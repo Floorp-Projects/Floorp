@@ -141,12 +141,6 @@ jobs:
         definition: debian-build
         args:
             ARCH: amd64
-    debian10-arm64-build:
-        symbol: I(deb10-arm64)
-        parent: debian10-base
-        definition: debian-build
-        args:
-            ARCH: arm64
     debian10-test-iris:
         symbol: I(deb10-ti)
         parent: debian10-test
