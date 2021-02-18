@@ -1177,6 +1177,12 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       displayUrl: {
         type: "string",
       },
+      helpL10nId: {
+        type: "string",
+      },
+      helpUrl: {
+        type: "string",
+      },
       icon: {
         type: "string",
       },

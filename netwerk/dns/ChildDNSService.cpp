@@ -44,6 +44,7 @@ already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
       return nullptr;
     }
     gChildDNSService = new ChildDNSService();
+    gChildDNSService->Init();
     ClearOnShutdown(&gChildDNSService);
   }
 
@@ -53,9 +54,7 @@ already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
 NS_IMPL_ISUPPORTS(ChildDNSService, nsIDNSService, nsPIDNSService, nsIObserver)
 
 ChildDNSService::ChildDNSService()
-    : mFirstTime(true),
-      mDisablePrefetch(false),
-      mPendingRequestsLock("DNSPendingRequestsLock") {
+    : mPendingRequestsLock("DNSPendingRequestsLock") {
   MOZ_ASSERT_IF(nsIOService::UseSocketProcess(),
                 XRE_IsContentProcess() || XRE_IsParentProcess());
   MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(),
@@ -332,6 +331,14 @@ ChildDNSService::GetMyHostName(nsACString& result) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP
+ChildDNSService::GetODoHActivated(bool* aResult) {
+  NS_ENSURE_ARG(aResult);
+
+  *aResult = mODoHActivated;
+  return NS_OK;
+}
+
 void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
   // We need the original flags and listener for the pending requests hash.
   uint32_t originalFlags = aDnsRequest->mFlags & ~RESOLVE_OFFLINE;
@@ -385,6 +392,12 @@ nsresult ChildDNSService::Init() {
       // If a manual proxy is in use, disable prefetch implicitly
       prefs->AddObserver("network.proxy.type", this, false);
     }
+
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->AddObserver(this, "odoh-service-activated", false);
+    }
   }
 
   mDisablePrefetch =
@@ -433,12 +446,13 @@ ChildDNSService::ResetExcludedSVCDomainName(const nsACString& aOwnerName) {
 NS_IMETHODIMP
 ChildDNSService::Observe(nsISupports* subject, const char* topic,
                          const char16_t* data) {
-  // we are only getting called if a preference has changed.
-  NS_ASSERTION(strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0,
-               "unexpected observe call");
+  if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    // Reread prefs
+    Init();
+  } else if (!strcmp(topic, "odoh-service-activated")) {
+    mODoHActivated = u"true"_ns.Equals(data);
+  }
 
-  // Reread prefs
-  Init();
   return NS_OK;
 }
 

@@ -15,19 +15,20 @@ div {
   position: relative;
   line-height: 0px;
 }
-input {
-  height: 113px;
-}
     </style>
   <body>
-  <!--
-    Default Size of radio is 13px * 13px on all platforms except Linux
-    (18px * 18px). So given a radio with height 113px, the radio will be
-    clamped to 13px * 13px and move to center which y is 50px ((113 - 13) / 2).
-  -->
     <div>
       <input type="radio">
       <input type="radio" checked>
     <div>
+    <script>
+      // If we grow the radio vertically, horizontal size shouldn't change,
+      // instead it should be centered vertically. We grow it by a hundred
+      // pixels, and the reference positions it manually at 50px, which is where
+      // it should end up.
+      for (let input of document.querySelectorAll("input")) {
+        input.style.height = (100 + input.getBoundingClientRect().height) + "px";
+      }
+    </script>
   </body>
 </html>

@@ -1378,9 +1378,6 @@ pref("prompts.tabChromePromptSubDialog", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Experiment Prefs for Nimbus
-pref("browser.newtab.experiments.value", "{\"prefsButtonIcon\": \"icon-settings\"}");
-
 // Preference to enable the entire new newtab experience at once.
 pref("browser.newtabpage.activity-stream.newNewtabExperience.enabled", false);
 
@@ -1468,6 +1465,7 @@ pref("trailhead.firstrun.newtab.triplets", "");
 pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX
 pref("browser.aboutwelcome.overrideContent", "");
+pref("browser.aboutwelcome.skipFocus", false);
 
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", true);

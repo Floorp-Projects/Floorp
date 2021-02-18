@@ -13,6 +13,7 @@
 #include "nsIDNSService.h"
 #include "nsQueryObject.h"
 #include "nsURLHelper.h"
+#include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SyncRunnable.h"
 
@@ -1009,7 +1010,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
   nsCOMPtr<nsISocketTransport> socketTransport;
   nsCOMPtr<nsISocketTransportService> sts;
 
-  sts = services::GetSocketTransportService();
+  sts = components::SocketTransport::Service();
   if (!sts) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1054,6 +1055,13 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
 
   if (dnsAndSock->mCaps & NS_HTTP_LOAD_ANONYMOUS) {
     tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
+  }
+
+  // When we are making a speculative connection we do not propagate all flags
+  // in mCaps, so we need to query nsHttpConnectionInfo directly as well.
+  if ((dnsAndSock->mCaps & NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT) ||
+      ci->GetAnonymousAllowClientCert()) {
+    tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
   }
 
   if (ci->GetPrivate()) {

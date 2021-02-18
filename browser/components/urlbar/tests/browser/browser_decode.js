@@ -35,7 +35,7 @@ add_task(function losslessDecode() {
     UrlbarUtils.RESULT_SOURCE.TABS,
     { url }
   );
-  gURLBar.setValueFromResult(result);
+  gURLBar.setValueFromResult({ result });
   // Since this is directly setting textValue, it is expected to be trimmed.
   Assert.equal(
     gURLBar.inputField.value,

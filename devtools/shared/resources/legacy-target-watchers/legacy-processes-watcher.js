@@ -8,7 +8,6 @@ class LegacyProcessesWatcher {
   constructor(targetList, onTargetAvailable, onTargetDestroyed) {
     this.targetList = targetList;
     this.rootFront = targetList.rootFront;
-    this.target = targetList.targetFront;
 
     this.onTargetAvailable = onTargetAvailable;
     this.onTargetDestroyed = onTargetDestroyed;

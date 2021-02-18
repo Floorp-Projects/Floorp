@@ -92,14 +92,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSystemStatusBarCocoa)
 #include "nsTouchBarUpdater.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTouchBarUpdater)
 
-#include "GfxInfo.h"
-namespace mozilla {
-namespace widget {
-// This constructor should really be shared with all platforms.
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
-}  // namespace widget
-}  // namespace mozilla
-
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_COLORPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
@@ -123,7 +115,6 @@ NS_DEFINE_NAMED_CID(NS_MACWEBAPPUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_STANDALONENATIVEMENU_CID);
 NS_DEFINE_NAMED_CID(NS_SYSTEMSTATUSBAR_CID);
 NS_DEFINE_NAMED_CID(NS_TOUCHBARUPDATER_CID);
-NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     {&kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor, mozilla::Module::MAIN_PROCESS_ONLY},
@@ -154,7 +145,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     {&kNS_STANDALONENATIVEMENU_CID, false, NULL, nsStandaloneNativeMenuConstructor},
     {&kNS_SYSTEMSTATUSBAR_CID, false, NULL, nsSystemStatusBarCocoaConstructor},
     {&kNS_TOUCHBARUPDATER_CID, false, NULL, nsTouchBarUpdaterConstructor},
-    {&kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor},
     {NULL}};
 
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
@@ -183,7 +173,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     {"@mozilla.org/widget/standalonenativemenu;1", &kNS_STANDALONENATIVEMENU_CID},
     {"@mozilla.org/widget/systemstatusbar;1", &kNS_SYSTEMSTATUSBAR_CID},
     {"@mozilla.org/widget/touchbarupdater;1", &kNS_TOUCHBARUPDATER_CID},
-    {"@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID},
     {NULL}};
 
 static void nsWidgetCocoaModuleDtor() {

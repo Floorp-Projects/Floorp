@@ -1110,6 +1110,11 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
   if (mConnectionFlags & nsISocketTransport::BE_CONSERVATIVE)
     controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
 
+  if (mConnectionFlags &
+      nsISocketTransport::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT) {
+    controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
+  }
+
   // by setting host to mOriginHost, instead of mHost we send the
   // SocketProvider (e.g. PSM) the origin hostname but can still do DNS
   // on an explicit alternate service host name

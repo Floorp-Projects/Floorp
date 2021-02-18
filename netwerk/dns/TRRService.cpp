@@ -1054,7 +1054,7 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
   MOZ_ASSERT(!rec);
 
   RefPtr<AddrInfo> newRRSet(aNewRRSet);
-  MOZ_ASSERT(newRRSet && newRRSet->IsTRR() == TRRTYPE_NS);
+  MOZ_ASSERT(newRRSet && newRRSet->TRRType() == TRRTYPE_NS);
 
 #ifdef DEBUG
   {

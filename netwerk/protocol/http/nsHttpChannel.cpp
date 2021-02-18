@@ -61,7 +61,7 @@
 #include "mozilla/ContentBlocking.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -693,6 +693,8 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   mConnectionInfo->SetTRRMode(nsIRequest::GetTRRMode());
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
+  mConnectionInfo->SetAnonymousAllowClientCert(
+      (mLoadFlags & LOAD_ANONYMOUS_ALLOW_CLIENT_CERT) != 0);
 
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
@@ -1213,6 +1215,10 @@ nsresult nsHttpChannel::SetupTransaction() {
   }
   if (LoadBeConservative()) {
     mCaps |= NS_HTTP_BE_CONSERVATIVE;
+  }
+
+  if (mLoadFlags & LOAD_ANONYMOUS_ALLOW_CLIENT_CERT) {
+    mCaps |= NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
   }
 
   // Use the URI path if not proxying (transparent proxying such as proxy
@@ -3682,7 +3688,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   nsAutoCString cacheKey;
 
   nsCOMPtr<nsICacheStorageService> cacheStorageService(
-      services::GetCacheStorageService());
+      components::CacheStorage::Service());
   if (!cacheStorageService) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -4847,7 +4853,7 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
   nsCOMPtr<nsIInputStream> wrapper;
 
   nsCOMPtr<nsIStreamTransportService> sts(
-      services::GetStreamTransportService());
+      components::StreamTransport::Service());
   rv = sts ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   if (NS_SUCCEEDED(rv)) {
     rv = sts->CreateInputTransport(stream, true, getter_AddRefs(transport));
@@ -5100,7 +5106,7 @@ void nsHttpChannel::MaybeCreateCacheEntryWhenRCWN() {
   LOG(("nsHttpChannel::MaybeCreateCacheEntryWhenRCWN [this=%p]", this));
 
   nsCOMPtr<nsICacheStorageService> cacheStorageService(
-      services::GetCacheStorageService());
+      components::CacheStorage::Service());
   if (!cacheStorageService) {
     return;
   }
@@ -7312,7 +7318,17 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
         NS_SUCCEEDED(mStatus));
   }
 
-  if (gTRRService && gTRRService->IsConfirmed()) {
+  if (StaticPrefs::network_trr_odoh_enabled()) {
+    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+    bool ODoHActivated = false;
+    if (dns && NS_SUCCEEDED(dns->GetODoHActivated(&ODoHActivated)) &&
+        ODoHActivated) {
+      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_ODOH,
+                            NS_SUCCEEDED(mStatus));
+    }
+  } else if (gTRRService && gTRRService->IsConfirmed()) {
+    // Note this telemetry probe is not working when DNS resolution is done in
+    // the socket process.
     Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_TRR,
                           TRRService::AutoDetectedKey(), NS_SUCCEEDED(mStatus));
   }
@@ -9128,7 +9144,7 @@ void nsHttpChannel::DoInvalidateCacheEntry(nsIURI* aURI) {
   LOG(("DoInvalidateCacheEntry [channel=%p key=%s]", this, key.get()));
 
   nsCOMPtr<nsICacheStorageService> cacheStorageService(
-      services::GetCacheStorageService());
+      components::CacheStorage::Service());
   rv = cacheStorageService ? NS_OK : NS_ERROR_FAILURE;
 
   nsCOMPtr<nsICacheStorage> cacheStorage;

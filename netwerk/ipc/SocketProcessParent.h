@@ -119,6 +119,8 @@ class SocketProcessParent final
       PRemoteLazyInputStreamParent* aActor, const nsID& aID,
       const uint64_t& aSize);
 
+  mozilla::ipc::IPCResult RecvODoHServiceActivated(const bool& aActivated);
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;

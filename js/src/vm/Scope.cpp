@@ -418,7 +418,7 @@ XDRResult Scope::XDRSizedBindingNames(
   } else {
     data.set(NewEmptyScopeData<ConcreteScope, JSAtom>(cx, length).release());
     if (!data) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -889,7 +889,7 @@ XDRResult LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
       scope.set(createWithData(cx, kind, &uniqueData.ref(), firstFrameSlot,
                                enclosing));
       if (!scope) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
 
       // nextFrameSlot is used only for this correctness check.
@@ -1051,7 +1051,7 @@ XDRResult FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun,
       scope.set(createWithData(cx, &uniqueData.ref(), hasParameterExprs,
                                needsEnvironment, fun, enclosing));
       if (!scope) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
 
       // nextFrameSlot is used only for this correctness check.
@@ -1145,7 +1145,7 @@ XDRResult VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
       scope.set(createWithData(cx, kind, &uniqueData.ref(), firstFrameSlot,
                                needsEnvironment, enclosing));
       if (!scope) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
 
       // nextFrameSlot is used only for this correctness check.
@@ -1236,7 +1236,7 @@ XDRResult GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
 
       scope.set(createWithData(cx, kind, &uniqueData.ref()));
       if (!scope) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
@@ -1270,7 +1270,7 @@ XDRResult WithScope::XDR(XDRState<mode>* xdr, HandleScope enclosing,
   if (mode == XDR_DECODE) {
     scope.set(create(cx, enclosing));
     if (!scope) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -1362,7 +1362,7 @@ XDRResult EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
       }
       scope.set(createWithData(cx, kind, &uniqueData.ref(), enclosing));
       if (!scope) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
@@ -1481,7 +1481,7 @@ XDRResult ModuleScope::XDR(XDRState<mode>* xdr, HandleModuleObject module,
 
       scope.set(createWithData(cx, &uniqueData.ref(), module, enclosing));
       if (!scope) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
 
       // nextFrameSlot is used only for this correctness check.

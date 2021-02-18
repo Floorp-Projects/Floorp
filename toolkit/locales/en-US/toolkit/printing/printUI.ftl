@@ -118,6 +118,7 @@ printui-paper-tabloid = Tabloid
 
 printui-error-invalid-scale = Scale must be a number between 10 and 200.
 printui-error-invalid-margin = Please enter a valid margin for the selected paper size.
+printui-error-invalid-copies = Copies must be a number between 1 and 10000.
 
 # Variables
 # $numPages (integer) - Number of pages

@@ -17,6 +17,10 @@ class ODoH final : public TRR {
   explicit ODoH(AHostResolver* aResolver, nsHostRecord* aRec,
                 enum TrrType aType)
       : TRR(aResolver, aRec, aType) {}
+  // when following CNAMEs
+  explicit ODoH(AHostResolver* aResolver, nsHostRecord* aRec, nsCString& aHost,
+                enum TrrType& aType, unsigned int aLoopCount, bool aPB)
+      : TRR(aResolver, aRec, aHost, aType, aLoopCount, aPB) {}
   NS_IMETHOD Run() override;
   // ODoH should not support push.
   NS_IMETHOD GetInterface(const nsIID&, void**) override {
@@ -30,6 +34,22 @@ class ODoH final : public TRR {
   virtual const char* ContentType() const override {
     return "application/oblivious-dns-message";
   }
+  virtual DNSResolverType ResolverType() const override {
+    return DNSResolverType::ODoH;
+  }
+  virtual bool MaybeBlockRequest() override {
+    // TODO: check excluded list
+    return false;
+  };
+  virtual void RecordProcessingTime(nsIChannel* aChannel) override {
+    // TODO: record processing time for ODoH.
+  }
+  virtual void ReportStatus(nsresult aStatusCode) override {
+    // TODO: record status in ODoHService.
+  }
+  virtual void HandleTimeout() override;
+  virtual void HandleEncodeError(nsresult aStatusCode) override;
+  virtual void HandleDecodeError(nsresult aStatusCode) override;
 };
 
 }  // namespace net

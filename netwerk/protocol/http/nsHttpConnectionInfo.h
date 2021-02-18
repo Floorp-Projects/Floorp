@@ -147,6 +147,11 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
   bool GetBeConservative() const { return mHashKey.CharAt(6) == 'C'; }
 
+  void SetAnonymousAllowClientCert(bool anon) {
+    mHashKey.SetCharAt(anon ? 'B' : '.', 7);
+  }
+  bool GetAnonymousAllowClientCert() const { return mHashKey.CharAt(7) == 'B'; }
+
   void SetTlsFlags(uint32_t aTlsFlags);
   uint32_t GetTlsFlags() const { return mTlsFlags; }
 

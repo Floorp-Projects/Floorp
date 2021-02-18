@@ -48,6 +48,10 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     this._handleTabEvent = this._handleTabEvent.bind(this);
   }
 
+  get client() {
+    return this._client;
+  }
+
   form(json) {
     this.actorID = json.actor;
     this._form = json;

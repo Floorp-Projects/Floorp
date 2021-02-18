@@ -22,6 +22,7 @@
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
 
+#include "mozilla/Components.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_security.h"
@@ -158,7 +159,7 @@ void CSP_GetLocalizedStr(const char* aName, const nsTArray<nsString>& aParams,
                          nsAString& outResult) {
   nsCOMPtr<nsIStringBundle> keyStringBundle;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
 
   NS_ASSERTION(stringBundleService, "String bundle service must be present!");
   stringBundleService->CreateBundle(

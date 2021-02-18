@@ -151,9 +151,9 @@ export class _ContextMenuItem extends React.PureComponent {
 
   render() {
     const { option } = this.props;
-    const isNewNewtabExperienceEnabled = this.props.Prefs.values[
-      "newNewtabExperience.enabled"
-    ];
+    const {
+      newNewtabExperienceEnabled,
+    } = this.props.Prefs.values.featureConfig;
     return (
       <li role="presentation" className="context-menu-item">
         <button
@@ -164,7 +164,7 @@ export class _ContextMenuItem extends React.PureComponent {
           onKeyUp={this.onKeyUp}
           ref={option.first ? this.focusFirst : null}
         >
-          {!isNewNewtabExperienceEnabled && option.icon && (
+          {!newNewtabExperienceEnabled && option.icon && (
             <span className={`icon icon-spacer icon-${option.icon}`} />
           )}
           <span data-l10n-id={option.string_id || option.id} />

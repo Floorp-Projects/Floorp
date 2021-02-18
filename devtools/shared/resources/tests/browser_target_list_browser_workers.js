@@ -34,8 +34,7 @@ add_task(async function() {
   const sharedWorker = new SharedWorker(CHROME_WORKER_URL + "#shared-worker");
 
   const targetDescriptor = await mainRoot.getMainProcess();
-  const target = await targetDescriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(targetDescriptor);
   await targetList.startListening();
 
   // Very naive sanity check against getAllTargets([workerType])
@@ -107,6 +106,7 @@ add_task(async function() {
     "Check that watchTargets will call the create callback for all existing workers"
   );
   const targets = [];
+  const topLevelTarget = await targetDescriptor.getTarget();
   const onAvailable = async ({ targetFront }) => {
     ok(
       targetFront.targetType === TYPES.WORKER ||
@@ -115,7 +115,9 @@ add_task(async function() {
       "We are only notified about worker targets"
     );
     ok(
-      targetFront == target ? targetFront.isTopLevel : !targetFront.isTopLevel,
+      targetFront == topLevelTarget
+        ? targetFront.isTopLevel
+        : !targetFront.isTopLevel,
       "isTopLevel property is correct"
     );
     targets.push(targetFront);

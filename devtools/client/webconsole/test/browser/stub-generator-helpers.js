@@ -17,18 +17,20 @@ const STUBS_UPDATE_ENV = "WEBCONSOLE_STUBS_UPDATE";
 async function createResourceWatcherForTab(tab) {
   const { TargetFactory } = require("devtools/client/framework/target");
   const target = await TargetFactory.forTab(tab);
-  const resourceWatcher = await createResourceWatcherForTarget(target);
+  const resourceWatcher = await createResourceWatcherForDescriptor(
+    target.descriptorFront
+  );
   return resourceWatcher;
 }
 
-async function createResourceWatcherForTarget(target) {
+async function createResourceWatcherForDescriptor(descriptor) {
   // Avoid mocha to try to load these module and fail while doing it when running node tests
   const {
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
   const { TargetList } = require("devtools/shared/resources/target-list");
 
-  const targetList = new TargetList(target.client.mainRoot, target);
+  const targetList = new TargetList(descriptor);
   await targetList.startListening();
   return new ResourceWatcher(targetList);
 }
@@ -538,7 +540,7 @@ function parsePacketAndCreateFronts(packet) {
 module.exports = {
   STUBS_UPDATE_ENV,
   createResourceWatcherForTab,
-  createResourceWatcherForTarget,
+  createResourceWatcherForDescriptor,
   getStubFile,
   getCleanedPacket,
   getSerializedPacket,

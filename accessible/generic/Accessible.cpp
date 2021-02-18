@@ -65,6 +65,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/Components.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
@@ -277,7 +278,7 @@ KeyBinding Accessible::KeyboardShortcut() const { return KeyBinding(); }
 
 void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-      services::GetStringBundleService();
+      components::StringBundle::Service();
   if (!stringBundleService) return;
 
   nsCOMPtr<nsIStringBundle> stringBundle;
@@ -2759,7 +2760,7 @@ uint32_t KeyBinding::AccelModifier() {
 void KeyBinding::ToPlatformFormat(nsAString& aValue) const {
   nsCOMPtr<nsIStringBundle> keyStringBundle;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   if (stringBundleService)
     stringBundleService->CreateBundle(
         "chrome://global-platform/locale/platformKeys.properties",

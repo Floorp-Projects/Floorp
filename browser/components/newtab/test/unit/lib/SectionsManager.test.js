@@ -43,6 +43,7 @@ describe("SectionsManager", () => {
     globals.set({
       Services: fakeServices,
       PlacesUtils: fakePlacesUtils,
+      aboutNewTabFeature: { getValue: sandbox.stub() },
     });
     // Redecorate SectionsManager to remove any listeners that have been added
     EventEmitter.decorate(SectionsManager);
@@ -513,11 +514,14 @@ describe("SectionsFeed", () => {
   let feed;
   let sandbox;
   let storage;
+  let globals;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     SectionsManager.sections.clear();
     SectionsManager.initialized = false;
+    globals = new GlobalOverrider();
+    globals.set("aboutNewTabFeature", { getValue: sandbox.stub() });
     storage = {
       get: sandbox.stub().resolves(),
       set: sandbox.stub().resolves(),
@@ -543,6 +547,7 @@ describe("SectionsFeed", () => {
   });
   afterEach(() => {
     feed.uninit();
+    globals.restore();
   });
   describe("#init", () => {
     it("should create a SectionsFeed", () => {

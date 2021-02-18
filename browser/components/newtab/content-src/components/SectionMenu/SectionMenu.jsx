@@ -49,7 +49,7 @@ export class _SectionMenu extends React.PureComponent {
 
     // Remove Collapse/Expand related option if the `newNewtabExperience.enabled`
     // pref is set to true.
-    if (props.Prefs.values["newNewtabExperience.enabled"]) {
+    if (props.Prefs.values.featureConfig.newNewtabExperienceEnabled) {
       if (props.isWebExtension) {
         propOptions.splice(2, 2);
       } else {

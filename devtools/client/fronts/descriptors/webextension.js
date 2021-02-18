@@ -22,8 +22,11 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
 ) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
-    this.client = client;
+    this._client = client;
     this.traits = {};
+  }
+  get client() {
+    return this._client;
   }
 
   form(json) {

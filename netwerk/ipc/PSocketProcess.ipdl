@@ -128,6 +128,7 @@ parent:
                        OriginAttributes aOriginAttributes,
                        nsCString aRequestString)
     returns (bool aAccepted);
+  async ODoHServiceActivated(bool aActivated);
 
 child:
   async Init(SocketPorcessInitAttributes aAttributes);

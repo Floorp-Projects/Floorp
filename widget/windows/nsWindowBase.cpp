@@ -19,8 +19,6 @@ static const wchar_t kUser32LibName[] = L"user32.dll";
 bool nsWindowBase::sTouchInjectInitialized = false;
 InjectTouchInputPtr nsWindowBase::sInjectTouchFuncPtr;
 
-bool nsWindowBase::DispatchPluginEvent(const MSG& aMsg) { return false; }
-
 // static
 bool nsWindowBase::InitTouchInjection() {
   if (!sTouchInjectInitialized) {

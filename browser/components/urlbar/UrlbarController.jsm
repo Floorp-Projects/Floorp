@@ -888,7 +888,7 @@ class TelemetryEvent {
       // Element handlers go here.
       if (
         row.result.type == UrlbarUtils.RESULT_TYPE.TIP &&
-        element.classList.contains("urlbarView-tip-help")
+        element.classList.contains("urlbarView-help")
       ) {
         return "tiphelp";
       }

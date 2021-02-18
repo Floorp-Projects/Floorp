@@ -14,7 +14,7 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -365,7 +365,7 @@ void InitBrandName() {
   }
   nsAutoString brandName;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   if (stringBundleService) {
     nsCOMPtr<nsIStringBundle> brandBundle;
     nsresult rv = stringBundleService->CreateBundle(

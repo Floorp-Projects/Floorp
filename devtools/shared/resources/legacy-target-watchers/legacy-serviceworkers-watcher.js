@@ -82,7 +82,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     // registrations.
     await this._onRegistrationListChanged();
 
-    if (this.target.isLocalTab) {
+    if (this.targetList.descriptorFront.isLocalTab) {
       // Note that we rely on "navigate" rather than "will-navigate" because the
       // destroyed/available callbacks should be triggered after the Debugger
       // has cleaned up its reducers, which happens on "will-navigate".
@@ -96,7 +96,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
   unlisten() {
     this._workersListener.removeListener(this._onRegistrationListChanged);
 
-    if (this.target.isLocalTab) {
+    if (this.targetList.descriptorFront.isLocalTab) {
       this.target.off("navigate", this._onNavigate);
     }
 
@@ -105,7 +105,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
 
   // Override from LegacyWorkersWatcher.
   async _onProcessAvailable({ targetFront }) {
-    if (this.target.isLocalTab) {
+    if (this.targetList.descriptorFront.isLocalTab) {
       // XXX: This has been ported straight from the current debugger
       // implementation. Since pauseMatchingServiceWorkers expects an origin
       // to filter matching workers, it only makes sense when we are debugging
@@ -247,7 +247,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
       return true;
     }
 
-    if (!this.target.isLocalTab) {
+    if (!this.targetList.descriptorFront.isLocalTab) {
       // No support for service worker targets outside of main process & local
       // tab debugging.
       return false;

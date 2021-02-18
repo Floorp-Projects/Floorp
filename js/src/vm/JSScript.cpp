@@ -52,6 +52,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/SourceText.h"
+#include "js/Transcoding.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
@@ -239,7 +240,7 @@ XDRResult js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp) {
     default:
       // Fail in debug, but only soft-fail in release
       MOZ_ASSERT(false, "Bad XDR value kind");
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
   }
   return Ok();
 }
@@ -318,7 +319,7 @@ XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
       default: {
         // Fail in debug, but only soft-fail in release
         MOZ_ASSERT(false, "Bad XDR class kind");
-        return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+        return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
       }
     }
   }
@@ -386,7 +387,7 @@ static XDRResult XDRInnerObject(XDRState<mode>* xdr,
         RootedFunction function(cx, &inner->as<JSFunction>());
 
         if (function->isAsmJSNative()) {
-          return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
+          return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
         }
 
         MOZ_ASSERT(function->enclosingScope());
@@ -432,7 +433,7 @@ static XDRResult XDRInnerObject(XDRState<mode>* xdr,
     default: {
       // Fail in debug, but only soft-fail in release
       MOZ_ASSERT(false, "Bad XDR class kind");
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
     }
   }
 
@@ -522,7 +523,7 @@ static XDRResult XDRScope(XDRState<mode>* xdr, js::PrivateScriptData* data,
     default:
       // Fail in debug, but only soft-fail in release
       MOZ_ASSERT(false, "Bad XDR scope kind");
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
   }
 
   return Ok();
@@ -594,7 +595,7 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
     default:
       // Fail in debug, but only soft-fail in release.
       MOZ_ASSERT(false, "Bad XDR class kind");
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
   }
   return Ok();
 }
@@ -806,7 +807,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
 
   if (mode == XDR_DECODE) {
     if (!JSScript::createPrivateScriptData(cx, script, ngcthings)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
 
     data = script->data_;
@@ -969,7 +970,7 @@ XDRResult js::XDRImmutableScriptData(XDRState<mode>* xdr,
   } else {
     isd = ImmutableScriptData::new_(xdr->cx(), size);
     if (!isd) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     data = reinterpret_cast<uint8_t*>(isd.get());
   }
@@ -1088,7 +1089,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   // instructions.
   if (xdr->hasOptions() ? !!xdr->options().instrumentationKinds
                         : !!cx->global()->getInstrumentationHolder()) {
-    return xdr->fail(JS::TranscodeResult_Failure);
+    return xdr->fail(JS::TranscodeResult::Failure);
   }
 
   if (mode == XDR_ENCODE) {
@@ -1135,7 +1136,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
       if (!js::CheckCompileOptionsMatch(*options,
                                         ImmutableScriptFlags(immutableFlags),
                                         xdr->isMultiDecode())) {
-        return xdr->fail(JS::TranscodeResult_Failure_WrongCompileOption);
+        return xdr->fail(JS::TranscodeResult::Failure_WrongCompileOption);
       }
     }
   }
@@ -1157,7 +1158,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     if (mode == XDR_DECODE) {
       sourceObject = ScriptSourceObject::create(cx, source);
       if (!sourceObject) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
 
       if (xdr->hasScriptSourceObjectOut()) {
@@ -1166,7 +1167,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         *xdr->scriptSourceObjectOut() = sourceObject;
       } else if (!ScriptSourceObject::initFromOptions(cx, sourceObject,
                                                       *options)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   } else {
@@ -1184,7 +1185,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     script = JSScript::Create(cx, functionOrGlobal, sourceObject, extent,
                               ImmutableScriptFlags(immutableFlags));
     if (!script) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     scriptp.set(script);
 
@@ -1211,7 +1212,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   if (mode == XDR_DECODE) {
     if (!SharedImmutableScriptData::shareScriptData(cx, script->sharedData_)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -1224,7 +1225,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   if (mode == XDR_DECODE) {
     if (coverage::IsLCovEnabled()) {
       if (!coverage::InitScriptCoverage(cx, script)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
 
@@ -1277,7 +1278,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       lazy.set(BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject,
                                          extent, immutableFlags));
       if (!lazy) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
 
       // Set the enclosing scope of the lazy function. This value should only be
@@ -2711,11 +2712,7 @@ bool ScriptSource::xdrEncodeInitialStencil(
   if (res.isErr()) {
     // On encoding failure, let failureCase destroy encoder and return true
     // to avoid failing any currently executing script.
-    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
-      return true;
-    }
-
-    return false;
+    return JS::IsTranscodeFailureResult(res.unwrapErr());
   }
 
   failureCase.release();
@@ -2762,10 +2759,7 @@ bool ScriptSource::xdrEncodeFunctionStencilWith(
   if (res.isErr()) {
     // On encoding failure, let failureCase destroy encoder and return true
     // to avoid failing any currently executing script.
-    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
-      return true;
-    }
-    return false;
+    return JS::IsTranscodeFailureResult(res.unwrapErr());
   }
 
   failureCase.release();
@@ -2811,14 +2805,14 @@ struct UnretrievableSourceDecoder {
     auto sourceUnits = xdr_->cx()->make_pod_array<Unit>(
         std::max<size_t>(uncompressedLength_, 1));
     if (!sourceUnits) {
-      return xdr_->fail(JS::TranscodeResult_Throw);
+      return xdr_->fail(JS::TranscodeResult::Throw);
     }
 
     MOZ_TRY(xdr_->codeChars(sourceUnits.get(), uncompressedLength_));
 
     if (!scriptSource_->initializeUnretrievableUncompressedSource(
             xdr_->cx(), std::move(sourceUnits), uncompressedLength_)) {
-      return xdr_->fail(JS::TranscodeResult_Throw);
+      return xdr_->fail(JS::TranscodeResult::Throw);
     }
 
     return Ok();
@@ -2937,14 +2931,14 @@ XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
     // Compressed data is always single-byte chars.
     auto bytes = xdr->cx()->template make_pod_array<char>(compressedLength);
     if (!bytes) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
 
     if (!ss->initializeWithUnretrievableCompressedSource<Unit>(
             xdr->cx(), std::move(bytes), compressedLength,
             uncompressedLength)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   } else {
     void* bytes = const_cast<char*>(ss->compressedData<Unit>()->raw.chars());
@@ -3059,7 +3053,7 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     if (type > static_cast<uint8_t>(DataType::Missing)) {
       // Fail in debug, but only soft-fail in release, if the type is invalid.
       MOZ_ASSERT_UNREACHABLE("bad tag");
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
     }
 
     tag = static_cast<DataType>(type);
@@ -3131,7 +3125,7 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     // Allocate a new ScriptSource and root it with the holder.
     source = do_AddRef(cx->new_<ScriptSource>());
     if (!source) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
 
     // We use this CompileOptions only to initialize the ScriptSourceObject.
@@ -3139,7 +3133,7 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     // that are (element; elementAttributeName) aren't preserved by XDR. So
     // this can be simple.
     if (!source->initFromOptions(cx, *maybeOptions)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -3158,7 +3152,7 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     if (mode == XDR_DECODE) {
       if (!source->setSourceMapURL(
               cx, std::move(chars.ref<UniqueTwoByteChars>()))) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
@@ -3176,7 +3170,7 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     if (mode == XDR_DECODE) {
       if (!source->setDisplayURL(cx,
                                  std::move(chars.ref<UniqueTwoByteChars>()))) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
@@ -3194,7 +3188,7 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     if (mode == XDR_DECODE) {
       if (!source->filename()) {
         if (!source->setFilename(cx, std::move(chars.ref<UniqueChars>()))) {
-          return xdr->fail(JS::TranscodeResult_Throw);
+          return xdr->fail(JS::TranscodeResult::Throw);
         }
       }
       MOZ_ASSERT(source->filename());

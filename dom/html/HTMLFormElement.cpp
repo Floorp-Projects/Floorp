@@ -11,6 +11,7 @@
 #include "jsapi.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/Components.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
@@ -938,7 +939,7 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
 
   nsCOMPtr<nsIStringBundle> stringBundle;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   if (!stringBundleService) {
     return NS_ERROR_FAILURE;
   }

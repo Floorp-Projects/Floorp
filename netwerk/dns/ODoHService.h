@@ -33,6 +33,7 @@ class ODoHService : public nsIDNSListener,
 
   const Maybe<nsTArray<ObliviousDoHConfig>>& ODoHConfigs();
   void AppendPendingODoHRequest(ODoH* aRequest);
+  bool RemovePendingODoHRequest(ODoH* aRequest);
   void GetRequestURI(nsACString& aResult);
   // Send a DNS query to reterive the ODoHConfig.
   nsresult UpdateODoHConfig();
