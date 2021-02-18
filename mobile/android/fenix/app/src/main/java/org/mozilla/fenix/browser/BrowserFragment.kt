@@ -84,7 +84,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 visible = {
                     readerModeAvailable
                 },
-                selected = getSessionById()?.let {
+                selected = getCurrentTab()?.let {
                         activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
                     } ?: false,
                 listener = browserInteractor::onReaderModePressed

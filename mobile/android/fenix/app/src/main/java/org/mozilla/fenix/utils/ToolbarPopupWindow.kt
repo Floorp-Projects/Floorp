@@ -15,8 +15,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -27,7 +27,7 @@ import java.lang.ref.WeakReference
 object ToolbarPopupWindow {
     fun show(
         view: WeakReference<View>,
-        customTabSession: Session? = null,
+        customTabSession: CustomTabSessionState? = null,
         handlePasteAndGo: (String) -> Unit,
         handlePaste: (String) -> Unit,
         copyVisible: Boolean = true
@@ -101,10 +101,10 @@ object ToolbarPopupWindow {
     @VisibleForTesting
     internal fun getUrlForClipboard(
         store: BrowserStore,
-        customTabSession: Session? = null
+        customTabSession: CustomTabSessionState? = null
     ): String? {
         return if (customTabSession != null) {
-            customTabSession.url
+            customTabSession.content.url
         } else {
             val selectedTab = store.state.selectedTab
             selectedTab?.readerState?.activeUrl ?: selectedTab?.content?.url

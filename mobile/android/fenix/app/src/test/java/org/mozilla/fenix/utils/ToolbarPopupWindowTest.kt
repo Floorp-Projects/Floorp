@@ -4,11 +4,10 @@
 
 package org.mozilla.fenix.utils
 
-import io.mockk.every
 import io.mockk.mockk
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Assert.assertEquals
@@ -21,8 +20,7 @@ class ToolbarPopupWindowTest {
 
     @Test
     fun getUrlForClipboard() {
-        val customTabSession: Session = mockk()
-        every { customTabSession.url } returns "https://mozilla.org"
+        val customTabSession = createCustomTab("https://mozilla.org")
 
         // Custom tab
         assertEquals(

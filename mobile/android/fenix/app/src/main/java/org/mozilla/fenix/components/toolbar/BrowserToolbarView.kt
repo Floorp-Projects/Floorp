@@ -16,8 +16,8 @@ import androidx.lifecycle.LifecycleOwner
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
@@ -52,7 +52,7 @@ class BrowserToolbarView(
     private val container: ViewGroup,
     private val toolbarPosition: ToolbarPosition,
     private val interactor: BrowserToolbarViewInteractor,
-    private val customTabSession: Session?,
+    private val customTabSession: CustomTabSessionState?,
     private val lifecycleOwner: LifecycleOwner
 ) : LayoutContainer {
 
@@ -78,8 +78,8 @@ class BrowserToolbarView(
 
     @VisibleForTesting
     internal val isPwaTabOrTwaTab: Boolean
-        get() = customTabSession?.customTabConfig?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP ||
-                customTabSession?.customTabConfig?.externalAppType == ExternalAppType.TRUSTED_WEB_ACTIVITY
+        get() = customTabSession?.config?.externalAppType == ExternalAppType.PROGRESSIVE_WEB_APP ||
+                customTabSession?.config?.externalAppType == ExternalAppType.TRUSTED_WEB_ACTIVITY
 
     init {
         val isCustomTabSession = customTabSession != null
@@ -185,7 +185,7 @@ class BrowserToolbarView(
                     view,
                     menuToolbar,
                     customTabSession.id,
-                    isPrivate = customTabSession.private
+                    isPrivate = customTabSession.content.private
                 )
             } else {
                 DefaultToolbarIntegration(
