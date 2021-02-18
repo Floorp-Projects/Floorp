@@ -624,10 +624,6 @@ skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
 skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=
-skip script test262/intl402/NumberFormat/constructor-no-instanceof.js
-skip script test262/intl402/DateTimeFormat/constructor-no-instanceof.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

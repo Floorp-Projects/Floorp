@@ -30,6 +30,8 @@ PlainObject* ObjectCreateWithTemplate(JSContext* cx,
 [[nodiscard]] bool obj_propertyIsEnumerable(JSContext* cx, unsigned argc,
                                             Value* vp);
 
+[[nodiscard]] bool obj_isPrototypeOf(JSContext* cx, unsigned argc, Value* vp);
+
 [[nodiscard]] bool obj_create(JSContext* cx, unsigned argc, JS::Value* vp);
 
 [[nodiscard]] bool obj_is(JSContext* cx, unsigned argc, JS::Value* vp);

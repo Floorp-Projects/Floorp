@@ -127,7 +127,7 @@ function UnwrapNumberFormat(nf) {
     if (IsObject(nf) &&
         GuardToNumberFormat(nf) === null &&
         !IsWrappedNumberFormat(nf) &&
-        nf instanceof GetBuiltinConstructor("NumberFormat"))
+        callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("NumberFormat"), nf))
     {
         nf = nf[intlFallbackSymbol()];
     }
@@ -528,10 +528,8 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     initializeIntlObject(numberFormat, "NumberFormat", lazyNumberFormatData);
 
     // 11.2.1, steps 4-5.
-    // TODO: spec issue - The current spec doesn't have the IsObject check,
-    // which means |Intl.NumberFormat.call(null)| is supposed to throw here.
-    if (numberFormat !== thisValue && IsObject(thisValue) &&
-        thisValue instanceof GetBuiltinConstructor("NumberFormat"))
+    if (numberFormat !== thisValue &&
+        callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("NumberFormat"), thisValue))
     {
         _DefineDataProperty(thisValue, intlFallbackSymbol(), numberFormat,
                             ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
