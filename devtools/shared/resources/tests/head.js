@@ -38,8 +38,7 @@ async function _initResourceWatcherFromDescriptor(
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
 
-  const target = await descriptor.getTarget();
-  const targetList = new TargetList(client.mainRoot, target);
+  const targetList = new TargetList(descriptor);
   if (listenForWorkers) {
     targetList.listenForWorkers = true;
   }

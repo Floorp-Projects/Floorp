@@ -26,6 +26,10 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
     this._client = client;
   }
 
+  get client() {
+    return this._client;
+  }
+
   form(json) {
     this.id = json.id;
     this.isParent = json.isParent;

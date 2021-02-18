@@ -140,7 +140,8 @@ function runNextTest() {
   }
 }
 
-function createResourceWatcher(target) {
-  const targetList = new TargetList(target.client.mainRoot, target);
+async function createResourceWatcher(target) {
+  const targetList = new TargetList(target.descriptorFront);
+  await targetList.startListening();
   return new ResourceWatcher(targetList);
 }

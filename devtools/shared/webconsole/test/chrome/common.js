@@ -123,7 +123,7 @@ async function createResourceWatcherForTab() {
   } = require("devtools/shared/resources/resource-watcher");
   const { TargetList } = require("devtools/shared/resources/target-list");
 
-  const targetList = new TargetList(client.mainRoot, target);
+  const targetList = new TargetList(targetDescriptor);
   await targetList.startListening();
   const resourceWatcher = new ResourceWatcher(targetList);
 
