@@ -13,6 +13,7 @@
 #include "nsIDNSService.h"
 #include "nsQueryObject.h"
 #include "nsURLHelper.h"
+#include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SyncRunnable.h"
 
@@ -1009,7 +1010,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
   nsCOMPtr<nsISocketTransport> socketTransport;
   nsCOMPtr<nsISocketTransportService> sts;
 
-  sts = services::GetSocketTransportService();
+  sts = components::SocketTransport::Service();
   if (!sts) {
     return NS_ERROR_NOT_AVAILABLE;
   }
