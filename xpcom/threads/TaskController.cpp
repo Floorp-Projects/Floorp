@@ -655,10 +655,15 @@ bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
 
 bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
     const MutexAutoLock& aProofOfLock) {
+#ifdef MOZ_GECKO_PROFILER
   nsCOMPtr<nsIThread> mainIThread;
   NS_GetMainThread(getter_AddRefs(mainIThread));
+
   nsThread* mainThread = static_cast<nsThread*>(mainIThread.get());
-  mainThread->SetRunningEventDelay(TimeDuration(), TimeStamp());
+  if (mainThread) {
+    mainThread->SetRunningEventDelay(TimeDuration(), TimeStamp());
+  }
+#endif
 
   uint32_t totalSuspended = 0;
   for (TaskManager* manager : mTaskManagers) {
@@ -735,10 +740,12 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
         TimeStamp now = TimeStamp::Now();
 
 #ifdef MOZ_GECKO_PROFILER
-        if (task->GetPriority() < uint32_t(EventQueuePriority::InputHigh)) {
-          mainThread->SetRunningEventDelay(TimeDuration(), now);
-        } else {
-          mainThread->SetRunningEventDelay(now - task->mInsertionTime, now);
+        if (mainThread) {
+          if (task->GetPriority() < uint32_t(EventQueuePriority::InputHigh)) {
+            mainThread->SetRunningEventDelay(TimeDuration(), now);
+          } else {
+            mainThread->SetRunningEventDelay(now - task->mInsertionTime, now);
+          }
         }
 #endif
 
