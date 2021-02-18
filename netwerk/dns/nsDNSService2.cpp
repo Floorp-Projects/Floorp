@@ -130,7 +130,9 @@ NS_IMETHODIMP
 nsDNSRecord::IsTRR(bool* retval) {
   MutexAutoLock lock(mHostRecord->addr_info_lock);
   if (mHostRecord->addr_info) {
-    *retval = mHostRecord->addr_info->IsTRR();
+    // TODO: Let the consumers of nsIDNSRecord be unaware of the difference of
+    // TRR and ODoH. Will let them know the truth when needed.
+    *retval = mHostRecord->addr_info->IsTRROrODoH();
   } else {
     *retval = false;
   }
@@ -140,7 +142,7 @@ nsDNSRecord::IsTRR(bool* retval) {
 NS_IMETHODIMP
 nsDNSRecord::GetTrrFetchDuration(double* aTime) {
   MutexAutoLock lock(mHostRecord->addr_info_lock);
-  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRR()) {
+  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRROrODoH()) {
     *aTime = mHostRecord->addr_info->GetTrrFetchDuration();
   } else {
     *aTime = 0;
@@ -151,7 +153,7 @@ nsDNSRecord::GetTrrFetchDuration(double* aTime) {
 NS_IMETHODIMP
 nsDNSRecord::GetTrrFetchDurationNetworkOnly(double* aTime) {
   MutexAutoLock lock(mHostRecord->addr_info_lock);
-  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRR()) {
+  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRROrODoH()) {
     *aTime = mHostRecord->addr_info->GetTrrFetchDurationNetworkOnly();
   } else {
     *aTime = 0;

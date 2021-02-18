@@ -288,9 +288,10 @@ class AddrHostRecord final : public nsHostRecord {
   mozilla::TimeDuration mTrrDuration;
   mozilla::TimeDuration mNativeDuration;
 
-  mozilla::Atomic<bool> mTRRUsed;  // TRR was used on this record
-  uint8_t mTRRSuccess;             // number of successful TRR responses
-  uint8_t mNativeSuccess;          // number of native lookup responses
+  // TRR or ODoH was used on this record
+  mozilla::Atomic<mozilla::net::DNSResolverType> mResolverType;
+  uint8_t mTRRSuccess;     // number of successful TRR responses
+  uint8_t mNativeSuccess;  // number of native lookup responses
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields, 8, (

@@ -183,6 +183,8 @@ struct ObliviousDoHMessage {
   nsTArray<uint8_t> mEncryptedMessage;
 };
 
+enum class DNSResolverType : uint32_t { Native = 0, TRR, ODoH };
+
 class AddrInfo {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AddrInfo)
 
@@ -197,17 +199,24 @@ class AddrInfo {
   // Creates a basic AddrInfo object (initialize only the host, cname and TRR
   // type).
   explicit AddrInfo(const nsACString& host, const nsACString& cname,
-                    unsigned int aTRR, nsTArray<NetAddr>&& addresses);
+                    DNSResolverType aResolverType, unsigned int aTRRType,
+                    nsTArray<NetAddr>&& addresses);
 
   // Creates a basic AddrInfo object (initialize only the host and TRR status).
-  explicit AddrInfo(const nsACString& host, unsigned int aTRR,
-                    nsTArray<NetAddr>&& addresses, uint32_t aTTL = NO_TTL_DATA);
+  explicit AddrInfo(const nsACString& host, DNSResolverType aResolverType,
+                    unsigned int aTRRType, nsTArray<NetAddr>&& addresses,
+                    uint32_t aTTL = NO_TTL_DATA);
 
   explicit AddrInfo(const AddrInfo* src);  // copy
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  unsigned int IsTRR() { return mFromTRR; }
+  bool IsTRROrODoH() const {
+    return mResolverType == DNSResolverType::TRR ||
+           mResolverType == DNSResolverType::ODoH;
+  }
+  DNSResolverType ResolverType() const { return mResolverType; }
+  unsigned int TRRType() { return mTRRType; }
 
   double GetTrrFetchDuration() { return mTrrFetchDuration; }
   double GetTrrFetchDurationNetworkOnly() {
@@ -255,8 +264,8 @@ class AddrInfo {
 
   nsCString mHostName;
   nsCString mCanonicalName;
-
-  unsigned int mFromTRR = 0;
+  DNSResolverType mResolverType = DNSResolverType::Native;
+  unsigned int mTRRType = 0;
   double mTrrFetchDuration = 0;
   double mTrrFetchDurationNetworkOnly = 0;
 
