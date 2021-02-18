@@ -16468,5 +16468,27 @@
     "bug_numbers": [1689987],
     "releaseChannelCollection": "opt-out",
     "description": "When in ODoH-first mode, it lists the reason we may have skipped ODoH"
+  },
+  "HTTP_PAGE_DNS_ODOH_LOOKUP_TIME": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "description": "HTTP page channel: ODoH lookup time (ms)",
+    "bug_numbers": [1689987]
+  },
+  "HTTP_SUB_DNS_ODOH_LOOKUP_TIME": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "bug_numbers": [1689987],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "description": "HTTP subitem channel: ODoH lookup time (ms)"
   }
 }
