@@ -968,6 +968,23 @@ void nsLoadGroup::TelemetryReportChannel(nsITimedChannel* aTimedChannel,
     }
   }
 
+  if (StaticPrefs::network_trr_odoh_enabled() && !domainLookupStart.IsNull() &&
+      !domainLookupEnd.IsNull()) {
+    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+    bool ODoHActivated = false;
+    if (dns && NS_SUCCEEDED(dns->GetODoHActivated(&ODoHActivated)) &&
+        ODoHActivated) {
+      if (aDefaultRequest) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::HTTP_PAGE_DNS_ODOH_LOOKUP_TIME, domainLookupStart,
+            domainLookupEnd);
+      } else {
+        Telemetry::AccumulateTimeDelta(Telemetry::HTTP_SUB_DNS_ODOH_LOOKUP_TIME,
+                                       domainLookupStart, domainLookupEnd);
+      }
+    }
+  }
+
 #undef HTTP_REQUEST_HISTOGRAMS
 }
 
