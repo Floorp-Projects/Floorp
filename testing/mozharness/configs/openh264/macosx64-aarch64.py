@@ -19,7 +19,6 @@ config = {
     },
     "dump_syms_binary": "{}/dump_syms/dump_syms".format(os.environ["MOZ_FETCHES_DIR"]),
     "arch": "aarch64",
-    "use_yasm": True,
     "operating_system": "darwin",
     "partial_env": {
         "CFLAGS": (
