@@ -250,6 +250,24 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void HandleFallback(nsHttpConnectionInfo* aFallbackConnInfo);
   void MaybeCancelFallbackTimer();
 
+  // IMPORTANT: when adding new values, always add them to the end, otherwise
+  // it will mess up telemetry.
+  enum TRANSACTION_RESTART_REASON : uint32_t {
+    TRANSACTION_RESTART_NONE = 0,  // The transacion was not restarted.
+    TRANSACTION_RESTART_FORCED,    // The transaction was forced to restart.
+    TRANSACTION_RESTART_NO_DATA_SENT,
+    TRANSACTION_RESTART_DOWNGRADE_WITH_EARLY_DATA,
+    TRANSACTION_RESTART_HTTPS_RR_NET_RESET,
+    TRANSACTION_RESTART_HTTPS_RR_CONNECTION_REFUSED,
+    TRANSACTION_RESTART_HTTPS_RR_UNKNOWN_HOST,
+    TRANSACTION_RESTART_HTTPS_RR_NET_TIMEOUT,
+    TRANSACTION_RESTART_HTTPS_RR_SEC_ERROR,
+    TRANSACTION_RESTART_HTTPS_RR_FAST_FALLBACK,
+    TRANSACTION_RESTART_HTTP3_FAST_FALLBACK,
+    TRANSACTION_RESTART_OTHERS,
+  };
+  void SetRestartReason(TRANSACTION_RESTART_REASON aReason);
+
  private:
   class UpdateSecurityCallbacks : public Runnable {
    public:
@@ -515,17 +533,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCOMPtr<nsITimer> mHttp3BackupTimer;
   RefPtr<nsHttpConnectionInfo> mBackupConnInfo;
   RefPtr<HTTPSRecordResolver> mResolver;
-
-  // IMPORTANT: when adding new values, always add them to the end, otherwise
-  // it will mess up telemetry.
-  enum TRANSACTION_RESTART_REASON : uint32_t {
-    TRANSACTION_RESTART_NONE = 0,    // The transacion was not restarted.
-    TRANSACTION_RESTART_FORCED = 1,  // The transaction was forced to restart.
-    TRANSACTION_RESTART_HTTPSSVC_INVOLVED = 2,
-    TRANSACTION_RESTART_NO_DATA_SENT = 3,
-    TRANSACTION_RESTART_DOWNGRADE_WITH_EARLY_DATA = 4,
-    TRANSACTION_RESTART_OTHERS = 5,
-  };
+  TRANSACTION_RESTART_REASON mRestartReason = TRANSACTION_RESTART_NONE;
 
   nsDataHashtable<nsUint32HashKey, uint32_t> mEchRetryCounterMap;
 
