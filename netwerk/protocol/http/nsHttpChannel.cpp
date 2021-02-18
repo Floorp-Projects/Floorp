@@ -4847,7 +4847,7 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
   nsCOMPtr<nsIInputStream> wrapper;
 
   nsCOMPtr<nsIStreamTransportService> sts(
-      services::GetStreamTransportService());
+      components::StreamTransport::Service());
   rv = sts ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   if (NS_SUCCEEDED(rv)) {
     rv = sts->CreateInputTransport(stream, true, getter_AddRefs(transport));
