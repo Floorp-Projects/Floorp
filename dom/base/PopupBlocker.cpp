@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Components.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/BasePrincipal.h"
@@ -117,7 +118,7 @@ PopupBlocker::GetPopupControlState() {
 uint32_t PopupBlocker::GetPopupPermission(nsIPrincipal* aPrincipal) {
   uint32_t permit = nsIPermissionManager::UNKNOWN_ACTION;
   nsCOMPtr<nsIPermissionManager> permissionManager =
-      services::GetPermissionManager();
+      components::PermissionManager::Service();
 
   if (permissionManager) {
     permissionManager->TestPermissionFromPrincipal(aPrincipal, "popup"_ns,
