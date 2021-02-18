@@ -1,12 +1,10 @@
-commit df1961f16a7cdae0bcd9d6a0004b9fda1895a9ef
-Author: Yusuke Suzuki <ysuzuki@apple.com>
-Date:   Wed Jan 6 20:36:24 2021 -0800
+commit f6034ebe9fb92d4d3dea644b9225bdc18b44a7ab
+Author: Ujjwal Sharma <ryzokuken@disroot.org>
+Date:   Tue Feb 16 19:57:19 2021 +0530
 
-    Fix formatRangeToParts/date-same-returns-single-date.js and add tests using practically-equal two dates
+    Add DateTimeFormat tests for OrdinaryHasInstance
     
-    intl402/DateTimeFormat/prototype/formatRangeToParts/date-same-returns-single-date.js is using `formatRange` and `format`.
-    Fix this test to use `formatRangeToParts` and `formatToParts` since it is the intention of this test.
+    Add tests to make sure DateTimeFormat does not call the instanceof
+    operator and calls OrdinaryHasInstance instead.
     
-    This patch adds additional tests to intl402/DateTimeFormat/prototype/formatRangeToParts/date-same-returns-single-date.js and
-    intl402/DateTimeFormat/prototype/formatRange/date-same-returns-single-date.js. The new test uses two dates that are practially-equal,
-    and ensures the implementation uses `format` or `formatToParts` by detecting they are practically-equal.
+    Refs: https://github.com/tc39/ecma402/pull/500
