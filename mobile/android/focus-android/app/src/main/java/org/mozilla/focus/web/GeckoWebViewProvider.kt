@@ -24,7 +24,11 @@ import kotlinx.coroutines.Job
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_DISPOSITION
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_LENGTH
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.lib.crash.handler.CrashHandlerService
+import mozilla.components.support.utils.DownloadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedGeckoSession
@@ -47,6 +51,7 @@ import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
 import org.mozilla.geckoview.WebRequestError
+import org.mozilla.geckoview.WebResponse
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -377,10 +382,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     }
                 }
 
-                override fun onExternalResponse(
-                    session: GeckoSession,
-                    response: GeckoSession.WebResponseInfo
-                ) {
+                override fun onExternalResponse(session: GeckoSession, response: WebResponse) {
                     if (!AppConstants.supportsDownloadingFiles()) {
                         return
                     }
@@ -394,10 +396,21 @@ class GeckoWebViewProvider : IWebViewProvider {
                         return
                     }
 
+                    val contentType = response.headers[CONTENT_TYPE]?.trim()
+                    val contentLength = response.headers[CONTENT_LENGTH]?.trim()?.toLong() ?: 0
+                    val contentDisposition = response.headers[CONTENT_DISPOSITION]?.trim()
+                    val url = response.uri
+                    val fileName = DownloadUtils.guessFileName(
+                        contentDisposition,
+                        destinationDirectory = null,
+                        url = url,
+                        mimeType = contentType
+                    )
+
                     val download = Download(
                         response.uri, USER_AGENT,
-                        response.filename, response.contentType, response.contentLength,
-                        Environment.DIRECTORY_DOWNLOADS, response.filename
+                        fileName, contentType, contentLength,
+                        Environment.DIRECTORY_DOWNLOADS, fileName
                     )
                     callback?.onDownloadStart(download)
                 }

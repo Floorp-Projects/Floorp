@@ -6,6 +6,7 @@ package org.mozilla.focus
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.JsonReader
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
@@ -74,6 +75,10 @@ private class DummyEngine : Engine {
     }
 
     override fun createSessionState(json: JSONObject): EngineSessionState {
+        throw NotImplementedError()
+    }
+
+    override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
         throw NotImplementedError()
     }
 
