@@ -10,6 +10,7 @@
 #include "CachePushChecker.h"
 #include "HttpTransactionParent.h"
 #include "SocketProcessHost.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -276,7 +277,7 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
     const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
     const uint64_t& aExtraSizeData, const nsCString& aExtraStringData) {
   nsCOMPtr<nsIHttpActivityDistributor> activityDistributor =
-      services::GetHttpActivityDistributor();
+      components::HttpActivityDistributor::Service();
   MOZ_ASSERT(activityDistributor);
 
   Unused << activityDistributor->ObserveActivityWithArgs(
