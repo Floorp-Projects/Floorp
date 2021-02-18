@@ -83,6 +83,7 @@ var pktUI = (function() {
   const initialPanelSize = {
     signup: {
       control: { height: 442, width: 300 },
+      button_control: { height: 442, width: 300 },
       variant_a: { height: 408, width: 300 },
       variant_b: { height: 383, width: 300 },
       variant_c: { height: 424, width: 300 },
@@ -165,7 +166,10 @@ var pktUI = (function() {
       const loggedOutVariant =
         Services.prefs.getCharPref("extensions.pocket.loggedOutVariant") ||
         "control";
-      const sizes = initialPanelSize.signup[loggedOutVariant];
+      let sizes = initialPanelSize.signup.control;
+      if (loggedOutVariant && initialPanelSize.signup[loggedOutVariant]) {
+        sizes = initialPanelSize.signup[loggedOutVariant];
+      }
 
       showPanel(
         "about:pocket-signup?pockethost=" +
