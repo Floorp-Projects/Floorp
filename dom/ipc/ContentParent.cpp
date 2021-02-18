@@ -4562,7 +4562,7 @@ mozilla::ipc::IPCResult ContentParent::RecvOpenNotificationSettings(
 mozilla::ipc::IPCResult ContentParent::RecvNotificationEvent(
     const nsString& aType, const NotificationEventData& aData) {
   nsCOMPtr<nsIServiceWorkerManager> swm =
-      mozilla::services::GetServiceWorkerManager();
+      mozilla::components::ServiceWorkerManager::Service();
   if (NS_WARN_IF(!swm)) {
     // Probably shouldn't happen, but no need to crash the child process.
     return IPC_OK();
