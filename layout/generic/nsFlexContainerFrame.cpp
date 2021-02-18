@@ -649,6 +649,10 @@ class nsFlexContainerFrame::FlexItem final {
     // the 'hypothetical main size', which is the flex base size, clamped
     // to the [min,max] range:
     mMainSize = NS_CSS_MINMAX(mFlexBaseSize, mMainMinSize, mMainMaxSize);
+
+    FLEX_LOGV(
+        "Set flex base size: %d, hypothetical main size: %d for flex item %p",
+        mFlexBaseSize, mMainSize, mFrame);
   }
 
   // Setters used while we're resolving flexible lengths
@@ -1310,7 +1314,14 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
     const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis) {
   const auto flexWM = aAxisTracker.GetWritingMode();
   const auto childWM = aChildFrame->GetWritingMode();
-  const auto* stylePos = aChildFrame->StylePosition();
+
+  // Note: we use GetStyleFrame() to access the sizing & flex properties here.
+  // This lets us correctly handle table wrapper frames as flex items since
+  // their inline-size and block-size properties are always 'auto'. In order for
+  // 'flex-basis:auto' to actually resolve to the author's specified inline-size
+  // or block-size, we need to dig through to the inner table.
+  const auto* stylePos =
+      nsLayoutUtils::GetStyleFrame(aChildFrame)->StylePosition();
 
   // Construct a StyleSizeOverrides for this flex item so that its ReflowInput
   // below will use and resolve its flex base size rather than its corresponding
@@ -1355,6 +1366,10 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
     } else {
       sizeOverrides.mStyleBSize = std::move(styleFlexBaseSize);
     }
+
+    // 'flex-basis' should works on the inner table frame for a table flex item,
+    // just like how 'height' works on a table element.
+    sizeOverrides.mApplyOverridesVerbatim = true;
   }
 
   // Create temporary reflow input just for sizing -- to get hypothetical
@@ -2265,7 +2280,8 @@ nscoord FlexItem::BaselineOffsetFromOuterCrossEdge(
 }
 
 bool FlexItem::IsCrossSizeAuto() const {
-  const nsStylePosition* stylePos = mFrame->StylePosition();
+  const nsStylePosition* stylePos =
+      nsLayoutUtils::GetStyleFrame(mFrame)->StylePosition();
   // Check whichever component is in the flex container's cross axis.
   // (IsInlineAxisCrossAxis() tells us whether that's our ISize or BSize, in
   // terms of our own WritingMode, mWM.)

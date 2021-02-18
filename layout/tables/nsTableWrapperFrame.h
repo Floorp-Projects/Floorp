@@ -92,6 +92,14 @@ class nsTableWrapperFrame : public nsContainerFrame {
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
+  SizeComputationResult ComputeSize(
+      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
+      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
+      const mozilla::LogicalSize& aMargin,
+      const mozilla::LogicalSize& aBorderPadding,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
+      mozilla::ComputeSizeFlags aFlags) override;
+
   mozilla::LogicalSize ComputeAutoSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
@@ -288,6 +296,24 @@ class nsTableWrapperFrame : public nsContainerFrame {
                                  const mozilla::LogicalSize& aCBSize,
                                  nscoord aAvailableISize,
                                  mozilla::ComputeSizeFlags aFlag) const;
+
+  /**
+   * Create a new StyleSize by reducing the size by aAmountToReduce.
+   *
+   * @param aStyleSize must be a Length.
+   */
+  mozilla::StyleSize ReduceStyleSizeBy(const mozilla::StyleSize& aStyleSize,
+                                       const nscoord aAmountToReduce) const;
+
+  /**
+   * Compute StyleSizeOverrides for inner table frame given the overrides of the
+   * table wrapper frame.
+   */
+  mozilla::StyleSizeOverrides ComputeSizeOverridesForInnerTable(
+      const nsTableFrame* aTableFrame,
+      const mozilla::StyleSizeOverrides& aWrapperSizeOverrides,
+      const mozilla::LogicalSize& aBorderPadding,
+      const mozilla::LogicalSize& aAreaOccupiedByCaption) const;
 
  private:
   nsFrameList mCaptionFrames;

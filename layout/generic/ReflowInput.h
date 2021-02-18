@@ -42,6 +42,23 @@ enum class LayoutFrameType : uint8_t;
 struct StyleSizeOverrides {
   Maybe<StyleSize> mStyleISize;
   Maybe<StyleSize> mStyleBSize;
+
+  bool HasAnyOverrides() const { return mStyleISize || mStyleBSize; }
+  bool HasAnyLengthOverrides() const {
+    return (mStyleISize && mStyleISize->ConvertsToLength()) ||
+           (mStyleBSize && mStyleBSize->ConvertsToLength());
+  }
+
+  // By default, table wrapper frame considers the size overrides applied to
+  // itself, so it creates any length size overrides for inner table frame by
+  // subtracting the area occupied by the caption and border & padding according
+  // to box-sizing.
+  //
+  // When this flag is true, table wrapper frame is required to apply the size
+  // overrides to the inner table frame directly, without any modification,
+  // which is useful for flex container to override the inner table frame's
+  // preferred main size with 'flex-basis'.
+  bool mApplyOverridesVerbatim = false;
 };
 }  // namespace mozilla
 
