@@ -96,7 +96,7 @@ nsresult nsHttpConnectionMgr::EnsureSocketThreadTarget() {
   nsCOMPtr<nsIIOService> ioService = components::IO::Service();
   if (ioService) {
     nsCOMPtr<nsISocketTransportService> realSTS =
-        services::GetSocketTransportService();
+        components::SocketTransport::Service();
     sts = do_QueryInterface(realSTS);
   }
 
