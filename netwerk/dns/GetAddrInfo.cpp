@@ -186,8 +186,8 @@ _DNSQuery_A_SingleLabel(const nsACString& aCanonHost, uint16_t aAddressFamily,
   if (addresses.IsEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
-  RefPtr<AddrInfo> ai(
-      new AddrInfo(aCanonHost, canonName, 0, std::move(addresses)));
+  RefPtr<AddrInfo> ai(new AddrInfo(
+      aCanonHost, canonName, DNSResolverType::Native, 0, std::move(addresses)));
   ai.forget(aAddrInfo);
 
   return NS_OK;
@@ -318,9 +318,10 @@ bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
   }
 
   if (!cname) {
-    ai = new AddrInfo(aHost, 0, std::move(addresses));
+    ai = new AddrInfo(aHost, DNSResolverType::Native, 0, std::move(addresses));
   } else {
-    ai = new AddrInfo(aHost, *cname, 0, std::move(addresses));
+    ai = new AddrInfo(aHost, *cname, DNSResolverType::Native, 0,
+                      std::move(addresses));
   }
 
   ai.forget(aAddrInfo);

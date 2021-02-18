@@ -30,6 +30,19 @@ class ODoH final : public TRR {
   virtual const char* ContentType() const override {
     return "application/oblivious-dns-message";
   }
+  virtual DNSResolverType ResolverType() const override {
+    return DNSResolverType::ODoH;
+  }
+  virtual bool MaybeBlockRequest() override {
+    // TODO: check excluded list
+    return false;
+  };
+  virtual void RecordProcessingTime(nsIChannel* aChannel) override {
+    // TODO: record processing time for ODoH.
+  }
+  virtual void ReportStatus(nsresult aStatusCode) override {
+    // TODO: record status in ODoHService.
+  }
 };
 
 }  // namespace net
