@@ -403,12 +403,6 @@ def deprecated_option(*args, **kwargs):
     return decorator
 
 
-# from mozbuild.util import ReadOnlyNamespace as namespace
-@imports(_from="mozbuild.util", _import="ReadOnlyNamespace")
-def namespace(**kwargs):
-    return ReadOnlyNamespace(**kwargs)
-
-
 # Turn an object into an object that can be used as an argument to @depends.
 # The given object can be a literal value, a function that takes no argument,
 # or, for convenience, a @depends function.
