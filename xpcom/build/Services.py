@@ -2,6 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# NOTE: Although this generates headers and code for C++, using Services.h
+# is deprecated in favour of Components.h. This system is currently only
+# used for generating services.rs (until a Rust version of Components.h is
+# is written and this can be completely deleted).
+
 import buildconfig
 
 
