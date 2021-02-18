@@ -7,7 +7,7 @@
 #include "nsString.h"
 #include "nsParserMsgUtils.h"
 #include "nsNetCID.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 
 static nsresult GetBundle(const char* aPropFileName,
                           nsIStringBundle** aBundle) {
@@ -17,7 +17,7 @@ static nsresult GetBundle(const char* aPropFileName,
   // Create a bundle for the localization
 
   nsCOMPtr<nsIStringBundleService> stringService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   if (!stringService) return NS_ERROR_FAILURE;
 
   return stringService->CreateBundle(aPropFileName, aBundle);

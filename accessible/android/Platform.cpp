@@ -9,6 +9,7 @@
 #include "DocAccessibleWrap.h"
 #include "SessionAccessibility.h"
 #include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/Components.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessiblePivot.h"
 #include "nsIStringBundle.h"
@@ -220,7 +221,7 @@ bool a11y::LocalizeString(const char* aToken, nsAString& aLocalized,
   MOZ_ASSERT(XRE_IsParentProcess());
   nsresult rv = NS_OK;
   if (!sStringBundle) {
-    nsCOMPtr<nsIStringBundleService> sbs = services::GetStringBundleService();
+    nsCOMPtr<nsIStringBundleService> sbs = components::StringBundle::Service();
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to get string bundle service");
       return false;

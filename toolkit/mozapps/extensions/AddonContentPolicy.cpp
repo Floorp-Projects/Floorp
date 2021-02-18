@@ -346,7 +346,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
 
   already_AddRefed<nsIStringBundle> GetStringBundle() {
     nsCOMPtr<nsIStringBundleService> sbs =
-        mozilla::services::GetStringBundleService();
+        mozilla::components::StringBundle::Service();
     NS_ENSURE_TRUE(sbs, nullptr);
 
     nsCOMPtr<nsIStringBundle> stringBundle;
