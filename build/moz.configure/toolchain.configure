@@ -592,7 +592,6 @@ option(
     "--with-visual-studio-version",
     when=host_is_windows,
 )
-@imports(_from="__builtin__", _import="sorted")
 @imports(_from="operator", _import="itemgetter")
 def vc_compiler_paths_for_version(
     host, vs_major_version, env, vc_path, vs_release_name
