@@ -99,25 +99,25 @@ function hasMinimalDisplayPort(elementId, containingDoc = null) {
 function checkDirectActivation(elementId, containingDoc = null) {
   if (activateAllScrollFrames) {
     return hasNonZeroMarginDisplayPort(elementId, containingDoc);
-  } else {
+  } 
     return isLayerized(elementId);
-  }
+  
 }
 
 function checkAncestorActivation(elementId, containingDoc = null) {
   if (activateAllScrollFrames) {
     return hasMinimalDisplayPort(elementId, containingDoc);
-  } else {
+  } 
     return isLayerized(elementId);
-  }
+  
 }
 
 function checkInactive(elementId, containingDoc = null) {
   if (activateAllScrollFrames) {
     return hasMinimalDisplayPort(elementId, containingDoc);
-  } else {
+  } 
     return !isLayerized(elementId);
-  }
+  
 }
 
 async function test() {
