@@ -35,14 +35,18 @@ startup-timeline:
   description: |
     This ping is intended to provide an understanding of startup performance.
 
-    The ping is intended to be captured by performance testing automation to
-    report results there, in addition to user telemetry. We place these metrics
-    into their own ping in order to isolate them and make this process easier.
-  include_client_id: false
+    In addition to being captured on real devices, the ping data was prematurely
+    optimized into this separate ping to be isolated from other metrics to be
+    more easily captured by performance testing automation but that hasn't
+    happened in practice. We would have removed it but implementation
+    details don't make that possible:
+    https://github.com/mozilla-mobile/fenix/issues/17972#issuecomment-781002987
+  include_client_id: true
   bugs:
     - https://github.com/mozilla-mobile/fenix/issues/8803
+    - https://github.com/mozilla-mobile/fenix/issues/17972
   data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
   notification_emails:
     - perf-android-fe@mozilla.com
-    - esmyth@mozilla.com
+    - mcomella@mozilla.com
