@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.helpers
 
+import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
@@ -25,15 +26,17 @@ class HomeActivityTestRule(
     private val skipOnboarding: Boolean = false
 ) :
     ActivityTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
+    private val longTapUserPreference = getLongPressTimeout()
+
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
-        setLongTapTimeout("3000")
+        setLongTapTimeout(3000)
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 
     override fun afterActivityFinished() {
         super.afterActivityFinished()
-        setLongTapTimeout("400")
+        setLongTapTimeout(longTapUserPreference)
     }
 }
 
@@ -51,20 +54,22 @@ class HomeActivityIntentTestRule(
     private val skipOnboarding: Boolean = false
 ) :
     IntentsTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
+    private val longTapUserPreference = getLongPressTimeout()
+
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
-        setLongTapTimeout("3000")
+        setLongTapTimeout(3000)
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 
     override fun afterActivityFinished() {
         super.afterActivityFinished()
-        setLongTapTimeout("400")
+        setLongTapTimeout(longTapUserPreference)
     }
 }
 
 // changing the device preference for Touch and Hold delay, to avoid long-clicks instead of a single-click
-fun setLongTapTimeout(delay: String) {
+fun setLongTapTimeout(delay: Int) {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     mDevice.executeShellCommand("settings put secure long_press_timeout $delay")
 }
