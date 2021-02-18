@@ -37,18 +37,8 @@ add_task(async function() {
     is(e.message, "targetFromURL, unsupported type 'x' parameter");
   }
 
-  info("Test browser window");
-  let windowId = window.docShell.outerWindowID;
-  target = await targetFromURL(
-    new URL("http://foo?type=window&id=" + windowId)
-  );
-  is(target.url, window.location.href);
-  is(target.isLocalTab, false);
-  is(target.chrome, true);
-  is(target.isBrowsingContext, true);
-  await target.client.close();
-
   info("Test tab");
+  let windowId = window.docShell.outerWindowID;
   windowId = browser.outerWindowID;
   target = await targetFromURL(new URL("http://foo?type=tab&id=" + windowId));
   assertTarget(target, TEST_URI);

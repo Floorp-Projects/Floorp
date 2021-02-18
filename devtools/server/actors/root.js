@@ -21,12 +21,6 @@ const { rootSpec } = require("devtools/shared/specs/root");
 
 loader.lazyRequireGetter(
   this,
-  "ChromeWindowTargetActor",
-  "devtools/server/actors/targets/chrome-window",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "ProcessDescriptorActor",
   "devtools/server/actors/descriptors/process",
   true
@@ -197,9 +191,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     if (this._globalActorPool) {
       this._globalActorPool.destroy();
     }
-    if (this._chromeWindowActorPool) {
-      this._chromeWindowActorPool.destroy();
-    }
     if (this._addonTargetActorPool) {
       this._addonTargetActorPool.destroy();
     }
@@ -217,7 +208,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     this.conn = null;
     this._tabDescriptorActorPool = null;
     this._globalActorPool = null;
-    this._chromeWindowActorPool = null;
     this._parameters = null;
   },
 
@@ -312,34 +302,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     this._tabDescriptorActorPool.manage(descriptorActor);
 
     return descriptorActor;
-  },
-
-  getWindow: function({ outerWindowID }) {
-    if (!DevToolsServer.allowChromeProcess) {
-      throw {
-        error: "forbidden",
-        message: "You are not allowed to debug windows.",
-      };
-    }
-    const window = Services.wm.getOuterWindowWithId(outerWindowID);
-    if (!window) {
-      throw {
-        error: "notFound",
-        message: `No window found with outerWindowID ${outerWindowID}`,
-      };
-    }
-
-    if (!this._chromeWindowActorPool) {
-      this._chromeWindowActorPool = new Pool(this.conn, "chrome-window");
-    }
-
-    const actor = new ChromeWindowTargetActor(this.conn, window, {
-      isTopLevelTarget: true,
-    });
-    actor.parentID = this.actorID;
-    this._chromeWindowActorPool.manage(actor);
-
-    return actor;
   },
 
   onTabListChanged: function() {
