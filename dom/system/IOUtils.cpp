@@ -34,6 +34,7 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsISupports.h"
 #include "nsLocalFile.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
@@ -51,15 +52,14 @@
 #  include "nsSystemInfo.h"
 #endif
 
-#define REJECT_IF_SHUTTING_DOWN(aJSPromise)                       \
-  do {                                                            \
-    if (sShutdownStarted) {                                       \
-      (aJSPromise)                                                \
-          ->MaybeRejectWithNotAllowedError(                       \
-              "Shutting down and refusing additional I/O tasks"); \
-      return (aJSPromise).forget();                               \
-    }                                                             \
-  } while (false)
+#define REJECT_IF_SHUTDOWN(_promise)                                        \
+  do {                                                                      \
+    if (sShutdownFinished) {                                                \
+      IOUtils::RejectJSPromise(                                             \
+          (_promise), IOError(NS_ERROR_ABORT).WithMessage(SHUTDOWN_ERROR)); \
+      return (_promise).forget();                                           \
+    }                                                                       \
+  } while (0)
 
 #define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)               \
   do {                                                                   \
@@ -70,6 +70,9 @@
       return (_promise).forget();                                        \
     }                                                                    \
   } while (0)
+
+static constexpr auto SHUTDOWN_ERROR =
+    "IOUtils: Shutting down and refusing additional I/O tasks"_ns;
 
 namespace mozilla::dom {
 
@@ -149,47 +152,39 @@ MOZ_MUST_USE inline bool ToJSValue(
 }
 
 // IOUtils implementation
-
 /* static */
-StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
-    IOUtils::sBackgroundEventTarget("sBackgroundEventTarget");
+IOUtils::EventQueueMutex IOUtils::sEventQueue{"IOUtils::sEventQueue"};
 /* static */
-StaticRefPtr<nsIAsyncShutdownClient> IOUtils::sBarrier;
-/* static */
-Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
+Atomic<bool> IOUtils::sShutdownFinished{false};
 
 /* static */
 template <typename OkT, typename Fn>
-RefPtr<IOUtils::IOPromise<OkT>> IOUtils::RunOnBackgroundThread(Fn aFunc) {
-  nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
-  if (!bg) {
-    return IOPromise<OkT>::CreateAndReject(
-        IOError(NS_ERROR_ABORT)
-            .WithMessage("Could not dispatch task to background thread"),
-        __func__);
+RefPtr<IOUtils::IOPromise<OkT>> IOUtils::Dispatch(Fn aFunc) {
+  if (!sShutdownFinished) {
+    if (auto guard = GetEventQueue(); guard.isSome()) {
+      auto& eventQueue = guard.ref().ref();
+
+      return eventQueue->Dispatch<OkT, Fn>(std::move(aFunc));
+    }
   }
 
-  return InvokeAsync(bg, __func__, [func = std::move(aFunc)]() {
-    Result<OkT, IOError> result = func();
-    if (result.isErr()) {
-      return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
-    }
-    return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
-  });
+  return IOPromise<OkT>::CreateAndReject(
+      IOError(NS_ERROR_ABORT).WithMessage(SHUTDOWN_ERROR), __func__);
 }
 
 /* static */
 template <typename OkT, typename Fn>
-void IOUtils::RunOnBackgroundThreadAndResolve(Promise* aPromise, Fn aFunc) {
-  RunOnBackgroundThread<OkT, Fn>(std::move(aFunc))
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise = RefPtr(aPromise)](OkT&& ok) {
-            ResolveJSPromise(promise, std::forward<OkT>(ok));
-          },
-          [promise = RefPtr(aPromise)](const IOError& err) {
-            RejectJSPromise(promise, err);
-          });
+void IOUtils::DispatchAndResolve(Promise* aPromise, Fn aFunc) {
+  if (RefPtr<IOPromise<OkT>> p = Dispatch<OkT, Fn>(std::move(aFunc))) {
+    p->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [promise = RefPtr(aPromise)](OkT&& ok) {
+          ResolveJSPromise(promise, std::forward<OkT>(ok));
+        },
+        [promise = RefPtr(aPromise)](const IOError& err) {
+          RejectJSPromise(promise, err);
+        });
+  }
 }
 
 /* static */
@@ -201,7 +196,8 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -217,11 +213,10 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     toRead.emplace(aOptions.mMaxBytes.Value());
   }
 
-  RunOnBackgroundThreadAndResolve<JsBuffer>(
-      promise,
-      [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
-        return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
-      });
+  DispatchAndResolve<JsBuffer>(promise, [file = std::move(file), toRead,
+                                         decompress = aOptions.mDecompress]() {
+    return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
+  });
   return promise.forget();
 }
 
@@ -235,13 +230,15 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
     return nullptr;
   }
 
+  REJECT_IF_SHUTDOWN(promise);
+
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-  RunOnBackgroundThreadAndResolve<JsBuffer>(
+
+  DispatchAndResolve<JsBuffer>(
       promise, [file = std::move(file), decompress = aOptions.mDecompress]() {
         return ReadUTF8Sync(file, decompress);
       });
-
   return promise.forget();
 }
 
@@ -255,51 +252,56 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
     return nullptr;
   }
 
+  REJECT_IF_SHUTDOWN(promise);
+
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThread<JsBuffer>([file, decompress = aOptions.mDecompress]() {
-    return ReadUTF8Sync(file, decompress);
-  })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise, file](JsBuffer&& aBuffer) {
-            AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-              promise->MaybeRejectWithUnknownError(
-                  "Could not initialize JS API");
-              return;
+  RefPtr<IOPromise<JsBuffer>> p =
+      Dispatch<JsBuffer>([file, decompress = aOptions.mDecompress]() {
+        return ReadUTF8Sync(file, decompress);
+      });
+
+  if (p) {
+    p->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [promise, file](JsBuffer&& aBuffer) {
+          AutoJSAPI jsapi;
+          if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+            promise->MaybeRejectWithUnknownError("Could not initialize JS API");
+            return;
+          }
+          JSContext* cx = jsapi.cx();
+
+          JS::Rooted<JSString*> jsonStr(
+              cx, IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
+          if (!jsonStr) {
+            RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
+            return;
+          }
+
+          JS::Rooted<JS::Value> val(cx);
+          if (!JS_ParseJSON(cx, jsonStr, &val)) {
+            JS::Rooted<JS::Value> exn(cx);
+            if (JS_GetPendingException(cx, &exn)) {
+              JS_ClearPendingException(cx);
+              promise->MaybeReject(exn);
+            } else {
+              RejectJSPromise(
+                  promise,
+                  IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                      .WithMessage("ParseJSON threw an uncatchable exception "
+                                   "while parsing file(%s)",
+                                   file->HumanReadablePath().get()));
             }
-            JSContext* cx = jsapi.cx();
 
-            JS::Rooted<JSString*> jsonStr(
-                cx, IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
-            if (!jsonStr) {
-              RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
-              return;
-            }
+            return;
+          }
 
-            JS::Rooted<JS::Value> val(cx);
-            if (!JS_ParseJSON(cx, jsonStr, &val)) {
-              JS::Rooted<JS::Value> exn(cx);
-              if (JS_GetPendingException(cx, &exn)) {
-                JS_ClearPendingException(cx);
-                promise->MaybeReject(exn);
-              } else {
-                RejectJSPromise(
-                    promise,
-                    IOError(NS_ERROR_DOM_UNKNOWN_ERR)
-                        .WithMessage("ParseJSON threw an uncatchable exception "
-                                     "while parsing file(%s)",
-                                     file->HumanReadablePath().get()));
-              }
-
-              return;
-            }
-
-            promise->MaybeResolve(val);
-          },
-          [promise](const IOError& aErr) { RejectJSPromise(promise, aErr); });
+          promise->MaybeResolve(val);
+        },
+        [promise](const IOError& aErr) { RejectJSPromise(promise, aErr); });
+  }
 
   return promise.forget();
 }
@@ -314,7 +316,8 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -333,7 +336,7 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  RunOnBackgroundThreadAndResolve<uint32_t>(
+  DispatchAndResolve<uint32_t>(
       promise, [file = std::move(file), buf = std::move(*buf),
                 opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
 
@@ -350,7 +353,8 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -361,7 +365,7 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  RunOnBackgroundThreadAndResolve<uint32_t>(
+  DispatchAndResolve<uint32_t>(
       promise, [file = std::move(file), str = nsCString(aString),
                 opts = opts.unwrap()]() {
         return WriteSync(file, AsBytes(Span(str)), opts);
@@ -385,7 +389,8 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
@@ -414,12 +419,11 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  RunOnBackgroundThreadAndResolve<uint32_t>(
+  DispatchAndResolve<uint32_t>(
       promise, [file = std::move(file), utf8Str = std::move(utf8Str),
                 opts = opts.unwrap()]() {
         return WriteSync(file, AsBytes(Span(utf8Str)), opts);
       });
-
   return promise.forget();
 }
 
@@ -433,7 +437,8 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
@@ -441,13 +446,11 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> destFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
-      promise,
-      [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
-       noOverwrite = aOptions.mNoOverwrite]() {
-        return MoveSync(sourceFile, destFile, noOverwrite);
-      });
-
+  DispatchAndResolve<Ok>(promise, [sourceFile = std::move(sourceFile),
+                                   destFile = std::move(destFile),
+                                   noOverwrite = aOptions.mNoOverwrite]() {
+    return MoveSync(sourceFile, destFile, noOverwrite);
+  });
   return promise.forget();
 }
 
@@ -460,17 +463,17 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
+  DispatchAndResolve<Ok>(
       promise, [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent,
                 recursive = aOptions.mRecursive]() {
         return RemoveSync(file, ignoreAbsent, recursive);
       });
-
   return promise.forget();
 }
 
@@ -483,20 +486,19 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
-      promise,
-      [file = std::move(file), createAncestors = aOptions.mCreateAncestors,
-       ignoreExisting = aOptions.mIgnoreExisting,
-       permissions = aOptions.mPermissions]() {
-        return MakeDirectorySync(file, createAncestors, ignoreExisting,
-                                 permissions);
-      });
-
+  DispatchAndResolve<Ok>(promise, [file = std::move(file),
+                                   createAncestors = aOptions.mCreateAncestors,
+                                   ignoreExisting = aOptions.mIgnoreExisting,
+                                   permissions = aOptions.mPermissions]() {
+    return MakeDirectorySync(file, createAncestors, ignoreExisting,
+                             permissions);
+  });
   return promise.forget();
 }
 
@@ -507,14 +509,14 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<InternalFileInfo>(
+  DispatchAndResolve<InternalFileInfo>(
       promise, [file = std::move(file)]() { return StatSync(file); });
-
   return promise.forget();
 }
 
@@ -528,7 +530,8 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   if (!promise) {
     return nullptr;
   }
-  REJECT_IF_SHUTTING_DOWN(promise);
+
+  REJECT_IF_SHUTDOWN(promise);
 
   nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
@@ -536,13 +539,12 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   nsCOMPtr<nsIFile> destFile = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-  RunOnBackgroundThreadAndResolve<Ok>(
+  DispatchAndResolve<Ok>(
       promise,
       [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
        noOverwrite = aOptions.mNoOverwrite, recursive = aOptions.mRecursive]() {
         return CopySync(sourceFile, destFile, noOverwrite, recursive);
       });
-
   return promise.forget();
 }
 
@@ -556,6 +558,8 @@ already_AddRefed<Promise> IOUtils::Touch(
     return nullptr;
   }
 
+  REJECT_IF_SHUTDOWN(promise);
+
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
@@ -563,11 +567,9 @@ already_AddRefed<Promise> IOUtils::Touch(
   if (aModification.WasPassed()) {
     newTime = Some(aModification.Value());
   }
-
-  RunOnBackgroundThreadAndResolve<int64_t>(
-      promise,
-      [file = std::move(file), newTime]() { return TouchSync(file, newTime); });
-
+  DispatchAndResolve<int64_t>(promise, [file = std::move(file), newTime]() {
+    return TouchSync(file, newTime);
+  });
   return promise.forget();
 }
 
@@ -580,12 +582,13 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
     return nullptr;
   }
 
+  REJECT_IF_SHUTDOWN(promise);
+
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<nsTArray<nsString>>(
+  DispatchAndResolve<nsTArray<nsString>>(
       promise, [file = std::move(file)]() { return GetChildrenSync(file); });
-
   return promise.forget();
 }
 
@@ -600,8 +603,7 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsIFile> file = new nsLocalFile();
-  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+  REJECT_IF_SHUTDOWN(promise);
 
 #if defined(XP_UNIX) && !defined(ANDROID)
   if (aHonorUmask) {
@@ -609,11 +611,13 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
   }
 #endif
 
-  RunOnBackgroundThreadAndResolve<Ok>(
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  DispatchAndResolve<Ok>(
       promise, [file = std::move(file), permissions = aPermissions]() {
         return SetPermissionsSync(file, permissions);
       });
-
   return promise.forget();
 }
 
@@ -626,73 +630,14 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
     return nullptr;
   }
 
+  REJECT_IF_SHUTDOWN(promise);
+
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-  RunOnBackgroundThreadAndResolve<bool>(
+  DispatchAndResolve<bool>(
       promise, [file = std::move(file)]() { return ExistsSync(file); });
-
   return promise.forget();
-}
-
-/* static */
-already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
-  if (sShutdownStarted) {
-    return nullptr;
-  }
-
-  auto lockedBackgroundEventTarget = sBackgroundEventTarget.Lock();
-  if (!lockedBackgroundEventTarget.ref()) {
-    nsCOMPtr<nsISerialEventTarget> et;
-    MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
-        "IOUtils::BackgroundIOThread", getter_AddRefs(et)));
-    MOZ_ASSERT(et);
-    *lockedBackgroundEventTarget = et;
-
-    if (NS_IsMainThread()) {
-      IOUtils::SetShutdownHooks();
-    } else {
-      nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-          __func__, []() { IOUtils::SetShutdownHooks(); });
-      NS_DispatchToMainThread(runnable.forget());
-    }
-  }
-  return do_AddRef(*lockedBackgroundEventTarget);
-}
-
-/* static */
-already_AddRefed<nsIAsyncShutdownClient> IOUtils::GetShutdownBarrier() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  if (!sBarrier) {
-    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
-    MOZ_ASSERT(svc);
-
-    nsCOMPtr<nsIAsyncShutdownClient> barrier;
-    nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    sBarrier = barrier;
-  }
-  return do_AddRef(sBarrier);
-}
-
-/* static */
-void IOUtils::SetShutdownHooks() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-  nsCOMPtr<nsIAsyncShutdownBlocker> blocker = new IOUtilsShutdownBlocker();
-
-  nsresult rv = barrier->AddBlocker(
-      blocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      u"IOUtils: waiting for pending I/O to finish"_ns);
-  // Adding a new shutdown blocker should only fail if the current shutdown
-  // phase has completed. Ensure that we have set our shutdown flag to stop
-  // accepting new I/O tasks in this case.
-  if (NS_FAILED(rv)) {
-    sShutdownStarted = true;
-  }
-  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 /* static */
@@ -1419,6 +1364,118 @@ Result<bool, IOUtils::IOError> IOUtils::ExistsSync(nsIFile* aFile) {
 }
 
 /* static */
+void IOUtils::GetProfileBeforeChange(GlobalObject& aGlobal,
+                                     JS::MutableHandle<JS::Value> aClient,
+                                     ErrorResult& aRv) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (auto guard = GetEventQueue()) {
+    MOZ_RELEASE_ASSERT(
+        !sShutdownFinished,
+        "GetEventQueue() only returns Some() when !sShutdownFinished");
+
+    RefPtr<nsIAsyncShutdownClient> client =
+        guard.ref().ref()->ProfileBeforeChangeClient();
+    MOZ_RELEASE_ASSERT(client);
+    if (nsresult rv = client->GetJsclient(aClient); NS_FAILED(rv)) {
+      aRv.ThrowAbortError(
+          "Could not get jsclient for IOUtils shutdown blocker");
+    }
+    return;
+  }
+
+  aRv.ThrowAbortError(
+      "IOUtils: profileBeforeChange phase has already finished");
+}
+
+/* static */
+Maybe<IOUtils::EventQueueMutex::AutoLock> IOUtils::GetEventQueue() {
+  auto eventQueue = sEventQueue.Lock();
+  if (sShutdownFinished) {
+    return Nothing{};
+  }
+
+  if (!eventQueue.ref()) {
+    eventQueue.ref() = new IOUtils::EventQueue();
+
+    if (NS_IsMainThread()) {
+      eventQueue.ref()->SetShutdownHooks();
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
+        auto guard = IOUtils::sEventQueue.Lock();
+        MOZ_RELEASE_ASSERT(guard.ref());
+        guard.ref()->SetShutdownHooks();
+      }));
+    }
+  }
+
+  return Some(std::move(eventQueue));
+}
+
+IOUtils::EventQueue::EventQueue() {
+  MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
+      "IOUtils::EventQueue", getter_AddRefs(mBackgroundEventTarget)));
+
+  MOZ_RELEASE_ASSERT(mBackgroundEventTarget);
+}
+
+nsresult IOUtils::EventQueue::SetShutdownHooks() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(!mProfileBeforeChangeBarrier);
+  MOZ_RELEASE_ASSERT(!IOUtils::sShutdownFinished);
+
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
+  MOZ_RELEASE_ASSERT(svc);
+
+  MOZ_TRY(svc->MakeBarrier(
+      u"IOUtils: waiting for profileBeforeChange IO to complete"_ns,
+      getter_AddRefs(mProfileBeforeChangeBarrier)));
+
+  nsCOMPtr<nsIAsyncShutdownClient> profileBeforeChange;
+  MOZ_TRY(svc->GetProfileBeforeChange(getter_AddRefs(profileBeforeChange)));
+  MOZ_RELEASE_ASSERT(profileBeforeChange);
+
+  nsCOMPtr<nsIAsyncShutdownBlocker> blocker = new IOUtilsShutdownBlocker();
+  nsresult rv = profileBeforeChange->AddBlocker(
+      blocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
+      u"IOUtils::SetShutdownHooks"_ns);
+
+  if (NS_FAILED(rv)) {
+    IOUtils::sShutdownFinished = true;
+  }
+
+  return NS_OK;
+}
+
+template <typename OkT, typename Fn>
+RefPtr<IOUtils::IOPromise<OkT>> IOUtils::EventQueue::Dispatch(Fn aFunc) {
+  MOZ_RELEASE_ASSERT(mBackgroundEventTarget);
+  MOZ_RELEASE_ASSERT(!IOUtils::sShutdownFinished);
+
+  return InvokeAsync(
+      mBackgroundEventTarget, __func__, [func = std::move(aFunc)]() {
+        Result<OkT, IOError> result = func();
+        if (result.isErr()) {
+          return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
+        }
+        return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
+      });
+};
+
+already_AddRefed<nsIAsyncShutdownClient>
+IOUtils::EventQueue::ProfileBeforeChangeClient() {
+  nsCOMPtr<nsIAsyncShutdownClient> profileBeforeChange;
+  MOZ_ALWAYS_SUCCEEDS(mProfileBeforeChangeBarrier->GetClient(
+      getter_AddRefs(profileBeforeChange)));
+  return profileBeforeChange.forget();
+}
+
+already_AddRefed<nsIAsyncShutdownBarrier>
+IOUtils::EventQueue::ProfileBeforeChangeBarrier() {
+  return do_AddRef(mProfileBeforeChangeBarrier);
+}
+
+/* static */
 Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
     Span<const uint8_t> aUncompressed) {
   nsTArray<uint8_t> result;
@@ -1504,7 +1561,8 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
   return decompressed;
 }
 
-NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);
+NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker,
+                  nsIAsyncShutdownCompletionCallback);
 
 NS_IMETHODIMP IOUtilsShutdownBlocker::GetName(nsAString& aName) {
   aName = u"IOUtils Blocker"_ns;
@@ -1513,30 +1571,53 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::GetName(nsAString& aName) {
 
 NS_IMETHODIMP IOUtilsShutdownBlocker::BlockShutdown(
     nsIAsyncShutdownClient* aBarrierClient) {
-  nsCOMPtr<nsISerialEventTarget> et = IOUtils::GetBackgroundEventTarget();
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  IOUtils::sShutdownStarted = true;
+  auto eventQueue = IOUtils::sEventQueue.Lock();
+  MOZ_RELEASE_ASSERT(!IOUtils::sShutdownFinished);
+  MOZ_RELEASE_ASSERT(eventQueue.ref());
 
-  if (!IOUtils::sBarrier) {
-    return NS_ERROR_NULL_POINTER;
+  mParentClient = new nsMainThreadPtrHolder<nsIAsyncShutdownClient>(
+      "IOUtilsShutdownBlocker::mParentClient", aBarrierClient);
+
+  nsCOMPtr<nsIAsyncShutdownBarrier> barrier =
+      eventQueue.ref()->ProfileBeforeChangeBarrier();
+
+  if (NS_WARN_IF(NS_FAILED(barrier->Wait(this)))) {
+    Unused << Done(*eventQueue.ref());
   }
+  return NS_OK;
+}
 
-  nsCOMPtr<nsIRunnable> backgroundRunnable =
-      NS_NewRunnableFunction(__func__, [self = RefPtr(this)]() {
-        nsCOMPtr<nsIRunnable> mainThreadRunnable =
-            NS_NewRunnableFunction(__func__, [self = RefPtr(self)]() {
-              IOUtils::sBarrier->RemoveBlocker(self);
+NS_IMETHODIMP IOUtilsShutdownBlocker::Done() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-              auto lockedBackgroundET = IOUtils::sBackgroundEventTarget.Lock();
-              *lockedBackgroundET = nullptr;
-              IOUtils::sBarrier = nullptr;
-            });
-        nsresult rv = NS_DispatchToMainThread(mainThreadRunnable.forget());
-        NS_ENSURE_SUCCESS_VOID(rv);
-      });
+  auto eventQueue = IOUtils::sEventQueue.Lock();
+  MOZ_RELEASE_ASSERT(!IOUtils::sShutdownFinished);
+  MOZ_RELEASE_ASSERT(eventQueue.ref());
 
-  return et->Dispatch(backgroundRunnable.forget(),
-                      nsIEventTarget::DISPATCH_NORMAL);
+  return Done(*eventQueue.ref());
+}
+
+nsresult IOUtilsShutdownBlocker::Done(IOUtils::EventQueue& aEventQueue) {
+  // This method is called once we have served all shutdown clients. Now we
+  // flush the remaining IO queue and forbid additional IO requests.
+  aEventQueue.Dispatch<Ok>([]() { return Ok{}; })
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [self = RefPtr(this)]() {
+               if (self->mParentClient) {
+                 Unused << NS_WARN_IF(
+                     NS_FAILED(self->mParentClient->RemoveBlocker(self)));
+                 self->mParentClient = nullptr;
+
+                 auto eventQueue = IOUtils::sEventQueue.Lock();
+                 MOZ_RELEASE_ASSERT(eventQueue.ref());
+                 eventQueue.ref() = nullptr;
+               }
+             });
+  aEventQueue.SetShutdownFinished();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
