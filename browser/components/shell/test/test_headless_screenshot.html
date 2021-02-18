@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1378010</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const {Subprocess} = ChromeUtils.import("resource://gre/modules/Subprocess.jsm");
+  const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+  SimpleTest.requestLongerTimeout(2);
+
+  const screenshotPath = OS.Path.join(OS.Constants.Path.tmpDir, "headless_test_screenshot.png");
+
+  async function runFirefox(args) {
+    const XRE_EXECUTABLE_FILE = "XREExeF";
+    const firefoxExe = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile).path;
+    const NS_APP_PREFS_50_FILE = "PrefF";
+    const mochiPrefsFile = Services.dirsvc.get(NS_APP_PREFS_50_FILE, Ci.nsIFile);
+    const mochiPrefsPath = mochiPrefsFile.path;
+    const mochiPrefsName = mochiPrefsFile.leafName;
+    const profilePath = OS.Path.join(OS.Constants.Path.tmpDir, "headless_test_screenshot_profile");
+    const prefsPath = OS.Path.join(profilePath, mochiPrefsName);
+    const firefoxArgs = ["-profile", profilePath, "-no-remote"];
+
+    await OS.File.makeDir(profilePath);
+    await OS.File.copy(mochiPrefsPath, prefsPath);
+    let proc = await Subprocess.call({
+      command: firefoxExe,
+      arguments: firefoxArgs.concat(args),
+      // Disable leak detection to avoid intermittent failure bug 1331152.
+      environmentAppend: true,
+      environment: {
+        ASAN_OPTIONS: "detect_leaks=0:quarantine_size=50331648:malloc_context_size=5",
+      },
+    });
+    let stdout;
+    while ((stdout = await proc.stdout.readString())) {
+      dump(">>> " + stdout + "\n");
+    }
+    let {exitCode} = await proc.wait();
+    is(exitCode, 0, "Firefox process should exit with code 0");
+    await OS.File.removeDir(profilePath);
+  }
+
+  async function testFileCreationPositive(args, path) {
+    await runFirefox(args);
+
+    let saved = await OS.File.exists(path);
+    ok(saved, "A screenshot should be saved as " + path);
+    if (!saved) {
+      return;
+    }
+
+    let info = await OS.File.stat(path);
+    ok(info.size > 0, "Screenshot should not be an empty file");
+    await OS.File.remove(path);
+  }
+
+  async function testFileCreationNegative(args, path) {
+    await runFirefox(args);
+
+    let saved = await OS.File.exists(path);
+    ok(!saved, "A screenshot should not be saved");
+    await OS.File.remove(path, { ignoreAbsent: true });
+  }
+
+  async function testWindowSizePositive(width, height) {
+    let size = width + "";
+    if (height) {
+      size += "," + height;
+    }
+
+    await runFirefox(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", screenshotPath, "-window-size", size]);
+
+    let saved = await OS.File.exists(screenshotPath);
+    ok(saved, "A screenshot should be saved in the tmp directory");
+    if (!saved) {
+      return;
+    }
+
+    let data = await OS.File.read(screenshotPath);
+    await new Promise((resolve, reject) => {
+      let blob = new Blob([data], { type: "image/png" });
+      let reader = new FileReader();
+      reader.onloadend = function() {
+        let screenshot = new Image();
+        screenshot.onloadend = function() {
+          is(screenshot.width, width, "Screenshot should be " + width + " pixels wide");
+          if (height) {
+            is(screenshot.height, height, "Screenshot should be " + height + " pixels tall");
+          }
+          resolve();
+        };
+        screenshot.src = reader.result;
+      };
+      reader.readAsDataURL(blob);
+    });
+    await OS.File.remove(screenshotPath);
+  }
+
+  (async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    // Test all four basic variations of the "screenshot" argument
+    // when a file path is specified.
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", screenshotPath], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", `-screenshot=${screenshotPath}`], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "--screenshot", screenshotPath], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", `--screenshot=${screenshotPath}`], screenshotPath);
+
+    // Test variations of the "screenshot" argument when a file path
+    // isn't specified.
+    await testFileCreationPositive(["-screenshot", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html"], "screenshot.png");
+    await testFileCreationPositive(["http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot"], "screenshot.png");
+    await testFileCreationPositive(["--screenshot", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html"], "screenshot.png");
+    await testFileCreationPositive(["http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "--screenshot"], "screenshot.png");
+
+    // Test invalid URL arguments (either no argument or too many arguments).
+    await testFileCreationNegative(["-screenshot"], "screenshot.png");
+    await testFileCreationNegative(["http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "http://mochi.test:8888/headless.html", "-screenshot"], "screenshot.png");
+
+    // Test all four basic variations of the "window-size" argument.
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size=800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "--window-size", "800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "--window-size=800"], "screenshot.png");
+
+    // Test other variations of the "window-size" argument.
+    await testWindowSizePositive(800, 600);
+    await testWindowSizePositive(1234);
+    await testFileCreationNegative(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "hello"], "screenshot.png");
+    await testFileCreationNegative(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "800,"], "screenshot.png");
+
+    // Test when the requested URL redirects
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless_redirect.html", "-screenshot", screenshotPath], screenshotPath);
+
+    SimpleTest.finish();
+  })();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1378010">Mozilla Bug 1378010</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
