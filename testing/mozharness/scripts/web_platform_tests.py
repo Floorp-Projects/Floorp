@@ -328,6 +328,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         if (
             self.is_android
+            or mozinfo.info["tsan"]
             or "wdspec" in test_types
             or "fission.autostart=true" in c["extra_prefs"]
             or
