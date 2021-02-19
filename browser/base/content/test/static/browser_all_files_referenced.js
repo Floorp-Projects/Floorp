@@ -157,8 +157,6 @@ var whitelist = [
   },
 
   // Files from upstream library
-  { file: "resource://pdf.js/build/pdf.sandbox.external.js" },
-  { file: "resource://pdf.js/build/pdf.scripting.js" },
   { file: "resource://pdf.js/web/debugger.js" },
 
   // resource://app/modules/translation/TranslationContentHandler.jsm
