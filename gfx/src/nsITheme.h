@@ -151,6 +151,14 @@ class nsITheme : public nsISupports {
   }
 
   /**
+   * Get the preferred content-box size of a checkbox / radio button, in app
+   * units.  Historically 9px.
+   */
+  virtual nscoord GetCheckboxRadioPrefSize() {
+    return mozilla::CSSPixel::ToAppUnits(9);
+  }
+
+  /**
    * Get the minimum border-box size of a widget, in *pixels* (in
    * |aResult|).  If |aIsOverridable| is set to true, this size is a
    * minimum size; if false, this size is the only valid size for the
