@@ -237,6 +237,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
                                     config_.rtp.local_ssrc)),
       complete_frame_callback_(complete_frame_callback),
       keyframe_request_sender_(keyframe_request_sender),
+      keyframe_request_method_(config_.rtp.keyframe_method),
       // TODO(bugs.webrtc.org/10336): Let |rtcp_feedback_buffer_| communicate
       // directly with |rtp_rtcp_|.
       rtcp_feedback_buffer_(this, nack_sender, this),
@@ -685,8 +686,10 @@ void RtpVideoStreamReceiver2::RequestKeyFrame() {
   // sender) is relying on LNTF alone.
   if (keyframe_request_sender_) {
     keyframe_request_sender_->RequestKeyFrame();
-  } else {
+  } else if (keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp) {
     rtp_rtcp_->SendPictureLossIndication();
+  } else if (keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp) {
+    rtp_rtcp_->SendFullIntraRequest();
   }
 }
 

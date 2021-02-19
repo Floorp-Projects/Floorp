@@ -294,6 +294,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
 
   video_coding::OnCompleteFrameCallback* complete_frame_callback_;
   KeyFrameRequestSender* const keyframe_request_sender_;
+  const KeyFrameReqMethod keyframe_request_method_;
 
   RtcpFeedbackBuffer rtcp_feedback_buffer_;
   const std::unique_ptr<NackModule2> nack_module_;
