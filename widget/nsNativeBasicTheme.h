@@ -83,6 +83,7 @@ static const gfx::sRGBColor sScrollbarButtonHoverColor(gfx::sRGBColor(0.86f,
                                                                       0.86f,
                                                                       0.86f));
 
+static const CSSCoord kMinimumWidgetSize = 14.0f;
 static const CSSCoord kMinimumScrollbarSize = 17.0f;
 static const CSSCoord kMinimumThinScrollbarSize = 6.0f;
 static const CSSCoord kMinimumColorPickerHeight = 32.0f;
@@ -173,8 +174,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
   static nscolor AdjustUnthemedScrollbarThumbColor(nscolor, EventStates);
-
-  nscoord GetCheckboxRadioPrefSize() override;
 
  protected:
   nsNativeBasicTheme() = default;

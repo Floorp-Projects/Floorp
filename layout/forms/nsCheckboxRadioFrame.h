@@ -86,7 +86,12 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
  protected:
   virtual ~nsCheckboxRadioFrame();
 
-  nscoord DefaultSize();
+  static nscoord DefaultSize() {
+    // XXXmats We have traditionally always returned 9px for GetMin/PrefISize
+    // but we might want to factor in what the theme says, something like:
+    // GetMinimumWidgetSize - GetWidgetPadding - GetWidgetBorder.
+    return nsPresContext::CSSPixelsToAppUnits(9);
+  }
 
   /**
    * Get the state of the checked attribute.
