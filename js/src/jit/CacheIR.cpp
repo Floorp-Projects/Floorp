@@ -611,7 +611,10 @@ static void GuardGroupProto(CacheIRWriter& writer, JSObject* obj,
 static void TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj,
                                  ObjOperandId objId) {
   if (obj->is<TypedObject>()) {
-    writer.guardGroupForLayout(objId, obj->group());
+    // For now guard on both the shape and TypeDescr. Longer-term the plan is to
+    // fix this by moving the TypeDescr into TypedObjectShape.
+    writer.guardShape(objId, obj->shape());
+    writer.guardTypeDescr(objId, &obj->as<TypedObject>().typeDescr());
   } else if (obj->is<ProxyObject>()) {
     writer.guardShapeForClass(objId, obj->as<ProxyObject>().shape());
   } else {

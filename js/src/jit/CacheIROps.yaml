@@ -240,6 +240,14 @@
     obj: ObjId
     group: GroupField
 
+- name: GuardTypeDescr
+  shared: false
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    descr: ObjectField
+
 - name: GuardProto
   shared: false
   transpile: true
