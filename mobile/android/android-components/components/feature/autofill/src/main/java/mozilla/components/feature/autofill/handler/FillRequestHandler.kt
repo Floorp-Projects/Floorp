@@ -105,9 +105,9 @@ private fun createLoginsResponse(
 
     logins.forEach { login ->
         val usernamePresentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
-        usernamePresentation.setTextViewText(android.R.id.text1, login.username)
+        usernamePresentation.setTextViewText(android.R.id.text1, login.usernamePresentationOrFallback(context))
         val passwordPresentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
-        passwordPresentation.setTextViewText(android.R.id.text1, "Password for ${login.username}")
+        passwordPresentation.setTextViewText(android.R.id.text1, login.passwordPresentation(context))
 
         val dataset = Dataset.Builder()
 
@@ -131,4 +131,19 @@ private fun createLoginsResponse(
     }
 
     return builder.build()
+}
+
+private fun Login.usernamePresentationOrFallback(context: Context): String {
+    return if (username.isNotEmpty()) {
+        username
+    } else {
+        context.getString(R.string.mozac_feature_autofill_popup_no_username)
+    }
+}
+
+private fun Login.passwordPresentation(context: Context): String {
+    return context.getString(
+        R.string.mozac_feature_autofill_popup_password,
+        usernamePresentationOrFallback(context)
+    )
 }

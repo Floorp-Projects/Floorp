@@ -22,6 +22,12 @@ class DummyLoginsStorage : LoginsStorage {
             origin = "twitter.com",
             username = "NotAnAccount",
             password = "NotReallyAPassword"
+        ),
+        Login(
+            guid = "8034a37f-5f9e-4136-95b2-e0293116b322",
+            origin = "twitter.com",
+            username = "",
+            password = "NotReallyAPassword"
         )
     )
 
