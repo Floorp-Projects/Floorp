@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2020 Mozilla Foundation
+ * Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.8.61';
-const pdfjsBuild = '884c65c60';
+const pdfjsVersion = '2.8.117';
+const pdfjsBuild = '3d80c21a8';
 
 /***/ }),
 /* 1 */
@@ -122,7 +122,8 @@ function initSandbox(params) {
       const obj = objs[0];
       obj.send = send;
       obj.globalEval = globalEval;
-      obj.doc = _document.wrapped;
+      obj.doc = _document;
+      obj.fieldPath = name;
       let field;
 
       if (obj.type === "radiobutton") {
@@ -419,7 +420,7 @@ class Field extends _pdf_object.PDFObject {
     this.doNotSpellCheck = data.doNotSpellCheck;
     this.delay = data.delay;
     this.display = data.display;
-    this.doc = data.doc;
+    this.doc = data.doc.wrapped;
     this.editable = data.editable;
     this.exportValues = data.exportValues;
     this.fileSelect = data.fileSelect;
@@ -446,8 +447,13 @@ class Field extends _pdf_object.PDFObject {
     this.type = data.type;
     this.userName = data.userName;
     this._actions = (0, _common.createActionsMap)(data.actions);
+    this._browseForFileToSubmit = data.browseForFileToSubmit || null;
+    this._buttonCaption = null;
+    this._buttonIcon = null;
+    this._children = null;
     this._currentValueIndices = data.currentValueIndices || 0;
     this._document = data.doc;
+    this._fieldPath = data.fieldPath;
     this._fillColor = data.fillColor || ["T"];
     this._isChoice = Array.isArray(data.items);
     this._items = data.items || [];
@@ -578,6 +584,46 @@ class Field extends _pdf_object.PDFObject {
     this._valueAsString = val ? val.toString() : "";
   }
 
+  browseForFileToSubmit() {
+    if (this._browseForFileToSubmit) {
+      this._browseForFileToSubmit();
+    }
+  }
+
+  buttonGetCaption(nFace = 0) {
+    if (this._buttonCaption) {
+      return this._buttonCaption[nFace];
+    }
+
+    return "";
+  }
+
+  buttonGetIcon(nFace = 0) {
+    if (this._buttonIcon) {
+      return this._buttonIcon[nFace];
+    }
+
+    return null;
+  }
+
+  buttonImportIcon(cPath = null, nPave = 0) {}
+
+  buttonSetCaption(cCaption, nFace = 0) {
+    if (!this._buttonCaption) {
+      this._buttonCaption = ["", "", ""];
+    }
+
+    this._buttonCaption[nFace] = cCaption;
+  }
+
+  buttonSetIcon(oIcon, nFace = 0) {
+    if (!this._buttonIcon) {
+      this._buttonIcon = [null, null, null];
+    }
+
+    this._buttonIcon[nFace] = oIcon;
+  }
+
   checkThisBox(nWidget, bCheckIt = true) {}
 
   clearItems() {
@@ -650,6 +696,18 @@ class Field extends _pdf_object.PDFObject {
 
     const item = this._items[nIdx];
     return bExportValue ? item.exportValue : item.displayValue;
+  }
+
+  getArray() {
+    if (this._children === null) {
+      this._children = this._document.obj._getChildren(this._fieldPath);
+    }
+
+    return this._children;
+  }
+
+  getLock() {
+    return undefined;
   }
 
   isBoxChecked(nWidget) {
@@ -760,6 +818,20 @@ class Field extends _pdf_object.PDFObject {
       items: this._items
     });
   }
+
+  setLock() {}
+
+  signatureGetModifications() {}
+
+  signatureGetSeedValue() {}
+
+  signatureInfo() {}
+
+  signatureSetSeedValue() {}
+
+  signatureSign() {}
+
+  signatureValidate() {}
 
   _isButton() {
     return false;
@@ -3474,13 +3546,55 @@ class Doc extends _pdf_object.PDFObject {
       return searchedField;
     }
 
+    const parts = cName.split("#");
+    let childIndex = NaN;
+
+    if (parts.length === 2) {
+      childIndex = Math.floor(parseFloat(parts[1]));
+      cName = parts[0];
+    }
+
     for (const [name, field] of this._fields.entries()) {
-      if (name.includes(cName)) {
+      if (name.endsWith(cName)) {
+        if (!isNaN(childIndex)) {
+          const children = this._getChildren(name);
+
+          if (childIndex < 0 || childIndex >= children.length) {
+            childIndex = 0;
+          }
+
+          if (childIndex < children.length) {
+            this._fields.set(cName, children[childIndex]);
+
+            return children[childIndex];
+          }
+        }
+
+        this._fields.set(cName, field);
+
         return field;
       }
     }
 
     return undefined;
+  }
+
+  _getChildren(fieldName) {
+    const len = fieldName.length;
+    const children = [];
+    const pattern = /^\.[^.]+$/;
+
+    for (const [name, field] of this._fields.entries()) {
+      if (name.startsWith(fieldName)) {
+        const finalPart = name.slice(len);
+
+        if (finalPart.match(pattern)) {
+          children.push(field);
+        }
+      }
+    }
+
+    return children;
   }
 
   getIcon() {}
