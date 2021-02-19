@@ -847,16 +847,32 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   uint32_t from = findFilenameStart(aSpec);
   nsAutoCString fileName(Substring(aSpec, from));
 
+  // To test this telemetry we use a zip file and we want to make
+  // sure don't filter it out.
+  bool isTest = fileName.Find("test_empty_file.zip!") != -1;
+
   Telemetry::SetEventRecordingEnabled("zero_byte_load"_ns, true);
   Telemetry::EventID eventType = Telemetry::EventID::Zero_byte_load_Load_Others;
   if (StringEndsWith(fileName, ".ftl"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Ftl;
   } else if (StringEndsWith(fileName, ".dtd"_ns)) {
+    // We're going to skip reporting telemetry on res DTDs.
+    // See Bug 1693711 for investigation into those empty loads.
+    if (!isTest && StringBeginsWith(fileName, "omni.ja!/res/dtd"_ns)) {
+      return;
+    }
+
     eventType = Telemetry::EventID::Zero_byte_load_Load_Dtd;
   } else if (StringEndsWith(fileName, ".properties"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Properties;
   } else if (StringEndsWith(fileName, ".js"_ns) ||
              StringEndsWith(fileName, ".jsm"_ns)) {
+    // We're going to skip reporting telemetry on JS loads
+    // coming not from omni.ja.
+    // See Bug 1693711 for investigation into those empty loads.
+    if (!isTest && !StringBeginsWith(fileName, "omni.ja!"_ns)) {
+      return;
+    }
     eventType = Telemetry::EventID::Zero_byte_load_Load_Js;
   } else if (StringEndsWith(fileName, ".xml"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Xml;
@@ -864,13 +880,30 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
     eventType = Telemetry::EventID::Zero_byte_load_Load_Xhtml;
   }
 
+  // We're going to skip reporting telemetry on other types of files.
+  // See Bug 1693711 for investigation into those empty loads.
+  if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Others) {
+    return;
+  }
+
+  nsAutoCString errorCString;
+  mozilla::GetErrorName(aStatus, errorCString);
+
+  // FTL uses I/O to test for file presence, so we get
+  // a high volume of events from it, but it is not erronous.
+  // Also, Fluent is resilient to empty loads, so even if any
+  // of the errors are real errors, they don't cause YSOD.
+  // We can investigate them separately.
+  if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Ftl &&
+      errorCString.EqualsLiteral("NS_ERROR_FILE_NOT_FOUND")) {
+    return;
+  }
+
   auto res = CopyableTArray<Telemetry::EventExtraEntry>{};
   res.SetCapacity(3);
   res.AppendElement(
       Telemetry::EventExtraEntry{"sync"_ns, aIsSync ? "true"_ns : "false"_ns});
   res.AppendElement(Telemetry::EventExtraEntry{"file_name"_ns, fileName});
-  nsAutoCString errorCString;
-  mozilla::GetErrorName(aStatus, errorCString);
   res.AppendElement(Telemetry::EventExtraEntry{"status"_ns, errorCString});
   Telemetry::RecordEvent(eventType, Nothing{}, Some(res));
 }
