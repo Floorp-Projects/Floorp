@@ -162,6 +162,19 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
 
+  // Whether results will include QuickSuggest suggestions.
+  ["suggest.quicksuggest", true],
+
+  // Whether the QuickSuggest experiment is enabled.
+  ["quicksuggest.enabled", false],
+
+  // The index where we show QuickSuggest results, -1 means they
+  // will be shown as the last result.
+  ["quicksuggest.suggestedIndex", -1],
+
+  // Whether to show QuickSuggest related logs.
+  ["quicksuggest.log", false],
+
   // When using switch to tabs, if set to true this will move the tab into the
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],
