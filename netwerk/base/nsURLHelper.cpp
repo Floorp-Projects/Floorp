@@ -864,6 +864,12 @@ void net_ParseRequestContentType(const nsACString& aHeaderStr,
 }
 
 bool net_IsValidHostName(const nsACString& host) {
+  // A DNS name is limited to 255 bytes on the wire.
+  // In practice this means the host name is limited to 253 ascii characters.
+  if (StaticPrefs::network_dns_limit_253_chars() && host.Length() > 253) {
+    return false;
+  }
+
   const char* end = host.EndReading();
   // Use explicit whitelists to select which characters we are
   // willing to send to lower-level DNS logic. This is more
