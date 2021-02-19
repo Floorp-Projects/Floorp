@@ -1,4 +1,7 @@
 async function waitForPdfJS(browser, url) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["pdfjs.eventBusDispatchToDOM", true]],
+  });
   // Runs tests after all "load" event handlers have fired off
   let loadPromise = BrowserTestUtils.waitForContentEvent(
     browser,
@@ -14,6 +17,9 @@ async function waitForPdfJS(browser, url) {
 }
 
 async function waitForPdfJSAnnotationLayer(browser, url) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["pdfjs.eventBusDispatchToDOM", true]],
+  });
   let loadPromise = BrowserTestUtils.waitForContentEvent(
     browser,
     "annotationlayerrendered",
@@ -24,17 +30,6 @@ async function waitForPdfJSAnnotationLayer(browser, url) {
   await SpecialPowers.spawn(browser, [url], contentUrl => {
     content.location = contentUrl;
   });
-  return loadPromise;
-}
-
-async function waitForPdfJSSandbox(browser) {
-  let loadPromise = BrowserTestUtils.waitForContentEvent(
-    browser,
-    "sandboxcreated",
-    false,
-    null,
-    true
-  );
   return loadPromise;
 }
 
