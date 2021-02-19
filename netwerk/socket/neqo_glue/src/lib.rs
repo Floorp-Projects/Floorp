@@ -418,6 +418,7 @@ fn crypto_error_code(err: neqo_crypto::Error) -> u64 {
 #[repr(C)]
 pub enum CloseError {
     TransportInternalError(u16),
+    TransportInternalErrorOther(u16),
     TransportError(u64),
     CryptoError(u64),
     CryptoAlert(u8),
@@ -426,25 +427,64 @@ pub enum CloseError {
     AppError(u64),
 }
 
+impl From<TransportError> for CloseError {
+    fn from(error: TransportError) -> CloseError {
+        match error {
+            TransportError::InternalError(c) => CloseError::TransportInternalError(c),
+            TransportError::CryptoError(c) => CloseError::CryptoError(crypto_error_code(c)),
+            TransportError::CryptoAlert(c) => CloseError::CryptoAlert(c),
+            TransportError::PeerApplicationError(c) => CloseError::PeerAppError(c),
+            TransportError::PeerError(c) => CloseError::PeerError(c),
+            TransportError::NoError
+            | TransportError::IdleTimeout
+            | TransportError::ConnectionRefused
+            | TransportError::FlowControlError
+            | TransportError::StreamLimitError
+            | TransportError::StreamStateError
+            | TransportError::FinalSizeError
+            | TransportError::FrameEncodingError
+            | TransportError::TransportParameterError
+            | TransportError::ProtocolViolation
+            | TransportError::InvalidToken
+            | TransportError::KeysExhausted
+            | TransportError::ApplicationError
+            | TransportError::NoAvailablePath => CloseError::TransportError(error.code()),
+            TransportError::AckedUnsentPacket => CloseError::TransportInternalErrorOther(0),
+            TransportError::ConnectionIdLimitExceeded => CloseError::TransportInternalErrorOther(1),
+            TransportError::ConnectionIdsExhausted => CloseError::TransportInternalErrorOther(2),
+            TransportError::ConnectionState => CloseError::TransportInternalErrorOther(3),
+            TransportError::DecodingFrame => CloseError::TransportInternalErrorOther(4),
+            TransportError::DecryptError => CloseError::TransportInternalErrorOther(5),
+            TransportError::HandshakeFailed => CloseError::TransportInternalErrorOther(6),
+            TransportError::IntegerOverflow => CloseError::TransportInternalErrorOther(7),
+            TransportError::InvalidInput => CloseError::TransportInternalErrorOther(8),
+            TransportError::InvalidMigration => CloseError::TransportInternalErrorOther(9),
+            TransportError::InvalidPacket => CloseError::TransportInternalErrorOther(10),
+            TransportError::InvalidResumptionToken => CloseError::TransportInternalErrorOther(11),
+            TransportError::InvalidRetry => CloseError::TransportInternalErrorOther(12),
+            TransportError::InvalidStreamId => CloseError::TransportInternalErrorOther(13),
+            TransportError::KeysDiscarded => CloseError::TransportInternalErrorOther(14),
+            TransportError::KeysPending(_) => CloseError::TransportInternalErrorOther(15),
+            TransportError::KeyUpdateBlocked => CloseError::TransportInternalErrorOther(16),
+            TransportError::NoMoreData => CloseError::TransportInternalErrorOther(17),
+            TransportError::NotConnected => CloseError::TransportInternalErrorOther(18),
+            TransportError::PacketNumberOverlap => CloseError::TransportInternalErrorOther(19),
+            TransportError::StatelessReset => CloseError::TransportInternalErrorOther(20),
+            TransportError::TooMuchData => CloseError::TransportInternalErrorOther(21),
+            TransportError::UnexpectedMessage => CloseError::TransportInternalErrorOther(22),
+            TransportError::UnknownConnectionId => CloseError::TransportInternalErrorOther(23),
+            TransportError::UnknownFrameType => CloseError::TransportInternalErrorOther(24),
+            TransportError::VersionNegotiation => CloseError::TransportInternalErrorOther(25),
+            TransportError::WrongRole => CloseError::TransportInternalErrorOther(26),
+            TransportError::QlogError => CloseError::TransportInternalErrorOther(27),
+        }
+    }
+}
+
 impl From<neqo_transport::ConnectionError> for CloseError {
     fn from(error: neqo_transport::ConnectionError) -> CloseError {
         match error {
-            neqo_transport::ConnectionError::Transport(TransportError::InternalError(c)) => {
-                CloseError::TransportInternalError(c)
-            }
-            neqo_transport::ConnectionError::Transport(TransportError::CryptoError(c)) => {
-                CloseError::CryptoError(crypto_error_code(c))
-            }
-            neqo_transport::ConnectionError::Transport(TransportError::CryptoAlert(c)) => {
-                CloseError::CryptoAlert(c)
-            }
-            neqo_transport::ConnectionError::Transport(TransportError::PeerApplicationError(c)) => {
-                CloseError::PeerAppError(c)
-            }
-            neqo_transport::ConnectionError::Transport(TransportError::PeerError(c)) => {
-                CloseError::PeerError(c)
-            }
-            neqo_transport::ConnectionError::Transport(c) => CloseError::TransportError(c.code()),
+            neqo_transport::ConnectionError::Transport(c) => c.into(),
             neqo_transport::ConnectionError::Application(c) => CloseError::AppError(c),
         }
     }
