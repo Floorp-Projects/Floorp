@@ -1355,10 +1355,12 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
       styleFlexBaseSize.emplace(flexBasis.AsSize());
     } else {
       // else: flex-basis is 'auto', which is deferring to some explicit value
-      // in the preferred main size, so we proceed without emplacing
-      // styleFlexBaseSize.
+      // in the preferred main size.
       MOZ_ASSERT(flexBasis.IsAuto());
+      styleFlexBaseSize.emplace(styleMainSize);
     }
+
+    MOZ_ASSERT(styleFlexBaseSize, "We should've emplace styleFlexBaseSize!");
 
     // Provide the size override for the preferred main size property.
     if (aAxisTracker.IsInlineAxisMainAxis(childWM)) {
