@@ -190,7 +190,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     } = this;
 
     if (props.template === "simplified") {
-      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_SimpleAboutWelcome__WEBPACK_IMPORTED_MODULE_3__["SimpleAboutWelcome"], {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_SimpleAboutWelcome__WEBPACK_IMPORTED_MODULE_3__["SimpleAboutWelcome"], {
         metricsFlowUri: this.state.metricsFlowUri,
         message_id: props.messageId,
         utm_term: props.UTMTerm,
@@ -201,7 +201,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
         handleStartBtnClick: this.handleStartBtnClick
       });
     } else if (props.template === "return_to_amo") {
-      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__["ReturnToAMO"], {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__["ReturnToAMO"], {
         message_id: props.messageId,
         name: props.name,
         url: props.url,
@@ -209,7 +209,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       });
     }
 
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__["MultiStageAboutWelcome"], {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__["MultiStageAboutWelcome"], {
       screens: props.screens,
       metricsFlowUri: this.state.metricsFlowUri,
       message_id: props.messageId,
@@ -245,7 +245,7 @@ async function retrieveRenderContent() {
   // Check for override content in pref browser.aboutwelcome.overrideContent
   let aboutWelcomeProps = await window.AWGetWelcomeOverrideContent();
 
-  if ((_aboutWelcomeProps = aboutWelcomeProps) === null || _aboutWelcomeProps === void 0 ? void 0 : _aboutWelcomeProps.template) {
+  if ((_aboutWelcomeProps = aboutWelcomeProps) !== null && _aboutWelcomeProps !== void 0 && _aboutWelcomeProps.template) {
     let {
       messageId,
       UTMTerm
@@ -262,19 +262,19 @@ async function retrieveRenderContent() {
     slug,
     branch
   } = await window.AWGetExperimentData();
-  aboutWelcomeProps = (branch === null || branch === void 0 ? void 0 : branch.feature) ? branch.feature.value : {}; // Check if there is any attribution data, this could take a while to await in series
+  aboutWelcomeProps = branch !== null && branch !== void 0 && branch.feature ? branch.feature.value : {}; // Check if there is any attribution data, this could take a while to await in series
   // especially when there is an add-on that requires remote lookup
   // Moving RTAMO as part of another screen of multistage is one option to fix the delay
   // as it will allow the initial page to be fast while we fetch attribution data in parallel for a later screen.
 
   const attribution = await window.AWGetAttributionData();
 
-  if (attribution === null || attribution === void 0 ? void 0 : attribution.template) {
+  if (attribution !== null && attribution !== void 0 && attribution.template) {
     var _aboutWelcomeProps2;
 
     aboutWelcomeProps = { ...aboutWelcomeProps,
       // If part of an experiment, render experiment template
-      template: ((_aboutWelcomeProps2 = aboutWelcomeProps) === null || _aboutWelcomeProps2 === void 0 ? void 0 : _aboutWelcomeProps2.template) ? aboutWelcomeProps.template : attribution.template,
+      template: (_aboutWelcomeProps2 = aboutWelcomeProps) !== null && _aboutWelcomeProps2 !== void 0 && _aboutWelcomeProps2.template ? aboutWelcomeProps.template : attribution.template,
       ...attribution.extraProps
     };
   }
@@ -296,7 +296,7 @@ async function mount() {
     messageId,
     UTMTerm
   } = await retrieveRenderContent();
-  react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, _extends({
+  react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, _extends({
     messageId: messageId,
     UTMTerm: UTMTerm
   }, aboutWelcomeProps)), document.getElementById("root"));
@@ -372,7 +372,7 @@ const MultiStageAboutWelcome = props => {
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
       if (metricsFlowUri) {
-        setFlowParams((await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].fetchFlowParams(metricsFlowUri)));
+        setFlowParams(await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].fetchFlowParams(metricsFlowUri));
       }
     })();
   }, [metricsFlowUri]); // Transition to next screen, opening about:home on last screen button CTA
@@ -388,7 +388,7 @@ const MultiStageAboutWelcome = props => {
   const [region, setRegion] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
-      setRegion((await window.AWGetRegion()));
+      setRegion(await window.AWGetRegion());
     })();
   }, []); // Get the active theme so the rendering code can make it selected
   // by default.
@@ -409,7 +409,7 @@ const MultiStageAboutWelcome = props => {
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async () => {
       let DEFAULT_SITES = await window.AWGetDefaultSites();
-      const importable = JSON.parse((await window.AWGetImportableSites()));
+      const importable = JSON.parse(await window.AWGetImportableSites());
       const showImportable = useImportable && importable.length >= 5;
 
       if (!importTelemetrySent.current) {
@@ -429,10 +429,10 @@ const MultiStageAboutWelcome = props => {
       });
     })();
   }, [useImportable, region]);
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `outer-wrapper onboardingContainer`
   }, props.screens.map(screen => {
-    return index === screen.order ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
+    return index === screen.order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
       key: screen.id,
       id: screen.id,
       totalNumberOfScreens: props.screens.length,
@@ -557,13 +557,13 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
 
   renderSecondaryCTA(position) {
     let targetElement = position ? `secondary_button_${position}` : `secondary_button`;
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: position ? `secondary-cta ${position}` : "secondary-cta"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: this.props.content[targetElement].text
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: this.props.content[targetElement].label
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "secondary",
       value: targetElement,
       onClick: this.handleAction
@@ -573,9 +573,9 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   renderTiles() {
     switch (this.props.content.tiles.type) {
       case "topsites":
-        return this.props.topSites && this.props.topSites.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        return this.props.topSites && this.props.topSites.data ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: `tiles-container ${this.props.content.tiles.info ? "info" : ""}`
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "tiles-topsites-section",
           name: "topsites-section",
           id: "topsites-section",
@@ -585,44 +585,44 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           icon,
           label,
           title
-        }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "site",
           key: icon + label,
           "aria-label": title ? title : label,
           role: "img"
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "icon",
           style: icon ? {
             backgroundColor: "transparent",
             backgroundImage: `url(${icon})`
           } : {}
-        }, icon ? "" : label && label[0].toUpperCase()), this.props.content.tiles.showTitles && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, icon ? "" : label && label[0].toUpperCase()), this.props.content.tiles.showTitles && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "host"
         }, title || label))))) : null;
 
       case "theme":
-        return this.props.content.tiles.data ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        return this.props.content.tiles.data ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "tiles-theme-container"
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("fieldset", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("fieldset", {
           className: "tiles-theme-section"
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           text: this.props.content.subtitle
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("legend", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("legend", {
           className: "sr-only"
         })), this.props.content.tiles.data.map(({
           theme,
           label,
           tooltip,
           description
-        }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+        }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           key: theme + label,
           text: typeof tooltip === "object" ? tooltip : {}
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
           className: `theme${theme === this.props.activeTheme ? " selected" : ""}`,
           title: theme + label
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           text: typeof description === "object" ? description : {}
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
           type: "radio",
           value: theme,
           name: "theme",
@@ -630,20 +630,20 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
           className: "sr-only input",
           onClick: this.handleAction,
           "data-l10n-attrs": "aria-description"
-        })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: `icon ${theme}`
-        }), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+        }), label && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
           text: label
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "text"
         })))))))) : null;
 
       case "video":
-        return this.props.content.tiles.source ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        return this.props.content.tiles.source ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: `tiles-media-section ${this.props.content.tiles.media_type}`
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: "fade"
-        }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("video", {
+        }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("video", {
           className: "media",
           autoPlay: "true",
           loop: "true",
@@ -652,9 +652,9 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
         })) : null;
 
       case "image":
-        return this.props.content.tiles.source ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        return this.props.content.tiles.source ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
           className: `${this.props.content.tiles.media_type}`
-        }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
           src: _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].hasDarkMode() && this.props.content.tiles.source.dark ? this.props.content.tiles.source.dark : this.props.content.tiles.source.default,
           role: "presentation",
           alt: ""
@@ -669,7 +669,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
 
     for (let i = 0; i < this.props.totalNumberOfScreens; i++) {
       let className = i === this.props.order ? "current" : "";
-      steps.push(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      steps.push( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
         key: i,
         className: `indicator ${className}`
       }));
@@ -679,9 +679,9 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   }
 
   renderHelpText() {
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: this.props.content.help_text.text
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
       id: "helptext",
       className: `helptext ${this.props.content.help_text.position}`
     }));
@@ -699,28 +699,28 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     }
 
     const showImportableSitesDisclaimer = content.tiles && content.tiles.type === "topsites" && topSites && topSites.showImportable;
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
       className: `screen ${this.props.id}`
-    }, content.secondary_button_top ? this.renderSecondaryCTA("top") : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }, content.secondary_button_top ? this.renderSecondaryCTA("top") : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `brand-logo ${content.secondary_button_top ? "cta-top" : ""}`
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "welcome-text"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Zap__WEBPACK_IMPORTED_MODULE_2__["Zap"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Zap__WEBPACK_IMPORTED_MODULE_2__["Zap"], {
       hasZap: content.zap,
       text: content.title
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.subtitle
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null))), content.tiles ? this.renderTiles() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null))), content.tiles ? this.renderTiles() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.primary_button ? content.primary_button.label : null
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "primary",
       value: "primary_button",
       onClick: this.handleAction
-    }))), content.help_text && content.help_text.position === "default" ? this.renderHelpText() : null, content.secondary_button ? this.renderSecondaryCTA() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
+    }))), content.help_text && content.help_text.position === "default" ? this.renderHelpText() : null, content.secondary_button ? this.renderSecondaryCTA() : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
       className: content.help_text && content.help_text.position === "footer" || showImportableSitesDisclaimer ? "steps has-helptext" : "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": `{"current": ${parseInt(this.props.order, 10) + 1}, "total": ${this.props.totalNumberOfScreens}}`
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null), this.renderStepsIndicator()), content.help_text && content.help_text.position === "footer" || showImportableSitesDisclaimer ? this.renderHelpText() : null);
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null), this.renderStepsIndicator()), content.help_text && content.help_text.position === "footer" || showImportableSitesDisclaimer ? this.renderHelpText() : null);
   }
 
 }
@@ -780,12 +780,12 @@ const Localized = ({
   }
 
   if (!children) {
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", props, textNode);
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", props, textNode);
   } else if (textNode) {
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.cloneElement(children, props, textNode);
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.cloneElement(children, props, textNode);
   }
 
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.cloneElement(children, props);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.cloneElement(children, props);
 };
 
 /***/ }),
@@ -833,11 +833,11 @@ const Zap = props => {
 
   if (props.hasZap) {
     if (typeof props.text === "object" && props.text[MS_STRING_PROP]) {
-      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
         text: props.text
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
         className: "welcomeZap"
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
         "data-l10n-name": "zap",
         className: "zap"
       })));
@@ -845,16 +845,16 @@ const Zap = props => {
       // Parse string to zap style last word of the props.text
       let titleArray = props.text.split(" ");
       let lastWord = `${titleArray.pop()}`;
-      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
         className: "welcomeZap"
-      }, titleArray.join(" ").concat(" "), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+      }, titleArray.join(" ").concat(" "), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
         className: "zap"
       }, lastWord));
     }
   } else {
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: props.text
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null));
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null));
   }
 
   return null;
@@ -1205,21 +1205,21 @@ class SimpleAboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Pu
     const {
       props
     } = this;
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "outer-wrapper welcomeContainer"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "welcomeContainerInner"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_HeroText__WEBPACK_IMPORTED_MODULE_1__["HeroText"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_HeroText__WEBPACK_IMPORTED_MODULE_1__["HeroText"], {
       title: props.title,
       subtitle: props.subtitle
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_FxCards__WEBPACK_IMPORTED_MODULE_2__["FxCards"], {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_FxCards__WEBPACK_IMPORTED_MODULE_2__["FxCards"], {
       cards: props.cards,
       metricsFlowUri: this.props.metricsFlowUri,
       sendTelemetry: window.AWSendEventTelemetry,
       utm_term: this.props.UTMTerm
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_3__["Localized"], {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_3__["Localized"], {
       text: props.startButton.label
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "start-button",
       onClick: this.props.handleStartBtnClick
     })))));
@@ -1243,13 +1243,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const HeroText = props => {
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
     text: props.title
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
     className: "welcome-title"
-  })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
     text: props.subtitle
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
     className: "welcome-subtitle"
   })));
 };
@@ -1336,9 +1336,9 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
     const {
       props
     } = this;
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `welcomeCardGrid show`
-    }, props.cards.map(card => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_asrouter_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__["OnboardingCard"], _extends({
+    }, props.cards.map(card => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_asrouter_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__["OnboardingCard"], _extends({
       key: card.id,
       message: card,
       className: "welcomeCard",
@@ -1389,25 +1389,25 @@ class OnboardingCard extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
       content
     } = this.props;
     const className = this.props.className || "onboardingMessage";
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: className
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `onboardingMessageImage ${content.icon}`
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "onboardingContent"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_aboutwelcome_components_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_aboutwelcome_components_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.title
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
       className: "onboardingTitle"
-    })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_aboutwelcome_components_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_aboutwelcome_components_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.text
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
       className: "onboardingText"
-    }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: "onboardingButtonContainer"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_aboutwelcome_components_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_aboutwelcome_components_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.primary_button.label
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "button onboardingButton",
       onClick: this.onClick
     })))));
@@ -1448,7 +1448,7 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
       url
     } = this.props;
 
-    if (!(content === null || content === void 0 ? void 0 : (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : (_content$primary_butt2 = _content$primary_butt.action) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.data)) {
+    if (!(content !== null && content !== void 0 && (_content$primary_butt = content.primary_button) !== null && _content$primary_butt !== void 0 && (_content$primary_butt2 = _content$primary_butt.action) !== null && _content$primary_butt2 !== void 0 && _content$primary_butt2.data)) {
       return;
     } // Set add-on url in action.data.url property from JSON
 
@@ -1494,35 +1494,35 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
     // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
 
 
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "outer-wrapper onboardingContainer"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
       className: "screen"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "brand-logo"
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "welcome-text"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.subtitle
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.text
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
       "data-l10n-args": this.props.name ? JSON.stringify({
         "addon-name": this.props.name
       }) : null
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
       "data-l10n-name": "icon",
       src: this.props.iconURL,
       role: "presentation",
       alt: ""
-    }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.primary_button.label
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       onClick: this.onClickAddExtension,
       className: "primary"
-    })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
       text: content.startButton.label
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       onClick: this.handleStartBtnClick,
       className: "secondary"
     })))));
