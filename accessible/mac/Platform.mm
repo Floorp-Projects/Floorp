@@ -10,7 +10,7 @@
 #import "MOXTextMarkerDelegate.h"
 
 #include "Platform.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "AccessibleOrProxy.h"
 #include "DocAccessibleParent.h"
 #include "mozTableAccessible.h"
@@ -40,7 +40,7 @@ void PlatformInit() {}
 
 void PlatformShutdown() {}
 
-void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
+void ProxyCreated(RemoteAccessible* aProxy, uint32_t) {
   if (aProxy->Role() == roles::WHITESPACE) {
     // We don't create a native object if we're child of a "flat" accessible;
     // for example, on OS X buttons shouldn't have any children, because that
@@ -50,7 +50,7 @@ void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
   }
 
   // Pass in dummy state for now as retrieving proxy state requires IPC.
-  // Note that we can use ProxyAccessible::IsTable* functions here because they
+  // Note that we can use RemoteAccessible::IsTable* functions here because they
   // do not use IPC calls but that might change after bug 1210477.
   Class type;
   if (aProxy->IsTable()) {
@@ -69,7 +69,7 @@ void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(mozWrapper));
 }
 
-void ProxyDestroyed(ProxyAccessible* aProxy) {
+void ProxyDestroyed(RemoteAccessible* aProxy) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
   [wrapper expire];
   [wrapper release];
@@ -80,7 +80,7 @@ void ProxyDestroyed(ProxyAccessible* aProxy) {
   }
 }
 
-void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
+void ProxyEvent(RemoteAccessible* aProxy, uint32_t aEventType) {
   // Ignore event that we don't escape below, they aren't yet supported.
   if (aEventType != nsIAccessibleEvent::EVENT_FOCUS &&
       aEventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
@@ -101,7 +101,7 @@ void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
   }
 }
 
-void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t aState,
+void ProxyStateChangeEvent(RemoteAccessible* aProxy, uint64_t aState,
                            bool aEnabled) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
   if (wrapper) {
@@ -109,7 +109,7 @@ void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t aState,
   }
 }
 
-void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
+void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
                          bool aIsSelectionCollapsed) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
   MOXTextMarkerDelegate* delegate =
@@ -132,10 +132,10 @@ void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
+void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
                           int32_t aStart, uint32_t aLen, bool aIsInsert,
                           bool aFromUser) {
-  ProxyAccessible* acc = aTarget;
+  RemoteAccessible* acc = aTarget;
   // If there is a text input ancestor, use it as the event source.
   while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
     acc = acc->RemoteParent();
@@ -147,9 +147,9 @@ void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
                                         at:aStart];
 }
 
-void ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool) {}
+void ProxyShowHideEvent(RemoteAccessible*, RemoteAccessible*, bool, bool) {}
 
-void ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible* aWidget,
+void ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible* aWidget,
                          uint32_t aEventType) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aWidget);
   if (wrapper) {
@@ -157,15 +157,15 @@ void ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible* aWidget,
   }
 }
 
-void ProxyTextSelectionChangeEvent(ProxyAccessible* aTarget,
+void ProxyTextSelectionChangeEvent(RemoteAccessible* aTarget,
                                    const nsTArray<TextRangeData>& aSelection) {
   if (aSelection.Length()) {
     MOXTextMarkerDelegate* delegate =
         [MOXTextMarkerDelegate getOrCreateForDoc:aTarget->Document()];
     DocAccessibleParent* doc = aTarget->Document();
-    ProxyAccessible* startContainer =
+    RemoteAccessible* startContainer =
         doc->GetAccessible(aSelection[0].StartID());
-    ProxyAccessible* endContainer = doc->GetAccessible(aSelection[0].EndID());
+    RemoteAccessible* endContainer = doc->GetAccessible(aSelection[0].EndID());
     // Cache the selection.
     [delegate setSelectionFrom:startContainer
                             at:aSelection[0].StartOffset()
@@ -180,7 +180,7 @@ void ProxyTextSelectionChangeEvent(ProxyAccessible* aTarget,
   }
 }
 
-void ProxyRoleChangedEvent(ProxyAccessible* aTarget, const a11y::role& aRole) {
+void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole) {
   if (mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget)) {
     [wrapper handleRoleChanged:aRole];
   }

@@ -29,7 +29,7 @@ class xpcAccessibleHyperText : public xpcAccessibleGeneric,
     }
   }
 
-  xpcAccessibleHyperText(ProxyAccessible* aProxy, uint32_t aInterfaces)
+  xpcAccessibleHyperText(RemoteAccessible* aProxy, uint32_t aInterfaces)
       : xpcAccessibleGeneric(aProxy, aInterfaces) {
     mSupportedIfaces |= eText;
   }

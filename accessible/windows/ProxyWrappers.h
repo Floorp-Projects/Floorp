@@ -13,9 +13,9 @@
 namespace mozilla {
 namespace a11y {
 
-class ProxyAccessibleWrap : public AccessibleWrap {
+class RemoteAccessibleWrap : public AccessibleWrap {
  public:
-  explicit ProxyAccessibleWrap(ProxyAccessible* aProxy)
+  explicit RemoteAccessibleWrap(RemoteAccessible* aProxy)
       : AccessibleWrap(nullptr, nullptr) {
     mType = eProxyType;
     mBits.proxy = aProxy;
@@ -31,9 +31,9 @@ class ProxyAccessibleWrap : public AccessibleWrap {
   }
 };
 
-class HyperTextProxyAccessibleWrap : public HyperTextAccessibleWrap {
+class HyperTextRemoteAccessibleWrap : public HyperTextAccessibleWrap {
  public:
-  explicit HyperTextProxyAccessibleWrap(ProxyAccessible* aProxy)
+  explicit HyperTextRemoteAccessibleWrap(RemoteAccessible* aProxy)
       : HyperTextAccessibleWrap(nullptr, nullptr) {
     mType = eProxyType;
     mBits.proxy = aProxy;
@@ -49,10 +49,10 @@ class HyperTextProxyAccessibleWrap : public HyperTextAccessibleWrap {
   }
 };
 
-class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap {
+class DocRemoteAccessibleWrap : public HyperTextRemoteAccessibleWrap {
  public:
-  explicit DocProxyAccessibleWrap(ProxyAccessible* aProxy)
-      : HyperTextProxyAccessibleWrap(aProxy) {
+  explicit DocRemoteAccessibleWrap(RemoteAccessible* aProxy)
+      : HyperTextRemoteAccessibleWrap(aProxy) {
     mGenericTypes |= eDocument;
   }
 
@@ -65,7 +65,7 @@ class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap {
   }
 
   virtual nsIntRect Bounds() const override {
-    // OuterDocAccessible can return a DocProxyAccessibleWrap as a child.
+    // OuterDocAccessible can return a DocRemoteAccessibleWrap as a child.
     // LocalAccessible::ChildAtPoint on an ancestor might retrieve this proxy
     // and call Bounds() on it. This will crash on a proxy, so we override it to
     // do nothing here.
@@ -80,24 +80,24 @@ class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap {
 };
 
 template <typename T>
-inline ProxyAccessible* HyperTextProxyFor(T* aWrapper) {
+inline RemoteAccessible* HyperTextProxyFor(T* aWrapper) {
   static_assert(std::is_base_of<IUnknown, T>::value,
                 "only IAccessible* should be passed in");
-  auto wrapper = static_cast<HyperTextProxyAccessibleWrap*>(aWrapper);
+  auto wrapper = static_cast<HyperTextRemoteAccessibleWrap*>(aWrapper);
   return wrapper->IsProxy() ? wrapper->Proxy() : nullptr;
 }
 
 /**
  * Stub AccessibleWrap used in a content process for an embedded document
  * residing in another content process.
- * There is no ProxyAccessible here, since those only exist in the parent
- * process. However, like ProxyAccessibleWrap, the only real method that
+ * There is no RemoteAccessible here, since those only exist in the parent
+ * process. However, like RemoteAccessibleWrap, the only real method that
  * gets called is GetNativeInterface, which returns a COM proxy for the
  * document.
  */
-class RemoteIframeDocProxyAccessibleWrap : public HyperTextAccessibleWrap {
+class RemoteIframeDocRemoteAccessibleWrap : public HyperTextAccessibleWrap {
  public:
-  explicit RemoteIframeDocProxyAccessibleWrap(IDispatch* aCOMProxy)
+  explicit RemoteIframeDocRemoteAccessibleWrap(IDispatch* aCOMProxy)
       : HyperTextAccessibleWrap(nullptr, nullptr), mCOMProxy(aCOMProxy) {
     mType = eProxyType;
     mBits.proxy = nullptr;
@@ -114,7 +114,7 @@ class RemoteIframeDocProxyAccessibleWrap : public HyperTextAccessibleWrap {
   }
 
   virtual nsIntRect Bounds() const override {
-    // OuterDocAccessible can return a RemoteIframeDocProxyAccessibleWrap as a
+    // OuterDocAccessible can return a RemoteIframeDocRemoteAccessibleWrap as a
     // child. LocalAccessible::ChildAtPoint on an ancestor might retrieve this
     // proxy and call Bounds() on it. This will crash on a proxy, so we override
     // it to do nothing here.

@@ -39,7 +39,7 @@ class MaiHyperlink {
     return link;
   }
 
-  ProxyAccessible* Proxy() const { return mHyperlink.AsProxy(); }
+  RemoteAccessible* Proxy() const { return mHyperlink.AsProxy(); }
 
  protected:
   AccessibleOrProxy mHyperlink;

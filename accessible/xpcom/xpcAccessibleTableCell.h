@@ -23,7 +23,7 @@ class xpcAccessibleTableCell : public xpcAccessibleHyperText,
   explicit xpcAccessibleTableCell(LocalAccessible* aIntl)
       : xpcAccessibleHyperText(aIntl) {}
 
-  xpcAccessibleTableCell(ProxyAccessible* aProxy, uint32_t aInterfaces)
+  xpcAccessibleTableCell(RemoteAccessible* aProxy, uint32_t aInterfaces)
       : xpcAccessibleHyperText(aProxy, aInterfaces) {}
 
   NS_DECL_ISUPPORTS_INHERITED

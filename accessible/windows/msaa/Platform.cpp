@@ -11,7 +11,7 @@
 #include "HyperTextAccessibleWrap.h"
 #include "nsIWindowsRegKey.h"
 #include "nsWinUtils.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/mscom/ActivationContext.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
@@ -68,14 +68,14 @@ void a11y::PlatformShutdown() {
   }
 }
 
-void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
+void a11y::ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces) {
   AccessibleWrap* wrapper = nullptr;
   if (aInterfaces & Interfaces::DOCUMENT) {
-    wrapper = new DocProxyAccessibleWrap(aProxy);
+    wrapper = new DocRemoteAccessibleWrap(aProxy);
   } else if (aInterfaces & Interfaces::HYPERTEXT) {
-    wrapper = new HyperTextProxyAccessibleWrap(aProxy);
+    wrapper = new HyperTextRemoteAccessibleWrap(aProxy);
   } else {
-    wrapper = new ProxyAccessibleWrap(aProxy);
+    wrapper = new RemoteAccessibleWrap(aProxy);
   }
 
   wrapper->SetProxyInterfaces(aInterfaces);
@@ -83,7 +83,7 @@ void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
 }
 
-void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
+void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   AccessibleWrap* wrapper =
       reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 
@@ -101,16 +101,16 @@ void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
   wrapper->Release();
 }
 
-void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
+void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget), aEventType);
 }
 
-void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t, bool) {
+void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t, bool) {
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
                                nsIAccessibleEvent::EVENT_STATE_CHANGE);
 }
 
-void a11y::ProxyFocusEvent(ProxyAccessible* aTarget,
+void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
                            const LayoutDeviceIntRect& aCaretRect) {
   FocusManager* focusMgr = FocusMgr();
   if (focusMgr && focusMgr->FocusedAccessible()) {
@@ -129,14 +129,14 @@ void a11y::ProxyFocusEvent(ProxyAccessible* aTarget,
                                nsIAccessibleEvent::EVENT_FOCUS);
 }
 
-void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget,
+void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget,
                                const LayoutDeviceIntRect& aCaretRect) {
   AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
                                nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);
 }
 
-void a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
+void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsString& aStr,
                                 int32_t aStart, uint32_t aLen, bool aInsert,
                                 bool) {
   AccessibleWrap* wrapper = WrapperFor(aText);
@@ -164,7 +164,7 @@ void a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
   AccessibleWrap::FireWinEvent(wrapper, eventType);
 }
 
-void a11y::ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible*,
+void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible*,
                               bool aInsert, bool) {
   uint32_t event =
       aInsert ? nsIAccessibleEvent::EVENT_SHOW : nsIAccessibleEvent::EVENT_HIDE;
@@ -172,7 +172,7 @@ void a11y::ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible*,
   AccessibleWrap::FireWinEvent(wrapper, event);
 }
 
-void a11y::ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible*,
+void a11y::ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible*,
                                uint32_t aType) {
   AccessibleWrap* wrapper = WrapperFor(aTarget);
   AccessibleWrap::FireWinEvent(wrapper, aType);

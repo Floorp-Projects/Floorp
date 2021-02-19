@@ -16,7 +16,7 @@ int32_t AccessibleOrProxy::IndexInParent() const {
     return AsAccessible()->IndexInParent();
   }
 
-  ProxyAccessible* proxy = AsProxy();
+  RemoteAccessible* proxy = AsProxy();
   if (!proxy) {
     return -1;
   }
@@ -38,12 +38,12 @@ AccessibleOrProxy AccessibleOrProxy::Parent() const {
     return AsAccessible()->LocalParent();
   }
 
-  ProxyAccessible* proxy = AsProxy();
+  RemoteAccessible* proxy = AsProxy();
   if (!proxy) {
     return nullptr;
   }
 
-  if (ProxyAccessible* parent = proxy->RemoteParent()) {
+  if (RemoteAccessible* parent = proxy->RemoteParent()) {
     return parent;
   }
 
@@ -56,7 +56,7 @@ AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
   if (IsProxy()) {
     return AsProxy()->ChildAtPoint(aX, aY, aWhichChild);
   }
-  ProxyAccessible* childDoc = RemoteChildDoc();
+  RemoteAccessible* childDoc = RemoteChildDoc();
   if (childDoc) {
     // This is an OuterDocAccessible.
     nsIntRect docRect = AsAccessible()->Bounds();
@@ -75,13 +75,13 @@ AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
   childDoc = target.RemoteChildDoc();
   if (childDoc) {
     // LocalAccessible::ChildAtPoint stopped at an OuterDocAccessible, since it
-    // can't traverse into ProxyAccessibles. Continue the search from childDoc.
+    // can't traverse into RemoteAccessibles. Continue the search from childDoc.
     return childDoc->ChildAtPoint(aX, aY, aWhichChild);
   }
   return target;
 }
 
-ProxyAccessible* AccessibleOrProxy::RemoteChildDoc() const {
+RemoteAccessible* AccessibleOrProxy::RemoteChildDoc() const {
   MOZ_ASSERT(!IsNull());
   if (IsProxy()) {
     return nullptr;

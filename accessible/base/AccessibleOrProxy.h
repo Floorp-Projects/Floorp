@@ -8,7 +8,7 @@
 #define mozilla_a11y_AccessibleOrProxy_h
 
 #include "mozilla/a11y/LocalAccessible.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/a11y/Role.h"
 
 #include <stdint.h>
@@ -17,22 +17,22 @@ namespace mozilla {
 namespace a11y {
 
 /**
- * This class stores a LocalAccessible* or a ProxyAccessible* in a safe manner
+ * This class stores a LocalAccessible* or a RemoteAccessible* in a safe manner
  * with size sizeof(void*).
  */
 class AccessibleOrProxy {
  public:
   MOZ_IMPLICIT AccessibleOrProxy(LocalAccessible* aAcc)
       : mBits(reinterpret_cast<uintptr_t>(aAcc)) {}
-  MOZ_IMPLICIT AccessibleOrProxy(ProxyAccessible* aProxy)
+  MOZ_IMPLICIT AccessibleOrProxy(RemoteAccessible* aProxy)
       : mBits(aProxy ? (reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY) : 0) {}
   MOZ_IMPLICIT AccessibleOrProxy(decltype(nullptr)) : mBits(0) {}
   MOZ_IMPLICIT AccessibleOrProxy() : mBits(0) {}
 
   bool IsProxy() const { return mBits & IS_PROXY; }
-  ProxyAccessible* AsProxy() const {
+  RemoteAccessible* AsProxy() const {
     if (IsProxy()) {
-      return reinterpret_cast<ProxyAccessible*>(mBits & ~IS_PROXY);
+      return reinterpret_cast<RemoteAccessible*>(mBits & ~IS_PROXY);
     }
 
     return nullptr;
@@ -75,7 +75,7 @@ class AccessibleOrProxy {
       return AsProxy()->RemoteChildAt(aIdx);
     }
 
-    ProxyAccessible* childDoc = RemoteChildDoc();
+    RemoteAccessible* childDoc = RemoteChildDoc();
     if (childDoc && aIdx == 0) {
       return childDoc;
     }
@@ -91,7 +91,7 @@ class AccessibleOrProxy {
       return AsProxy()->RemoteFirstChild();
     }
 
-    ProxyAccessible* childDoc = RemoteChildDoc();
+    RemoteAccessible* childDoc = RemoteChildDoc();
     if (childDoc) {
       return childDoc;
     }
@@ -107,7 +107,7 @@ class AccessibleOrProxy {
       return AsProxy()->RemoteLastChild();
     }
 
-    ProxyAccessible* childDoc = RemoteChildDoc();
+    RemoteAccessible* childDoc = RemoteChildDoc();
     if (childDoc) {
       return childDoc;
     }
@@ -168,7 +168,7 @@ class AccessibleOrProxy {
   /**
    * If this is an OuterDocAccessible, return the remote child document.
    */
-  ProxyAccessible* RemoteChildDoc() const;
+  RemoteAccessible* RemoteChildDoc() const;
 
   uintptr_t mBits;
   static const uintptr_t IS_PROXY = 0x1;

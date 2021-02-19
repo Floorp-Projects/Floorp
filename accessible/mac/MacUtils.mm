@@ -34,13 +34,13 @@ NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<LocalAccessible*>& aArray) {
 
 // convert an array of Gecko proxy accessibles to an NSArray of native
 // accessibles
-NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray) {
+NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<RemoteAccessible*>& aArray) {
   NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
 
   // iterate through the list, and get each native accessible.
   size_t totalCount = aArray.Length();
   for (size_t i = 0; i < totalCount; i++) {
-    ProxyAccessible* curAccessible = aArray.ElementAt(i);
+    RemoteAccessible* curAccessible = aArray.ElementAt(i);
     mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
     if (curNative)
       [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
@@ -67,7 +67,7 @@ NSString* GetAccAttr(mozAccessible* aNativeAccessible, const char* aAttrName) {
           [aNativeAccessible geckoAccessible].AsAccessible()) {
     nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
     attributes->GetStringProperty(nsCString(aAttrName), result);
-  } else if (ProxyAccessible* proxy =
+  } else if (RemoteAccessible* proxy =
                  [aNativeAccessible geckoAccessible].AsProxy()) {
     AutoTArray<Attribute, 10> attrs;
     proxy->Attributes(&attrs);

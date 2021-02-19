@@ -8,8 +8,8 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/a11y/Platform.h"
-#include "mozilla/a11y/ProxyAccessibleBase.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessibleBase.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/a11y/Role.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -21,7 +21,7 @@ namespace mozilla {
 namespace a11y {
 
 template <class Derived>
-void ProxyAccessibleBase<Derived>::Shutdown() {
+void RemoteAccessibleBase<Derived>::Shutdown() {
   MOZ_DIAGNOSTIC_ASSERT(!IsDoc());
   xpcAccessibleDocument* xpcDoc =
       GetAccService()->GetCachedXPCDocument(Document());
@@ -48,7 +48,8 @@ void ProxyAccessibleBase<Derived>::Shutdown() {
 }
 
 template <class Derived>
-void ProxyAccessibleBase<Derived>::SetChildDoc(DocAccessibleParent* aChildDoc) {
+void RemoteAccessibleBase<Derived>::SetChildDoc(
+    DocAccessibleParent* aChildDoc) {
   MOZ_ASSERT(aChildDoc);
   MOZ_ASSERT(mChildren.Length() == 0);
   mChildren.AppendElement(aChildDoc);
@@ -56,7 +57,7 @@ void ProxyAccessibleBase<Derived>::SetChildDoc(DocAccessibleParent* aChildDoc) {
 }
 
 template <class Derived>
-void ProxyAccessibleBase<Derived>::ClearChildDoc(
+void RemoteAccessibleBase<Derived>::ClearChildDoc(
     DocAccessibleParent* aChildDoc) {
   MOZ_ASSERT(aChildDoc);
   // This is possible if we're replacing one document with another: Doc 1
@@ -68,7 +69,7 @@ void ProxyAccessibleBase<Derived>::ClearChildDoc(
 }
 
 template <class Derived>
-uint32_t ProxyAccessibleBase<Derived>::EmbeddedChildCount() const {
+uint32_t RemoteAccessibleBase<Derived>::EmbeddedChildCount() const {
   size_t count = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (mChildren[i]->IsEmbeddedObject()) {
@@ -80,7 +81,7 @@ uint32_t ProxyAccessibleBase<Derived>::EmbeddedChildCount() const {
 }
 
 template <class Derived>
-int32_t ProxyAccessibleBase<Derived>::IndexOfEmbeddedChild(
+int32_t RemoteAccessibleBase<Derived>::IndexOfEmbeddedChild(
     const Derived* aChild) {
   size_t index = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
@@ -97,7 +98,7 @@ int32_t ProxyAccessibleBase<Derived>::IndexOfEmbeddedChild(
 }
 
 template <class Derived>
-Derived* ProxyAccessibleBase<Derived>::EmbeddedChildAt(size_t aChildIdx) {
+Derived* RemoteAccessibleBase<Derived>::EmbeddedChildAt(size_t aChildIdx) {
   size_t index = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (!mChildren[i]->IsEmbeddedObject()) {
@@ -115,7 +116,8 @@ Derived* ProxyAccessibleBase<Derived>::EmbeddedChildAt(size_t aChildIdx) {
 }
 
 template <class Derived>
-LocalAccessible* ProxyAccessibleBase<Derived>::OuterDocOfRemoteBrowser() const {
+LocalAccessible* RemoteAccessibleBase<Derived>::OuterDocOfRemoteBrowser()
+    const {
   auto tab = static_cast<dom::BrowserParent*>(mDoc->Manager());
   dom::Element* frame = tab->GetOwnerElement();
   NS_ASSERTION(frame, "why isn't the tab in a frame!");
@@ -127,7 +129,7 @@ LocalAccessible* ProxyAccessibleBase<Derived>::OuterDocOfRemoteBrowser() const {
 }
 
 template <class Derived>
-void ProxyAccessibleBase<Derived>::SetParent(Derived* aParent) {
+void RemoteAccessibleBase<Derived>::SetParent(Derived* aParent) {
   MOZ_ASSERT(IsDoc(), "we should only reparent documents");
   if (!aParent) {
     mParent = kNoParent;
@@ -138,7 +140,7 @@ void ProxyAccessibleBase<Derived>::SetParent(Derived* aParent) {
 }
 
 template <class Derived>
-Derived* ProxyAccessibleBase<Derived>::RemoteParent() const {
+Derived* RemoteAccessibleBase<Derived>::RemoteParent() const {
   if (mParent == kNoParent) {
     return nullptr;
   }
@@ -163,7 +165,7 @@ Derived* ProxyAccessibleBase<Derived>::RemoteParent() const {
   return parentDoc->GetAccessible(mParent);
 }
 
-template class ProxyAccessibleBase<ProxyAccessible>;
+template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y
 }  // namespace mozilla

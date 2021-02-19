@@ -707,7 +707,7 @@ void RootAccessible::HandleTreeInvalidatedEvent(
 }
 #endif
 
-ProxyAccessible* RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const {
+RemoteAccessible* RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const {
   nsCOMPtr<nsIDocShellTreeOwner> owner;
   mDocumentNode->GetDocShell()->GetTreeOwner(getter_AddRefs(owner));
   NS_ENSURE_TRUE(owner, nullptr);

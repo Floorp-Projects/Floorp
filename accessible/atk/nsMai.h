@@ -16,7 +16,7 @@
 
 namespace mozilla {
 namespace a11y {
-class ProxyAccessible;
+class RemoteAccessible;
 }
 }  // namespace mozilla
 
@@ -64,9 +64,9 @@ typedef struct _MaiAtkSocketClass {
 extern "C" GType (*gAtkTableCellGetTypeFunc)();
 
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
-mozilla::a11y::ProxyAccessible* GetProxy(AtkObject* aAtkObj);
+mozilla::a11y::RemoteAccessible* GetProxy(AtkObject* aAtkObj);
 mozilla::a11y::AccessibleOrProxy GetInternalObj(AtkObject* aObj);
-AtkObject* GetWrapperFor(mozilla::a11y::ProxyAccessible* aProxy);
+AtkObject* GetWrapperFor(mozilla::a11y::RemoteAccessible* aProxy);
 AtkObject* GetWrapperFor(mozilla::a11y::AccessibleOrProxy aObj);
 
 extern int atkMajorVersion, atkMinorVersion, atkMicroVersion;

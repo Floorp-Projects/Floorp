@@ -10,7 +10,7 @@
 #include "AccessibleWrap.h"
 #include "DocAccessible.h"
 #include "nsMai.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla::a11y;
@@ -46,7 +46,7 @@ const gchar* getDocumentLocaleCB(AtkDocument* aDocument) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
   if (accWrap) {
     accWrap->Language(locale);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
     proxy->Language(locale);
   }
 
@@ -80,7 +80,7 @@ AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
     document->URL(url);
     document->DocType(w3cDocType);
     document->MimeType(mimeType);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
     proxy->URLDocTypeMimeType(url, w3cDocType, mimeType);
   } else {
     return nullptr;
@@ -97,7 +97,7 @@ AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
 
 const gchar* getDocumentAttributeValueCB(AtkDocument* aDocument,
                                          const gchar* aAttrName) {
-  ProxyAccessible* proxy = nullptr;
+  RemoteAccessible* proxy = nullptr;
   DocAccessible* document = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
   if (accWrap) {

@@ -44,7 +44,7 @@ class HyperTextAccessible;
 class ImageAccessible;
 class KeyBinding;
 class OuterDocAccessible;
-class ProxyAccessible;
+class RemoteAccessible;
 class Relation;
 class RootAccessible;
 class TableAccessible;
@@ -604,7 +604,7 @@ class LocalAccessible : public nsISupports {
   bool IsMenuPopup() const { return mType == eMenuPopupType; }
 
   bool IsProxy() const { return mType == eProxyType; }
-  ProxyAccessible* Proxy() const {
+  RemoteAccessible* Proxy() const {
     MOZ_ASSERT(IsProxy());
     return mBits.proxy;
   }
@@ -1210,7 +1210,7 @@ class LocalAccessible : public nsISupports {
 
   union {
     AccGroupInfo* groupInfo;
-    ProxyAccessible* proxy;
+    RemoteAccessible* proxy;
   } mutable mBits;
   friend class AccGroupInfo;
 

@@ -52,7 +52,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
     return IPC_FAIL(this, "No children being added");
   }
 
-  ProxyAccessible* parent = GetAccessible(aData.ID());
+  RemoteAccessible* parent = GetAccessible(aData.ID());
 
   // XXX This should really never happen, but sometimes we fail to fire the
   // required show events.
@@ -98,7 +98,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = parent->RemoteChildAt(newChildIdx);
+  RemoteAccessible* target = parent->RemoteChildAt(newChildIdx);
   ProxyShowHideEvent(target, parent, true, aFromUser);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -117,7 +117,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
 }
 
 uint32_t DocAccessibleParent::AddSubtree(
-    ProxyAccessible* aParent, const nsTArray<a11y::AccessibleData>& aNewTree,
+    RemoteAccessible* aParent, const nsTArray<a11y::AccessibleData>& aNewTree,
     uint32_t aIdx, uint32_t aIdxInParent) {
   if (aNewTree.Length() <= aIdx) {
     NS_ERROR("bad index in serialized tree!");
@@ -131,7 +131,7 @@ uint32_t DocAccessibleParent::AddSubtree(
     return 0;
   }
 
-  ProxyAccessible* newProxy = new ProxyAccessible(
+  RemoteAccessible* newProxy = new RemoteAccessible(
       newChild.ID(), aParent, this, newChild.Role(), newChild.Interfaces());
 
   aParent->AddChildAt(aIdxInParent, newProxy);
@@ -187,13 +187,13 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* root = rootEntry->mProxy;
+  RemoteAccessible* root = rootEntry->mProxy;
   if (!root) {
     NS_ERROR("invalid root being removed!");
     return IPC_OK();
   }
 
-  ProxyAccessible* parent = root->RemoteParent();
+  RemoteAccessible* parent = root->RemoteParent();
   ProxyShowHideEvent(root, parent, false, aFromUser);
 
   RefPtr<xpcAccHideEvent> event = nullptr;
@@ -201,9 +201,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
     uint32_t type = nsIAccessibleEvent::EVENT_HIDE;
     xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(root);
     xpcAccessibleGeneric* xpcParent = GetXPCAccessible(parent);
-    ProxyAccessible* next = root->RemoteNextSibling();
+    RemoteAccessible* next = root->RemoteNextSibling();
     xpcAccessibleGeneric* xpcNext = next ? GetXPCAccessible(next) : nullptr;
-    ProxyAccessible* prev = root->RemotePrevSibling();
+    RemoteAccessible* prev = root->RemotePrevSibling();
     xpcAccessibleGeneric* xpcPrev = prev ? GetXPCAccessible(prev) : nullptr;
     xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
     nsINode* node = nullptr;
@@ -229,7 +229,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* proxy = GetAccessible(aID);
+  RemoteAccessible* proxy = GetAccessible(aID);
   if (!proxy) {
     NS_ERROR("no proxy for event!");
     return IPC_OK();
@@ -258,7 +258,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvStateChangeEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = GetAccessible(aID);
+  RemoteAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("we don't know about the target of a state change event!");
     return IPC_OK();
@@ -294,7 +294,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* proxy = GetAccessible(aID);
+  RemoteAccessible* proxy = GetAccessible(aID);
   if (!proxy) {
     NS_ERROR("unknown caret move event target!");
     return IPC_OK();
@@ -329,7 +329,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextChangeEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = GetAccessible(aID);
+  RemoteAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("text change event target is unknown!");
     return IPC_OK();
@@ -369,8 +369,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvSelectionEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = GetAccessible(aID);
-  ProxyAccessible* widget = GetAccessible(aWidgetID);
+  RemoteAccessible* target = GetAccessible(aID);
+  RemoteAccessible* widget = GetAccessible(aWidgetID);
   if (!target || !widget) {
     NS_ERROR("invalid id in selection event");
     return IPC_OK();
@@ -399,9 +399,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvVirtualCursorChangeEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = GetAccessible(aID);
-  ProxyAccessible* oldPosition = GetAccessible(aOldPositionID);
-  ProxyAccessible* newPosition = GetAccessible(aNewPositionID);
+  RemoteAccessible* target = GetAccessible(aID);
+  RemoteAccessible* oldPosition = GetAccessible(aOldPositionID);
+  RemoteAccessible* newPosition = GetAccessible(aNewPositionID);
 
   if (!target) {
     NS_ERROR("no proxy for event!");
@@ -439,7 +439,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = GetAccessible(aID);
+  RemoteAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("no proxy for event!");
     return IPC_OK();
@@ -476,7 +476,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvAnnouncementEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = GetAccessible(aID);
+  RemoteAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("no proxy for event!");
     return IPC_OK();
@@ -507,7 +507,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = GetAccessible(aID);
+  RemoteAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("no proxy for event!");
     return IPC_OK();
@@ -595,7 +595,7 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
     return IPC_FAIL(this, "binding to nonexistant proxy!");
   }
 
-  ProxyAccessible* outerDoc = e->mProxy;
+  RemoteAccessible* outerDoc = e->mProxy;
   MOZ_ASSERT(outerDoc);
 
   // OuterDocAccessibles are expected to only have a document as a child.
@@ -802,7 +802,7 @@ bool DocAccessibleParent::CheckDocTree() const {
 }
 
 xpcAccessibleGeneric* DocAccessibleParent::GetXPCAccessible(
-    ProxyAccessible* aProxy) {
+    RemoteAccessible* aProxy) {
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
   MOZ_ASSERT(doc);
 
@@ -883,7 +883,7 @@ void DocAccessibleParent::SendParentCOMProxy(LocalAccessible* aOuterDoc) {
   if (NS_WARN_IF(!nativeAcc)) {
     // Couldn't get a COM proxy for the outer doc. That probably means it died,
     // but the parent process hasn't received a message to remove it from the
-    // ProxyAccessible tree yet.
+    // RemoteAccessible tree yet.
     return;
   }
 
@@ -943,7 +943,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* proxy = GetAccessible(aID);
+  RemoteAccessible* proxy = GetAccessible(aID);
   if (!proxy) {
     NS_ERROR("no proxy for event!");
     return IPC_OK();
@@ -977,7 +977,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
   if (mShutdown) {
     return IPC_OK();
   }
-  nsTArray<ProxyAccessible*> proxies(aData.Length());
+  nsTArray<RemoteAccessible*> proxies(aData.Length());
   for (size_t i = 0; i < aData.Length(); i++) {
     DocAccessibleParent* doc = static_cast<DocAccessibleParent*>(
         aData.ElementAt(i).Document().get_PDocAccessibleParent());
@@ -987,7 +987,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
       continue;
     }
 
-    ProxyAccessible* proxy = doc->GetAccessible(aData.ElementAt(i).ID());
+    RemoteAccessible* proxy = doc->GetAccessible(aData.ElementAt(i).ID());
     if (!proxy) {
       MOZ_ASSERT_UNREACHABLE("No proxy found!");
       continue;

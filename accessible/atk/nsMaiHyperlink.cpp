@@ -6,7 +6,7 @@
 
 #include "nsIURI.h"
 #include "nsMaiHyperlink.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 
 using namespace mozilla::a11y;
 
@@ -176,7 +176,7 @@ AtkObject* getObjectCB(AtkHyperlink* aLink, gint aLinkIndex) {
     return AccessibleWrap::GetAtkObject(anchor);
   }
 
-  ProxyAccessible* anchor = maiLink->Proxy()->AnchorAt(aLinkIndex);
+  RemoteAccessible* anchor = maiLink->Proxy()->AnchorAt(aLinkIndex);
   return anchor ? GetWrapperFor(anchor) : nullptr;
 }
 

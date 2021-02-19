@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_ProxyAccessibleBase_h
-#define mozilla_a11y_ProxyAccessibleBase_h
+#ifndef mozilla_a11y_RemoteAccessibleBase_h
+#define mozilla_a11y_RemoteAccessibleBase_h
 
 #include "mozilla/a11y/Role.h"
 #include "nsIAccessibleText.h"
@@ -22,7 +22,7 @@ namespace a11y {
 class LocalAccessible;
 class Attribute;
 class DocAccessibleParent;
-class ProxyAccessible;
+class RemoteAccessible;
 enum class RelationType;
 
 enum Interfaces {
@@ -38,9 +38,9 @@ enum Interfaces {
 };
 
 template <class Derived>
-class ProxyAccessibleBase {
+class RemoteAccessibleBase {
  public:
-  ~ProxyAccessibleBase() { MOZ_ASSERT(!mWrapper); }
+  ~RemoteAccessibleBase() { MOZ_ASSERT(!mWrapper); }
 
   void AddChildAt(uint32_t aIdx, Derived* aChild) {
     mChildren.InsertElementAt(aIdx, aChild);
@@ -155,8 +155,9 @@ class ProxyAccessibleBase {
   }
 
  protected:
-  ProxyAccessibleBase(uint64_t aID, Derived* aParent, DocAccessibleParent* aDoc,
-                      role aRole, uint32_t aInterfaces)
+  RemoteAccessibleBase(uint64_t aID, Derived* aParent,
+                       DocAccessibleParent* aDoc, role aRole,
+                       uint32_t aInterfaces)
       : mParent(aParent->ID()),
         mDoc(aDoc),
         mWrapper(0),
@@ -169,7 +170,7 @@ class ProxyAccessibleBase {
         mIsHyperText(aInterfaces & Interfaces::HYPERTEXT),
         mIsSelection(aInterfaces & Interfaces::SELECTION) {}
 
-  explicit ProxyAccessibleBase(DocAccessibleParent* aThisAsDoc)
+  explicit RemoteAccessibleBase(DocAccessibleParent* aThisAsDoc)
       : mParent(kNoParent),
         mDoc(aThisAsDoc),
         mWrapper(0),
@@ -212,7 +213,7 @@ class ProxyAccessibleBase {
   const bool mIsSelection : 1;
 };
 
-extern template class ProxyAccessibleBase<ProxyAccessible>;
+extern template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y
 }  // namespace mozilla

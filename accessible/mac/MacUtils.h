@@ -22,7 +22,7 @@ NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<LocalAccessible*>& aArray);
 
 // convert an array of Gecko proxy accessibles to an NSArray of native
 // accessibles
-NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray);
+NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<RemoteAccessible*>& aArray);
 
 /**
  * Get a localized string from the string bundle.

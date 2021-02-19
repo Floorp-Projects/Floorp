@@ -121,7 +121,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     state = acc->State();
   }
 
-  if (ProxyAccessible* proxy = mGeckoAccessible.AsProxy()) {
+  if (RemoteAccessible* proxy = mGeckoAccessible.AsProxy()) {
     state = proxy->State();
   }
 
@@ -222,7 +222,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   MOZ_ASSERT(!mGeckoAccessible.IsNull());
 
   LocalAccessible* acc = mGeckoAccessible.AsAccessible();
-  ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+  RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
 
   mozAccessible* focusedChild = nil;
   if (acc) {
@@ -242,7 +242,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
       }
     }
   } else if (proxy) {
-    ProxyAccessible* focusedGeckoChild = proxy->FocusedChild();
+    RemoteAccessible* focusedGeckoChild = proxy->FocusedChild();
     if (focusedGeckoChild) {
       focusedChild = GetNativeFromGeckoAccessible(focusedGeckoChild);
     }
@@ -427,7 +427,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   MOZ_ASSERT(!mGeckoAccessible.IsNull());
 
   LocalAccessible* acc = mGeckoAccessible.AsAccessible();
-  ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+  RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
 
   // Deal with landmarks first
   // macOS groups the specific landmark types of DPub ARIA into two broad
@@ -584,7 +584,7 @@ struct RoleDescrComparator {
   }
 
   LocalAccessible* acc = mGeckoAccessible.AsAccessible();
-  ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+  RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
   nsAutoString name;
 
   /* If our accessible is:
@@ -676,7 +676,7 @@ struct RoleDescrComparator {
   if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     docAcc = acc->Document();
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
     LocalAccessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
     if (outerDoc) docAcc = outerDoc->Document();
   }
@@ -981,8 +981,8 @@ struct RoleDescrComparator {
     return relations;
   }
 
-  ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
-  nsTArray<ProxyAccessible*> rel = proxy->RelationByType(relationType);
+  RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
+  nsTArray<RemoteAccessible*> rel = proxy->RelationByType(relationType);
   return utils::ConvertToNSArray(rel);
 }
 

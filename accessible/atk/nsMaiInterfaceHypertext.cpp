@@ -10,7 +10,7 @@
 #include "HyperTextAccessible.h"
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla::a11y;
@@ -30,8 +30,8 @@ static AtkHyperlink* getLinkCB(AtkHypertext* aText, gint aLinkIndex) {
     }
 
     atkHyperLink = AccessibleWrap::GetAtkObject(hyperLink);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    ProxyAccessible* proxyLink = proxy->LinkAt(aLinkIndex);
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    RemoteAccessible* proxyLink = proxy->LinkAt(aLinkIndex);
     if (!proxyLink) return nullptr;
 
     atkHyperLink = GetWrapperFor(proxyLink);
@@ -49,7 +49,7 @@ static gint getLinkCountCB(AtkHypertext* aText) {
     return hyperText->LinkCount();
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return proxy->LinkCount();
   }
 
@@ -65,7 +65,7 @@ static gint getLinkIndexCB(AtkHypertext* aText, gint aCharIndex) {
     return hyperText->LinkIndexAtOffset(aCharIndex);
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return proxy->LinkIndexAtOffset(aCharIndex);
   }
 

@@ -715,7 +715,7 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
 #else
     xpcAccessibleHyperText* linkHyperText =
         static_cast<xpcAccessibleHyperText*>(xpcLink.get());
-    ProxyAccessible* proxyLink = linkHyperText->mIntl.AsProxy();
+    RemoteAccessible* proxyLink = linkHyperText->mIntl.AsProxy();
     if (proxyLink) {
       *aIndex = mIntl.AsProxy()->LinkIndexOf(proxyLink);
     }

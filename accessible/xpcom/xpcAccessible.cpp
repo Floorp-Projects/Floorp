@@ -48,7 +48,7 @@ xpcAccessible::GetNextSibling(nsIAccessible** aNextSibling) {
     return rv;
   }
 
-  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  RemoteAccessible* proxy = IntlGeneric().AsProxy();
   NS_ENSURE_STATE(proxy);
 
   NS_IF_ADDREF(*aNextSibling = ToXPC(proxy->RemoteNextSibling()));
@@ -68,7 +68,7 @@ xpcAccessible::GetPreviousSibling(nsIAccessible** aPreviousSibling) {
     return rv;
   }
 
-  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  RemoteAccessible* proxy = IntlGeneric().AsProxy();
   NS_ENSURE_STATE(proxy);
 
   NS_IF_ADDREF(*aPreviousSibling = ToXPC(proxy->RemotePrevSibling()));
@@ -192,7 +192,7 @@ xpcAccessible::GetDOMNode(nsINode** aDOMNode) {
 
 NS_IMETHODIMP
 xpcAccessible::GetId(nsAString& aID) {
-  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  RemoteAccessible* proxy = IntlGeneric().AsProxy();
   if (!proxy) {
     return NS_ERROR_FAILURE;
   }
@@ -260,7 +260,7 @@ xpcAccessible::GetName(nsAString& aName) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   nsAutoString name;
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
     proxy->Name(name);
   } else {
     Intl()->Name(name);
@@ -276,7 +276,7 @@ xpcAccessible::GetDescription(nsAString& aDescription) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   nsAutoString desc;
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
     proxy->Description(desc);
   } else {
     Intl()->Description(desc);
@@ -292,7 +292,7 @@ xpcAccessible::GetLanguage(nsAString& aLanguage) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   nsAutoString lang;
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
     proxy->Language(lang);
   } else {
     Intl()->Language(lang);
@@ -307,7 +307,7 @@ xpcAccessible::GetValue(nsAString& aValue) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   nsAutoString value;
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
     proxy->Value(value);
   } else {
     Intl()->Value(value);
@@ -323,7 +323,7 @@ xpcAccessible::GetHelp(nsAString& aHelp) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   nsAutoString help;
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -344,7 +344,7 @@ xpcAccessible::GetAccessKey(nsAString& aAccessKey) {
 
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -362,7 +362,7 @@ xpcAccessible::GetKeyboardShortcut(nsAString& aKeyBinding) {
   aKeyBinding.Truncate();
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -389,7 +389,7 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
     return NS_OK;
   }
 
-  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  RemoteAccessible* proxy = IntlGeneric().AsProxy();
   AutoTArray<Attribute, 10> attrs;
   proxy->Attributes(&attrs);
 
@@ -521,8 +521,8 @@ xpcAccessible::GetRelationByType(uint32_t aType,
     return NS_OK;
   }
 
-  ProxyAccessible* proxy = IntlGeneric().AsProxy();
-  nsTArray<ProxyAccessible*> targets =
+  RemoteAccessible* proxy = IntlGeneric().AsProxy();
+  nsTArray<RemoteAccessible*> targets =
       proxy->RelationByType(static_cast<RelationType>(aType));
   NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &targets));
 
@@ -584,7 +584,7 @@ xpcAccessible::GetFocusedChild(nsIAccessible** aChild) {
 
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -645,7 +645,7 @@ NS_IMETHODIMP
 xpcAccessible::SetSelected(bool aSelect) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -662,7 +662,7 @@ NS_IMETHODIMP
 xpcAccessible::TakeSelection() {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -679,7 +679,7 @@ NS_IMETHODIMP
 xpcAccessible::TakeFocus() {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
     proxy->TakeFocus();
   } else {
     Intl()->TakeFocus();
@@ -694,7 +694,7 @@ xpcAccessible::GetActionCount(uint8_t* aActionCount) {
   *aActionCount = 0;
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -711,7 +711,7 @@ NS_IMETHODIMP
 xpcAccessible::GetActionName(uint8_t aIndex, nsAString& aName) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -732,7 +732,7 @@ NS_IMETHODIMP
 xpcAccessible::GetActionDescription(uint8_t aIndex, nsAString& aDescription) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -753,7 +753,7 @@ NS_IMETHODIMP
 xpcAccessible::DoAction(uint8_t aIndex) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -768,7 +768,7 @@ NS_IMETHODIMP
 xpcAccessible::ScrollTo(uint32_t aHow) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -786,7 +786,7 @@ NS_IMETHODIMP
 xpcAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -801,7 +801,7 @@ xpcAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY) {
 
 NS_IMETHODIMP
 xpcAccessible::Announce(const nsAString& aAnnouncement, uint16_t aPriority) {
-  if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
+  if (RemoteAccessible* proxy = IntlGeneric().AsProxy()) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
