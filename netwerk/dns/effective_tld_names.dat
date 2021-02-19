@@ -12614,8 +12614,8 @@ nfshost.com
 
 // Northflank Ltd. : https://northflank.com/
 // Submitted by Marco Suter <marco@northflank.com>
-northflank.app
-code.run
+*.northflank.app
+*.code.run
 
 // Now-DNS : https://now-dns.com
 // Submitted by Steve Russell <steve@now-dns.com>
