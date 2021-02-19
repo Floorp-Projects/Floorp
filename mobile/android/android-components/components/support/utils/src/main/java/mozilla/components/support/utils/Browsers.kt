@@ -281,6 +281,15 @@ class Browsers private constructor(
         private val SAMPLE_BROWSER_URI = Uri.parse(SAMPLE_BROWSER_HTTP_URL)
 
         /**
+         * Returns `true` is the provided [packageName] matches a known browser.
+         */
+        fun isBrowser(packageName: String): Boolean {
+            return KnownBrowser.values().asSequence().firstOrNull { browser ->
+                browser.packageName == packageName
+            } != null
+        }
+
+        /**
          * Collect information about all installed browsers and return a [Browsers] object containing that data.
          */
         fun all(context: Context): Browsers = Browsers(context, SAMPLE_BROWSER_URI)

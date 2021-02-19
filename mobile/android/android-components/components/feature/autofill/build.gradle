@@ -31,6 +31,7 @@ dependencies {
     implementation project(':concept-storage')
     implementation project(':lib-publicsuffixlist')
     implementation project(':support-base')
+    implementation project(":support-utils")
 
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_biometric
