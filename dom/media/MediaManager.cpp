@@ -3295,16 +3295,9 @@ void MediaManager::OnNavigation(uint64_t aWindowID) {
     mCallIds.Remove(aWindowID);
   }
 
-  // This is safe since we're on main-thread, and the windowlist can only
-  // be added to from the main-thread
-  auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowID);
-  if (window) {
-    if (RefPtr<GetUserMediaWindowListener> listener =
-            GetWindowListener(aWindowID)) {
-      listener->RemoveAll();
-    }
-  } else {
-    RemoveWindowID(aWindowID);
+  if (RefPtr<GetUserMediaWindowListener> listener =
+          GetWindowListener(aWindowID)) {
+    listener->RemoveAll();
   }
   MOZ_ASSERT(!GetWindowListener(aWindowID));
 }
