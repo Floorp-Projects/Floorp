@@ -23,7 +23,7 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
-if (!build_with_chromium) {
+if (!build_with_chromium && !build_with_mozilla) {
   # This target should (transitively) cause everything to be built; if you run
   # 'ninja default' and then 'ninja all', the second build should do no work.
   group("default") {
