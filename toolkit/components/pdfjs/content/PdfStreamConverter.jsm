@@ -64,6 +64,12 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(this, "PdfJs", "resource://pdf.js/PdfJs.jsm");
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PdfSandbox",
+  "resource://pdf.js/PdfSandbox.jsm"
+);
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 var Svc = {};
@@ -277,6 +283,55 @@ class ChromeActions {
       fontTypesUsed: {},
       fallbackErrorsReported: {},
     };
+    this.sandbox = null;
+    this.unloadListener = null;
+  }
+
+  createSandbox(data, sendResponse) {
+    function sendResp(res) {
+      if (sendResponse) {
+        sendResponse(res);
+      }
+      return res;
+    }
+
+    if (!getBoolPref(PREF_PREFIX + ".enableScripting", false)) {
+      return sendResp(false);
+    }
+
+    if (this.sandbox !== null) {
+      return sendResp(true);
+    }
+
+    try {
+      this.sandbox = new PdfSandbox(this.domWindow, data);
+    } catch (err) {
+      // If there's an error here, it means that something is really wrong
+      // on pdf.js side during sandbox initialization phase.
+      Cu.reportError(err);
+      return sendResp(false);
+    }
+
+    this.unloadListener = () => {
+      this.destroySandbox();
+    };
+    this.domWindow.addEventListener("unload", this.unloadListener);
+
+    return sendResp(true);
+  }
+
+  dispatchEventInSandbox(event) {
+    if (this.sandbox) {
+      this.sandbox.dispatchEvent(event);
+    }
+  }
+
+  destroySandbox() {
+    if (this.sandbox) {
+      this.domWindow.removeEventListener("unload", this.unloadListener);
+      this.sandbox.destroy();
+      this.sandbox = null;
+    }
   }
 
   isInPrivateBrowsing() {

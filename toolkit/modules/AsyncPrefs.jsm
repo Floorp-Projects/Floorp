@@ -51,6 +51,7 @@ const kAllowedPrefs = new Set([
   "pdfjs.disableFontFace",
   "pdfjs.disableRange",
   "pdfjs.disableStream",
+  "pdfjs.enableScripting",
 
   "reader.font_size",
   "reader.font_type",
