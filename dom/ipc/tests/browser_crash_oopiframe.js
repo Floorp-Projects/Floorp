@@ -1,15 +1,13 @@
 "use strict";
 
 /**
- * Helper function for testing frame crashing. Some tabs are opened
- * containing frames from example.com and then the process for
- * example.com is crashed. Notifications should apply to each tab
- * and all should close when one of the notifications is closed.
+ * Opens a number of tabs containing an out-of-process iframe.
  *
  * @param numTabs the number of tabs to open.
+ * @returns the browsing context of the iframe in the last tab opened.
  */
-async function testFrameCrash(numTabs) {
-  let browser, rootBC, iframeBC;
+async function openTestTabs(numTabs) {
+  let iframeBC = null;
 
   for (let count = 0; count < numTabs; count++) {
     let tab = await BrowserTestUtils.openNewForegroundTab({
@@ -17,12 +15,9 @@ async function testFrameCrash(numTabs) {
       url: "about:blank",
     });
 
-    browser = tab.linkedBrowser;
-    rootBC = browser.browsingContext;
-
     // If we load example.com in an injected subframe, we assume that this
     // will load in its own subprocess, which we can then crash.
-    iframeBC = await SpecialPowers.spawn(browser, [], async () => {
+    iframeBC = await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
       let iframe = content.document.createElement("iframe");
       iframe.setAttribute("src", "http://example.com");
 
@@ -31,6 +26,22 @@ async function testFrameCrash(numTabs) {
       return iframe.frameLoader.browsingContext;
     });
   }
+
+  return iframeBC;
+}
+
+/**
+ * Helper function for testing frame crashing. Some tabs are opened
+ * containing frames from example.com and then the process for
+ * example.com is crashed. Notifications should apply to each tab
+ * and all should close when one of the notifications is closed.
+ *
+ * @param numTabs the number of tabs to open.
+ */
+async function testFrameCrash(numTabs) {
+  let iframeBC = await openTestTabs(numTabs);
+  let browser = gBrowser.selectedBrowser;
+  let rootBC = browser.browsingContext;
 
   is(iframeBC.parent, rootBC, "oop frame has root as parent");
 
@@ -148,7 +159,7 @@ async function testFrameCrash(numTabs) {
  *  2. the crashed subframe is now pointing at "about:framecrashed"
  *     page.
  */
-add_task(async function() {
+add_task(async function test_crashframe() {
   // Open a new window with fission enabled.
   ok(
     SpecialPowers.useRemoteSubframes,
@@ -164,4 +175,43 @@ add_task(async function() {
   // Test both one tab and when four tabs are opened.
   await testFrameCrash(1);
   await testFrameCrash(4);
+});
+
+// This test checks that no notification shows when there is no minidump available. It
+// simulates the steps that occur during a crash, once with a dumpID and once without.
+add_task(async function test_nominidump() {
+  for (let dumpID of [null, "8888"]) {
+    let iframeBC = await openTestTabs(1);
+
+    let childID = iframeBC.currentWindowGlobal.domProcess.childID;
+
+    gBrowser.selectedBrowser.dispatchEvent(
+      new FrameCrashedEvent("oop-browser-crashed", {
+        browsingContextID: iframeBC,
+        childID,
+        isTopFrame: false,
+        bubbles: true,
+      })
+    );
+
+    let bag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag
+    );
+    bag.setProperty("abnormal", "true");
+    bag.setProperty("childID", iframeBC.currentWindowGlobal.domProcess.childID);
+    if (dumpID) {
+      bag.setProperty("dumpID", dumpID);
+    }
+
+    Services.obs.notifyObservers(bag, "ipc:content-shutdown");
+
+    let notificationBox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
+    let notification = notificationBox.currentNotification;
+    ok(
+      dumpID ? notification : !notification,
+      "notification shown for browser with no minidump"
+    );
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
 });
