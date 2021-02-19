@@ -505,9 +505,7 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
         }
         [pasteboardOutputDict setObject:nativeData forKey:customType];
       }
-    } else if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
-               flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime) ||
-               flavorStr.EqualsLiteral(kNativeImageMime)) {
+    } else if (nsClipboard::IsImageType(flavorStr)) {
       nsCOMPtr<nsISupports> transferSupports;
       rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(transferSupports));
       if (NS_FAILED(rv)) {
@@ -654,6 +652,13 @@ bool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboar
   } else {
     return false;
   }
+}
+
+// static
+bool nsClipboard::IsImageType(const nsACString& aMIMEType) {
+  return aMIMEType.EqualsLiteral(kPNGImageMime) || aMIMEType.EqualsLiteral(kJPEGImageMime) ||
+         aMIMEType.EqualsLiteral(kJPGImageMime) || aMIMEType.EqualsLiteral(kGIFImageMime) ||
+         aMIMEType.EqualsLiteral(kNativeImageMime);
 }
 
 NSString* nsClipboard::WrapHtmlForSystemPasteboard(NSString* aString) {
