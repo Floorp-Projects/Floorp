@@ -24,7 +24,6 @@ config = {
         os.environ["MOZ_FETCHES_DIR"]
     ),
     "arch": "aarch64",
-    "use_yasm": False,
     "partial_env": {
         "PATH": (
             "%(abs_work_dir)s\\openh264;"

@@ -24,10 +24,10 @@ config = {
         os.environ["MOZ_FETCHES_DIR"]
     ),
     "arch": "x86",
-    "use_yasm": True,
     "partial_env": {
         "PATH": (
             "{MOZ_FETCHES_DIR}\\clang\\bin\\;"
+            "{MOZ_FETCHES_DIR}\\nasm;"
             "{_VSPATH}\\VC\\bin\\Hostx64\\x64;%(PATH)s"
             # 32-bit redist here for our dump_syms.exe
             "{_VSPATH}/VC/redist/x86/Microsoft.VC141.CRT;"

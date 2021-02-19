@@ -297,26 +297,27 @@ class ConfigureSandbox(dict):
         {
             b: getattr(__builtin__, b, None)
             for b in (
-                "None",
+                "AssertionError",
                 "False",
+                "None",
                 "True",
-                "int",
-                "bool",
-                "any",
+                "__build_class__",  # will be None on py2
                 "all",
-                "len",
-                "list",
-                "tuple",
-                "set",
+                "any",
+                "bool",
                 "dict",
-                "isinstance",
+                "enumerate",
                 "getattr",
                 "hasattr",
-                "enumerate",
+                "int",
+                "isinstance",
+                "len",
+                "list",
                 "range",
+                "set",
+                "sorted",
+                "tuple",
                 "zip",
-                "AssertionError",
-                "__build_class__",  # will be None on py2
             )
         },
         __import__=forbidden_import,
@@ -1028,8 +1029,11 @@ class ConfigureSandbox(dict):
 
             return wrapper
 
-        for f in ("call", "check_call", "check_output", "Popen"):
-            wrapped_subprocess[f] = wrap(wrapped_subprocess[f])
+        for f in ("call", "check_call", "check_output", "Popen", "run"):
+            # `run` is new to python 3.5. In case this still runs from python2
+            # code, avoid failing here.
+            if f in wrapped_subprocess:
+                wrapped_subprocess[f] = wrap(wrapped_subprocess[f])
 
         return ReadOnlyNamespace(**wrapped_subprocess)
 
@@ -1257,6 +1261,7 @@ class ConfigureSandbox(dict):
             __name__=self._paths[-1] if self._paths else "",
             os=self.OS,
             log=self.log_impl,
+            namespace=ReadOnlyNamespace,
         )
         if update_globals:
             update_globals(glob)
