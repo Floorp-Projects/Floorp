@@ -9679,11 +9679,17 @@ Result<bool, nsresult> StorageOperationBase::MaybeRenameOrigin(
         "instead of renaming!",
         NS_ConvertUTF16toUTF8(oldLeafName).get(),
         NS_ConvertUTF16toUTF8(newLeafName).get());
-
-    QM_TRY(aOriginProps.mDirectory->Remove(/* recursive */ true));
-  } else {
-    QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
   }
+
+  QM_TRY(CallWithDelayedRetriesIfAccessDenied(
+      [&exists, &aOriginProps, &newLeafName] {
+        if (exists) {
+          QM_TRY_RETURN(aOriginProps.mDirectory->Remove(/* recursive */ true));
+        }
+        QM_TRY_RETURN(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
+      },
+      StaticPrefs::dom_quotaManager_directoryRemovalOrRenaming_maxRetries(),
+      StaticPrefs::dom_quotaManager_directoryRemovalOrRenaming_delayMs()));
 
   return true;
 }
