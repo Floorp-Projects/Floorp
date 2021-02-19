@@ -234,6 +234,25 @@ events:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+  normal_and_private_uri_count:
+    type: counter
+    description: |
+      A counter of URIs visited by the user in the current session, including
+      page reloads. This includes private browsing.  This does not include
+      background page requests and URIs from embedded pages but may be
+      incremented without user interaction by website scripts that
+      programmatically redirect to a new location.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17089
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17935
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
   preference_toggled:
     type: event
     description: |

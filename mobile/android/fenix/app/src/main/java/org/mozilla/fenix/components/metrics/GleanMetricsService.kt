@@ -237,6 +237,9 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.UriOpened -> EventWrapper<NoExtraKeys>(
             { Events.totalUriCount.add(1) }
         )
+        is Event.NormalAndPrivateUriOpened -> EventWrapper<NoExtraKeys>(
+            { Events.normalAndPrivateUriCount.add(1) }
+        )
         is Event.ErrorPageVisited -> EventWrapper(
             { ErrorPage.visitedError.record(it) },
             { ErrorPage.visitedErrorKeys.valueOf(it) }

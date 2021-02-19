@@ -52,6 +52,7 @@ sealed class Event {
     object CustomTabsActionTapped : Event()
     object CustomTabsMenuOpened : Event()
     object UriOpened : Event()
+    object NormalAndPrivateUriOpened : Event()
     object SyncAuthOpened : Event()
     object SyncAuthClosed : Event()
     object SyncAuthSignUp : Event()

@@ -182,9 +182,11 @@ class TelemetryMiddlewareTest {
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
         verify(exactly = 0) { metrics.track(Event.UriOpened) }
+        verify(exactly = 0) { metrics.track(Event.NormalAndPrivateUriOpened) }
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
         verify(exactly = 1) { metrics.track(Event.UriOpened) }
+        verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
     }
 
     @Test
@@ -193,9 +195,11 @@ class TelemetryMiddlewareTest {
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
         verify(exactly = 0) { metrics.track(Event.UriOpened) }
+        verify(exactly = 0) { metrics.track(Event.NormalAndPrivateUriOpened) }
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
         verify(exactly = 0) { metrics.track(Event.UriOpened) }
+        verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
     }
 
     @Test

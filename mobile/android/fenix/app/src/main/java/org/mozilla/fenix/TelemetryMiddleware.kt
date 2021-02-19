@@ -55,7 +55,7 @@ class TelemetryMiddleware(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught", "ComplexMethod")
+    @Suppress("TooGenericExceptionCaught", "ComplexMethod", "NestedBlockDepth")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -66,8 +66,12 @@ class TelemetryMiddleware(
             is ContentAction.UpdateLoadingStateAction -> {
                 context.state.findTab(action.sessionId)?.let { tab ->
                     // Record UriOpened event when a non-private page finishes loading
-                    if (tab.content.loading && !action.loading && !tab.content.private) {
-                        metrics.track(Event.UriOpened)
+                    if (tab.content.loading && !action.loading) {
+                        if (!tab.content.private) {
+                            metrics.track(Event.UriOpened)
+                        }
+
+                        metrics.track(Event.NormalAndPrivateUriOpened)
                     }
                 }
             }
