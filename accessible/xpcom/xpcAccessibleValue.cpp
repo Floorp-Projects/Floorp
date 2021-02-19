@@ -17,8 +17,9 @@ xpcAccessibleValue::GetMaximumValue(double* aValue) {
 
   if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
+  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
     return NS_ERROR_FAILURE;
+  }
 
   double value;
   if (Intl().IsAccessible()) {
@@ -39,8 +40,9 @@ xpcAccessibleValue::GetMinimumValue(double* aValue) {
 
   if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
+  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
     return NS_ERROR_FAILURE;
+  }
 
   double value;
   if (Intl().IsAccessible()) {
@@ -61,8 +63,9 @@ xpcAccessibleValue::GetCurrentValue(double* aValue) {
 
   if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
+  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
     return NS_ERROR_FAILURE;
+  }
 
   double value;
   if (Intl().IsAccessible()) {
@@ -80,8 +83,9 @@ NS_IMETHODIMP
 xpcAccessibleValue::SetCurrentValue(double aValue) {
   if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
+  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
     return NS_ERROR_FAILURE;
+  }
 
   if (Intl().IsAccessible()) {
     Intl().AsAccessible()->SetCurValue(aValue);
@@ -99,8 +103,9 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue) {
 
   if (Intl().IsNull()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
+  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
     return NS_ERROR_FAILURE;
+  }
 
   double value;
   if (Intl().IsAccessible()) {

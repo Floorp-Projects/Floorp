@@ -30,8 +30,9 @@ gboolean toplevel_event_watcher(GSignalInvocationHint* ihint,
                                 const GValue* param_values, gpointer data) {
   static GQuark sQuark_gecko_acc_obj = 0;
 
-  if (!sQuark_gecko_acc_obj)
+  if (!sQuark_gecko_acc_obj) {
     sQuark_gecko_acc_obj = g_quark_from_static_string("GeckoAccObj");
+  }
 
   if (nsAccessibilityService::IsShutdown()) return TRUE;
 

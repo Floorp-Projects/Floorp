@@ -179,11 +179,12 @@ uint32_t ARIAGridAccessible::SelectedColCount() {
     AccIterator cellIter(row, filters::GetCell);
     Accessible* cell = nullptr;
     for (uint32_t colIdx = 0; (cell = cellIter.Next()) && colIdx < colCount;
-         colIdx++)
+         colIdx++) {
       if (isColSelArray[colIdx] && !nsAccUtils::IsARIASelected(cell)) {
         isColSelArray[colIdx] = false;
         selColCount--;
       }
+    }
   } while ((row = rowIter.Next()));
 
   return selColCount;
@@ -252,8 +253,9 @@ void ARIAGridAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
   Accessible* row = nullptr;
   for (uint32_t rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
     if (nsAccUtils::IsARIASelected(row)) {
-      for (uint32_t colIdx = 0; colIdx < colCount; colIdx++)
+      for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
         aCells->AppendElement(rowIdx * colCount + colIdx);
+      }
 
       continue;
     }
@@ -261,8 +263,9 @@ void ARIAGridAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
     AccIterator cellIter(row, filters::GetCell);
     Accessible* cell = nullptr;
     for (uint32_t colIdx = 0; (cell = cellIter.Next()); colIdx++) {
-      if (nsAccUtils::IsARIASelected(cell))
+      if (nsAccUtils::IsARIASelected(cell)) {
         aCells->AppendElement(rowIdx * colCount + colIdx);
+      }
     }
   }
 }
@@ -287,14 +290,16 @@ void ARIAGridAccessible::SelectedColIndices(nsTArray<uint32_t>* aCols) {
     AccIterator cellIter(row, filters::GetCell);
     Accessible* cell = nullptr;
     for (uint32_t colIdx = 0; (cell = cellIter.Next()) && colIdx < colCount;
-         colIdx++)
+         colIdx++) {
       if (isColSelArray[colIdx] && !nsAccUtils::IsARIASelected(cell)) {
         isColSelArray[colIdx] = false;
       }
+    }
   } while ((row = rowIter.Next()));
 
-  for (uint32_t colIdx = 0; colIdx < colCount; colIdx++)
+  for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
     if (isColSelArray[colIdx]) aCols->AppendElement(colIdx);
+  }
 }
 
 void ARIAGridAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
@@ -384,12 +389,13 @@ nsresult ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
 
   nsresult rv = NS_OK;
   if (content->IsElement()) {
-    if (aIsSelected)
+    if (aIsSelected) {
       rv = content->AsElement()->SetAttr(
           kNameSpaceID_None, nsGkAtoms::aria_selected, u"true"_ns, aNotify);
-    else
+    } else {
       rv = content->AsElement()->SetAttr(
           kNameSpaceID_None, nsGkAtoms::aria_selected, u"false"_ns, aNotify);
+    }
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -570,8 +576,9 @@ void ARIAGridCellAccessible::ApplyARIAState(uint64_t* aState) const {
   if (nsAccUtils::HasDefinedARIAToken(rowContent, nsGkAtoms::aria_selected) &&
       !rowContent->AsElement()->AttrValueIs(kNameSpaceID_None,
                                             nsGkAtoms::aria_selected,
-                                            nsGkAtoms::_false, eCaseMatters))
+                                            nsGkAtoms::_false, eCaseMatters)) {
     *aState |= states::SELECTABLE | states::SELECTED;
+  }
 }
 
 already_AddRefed<nsIPersistentProperties>
@@ -596,8 +603,9 @@ ARIAGridCellAccessible::NativeAttributes() {
 
     roles::Role role = child->Role();
     if (role == roles::CELL || role == roles::GRID_CELL ||
-        role == roles::ROWHEADER || role == roles::COLUMNHEADER)
+        role == roles::ROWHEADER || role == roles::COLUMNHEADER) {
       colCount++;
+    }
   }
 
   nsAutoString stringIdx;

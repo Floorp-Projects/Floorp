@@ -148,8 +148,9 @@ SelectionManager::NotifySelectionChanged(dom::Document* aDocument,
   DocAccessible* document = GetAccService()->GetDocAccessible(aDocument);
 
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eSelection))
+  if (logging::IsEnabled(logging::eSelection)) {
     logging::SelChange(aSelection, document, aReason);
+  }
 #endif
 
   if (document) {

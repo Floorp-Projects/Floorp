@@ -38,8 +38,9 @@ bool TextPoint::operator<(const TextPoint& aPoint) const {
   for (uint32_t len = std::min(pos1, pos2); len > 0; --len) {
     Accessible* child1 = parents1.ElementAt(--pos1);
     Accessible* child2 = parents2.ElementAt(--pos2);
-    if (child1 != child2)
+    if (child1 != child2) {
       return child1->IndexInParent() < child2->IndexInParent();
+    }
   }
 
   if (pos1 != 0) {

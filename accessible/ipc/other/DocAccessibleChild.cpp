@@ -161,8 +161,9 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvRelationByType(
 
   auto type = static_cast<RelationType>(aType);
   Relation rel = acc->RelationByType(type);
-  while (Accessible* target = rel.Next())
+  while (Accessible* target = rel.Next()) {
     aTargets->AppendElement(reinterpret_cast<uint64_t>(target->UniqueID()));
+  }
 
   return IPC_OK();
 }
@@ -171,8 +172,9 @@ static void AddRelation(Accessible* aAcc, RelationType aType,
                         nsTArray<RelationTargets>* aTargets) {
   Relation rel = aAcc->RelationByType(aType);
   nsTArray<uint64_t> targets;
-  while (Accessible* target = rel.Next())
+  while (Accessible* target = rel.Next()) {
     targets.AppendElement(reinterpret_cast<uint64_t>(target->UniqueID()));
+  }
 
   if (!targets.IsEmpty()) {
     RelationTargets* newRelation = aTargets->AppendElement(

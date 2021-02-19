@@ -266,8 +266,9 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
 
     case eIndeterminateIfNoValue: {
       if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow) &&
-          !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuetext))
+          !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_valuetext)) {
         *aState |= states::MIXED;
+      }
 
       return true;
     }
@@ -276,8 +277,9 @@ bool aria::MapToState(EStateRule aRule, dom::Element* aElement,
       if (!nsAccUtils::HasDefinedARIAToken(aElement,
                                            nsGkAtoms::aria_disabled) ||
           aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
-                                nsGkAtoms::_false, eCaseMatters))
+                                nsGkAtoms::_false, eCaseMatters)) {
         *aState |= states::FOCUSABLE;
+      }
 
       return true;
     }
@@ -308,10 +310,11 @@ static void MapTokenType(dom::Element* aElement, uint64_t* aState,
   if (nsAccUtils::HasDefinedARIAToken(aElement, aData.mAttrName)) {
     if (aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
                               nsGkAtoms::mixed, eCaseMatters)) {
-      if (aData.mType & eMixedType)
+      if (aData.mType & eMixedType) {
         *aState |= aData.mPermanentState | states::MIXED;
-      else  // unsupported use of 'mixed' is an authoring error
+      } else {  // unsupported use of 'mixed' is an authoring error
         *aState |= aData.mPermanentState | aData.mFalseState;
+      }
       return;
     }
 
@@ -325,6 +328,7 @@ static void MapTokenType(dom::Element* aElement, uint64_t* aState,
     return;
   }
 
-  if (aData.mType & eDefinedIfAbsent)
+  if (aData.mType & eDefinedIfAbsent) {
     *aState |= aData.mPermanentState | aData.mFalseState;
+  }
 }

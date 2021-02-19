@@ -103,18 +103,21 @@ HTMLTableCellAccessible::NativeAttributes() {
       }
     }
   }
-  if (abbrText.IsEmpty())
+  if (abbrText.IsEmpty()) {
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr,
                                    abbrText);
+  }
 
-  if (!abbrText.IsEmpty())
+  if (!abbrText.IsEmpty()) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::abbr, abbrText);
+  }
 
   // axis attribute
   nsAutoString axisText;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
-  if (!axisText.IsEmpty())
+  if (!axisText.IsEmpty()) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::axis, axisText);
+  }
 
 #ifdef DEBUG
   nsAutoString unused;
@@ -194,8 +197,9 @@ void HTMLTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
       // If referred table cell is at the same column then treat it as a column
       // header.
       TableCellAccessible* tableCell = cell->AsTableCell();
-      if (tableCell && tableCell->ColIdx() == ColIdx())
+      if (tableCell && tableCell->ColIdx() == ColIdx()) {
         aCells->AppendElement(cell);
+      }
     }
   }
 
@@ -212,8 +216,9 @@ void HTMLTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
       // If referred table cell is at the same row then treat it as a column
       // header.
       TableCellAccessible* tableCell = cell->AsTableCell();
-      if (tableCell && tableCell->RowIdx() == RowIdx())
+      if (tableCell && tableCell->RowIdx() == RowIdx()) {
         aCells->AppendElement(cell);
+      }
     }
   }
 
@@ -284,15 +289,17 @@ role HTMLTableHeaderCellAccessible::NativeRole() const {
   // a row header for it.
   uint32_t rowIdx = RowIdx(), colIdx = ColIdx();
   Accessible* cell = table->CellAt(rowIdx, colIdx + ColExtent());
-  if (cell && !nsCoreUtils::IsHTMLTableHeader(cell->GetContent()))
+  if (cell && !nsCoreUtils::IsHTMLTableHeader(cell->GetContent())) {
     return roles::ROWHEADER;
+  }
 
   // If the cell below this one is not a header cell then assume this cell is
   // a column header for it.
   uint32_t rowExtent = RowExtent();
   cell = table->CellAt(rowIdx + rowExtent, colIdx);
-  if (cell && !nsCoreUtils::IsHTMLTableHeader(cell->GetContent()))
+  if (cell && !nsCoreUtils::IsHTMLTableHeader(cell->GetContent())) {
     return roles::COLUMNHEADER;
+  }
 
   // Otherwise if this cell is surrounded by header cells only then make a guess
   // based on its cell spanning. In other words if it is row spanned then assume
@@ -457,8 +464,9 @@ uint32_t HTMLTableAccessible::SelectedCellCount() {
 uint32_t HTMLTableAccessible::SelectedColCount() {
   uint32_t count = 0, colCount = ColCount();
 
-  for (uint32_t colIdx = 0; colIdx < colCount; colIdx++)
+  for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
     if (IsColSelected(colIdx)) count++;
+  }
 
   return count;
 }
@@ -466,8 +474,9 @@ uint32_t HTMLTableAccessible::SelectedColCount() {
 uint32_t HTMLTableAccessible::SelectedRowCount() {
   uint32_t count = 0, rowCount = RowCount();
 
-  for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++)
+  for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     if (IsRowSelected(rowIdx)) count++;
+  }
 
   return count;
 }
@@ -504,22 +513,25 @@ void HTMLTableAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
 
       uint32_t startCol = cellFrame->ColIndex();
       uint32_t startRow = cellFrame->RowIndex();
-      if (startRow == rowIdx && startCol == colIdx)
+      if (startRow == rowIdx && startCol == colIdx) {
         aCells->AppendElement(CellIndexAt(rowIdx, colIdx));
+      }
     }
   }
 }
 
 void HTMLTableAccessible::SelectedColIndices(nsTArray<uint32_t>* aCols) {
   uint32_t colCount = ColCount();
-  for (uint32_t colIdx = 0; colIdx < colCount; colIdx++)
+  for (uint32_t colIdx = 0; colIdx < colCount; colIdx++) {
     if (IsColSelected(colIdx)) aCols->AppendElement(colIdx);
+  }
 }
 
 void HTMLTableAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
   uint32_t rowCount = RowCount();
-  for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++)
+  for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     if (IsRowSelected(rowIdx)) aRows->AppendElement(rowIdx);
+  }
 }
 
 Accessible* HTMLTableAccessible::CellAt(uint32_t aRowIdx, uint32_t aColIdx) {
@@ -703,10 +715,11 @@ nsresult HTMLTableAccessible::AddRowOrColumnToSelection(
   if (!tableFrame) return NS_OK;
 
   uint32_t count = 0;
-  if (doSelectRow)
+  if (doSelectRow) {
     count = ColCount();
-  else
+  } else {
     count = RowCount();
+  }
 
   PresShell* presShell = mDoc->PresShellPtr();
   RefPtr<nsFrameSelection> tableSelection =
@@ -742,9 +755,10 @@ nsresult HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(
   int32_t startColIdx = doUnselectRow ? 0 : aIndex;
   int32_t endColIdx = doUnselectRow ? count - 1 : aIndex;
 
-  if (aIsOuter)
+  if (aIsOuter) {
     return tableSelection->RestrictCellsToSelection(
         mContent, startRowIdx, startColIdx, endRowIdx, endColIdx);
+  }
 
   return tableSelection->RemoveCellsFromSelection(
       mContent, startRowIdx, startColIdx, endRowIdx, endColIdx);

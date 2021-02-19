@@ -37,10 +37,11 @@ static_assert(static_cast<bool>(eNoUserInput) == false &&
 AccEvent::AccEvent(uint32_t aEventType, Accessible* aAccessible,
                    EIsFromUserInput aIsFromUserInput, EEventRule aEventRule)
     : mEventType(aEventType), mEventRule(aEventRule), mAccessible(aAccessible) {
-  if (aIsFromUserInput == eAutoDetect)
+  if (aIsFromUserInput == eAutoDetect) {
     mIsFromUserInput = dom::UserActivation::IsHandlingUserInput();
-  else
+  } else {
     mIsFromUserInput = aIsFromUserInput == eFromUserInput ? true : false;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,10 +158,11 @@ AccSelChangeEvent::AccSelChangeEvent(Accessible* aWidget, Accessible* aItem,
       mPreceedingCount(0),
       mPackedEvent(nullptr) {
   if (aSelChangeType == eSelectionAdd) {
-    if (mWidget->GetSelectedItem(1))
+    if (mWidget->GetSelectedItem(1)) {
       mEventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
-    else
+    } else {
       mEventType = nsIAccessibleEvent::EVENT_SELECTION;
+    }
   } else {
     mEventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
   }

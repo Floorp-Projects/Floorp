@@ -101,8 +101,9 @@ role XULListboxAccessible::NativeRole() const {
   // A richlistbox is used with the new autocomplete URL bar, and has a parent
   // popup <panel>.
   if (mContent->GetParent() &&
-      mContent->GetParent()->IsXULElement(nsGkAtoms::panel))
+      mContent->GetParent()->IsXULElement(nsGkAtoms::panel)) {
     return roles::COMBOBOX_LIST;
+  }
 
   return IsMulticolumn() ? roles::TABLE : roles::LISTBOX;
 }
@@ -267,9 +268,11 @@ void XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells) {
     if (item) {
       int32_t itemIdx = -1;
       control->GetIndexOfItem(item, &itemIdx);
-      if (itemIdx >= 0)
-        for (uint32_t colIdx = 0; colIdx < colCount; colIdx++, cellsIdx++)
+      if (itemIdx >= 0) {
+        for (uint32_t colIdx = 0; colIdx < colCount; colIdx++, cellsIdx++) {
           aCells->ElementAt(cellsIdx) = itemIdx * colCount + colIdx;
+        }
+      }
     }
   }
 }
@@ -278,8 +281,9 @@ void XULListboxAccessible::SelectedColIndices(nsTArray<uint32_t>* aCols) {
   uint32_t selColCount = SelectedColCount();
   aCols->SetCapacity(selColCount);
 
-  for (uint32_t colIdx = 0; colIdx < selColCount; colIdx++)
+  for (uint32_t colIdx = 0; colIdx < selColCount; colIdx++) {
     aCols->AppendElement(colIdx);
+  }
 }
 
 void XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
@@ -459,8 +463,9 @@ role XULListitemAccessible::NativeRole() const {
 
   if (mIsCheckbox) return roles::CHECK_RICH_OPTION;
 
-  if (mParent && mParent->Role() == roles::COMBOBOX_LIST)
+  if (mParent && mParent->Role() == roles::COMBOBOX_LIST) {
     return roles::COMBOBOX_OPTION;
+  }
 
   return roles::RICH_OPTION;
 }
@@ -492,10 +497,11 @@ uint64_t XULListitemAccessible::NativeInteractiveState() const {
 void XULListitemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Click && mIsCheckbox) {
     uint64_t states = NativeState();
-    if (states & states::CHECKED)
+    if (states & states::CHECKED) {
       aName.AssignLiteral("uncheck");
-    else
+    } else {
       aName.AssignLiteral("check");
+    }
   }
 }
 

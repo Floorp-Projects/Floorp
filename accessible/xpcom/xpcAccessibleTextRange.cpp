@@ -78,8 +78,9 @@ xpcAccessibleTextRange::GetEmbeddedChildren(nsIArray** aList) {
   mRange.EmbeddedChildren(&objects);
 
   uint32_t len = objects.Length();
-  for (uint32_t idx = 0; idx < len; idx++)
+  for (uint32_t idx = 0; idx < len; idx++) {
     xpcList->AppendElement(static_cast<nsIAccessible*>(ToXPC(objects[idx])));
+  }
 
   xpcList.forget(aList);
 
@@ -110,10 +111,11 @@ xpcAccessibleTextRange::CompareEndPoints(uint32_t aEndPoint,
                              ? xpcRange->mRange.StartPoint()
                              : xpcRange->mRange.EndPoint();
 
-  if (p == otherPoint)
+  if (p == otherPoint) {
     *aResult = 0;
-  else
+  } else {
     *aResult = p < otherPoint ? -1 : 1;
+  }
 
   return NS_OK;
 }

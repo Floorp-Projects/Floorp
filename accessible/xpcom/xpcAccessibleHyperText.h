@@ -24,8 +24,9 @@ class xpcAccessibleHyperText : public xpcAccessibleGeneric,
  public:
   explicit xpcAccessibleHyperText(Accessible* aIntl)
       : xpcAccessibleGeneric(aIntl) {
-    if (aIntl->IsHyperText() && aIntl->AsHyperText()->IsTextRole())
+    if (aIntl->IsHyperText() && aIntl->AsHyperText()->IsTextRole()) {
       mSupportedIfaces |= eText;
+    }
   }
 
   xpcAccessibleHyperText(ProxyAccessible* aProxy, uint32_t aInterfaces)

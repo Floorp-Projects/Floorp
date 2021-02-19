@@ -919,10 +919,11 @@ class Accessible : public nsISupports {
    */
   bool IsRelocated() const { return mStateFlags & eRelocated; }
   void SetRelocated(bool aRelocated) {
-    if (aRelocated)
+    if (aRelocated) {
       mStateFlags |= eRelocated;
-    else
+    } else {
       mStateFlags &= ~eRelocated;
+    }
   }
 
   /**
@@ -1255,10 +1256,11 @@ class KeyBinding {
   inline void AppendToString(nsAString& aValue,
                              Format aFormat = ePlatformFormat) const {
     if (mKey) {
-      if (aFormat == ePlatformFormat)
+      if (aFormat == ePlatformFormat) {
         ToPlatformFormat(aValue);
-      else
+      } else {
         ToAtkFormat(aValue);
+      }
     }
   }
 

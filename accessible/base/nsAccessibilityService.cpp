@@ -995,19 +995,22 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
       // create,
       const HTMLMarkupMapInfo* markupMap =
           mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
-      if (markupMap && markupMap->new_func)
+      if (markupMap && markupMap->new_func) {
         newAcc = markupMap->new_func(content->AsElement(), aContext);
+      }
 
-      if (!newAcc)  // try by frame accessible type.
+      if (!newAcc) {  // try by frame accessible type.
         newAcc = CreateAccessibleByFrameType(frame, content, aContext);
+      }
     }
 
     // In case of ARIA grid or table use table-specific classes if it's not
     // native table based.
     if (isARIATablePart && (!newAcc || newAcc->IsGenericHyperText())) {
       if ((roleMapEntry->accTypes & eTableCell)) {
-        if (aContext->IsTableRow())
+        if (aContext->IsTableRow()) {
           newAcc = new ARIAGridCellAccessibleWrap(content, document);
+        }
 
       } else if (roleMapEntry->IsOfType(eTableRow)) {
         if (aContext->IsTable() ||
@@ -1025,8 +1028,9 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
     if (!roleMapEntry && newAcc && aContext->HasStrongARIARole()) {
       if (frame->AccessibleType() == eHTMLTableRowType) {
         const nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
-        if (!contextRoleMap->IsOfType(eTable))
+        if (!contextRoleMap->IsOfType(eTable)) {
           roleMapEntry = &aria::gEmptyRoleMap;
+        }
 
       } else if (frame->AccessibleType() == eHTMLTableCellType &&
                  aContext->ARIARoleMap() == &aria::gEmptyRoleMap) {
@@ -1036,8 +1040,9 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
                                               nsGkAtoms::dd) ||
                  frame->AccessibleType() == eHTMLLiType) {
         const nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
-        if (!contextRoleMap->IsOfType(eList))
+        if (!contextRoleMap->IsOfType(eList)) {
           roleMapEntry = &aria::gEmptyRoleMap;
+        }
       }
     }
   }
@@ -1095,8 +1100,9 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
     } else if (content->IsMathMLElement()) {
       const HTMLMarkupMapInfo* markupMap =
           mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
-      if (markupMap && markupMap->new_func)
+      if (markupMap && markupMap->new_func) {
         newAcc = markupMap->new_func(content->AsElement(), aContext);
+      }
 
       // Fall back to text when encountering Content MathML.
       if (!newAcc && !content->IsAnyOfMathMLElements(
@@ -1165,12 +1171,14 @@ bool nsAccessibilityService::Init() {
 
   eventListenerService->AddListenerChangeListener(this);
 
-  for (uint32_t i = 0; i < ArrayLength(sHTMLMarkupMapList); i++)
+  for (uint32_t i = 0; i < ArrayLength(sHTMLMarkupMapList); i++) {
     mHTMLMarkupMap.Put(sHTMLMarkupMapList[i].tag, &sHTMLMarkupMapList[i]);
+  }
 
 #ifdef MOZ_XUL
-  for (uint32_t i = 0; i < ArrayLength(sXULMarkupMapList); i++)
+  for (uint32_t i = 0; i < ArrayLength(sXULMarkupMapList); i++) {
     mXULMarkupMap.Put(sXULMarkupMapList[i].tag, &sXULMarkupMapList[i]);
+  }
 #endif
 
 #ifdef A11Y_LOG
@@ -1326,10 +1334,11 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLSpinnerAccessible(aContent, document);
       break;
     case eHTMLTableType:
-      if (aContent->IsHTMLElement(nsGkAtoms::table))
+      if (aContent->IsHTMLElement(nsGkAtoms::table)) {
         newAcc = new HTMLTableAccessibleWrap(aContent, document);
-      else
+      } else {
         newAcc = new HyperTextAccessibleWrap(aContent, document);
+      }
       break;
     case eHTMLTableCellType:
       // Accessible HTML table cell should be a child of accessible HTML table
@@ -1337,10 +1346,11 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       // certain degree).
       // Otherwise create a generic text accessible to avoid text jamming
       // when reading by AT.
-      if (aContext->IsHTMLTableRow() || aContext->IsHTMLTable())
+      if (aContext->IsHTMLTableRow() || aContext->IsHTMLTable()) {
         newAcc = new HTMLTableCellAccessibleWrap(aContent, document);
-      else
+      } else {
         newAcc = new HyperTextAccessibleWrap(aContent, document);
+      }
       break;
 
     case eHTMLTableRowType: {
@@ -1435,8 +1445,9 @@ void nsAccessibilityService::MarkupAttributes(
                                        value);
       }
 
-      if (!value.IsEmpty())
+      if (!value.IsEmpty()) {
         nsAccUtils::SetAccAttr(aAttributes, info->name, value);
+      }
 
       continue;
     }

@@ -29,8 +29,9 @@ void TableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
 
     // Avoid addding cells multiple times, if this cell spans more columns
     // we'll get it later.
-    if (tableCell->ColIdx() == curColIdx && cell->Role() == roles::ROWHEADER)
+    if (tableCell->ColIdx() == curColIdx && cell->Role() == roles::ROWHEADER) {
       aCells->AppendElement(cell);
+    }
   }
 }
 

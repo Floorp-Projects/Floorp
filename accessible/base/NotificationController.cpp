@@ -86,8 +86,9 @@ void NotificationController::Shutdown() {
   // Shutdown handling child documents.
   int32_t childDocCount = mHangingChildDocuments.Length();
   for (int32_t idx = childDocCount - 1; idx >= 0; idx--) {
-    if (!mHangingChildDocuments[idx]->IsDefunct())
+    if (!mHangingChildDocuments[idx]->IsDefunct()) {
       mHangingChildDocuments[idx]->Shutdown();
+    }
   }
 
   mHangingChildDocuments.Clear();
@@ -437,8 +438,9 @@ void NotificationController::ScheduleProcessing() {
   // asynchronously (after style and layout).
   if (mObservingState == eNotObservingRefresh) {
     if (mPresShell->AddRefreshObserver(this, FlushType::Display,
-                                       "Accessibility notifications"))
+                                       "Accessibility notifications")) {
       mObservingState = eRefreshObserving;
+    }
   }
 }
 

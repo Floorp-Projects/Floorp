@@ -127,8 +127,9 @@ void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   delete[] entries;
 
   // Fire events.
-  for (int32_t idx = events.Length() - 1; idx >= 0; idx--)
+  for (int32_t idx = events.Length() - 1; idx >= 0; idx--) {
     mDocument->FireDelayedEvent(events[idx]);
+  }
 
   mDocument->MaybeNotifyOfValueChange(mHyperText);
 

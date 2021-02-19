@@ -40,8 +40,9 @@ uint64_t HTMLLinkAccessible::NativeLinkState() const {
   EventStates eventState = mContent->AsElement()->State();
   if (eventState.HasState(NS_EVENT_STATE_UNVISITED)) return states::LINKED;
 
-  if (eventState.HasState(NS_EVENT_STATE_VISITED))
+  if (eventState.HasState(NS_EVENT_STATE_VISITED)) {
     return states::LINKED | states::TRAVERSED;
+  }
 
   // This is a either named anchor (a link with also a name attribute) or
   // it doesn't have any attributes. Check if 'click' event handler is
@@ -55,8 +56,9 @@ uint64_t HTMLLinkAccessible::NativeInteractiveState() const {
   // This is how we indicate it is a named anchor. In other words, this anchor
   // can be selected as a location :) There is no other better state to use to
   // indicate this.
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::name))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::name)) {
     state |= states::SELECTABLE;
+  }
 
   return state;
 }
@@ -65,8 +67,9 @@ void HTMLLinkAccessible::Value(nsString& aValue) const {
   aValue.Truncate();
 
   HyperTextAccessible::Value(aValue);
-  if (aValue.IsEmpty())
+  if (aValue.IsEmpty()) {
     nsContentUtils::GetLinkLocation(mContent->AsElement(), aValue);
+  }
 }
 
 uint8_t HTMLLinkAccessible::ActionCount() const {

@@ -44,10 +44,11 @@ uint64_t XULComboboxAccessible::NativeState() const {
   if (menuList) {
     bool isOpen = false;
     menuList->GetOpen(&isOpen);
-    if (isOpen)
+    if (isOpen) {
       state |= states::EXPANDED;
-    else
+    } else {
       state |= states::COLLAPSED;
+    }
   }
 
   return state | states::HASPOPUP;
@@ -102,10 +103,11 @@ void XULComboboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 
   bool isDroppedDown = false;
   menuList->GetOpen(&isDroppedDown);
-  if (isDroppedDown)
+  if (isDroppedDown) {
     aName.AssignLiteral("close");
-  else
+  } else {
     aName.AssignLiteral("open");
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +119,9 @@ bool XULComboboxAccessible::IsActiveWidget() const {
     int32_t childCount = mChildren.Length();
     for (int32_t idx = 0; idx < childCount; idx++) {
       Accessible* child = mChildren[idx];
-      if (child->Role() == roles::ENTRY)
+      if (child->Role() == roles::ENTRY) {
         return FocusMgr()->HasDOMFocus(child->GetContent());
+      }
     }
     return false;
   }

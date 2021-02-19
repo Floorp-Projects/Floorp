@@ -39,8 +39,9 @@ HTMLSelectListAccessible::HTMLSelectListAccessible(nsIContent* aContent,
 
 uint64_t HTMLSelectListAccessible::NativeState() const {
   uint64_t state = AccessibleWrap::NativeState();
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
     state |= states::MULTISELECTABLE | states::EXTSELECTABLE;
+  }
 
   return state;
 }
@@ -196,8 +197,9 @@ int32_t HTMLSelectOptionAccessible::GetLevelInternal() {
   int32_t level =
       parentContent->NodeInfo()->Equals(nsGkAtoms::optgroup) ? 2 : 1;
 
-  if (level == 1 && Role() != roles::HEADING)
+  if (level == 1 && Role() != roles::HEADING) {
     level = 0;  // In a single level list, the level is irrelevant
+  }
 
   return level;
 }
@@ -205,8 +207,9 @@ int32_t HTMLSelectOptionAccessible::GetLevelInternal() {
 nsRect HTMLSelectOptionAccessible::RelativeBounds(
     nsIFrame** aBoundingFrame) const {
   Accessible* combobox = GetCombobox();
-  if (combobox && (combobox->State() & states::COLLAPSED))
+  if (combobox && (combobox->State() & states::COLLAPSED)) {
     return combobox->RelativeBounds(aBoundingFrame);
+  }
 
   return HyperTextAccessibleWrap::RelativeBounds(aBoundingFrame);
 }
@@ -322,10 +325,11 @@ uint64_t HTMLComboboxAccessible::NativeState() const {
   uint64_t state = Accessible::NativeState();
 
   nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
-  if (comboFrame && comboFrame->IsDroppedDown())
+  if (comboFrame && comboFrame->IsDroppedDown()) {
     state |= states::EXPANDED;
-  else
+  } else {
     state |= states::COLLAPSED;
+  }
 
   state |= states::HASPOPUP;
   return state;
@@ -364,10 +368,11 @@ void HTMLComboboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
   if (!comboFrame) return;
 
-  if (comboFrame->IsDroppedDown())
+  if (comboFrame->IsDroppedDown()) {
     aName.AssignLiteral("close");
-  else
+  } else {
     aName.AssignLiteral("open");
+  }
 }
 
 bool HTMLComboboxAccessible::IsAcceptableChild(nsIContent* aEl) const {
@@ -449,10 +454,11 @@ uint64_t HTMLComboboxListAccessible::NativeState() const {
   uint64_t state = Accessible::NativeState();
 
   nsComboboxControlFrame* comboFrame = do_QueryFrame(mParent->GetFrame());
-  if (comboFrame && comboFrame->IsDroppedDown())
+  if (comboFrame && comboFrame->IsDroppedDown()) {
     state |= states::FLOATING;
-  else
+  } else {
     state |= states::INVISIBLE;
+  }
 
   return state;
 }
