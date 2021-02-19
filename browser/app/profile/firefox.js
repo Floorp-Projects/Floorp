@@ -331,10 +331,6 @@ pref("browser.urlbar.suggest.openpage",             true);
 pref("browser.urlbar.suggest.searches",             true);
 pref("browser.urlbar.suggest.topsites",             true);
 pref("browser.urlbar.suggest.engines",              true);
-pref("browser.urlbar.suggest.quicksuggest",         true);
-
-// Whether the QuickSuggest experiment is enabled.
-pref("browser.urlbar.quicksuggest.enabled", false);
 
 // Whether to show search suggestions before general results like history and
 // bookmarks.
