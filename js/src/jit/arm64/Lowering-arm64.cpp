@@ -694,3 +694,11 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
 void LIRGenerator::visitWasmReduceSimd128(MWasmReduceSimd128* ins) {
   MOZ_CRASH("reduce-SIMD NYI");
 }
+
+void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
+  MOZ_CRASH("load-lane SIMD NYI");
+}
+
+void LIRGenerator::visitWasmStoreLaneSimd128(MWasmStoreLaneSimd128* ins) {
+  MOZ_CRASH("store-lane SIMD NYI");
+}

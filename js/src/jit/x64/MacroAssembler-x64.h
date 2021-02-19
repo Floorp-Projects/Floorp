@@ -561,6 +561,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
       load32(Address(scratch, 0x0), dest);
     }
   }
+  void load64(const Operand& address, Register64 dest) {
+    movq(address, dest.reg);
+  }
   void load64(const Address& address, Register64 dest) {
     movq(Operand(address), dest.reg);
   }
@@ -596,6 +599,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   void store64(Register src, const Address& address) {
     movq(src, Operand(address));
+  }
+  void store64(Register64 src, const Operand& address) {
+    movq(src.reg, address);
   }
   void storePtr(Register src, const BaseIndex& address) {
     movq(src, Operand(address));

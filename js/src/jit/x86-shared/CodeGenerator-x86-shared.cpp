@@ -404,18 +404,7 @@ void CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins) {
                            ToRegister(boundsCheckLimit), ool->entry());
   }
 
-#ifdef JS_CODEGEN_X86
-  const LAllocation* memoryBase = ins->memoryBase();
-  Operand srcAddr = ptr->isBogus() ? Operand(ToRegister(memoryBase), 0)
-                                   : Operand(ToRegister(memoryBase),
-                                             ToRegister(ptr), TimesOne);
-#else
-  MOZ_ASSERT(!mir->hasMemoryBase());
-  Operand srcAddr = ptr->isBogus()
-                        ? Operand(HeapReg, 0)
-                        : Operand(HeapReg, ToRegister(ptr), TimesOne);
-#endif
-
+  Operand srcAddr = toMemoryAccessOperand(ins, 0);
   masm.wasmLoad(mir->access(), srcAddr, out);
 
   if (ool) {
@@ -469,18 +458,7 @@ void CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins) {
                            ToRegister(boundsCheckLimit), &rejoin);
   }
 
-#ifdef JS_CODEGEN_X86
-  const LAllocation* memoryBase = ins->memoryBase();
-  Operand dstAddr = ptr->isBogus() ? Operand(ToRegister(memoryBase), 0)
-                                   : Operand(ToRegister(memoryBase),
-                                             ToRegister(ptr), TimesOne);
-#else
-  MOZ_ASSERT(!mir->hasMemoryBase());
-  Operand dstAddr = ptr->isBogus()
-                        ? Operand(HeapReg, 0)
-                        : Operand(HeapReg, ToRegister(ptr), TimesOne);
-#endif
-
+  Operand dstAddr = toMemoryAccessOperand(ins, 0);
   masm.wasmStore(mir->access(), ToAnyRegister(value), dstAddr);
 
   if (rejoin.used()) {
@@ -2179,6 +2157,22 @@ void CodeGeneratorX86Shared::canonicalizeIfDeterministic(
 #endif  // DEBUG
 }
 
+template <typename T>
+Operand CodeGeneratorX86Shared::toMemoryAccessOperand(T* lir, int32_t disp) {
+  const LAllocation* ptr = lir->ptr();
+#ifdef JS_CODEGEN_X86
+  const LAllocation* memoryBase = lir->memoryBase();
+  Operand destAddr = ptr->isBogus() ? Operand(ToRegister(memoryBase), disp)
+                                    : Operand(ToRegister(memoryBase),
+                                              ToRegister(ptr), TimesOne, disp);
+#else
+  Operand destAddr = ptr->isBogus()
+                         ? Operand(HeapReg, disp)
+                         : Operand(HeapReg, ToRegister(ptr), TimesOne, disp);
+#endif
+  return destAddr;
+}
+
 void CodeGenerator::visitCopySignF(LCopySignF* lir) {
   FloatRegister lhs = ToFloatRegister(lir->getOperand(0));
   FloatRegister rhs = ToFloatRegister(lir->getOperand(1));
@@ -3532,6 +3526,87 @@ void CodeGenerator::visitWasmReduceSimd128ToInt64(
   }
 }
 
+void CodeGenerator::visitWasmLoadLaneSimd128(LWasmLoadLaneSimd128* ins) {
+  const MWasmLoadLaneSimd128* mir = ins->mir();
+  const wasm::MemoryAccessDesc& access = mir->access();
+
+  uint32_t offset = access.offset();
+  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
+
+  const LAllocation* value = ins->src();
+  Operand srcAddr = toMemoryAccessOperand(ins, offset);
+
+  masm.append(access, masm.size());
+  switch (ins->laneSize()) {
+    case 1: {
+      masm.vpinsrb(ins->laneIndex(), srcAddr, ToFloatRegister(value),
+                   ToFloatRegister(value));
+      break;
+    }
+    case 2: {
+      masm.vpinsrw(ins->laneIndex(), srcAddr, ToFloatRegister(value),
+                   ToFloatRegister(value));
+      break;
+    }
+    case 4: {
+      masm.vinsertps(ins->laneIndex() << 4, srcAddr, ToFloatRegister(value),
+                     ToFloatRegister(value));
+      break;
+    }
+    case 8: {
+      if (ins->laneIndex() == 0) {
+        masm.vmovlps(srcAddr, ToFloatRegister(value), ToFloatRegister(value));
+      } else {
+        masm.vmovhps(srcAddr, ToFloatRegister(value), ToFloatRegister(value));
+      }
+      break;
+    }
+    default:
+      MOZ_CRASH("Unsupported load lane size");
+  }
+}
+
+void CodeGenerator::visitWasmStoreLaneSimd128(LWasmStoreLaneSimd128* ins) {
+  const MWasmStoreLaneSimd128* mir = ins->mir();
+  const wasm::MemoryAccessDesc& access = mir->access();
+
+  uint32_t offset = access.offset();
+  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
+
+  const LAllocation* src = ins->src();
+  Operand destAddr = toMemoryAccessOperand(ins, offset);
+
+  masm.append(access, masm.size());
+  switch (ins->laneSize()) {
+    case 1: {
+      masm.vpextrb(ins->laneIndex(), ToFloatRegister(src), destAddr);
+      break;
+    }
+    case 2: {
+      masm.vpextrw(ins->laneIndex(), ToFloatRegister(src), destAddr);
+      break;
+    }
+    case 4: {
+      unsigned lane = ins->laneIndex();
+      if (lane == 0) {
+        masm.vmovss(ToFloatRegister(src), destAddr);
+      } else {
+        masm.vextractps(lane, ToFloatRegister(src), destAddr);
+      }
+      break;
+    }
+    case 8: {
+      if (ins->laneIndex() == 0) {
+        masm.vmovlps(ToFloatRegister(src), destAddr);
+      } else {
+        masm.vmovhps(ToFloatRegister(src), destAddr);
+      }
+      break;
+    }
+    default:
+      MOZ_CRASH("Unsupported store lane size");
+  }
+}
 #endif  // ENABLE_WASM_SIMD
 
 }  // namespace jit

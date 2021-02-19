@@ -275,6 +275,183 @@ function wasmCompile(text) {
 }
 
 
+// Load lane
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    ${iota(16).map(i => `(func (export "load8_lane_${i}") (param i32)
+      (v128.store (i32.const 0)
+        (v128.load8_lane offset=0 ${i} (local.get 0) (v128.load (i32.const 16)))))
+    `).join('')}
+    ${iota(8).map(i => `(func (export "load16_lane_${i}") (param i32)
+    (v128.store (i32.const 0)
+      (v128.load16_lane offset=0 ${i} (local.get 0) (v128.load (i32.const 16)))))
+    `).join('')}
+    ${iota(4).map(i => `(func (export "load32_lane_${i}") (param i32)
+    (v128.store (i32.const 0)
+      (v128.load32_lane offset=0 ${i} (local.get 0) (v128.load (i32.const 16)))))
+    `).join('')}
+    ${iota(2).map(i => `(func (export "load64_lane_${i}") (param i32)
+    (v128.store (i32.const 0)
+      (v128.load64_lane offset=0 ${i} (local.get 0) (v128.load (i32.const 16)))))
+    `).join('')}
+    (func (export "load_lane_const_and_align")
+      (v128.store (i32.const 0)
+        (v128.load64_lane offset=32 1 (i32.const 1)
+          (v128.load32_lane offset=32 1 (i32.const 3)
+            (v128.load16_lane offset=32 0 (i32.const 5)
+              (v128.load (i32.const 16)))))
+      ))
+  )`);
+
+var mem8 = new Int8Array(ins.exports.mem.buffer);
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+
+var as = [0x12345678, 0x23456789, 0x3456789A, 0x456789AB];
+set(mem32, 4, as); set(mem8, 32, [0xC2]);
+
+ins.exports["load8_lane_0"](32);
+assertSame(get(mem32, 0, 4), [0x123456C2, 0x23456789, 0x3456789A, 0x456789AB]);
+ins.exports["load8_lane_1"](32);
+assertSame(get(mem32, 0, 4), [0x1234C278, 0x23456789, 0x3456789A, 0x456789AB]);
+ins.exports["load8_lane_2"](32);
+assertSame(get(mem32, 0, 4), [0x12C25678, 0x23456789, 0x3456789A, 0x456789AB]);
+ins.exports["load8_lane_3"](32);
+assertSame(get(mem32, 0, 4), [0xC2345678|0, 0x23456789, 0x3456789A, 0x456789AB]);
+ins.exports["load8_lane_4"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x234567C2, 0x3456789A, 0x456789AB]);
+ins.exports["load8_lane_6"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x23C26789, 0x3456789A, 0x456789AB]);
+ins.exports["load8_lane_9"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x23456789, 0x3456C29A, 0x456789AB]);
+ins.exports["load8_lane_14"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x23456789, 0x3456789A, 0x45C289AB]);
+
+set(mem8, 32, [0xC2, 0xD1]);
+
+ins.exports["load16_lane_0"](32);
+assertSame(get(mem32, 0, 4), [0x1234D1C2, 0x23456789, 0x3456789A, 0x456789AB]);
+ins.exports["load16_lane_1"](32);
+assertSame(get(mem32, 0, 4), [0xD1C25678|0, 0x23456789, 0x3456789A, 0x456789AB]);
+ins.exports["load16_lane_2"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x2345D1C2, 0x3456789A, 0x456789AB]);
+ins.exports["load16_lane_5"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x23456789, 0xD1C2789A|0, 0x456789AB]);
+ins.exports["load16_lane_7"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x23456789, 0x3456789A, 0xD1C289AB|0]);
+
+set(mem32, 8, [0x16B5C3D0]);
+
+ins.exports["load32_lane_0"](32);
+assertSame(get(mem32, 0, 4), [0x16B5C3D0, 0x23456789, 0x3456789A, 0x456789AB]);
+ins.exports["load32_lane_1"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x16B5C3D0, 0x3456789A, 0x456789AB]);
+ins.exports["load32_lane_2"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x23456789, 0x16B5C3D0, 0x456789AB]);
+ins.exports["load32_lane_3"](32);
+assertSame(get(mem32, 0, 4), [0x12345678, 0x23456789, 0x3456789A, 0x16B5C3D0]);
+
+set(mem64, 4, [0x3300AA4416B5C3D0n]);
+
+ins.exports["load64_lane_0"](32);
+assertSame(get(mem64, 0, 2), [0x3300AA4416B5C3D0n, 0x456789AB3456789An]);
+ins.exports["load64_lane_1"](32);
+assertSame(get(mem64, 0, 2), [0x2345678912345678n, 0x3300AA4416B5C3D0n]);
+
+// .. (mis)align load lane
+
+var as = [0x12345678, 0x23456789, 0x3456789A, 0x456789AB];
+set(mem32, 4, as); set(mem64, 4, [0x3300AA4416B5C3D0n, 0x300AA4416B5C3D03n]);
+
+ins.exports["load16_lane_5"](33);
+assertSame(get(mem32, 0, 4), [0x12345678,0x23456789,0xb5c3789a|0,0x456789ab]);
+ins.exports["load32_lane_1"](34);
+assertSame(get(mem32, 0, 4), [0x12345678, 0xaa4416b5|0,0x3456789a,0x456789ab]);
+ins.exports["load64_lane_0"](35);
+assertSame(get(mem64, 0, 2), [0x5c3d033300aa4416n, 0x456789ab3456789an]);
+
+ins.exports["load_lane_const_and_align"]();
+assertSame(get(mem32, 0, 4), [0x123400aa,0x00AA4416,0x4416b5c3,0x033300aa]);
+
+// Store lane
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    ${iota(16).map(i => `(func (export "store8_lane_${i}") (param i32) (param i32)
+      (v128.store8_lane ${i} (local.get 1) (v128.load (local.get 0))))
+    `).join('')}
+    ${iota(8).map(i => `(func (export "store16_lane_${i}") (param i32) (param i32)
+      (v128.store16_lane ${i} (local.get 1) (v128.load (local.get 0))))
+    `).join('')}
+    ${iota(4).map(i => `(func (export "store32_lane_${i}") (param i32) (param i32)
+      (v128.store32_lane ${i} (local.get 1) (v128.load (local.get 0))))
+    `).join('')}
+    ${iota(2).map(i => `(func (export "store64_lane_${i}") (param i32) (param i32)
+      (v128.store64_lane ${i} (local.get 1) (v128.load (local.get 0))))
+    `).join('')}
+    (func (export "store_lane_const_and_align")
+      (v128.store16_lane 1 (i32.const 33) (v128.load (i32.const 16)))
+      (v128.store32_lane 2 (i32.const 37) (v128.load (i32.const 16)))
+      (v128.store64_lane 0 (i32.const 47) (v128.load (i32.const 16)))
+    ))`);
+
+
+var mem8 = new Int8Array(ins.exports.mem.buffer);
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+
+var as = [0x12345678, 0x23456789, 0x3456789A, 0x456789AB];
+set(mem32, 4, as); set(mem32, 0, [0x7799AA00, 42, 3, 0]);
+
+ins.exports["store8_lane_0"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA78]);
+ins.exports["store8_lane_1"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA56]);
+ins.exports["store8_lane_2"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA34]);
+ins.exports["store8_lane_3"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA12]);
+ins.exports["store8_lane_5"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA67]);
+ins.exports["store8_lane_7"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA23]);
+ins.exports["store8_lane_8"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA9A]);
+ins.exports["store8_lane_15"](16, 0); assertSame(get(mem32, 0, 1), [0x7799AA45]);
+
+ins.exports["store16_lane_0"](16, 0); assertSame(get(mem32, 0, 1), [0x77995678]);
+ins.exports["store16_lane_1"](16, 0); assertSame(get(mem32, 0, 1), [0x77991234]);
+ins.exports["store16_lane_2"](16, 0); assertSame(get(mem32, 0, 1), [0x77996789]);
+ins.exports["store16_lane_5"](16, 0); assertSame(get(mem32, 0, 1), [0x77993456]);
+ins.exports["store16_lane_7"](16, 0); assertSame(get(mem32, 0, 1), [0x77994567]);
+
+ins.exports["store32_lane_0"](16, 0); assertSame(get(mem32, 0, 2), [0x12345678, 42]);
+ins.exports["store32_lane_1"](16, 0); assertSame(get(mem32, 0, 2), [0x23456789, 42]);
+ins.exports["store32_lane_2"](16, 0); assertSame(get(mem32, 0, 2), [0x3456789A, 42]);
+ins.exports["store32_lane_3"](16, 0); assertSame(get(mem32, 0, 2), [0x456789AB, 42]);
+
+ins.exports["store64_lane_0"](16, 0); assertSame(get(mem64, 0, 2), [0x2345678912345678n, 3]);
+ins.exports["store64_lane_1"](16, 0); assertSame(get(mem64, 0, 2), [0x456789AB3456789An, 3]);
+
+// .. (mis)align store lane
+
+var as = [0x12345678, 0x23456789, 0x3456789A, 0x456789AB];
+set(mem32, 4, as); set(mem32, 0, [0x7799AA01, 42, 3, 0]);
+ins.exports["store16_lane_1"](16, 1); assertSame(get(mem32, 0, 2), [0x77123401, 42]);
+set(mem32, 0, [0x7799AA01, 42, 3, 0]);
+ins.exports["store32_lane_1"](16, 2); assertSame(get(mem32, 0, 2), [0x6789AA01, 0x2345]);
+set(mem32, 0, [0x7799AA01, 42, 5, 3]);
+ins.exports["store64_lane_0"](16, 1);
+assertSame(get(mem64, 0, 2), [0x4567891234567801n, 0x0300000023]);
+
+set(mem32, 4, [
+  0x12345678, 0x23456789, 0x3456789A, 0x456789AB,
+  0x55AA55AA, 0xCC44CC44, 0x55AA55AA, 0xCC44CC44,
+  0x55AA55AA, 0xCC44CC44, 0x55AA55AA, 0xCC44CC44,
+]);
+ins.exports["store_lane_const_and_align"]();
+assertSame(get(mem32, 8, 8), [
+  0x551234aa, 0x56789a44, 0x55aa5534, 0x7844cc44,
+  0x89123456|0, 0xcc234567|0, 0x55aa55aa, 0xcc44cc44|0,
+]);
+
+
 /// Double-precision conversion instructions.
 /// f64x2.convert_low_i32x4_{u,s} / i32x4.trunc_sat_f64x2_{u,s}_zero
 /// f32x4.demote_f64x2_zero / f64x2.promote_low_f32x4
