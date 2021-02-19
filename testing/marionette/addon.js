@@ -108,6 +108,11 @@ class Addon {
    */
   static async uninstall(id) {
     let candidate = await AddonManager.getAddonByID(id);
+    if (candidate === null) {
+      // `AddonManager.getAddonByID` never rejects but instead
+      // returns `null` if the requested addon cannot be found.
+      throw new error.UnknownError(`Addon ${id} is not installed`);
+    }
 
     return new Promise(resolve => {
       let listener = {
