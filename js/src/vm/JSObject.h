@@ -155,8 +155,6 @@ class JSObject
   }
   js::Shape* shape() const { return shape_; }
 
-  void traceShape(JSTracer* trc) { TraceEdge(trc, shapePtr(), "shape"); }
-
   static JSObject* fromShapeFieldPointer(uintptr_t p) {
     return reinterpret_cast<JSObject*>(p - JSObject::offsetOfShape());
   }
