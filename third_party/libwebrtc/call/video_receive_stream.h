@@ -205,6 +205,10 @@ class VideoReceiveStream {
 
       bool tmmbr = false;
 
+      // How to request keyframes from a remote sender. Applies only if lntf is
+      // disabled.
+      KeyFrameReqMethod keyframe_method;
+
       // See LntfConfig for description.
       LntfConfig lntf;
 
