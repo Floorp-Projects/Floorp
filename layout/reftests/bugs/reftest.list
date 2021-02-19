@@ -67,9 +67,9 @@ skip-if(isDebugBuild) == 256180-5.html 256180-5-ref.html
 == 25888-2r-block.html 25888-2r-ref.html
 == 25888-3l-block.html 25888-3l-ref.html
 == 25888-3r-block.html 25888-3r-ref.html
-fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-4) == 28811-1a.html 28811-1-ref.html
+fuzzy-if((winWidget||gtkWidget)&&!nativeThemePref,0-1,0-4) == 28811-1a.html 28811-1-ref.html
 fuzzy-if(gtkWidget,0-6,0-26200) == 28811-1b.html 28811-1-ref.html  # Bug 1128229
-fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-4) == 28811-2a.html 28811-2-ref.html
+fuzzy-if((winWidget||gtkWidget)&&!nativeThemePref,0-1,0-4) == 28811-2a.html 28811-2-ref.html
 fuzzy-if(gtkWidget,0-6,0-26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 40596-1a.html 40596-1-ref.html
 != 40596-1b.html 40596-1-ref.html
@@ -839,7 +839,7 @@ fails-if(cocoaWidget||winWidget) random-if(!cocoaWidget&&!winWidget) != 399636-q
 == chrome://reftest/content/bugs/401946-1.xhtml about:blank
 == 402338-1.html 402338-1-ref.html
 == 402567-1.html 402567-1-ref.html
-== 402567-2.html 402567-2-ref.html
+fuzzy-if(winWidget&&!nativeThemePref,0-8,0-1) == 402567-2.html 402567-2-ref.html
 == 402567-3.html 402567-3-ref.html
 fuzzy-if(gtkWidget,0-2,0-40) == 402567-4.html 402567-4-ref.html
 fuzzy-if(skiaContent,0-2,0-5) == 402629-1.html 402629-1-ref.html
@@ -1910,7 +1910,7 @@ fuzzy-if(webrender,0-128,0-22) == 1155828-1.html 1155828-1-ref.html # bug 164652
 fuzzy-if(skiaContent,0-7,0-84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
 fuzzy-if(Android,0-6,0-6) == 1169331-1.html 1169331-1-ref.html
-fuzzy(0-1,0-74) random-if(Android||gtkWidget) == 1174332-1.html 1174332-1-ref.html # bug 1312658
+fuzzy(0-1,0-74) random-if(Android||gtkWidget) fuzzy-if(winWidget&&!nativeThemePref,0-68,0-28) == 1174332-1.html 1174332-1-ref.html # bug 1312658
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html
 == 1190635-1.html 1190635-1-ref.html
