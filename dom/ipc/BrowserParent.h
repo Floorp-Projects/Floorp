@@ -532,6 +532,10 @@ class BrowserParent final : public PBrowserParent,
       const LayoutDeviceIntPoint& aPoint, const double& aPointerPressure,
       const uint32_t& aPointerOrientation, const uint64_t& aObserverId);
 
+  mozilla::ipc::IPCResult RecvSynthesizeNativeTouchPadPinch(
+      const TouchpadPinchPhase& aEventPhase, const float& aScale,
+      const LayoutDeviceIntPoint& aPoint, const int32_t& aModifierFlags);
+
   mozilla::ipc::IPCResult RecvSynthesizeNativeTouchTap(
       const LayoutDeviceIntPoint& aPoint, const bool& aLongTap,
       const uint64_t& aObserverId);
