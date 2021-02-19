@@ -45,9 +45,6 @@ namespace dom {
  * the object is about to die.)
  */
 
-template <typename T>
-struct Prefable;
-
 class BaseDOMProxyHandler : public js::BaseProxyHandler {
  public:
   explicit constexpr BaseDOMProxyHandler(const void* aProxyFamily,
