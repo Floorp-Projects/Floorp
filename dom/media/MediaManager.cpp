@@ -309,6 +309,7 @@ class SourceListener : public SupportsWeakPtr {
 
   /**
    * Registers this source listener as belonging to the given window listener.
+   * Stop() must be called on registered SourceListeners before destruction.
    */
   void Register(GetUserMediaWindowListener* aListener);
 
@@ -435,7 +436,7 @@ class SourceListener : public SupportsWeakPtr {
   PrincipalHandle GetPrincipalHandle() const;
 
  private:
-  virtual ~SourceListener() = default;
+  virtual ~SourceListener() { MOZ_ASSERT(!mWindowListener); }
 
   using DeviceOperationPromise =
       MozPromise<nsresult, bool, /* IsExclusive = */ true>;
@@ -582,6 +583,8 @@ class GetUserMediaWindowListener {
    * reference. That said, you'll still want to iterate on a copy of said lists,
    * if you end up calling this method (or methods that may call this method) in
    * the loop, to avoid inadvertently skipping members.
+   *
+   * For use only from GetUserMediaWindowListener and SourceListener.
    */
   bool Remove(RefPtr<SourceListener> aListener) {
     // We refcount aListener on entry since we're going to proxy-release it
@@ -1342,9 +1345,8 @@ class GetUserMediaTask final {
                         __func__);
         }));
     // Do after the above runs, as it checks active window list
-    NS_DispatchToMainThread(NewRunnableMethod<RefPtr<SourceListener>>(
-        "GetUserMediaWindowListener::Remove", mWindowListener,
-        &GetUserMediaWindowListener::Remove, mSourceListener));
+    NS_DispatchToMainThread(NewRunnableMethod(
+        "SourceListener::Stop", mSourceListener, &SourceListener::Stop));
   }
 
   /**
@@ -1436,7 +1438,7 @@ class GetUserMediaTask final {
     if (NS_IsMainThread()) {
       mHolder.Reject(MakeRefPtr<MediaMgrError>(aName, aMessage), __func__);
       // Should happen *after* error runs for consistency, but may not matter
-      mWindowListener->Remove(mSourceListener);
+      mSourceListener->Stop();
     } else {
       // This will re-check the window being alive on main-thread
       Fail(aName, aMessage);
@@ -2583,7 +2585,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
     if ((!IsOn(c.mAudio) && !IsOn(c.mVideo)) ||
         (IsOn(c.mAudio) && audioPerm == nsIPermissionManager::DENY_ACTION) ||
         (IsOn(c.mVideo) && videoPerm == nsIPermissionManager::DENY_ACTION)) {
-      windowListener->Remove(sourceListener);
+      sourceListener->Stop();
       return StreamPromise::CreateAndReject(
           MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
           __func__);
@@ -2695,7 +2697,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
               LOG("GetUserMedia: bad window (%" PRIu64
                   ") in post enumeration success callback 2!",
                   windowID);
-              windowListener->Remove(sourceListener);
+              sourceListener->Stop();
               return StreamPromise::CreateAndReject(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
@@ -2706,7 +2708,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                   "promise2 success callback! Calling error handler!");
               nsString constraint;
               constraint.AssignASCII(badConstraint);
-              windowListener->Remove(sourceListener);
+              sourceListener->Stop();
               return StreamPromise::CreateAndReject(
                   MakeRefPtr<MediaMgrError>(
                       MediaMgrError::Name::OverconstrainedError, "",
@@ -2716,7 +2718,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             if (!devices->Length()) {
               LOG("GetUserMedia: no devices found in post enumeration promise2 "
                   "success callback! Calling error handler!");
-              windowListener->Remove(sourceListener);
+              sourceListener->Stop();
               // When privacy.resistFingerprinting = true, no
               // available device implies content script is requesting
               // a fake device, so report NotAllowedError.
@@ -2733,7 +2735,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
               for (auto& device : *devices) {
                 nsresult rv = devicesCopy->AppendElement(device);
                 if (NS_WARN_IF(NS_FAILED(rv))) {
-                  windowListener->Remove(sourceListener);
+                  sourceListener->Stop();
                   return StreamPromise::CreateAndReject(
                       MakeRefPtr<MediaMgrError>(
                           MediaMgrError::Name::AbortError),
@@ -2793,10 +2795,10 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
 #endif
             return p;
           },
-          [windowListener, sourceListener](RefPtr<MediaMgrError>&& aError) {
+          [sourceListener](RefPtr<MediaMgrError>&& aError) {
             LOG("GetUserMedia: post enumeration SelectSettings failure "
                 "callback called!");
-            windowListener->Remove(sourceListener);
+            sourceListener->Stop();
             return StreamPromise::CreateAndReject(std::move(aError), __func__);
           });
 };
@@ -3106,17 +3108,17 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
                               devices)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [windowListener, sourceListener, devices](bool) {
+          [sourceListener, devices](bool) {
             // The listener may have already been removed if the window is no
             // longer active.
-            windowListener->Remove(sourceListener);
+            sourceListener->Stop();
             return DevicesPromise::CreateAndResolve(devices, __func__);
           },
-          [windowListener, sourceListener](RefPtr<MediaMgrError>&& aError) {
+          [sourceListener](RefPtr<MediaMgrError>&& aError) {
             // EnumerateDevices may fail if a new doc has been set, in which
             // case the OnNavigation() method should have removed all previous
             // active listeners.
-            MOZ_ASSERT(!windowListener->Remove(sourceListener));
+            MOZ_ASSERT(sourceListener->Stopped());
             return DevicesPromise::CreateAndReject(std::move(aError), __func__);
           });
 }
