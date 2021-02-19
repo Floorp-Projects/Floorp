@@ -10520,10 +10520,12 @@ Result<bool, nsresult> UpgradeStorageFrom0_0To1_0Helper::MaybeRenameOrigin(
   AssertIsOnIOThread();
   MOZ_ASSERT(aOriginProps.mDirectory);
 
+  const nsAString& oldLeafName = aOriginProps.mLeafName;
+
   const auto newLeafName =
       MakeSanitizedOriginString(aOriginProps.mOriginMetadata.mOrigin);
 
-  if (aOriginProps.mLeafName == newLeafName) {
+  if (oldLeafName == newLeafName) {
     return false;
   }
 
@@ -10535,7 +10537,25 @@ Result<bool, nsresult> UpgradeStorageFrom0_0To1_0Helper::MaybeRenameOrigin(
       *aOriginProps.mDirectory, aOriginProps.mTimestamp,
       /* aPersisted */ false, aOriginProps.mOriginMetadata));
 
-  QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
+  QM_TRY_INSPECT(const auto& newFile,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<nsIFile>, aOriginProps.mDirectory, GetParent));
+
+  QM_TRY(newFile->Append(newLeafName));
+
+  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(newFile, Exists));
+
+  if (exists) {
+    QM_WARNING(
+        "Can't rename %s directory to %s, the target already exists, removing "
+        "instead of renaming!",
+        NS_ConvertUTF16toUTF8(oldLeafName).get(),
+        NS_ConvertUTF16toUTF8(newLeafName).get());
+
+    QM_TRY(aOriginProps.mDirectory->Remove(/* recursive */ true));
+  } else {
+    QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
+  }
 
   return true;
 }
