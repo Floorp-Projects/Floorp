@@ -182,6 +182,8 @@ enum class OpKind {
 #  ifdef ENABLE_WASM_SIMD
   ExtractLane,
   ReplaceLane,
+  LoadLane,
+  StoreLane,
   VectorShift,
   VectorSelect,
   VectorShuffle,
@@ -559,6 +561,12 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readLoadSplat(uint32_t byteSize,
                                    LinearMemoryAddress<Value>* addr);
   [[nodiscard]] bool readLoadExtend(LinearMemoryAddress<Value>* addr);
+  [[nodiscard]] bool readLoadLane(uint32_t byteSize,
+                                  LinearMemoryAddress<Value>* addr,
+                                  uint32_t* laneIndex, Value* input);
+  [[nodiscard]] bool readStoreLane(uint32_t byteSize,
+                                   LinearMemoryAddress<Value>* addr,
+                                   uint32_t* laneIndex, Value* input);
 #endif
 
   // At a location where readOp is allowed, peek at the next opcode
@@ -2826,6 +2834,52 @@ inline bool OpIter<Policy>::readLoadExtend(LinearMemoryAddress<Value>* addr) {
   }
 
   infalliblePush(ValType::V128);
+
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readLoadLane(uint32_t byteSize,
+                                         LinearMemoryAddress<Value>* addr,
+                                         uint32_t* laneIndex, Value* input) {
+  MOZ_ASSERT(Classify(op_) == OpKind::LoadLane);
+
+  if (!popWithType(ValType::V128, input)) {
+    return false;
+  }
+
+  if (!readLinearMemoryAddress(byteSize, addr)) {
+    return false;
+  }
+
+  uint32_t inputLanes = 16 / byteSize;
+  if (!readLaneIndex(inputLanes, laneIndex)) {
+    return fail("missing or invalid load_lane lane index");
+  }
+
+  infalliblePush(ValType::V128);
+
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readStoreLane(uint32_t byteSize,
+                                          LinearMemoryAddress<Value>* addr,
+                                          uint32_t* laneIndex, Value* input) {
+  MOZ_ASSERT(Classify(op_) == OpKind::StoreLane);
+
+  if (!popWithType(ValType::V128, input)) {
+    return false;
+  }
+
+  if (!readLinearMemoryAddress(byteSize, addr)) {
+    return false;
+  }
+
+  uint32_t inputLanes = 16 / byteSize;
+  if (!readLaneIndex(inputLanes, laneIndex)) {
+    return fail("missing or invalid store_lane lane index");
+  }
 
   return true;
 }

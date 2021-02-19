@@ -1535,8 +1535,6 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
   if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
     TraceManuallyBarrieredEdge(trc, &global, "group_global");
   }
-
-  TraceNullableEdge(trc, &typeDescr_, "group_typedescr");
 }
 
 void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
@@ -1547,10 +1545,6 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
   // Note: the realm's global can be nullptr if we GC while creating the global.
   if (GlobalObject* global = group->realm()->unsafeUnbarrieredMaybeGlobal()) {
     traverseEdge(group, static_cast<JSObject*>(global));
-  }
-
-  if (TypeDescr* descr = group->maybeTypeDescr()) {
-    traverseEdge(group, static_cast<JSObject*>(descr));
   }
 }
 
@@ -1997,6 +1991,7 @@ scan_obj : {
 
   markImplicitEdges(obj);
   traverseEdge(obj, obj->group());
+  traverseEdge(obj, obj->shape());
 
   CallTraceHook(this, obj);
 
@@ -2005,8 +2000,6 @@ scan_obj : {
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
-  Shape* shape = nobj->lastProperty();
-  traverseEdge(obj, shape);
 
   unsigned nslots = nobj->slotSpan();
 

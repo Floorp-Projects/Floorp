@@ -198,6 +198,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetRegion",
     });
 
+    Cu.exportFunction(this.AWIsDefaultBrowser.bind(this), window, {
+      defineAs: "AWIsDefaultBrowser",
+    });
+
     Cu.exportFunction(this.AWSelectTheme.bind(this), window, {
       defineAs: "AWSelectTheme",
     });
@@ -336,6 +340,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWGetSelectedTheme() {
     return this.wrapPromise(getSelectedTheme(this));
+  }
+
+  AWIsDefaultBrowser() {
+    return this.wrapPromise(this.sendQuery("AWPage:IS_DEFAULT_BROWSER"));
   }
 
   /**

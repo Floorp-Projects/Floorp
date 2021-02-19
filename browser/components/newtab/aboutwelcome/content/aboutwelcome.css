@@ -457,6 +457,12 @@ body {
       margin: 0; }
       .onboardingContainer .tiles-media-section.privacy.media {
         opacity: 0; }
+  .onboardingContainer .tiles-delayed {
+    animation: fadein 0.4s; }
+
+@keyframes fadein {
+  from {
+    opacity: 0; } }
   .onboardingContainer button {
     font-family: inherit;
     cursor: pointer;

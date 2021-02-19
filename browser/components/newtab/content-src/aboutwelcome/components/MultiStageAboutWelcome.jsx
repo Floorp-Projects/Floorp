@@ -136,6 +136,7 @@ export class WelcomeScreen extends React.PureComponent {
   constructor(props) {
     super(props);
     this.handleAction = this.handleAction.bind(this);
+    this.state = { alternateContent: "" };
   }
 
   handleOpenURL(action, flowParams, UTMTerm) {
@@ -191,6 +192,25 @@ export class WelcomeScreen extends React.PureComponent {
         await window.AWWaitForMigrationClose();
         AboutWelcomeUtils.sendActionTelemetry(props.messageId, "migrate_close");
       }
+    }
+
+    // Wait until we become default browser to continue rest of action.
+    if (action.waitForDefault) {
+      // Update the UI to show additional "waiting" content.
+      this.setState({ alternateContent: "waiting_for_default" });
+
+      // Keep checking frequently as we want the UI to be responsive.
+      await new Promise(resolve =>
+        (async function checkDefault() {
+          if (await window.AWIsDefaultBrowser()) {
+            resolve();
+          } else {
+            setTimeout(checkDefault, 100);
+          }
+        })()
+      );
+
+      AboutWelcomeUtils.sendActionTelemetry(props.messageId, "default_browser");
     }
 
     // A special tiles.action.theme value indicates we should use the event's value vs provided value.
@@ -383,7 +403,12 @@ export class WelcomeScreen extends React.PureComponent {
   }
 
   render() {
+    // Use the provided content or switch to an alternate one.
     const { content, topSites } = this.props;
+    if (content[this.state.alternateContent]) {
+      Object.assign(content, content[this.state.alternateContent]);
+    }
+
     const showImportableSitesDisclaimer =
       content.tiles &&
       content.tiles.type === "topsites" &&
@@ -416,10 +441,10 @@ export class WelcomeScreen extends React.PureComponent {
             />
           </Localized>
         </div>
-        {content.secondary_button ? this.renderSecondaryCTA() : null}
         {content.help_text && content.help_text.position === "default"
           ? this.renderHelpText()
           : null}
+        {content.secondary_button ? this.renderSecondaryCTA() : null}
         <nav
           className={
             (content.help_text && content.help_text.position === "footer") ||

@@ -214,5 +214,102 @@ describe("MultiStageAboutWelcome module", () => {
         );
       });
     });
+    describe("#handleAction", () => {
+      let SCREEN_PROPS;
+      let TEST_ACTION;
+      beforeEach(() => {
+        SCREEN_PROPS = {
+          content: {
+            primary_button: {
+              action: {},
+              label: "test button",
+            },
+          },
+          navigate: sandbox.stub(),
+          setActiveTheme: sandbox.stub(),
+          UTMTerm: "you_tee_emm",
+        };
+        TEST_ACTION = SCREEN_PROPS.content.primary_button.action;
+        sandbox.stub(AboutWelcomeUtils, "handleUserAction");
+      });
+      it("should handle navigate", () => {
+        TEST_ACTION.navigate = true;
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        wrapper.find(".primary").simulate("click");
+
+        assert.calledOnce(SCREEN_PROPS.navigate);
+      });
+      it("should handle theme", () => {
+        TEST_ACTION.theme = "test";
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        wrapper.find(".primary").simulate("click");
+
+        assert.calledWith(SCREEN_PROPS.setActiveTheme, "test");
+      });
+      it("should handle SHOW_FIREFOX_ACCOUNTS", () => {
+        TEST_ACTION.type = "SHOW_FIREFOX_ACCOUNTS";
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        wrapper.find(".primary").simulate("click");
+
+        assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+          data: {
+            extraParams: {
+              utm_campaign: "firstrun",
+              utm_medium: "referral",
+              utm_source: "activity-stream",
+              utm_term: "aboutwelcome-you_tee_emm-screen",
+            },
+          },
+          type: "SHOW_FIREFOX_ACCOUNTS",
+        });
+      });
+      it("should handle SHOW_MIGRATION_WIZARD", () => {
+        TEST_ACTION.type = "SHOW_MIGRATION_WIZARD";
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        wrapper.find(".primary").simulate("click");
+
+        assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+          type: "SHOW_MIGRATION_WIZARD",
+        });
+      });
+      it("should handle waitForDefault", () => {
+        TEST_ACTION.waitForDefault = true;
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        wrapper.find(".primary").simulate("click");
+
+        assert.propertyVal(
+          wrapper.state(),
+          "alternateContent",
+          "waiting_for_default"
+        );
+      });
+    });
+    describe("alternate content", () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "Original",
+          alternate: {
+            title: "Alternate",
+          },
+        },
+      };
+      it("should show original title", () => {
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        assert.equal(wrapper.find(".welcome-text").text(), "Original");
+      });
+      it("should show alternate title", () => {
+        const wrapper = mount(<WelcomeScreen {...SCREEN_PROPS} />);
+
+        wrapper.setState({ alternateContent: "alternate" });
+
+        assert.equal(wrapper.find(".welcome-text").text(), "Alternate");
+      });
+    });
   });
 });

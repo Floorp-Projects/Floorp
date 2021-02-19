@@ -8374,6 +8374,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitLoadSplat(Scalar::Type viewType);
   [[nodiscard]] bool emitLoadZero(Scalar::Type viewType);
   [[nodiscard]] bool emitLoadExtend(Scalar::Type viewType);
+  [[nodiscard]] bool emitLoadLane(uint32_t laneSize);
+  [[nodiscard]] bool emitStoreLane(uint32_t laneSize);
   [[nodiscard]] bool emitBitselect();
   [[nodiscard]] bool emitVectorShuffle();
   [[nodiscard]] bool emitVectorShiftRightI64x2(bool isUnsigned);
@@ -14440,6 +14442,123 @@ bool BaseCompiler::emitLoadExtend(Scalar::Type viewType) {
   return true;
 }
 
+bool BaseCompiler::emitLoadLane(uint32_t laneSize) {
+  Nothing nothing;
+  LinearMemoryAddress<Nothing> addr;
+  uint32_t laneIndex;
+  if (!iter_.readLoadLane(laneSize, &addr, &laneIndex, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  RegV128 rsd = popV128();
+
+  Scalar::Type viewType;
+  ValType type;
+  switch (laneSize) {
+    case 1:
+      viewType = Scalar::Uint8;
+      type = ValType::I32;
+      break;
+    case 2:
+      viewType = Scalar::Uint16;
+      type = ValType::I32;
+      break;
+    case 4:
+      viewType = Scalar::Int32;
+      type = ValType::I32;
+      break;
+    case 8:
+      viewType = Scalar::Int64;
+      type = ValType::I64;
+      break;
+    default:
+      MOZ_CRASH("unsupported laneSize");
+  }
+
+  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  if (!loadCommon(&access, AccessCheck(), type)) {
+    return false;
+  }
+
+  if (type == ValType::I32) {
+    RegI32 rs = popI32();
+    switch (laneSize) {
+      case 1:
+        masm.replaceLaneInt8x16(laneIndex, rs, rsd);
+        break;
+      case 2:
+        masm.replaceLaneInt16x8(laneIndex, rs, rsd);
+        break;
+      case 4:
+        masm.replaceLaneInt32x4(laneIndex, rs, rsd);
+        break;
+    }
+    freeI32(rs);
+  } else {
+    MOZ_ASSERT(type == ValType::I64);
+    RegI64 rs = popI64();
+    masm.replaceLaneInt64x2(laneIndex, rs, rsd);
+    freeI64(rs);
+  }
+
+  pushV128(rsd);
+
+  return true;
+}
+
+bool BaseCompiler::emitStoreLane(uint32_t laneSize) {
+  Nothing nothing;
+  LinearMemoryAddress<Nothing> addr;
+  uint32_t laneIndex;
+  if (!iter_.readStoreLane(laneSize, &addr, &laneIndex, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  RegV128 rs = popV128();
+  Scalar::Type viewType;
+  ValType type;
+  if (laneSize <= 4) {
+    RegI32 tmp = needI32();
+    switch (laneSize) {
+      case 1:
+        viewType = Scalar::Uint8;
+        masm.extractLaneInt8x16(laneIndex, rs, tmp);
+        break;
+      case 2:
+        viewType = Scalar::Uint16;
+        masm.extractLaneInt16x8(laneIndex, rs, tmp);
+        break;
+      case 4:
+        viewType = Scalar::Int32;
+        masm.extractLaneInt32x4(laneIndex, rs, tmp);
+        break;
+      default:
+        MOZ_CRASH("unsupported laneSize");
+    }
+    pushI32(tmp);
+    type = ValType::I32;
+  } else {
+    MOZ_ASSERT(laneSize == 8);
+    RegI64 tmp = needI64();
+    masm.extractLaneInt64x2(laneIndex, rs, tmp);
+    pushI64(tmp);
+    type = ValType::I64;
+    viewType = Scalar::Int64;
+  }
+  freeV128(rs);
+
+  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  return storeCommon(&access, AccessCheck(), type);
+}
+
 bool BaseCompiler::emitBitselect() {
   Nothing unused_a, unused_b, unused_c;
 
@@ -15867,6 +15986,22 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitLoadZero(Scalar::Float64));
           case uint32_t(SimdOp::V128Store):
             CHECK_NEXT(emitStore(ValType::V128, Scalar::Simd128));
+          case uint32_t(SimdOp::V128Load8Lane):
+            CHECK_NEXT(emitLoadLane(1));
+          case uint32_t(SimdOp::V128Load16Lane):
+            CHECK_NEXT(emitLoadLane(2));
+          case uint32_t(SimdOp::V128Load32Lane):
+            CHECK_NEXT(emitLoadLane(4));
+          case uint32_t(SimdOp::V128Load64Lane):
+            CHECK_NEXT(emitLoadLane(8));
+          case uint32_t(SimdOp::V128Store8Lane):
+            CHECK_NEXT(emitStoreLane(1));
+          case uint32_t(SimdOp::V128Store16Lane):
+            CHECK_NEXT(emitStoreLane(2));
+          case uint32_t(SimdOp::V128Store32Lane):
+            CHECK_NEXT(emitStoreLane(4));
+          case uint32_t(SimdOp::V128Store64Lane):
+            CHECK_NEXT(emitStoreLane(8));
           default:
             break;
         }  // switch (op.b1)
