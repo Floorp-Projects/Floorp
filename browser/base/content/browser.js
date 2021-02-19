@@ -1929,7 +1929,7 @@ var gBrowserInit = {
     this._handleURIToLoad();
 
     Services.obs.addObserver(gIdentityHandler, "perm-changed");
-    Services.obs.addObserver(gRemoteControl, "devtools-listening");
+    Services.obs.addObserver(gRemoteControl, "devtools-socket");
     Services.obs.addObserver(gRemoteControl, "marionette-listening");
     Services.obs.addObserver(gRemoteControl, "remote-listening");
     Services.obs.addObserver(
@@ -2568,7 +2568,7 @@ var gBrowserInit = {
       FullZoom.destroy();
 
       Services.obs.removeObserver(gIdentityHandler, "perm-changed");
-      Services.obs.removeObserver(gRemoteControl, "devtools-listening");
+      Services.obs.removeObserver(gRemoteControl, "devtools-socket");
       Services.obs.removeObserver(gRemoteControl, "marionette-listening");
       Services.obs.removeObserver(gRemoteControl, "remote-listening");
       Services.obs.removeObserver(
