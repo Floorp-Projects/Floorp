@@ -253,7 +253,14 @@ decorate_task(
     await action.finalize();
 
     Assert.deepEqual(stopStub.args, [
-      ["unseen", { resetValue: true, reason: "recipe-not-seen" }],
+      [
+        "unseen",
+        {
+          resetValue: true,
+          reason: "recipe-not-seen",
+          caller: "PreferenceExperimentAction._finalize",
+        },
+      ],
     ]);
   }
 );

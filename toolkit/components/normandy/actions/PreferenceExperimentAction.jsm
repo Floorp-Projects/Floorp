@@ -88,6 +88,8 @@ class PreferenceExperimentAction extends BaseStudyAction {
           await PreferenceExperiments.stop(slug, {
             resetValue: true,
             reason: "capability-mismatch",
+            caller:
+              "PreferenceExperimentAction._processRecipe::capabilities_mismatch",
           });
         }
         break;
@@ -148,6 +150,8 @@ class PreferenceExperimentAction extends BaseStudyAction {
           await PreferenceExperiments.stop(slug, {
             resetValue: true,
             reason: "filter-mismatch",
+            caller:
+              "PreferenceExperimentAction._processRecipe::filter_mismatch",
           });
         }
         break;
@@ -163,6 +167,8 @@ class PreferenceExperimentAction extends BaseStudyAction {
           await PreferenceExperiments.stop(slug, {
             resetValue: true,
             reason: "arguments-invalid",
+            caller:
+              "PreferenceExperimentAction._processRecipe::arguments_invalid",
           });
         }
         break;
@@ -217,6 +223,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
         return PreferenceExperiments.stop(experiment.slug, {
           resetValue: true,
           reason: "recipe-not-seen",
+          caller: "PreferenceExperimentAction._finalize",
         }).catch(e => {
           this.log.warn(`Stopping experiment ${experiment.slug} failed: ${e}`);
         });
@@ -263,6 +270,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
         await PreferenceExperiments.stop(experiment.slug, {
           resetValue: true,
           reason,
+          caller: "PreferenceExperimentAction._considerTemporaryFailure",
         });
       }
     } else {
