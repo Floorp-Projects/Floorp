@@ -13,12 +13,12 @@ if CONFIG["ACCESSIBILITY"]:
 
     EXPORTS.mozilla.a11y += [
         "DocAccessibleChild.h",
-        "ProxyAccessible.h",
+        "RemoteAccessible.h",
     ]
 
     SOURCES += [
         "DocAccessibleChild.cpp",
-        "ProxyAccessible.cpp",
+        "RemoteAccessible.cpp",
     ]
 
     LOCAL_INCLUDES += [

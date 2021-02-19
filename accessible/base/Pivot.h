@@ -103,8 +103,8 @@ class PivotRoleRule : public PivotRule {
 };
 
 /**
- * This rule matches any local LocalAccessible (i.e. not ProxyAccessible) in the
- * same document as the anchor. That is, it includes any descendant
+ * This rule matches any local LocalAccessible (i.e. not RemoteAccessible) in
+ * the same document as the anchor. That is, it includes any descendant
  * OuterDocAccessible, but not its descendants.
  */
 class LocalAccInSameDocRule : public PivotRule {

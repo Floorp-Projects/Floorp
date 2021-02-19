@@ -124,7 +124,7 @@ using namespace mozilla::a11y;
     DocAccessible* acc = mGeckoAccessible.AsAccessible()->AsDoc();
     acc->URL(url);
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
     proxy->URL(url);
   }
 

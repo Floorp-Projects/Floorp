@@ -8,7 +8,7 @@
 
 #include "AccessibleWrap.h"
 #include "nsMai.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 
@@ -18,7 +18,7 @@ using namespace mozilla::a11y;
 extern "C" {
 
 static void getCurrentValueCB(AtkValue* obj, GValue* value) {
-  ProxyAccessible* proxy = nullptr;
+  RemoteAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
   if (!accWrap) {
     proxy = GetProxy(ATK_OBJECT(obj));
@@ -36,7 +36,7 @@ static void getCurrentValueCB(AtkValue* obj, GValue* value) {
 }
 
 static void getMaximumValueCB(AtkValue* obj, GValue* value) {
-  ProxyAccessible* proxy = nullptr;
+  RemoteAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
   if (!accWrap) {
     proxy = GetProxy(ATK_OBJECT(obj));
@@ -54,7 +54,7 @@ static void getMaximumValueCB(AtkValue* obj, GValue* value) {
 }
 
 static void getMinimumValueCB(AtkValue* obj, GValue* value) {
-  ProxyAccessible* proxy = nullptr;
+  RemoteAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
   if (!accWrap) {
     proxy = GetProxy(ATK_OBJECT(obj));
@@ -72,7 +72,7 @@ static void getMinimumValueCB(AtkValue* obj, GValue* value) {
 }
 
 static void getMinimumIncrementCB(AtkValue* obj, GValue* minimumIncrement) {
-  ProxyAccessible* proxy = nullptr;
+  RemoteAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
   if (!accWrap) {
     proxy = GetProxy(ATK_OBJECT(obj));
@@ -92,7 +92,7 @@ static void getMinimumIncrementCB(AtkValue* obj, GValue* minimumIncrement) {
 }
 
 static gboolean setCurrentValueCB(AtkValue* obj, const GValue* value) {
-  ProxyAccessible* proxy = nullptr;
+  RemoteAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
   if (!accWrap) {
     proxy = GetProxy(ATK_OBJECT(obj));

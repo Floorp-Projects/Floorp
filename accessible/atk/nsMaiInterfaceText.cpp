@@ -9,7 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "nsMai.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 
 #include "nsIAccessibleTypes.h"
 #include "nsIPersistentProperties2.h"
@@ -143,7 +143,7 @@ static gchar* getTextCB(AtkText* aText, gint aStartOffset, gint aEndOffset) {
             ? DOMtoATK::AtkStringConvertFlags::ConvertTextToAsterisks
             : DOMtoATK::AtkStringConvertFlags::None);
 
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return DOMtoATK::NewATKString(proxy, aStartOffset, aEndOffset,
                                   DOMtoATK::AtkStringConvertFlags::None);
   }
@@ -195,7 +195,7 @@ static gchar* getTextAfterOffsetCB(AtkText* aText, gint aOffset,
     text->TextAfterOffset(aOffset, aBoundaryType, &startOffset, &endOffset,
                           autoStr);
     ConvertTexttoAsterisks(accWrap, autoStr);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->GetTextAfterOffset(aOffset, aBoundaryType, autoStr, &startOffset,
                               &endOffset);
   }
@@ -224,7 +224,7 @@ static gchar* getTextAtOffsetCB(AtkText* aText, gint aOffset,
     text->TextAtOffset(aOffset, aBoundaryType, &startOffset, &endOffset,
                        autoStr);
     ConvertTexttoAsterisks(accWrap, autoStr);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->GetTextAtOffset(aOffset, aBoundaryType, autoStr, &startOffset,
                            &endOffset);
   }
@@ -246,7 +246,7 @@ static gunichar getCharacterAtOffsetCB(AtkText* aText, gint aOffset) {
     return DOMtoATK::ATKCharacter(text, aOffset);
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return DOMtoATK::ATKCharacter(proxy, aOffset);
   }
 
@@ -270,7 +270,7 @@ static gchar* getTextBeforeOffsetCB(AtkText* aText, gint aOffset,
     text->TextBeforeOffset(aOffset, aBoundaryType, &startOffset, &endOffset,
                            autoStr);
     ConvertTexttoAsterisks(accWrap, autoStr);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->GetTextBeforeOffset(aOffset, aBoundaryType, autoStr, &startOffset,
                                &endOffset);
   }
@@ -293,7 +293,7 @@ static gint getCaretOffsetCB(AtkText* aText) {
     return static_cast<gint>(text->CaretOffset());
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return static_cast<gint>(proxy->CaretOffset());
   }
 
@@ -323,7 +323,7 @@ static AtkAttributeSet* getRunAttributesCB(AtkText* aText, gint aOffset,
     return ConvertToAtkTextAttributeSet(attributes);
   }
 
-  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText));
+  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText));
   if (!proxy) {
     return nullptr;
   }
@@ -348,7 +348,7 @@ static AtkAttributeSet* getDefaultAttributesCB(AtkText* aText) {
     return ConvertToAtkTextAttributeSet(attributes);
   }
 
-  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText));
+  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText));
   if (!proxy) {
     return nullptr;
   }
@@ -382,7 +382,7 @@ static void getCharacterExtentsCB(AtkText* aText, gint aOffset, gint* aX,
     }
 
     rect = text->CharBounds(aOffset, geckoCoordType);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     rect = proxy->CharBounds(aOffset, geckoCoordType);
   } else {
     return;
@@ -418,7 +418,7 @@ static void getRangeExtentsCB(AtkText* aText, gint aStartOffset,
     }
 
     rect = text->TextBounds(aStartOffset, aEndOffset, geckoCoordType);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     rect = proxy->TextBounds(aStartOffset, aEndOffset, geckoCoordType);
   } else {
     return;
@@ -439,7 +439,7 @@ static gint getCharacterCountCB(AtkText* aText) {
                : static_cast<gint>(textAcc->CharacterCount());
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return proxy->CharacterCount();
   }
 
@@ -462,7 +462,7 @@ static gint getOffsetAtPointCB(AtkText* aText, gint aX, gint aY,
              : nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE)));
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return static_cast<gint>(proxy->OffsetAtPoint(
         aX, aY,
         (aCoords == ATK_XY_SCREEN
@@ -484,7 +484,7 @@ static gint getTextSelectionCountCB(AtkText* aText) {
     return text->SelectionCount();
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return proxy->SelectionCount();
   }
 
@@ -507,7 +507,7 @@ static gchar* getTextSelectionCB(AtkText* aText, gint aSelectionNum,
 
     return getTextCB(aText, *aStartOffset, *aEndOffset);
   }
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     nsString data;
     proxy->SelectionBoundsAt(aSelectionNum, data, &startOffset, &endOffset);
     *aStartOffset = startOffset;
@@ -531,7 +531,7 @@ static gboolean addTextSelectionCB(AtkText* aText, gint aStartOffset,
 
     return text->AddToSelection(aStartOffset, aEndOffset);
   }
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return proxy->AddToSelection(aStartOffset, aEndOffset);
   }
 
@@ -548,7 +548,7 @@ static gboolean removeTextSelectionCB(AtkText* aText, gint aSelectionNum) {
 
     return text->RemoveFromSelection(aSelectionNum);
   }
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return proxy->RemoveFromSelection(aSelectionNum);
   }
 
@@ -566,7 +566,7 @@ static gboolean setTextSelectionCB(AtkText* aText, gint aSelectionNum,
 
     return text->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
   }
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     return proxy->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
   }
 
@@ -585,7 +585,7 @@ static gboolean setCaretOffsetCB(AtkText* aText, gint aOffset) {
     return TRUE;
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->SetCaretOffset(aOffset);
     return TRUE;
   }
@@ -607,7 +607,7 @@ static gboolean scrollSubstringToCB(AtkText* aText, gint aStartOffset,
     return TRUE;
   }
 
-  ProxyAccessible* proxy = GetProxy(atkObject);
+  RemoteAccessible* proxy = GetProxy(atkObject);
   if (proxy) {
     proxy->ScrollSubstringTo(aStartOffset, aEndOffset, aType);
     return TRUE;
@@ -631,7 +631,7 @@ static gboolean scrollSubstringToPointCB(AtkText* aText, gint aStartOffset,
     return TRUE;
   }
 
-  ProxyAccessible* proxy = GetProxy(atkObject);
+  RemoteAccessible* proxy = GetProxy(atkObject);
   if (proxy) {
     proxy->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoords, aX, aY);
     return TRUE;

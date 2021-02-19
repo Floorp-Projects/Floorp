@@ -321,7 +321,7 @@ uint16_t RotorHeadingLevelRule::Match(const AccessibleOrProxy& aAccOrProxy) {
     int32_t currLevel = 0;
     if (LocalAccessible* acc = aAccOrProxy.AsAccessible()) {
       currLevel = acc->GroupPosition().level;
-    } else if (ProxyAccessible* proxy = aAccOrProxy.AsProxy()) {
+    } else if (RemoteAccessible* proxy = aAccOrProxy.AsProxy()) {
       currLevel = proxy->GroupPosition().level;
     }
 

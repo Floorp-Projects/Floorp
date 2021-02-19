@@ -7,7 +7,7 @@
 #define mozilla_a11y_AccessibleWrap_h_
 
 #include "LocalAccessible.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/java/GeckoBundleWrappers.h"
 #include "mozilla/java/SessionAccessibilityWrappers.h"
 #include "nsCOMPtr.h"
@@ -112,7 +112,7 @@ class AccessibleWrap : public LocalAccessible {
   static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 };
 
-static inline AccessibleWrap* WrapperFor(const ProxyAccessible* aProxy) {
+static inline AccessibleWrap* WrapperFor(const RemoteAccessible* aProxy) {
   return reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 }
 

@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. *
  */
 
-#ifndef MOZILLA_A11Y_ProxyAccessibleWrap_h
-#define MOZILLA_A11Y_ProxyAccessibleWrap_h
+#ifndef MOZILLA_A11Y_RemoteAccessibleWrap_h
+#define MOZILLA_A11Y_RemoteAccessibleWrap_h
 
 #include "AccessibleWrap.h"
 #include "DocAccessibleParent.h"
@@ -21,9 +21,9 @@ namespace a11y {
  * a local or remote accessibles. NOTE: This shouldn't be regarded as a full
  * Accessible implementation.
  */
-class ProxyAccessibleWrap : public AccessibleWrap {
+class RemoteAccessibleWrap : public AccessibleWrap {
  public:
-  explicit ProxyAccessibleWrap(ProxyAccessible* aProxy);
+  explicit RemoteAccessibleWrap(RemoteAccessible* aProxy);
 
   virtual void Shutdown() override;
 
@@ -87,10 +87,10 @@ class ProxyAccessibleWrap : public AccessibleWrap {
                                 double* aMaxVal, double* aStep) override;
 };
 
-class DocProxyAccessibleWrap : public ProxyAccessibleWrap {
+class DocRemoteAccessibleWrap : public RemoteAccessibleWrap {
  public:
-  explicit DocProxyAccessibleWrap(DocAccessibleParent* aProxy)
-      : ProxyAccessibleWrap(aProxy) {
+  explicit DocRemoteAccessibleWrap(DocAccessibleParent* aProxy)
+      : RemoteAccessibleWrap(aProxy) {
     mGenericTypes |= eDocument;
 
     if (aProxy->IsTopLevel()) {
@@ -113,20 +113,20 @@ class DocProxyAccessibleWrap : public ProxyAccessibleWrap {
     mStateFlags |= eIsDefunct;
   }
 
-  DocProxyAccessibleWrap* ParentDocument() {
+  DocRemoteAccessibleWrap* ParentDocument() {
     DocAccessibleParent* proxy = static_cast<DocAccessibleParent*>(Proxy());
     MOZ_ASSERT(proxy);
     if (DocAccessibleParent* parent = proxy->ParentDoc()) {
-      return reinterpret_cast<DocProxyAccessibleWrap*>(parent->GetWrapper());
+      return reinterpret_cast<DocRemoteAccessibleWrap*>(parent->GetWrapper());
     }
 
     return nullptr;
   }
 
-  DocProxyAccessibleWrap* GetChildDocumentAt(uint32_t aIndex) {
+  DocRemoteAccessibleWrap* GetChildDocumentAt(uint32_t aIndex) {
     auto doc = Proxy()->AsDoc();
     if (doc && doc->ChildDocCount() > aIndex) {
-      return reinterpret_cast<DocProxyAccessibleWrap*>(
+      return reinterpret_cast<DocRemoteAccessibleWrap*>(
           doc->ChildDocAt(aIndex)->GetWrapper());
     }
 

@@ -9,7 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "AccessibleWrap.h"
 #include "nsMai.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "mozilla/Likely.h"
 
 #include <atk/atk.h>
@@ -24,7 +24,7 @@ static gboolean addSelectionCB(AtkSelection* aSelection, gint i) {
     return accWrap->AddItemToSelection(i);
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
     return proxy->AddItemToSelection(i);
   }
 
@@ -37,7 +37,7 @@ static gboolean clearSelectionCB(AtkSelection* aSelection) {
     return accWrap->UnselectAll();
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
     return proxy->UnselectAll();
   }
 
@@ -54,8 +54,8 @@ static AtkObject* refSelectionCB(AtkSelection* aSelection, gint i) {
     }
 
     atkObj = AccessibleWrap::GetAtkObject(selectedItem);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    ProxyAccessible* selectedItem = proxy->GetSelectedItem(i);
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
+    RemoteAccessible* selectedItem = proxy->GetSelectedItem(i);
     if (selectedItem) {
       atkObj = GetWrapperFor(selectedItem);
     }
@@ -74,7 +74,7 @@ static gint getSelectionCountCB(AtkSelection* aSelection) {
     return accWrap->SelectedItemCount();
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
     return proxy->SelectedItemCount();
   }
 
@@ -87,7 +87,7 @@ static gboolean isChildSelectedCB(AtkSelection* aSelection, gint i) {
     return accWrap->IsItemSelected(i);
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
     return proxy->IsItemSelected(i);
   }
 
@@ -100,7 +100,7 @@ static gboolean removeSelectionCB(AtkSelection* aSelection, gint i) {
     return accWrap->RemoveItemFromSelection(i);
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
     return proxy->RemoveItemFromSelection(i);
   }
 
@@ -113,7 +113,7 @@ static gboolean selectAllSelectionCB(AtkSelection* aSelection) {
     return accWrap->SelectAll();
   }
 
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
+  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
     return proxy->SelectAll();
   }
 

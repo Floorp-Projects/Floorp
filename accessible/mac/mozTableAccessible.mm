@@ -63,11 +63,11 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
       }
     }
 
-  } else if (ProxyAccessible* proxy = [mParent geckoAccessible].AsProxy()) {
+  } else if (RemoteAccessible* proxy = [mParent geckoAccessible].AsProxy()) {
     uint32_t numRows = proxy->TableRowCount();
 
     for (uint32_t j = 0; j < numRows; j++) {
-      ProxyAccessible* cell = proxy->TableCellAt(j, mIndex);
+      RemoteAccessible* cell = proxy->TableCellAt(j, mIndex);
       mozAccessible* nativeCell =
           cell ? GetNativeFromGeckoAccessible(cell) : nil;
       if ([nativeCell isAccessibilityElement]) {
@@ -199,7 +199,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     tableGuess = acc->AsTable()->IsProbablyLayoutTable();
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
     tableGuess = proxy->TableIsProbablyForLayout();
   }
 
@@ -385,7 +385,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
     return
         [NSValue valueWithRange:NSMakeRange(cell->RowIdx(), cell->RowExtent())];
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
     return [NSValue
         valueWithRange:NSMakeRange(proxy->RowIdx(), proxy->RowExtent())];
   }
@@ -399,7 +399,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
     return
         [NSValue valueWithRange:NSMakeRange(cell->ColIdx(), cell->ColExtent())];
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
     return [NSValue
         valueWithRange:NSMakeRange(proxy->ColIdx(), proxy->ColExtent())];
   }
@@ -414,8 +414,8 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
     cell->RowHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
-    nsTArray<ProxyAccessible*> headerCells;
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
+    nsTArray<RemoteAccessible*> headerCells;
     proxy->RowHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   }
@@ -430,8 +430,8 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
     cell->ColHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
-    nsTArray<ProxyAccessible*> headerCells;
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
+    nsTArray<RemoteAccessible*> headerCells;
     proxy->ColHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   }
@@ -569,7 +569,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   GroupPos groupPos;
   if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     groupPos = acc->GroupPosition();
-  } else if (ProxyAccessible* proxy = mGeckoAccessible.AsProxy()) {
+  } else if (RemoteAccessible* proxy = mGeckoAccessible.AsProxy()) {
     groupPos = proxy->GroupPosition();
   }
   // mac expects 0-indexed levels, but groupPos.level is 1-indexed

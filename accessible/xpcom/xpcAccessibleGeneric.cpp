@@ -40,7 +40,7 @@ xpcAccessibleGeneric::~xpcAccessibleGeneric() {
       xpcDoc->NotifyOfShutdown(acc);
     }
   } else {
-    ProxyAccessible* proxy = mIntl.AsProxy();
+    RemoteAccessible* proxy = mIntl.AsProxy();
     if (!proxy->IsDoc()) {
       xpcDoc = GetAccService()->GetXPCDocument(proxy->Document());
       xpcDoc->NotifyOfShutdown(proxy);

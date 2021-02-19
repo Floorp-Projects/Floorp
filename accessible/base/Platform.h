@@ -26,7 +26,7 @@
 namespace mozilla {
 namespace a11y {
 
-class ProxyAccessible;
+class RemoteAccessible;
 
 enum EPlatformDisabledState {
   ePlatformIsForceEnabled = -1,
@@ -82,63 +82,63 @@ void PlatformInit();
 void PlatformShutdown();
 
 /**
- * called when a new ProxyAccessible is created, so the platform may setup a
+ * called when a new RemoteAccessible is created, so the platform may setup a
  * wrapper for it, or take other action.
  */
-void ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces);
+void ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces);
 
 /**
- * Called just before a ProxyAccessible is destroyed so its wrapper can be
+ * Called just before a RemoteAccessible is destroyed so its wrapper can be
  * disposed of and other action taken.
  */
-void ProxyDestroyed(ProxyAccessible*);
+void ProxyDestroyed(RemoteAccessible*);
 
 /**
  * Callied when an event is fired on a proxied accessible.
  */
-void ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType);
-void ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
+void ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType);
+void ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
                            bool aEnabled);
 
 #if defined(XP_WIN)
-void ProxyFocusEvent(ProxyAccessible* aTarget,
+void ProxyFocusEvent(RemoteAccessible* aTarget,
                      const LayoutDeviceIntRect& aCaretRect);
-void ProxyCaretMoveEvent(ProxyAccessible* aTarget,
+void ProxyCaretMoveEvent(RemoteAccessible* aTarget,
                          const LayoutDeviceIntRect& aCaretRect);
 #else
-void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
+void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
                          bool aIsSelectionCollapsed);
 #endif
-void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
+void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
                           int32_t aStart, uint32_t aLen, bool aIsInsert,
                           bool aFromUser);
-void ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible* aParent,
+void ProxyShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible* aParent,
                         bool aInsert, bool aFromUser);
-void ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible* aWidget,
+void ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible* aWidget,
                          uint32_t aType);
 
 #if defined(ANDROID)
 MOZ_CAN_RUN_SCRIPT
-void ProxyVirtualCursorChangeEvent(ProxyAccessible* aTarget,
-                                   ProxyAccessible* aOldPosition,
+void ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
+                                   RemoteAccessible* aOldPosition,
                                    int32_t aOldStartOffset,
                                    int32_t aOldEndOffset,
-                                   ProxyAccessible* aNewPosition,
+                                   RemoteAccessible* aNewPosition,
                                    int32_t aNewStartOffset,
                                    int32_t aNewEndOffset, int16_t aReason,
                                    int16_t aBoundaryType, bool aFromUser);
 
-void ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
+void ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
                          uint32_t aScrollX, uint32_t aScrollY,
                          uint32_t aMaxScrollX, uint32_t aMaxScrollY);
 
-void ProxyAnnouncementEvent(ProxyAccessible* aTarget,
+void ProxyAnnouncementEvent(RemoteAccessible* aTarget,
                             const nsString& aAnnouncement, uint16_t aPriority);
 
 class BatchData;
 
-void ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
-                const nsTArray<ProxyAccessible*>& aAccessibles,
+void ProxyBatch(RemoteAccessible* aDocument, const uint64_t aBatchType,
+                const nsTArray<RemoteAccessible*>& aAccessibles,
                 const nsTArray<BatchData>& aData);
 
 bool LocalizeString(
@@ -148,10 +148,10 @@ bool LocalizeString(
 
 #ifdef MOZ_WIDGET_COCOA
 class TextRangeData;
-void ProxyTextSelectionChangeEvent(ProxyAccessible* aTarget,
+void ProxyTextSelectionChangeEvent(RemoteAccessible* aTarget,
                                    const nsTArray<TextRangeData>& aSelection);
 
-void ProxyRoleChangedEvent(ProxyAccessible* aTarget, const a11y::role& aRole);
+void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole);
 #endif
 
 }  // namespace a11y

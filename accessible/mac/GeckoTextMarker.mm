@@ -108,7 +108,7 @@ GeckoTextMarker GeckoTextMarker::MarkerFromIndex(const AccessibleOrProxy& aRoot,
     DocAccessibleParent* ipcDoc = aRoot.AsProxy()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendOffsetAtIndex(
         aRoot.AsProxy()->ID(), aIndex, &containerID, &offset);
-    ProxyAccessible* container = ipcDoc->GetAccessible(containerID);
+    RemoteAccessible* container = ipcDoc->GetAccessible(containerID);
     return GeckoTextMarker(container, offset);
   } else if (auto htWrap = static_cast<HyperTextAccessibleWrap*>(
                  aRoot.AsAccessible()->AsHyperText())) {
@@ -235,7 +235,7 @@ bool GeckoTextMarker::Next() {
     DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendNextClusterAt(
         mContainer.AsProxy()->ID(), mOffset, &nextContainerID, &nextOffset);
-    ProxyAccessible* nextContainer = ipcDoc->GetAccessible(nextContainerID);
+    RemoteAccessible* nextContainer = ipcDoc->GetAccessible(nextContainerID);
     bool moved = nextContainer != mContainer.AsProxy() || nextOffset != mOffset;
     mContainer = nextContainer;
     mOffset = nextOffset;
@@ -260,7 +260,7 @@ bool GeckoTextMarker::Previous() {
     DocAccessibleParent* ipcDoc = mContainer.AsProxy()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendPreviousClusterAt(
         mContainer.AsProxy()->ID(), mOffset, &prevContainerID, &prevOffset);
-    ProxyAccessible* prevContainer = ipcDoc->GetAccessible(prevContainerID);
+    RemoteAccessible* prevContainer = ipcDoc->GetAccessible(prevContainerID);
     bool moved = prevContainer != mContainer.AsProxy() || prevOffset != mOffset;
     mContainer = prevContainer;
     mOffset = prevOffset;
@@ -498,7 +498,7 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
     for (size_t i = 0; i < textAttributesRuns.Length(); i++) {
       nsTArray<Attribute>& attributes =
           textAttributesRuns.ElementAt(i).TextAttributes();
-      ProxyAccessible* container =
+      RemoteAccessible* container =
           ipcDoc->GetAccessible(textAttributesRuns.ElementAt(i).ContainerID());
 
       NSAttributedString* substr = [[[NSAttributedString alloc]

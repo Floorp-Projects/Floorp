@@ -15,7 +15,7 @@
 #include "ia2AccessibleValue.h"
 #include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/a11y/MsaaIdGenerator.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/StaticPtr.h"
@@ -31,7 +31,7 @@
 
 namespace mozilla {
 namespace a11y {
-class DocProxyAccessibleWrap;
+class DocRemoteAccessibleWrap;
 
 class AccessibleWrap : public LocalAccessible,
                        public ia2Accessible,
@@ -173,7 +173,7 @@ class AccessibleWrap : public LocalAccessible,
    * Gecko is still responsible for drawing its own caret
    */
   void UpdateSystemCaretFor(LocalAccessible* aAccessible);
-  static void UpdateSystemCaretFor(ProxyAccessible* aProxy,
+  static void UpdateSystemCaretFor(RemoteAccessible* aProxy,
                                    const LayoutDeviceIntRect& aCaretRect);
 
   /**
@@ -244,7 +244,7 @@ class AccessibleWrap : public LocalAccessible,
   /**
    * Return the wrapper for the document's proxy.
    */
-  DocProxyAccessibleWrap* DocProxyWrapper() const;
+  DocRemoteAccessibleWrap* DocProxyWrapper() const;
 
   /**
    * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.
@@ -310,7 +310,7 @@ class AccessibleWrap : public LocalAccessible,
   nsTArray<RefPtr<IUnknown>> mAssociatedCOMObjectsForDisconnection;
 };
 
-static inline AccessibleWrap* WrapperFor(const ProxyAccessible* aProxy) {
+static inline AccessibleWrap* WrapperFor(const RemoteAccessible* aProxy) {
   return reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 }
 

@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_ProxyAccessible_h
-#define mozilla_a11y_ProxyAccessible_h
+#ifndef mozilla_a11y_RemoteAccessible_h
+#define mozilla_a11y_RemoteAccessible_h
 
 #include "LocalAccessible.h"
-#include "mozilla/a11y/ProxyAccessibleBase.h"
+#include "mozilla/a11y/RemoteAccessibleBase.h"
 #include "mozilla/a11y/Role.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -19,18 +19,18 @@
 namespace mozilla {
 namespace a11y {
 
-class ProxyAccessible : public ProxyAccessibleBase<ProxyAccessible> {
+class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
  public:
-  ProxyAccessible(uint64_t aID, ProxyAccessible* aParent,
-                  DocAccessibleParent* aDoc, role aRole, uint32_t aInterfaces)
-      : ProxyAccessibleBase(aID, aParent, aDoc, aRole, aInterfaces),
+  RemoteAccessible(uint64_t aID, RemoteAccessible* aParent,
+                   DocAccessibleParent* aDoc, role aRole, uint32_t aInterfaces)
+      : RemoteAccessibleBase(aID, aParent, aDoc, aRole, aInterfaces),
         mSafeToRecurse(true) {
-    MOZ_COUNT_CTOR(ProxyAccessible);
+    MOZ_COUNT_CTOR(RemoteAccessible);
   }
 
-  MOZ_COUNTED_DTOR(ProxyAccessible)
+  MOZ_COUNTED_DTOR(RemoteAccessible)
 
-#include "mozilla/a11y/ProxyAccessibleShared.h"
+#include "mozilla/a11y/RemoteAccessibleShared.h"
 
   bool GetCOMInterface(void** aOutAccessible) const;
   void SetCOMInterface(const RefPtr<IAccessible>& aIAccessible) {
@@ -45,9 +45,9 @@ class ProxyAccessible : public ProxyAccessibleBase<ProxyAccessible> {
   }
 
  protected:
-  explicit ProxyAccessible(DocAccessibleParent* aThisAsDoc)
-      : ProxyAccessibleBase(aThisAsDoc) {
-    MOZ_COUNT_CTOR(ProxyAccessible);
+  explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
+      : RemoteAccessibleBase(aThisAsDoc) {
+    MOZ_COUNT_CTOR(RemoteAccessible);
   }
 
  private:

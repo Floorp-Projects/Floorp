@@ -8,7 +8,7 @@
 
 #include "nsAccessibilityService.h"
 #include "LocalAccessible-inl.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "Relation.h"
 #include "HyperTextAccessible-inl.h"
 #include "TextLeafAccessible.h"

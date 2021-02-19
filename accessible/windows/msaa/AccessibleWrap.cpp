@@ -17,7 +17,7 @@
 #include "nsIAccessibleEvent.h"
 #include "nsWindowsHelpers.h"
 #include "nsWinUtils.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "ProxyWrappers.h"
 #include "ServiceProvider.h"
 #include "Relation.h"
@@ -1167,10 +1167,10 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   return NS_OK;
 }
 
-DocProxyAccessibleWrap* AccessibleWrap::DocProxyWrapper() const {
+DocRemoteAccessibleWrap* AccessibleWrap::DocProxyWrapper() const {
   MOZ_ASSERT(IsProxy());
 
-  ProxyAccessible* proxy = Proxy();
+  RemoteAccessible* proxy = Proxy();
   if (!proxy) {
     return nullptr;
   }
@@ -1178,7 +1178,7 @@ DocProxyAccessibleWrap* AccessibleWrap::DocProxyWrapper() const {
   AccessibleWrap* acc = WrapperFor(proxy->Document());
   MOZ_ASSERT(acc->IsDoc());
 
-  return static_cast<DocProxyAccessibleWrap*>(acc);
+  return static_cast<DocRemoteAccessibleWrap*>(acc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1223,7 +1223,7 @@ HWND AccessibleWrap::GetHWNDFor(LocalAccessible* aAccessible) {
   }
 
   if (aAccessible->IsProxy()) {
-    ProxyAccessible* proxy = aAccessible->Proxy();
+    RemoteAccessible* proxy = aAccessible->Proxy();
     if (!proxy) {
       return nullptr;
     }
@@ -1308,7 +1308,7 @@ static LocalAccessible* GetAccessibleInSubtree(DocAccessible* aDoc,
 
 static already_AddRefed<IDispatch> GetProxiedAccessibleInSubtree(
     const DocAccessibleParent* aDoc, const VARIANT& aVarChild) {
-  auto wrapper = static_cast<DocProxyAccessibleWrap*>(WrapperFor(aDoc));
+  auto wrapper = static_cast<DocRemoteAccessibleWrap*>(WrapperFor(aDoc));
   RefPtr<IAccessible> comProxy;
   int32_t docWrapperChildId = AccessibleWrap::GetChildIDFor(wrapper);
   // Only document accessible proxies at the top level of their content process
@@ -1603,7 +1603,7 @@ void AccessibleWrap::UpdateSystemCaretFor(LocalAccessible* aAccessible) {
 
 /* static */
 void AccessibleWrap::UpdateSystemCaretFor(
-    ProxyAccessible* aProxy, const LayoutDeviceIntRect& aCaretRect) {
+    RemoteAccessible* aProxy, const LayoutDeviceIntRect& aCaretRect) {
   ::DestroyCaret();
 
   // The HWND should be the real widget HWND, not an emulated HWND.

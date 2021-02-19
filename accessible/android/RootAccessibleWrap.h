@@ -14,7 +14,7 @@ class PresShell;
 
 namespace a11y {
 
-class DocProxyAccessibleWrap;
+class DocRemoteAccessibleWrap;
 
 class RootAccessibleWrap : public RootAccessible {
  public:
@@ -29,7 +29,7 @@ class RootAccessibleWrap : public RootAccessible {
   AccessibleWrap* FindAccessibleById(DocAccessibleWrap* aDocument, int32_t aID);
 
   // Recursively searches for the accessible ID within the proxy document tree.
-  AccessibleWrap* FindAccessibleById(DocProxyAccessibleWrap* aDocument,
+  AccessibleWrap* FindAccessibleById(DocRemoteAccessibleWrap* aDocument,
                                      int32_t aID);
 };
 

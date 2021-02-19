@@ -189,7 +189,7 @@ enum CheckboxValue {
     if ((IsNaN(min) || newVal >= min) && (IsNaN(max) || newVal <= max)) {
       acc->SetCurValue(newVal);
     }
-  } else if (ProxyAccessible* proxy = mGeckoAccessible.AsProxy()) {
+  } else if (RemoteAccessible* proxy = mGeckoAccessible.AsProxy()) {
     double newVal = proxy->CurValue() + (proxy->Step() * factor);
     double min = proxy->MinValue();
     double max = proxy->MaxValue();

@@ -9,7 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "nsMai.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "nsString.h"
 #include "mozilla/Likely.h"
 
@@ -26,7 +26,7 @@ static void setTextContentsCB(AtkEditableText* aText, const gchar* aString) {
 
     NS_ConvertUTF8toUTF16 strContent(aString);
     text->ReplaceText(strContent);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     NS_ConvertUTF8toUTF16 strContent(aString);
     proxy->ReplaceText(strContent);
   }
@@ -43,7 +43,7 @@ static void insertTextCB(AtkEditableText* aText, const gchar* aString,
 
     NS_ConvertUTF8toUTF16 strContent(aString);
     text->InsertText(strContent, *aPosition);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     NS_ConvertUTF8toUTF16 strContent(aString);
     proxy->InsertText(strContent, *aPosition);
   }
@@ -58,7 +58,7 @@ static void copyTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
     }
 
     text->CopyText(aStartPos, aEndPos);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->CopyText(aStartPos, aEndPos);
   }
 }
@@ -72,7 +72,7 @@ static void cutTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
     }
 
     text->CutText(aStartPos, aEndPos);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->CutText(aStartPos, aEndPos);
   }
 }
@@ -86,7 +86,7 @@ static void deleteTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
     }
 
     text->DeleteText(aStartPos, aEndPos);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->DeleteText(aStartPos, aEndPos);
   }
 }
@@ -101,7 +101,7 @@ static void pasteTextCB(AtkEditableText* aText, gint aPosition) {
     }
 
     text->PasteText(aPosition);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     proxy->PasteText(aPosition);
   }
 }

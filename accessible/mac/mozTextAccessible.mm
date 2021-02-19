@@ -94,7 +94,7 @@ inline NSString* ToNSString(id aValue) {
       }
       return nsCocoaUtils::ToNSString(invalidStr);
     } else {
-      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+      RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
       // Similar to the acc case above, we iterate through our attributes
       // to find the value for `invalid`.
       AutoTArray<Attribute, 10> attrs;
@@ -151,7 +151,7 @@ inline NSString* ToNSString(id aValue) {
 
   if (mRole == roles::ENTRY) {
     LocalAccessible* acc = mGeckoAccessible.AsAccessible();
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
     if ((acc && acc->IsSearchbox()) || (proxy && proxy->IsSearchbox())) {
       return @"AXSearchField";
     }
@@ -234,7 +234,7 @@ inline NSString* ToNSString(id aValue) {
       textAcc->InsertText(text, start);
     }
   } else {
-    ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+    RemoteAccessible* proxy = mGeckoAccessible.AsProxy();
     nsString data;
     proxy->SelectionBoundsAt(0, data, &start, &end);
     proxy->DeleteText(start, end - start);

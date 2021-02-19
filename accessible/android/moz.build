@@ -15,7 +15,7 @@ SOURCES += [
     "AccessibleWrap.cpp",
     "DocAccessibleWrap.cpp",
     "Platform.cpp",
-    "ProxyAccessibleWrap.cpp",
+    "RemoteAccessibleWrap.cpp",
     "RootAccessibleWrap.cpp",
     "SessionAccessibility.cpp",
     "TraversalRule.cpp",

@@ -9,7 +9,7 @@
 
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/PDocAccessibleParent.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Tuple.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -28,13 +28,13 @@ class DocAccessiblePlatformExtParent;
  * These objects live in the main process and comunicate with and represent
  * an accessible document in a content process.
  */
-class DocAccessibleParent : public ProxyAccessible,
+class DocAccessibleParent : public RemoteAccessible,
                             public PDocAccessibleParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(DocAccessibleParent);
 
   DocAccessibleParent()
-      : ProxyAccessible(this),
+      : RemoteAccessible(this),
         mParentDoc(kNoParentDoc),
 #if defined(XP_WIN)
         mEmulatedWindowHandle(nullptr),
@@ -184,7 +184,7 @@ class DocAccessibleParent : public ProxyAccessible,
    * notifies the main process a child document has been removed.
    */
   void RemoveChildDoc(DocAccessibleParent* aChildDoc) {
-    ProxyAccessible* parent = aChildDoc->RemoteParent();
+    RemoteAccessible* parent = aChildDoc->RemoteParent();
     MOZ_ASSERT(parent);
     if (parent) {
       aChildDoc->RemoteParent()->ClearChildDoc(aChildDoc);
@@ -194,7 +194,7 @@ class DocAccessibleParent : public ProxyAccessible,
     MOZ_ASSERT(result);
   }
 
-  void RemoveAccessible(ProxyAccessible* aAccessible) {
+  void RemoveAccessible(RemoteAccessible* aAccessible) {
     MOZ_DIAGNOSTIC_ASSERT(mAccessibles.GetEntry(aAccessible->ID()));
     mAccessibles.RemoveEntry(aAccessible->ID());
   }
@@ -202,14 +202,14 @@ class DocAccessibleParent : public ProxyAccessible,
   /**
    * Return the accessible for given id.
    */
-  ProxyAccessible* GetAccessible(uintptr_t aID) {
+  RemoteAccessible* GetAccessible(uintptr_t aID) {
     if (!aID) return this;
 
     ProxyEntry* e = mAccessibles.GetEntry(aID);
     return e ? e->mProxy : nullptr;
   }
 
-  const ProxyAccessible* GetAccessible(uintptr_t aID) const {
+  const RemoteAccessible* GetAccessible(uintptr_t aID) const {
     return const_cast<DocAccessibleParent*>(this)->GetAccessible(aID);
   }
 
@@ -230,7 +230,7 @@ class DocAccessibleParent : public ProxyAccessible,
    * called when either of these is created.
    * @param aOuterDoc The OuterDocAccessible to be returned as the parent of
    *        this document. Only GetNativeInterface() is called on this, so it
-   *        may be a ProxyAccessibleWrap or similar.
+   *        may be a RemoteAccessibleWrap or similar.
    */
   void SendParentCOMProxy(LocalAccessible* aOuterDoc);
 
@@ -293,14 +293,14 @@ class DocAccessibleParent : public ProxyAccessible,
 
     enum { ALLOW_MEMMOVE = true };
 
-    ProxyAccessible* mProxy;
+    RemoteAccessible* mProxy;
   };
 
-  uint32_t AddSubtree(ProxyAccessible* aParent,
+  uint32_t AddSubtree(RemoteAccessible* aParent,
                       const nsTArray<AccessibleData>& aNewTree, uint32_t aIdx,
                       uint32_t aIdxInParent);
   [[nodiscard]] bool CheckDocTree() const;
-  xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
+  xpcAccessibleGeneric* GetXPCAccessible(RemoteAccessible* aProxy);
 
   nsTArray<uint64_t> mChildDocs;
   uint64_t mParentDoc;
