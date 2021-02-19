@@ -196,8 +196,9 @@ role DocAccessible::NativeRole() const {
     int32_t itemType = docShell->ItemType();
     if (sameTypeRoot == docShell) {
       // Root of content or chrome tree
-      if (itemType == nsIDocShellTreeItem::typeChrome)
+      if (itemType == nsIDocShellTreeItem::typeChrome) {
         return roles::CHROME_WINDOW;
+      }
 
       if (itemType == nsIDocShellTreeItem::typeContent) {
         return roles::DOCUMENT;
@@ -273,8 +274,9 @@ already_AddRefed<nsIPersistentProperties> DocAccessible::Attributes() {
   // Override ARIA object attributes from outerdoc.
   aria::AttrIterator attribIter(mParent->GetContent());
   nsAutoString name, value, unused;
-  while (attribIter.Next(name, value))
+  while (attribIter.Next(name, value)) {
     attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+  }
 
   return attributes.forget();
 }
@@ -299,8 +301,9 @@ already_AddRefed<TextEditor> DocAccessible::GetEditor() const {
   // Check if document is editable (designMode="on" case). Otherwise check if
   // the html:body (for HTML document case) or document element is editable.
   if (!mDocumentNode->HasFlag(NODE_IS_EDITABLE) &&
-      (!mContent || !mContent->HasFlag(NODE_IS_EDITABLE)))
+      (!mContent || !mContent->HasFlag(NODE_IS_EDITABLE))) {
     return nullptr;
+  }
 
   nsCOMPtr<nsIDocShell> docShell = mDocumentNode->GetDocShell();
   if (!docShell) {
@@ -358,8 +361,9 @@ void DocAccessible::DocType(nsAString& aType) const {
 
 void DocAccessible::Init() {
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eDocCreate))
+  if (logging::IsEnabled(logging::eDocCreate)) {
     logging::DocCreate("document initialize", mDocumentNode, this);
+  }
 #endif
 
   // Initialize notification controller.
@@ -368,8 +372,10 @@ void DocAccessible::Init() {
   // Mark the document accessible as loaded if its DOM document was loaded at
   // this point (this can happen because a11y is started late or DOM document
   // having no container was loaded.
-  if (mDocumentNode->GetReadyStateEnum() == dom::Document::READYSTATE_COMPLETE)
+  if (mDocumentNode->GetReadyStateEnum() ==
+      dom::Document::READYSTATE_COMPLETE) {
     mLoadState |= eDOMLoaded;
+  }
 
   AddEventListeners();
 }
@@ -380,8 +386,9 @@ void DocAccessible::Shutdown() {
   }
 
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eDocDestroy))
+  if (logging::IsEnabled(logging::eDocDestroy)) {
     logging::DocDestroy("document shutdown", mDocumentNode, this);
+  }
 #endif
 
   // Mark the document as shutdown before AT is notified about the document
@@ -413,8 +420,9 @@ void DocAccessible::Shutdown() {
   // Walk the array backwards because child documents remove themselves from the
   // array as they are shutdown.
   int32_t childDocCount = mChildDocuments.Length();
-  for (int32_t idx = childDocCount - 1; idx >= 0; idx--)
+  for (int32_t idx = childDocCount - 1; idx >= 0; idx--) {
     mChildDocuments[idx]->Shutdown();
+  }
 
   mChildDocuments.Clear();
 
@@ -519,8 +527,9 @@ nsresult DocAccessible::AddEventListeners() {
   // an editor.
   if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
     RefPtr<nsCommandManager> commandManager = docShell->GetCommandManager();
-    if (commandManager)
+    if (commandManager) {
       commandManager->AddCommandObserver(this, "obs_documentCreated");
+    }
   }
 
   SelectionMgr()->AddDocSelectionListener(mPresShell);
@@ -672,8 +681,9 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
   // Update dependent IDs cache. Take care of elements that are accessible
   // because dependent IDs cache doesn't contain IDs from non accessible
   // elements.
-  if (aModType != dom::MutationEvent_Binding::ADDITION)
+  if (aModType != dom::MutationEvent_Binding::ADDITION) {
     RemoveDependentIDsFor(accessible, aAttribute);
+  }
 
   if (aAttribute == nsGkAtoms::id) {
     RelocateARIAOwnedIfNeeded(aElement);
@@ -923,9 +933,10 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
       return;
     }
 
-    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_describedby))
+    if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_describedby)) {
       FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE,
                        aAccessible);
+    }
 
     return;
   }
@@ -999,8 +1010,9 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
   }
 
   if (aAttribute == nsGkAtoms::value) {
-    if (aAccessible->IsProgress())
+    if (aAccessible->IsProgress()) {
       FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
+    }
     return;
   }
 
@@ -1146,9 +1158,10 @@ void DocAccessible::ARIAActiveDescendantChanged(Accessible* aAccessible) {
         if (activeDescendant) {
           FocusMgr()->ActiveItemChanged(activeDescendant, false);
 #ifdef A11Y_LOG
-          if (logging::IsEnabled(logging::eFocus))
+          if (logging::IsEnabled(logging::eFocus)) {
             logging::ActiveItemChangeCausedBy("ARIA activedescedant changed",
                                               activeDescendant);
+          }
 #endif
           return;
         }
@@ -1244,8 +1257,9 @@ void DocAccessible::ParentChainChanged(nsIContent* aContent) {}
 
 #ifdef A11Y_LOG
 nsresult DocAccessible::HandleAccEvent(AccEvent* aEvent) {
-  if (logging::IsEnabled(logging::eDocLoad))
+  if (logging::IsEnabled(logging::eDocLoad)) {
     logging::DocLoadEventHandled(aEvent);
+  }
 
   return HyperTextAccessible::HandleAccEvent(aEvent);
 }
@@ -1377,8 +1391,9 @@ Accessible* DocAccessible::GetAccessibleOrDescendant(nsINode* aNode) const {
 void DocAccessible::BindToDocument(Accessible* aAccessible,
                                    const nsRoleMapEntry* aRoleMapEntry) {
   // Put into DOM node cache.
-  if (aAccessible->IsNodeMapEntry())
+  if (aAccessible->IsNodeMapEntry()) {
     mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible);
+  }
 
   // Put into unique ID cache.
   mAccessibleCache.Put(aAccessible->UniqueID(), RefPtr{aAccessible});
@@ -1405,15 +1420,17 @@ void DocAccessible::UnbindFromDocument(Accessible* aAccessible) {
   if (FocusMgr()->WasLastFocused(aAccessible)) {
     FocusMgr()->ActiveItemChanged(nullptr);
 #ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus))
+    if (logging::IsEnabled(logging::eFocus)) {
       logging::ActiveItemChangeCausedBy("tree shutdown", aAccessible);
+    }
 #endif
   }
 
   // Remove an accessible from node-to-accessible map if it exists there.
   if (aAccessible->IsNodeMapEntry() &&
-      mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
+      mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible) {
     mNodeToAccessibleMap.Remove(aAccessible->GetNode());
+  }
 
   aAccessible->mStateFlags |= eIsNotInDocument;
 
@@ -1652,8 +1669,9 @@ void DocAccessible::ProcessInvalidationList() {
 
 Accessible* DocAccessible::GetAccessibleEvenIfNotInMap(nsINode* aNode) const {
   if (!aNode->IsContent() ||
-      !aNode->AsContent()->IsHTMLElement(nsGkAtoms::area))
+      !aNode->AsContent()->IsHTMLElement(nsGkAtoms::area)) {
     return GetAccessible(aNode);
+  }
 
   // XXX Bug 135040, incorrect when multiple images use the same map.
   nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
@@ -1781,8 +1799,9 @@ void DocAccessible::ProcessLoad() {
   mLoadState |= eCompletelyLoaded;
 
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eDocLoad))
+  if (logging::IsEnabled(logging::eDocLoad)) {
     logging::DocCompleteLoad(this, IsLoadEventTarget());
+  }
 #endif
 
   // Do not fire document complete/stop events for root chrome document
@@ -1818,13 +1837,15 @@ void DocAccessible::AddDependentIDsFor(Accessible* aRelProvider,
 
     if (relAttr == nsGkAtoms::_for) {
       if (!relProviderEl->IsAnyOfHTMLElements(nsGkAtoms::label,
-                                              nsGkAtoms::output))
+                                              nsGkAtoms::output)) {
         continue;
+      }
 
     } else if (relAttr == nsGkAtoms::control) {
       if (!relProviderEl->IsAnyOfXULElements(nsGkAtoms::label,
-                                             nsGkAtoms::description))
+                                             nsGkAtoms::description)) {
         continue;
+      }
     }
 
     IDRefsIterator iter(this, relProviderEl, relAttr);
@@ -1835,8 +1856,9 @@ void DocAccessible::AddDependentIDsFor(Accessible* aRelProvider,
       nsIContent* dependentContent = iter.GetElem(id);
       if (!dependentContent ||
           (relAttr == nsGkAtoms::aria_owns &&
-           !aRelProvider->IsAcceptableChild(dependentContent)))
+           !aRelProvider->IsAcceptableChild(dependentContent))) {
         continue;
+      }
 
       AttrRelProviders* providers =
           GetOrCreateRelProviders(dependentContent->AsElement(), id);
@@ -2554,8 +2576,9 @@ void DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
   // If the accessible is focused then report a focus event after all related
   // mutation events.
   if (aFocusedAcc && !*aFocusedAcc &&
-      FocusMgr()->HasDOMFocus(aRoot->GetContent()))
+      FocusMgr()->HasDOMFocus(aRoot->GetContent())) {
     *aFocusedAcc = aRoot;
+  }
 
   Accessible* root = aRoot->IsHTMLCombobox() ? aRoot->LocalFirstChild() : aRoot;
   if (root->KidsFromDOM()) {
@@ -2615,8 +2638,9 @@ void DocAccessible::UncacheChildrenInSubtree(Accessible* aRoot) {
   }
 
   if (aRoot->IsNodeMapEntry() &&
-      mNodeToAccessibleMap.Get(aRoot->GetNode()) == aRoot)
+      mNodeToAccessibleMap.Get(aRoot->GetNode()) == aRoot) {
     mNodeToAccessibleMap.Remove(aRoot->GetNode());
+  }
 }
 
 void DocAccessible::ShutdownChildrenInSubtree(Accessible* aAccessible) {

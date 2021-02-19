@@ -106,8 +106,9 @@ bool FocusManager::WasLastFocused(const Accessible* aAccessible) const {
 
 void FocusManager::NotifyOfDOMFocus(nsISupports* aTarget) {
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eFocus))
+  if (logging::IsEnabled(logging::eFocus)) {
     logging::FocusNotificationTarget("DOM focus", "Target", aTarget);
+  }
 #endif
 
   mActiveItem = nullptr;
@@ -118,8 +119,9 @@ void FocusManager::NotifyOfDOMFocus(nsISupports* aTarget) {
         GetAccService()->GetDocAccessible(targetNode->OwnerDoc());
     if (document) {
       // Set selection listener for focused element.
-      if (targetNode->IsElement())
+      if (targetNode->IsElement()) {
         SelectionMgr()->SetControlSelectionListener(targetNode->AsElement());
+      }
 
       document->HandleNotification<FocusManager, nsINode>(
           this, &FocusManager::ProcessDOMFocus, targetNode);
@@ -129,8 +131,9 @@ void FocusManager::NotifyOfDOMFocus(nsISupports* aTarget) {
 
 void FocusManager::NotifyOfDOMBlur(nsISupports* aTarget) {
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eFocus))
+  if (logging::IsEnabled(logging::eFocus)) {
     logging::FocusNotificationTarget("DOM blur", "Target", aTarget);
+  }
 #endif
 
   mActiveItem = nullptr;
@@ -143,8 +146,9 @@ void FocusManager::NotifyOfDOMBlur(nsISupports* aTarget) {
     DocAccessible* document = GetAccService()->GetDocAccessible(DOMDoc);
     if (document) {
       // Clear selection listener for previously focused element.
-      if (targetNode->IsElement())
+      if (targetNode->IsElement()) {
         SelectionMgr()->ClearControlSelectionListener();
+      }
 
       document->HandleNotification<FocusManager, nsINode>(
           this, &FocusManager::ProcessDOMFocus, DOMDoc);
@@ -154,8 +158,9 @@ void FocusManager::NotifyOfDOMBlur(nsISupports* aTarget) {
 
 void FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive) {
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eFocus))
+  if (logging::IsEnabled(logging::eFocus)) {
     logging::FocusNotificationTarget("active item changed", "Item", aItem);
+  }
 #endif
 
   // Nothing changed, happens for XUL trees and HTML selects.
@@ -168,8 +173,9 @@ void FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive) {
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus)) logging::ActiveWidget(widget);
 #endif
-    if (!widget || !widget->IsActiveWidget() || !widget->AreItemsOperable())
+    if (!widget || !widget->IsActiveWidget() || !widget->AreItemsOperable()) {
       return;
+    }
   }
   mActiveItem = aItem;
 
@@ -225,8 +231,9 @@ void FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
 
 void FocusManager::ProcessDOMFocus(nsINode* aTarget) {
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eFocus))
+  if (logging::IsEnabled(logging::eFocus)) {
     logging::FocusNotificationTarget("process DOM focus", "Target", aTarget);
+  }
 #endif
 
   DocAccessible* document =
@@ -330,8 +337,9 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   }
 
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eFocus))
+  if (logging::IsEnabled(logging::eFocus)) {
     logging::FocusNotificationTarget("fire focus event", "Target", target);
+  }
 #endif
 
   // Reset cached caret value. The cache will be updated upon processing the

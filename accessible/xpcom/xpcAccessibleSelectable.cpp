@@ -33,8 +33,9 @@ xpcAccessibleSelectable::GetSelectedItems(nsIArray** aSelectedItems) {
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (uint32_t idx = 0; idx < itemCount; idx++)
+  for (uint32_t idx = 0; idx < itemCount; idx++) {
     xpcItems->AppendElement(static_cast<nsIAccessible*>(ToXPC(items[idx])));
+  }
 
   NS_ADDREF(*aSelectedItems = xpcItems);
   return NS_OK;

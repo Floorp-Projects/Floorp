@@ -173,8 +173,9 @@ Accessible* XULTreeAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   // If we failed to find tree cell for the given point then it might be
   // tree columns.
-  if (cellInfo.mRow == -1 || !cellInfo.mCol)
+  if (cellInfo.mRow == -1 || !cellInfo.mCol) {
     return AccessibleWrap::ChildAtPoint(aX, aY, aWhichChild);
+  }
 
   Accessible* child = GetTreeItemAccessible(cellInfo.mRow);
   if (aWhichChild == eDeepestChild && child) {
@@ -363,8 +364,9 @@ uint32_t XULTreeAccessible::ChildCount() const {
 
 Relation XULTreeAccessible::RelationByType(RelationType aType) const {
   if (aType == RelationType::NODE_PARENT_OF) {
-    if (mTreeView)
+    if (mTreeView) {
       return Relation(new XULTreeItemIterator(this, mTreeView, -1));
+    }
 
     return Relation();
   }
@@ -671,8 +673,9 @@ Relation XULTreeItemAccessibleBase::RelationByType(RelationType aType) const {
   switch (aType) {
     case RelationType::NODE_CHILD_OF: {
       int32_t parentIndex = -1;
-      if (!NS_SUCCEEDED(mTreeView->GetParentIndex(mRow, &parentIndex)))
+      if (!NS_SUCCEEDED(mTreeView->GetParentIndex(mRow, &parentIndex))) {
         return Relation();
+      }
 
       if (parentIndex == -1) return Relation(mParent);
 
@@ -682,11 +685,13 @@ Relation XULTreeItemAccessibleBase::RelationByType(RelationType aType) const {
 
     case RelationType::NODE_PARENT_OF: {
       bool isTrue = false;
-      if (NS_FAILED(mTreeView->IsContainerEmpty(mRow, &isTrue)) || isTrue)
+      if (NS_FAILED(mTreeView->IsContainerEmpty(mRow, &isTrue)) || isTrue) {
         return Relation();
+      }
 
-      if (NS_FAILED(mTreeView->IsContainerOpen(mRow, &isTrue)) || !isTrue)
+      if (NS_FAILED(mTreeView->IsContainerOpen(mRow, &isTrue)) || !isTrue) {
         return Relation();
+      }
 
       XULTreeAccessible* tree = mParent->AsXULTree();
       return Relation(new XULTreeItemIterator(tree, mTreeView, mRow));
@@ -712,16 +717,19 @@ void XULTreeItemAccessibleBase::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Expand && IsExpandable()) {
     bool isContainerOpen = false;
     mTreeView->IsContainerOpen(mRow, &isContainerOpen);
-    if (isContainerOpen)
+    if (isContainerOpen) {
       aName.AssignLiteral("collapse");
-    else
+    } else {
       aName.AssignLiteral("expand");
+    }
   }
 }
 
 bool XULTreeItemAccessibleBase::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Click && (aIndex != eAction_Expand || !IsExpandable()))
+  if (aIndex != eAction_Click &&
+      (aIndex != eAction_Expand || !IsExpandable())) {
     return false;
+  }
 
   DoCommand(nullptr, aIndex);
   return true;
@@ -803,8 +811,9 @@ uint64_t XULTreeItemAccessibleBase::NativeState() const {
   // invisible state
   int32_t firstVisibleRow = mTree->GetFirstVisibleRow();
   int32_t lastVisibleRow = mTree->GetLastVisibleRow();
-  if (mRow < firstVisibleRow || mRow > lastVisibleRow)
+  if (mRow < firstVisibleRow || mRow > lastVisibleRow) {
     state |= states::INVISIBLE;
+  }
 
   return state;
 }
@@ -873,8 +882,9 @@ bool XULTreeItemAccessibleBase::IsExpandable() const {
       RefPtr<nsTreeColumns> columns = mTree->GetColumns();
       if (columns) {
         nsTreeColumn* primaryColumn = columns->GetPrimaryColumn();
-        if (primaryColumn && !nsCoreUtils::IsColumnHidden(primaryColumn))
+        if (primaryColumn && !nsCoreUtils::IsColumnHidden(primaryColumn)) {
           return true;
+        }
       }
     }
   }
@@ -976,8 +986,9 @@ XULTreeColumAccessible::XULTreeColumAccessible(nsIContent* aContent,
 
 Accessible* XULTreeColumAccessible::GetSiblingAtOffset(int32_t aOffset,
                                                        nsresult* aError) const {
-  if (aOffset < 0)
+  if (aOffset < 0) {
     return XULColumAccessible::GetSiblingAtOffset(aOffset, aError);
+  }
 
   if (aError) *aError = NS_OK;  // fail peacefully
 

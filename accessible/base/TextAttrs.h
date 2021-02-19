@@ -136,13 +136,15 @@ class TextAttrsMgr {
       }
 
       if (mIsDefined) {
-        if (aIncludeDefAttrValue || mRootNativeValue != mNativeValue)
+        if (aIncludeDefAttrValue || mRootNativeValue != mNativeValue) {
           ExposeValue(aAttributes, mNativeValue);
+        }
         return;
       }
 
-      if (aIncludeDefAttrValue && mIsRootDefined)
+      if (aIncludeDefAttrValue && mIsRootDefined) {
         ExposeValue(aAttributes, mRootNativeValue);
+      }
     }
 
     virtual bool Equal(Accessible* aAccessible) override {

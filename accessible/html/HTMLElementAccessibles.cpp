@@ -79,8 +79,9 @@ bool HTMLLabelAccessible::DoAction(uint8_t aIndex) const {
 
 Relation HTMLOutputAccessible::RelationByType(RelationType aType) const {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType == RelationType::CONTROLLED_BY)
+  if (aType == RelationType::CONTROLLED_BY) {
     rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::_for));
+  }
 
   return rel;
 }

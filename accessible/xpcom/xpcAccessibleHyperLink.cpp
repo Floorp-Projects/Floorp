@@ -93,8 +93,9 @@ xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI) {
   if (aIndex < 0) return NS_ERROR_INVALID_ARG;
 
   if (Intl().IsAccessible()) {
-    if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount()))
+    if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount())) {
       return NS_ERROR_INVALID_ARG;
+    }
 
     RefPtr<nsIURI>(Intl().AsAccessible()->AnchorURIAt(aIndex)).forget(aURI);
   } else {
@@ -127,8 +128,9 @@ xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible) {
   if (aIndex < 0) return NS_ERROR_INVALID_ARG;
 
   if (Intl().IsAccessible()) {
-    if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount()))
+    if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount())) {
       return NS_ERROR_INVALID_ARG;
+    }
 
     NS_IF_ADDREF(*aAccessible = ToXPC(Intl().AsAccessible()->AnchorAt(aIndex)));
   } else {

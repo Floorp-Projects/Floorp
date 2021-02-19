@@ -309,14 +309,17 @@ static void LogRequest(nsIRequest* aRequest) {
     aRequest->GetLoadFlags(&loadFlags);
     printf("    request load flags: %x; ", loadFlags);
     if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) printf("document uri; ");
-    if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+    if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
       printf("retargeted document uri; ");
+    }
     if (loadFlags & nsIChannel::LOAD_REPLACE) printf("replace; ");
-    if (loadFlags & nsIChannel::LOAD_INITIAL_DOCUMENT_URI)
+    if (loadFlags & nsIChannel::LOAD_INITIAL_DOCUMENT_URI) {
       printf("initial document uri; ");
+    }
     if (loadFlags & nsIChannel::LOAD_TARGETED) printf("targeted; ");
-    if (loadFlags & nsIChannel::LOAD_CALL_CONTENT_SNIFFERS)
+    if (loadFlags & nsIChannel::LOAD_CALL_CONTENT_SNIFFERS) {
       printf("call content sniffers; ");
+    }
     if (loadFlags & nsIChannel::LOAD_BYPASS_URL_CLASSIFIER) {
       printf("bypass classify uri; ");
     }
@@ -327,14 +330,15 @@ static void LogRequest(nsIRequest* aRequest) {
 
 static void LogDocAccState(DocAccessible* aDocument) {
   printf("document acc state: ");
-  if (aDocument->HasLoadState(DocAccessible::eCompletelyLoaded))
+  if (aDocument->HasLoadState(DocAccessible::eCompletelyLoaded)) {
     printf("completely loaded;");
-  else if (aDocument->HasLoadState(DocAccessible::eReady))
+  } else if (aDocument->HasLoadState(DocAccessible::eReady)) {
     printf("ready;");
-  else if (aDocument->HasLoadState(DocAccessible::eDOMLoaded))
+  } else if (aDocument->HasLoadState(DocAccessible::eDOMLoaded)) {
     printf("DOM loaded;");
-  else if (aDocument->HasLoadState(DocAccessible::eTreeConstructed))
+  } else if (aDocument->HasLoadState(DocAccessible::eTreeConstructed)) {
     printf("tree constructed;");
+  }
 }
 
 static void GetDocLoadEventType(AccEvent* aEvent, nsACString& aEventType) {
@@ -349,10 +353,11 @@ static void GetDocLoadEventType(AccEvent* aEvent, nsACString& aEventType) {
     AccStateChangeEvent* event = downcast_accEvent(aEvent);
     if (event->GetState() == states::BUSY) {
       aEventType.AssignLiteral("busy ");
-      if (event->IsStateEnabled())
+      if (event->IsStateEnabled()) {
         aEventType.AppendLiteral("true");
-      else
+      } else {
         aEventType.AppendLiteral("false");
+      }
     }
   }
 }
@@ -560,11 +565,12 @@ void logging::FocusNotificationTarget(const char* aMsg,
 
   if (aTargetThing) {
     nsCOMPtr<nsINode> targetNode(do_QueryInterface(aTargetThing));
-    if (targetNode)
+    if (targetNode) {
       AccessibleNNode(aTargetDescr, targetNode);
-    else
+    } else {
       printf("    %s: %p, window\n", aTargetDescr,
              static_cast<void*>(aTargetThing));
+    }
   }
 
   MsgEnd();
@@ -600,12 +606,13 @@ void logging::SelChange(dom::Selection* aSelection, DocAccessible* aDocument,
   SelectionType type = aSelection->GetType();
 
   const char* strType = 0;
-  if (type == SelectionType::eNormal)
+  if (type == SelectionType::eNormal) {
     strType = "normal";
-  else if (type == SelectionType::eSpellCheck)
+  } else if (type == SelectionType::eSpellCheck) {
     strType = "spellcheck";
-  else
+  } else {
     strType = "unknown";
+  }
 
   bool isIgnored = !aDocument || !aDocument->IsContentLoaded();
   printf(
@@ -911,8 +918,9 @@ bool logging::IsEnabledAll(uint32_t aModules) {
 
 bool logging::IsEnabled(const nsAString& aModuleStr) {
   for (unsigned int idx = 0; idx < ArrayLength(sModuleMap); idx++) {
-    if (aModuleStr.EqualsASCII(sModuleMap[idx].mStr))
+    if (aModuleStr.EqualsASCII(sModuleMap[idx].mStr)) {
       return sModules & sModuleMap[idx].mModule;
+    }
   }
 
   return false;

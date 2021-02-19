@@ -47,10 +47,11 @@ class Relation {
   }
 
   inline void AppendIter(AccIterable* aIter) {
-    if (mLastIter)
+    if (mLastIter) {
       mLastIter->mNextIter.reset(aIter);
-    else
+    } else {
       mFirstIter.reset(aIter);
+    }
 
     mLastIter = aIter;
   }
@@ -76,8 +77,9 @@ class Relation {
   inline Accessible* Next() {
     Accessible* target = nullptr;
 
-    while (mFirstIter && !(target = mFirstIter->Next()))
+    while (mFirstIter && !(target = mFirstIter->Next())) {
       mFirstIter = std::move(mFirstIter->mNextIter);
+    }
 
     if (!mFirstIter) mLastIter = nullptr;
 

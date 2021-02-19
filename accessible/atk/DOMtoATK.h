@@ -128,8 +128,9 @@ gchar* NewATKString(AccessibleOrProxy* aAccessible, gint aStartOffset,
     return g_strdup("");
   }
 
-  if (aFlags & AtkStringConvertFlags::ConvertTextToAsterisks)
+  if (aFlags & AtkStringConvertFlags::ConvertTextToAsterisks) {
     ConvertTexttoAsterisks(str);
+  }
   return converter.ConvertAdjusted(str);
 }
 

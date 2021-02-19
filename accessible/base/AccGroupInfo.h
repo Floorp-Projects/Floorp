@@ -56,8 +56,9 @@ class AccGroupInfo {
         role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
         role != mozilla::a11y::roles::RADIOBUTTON &&
         role != mozilla::a11y::roles::PAGETAB &&
-        role != mozilla::a11y::roles::COMMENT)
+        role != mozilla::a11y::roles::COMMENT) {
       return nullptr;
+    }
 
     AccGroupInfo* info = new AccGroupInfo(aAccessible, BaseRole(role));
     return info;
@@ -90,11 +91,13 @@ class AccGroupInfo {
   static mozilla::a11y::role BaseRole(mozilla::a11y::role aRole) {
     if (aRole == mozilla::a11y::roles::CHECK_MENU_ITEM ||
         aRole == mozilla::a11y::roles::PARENT_MENUITEM ||
-        aRole == mozilla::a11y::roles::RADIO_MENU_ITEM)
+        aRole == mozilla::a11y::roles::RADIO_MENU_ITEM) {
       return mozilla::a11y::roles::MENUITEM;
+    }
 
-    if (aRole == mozilla::a11y::roles::CHECK_RICH_OPTION)
+    if (aRole == mozilla::a11y::roles::CHECK_RICH_OPTION) {
       return mozilla::a11y::roles::RICH_OPTION;
+    }
 
     return aRole;
   }

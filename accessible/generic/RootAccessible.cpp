@@ -108,19 +108,22 @@ uint64_t RootAccessible::NativeState() const {
 
 #ifdef MOZ_XUL
   uint32_t chromeFlags = GetChromeFlags();
-  if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
     state |= states::SIZEABLE;
+  }
   // If it has a titlebar it's movable
   // XXX unless it's minimized or maximized, but not sure
   //     how to detect that
-  if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR) {
     state |= states::MOVEABLE;
+  }
   if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) state |= states::MODAL;
 #endif
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && fm->GetActiveWindow() == mDocumentNode->GetWindow())
+  if (fm && fm->GetActiveWindow() == mDocumentNode->GetWindow()) {
     state |= states::ACTIVE;
+  }
 
   return state;
 }
@@ -254,8 +257,9 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
   aDOMEvent->GetType(eventType);
 
 #ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eDOMEvents))
+  if (logging::IsEnabled(logging::eDOMEvents)) {
     logging::DOMEvent("processed", aTarget, eventType);
+  }
 #endif
 
   if (eventType.EqualsLiteral("popuphiding")) {
@@ -308,8 +312,9 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
     if (isEnabled) {
       FocusMgr()->ActiveItemChanged(accessible);
 #ifdef A11Y_LOG
-      if (logging::IsEnabled(logging::eFocus))
+      if (logging::IsEnabled(logging::eFocus)) {
         logging::ActiveItemChangeCausedBy("RadioStateChange", accessible);
+      }
 #endif
     }
 
@@ -394,8 +399,9 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
   } else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
     FocusMgr()->ActiveItemChanged(accessible);
 #ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus))
+    if (logging::IsEnabled(logging::eFocus)) {
       logging::ActiveItemChangeCausedBy("DOMMenuItemActive", accessible);
+    }
 #endif
   } else if (eventType.EqualsLiteral("DOMMenuItemInactive")) {
     // Process DOMMenuItemInactive event for autocomplete only because this is
@@ -407,8 +413,9 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
     if (widget && widget->IsAutoCompletePopup()) {
       FocusMgr()->ActiveItemChanged(nullptr);
 #ifdef A11Y_LOG
-      if (logging::IsEnabled(logging::eFocus))
+      if (logging::IsEnabled(logging::eFocus)) {
         logging::ActiveItemChangeCausedBy("DOMMenuItemInactive", accessible);
+      }
 #endif
     }
   } else if (eventType.EqualsLiteral(
@@ -426,8 +433,9 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
     if (activeItem) {
       FocusMgr()->ActiveItemChanged(activeItem);
 #ifdef A11Y_LOG
-      if (logging::IsEnabled(logging::eFocus))
+      if (logging::IsEnabled(logging::eFocus)) {
         logging::ActiveItemChangeCausedBy("DOMMenuBarActive", accessible);
+      }
 #endif
     }
   } else if (eventType.EqualsLiteral(
@@ -437,8 +445,9 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
 
     FocusMgr()->ActiveItemChanged(nullptr);
 #ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus))
+    if (logging::IsEnabled(logging::eFocus)) {
       logging::ActiveItemChangeCausedBy("DOMMenuBarInactive", accessible);
+    }
 #endif
   } else if (accessible->NeedsDOMUIEvent() &&
              eventType.EqualsLiteral("ValueChange")) {
@@ -623,8 +632,9 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
   if (notifyOf & kNotifyOfFocus) {
     FocusMgr()->ActiveItemChanged(nullptr);
 #ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus))
+    if (logging::IsEnabled(logging::eFocus)) {
       logging::ActiveItemChangeCausedBy("popuphiding", popup);
+    }
 #endif
   }
 

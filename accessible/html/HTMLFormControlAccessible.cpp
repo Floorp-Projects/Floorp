@@ -191,11 +191,14 @@ ENameValueFlag HTMLButtonAccessible::NativeName(nsString& aName) const {
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty() || !mContent->IsHTMLElement(nsGkAtoms::input) ||
       !mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                          nsGkAtoms::image, eCaseMatters))
+                                          nsGkAtoms::image, eCaseMatters)) {
     return nameFlag;
+  }
 
-  if (!mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName))
+  if (!mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt,
+                                      aName)) {
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
+  }
 
   aName.CompressWhitespace();
   return eNameOK;
@@ -287,8 +290,9 @@ ENameValueFlag HTMLTextFieldAccessible::NativeName(nsString& aName) const {
 
 void HTMLTextFieldAccessible::Value(nsString& aValue) const {
   aValue.Truncate();
-  if (NativeState() & states::PROTECTED)  // Don't return password text!
+  if (NativeState() & states::PROTECTED) {  // Don't return password text!
     return;
+  }
 
   HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromNode(mContent);
   if (textArea) {
@@ -311,8 +315,9 @@ void HTMLTextFieldAccessible::ApplyARIAState(uint64_t* aState) const {
   // If part of compound of XUL widget then pick up ARIA stuff from XUL widget
   // element.
   nsIContent* widgetElm = BindingOrWidgetParent();
-  if (widgetElm)
+  if (widgetElm) {
     aria::MapToState(aria::eARIAAutoComplete, widgetElm->AsElement(), aState);
+  }
 }
 
 uint64_t HTMLTextFieldAccessible::NativeState() const {
@@ -338,8 +343,9 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
                                                      : states::MULTI_LINE;
 
   if (state & (states::PROTECTED | states::MULTI_LINE | states::READONLY |
-               states::UNAVAILABLE))
+               states::UNAVAILABLE)) {
     return state;
+  }
 
   // Expose autocomplete states if this input is part of autocomplete widget.
   Accessible* widget = ContainerWidget();
@@ -349,8 +355,9 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
   }
 
   // Expose autocomplete state if it has associated autocomplete list.
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::list_))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::list_)) {
     return state | states::SUPPORTS_AUTOCOMPLETION | states::HASPOPUP;
+  }
 
   // Ordinal XUL textboxes don't support autocomplete.
   if (!BindingOrWidgetParent() &&
@@ -371,8 +378,9 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
                              autocomplete);
       }
 
-      if (!formElement || !autocomplete.LowerCaseEqualsLiteral("off"))
+      if (!formElement || !autocomplete.LowerCaseEqualsLiteral("off")) {
         state |= states::SUPPORTS_AUTOCOMPLETION;
+      }
     }
   }
 
@@ -606,8 +614,9 @@ ENameValueFlag HTMLGroupboxAccessible::NativeName(nsString& aName) const {
   if (!aName.IsEmpty()) return nameFlag;
 
   nsIContent* legendContent = GetLegend();
-  if (legendContent)
+  if (legendContent) {
     nsTextEquivUtils::AppendTextEquivFromContent(this, legendContent, &aName);
+  }
 
   aName.CompressWhitespace();
   return eNameOK;
@@ -634,8 +643,9 @@ Relation HTMLLegendAccessible::RelationByType(RelationType aType) const {
   if (aType != RelationType::LABEL_FOR) return rel;
 
   Accessible* groupbox = LocalParent();
-  if (groupbox && groupbox->Role() == roles::GROUPING)
+  if (groupbox && groupbox->Role() == roles::GROUPING) {
     rel.AppendTarget(groupbox);
+  }
 
   return rel;
 }
@@ -653,8 +663,9 @@ ENameValueFlag HTMLFigureAccessible::NativeName(nsString& aName) const {
   if (!aName.IsEmpty()) return nameFlag;
 
   nsIContent* captionContent = Caption();
-  if (captionContent)
+  if (captionContent) {
     nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
+  }
 
   aName.CompressWhitespace();
   return eNameOK;

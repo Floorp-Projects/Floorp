@@ -167,8 +167,9 @@ void EventQueue::CoalesceEvents() {
           AccStateChangeEvent* tailSCEvent = downcast_accEvent(tailEvent);
           if (thisSCEvent->mState == tailSCEvent->mState) {
             thisEvent->mEventRule = AccEvent::eDoNotEmit;
-            if (thisSCEvent->mIsEnabled != tailSCEvent->mIsEnabled)
+            if (thisSCEvent->mIsEnabled != tailSCEvent->mIsEnabled) {
               tailEvent->mEventRule = AccEvent::eDoNotEmit;
+            }
           }
         }
       }
@@ -187,8 +188,9 @@ void EventQueue::CoalesceEvents() {
           AccTextSelChangeEvent* thisTSCEvent = downcast_accEvent(thisEvent);
           AccTextSelChangeEvent* tailTSCEvent = downcast_accEvent(tailEvent);
           if (thisTSCEvent->mSel == tailTSCEvent->mSel ||
-              thisEvent->mAccessible == tailEvent->mAccessible)
+              thisEvent->mAccessible == tailEvent->mAccessible) {
             thisEvent->mEventRule = AccEvent::eDoNotEmit;
+          }
         }
       }
       break;  // eCoalesceTextSelChange
@@ -233,8 +235,9 @@ void EventQueue::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
         AccEvent* prevEvent = mEvents[jdx];
         if (prevEvent->mEventRule == aTailEvent->mEventRule) {
           AccSelChangeEvent* prevSelChangeEvent = downcast_accEvent(prevEvent);
-          if (prevSelChangeEvent->mWidget == aTailEvent->mWidget)
+          if (prevSelChangeEvent->mWidget == aTailEvent->mWidget) {
             prevSelChangeEvent->mEventRule = AccEvent::eDoNotEmit;
+          }
         }
       }
     }
@@ -287,8 +290,9 @@ void EventQueue::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
 
   // Convert into selection add since control has single selection but other
   // selection events for this control are queued.
-  if (aTailEvent->mEventType == nsIAccessibleEvent::EVENT_SELECTION)
+  if (aTailEvent->mEventType == nsIAccessibleEvent::EVENT_SELECTION) {
     aTailEvent->mEventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

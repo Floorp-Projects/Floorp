@@ -89,8 +89,9 @@ nsAccessiblePivot::SetPosition(nsIAccessible* aPosition) {
 
   if (aPosition) {
     position = aPosition->ToInternalAccessible();
-    if (!position || !IsDescendantOf(position, GetActiveRoot()))
+    if (!position || !IsDescendantOf(position, GetActiveRoot())) {
       return NS_ERROR_INVALID_ARG;
+    }
   }
 
   // Swap old position with new position, saves us an AddRef/Release.
@@ -119,8 +120,9 @@ nsAccessiblePivot::SetModalRoot(nsIAccessible* aModalRoot) {
 
   if (aModalRoot) {
     modalRoot = aModalRoot->ToInternalAccessible();
-    if (!modalRoot || !IsDescendantOf(modalRoot, mRoot))
+    if (!modalRoot || !IsDescendantOf(modalRoot, mRoot)) {
       return NS_ERROR_INVALID_ARG;
+    }
   }
 
   mModalRoot = modalRoot;
@@ -165,12 +167,14 @@ nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
   NS_ENSURE_ARG(acc);
 
   HyperTextAccessible* position = acc->AsHyperText();
-  if (!position || !IsDescendantOf(position, GetActiveRoot()))
+  if (!position || !IsDescendantOf(position, GetActiveRoot())) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   // Make sure the given offsets don't exceed the character count.
-  if (aEndOffset > static_cast<int32_t>(position->CharacterCount()))
+  if (aEndOffset > static_cast<int32_t>(position->CharacterCount())) {
     return NS_ERROR_FAILURE;
+  }
 
   int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
   mStartOffset = aStartOffset;
@@ -199,8 +203,9 @@ nsAccessiblePivot::MoveNext(nsIAccessibleTraversalRule* aRule,
   if (aArgc > 0 && aAnchor) anchor = aAnchor->ToInternalAccessible();
 
   if (anchor &&
-      (anchor->IsDefunct() || !IsDescendantOf(anchor, GetActiveRoot())))
+      (anchor->IsDefunct() || !IsDescendantOf(anchor, GetActiveRoot()))) {
     return NS_ERROR_NOT_IN_TREE;
+  }
 
   Pivot pivot(GetActiveRoot());
   RuleCache rule(aRule);
@@ -233,8 +238,9 @@ nsAccessiblePivot::MovePrevious(nsIAccessibleTraversalRule* aRule,
   if (aArgc > 0 && aAnchor) anchor = aAnchor->ToInternalAccessible();
 
   if (anchor &&
-      (anchor->IsDefunct() || !IsDescendantOf(anchor, GetActiveRoot())))
+      (anchor->IsDefunct() || !IsDescendantOf(anchor, GetActiveRoot()))) {
     return NS_ERROR_NOT_IN_TREE;
+  }
 
   Pivot pivot(GetActiveRoot());
   RuleCache rule(aRule);
@@ -442,8 +448,9 @@ bool nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
                                             int16_t aBoundaryType,
                                             bool aIsFromUserInput) {
   if (aOldPosition == mPosition && aOldStart == mStartOffset &&
-      aOldEnd == mEndOffset)
+      aOldEnd == mEndOffset) {
     return false;
+  }
 
   nsCOMPtr<nsIAccessible> xpcOldPos = ToXPC(aOldPosition);  // death grip
   for (nsIAccessiblePivotObserver* obs : mObservers.ForwardRange()) {
@@ -480,16 +487,19 @@ uint16_t RuleCache::Match(const AccessibleOrProxy& aAccOrProxy) {
     }
 
     if ((nsIAccessibleTraversalRule::PREFILTER_INVISIBLE & mPreFilter) &&
-        (state & states::INVISIBLE))
+        (state & states::INVISIBLE)) {
       return result;
+    }
 
     if ((nsIAccessibleTraversalRule::PREFILTER_OFFSCREEN & mPreFilter) &&
-        (state & states::OFFSCREEN))
+        (state & states::OFFSCREEN)) {
       return result;
+    }
 
     if ((nsIAccessibleTraversalRule::PREFILTER_NOT_FOCUSABLE & mPreFilter) &&
-        !(state & states::FOCUSABLE))
+        !(state & states::FOCUSABLE)) {
       return result;
+    }
 
     if (aAccOrProxy.IsAccessible() &&
         (nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) &&

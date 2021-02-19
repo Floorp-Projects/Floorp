@@ -109,8 +109,9 @@ inline void HyperTextAccessible::PasteText(int32_t aPosition) {
 }
 
 inline index_t HyperTextAccessible::ConvertMagicOffset(int32_t aOffset) const {
-  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT)
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
     return CharacterCount();
+  }
 
   if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) return CaretOffset();
 

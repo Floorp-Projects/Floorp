@@ -323,8 +323,9 @@ Accessible* XULTreeItemIterator::Next() {
     int32_t level = 0;
     mTreeView->GetLevel(mCurrRowIdx, &level);
 
-    if (level == mContainerLevel + 1)
+    if (level == mContainerLevel + 1) {
       return mXULTree->GetTreeItemAccessible(mCurrRowIdx++);
+    }
 
     if (level <= mContainerLevel) {  // got level up
       mCurrRowIdx = mRowCount;

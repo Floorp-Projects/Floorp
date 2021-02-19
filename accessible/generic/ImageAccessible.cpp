@@ -46,9 +46,10 @@ uint64_t ImageAccessible::NativeState() const {
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mContent));
   nsCOMPtr<imgIRequest> imageRequest;
 
-  if (content)
+  if (content) {
     content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                         getter_AddRefs(imageRequest));
+  }
 
   if (imageRequest) {
     nsCOMPtr<imgIContainer> imgContainer;
@@ -106,10 +107,11 @@ uint8_t ImageAccessible::ActionCount() const {
 
 void ImageAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   aName.Truncate();
-  if (IsLongDescIndex(aIndex) && HasLongDesc())
+  if (IsLongDescIndex(aIndex) && HasLongDesc()) {
     aName.AssignLiteral("showlongdesc");
-  else
+  } else {
     LinkableAccessible::ActionNameAt(aIndex, aName);
+  }
 }
 
 bool ImageAccessible::DoAction(uint8_t aIndex) const {

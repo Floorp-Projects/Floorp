@@ -22,8 +22,9 @@ namespace a11y {
 
 inline mozilla::a11y::role Accessible::Role() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole)
+  if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole) {
     return ARIATransformRole(NativeRole());
+  }
 
   return ARIATransformRole(roleMapEntry->role);
 }
@@ -48,8 +49,9 @@ inline const nsRoleMapEntry* Accessible::ARIARoleMap() const {
 
 inline mozilla::a11y::role Accessible::ARIARole() {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole)
+  if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole) {
     return mozilla::a11y::roles::NOTHING;
+  }
 
   return ARIATransformRole(roleMapEntry->role);
 }
@@ -80,8 +82,9 @@ inline bool Accessible::ARIAHasNumericValue() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) return false;
 
-  if (roleMapEntry->valueRule == eHasValueMinMaxIfFocusable)
+  if (roleMapEntry->valueRule == eHasValueMinMaxIfFocusable) {
     return InteractiveState() & states::FOCUSABLE;
+  }
 
   return true;
 }

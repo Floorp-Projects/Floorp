@@ -18,8 +18,9 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType, Relation* aRel)
     : mType(aType) {
   mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
   Accessible* targetAcc = nullptr;
-  while ((targetAcc = aRel->Next()))
+  while ((targetAcc = aRel->Next())) {
     mTargets->AppendElement(static_cast<nsIAccessible*>(ToXPC(targetAcc)));
+  }
 }
 
 nsAccessibleRelation::nsAccessibleRelation(

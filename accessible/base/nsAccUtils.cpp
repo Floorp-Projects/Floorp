@@ -131,8 +131,9 @@ void nsAccUtils::SetLiveContainerAttributes(
     if (relevant.IsEmpty() &&
         HasDefinedARIAToken(ancestor, nsGkAtoms::aria_relevant) &&
         ancestor->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::aria_relevant, relevant))
+                                       nsGkAtoms::aria_relevant, relevant)) {
       SetAccAttr(aAttributes, nsGkAtoms::containerRelevant, relevant);
+    }
 
     // container-live, and container-live-role attributes
     if (live.IsEmpty()) {
@@ -169,8 +170,9 @@ void nsAccUtils::SetLiveContainerAttributes(
     // container-busy attribute
     if (busy.IsEmpty() && HasDefinedARIAToken(ancestor, nsGkAtoms::aria_busy) &&
         ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy,
-                                       busy))
+                                       busy)) {
       SetAccAttr(aAttributes, nsGkAtoms::containerBusy, busy);
+    }
 
     if (ancestor == topEl) {
       break;
