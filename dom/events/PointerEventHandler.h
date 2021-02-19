@@ -199,6 +199,8 @@ class PointerEventHandler final {
 
   static void NotifyDestroyPresContext(nsPresContext* aPresContext);
 
+  static bool IsDragAndDropEnabled(WidgetMouseEvent& aEvent);
+
  private:
   // Set pointer capture of the specified pointer by the element.
   static void SetPointerCaptureById(uint32_t aPointerId,
