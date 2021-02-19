@@ -18,8 +18,13 @@ ChromeUtils.defineModuleGetter(
 const kPrefProtonToolbarEnabled = "browser.proton.toolbar.enabled";
 const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
 const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";
+const kPrefLibraryButtonUsed = "browser.engagement.library-button.has-used";
 
-async function testHomeButton(shouldRemoveHomeButton, shouldUpdateVersion) {
+async function testToolbarButtons(
+  shouldRemoveHomeButton,
+  shouldRemoveLibraryButton,
+  shouldUpdateVersion
+) {
   const defaultPlacements = [
     "back-button",
     "forward-button",
@@ -50,14 +55,19 @@ async function testHomeButton(shouldRemoveHomeButton, shouldUpdateVersion) {
   };
   CustomizableUIInternal._updateForNewProtonVersion();
 
-  let includesHomeButton = CustomizableUIBSPass.gSavedState.placements[
-    "nav-bar"
-  ].includes("home-button");
+  let navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
+  let includesHomeButton = navbarPlacements.includes("home-button");
+  let includesLibraryButton = navbarPlacements.includes("library-button");
 
   Assert.equal(
     !includesHomeButton,
     shouldRemoveHomeButton,
     "Correctly handles home button"
+  );
+  Assert.equal(
+    !includesLibraryButton,
+    shouldRemoveLibraryButton,
+    "Correctly handles library button"
   );
 
   let toolbarVersion = Services.prefs.getIntPref(kPrefProtonToolbarVersion);
@@ -77,38 +87,62 @@ async function testHomeButton(shouldRemoveHomeButton, shouldUpdateVersion) {
  * pref is false, and the homepage is about:home or about:blank.
  * Otherwise, the home button should remain if it was previously
  * in the navbar.
+ * Also checks that the library button is removed from the nav-bar
+ * if proton is enabled and the toolbar engagement pref is false.
  */
 add_task(async function testButtonRemoval() {
+  // Ensure the engagement prefs are set to their default values
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [kPrefHomeButtonUsed, false],
+      [kPrefLibraryButtonUsed, false],
+    ],
+  });
+
   let tests = [
-    // Proton enabled without engagement
+    // Proton enabled without home and library engagement
     {
       prefs: [[kPrefProtonToolbarEnabled, true]],
       shouldRemoveHomeButton: true,
+      shouldRemoveLibraryButton: true,
       shouldUpdateVersion: true,
     },
-    // Proton enabled with engagement
+    // Proton enabled with home engagement
     {
       prefs: [
         [kPrefProtonToolbarEnabled, true],
         [kPrefHomeButtonUsed, true],
       ],
       shouldRemoveHomeButton: false,
+      shouldRemoveLibraryButton: true,
       shouldUpdateVersion: true,
     },
     // Proton disabled
     {
       prefs: [[kPrefProtonToolbarEnabled, false]],
       shouldRemoveHomeButton: false,
+      shouldRemoveLibraryButton: false,
       shouldUpdateVersion: false,
     },
     // Proton enabled with custom homepage
     {
       prefs: [[kPrefProtonToolbarEnabled, true]],
       shouldRemoveHomeButton: false,
+      shouldRemoveLibraryButton: true,
       shouldUpdateVersion: true,
       async fn() {
         HomePage.safeSet("https://example.com");
       },
+    },
+    // Proton enabled with library engagement
+    {
+      prefs: [
+        [kPrefProtonToolbarEnabled, true],
+        [kPrefLibraryButtonUsed, true],
+      ],
+      shouldRemoveHomeButton: true,
+      shouldRemoveLibraryButton: false,
+      shouldUpdateVersion: true,
     },
   ];
 
@@ -119,7 +153,11 @@ add_task(async function testButtonRemoval() {
     if (test.fn) {
       await test.fn();
     }
-    testHomeButton(test.shouldRemoveHomeButton, test.shouldUpdateVersion);
+    testToolbarButtons(
+      test.shouldRemoveHomeButton,
+      test.shouldRemoveLibraryButton,
+      test.shouldUpdateVersion
+    );
     HomePage.reset();
     await SpecialPowers.popPrefEnv();
   }
@@ -144,14 +182,27 @@ add_task(async function testNullSavedState() {
   );
 
   let { CustomizableUIInternal } = CustomizableUIBSPass;
-  CustomizableUIInternal._updateForNewProtonVersion();
+  CustomizableUIInternal.initialize();
 
   Assert.ok(
     Services.prefs.getIntPref(kPrefProtonToolbarVersion) >= 1,
     "Toolbar proton version updated"
   );
+  let navbarPlacements = CustomizableUIBSPass.gAreas
+    .get("nav-bar")
+    .get("defaultPlacements");
+  Assert.ok(
+    !navbarPlacements.includes("home-button"),
+    "Home button isn't included by default"
+  );
+  Assert.ok(
+    !navbarPlacements.includes("library-button"),
+    "Library button isn't included by default"
+  );
 
   // Cleanup
   CustomizableUIBSPass.gSavedState = oldState;
   await SpecialPowers.popPrefEnv();
+  // Re-initialize to prevent future test failures
+  CustomizableUIInternal.initialize();
 });
