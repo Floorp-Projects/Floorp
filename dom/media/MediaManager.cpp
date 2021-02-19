@@ -2532,17 +2532,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
 
   // Create a window listener if it doesn't already exist.
   RefPtr<GetUserMediaWindowListener> windowListener =
-      GetWindowListener(windowID);
-  if (windowListener) {
-    PrincipalHandle existingPrincipalHandle =
-        windowListener->GetPrincipalHandle();
-    MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
-  } else {
-    windowListener = new GetUserMediaWindowListener(
-        windowID, MakePrincipalHandle(principal));
-    AddWindowID(windowID, windowListener);
-  }
-
+      GetOrMakeWindowListener(aWindow);
+  MOZ_ASSERT(windowListener);
   auto sourceListener = MakeRefPtr<SourceListener>();
   windowListener->Register(sourceListener);
 
@@ -3026,21 +3017,9 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
   uint64_t windowId = aWindow->WindowID();
   Document* doc = aWindow->GetExtantDoc();
   MOZ_ASSERT(doc);
-
-  nsIPrincipal* principal = doc->NodePrincipal();
-
   RefPtr<GetUserMediaWindowListener> windowListener =
-      GetWindowListener(windowId);
-  if (windowListener) {
-    PrincipalHandle existingPrincipalHandle =
-        windowListener->GetPrincipalHandle();
-    MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
-  } else {
-    windowListener = new GetUserMediaWindowListener(
-        windowId, MakePrincipalHandle(principal));
-    AddWindowID(windowId, windowListener);
-  }
-
+      GetOrMakeWindowListener(aWindow);
+  MOZ_ASSERT(windowListener);
   // Create an inactive SourceListener to act as a placeholder, so the
   // window listener doesn't clean itself up until we're done.
   auto sourceListener = MakeRefPtr<SourceListener>();
@@ -3164,19 +3143,9 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
 
   // We have to add the window id here because enumerate methods
   // check for that and abort silently if it does not exist.
-  uint64_t windowId = aWindow->WindowID();
-  nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
   RefPtr<GetUserMediaWindowListener> windowListener =
-      GetWindowListener(windowId);
-  if (windowListener) {
-    PrincipalHandle existingPrincipalHandle =
-        windowListener->GetPrincipalHandle();
-    MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
-  } else {
-    windowListener = new GetUserMediaWindowListener(
-        windowId, MakePrincipalHandle(principal));
-    AddWindowID(windowId, windowListener);
-  }
+      GetOrMakeWindowListener(aWindow);
+  MOZ_ASSERT(windowListener);
   // Create an inactive SourceListener to act as a placeholder, so the
   // window listener doesn't clean itself up until we're done.
   auto sourceListener = MakeRefPtr<SourceListener>();
@@ -3319,6 +3288,28 @@ void MediaManager::OnMicrophoneMute(bool aMute) {
   for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
     iter.UserData()->MuteOrUnmuteMicrophones(aMute);
   }
+}
+
+RefPtr<GetUserMediaWindowListener> MediaManager::GetOrMakeWindowListener(
+    nsPIDOMWindowInner* aWindow) {
+  Document* doc = aWindow->GetExtantDoc();
+  if (!doc) {
+    // The window has been destroyed. Destroyed windows don't have listeners.
+    return nullptr;
+  }
+  nsIPrincipal* principal = doc->NodePrincipal();
+  uint64_t windowId = aWindow->WindowID();
+  RefPtr<GetUserMediaWindowListener> windowListener =
+      GetWindowListener(windowId);
+  if (windowListener) {
+    MOZ_ASSERT(PrincipalHandleMatches(windowListener->GetPrincipalHandle(),
+                                      principal));
+  } else {
+    windowListener = new GetUserMediaWindowListener(
+        windowId, MakePrincipalHandle(principal));
+    AddWindowID(windowId, windowListener);
+  }
+  return windowListener;
 }
 
 void MediaManager::AddWindowID(uint64_t aWindowId,
