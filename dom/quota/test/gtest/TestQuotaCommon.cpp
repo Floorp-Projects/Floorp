@@ -1489,6 +1489,53 @@ TEST(QuotaCommon_ScopedLogExtraInfo, Nested)
 #endif
 }
 
+TEST(QuotaCommon_CallWithDelayedRetriesIfAccessDenied, NoFailures)
+{
+  uint32_t tries = 0;
+
+  auto res = CallWithDelayedRetriesIfAccessDenied(
+      [&tries]() -> Result<Ok, nsresult> {
+        ++tries;
+        return Ok{};
+      },
+      10, 2);
+
+  EXPECT_EQ(tries, 1u);
+  EXPECT_TRUE(res.isOk());
+}
+
+TEST(QuotaCommon_CallWithDelayedRetriesIfAccessDenied, PermanentFailures)
+{
+  uint32_t tries = 0;
+
+  auto res = CallWithDelayedRetriesIfAccessDenied(
+      [&tries]() -> Result<Ok, nsresult> {
+        ++tries;
+        return Err(NS_ERROR_FILE_IS_LOCKED);
+      },
+      10, 2);
+
+  EXPECT_EQ(tries, 11u);
+  EXPECT_TRUE(res.isErr());
+}
+
+TEST(QuotaCommon_CallWithDelayedRetriesIfAccessDenied, FailuresAndSuccess)
+{
+  uint32_t tries = 0;
+
+  auto res = CallWithDelayedRetriesIfAccessDenied(
+      [&tries]() -> Result<Ok, nsresult> {
+        if (++tries == 5) {
+          return Ok{};
+        }
+        return Err(NS_ERROR_FILE_ACCESS_DENIED);
+      },
+      10, 2);
+
+  EXPECT_EQ(tries, 5u);
+  EXPECT_TRUE(res.isOk());
+}
+
 #ifdef __clang__
 #  pragma clang diagnostic pop
 #endif
