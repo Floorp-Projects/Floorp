@@ -46,6 +46,8 @@ std::string AudioReceiveStream::Config::Rtp::ToString() const {
     }
   }
   ss << ']';
+  ss << ", rtcp_event_observer: "
+     << (rtcp_event_observer ? "(rtcp_event_observer)" : "nullptr");
   ss << '}';
   return ss.str();
 }
@@ -83,7 +85,7 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
       config.jitter_buffer_min_delay_ms,
       config.jitter_buffer_enable_rtx_handling, config.decoder_factory,
       config.codec_pair_id, config.frame_decryptor, config.crypto_options,
-      std::move(config.frame_transformer));
+      std::move(config.frame_transformer), config.rtp.rtcp_event_observer);
 }
 }  // namespace
 

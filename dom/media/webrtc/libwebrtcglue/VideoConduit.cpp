@@ -532,6 +532,7 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateRecvStream() {
   }
 
   mRecvStreamConfig.decoder_factory = mDecoderFactory.get();
+  mRecvStreamConfig.rtp.rtcp_event_observer = this;
 
   mRecvStream =
       mCall->Call()->CreateVideoReceiveStream(mRecvStreamConfig.Copy());
@@ -1829,6 +1830,34 @@ void WebrtcVideoConduit::CollectTelemetryData() {
     mRecvBitrate.Push(stats.total_bitrate_bps);
     mRecvFramerate.Push(stats.decode_frame_rate);
   }
+}
+
+void WebrtcVideoConduit::OnRtcpBye() {
+  RefPtr<WebrtcVideoConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpBye();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcVideoConduit::OnRtcpTimeout() {
+  RefPtr<WebrtcVideoConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpTimeout();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcVideoConduit::SetRtcpEventObserver(
+    mozilla::RtcpEventObserver* observer) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mRtcpEventObserver = observer;
 }
 
 bool WebrtcVideoConduit::HasCodecPluginID(uint64_t aPluginID) {

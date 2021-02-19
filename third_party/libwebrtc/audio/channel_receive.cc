@@ -98,7 +98,8 @@ class ChannelReceive : public ChannelReceiveInterface {
       absl::optional<AudioCodecPairId> codec_pair_id,
       rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
       const webrtc::CryptoOptions& crypto_options,
-      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
+      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+      RtcpEventObserver* rtcp_event_observer);
   ~ChannelReceive() override;
 
   void SetSink(AudioSinkInterface* sink) override;
@@ -459,7 +460,8 @@ ChannelReceive::ChannelReceive(
     absl::optional<AudioCodecPairId> codec_pair_id,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     const webrtc::CryptoOptions& crypto_options,
-    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer)
+    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+    RtcpEventObserver* rtcp_event_observer)
     : event_log_(rtc_event_log),
       rtp_receive_statistics_(ReceiveStatistics::Create(clock)),
       remote_ssrc_(remote_ssrc),
@@ -504,6 +506,7 @@ ChannelReceive::ChannelReceive(
   configuration.receive_statistics = rtp_receive_statistics_.get();
   configuration.event_log = event_log_;
   configuration.local_media_ssrc = local_ssrc;
+  configuration.rtcp_event_observer = rtcp_event_observer;
 
   if (frame_transformer)
     InitFrameTransformerDelegate(std::move(frame_transformer));
@@ -995,14 +998,15 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     absl::optional<AudioCodecPairId> codec_pair_id,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     const webrtc::CryptoOptions& crypto_options,
-    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) {
+    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+    RtcpEventObserver* rtcp_event_observer) {
   return std::make_unique<ChannelReceive>(
       clock, module_process_thread, neteq_factory, audio_device_module,
       rtcp_send_transport, rtc_event_log, local_ssrc, remote_ssrc,
       jitter_buffer_max_packets, jitter_buffer_fast_playout,
       jitter_buffer_min_delay_ms, jitter_buffer_enable_rtx_handling,
       decoder_factory, codec_pair_id, frame_decryptor, crypto_options,
-      std::move(frame_transformer));
+      std::move(frame_transformer), rtcp_event_observer);
 }
 
 }  // namespace voe
