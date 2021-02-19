@@ -11,9 +11,12 @@
 #ifndef MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
 #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
 
+#include <dbt.h>
 #include <dshow.h>
+#include <Ks.h>
 
 #include "modules/video_capture/device_info_impl.h"
+#include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_impl.h"
 
 namespace webrtc {
@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
                         char* deviceUniqueIdUTF8,
                         uint32_t deviceUniqueIdUTF8Length,
                         char* productUniqueIdUTF8,
-                        uint32_t productUniqueIdUTF8Length) override;
+                        uint32_t productUniqueIdUTF8Length,
+                        pid_t* pid) override;
 
   /*
    * Display OS /capture device specific settings dialog
