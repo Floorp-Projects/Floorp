@@ -83,8 +83,9 @@ static void getMinimumIncrementCB(AtkValue* obj, GValue* minimumIncrement) {
 
   memset(minimumIncrement, 0, sizeof(GValue));
   double accValue = accWrap ? accWrap->Step() : proxy->Step();
-  if (IsNaN(accValue))
+  if (IsNaN(accValue)) {
     accValue = 0;  // zero if the minimum increment is undefined
+  }
 
   g_value_init(minimumIncrement, G_TYPE_DOUBLE);
   g_value_set_double(minimumIncrement, accValue);

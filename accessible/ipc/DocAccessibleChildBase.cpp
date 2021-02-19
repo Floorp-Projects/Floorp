@@ -15,8 +15,9 @@ namespace a11y {
 /* static */
 uint32_t DocAccessibleChildBase::InterfacesFor(Accessible* aAcc) {
   uint32_t interfaces = 0;
-  if (aAcc->IsHyperText() && aAcc->AsHyperText()->IsTextRole())
+  if (aAcc->IsHyperText() && aAcc->AsHyperText()->IsTextRole()) {
     interfaces |= Interfaces::HYPERTEXT;
+  }
 
   if (aAcc->IsLink()) interfaces |= Interfaces::HYPERLINK;
 

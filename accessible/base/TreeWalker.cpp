@@ -126,8 +126,9 @@ bool TreeWalker::Seek(nsIContent* aChildNode) {
 
       Accessible* ownedChild = nullptr;
       while ((ownedChild = mDoc->ARIAOwnedAt(mContext, mARIAOwnsIdx++)) &&
-             ownedChild != child)
+             ownedChild != child) {
         ;
+      }
 
       MOZ_ASSERT(ownedChild, "A child has to be in ARIA owned elements");
       mPhase = eAtARIAOwns;

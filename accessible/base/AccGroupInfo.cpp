@@ -153,13 +153,16 @@ Accessible* AccGroupInfo::FirstItemOf(const Accessible* aContainer) {
   a11y::role containerRole = aContainer->Role();
   Accessible* item = aContainer->LocalNextSibling();
   if (item) {
-    if (containerRole == roles::OUTLINEITEM && item->Role() == roles::GROUPING)
+    if (containerRole == roles::OUTLINEITEM &&
+        item->Role() == roles::GROUPING) {
       item = item->LocalFirstChild();
+    }
 
     if (item) {
       AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
-      if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer)
+      if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer) {
         return item;
+      }
     }
   }
 
@@ -174,8 +177,9 @@ Accessible* AccGroupInfo::FirstItemOf(const Accessible* aContainer) {
     item = item->LocalFirstChild();
     if (item) {
       AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
-      if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer)
+      if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer) {
         return item;
+      }
     }
   }
 

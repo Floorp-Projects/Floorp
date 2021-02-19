@@ -83,8 +83,9 @@ inline void DocAccessible::UpdateText(nsIContent* aTextNode) {
   NS_ASSERTION(mNotificationController, "The document was shut down!");
 
   // Ignore the notification if initial tree construction hasn't been done yet.
-  if (mNotificationController && HasLoadState(eTreeConstructed))
+  if (mNotificationController && HasLoadState(eTreeConstructed)) {
     mNotificationController->ScheduleTextUpdate(aTextNode);
+  }
 }
 
 inline void DocAccessible::NotifyOfLoad(uint32_t aLoadEventType) {

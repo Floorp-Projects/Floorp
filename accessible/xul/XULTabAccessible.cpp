@@ -65,12 +65,14 @@ uint64_t XULTabAccessible::NativeState() const {
       Elm()->AsXULSelectControlItem();
   if (tab) {
     bool selected = false;
-    if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
+    if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected) {
       state |= states::SELECTED;
+    }
 
     if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::pinned,
-                                           nsGkAtoms::_true, eCaseMatters))
+                                           nsGkAtoms::_true, eCaseMatters)) {
       state |= states::PINNED;
+    }
   }
 
   return state;

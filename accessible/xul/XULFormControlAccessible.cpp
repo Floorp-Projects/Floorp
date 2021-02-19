@@ -92,8 +92,9 @@ uint64_t XULButtonAccessible::NativeState() const {
 
   if (ContainsMenu()) state |= states::HASPOPUP;
 
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::_default))
+  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::_default)) {
     state |= states::DEFAULT;
+  }
 
   return state;
 }
@@ -178,10 +179,11 @@ bool XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen) const {
 void XULDropmarkerAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   aName.Truncate();
   if (aIndex == eAction_Click) {
-    if (DropmarkerOpen(false))
+    if (DropmarkerOpen(false)) {
       aName.AssignLiteral("close");
-    else
+    } else {
       aName.AssignLiteral("open");
+    }
   }
 }
 
@@ -418,8 +420,9 @@ role XULToolbarAccessible::NativeRole() const { return roles::TOOLBAR; }
 
 ENameValueFlag XULToolbarAccessible::NativeName(nsString& aName) const {
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::toolbarname,
-                                     aName))
+                                     aName)) {
     aName.CompressWhitespace();
+  }
 
   return eNameOK;
 }

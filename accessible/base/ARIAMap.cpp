@@ -1449,9 +1449,11 @@ uint64_t aria::UniversalStatesFor(mozilla::dom::Element* aElement) {
 }
 
 uint8_t aria::AttrCharacteristicsFor(nsAtom* aAtom) {
-  for (uint32_t i = 0; i < ArrayLength(gWAIUnivAttrMap); i++)
-    if (gWAIUnivAttrMap[i].attributeName == aAtom)
+  for (uint32_t i = 0; i < ArrayLength(gWAIUnivAttrMap); i++) {
+    if (gWAIUnivAttrMap[i].attributeName == aAtom) {
       return gWAIUnivAttrMap[i].characteristics;
+    }
+  }
 
   return 0;
 }
@@ -1481,12 +1483,14 @@ bool AttrIterator::Next(nsAString& aAttrName, nsAString& aAttrValue) {
       if (!StringBeginsWith(attrStr, u"aria-"_ns)) continue;  // Not ARIA
 
       uint8_t attrFlags = aria::AttrCharacteristicsFor(attrAtom);
-      if (attrFlags & ATTR_BYPASSOBJ)
+      if (attrFlags & ATTR_BYPASSOBJ) {
         continue;  // No need to handle exposing as obj attribute here
+      }
 
       if ((attrFlags & ATTR_VALTOKEN) &&
-          !nsAccUtils::HasDefinedARIAToken(mElement, attrAtom))
+          !nsAccUtils::HasDefinedARIAToken(mElement, attrAtom)) {
         continue;  // only expose token based attributes if they are defined
+      }
 
       if ((attrFlags & ATTR_BYPASSOBJ_IF_FALSE) &&
           mElement->AttrValueIs(kNameSpaceID_None, attrAtom, nsGkAtoms::_false,

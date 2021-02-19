@@ -772,10 +772,11 @@ void DocAccessibleParent::Destroy() {
     return;
   }
 
-  if (DocAccessibleParent* parentDoc = thisDoc->ParentDoc())
+  if (DocAccessibleParent* parentDoc = thisDoc->ParentDoc()) {
     parentDoc->RemoveChildDoc(thisDoc);
-  else if (IsTopLevel())
+  } else if (IsTopLevel()) {
     GetAccService()->RemoteDocShutdown(this);
+  }
 }
 
 DocAccessibleParent* DocAccessibleParent::ParentDoc() const {

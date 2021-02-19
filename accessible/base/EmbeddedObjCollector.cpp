@@ -50,8 +50,9 @@ int32_t EmbeddedObjCollector::GetIndexAt(Accessible* aAccessible) {
   if (aAccessible->mParent != mRoot) return -1;
 
   MOZ_ASSERT(!aAccessible->IsProxy());
-  if (aAccessible->mInt.mIndexOfEmbeddedChild != -1)
+  if (aAccessible->mInt.mIndexOfEmbeddedChild != -1) {
     return aAccessible->mInt.mIndexOfEmbeddedChild;
+  }
 
   return !aAccessible->IsText() ? EnsureNGetIndex(aAccessible) : -1;
 }

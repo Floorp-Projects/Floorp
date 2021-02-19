@@ -43,10 +43,11 @@ uint64_t XULMenuitemAccessible::NativeState() const {
   // Has Popup?
   if (mContent->NodeInfo()->Equals(nsGkAtoms::menu, kNameSpaceID_XUL)) {
     state |= states::HASPOPUP;
-    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::open))
+    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::open)) {
       state |= states::EXPANDED;
-    else
+    } else {
       state |= states::COLLAPSED;
+    }
   }
 
   // Checkable/checked?
@@ -61,8 +62,9 @@ uint64_t XULMenuitemAccessible::NativeState() const {
     // Checked?
     if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
                                            nsGkAtoms::checked, nsGkAtoms::_true,
-                                           eCaseMatters))
+                                           eCaseMatters)) {
       state |= states::CHECKED;
+    }
   }
 
   // Combo box listitem
@@ -225,12 +227,14 @@ role XULMenuitemAccessible::NativeRole() const {
   }
 
   if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                         nsGkAtoms::radio, eCaseMatters))
+                                         nsGkAtoms::radio, eCaseMatters)) {
     return roles::RADIO_MENU_ITEM;
+  }
 
   if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                         nsGkAtoms::checkbox, eCaseMatters))
+                                         nsGkAtoms::checkbox, eCaseMatters)) {
     return roles::CHECK_MENU_ITEM;
+  }
 
   return roles::MENUITEM;
 }
@@ -406,14 +410,16 @@ role XULMenupopupAccessible::NativeRole() const {
   }
 
   if (mParent) {
-    if (mParent->IsCombobox() || mParent->IsAutoComplete())
+    if (mParent->IsCombobox() || mParent->IsAutoComplete()) {
       return roles::COMBOBOX_LIST;
+    }
 
     if (mParent->Role() == roles::PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
       Accessible* grandParent = mParent->LocalParent();
-      if (grandParent && grandParent->IsAutoComplete())
+      if (grandParent && grandParent->IsAutoComplete()) {
         return roles::COMBOBOX_LIST;
+      }
     }
   }
 
@@ -445,16 +451,19 @@ Accessible* XULMenupopupAccessible::ContainerWidget() const {
   while (menuPopupFrame) {
     Accessible* menuPopup =
         document->GetAccessible(menuPopupFrame->GetContent());
-    if (!menuPopup)  // shouldn't be a real case
+    if (!menuPopup) {  // shouldn't be a real case
       return nullptr;
+    }
 
     nsMenuFrame* menuFrame = do_QueryFrame(menuPopupFrame->GetParent());
-    if (!menuFrame)  // context menu or popups
+    if (!menuFrame) {  // context menu or popups
       return nullptr;
+    }
 
     nsMenuParent* menuParent = menuFrame->GetMenuParent();
-    if (!menuParent)  // menulist or menubutton
+    if (!menuParent) {  // menulist or menubutton
       return menuPopup->LocalParent();
+    }
 
     if (menuParent->IsMenuBar()) {  // menubar menu
       nsMenuBarFrame* menuBarFrame = static_cast<nsMenuBarFrame*>(menuParent);

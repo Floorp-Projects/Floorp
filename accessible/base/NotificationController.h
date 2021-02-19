@@ -217,8 +217,9 @@ class NotificationController final : public EventQueue,
     if (!IsUpdatePending()) {
 #ifdef A11Y_LOG
       if (mozilla::a11y::logging::IsEnabled(
-              mozilla::a11y::logging::eNotifications))
+              mozilla::a11y::logging::eNotifications)) {
         mozilla::a11y::logging::Text("sync notification processing");
+      }
 #endif
       (aInstance->*aMethod)(aArgs...);
       return;

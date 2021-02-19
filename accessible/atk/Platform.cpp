@@ -86,10 +86,11 @@ static nsresult LoadGtkModule(GnomeAccessibilityModule& aModule) {
     int16_t subLen = 0;
     while (loc2 >= 0) {
       loc2 = libPath.FindChar(':', loc1);
-      if (loc2 < 0)
+      if (loc2 < 0) {
         subLen = libPath.Length() - loc1;
-      else
+      } else {
         subLen = loc2 - loc1;
+      }
       nsAutoCString sub(Substring(libPath, loc1, subLen));
       sub.AppendLiteral("/gtk-3.0/modules/");
       sub.Append(aModule.libName);
@@ -122,8 +123,9 @@ void a11y::PlatformInit() {
   AtkGetTypeType pfn_atk_hyperlink_impl_get_type =
       (AtkGetTypeType)PR_FindFunctionSymbol(sATKLib,
                                             sATKHyperlinkImplGetTypeSymbol);
-  if (pfn_atk_hyperlink_impl_get_type)
+  if (pfn_atk_hyperlink_impl_get_type) {
     g_atk_hyperlink_impl_type = pfn_atk_hyperlink_impl_get_type();
+  }
 
   AtkGetTypeType pfn_atk_socket_get_type =
       (AtkGetTypeType)PR_FindFunctionSymbol(
@@ -150,8 +152,9 @@ void a11y::PlatformInit() {
       atkMajorVersion = strtol(version, &endPtr, 10);
       if (atkMajorVersion != 0L) {
         atkMinorVersion = strtol(endPtr + 1, &endPtr, 10);
-        if (atkMinorVersion != 0L)
+        if (atkMinorVersion != 0L) {
           atkMicroVersion = strtol(endPtr + 1, &endPtr, 10);
+        }
       }
     }
   }
@@ -275,8 +278,9 @@ bool a11y::ShouldA11yBeEnabled() {
   sPendingCall = nullptr;
   if (!reply ||
       dbus_message_get_type(reply) != DBUS_MESSAGE_TYPE_METHOD_RETURN ||
-      strcmp(dbus_message_get_signature(reply), DBUS_TYPE_VARIANT_AS_STRING))
+      strcmp(dbus_message_get_signature(reply), DBUS_TYPE_VARIANT_AS_STRING)) {
     goto dbus_done;
+  }
 
   DBusMessageIter iter, iter_variant, iter_struct;
   dbus_bool_t dResult;

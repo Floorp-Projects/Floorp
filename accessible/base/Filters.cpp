@@ -19,8 +19,9 @@ uint32_t filters::GetSelected(Accessible* aAccessible) {
 }
 
 uint32_t filters::GetSelectable(Accessible* aAccessible) {
-  if (aAccessible->InteractiveState() & states::SELECTABLE)
+  if (aAccessible->InteractiveState() & states::SELECTABLE) {
     return eMatch | eSkipSubtree;
+  }
 
   return eSkip;
 }

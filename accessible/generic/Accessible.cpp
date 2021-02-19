@@ -320,8 +320,9 @@ uint64_t Accessible::VisibilityState() const {
   nsIFrame* curFrame = frame;
   do {
     nsView* view = curFrame->GetView();
-    if (view && view->GetVisibility() == nsViewVisibility_kHide)
+    if (view && view->GetVisibility() == nsViewVisibility_kHide) {
       return states::INVISIBLE;
+    }
 
     if (nsLayoutUtils::IsPopup(curFrame)) return 0;
 
@@ -330,8 +331,9 @@ uint64_t Accessible::VisibilityState() const {
     nsIFrame* parentFrame = curFrame->GetParent();
     nsDeckFrame* deckFrame = do_QueryFrame(parentFrame);
     if (deckFrame && deckFrame->GetSelectedBox() != curFrame) {
-      if (deckFrame->GetContent()->IsXULElement(nsGkAtoms::tabpanels))
+      if (deckFrame->GetContent()->IsXULElement(nsGkAtoms::tabpanels)) {
         return states::OFFSCREEN;
+      }
 
       MOZ_ASSERT_UNREACHABLE(
           "Children of not selected deck panel are not accessible.");
@@ -395,8 +397,9 @@ uint64_t Accessible::NativeState() const {
 
     if (elementState.HasState(NS_EVENT_STATE_INVALID)) state |= states::INVALID;
 
-    if (elementState.HasState(NS_EVENT_STATE_REQUIRED))
+    if (elementState.HasState(NS_EVENT_STATE_REQUIRED)) {
       state |= states::REQUIRED;
+    }
 
     state |= NativeInteractiveState();
     if (FocusMgr()->IsFocused(this)) state |= states::FOCUSED;
@@ -415,24 +418,27 @@ uint64_t Accessible::NativeState() const {
       const nsStyleXUL* xulStyle = frame->StyleXUL();
       if (xulStyle && frame->IsXULBoxFrame()) {
         // In XUL all boxes are either vertical or horizontal
-        if (xulStyle->mBoxOrient == StyleBoxOrient::Vertical)
+        if (xulStyle->mBoxOrient == StyleBoxOrient::Vertical) {
           state |= states::VERTICAL;
-        else
+        } else {
           state |= states::HORIZONTAL;
+        }
       }
     }
   }
 
   // Check if a XUL element has the popup attribute (an attached popup menu).
   if (HasOwnContent() && mContent->IsXULElement() &&
-      mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
+      mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup)) {
     state |= states::HASPOPUP;
+  }
 
   // Bypass the link states specialization for non links.
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->roleRule == kUseNativeRole ||
-      roleMapEntry->role == roles::LINK)
+      roleMapEntry->role == roles::LINK) {
     state |= NativeLinkState();
+  }
 
   return state;
 }
@@ -475,8 +481,9 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   nsIntRect rect = Bounds();
   if (rect.Contains(aX, aY)) fallbackAnswer = this;
 
-  if (nsAccUtils::MustPrune(this))  // Do not dig any further
+  if (nsAccUtils::MustPrune(this)) {  // Do not dig any further
     return fallbackAnswer;
+  }
 
   // Search an accessible at the given point starting from accessible document
   // because containing block (see CSS2) for out of flow element (for example,
@@ -513,8 +520,9 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
     Accessible* popupAcc =
         popupDoc->GetAccessibleOrContainer(popupFrame->GetContent());
     Accessible* popupChild = this;
-    while (popupChild && !popupChild->IsDoc() && popupChild != popupAcc)
+    while (popupChild && !popupChild->IsDoc() && popupChild != popupAcc) {
       popupChild = popupChild->LocalParent();
+    }
 
     if (popupChild == popupAcc) startFrame = popupFrame;
   }
@@ -528,8 +536,9 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
       RelativeTo{startFrame, ViewportType::Visual}, offset);
 
   nsIContent* content = nullptr;
-  if (!foundFrame || !(content = foundFrame->GetContent()))
+  if (!foundFrame || !(content = foundFrame->GetContent())) {
     return fallbackAnswer;
+  }
 
   // Get accessible for the node with the point or the first accessible in
   // the DOM parent chain.
@@ -574,8 +583,9 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
     nsIntRect childRect = child->Bounds();
     if (childRect.Contains(aX, aY) &&
         (child->State() & states::INVISIBLE) == 0) {
-      if (aWhichChild == eDeepestChild)
+      if (aWhichChild == eDeepestChild) {
         return child->ChildAtPoint(aX, aY, eDeepestChild);
+      }
 
       return child;
     }
@@ -802,8 +812,9 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
         case nsIAccessibleEvent::EVENT_REORDER:
           // reorder events on the application acc aren't necessary to tell the
           // parent about new top level documents.
-          if (!aEvent->GetAccessible()->IsApplication())
+          if (!aEvent->GetAccessible()->IsApplication()) {
             ipcDoc->SendEvent(id, aEvent->GetEventType());
+          }
           break;
         case nsIAccessibleEvent::EVENT_STATE_CHANGE: {
           AccStateChangeEvent* event = downcast_accEvent(aEvent);
@@ -940,8 +951,9 @@ already_AddRefed<nsIPersistentProperties> Accessible::Attributes() {
   nsAutoString unused;
   aria::AttrIterator attribIter(mContent);
   nsAutoString name, value;
-  while (attribIter.Next(name, value))
+  while (attribIter.Next(name, value)) {
     attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+  }
 
   // If there is no aria-live attribute then expose default value of 'live'
   // object attribute used for ARIA role of this accessible.
@@ -955,8 +967,9 @@ already_AddRefed<nsIPersistentProperties> Accessible::Attributes() {
     nsAutoString live;
     nsAccUtils::GetAccAttr(attributes, nsGkAtoms::live, live);
     if (live.IsEmpty()) {
-      if (nsAccUtils::GetLiveAttrValue(roleMapEntry->liveAttRule, live))
+      if (nsAccUtils::GetLiveAttrValue(roleMapEntry->liveAttRule, live)) {
         nsAccUtils::SetAccAttr(attributes, nsGkAtoms::live, live);
+      }
     }
   }
 
@@ -1021,14 +1034,16 @@ already_AddRefed<nsIPersistentProperties> Accessible::NativeAttributes() {
   if (!mContent->IsElement()) return attributes.forget();
 
   nsAutoString id;
-  if (nsCoreUtils::GetID(mContent, id))
+  if (nsCoreUtils::GetID(mContent, id)) {
     attributes->SetStringProperty("id"_ns, id, unused);
+  }
 
   // Expose class because it may have useful microformat information.
   nsAutoString _class;
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                     _class))
+                                     _class)) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::_class, _class);
+  }
 
   // Expose tag.
   nsAutoString tagName;
@@ -1159,8 +1174,9 @@ uint64_t Accessible::State() {
         Accessible* relTarget = nullptr;
         while ((relTarget = rel.Next())) {
           if (relTarget->Role() == roles::PROPERTYPAGE &&
-              FocusMgr()->IsFocusWithin(relTarget))
+              FocusMgr()->IsFocusWithin(relTarget)) {
             state |= states::SELECTED;
+          }
         }
       }
     } else if (state & states::FOCUSED) {
@@ -1194,8 +1210,9 @@ uint64_t Accessible::State() {
     if (widget && widget->CurrentItem() == this) state |= states::ACTIVE;
   }
 
-  if ((state & states::COLLAPSED) || (state & states::EXPANDED))
+  if ((state & states::COLLAPSED) || (state & states::EXPANDED)) {
     state |= states::EXPANDABLE;
+  }
 
   // For some reasons DOM node may have not a frame. We tract such accessibles
   // as invisible.
@@ -1267,8 +1284,9 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
   // special case: A native button element whose role got transformed by ARIA to
   // a toggle button Also applies to togglable button menus, like in the Dev
   // Tools Web Console.
-  if (IsButton() || IsMenuButton())
+  if (IsButton() || IsMenuButton()) {
     aria::MapToState(aria::eARIAPressed, element, aState);
+  }
 
   if (!roleMapEntry) return;
 
@@ -1276,8 +1294,9 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
 
   if (aria::MapToState(roleMapEntry->attributeMap1, element, aState) &&
       aria::MapToState(roleMapEntry->attributeMap2, element, aState) &&
-      aria::MapToState(roleMapEntry->attributeMap3, element, aState))
+      aria::MapToState(roleMapEntry->attributeMap3, element, aState)) {
     aria::MapToState(roleMapEntry->attributeMap4, element, aState);
+  }
 
   // ARIA gridcell inherits readonly state from the grid until it's overridden.
   if ((roleMapEntry->Is(nsGkAtoms::gridcell) ||
@@ -1436,13 +1455,15 @@ role Accessible::ARIATransformRole(role aRole) const {
       // Listbox is owned by a combobox
       Relation rel = RelationByType(RelationType::NODE_CHILD_OF);
       Accessible* targetAcc = nullptr;
-      while ((targetAcc = rel.Next()))
+      while ((targetAcc = rel.Next())) {
         if (targetAcc->IsCombobox()) return roles::COMBOBOX_LIST;
+      }
     }
 
   } else if (aRole == roles::OPTION) {
-    if (mParent && mParent->Role() == roles::COMBOBOX_LIST)
+    if (mParent && mParent->Role() == roles::COMBOBOX_LIST) {
       return roles::COMBOBOX_OPTION;
+    }
 
   } else if (aRole == roles::MENUITEM) {
     // Menuitem has a submenu.
@@ -1504,12 +1525,13 @@ void Accessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 
     case eCheckUncheckAction: {
       uint64_t state = State();
-      if (state & states::CHECKED)
+      if (state & states::CHECKED) {
         aName.AssignLiteral("uncheck");
-      else if (state & states::MIXED)
+      } else if (state & states::MIXED) {
         aName.AssignLiteral("cycle");
-      else
+      } else {
         aName.AssignLiteral("check");
+      }
       return;
     }
 
@@ -1518,10 +1540,11 @@ void Accessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
       return;
 
     case eOpenCloseAction:
-      if (State() & states::COLLAPSED)
+      if (State() & states::COLLAPSED) {
         aName.AssignLiteral("open");
-      else
+      } else {
         aName.AssignLiteral("close");
+      }
       return;
 
     case eSelectAction:
@@ -1537,10 +1560,11 @@ void Accessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
       return;
 
     case eExpandAction:
-      if (State() & states::COLLAPSED)
+      if (State() & states::COLLAPSED) {
         aName.AssignLiteral("expand");
-      else
+      } else {
         aName.AssignLiteral("collapse");
+      }
       return;
   }
 }
@@ -1562,8 +1586,9 @@ nsIContent* Accessible::GetAtomicRegion() const {
   while (loopContent &&
          (!loopContent->IsElement() ||
           !loopContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                             nsGkAtoms::aria_atomic, atomic)))
+                                             nsGkAtoms::aria_atomic, atomic))) {
     loopContent = loopContent->GetParent();
+  }
 
   return atomic.EqualsLiteral("true") ? loopContent : nullptr;
 }
@@ -1590,8 +1615,9 @@ Relation Accessible::RelationByType(RelationType aType) const {
     case RelationType::LABEL_FOR: {
       Relation rel(new RelatedAccIterator(Document(), mContent,
                                           nsGkAtoms::aria_labelledby));
-      if (mContent->IsXULElement(nsGkAtoms::label))
+      if (mContent->IsXULElement(nsGkAtoms::label)) {
         rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::control));
+      }
 
       return rel;
     }
@@ -1599,8 +1625,9 @@ Relation Accessible::RelationByType(RelationType aType) const {
     case RelationType::DESCRIBED_BY: {
       Relation rel(
           new IDRefsIterator(mDoc, mContent, nsGkAtoms::aria_describedby));
-      if (mContent->IsXULElement())
+      if (mContent->IsXULElement()) {
         rel.AppendIter(new XULDescriptionIterator(Document(), mContent));
+      }
 
       return rel;
     }
@@ -1612,8 +1639,9 @@ Relation Accessible::RelationByType(RelationType aType) const {
       // This affectively adds an optional control attribute to xul:description,
       // which only affects accessibility, by allowing the description to be
       // tied to a control.
-      if (mContent->IsXULElement(nsGkAtoms::description))
+      if (mContent->IsXULElement(nsGkAtoms::description)) {
         rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::control));
+      }
 
       return rel;
     }
@@ -1653,8 +1681,9 @@ Relation Accessible::RelationByType(RelationType aType) const {
         nsView* view = frame->GetView();
         if (view) {
           nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);
-          if (scrollFrame || view->GetWidget() || !frame->GetParent())
+          if (scrollFrame || view->GetWidget() || !frame->GetParent()) {
             rel.AppendTarget(LocalParent());
+          }
         }
       }
 
@@ -1904,8 +1933,9 @@ void Accessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
       nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType, this);
 
   nsIFrame* parentFrame = frame;
-  while ((parentFrame = parentFrame->GetParent()))
+  while ((parentFrame = parentFrame->GetParent())) {
     nsCoreUtils::ScrollFrameToPoint(parentFrame, frame, coords);
+  }
 }
 
 void Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
@@ -1955,8 +1985,9 @@ void Accessible::Shutdown() {
 
   mContent = nullptr;
   mDoc = nullptr;
-  if (SelectionMgr() && SelectionMgr()->AccessibleWithCaret(nullptr) == this)
+  if (SelectionMgr() && SelectionMgr()->AccessibleWithCaret(nullptr) == this) {
     SelectionMgr()->ResetCaretOffset();
+  }
 }
 
 // Accessible protected
@@ -2279,8 +2310,9 @@ int32_t Accessible::IndexInParent() const { return mIndexInParent; }
 
 uint32_t Accessible::EmbeddedChildCount() {
   if (mStateFlags & eHasTextKids) {
-    if (!mEmbeddedObjCollector)
+    if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
+    }
     return mEmbeddedObjCollector->Count();
   }
 
@@ -2289,8 +2321,9 @@ uint32_t Accessible::EmbeddedChildCount() {
 
 Accessible* Accessible::GetEmbeddedChildAt(uint32_t aIndex) {
   if (mStateFlags & eHasTextKids) {
-    if (!mEmbeddedObjCollector)
+    if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
+    }
     return mEmbeddedObjCollector.get()
                ? mEmbeddedObjCollector->GetAccessibleAt(aIndex)
                : nullptr;
@@ -2301,8 +2334,9 @@ Accessible* Accessible::GetEmbeddedChildAt(uint32_t aIndex) {
 
 int32_t Accessible::GetIndexOfEmbeddedChild(Accessible* aChild) {
   if (mStateFlags & eHasTextKids) {
-    if (!mEmbeddedObjCollector)
+    if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
+    }
     return mEmbeddedObjCollector.get()
                ? mEmbeddedObjCollector->GetIndexAt(aChild)
                : -1;
@@ -2470,8 +2504,9 @@ bool Accessible::IsActiveWidget() const {
     uint32_t childCount = ChildCount();
     for (uint32_t idx = 0; idx < childCount; idx++) {
       Accessible* child = mChildren.ElementAt(idx);
-      if (child->Role() == roles::ENTRY)
+      if (child->Role() == roles::ENTRY) {
         return FocusMgr()->HasDOMFocus(child->GetContent());
+      }
     }
   }
 
@@ -2577,13 +2612,15 @@ Accessible* Accessible::GetSiblingAtOffset(int32_t aOffset,
 
 double Accessible::AttrNumericValue(nsAtom* aAttr) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue)
+  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) {
     return UnspecifiedNaN<double>();
+  }
 
   nsAutoString attrValue;
   if (!mContent->IsElement() ||
-      !mContent->AsElement()->GetAttr(kNameSpaceID_None, aAttr, attrValue))
+      !mContent->AsElement()->GetAttr(kNameSpaceID_None, aAttr, attrValue)) {
     return UnspecifiedNaN<double>();
+  }
 
   nsresult error = NS_OK;
   double value = attrValue.ToDouble(&error);
@@ -2591,13 +2628,16 @@ double Accessible::AttrNumericValue(nsAtom* aAttr) const {
 }
 
 uint32_t Accessible::GetActionRule() const {
-  if (!HasOwnContent() || (InteractiveState() & states::UNAVAILABLE))
+  if (!HasOwnContent() || (InteractiveState() & states::UNAVAILABLE)) {
     return eNoAction;
+  }
 
   // Return "click" action on elements that have an attached popup menu.
-  if (mContent->IsXULElement())
-    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
+  if (mContent->IsXULElement()) {
+    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup)) {
       return eClickAction;
+    }
+  }
 
   // Has registered 'click' event handler.
   bool isOnclick = nsCoreUtils::HasClickListener(mContent);
@@ -2606,12 +2646,14 @@ uint32_t Accessible::GetActionRule() const {
 
   // Get an action based on ARIA role.
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (roleMapEntry && roleMapEntry->actionRule != eNoAction)
+  if (roleMapEntry && roleMapEntry->actionRule != eNoAction) {
     return roleMapEntry->actionRule;
+  }
 
   // Get an action based on ARIA attribute.
-  if (nsAccUtils::HasDefinedARIAToken(mContent, nsGkAtoms::aria_expanded))
+  if (nsAccUtils::HasDefinedARIAToken(mContent, nsGkAtoms::aria_expanded)) {
     return eExpandAction;
+  }
 
   return eNoAction;
 }
@@ -2684,10 +2726,11 @@ int32_t Accessible::GetLevelInternal() {
     while ((parent = parent->LocalParent())) {
       roles::Role parentRole = parent->Role();
 
-      if (parentRole == roles::LISTITEM)
+      if (parentRole == roles::LISTITEM) {
         ++level;
-      else if (parentRole != roles::LIST && parentRole != roles::GROUPING)
+      } else if (parentRole != roles::LIST && parentRole != roles::GROUPING) {
         break;
+      }
     }
 
     if (level == 0) {
@@ -2701,8 +2744,10 @@ int32_t Accessible::GetLevelInternal() {
         Accessible* siblingChild = sibling->LocalLastChild();
         if (siblingChild) {
           roles::Role lastChildRole = siblingChild->Role();
-          if (lastChildRole == roles::LIST || lastChildRole == roles::GROUPING)
+          if (lastChildRole == roles::LIST ||
+              lastChildRole == roles::GROUPING) {
             return 1;
+          }
         }
       }
     } else {
@@ -2761,10 +2806,11 @@ void KeyBinding::ToPlatformFormat(nsAString& aValue) const {
   nsCOMPtr<nsIStringBundle> keyStringBundle;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
       mozilla::components::StringBundle::Service();
-  if (stringBundleService)
+  if (stringBundleService) {
     stringBundleService->CreateBundle(
         "chrome://global-platform/locale/platformKeys.properties",
         getter_AddRefs(keyStringBundle));
+  }
 
   if (!keyStringBundle) return;
 

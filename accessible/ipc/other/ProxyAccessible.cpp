@@ -60,9 +60,11 @@ nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
 
   size_t targetCount = targetIDs.Length();
   nsTArray<ProxyAccessible*> targets(targetCount);
-  for (size_t i = 0; i < targetCount; i++)
-    if (ProxyAccessible* proxy = mDoc->GetAccessible(targetIDs[i]))
+  for (size_t i = 0; i < targetCount; i++) {
+    if (ProxyAccessible* proxy = mDoc->GetAccessible(targetIDs[i])) {
       targets.AppendElement(proxy);
+    }
+  }
 
   return targets;
 }
@@ -82,10 +84,12 @@ void ProxyAccessible::Relations(
 
     size_t targetCount = ipcRelations[i].Targets().Length();
     nsTArray<ProxyAccessible*> targets(targetCount);
-    for (size_t j = 0; j < targetCount; j++)
+    for (size_t j = 0; j < targetCount; j++) {
       if (ProxyAccessible* proxy =
-              mDoc->GetAccessible(ipcRelations[i].Targets()[j]))
+              mDoc->GetAccessible(ipcRelations[i].Targets()[j])) {
         targets.AppendElement(proxy);
+      }
+    }
 
     if (targets.IsEmpty()) continue;
 
