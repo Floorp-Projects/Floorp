@@ -162,6 +162,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       main_ssrc_(config.local_media_ssrc),
       registered_ssrcs_(GetRegisteredSsrcs(config)),
       rtcp_bandwidth_observer_(config.bandwidth_callback),
+      rtcp_event_observer_(config.rtcp_event_observer),
       rtcp_intra_frame_observer_(config.intra_frame_callback),
       rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
       network_state_estimate_observer_(config.network_state_estimate_observer),
@@ -787,6 +788,10 @@ void RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
     return;
   }
 
+  if (rtcp_event_observer_) {
+    rtcp_event_observer_->OnRtcpBye();
+  }
+
   // Clear our lists.
   for (auto& reports_per_receiver : received_report_blocks_)
     reports_per_receiver.second.erase(bye.sender_ssrc());
@@ -1223,12 +1228,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
 }
 
 bool RTCPReceiver::RtcpRrTimeoutLocked(Timestamp now) {
-  return ResetTimestampIfExpired(now, last_received_rb_, report_interval_);
+  bool result = ResetTimestampIfExpired(now, last_received_rb_, report_interval_);
+  if (result && rtcp_event_observer_) {
+    rtcp_event_observer_->OnRtcpTimeout();
+  }
+  return result;
 }
 
 bool RTCPReceiver::RtcpRrSequenceNumberTimeoutLocked(Timestamp now) {
-  return ResetTimestampIfExpired(now, last_increased_sequence_number_,
+  bool result = ResetTimestampIfExpired(now, last_increased_sequence_number_,
                                  report_interval_);
+  if (result && rtcp_event_observer_) {
+    rtcp_event_observer_->OnRtcpTimeout();
+  }
+  return result;
 }
 
 }  // namespace webrtc

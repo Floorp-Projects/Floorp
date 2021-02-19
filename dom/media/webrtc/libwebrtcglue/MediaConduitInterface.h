@@ -18,6 +18,7 @@
 #include "TaskQueueWrapper.h"
 #include "VideoTypes.h"
 #include "WebrtcVideoCodecFactory.h"
+#include "RtcpEventObserver.h"
 
 // libwebrtc includes
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
@@ -235,6 +236,8 @@ class MediaSessionConduit {
 
   virtual Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() = 0;
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;
+
+  virtual void SetRtcpEventObserver(RtcpEventObserver* observer) = 0;
 
   virtual webrtc::Call::Stats GetCallStats() const = 0;
 

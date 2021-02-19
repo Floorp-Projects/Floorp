@@ -187,6 +187,34 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
       mDtmfPayloadType, mDtmfPayloadFrequency, eventCode, lengthMs);
 }
 
+void WebrtcAudioConduit::OnRtcpBye() {
+  RefPtr<WebrtcAudioConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpBye();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcAudioConduit::OnRtcpTimeout() {
+  RefPtr<WebrtcAudioConduit> self = this;
+  NS_DispatchToMainThread(media::NewRunnableFrom([self]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (self->mRtcpEventObserver) {
+      self->mRtcpEventObserver->OnRtcpTimeout();
+    }
+    return NS_OK;
+  }));
+}
+
+void WebrtcAudioConduit::SetRtcpEventObserver(
+    mozilla::RtcpEventObserver* observer) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mRtcpEventObserver = observer;
+}
+
 void WebrtcAudioConduit::GetRtpSources(
     nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -894,6 +922,7 @@ MediaConduitErrorCode WebrtcAudioConduit::CreateRecvStream() {
   mMutex.AssertCurrentThreadOwns();
 
   mRecvStreamConfig.rtcp_send_transport = this;
+  mRecvStreamConfig.rtp.rtcp_event_observer = this;
   mRecvStream = mCall->Call()->CreateAudioReceiveStream(mRecvStreamConfig);
   if (!mRecvStream) {
     return kMediaConduitUnknownError;

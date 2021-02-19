@@ -233,6 +233,7 @@ class RTCPReceiver final {
   const std::set<uint32_t> registered_ssrcs_;
 
   RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
+  RtcpEventObserver* const rtcp_event_observer_;
   RtcpIntraFrameObserver* const rtcp_intra_frame_observer_;
   RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
   NetworkStateEstimateObserver* const network_state_estimate_observer_;

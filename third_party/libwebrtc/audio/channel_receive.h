@@ -167,7 +167,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     absl::optional<AudioCodecPairId> codec_pair_id,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     const webrtc::CryptoOptions& crypto_options,
-    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
+    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+    RtcpEventObserver* rtcp_event_observer);
 
 }  // namespace voe
 }  // namespace webrtc

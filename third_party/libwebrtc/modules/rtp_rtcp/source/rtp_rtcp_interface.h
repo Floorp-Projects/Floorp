@@ -70,6 +70,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // stream.
     RtcpBandwidthObserver* bandwidth_callback = nullptr;
 
+    // Called when we receive a RTCP bye or timeout
+    RtcpEventObserver* rtcp_event_observer = nullptr;
+
     NetworkStateEstimateObserver* network_state_estimate_observer = nullptr;
     TransportFeedbackObserver* transport_feedback_callback = nullptr;
     VideoBitrateAllocationObserver* bitrate_allocation_observer = nullptr;

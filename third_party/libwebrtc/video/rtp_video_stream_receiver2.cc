@@ -83,7 +83,8 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
     RtcpRttStats* rtt_stats,
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     RtcpCnameCallback* rtcp_cname_callback,
-    uint32_t local_ssrc) {
+    uint32_t local_ssrc,
+    RtcpEventObserver* rtcp_event_observer) {
   RtpRtcpInterface::Configuration configuration;
   configuration.clock = clock;
   configuration.audio = false;
@@ -95,6 +96,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
       rtcp_packet_type_counter_observer;
   configuration.rtcp_cname_callback = rtcp_cname_callback;
   configuration.local_media_ssrc = local_ssrc;
+  configuration.rtcp_event_observer = rtcp_event_observer;
 
   std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp =
       ModuleRtpRtcpImpl2::Create(configuration);
@@ -234,7 +236,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
                                     rtt_stats,
                                     rtcp_packet_type_counter_observer,
                                     rtcp_cname_callback,
-                                    config_.rtp.local_ssrc)),
+                                    config_.rtp.local_ssrc,
+                                    config_.rtp.rtcp_event_observer)),
       complete_frame_callback_(complete_frame_callback),
       keyframe_request_sender_(keyframe_request_sender),
       keyframe_request_method_(config_.rtp.keyframe_method),
