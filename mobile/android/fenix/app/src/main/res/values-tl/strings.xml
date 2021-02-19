@@ -50,14 +50,20 @@
     <string name="tab_tray_multiselect_selected_content_description">Napili</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
-    <string name="about_content">%1$s ay gawa ng Mozilla.</string>
+    <string name="about_content">Ang %1$s ay gawa ng Mozilla.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ikaw ay nasa pribadong sesyon</string>
+    <string name="private_browsing_common_myths">
+       Mga karaniwang pamahiin tungkol sa pribadong pag-browse
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Burahin ang sesyon</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Magdagdag ng shortcut para makapagbukas ng mga pribadong tab mula sa iyong Home screen.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Magdagdag ng shortcut</string>
     <!-- Text for the negative button -->
@@ -78,6 +84,8 @@
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Alisin</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Itakda na kusang magsara ang mga nakabukas na tab na hindi napansin sa nakaraang araw, linggo, o buwan.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Tingnan ang mga pagpipilian</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -226,7 +234,7 @@
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Default na search engine</string>
     <!-- Preference for settings related to Search -->
-    <string name="preferences_search">Hanapin</string>
+    <string name="preferences_search">Paghahanap</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Address bar</string>
     <!-- Preference linking to help about Fenix -->
@@ -239,7 +247,7 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Tungkol sa %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Your Rights</string>
+    <string name="preferences_your_rights">Ang Iyong mga Karapatan</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Mga Password</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
@@ -283,7 +291,7 @@
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Home</string>
     <!-- Preference for gestures based actions -->
-    <string name="preferences_gestures">Gestures</string>
+    <string name="preferences_gestures">Mga gesture</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Customize</string>
     <!-- Preference description for banner about signing in -->
@@ -306,7 +314,7 @@
     <string name="developer_tools_category">Developer tools</string>
 
     <!-- Preference for developers -->
-    <string name="preferences_remote_debugging">Remote debugging via USB</string>
+    <string name="preferences_remote_debugging">Remote debugging sa USB</string>
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">Ipakita ang mga search engine</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -332,7 +340,7 @@
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Hiwalay na download manager</string>
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Add-ons</string>
+    <string name="preferences_addons">Mga add-on</string>
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Mga abiso</string>
@@ -362,7 +370,7 @@
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
-    <string name="preferences_sync_now">Sync now</string>
+    <string name="preferences_sync_now">Mag-sync na</string>
     <!-- Preference category for sync -->
     <string name="preferences_sync_category">Piliin alin ang isi-sync</string>
     <!-- Preference for syncing history -->
@@ -457,7 +465,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Turn on Sync</string>
+    <string name="preferences_sync">Buksan ang Sync</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">Scan pairing code in desktop Firefox</string>
     <!-- Preference for account login -->
@@ -469,7 +477,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions_2"><![CDATA[Scan the QR code shown at <b>firefox.com/pair</b>]]></string>
+    <string name="pair_instructions_2"><![CDATA[i-Scan ang QR code na ipinapakita sa <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Buksan ang Camera</string>
     <!-- Button to cancel pairing -->
@@ -483,7 +491,7 @@
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
-    <string name="preference_light_theme">Light</string>
+    <string name="preference_light_theme">Maliwanag</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Madilim</string>
 
@@ -539,7 +547,7 @@
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Mga isinarang tab kamakailan</string>
     <!-- Option in library to open Recently Closed Tabs page -->
-    <string name="recently_closed_show_full_history">Ipakita ang kumpletong kasaysayan</string>
+    <string name="recently_closed_show_full_history">Ipakita ang buong kasaysayan</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tabs">%d mga tab</string>
@@ -1215,7 +1223,7 @@
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">SUBUKAN MULI</string>
     <!-- Title of QR Pairing Fragment -->
-    <string name="sync_scan_code">I-scan ang code</string>
+    <string name="sync_scan_code">i-Scan ang code</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Buksan ang Firefox sa computer mo at pumunta sa <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
@@ -1332,15 +1340,92 @@
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Mga Redirect Tracker</string>
 
+    <!-- About page link text to open support link -->
+    <string name="about_support">Suporta</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Mga crash</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Paunawa sa privacy</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Alamin ang iyong mga karapatan</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Impormasyon sa paglisensiya</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Mga library na ginagamit namin</string>
+
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Kopyahin</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Mga login at password</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">i-Save ang mga login at password</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Tanungin kung ise-save</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Huwag mag-save kailanman</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Nakabukas</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Nakasara</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Mag-sign in sa Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Mga naka-save na login</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Ang mga login na naka-save o naka-sync sa %s ay magpapakita rito.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Alamin ang tungkol sa Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Mag exception</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Ang mga login at password na hindi naka-save ay ipapakita rito.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Hindi ise-save ang mga login at password para sa mga site na ito.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Hanapin sa mga login</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Ginamit kamakailan</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Site</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Username</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Password</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Muling ipasok ang PIN</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopyahin ang password</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopyahin ang username</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopyahin ang site</string>
+
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Buksan ang site sa browser</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Ipakita ang password</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Itago ang password</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Pakaingatan ang iyong mga login at password</string>
+
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Magtakda ng device lock pattern, PIN, o password para maprotektahan ang mga naka-save mong login at password sakaling may ibang may hawak sa device mo.</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Mag-zoom sa lahat ng mga website</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Paganahin para makapag-pinch at zoom, kahit sa mga website na pinipigilan ang gesture na ito.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Pangalan (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Huling ginamit</string>
+
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Idagdag sa mga top site</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Ipakita ang pinakamadalas na bisitahing site</string>
 
     </resources>

@@ -61,7 +61,7 @@
     <string name="private_browsing_title">Nalaziš se u privatnoj sesiji</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s čisti tvoju kronologiju pretraživanja i pregledavanja kad izađeš iz aplikacije ili kad zatvoriš sve kartice i prozore privatnog pregledavanja. Ovo te ne čini anonimnim prema web-stranicama ili tvom pružatelju internet usluga, ali olakšava da zadržiš privatnim ono što radiš na internetu od ostalih osoba koje koriste ovo računalo.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s čisti tvoju povijest pretraživanja i pregledavanja u privatnim karticama kada ih zatvoriš ili izađeš iz aplikacije. Ovo te ne čini anonimnim prema web-stranicama ili tvom pružatelju internetskih usluga, ali olakšava da zadržiš privatnim ono što radiš na internetu od ostalih osoba koje koriste ovaj uređaj.</string>
     <string name="private_browsing_common_myths">Česti mitovi o privatnom pregledavanju</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Izbriši sesiju</string>
