@@ -52,6 +52,15 @@ def test_create_socket_connection_forward(
     )
 
 
+def test_create_socket_connection_forward_adb_assigned_port(
+    mock_adb_object, select_test_port
+):
+    result = mock_adb_object.create_socket_connection(
+        direction="forward", local="tcp:0", remote=select_test_port
+    )
+    assert isinstance(result, int) and result == 7777
+
+
 def test_remove_socket_connections_reverse(mock_adb_object, redirect_stdout_and_assert):
     _expected = "['reverse', '--remove-all']"
     redirect_stdout_and_assert(
@@ -74,6 +83,11 @@ def test_legacy_forward(mock_adb_object, select_test_port, redirect_stdout_and_a
         remote=select_test_port,
         text=_expected,
     )
+
+
+def test_legacy_forward_adb_assigned_port(mock_adb_object, select_test_port):
+    result = mock_adb_object.forward(local="tcp:0", remote=select_test_port)
+    assert isinstance(result, int) and result == 7777
 
 
 def test_legacy_reverse(mock_adb_object, select_test_port, redirect_stdout_and_assert):
