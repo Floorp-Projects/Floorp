@@ -1236,6 +1236,32 @@ auto FilterDatabaseCorruptionError(const nsresult aValue)
   return Err(aValue);
 }
 
+template <typename Func>
+auto CallWithDelayedRetriesIfAccessDenied(Func&& aFunc, uint32_t aMaxRetries,
+                                          uint32_t aDelayMs)
+    -> Result<typename std::result_of_t<Func()>::ok_type, nsresult> {
+  uint32_t retries = 0;
+
+  while (true) {
+    auto result = std::forward<Func>(aFunc)();
+
+    if (result.isOk()) {
+      return result;
+    }
+
+    if (result.inspectErr() != NS_ERROR_FILE_IS_LOCKED &&
+        result.inspectErr() != NS_ERROR_FILE_ACCESS_DENIED) {
+      return result;
+    }
+
+    if (retries++ >= aMaxRetries) {
+      return result;
+    }
+
+    PR_Sleep(PR_MillisecondsToInterval(aDelayMs));
+  }
+}
+
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla
