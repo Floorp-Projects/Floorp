@@ -180,6 +180,8 @@ class OutlineTypedObject : public TypedObject {
   void setData(uint8_t* data) { data_ = data; }
 
  public:
+  static constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT0;
+
   // JIT accessors.
   static size_t offsetOfData() { return offsetof(OutlineTypedObject, data_); }
   static size_t offsetOfOwner() { return offsetof(OutlineTypedObject, owner_); }
