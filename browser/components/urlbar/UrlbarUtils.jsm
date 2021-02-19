@@ -1180,6 +1180,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       helpL10nId: {
         type: "string",
       },
+      helpTitle: {
+        type: "string",
+      },
       helpUrl: {
         type: "string",
       },
