@@ -29,6 +29,7 @@ class CustomTabContextMenuCandidate {
             ),
             ContextMenuCandidate.createShareLinkCandidate(context),
             ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
+            ContextMenuCandidate.createSaveVideoAudioCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createCopyImageLocationCandidate(
                 context,
                 snackBarParentView,
