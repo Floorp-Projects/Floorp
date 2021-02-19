@@ -1997,6 +1997,7 @@ scan_obj : {
 
   markImplicitEdges(obj);
   traverseEdge(obj, obj->group());
+  traverseEdge(obj, obj->shape());
 
   CallTraceHook(this, obj);
 
@@ -2005,8 +2006,6 @@ scan_obj : {
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
-  Shape* shape = nobj->lastProperty();
-  traverseEdge(obj, shape);
 
   unsigned nslots = nobj->slotSpan();
 

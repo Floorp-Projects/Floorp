@@ -260,8 +260,6 @@ TypedObject* TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr,
 void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
   OutlineTypedObject& typedObj = object->as<OutlineTypedObject>();
 
-  TraceEdge(trc, typedObj.shapePtr(), "OutlineTypedObject_shape");
-
   if (!typedObj.owner_) {
     MOZ_ASSERT(!typedObj.data_);
     return;
@@ -513,8 +511,6 @@ InlineTypedObject* InlineTypedObject::create(JSContext* cx,
 /* static */
 void InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
   InlineTypedObject& typedObj = object->as<InlineTypedObject>();
-
-  TraceEdge(trc, typedObj.shapePtr(), "InlineTypedObject_shape");
 
   TypeDescr& descr = typedObj.typeDescr();
   if (descr.hasTraceList()) {
