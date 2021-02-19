@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@depends(target.os, "--help")
-def arm_option_defaults(os, _):
+@depends(target.os)
+def arm_option_defaults(os):
     if os == "Android":
         arch = "armv7-a"
         thumb = "yes"

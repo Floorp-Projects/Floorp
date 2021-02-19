@@ -168,8 +168,8 @@ option(
 )
 
 
-@depends("--enable-jit", "--enable-simulator", target, "--help")
-def simulator(jit_enabled, simulator_enabled, target, _):
+@depends("--enable-jit", "--enable-simulator", target)
+def simulator(jit_enabled, simulator_enabled, target):
     if not jit_enabled or not simulator_enabled:
         return
 

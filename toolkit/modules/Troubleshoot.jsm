@@ -885,6 +885,7 @@ var dataProviders = {
   async normandy(done) {
     if (!AppConstants.MOZ_NORMANDY) {
       done();
+      return;
     }
 
     const {

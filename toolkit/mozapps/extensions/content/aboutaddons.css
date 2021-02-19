@@ -550,9 +550,6 @@ addon-details {
 }
 
 .addon-detail-actions > label {
-  /* Center the items and remove the whitespaces between the input and the span
-     to allow them to accomodate more space when it's constrained. */
-  display: inline-flex;
   flex-wrap: wrap;
 }
 

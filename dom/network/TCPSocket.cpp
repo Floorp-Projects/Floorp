@@ -36,7 +36,14 @@
 #include "nsIOutputStream.h"
 #include "nsINSSErrorsService.h"
 #include "nsISSLSocketControl.h"
+#include "nsIProtocolProxyService.h"
+#include "nsICancelable.h"
+#include "nsIChannel.h"
+#include "nsIURIMutator.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
+#include "nsString.h"
 #include "nsStringStream.h"
 #include "secerr.h"
 #include "sslerr.h"
@@ -131,6 +138,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPSocket)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITCPSocketCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost,
@@ -221,7 +229,7 @@ nsresult TCPSocket::InitWithUnconnectedTransport(
   return NS_OK;
 }
 
-nsresult TCPSocket::Init() {
+nsresult TCPSocket::Init(nsIProxyInfo* aProxyInfo) {
   nsCOMPtr<nsIObserverService> obs =
       do_GetService("@mozilla.org/observer-service;1");
   if (obs) {
@@ -254,7 +262,7 @@ nsresult TCPSocket::Init() {
   nsCOMPtr<nsISocketTransport> transport;
   nsresult rv =
       sts->CreateTransport(socketTypes, NS_ConvertUTF16toUTF8(mHost), mPort,
-                           nullptr, nullptr, getter_AddRefs(transport));
+                           aProxyInfo, nullptr, getter_AddRefs(transport));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return InitWithUnconnectedTransport(transport);
@@ -708,6 +716,11 @@ void TCPSocket::CloseHelper(bool waitForUnsentData) {
 
   mReadyState = TCPReadyState::Closing;
 
+  if (mProxyRequest) {
+    mProxyRequest->Cancel(NS_BINDING_ABORTED);
+    mProxyRequest = nullptr;
+  }
+
   if (mSocketBridgeChild) {
     mSocketBridgeChild->SendClose();
     return;
@@ -829,9 +842,8 @@ TCPReadyState TCPSocket::ReadyState() { return mReadyState; }
 TCPSocketBinaryType TCPSocket::BinaryType() {
   if (mUseArrayBuffers) {
     return TCPSocketBinaryType::Arraybuffer;
-  } else {
-    return TCPSocketBinaryType::String;
   }
+  return TCPSocketBinaryType::String;
 }
 
 already_AddRefed<TCPSocket> TCPSocket::CreateAcceptedSocket(
@@ -859,13 +871,68 @@ already_AddRefed<TCPSocket> TCPSocket::Constructor(
   RefPtr<TCPSocket> socket =
       new TCPSocket(global, aHost, aPort, aOptions.mUseSecureTransport,
                     aOptions.mBinaryType == TCPSocketBinaryType::Arraybuffer);
-  nsresult rv = socket->Init();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
+  socket->ResolveProxy();
 
   return socket.forget();
+}
+
+nsresult TCPSocket::ResolveProxy() {
+  nsresult rv;
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsCString spec = mSsl ? "https://"_ns : "http://"_ns;
+  if (!AppendUTF16toUTF8(mHost, spec, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+           .SetSpec(spec)
+           .SetPort(mPort)
+           .Finalize(uri);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), uri,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = pps->AsyncResolve(channel,
+                         nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY,
+                         this, nullptr, getter_AddRefs(mProxyRequest));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TCPSocket::OnProxyAvailable(nsICancelable* aRequest, nsIChannel* aChannel,
+                            nsIProxyInfo* aProxyInfo, nsresult aResult) {
+  mProxyRequest = nullptr;
+  if (NS_SUCCEEDED(aResult) && aProxyInfo) {
+    nsCString proxyType;
+    nsresult rv = aProxyInfo->GetType(proxyType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Close();
+      return rv;
+    }
+    // Only supports SOCKS proxy for now.
+    if (proxyType == "socks" || proxyType == "socks4") {
+      return Init(aProxyInfo);
+    }
+  }
+  return Init(nullptr);
 }
 
 nsresult TCPSocket::CreateInputStreamPump() {
