@@ -250,9 +250,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       has_received_frame_(false),
       frames_decryptable_(false),
       absolute_capture_time_receiver_(clock) {
-  constexpr bool remb_candidate = true;
   if (packet_router_)
-    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), remb_candidate);
+    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
 
   RTC_DCHECK(config_.rtp.rtcp_mode != RtcpMode::kOff)
       << "A stream should not be configured with RTCP disabled. This value is "

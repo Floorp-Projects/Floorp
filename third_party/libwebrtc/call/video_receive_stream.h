@@ -203,6 +203,9 @@ class VideoReceiveStream {
       // See draft-holmer-rmcat-transport-wide-cc-extensions for details.
       bool transport_cc = false;
 
+      // See draft-alvestrand-rmcat-remb for information.
+      bool remb = false;
+
       bool tmmbr = false;
 
       // How to request keyframes from a remote sender. Applies only if lntf is
