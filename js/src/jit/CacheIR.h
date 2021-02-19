@@ -845,11 +845,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     guardGroup(obj, group);
   }
 
-  void guardGroupForLayout(ObjOperandId obj, ObjectGroup* group) {
-    MOZ_ASSERT(IsTypedObjectClass(group->clasp()));
-    guardGroup(obj, group);
-  }
-
   static uint32_t encodeNargsAndFlags(JSFunction* fun) {
     static_assert(JSFunction::NArgsBits == 16);
     static_assert(sizeof(decltype(fun->flags().toRaw())) == sizeof(uint16_t));
