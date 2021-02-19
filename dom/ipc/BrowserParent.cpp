@@ -1830,6 +1830,17 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchPoint(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchPadPinch(
+    const TouchpadPinchPhase& aEventPhase, const float& aScale,
+    const LayoutDeviceIntPoint& aPoint, const int32_t& aModifierFlags) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->SynthesizeNativeTouchPadPinch(aEventPhase, aScale, aPoint,
+                                          aModifierFlags);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchTap(
     const LayoutDeviceIntPoint& aPoint, const bool& aLongTap,
     const uint64_t& aObserverId) {

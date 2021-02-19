@@ -1023,6 +1023,24 @@ nsDOMWindowUtils::SendNativeTouchPoint(uint32_t aPointerId,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeTouchpadPinch(uint32_t aEventPhase, float aScale,
+                                          int32_t aScreenX, int32_t aScreenY,
+                                          int32_t aModifierFlags) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+  NS_DispatchToMainThread(NativeInputRunnable::Create(
+      NewRunnableMethod<nsIWidget::TouchpadPinchPhase, float,
+                        LayoutDeviceIntPoint, int32_t>(
+          "nsIWidget::SynthesizeNativeTouchPadPinch", widget,
+          &nsIWidget::SynthesizeNativeTouchPadPinch,
+          (nsIWidget::TouchpadPinchPhase)aEventPhase, aScale,
+          LayoutDeviceIntPoint(aScreenX, aScreenY), aModifierFlags)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX, int32_t aScreenY,
                                      bool aLongTap, nsIObserver* aObserver) {
   nsCOMPtr<nsIWidget> widget = GetWidget();

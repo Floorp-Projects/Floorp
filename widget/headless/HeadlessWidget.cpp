@@ -509,5 +509,52 @@ nsresult HeadlessWidget::SynthesizeNativeTouchPoint(
   return NS_OK;
 }
 
+nsresult HeadlessWidget::SynthesizeNativeTouchPadPinch(
+    TouchpadPinchPhase aEventPhase, float aScale, LayoutDeviceIntPoint aPoint,
+    int32_t aModifierFlags) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  PinchGestureInput::PinchGestureType pinchGestureType =
+      PinchGestureInput::PINCHGESTURE_SCALE;
+  ScreenCoord CurrentSpan;
+  ScreenCoord PreviousSpan;
+  switch (aEventPhase) {
+    case PHASE_BEGIN:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
+      CurrentSpan = aScale;
+      PreviousSpan = 0.999;
+      mLastPinchSpan = aScale;
+      break;
+
+    case PHASE_UPDATE:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+      if (aScale == mLastPinchSpan) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      CurrentSpan = aScale;
+      PreviousSpan = mLastPinchSpan;
+      mLastPinchSpan = aScale;
+      break;
+
+    case PHASE_END:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+      CurrentSpan = aScale;
+      PreviousSpan = mLastPinchSpan;
+      break;
+
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+  LayoutDeviceIntPoint touchpadPoint = aPoint - WidgetToScreenOffset();
+  // The headless widget does not support modifiers.
+  // Do not pass `aModifierFlags` because it contains native modifier values.
+  PinchGestureInput inputToDispatch(
+      pinchGestureType, PinchGestureInput::TRACKPAD, PR_IntervalNow(),
+      TimeStamp::Now(), ExternalPoint(0, 0),
+      ScreenPoint(touchpadPoint.x, touchpadPoint.y), CurrentSpan, PreviousSpan,
+      0);
+  DispatchPinchGestureInput(inputToDispatch);
+  return NS_OK;
+}
 }  // namespace widget
 }  // namespace mozilla

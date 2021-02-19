@@ -85,6 +85,7 @@ using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.
 using mozilla::CSSToScreenScale from "Units.h";
 using mozilla::CommandInt from "mozilla/EventForwards.h";
 using nsIWidget::TouchPointerState from "nsIWidget.h";
+using nsIWidget::TouchpadPinchPhase from "nsIWidget.h";
 using nsCursor from "nsIWidget.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
@@ -523,7 +524,11 @@ parent:
                                      LayoutDeviceIntPoint aPoint,
                                      double aPointerPressure,
                                      uint32_t aPointerOrientation,
-                                     uint64_t aObserverId);
+                                     uint64_t aObserverId);    
+    async SynthesizeNativeTouchPadPinch(TouchpadPinchPhase aEventPhase,
+                                        float aScale,
+                                        LayoutDeviceIntPoint aPoint,
+                                        int32_t aModifierFlags);
     async SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint,
                                    bool aLongTap,
                                    uint64_t aObserverId);
