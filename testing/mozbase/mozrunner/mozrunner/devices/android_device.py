@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 import glob
 import os
 import platform
+import posixpath
 import re
 import shutil
 import signal
@@ -37,6 +38,40 @@ MANIFEST_PATH = "testing/config/tooltool-manifests"
 SHORT_TIMEOUT = 10
 
 verbose_logging = False
+
+LLDB_SERVER_INSTALL_COMMANDS_SCRIPT = """
+umask 0002
+
+mkdir -p {lldb_bin_dir}
+
+cp /data/local/tmp/lldb-server {lldb_bin_dir}
+chmod +x {lldb_bin_dir}/lldb-server
+
+chmod 0775 {lldb_dir}
+""".lstrip()
+
+LLDB_SERVER_START_COMMANDS_SCRIPT = """
+umask 0002
+
+export LLDB_DEBUGSERVER_LOG_FILE={lldb_log_file}
+export LLDB_SERVER_LOG_CHANNELS="{lldb_log_channels}"
+export LLDB_DEBUGSERVER_DOMAINSOCKET_DIR={socket_dir}
+
+rm -rf {lldb_tmp_dir}
+mkdir {lldb_tmp_dir}
+export TMPDIR={lldb_tmp_dir}
+
+rm -rf {lldb_log_dir}
+mkdir {lldb_log_dir}
+
+touch {lldb_log_file}
+touch {platform_log_file}
+
+cd {lldb_tmp_dir}
+{lldb_bin_dir}/lldb-server platform --server --listen {listener_scheme}://{socket_file} \\
+    --log-file "{platform_log_file}" --log-channels "{lldb_log_channels}" \\
+    < /dev/null > {platform_stdout_log_file} 2>&1 &
+""".lstrip()
 
 
 class InstallIntent(Enum):
@@ -220,8 +255,8 @@ def verify_android_device(
     If 'xre' is specified, also check with MOZ_HOST_BIN is set
     to a valid xre/host-utils directory; if not, prompt to set
     one up.
-    If 'debugger' is specified, also check that JimDB is installed;
-    if JimDB is not found, prompt to set up JimDB.
+    If 'debugger' is specified, also check that lldb-server is installed;
+    if it is not found, set it up.
     If 'network' is specified, also check that the device has basic
     network connectivity.
     Returns True if the emulator was started or another device was
@@ -375,9 +410,102 @@ def verify_android_device(
             _log_debug("network check skipped on emulator")
 
     if debugger:
-        _log_warning("JimDB is no longer supported")
+        _setup_or_run_lldb_server(app, build_obj.substs, device_serial, setup=True)
 
     return device_verified
+
+
+def run_lldb_server(app, substs, device_serial):
+    return _setup_or_run_lldb_server(app, substs, device_serial, setup=False)
+
+
+def _setup_or_run_lldb_server(app, substs, device_serial, setup=True):
+    device = _get_device(substs, device_serial)
+
+    # Don't use enable_run_as here, as this will not give you what you
+    # want if we have root access on the device.
+    pkg_dir = device.shell_output("run-as %s pwd" % app)
+    if not pkg_dir or pkg_dir == "/":
+        pkg_dir = "/data/data/%s" % app
+        _log_warning(
+            "Unable to resolve data directory for package %s, falling back to hardcoded path"
+            % app
+        )
+
+    pkg_lldb_dir = posixpath.join(pkg_dir, "lldb")
+    pkg_lldb_bin_dir = posixpath.join(pkg_lldb_dir, "bin")
+    pkg_lldb_server = posixpath.join(pkg_lldb_bin_dir, "lldb-server")
+
+    if setup:
+        # Check whether lldb-server is already there
+        if device.shell_bool("test -x %s" % pkg_lldb_server, enable_run_as=True):
+            _log_info(
+                "Found lldb-server binary, terminating any running server processes..."
+            )
+            # lldb-server is already present. Kill any running server.
+            device.shell("pkill -f lldb-server", enable_run_as=True)
+        else:
+            _log_info("lldb-server not found, installing...")
+
+            # We need to do an install
+            try:
+                server_path_local = substs["ANDROID_LLDB_SERVER"]
+            except KeyError:
+                _log_info(
+                    "ANDROID_LLDB_SERVER is not configured correctly; "
+                    "please re-configure your build."
+                )
+                return
+
+            device.push(server_path_local, "/data/local/tmp")
+
+            install_cmds = LLDB_SERVER_INSTALL_COMMANDS_SCRIPT.format(
+                lldb_bin_dir=pkg_lldb_bin_dir, lldb_dir=pkg_lldb_dir
+            )
+
+            install_cmds = [l for l in install_cmds.splitlines() if l]
+
+            _log_debug(
+                "Running the following installation commands:\n%r" % (install_cmds,)
+            )
+
+            device.batch_execute(install_cmds, enable_run_as=True)
+        return
+
+    pkg_lldb_sock_file = posixpath.join(pkg_dir, "platform-%d.sock" % int(time.time()))
+
+    pkg_lldb_log_dir = posixpath.join(pkg_lldb_dir, "log")
+    pkg_lldb_tmp_dir = posixpath.join(pkg_lldb_dir, "tmp")
+
+    pkg_lldb_log_file = posixpath.join(pkg_lldb_log_dir, "lldb-server.log")
+    pkg_platform_log_file = posixpath.join(pkg_lldb_log_dir, "platform.log")
+    pkg_platform_stdout_log_file = posixpath.join(
+        pkg_lldb_log_dir, "platform-stdout.log"
+    )
+
+    listener_scheme = "unix-abstract"
+    log_channels = "lldb process:gdb-remote packets"
+
+    start_cmds = LLDB_SERVER_START_COMMANDS_SCRIPT.format(
+        lldb_bin_dir=pkg_lldb_bin_dir,
+        lldb_log_file=pkg_lldb_log_file,
+        lldb_log_channels=log_channels,
+        socket_dir=pkg_dir,
+        lldb_tmp_dir=pkg_lldb_tmp_dir,
+        lldb_log_dir=pkg_lldb_log_dir,
+        platform_log_file=pkg_platform_log_file,
+        listener_scheme=listener_scheme,
+        platform_stdout_log_file=pkg_platform_stdout_log_file,
+        socket_file=pkg_lldb_sock_file,
+    )
+
+    start_cmds = [l for l in start_cmds.splitlines() if l]
+
+    _log_debug("Running the following start commands:\n%r" % (start_cmds,))
+
+    device.batch_execute(start_cmds, enable_run_as=True)
+
+    return pkg_lldb_sock_file
 
 
 def get_adb_path(build_obj):
