@@ -7,13 +7,13 @@
 #include "mozilla/a11y/DocAccessibleChildBase.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 
 namespace mozilla {
 namespace a11y {
 
 /* static */
-uint32_t DocAccessibleChildBase::InterfacesFor(Accessible* aAcc) {
+uint32_t DocAccessibleChildBase::InterfacesFor(LocalAccessible* aAcc) {
   uint32_t interfaces = 0;
   if (aAcc->IsHyperText() && aAcc->AsHyperText()->IsTextRole()) {
     interfaces |= Interfaces::HYPERTEXT;
@@ -45,7 +45,7 @@ uint32_t DocAccessibleChildBase::InterfacesFor(Accessible* aAcc) {
 }
 
 /* static */
-void DocAccessibleChildBase::SerializeTree(Accessible* aRoot,
+void DocAccessibleChildBase::SerializeTree(LocalAccessible* aRoot,
                                            nsTArray<AccessibleData>& aTree) {
   uint64_t id = reinterpret_cast<uint64_t>(aRoot->UniqueID());
 #if defined(XP_WIN)
@@ -74,8 +74,8 @@ void DocAccessibleChildBase::SerializeTree(Accessible* aRoot,
   }
 }
 
-void DocAccessibleChildBase::InsertIntoIpcTree(Accessible* aParent,
-                                               Accessible* aChild,
+void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
+                                               LocalAccessible* aChild,
                                                uint32_t aIdxInParent) {
   uint64_t parentID =
       aParent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(aParent->UniqueID());
@@ -86,7 +86,7 @@ void DocAccessibleChildBase::InsertIntoIpcTree(Accessible* aParent,
 }
 
 void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {
-  Accessible* parent = aShowEvent->LocalParent();
+  LocalAccessible* parent = aShowEvent->LocalParent();
   uint64_t parentID =
       parent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(parent->UniqueID());
   uint32_t idxInParent = aShowEvent->GetAccessible()->IndexInParent();

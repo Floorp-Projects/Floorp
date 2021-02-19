@@ -6,7 +6,7 @@
 
 #include "AccessibleWrap.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "ApplicationAccessibleWrap.h"
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
@@ -247,7 +247,7 @@ GType mai_atk_object_get_type(void) {
 }
 
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-    : Accessible(aContent, aDoc), mAtkObject(nullptr) {}
+    : LocalAccessible(aContent, aDoc), mAtkObject(nullptr) {}
 
 AccessibleWrap::~AccessibleWrap() {
   NS_ASSERTION(!mAtkObject, "ShutdownAtkObject() is not called");
@@ -265,7 +265,7 @@ void AccessibleWrap::ShutdownAtkObject() {
 
 void AccessibleWrap::Shutdown() {
   ShutdownAtkObject();
-  Accessible::Shutdown();
+  LocalAccessible::Shutdown();
 }
 
 void AccessibleWrap::GetNativeInterface(void** aOutAccessible) {
@@ -298,9 +298,9 @@ AtkObject* AccessibleWrap::GetAtkObject(void) {
   return static_cast<AtkObject*>(atkObj);
 }
 
-// Get AtkObject from Accessible interface
+// Get AtkObject from LocalAccessible interface
 /* static */
-AtkObject* AccessibleWrap::GetAtkObject(Accessible* acc) {
+AtkObject* AccessibleWrap::GetAtkObject(LocalAccessible* acc) {
   void* atkObjPtr = nullptr;
   acc->GetNativeInterface(&atkObjPtr);
   return atkObjPtr ? ATK_OBJECT(atkObjPtr) : nullptr;
@@ -676,7 +676,7 @@ static AtkAttributeSet* ConvertToAtkAttributeSet(
   return objAttributeSet;
 }
 
-AtkAttributeSet* GetAttributeSet(Accessible* aAccessible) {
+AtkAttributeSet* GetAttributeSet(LocalAccessible* aAccessible) {
   nsCOMPtr<nsIPersistentProperties> attributes = aAccessible->Attributes();
   if (attributes) return ConvertToAtkAttributeSet(attributes);
 
@@ -771,7 +771,7 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
       return nullptr;
     }
 
-    Accessible* accChild = accWrap->GetEmbeddedChildAt(aChildIndex);
+    LocalAccessible* accChild = accWrap->GetEmbeddedChildAt(aChildIndex);
     if (accChild) {
       childAtkObj = AccessibleWrap::GetAtkObject(accChild);
     } else {
@@ -805,7 +805,7 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
 }
 
 gint getIndexInParentCB(AtkObject* aAtkObj) {
-  // We don't use Accessible::IndexInParent() because we don't include text
+  // We don't use LocalAccessible::IndexInParent() because we don't include text
   // leaf nodes as children in ATK.
   if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
     if (ProxyAccessible* parent = proxy->RemoteParent()) {
@@ -824,7 +824,7 @@ gint getIndexInParentCB(AtkObject* aAtkObj) {
     return -1;
   }
 
-  Accessible* parent = accWrap->LocalParent();
+  LocalAccessible* parent = accWrap->LocalParent();
   if (!parent) return -1;  // No parent
 
   return parent->GetIndexOfEmbeddedChild(accWrap);
@@ -872,7 +872,7 @@ AtkStateSet* refStateSetCB(AtkObject* aAtkObj) {
   return state_set;
 }
 
-static void UpdateAtkRelation(RelationType aType, Accessible* aAcc,
+static void UpdateAtkRelation(RelationType aType, LocalAccessible* aAcc,
                               AtkRelationType aAtkType,
                               AtkRelationSet* aAtkSet) {
   if (aAtkType == ATK_RELATION_NULL) return;
@@ -883,7 +883,7 @@ static void UpdateAtkRelation(RelationType aType, Accessible* aAcc,
 
   Relation rel(aAcc->RelationByType(aType));
   nsTArray<AtkObject*> targets;
-  Accessible* tempAcc = nullptr;
+  LocalAccessible* tempAcc = nullptr;
   while ((tempAcc = rel.Next())) {
     targets.AppendElement(AccessibleWrap::GetAtkObject(tempAcc));
   }
@@ -963,7 +963,7 @@ AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj) {
 
   AccessibleWrap* accWrap = nullptr;
   if (isMAIObject) {
-    Accessible* acc = MAI_ATK_OBJECT(aAtkObj)->accWrap.AsAccessible();
+    LocalAccessible* acc = MAI_ATK_OBJECT(aAtkObj)->accWrap.AsAccessible();
     accWrap = static_cast<AccessibleWrap*>(acc);
   } else {
     accWrap = MAI_ATK_SOCKET(aAtkObj)->accWrap;
@@ -1065,14 +1065,14 @@ void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
 }
 
 nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
-  nsresult rv = Accessible::HandleAccEvent(aEvent);
+  nsresult rv = LocalAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IPCAccessibilityActive()) {
     return NS_OK;
   }
 
-  Accessible* accessible = aEvent->GetAccessible();
+  LocalAccessible* accessible = aEvent->GetAccessible();
   NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
 
   // The accessible can become defunct if we have an xpcom event listener
@@ -1240,7 +1240,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
     case nsIAccessibleEvent::EVENT_SHOW: {
       AccMutationEvent* event = downcast_accEvent(aEvent);
-      Accessible* parentAcc =
+      LocalAccessible* parentAcc =
           event ? event->LocalParent() : accessible->LocalParent();
       AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
       NS_ENSURE_STATE(parent);
@@ -1258,7 +1258,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       }
 
       AccMutationEvent* event = downcast_accEvent(aEvent);
-      Accessible* parentAcc =
+      LocalAccessible* parentAcc =
           event ? event->LocalParent() : accessible->LocalParent();
       AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
       NS_ENSURE_STATE(parent);
@@ -1497,7 +1497,7 @@ void a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible* aWidget,
 }
 
 // static
-void AccessibleWrap::GetKeyBinding(Accessible* aAccessible,
+void AccessibleWrap::GetKeyBinding(LocalAccessible* aAccessible,
                                    nsAString& aResult) {
   // Return all key bindings including access key and keyboard shortcut.
 
@@ -1507,7 +1507,7 @@ void AccessibleWrap::GetKeyBinding(Accessible* aAccessible,
   if (!keyBinding.IsEmpty()) {
     keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
 
-    Accessible* parent = aAccessible->LocalParent();
+    LocalAccessible* parent = aAccessible->LocalParent();
     roles::Role role = parent ? parent->Role() : roles::NOTHING;
     if (role == roles::PARENT_MENUITEM || role == roles::MENUITEM ||
         role == roles::RADIO_MENU_ITEM || role == roles::CHECK_MENU_ITEM) {
@@ -1544,13 +1544,13 @@ void AccessibleWrap::GetKeyBinding(Accessible* aAccessible,
 }
 
 // static
-Accessible* AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible,
-                                            int32_t aColIdx) {
+LocalAccessible* AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible,
+                                                 int32_t aColIdx) {
   if (!aAccessible) {
     return nullptr;
   }
 
-  Accessible* cell = aAccessible->CellAt(0, aColIdx);
+  LocalAccessible* cell = aAccessible->CellAt(0, aColIdx);
   if (!cell) {
     return nullptr;
   }
@@ -1567,7 +1567,7 @@ Accessible* AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible,
     return nullptr;
   }
 
-  AutoTArray<Accessible*, 10> headerCells;
+  AutoTArray<LocalAccessible*, 10> headerCells;
   tableCell->ColHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;
@@ -1577,13 +1577,13 @@ Accessible* AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible,
 }
 
 // static
-Accessible* AccessibleWrap::GetRowHeader(TableAccessible* aAccessible,
-                                         int32_t aRowIdx) {
+LocalAccessible* AccessibleWrap::GetRowHeader(TableAccessible* aAccessible,
+                                              int32_t aRowIdx) {
   if (!aAccessible) {
     return nullptr;
   }
 
-  Accessible* cell = aAccessible->CellAt(aRowIdx, 0);
+  LocalAccessible* cell = aAccessible->CellAt(aRowIdx, 0);
   if (!cell) {
     return nullptr;
   }
@@ -1600,7 +1600,7 @@ Accessible* AccessibleWrap::GetRowHeader(TableAccessible* aAccessible,
     return nullptr;
   }
 
-  AutoTArray<Accessible*, 10> headerCells;
+  AutoTArray<LocalAccessible*, 10> headerCells;
   tableCell->RowHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;

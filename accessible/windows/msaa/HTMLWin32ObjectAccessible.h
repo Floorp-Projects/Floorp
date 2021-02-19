@@ -29,21 +29,21 @@ class HTMLWin32ObjectOwnerAccessible : public AccessibleWrap {
                                  void* aHwnd);
   virtual ~HTMLWin32ObjectOwnerAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown();
   virtual mozilla::a11y::role NativeRole() const override;
   virtual bool NativelyUnavailable() const;
 
  protected:
   void* mHwnd;
-  RefPtr<Accessible> mNativeAccessible;
+  RefPtr<LocalAccessible> mNativeAccessible;
 };
 
 /**
  * This class is used only internally, we never! send out an IAccessible linked
  *   back to this object. This class is used to represent a plugin object when
- *   referenced as a child or sibling of another Accessible node. We need only
- *   a limited portion of the Accessible interface implemented here. The
+ *   referenced as a child or sibling of another Accessible node. We need
+ * only a limited portion of the Accessible interface implemented here. The
  *   in depth accessible information will be returned by the actual IAccessible
  *   object returned by us in Accessible::NewAccessible() that gets the
  * IAccessible from the windows system from the window handle.

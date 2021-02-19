@@ -51,7 +51,7 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
   /**
    * Return XPCOM wrapper for the internal accessible.
    */
-  xpcAccessibleGeneric* GetAccessible(Accessible* aAccessible);
+  xpcAccessibleGeneric* GetAccessible(LocalAccessible* aAccessible);
   xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
   virtual void Shutdown() override;
@@ -61,14 +61,14 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
 
  private:
   DocAccessible* Intl() {
-    if (Accessible* acc = mIntl.AsAccessible()) {
+    if (LocalAccessible* acc = mIntl.AsAccessible()) {
       return acc->AsDoc();
     }
 
     return nullptr;
   }
 
-  void NotifyOfShutdown(Accessible* aAccessible) {
+  void NotifyOfShutdown(LocalAccessible* aAccessible) {
     MOZ_ASSERT(!mRemote);
     xpcAccessibleGeneric* xpcAcc = mCache.Get(aAccessible);
     if (xpcAcc) {
@@ -109,7 +109,7 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
   bool mRemote;
 };
 
-inline xpcAccessibleGeneric* ToXPC(Accessible* aAccessible) {
+inline xpcAccessibleGeneric* ToXPC(LocalAccessible* aAccessible) {
   if (!aAccessible) return nullptr;
 
   if (aAccessible->IsApplication()) return XPCApplicationAcc();

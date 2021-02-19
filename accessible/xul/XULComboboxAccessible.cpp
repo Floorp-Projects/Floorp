@@ -5,7 +5,7 @@
 
 #include "XULComboboxAccessible.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"
 #include "nsCoreUtils.h"
@@ -38,7 +38,7 @@ uint64_t XULComboboxAccessible::NativeState() const {
   //     STATE_COLLAPSED
 
   // Get focus status from base class
-  uint64_t state = Accessible::NativeState();
+  uint64_t state = LocalAccessible::NativeState();
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList = Elm()->AsXULMenuList();
   if (menuList) {
@@ -63,7 +63,7 @@ void XULComboboxAccessible::Description(nsString& aDescription) {
   nsCOMPtr<dom::Element> focusedOptionItem;
   menuListElm->GetSelectedItem(getter_AddRefs(focusedOptionItem));
   if (focusedOptionItem && mDoc) {
-    Accessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionItem);
+    LocalAccessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionItem);
     if (focusedOptionAcc) focusedOptionAcc->Description(aDescription);
   }
 }
@@ -118,7 +118,7 @@ bool XULComboboxAccessible::IsActiveWidget() const {
                                          nsGkAtoms::_true, eIgnoreCase)) {
     int32_t childCount = mChildren.Length();
     for (int32_t idx = 0; idx < childCount; idx++) {
-      Accessible* child = mChildren[idx];
+      LocalAccessible* child = mChildren[idx];
       if (child->Role() == roles::ENTRY) {
         return FocusMgr()->HasDOMFocus(child->GetContent());
       }

@@ -19,7 +19,7 @@ class TextLeafAccessible : public LinkableAccessible {
   TextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~TextLeafAccessible();
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX) override;
@@ -34,9 +34,9 @@ class TextLeafAccessible : public LinkableAccessible {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible downcast method
+// LocalAccessible downcast method
 
-inline TextLeafAccessible* Accessible::AsTextLeaf() {
+inline TextLeafAccessible* LocalAccessible::AsTextLeaf() {
   return IsTextLeaf() ? static_cast<TextLeafAccessible*>(this) : nullptr;
 }
 

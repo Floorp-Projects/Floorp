@@ -5,7 +5,7 @@
 
 #include "XULAlertAccessible.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "Role.h"
 #include "States.h"
 
@@ -26,7 +26,7 @@ XULAlertAccessible::~XULAlertAccessible() {}
 role XULAlertAccessible::NativeRole() const { return roles::ALERT; }
 
 uint64_t XULAlertAccessible::NativeState() const {
-  return Accessible::NativeState() | states::ALERT;
+  return LocalAccessible::NativeState() | states::ALERT;
 }
 
 ENameValueFlag XULAlertAccessible::Name(nsString& aName) const {
@@ -41,4 +41,4 @@ ENameValueFlag XULAlertAccessible::Name(nsString& aName) const {
 
 bool XULAlertAccessible::IsWidget() const { return true; }
 
-Accessible* XULAlertAccessible::ContainerWidget() const { return nullptr; }
+LocalAccessible* XULAlertAccessible::ContainerWidget() const { return nullptr; }

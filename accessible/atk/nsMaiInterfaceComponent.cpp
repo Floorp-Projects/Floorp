@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
@@ -118,7 +118,7 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
   }
 
   AccessibleOrProxy accAtPoint =
-      acc.ChildAtPoint(aX, aY, Accessible::eDeepestChild);
+      acc.ChildAtPoint(aX, aY, LocalAccessible::eDeepestChild);
   if (accAtPoint.IsNull()) {
     return nullptr;
   }

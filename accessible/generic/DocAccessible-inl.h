@@ -22,11 +22,12 @@
 namespace mozilla {
 namespace a11y {
 
-inline Accessible* DocAccessible::AccessibleOrTrueContainer(
+inline LocalAccessible* DocAccessible::AccessibleOrTrueContainer(
     nsINode* aNode, bool aNoContainerIfPruned) const {
   // HTML comboboxes have no-content list accessible as an intermediate
   // containing all options.
-  Accessible* container = GetAccessibleOrContainer(aNode, aNoContainerIfPruned);
+  LocalAccessible* container =
+      GetAccessibleOrContainer(aNode, aNoContainerIfPruned);
   if (container && container->IsHTMLCombobox()) {
     return container->LocalFirstChild();
   }
@@ -60,7 +61,7 @@ inline void DocAccessible::FireDelayedEvent(AccEvent* aEvent) {
 }
 
 inline void DocAccessible::FireDelayedEvent(uint32_t aEventType,
-                                            Accessible* aTarget) {
+                                            LocalAccessible* aTarget) {
   RefPtr<AccEvent> event = new AccEvent(aEventType, aTarget);
   FireDelayedEvent(event);
 }
@@ -101,25 +102,26 @@ inline void DocAccessible::NotifyOfLoad(uint32_t aLoadEventType) {
   }
 }
 
-inline void DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible) {
+inline void DocAccessible::MaybeNotifyOfValueChange(
+    LocalAccessible* aAccessible) {
   if (aAccessible->IsCombobox() || aAccessible->Role() == roles::ENTRY ||
       aAccessible->Role() == roles::SPINBUTTON) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE, aAccessible);
   }
 }
 
-inline Accessible* DocAccessible::GetAccessibleEvenIfNotInMapOrContainer(
+inline LocalAccessible* DocAccessible::GetAccessibleEvenIfNotInMapOrContainer(
     nsINode* aNode) const {
-  Accessible* acc = GetAccessibleEvenIfNotInMap(aNode);
+  LocalAccessible* acc = GetAccessibleEvenIfNotInMap(aNode);
   return acc ? acc : GetContainerAccessible(aNode);
 }
 
-inline void DocAccessible::CreateSubtree(Accessible* aChild) {
+inline void DocAccessible::CreateSubtree(LocalAccessible* aChild) {
   // If a focused node has been shown then it could mean its frame was recreated
   // while the node stays focused and we need to fire focus event on
   // the accessible we just created. If the queue contains a focus event for
   // this node already then it will be suppressed by this one.
-  Accessible* focusedAcc = nullptr;
+  LocalAccessible* focusedAcc = nullptr;
   CacheChildrenInSubtree(aChild, &focusedAcc);
 
 #ifdef A11Y_LOG

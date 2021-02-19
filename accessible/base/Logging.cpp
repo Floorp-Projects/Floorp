@@ -6,7 +6,7 @@
 
 #include "Logging.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccEvent.h"
 #include "DocAccessible.h"
 #include "nsAccessibilityService.h"
@@ -544,7 +544,7 @@ void logging::OuterDocDestroy(OuterDocAccessible* aOuterDoc) {
 
 void logging::FocusNotificationTarget(const char* aMsg,
                                       const char* aTargetDescr,
-                                      Accessible* aTarget) {
+                                      LocalAccessible* aTarget) {
   MsgBegin(sFocusTitle, "%s", aMsg);
   AccessibleNNode(aTargetDescr, aTarget);
   MsgEnd();
@@ -577,14 +577,14 @@ void logging::FocusNotificationTarget(const char* aMsg,
 }
 
 void logging::ActiveItemChangeCausedBy(const char* aCause,
-                                       Accessible* aTarget) {
+                                       LocalAccessible* aTarget) {
   SubMsgBegin();
   printf("    Caused by: %s\n", aCause);
   AccessibleNNode("Item", aTarget);
   SubMsgEnd();
 }
 
-void logging::ActiveWidget(Accessible* aWidget) {
+void logging::ActiveWidget(LocalAccessible* aWidget) {
   SubMsgBegin();
 
   AccessibleNNode("Widget", aWidget);
@@ -595,7 +595,7 @@ void logging::ActiveWidget(Accessible* aWidget) {
   SubMsgEnd();
 }
 
-void logging::FocusDispatched(Accessible* aTarget) {
+void logging::FocusDispatched(LocalAccessible* aTarget) {
   SubMsgBegin();
   AccessibleNNode("A11y target", aTarget);
   SubMsgEnd();
@@ -628,11 +628,11 @@ void logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, ...) {
     va_start(vl, aExtraFlags);
     const char* descr = va_arg(vl, const char*);
     if (descr) {
-      Accessible* acc = va_arg(vl, Accessible*);
+      LocalAccessible* acc = va_arg(vl, LocalAccessible*);
       MsgBegin("TREE", "%s; doc: %p", aMsg, acc ? acc->Document() : nullptr);
       AccessibleInfo(descr, acc);
       while ((descr = va_arg(vl, const char*))) {
-        AccessibleInfo(descr, va_arg(vl, Accessible*));
+        AccessibleInfo(descr, va_arg(vl, LocalAccessible*));
       }
     } else {
       MsgBegin("TREE", "%s", aMsg);
@@ -647,12 +647,13 @@ void logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, ...) {
 }
 
 void logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
-                       const char* aMsg1, Accessible* aAcc, const char* aMsg2,
-                       nsINode* aNode) {
+                       const char* aMsg1, LocalAccessible* aAcc,
+                       const char* aMsg2, nsINode* aNode) {
   if (IsEnabledAll(logging::eTree | aExtraFlags)) {
     MsgBegin("TREE", "%s; doc: %p", aMsg, aAcc ? aAcc->Document() : nullptr);
     AccessibleInfo(aMsg1, aAcc);
-    Accessible* acc = aAcc ? aAcc->Document()->GetAccessible(aNode) : nullptr;
+    LocalAccessible* acc =
+        aAcc ? aAcc->Document()->GetAccessible(aNode) : nullptr;
     if (acc) {
       AccessibleInfo(aMsg2, acc);
     } else {
@@ -663,7 +664,7 @@ void logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
 }
 
 void logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
-                       Accessible* aParent) {
+                       LocalAccessible* aParent) {
   if (IsEnabledAll(logging::eTree | aExtraFlags)) {
     MsgBegin("TREE", "%s; doc: %p", aMsg, aParent->Document());
     AccessibleInfo("container", aParent);
@@ -674,12 +675,13 @@ void logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
   }
 }
 
-void logging::Tree(const char* aTitle, const char* aMsgText, Accessible* aRoot,
-                   GetTreePrefix aPrefixFunc, void* aGetTreePrefixData) {
+void logging::Tree(const char* aTitle, const char* aMsgText,
+                   LocalAccessible* aRoot, GetTreePrefix aPrefixFunc,
+                   void* aGetTreePrefixData) {
   logging::MsgBegin(aTitle, "%s", aMsgText);
 
   nsAutoString level;
-  Accessible* root = aRoot;
+  LocalAccessible* root = aRoot;
   do {
     const char* prefix =
         aPrefixFunc ? aPrefixFunc(aGetTreePrefixData, root) : "";
@@ -780,7 +782,7 @@ void logging::MsgEntry(const char* aEntryText, ...) {
 
 void logging::Text(const char* aText) { printf("  %s\n", aText); }
 
-void logging::Address(const char* aDescr, Accessible* aAcc) {
+void logging::Address(const char* aDescr, LocalAccessible* aAcc) {
   if (!aAcc->IsDoc()) {
     printf("    %s accessible: %p, node: %p\n", aDescr,
            static_cast<void*>(aAcc), static_cast<void*>(aAcc->GetNode()));
@@ -815,7 +817,7 @@ void logging::Document(DocAccessible* aDocument) {
   printf("\n");
 }
 
-void logging::AccessibleInfo(const char* aDescr, Accessible* aAccessible) {
+void logging::AccessibleInfo(const char* aDescr, LocalAccessible* aAccessible) {
   printf("    %s: %p; ", aDescr, static_cast<void*>(aAccessible));
   if (!aAccessible) {
     printf("\n");
@@ -847,7 +849,8 @@ void logging::AccessibleInfo(const char* aDescr, Accessible* aAccessible) {
   printf(", node: %s\n", NS_ConvertUTF16toUTF8(nodeDesc).get());
 }
 
-void logging::AccessibleNNode(const char* aDescr, Accessible* aAccessible) {
+void logging::AccessibleNNode(const char* aDescr,
+                              LocalAccessible* aAccessible) {
   printf("    %s: %p; ", aDescr, static_cast<void*>(aAccessible));
   if (!aAccessible) return;
 
@@ -871,7 +874,7 @@ void logging::AccessibleNNode(const char* aDescr, nsINode* aNode) {
       GetAccService()->GetDocAccessible(aNode->OwnerDoc());
 
   if (document) {
-    Accessible* accessible = document->GetAccessible(aNode);
+    LocalAccessible* accessible = document->GetAccessible(aNode);
     if (accessible) {
       AccessibleNNode(aDescr, accessible);
       return;

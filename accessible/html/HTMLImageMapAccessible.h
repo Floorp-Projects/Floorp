@@ -23,12 +23,12 @@ class HTMLImageMapAccessible final : public ImageAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLImageMapAccessible,
                                        ImageAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
 
   // HyperLinkAccessible
   virtual uint32_t AnchorCount() override;
-  virtual Accessible* AnchorAt(uint32_t aAnchorIndex) override;
+  virtual LocalAccessible* AnchorAt(uint32_t aAnchorIndex) override;
   virtual already_AddRefed<nsIURI> AnchorURIAt(
       uint32_t aAnchorIndex) const override;
 
@@ -40,7 +40,7 @@ class HTMLImageMapAccessible final : public ImageAccessibleWrap {
   /**
    * Return accessible of child node.
    */
-  Accessible* GetChildAccessibleFor(const nsINode* aNode) const;
+  LocalAccessible* GetChildAccessibleFor(const nsINode* aNode) const;
 
  protected:
   virtual ~HTMLImageMapAccessible() {}
@@ -53,10 +53,10 @@ class HTMLAreaAccessible final : public HTMLLinkAccessible {
  public:
   HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual void Description(nsString& aDescription) override;
-  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild) override;
+  virtual LocalAccessible* ChildAtPoint(
+      int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;
 
   // HyperLinkAccessible
@@ -68,14 +68,14 @@ class HTMLAreaAccessible final : public HTMLLinkAccessible {
   }
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible downcasting method
+// LocalAccessible downcasting method
 
-inline HTMLImageMapAccessible* Accessible::AsImageMap() {
+inline HTMLImageMapAccessible* LocalAccessible::AsImageMap() {
   return IsImageMap() ? static_cast<HTMLImageMapAccessible*>(this) : nullptr;
 }
 

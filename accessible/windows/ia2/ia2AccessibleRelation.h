@@ -8,7 +8,7 @@
 #ifndef _NS_ACCESSIBLE_RELATION_WRAP_H
 #define _NS_ACCESSIBLE_RELATION_WRAP_H
 
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "IUnknownImpl.h"
 
 #include <utility>
@@ -24,7 +24,7 @@ class ia2AccessibleRelation final : public IAccessibleRelation {
   ia2AccessibleRelation(RelationType aType, Relation* aRel);
 
   ia2AccessibleRelation(RelationType aType,
-                        nsTArray<RefPtr<Accessible>>&& aTargets)
+                        nsTArray<RefPtr<LocalAccessible>>&& aTargets)
       : mType(aType), mTargets(std::move(aTargets)) {}
 
   // IUnknown
@@ -57,7 +57,7 @@ class ia2AccessibleRelation final : public IAccessibleRelation {
   ia2AccessibleRelation& operator=(const ia2AccessibleRelation&);
 
   RelationType mType;
-  nsTArray<RefPtr<Accessible>> mTargets;
+  nsTArray<RefPtr<LocalAccessible>> mTargets;
 };
 
 /**

@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 class TableAccessible;
 
 /**
@@ -49,12 +49,12 @@ class TableCellAccessible {
   /**
    * Return the column header cells for this cell.
    */
-  virtual void ColHeaderCells(nsTArray<Accessible*>* aCells);
+  virtual void ColHeaderCells(nsTArray<LocalAccessible*>* aCells);
 
   /**
    * Return the row header cells for this cell.
    */
-  virtual void RowHeaderCells(nsTArray<Accessible*>* aCells);
+  virtual void RowHeaderCells(nsTArray<LocalAccessible*>* aCells);
 
   /**
    * Returns true if this cell is selected.
@@ -62,7 +62,7 @@ class TableCellAccessible {
   virtual bool Selected() = 0;
 
  private:
-  Accessible* PrevColHeader();
+  LocalAccessible* PrevColHeader();
 };
 
 }  // namespace a11y

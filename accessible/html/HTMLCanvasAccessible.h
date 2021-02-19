@@ -22,7 +22,7 @@ class HTMLCanvasAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLCanvasAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
 
  protected:

@@ -133,7 +133,7 @@ DocAccessibleWrap::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible
+// LocalAccessible
 
 void DocAccessibleWrap::Shutdown() {
   // Do window emulation specific shutdown if emulation was started.

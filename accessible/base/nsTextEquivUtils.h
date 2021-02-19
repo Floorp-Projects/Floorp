@@ -8,7 +8,7 @@
 #ifndef _nsTextEquivUtils_H_
 #define _nsTextEquivUtils_H_
 
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "Role.h"
 
 class nsIContent;
@@ -39,7 +39,7 @@ enum ETextEquivRule {
  */
 class nsTextEquivUtils {
  public:
-  typedef mozilla::a11y::Accessible Accessible;
+  typedef mozilla::a11y::LocalAccessible LocalAccessible;
 
   /**
    * Determines if the accessible has a given name rule.
@@ -48,7 +48,7 @@ class nsTextEquivUtils {
    * @param aRule       [in] a given name rule
    * @return true if the accessible has the rule
    */
-  static inline bool HasNameRule(Accessible* aAccessible,
+  static inline bool HasNameRule(LocalAccessible* aAccessible,
                                  ETextEquivRule aRule) {
     return (GetRoleRule(aAccessible->Role()) & aRule) == aRule;
   }
@@ -59,14 +59,14 @@ class nsTextEquivUtils {
    * @param aAccessible [in] the given accessible
    * @param aName       [out] accessible name
    */
-  static nsresult GetNameFromSubtree(const Accessible* aAccessible,
+  static nsresult GetNameFromSubtree(const LocalAccessible* aAccessible,
                                      nsAString& aName);
 
   /**
    * Calculates text equivalent from the subtree. Similar to GetNameFromSubtree.
    * However it returns not empty result for things like HTML p.
    */
-  static void GetTextEquivFromSubtree(const Accessible* aAccessible,
+  static void GetTextEquivFromSubtree(const LocalAccessible* aAccessible,
                                       nsString& aTextEquiv) {
     aTextEquiv.Truncate();
 
@@ -82,7 +82,7 @@ class nsTextEquivUtils {
    * @param aIDRefsAttr  [in] IDRefs attribute on DOM node of the accessible
    * @param aTextEquiv   [out] result text equivalent
    */
-  static nsresult GetTextEquivFromIDRefs(const Accessible* aAccessible,
+  static nsresult GetTextEquivFromIDRefs(const LocalAccessible* aAccessible,
                                          nsAtom* aIDRefsAttr,
                                          nsAString& aTextEquiv);
 
@@ -97,9 +97,9 @@ class nsTextEquivUtils {
    *                       computed from
    * @param aString        [in, out] the string
    */
-  static nsresult AppendTextEquivFromContent(const Accessible* aInitiatorAcc,
-                                             nsIContent* aContent,
-                                             nsAString* aString);
+  static nsresult AppendTextEquivFromContent(
+      const LocalAccessible* aInitiatorAcc, nsIContent* aContent,
+      nsAString* aString);
 
   /**
    * Calculates the text equivalent from the given text content (may be text
@@ -126,20 +126,21 @@ class nsTextEquivUtils {
    * Iterates accessible children and calculates text equivalent from each
    * child.
    */
-  static nsresult AppendFromAccessibleChildren(const Accessible* aAccessible,
-                                               nsAString* aString);
+  static nsresult AppendFromAccessibleChildren(
+      const LocalAccessible* aAccessible, nsAString* aString);
 
   /**
    * Calculates text equivalent from the given accessible and its subtree if
    * allowed.
    */
-  static nsresult AppendFromAccessible(Accessible* aAccessible,
+  static nsresult AppendFromAccessible(LocalAccessible* aAccessible,
                                        nsAString* aString);
 
   /**
    * Calculates text equivalent from the value of given accessible.
    */
-  static nsresult AppendFromValue(Accessible* aAccessible, nsAString* aString);
+  static nsresult AppendFromValue(LocalAccessible* aAccessible,
+                                  nsAString* aString);
 
   /**
    * Calculates text equivalent from the given DOM node and its subtree if
@@ -163,7 +164,7 @@ class nsTextEquivUtils {
    * Returns true if a given accessible should be included when calculating
    * the text equivalent for the initiator's subtree.
    */
-  static bool ShouldIncludeInSubtreeCalculation(Accessible* aAccessible);
+  static bool ShouldIncludeInSubtreeCalculation(LocalAccessible* aAccessible);
 };
 
 #endif

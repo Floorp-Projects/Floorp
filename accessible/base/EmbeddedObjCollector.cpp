@@ -4,7 +4,7 @@
 
 #include "EmbeddedObjCollector.h"
 
-#include "Accessible.h"
+#include "LocalAccessible.h"
 
 using namespace mozilla::a11y;
 
@@ -13,17 +13,17 @@ uint32_t EmbeddedObjCollector::Count() {
   return mObjects.Length();
 }
 
-Accessible* EmbeddedObjCollector::GetAccessibleAt(uint32_t aIndex) {
-  Accessible* accessible = mObjects.SafeElementAt(aIndex, nullptr);
+LocalAccessible* EmbeddedObjCollector::GetAccessibleAt(uint32_t aIndex) {
+  LocalAccessible* accessible = mObjects.SafeElementAt(aIndex, nullptr);
   if (accessible) return accessible;
 
   return EnsureNGetObject(aIndex);
 }
 
-Accessible* EmbeddedObjCollector::EnsureNGetObject(uint32_t aIndex) {
+LocalAccessible* EmbeddedObjCollector::EnsureNGetObject(uint32_t aIndex) {
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
-    Accessible* child = mRoot->LocalChildAt(mRootChildIdx++);
+    LocalAccessible* child = mRoot->LocalChildAt(mRootChildIdx++);
     if (child->IsText()) continue;
 
     AppendObject(child);
@@ -33,10 +33,10 @@ Accessible* EmbeddedObjCollector::EnsureNGetObject(uint32_t aIndex) {
   return nullptr;
 }
 
-int32_t EmbeddedObjCollector::EnsureNGetIndex(Accessible* aAccessible) {
+int32_t EmbeddedObjCollector::EnsureNGetIndex(LocalAccessible* aAccessible) {
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
-    Accessible* child = mRoot->LocalChildAt(mRootChildIdx++);
+    LocalAccessible* child = mRoot->LocalChildAt(mRootChildIdx++);
     if (child->IsText()) continue;
 
     AppendObject(child);
@@ -46,7 +46,7 @@ int32_t EmbeddedObjCollector::EnsureNGetIndex(Accessible* aAccessible) {
   return -1;
 }
 
-int32_t EmbeddedObjCollector::GetIndexAt(Accessible* aAccessible) {
+int32_t EmbeddedObjCollector::GetIndexAt(LocalAccessible* aAccessible) {
   if (aAccessible->mParent != mRoot) return -1;
 
   MOZ_ASSERT(!aAccessible->IsProxy());
@@ -57,7 +57,7 @@ int32_t EmbeddedObjCollector::GetIndexAt(Accessible* aAccessible) {
   return !aAccessible->IsText() ? EnsureNGetIndex(aAccessible) : -1;
 }
 
-void EmbeddedObjCollector::AppendObject(Accessible* aAccessible) {
+void EmbeddedObjCollector::AppendObject(LocalAccessible* aAccessible) {
   MOZ_ASSERT(!aAccessible->IsProxy());
   aAccessible->mInt.mIndexOfEmbeddedChild = mObjects.Length();
   mObjects.AppendElement(aAccessible);

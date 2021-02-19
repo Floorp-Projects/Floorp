@@ -49,13 +49,14 @@ gboolean toplevel_event_watcher(GSignalInvocationHint* ihint,
        role == ATK_ROLE_COLOR_CHOOSER || role == ATK_ROLE_FONT_CHOOSER)) {
     if (data == reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW)) {
       // Attach the dialog accessible to app accessible tree
-      Accessible* windowAcc = GetAccService()->AddNativeRootAccessible(child);
+      LocalAccessible* windowAcc =
+          GetAccService()->AddNativeRootAccessible(child);
       g_object_set_qdata(G_OBJECT(child), sQuark_gecko_acc_obj,
                          reinterpret_cast<gpointer>(windowAcc));
 
     } else {
       // Deattach the dialog accessible
-      Accessible* windowAcc = reinterpret_cast<Accessible*>(
+      LocalAccessible* windowAcc = reinterpret_cast<LocalAccessible*>(
           g_object_get_qdata(G_OBJECT(child), sQuark_gecko_acc_obj));
       if (windowAcc) {
         GetAccService()->RemoveNativeRootAccessible(windowAcc);
@@ -110,7 +111,7 @@ gboolean fireRootAccessibleAddedCB(gpointer data) {
 }
 
 bool ApplicationAccessibleWrap::InsertChildAt(uint32_t aIdx,
-                                              Accessible* aChild) {
+                                              LocalAccessible* aChild) {
   if (!ApplicationAccessible::InsertChildAt(aIdx, aChild)) return false;
 
   AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);
@@ -134,7 +135,7 @@ bool ApplicationAccessibleWrap::InsertChildAt(uint32_t aIdx,
   return true;
 }
 
-bool ApplicationAccessibleWrap::RemoveChild(Accessible* aChild) {
+bool ApplicationAccessibleWrap::RemoveChild(LocalAccessible* aChild) {
   int32_t index = aChild->IndexInParent();
 
   AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);

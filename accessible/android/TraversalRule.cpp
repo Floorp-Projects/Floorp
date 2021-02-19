@@ -9,8 +9,8 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "Role.h"
-#include "Accessible.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible.h"
+#include "LocalAccessible-inl.h"
 #include "HTMLListAccessible.h"
 #include "SessionAccessibility.h"
 #include "nsAccUtils.h"
@@ -28,7 +28,7 @@ TraversalRule::TraversalRule(int32_t aGranularity)
 uint16_t TraversalRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   MOZ_ASSERT(aAccOrProxy.IsAccessible(),
              "Should only receive accessibles when processing on android.");
-  Accessible* aAccessible = aAccOrProxy.AsAccessible();
+  LocalAccessible* aAccessible = aAccOrProxy.AsAccessible();
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
   if (nsAccUtils::MustPrune(aAccessible)) {
@@ -72,8 +72,8 @@ uint16_t TraversalRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   return result;
 }
 
-bool TraversalRule::IsSingleLineage(Accessible* aAccessible) {
-  Accessible* child = aAccessible;
+bool TraversalRule::IsSingleLineage(LocalAccessible* aAccessible) {
+  LocalAccessible* child = aAccessible;
   while (child) {
     switch (child->ChildCount()) {
       case 0:
@@ -82,7 +82,7 @@ bool TraversalRule::IsSingleLineage(Accessible* aAccessible) {
         child = child->LocalFirstChild();
         break;
       case 2:
-        if (Accessible* bullet =
+        if (LocalAccessible* bullet =
                 child->LocalParent()->IsHTMLListItem()
                     ? child->LocalParent()->AsHTMLListItem()->Bullet()
                     : nullptr) {
@@ -99,13 +99,13 @@ bool TraversalRule::IsSingleLineage(Accessible* aAccessible) {
   return true;
 }
 
-bool TraversalRule::IsListItemBullet(const Accessible* aAccessible) {
-  Accessible* parent = aAccessible->LocalParent();
+bool TraversalRule::IsListItemBullet(const LocalAccessible* aAccessible) {
+  LocalAccessible* parent = aAccessible->LocalParent();
   return parent && parent->IsHTMLListItem() &&
          parent->AsHTMLListItem()->Bullet() == aAccessible;
 }
 
-bool TraversalRule::IsFlatSubtree(const Accessible* aAccessible) {
+bool TraversalRule::IsFlatSubtree(const LocalAccessible* aAccessible) {
   for (auto child = aAccessible->LocalFirstChild(); child;
        child = child->LocalNextSibling()) {
     roles::Role role = child->Role();
@@ -121,14 +121,14 @@ bool TraversalRule::IsFlatSubtree(const Accessible* aAccessible) {
   return true;
 }
 
-bool TraversalRule::HasName(const Accessible* aAccessible) {
+bool TraversalRule::HasName(const LocalAccessible* aAccessible) {
   nsAutoString name;
   aAccessible->Name(name);
   name.CompressWhitespace();
   return !name.IsEmpty();
 }
 
-uint16_t TraversalRule::LinkMatch(Accessible* aAccessible) {
+uint16_t TraversalRule::LinkMatch(LocalAccessible* aAccessible) {
   if (aAccessible->Role() == roles::LINK &&
       (aAccessible->State() & states::LINKED) != 0) {
     return nsIAccessibleTraversalRule::FILTER_MATCH |
@@ -138,7 +138,7 @@ uint16_t TraversalRule::LinkMatch(Accessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::HeadingMatch(Accessible* aAccessible) {
+uint16_t TraversalRule::HeadingMatch(LocalAccessible* aAccessible) {
   if (aAccessible->Role() == roles::HEADING && aAccessible->ChildCount()) {
     return nsIAccessibleTraversalRule::FILTER_MATCH;
   }
@@ -146,7 +146,7 @@ uint16_t TraversalRule::HeadingMatch(Accessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::SectionMatch(Accessible* aAccessible) {
+uint16_t TraversalRule::SectionMatch(LocalAccessible* aAccessible) {
   roles::Role role = aAccessible->Role();
   if (role == roles::HEADING || role == roles::LANDMARK ||
       aAccessible->LandmarkRole()) {
@@ -156,7 +156,7 @@ uint16_t TraversalRule::SectionMatch(Accessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::LandmarkMatch(Accessible* aAccessible) {
+uint16_t TraversalRule::LandmarkMatch(LocalAccessible* aAccessible) {
   if (aAccessible->LandmarkRole()) {
     return nsIAccessibleTraversalRule::FILTER_MATCH;
   }
@@ -164,7 +164,7 @@ uint16_t TraversalRule::LandmarkMatch(Accessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::ControlMatch(Accessible* aAccessible) {
+uint16_t TraversalRule::ControlMatch(LocalAccessible* aAccessible) {
   switch (aAccessible->Role()) {
     case roles::PUSHBUTTON:
     case roles::SPINBUTTON:
@@ -203,7 +203,7 @@ uint16_t TraversalRule::ControlMatch(Accessible* aAccessible) {
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
 }
 
-uint16_t TraversalRule::DefaultMatch(Accessible* aAccessible) {
+uint16_t TraversalRule::DefaultMatch(LocalAccessible* aAccessible) {
   switch (aAccessible->Role()) {
     case roles::COMBOBOX:
       // We don't want to ignore the subtree because this is often

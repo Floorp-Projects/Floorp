@@ -16,7 +16,7 @@ class nsIAccessible;
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 
 /**
  * XPCOM nsIAccessibleHyperLink implementation, used by xpcAccessibleGeneric

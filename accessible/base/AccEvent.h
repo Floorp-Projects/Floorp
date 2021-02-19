@@ -8,7 +8,7 @@
 
 #include "nsIAccessibleEvent.h"
 
-#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/LocalAccessible.h"
 
 class nsEventShell;
 namespace mozilla {
@@ -72,7 +72,7 @@ class AccEvent {
   };
 
   // Initialize with an accessible.
-  AccEvent(uint32_t aEventType, Accessible* aAccessible,
+  AccEvent(uint32_t aEventType, LocalAccessible* aAccessible,
            EIsFromUserInput aIsFromUserInput = eAutoDetect,
            EEventRule aEventRule = eRemoveDupes);
 
@@ -84,7 +84,7 @@ class AccEvent {
     return static_cast<EIsFromUserInput>(mIsFromUserInput);
   }
 
-  Accessible* GetAccessible() const { return mAccessible; }
+  LocalAccessible* GetAccessible() const { return mAccessible; }
   DocAccessible* Document() const { return mAccessible->Document(); }
 
   /**
@@ -124,7 +124,7 @@ class AccEvent {
   bool mIsFromUserInput;
   uint32_t mEventType;
   EEventRule mEventRule;
-  RefPtr<Accessible> mAccessible;
+  RefPtr<LocalAccessible> mAccessible;
 
   friend class EventQueue;
   friend class EventTree;
@@ -137,14 +137,15 @@ class AccEvent {
  */
 class AccStateChangeEvent : public AccEvent {
  public:
-  AccStateChangeEvent(Accessible* aAccessible, uint64_t aState, bool aIsEnabled,
+  AccStateChangeEvent(LocalAccessible* aAccessible, uint64_t aState,
+                      bool aIsEnabled,
                       EIsFromUserInput aIsFromUserInput = eAutoDetect)
       : AccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible,
                  aIsFromUserInput, eCoalesceStateChange),
         mState(aState),
         mIsEnabled(aIsEnabled) {}
 
-  AccStateChangeEvent(Accessible* aAccessible, uint64_t aState)
+  AccStateChangeEvent(LocalAccessible* aAccessible, uint64_t aState)
       : AccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible,
                  eAutoDetect, eCoalesceStateChange),
         mState(aState) {
@@ -173,7 +174,7 @@ class AccStateChangeEvent : public AccEvent {
  */
 class AccTextChangeEvent : public AccEvent {
  public:
-  AccTextChangeEvent(Accessible* aAccessible, int32_t aStart,
+  AccTextChangeEvent(LocalAccessible* aAccessible, int32_t aStart,
                      const nsAString& aModifiedText, bool aIsInserted,
                      EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
@@ -207,7 +208,7 @@ class AccTextChangeEvent : public AccEvent {
  */
 class AccTreeMutationEvent : public AccEvent {
  public:
-  AccTreeMutationEvent(uint32_t aEventType, Accessible* aTarget)
+  AccTreeMutationEvent(uint32_t aEventType, LocalAccessible* aTarget)
       : AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder),
         mGeneration(0) {}
 
@@ -239,7 +240,7 @@ class AccTreeMutationEvent : public AccEvent {
  */
 class AccMutationEvent : public AccTreeMutationEvent {
  public:
-  AccMutationEvent(uint32_t aEventType, Accessible* aTarget)
+  AccMutationEvent(uint32_t aEventType, LocalAccessible* aTarget)
       : AccTreeMutationEvent(aEventType, aTarget) {
     // Don't coalesce these since they are coalesced by reorder event. Coalesce
     // contained text change events.
@@ -257,11 +258,11 @@ class AccMutationEvent : public AccTreeMutationEvent {
   bool IsShow() const { return mEventType == nsIAccessibleEvent::EVENT_SHOW; }
   bool IsHide() const { return mEventType == nsIAccessibleEvent::EVENT_HIDE; }
 
-  Accessible* LocalParent() const { return mParent; }
+  LocalAccessible* LocalParent() const { return mParent; }
 
  protected:
   nsCOMPtr<nsINode> mNode;
-  RefPtr<Accessible> mParent;
+  RefPtr<LocalAccessible> mParent;
   RefPtr<AccTextChangeEvent> mTextChangeEvent;
 
   friend class EventTree;
@@ -273,7 +274,7 @@ class AccMutationEvent : public AccTreeMutationEvent {
  */
 class AccHideEvent : public AccMutationEvent {
  public:
-  explicit AccHideEvent(Accessible* aTarget, bool aNeedsShutdown = true);
+  explicit AccHideEvent(LocalAccessible* aTarget, bool aNeedsShutdown = true);
 
   // Event
   static const EventGroup kEventGroup = eHideEvent;
@@ -282,15 +283,15 @@ class AccHideEvent : public AccMutationEvent {
   }
 
   // AccHideEvent
-  Accessible* TargetParent() const { return mParent; }
-  Accessible* TargetNextSibling() const { return mNextSibling; }
-  Accessible* TargetPrevSibling() const { return mPrevSibling; }
+  LocalAccessible* TargetParent() const { return mParent; }
+  LocalAccessible* TargetNextSibling() const { return mNextSibling; }
+  LocalAccessible* TargetPrevSibling() const { return mPrevSibling; }
   bool NeedsShutdown() const { return mNeedsShutdown; }
 
  protected:
   bool mNeedsShutdown;
-  RefPtr<Accessible> mNextSibling;
-  RefPtr<Accessible> mPrevSibling;
+  RefPtr<LocalAccessible> mNextSibling;
+  RefPtr<LocalAccessible> mPrevSibling;
 
   friend class EventTree;
   friend class NotificationController;
@@ -301,7 +302,7 @@ class AccHideEvent : public AccMutationEvent {
  */
 class AccShowEvent : public AccMutationEvent {
  public:
-  explicit AccShowEvent(Accessible* aTarget);
+  explicit AccShowEvent(LocalAccessible* aTarget);
 
   // Event
   static const EventGroup kEventGroup = eShowEvent;
@@ -323,7 +324,7 @@ class AccShowEvent : public AccMutationEvent {
  */
 class AccReorderEvent : public AccTreeMutationEvent {
  public:
-  explicit AccReorderEvent(Accessible* aTarget)
+  explicit AccReorderEvent(LocalAccessible* aTarget)
       : AccTreeMutationEvent(::nsIAccessibleEvent::EVENT_REORDER, aTarget) {}
   virtual ~AccReorderEvent() {}
 
@@ -339,7 +340,7 @@ class AccReorderEvent : public AccTreeMutationEvent {
  */
 class AccCaretMoveEvent : public AccEvent {
  public:
-  AccCaretMoveEvent(Accessible* aAccessible, int32_t aCaretOffset,
+  AccCaretMoveEvent(LocalAccessible* aAccessible, int32_t aCaretOffset,
                     bool aIsSelectionCollapsed,
                     EIsFromUserInput aIsFromUserInput = eAutoDetect)
       : AccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible,
@@ -407,7 +408,7 @@ class AccSelChangeEvent : public AccEvent {
  public:
   enum SelChangeType { eSelectionAdd, eSelectionRemove };
 
-  AccSelChangeEvent(Accessible* aWidget, Accessible* aItem,
+  AccSelChangeEvent(LocalAccessible* aWidget, LocalAccessible* aItem,
                     SelChangeType aSelChangeType);
 
   virtual ~AccSelChangeEvent() {}
@@ -419,11 +420,11 @@ class AccSelChangeEvent : public AccEvent {
   }
 
   // AccSelChangeEvent
-  Accessible* Widget() const { return mWidget; }
+  LocalAccessible* Widget() const { return mWidget; }
 
  private:
-  RefPtr<Accessible> mWidget;
-  RefPtr<Accessible> mItem;
+  RefPtr<LocalAccessible> mWidget;
+  RefPtr<LocalAccessible> mItem;
   SelChangeType mSelChangeType;
   uint32_t mPreceedingCount;
   AccSelChangeEvent* mPackedEvent;
@@ -436,7 +437,7 @@ class AccSelChangeEvent : public AccEvent {
  */
 class AccTableChangeEvent : public AccEvent {
  public:
-  AccTableChangeEvent(Accessible* aAccessible, uint32_t aEventType,
+  AccTableChangeEvent(LocalAccessible* aAccessible, uint32_t aEventType,
                       int32_t aRowOrColIndex, int32_t aNumRowsOrCols);
 
   // AccEvent
@@ -460,10 +461,11 @@ class AccTableChangeEvent : public AccEvent {
  */
 class AccVCChangeEvent : public AccEvent {
  public:
-  AccVCChangeEvent(Accessible* aAccessible, Accessible* aOldAccessible,
-                   int32_t aOldStart, int32_t aOldEnd,
-                   Accessible* aNewAccessible, int32_t aNewStart,
-                   int32_t aNewEnd, int16_t aReason, int16_t aBoundaryType,
+  AccVCChangeEvent(LocalAccessible* aAccessible,
+                   LocalAccessible* aOldAccessible, int32_t aOldStart,
+                   int32_t aOldEnd, LocalAccessible* aNewAccessible,
+                   int32_t aNewStart, int32_t aNewEnd, int16_t aReason,
+                   int16_t aBoundaryType,
                    EIsFromUserInput aIsFromUserInput = eFromUserInput);
 
   virtual ~AccVCChangeEvent() {}
@@ -475,18 +477,18 @@ class AccVCChangeEvent : public AccEvent {
   }
 
   // AccVCChangeEvent
-  Accessible* OldAccessible() const { return mOldAccessible; }
+  LocalAccessible* OldAccessible() const { return mOldAccessible; }
   int32_t OldStartOffset() const { return mOldStart; }
   int32_t OldEndOffset() const { return mOldEnd; }
-  Accessible* NewAccessible() const { return mNewAccessible; }
+  LocalAccessible* NewAccessible() const { return mNewAccessible; }
   int32_t NewStartOffset() const { return mNewStart; }
   int32_t NewEndOffset() const { return mNewEnd; }
   int32_t Reason() const { return mReason; }
   int32_t BoundaryType() const { return mBoundaryType; }
 
  private:
-  RefPtr<Accessible> mOldAccessible;
-  RefPtr<Accessible> mNewAccessible;
+  RefPtr<LocalAccessible> mOldAccessible;
+  RefPtr<LocalAccessible> mNewAccessible;
   int32_t mOldStart;
   int32_t mNewStart;
   int32_t mOldEnd;
@@ -500,7 +502,7 @@ class AccVCChangeEvent : public AccEvent {
  */
 class AccObjectAttrChangedEvent : public AccEvent {
  public:
-  AccObjectAttrChangedEvent(Accessible* aAccessible, nsAtom* aAttribute)
+  AccObjectAttrChangedEvent(LocalAccessible* aAccessible, nsAtom* aAttribute)
       : AccEvent(::nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
                  aAccessible),
         mAttribute(aAttribute) {}
@@ -525,7 +527,7 @@ class AccObjectAttrChangedEvent : public AccEvent {
  */
 class AccScrollingEvent : public AccEvent {
  public:
-  AccScrollingEvent(uint32_t aEventType, Accessible* aAccessible,
+  AccScrollingEvent(uint32_t aEventType, LocalAccessible* aAccessible,
                     uint32_t aScrollX, uint32_t aScrollY, uint32_t aMaxScrollX,
                     uint32_t aMaxScrollY)
       : AccEvent(aEventType, aAccessible),
@@ -563,8 +565,8 @@ class AccScrollingEvent : public AccEvent {
  */
 class AccAnnouncementEvent : public AccEvent {
  public:
-  AccAnnouncementEvent(Accessible* aAccessible, const nsAString& aAnnouncement,
-                       uint16_t aPriority)
+  AccAnnouncementEvent(LocalAccessible* aAccessible,
+                       const nsAString& aAnnouncement, uint16_t aPriority)
       : AccEvent(nsIAccessibleEvent::EVENT_ANNOUNCEMENT, aAccessible),
         mAnnouncement(aAnnouncement),
         mPriority(aPriority) {}

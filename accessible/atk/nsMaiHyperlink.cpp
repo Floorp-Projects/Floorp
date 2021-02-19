@@ -146,7 +146,7 @@ gchar* getUriCB(AtkHyperlink* aLink, gint aLinkIndex) {
   if (!maiLink) return nullptr;
 
   nsAutoCString cautoStr;
-  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
+  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
     nsCOMPtr<nsIURI> uri = hyperlink->AnchorURIAt(aLinkIndex);
     if (!uri) return nullptr;
 
@@ -169,8 +169,8 @@ AtkObject* getObjectCB(AtkHyperlink* aLink, gint aLinkIndex) {
     return nullptr;
   }
 
-  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
-    Accessible* anchor = hyperlink->AnchorAt(aLinkIndex);
+  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
+    LocalAccessible* anchor = hyperlink->AnchorAt(aLinkIndex);
     NS_ENSURE_TRUE(anchor, nullptr);
 
     return AccessibleWrap::GetAtkObject(anchor);
@@ -184,7 +184,7 @@ gint getEndIndexCB(AtkHyperlink* aLink) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return false;
 
-  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
+  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
     return static_cast<gint>(hyperlink->EndOffset());
   }
 
@@ -197,7 +197,7 @@ gint getStartIndexCB(AtkHyperlink* aLink) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return -1;
 
-  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
+  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
     return static_cast<gint>(hyperlink->StartOffset());
   }
 
@@ -210,7 +210,7 @@ gboolean isValidCB(AtkHyperlink* aLink) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return false;
 
-  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
+  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
     return static_cast<gboolean>(hyperlink->IsLinkValid());
   }
 
@@ -221,7 +221,7 @@ gint getAnchorCountCB(AtkHyperlink* aLink) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return -1;
 
-  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
+  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
     return static_cast<gint>(hyperlink->AnchorCount());
   }
 

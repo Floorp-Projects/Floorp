@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccessibleOrProxy.h"
 #include "DocAccessibleChild.h"
 #include "DocAccessibleWrap.h"
@@ -110,12 +110,12 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       continue;
     }
 
-    Accessible* visibleAcc = docAcc->GetAccessibleOrContainer(content);
+    LocalAccessible* visibleAcc = docAcc->GetAccessibleOrContainer(content);
     if (!visibleAcc) {
       continue;
     }
 
-    for (Accessible* acc = visibleAcc; acc && acc != docAcc->LocalParent();
+    for (LocalAccessible* acc = visibleAcc; acc && acc != docAcc->LocalParent();
          acc = acc->LocalParent()) {
       if (inViewAccs.Contains(acc->UniqueID())) {
         break;
@@ -128,7 +128,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     DocAccessibleChild* ipcDoc = docAcc->IPCDoc();
     nsTArray<BatchData> cacheData(inViewAccs.Count());
     for (auto iter = inViewAccs.Iter(); !iter.Done(); iter.Next()) {
-      Accessible* accessible = iter.Data();
+      LocalAccessible* accessible = iter.Data();
       nsAutoString name;
       accessible->Name(name);
       nsAutoString textValue;
@@ -162,8 +162,8 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     AccessibleOrProxy accOrProxy = AccessibleOrProxy(docAcc);
     a11y::Pivot pivot(accOrProxy);
     TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT);
-    Accessible* first = pivot.First(rule).AsAccessible();
-    Accessible* last = pivot.Last(rule).AsAccessible();
+    LocalAccessible* first = pivot.First(rule).AsAccessible();
+    LocalAccessible* last = pivot.Last(rule).AsAccessible();
 
     // If first/last are null, pass the root document as pivot boundary.
     if (IPCAccessibilityActive()) {
@@ -266,7 +266,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
     DocAccessibleChild* ipcDoc = IPCDoc();
     nsTArray<BatchData> boundsData(mFocusPath.Count());
     for (auto iter = mFocusPath.Iter(); !iter.Done(); iter.Next()) {
-      Accessible* accessible = iter.Data();
+      LocalAccessible* accessible = iter.Data();
       if (!accessible || accessible->IsDefunct()) {
         MOZ_ASSERT_UNREACHABLE("Focus path cached accessible is gone.");
         continue;
@@ -285,7 +285,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
                  SessionAccessibility::GetInstanceFor(this)) {
     nsTArray<AccessibleWrap*> accessibles(mFocusPath.Count());
     for (auto iter = mFocusPath.Iter(); !iter.Done(); iter.Next()) {
-      Accessible* accessible = iter.Data();
+      LocalAccessible* accessible = iter.Data();
       if (!accessible || accessible->IsDefunct()) {
         MOZ_ASSERT_UNREACHABLE("Focus path cached accessible is gone.");
         continue;

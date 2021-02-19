@@ -7,7 +7,7 @@
 #ifndef mozilla_a11y_ProxyAccessible_h
 #define mozilla_a11y_ProxyAccessible_h
 
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "mozilla/a11y/ProxyAccessibleBase.h"
 #include "mozilla/a11y/Role.h"
 #include "nsString.h"

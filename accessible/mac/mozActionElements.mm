@@ -8,7 +8,7 @@
 #import "mozActionElements.h"
 
 #import "MacUtils.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "DocAccessible.h"
 #include "XULTabAccessible.h"
 #include "HTMLFormControlAccessible.h"
@@ -132,7 +132,7 @@ enum CheckboxValue {
       do_QueryFrame(mGeckoAccessible.AsAccessible()->GetFrame());
   nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nullptr;
 
-  Accessible* selectedAcc = nullptr;
+  LocalAccessible* selectedAcc = nullptr;
   if (selectedFrame) {
     nsINode* node = selectedFrame->GetContent();
     selectedAcc =
@@ -182,7 +182,7 @@ enum CheckboxValue {
 - (void)changeValueBySteps:(int)factor {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     double newVal = acc->CurValue() + (acc->Step() * factor);
     double min = acc->MinValue();
     double max = acc->MaxValue();

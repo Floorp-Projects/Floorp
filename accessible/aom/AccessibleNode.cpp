@@ -12,7 +12,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"
 

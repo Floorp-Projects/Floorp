@@ -20,13 +20,13 @@ class XULSelectControlAccessible : public AccessibleWrap {
   XULSelectControlAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~XULSelectControlAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown() override;
 
   // SelectAccessible
-  virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
+  virtual void SelectedItems(nsTArray<LocalAccessible*>* aItems) override;
   virtual uint32_t SelectedItemCount() override;
-  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
+  virtual LocalAccessible* GetSelectedItem(uint32_t aIndex) override;
   virtual bool IsItemSelected(uint32_t aIndex) override;
   virtual bool AddItemToSelection(uint32_t aIndex) override;
   virtual bool RemoveItemFromSelection(uint32_t aIndex) override;
@@ -34,8 +34,8 @@ class XULSelectControlAccessible : public AccessibleWrap {
   virtual bool UnselectAll() override;
 
   // Widgets
-  virtual Accessible* CurrentItem() const override;
-  virtual void SetCurrentItem(const Accessible* aItem) override;
+  virtual LocalAccessible* CurrentItem() const override;
+  virtual void SetCurrentItem(const LocalAccessible* aItem) override;
 
  protected:
   RefPtr<dom::Element> mSelectControl;

@@ -5,7 +5,7 @@
 
 #include "XULFormControlAccessible.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "HTMLFormControlAccessible.h"
 #include "nsAccUtils.h"
 #include "DocAccessible.h"
@@ -63,7 +63,7 @@ bool XULButtonAccessible::DoAction(uint8_t aIndex) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULButtonAccessible: Accessible
+// XULButtonAccessible: LocalAccessible
 
 role XULButtonAccessible::NativeRole() const { return roles::PUSHBUTTON; }
 
@@ -71,7 +71,7 @@ uint64_t XULButtonAccessible::NativeState() const {
   // Possible states: focused, focusable, unavailable(disabled).
 
   // get focus and disable status from base class
-  uint64_t state = Accessible::NativeState();
+  uint64_t state = LocalAccessible::NativeState();
 
   // Buttons can be checked -- they simply appear pressed in rather than checked
   nsCOMPtr<nsIDOMXULButtonElement> xulButtonElement = Elm()->AsXULButton();
@@ -110,7 +110,7 @@ bool XULButtonAccessible::IsActiveWidget() const {
 
 bool XULButtonAccessible::AreItemsOperable() const {
   if (IsMenuButton()) {
-    Accessible* menuPopup = mChildren.SafeElementAt(0, nullptr);
+    LocalAccessible* menuPopup = mChildren.SafeElementAt(0, nullptr);
     if (menuPopup) {
       nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(menuPopup->GetFrame());
       return menuPopupFrame->IsOpen();
@@ -119,7 +119,7 @@ bool XULButtonAccessible::AreItemsOperable() const {
   return false;  // no items
 }
 
-Accessible* XULButtonAccessible::ContainerWidget() const {
+LocalAccessible* XULButtonAccessible::ContainerWidget() const {
   if (IsMenuButton() && mParent && mParent->IsAutoComplete()) return mParent;
   return nullptr;
 }
@@ -213,7 +213,7 @@ role XULGroupboxAccessible::NativeRole() const { return roles::GROUPING; }
 
 ENameValueFlag XULGroupboxAccessible::NativeName(nsString& aName) const {
   // XXX: we use the first related accessible only.
-  Accessible* label = RelationByType(RelationType::LABELLED_BY).Next();
+  LocalAccessible* label = RelationByType(RelationType::LABELLED_BY).Next();
   if (label) return label->Name(aName);
 
   return eNameOK;
@@ -224,7 +224,7 @@ Relation XULGroupboxAccessible::RelationByType(RelationType aType) const {
 
   // The label for xul:groupbox is generated from the first xul:label
   if (aType == RelationType::LABELLED_BY && ChildCount() > 0) {
-    Accessible* childAcc = LocalChildAt(0);
+    LocalAccessible* childAcc = LocalChildAt(0);
     if (childAcc->Role() == roles::LABEL &&
         childAcc->GetContent()->IsXULElement(nsGkAtoms::label)) {
       rel.AppendTarget(childAcc);
@@ -266,7 +266,7 @@ uint64_t XULRadioButtonAccessible::NativeInteractiveState() const {
 ////////////////////////////////////////////////////////////////////////////////
 // XULRadioButtonAccessible: Widgets
 
-Accessible* XULRadioButtonAccessible::ContainerWidget() const {
+LocalAccessible* XULRadioButtonAccessible::ContainerWidget() const {
   return mParent;
 }
 
@@ -307,7 +307,7 @@ bool XULRadioGroupAccessible::IsActiveWidget() const {
 
 bool XULRadioGroupAccessible::AreItemsOperable() const { return true; }
 
-Accessible* XULRadioGroupAccessible::CurrentItem() const {
+LocalAccessible* XULRadioGroupAccessible::CurrentItem() const {
   if (!mSelectControl) {
     return nullptr;
   }
@@ -329,7 +329,7 @@ Accessible* XULRadioGroupAccessible::CurrentItem() const {
   return nullptr;
 }
 
-void XULRadioGroupAccessible::SetCurrentItem(const Accessible* aItem) {
+void XULRadioGroupAccessible::SetCurrentItem(const LocalAccessible* aItem) {
   if (!mSelectControl) {
     return;
   }
@@ -365,12 +365,12 @@ void XULToolbarButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
   int32_t setSize = 0;
   int32_t posInSet = 0;
 
-  Accessible* parent = LocalParent();
+  LocalAccessible* parent = LocalParent();
   if (!parent) return;
 
   uint32_t childCount = parent->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = parent->LocalChildAt(childIdx);
+    LocalAccessible* child = parent->LocalChildAt(childIdx);
     if (IsSeparator(child)) {  // end of a group of buttons
       if (posInSet) break;     // we've found our group, so we're done
 
@@ -387,7 +387,7 @@ void XULToolbarButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
   *aSetSize = setSize;
 }
 
-bool XULToolbarButtonAccessible::IsSeparator(Accessible* aAccessible) {
+bool XULToolbarButtonAccessible::IsSeparator(LocalAccessible* aAccessible) {
   nsIContent* content = aAccessible->GetContent();
   return content && content->IsAnyOfXULElements(nsGkAtoms::toolbarseparator,
                                                 nsGkAtoms::toolbarspacer,

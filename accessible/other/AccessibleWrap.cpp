@@ -11,7 +11,7 @@ using namespace mozilla::a11y;
 // construction
 //-----------------------------------------------------
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-    : Accessible(aContent, aDoc) {}
+    : LocalAccessible(aContent, aDoc) {}
 
 //-----------------------------------------------------
 // destruction

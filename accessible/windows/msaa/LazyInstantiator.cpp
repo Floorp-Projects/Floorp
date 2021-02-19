@@ -7,7 +7,7 @@
 #include "LazyInstantiator.h"
 
 #include "MainThreadUtils.h"
-#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/LocalAccessible.h"
 #include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/a11y/Compatibility.h"
 #include "mozilla/a11y/Platform.h"
@@ -70,14 +70,15 @@ already_AddRefed<IAccessible> LazyInstantiator::GetRootAccessible(HWND aHwnd) {
   }
 
   // a11y is running, so we just resolve the real root accessible.
-  a11y::Accessible* rootAcc = widget::WinUtils::GetRootAccessibleForHWND(aHwnd);
+  a11y::LocalAccessible* rootAcc =
+      widget::WinUtils::GetRootAccessibleForHWND(aHwnd);
   if (!rootAcc) {
     return nullptr;
   }
 
   if (!rootAcc->IsRoot()) {
     // rootAcc might represent a popup as opposed to a true root accessible.
-    // In that case we just use the regular Accessible::GetNativeInterface.
+    // In that case we just use the regular LocalAccessible::GetNativeInterface.
     rootAcc->GetNativeInterface(getter_AddRefs(result));
     return result.forget();
   }
@@ -247,7 +248,7 @@ bool LazyInstantiator::ShouldInstantiate(const DWORD aClientTid) {
 }
 
 RootAccessibleWrap* LazyInstantiator::ResolveRootAccWrap() {
-  Accessible* acc = widget::WinUtils::GetRootAccessibleForHWND(mHwnd);
+  LocalAccessible* acc = widget::WinUtils::GetRootAccessibleForHWND(mHwnd);
   if (!acc || !acc->IsRoot()) {
     return nullptr;
   }

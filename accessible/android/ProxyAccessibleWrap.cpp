@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ProxyAccessibleWrap.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 
 #include "nsPersistentProperties.h"
 
@@ -50,7 +50,7 @@ void ProxyAccessibleWrap::Shutdown() {
   mStateFlags |= eIsDefunct;
 }
 
-// Accessible
+// LocalAccessible
 
 already_AddRefed<nsIPersistentProperties> ProxyAccessibleWrap::Attributes() {
   AutoTArray<Attribute, 10> attrs;
@@ -62,7 +62,7 @@ uint32_t ProxyAccessibleWrap::ChildCount() const {
   return Proxy()->ChildrenCount();
 }
 
-Accessible* ProxyAccessibleWrap::LocalChildAt(uint32_t aIndex) const {
+LocalAccessible* ProxyAccessibleWrap::LocalChildAt(uint32_t aIndex) const {
   ProxyAccessible* child = Proxy()->RemoteChildAt(aIndex);
   return child ? WrapperFor(child) : nullptr;
 }

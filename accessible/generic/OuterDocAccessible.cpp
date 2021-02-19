@@ -5,7 +5,7 @@
 
 #include "OuterDocAccessible.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
@@ -74,18 +74,18 @@ void OuterDocAccessible::SendEmbedderAccessible(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible public (DON'T add methods here)
+// LocalAccessible public (DON'T add methods here)
 
 role OuterDocAccessible::NativeRole() const { return roles::INTERNAL_FRAME; }
 
-Accessible* OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
-                                             EWhichChildAtPoint aWhichChild) {
+LocalAccessible* OuterDocAccessible::ChildAtPoint(
+    int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   nsIntRect docRect = Bounds();
   if (!docRect.Contains(aX, aY)) return nullptr;
 
   // Always return the inner doc as direct child accessible unless bounds
   // outside of it.
-  Accessible* child = LocalChildAt(0);
+  LocalAccessible* child = LocalChildAt(0);
   NS_ENSURE_TRUE(child, nullptr);
 
   if (aWhichChild == eDeepestChild) {
@@ -103,14 +103,14 @@ Accessible* OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible public
+// LocalAccessible public
 
 void OuterDocAccessible::Shutdown() {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy)) logging::OuterDocDestroy(this);
 #endif
 
-  Accessible* child = mChildren.SafeElementAt(0, nullptr);
+  LocalAccessible* child = mChildren.SafeElementAt(0, nullptr);
   if (child) {
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocDestroy)) {
@@ -137,7 +137,8 @@ void OuterDocAccessible::Shutdown() {
   AccessibleWrap::Shutdown();
 }
 
-bool OuterDocAccessible::InsertChildAt(uint32_t aIdx, Accessible* aAccessible) {
+bool OuterDocAccessible::InsertChildAt(uint32_t aIdx,
+                                       LocalAccessible* aAccessible) {
   MOZ_RELEASE_ASSERT(aAccessible->IsDoc(),
                      "OuterDocAccessible can have a document child only!");
 
@@ -161,8 +162,8 @@ bool OuterDocAccessible::InsertChildAt(uint32_t aIdx, Accessible* aAccessible) {
   return true;
 }
 
-bool OuterDocAccessible::RemoveChild(Accessible* aAccessible) {
-  Accessible* child = mChildren.SafeElementAt(0, nullptr);
+bool OuterDocAccessible::RemoveChild(LocalAccessible* aAccessible) {
+  LocalAccessible* child = mChildren.SafeElementAt(0, nullptr);
   MOZ_ASSERT(child == aAccessible, "Wrong child to remove!");
   if (child != aAccessible) {
     return false;
@@ -192,7 +193,7 @@ bool OuterDocAccessible::IsAcceptableChild(nsIContent* aEl) const {
 
 #if defined(XP_WIN)
 
-Accessible* OuterDocAccessible::RemoteChildDocAccessible() const {
+LocalAccessible* OuterDocAccessible::RemoteChildDocAccessible() const {
   ProxyAccessible* docProxy = RemoteChildDoc();
   if (docProxy) {
     // We're in the parent process, but we're embedding a remote document.
@@ -224,8 +225,8 @@ uint32_t OuterDocAccessible::ChildCount() const {
   return result;
 }
 
-Accessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
-  Accessible* result = AccessibleWrap::LocalChildAt(aIndex);
+LocalAccessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
+  LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
   if (result || aIndex) {
     return result;
   }

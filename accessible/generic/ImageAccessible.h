@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace a11y {
 
-/* Accessible for supporting images
+/* LocalAccessible for supporting images
  * supports:
  * - gets name, role
  * - support basic state
@@ -20,7 +20,7 @@ class ImageAccessible : public LinkableAccessible {
  public:
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
@@ -37,7 +37,7 @@ class ImageAccessible : public LinkableAccessible {
  protected:
   virtual ~ImageAccessible();
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
  private:
@@ -69,9 +69,9 @@ class ImageAccessible : public LinkableAccessible {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible downcasting method
+// LocalAccessible downcasting method
 
-inline ImageAccessible* Accessible::AsImage() {
+inline ImageAccessible* LocalAccessible::AsImage() {
   return IsImage() ? static_cast<ImageAccessible*>(this) : nullptr;
 }
 

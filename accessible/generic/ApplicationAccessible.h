@@ -31,7 +31,7 @@ class ApplicationAccessible : public AccessibleWrap {
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ApplicationAccessible, AccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown() override;
   virtual nsIntRect Bounds() const override;
   virtual nsRect BoundsInAppUnits() const override;
@@ -46,9 +46,9 @@ class ApplicationAccessible : public AccessibleWrap {
   virtual uint64_t NativeState() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 
-  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild) override;
-  virtual Accessible* FocusedChild() override;
+  virtual LocalAccessible* ChildAtPoint(
+      int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
+  virtual LocalAccessible* FocusedChild() override;
 
   // ActionAccessible
   virtual KeyBinding AccessKey() const override;
@@ -91,15 +91,15 @@ class ApplicationAccessible : public AccessibleWrap {
  protected:
   virtual ~ApplicationAccessible() {}
 
-  // Accessible
-  virtual Accessible* GetSiblingAtOffset(
+  // LocalAccessible
+  virtual LocalAccessible* GetSiblingAtOffset(
       int32_t aOffset, nsresult* aError = nullptr) const override;
 
  private:
   nsCOMPtr<nsIXULAppInfo> mAppInfo;
 };
 
-inline ApplicationAccessible* Accessible::AsApplication() {
+inline ApplicationAccessible* LocalAccessible::AsApplication() {
   return IsApplication() ? static_cast<ApplicationAccessible*>(this) : nullptr;
 }
 

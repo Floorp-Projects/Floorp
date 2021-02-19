@@ -7629,7 +7629,7 @@ TextEventDispatcherListener* nsWindow::GetNativeTextEventDispatcherListener() {
 #    define NS_LOG_WMGETOBJECT(aWnd, aHwnd, aAcc)
 #  endif
 
-a11y::Accessible* nsWindow::GetAccessible() {
+a11y::LocalAccessible* nsWindow::GetAccessible() {
   // If the pref was ePlatformIsDisabled, return null here, disabling a11y.
   if (a11y::PlatformDisabledState() == a11y::ePlatformIsDisabled)
     return nullptr;

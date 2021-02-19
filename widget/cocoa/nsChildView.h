@@ -9,7 +9,7 @@
 // formal protocols
 #include "mozView.h"
 #ifdef ACCESSIBILITY
-#  include "mozilla/a11y/Accessible.h"
+#  include "mozilla/a11y/LocalAccessible.h"
 #  include "mozAccessibleProtocol.h"
 #endif
 
@@ -418,7 +418,7 @@ class nsChildView final : public nsBaseWidget {
   void HandleMainThreadCATransaction();
 
 #ifdef ACCESSIBILITY
-  already_AddRefed<mozilla::a11y::Accessible> GetDocumentAccessible();
+  already_AddRefed<mozilla::a11y::LocalAccessible> GetDocumentAccessible();
 #endif
 
   virtual void CreateCompositor() override;

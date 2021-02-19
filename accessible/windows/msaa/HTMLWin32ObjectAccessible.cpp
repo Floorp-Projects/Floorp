@@ -27,7 +27,7 @@ HTMLWin32ObjectOwnerAccessible::HTMLWin32ObjectOwnerAccessible(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// HTMLWin32ObjectOwnerAccessible: Accessible implementation
+// HTMLWin32ObjectOwnerAccessible: LocalAccessible implementation
 
 void HTMLWin32ObjectOwnerAccessible::Shutdown() {
   AccessibleWrap::Shutdown();

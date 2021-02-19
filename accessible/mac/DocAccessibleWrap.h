@@ -28,7 +28,7 @@ class DocAccessibleWrap : public DocAccessible {
                                 nsAtom* aAttribute, int32_t aModType,
                                 const nsAttrValue* aOldValue) override;
 
-  void QueueNewLiveRegion(Accessible* aAccessible);
+  void QueueNewLiveRegion(LocalAccessible* aAccessible);
 
   void ProcessNewLiveRegions();
 

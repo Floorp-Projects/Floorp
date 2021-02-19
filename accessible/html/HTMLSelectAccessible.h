@@ -34,7 +34,7 @@ class HTMLSelectListAccessible : public AccessibleWrap {
   HTMLSelectListAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLSelectListAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
@@ -47,8 +47,8 @@ class HTMLSelectListAccessible : public AccessibleWrap {
   virtual bool IsWidget() const override;
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
-  virtual Accessible* CurrentItem() const override;
-  virtual void SetCurrentItem(const Accessible* aItem) override;
+  virtual LocalAccessible* CurrentItem() const override;
+  virtual void SetCurrentItem(const LocalAccessible* aItem) override;
 };
 
 /*
@@ -61,7 +61,7 @@ class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
   HTMLSelectOptionAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLSelectOptionAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
@@ -76,24 +76,24 @@ class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
   virtual bool DoAction(uint8_t aIndex) const override;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const override;
+  virtual LocalAccessible* ContainerWidget() const override;
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
  private:
   /**
    * Return a select accessible the option belongs to if any.
    */
-  Accessible* GetSelect() const {
-    Accessible* parent = mParent;
+  LocalAccessible* GetSelect() const {
+    LocalAccessible* parent = mParent;
     if (parent && parent->IsHTMLOptGroup()) {
       parent = parent->LocalParent();
     }
 
     if (parent && parent->IsListControl()) {
-      Accessible* combobox = parent->LocalParent();
+      LocalAccessible* combobox = parent->LocalParent();
       return combobox && combobox->IsCombobox() ? combobox : mParent;
     }
 
@@ -103,14 +103,14 @@ class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
   /**
    * Return a combobox accessible the option belongs to if any.
    */
-  Accessible* GetCombobox() const {
-    Accessible* parent = mParent;
+  LocalAccessible* GetCombobox() const {
+    LocalAccessible* parent = mParent;
     if (parent && parent->IsHTMLOptGroup()) {
       parent = parent->LocalParent();
     }
 
     if (parent && parent->IsListControl()) {
-      Accessible* combobox = parent->LocalParent();
+      LocalAccessible* combobox = parent->LocalParent();
       return combobox && combobox->IsCombobox() ? combobox : nullptr;
     }
 
@@ -129,7 +129,7 @@ class HTMLSelectOptGroupAccessible : public HTMLSelectOptionAccessible {
   }
   virtual ~HTMLSelectOptGroupAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
@@ -156,13 +156,13 @@ class HTMLComboboxAccessible final : public AccessibleWrap {
   HTMLComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLComboboxAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown() override;
   virtual void Description(nsString& aDescription) override;
   virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
-  virtual bool RemoveChild(Accessible* aChild) override;
+  virtual bool RemoveChild(LocalAccessible* aChild) override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
   // ActionAccessible
@@ -174,14 +174,14 @@ class HTMLComboboxAccessible final : public AccessibleWrap {
   virtual bool IsWidget() const override;
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
-  virtual Accessible* CurrentItem() const override;
-  virtual void SetCurrentItem(const Accessible* aItem) override;
+  virtual LocalAccessible* CurrentItem() const override;
+  virtual void SetCurrentItem(const LocalAccessible* aItem) override;
 
  protected:
   /**
    * Return selected option.
    */
-  Accessible* SelectedOption() const;
+  LocalAccessible* SelectedOption() const;
 
  private:
   RefPtr<HTMLComboboxListAccessible> mListAccessible;
@@ -194,11 +194,11 @@ class HTMLComboboxAccessible final : public AccessibleWrap {
  */
 class HTMLComboboxListAccessible : public HTMLSelectListAccessible {
  public:
-  HTMLComboboxListAccessible(Accessible* aParent, nsIContent* aContent,
+  HTMLComboboxListAccessible(LocalAccessible* aParent, nsIContent* aContent,
                              DocAccessible* aDoc);
   virtual ~HTMLComboboxListAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual nsIFrame* GetFrame() const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;

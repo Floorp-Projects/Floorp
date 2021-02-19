@@ -170,7 +170,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvRangeOfChild(
   *aEndOffset = 0;
 
   HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
-  Accessible* child =
+  LocalAccessible* child =
       static_cast<DocAccessibleChild*>(Manager())->IdToAccessible(aChild);
   if (!acc || !child) {
     return IPC_OK();
@@ -189,7 +189,7 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeafAtOffset(
     return IPC_OK();
   }
 
-  Accessible* leaf = acc->LeafAtOffset(aOffset);
+  LocalAccessible* leaf = acc->LeafAtOffset(aOffset);
 
   MOZ_ASSERT(!leaf || leaf->Document() == acc->Document());
 
@@ -211,7 +211,7 @@ DocAccessiblePlatformExtChild::RecvAttributedTextForRange(
   }
 
   nsTArray<nsString> texts;
-  nsTArray<Accessible*> containers;
+  nsTArray<LocalAccessible*> containers;
   nsTArray<nsCOMPtr<nsIPersistentProperties>> props;
 
   acc->AttributedTextForRange(texts, props, containers, aStartOffset,

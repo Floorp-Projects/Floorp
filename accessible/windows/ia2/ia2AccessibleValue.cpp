@@ -10,7 +10,7 @@
 #include "AccessibleValue_i.c"
 
 #include "AccessibleWrap.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "IUnknownImpl.h"
 
 #include "mozilla/FloatingPoint.h"

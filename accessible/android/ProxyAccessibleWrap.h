@@ -15,11 +15,11 @@ namespace mozilla {
 namespace a11y {
 
 /**
- * A wrapper for Accessible proxies. The public methods here should be overriden
- * from AccessibleWrap or its super classes.
- * This gives us an abstraction layer so SessionAccessibility doesn't have
- * to distinguish between a local or remote accessibles.
- * NOTE: This shouldn't be regarded as a full Accessible implementation.
+ * A wrapper for Accessible proxies. The public methods here should be
+ * overriden from AccessibleWrap or its super classes. This gives us an
+ * abstraction layer so SessionAccessibility doesn't have to distinguish between
+ * a local or remote accessibles. NOTE: This shouldn't be regarded as a full
+ * Accessible implementation.
  */
 class ProxyAccessibleWrap : public AccessibleWrap {
  public:
@@ -27,13 +27,13 @@ class ProxyAccessibleWrap : public AccessibleWrap {
 
   virtual void Shutdown() override;
 
-  // Accessible
+  // LocalAccessible
 
   virtual already_AddRefed<nsIPersistentProperties> Attributes() override;
 
   virtual uint32_t ChildCount() const override;
 
-  virtual Accessible* LocalChildAt(uint32_t aIndex) const override;
+  virtual LocalAccessible* LocalChildAt(uint32_t aIndex) const override;
 
   virtual ENameValueFlag Name(nsString& aName) const override;
 

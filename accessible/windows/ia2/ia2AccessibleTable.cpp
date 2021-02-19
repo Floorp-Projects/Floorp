@@ -479,7 +479,7 @@ ia2AccessibleTable::get_selectedCells(IUnknown*** aCells,
   *aNSelectedCells = 0;
   if (!mTable) return CO_E_OBJNOTCONNECTED;
 
-  AutoTArray<Accessible*, 30> cells;
+  AutoTArray<LocalAccessible*, 30> cells;
   mTable->SelectedCells(&cells);
   if (cells.IsEmpty()) return S_FALSE;
 

@@ -44,7 +44,8 @@ class SessionAccessibility final
   static void Init();
   static RefPtr<SessionAccessibility> GetInstanceFor(
       ProxyAccessible* aAccessible);
-  static RefPtr<SessionAccessibility> GetInstanceFor(Accessible* aAccessible);
+  static RefPtr<SessionAccessibility> GetInstanceFor(
+      LocalAccessible* aAccessible);
 
   // Native implementations
   using Base::AttachNative;

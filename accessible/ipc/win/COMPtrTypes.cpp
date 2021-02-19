@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/LocalAccessible.h"
 #include "mozilla/a11y/HandlerProvider.h"
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/mscom/MainThreadHandoff.h"
@@ -26,7 +26,8 @@ using mozilla::mscom::STAUniquePtr;
 namespace mozilla {
 namespace a11y {
 
-IAccessibleHolder CreateHolderFromAccessible(NotNull<Accessible*> aAccToWrap) {
+IAccessibleHolder CreateHolderFromAccessible(
+    NotNull<LocalAccessible*> aAccToWrap) {
   MOZ_ASSERT(NS_IsMainThread());
 
   STAUniquePtr<IAccessible> iaToProxy;

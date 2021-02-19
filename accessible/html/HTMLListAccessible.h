@@ -29,7 +29,7 @@ class HTMLListAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLListAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 
@@ -48,14 +48,15 @@ class HTMLLIAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLLIAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown() override;
   virtual nsRect BoundsInAppUnits() const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 
-  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
-  virtual void RelocateChild(uint32_t aNewIndex, Accessible* aChild) override;
+  virtual bool InsertChildAt(uint32_t aIndex, LocalAccessible* aChild) override;
+  virtual void RelocateChild(uint32_t aNewIndex,
+                             LocalAccessible* aChild) override;
 
   // HTMLLIAccessible
   HTMLListBulletAccessible* Bullet() const { return mBullet; }
@@ -76,7 +77,7 @@ class HTMLListBulletAccessible : public LeafAccessible {
   HTMLListBulletAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLListBulletAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual nsIFrame* GetFrame() const override;
   virtual ENameValueFlag Name(nsString& aName) const override;
   virtual a11y::role NativeRole() const override;
@@ -92,7 +93,7 @@ class HTMLListBulletAccessible : public LeafAccessible {
   bool IsInside() const;
 };
 
-inline HTMLLIAccessible* Accessible::AsHTMLListItem() {
+inline HTMLLIAccessible* LocalAccessible::AsHTMLListItem() {
   return IsHTMLListItem() ? static_cast<HTMLLIAccessible*>(this) : nullptr;
 }
 

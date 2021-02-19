@@ -74,7 +74,7 @@ xpcAccessibleTextRange::GetEmbeddedChildren(nsIArray** aList) {
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<Accessible*> objects;
+  nsTArray<LocalAccessible*> objects;
   mRange.EmbeddedChildren(&objects);
 
   uint32_t len = objects.Length();
@@ -150,7 +150,7 @@ xpcAccessibleTextRange::Normalize(uint32_t aUnit) { return NS_OK; }
 
 NS_IMETHODIMP
 xpcAccessibleTextRange::Crop(nsIAccessible* aContainer, bool* aSuccess) {
-  Accessible* container = aContainer->ToInternalAccessible();
+  LocalAccessible* container = aContainer->ToInternalAccessible();
   NS_ENSURE_TRUE(container, NS_ERROR_INVALID_ARG);
 
   *aSuccess = mRange.Crop(container);

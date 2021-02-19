@@ -14,7 +14,7 @@
 
 #include <objc/objc.h>
 
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "PlatformExtTypes.h"
 #include "States.h"
 
@@ -29,7 +29,7 @@
 namespace mozilla {
 namespace a11y {
 
-class AccessibleWrap : public Accessible {
+class AccessibleWrap : public LocalAccessible {
  public:  // construction, destruction
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~AccessibleWrap();

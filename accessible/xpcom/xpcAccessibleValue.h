@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 
 /**
  * XPCOM nsIAccessibleValue interface implementation, used by

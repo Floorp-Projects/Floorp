@@ -5,7 +5,7 @@
 
 #include "EventTree.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "EmbeddedObjCollector.h"
 #include "NotificationController.h"
 #include "nsEventShell.h"
@@ -24,7 +24,7 @@ using namespace mozilla::a11y;
 
 EventTree* const TreeMutation::kNoEventTree = reinterpret_cast<EventTree*>(-1);
 
-TreeMutation::TreeMutation(Accessible* aParent, bool aNoEvents)
+TreeMutation::TreeMutation(LocalAccessible* aParent, bool aNoEvents)
     : mParent(aParent),
       mStartIdx(UINT32_MAX),
       mStateFlagsCopy(mParent->mStateFlags),
@@ -47,14 +47,14 @@ TreeMutation::TreeMutation(Accessible* aParent, bool aNoEvents)
   }
 #endif
 
-  mParent->mStateFlags |= Accessible::eKidsMutating;
+  mParent->mStateFlags |= LocalAccessible::eKidsMutating;
 }
 
 TreeMutation::~TreeMutation() {
   MOZ_ASSERT(mIsDone, "Done() must be called explicitly");
 }
 
-void TreeMutation::AfterInsertion(Accessible* aChild) {
+void TreeMutation::AfterInsertion(LocalAccessible* aChild) {
   MOZ_ASSERT(aChild->LocalParent() == mParent);
 
   if (static_cast<uint32_t>(aChild->mIndexInParent) < mStartIdx) {
@@ -71,7 +71,7 @@ void TreeMutation::AfterInsertion(Accessible* aChild) {
   aChild->SetShowEventTarget(true);
 }
 
-void TreeMutation::BeforeRemoval(Accessible* aChild, bool aNoShutdown) {
+void TreeMutation::BeforeRemoval(LocalAccessible* aChild, bool aNoShutdown) {
   MOZ_ASSERT(aChild->LocalParent() == mParent);
 
   if (static_cast<uint32_t>(aChild->mIndexInParent) < mStartIdx) {
@@ -89,8 +89,8 @@ void TreeMutation::BeforeRemoval(Accessible* aChild, bool aNoShutdown) {
 }
 
 void TreeMutation::Done() {
-  MOZ_ASSERT(mParent->mStateFlags & Accessible::eKidsMutating);
-  mParent->mStateFlags &= ~Accessible::eKidsMutating;
+  MOZ_ASSERT(mParent->mStateFlags & LocalAccessible::eKidsMutating);
+  mParent->mStateFlags &= ~LocalAccessible::eKidsMutating;
 
   uint32_t length = mParent->mChildren.Length();
 #ifdef DEBUG
@@ -106,11 +106,11 @@ void TreeMutation::Done() {
   }
 
   for (uint32_t idx = 0; idx < length; idx++) {
-    mParent->mChildren[idx]->mStateFlags |= Accessible::eGroupInfoDirty;
+    mParent->mChildren[idx]->mStateFlags |= LocalAccessible::eGroupInfoDirty;
   }
 
   mParent->mEmbeddedObjCollector = nullptr;
-  mParent->mStateFlags |= mStateFlagsCopy & Accessible::eKidsMutating;
+  mParent->mStateFlags |= mStateFlagsCopy & LocalAccessible::eKidsMutating;
 
 #ifdef DEBUG
   mIsDone = true;
@@ -127,7 +127,7 @@ void TreeMutation::Done() {
 }
 
 #ifdef A11Y_LOG
-const char* TreeMutation::PrefixLog(void* aData, Accessible* aAcc) {
+const char* TreeMutation::PrefixLog(void* aData, LocalAccessible* aAcc) {
   TreeMutation* thisObj = reinterpret_cast<TreeMutation*>(aData);
   if (thisObj->mParent == aAcc) {
     return "_X_";
@@ -143,13 +143,13 @@ const char* TreeMutation::PrefixLog(void* aData, Accessible* aAcc) {
 ////////////////////////////////////////////////////////////////////////////////
 // EventTree
 
-void EventTree::Shown(Accessible* aChild) {
+void EventTree::Shown(LocalAccessible* aChild) {
   RefPtr<AccShowEvent> ev = new AccShowEvent(aChild);
   Controller(aChild)->WithdrawPrecedingEvents(&ev->mPrecedingEvents);
   Mutated(ev);
 }
 
-void EventTree::Hidden(Accessible* aChild, bool aNeedsShutdown) {
+void EventTree::Hidden(LocalAccessible* aChild, bool aNeedsShutdown) {
   RefPtr<AccHideEvent> ev = new AccHideEvent(aChild, aNeedsShutdown);
   if (!aNeedsShutdown) {
     Controller(aChild)->StorePrecedingEvent(ev);
@@ -238,7 +238,7 @@ void EventTree::Process(const RefPtr<DocAccessible>& aDeathGrip) {
   mDependentEvents.Clear();
 }
 
-EventTree* EventTree::FindOrInsert(Accessible* aContainer) {
+EventTree* EventTree::FindOrInsert(LocalAccessible* aContainer) {
   if (!mFirst) {
     mFirst.reset(new EventTree(aContainer, mDependentEvents.IsEmpty()));
     return mFirst.get();
@@ -258,8 +258,8 @@ EventTree* EventTree::FindOrInsert(Accessible* aContainer) {
     }
 
     // Check if the given container is contained by a current node
-    Accessible* top = mContainer ? mContainer : aContainer->Document();
-    Accessible* parent = aContainer;
+    LocalAccessible* top = mContainer ? mContainer : aContainer->Document();
+    LocalAccessible* parent = aContainer;
     while (parent) {
       // Reached a top, no match for a current event.
       if (parent == top) {
@@ -304,7 +304,7 @@ EventTree* EventTree::FindOrInsert(Accessible* aContainer) {
     //   if show or hide of the given node contains a grand parent of the
     //   current node then ignore the current node and its show and hide events
     //   otherwise ignore the current node, but not its show and hide events
-    Accessible* curParent = node->mContainer;
+    LocalAccessible* curParent = node->mContainer;
     while (curParent && !curParent->IsDoc()) {
       if (curParent->LocalParent() != aContainer) {
         curParent = curParent->LocalParent();
@@ -328,7 +328,7 @@ EventTree* EventTree::FindOrInsert(Accessible* aContainer) {
       UniquePtr<EventTree>* nodeRef = &nodeOwnerRef->mNext;
       EventTree* insNode = nodeOwnerRef->mFirst.get();
       while (node) {
-        Accessible* curParent = node->mContainer;
+        LocalAccessible* curParent = node->mContainer;
         while (curParent && !curParent->IsDoc()) {
           if (curParent->LocalParent() != aContainer) {
             curParent = curParent->LocalParent();
@@ -385,7 +385,7 @@ void EventTree::Clear() {
   mDependentEvents.Clear();
 }
 
-const EventTree* EventTree::Find(const Accessible* aContainer) const {
+const EventTree* EventTree::Find(const LocalAccessible* aContainer) const {
   const EventTree* et = this;
   while (et) {
     if (et->mContainer == aContainer) {
@@ -463,7 +463,7 @@ void EventTree::Mutated(AccMutationEvent* aEv) {
   // discard those subtree mutations as we are no longer interested in them.
   UniquePtr<EventTree>* node = &mFirst;
   while (*node) {
-    Accessible* cntr = (*node)->mContainer;
+    LocalAccessible* cntr = (*node)->mContainer;
     while (cntr != mContainer) {
       if (cntr == aEv->mAccessible) {
 #ifdef A11Y_LOG

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SessionAccessibility.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AndroidUiThread.h"
 #include "DocAccessibleParent.h"
 #include "nsThreadUtils.h"
@@ -170,12 +170,12 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     return nullptr;
   }
 
-  Accessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
+  LocalAccessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
   return chromeDoc ? GetInstanceFor(chromeDoc) : nullptr;
 }
 
 RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
-    Accessible* aAccessible) {
+    LocalAccessible* aAccessible) {
   RootAccessible* rootAcc = aAccessible->RootAccessible();
   nsViewManager* vm = rootAcc->PresShellPtr()->GetViewManager();
   if (!vm) {

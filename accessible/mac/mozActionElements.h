@@ -46,7 +46,7 @@
 
 @end
 
-// Accessible for a radio button
+// LocalAccessible for a radio button
 @interface mozRadioButtonAccessible : mozCheckboxAccessible
 
 // override

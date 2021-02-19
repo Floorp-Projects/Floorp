@@ -6,7 +6,7 @@
 #ifndef mozilla_a11y_AccessibleWrap_h_
 #define mozilla_a11y_AccessibleWrap_h_
 
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "mozilla/java/GeckoBundleWrappers.h"
 #include "mozilla/java/SessionAccessibilityWrappers.h"
@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace a11y {
 
-class AccessibleWrap : public Accessible {
+class AccessibleWrap : public LocalAccessible {
  public:
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~AccessibleWrap();

@@ -32,7 +32,7 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableCellAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
@@ -46,8 +46,8 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
   virtual uint32_t RowIdx() const override;
   virtual uint32_t ColExtent() const override;
   virtual uint32_t RowExtent() const override;
-  virtual void ColHeaderCells(nsTArray<Accessible*>* aCells) override;
-  virtual void RowHeaderCells(nsTArray<Accessible*>* aCells) override;
+  virtual void ColHeaderCells(nsTArray<LocalAccessible*>* aCells) override;
+  virtual void RowHeaderCells(nsTArray<LocalAccessible*>* aCells) override;
   virtual bool Selected() override;
 
  protected:
@@ -76,7 +76,7 @@ class HTMLTableHeaderCellAccessible : public HTMLTableCellAccessible {
  public:
   HTMLTableHeaderCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
 };
 
@@ -94,14 +94,14 @@ class HTMLTableRowAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableRowAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
 
  protected:
   virtual ~HTMLTableRowAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
@@ -127,12 +127,12 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
                                        HyperTextAccessibleWrap)
 
   // TableAccessible
-  virtual Accessible* Caption() const override;
+  virtual LocalAccessible* Caption() const override;
   virtual void Summary(nsString& aSummary) override;
   virtual uint32_t ColCount() const override;
   virtual uint32_t RowCount() override;
-  virtual Accessible* CellAt(uint32_t aRowIndex,
-                             uint32_t aColumnIndex) override;
+  virtual LocalAccessible* CellAt(uint32_t aRowIndex,
+                                  uint32_t aColumnIndex) override;
   virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) override;
   virtual int32_t ColIndexAt(uint32_t aCellIdx) override;
   virtual int32_t RowIndexAt(uint32_t aCellIdx) override;
@@ -146,7 +146,7 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
   virtual uint32_t SelectedCellCount() override;
   virtual uint32_t SelectedColCount() override;
   virtual uint32_t SelectedRowCount() override;
-  virtual void SelectedCells(nsTArray<Accessible*>* aCells) override;
+  virtual void SelectedCells(nsTArray<LocalAccessible*>* aCells) override;
   virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
   virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
@@ -154,9 +154,9 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
   virtual void SelectRow(uint32_t aRowIdx) override;
   virtual void UnselectCol(uint32_t aColIdx) override;
   virtual void UnselectRow(uint32_t aRowIdx) override;
-  virtual Accessible* AsAccessible() override { return this; }
+  virtual LocalAccessible* AsAccessible() override { return this; }
 
-  // Accessible
+  // LocalAccessible
   virtual TableAccessible* AsTable() override { return this; }
   virtual void Description(nsString& aDescription) override;
   virtual a11y::role NativeRole() const override;
@@ -164,12 +164,12 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual Relation RelationByType(RelationType aRelationType) const override;
 
-  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
+  virtual bool InsertChildAt(uint32_t aIndex, LocalAccessible* aChild) override;
 
  protected:
   virtual ~HTMLTableAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // HTMLTableAccessible
@@ -218,7 +218,7 @@ class HTMLCaptionAccessible : public HyperTextAccessibleWrap {
     mType = eHTMLCaptionType;
   }
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aRelationType) const override;
 

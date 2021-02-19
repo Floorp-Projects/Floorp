@@ -6,7 +6,7 @@
 #include "Pivot.h"
 
 #include "AccIterator.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "DocAccessible.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
@@ -157,13 +157,14 @@ AccessibleOrProxy Pivot::SearchForward(AccessibleOrProxy& aAnchor,
 }
 
 // TODO: This method does not work for proxy accessibles
-HyperTextAccessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
+HyperTextAccessible* Pivot::SearchForText(LocalAccessible* aAnchor,
+                                          bool aBackward) {
   if (!mRoot.IsAccessible()) {
     return nullptr;
   }
-  Accessible* accessible = aAnchor;
+  LocalAccessible* accessible = aAnchor;
   while (true) {
-    Accessible* child = nullptr;
+    LocalAccessible* child = nullptr;
 
     while ((child = (aBackward ? accessible->LocalLastChild()
                                : accessible->LocalFirstChild()))) {
@@ -173,8 +174,8 @@ HyperTextAccessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
       }
     }
 
-    Accessible* sibling = nullptr;
-    Accessible* temp = accessible;
+    LocalAccessible* sibling = nullptr;
+    LocalAccessible* temp = accessible;
     do {
       if (temp == mRoot.AsAccessible()) {
         break;
@@ -236,14 +237,15 @@ AccessibleOrProxy Pivot::Last(PivotRule& aRule) {
 }
 
 // TODO: This method does not work for proxy accessibles
-Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
-                            int32_t* aEndOffset, int32_t aBoundaryType) {
+LocalAccessible* Pivot::NextText(LocalAccessible* aAnchor,
+                                 int32_t* aStartOffset, int32_t* aEndOffset,
+                                 int32_t aBoundaryType) {
   if (!mRoot.IsAccessible()) {
     return nullptr;
   }
 
   int32_t tempStart = *aStartOffset, tempEnd = *aEndOffset;
-  Accessible* tempPosition = aAnchor;
+  LocalAccessible* tempPosition = aAnchor;
 
   // if we're starting on a text leaf, translate the offsets to the
   // HyperTextAccessible parent and start from there.
@@ -262,7 +264,7 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
 
   while (true) {
     MOZ_ASSERT(tempPosition);
-    Accessible* curPosition = tempPosition;
+    LocalAccessible* curPosition = tempPosition;
     HyperTextAccessible* text = nullptr;
     // Find the nearest text node using a preorder traversal starting from
     // the current node.
@@ -299,7 +301,7 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
       // offset. Otherwise, do a forward search for the next node to land on
       // (we don't do this in the first case because we don't want to go to the
       // subtree).
-      Accessible* sibling = tempPosition->LocalNextSibling();
+      LocalAccessible* sibling = tempPosition->LocalNextSibling();
       if (tempPosition->IsLink()) {
         if (sibling && sibling->IsLink()) {
           tempStart = tempEnd = -1;
@@ -349,7 +351,7 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
     // The offset range we've obtained might have embedded characters in it,
     // limit the range to the start of the first occurrence of an embedded
     // character.
-    Accessible* childAtOffset = nullptr;
+    LocalAccessible* childAtOffset = nullptr;
     for (int32_t i = tempStart; i < tempEnd; i++) {
       childAtOffset = text->GetChildAtOffset(i);
       if (childAtOffset && childAtOffset->IsHyperText()) {
@@ -376,14 +378,15 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
 }
 
 // TODO: This method does not work for proxy accessibles
-Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
-                            int32_t* aEndOffset, int32_t aBoundaryType) {
+LocalAccessible* Pivot::PrevText(LocalAccessible* aAnchor,
+                                 int32_t* aStartOffset, int32_t* aEndOffset,
+                                 int32_t aBoundaryType) {
   if (!mRoot.IsAccessible()) {
     return nullptr;
   }
 
   int32_t tempStart = *aStartOffset, tempEnd = *aEndOffset;
-  Accessible* tempPosition = aAnchor;
+  LocalAccessible* tempPosition = aAnchor;
 
   // if we're starting on a text leaf, translate the offsets to the
   // HyperTextAccessible parent and start from there.
@@ -403,7 +406,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
   while (true) {
     MOZ_ASSERT(tempPosition);
 
-    Accessible* curPosition = tempPosition;
+    LocalAccessible* curPosition = tempPosition;
     HyperTextAccessible* text;
     // Find the nearest text node using a reverse preorder traversal starting
     // from the current node.
@@ -443,7 +446,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
       // offset. Otherwise, do a forward search for the next node to land on
       // (we don't do this in the first case because we don't want to go to the
       // subtree).
-      Accessible* sibling = tempPosition->LocalPrevSibling();
+      LocalAccessible* sibling = tempPosition->LocalPrevSibling();
       if (tempPosition->IsLink()) {
         if (sibling && sibling->IsLink()) {
           HyperTextAccessible* siblingText = sibling->AsHyperText();
@@ -504,7 +507,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
     // The offset range we've obtained might have embedded characters in it,
     // limit the range to the start of the last occurrence of an embedded
     // character.
-    Accessible* childAtOffset = nullptr;
+    LocalAccessible* childAtOffset = nullptr;
     for (int32_t i = tempEnd - 1; i >= tempStart; i--) {
       childAtOffset = text->GetChildAtOffset(i);
       if (childAtOffset && !childAtOffset->IsText()) {
@@ -533,7 +536,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
 AccessibleOrProxy Pivot::AtPoint(int32_t aX, int32_t aY, PivotRule& aRule) {
   AccessibleOrProxy match = AccessibleOrProxy();
   AccessibleOrProxy child =
-      mRoot.ChildAtPoint(aX, aY, Accessible::eDeepestChild);
+      mRoot.ChildAtPoint(aX, aY, LocalAccessible::eDeepestChild);
   while (!child.IsNull() && (mRoot != child)) {
     uint16_t filtered = aRule.Match(child);
 
@@ -599,7 +602,7 @@ uint16_t PivotRoleRule::Match(const AccessibleOrProxy& aAccOrProxy) {
 // LocalAccInSameDocRule
 
 uint16_t LocalAccInSameDocRule::Match(const AccessibleOrProxy& aAccOrProxy) {
-  Accessible* acc = aAccOrProxy.AsAccessible();
+  LocalAccessible* acc = aAccOrProxy.AsAccessible();
   if (!acc) {
     return nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
   }

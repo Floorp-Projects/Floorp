@@ -18,7 +18,7 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLLinkAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
@@ -46,7 +46,7 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
   enum { eAction_Jump = 0 };
 };
 
-inline HTMLLinkAccessible* Accessible::AsHTMLLink() {
+inline HTMLLinkAccessible* LocalAccessible::AsHTMLLink() {
   return IsHTMLLink() ? static_cast<HTMLLinkAccessible*>(this) : nullptr;
 }
 
