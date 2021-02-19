@@ -1099,6 +1099,8 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     return kMediaConduitMalformedArgument;
   }
 
+  webrtc::KeyFrameReqMethod kf_request_method =
+      webrtc::KeyFrameReqMethod::kNone;
   bool use_nack_basic = false;
   bool use_tmmbr = false;
   bool use_fec = false;
@@ -1137,6 +1139,14 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       continue;
     }
 
+    // Check for the keyframe request type: PLI is preferred over FIR, and FIR
+    // is preferred over none.
+    if (codec_config->RtcpFbNackIsSet("pli")) {
+      kf_request_method = webrtc::KeyFrameReqMethod::kPliRtcp;
+    } else if (codec_config->RtcpFbCcmIsSet("fir")) {
+      kf_request_method = webrtc::KeyFrameReqMethod::kFirRtcp;
+    }
+
     // What if codec A has Nack and REMB, and codec B has TMMBR, and codec C has
     // none? In practice, that's not a useful configuration, and
     // VideoReceiveStream::Config can't represent that, so simply union the
@@ -1160,6 +1170,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
           (use_nack_basic ? 1000 : 0) ||
       mRecvStreamConfig.rtp.transport_cc != use_transport_cc ||
       mRecvStreamConfig.rtp.tmmbr != use_tmmbr ||
+      mRecvStreamConfig.rtp.keyframe_method != kf_request_method ||
       (use_fec &&
        (mRecvStreamConfig.rtp.ulpfec_payload_type != ulpfec_payload_type ||
         mRecvStreamConfig.rtp.red_payload_type != red_payload_type))) {
@@ -1176,7 +1187,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     mRecvStreamConfig.rtp.nack.rtp_history_ms = use_nack_basic ? 1000 : 0;
     mRecvStreamConfig.rtp.transport_cc = use_transport_cc;
     mRecvStreamConfig.rtp.tmmbr = use_tmmbr;
-    // mRecvStreamConfig.rtp.keyframe_method = kf_request_method;
+    mRecvStreamConfig.rtp.keyframe_method = kf_request_method;
 
     if (use_fec) {
       mRecvStreamConfig.rtp.ulpfec_payload_type = ulpfec_payload_type;
