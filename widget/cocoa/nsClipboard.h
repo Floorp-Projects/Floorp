@@ -8,6 +8,7 @@
 
 #include "nsIClipboard.h"
 #include "nsString.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
 
 #import <Cocoa/Cocoa.h>
@@ -47,6 +48,9 @@ class nsClipboard : public nsIClipboard {
 
  private:
   virtual ~nsClipboard();
+
+  static mozilla::Maybe<uint32_t> FindIndexOfImageFlavor(const nsTArray<nsCString>& aMIMETypes);
+
   int32_t mCachedClipboard;
   int32_t mChangeCount;  // Set to the native change count after any modification of the clipboard.
 

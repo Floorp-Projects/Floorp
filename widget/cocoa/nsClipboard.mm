@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+
 #include "mozilla/Logging.h"
 
 #include "mozilla/Unused.h"
@@ -433,6 +435,18 @@ nsClipboard::SupportsFindClipboard(bool* _retval) {
   return NS_OK;
 }
 
+// static
+mozilla::Maybe<uint32_t> nsClipboard::FindIndexOfImageFlavor(
+    const nsTArray<nsCString>& aMIMETypes) {
+  for (uint32_t i = 0; i < aMIMETypes.Length(); ++i) {
+    if (nsClipboard::IsImageType(aMIMETypes[i])) {
+      return mozilla::Some(i);
+    }
+  }
+
+  return mozilla::Nothing();
+}
+
 // This function converts anything that other applications might understand into the system format
 // and puts it into a dictionary which it returns.
 // static
@@ -451,6 +465,14 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
     return nil;
   }
 
+  const mozilla::Maybe<uint32_t> imageFlavorIndex = nsClipboard::FindIndexOfImageFlavor(flavors);
+
+  if (imageFlavorIndex) {
+    // When right-clicking and "Copy Image" is clicked on macOS, some apps expect the
+    // first flavor to be the image flavor. See bug 1689992. For other apps, the
+    // order shouldn't matter.
+    std::swap(*flavors.begin(), flavors[*imageFlavorIndex]);
+  }
   for (uint32_t i = 0; i < flavors.Length(); i++) {
     nsCString& flavorStr = flavors[i];
 
