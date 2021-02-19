@@ -473,6 +473,42 @@ async function testFileAccess() {
       });
     }
 
+    // The font registry directory is in the Darwin user cache dir which is
+    // accessible with the getconf(1) library call using DARWIN_USER_CACHE_DIR.
+    // For this test, assume the cache dir is located at $TMPDIR/../C and use
+    // the $TMPDIR to derive the path to the registry.
+    let fontRegistryDir = macTempDir.parent.clone();
+    fontRegistryDir.appendRelativePath("C/com.apple.FontRegistry");
+
+    // Assume the font registry directory has been created by the system.
+    Assert.ok(fontRegistryDir.exists(), `${fontRegistryDir.path} exists`);
+    if (fontRegistryDir.exists()) {
+      tests.push({
+        desc: `FontRegistry (${fontRegistryDir.path})`,
+        ok: true,
+        browser: webBrowser,
+        file: fontRegistryDir,
+        minLevel: minHomeReadSandboxLevel(),
+        func: readDir,
+      });
+      // Check that we can read the file named `font` which typically
+      // exists in the the font registry directory.
+      let fontFile = fontRegistryDir.clone();
+      fontFile.appendRelativePath("font");
+      // Assume the `font` file has been created by the system.
+      Assert.ok(fontFile.exists(), `${fontFile.path} exists`);
+      if (fontFile.exists()) {
+        tests.push({
+          desc: `FontRegistry file (${fontFile.path})`,
+          ok: true,
+          browser: webBrowser,
+          file: fontFile,
+          minLevel: minHomeReadSandboxLevel(),
+          func: readFile,
+        });
+      }
+    }
+
     // Test that we cannot read from /Volumes at level 3
     let volumes = GetDir("/Volumes");
     tests.push({
