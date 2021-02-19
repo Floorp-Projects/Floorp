@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 import mozpack.path as mozpath
 
@@ -727,7 +728,7 @@ class GTestCommands(MachCommandBase):
             args.append("--wait-for-browser")
 
         if debug or debugger or debugger_args:
-            args = self.prepend_debugger_args(args, debugger, debugger_args)
+            args = _prepend_debugger_args(args, debugger, debugger_args)
             if not args:
                 return 1
 
@@ -863,50 +864,6 @@ class GTestCommands(MachCommandBase):
 
         return exit_code
 
-    def prepend_debugger_args(self, args, debugger, debugger_args):
-        """
-        Given an array with program arguments, prepend arguments to run it under a
-        debugger.
-
-        :param args: The executable and arguments used to run the process normally.
-        :param debugger: The debugger to use, or empty to use the default debugger.
-        :param debugger_args: Any additional parameters to pass to the debugger.
-        """
-
-        import mozdebug
-
-        if not debugger:
-            # No debugger name was provided. Look for the default ones on
-            # current OS.
-            debugger = mozdebug.get_default_debugger_name(
-                mozdebug.DebuggerSearch.KeepLooking
-            )
-
-        if debugger:
-            debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
-
-        if not debugger or not debuggerInfo:
-            print("Could not find a suitable debugger in your PATH.")
-            return None
-
-        # Parameters come from the CLI. We need to convert them before
-        # their use.
-        if debugger_args:
-            from mozbuild import shellutil
-
-            try:
-                debugger_args = shellutil.split(debugger_args)
-            except shellutil.MetaCharacterException as e:
-                print(
-                    "The --debugger_args you passed require a real shell to parse them."
-                )
-                print("(We can't handle the %r character.)" % e.char)
-                return None
-
-        # Prepend the debugger args.
-        args = [debuggerInfo.path] + debuggerInfo.args + args
-        return args
-
 
 @CommandProvider
 class Package(MachCommandBase):
@@ -1001,62 +958,93 @@ single quoted to force them to be strings.
 
 def _get_android_run_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+    group = parser.add_argument_group("The compiled program")
+    group.add_argument(
         "--app",
         default="org.mozilla.geckoview_example",
         help="Android package to run " "(default: org.mozilla.geckoview_example)",
     )
-    parser.add_argument(
+    group.add_argument(
         "--intent",
         default="android.intent.action.VIEW",
         help="Android intent action to launch with "
         "(default: android.intent.action.VIEW)",
     )
-    parser.add_argument(
+    group.add_argument(
         "--setenv",
         dest="env",
         action="append",
         default=[],
         help="Set target environment variable, like FOO=BAR",
     )
-    parser.add_argument(
+    group.add_argument(
         "--profile",
         "-P",
         default=None,
         help="Path to Gecko profile, like /path/to/host/profile "
         "or /path/to/target/profile",
     )
-    parser.add_argument("--url", default=None, help="URL to open")
-    parser.add_argument(
+    group.add_argument("--url", default=None, help="URL to open")
+    group.add_argument(
         "--no-install",
         action="store_true",
         default=False,
         help="Do not try to install application on device before running "
         "(default: False)",
     )
-    parser.add_argument(
+    group.add_argument(
         "--no-wait",
         action="store_true",
         default=False,
         help="Do not wait for application to start before returning "
         "(default: False)",
     )
-    parser.add_argument(
+    group.add_argument(
         "--enable-fission",
         action="store_true",
         help="Run the program with Fission (site isolation) enabled.",
     )
-    parser.add_argument(
+    group.add_argument(
         "--fail-if-running",
         action="store_true",
         default=False,
         help="Fail if application is already running (default: False)",
     )
-    parser.add_argument(
+    group.add_argument(
         "--restart",
         action="store_true",
         default=False,
         help="Stop the application if it is already running (default: False)",
+    )
+
+    group = parser.add_argument_group("Debugging")
+    group.add_argument("--debug", action="store_true", help="Enable the lldb debugger.")
+    group.add_argument(
+        "--debugger",
+        default=None,
+        type=str,
+        help="Name of lldb compatible debugger to use.",
+    )
+    group.add_argument(
+        "--debugger-args",
+        default=None,
+        metavar="params",
+        type=str,
+        help="Command-line arguments to pass to the debugger itself; "
+        "split as the Bourne shell would.",
+    )
+    group.add_argument(
+        "--no-attach",
+        action="store_true",
+        default=False,
+        help="Start the debugging servers on the device but do not "
+        "attach any debuggers.",
+    )
+    group.add_argument(
+        "--use-existing-process",
+        action="store_true",
+        default=False,
+        help="Select an existing process to debug.",
     )
     return parser
 
@@ -1263,6 +1251,11 @@ class RunProgram(MachCommandBase):
         fail_if_running=None,
         restart=None,
         enable_fission=False,
+        debug=False,
+        debugger=None,
+        debugger_args=None,
+        no_attach=False,
+        use_existing_process=False,
     ):
         from mozrunner.devices.android_device import (
             verify_android_device,
@@ -1280,9 +1273,17 @@ class RunProgram(MachCommandBase):
         else:
             raise RuntimeError("Application not recognized: {}".format(app))
 
+        # If we want to debug an existing process, we implicitly do not want
+        # to kill it and pave over its installation with a new one.
+        if debug and use_existing_process:
+            no_install = True
+
         # `verify_android_device` respects `DEVICE_SERIAL` if it is set and sets it otherwise.
         verify_android_device(
-            self, app=app, install=InstallIntent.NO if no_install else InstallIntent.YES
+            self,
+            app=app,
+            debugger=debug,
+            install=InstallIntent.NO if no_install else InstallIntent.YES,
         )
         device_serial = os.environ.get("DEVICE_SERIAL")
         if not device_serial:
@@ -1291,74 +1292,287 @@ class RunProgram(MachCommandBase):
 
         device = _get_device(self.substs, device_serial=device_serial)
 
-        args = []
-        if profile:
-            if os.path.isdir(profile):
-                host_profile = profile
-                # Always /data/local/tmp, rather than `device.test_root`, because GeckoView only
-                # takes its configuration file from /data/local/tmp, and we want to follow suit.
-                target_profile = "/data/local/tmp/{}-profile".format(app)
-                device.rm(target_profile, recursive=True, force=True)
-                device.push(host_profile, target_profile)
+        if debug:
+            # This will terminate any existing processes, so we skip it when we
+            # want to attach to an existing one.
+            if not use_existing_process:
                 self.log(
                     logging.INFO,
                     "run",
-                    {"host_profile": host_profile, "target_profile": target_profile},
-                    'Pushed profile from host "{host_profile}" to target "{target_profile}"',
+                    {"app": app},
+                    "Setting {app} as the device debug app",
                 )
-            else:
-                target_profile = profile
+                device.shell("am set-debug-app -w --persistent %s" % app)
+        else:
+            # Make sure that the app doesn't block waiting for jdb
+            device.shell("am clear-debug-app")
+
+        if not debug or not use_existing_process:
+            args = []
+            if profile:
+                if os.path.isdir(profile):
+                    host_profile = profile
+                    # Always /data/local/tmp, rather than `device.test_root`, because
+                    # GeckoView only takes its configuration file from /data/local/tmp,
+                    # and we want to follow suit.
+                    target_profile = "/data/local/tmp/{}-profile".format(app)
+                    device.rm(target_profile, recursive=True, force=True)
+                    device.push(host_profile, target_profile)
+                    self.log(
+                        logging.INFO,
+                        "run",
+                        {
+                            "host_profile": host_profile,
+                            "target_profile": target_profile,
+                        },
+                        'Pushed profile from host "{host_profile}" to '
+                        'target "{target_profile}"',
+                    )
+                else:
+                    target_profile = profile
+                    self.log(
+                        logging.INFO,
+                        "run",
+                        {"target_profile": target_profile},
+                        'Using profile from target "{target_profile}"',
+                    )
+
+            if enable_fission:
+                env.append("MOZ_FORCE_ENABLE_FISSION=1")
+
+                args = ["--profile", shlex_quote(target_profile)]
+
+            extras = {}
+            for i, e in enumerate(env):
+                extras["env{}".format(i)] = e
+            if args:
+                extras["args"] = " ".join(args)
+
+            if env or args:
+                restart = True
+
+            if restart:
+                fail_if_running = False
                 self.log(
                     logging.INFO,
                     "run",
-                    {"target_profile": target_profile},
-                    'Using profile from target "{target_profile}"',
+                    {"app": app},
+                    "Stopping {app} to ensure clean restart.",
                 )
+                device.stop_application(app)
 
-            args = ["--profile", shlex_quote(target_profile)]
-
-        if enable_fission:
-            env.append("MOZ_FORCE_ENABLE_FISSION=1")
-
-        extras = {}
-        for i, e in enumerate(env):
-            extras["env{}".format(i)] = e
-        if args:
-            extras["args"] = " ".join(args)
-
-        if env or args:
-            restart = True
-
-        if restart:
-            fail_if_running = False
+            # We'd prefer to log the actual `am start ...` command, but it's not trivial
+            # to wire the device's logger to mach's logger.
             self.log(
                 logging.INFO,
                 "run",
-                {"app": app},
-                "Stopping {app} to ensure clean restart.",
+                {"app": app, "activity_name": activity_name},
+                "Starting {app}/{activity_name}.",
             )
-            device.stop_application(app)
 
-        # We'd prefer to log the actual `am start ...` command, but it's not trivial to wire the
-        # device's logger to mach's logger.
+            device.launch_application(
+                app_name=app,
+                activity_name=activity_name,
+                intent=intent,
+                extras=extras,
+                url=url,
+                wait=not no_wait,
+                fail_if_running=fail_if_running,
+            )
+
+        if not debug:
+            return 0
+
+        from mozrunner.devices.android_device import run_lldb_server
+
+        socket_file = run_lldb_server(app, self.substs, device_serial)
+        if not socket_file:
+            self.log(
+                logging.ERROR,
+                "run",
+                {"msg": "Failed to obtain a socket file!"},
+                "{msg}",
+            )
+            return 1
+
+        # Give lldb-server a chance to start
         self.log(
             logging.INFO,
             "run",
-            {"app": app, "activity_name": activity_name},
-            "Starting {app}/{activity_name}.",
+            {"msg": "Pausing to ensure lldb-server has started..."},
+            "{msg}",
         )
+        time.sleep(1)
 
-        device.launch_application(
-            app_name=app,
-            activity_name=activity_name,
-            intent=intent,
-            extras=extras,
-            url=url,
-            wait=not no_wait,
-            fail_if_running=fail_if_running,
-        )
+        if use_existing_process:
 
-        return 0
+            def _is_geckoview_process(proc_name, pkg_name):
+                if not proc_name.startswith(pkg_name):
+                    # Definitely not our package
+                    return False
+                if len(proc_name) == len(pkg_name):
+                    # Parent process from our package
+                    return True
+                if proc_name[len(pkg_name)] == ":":
+                    # Child process from our package
+                    return True
+                # Process name is a prefix of our package name
+                return False
+
+            # If we're going to attach to an existing process, we need to know
+            # who we're attaching to. Obtain a list of all processes associated
+            # with our desired app.
+            proc_list = [
+                proc[:-1]
+                for proc in device.get_process_list()
+                if _is_geckoview_process(proc[1], app)
+            ]
+
+            if not proc_list:
+                self.log(
+                    logging.ERROR,
+                    "run",
+                    {"app": app},
+                    "No existing {app} processes found",
+                )
+                return 1
+            elif len(proc_list) == 1:
+                pid = proc_list[0][0]
+            else:
+                # Prompt the user to determine which process we should use
+                entries = [
+                    "%2d: %6d %s" % (n, p[0], p[1])
+                    for n, p in enumerate(proc_list, start=1)
+                ]
+                prompt = "\n".join(["\nPlease select a process:\n"] + entries) + "\n\n"
+                valid_range = range(1, len(proc_list) + 1)
+
+                while True:
+                    response = int(input(prompt).strip())
+                    if response in valid_range:
+                        break
+                    self.log(logging.ERROR, "run", {"msg": "Invalid response"}, "{msg}")
+                pid = proc_list[response - 1][0]
+        else:
+            # We're not using an existing process, so there should only be our
+            # parent process at this time.
+            pids = device.pidof(app_name=app)
+            if len(pids) != 1:
+                self.log(
+                    logging.ERROR,
+                    "run",
+                    {"msg": "Not sure which pid to attach to!"},
+                    "{msg}",
+                )
+                return 1
+            pid = pids[0]
+
+        self.log(logging.INFO, "run", {"pid": str(pid)}, "Debuggee pid set to {pid}...")
+
+        lldb_connect_url = "unix-abstract-connect://" + socket_file
+        local_jdb_port = device.forward("tcp:0", "jdwp:%d" % pid)
+
+        if no_attach:
+            self.log(
+                logging.INFO,
+                "run",
+                {"pid": str(pid), "url": lldb_connect_url},
+                "To debug native code, connect lldb to {url} and attach to pid {pid}",
+            )
+            self.log(
+                logging.INFO,
+                "run",
+                {"port": str(local_jdb_port)},
+                "To debug Java code, connect jdb using tcp to localhost:{port}",
+            )
+            return 0
+
+        # Beyond this point we want to be able to automatically clean up after ourselves,
+        # so we enter the following try block.
+        try:
+            self.log(logging.INFO, "run", {"msg": "Starting debugger..."}, "{msg}")
+
+            if not use_existing_process:
+                # The app is waiting for jdb to attach and will not continue running
+                # until we do so.
+                def _jdb_ping(local_jdb_port):
+                    jdb_process = subprocess.Popen(
+                        ["jdb", "-attach", "localhost:%d" % local_jdb_port],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        encoding="utf-8",
+                    )
+                    # Wait a bit to provide enough time for jdb and lldb to connect
+                    # to the debuggee
+                    time.sleep(5)
+                    # NOTE: jdb cannot detach while the debuggee is frozen in lldb,
+                    # so its process might not necessarily exit immediately once the
+                    # quit command has been issued.
+                    jdb_process.communicate(input="quit\n")
+
+                # We run this in the background while lldb attaches in the foreground
+                from threading import Thread
+
+                jdb_thread = Thread(target=_jdb_ping, args=[local_jdb_port])
+                jdb_thread.start()
+
+            LLDBINIT = """
+settings set target.inline-breakpoint-strategy always
+settings append target.exec-search-paths {obj_xul}
+settings append target.exec-search-paths {obj_mozglue}
+platform select remote-android
+platform connect {connect_url}
+process attach {continue_flag}-p {pid!s}
+""".lstrip()
+
+            obj_xul = os.path.join(self.topobjdir, "toolkit", "library", "build")
+            obj_mozglue = os.path.join(self.topobjdir, "mozglue", "build")
+
+            if use_existing_process:
+                continue_flag = ""
+            else:
+                # Tell lldb to continue after attaching; instead we'll break at
+                # the initial SEGVHandler, similarly to how things work when we
+                # attach using Android Studio. Doing this gives Android a chance
+                # to dismiss the "Waiting for Debugger" dialog.
+                continue_flag = "-c "
+
+            try:
+                # Write out our lldb startup commands to a temp file. We'll pass its
+                # name to lldb on its command line.
+                with tempfile.NamedTemporaryFile(
+                    mode="wt", encoding="utf-8", newline="\n", delete=False
+                ) as tmp:
+                    tmp_lldb_start_script = tmp.name
+                    tmp.write(
+                        LLDBINIT.format(
+                            obj_xul=obj_xul,
+                            obj_mozglue=obj_mozglue,
+                            connect_url=lldb_connect_url,
+                            continue_flag=continue_flag,
+                            pid=pid,
+                        )
+                    )
+
+                our_debugger_args = "-s %s" % tmp_lldb_start_script
+                if debugger_args:
+                    full_debugger_args = " ".join([debugger_args, our_debugger_args])
+                else:
+                    full_debugger_args = our_debugger_args
+
+                args = _prepend_debugger_args([], debugger, full_debugger_args)
+                if not args:
+                    return 1
+
+                return self.run_process(
+                    args=args, ensure_exit_code=False, pass_thru=True
+                )
+            finally:
+                os.remove(tmp_lldb_start_script)
+        finally:
+            device.remove_forwards("tcp:%d" % local_jdb_port)
+            device.shell("pkill -f lldb-server", enable_run_as=True)
 
     def _run_jsshell(self, params, debug, debugger, debugger_args):
         try:
@@ -2170,3 +2384,46 @@ class CreateMachEnvironment(MachCommandBase):
                 )
         else:
             print("Python 2 mach environment created.")
+
+
+def _prepend_debugger_args(args, debugger, debugger_args):
+    """
+    Given an array with program arguments, prepend arguments to run it under a
+    debugger.
+
+    :param args: The executable and arguments used to run the process normally.
+    :param debugger: The debugger to use, or empty to use the default debugger.
+    :param debugger_args: Any additional parameters to pass to the debugger.
+    """
+
+    import mozdebug
+
+    if not debugger:
+        # No debugger name was provided. Look for the default ones on
+        # current OS.
+        debugger = mozdebug.get_default_debugger_name(
+            mozdebug.DebuggerSearch.KeepLooking
+        )
+
+    if debugger:
+        debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+
+    if not debugger or not debuggerInfo:
+        print("Could not find a suitable debugger in your PATH.")
+        return None
+
+    # Parameters come from the CLI. We need to convert them before
+    # their use.
+    if debugger_args:
+        from mozbuild import shellutil
+
+        try:
+            debugger_args = shellutil.split(debugger_args)
+        except shellutil.MetaCharacterException as e:
+            print("The --debugger_args you passed require a real shell to parse them.")
+            print("(We can't handle the %r character.)" % e.char)
+            return None
+
+    # Prepend the debugger args.
+    args = [debuggerInfo.path] + debuggerInfo.args + args
+    return args
