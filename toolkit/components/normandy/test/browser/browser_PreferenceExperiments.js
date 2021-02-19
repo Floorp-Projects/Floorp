@@ -680,7 +680,7 @@ decorate_task(
     };
 
     for (const [testPref, newValue] of Object.entries(newValues)) {
-      const stop = sinon.stub(PreferenceExperiments, "stop");
+      const stopStub = sinon.stub(PreferenceExperiments, "stop");
       for (const [prefName, prefInfo] of Object.entries(preferences)) {
         mockPreferences.set(prefName, prefInfo.previousPreferenceValue);
       }
@@ -692,17 +692,20 @@ decorate_task(
       for (const [prefName, prefInfo] of Object.entries(preferences)) {
         mockPreferences.set(prefName, prefInfo.preferenceValue);
         ok(
-          !stop.called,
+          !stopStub.called,
           "Changing to the experimental pref value did not trigger the observer"
         );
       }
 
       // Setting it to something different should trigger the call.
       mockPreferences.set(testPref, newValue);
-      ok(stop.called, "Changing to a different value triggered the observer");
+      ok(
+        stopStub.called,
+        "Changing to a different value triggered the observer"
+      );
 
       PreferenceExperiments.stopAllObservers();
-      stop.restore();
+      stopStub.restore();
     }
   }
 );
@@ -737,84 +740,66 @@ decorate_task(withMockExperiments(), async function() {
 });
 
 // stopObserver should cancel an active observers.
-decorate_task(withMockExperiments(), withMockPreferences, async function(
-  mockExperiments,
-  mockPreferences
-) {
-  const preferenceInfo = {
-    "fake.preferencestring": {
-      preferenceType: "string",
-      preferenceValue: "experimentvalue",
-    },
-    "fake.preferenceinteger": {
-      preferenceType: "integer",
-      preferenceValue: 2,
-    },
-  };
-  const stop = sinon.stub(PreferenceExperiments, "stop");
-  mockPreferences.set("fake.preference", "startvalue");
+decorate_task(
+  withMockExperiments(),
+  withMockPreferences,
+  withStub(PreferenceExperiments, "stop"),
+  async function(mockExperiments, mockPreferences, stopStub) {
+    stopStub.returnValue = Promise.resolve();
+    const preferenceInfo = {
+      "fake.preferencestring": {
+        preferenceType: "string",
+        preferenceValue: "experimentvalue",
+      },
+      "fake.preferenceinteger": {
+        preferenceType: "integer",
+        preferenceValue: 2,
+      },
+    };
+    mockPreferences.set("fake.preference", "startvalue");
 
-  PreferenceExperiments.startObserver("test", preferenceInfo);
-  PreferenceExperiments.stopObserver("test");
-
-  // Setting the preference now that the observer is stopped should not call
-  // stop.
-  mockPreferences.set("fake.preferencestring", "newvalue");
-  ok(!stop.called, "stopObserver successfully removed the observer for string");
-
-  mockPreferences.set("fake.preferenceinteger", 42);
-  ok(
-    !stop.called,
-    "stopObserver successfully removed the observer for integer"
-  );
-
-  // Now that the observer is stopped, start should be able to start a new one
-  // without throwing.
-  try {
     PreferenceExperiments.startObserver("test", preferenceInfo);
-  } catch (err) {
-    ok(
-      false,
-      "startObserver did not throw an error for an observer that was already stopped"
-    );
-  }
+    PreferenceExperiments.stopObserver("test");
 
-  PreferenceExperiments.stopAllObservers();
-  stop.restore();
-});
+    // Setting the preference now that the observer is stopped should not call
+    // stop.
+    mockPreferences.set("fake.preferencestring", "newvalue");
+    ok(
+      !stopStub.called,
+      "stopObserver successfully removed the observer for string"
+    );
+
+    mockPreferences.set("fake.preferenceinteger", 42);
+    ok(
+      !stopStub.called,
+      "stopObserver successfully removed the observer for integer"
+    );
+
+    // Now that the observer is stopped, start should be able to start a new one
+    // without throwing.
+    try {
+      PreferenceExperiments.startObserver("test", preferenceInfo);
+    } catch (err) {
+      ok(
+        false,
+        "startObserver did not throw an error for an observer that was already stopped"
+      );
+    }
+
+    PreferenceExperiments.stopAllObservers();
+  }
+);
 
 // stopAllObservers
-decorate_task(withMockExperiments(), withMockPreferences, async function(
-  mockExperiments,
-  mockPreferences
-) {
-  const stop = sinon.stub(PreferenceExperiments, "stop");
-  mockPreferences.set("fake.preference", "startvalue");
-  mockPreferences.set("other.fake.preference", "startvalue");
+decorate_task(
+  withMockExperiments(),
+  withMockPreferences,
+  withStub(PreferenceExperiments, "stop"),
+  async function(mockExperiments, mockPreferences, stopStub) {
+    stopStub.returnValue = Promise.resolve();
+    mockPreferences.set("fake.preference", "startvalue");
+    mockPreferences.set("other.fake.preference", "startvalue");
 
-  PreferenceExperiments.startObserver("test", {
-    "fake.preference": {
-      preferenceType: "string",
-      preferenceValue: "experimentvalue",
-    },
-  });
-  PreferenceExperiments.startObserver("test2", {
-    "other.fake.preference": {
-      preferenceType: "string",
-      preferenceValue: "experimentvalue",
-    },
-  });
-  PreferenceExperiments.stopAllObservers();
-
-  // Setting the preference now that the observers are stopped should not call
-  // stop.
-  mockPreferences.set("fake.preference", "newvalue");
-  mockPreferences.set("other.fake.preference", "newvalue");
-  ok(!stop.called, "stopAllObservers successfully removed all observers");
-
-  // Now that the observers are stopped, start should be able to start new
-  // observers without throwing.
-  try {
     PreferenceExperiments.startObserver("test", {
       "fake.preference": {
         preferenceType: "string",
@@ -827,16 +812,39 @@ decorate_task(withMockExperiments(), withMockPreferences, async function(
         preferenceValue: "experimentvalue",
       },
     });
-  } catch (err) {
-    ok(
-      false,
-      "startObserver did not throw an error for an observer that was already stopped"
-    );
-  }
+    PreferenceExperiments.stopAllObservers();
 
-  PreferenceExperiments.stopAllObservers();
-  stop.restore();
-});
+    // Setting the preference now that the observers are stopped should not call
+    // stop.
+    mockPreferences.set("fake.preference", "newvalue");
+    mockPreferences.set("other.fake.preference", "newvalue");
+    ok(!stopStub.called, "stopAllObservers successfully removed all observers");
+
+    // Now that the observers are stopped, start should be able to start new
+    // observers without throwing.
+    try {
+      PreferenceExperiments.startObserver("test", {
+        "fake.preference": {
+          preferenceType: "string",
+          preferenceValue: "experimentvalue",
+        },
+      });
+      PreferenceExperiments.startObserver("test2", {
+        "other.fake.preference": {
+          preferenceType: "string",
+          preferenceValue: "experimentvalue",
+        },
+      });
+    } catch (err) {
+      ok(
+        false,
+        "startObserver did not throw an error for an observer that was already stopped"
+      );
+    }
+
+    PreferenceExperiments.stopAllObservers();
+  }
+);
 
 // markLastSeen should throw if it can't find a matching experiment
 decorate_task(withMockExperiments(), async function() {
@@ -1050,7 +1058,6 @@ decorate_task(
   ]),
   withMockPreferences,
   async function(experiments, mockPreferences) {
-    const stopObserver = sinon.stub(PreferenceExperiments, "stopObserver");
     mockPreferences.set("fake.preference", "experimentvalue", "user");
 
     await PreferenceExperiments.stop("test");
@@ -1058,8 +1065,6 @@ decorate_task(
       !Preferences.isSet("fake.preference"),
       "stop removed the preference that had no value prior to the experiment"
     );
-
-    stopObserver.restore();
   }
 );
 
@@ -1111,6 +1116,35 @@ decorate_task(
           branch: "fakebranch",
         },
       ],
+    ]);
+  }
+);
+
+// stop should include the system that stopped it
+decorate_task(
+  withMockExperiments([preferenceStudyFactory({ expired: true })]),
+  withSendEventSpy,
+  async function testStopUserPrefs([experiment], sendEventSpy) {
+    await Assert.rejects(
+      PreferenceExperiments.stop(experiment.slug, {
+        caller: "testCaller",
+        reason: "original-reason",
+      }),
+      /.*already expired.*/,
+      "Stopped an expired experiment should throw an exception"
+    );
+
+    const expectedExtra = {
+      reason: "already-unenrolled",
+      enrollmentId: experiment.enrollmentId,
+      originalReason: "original-reason",
+    };
+    if (AppConstants.NIGHTLY_BUILD) {
+      expectedExtra.caller = "testCaller";
+    }
+
+    sendEventSpy.assertEvents([
+      ["unenrollFailed", "preference_study", experiment.slug, expectedExtra],
     ]);
   }
 );
@@ -1443,6 +1477,7 @@ decorate_task(
   withMockPreferences,
   withStub(PreferenceExperiments, "stop"),
   async function testInitChanges(experiments, mockPreferences, stopStub) {
+    stopStub.returnValue = Promise.resolve();
     mockPreferences.set("fake.preference", "experiment value", "default");
     mockPreferences.set("fake.preference", "changed value", "user");
     await PreferenceExperiments.init();
@@ -1490,9 +1525,9 @@ decorate_task(
     experiments,
     mockPreferences,
     startObserver,
-    stop
+    stopStub
   ) {
-    stop.throws("Stop should not be called");
+    stopStub.throws("Stop should not be called");
     mockPreferences.set("fake.preference", "experiment value", "default");
     is(
       Preferences.get("fake.preference"),

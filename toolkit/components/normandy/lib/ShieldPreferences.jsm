@@ -64,6 +64,7 @@ var ShieldPreferences = {
               }
               return PreferenceExperiments.stop(experiment.slug, {
                 reason: "general-opt-out",
+                caller: "observePrefChange::general-opt-out",
               });
             }
           );

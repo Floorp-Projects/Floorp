@@ -191,7 +191,10 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      */
     async removePreferenceStudy(experimentName, reason) {
       try {
-        await PreferenceExperiments.stop(experimentName, { reason });
+        await PreferenceExperiments.stop(experimentName, {
+          reason,
+          caller: "AboutPages.removePreferenceStudy",
+        });
       } catch (err) {
         // If the exception was that the study was already removed, that's ok.
         // If not, rethrow the error.
