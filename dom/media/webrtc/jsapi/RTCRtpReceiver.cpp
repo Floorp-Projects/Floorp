@@ -101,6 +101,12 @@ RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
   PrincipalHandle principalHandle = GetPrincipalHandle(aWindow, aPrivacyNeeded);
   mTrack = CreateTrack(aWindow, aConduit->type() == MediaSessionConduit::AUDIO,
                        principalHandle.get());
+  // Until Bug 1232234 is fixed, we'll get extra RTCP BYES during renegotiation,
+  // so we'll disable muting on RTCP BYE and timeout for now.
+  if (Preferences::GetBool("media.peerconnection.mute_on_bye_or_timeout",
+                           false)) {
+    aConduit->SetRtcpEventObserver(this);
+  }
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mPipeline = new MediaPipelineReceiveAudio(
         mPCHandle, aTransportHandler, mMainThread.get(), mStsThread.get(),
@@ -498,6 +504,7 @@ void RTCRtpReceiver::Shutdown() {
   ASSERT_ON_THREAD(mMainThread);
   if (mPipeline) {
     mPipeline->Shutdown_m();
+    mPipeline->mConduit->SetRtcpEventObserver(nullptr);
     mPipeline = nullptr;
   }
   mTransceiverImpl = nullptr;
@@ -735,6 +742,10 @@ void RTCRtpReceiver::MozInsertAudioLevelForContributingSource(
   audio_conduit->InsertAudioLevelForContributingSource(
       aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
 }
+
+void RTCRtpReceiver::OnRtcpBye() { SetReceiveTrackMuted(true); }
+
+void RTCRtpReceiver::OnRtcpTimeout() { SetReceiveTrackMuted(true); }
 
 void RTCRtpReceiver::SetReceiveTrackMuted(bool aMuted) {
   if (mTrack) {

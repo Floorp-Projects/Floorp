@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "api/call/transport.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "api/crypto/crypto_options.h"
 #include "api/crypto/frame_decryptor_interface.h"
 #include "api/frame_transformer_interface.h"
@@ -240,6 +241,8 @@ class VideoReceiveStream {
 
       // RTP header extensions used for the received stream.
       std::vector<RtpExtension> extensions;
+
+      RtcpEventObserver* rtcp_event_observer = nullptr;
     } rtp;
 
     // Transport for outgoing packets (RTCP).

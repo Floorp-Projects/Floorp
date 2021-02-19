@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "RTCStatsReport.h"
+#include "libwebrtcglue/RtcpEventObserver.h"
 #include <vector>
 
 class nsPIDOMWindowInner;
@@ -31,7 +32,9 @@ class RTCDtlsTransport;
 struct RTCRtpContributingSource;
 struct RTCRtpSynchronizationSource;
 
-class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
+class RTCRtpReceiver : public nsISupports,
+                       public nsWrapperCache,
+                       public RtcpEventObserver {
  public:
   explicit RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
                           const std::string& aPCHandle,
@@ -93,6 +96,10 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   // This is called when we set a remote description; may be an offer or answer.
   void UpdateStreams(StreamAssociationChanges* aChanges);
+
+  void OnRtcpBye() override;
+
+  void OnRtcpTimeout() override;
 
   void SetReceiveTrackMuted(bool aMuted);
 
