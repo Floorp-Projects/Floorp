@@ -1103,6 +1103,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       webrtc::KeyFrameReqMethod::kNone;
   bool use_nack_basic = false;
   bool use_tmmbr = false;
+  bool use_remb = false;
   bool use_fec = false;
   bool use_transport_cc = false;
   int ulpfec_payload_type = kNullPayloadType;
@@ -1153,6 +1154,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     // (boolean) settings
     use_nack_basic |= codec_config->RtcpFbNackIsSet("");
     use_tmmbr |= codec_config->RtcpFbCcmIsSet("tmmbr");
+    use_remb |= codec_config->RtcpFbRembIsSet();
     use_fec |= codec_config->RtcpFbFECIsSet();
     use_transport_cc |= codec_config->RtcpFbTransportCCIsSet();
 
@@ -1168,6 +1170,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   if (!mRecvStream || CodecsDifferent(recv_codecs, mRecvCodecList) ||
       mRecvStreamConfig.rtp.nack.rtp_history_ms !=
           (use_nack_basic ? 1000 : 0) ||
+      mRecvStreamConfig.rtp.remb != use_remb ||
       mRecvStreamConfig.rtp.transport_cc != use_transport_cc ||
       mRecvStreamConfig.rtp.tmmbr != use_tmmbr ||
       mRecvStreamConfig.rtp.keyframe_method != kf_request_method ||
@@ -1185,6 +1188,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     // If we fail after here things get ugly
     mRecvStreamConfig.rtp.rtcp_mode = aRtpRtcpConfig.GetRtcpMode();
     mRecvStreamConfig.rtp.nack.rtp_history_ms = use_nack_basic ? 1000 : 0;
+    mRecvStreamConfig.rtp.remb = use_remb;
     mRecvStreamConfig.rtp.transport_cc = use_transport_cc;
     mRecvStreamConfig.rtp.tmmbr = use_tmmbr;
     mRecvStreamConfig.rtp.keyframe_method = kf_request_method;
