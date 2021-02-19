@@ -3764,7 +3764,7 @@ const char16_t JS::ubi::Concrete<JSObject>::concreteTypeName[] = u"JSObject";
 void JSObject::traceChildren(JSTracer* trc) {
   TraceCellHeaderEdge(trc, this, "group");
 
-  traceShape(trc);
+  TraceEdge(trc, shapePtr(), "shape");
 
   const JSClass* clasp = group()->clasp();
   if (clasp->isNative()) {
