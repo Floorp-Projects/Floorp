@@ -4422,12 +4422,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+      - https://github.com/mozilla-mobile/fenix/pull/18071
     data_sensitivity:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-03-01"
+    expires: "2021-09-01"
   install_tap:
     type: event
     description: |
@@ -4436,12 +4437,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+      - https://github.com/mozilla-mobile/fenix/pull/18071
     data_sensitivity:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-03-01"
+    expires: "2021-09-01"
   foreground:
     type: event
     description: |
@@ -4454,12 +4456,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+      - https://github.com/mozilla-mobile/fenix/pull/18071
     data_sensitivity:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-03-01"
+    expires: "2021-09-01"
   background:
     type: event
     description: |
@@ -4472,12 +4475,13 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/issues/10261
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/11859
+      - https://github.com/mozilla-mobile/fenix/pull/18071
     data_sensitivity:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
       - erichards@mozilla.com
-    expires: "2021-03-01"
+    expires: "2021-09-01"
 
 master_password:
   displayed:
@@ -4488,11 +4492,12 @@ master_password:
       - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
+      - https://github.com/mozilla-mobile/fenix/pull/18071
     data_sensitivity:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-03-01"
+    expires: "2021-09-01"
   migration:
     type: event
     description: |
@@ -4501,11 +4506,12 @@ master_password:
       - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/14468#issuecomment-684114534
+      - https://github.com/mozilla-mobile/fenix/pull/18071
     data_sensitivity:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-03-01"
+    expires: "2021-09-01"
 
 tabs:
   setting_opened:
