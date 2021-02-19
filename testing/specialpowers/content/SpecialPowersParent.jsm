@@ -818,6 +818,10 @@ class SpecialPowersParent extends JSWindowActorParent {
       case "Wakeup":
         return undefined;
 
+      case "EvictAllContentViewers":
+        this.browsingContext.top.sessionHistory.evictAllContentViewers();
+        return undefined;
+
       case "PushPrefEnv":
         return this.pushPrefEnv(aMessage.data);
 

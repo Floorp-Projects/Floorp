@@ -80,7 +80,7 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvOpen(
     const bool& aUseArrayBuffers) {
   mSocket = new TCPSocket(nullptr, aHost, aPort, aUseSSL, aUseArrayBuffers);
   mSocket->SetSocketBridgeParent(this);
-  NS_ENSURE_SUCCESS(mSocket->Init(), IPC_OK());
+  NS_ENSURE_SUCCESS(mSocket->Init(nullptr), IPC_OK());
   return IPC_OK();
 }
 

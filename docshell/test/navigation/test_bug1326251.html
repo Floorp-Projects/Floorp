@@ -17,39 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 <pre id="test">
   <script type="application/javascript">
 
-    let chromeScript = null;
-    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-      chromeScript = SpecialPowers.loadChromeScript(() => {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-        function doSend(message, fn) {
-          try {
-            // eslint-disable-next-line no-undef
-            sendAsyncMessage(message, {success: true, value: fn()});
-          } catch(_) {
-            // eslint-disable-next-line no-undef
-            sendAsyncMessage(message, {success: false});
-          }
-        }
-
-        // eslint-disable-next-line no-undef
-        addMessageListener("evictAllContentViewers", _ => {
-          doSend("evictAllContentViewers", () => {
-            let win = Services.wm.getMostRecentWindow("navigator:browser");
-            let shistory = win.gBrowser.selectedBrowser.browsingContext.sessionHistory;
-            return shistory.evictAllContentViewers();
-          })
-        });
-      });
-    }
-
-    async function evictAllContentViewers() {
-      let p = chromeScript.promiseOneMessage("evictAllContentViewers");
-      chromeScript.sendAsyncMessage("evictAllContentViewers");
-      let result = await p;
-      ok(result.success, "Called evictAllContentViewers from parent");
-    }
-
     var testCount = 0;
 
     SimpleTest.waitForExplicitFinish();
@@ -61,9 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
     }
 
     function finishTest() {
-      if (chromeScript) {
-        chromeScript.destroy();
-      }
       testWindow.close();
       SimpleTest.finish();
     }

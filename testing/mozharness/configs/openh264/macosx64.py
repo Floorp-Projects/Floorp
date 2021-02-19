@@ -19,7 +19,6 @@ config = {
     },
     "dump_syms_binary": "{}/dump_syms/dump_syms".format(os.environ["MOZ_FETCHES_DIR"]),
     "arch": "x64",
-    "use_yasm": True,
     "operating_system": "darwin",
     "partial_env": {
         "CXXFLAGS": (
@@ -37,7 +36,9 @@ config = {
             )
         ),
         "PATH": (
-            "{MOZ_FETCHES_DIR}/clang/bin/:{MOZ_FETCHES_DIR}/cctools/bin/:%(PATH)s".format(
+            "{MOZ_FETCHES_DIR}/clang/bin:"
+            "{MOZ_FETCHES_DIR}/cctools/bin:"
+            "{MOZ_FETCHES_DIR}/nasm:%(PATH)s".format(
                 MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
             )
         ),

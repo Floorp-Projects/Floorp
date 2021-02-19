@@ -97,10 +97,12 @@ class TestUnifiedBuildFinder(TestUnified):
             "\n".join(
                 [
                     "<html>",
-                    "<body>",
-                    "<h1>Build Configuration</h1>",
-                    "<div>foo</div>",
-                    "</body>",
+                    "  <body>",
+                    "    <div>",
+                    "      <h1>Build Configuration</h1>",
+                    "      <div>foo</div>",
+                    "    </div>",
+                    "  </body>",
                     "</html>",
                 ]
             ),
@@ -111,10 +113,12 @@ class TestUnifiedBuildFinder(TestUnified):
             "\n".join(
                 [
                     "<html>",
-                    "<body>",
-                    "<h1>Build Configuration</h1>",
-                    "<div>bar</div>",
-                    "</body>",
+                    "  <body>",
+                    "    <div>",
+                    "      <h1>Build Configuration</h1>",
+                    "      <div>bar</div>",
+                    "    </div>",
+                    "  </body>",
                     "</html>",
                 ]
             ),
@@ -132,12 +136,14 @@ class TestUnifiedBuildFinder(TestUnified):
                     "\n".join(
                         [
                             "<html>",
-                            "<body>",
-                            "<h1>Build Configuration</h1>",
-                            "<div>foo</div>",
-                            "<hr> </hr>",
-                            "<div>bar</div>",
-                            "</body>",
+                            "  <body>",
+                            "    <div>",
+                            "      <h1>Build Configuration</h1>",
+                            "      <div>foo</div>",
+                            "      <hr> </hr>",
+                            "      <div>bar</div>",
+                            "    </div>",
+                            "  </body>",
                             "</html>",
                         ]
                     ),
