@@ -10,16 +10,16 @@
 #include "mozilla/a11y/Role.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsRect.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 class Attribute;
 class DocAccessibleParent;
 class ProxyAccessible;
@@ -100,7 +100,7 @@ class ProxyAccessibleBase {
    */
   Derived* RemoteParent() const;
 
-  Accessible* OuterDocOfRemoteBrowser() const;
+  LocalAccessible* OuterDocOfRemoteBrowser() const;
 
   /**
    * Get the role of the accessible we're proxying.

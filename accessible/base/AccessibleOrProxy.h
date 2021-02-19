@@ -7,7 +7,7 @@
 #ifndef mozilla_a11y_AccessibleOrProxy_h
 #define mozilla_a11y_AccessibleOrProxy_h
 
-#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/LocalAccessible.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "mozilla/a11y/Role.h"
 
@@ -17,12 +17,12 @@ namespace mozilla {
 namespace a11y {
 
 /**
- * This class stores an Accessible* or a ProxyAccessible* in a safe manner
+ * This class stores a LocalAccessible* or a ProxyAccessible* in a safe manner
  * with size sizeof(void*).
  */
 class AccessibleOrProxy {
  public:
-  MOZ_IMPLICIT AccessibleOrProxy(Accessible* aAcc)
+  MOZ_IMPLICIT AccessibleOrProxy(LocalAccessible* aAcc)
       : mBits(reinterpret_cast<uintptr_t>(aAcc)) {}
   MOZ_IMPLICIT AccessibleOrProxy(ProxyAccessible* aProxy)
       : mBits(aProxy ? (reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY) : 0) {}
@@ -39,9 +39,9 @@ class AccessibleOrProxy {
   }
 
   bool IsAccessible() const { return !IsProxy(); }
-  Accessible* AsAccessible() const {
+  LocalAccessible* AsAccessible() const {
     if (IsAccessible()) {
-      return reinterpret_cast<Accessible*>(mBits);
+      return reinterpret_cast<LocalAccessible*>(mBits);
     }
 
     return nullptr;
@@ -149,8 +149,8 @@ class AccessibleOrProxy {
 
   AccessibleOrProxy Parent() const;
 
-  AccessibleOrProxy ChildAtPoint(int32_t aX, int32_t aY,
-                                 Accessible::EWhichChildAtPoint aWhichChild);
+  AccessibleOrProxy ChildAtPoint(
+      int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild);
 
   bool operator!=(const AccessibleOrProxy& aOther) const {
     return mBits != aOther.mBits;

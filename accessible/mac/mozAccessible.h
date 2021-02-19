@@ -30,7 +30,7 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
   if (aAccOrProxy.IsNull()) {
     return nil;
   }
-  if (Accessible* acc = aAccOrProxy.AsAccessible()) {
+  if (LocalAccessible* acc = aAccOrProxy.AsAccessible()) {
     mozAccessible* native = nil;
     acc->GetNativeInterface((void**)&native);
     return native;

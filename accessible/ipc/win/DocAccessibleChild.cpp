@@ -7,7 +7,7 @@
 #include "DocAccessibleChild.h"
 
 #include "nsAccessibilityService.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "mozilla/a11y/PlatformChild.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "RootAccessible.h"
@@ -157,10 +157,10 @@ bool DocAccessibleChild::SendStateChangeEvent(const uint64_t& aID,
 }
 
 LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
-  Accessible* target;
+  LocalAccessible* target;
 
   if (aID) {
-    target = reinterpret_cast<Accessible*>(aID);
+    target = reinterpret_cast<LocalAccessible*>(aID);
   } else {
     target = mDoc;
   }

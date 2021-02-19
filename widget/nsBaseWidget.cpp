@@ -1792,7 +1792,7 @@ void nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
 
 #ifdef ACCESSIBILITY
 
-a11y::Accessible* nsBaseWidget::GetRootAccessible() {
+a11y::LocalAccessible* nsBaseWidget::GetRootAccessible() {
   NS_ENSURE_TRUE(mWidgetListener, nullptr);
 
   PresShell* presShell = mWidgetListener->GetPresShell();
@@ -1803,7 +1803,7 @@ a11y::Accessible* nsBaseWidget::GetRootAccessible() {
   nsPresContext* presContext = presShell->GetPresContext();
   NS_ENSURE_TRUE(presContext->GetContainerWeak(), nullptr);
 
-  // Accessible creation might be not safe so use IsSafeToRunScript to
+  // LocalAccessible creation might be not safe so use IsSafeToRunScript to
   // make sure it's not created at unsafe times.
   nsAccessibilityService* accService = GetOrCreateAccService();
   if (accService) {

@@ -769,7 +769,7 @@ void ProxyAccessible::TakeFocus() {
 }
 
 ProxyAccessible* ProxyAccessible::ChildAtPoint(
-    int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
+    int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   RefPtr<IAccessible2_2> target = QueryInterface<IAccessible2_2>(this);
   if (!target) {
     return nullptr;
@@ -805,7 +805,7 @@ ProxyAccessible* ProxyAccessible::ChildAtPoint(
     } else {
       proxy = GetProxyFor(doc, target);
     }
-    if (aWhichChild == Accessible::eDirectChild) {
+    if (aWhichChild == LocalAccessible::eDirectChild) {
       break;
     }
   }

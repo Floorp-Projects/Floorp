@@ -20,7 +20,7 @@ class nsDeviceContext;
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 class HyperTextAccessible;
 
 /**
@@ -54,7 +54,7 @@ class TextAttrsMgr {
    * @param oOffsetAccIdx    [optional] index in parent of offset accessible
    */
   TextAttrsMgr(HyperTextAccessible* aHyperTextAcc, bool aIncludeDefAttrs,
-               Accessible* aOffsetAcc, int32_t aOffsetAccIdx)
+               LocalAccessible* aOffsetAcc, int32_t aOffsetAccIdx)
       : mOffsetAcc(aOffsetAcc),
         mHyperTextAcc(aHyperTextAcc),
         mOffsetAccIdx(aOffsetAccIdx),
@@ -91,7 +91,7 @@ class TextAttrsMgr {
                 uint32_t* aStartOffset, uint32_t* aEndOffset);
 
  private:
-  Accessible* mOffsetAcc;
+  LocalAccessible* mOffsetAcc;
   HyperTextAccessible* mHyperTextAcc;
   int32_t mOffsetAccIdx;
   bool mIncludeDefAttrs;
@@ -116,7 +116,7 @@ class TextAttrsMgr {
      * Return true if the text attribute value on the given element equals with
      * predefined attribute value.
      */
-    virtual bool Equal(Accessible* aAccessible) = 0;
+    virtual bool Equal(LocalAccessible* aAccessible) = 0;
   };
 
   /**
@@ -147,7 +147,7 @@ class TextAttrsMgr {
       }
     }
 
-    virtual bool Equal(Accessible* aAccessible) override {
+    virtual bool Equal(LocalAccessible* aAccessible) override {
       T nativeValue;
       bool isDefined = GetValueFor(aAccessible, &nativeValue);
 
@@ -166,7 +166,7 @@ class TextAttrsMgr {
                              const T& aValue) = 0;
 
     // Return native value for the given DOM element.
-    virtual bool GetValueFor(Accessible* aAccessible, T* aValue) = 0;
+    virtual bool GetValueFor(LocalAccessible* aAccessible, T* aValue) = 0;
 
     // Indicates if root value should be exposed.
     bool mGetRootValue;
@@ -194,7 +194,7 @@ class TextAttrsMgr {
 
    protected:
     // TextAttr
-    virtual bool GetValueFor(Accessible* aAccessible,
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
                              nsString* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const nsString& aValue) override;
@@ -218,7 +218,7 @@ class TextAttrsMgr {
     enum { eFalse, eGrammar, eSpelling, eTrue };
 
     // TextAttr
-    virtual bool GetValueFor(Accessible* aAccessible,
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
                              uint32_t* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const uint32_t& aValue) override;
@@ -238,7 +238,8 @@ class TextAttrsMgr {
 
    protected:
     // TextAttr
-    virtual bool GetValueFor(Accessible* aAccessible, nscolor* aValue) override;
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
+                             nscolor* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const nscolor& aValue) override;
 
@@ -257,7 +258,8 @@ class TextAttrsMgr {
 
    protected:
     // TTextAttr
-    virtual bool GetValueFor(Accessible* aAccessible, nscolor* aValue) override;
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
+                             nscolor* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const nscolor& aValue) override;
   };
@@ -272,7 +274,7 @@ class TextAttrsMgr {
 
    protected:
     // TTextAttr
-    virtual bool GetValueFor(Accessible* aAccessible,
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
                              nsString* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const nsString& aValue) override;
@@ -291,7 +293,8 @@ class TextAttrsMgr {
 
    protected:
     // TTextAttr
-    virtual bool GetValueFor(Accessible* aAccessible, nscoord* aValue) override;
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
+                             nscoord* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const nscoord& aValue) override;
 
@@ -309,7 +312,7 @@ class TextAttrsMgr {
 
    protected:
     // TTextAttr
-    virtual bool GetValueFor(Accessible* aContent,
+    virtual bool GetValueFor(LocalAccessible* aContent,
                              mozilla::FontSlantStyle* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const mozilla::FontSlantStyle& aValue) override;
@@ -325,7 +328,7 @@ class TextAttrsMgr {
 
    protected:
     // TTextAttr
-    virtual bool GetValueFor(Accessible* aAccessible,
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
                              mozilla::FontWeight* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const mozilla::FontWeight& aValue) override;
@@ -340,12 +343,13 @@ class TextAttrsMgr {
   class AutoGeneratedTextAttr : public TTextAttr<bool> {
    public:
     AutoGeneratedTextAttr(HyperTextAccessible* aHyperTextAcc,
-                          Accessible* aAccessible);
+                          LocalAccessible* aAccessible);
     virtual ~AutoGeneratedTextAttr() {}
 
    protected:
     // TextAttr
-    virtual bool GetValueFor(Accessible* aAccessible, bool* aValue) override;
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
+                             bool* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const bool& aValue) override;
   };
@@ -394,7 +398,7 @@ class TextAttrsMgr {
 
    protected:
     // TextAttr
-    virtual bool GetValueFor(Accessible* aAccessible,
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
                              TextDecorValue* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const TextDecorValue& aValue) override;
@@ -418,7 +422,7 @@ class TextAttrsMgr {
 
    protected:
     // TextAttr
-    virtual bool GetValueFor(Accessible* aAccessible,
+    virtual bool GetValueFor(LocalAccessible* aAccessible,
                              TextPosValue* aValue) override;
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const TextPosValue& aValue) override;

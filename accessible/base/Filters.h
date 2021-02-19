@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 
 namespace filters {
 
@@ -22,23 +22,23 @@ enum EResult { eSkip = 0, eMatch = 1, eSkipSubtree = 2 };
 /**
  * Return true if the traversed accessible complies with filter.
  */
-typedef uint32_t (*FilterFuncPtr)(Accessible*);
+typedef uint32_t (*FilterFuncPtr)(LocalAccessible*);
 
 /**
  * Matches selected/selectable accessibles in subtree.
  */
-uint32_t GetSelected(Accessible* aAccessible);
-uint32_t GetSelectable(Accessible* aAccessible);
+uint32_t GetSelected(LocalAccessible* aAccessible);
+uint32_t GetSelectable(LocalAccessible* aAccessible);
 
 /**
  * Matches row accessibles in subtree.
  */
-uint32_t GetRow(Accessible* aAccessible);
+uint32_t GetRow(LocalAccessible* aAccessible);
 
 /**
  * Matches cell accessibles in children.
  */
-uint32_t GetCell(Accessible* aAccessible);
+uint32_t GetCell(LocalAccessible* aAccessible);
 }  // namespace filters
 }  // namespace a11y
 }  // namespace mozilla

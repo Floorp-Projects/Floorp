@@ -19,8 +19,8 @@ XULMenuitemAccessibleWrap::XULMenuitemAccessibleWrap(nsIContent* aContent,
     : XULMenuitemAccessible(aContent, aDoc) {}
 
 ENameValueFlag XULMenuitemAccessibleWrap::Name(nsString& aName) const {
-  // XXX This should be done in MSAA's get_accName() so that Accessible::Name()]
-  // provides the same results on all platforms
+  // XXX This should be done in MSAA's get_accName() so that
+  // LocalAccessible::Name()] provides the same results on all platforms
   XULMenuitemAccessible::Name(aName);
   if (aName.IsEmpty()) return eNameOK;
 

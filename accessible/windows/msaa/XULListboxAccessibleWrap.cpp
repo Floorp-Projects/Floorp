@@ -5,7 +5,7 @@
 
 #include "XULListboxAccessibleWrap.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 
 using namespace mozilla::a11y;
 

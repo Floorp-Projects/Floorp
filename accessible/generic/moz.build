@@ -5,14 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.a11y += [
-    "Accessible.h",
     "DocAccessible.h",
     "HyperTextAccessible.h",
+    "LocalAccessible.h",
     "OuterDocAccessible.h",
 ]
 
 UNIFIED_SOURCES += [
-    "Accessible.cpp",
     "ApplicationAccessible.cpp",
     "ARIAGridAccessible.cpp",
     "BaseAccessibles.cpp",
@@ -20,6 +19,7 @@ UNIFIED_SOURCES += [
     "FormControlAccessible.cpp",
     "HyperTextAccessible.cpp",
     "ImageAccessible.cpp",
+    "LocalAccessible.cpp",
     "OuterDocAccessible.cpp",
     "RootAccessible.cpp",
     "TableAccessible.cpp",

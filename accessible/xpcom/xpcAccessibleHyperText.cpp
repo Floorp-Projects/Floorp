@@ -6,7 +6,7 @@
 
 #include "xpcAccessibleHyperText.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "TextRange.h"
@@ -528,7 +528,7 @@ xpcAccessibleHyperText::GetRangeByChild(nsIAccessible* aChild,
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
-  Accessible* child = aChild->ToInternalAccessible();
+  LocalAccessible* child = aChild->ToInternalAccessible();
   if (child) {
     RefPtr<xpcAccessibleTextRange> range = new xpcAccessibleTextRange;
     Intl()->RangeByChild(child, range->mRange);
@@ -707,7 +707,7 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
   if (mIntl.IsNull()) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessible> xpcLink(do_QueryInterface(aLink));
-  if (Accessible* accLink = xpcLink->ToInternalAccessible()) {
+  if (LocalAccessible* accLink = xpcLink->ToInternalAccessible()) {
     *aIndex = Intl()->LinkIndexOf(accLink);
   } else {
 #if defined(XP_WIN)

@@ -7,7 +7,7 @@
 
 #include "HyperTextAccessibleWrap.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "HTMLListAccessible.h"
 #include "nsAccUtils.h"
 #include "nsFrameSelection.h"
@@ -99,7 +99,7 @@ bool HyperTextIterator::NormalizeForward() {
       return true;
     }
   } else {
-    Accessible* link = mCurrentContainer->LinkAt(
+    LocalAccessible* link = mCurrentContainer->LinkAt(
         mCurrentContainer->LinkIndexAtOffset(mCurrentStartOffset));
 
     // If there is a link at this offset, mutate into it.
@@ -113,7 +113,7 @@ bool HyperTextIterator::NormalizeForward() {
 
       mCurrentContainer = link->AsHyperText();
       if (link->IsHTMLListItem()) {
-        Accessible* bullet = link->AsHTMLListItem()->Bullet();
+        LocalAccessible* bullet = link->AsHTMLListItem()->Bullet();
         mCurrentStartOffset = bullet ? nsAccUtils::TextLength(bullet) : 0;
       } else {
         mCurrentStartOffset = 0;
@@ -161,7 +161,7 @@ bool HyperTextIterator::NormalizeBackward() {
     NormalizeBackward();
     return true;
   } else {
-    Accessible* link =
+    LocalAccessible* link =
         mCurrentContainer->GetChildAtOffset(mCurrentStartOffset - 1);
 
     // If there is a link before this offset, mutate into it,
@@ -198,7 +198,7 @@ int32_t HyperTextIterator::SegmentLength() {
 int32_t HyperTextIterator::NextLinkOffset() {
   int32_t linkCount = mCurrentContainer->LinkCount();
   for (int32_t i = 0; i < linkCount; i++) {
-    Accessible* link = mCurrentContainer->LinkAt(i);
+    LocalAccessible* link = mCurrentContainer->LinkAt(i);
     MOZ_ASSERT(link);
     int32_t linkStartOffset = link->StartOffset();
     if (mCurrentStartOffset < linkStartOffset) {
@@ -243,9 +243,9 @@ void HyperTextAccessibleWrap::TextForRange(nsAString& aText,
                                            HyperTextAccessible* aEndContainer,
                                            int32_t aEndOffset) {
   if (IsHTMLListItem()) {
-    Accessible* maybeBullet = GetChildAtOffset(aStartOffset - 1);
+    LocalAccessible* maybeBullet = GetChildAtOffset(aStartOffset - 1);
     if (maybeBullet) {
-      Accessible* bullet = AsHTMLListItem()->Bullet();
+      LocalAccessible* bullet = AsHTMLListItem()->Bullet();
       if (maybeBullet == bullet) {
         TextSubstring(0, nsAccUtils::TextLength(bullet), aText);
       }
@@ -264,12 +264,12 @@ void HyperTextAccessibleWrap::TextForRange(nsAString& aText,
 void HyperTextAccessibleWrap::AttributedTextForRange(
     nsTArray<nsString>& aStrings,
     nsTArray<nsCOMPtr<nsIPersistentProperties>>& aProperties,
-    nsTArray<Accessible*>& aContainers, int32_t aStartOffset,
+    nsTArray<LocalAccessible*>& aContainers, int32_t aStartOffset,
     HyperTextAccessible* aEndContainer, int32_t aEndOffset) {
   if (IsHTMLListItem()) {
-    Accessible* maybeBullet = GetChildAtOffset(aStartOffset - 1);
+    LocalAccessible* maybeBullet = GetChildAtOffset(aStartOffset - 1);
     if (maybeBullet) {
-      Accessible* bullet = AsHTMLListItem()->Bullet();
+      LocalAccessible* bullet = AsHTMLListItem()->Bullet();
       if (maybeBullet == bullet) {
         nsAutoString text;
         TextSubstring(0, nsAccUtils::TextLength(bullet), text);
@@ -591,7 +591,7 @@ void HyperTextAccessibleWrap::PreviousClusterAt(
   *aPrevOffset = prev.mOffset;
 }
 
-void HyperTextAccessibleWrap::RangeOfChild(Accessible* aChild,
+void HyperTextAccessibleWrap::RangeOfChild(LocalAccessible* aChild,
                                            int32_t* aStartOffset,
                                            int32_t* aEndOffset) {
   MOZ_ASSERT(aChild->LocalParent() == this);
@@ -605,9 +605,9 @@ void HyperTextAccessibleWrap::RangeOfChild(Accessible* aChild,
   }
 }
 
-Accessible* HyperTextAccessibleWrap::LeafAtOffset(int32_t aOffset) {
+LocalAccessible* HyperTextAccessibleWrap::LeafAtOffset(int32_t aOffset) {
   HyperTextAccessible* text = this;
-  Accessible* child = nullptr;
+  LocalAccessible* child = nullptr;
   // The offset needed should "attach" the previous accessible if
   // in between two accessibles.
   int32_t innerOffset = aOffset > 0 ? aOffset - 1 : aOffset;
@@ -651,7 +651,7 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(
 
   // Find a leaf accessible frame to start with. PeekOffset wants this.
   HyperTextAccessible* text = iter.mCurrentContainer;
-  Accessible* child = nullptr;
+  LocalAccessible* child = nullptr;
   int32_t innerOffset = iter.mCurrentStartOffset;
 
   do {
@@ -756,8 +756,8 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(
 }
 
 HyperTextAccessibleWrap* HyperTextAccessibleWrap::EditableRoot() {
-  Accessible* editable = nullptr;
-  for (Accessible* acc = this; acc && acc != Document();
+  LocalAccessible* editable = nullptr;
+  for (LocalAccessible* acc = this; acc && acc != Document();
        acc = acc->LocalParent()) {
     if (acc->NativeState() & states::EDITABLE) {
       editable = acc;

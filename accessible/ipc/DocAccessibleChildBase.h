@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 class AccShowEvent;
 
 class DocAccessibleChildBase : public PDocAccessibleChild {
@@ -44,7 +44,7 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   /**
    * Serializes a shown tree and sends it to the chrome process.
    */
-  void InsertIntoIpcTree(Accessible* aParent, Accessible* aChild,
+  void InsertIntoIpcTree(LocalAccessible* aParent, LocalAccessible* aChild,
                          uint32_t aIdxInParent);
   void ShowEvent(AccShowEvent* aShowEvent);
 
@@ -58,8 +58,9 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   }
 
  protected:
-  static uint32_t InterfacesFor(Accessible* aAcc);
-  static void SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree);
+  static uint32_t InterfacesFor(LocalAccessible* aAcc);
+  static void SerializeTree(LocalAccessible* aRoot,
+                            nsTArray<AccessibleData>& aTree);
 
   virtual void MaybeSendShowEvent(ShowEventData& aData, bool aFromUser) {
     Unused << SendShowEvent(aData, aFromUser);

@@ -3923,8 +3923,8 @@ class nsIFrame : public nsQueryFrame {
    * Called to retrieve this frame's accessible.
    * If this frame implements Accessibility return a valid accessible
    * If not return NS_ERROR_NOT_IMPLEMENTED.
-   * Note: Accessible must be refcountable. Do not implement directly on your
-   * frame Use a mediatior of some kind.
+   * Note: LocalAccessible must be refcountable. Do not implement directly on
+   * your frame Use a mediatior of some kind.
    */
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType();

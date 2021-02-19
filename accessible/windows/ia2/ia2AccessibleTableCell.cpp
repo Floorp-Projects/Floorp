@@ -77,7 +77,7 @@ ia2AccessibleTableCell::get_columnHeaderCells(IUnknown*** aCellAccessibles,
   *aNColumnHeaderCells = 0;
   if (!mTableCell) return CO_E_OBJNOTCONNECTED;
 
-  AutoTArray<Accessible*, 10> cells;
+  AutoTArray<LocalAccessible*, 10> cells;
   mTableCell->ColHeaderCells(&cells);
 
   *aNColumnHeaderCells = cells.Length();
@@ -126,7 +126,7 @@ ia2AccessibleTableCell::get_rowHeaderCells(IUnknown*** aCellAccessibles,
   *aNRowHeaderCells = 0;
   if (!mTableCell) return CO_E_OBJNOTCONNECTED;
 
-  AutoTArray<Accessible*, 10> cells;
+  AutoTArray<LocalAccessible*, 10> cells;
   mTableCell->RowHeaderCells(&cells);
 
   *aNRowHeaderCells = cells.Length();

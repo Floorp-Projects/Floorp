@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "nsMai.h"
 #include "Role.h"
 #include "mozilla/Likely.h"

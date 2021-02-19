@@ -32,7 +32,7 @@ void DocAccessibleWrap::AttributeChanged(dom::Element* aElement,
   DocAccessible::AttributeChanged(aElement, aNameSpaceID, aAttribute, aModType,
                                   aOldValue);
   if (aAttribute == nsGkAtoms::aria_live) {
-    Accessible* accessible =
+    LocalAccessible* accessible =
         mContent != aElement ? GetAccessible(aElement) : this;
     if (!accessible) {
       return;
@@ -79,7 +79,7 @@ void DocAccessibleWrap::AttributeChanged(dom::Element* aElement,
   }
 }
 
-void DocAccessibleWrap::QueueNewLiveRegion(Accessible* aAccessible) {
+void DocAccessibleWrap::QueueNewLiveRegion(LocalAccessible* aAccessible) {
   if (!aAccessible) {
     return;
   }
@@ -89,7 +89,7 @@ void DocAccessibleWrap::QueueNewLiveRegion(Accessible* aAccessible) {
 
 void DocAccessibleWrap::ProcessNewLiveRegions() {
   for (auto iter = mNewLiveRegions.Iter(); !iter.Done(); iter.Next()) {
-    if (Accessible* liveRegion =
+    if (LocalAccessible* liveRegion =
             GetAccessibleByUniqueID(const_cast<void*>(iter.Get()->GetKey()))) {
       FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED, liveRegion);
     }

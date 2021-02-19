@@ -4,7 +4,7 @@
 
 #include "FocusManager.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccIterator.h"
 #include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
@@ -27,7 +27,7 @@ FocusManager::FocusManager() {}
 
 FocusManager::~FocusManager() {}
 
-Accessible* FocusManager::FocusedAccessible() const {
+LocalAccessible* FocusManager::FocusedAccessible() const {
   if (mActiveItem) return mActiveItem;
 
   nsINode* focusedNode = FocusedDOMNode();
@@ -41,7 +41,7 @@ Accessible* FocusManager::FocusedAccessible() const {
   return nullptr;
 }
 
-bool FocusManager::IsFocused(const Accessible* aAccessible) const {
+bool FocusManager::IsFocused(const LocalAccessible* aAccessible) const {
   if (mActiveItem) return mActiveItem == aAccessible;
 
   nsINode* focusedNode = FocusedDOMNode();
@@ -63,8 +63,8 @@ bool FocusManager::IsFocused(const Accessible* aAccessible) const {
   return false;
 }
 
-bool FocusManager::IsFocusWithin(const Accessible* aContainer) const {
-  Accessible* child = FocusedAccessible();
+bool FocusManager::IsFocusWithin(const LocalAccessible* aContainer) const {
+  LocalAccessible* child = FocusedAccessible();
   while (child) {
     if (child == aContainer) return true;
 
@@ -74,15 +74,15 @@ bool FocusManager::IsFocusWithin(const Accessible* aContainer) const {
 }
 
 FocusManager::FocusDisposition FocusManager::IsInOrContainsFocus(
-    const Accessible* aAccessible) const {
-  Accessible* focus = FocusedAccessible();
+    const LocalAccessible* aAccessible) const {
+  LocalAccessible* focus = FocusedAccessible();
   if (!focus) return eNone;
 
   // If focused.
   if (focus == aAccessible) return eFocused;
 
   // If contains the focus.
-  Accessible* child = focus->LocalParent();
+  LocalAccessible* child = focus->LocalParent();
   while (child) {
     if (child == aAccessible) return eContainsFocus;
 
@@ -100,7 +100,7 @@ FocusManager::FocusDisposition FocusManager::IsInOrContainsFocus(
   return eNone;
 }
 
-bool FocusManager::WasLastFocused(const Accessible* aAccessible) const {
+bool FocusManager::WasLastFocused(const LocalAccessible* aAccessible) const {
   return mLastFocus == aAccessible;
 }
 
@@ -156,7 +156,8 @@ void FocusManager::NotifyOfDOMBlur(nsISupports* aTarget) {
   }
 }
 
-void FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive) {
+void FocusManager::ActiveItemChanged(LocalAccessible* aItem,
+                                     bool aCheckIfActive) {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus)) {
     logging::FocusNotificationTarget("active item changed", "Item", aItem);
@@ -169,7 +170,7 @@ void FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive) {
   mActiveItem = nullptr;
 
   if (aItem && aCheckIfActive) {
-    Accessible* widget = aItem->ContainerWidget();
+    LocalAccessible* widget = aItem->ContainerWidget();
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus)) logging::ActiveWidget(widget);
 #endif
@@ -195,7 +196,7 @@ void FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive) {
   // If active item is changed then fire accessible focus event on it, otherwise
   // if there's no an active item then fire focus event to accessible having
   // DOM focus.
-  Accessible* target = FocusedAccessible();
+  LocalAccessible* target = FocusedAccessible();
   if (target) {
     DispatchFocusEvent(target->Document(), target);
   }
@@ -214,7 +215,7 @@ void FocusManager::ForceFocusEvent() {
 }
 
 void FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
-                                      Accessible* aTarget) {
+                                      LocalAccessible* aTarget) {
   MOZ_ASSERT(aDocument, "No document for focused accessible!");
   if (aDocument) {
     RefPtr<AccEvent> event =
@@ -240,7 +241,7 @@ void FocusManager::ProcessDOMFocus(nsINode* aTarget) {
       GetAccService()->GetDocAccessible(aTarget->OwnerDoc());
   if (!document) return;
 
-  Accessible* target =
+  LocalAccessible* target =
       document->GetAccessibleEvenIfNotInMapOrContainer(aTarget);
   if (target) {
     // Check if still focused. Otherwise we can end up with storing the active
@@ -248,11 +249,11 @@ void FocusManager::ProcessDOMFocus(nsINode* aTarget) {
     nsINode* focusedNode = FocusedDOMNode();
     if (!focusedNode) return;
 
-    Accessible* DOMFocus =
+    LocalAccessible* DOMFocus =
         document->GetAccessibleEvenIfNotInMapOrContainer(focusedNode);
     if (target != DOMFocus) return;
 
-    Accessible* activeItem = target->CurrentItem();
+    LocalAccessible* activeItem = target->CurrentItem();
     if (activeItem) {
       mActiveItem = activeItem;
       target = activeItem;
@@ -268,7 +269,7 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
 
   // Emit focus event if event target is the active item. Otherwise then check
   // if it's still focused and then update active item and emit focus event.
-  Accessible* target = aEvent->GetAccessible();
+  LocalAccessible* target = aEvent->GetAccessible();
   MOZ_ASSERT(!target->IsDefunct());
   if (target != mActiveItem) {
     // Check if still focused. Otherwise we can end up with storing the active
@@ -277,11 +278,11 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
     nsINode* focusedNode = FocusedDOMNode();
     if (!focusedNode) return;
 
-    Accessible* DOMFocus =
+    LocalAccessible* DOMFocus =
         document->GetAccessibleEvenIfNotInMapOrContainer(focusedNode);
     if (target != DOMFocus) return;
 
-    Accessible* activeItem = target->CurrentItem();
+    LocalAccessible* activeItem = target->CurrentItem();
     if (activeItem) {
       mActiveItem = activeItem;
       target = activeItem;
@@ -292,8 +293,8 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   // Fire menu start/end events for ARIA menus.
   if (target->IsARIARole(nsGkAtoms::menuitem)) {
     // The focus was moved into menu.
-    Accessible* ARIAMenubar = nullptr;
-    for (Accessible* parent = target->LocalParent(); parent;
+    LocalAccessible* ARIAMenubar = nullptr;
+    for (LocalAccessible* parent = target->LocalParent(); parent;
          parent = parent->LocalParent()) {
       if (parent->IsARIARole(nsGkAtoms::menubar)) {
         ARIAMenubar = parent;
@@ -361,7 +362,7 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   // then null out the anchor jump because it no longer applies.
   DocAccessible* targetDocument = target->Document();
   MOZ_ASSERT(targetDocument);
-  Accessible* anchorJump = targetDocument->AnchorJump();
+  LocalAccessible* anchorJump = targetDocument->AnchorJump();
   if (anchorJump) {
     if (target == targetDocument) {
       // XXX: bug 625699, note in some cases the node could go away before we

@@ -21,7 +21,7 @@ namespace mozilla {
 class ErrorResult;
 
 namespace a11y {
-class Accessible;
+class LocalAccessible;
 }
 
 namespace dom {
@@ -200,7 +200,7 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
   nsRefPtrHashtable<nsUint32HashKey, AccessibleNode> mRelationProperties;
   nsDataHashtable<nsUint32HashKey, nsString> mStringProperties;
 
-  RefPtr<a11y::Accessible> mIntl;
+  RefPtr<a11y::LocalAccessible> mIntl;
   RefPtr<nsINode> mDOMNode;
   RefPtr<dom::DOMStringList> mStates;
 };

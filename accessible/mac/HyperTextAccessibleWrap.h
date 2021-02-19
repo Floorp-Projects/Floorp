@@ -25,7 +25,7 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
   void AttributedTextForRange(
       nsTArray<nsString>& aStrings,
       nsTArray<nsCOMPtr<nsIPersistentProperties>>& aProperties,
-      nsTArray<Accessible*>& aContainers, int32_t aStartOffset,
+      nsTArray<LocalAccessible*>& aContainers, int32_t aStartOffset,
       HyperTextAccessible* aEndContainer, int32_t aEndOffset);
 
   nsIntRect BoundsForRange(int32_t aStartOffset,
@@ -49,10 +49,10 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
   void PreviousClusterAt(int32_t aOffset, HyperTextAccessible** aPrevContainer,
                          int32_t* aPrevOffset);
 
-  void RangeOfChild(Accessible* aChild, int32_t* aStartOffset,
+  void RangeOfChild(LocalAccessible* aChild, int32_t* aStartOffset,
                     int32_t* aEndOffset);
 
-  Accessible* LeafAtOffset(int32_t aOffset);
+  LocalAccessible* LeafAtOffset(int32_t aOffset);
 
   MOZ_CAN_RUN_SCRIPT void SelectRange(int32_t aStartOffset,
                                       HyperTextAccessible* aEndContainer,

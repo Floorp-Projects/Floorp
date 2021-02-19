@@ -20,7 +20,7 @@ namespace a11y {
 class xpcAccessibleApplication : public xpcAccessibleGeneric,
                                  public nsIAccessibleApplication {
  public:
-  explicit xpcAccessibleApplication(Accessible* aIntl)
+  explicit xpcAccessibleApplication(LocalAccessible* aIntl)
       : xpcAccessibleGeneric(aIntl) {}
 
   NS_DECL_ISUPPORTS_INHERITED

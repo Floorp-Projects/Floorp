@@ -84,7 +84,7 @@ namespace mozilla {
 enum class PointerCapabilities : uint8_t;
 #if defined(ACCESSIBILITY)
 namespace a11y {
-class Accessible;
+class LocalAccessible;
 }  // namespace a11y
 #endif  // defined(ACCESSIBILITY)
 
@@ -559,7 +559,7 @@ class WinUtils {
 
  public:
 #ifdef ACCESSIBILITY
-  static a11y::Accessible* GetRootAccessibleForHWND(HWND aHwnd);
+  static a11y::LocalAccessible* GetRootAccessibleForHWND(HWND aHwnd);
 #endif
 };
 

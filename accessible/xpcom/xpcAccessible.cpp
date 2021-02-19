@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "nsAccUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -383,7 +383,7 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
     return NS_ERROR_FAILURE;
   }
 
-  if (Accessible* acc = Intl()) {
+  if (LocalAccessible* acc = Intl()) {
     nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
     attributes.swap(*aAttributes);
     return NS_OK;
@@ -437,7 +437,7 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY, int32_t* aWidth,
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   nsIntRect rect;
-  if (Accessible* acc = IntlGeneric().AsAccessible()) {
+  if (LocalAccessible* acc = IntlGeneric().AsAccessible()) {
     rect = acc->Bounds();
   } else {
     rect = IntlGeneric().AsProxy()->Bounds();
@@ -464,7 +464,7 @@ xpcAccessible::GetBoundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
   }
 
   nsIntRect rect;
-  if (Accessible* acc = IntlGeneric().AsAccessible()) {
+  if (LocalAccessible* acc = IntlGeneric().AsAccessible()) {
     rect = acc->BoundsInCSSPixels();
   } else {
     rect = IntlGeneric().AsProxy()->BoundsInCSSPixels();
@@ -488,7 +488,7 @@ xpcAccessible::GroupPosition(int32_t* aGroupLevel,
   *aPositionInGroup = 0;
 
   GroupPos groupPos;
-  if (Accessible* acc = IntlGeneric().AsAccessible()) {
+  if (LocalAccessible* acc = IntlGeneric().AsAccessible()) {
     groupPos = acc->GroupPosition();
   } else {
 #if defined(XP_WIN)
@@ -606,7 +606,7 @@ xpcAccessible::GetChildAtPoint(int32_t aX, int32_t aY,
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(*aAccessible = ToXPC(IntlGeneric().ChildAtPoint(
-                   aX, aY, Accessible::eDirectChild)));
+                   aX, aY, LocalAccessible::eDirectChild)));
 
   return NS_OK;
 }
@@ -620,7 +620,7 @@ xpcAccessible::GetDeepestChildAtPoint(int32_t aX, int32_t aY,
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(*aAccessible = ToXPC(IntlGeneric().ChildAtPoint(
-                   aX, aY, Accessible::eDeepestChild)));
+                   aX, aY, LocalAccessible::eDeepestChild)));
 
   return NS_OK;
 }
@@ -636,8 +636,8 @@ xpcAccessible::GetDeepestChildAtPointInProcess(int32_t aX, int32_t aY,
     return NS_ERROR_FAILURE;
   }
 
-  NS_IF_ADDREF(*aAccessible = ToXPC(
-                   Intl()->ChildAtPoint(aX, aY, Accessible::eDeepestChild)));
+  NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->ChildAtPoint(
+                   aX, aY, LocalAccessible::eDeepestChild)));
   return NS_OK;
 }
 
@@ -775,7 +775,7 @@ xpcAccessible::ScrollTo(uint32_t aHow) {
     proxy->ScrollTo(aHow);
 #endif
   } else {
-    RefPtr<Accessible> intl = Intl();
+    RefPtr<LocalAccessible> intl = Intl();
     intl->ScrollTo(aHow);
   }
 

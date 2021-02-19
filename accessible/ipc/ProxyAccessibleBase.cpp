@@ -115,7 +115,7 @@ Derived* ProxyAccessibleBase<Derived>::EmbeddedChildAt(size_t aChildIdx) {
 }
 
 template <class Derived>
-Accessible* ProxyAccessibleBase<Derived>::OuterDocOfRemoteBrowser() const {
+LocalAccessible* ProxyAccessibleBase<Derived>::OuterDocOfRemoteBrowser() const {
   auto tab = static_cast<dom::BrowserParent*>(mDoc->Manager());
   dom::Element* frame = tab->GetOwnerElement();
   NS_ASSERTION(frame, "why isn't the tab in a frame!");

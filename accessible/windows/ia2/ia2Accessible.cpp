@@ -175,7 +175,7 @@ ia2Accessible::role(long* aRole) {
   // the IA2 role a ROLE_OUTLINEITEM.
   MOZ_ASSERT(!acc->IsProxy());
   if (geckoRole == roles::ROW) {
-    Accessible* xpParent = acc->LocalParent();
+    LocalAccessible* xpParent = acc->LocalParent();
     if (xpParent && xpParent->Role() == roles::TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
@@ -456,11 +456,12 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
   if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   int32_t caretOffset = -1;
-  Accessible* accWithCaret = SelectionMgr()->AccessibleWithCaret(&caretOffset);
+  LocalAccessible* accWithCaret =
+      SelectionMgr()->AccessibleWithCaret(&caretOffset);
   if (!accWithCaret || acc->Document() != accWithCaret->Document())
     return S_FALSE;
 
-  Accessible* child = accWithCaret;
+  LocalAccessible* child = accWithCaret;
   while (!child->IsDoc() && child != acc) child = child->LocalParent();
 
   if (child != acc) return S_FALSE;
@@ -491,10 +492,10 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  nsTArray<Accessible*> targets;
+  nsTArray<LocalAccessible*> targets;
   MOZ_ASSERT(!acc->IsProxy());
   Relation rel = acc->RelationByType(*relationType);
-  Accessible* target = nullptr;
+  LocalAccessible* target = nullptr;
   while (
       (target = rel.Next()) &&
       (aMaxTargets == 0 || static_cast<long>(targets.Length()) < aMaxTargets)) {

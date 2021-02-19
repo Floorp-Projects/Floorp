@@ -19,7 +19,7 @@ namespace a11y {
 class xpcAccessibleTable : public xpcAccessibleHyperText,
                            public nsIAccessibleTable {
  public:
-  explicit xpcAccessibleTable(Accessible* aIntl)
+  explicit xpcAccessibleTable(LocalAccessible* aIntl)
       : xpcAccessibleHyperText(aIntl) {}
 
   xpcAccessibleTable(ProxyAccessible* aProxy, uint32_t aInterfaces)

@@ -18,7 +18,7 @@ class Document;
 namespace a11y {
 
 class AccEvent;
-class Accessible;
+class LocalAccessible;
 class DocAccessible;
 
 /**
@@ -31,18 +31,18 @@ class FocusManager {
   /**
    * Return a focused accessible.
    */
-  Accessible* FocusedAccessible() const;
+  LocalAccessible* FocusedAccessible() const;
 
   /**
    * Return true if given accessible is focused.
    */
-  bool IsFocused(const Accessible* aAccessible) const;
+  bool IsFocused(const LocalAccessible* aAccessible) const;
 
   /**
    * Return true if the given accessible is an active item, i.e. an item that
    * is current within the active widget.
    */
-  inline bool IsActiveItem(const Accessible* aAccessible) {
+  inline bool IsActiveItem(const LocalAccessible* aAccessible) {
     return aAccessible == mActiveItem;
   }
 
@@ -61,14 +61,15 @@ class FocusManager {
   /**
    * Return true if focused accessible is within the given container.
    */
-  bool IsFocusWithin(const Accessible* aContainer) const;
+  bool IsFocusWithin(const LocalAccessible* aContainer) const;
 
   /**
    * Return whether the given accessible is focused or contains the focus or
    * contained by focused accessible.
    */
   enum FocusDisposition { eNone, eFocused, eContainsFocus, eContainedByFocus };
-  FocusDisposition IsInOrContainsFocus(const Accessible* aAccessible) const;
+  FocusDisposition IsInOrContainsFocus(
+      const LocalAccessible* aAccessible) const;
 
   /**
    * Return true if the given accessible was the last accessible focused.
@@ -80,7 +81,7 @@ class FocusManager {
    * 2. The accessibility focus was an active item (e.g. aria-activedescendant)
    *    and that item was removed.
    */
-  bool WasLastFocused(const Accessible* aAccessible) const;
+  bool WasLastFocused(const LocalAccessible* aAccessible) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Focus notifications and processing (don't use until you know what you do).
@@ -99,7 +100,7 @@ class FocusManager {
    * Called when active item is changed. Note: must be called when accessible
    * tree is up to date.
    */
-  void ActiveItemChanged(Accessible* aItem, bool aCheckIfActive = true);
+  void ActiveItemChanged(LocalAccessible* aItem, bool aCheckIfActive = true);
 
   /**
    * Dispatch delayed focus event for the current focus accessible.
@@ -109,7 +110,7 @@ class FocusManager {
   /**
    * Dispatch delayed focus event for the given target.
    */
-  void DispatchFocusEvent(DocAccessible* aDocument, Accessible* aTarget);
+  void DispatchFocusEvent(DocAccessible* aDocument, LocalAccessible* aTarget);
 
   /**
    * Process DOM focus notification.
@@ -135,9 +136,9 @@ class FocusManager {
   dom::Document* FocusedDOMDocument() const;
 
  private:
-  RefPtr<Accessible> mActiveItem;
-  RefPtr<Accessible> mLastFocus;
-  RefPtr<Accessible> mActiveARIAMenubar;
+  RefPtr<LocalAccessible> mActiveItem;
+  RefPtr<LocalAccessible> mLastFocus;
+  RefPtr<LocalAccessible> mActiveARIAMenubar;
 };
 
 }  // namespace a11y

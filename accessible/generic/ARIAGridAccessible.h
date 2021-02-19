@@ -24,7 +24,7 @@ class ARIAGridAccessible : public HyperTextAccessibleWrap,
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ARIAGridAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual TableAccessible* AsTable() override { return this; }
@@ -32,15 +32,15 @@ class ARIAGridAccessible : public HyperTextAccessibleWrap,
   // TableAccessible
   virtual uint32_t ColCount() const override;
   virtual uint32_t RowCount() override;
-  virtual Accessible* CellAt(uint32_t aRowIndex,
-                             uint32_t aColumnIndex) override;
+  virtual LocalAccessible* CellAt(uint32_t aRowIndex,
+                                  uint32_t aColumnIndex) override;
   virtual bool IsColSelected(uint32_t aColIdx) override;
   virtual bool IsRowSelected(uint32_t aRowIdx) override;
   virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) override;
   virtual uint32_t SelectedCellCount() override;
   virtual uint32_t SelectedColCount() override;
   virtual uint32_t SelectedRowCount() override;
-  virtual void SelectedCells(nsTArray<Accessible*>* aCells) override;
+  virtual void SelectedCells(nsTArray<LocalAccessible*>* aCells) override;
   virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
   virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
@@ -48,7 +48,7 @@ class ARIAGridAccessible : public HyperTextAccessibleWrap,
   virtual void SelectRow(uint32_t aRowIdx) override;
   virtual void UnselectCol(uint32_t aColIdx) override;
   virtual void UnselectRow(uint32_t aRowIdx) override;
-  virtual Accessible* AsAccessible() override { return this; }
+  virtual LocalAccessible* AsAccessible() override { return this; }
 
  protected:
   virtual ~ARIAGridAccessible() {}
@@ -61,7 +61,7 @@ class ARIAGridAccessible : public HyperTextAccessibleWrap,
    * @param  aNotify      [in, optional] specifies if DOM should be notified
    *                       about attribute change (used internally).
    */
-  nsresult SetARIASelected(Accessible* aAccessible, bool aIsSelected,
+  nsresult SetARIASelected(LocalAccessible* aAccessible, bool aIsSelected,
                            bool aNotify = true);
 };
 
@@ -75,14 +75,14 @@ class ARIARowAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ARIARowAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
 
  protected:
   virtual ~ARIARowAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
@@ -97,7 +97,7 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ARIAGridCellAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual void ApplyARIAState(uint64_t* aState) const override;
@@ -110,8 +110,8 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
   /**
    * Return a containing row.
    */
-  Accessible* Row() const {
-    Accessible* row = LocalParent();
+  LocalAccessible* Row() const {
+    LocalAccessible* row = LocalParent();
     return row && row->IsTableRow() ? row : nullptr;
   }
 
@@ -119,7 +119,7 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
    * Return index of the given row.
    * Returns -1 upon error.
    */
-  int32_t RowIndexFor(Accessible* aRow) const;
+  int32_t RowIndexFor(LocalAccessible* aRow) const;
 
   // TableCellAccessible
   virtual TableAccessible* Table() const override;

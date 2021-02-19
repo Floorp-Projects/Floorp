@@ -56,7 +56,7 @@ already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit(
 #if defined(ACCESSIBILITY)
   if (a11y::DocAccessible* docAcc =
           a11y::GetExistingDocAccessible(owner->OwnerDoc())) {
-    if (a11y::Accessible* ownerAcc = docAcc->GetAccessible(owner)) {
+    if (a11y::LocalAccessible* ownerAcc = docAcc->GetAccessible(owner)) {
       if (a11y::OuterDocAccessible* outerAcc = ownerAcc->AsOuterDoc()) {
         outerAcc->SendEmbedderAccessible(this);
       }

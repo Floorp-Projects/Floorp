@@ -61,9 +61,10 @@ typedef mozilla::mscom::COMPtrHolder<IAccessible, IID_IAccessible>
     IAccessibleHolder;
 typedef mozilla::mscom::COMPtrHolder<IDispatch, IID_IDispatch> IDispatchHolder;
 
-class Accessible;
+class LocalAccessible;
 
-IAccessibleHolder CreateHolderFromAccessible(NotNull<Accessible*> aAccToWrap);
+IAccessibleHolder CreateHolderFromAccessible(
+    NotNull<LocalAccessible*> aAccToWrap);
 
 typedef mozilla::mscom::COMPtrHolder<IHandlerControl, IID_IHandlerControl>
     IHandlerControlHolder;

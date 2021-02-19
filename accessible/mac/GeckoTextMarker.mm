@@ -511,7 +511,7 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
     }
   } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
     nsTArray<nsString> texts;
-    nsTArray<Accessible*> containers;
+    nsTArray<LocalAccessible*> containers;
     nsTArray<nsCOMPtr<nsIPersistentProperties>> props;
 
     htWrap->AttributedTextForRange(texts, props, containers, mStart.mOffset,

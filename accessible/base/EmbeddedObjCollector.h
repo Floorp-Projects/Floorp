@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 
 /**
  * Collect embedded objects. Provide quick access to accessible by index and
@@ -23,7 +23,7 @@ class EmbeddedObjCollector final {
   /**
    * Return index of the given accessible within the collection.
    */
-  int32_t GetIndexAt(Accessible* aAccessible);
+  int32_t GetIndexAt(LocalAccessible* aAccessible);
 
   /**
    * Return accessible count within the collection.
@@ -33,33 +33,33 @@ class EmbeddedObjCollector final {
   /**
    * Return an accessible from the collection at the given index.
    */
-  Accessible* GetAccessibleAt(uint32_t aIndex);
+  LocalAccessible* GetAccessibleAt(uint32_t aIndex);
 
  protected:
   /**
    * Ensure accessible at the given index is stored and return it.
    */
-  Accessible* EnsureNGetObject(uint32_t aIndex);
+  LocalAccessible* EnsureNGetObject(uint32_t aIndex);
 
   /**
    * Ensure index for the given accessible is stored and return it.
    */
-  int32_t EnsureNGetIndex(Accessible* aAccessible);
+  int32_t EnsureNGetIndex(LocalAccessible* aAccessible);
 
-  // Make sure it's used by Accessible class only.
-  explicit EmbeddedObjCollector(Accessible* aRoot)
+  // Make sure it's used by LocalAccessible class only.
+  explicit EmbeddedObjCollector(LocalAccessible* aRoot)
       : mRoot(aRoot), mRootChildIdx(0) {}
 
   /**
    * Append the object to collection.
    */
-  void AppendObject(Accessible* aAccessible);
+  void AppendObject(LocalAccessible* aAccessible);
 
-  friend class Accessible;
+  friend class LocalAccessible;
 
-  Accessible* mRoot;
+  LocalAccessible* mRoot;
   uint32_t mRootChildIdx;
-  nsTArray<Accessible*> mObjects;
+  nsTArray<LocalAccessible*> mObjects;
 };
 
 }  // namespace a11y

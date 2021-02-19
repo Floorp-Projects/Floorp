@@ -7,7 +7,7 @@
 
 MARKUPMAP(
     a,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       // Only some roles truly enjoy life as HTMLLinkAccessibles, for
       // details see closed bug 494807.
       const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aElement);
@@ -32,14 +32,14 @@ MARKUPMAP(blockquote, New_HyperText, roles::BLOCKQUOTE)
 
 MARKUPMAP(
     button,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLButtonAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     caption,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       if (aContext->IsTable()) {
         dom::HTMLTableElement* tableEl =
             dom::HTMLTableElement::FromNode(aContext->GetContent());
@@ -65,7 +65,7 @@ MARKUPMAP(dialog, New_HyperText, roles::DIALOG)
 
 MARKUPMAP(
     div,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       // Never create an accessible if we're part of an anonymous
       // subtree.
       if (aElement->IsInNativeAnonymousSubtree()) {
@@ -139,7 +139,7 @@ MARKUPMAP(
 
 MARKUPMAP(
     dl,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLListAccessible(aElement, aContext->Document());
     },
     roles::DEFINITION_LIST)
@@ -148,42 +148,42 @@ MARKUPMAP(dt, New_HTMLDtOrDd<HTMLLIAccessible>, roles::TERM)
 
 MARKUPMAP(
     figcaption,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLFigcaptionAccessible(aElement, aContext->Document());
     },
     roles::CAPTION)
 
 MARKUPMAP(
     figure,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLFigureAccessible(aElement, aContext->Document());
     },
     roles::FIGURE, Attr(xmlroles, figure))
 
 MARKUPMAP(
     fieldset,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLGroupboxAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     form,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLFormAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     footer,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLHeaderOrFooterAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     header,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLHeaderOrFooterAccessible(aElement, aContext->Document());
     },
     0)
@@ -202,14 +202,14 @@ MARKUPMAP(h6, New_HyperText, roles::HEADING)
 
 MARKUPMAP(
     hr,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLHRAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     input,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       // TODO(emilio): This would be faster if it used
       // HTMLInputElement's already-parsed representation.
       if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
@@ -242,21 +242,21 @@ MARKUPMAP(ins, New_HyperText, roles::CONTENT_INSERTION)
 
 MARKUPMAP(
     label,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLLabelAccessible(aElement, aContext->Document());
     },
     roles::LABEL)
 
 MARKUPMAP(
     legend,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLLegendAccessible(aElement, aContext->Document());
     },
     roles::LABEL)
 
 MARKUPMAP(
     li,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       // If list item is a child of accessible list then create an
       // accessible for it unconditionally by tag name. nsBlockFrame
       // creates the list item accessible for other elements styled as
@@ -331,7 +331,7 @@ MARKUPMAP(mmultiscripts_, New_HyperText, roles::MATHML_MULTISCRIPTS)
 
 MARKUPMAP(
     mtable_,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLTableAccessible(aElement, aContext->Document());
     },
     roles::MATHML_TABLE, AttrFromDOM(align, align),
@@ -339,21 +339,21 @@ MARKUPMAP(
 
 MARKUPMAP(
     mlabeledtr_,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLTableRowAccessible(aElement, aContext->Document());
     },
     roles::MATHML_LABELED_ROW)
 
 MARKUPMAP(
     mtr_,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLTableRowAccessible(aElement, aContext->Document());
     },
     roles::MATHML_TABLE_ROW)
 
 MARKUPMAP(
     mtd_,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLTableCellAccessible(aElement, aContext->Document());
     },
     roles::MATHML_CELL)
@@ -364,7 +364,7 @@ MARKUPMAP(maction_, New_HyperText, roles::MATHML_ACTION,
 
 MARKUPMAP(
     menu,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLListAccessible(aElement, aContext->Document());
     },
     roles::LIST)
@@ -396,28 +396,28 @@ MARKUPMAP(nav, New_HyperText, roles::LANDMARK)
 
 MARKUPMAP(
     ol,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLListAccessible(aElement, aContext->Document());
     },
     roles::LIST)
 
 MARKUPMAP(
     option,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLSelectOptionAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     optgroup,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLSelectOptGroupAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     output,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLOutputAccessible(aElement, aContext->Document());
     },
     roles::STATUSBAR, Attr(live, polite))
@@ -426,7 +426,7 @@ MARKUPMAP(p, nullptr, roles::PARAGRAPH)
 
 MARKUPMAP(
     progress,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLProgressAccessible(aElement, aContext->Document());
     },
     0)
@@ -435,21 +435,21 @@ MARKUPMAP(q, New_HyperText, 0)
 
 MARKUPMAP(
     section,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLSectionAccessible(aElement, aContext->Document());
     },
     0)
 
 MARKUPMAP(
     summary,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLSummaryAccessible(aElement, aContext->Document());
     },
     roles::SUMMARY)
 
 MARKUPMAP(
     table,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       if (aElement->GetPrimaryFrame() &&
           aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
         return new ARIAGridAccessibleWrap(aElement, aContext->Document());
@@ -480,7 +480,7 @@ MARKUPMAP(tbody, nullptr, roles::GROUPING)
 
 MARKUPMAP(
     td,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       if (aContext->IsTableRow() &&
           aContext->GetContent() == aElement->GetParent()) {
         // If HTML:td element is part of its HTML:table, which has CSS
@@ -507,7 +507,7 @@ MARKUPMAP(tfoot, nullptr, roles::GROUPING)
 
 MARKUPMAP(
     th,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       if (aContext->IsTableRow() &&
           aContext->GetContent() == aElement->GetParent()) {
         if (!aContext->IsHTMLTableRow()) {
@@ -524,13 +524,13 @@ MARKUPMAP(thead, nullptr, roles::GROUPING)
 
 MARKUPMAP(
     tr,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       // If HTML:tr element is part of its HTML:table, which has CSS
       // display style other than 'table', then create a generic table row
       // accessible, because there's no underlying table layout and thus
       // native HTML table row class doesn't work. Refer to
       // CreateAccessibleByFrameType dual logic.
-      Accessible* table = aContext->IsTable() ? aContext : nullptr;
+      LocalAccessible* table = aContext->IsTable() ? aContext : nullptr;
       if (!table && aContext->LocalParent() &&
           aContext->LocalParent()->IsTable()) {
         table = aContext->LocalParent();
@@ -556,14 +556,14 @@ MARKUPMAP(
 
 MARKUPMAP(
     ul,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLListAccessible(aElement, aContext->Document());
     },
     roles::LIST)
 
 MARKUPMAP(
     meter,
-    [](Element* aElement, Accessible* aContext) -> Accessible* {
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLMeterAccessible(aElement, aContext->Document());
     },
     roles::METER)

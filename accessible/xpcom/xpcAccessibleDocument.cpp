@@ -147,7 +147,7 @@ xpcAccessibleDocument::GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor) {
 // xpcAccessibleDocument
 
 xpcAccessibleGeneric* xpcAccessibleDocument::GetAccessible(
-    Accessible* aAccessible) {
+    LocalAccessible* aAccessible) {
   MOZ_ASSERT(!mRemote);
   if (ToXPCDocument(aAccessible->Document()) != this) {
     NS_ERROR(

@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xpcAccessibleGeneric.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

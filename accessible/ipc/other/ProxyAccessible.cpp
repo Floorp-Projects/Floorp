@@ -803,7 +803,7 @@ ProxyAccessible* ProxyAccessible::FocusedChild() {
 }
 
 ProxyAccessible* ProxyAccessible::ChildAtPoint(
-    int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
+    int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   ProxyAccessible* target = this;
   do {
     if (target->mOuterDoc) {
@@ -813,7 +813,7 @@ ProxyAccessible* ProxyAccessible::ChildAtPoint(
       if (childDoc->IsTopLevelInContentProcess()) {
         // This is an OOP iframe. Remote calls can only work within their
         // process, so they stop at OOP iframes.
-        if (aWhichChild == Accessible::eDirectChild) {
+        if (aWhichChild == LocalAccessible::eDirectChild) {
           // Return the child document if it's within the bounds of the iframe.
           nsIntRect docRect = target->Bounds();
           if (docRect.Contains(aX, aY)) {
@@ -834,7 +834,7 @@ ProxyAccessible* ProxyAccessible::ChildAtPoint(
     auto useDoc = static_cast<DocAccessibleParent*>(resultDoc);
     target = resultDoc ? useDoc->GetAccessible(resultID) : nullptr;
   } while (target && target->mOuterDoc &&
-           aWhichChild == Accessible::eDeepestChild);
+           aWhichChild == LocalAccessible::eDeepestChild);
   return target;
 }
 

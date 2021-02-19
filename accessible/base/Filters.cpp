@@ -4,7 +4,7 @@
 
 #include "Filters.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "Role.h"
 #include "States.h"
@@ -12,13 +12,13 @@
 using namespace mozilla::a11y;
 using namespace mozilla::a11y::filters;
 
-uint32_t filters::GetSelected(Accessible* aAccessible) {
+uint32_t filters::GetSelected(LocalAccessible* aAccessible) {
   if (aAccessible->State() & states::SELECTED) return eMatch | eSkipSubtree;
 
   return eSkip;
 }
 
-uint32_t filters::GetSelectable(Accessible* aAccessible) {
+uint32_t filters::GetSelectable(LocalAccessible* aAccessible) {
   if (aAccessible->InteractiveState() & states::SELECTABLE) {
     return eMatch | eSkipSubtree;
   }
@@ -26,7 +26,7 @@ uint32_t filters::GetSelectable(Accessible* aAccessible) {
   return eSkip;
 }
 
-uint32_t filters::GetRow(Accessible* aAccessible) {
+uint32_t filters::GetRow(LocalAccessible* aAccessible) {
   if (aAccessible->IsTableRow()) return eMatch | eSkipSubtree;
 
   // Look for rows inside rowgroup or wrapping text containers.
@@ -40,6 +40,6 @@ uint32_t filters::GetRow(Accessible* aAccessible) {
   return eSkipSubtree;
 }
 
-uint32_t filters::GetCell(Accessible* aAccessible) {
+uint32_t filters::GetCell(LocalAccessible* aAccessible) {
   return aAccessible->IsTableCell() ? eMatch : eSkipSubtree;
 }

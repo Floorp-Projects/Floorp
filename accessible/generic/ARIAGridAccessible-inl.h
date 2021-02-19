@@ -15,11 +15,12 @@
 namespace mozilla {
 namespace a11y {
 
-inline int32_t ARIAGridCellAccessible::RowIndexFor(Accessible* aRow) const {
-  Accessible* table = nsAccUtils::TableFor(aRow);
+inline int32_t ARIAGridCellAccessible::RowIndexFor(
+    LocalAccessible* aRow) const {
+  LocalAccessible* table = nsAccUtils::TableFor(aRow);
   if (table) {
     int32_t rowIdx = 0;
-    Accessible* row = nullptr;
+    LocalAccessible* row = nullptr;
     AccIterator rowIter(table, filters::GetRow);
     while ((row = rowIter.Next()) && row != aRow) rowIdx++;
 

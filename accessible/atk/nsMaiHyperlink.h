@@ -8,7 +8,7 @@
 #define __MAI_HYPERLINK_H__
 
 #include "nsMai.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 
 struct _AtkHyperlink;
 typedef struct _AtkHyperlink AtkHyperlink;
@@ -27,10 +27,10 @@ class MaiHyperlink {
 
  public:
   AtkHyperlink* GetAtkHyperlink() const { return mMaiAtkHyperlink; }
-  Accessible* GetAccHyperlink() {
+  LocalAccessible* GetAccHyperlink() {
     if (!mHyperlink.IsAccessible()) return nullptr;
 
-    Accessible* link = mHyperlink.AsAccessible();
+    LocalAccessible* link = mHyperlink.AsAccessible();
     if (!link) {
       return nullptr;
     }

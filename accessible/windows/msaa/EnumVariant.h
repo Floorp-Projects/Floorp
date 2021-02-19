@@ -52,7 +52,7 @@ class ChildrenEnumVariant final : public IEnumVARIANT {
 
  protected:
   RefPtr<AccessibleWrap> mAnchorAcc;
-  Accessible* mCurAcc;
+  LocalAccessible* mCurAcc;
   uint32_t mCurIndex;
 };
 

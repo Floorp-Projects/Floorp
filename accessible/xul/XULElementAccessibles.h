@@ -21,7 +21,7 @@ class XULLabelAccessible : public HyperTextAccessibleWrap {
  public:
   XULLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown() override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
@@ -30,7 +30,7 @@ class XULLabelAccessible : public HyperTextAccessibleWrap {
   void UpdateLabelValue(const nsString& aValue);
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
   virtual void DispatchClickEvent(nsIContent* aContent,
                                   uint32_t aActionIndex) const override;
@@ -39,7 +39,7 @@ class XULLabelAccessible : public HyperTextAccessibleWrap {
   RefPtr<XULLabelTextLeafAccessible> mValueTextLeaf;
 };
 
-inline XULLabelAccessible* Accessible::AsXULLabel() {
+inline XULLabelAccessible* LocalAccessible::AsXULLabel() {
   return IsXULLabel() ? static_cast<XULLabelAccessible*>(this) : nullptr;
 }
 
@@ -56,7 +56,7 @@ class XULLabelTextLeafAccessible final : public TextLeafAccessibleWrap {
 
   virtual ~XULLabelTextLeafAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 };
@@ -68,7 +68,7 @@ class XULTooltipAccessible : public LeafAccessible {
  public:
   XULTooltipAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 };
@@ -77,7 +77,7 @@ class XULLinkAccessible : public XULLabelAccessible {
  public:
   XULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeLinkState() const override;
@@ -97,7 +97,7 @@ class XULLinkAccessible : public XULLabelAccessible {
  protected:
   virtual ~XULLinkAccessible();
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   enum { eAction_Jump = 0 };

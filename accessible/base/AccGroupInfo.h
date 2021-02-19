@@ -5,7 +5,7 @@
 #ifndef AccGroupInfo_h_
 #define AccGroupInfo_h_
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 
 namespace mozilla {
 namespace a11y {
@@ -31,7 +31,7 @@ class AccGroupInfo {
    * Return a direct or logical parent of the accessible that this group info is
    * created for.
    */
-  Accessible* ConceptualParent() const { return mParent; }
+  LocalAccessible* ConceptualParent() const { return mParent; }
 
   /**
    * Update group information.
@@ -41,7 +41,7 @@ class AccGroupInfo {
   /**
    * Create group info.
    */
-  static AccGroupInfo* CreateGroupInfo(const Accessible* aAccessible) {
+  static AccGroupInfo* CreateGroupInfo(const LocalAccessible* aAccessible) {
     mozilla::a11y::role role = aAccessible->Role();
     if (role != mozilla::a11y::roles::ROW &&
         role != mozilla::a11y::roles::OUTLINEITEM &&
@@ -67,21 +67,22 @@ class AccGroupInfo {
   /**
    * Return a first item for the given container.
    */
-  static Accessible* FirstItemOf(const Accessible* aContainer);
+  static LocalAccessible* FirstItemOf(const LocalAccessible* aContainer);
 
   /**
    * Return total number of items in container, and if it is has nested
    * collections.
    */
-  static uint32_t TotalItemCount(Accessible* aContainer, bool* aIsHierarchical);
+  static uint32_t TotalItemCount(LocalAccessible* aContainer,
+                                 bool* aIsHierarchical);
 
   /**
    * Return next item of the same group to the given item.
    */
-  static Accessible* NextItemTo(Accessible* aItem);
+  static LocalAccessible* NextItemTo(LocalAccessible* aItem);
 
  protected:
-  AccGroupInfo(const Accessible* aItem, a11y::role aRole);
+  AccGroupInfo(const LocalAccessible* aItem, a11y::role aRole);
 
  private:
   AccGroupInfo() = delete;
@@ -110,8 +111,8 @@ class AccGroupInfo {
 
   uint32_t mPosInSet;
   uint32_t mSetSize;
-  Accessible* mParent;
-  const Accessible* mItem;
+  LocalAccessible* mParent;
+  const LocalAccessible* mItem;
   a11y::role mRole;
 };
 

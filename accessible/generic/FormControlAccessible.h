@@ -27,7 +27,7 @@ class CheckboxAccessible : public LeafAccessible {
     }
   }
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 
@@ -47,7 +47,7 @@ class RadioButtonAccessible : public LeafAccessible {
  public:
   RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
 
   // ActionAccessible

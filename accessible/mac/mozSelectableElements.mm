@@ -8,7 +8,7 @@
 #import "mozSelectableElements.h"
 #import "MOXWebAreaAccessible.h"
 #import "MacUtils.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "nsCocoaUtils.h"
 
 using namespace mozilla::a11y;
@@ -75,7 +75,7 @@ using namespace mozilla::a11y;
     return;
   }
 
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     acc->SetSelected([selected boolValue]);
   } else {
     mGeckoAccessible.AsProxy()->SetSelected([selected boolValue]);
@@ -204,7 +204,7 @@ using namespace mozilla::a11y;
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(
                                                    mozAccessible* child,
                                                    NSDictionary* bindings) {
-        if (Accessible* acc = [child geckoAccessible].AsAccessible()) {
+        if (LocalAccessible* acc = [child geckoAccessible].AsAccessible()) {
           if (acc->IsContent() && acc->GetContent()->IsXULElement()) {
             return ((acc->VisibilityState() & states::INVISIBLE) == 0);
           }
@@ -290,7 +290,7 @@ using namespace mozilla::a11y;
 }
 
 - (NSString*)moxMenuItemMarkChar {
-  Accessible* acc = mGeckoAccessible.AsAccessible();
+  LocalAccessible* acc = mGeckoAccessible.AsAccessible();
   if (acc && acc->IsContent() &&
       acc->GetContent()->IsXULElement(nsGkAtoms::menuitem)) {
     // We need to provide a marker character. This is the visible "√" you see

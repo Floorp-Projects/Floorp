@@ -29,7 +29,7 @@ class HTMLRadioButtonAccessible : public RadioButtonAccessible {
     mStateFlags |= eIgnoreDOMUIEvent;
   }
 
-  // Accessible
+  // LocalAccessible
   virtual uint64_t NativeState() const override;
   virtual void GetPositionAndSizeInternal(int32_t* aPosInSet,
                                           int32_t* aSetSize) override;
@@ -49,7 +49,7 @@ class HTMLButtonAccessible : public HyperTextAccessibleWrap {
 
   HTMLButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;
   virtual uint64_t NativeState() const override;
@@ -63,13 +63,13 @@ class HTMLButtonAccessible : public HyperTextAccessibleWrap {
   virtual bool IsWidget() const override;
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
 /**
- * Accessible for HTML input@type="text", input@type="password", textarea and
- * other HTML text controls.
+ * Accessible for HTML input@type="text", input@type="password", textarea
+ * and other HTML text controls.
  */
 class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
  public:
@@ -84,7 +84,7 @@ class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual already_AddRefed<TextEditor> GetEditor()
       const override;
 
-  // Accessible
+  // LocalAccessible
   virtual void Value(nsString& aValue) const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual mozilla::a11y::role NativeRole() const override;
@@ -98,12 +98,12 @@ class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
 
   // Widgets
   virtual bool IsWidget() const override;
-  virtual Accessible* ContainerWidget() const override;
+  virtual LocalAccessible* ContainerWidget() const override;
 
  protected:
   virtual ~HTMLTextFieldAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   /**
@@ -127,10 +127,10 @@ class HTMLFileInputAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLFileInputAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual nsresult HandleAccEvent(AccEvent* aAccEvent) override;
-  virtual Accessible* CurrentItem() const override;
+  virtual LocalAccessible* CurrentItem() const override;
 };
 
 /**
@@ -143,7 +143,7 @@ class HTMLSpinnerAccessible final : public HTMLTextFieldAccessible {
     mStateFlags |= eHasNumericValue;
   }
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual void Value(nsString& aValue) const override;
 
@@ -164,7 +164,7 @@ class HTMLRangeAccessible : public LeafAccessible {
     mStateFlags |= eHasNumericValue;
   }
 
-  // Accessible
+  // LocalAccessible
   virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
 
@@ -186,12 +186,12 @@ class HTMLGroupboxAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // HTMLGroupboxAccessible
@@ -205,7 +205,7 @@ class HTMLLegendAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLLegendAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual Relation RelationByType(RelationType aType) const override;
 };
 
@@ -216,11 +216,11 @@ class HTMLFigureAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLFigureAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual Relation RelationByType(RelationType aType) const override;
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // HTMLLegendAccessible
@@ -234,7 +234,7 @@ class HTMLFigcaptionAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLFigcaptionAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual Relation RelationByType(RelationType aType) const override;
 };
 
@@ -249,7 +249,7 @@ class HTMLFormAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLFormAccessible,
                                        HyperTextAccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual nsAtom* LandmarkRole() const override;
   virtual a11y::role NativeRole() const override;
 
@@ -271,7 +271,7 @@ class HTMLProgressAccessible : public LeafAccessible {
     mType = eProgressType;
   }
 
-  // Accessible
+  // LocalAccessible
   virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
@@ -304,7 +304,7 @@ class HTMLMeterAccessible : public LeafAccessible {
     mType = eProgressType;
   }
 
-  // Accessible
+  // LocalAccessible
   virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
 
@@ -332,7 +332,7 @@ class HTMLDateTimeAccessible : public AccessibleWrap {
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLDateTimeAccessible, AccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override { return R; }
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes()
       override {

@@ -5,7 +5,7 @@
 
 #include "RootAccessibleWrap.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccessibleOrProxy.h"
 #include "DocAccessibleParent.h"
 #include "DocAccessible-inl.h"

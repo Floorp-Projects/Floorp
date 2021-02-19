@@ -35,7 +35,7 @@ ImageAccessible::ImageAccessible(nsIContent* aContent, DocAccessible* aDoc)
 ImageAccessible::~ImageAccessible() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible public
+// LocalAccessible public
 
 uint64_t ImageAccessible::NativeState() const {
   // The state is a bitfield, get our inherited state, then logically OR it with
@@ -85,20 +85,20 @@ ENameValueFlag ImageAccessible::NativeName(nsString& aName) const {
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
   if (!aName.IsEmpty()) return eNameOK;
 
-  ENameValueFlag nameFlag = Accessible::NativeName(aName);
+  ENameValueFlag nameFlag = LocalAccessible::NativeName(aName);
   if (!aName.IsEmpty()) return nameFlag;
 
   // No accessible name but empty 'alt' attribute is present. If further name
   // computation algorithm doesn't provide non empty name then it means
   // an empty 'alt' attribute was used to indicate a decorative image (see
-  // Accessible::Name() method for details).
+  // LocalAccessible::Name() method for details).
   return hasAltAttrib ? eNoNameOnPurpose : eNameOK;
 }
 
 role ImageAccessible::NativeRole() const { return roles::GRAPHIC; }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible
+// LocalAccessible
 
 uint8_t ImageAccessible::ActionCount() const {
   uint8_t actionCount = LinkableAccessible::ActionCount();
@@ -147,7 +147,7 @@ nsIntPoint ImageAccessible::Position(uint32_t aCoordType) {
 
 nsIntSize ImageAccessible::Size() { return Bounds().Size(); }
 
-// Accessible
+// LocalAccessible
 already_AddRefed<nsIPersistentProperties> ImageAccessible::NativeAttributes() {
   nsCOMPtr<nsIPersistentProperties> attributes =
       LinkableAccessible::NativeAttributes();

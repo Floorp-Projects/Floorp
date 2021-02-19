@@ -9,7 +9,7 @@
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "Role.h"
 #include "TextRange.h"
@@ -30,7 +30,9 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-    : Accessible(aContent, aDoc), mNativeObject(nil), mNativeInited(false) {
+    : LocalAccessible(aContent, aDoc),
+      mNativeObject(nil),
+      mNativeInited(false) {
   if (aContent && aContent->IsElement() && aDoc) {
     // Check if this accessible is a live region and queue it
     // it for dispatching an event after it has been inserted.
@@ -134,13 +136,13 @@ void AccessibleWrap::Shutdown() {
     mNativeObject = nil;
   }
 
-  Accessible::Shutdown();
+  LocalAccessible::Shutdown();
 }
 
 nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  nsresult rv = Accessible::HandleAccEvent(aEvent);
+  nsresult rv = LocalAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t eventType = aEvent->GetEventType();
@@ -154,7 +156,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     return NS_OK;
   }
 
-  Accessible* eventTarget = nullptr;
+  LocalAccessible* eventTarget = nullptr;
 
   switch (eventType) {
     case nsIAccessibleEvent::EVENT_SELECTION:
@@ -168,7 +170,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     }
     case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
     case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
-      Accessible* acc = aEvent->GetAccessible();
+      LocalAccessible* acc = aEvent->GetAccessible();
       // If there is a text input ancestor, use it as the event source.
       while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
         acc = acc->LocalParent();

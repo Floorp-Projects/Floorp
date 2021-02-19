@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "TableAccessible.h"
@@ -28,7 +28,7 @@ static AtkObject* refAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   AtkObject* cellAtkObj = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
-    Accessible* cell = accWrap->AsTable()->CellAt(aRowIdx, aColIdx);
+    LocalAccessible* cell = accWrap->AsTable()->CellAt(aRowIdx, aColIdx);
     if (!cell) {
       return nullptr;
     }
@@ -160,7 +160,7 @@ static gint getRowExtentAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
 static AtkObject* getCaptionCB(AtkTable* aTable) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
-    Accessible* caption = accWrap->AsTable()->Caption();
+    LocalAccessible* caption = accWrap->AsTable()->Caption();
     return caption ? AccessibleWrap::GetAtkObject(caption) : nullptr;
   }
 
@@ -189,7 +189,7 @@ static const gchar* getColumnDescriptionCB(AtkTable* aTable, gint aColumn) {
 static AtkObject* getColumnHeaderCB(AtkTable* aTable, gint aColIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
-    Accessible* header =
+    LocalAccessible* header =
         AccessibleWrap::GetColumnHeader(accWrap->AsTable(), aColIdx);
     return header ? AccessibleWrap::GetAtkObject(header) : nullptr;
   }
@@ -219,7 +219,7 @@ static const gchar* getRowDescriptionCB(AtkTable* aTable, gint aRow) {
 static AtkObject* getRowHeaderCB(AtkTable* aTable, gint aRowIdx) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
-    Accessible* header =
+    LocalAccessible* header =
         AccessibleWrap::GetRowHeader(accWrap->AsTable(), aRowIdx);
     return header ? AccessibleWrap::GetAtkObject(header) : nullptr;
   }

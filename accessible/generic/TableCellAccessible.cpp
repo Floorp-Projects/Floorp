@@ -6,20 +6,20 @@
 
 #include "TableCellAccessible.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "TableAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-void TableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
+void TableCellAccessible::RowHeaderCells(nsTArray<LocalAccessible*>* aCells) {
   uint32_t rowIdx = RowIdx(), colIdx = ColIdx();
   TableAccessible* table = Table();
   if (!table) return;
 
   // Move to the left to find row header cells
   for (uint32_t curColIdx = colIdx - 1; curColIdx < colIdx; curColIdx--) {
-    Accessible* cell = table->CellAt(rowIdx, curColIdx);
+    LocalAccessible* cell = table->CellAt(rowIdx, curColIdx);
     if (!cell) continue;
 
     // CellAt should always return a TableCellAccessible (XXX Bug 587529)
@@ -35,7 +35,7 @@ void TableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
   }
 }
 
-Accessible* TableCellAccessible::PrevColHeader() {
+LocalAccessible* TableCellAccessible::PrevColHeader() {
   TableAccessible* table = Table();
   if (!table) {
     return nullptr;
@@ -43,7 +43,7 @@ Accessible* TableCellAccessible::PrevColHeader() {
 
   TableAccessible::HeaderCache& cache = table->GetHeaderCache();
   bool inCache = false;
-  Accessible* cachedHeader = cache.GetWeak(this, &inCache);
+  LocalAccessible* cachedHeader = cache.GetWeak(this, &inCache);
   if (inCache) {
     // Cached but null means we know there is no previous column header.
     // if defunct, the cell was removed, so behave as if there is no cached
@@ -55,7 +55,7 @@ Accessible* TableCellAccessible::PrevColHeader() {
 
   uint32_t rowIdx = RowIdx(), colIdx = ColIdx();
   for (uint32_t curRowIdx = rowIdx - 1; curRowIdx < rowIdx; curRowIdx--) {
-    Accessible* cell = table->CellAt(curRowIdx, colIdx);
+    LocalAccessible* cell = table->CellAt(curRowIdx, colIdx);
     if (!cell) {
       continue;
     }
@@ -84,7 +84,7 @@ Accessible* TableCellAccessible::PrevColHeader() {
         (tableCell->ColExtent() == 1 || tableCell->ColIdx() == colIdx)) {
       if (!cachedHeader || !cachedHeader->IsDefunct()) {
         // Cache it for this cell.
-        cache.Put(this, RefPtr<Accessible>(cachedHeader));
+        cache.Put(this, RefPtr<LocalAccessible>(cachedHeader));
         return cachedHeader;
       }
     }
@@ -97,17 +97,17 @@ Accessible* TableCellAccessible::PrevColHeader() {
     }
 
     // Cache the header we found.
-    cache.Put(this, RefPtr<Accessible>(cell));
+    cache.Put(this, RefPtr<LocalAccessible>(cell));
     return cell;
   }
 
   // There's no header, so cache that fact.
-  cache.Put(this, RefPtr<Accessible>(nullptr));
+  cache.Put(this, RefPtr<LocalAccessible>(nullptr));
   return nullptr;
 }
 
-void TableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
-  for (Accessible* cell = PrevColHeader(); cell;
+void TableCellAccessible::ColHeaderCells(nsTArray<LocalAccessible*>* aCells) {
+  for (LocalAccessible* cell = PrevColHeader(); cell;
        cell = cell->AsTableCell()->PrevColHeader()) {
     aCells->AppendElement(cell);
   }
