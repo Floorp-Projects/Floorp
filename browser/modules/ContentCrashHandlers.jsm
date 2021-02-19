@@ -427,6 +427,13 @@ var TabCrashHandler = {
       },
     ];
 
+    // Add telemetry indicating that the subframe crash UI is shown, but wait until the tab
+    // is switched to.
+    let removeTelemetryFn = this.telemetryIfTabSelected(
+      browser,
+      "dom.contentprocess.crash_subframe_ui_presented"
+    );
+
     notification = notificationBox.appendNotification(
       messageFragment,
       value,
@@ -435,6 +442,8 @@ var TabCrashHandler = {
       buttons,
       eventName => {
         if (eventName == "disconnected") {
+          removeTelemetryFn();
+
           let existingItem = this.notificationsMap.get(childID);
           if (existingItem) {
             let idx = existingItem.indexOf(notification);
@@ -463,6 +472,40 @@ var TabCrashHandler = {
     } else {
       this.notificationsMap.set(childID, [notification]);
     }
+  },
+
+  /**
+   * If the browser tab is selected, increase the telemetry probe. If the browser tab
+   * is not selected, wait until the browser tab is selected before increasing the
+   * telemetry probe. This means that a crash in a background tab won't trigger the
+   * probe until the tab is switched to.
+   *
+   * Returns a function to be called to cancel the telemetry when it no longer applies,
+   */
+  telemetryIfTabSelected(browser, telemetryKey) {
+    let gBrowser = browser.getTabBrowser();
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    let seenNotification = event => {
+      if (tab == event.target) {
+        tab.removeEventListener("TabSelect", seenNotification, true);
+
+        Services.telemetry.scalarAdd(telemetryKey, 1);
+      }
+    };
+
+    // Add telemetry indicating that the subframe crash UI is shown, but wait until the tab
+    // is switched to.
+    if (gBrowser.selectedTab == tab) {
+      Services.telemetry.scalarAdd(telemetryKey, 1);
+      return () => {};
+    }
+
+    tab.addEventListener("TabSelect", seenNotification, true);
+
+    return () => {
+      tab.removeEventListener("TabSelect", seenNotification, true);
+    };
   },
 
   /**
@@ -698,6 +741,15 @@ var TabCrashHandler = {
       this.unseenCrashedChildIDs.splice(index, 1);
     }
 
+    // Add telemetry for each time the user has been shown a tab crash page. The
+    // tab crashed page should only appear in foreground tabs, but verify this.
+    if (browser.getTabBrowser().selectedBrowser == browser) {
+      Services.telemetry.scalarAdd(
+        "dom.contentprocess.crash_tab_ui_presented",
+        1
+      );
+    }
+
     let dumpID = this.getDumpID(browser);
     if (!dumpID) {
       return {
@@ -722,12 +774,6 @@ var TabCrashHandler = {
 
     if (emailMe) {
       data.email = this.prefs.getCharPref("email");
-    }
-
-    // Make sure to only count once even if there are multiple windows
-    // that will all show about:tabcrashed.
-    if (this._crashedTabCount == 1) {
-      Services.telemetry.getHistogramById("FX_CONTENT_CRASH_PRESENTED").add(1);
     }
 
     return data;
@@ -1123,6 +1169,11 @@ var UnsubmittedCrashHandler = {
         }
       }
     };
+
+    Services.telemetry.scalarAdd(
+      "dom.contentprocess.unsubmitted_ui_presented",
+      1
+    );
 
     return chromeWin.gNotificationBox.appendNotification(
       message,
