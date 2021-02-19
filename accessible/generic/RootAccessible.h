@@ -26,7 +26,7 @@ class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown() override;
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) const override;
   virtual Relation RelationByType(RelationType aType) const override;
@@ -61,7 +61,7 @@ class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
   /**
    * Process "popupshown" event. Used by HandleEvent().
    */
-  void HandlePopupShownEvent(Accessible* aAccessible);
+  void HandlePopupShownEvent(LocalAccessible* aAccessible);
 
   /*
    * Process "popuphiding" event. Used by HandleEvent().
@@ -78,7 +78,7 @@ class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
 #endif
 };
 
-inline RootAccessible* Accessible::AsRoot() {
+inline RootAccessible* LocalAccessible::AsRoot() {
   return IsRoot() ? static_cast<mozilla::a11y::RootAccessible*>(this) : nullptr;
 }
 

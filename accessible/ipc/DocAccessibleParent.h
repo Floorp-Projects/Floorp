@@ -232,7 +232,7 @@ class DocAccessibleParent : public ProxyAccessible,
    *        this document. Only GetNativeInterface() is called on this, so it
    *        may be a ProxyAccessibleWrap or similar.
    */
-  void SendParentCOMProxy(Accessible* aOuterDoc);
+  void SendParentCOMProxy(LocalAccessible* aOuterDoc);
 
   virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(
       const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;

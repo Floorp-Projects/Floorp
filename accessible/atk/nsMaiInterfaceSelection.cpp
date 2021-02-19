@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccessibleWrap.h"
 #include "nsMai.h"
 #include "ProxyAccessible.h"
@@ -48,7 +48,7 @@ static AtkObject* refSelectionCB(AtkSelection* aSelection, gint i) {
   AtkObject* atkObj = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
   if (accWrap && accWrap->IsSelect()) {
-    Accessible* selectedItem = accWrap->GetSelectedItem(i);
+    LocalAccessible* selectedItem = accWrap->GetSelectedItem(i);
     if (!selectedItem) {
       return nullptr;
     }

@@ -711,7 +711,7 @@ gfx::MarginDouble WinUtils::GetUnwriteableMarginsForDeviceInInches(HDC aHdc) {
 
 #ifdef ACCESSIBILITY
 /* static */
-a11y::Accessible* WinUtils::GetRootAccessibleForHWND(HWND aHwnd) {
+a11y::LocalAccessible* WinUtils::GetRootAccessibleForHWND(HWND aHwnd) {
   nsWindow* window = GetNSWindowPtr(aHwnd);
   if (!window) {
     return nullptr;

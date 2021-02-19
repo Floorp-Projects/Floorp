@@ -16,7 +16,7 @@ using namespace mozilla::a11y;
 
 ia2AccessibleRelation::ia2AccessibleRelation(RelationType aType, Relation* aRel)
     : mType(aType) {
-  Accessible* target = nullptr;
+  LocalAccessible* target = nullptr;
   while ((target = aRel->Next())) mTargets.AppendElement(target);
 }
 

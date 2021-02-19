@@ -16,7 +16,7 @@ class nsIContent;
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 class DocAccessible;
 
 /**
@@ -35,7 +35,7 @@ class TreeWalker final {
   /**
    * Used to navigate and create if needed the accessible children.
    */
-  explicit TreeWalker(Accessible* aContext);
+  explicit TreeWalker(LocalAccessible* aContext);
 
   /**
    * Used to navigate the accessible children relative to the anchor.
@@ -45,7 +45,7 @@ class TreeWalker final {
    * @param aAnchorNode [in] the node the search will be prepared relative to
    * @param aFlags   [in] flags (see enum above)
    */
-  TreeWalker(Accessible* aContext, nsIContent* aAnchorNode,
+  TreeWalker(LocalAccessible* aContext, nsIContent* aAnchorNode,
              uint32_t aFlags = eWalkCache);
 
   /**
@@ -59,7 +59,7 @@ class TreeWalker final {
    * Resets the walker state, and sets the given node as an anchor. Returns a
    * first accessible element within the node including the node itself.
    */
-  Accessible* Scope(nsIContent* aAnchorNode);
+  LocalAccessible* Scope(nsIContent* aAnchorNode);
 
   /**
    * Resets the walker state.
@@ -82,10 +82,10 @@ class TreeWalker final {
    *       rejected during tree creation then the caller should be unbind it
    *       from the document.
    */
-  Accessible* Next();
-  Accessible* Prev();
+  LocalAccessible* Next();
+  LocalAccessible* Prev();
 
-  Accessible* Context() const { return mContext; }
+  LocalAccessible* Context() const { return mContext; }
   DocAccessible* Document() const { return mDoc; }
 
  private:
@@ -96,8 +96,8 @@ class TreeWalker final {
   /**
    * Return an accessible for the given node if any.
    */
-  Accessible* AccessibleFor(nsIContent* aNode, uint32_t aFlags,
-                            bool* aSkipSubtree);
+  LocalAccessible* AccessibleFor(nsIContent* aNode, uint32_t aFlags,
+                                 bool* aSkipSubtree);
 
   /**
    * Create new state for the given node and push it on top of stack / at bottom
@@ -123,7 +123,7 @@ class TreeWalker final {
   dom::AllChildrenIterator* PopState();
 
   DocAccessible* mDoc;
-  Accessible* mContext;
+  LocalAccessible* mContext;
   nsIContent* mAnchorNode;
 
   AutoTArray<dom::AllChildrenIterator, 20> mStateStack;

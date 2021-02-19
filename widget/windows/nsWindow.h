@@ -42,7 +42,7 @@
 
 #ifdef ACCESSIBILITY
 #  include "oleacc.h"
-#  include "mozilla/a11y/Accessible.h"
+#  include "mozilla/a11y/LocalAccessible.h"
 #endif
 
 #include "nsUXThemeData.h"
@@ -275,7 +275,7 @@ class nsWindow final : public nsWindowBase {
   /**
    * Return an accessible associated with the window.
    */
-  mozilla::a11y::Accessible* GetAccessible();
+  mozilla::a11y::LocalAccessible* GetAccessible();
 #endif  // ACCESSIBILITY
 
   /**

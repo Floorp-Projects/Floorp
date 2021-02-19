@@ -6,7 +6,7 @@
 #include "AccessibleWrap.h"
 
 #include "JavaBuiltins.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "AccEvent.h"
 #include "AndroidInputType.h"
@@ -45,7 +45,7 @@ IDSet sIDSet(31UL);
 // construction
 //-----------------------------------------------------
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-    : Accessible(aContent, aDoc) {
+    : LocalAccessible(aContent, aDoc) {
   if (aDoc) {
     mID = AcquireID();
     DocAccessibleWrap* doc = static_cast<DocAccessibleWrap*>(aDoc);
@@ -100,7 +100,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
           if ((ht && ht->SelectionCount())) {
             DOMPoint point =
                 AsHyperText()->OffsetToDOMPoint(caretEvent->GetCaretOffset());
-            if (Accessible* newPos =
+            if (LocalAccessible* newPos =
                     doc->GetAccessibleOrContainer(point.node)) {
               static_cast<AccessibleWrap*>(newPos)->PivotTo(
                   java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
@@ -120,7 +120,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     }
   }
 
-  nsresult rv = Accessible::HandleAccEvent(aEvent);
+  nsresult rv = LocalAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   accessible->HandleLiveRegionEvent(aEvent);
@@ -247,12 +247,12 @@ void AccessibleWrap::Shutdown() {
     }
   }
 
-  Accessible::Shutdown();
+  LocalAccessible::Shutdown();
 }
 
 bool AccessibleWrap::DoAction(uint8_t aIndex) const {
   if (ActionCount()) {
-    return Accessible::DoAction(aIndex);
+    return LocalAccessible::DoAction(aIndex);
   }
 
   if (mContent) {
@@ -300,7 +300,7 @@ void AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
   a11y::Pivot pivot(accOrProxyRoot);
   TraversalRule rule(aGranularity);
   AccessibleOrProxy accOrProxy = AccessibleOrProxy(this);
-  Accessible* result =
+  LocalAccessible* result =
       aForward ? pivot.Next(accOrProxy, rule, aInclusive).AsAccessible()
                : pivot.Prev(accOrProxy, rule, aInclusive).AsAccessible();
   if (result && (result != this || aInclusive)) {
@@ -317,7 +317,7 @@ void AccessibleWrap::ExploreByTouch(float aX, float aY) {
   a11y::Pivot pivot(RootAccessible());
   TraversalRule rule;
 
-  Accessible* result = pivot.AtPoint(aX, aY, rule).AsAccessible();
+  LocalAccessible* result = pivot.AtPoint(aX, aY, rule).AsAccessible();
 
   if (result && result != this) {
     RefPtr<AccEvent> event =
@@ -357,7 +357,7 @@ void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
   }
 
   int32_t newOffset;
-  Accessible* newAnchor = nullptr;
+  LocalAccessible* newAnchor = nullptr;
   if (aForward) {
     newAnchor = pivot.NextText(this, &start, &end, pivotGranularity);
     newOffset = end;
@@ -909,11 +909,11 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
   nsString atomic;
   rv = attributes->GetStringProperty("container-atomic"_ns, atomic);
 
-  Accessible* announcementTarget = this;
+  LocalAccessible* announcementTarget = this;
   nsAutoString announcement;
   if (atomic.EqualsIgnoreCase("true")) {
-    Accessible* atomicAncestor = nullptr;
-    for (Accessible* parent = announcementTarget; parent;
+    LocalAccessible* atomicAncestor = nullptr;
+    for (LocalAccessible* parent = announcementTarget; parent;
          parent = parent->LocalParent()) {
       dom::Element* element = parent->Elm();
       if (element &&

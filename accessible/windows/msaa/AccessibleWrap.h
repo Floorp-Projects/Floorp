@@ -8,7 +8,7 @@
 #define mozilla_a11y_AccessibleWrap_h_
 
 #include "nsCOMPtr.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "ia2Accessible.h"
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"
@@ -33,7 +33,7 @@ namespace mozilla {
 namespace a11y {
 class DocProxyAccessibleWrap;
 
-class AccessibleWrap : public Accessible,
+class AccessibleWrap : public LocalAccessible,
                        public ia2Accessible,
                        public ia2AccessibleComponent,
                        public ia2AccessibleHyperlink,
@@ -155,15 +155,15 @@ class AccessibleWrap : public Accessible,
                                            EXCEPINFO* pExcepInfo,
                                            UINT* puArgErr) override;
 
-  // Accessible
+  // LocalAccessible
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
   virtual void Shutdown() override;
 
   // Helper methods
-  static int32_t GetChildIDFor(Accessible* aAccessible);
-  static HWND GetHWNDFor(Accessible* aAccessible);
+  static int32_t GetChildIDFor(LocalAccessible* aAccessible);
+  static HWND GetHWNDFor(LocalAccessible* aAccessible);
 
-  static void FireWinEvent(Accessible* aTarget, uint32_t aEventType);
+  static void FireWinEvent(LocalAccessible* aTarget, uint32_t aEventType);
 
   /**
    * System caret support: update the Windows caret position.
@@ -172,13 +172,13 @@ class AccessibleWrap : public Accessible,
    * We will use an invisible system caret.
    * Gecko is still responsible for drawing its own caret
    */
-  void UpdateSystemCaretFor(Accessible* aAccessible);
+  void UpdateSystemCaretFor(LocalAccessible* aAccessible);
   static void UpdateSystemCaretFor(ProxyAccessible* aProxy,
                                    const LayoutDeviceIntRect& aCaretRect);
 
   /**
-   * Associate a COM object with this Accessible so it will be disconnected
-   * from remote clients when this Accessible shuts down.
+   * Associate a COM object with this LocalAccessible so it will be disconnected
+   * from remote clients when this LocalAccessible shuts down.
    * This should only be called with separate COM objects with a different
    * IUnknown to this AccessibleWrap; e.g. IAccessibleRelation.
    */
@@ -208,7 +208,7 @@ class AccessibleWrap : public Accessible,
 
   virtual void GetNativeInterface(void** aOutAccessible) override;
 
-  static IDispatch* NativeAccessible(Accessible* aAccessible);
+  static IDispatch* NativeAccessible(LocalAccessible* aAccessible);
 
   uint32_t GetExistingID() const { return mID; }
   static const uint32_t kNoID = 0;

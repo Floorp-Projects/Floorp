@@ -34,7 +34,7 @@ class DocAccessibleWrap : public DocAccessible {
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR* pszValue) override;
 
-  // Accessible
+  // LocalAccessible
   virtual void Shutdown();
 
   // DocAccessible

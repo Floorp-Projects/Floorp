@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 
 #include "EmbeddedObjCollector.h"
 #include "AccGroupInfo.h"
@@ -86,25 +86,25 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible: nsISupports and cycle collection
+// LocalAccessible: nsISupports and cycle collection
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(Accessible)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Accessible)
+NS_IMPL_CYCLE_COLLECTION_CLASS(LocalAccessible)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LocalAccessible)
   tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Accessible)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LocalAccessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent, mDoc)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Accessible)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(Accessible)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, Accessible)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LocalAccessible)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(LocalAccessible)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, LocalAccessible)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Accessible)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(Accessible, LastRelease())
+NS_IMPL_CYCLE_COLLECTING_ADDREF(LocalAccessible)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(LocalAccessible, LastRelease())
 
-Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc)
+LocalAccessible::LocalAccessible(nsIContent* aContent, DocAccessible* aDoc)
     : mContent(aContent),
       mDoc(aDoc),
       mParent(nullptr),
@@ -121,11 +121,11 @@ Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc)
   mInt.mIndexOfEmbeddedChild = -1;
 }
 
-Accessible::~Accessible() {
+LocalAccessible::~LocalAccessible() {
   NS_ASSERTION(!mDoc, "LastRelease was never called!?!");
 }
 
-ENameValueFlag Accessible::Name(nsString& aName) const {
+ENameValueFlag LocalAccessible::Name(nsString& aName) const {
   aName.Truncate();
 
   if (!HasOwnContent()) return eNameOK;
@@ -166,7 +166,7 @@ ENameValueFlag Accessible::Name(nsString& aName) const {
   return nameFlag;
 }
 
-void Accessible::Description(nsString& aDescription) {
+void LocalAccessible::Description(nsString& aDescription) {
   // There are 4 conditions that make an accessible have no accDescription:
   // 1. it's a text node; or
   // 2. It has no ARIA describedby or description property
@@ -210,12 +210,12 @@ void Accessible::Description(nsString& aDescription) {
   }
 }
 
-KeyBinding Accessible::AccessKey() const {
+KeyBinding LocalAccessible::AccessKey() const {
   if (!HasOwnContent()) return KeyBinding();
 
   uint32_t key = nsCoreUtils::GetAccessKeyFor(mContent);
   if (!key && mContent->IsElement()) {
-    Accessible* label = nullptr;
+    LocalAccessible* label = nullptr;
 
     // Copy access key from label node.
     if (mContent->IsHTMLElement()) {
@@ -274,9 +274,10 @@ KeyBinding Accessible::AccessKey() const {
   return NS_SUCCEEDED(rv) ? KeyBinding(key, modifierMask) : KeyBinding();
 }
 
-KeyBinding Accessible::KeyboardShortcut() const { return KeyBinding(); }
+KeyBinding LocalAccessible::KeyboardShortcut() const { return KeyBinding(); }
 
-void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
+void LocalAccessible::TranslateString(const nsString& aKey,
+                                      nsAString& aStringOut) {
   nsCOMPtr<nsIStringBundleService> stringBundleService =
       components::StringBundle::Service();
   if (!stringBundleService) return;
@@ -293,7 +294,7 @@ void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
   if (NS_SUCCEEDED(rv)) aStringOut.Assign(xsValue);
 }
 
-uint64_t Accessible::VisibilityState() const {
+uint64_t LocalAccessible::VisibilityState() const {
   nsIFrame* frame = GetFrame();
   if (!frame) {
     // Element having display:contents is considered visible semantically,
@@ -387,7 +388,7 @@ uint64_t Accessible::VisibilityState() const {
   return 0;
 }
 
-uint64_t Accessible::NativeState() const {
+uint64_t LocalAccessible::NativeState() const {
   uint64_t state = 0;
 
   if (!IsInDocument()) state |= states::STALE;
@@ -443,7 +444,7 @@ uint64_t Accessible::NativeState() const {
   return state;
 }
 
-uint64_t Accessible::NativeInteractiveState() const {
+uint64_t LocalAccessible::NativeInteractiveState() const {
   if (!mContent->IsElement()) return 0;
 
   if (NativelyUnavailable()) return states::UNAVAILABLE;
@@ -454,9 +455,9 @@ uint64_t Accessible::NativeInteractiveState() const {
   return 0;
 }
 
-uint64_t Accessible::NativeLinkState() const { return 0; }
+uint64_t LocalAccessible::NativeLinkState() const { return 0; }
 
-bool Accessible::NativelyUnavailable() const {
+bool LocalAccessible::NativelyUnavailable() const {
   if (mContent->IsHTMLElement()) return mContent->AsElement()->IsDisabled();
 
   return mContent->IsElement() && mContent->AsElement()->AttrValueIs(
@@ -464,8 +465,8 @@ bool Accessible::NativelyUnavailable() const {
                                       nsGkAtoms::_true, eCaseMatters);
 }
 
-Accessible* Accessible::FocusedChild() {
-  Accessible* focus = FocusMgr()->FocusedAccessible();
+LocalAccessible* LocalAccessible::FocusedChild() {
+  LocalAccessible* focus = FocusMgr()->FocusedAccessible();
   if (focus && (focus == this || focus->LocalParent() == this)) {
     return focus;
   }
@@ -473,11 +474,11 @@ Accessible* Accessible::FocusedChild() {
   return nullptr;
 }
 
-Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
-                                     EWhichChildAtPoint aWhichChild) {
+LocalAccessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                                               EWhichChildAtPoint aWhichChild) {
   // If we can't find the point in a child, we will return the fallback answer:
   // we return |this| if the point is within it, otherwise nullptr.
-  Accessible* fallbackAnswer = nullptr;
+  LocalAccessible* fallbackAnswer = nullptr;
   nsIntRect rect = Bounds();
   if (rect.Contains(aX, aY)) fallbackAnswer = this;
 
@@ -517,9 +518,9 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
     // searching an accessible at point.
     DocAccessible* popupDoc =
         GetAccService()->GetDocAccessible(popupFrame->GetContent()->OwnerDoc());
-    Accessible* popupAcc =
+    LocalAccessible* popupAcc =
         popupDoc->GetAccessibleOrContainer(popupFrame->GetContent());
-    Accessible* popupChild = this;
+    LocalAccessible* popupChild = this;
     while (popupChild && !popupChild->IsDoc() && popupChild != popupAcc) {
       popupChild = popupChild->LocalParent();
     }
@@ -549,15 +550,16 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   NS_ASSERTION(contentDocAcc, "could not get the document accessible");
   if (!contentDocAcc) return fallbackAnswer;
 
-  Accessible* accessible = contentDocAcc->GetAccessibleOrContainer(content);
+  LocalAccessible* accessible =
+      contentDocAcc->GetAccessibleOrContainer(content);
   if (!accessible) return fallbackAnswer;
 
   // Hurray! We have an accessible for the frame that layout gave us.
   // Since DOM node of obtained accessible may be out of flow then we should
   // ensure obtained accessible is a child of this accessible.
-  Accessible* child = accessible;
+  LocalAccessible* child = accessible;
   while (child != this) {
-    Accessible* parent = child->LocalParent();
+    LocalAccessible* parent = child->LocalParent();
     if (!parent) {
       // Reached the top of the hierarchy. These bounds were inside an
       // accessible that is not a descendant of this one.
@@ -578,7 +580,7 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   // OuterDocAccessibles).
   uint32_t childCount = accessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = accessible->LocalChildAt(childIdx);
+    LocalAccessible* child = accessible->LocalChildAt(childIdx);
 
     nsIntRect childRect = child->Bounds();
     if (childRect.Contains(aX, aY) &&
@@ -594,7 +596,7 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   return accessible;
 }
 
-nsRect Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
+nsRect LocalAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
   nsIFrame* frame = GetFrame();
   if (frame && mContent) {
     if (mContent->GetProperty(nsGkAtoms::hitregion) && mContent->IsElement()) {
@@ -629,7 +631,7 @@ nsRect Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
   return nsRect();
 }
 
-nsRect Accessible::BoundsInAppUnits() const {
+nsRect LocalAccessible::BoundsInAppUnits() const {
   nsIFrame* boundingFrame = nullptr;
   nsRect unionRectTwips = RelativeBounds(&boundingFrame);
   if (!boundingFrame) {
@@ -656,19 +658,19 @@ nsRect Accessible::BoundsInAppUnits() const {
   return unionRectTwips;
 }
 
-nsIntRect Accessible::Bounds() const {
+nsIntRect LocalAccessible::Bounds() const {
   return BoundsInAppUnits().ToNearestPixels(
       mDoc->PresContext()->AppUnitsPerDevPixel());
 }
 
-nsIntRect Accessible::BoundsInCSSPixels() const {
+nsIntRect LocalAccessible::BoundsInCSSPixels() const {
   return BoundsInAppUnits().ToNearestPixels(AppUnitsPerCSSPixel());
 }
 
-void Accessible::SetSelected(bool aSelect) {
+void LocalAccessible::SetSelected(bool aSelect) {
   if (!HasOwnContent()) return;
 
-  Accessible* select = nsAccUtils::GetSelectableContainer(this, State());
+  LocalAccessible* select = nsAccUtils::GetSelectableContainer(this, State());
   if (select) {
     if (select->State() & states::MULTISELECTABLE) {
       if (mContent->IsElement() && ARIARoleMap()) {
@@ -687,15 +689,15 @@ void Accessible::SetSelected(bool aSelect) {
   }
 }
 
-void Accessible::TakeSelection() {
-  Accessible* select = nsAccUtils::GetSelectableContainer(this, State());
+void LocalAccessible::TakeSelection() {
+  LocalAccessible* select = nsAccUtils::GetSelectableContainer(this, State());
   if (select) {
     if (select->State() & states::MULTISELECTABLE) select->UnselectAll();
     SetSelected(true);
   }
 }
 
-void Accessible::TakeFocus() const {
+void LocalAccessible::TakeFocus() const {
   nsIFrame* frame = GetFrame();
   if (!frame) return;
 
@@ -704,7 +706,7 @@ void Accessible::TakeFocus() const {
   // If the accessible focus is managed by container widget then focus the
   // widget and set the accessible as its current item.
   if (!frame->IsFocusable()) {
-    Accessible* widget = ContainerWidget();
+    LocalAccessible* widget = ContainerWidget();
     if (widget && widget->AreItemsOperable()) {
       nsIContent* widgetElm = widget->GetContent();
       nsIFrame* widgetFrame = widgetElm->GetPrimaryFrame();
@@ -723,9 +725,10 @@ void Accessible::TakeFocus() const {
   }
 }
 
-void Accessible::NameFromAssociatedXULLabel(DocAccessible* aDocument,
-                                            nsIContent* aElm, nsString& aName) {
-  Accessible* label = nullptr;
+void LocalAccessible::NameFromAssociatedXULLabel(DocAccessible* aDocument,
+                                                 nsIContent* aElm,
+                                                 nsString& aName) {
+  LocalAccessible* label = nullptr;
   XULLabelIterator iter(aDocument, aElm);
   while ((label = iter.Next())) {
     // Check if label's value attribute is used
@@ -739,8 +742,8 @@ void Accessible::NameFromAssociatedXULLabel(DocAccessible* aDocument,
   aName.CompressWhitespace();
 }
 
-void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
-                            nsString& aName) {
+void LocalAccessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
+                                 nsString& aName) {
   /**
    * 3 main cases for XUL Controls to be labeled
    *   1 - control contains label="foo"
@@ -772,7 +775,7 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
   aName.CompressWhitespace();
 }
 
-nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
+nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
   NS_ENSURE_ARG_POINTER(aEvent);
 
 #ifdef MOZ_GECKO_PROFILER
@@ -863,8 +866,8 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
         }
         case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
           AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
-          Accessible* position = vcEvent->NewAccessible();
-          Accessible* oldPosition = vcEvent->OldAccessible();
+          LocalAccessible* position = vcEvent->NewAccessible();
+          LocalAccessible* oldPosition = vcEvent->OldAccessible();
           ipcDoc->SendVirtualCursorChangeEvent(
               id,
               oldPosition ? reinterpret_cast<uintptr_t>(oldPosition->UniqueID())
@@ -905,8 +908,8 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
           nsTArray<TextRangeData> textRangeData(ranges.Length());
           for (size_t i = 0; i < ranges.Length(); i++) {
             const TextRange& range = ranges.ElementAt(i);
-            Accessible* start = range.StartContainer();
-            Accessible* end = range.EndContainer();
+            LocalAccessible* start = range.StartContainer();
+            LocalAccessible* end = range.EndContainer();
             textRangeData.AppendElement(TextRangeData(
                 start->IsDoc() && start->AsDoc()->IPCDoc()
                     ? 0
@@ -933,7 +936,7 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
   return NS_OK;
 }
 
-already_AddRefed<nsIPersistentProperties> Accessible::Attributes() {
+already_AddRefed<nsIPersistentProperties> LocalAccessible::Attributes() {
   nsCOMPtr<nsIPersistentProperties> attributes = NativeAttributes();
   if (!HasOwnContent() || !mContent->IsElement()) return attributes.forget();
 
@@ -976,7 +979,7 @@ already_AddRefed<nsIPersistentProperties> Accessible::Attributes() {
   return attributes.forget();
 }
 
-already_AddRefed<nsIPersistentProperties> Accessible::NativeAttributes() {
+already_AddRefed<nsIPersistentProperties> LocalAccessible::NativeAttributes() {
   RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
 
   nsAutoString unused;
@@ -1105,7 +1108,7 @@ already_AddRefed<nsIPersistentProperties> Accessible::NativeAttributes() {
   return attributes.forget();
 }
 
-GroupPos Accessible::GroupPosition() {
+GroupPos LocalAccessible::GroupPosition() {
   GroupPos groupPos;
   if (!HasOwnContent()) return groupPos;
 
@@ -1147,7 +1150,7 @@ GroupPos Accessible::GroupPosition() {
   return groupPos;
 }
 
-uint64_t Accessible::State() {
+uint64_t LocalAccessible::State() {
   if (IsDefunct()) return states::DEFUNCT;
 
   uint64_t state = NativeState();
@@ -1171,7 +1174,7 @@ uint64_t Accessible::State() {
       } else {
         // If focus is in a child of the tab panel surely the tab is selected!
         Relation rel = RelationByType(RelationType::LABEL_FOR);
-        Accessible* relTarget = nullptr;
+        LocalAccessible* relTarget = nullptr;
         while ((relTarget = rel.Next())) {
           if (relTarget->Role() == roles::PROPERTYPAGE &&
               FocusMgr()->IsFocusWithin(relTarget)) {
@@ -1180,7 +1183,8 @@ uint64_t Accessible::State() {
         }
       }
     } else if (state & states::FOCUSED) {
-      Accessible* container = nsAccUtils::GetSelectableContainer(this, state);
+      LocalAccessible* container =
+          nsAccUtils::GetSelectableContainer(this, state);
       if (container &&
           !nsAccUtils::HasDefinedARIAToken(container->GetContent(),
                                            nsGkAtoms::aria_multiselectable)) {
@@ -1206,7 +1210,7 @@ uint64_t Accessible::State() {
     // ACTIVE. This allows screen reader virtual buffer modes to know which
     // descendant is the current one that would get focus if the user navigates
     // to the container widget.
-    Accessible* widget = ContainerWidget();
+    LocalAccessible* widget = ContainerWidget();
     if (widget && widget->CurrentItem() == this) state |= states::ACTIVE;
   }
 
@@ -1226,7 +1230,7 @@ uint64_t Accessible::State() {
   return state;
 }
 
-void Accessible::ApplyARIAState(uint64_t* aState) const {
+void LocalAccessible::ApplyARIAState(uint64_t* aState) const {
   if (!mContent->IsElement()) return;
 
   dom::Element* element = mContent->AsElement();
@@ -1244,7 +1248,7 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
     if (mContent->HasID()) {
       // If has a role & ID and aria-activedescendant on the container, assume
       // focusable.
-      const Accessible* ancestor = this;
+      const LocalAccessible* ancestor = this;
       while ((ancestor = ancestor->LocalParent()) && !ancestor->IsDoc()) {
         dom::Element* el = ancestor->Elm();
         if (el &&
@@ -1258,7 +1262,7 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
 
   if (*aState & states::FOCUSABLE) {
     // Propogate aria-disabled from ancestors down to any focusable descendant.
-    const Accessible* ancestor = this;
+    const LocalAccessible* ancestor = this;
     while ((ancestor = ancestor->LocalParent()) && !ancestor->IsDoc()) {
       dom::Element* el = ancestor->Elm();
       if (el && el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
@@ -1307,7 +1311,7 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
     if (cell) {
       TableAccessible* table = cell->Table();
       if (table) {
-        Accessible* grid = table->AsAccessible();
+        LocalAccessible* grid = table->AsAccessible();
         uint64_t gridState = 0;
         grid->ApplyARIAState(&gridState);
         *aState |= gridState & states::READONLY;
@@ -1316,7 +1320,7 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
   }
 }
 
-void Accessible::Value(nsString& aValue) const {
+void LocalAccessible::Value(nsString& aValue) const {
   if (HasNumericValue()) {
     // aria-valuenow is a number, and aria-valuetext is the optional text
     // equivalent. For the string value, we will try the optional text
@@ -1350,11 +1354,11 @@ void Accessible::Value(nsString& aValue) const {
 
   // Value of combobox is a text of current or selected item.
   if (roleMapEntry->Is(nsGkAtoms::combobox)) {
-    Accessible* option = CurrentItem();
+    LocalAccessible* option = CurrentItem();
     if (!option) {
       uint32_t childCount = ChildCount();
       for (uint32_t idx = 0; idx < childCount; idx++) {
-        Accessible* child = mChildren.ElementAt(idx);
+        LocalAccessible* child = mChildren.ElementAt(idx);
         if (child->IsListControl()) {
           option = child->GetSelectedItem(0);
           break;
@@ -1366,21 +1370,21 @@ void Accessible::Value(nsString& aValue) const {
   }
 }
 
-double Accessible::MaxValue() const {
+double LocalAccessible::MaxValue() const {
   double checkValue = AttrNumericValue(nsGkAtoms::aria_valuemax);
   return IsNaN(checkValue) && !NativeHasNumericValue() ? 100 : checkValue;
 }
 
-double Accessible::MinValue() const {
+double LocalAccessible::MinValue() const {
   double checkValue = AttrNumericValue(nsGkAtoms::aria_valuemin);
   return IsNaN(checkValue) && !NativeHasNumericValue() ? 0 : checkValue;
 }
 
-double Accessible::Step() const {
+double LocalAccessible::Step() const {
   return UnspecifiedNaN<double>();  // no mimimum increment (step) in ARIA.
 }
 
-double Accessible::CurValue() const {
+double LocalAccessible::CurValue() const {
   double checkValue = AttrNumericValue(nsGkAtoms::aria_valuenow);
   if (IsNaN(checkValue) && !NativeHasNumericValue()) {
     double minValue = MinValue();
@@ -1390,7 +1394,7 @@ double Accessible::CurValue() const {
   return checkValue;
 }
 
-bool Accessible::SetCurValue(double aValue) {
+bool LocalAccessible::SetCurValue(double aValue) {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) return false;
 
@@ -1412,7 +1416,7 @@ bool Accessible::SetCurValue(double aValue) {
       kNameSpaceID_None, nsGkAtoms::aria_valuenow, strValue, true));
 }
 
-role Accessible::ARIATransformRole(role aRole) const {
+role LocalAccessible::ARIATransformRole(role aRole) const {
   // Beginning with ARIA 1.1, user agents are expected to use the native host
   // language role of the element when the region role is used without a name.
   // https://rawgit.com/w3c/aria/master/core-aam/core-aam.html#role-map-region
@@ -1454,7 +1458,7 @@ role Accessible::ARIATransformRole(role aRole) const {
     } else {
       // Listbox is owned by a combobox
       Relation rel = RelationByType(RelationType::NODE_CHILD_OF);
-      Accessible* targetAcc = nullptr;
+      LocalAccessible* targetAcc = nullptr;
       while ((targetAcc = rel.Next())) {
         if (targetAcc->IsCombobox()) return roles::COMBOBOX_LIST;
       }
@@ -1490,20 +1494,20 @@ role Accessible::ARIATransformRole(role aRole) const {
   return aRole;
 }
 
-nsAtom* Accessible::LandmarkRole() const {
+nsAtom* LocalAccessible::LandmarkRole() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return roleMapEntry && roleMapEntry->IsOfType(eLandmark)
              ? roleMapEntry->roleAtom
              : nullptr;
 }
 
-role Accessible::NativeRole() const { return roles::NOTHING; }
+role LocalAccessible::NativeRole() const { return roles::NOTHING; }
 
-uint8_t Accessible::ActionCount() const {
+uint8_t LocalAccessible::ActionCount() const {
   return GetActionRule() == eNoAction ? 0 : 1;
 }
 
-void Accessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
+void LocalAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   aName.Truncate();
 
   if (aIndex != 0) return;
@@ -1569,7 +1573,7 @@ void Accessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   }
 }
 
-bool Accessible::DoAction(uint8_t aIndex) const {
+bool LocalAccessible::DoAction(uint8_t aIndex) const {
   if (aIndex != 0) return false;
 
   if (GetActionRule() != eNoAction) {
@@ -1580,7 +1584,7 @@ bool Accessible::DoAction(uint8_t aIndex) const {
   return false;
 }
 
-nsIContent* Accessible::GetAtomicRegion() const {
+nsIContent* LocalAccessible::GetAtomicRegion() const {
   nsIContent* loopContent = mContent;
   nsAutoString atomic;
   while (loopContent &&
@@ -1593,7 +1597,7 @@ nsIContent* Accessible::GetAtomicRegion() const {
   return atomic.EqualsLiteral("true") ? loopContent : nullptr;
 }
 
-Relation Accessible::RelationByType(RelationType aType) const {
+Relation LocalAccessible::RelationByType(RelationType aType) const {
   if (!HasOwnContent()) return Relation();
 
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
@@ -1662,7 +1666,7 @@ Relation Accessible::RelationByType(RelationType aType) const {
       // correctly handled by platform/AccessibleOrProxy code.
       if (XRE_IsContentProcess() && IsRoot()) {
         dom::Document* doc =
-            const_cast<Accessible*>(this)->AsDoc()->DocumentNode();
+            const_cast<LocalAccessible*>(this)->AsDoc()->DocumentNode();
         dom::BrowsingContext* bc = doc->GetBrowsingContext();
         MOZ_ASSERT(bc);
         if (!bc->Top()->IsInProcess()) {
@@ -1730,7 +1734,7 @@ Relation Accessible::RelationByType(RelationType aType) const {
          * radio button (because input=radio buttons are
          * HTMLRadioButtonAccessibles) */
         Relation rel = Relation();
-        Accessible* currParent = LocalParent();
+        LocalAccessible* currParent = LocalParent();
         while (currParent && currParent->Role() != roles::RADIO_GROUP) {
           currParent = currParent->LocalParent();
         }
@@ -1853,12 +1857,13 @@ Relation Accessible::RelationByType(RelationType aType) const {
   }
 }
 
-void Accessible::GetNativeInterface(void** aNativeAccessible) {}
+void LocalAccessible::GetNativeInterface(void** aNativeAccessible) {}
 
-void Accessible::DoCommand(nsIContent* aContent, uint32_t aActionIndex) const {
+void LocalAccessible::DoCommand(nsIContent* aContent,
+                                uint32_t aActionIndex) const {
   class Runnable final : public mozilla::Runnable {
    public:
-    Runnable(const Accessible* aAcc, nsIContent* aContent, uint32_t aIdx)
+    Runnable(const LocalAccessible* aAcc, nsIContent* aContent, uint32_t aIdx)
         : mozilla::Runnable("Runnable"),
           mAcc(aAcc),
           mContent(aContent),
@@ -1879,7 +1884,7 @@ void Accessible::DoCommand(nsIContent* aContent, uint32_t aActionIndex) const {
     }
 
    private:
-    RefPtr<const Accessible> mAcc;
+    RefPtr<const LocalAccessible> mAcc;
     nsCOMPtr<nsIContent> mContent;
     uint32_t mIdx;
   };
@@ -1889,8 +1894,8 @@ void Accessible::DoCommand(nsIContent* aContent, uint32_t aActionIndex) const {
   NS_DispatchToMainThread(runnable);
 }
 
-void Accessible::DispatchClickEvent(nsIContent* aContent,
-                                    uint32_t aActionIndex) const {
+void LocalAccessible::DispatchClickEvent(nsIContent* aContent,
+                                         uint32_t aActionIndex) const {
   if (IsDefunct()) return;
 
   RefPtr<PresShell> presShell = mDoc->PresShellPtr();
@@ -1924,8 +1929,8 @@ void Accessible::DispatchClickEvent(nsIContent* aContent,
                                   widget);
 }
 
-void Accessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
-                               int32_t aY) {
+void LocalAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
+                                    int32_t aY) {
   nsIFrame* frame = GetFrame();
   if (!frame) return;
 
@@ -1938,8 +1943,8 @@ void Accessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
   }
 }
 
-void Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
-                              uint32_t aLength) {
+void LocalAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
+                                   uint32_t aLength) {
   // Return text representation of non-text accessible within hypertext
   // accessible. Text accessible overrides this method to return enclosed text.
   if (aStartOffset != 0 || aLength == 0) return;
@@ -1967,7 +1972,7 @@ void Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
   }
 }
 
-void Accessible::Shutdown() {
+void LocalAccessible::Shutdown() {
   // Mark the accessible as defunct, invalidate the child count and pointers to
   // other accessibles, also make sure none of its children point to this
   // parent
@@ -1990,8 +1995,8 @@ void Accessible::Shutdown() {
   }
 }
 
-// Accessible protected
-void Accessible::ARIAName(nsString& aName) const {
+// LocalAccessible protected
+void LocalAccessible::ARIAName(nsString& aName) const {
   // aria-labelledby now takes precedence over aria-label
   nsresult rv = nsTextEquivUtils::GetTextEquivFromIDRefs(
       this, nsGkAtoms::aria_labelledby, aName);
@@ -2006,8 +2011,8 @@ void Accessible::ARIAName(nsString& aName) const {
   }
 }
 
-// Accessible protected
-void Accessible::ARIADescription(nsString& aDescription) const {
+// LocalAccessible protected
+void LocalAccessible::ARIADescription(nsString& aDescription) const {
   // aria-describedby takes precedence over aria-description
   nsresult rv = nsTextEquivUtils::GetTextEquivFromIDRefs(
       this, nsGkAtoms::aria_describedby, aDescription);
@@ -2022,10 +2027,10 @@ void Accessible::ARIADescription(nsString& aDescription) const {
   }
 }
 
-// Accessible protected
-ENameValueFlag Accessible::NativeName(nsString& aName) const {
+// LocalAccessible protected
+ENameValueFlag LocalAccessible::NativeName(nsString& aName) const {
   if (mContent->IsHTMLElement()) {
-    Accessible* label = nullptr;
+    LocalAccessible* label = nullptr;
     HTMLLabelIterator iter(Document(), this);
     while ((label = iter.Next())) {
       nsTextEquivUtils::AppendTextEquivFromContent(this, label->GetContent(),
@@ -2067,13 +2072,13 @@ ENameValueFlag Accessible::NativeName(nsString& aName) const {
   return eNameOK;
 }
 
-// Accessible protected
-void Accessible::NativeDescription(nsString& aDescription) {
+// LocalAccessible protected
+void LocalAccessible::NativeDescription(nsString& aDescription) {
   bool isXUL = mContent->IsXULElement();
   if (isXUL) {
     // Try XUL <description control="[id]">description text</description>
     XULDescriptionIterator iter(Document(), mContent);
-    Accessible* descr = nullptr;
+    LocalAccessible* descr = nullptr;
     while ((descr = iter.Next())) {
       nsTextEquivUtils::AppendTextEquivFromContent(this, descr->GetContent(),
                                                    &aDescription);
@@ -2081,8 +2086,9 @@ void Accessible::NativeDescription(nsString& aDescription) {
   }
 }
 
-// Accessible protected
-void Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent) {
+// LocalAccessible protected
+void LocalAccessible::BindToParent(LocalAccessible* aParent,
+                                   uint32_t aIndexInParent) {
   MOZ_ASSERT(aParent, "This method isn't used to set null parent");
   MOZ_ASSERT(!mParent, "The child was expected to be moved");
 
@@ -2123,8 +2129,8 @@ void Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent) {
   }
 }
 
-// Accessible protected
-void Accessible::UnbindFromParent() {
+// LocalAccessible protected
+void LocalAccessible::UnbindFromParent() {
   mParent = nullptr;
   mIndexInParent = -1;
   mInt.mIndexOfEmbeddedChild = -1;
@@ -2136,9 +2142,9 @@ void Accessible::UnbindFromParent() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible public methods
+// LocalAccessible public methods
 
-RootAccessible* Accessible::RootAccessible() const {
+RootAccessible* LocalAccessible::RootAccessible() const {
   nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(GetNode());
   NS_ASSERTION(docShell, "No docshell for mContent");
   if (!docShell) {
@@ -2156,17 +2162,17 @@ RootAccessible* Accessible::RootAccessible() const {
   return docAcc ? docAcc->AsRoot() : nullptr;
 }
 
-nsIFrame* Accessible::GetFrame() const {
+nsIFrame* LocalAccessible::GetFrame() const {
   return mContent ? mContent->GetPrimaryFrame() : nullptr;
 }
 
-nsINode* Accessible::GetNode() const { return mContent; }
+nsINode* LocalAccessible::GetNode() const { return mContent; }
 
-dom::Element* Accessible::Elm() const {
+dom::Element* LocalAccessible::Elm() const {
   return dom::Element::FromNodeOrNull(mContent);
 }
 
-void Accessible::Language(nsAString& aLanguage) {
+void LocalAccessible::Language(nsAString& aLanguage) {
   aLanguage.Truncate();
 
   if (!mDoc) return;
@@ -2178,7 +2184,7 @@ void Accessible::Language(nsAString& aLanguage) {
   }
 }
 
-bool Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
+bool LocalAccessible::InsertChildAt(uint32_t aIndex, LocalAccessible* aChild) {
   if (!aChild) return false;
 
   if (aIndex == mChildren.Length()) {
@@ -2205,7 +2211,7 @@ bool Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
   return true;
 }
 
-bool Accessible::RemoveChild(Accessible* aChild) {
+bool LocalAccessible::RemoveChild(LocalAccessible* aChild) {
   MOZ_DIAGNOSTIC_ASSERT(aChild, "No child was given");
   MOZ_DIAGNOSTIC_ASSERT(aChild->mParent, "No parent");
   MOZ_DIAGNOSTIC_ASSERT(aChild->mParent == this, "Wrong parent");
@@ -2235,7 +2241,8 @@ bool Accessible::RemoveChild(Accessible* aChild) {
   return true;
 }
 
-void Accessible::RelocateChild(uint32_t aNewIndex, Accessible* aChild) {
+void LocalAccessible::RelocateChild(uint32_t aNewIndex,
+                                    LocalAccessible* aChild) {
   MOZ_DIAGNOSTIC_ASSERT(aChild, "No child was given");
   MOZ_DIAGNOSTIC_ASSERT(aChild->mParent == this,
                         "A child from different subtree was given");
@@ -2291,12 +2298,12 @@ void Accessible::RelocateChild(uint32_t aNewIndex, Accessible* aChild) {
   aChild->SetShowEventTarget(true);
 }
 
-Accessible* Accessible::LocalChildAt(uint32_t aIndex) const {
-  Accessible* child = mChildren.SafeElementAt(aIndex, nullptr);
+LocalAccessible* LocalAccessible::LocalChildAt(uint32_t aIndex) const {
+  LocalAccessible* child = mChildren.SafeElementAt(aIndex, nullptr);
   if (!child) return nullptr;
 
 #ifdef DEBUG
-  Accessible* realParent = child->mParent;
+  LocalAccessible* realParent = child->mParent;
   NS_ASSERTION(!realParent || realParent == this,
                "Two accessibles have the same first child accessible!");
 #endif
@@ -2304,11 +2311,11 @@ Accessible* Accessible::LocalChildAt(uint32_t aIndex) const {
   return child;
 }
 
-uint32_t Accessible::ChildCount() const { return mChildren.Length(); }
+uint32_t LocalAccessible::ChildCount() const { return mChildren.Length(); }
 
-int32_t Accessible::IndexInParent() const { return mIndexInParent; }
+int32_t LocalAccessible::IndexInParent() const { return mIndexInParent; }
 
-uint32_t Accessible::EmbeddedChildCount() {
+uint32_t LocalAccessible::EmbeddedChildCount() {
   if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
@@ -2319,7 +2326,7 @@ uint32_t Accessible::EmbeddedChildCount() {
   return ChildCount();
 }
 
-Accessible* Accessible::GetEmbeddedChildAt(uint32_t aIndex) {
+LocalAccessible* LocalAccessible::GetEmbeddedChildAt(uint32_t aIndex) {
   if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
@@ -2332,7 +2339,7 @@ Accessible* Accessible::GetEmbeddedChildAt(uint32_t aIndex) {
   return LocalChildAt(aIndex);
 }
 
-int32_t Accessible::GetIndexOfEmbeddedChild(Accessible* aChild) {
+int32_t LocalAccessible::GetIndexOfEmbeddedChild(LocalAccessible* aChild) {
   if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
@@ -2348,58 +2355,59 @@ int32_t Accessible::GetIndexOfEmbeddedChild(Accessible* aChild) {
 ////////////////////////////////////////////////////////////////////////////////
 // HyperLinkAccessible methods
 
-bool Accessible::IsLink() const {
+bool LocalAccessible::IsLink() const {
   // Every embedded accessible within hypertext accessible implements
   // hyperlink interface.
   return mParent && mParent->IsHyperText() && !IsText();
 }
 
-uint32_t Accessible::StartOffset() {
+uint32_t LocalAccessible::StartOffset() {
   MOZ_ASSERT(IsLink(), "StartOffset is called not on hyper link!");
 
   HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nullptr;
   return hyperText ? hyperText->GetChildOffset(this) : 0;
 }
 
-uint32_t Accessible::EndOffset() {
+uint32_t LocalAccessible::EndOffset() {
   MOZ_ASSERT(IsLink(), "EndOffset is called on not hyper link!");
 
   HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nullptr;
   return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
 }
 
-uint32_t Accessible::AnchorCount() {
+uint32_t LocalAccessible::AnchorCount() {
   MOZ_ASSERT(IsLink(), "AnchorCount is called on not hyper link!");
   return 1;
 }
 
-Accessible* Accessible::AnchorAt(uint32_t aAnchorIndex) {
+LocalAccessible* LocalAccessible::AnchorAt(uint32_t aAnchorIndex) {
   MOZ_ASSERT(IsLink(), "GetAnchor is called on not hyper link!");
   return aAnchorIndex == 0 ? this : nullptr;
 }
 
-already_AddRefed<nsIURI> Accessible::AnchorURIAt(uint32_t aAnchorIndex) const {
+already_AddRefed<nsIURI> LocalAccessible::AnchorURIAt(
+    uint32_t aAnchorIndex) const {
   MOZ_ASSERT(IsLink(), "AnchorURIAt is called on not hyper link!");
   return nullptr;
 }
 
-void Accessible::ToTextPoint(HyperTextAccessible** aContainer, int32_t* aOffset,
-                             bool aIsBefore) const {
+void LocalAccessible::ToTextPoint(HyperTextAccessible** aContainer,
+                                  int32_t* aOffset, bool aIsBefore) const {
   if (IsHyperText()) {
-    *aContainer = const_cast<Accessible*>(this)->AsHyperText();
+    *aContainer = const_cast<LocalAccessible*>(this)->AsHyperText();
     *aOffset = aIsBefore ? 0 : (*aContainer)->CharacterCount();
     return;
   }
 
-  const Accessible* child = nullptr;
-  const Accessible* parent = this;
+  const LocalAccessible* child = nullptr;
+  const LocalAccessible* parent = this;
   do {
     child = parent;
     parent = parent->LocalParent();
   } while (parent && !parent->IsHyperText());
 
   if (parent) {
-    *aContainer = const_cast<Accessible*>(parent)->AsHyperText();
+    *aContainer = const_cast<LocalAccessible*>(parent)->AsHyperText();
     *aOffset = (*aContainer)
                    ->GetChildOffset(child->IndexInParent() +
                                     static_cast<int32_t>(!aIsBefore));
@@ -2409,24 +2417,24 @@ void Accessible::ToTextPoint(HyperTextAccessible** aContainer, int32_t* aOffset,
 ////////////////////////////////////////////////////////////////////////////////
 // SelectAccessible
 
-void Accessible::SelectedItems(nsTArray<Accessible*>* aItems) {
+void LocalAccessible::SelectedItems(nsTArray<LocalAccessible*>* aItems) {
   AccIterator iter(this, filters::GetSelected);
-  Accessible* selected = nullptr;
+  LocalAccessible* selected = nullptr;
   while ((selected = iter.Next())) aItems->AppendElement(selected);
 }
 
-uint32_t Accessible::SelectedItemCount() {
+uint32_t LocalAccessible::SelectedItemCount() {
   uint32_t count = 0;
   AccIterator iter(this, filters::GetSelected);
-  Accessible* selected = nullptr;
+  LocalAccessible* selected = nullptr;
   while ((selected = iter.Next())) ++count;
 
   return count;
 }
 
-Accessible* Accessible::GetSelectedItem(uint32_t aIndex) {
+LocalAccessible* LocalAccessible::GetSelectedItem(uint32_t aIndex) {
   AccIterator iter(this, filters::GetSelected);
-  Accessible* selected = nullptr;
+  LocalAccessible* selected = nullptr;
 
   uint32_t index = 0;
   while ((selected = iter.Next()) && index < aIndex) index++;
@@ -2434,19 +2442,19 @@ Accessible* Accessible::GetSelectedItem(uint32_t aIndex) {
   return selected;
 }
 
-bool Accessible::IsItemSelected(uint32_t aIndex) {
+bool LocalAccessible::IsItemSelected(uint32_t aIndex) {
   uint32_t index = 0;
   AccIterator iter(this, filters::GetSelectable);
-  Accessible* selected = nullptr;
+  LocalAccessible* selected = nullptr;
   while ((selected = iter.Next()) && index < aIndex) index++;
 
   return selected && selected->State() & states::SELECTED;
 }
 
-bool Accessible::AddItemToSelection(uint32_t aIndex) {
+bool LocalAccessible::AddItemToSelection(uint32_t aIndex) {
   uint32_t index = 0;
   AccIterator iter(this, filters::GetSelectable);
-  Accessible* selected = nullptr;
+  LocalAccessible* selected = nullptr;
   while ((selected = iter.Next()) && index < aIndex) index++;
 
   if (selected) selected->SetSelected(true);
@@ -2454,10 +2462,10 @@ bool Accessible::AddItemToSelection(uint32_t aIndex) {
   return static_cast<bool>(selected);
 }
 
-bool Accessible::RemoveItemFromSelection(uint32_t aIndex) {
+bool LocalAccessible::RemoveItemFromSelection(uint32_t aIndex) {
   uint32_t index = 0;
   AccIterator iter(this, filters::GetSelectable);
-  Accessible* selected = nullptr;
+  LocalAccessible* selected = nullptr;
   while ((selected = iter.Next()) && index < aIndex) index++;
 
   if (selected) selected->SetSelected(false);
@@ -2465,9 +2473,9 @@ bool Accessible::RemoveItemFromSelection(uint32_t aIndex) {
   return static_cast<bool>(selected);
 }
 
-bool Accessible::SelectAll() {
+bool LocalAccessible::SelectAll() {
   bool success = false;
-  Accessible* selectable = nullptr;
+  LocalAccessible* selectable = nullptr;
 
   AccIterator iter(this, filters::GetSelectable);
   while ((selectable = iter.Next())) {
@@ -2477,9 +2485,9 @@ bool Accessible::SelectAll() {
   return success;
 }
 
-bool Accessible::UnselectAll() {
+bool LocalAccessible::UnselectAll() {
   bool success = false;
-  Accessible* selected = nullptr;
+  LocalAccessible* selected = nullptr;
 
   AccIterator iter(this, filters::GetSelected);
   while ((selected = iter.Next())) {
@@ -2492,9 +2500,9 @@ bool Accessible::UnselectAll() {
 ////////////////////////////////////////////////////////////////////////////////
 // Widgets
 
-bool Accessible::IsWidget() const { return false; }
+bool LocalAccessible::IsWidget() const { return false; }
 
-bool Accessible::IsActiveWidget() const {
+bool LocalAccessible::IsActiveWidget() const {
   if (FocusMgr()->HasDOMFocus(mContent)) return true;
 
   // If text entry of combobox widget has a focus then the combobox widget is
@@ -2503,7 +2511,7 @@ bool Accessible::IsActiveWidget() const {
   if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::combobox)) {
     uint32_t childCount = ChildCount();
     for (uint32_t idx = 0; idx < childCount; idx++) {
-      Accessible* child = mChildren.ElementAt(idx);
+      LocalAccessible* child = mChildren.ElementAt(idx);
       if (child->Role() == roles::ENTRY) {
         return FocusMgr()->HasDOMFocus(child->GetContent());
       }
@@ -2513,13 +2521,13 @@ bool Accessible::IsActiveWidget() const {
   return false;
 }
 
-bool Accessible::AreItemsOperable() const {
+bool LocalAccessible::AreItemsOperable() const {
   return HasOwnContent() && mContent->IsElement() &&
          mContent->AsElement()->HasAttr(kNameSpaceID_None,
                                         nsGkAtoms::aria_activedescendant);
 }
 
-Accessible* Accessible::CurrentItem() const {
+LocalAccessible* LocalAccessible::CurrentItem() const {
   // Check for aria-activedescendant, which changes which element has focus.
   // For activedescendant, the ARIA spec does not require that the user agent
   // checks whether pointed node is actually a DOM descendant of the element
@@ -2542,7 +2550,7 @@ Accessible* Accessible::CurrentItem() const {
   return nullptr;
 }
 
-void Accessible::SetCurrentItem(const Accessible* aItem) {
+void LocalAccessible::SetCurrentItem(const LocalAccessible* aItem) {
   nsAtom* id = aItem->GetContent()->GetID();
   if (id) {
     nsAutoString idStr;
@@ -2552,9 +2560,9 @@ void Accessible::SetCurrentItem(const Accessible* aItem) {
   }
 }
 
-Accessible* Accessible::ContainerWidget() const {
+LocalAccessible* LocalAccessible::ContainerWidget() const {
   if (HasARIARole() && mContent->HasID()) {
-    for (Accessible* parent = LocalParent(); parent;
+    for (LocalAccessible* parent = LocalParent(); parent;
          parent = parent->LocalParent()) {
       nsIContent* parentContent = parent->GetContent();
       if (parentContent && parentContent->IsElement() &&
@@ -2570,16 +2578,17 @@ Accessible* Accessible::ContainerWidget() const {
   return nullptr;
 }
 
-void Accessible::Announce(const nsAString& aAnnouncement, uint16_t aPriority) {
+void LocalAccessible::Announce(const nsAString& aAnnouncement,
+                               uint16_t aPriority) {
   RefPtr<AccAnnouncementEvent> event =
       new AccAnnouncementEvent(this, aAnnouncement, aPriority);
   nsEventShell::FireEvent(event);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible protected methods
+// LocalAccessible protected methods
 
-void Accessible::LastRelease() {
+void LocalAccessible::LastRelease() {
   // First cleanup if needed...
   if (mDoc) {
     Shutdown();
@@ -2590,8 +2599,8 @@ void Accessible::LastRelease() {
   delete this;
 }
 
-Accessible* Accessible::GetSiblingAtOffset(int32_t aOffset,
-                                           nsresult* aError) const {
+LocalAccessible* LocalAccessible::GetSiblingAtOffset(int32_t aOffset,
+                                                     nsresult* aError) const {
   if (!mParent || mIndexInParent == -1) {
     if (aError) *aError = NS_ERROR_UNEXPECTED;
 
@@ -2604,13 +2613,13 @@ Accessible* Accessible::GetSiblingAtOffset(int32_t aOffset,
     return nullptr;
   }
 
-  Accessible* child = mParent->LocalChildAt(mIndexInParent + aOffset);
+  LocalAccessible* child = mParent->LocalChildAt(mIndexInParent + aOffset);
   if (aError && !child) *aError = NS_ERROR_UNEXPECTED;
 
   return child;
 }
 
-double Accessible::AttrNumericValue(nsAtom* aAttr) const {
+double LocalAccessible::AttrNumericValue(nsAtom* aAttr) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) {
     return UnspecifiedNaN<double>();
@@ -2627,7 +2636,7 @@ double Accessible::AttrNumericValue(nsAtom* aAttr) const {
   return NS_FAILED(error) ? UnspecifiedNaN<double>() : value;
 }
 
-uint32_t Accessible::GetActionRule() const {
+uint32_t LocalAccessible::GetActionRule() const {
   if (!HasOwnContent() || (InteractiveState() & states::UNAVAILABLE)) {
     return eNoAction;
   }
@@ -2658,7 +2667,7 @@ uint32_t Accessible::GetActionRule() const {
   return eNoAction;
 }
 
-AccGroupInfo* Accessible::GetGroupInfo() const {
+AccGroupInfo* LocalAccessible::GetGroupInfo() const {
   if (IsProxy()) MOZ_CRASH("This should never be called on proxy wrappers");
 
   if (mBits.groupInfo) {
@@ -2675,7 +2684,7 @@ AccGroupInfo* Accessible::GetGroupInfo() const {
   return mBits.groupInfo;
 }
 
-void Accessible::MaybeFireFocusableStateChange(bool aPreviouslyFocusable) {
+void LocalAccessible::MaybeFireFocusableStateChange(bool aPreviouslyFocusable) {
   bool isFocusable = (State() & states::FOCUSABLE);
   if (isFocusable != aPreviouslyFocusable) {
     RefPtr<AccEvent> focusableChangeEvent =
@@ -2684,8 +2693,8 @@ void Accessible::MaybeFireFocusableStateChange(bool aPreviouslyFocusable) {
   }
 }
 
-void Accessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
-                                            int32_t* aSetSize) {
+void LocalAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
+                                                 int32_t* aSetSize) {
   AccGroupInfo* groupInfo = GetGroupInfo();
   if (groupInfo) {
     *aPosInSet = groupInfo->PosInSet();
@@ -2693,7 +2702,7 @@ void Accessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
   }
 }
 
-int32_t Accessible::GetLevelInternal() {
+int32_t LocalAccessible::GetLevelInternal() {
   int32_t level = nsAccUtils::GetDefaultLevel(this);
 
   if (!IsBoundToParent()) return level;
@@ -2705,7 +2714,7 @@ int32_t Accessible::GetLevelInternal() {
     // its level.
     level = 1;
 
-    Accessible* parent = this;
+    LocalAccessible* parent = this;
     while ((parent = parent->LocalParent())) {
       roles::Role parentRole = parent->Role();
 
@@ -2722,7 +2731,7 @@ int32_t Accessible::GetLevelInternal() {
 
     // Calculate 'level' attribute based on number of parent listitems.
     level = 0;
-    Accessible* parent = this;
+    LocalAccessible* parent = this;
     while ((parent = parent->LocalParent())) {
       roles::Role parentRole = parent->Role();
 
@@ -2739,9 +2748,9 @@ int32_t Accessible::GetLevelInternal() {
       parent = LocalParent();
       uint32_t siblingCount = parent->ChildCount();
       for (uint32_t siblingIdx = 0; siblingIdx < siblingCount; siblingIdx++) {
-        Accessible* sibling = parent->LocalChildAt(siblingIdx);
+        LocalAccessible* sibling = parent->LocalChildAt(siblingIdx);
 
-        Accessible* siblingChild = sibling->LocalLastChild();
+        LocalAccessible* siblingChild = sibling->LocalLastChild();
         if (siblingChild) {
           roles::Role lastChildRole = siblingChild->Role();
           if (lastChildRole == roles::LIST ||
@@ -2758,7 +2767,7 @@ int32_t Accessible::GetLevelInternal() {
     // level.
     level = 1;
 
-    Accessible* parent = this;
+    LocalAccessible* parent = this;
     while ((parent = parent->LocalParent())) {
       roles::Role parentRole = parent->Role();
       if (parentRole == roles::COMMENT) {
@@ -2770,16 +2779,18 @@ int32_t Accessible::GetLevelInternal() {
   return level;
 }
 
-void Accessible::StaticAsserts() const {
-  static_assert(eLastStateFlag <= (1 << kStateFlagsBits) - 1,
-                "Accessible::mStateFlags was oversized by eLastStateFlag!");
+void LocalAccessible::StaticAsserts() const {
+  static_assert(
+      eLastStateFlag <= (1 << kStateFlagsBits) - 1,
+      "LocalAccessible::mStateFlags was oversized by eLastStateFlag!");
   static_assert(eLastAccType <= (1 << kTypeBits) - 1,
-                "Accessible::mType was oversized by eLastAccType!");
-  static_assert(eLastContextFlag <= (1 << kContextFlagsBits) - 1,
-                "Accessible::mContextFlags was oversized by eLastContextFlag!");
+                "LocalAccessible::mType was oversized by eLastAccType!");
+  static_assert(
+      eLastContextFlag <= (1 << kContextFlagsBits) - 1,
+      "LocalAccessible::mContextFlags was oversized by eLastContextFlag!");
   static_assert(
       eLastAccGenericType <= (1 << kGenericTypesBits) - 1,
-      "Accessible::mGenericType was oversized by eLastAccGenericType!");
+      "LocalAccessible::mGenericType was oversized by eLastAccGenericType!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

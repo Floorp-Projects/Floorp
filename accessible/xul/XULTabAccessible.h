@@ -23,7 +23,7 @@ class XULTabAccessible : public HyperTextAccessibleWrap {
 
   XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
@@ -43,7 +43,7 @@ class XULTabsAccessible : public XULSelectControlAccessible {
  public:
   XULTabsAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
@@ -52,13 +52,13 @@ class XULTabsAccessible : public XULSelectControlAccessible {
   virtual uint8_t ActionCount() const override;
 
   // SelectAccessible
-  virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
+  virtual void SelectedItems(nsTArray<LocalAccessible*>* aItems) override;
   virtual uint32_t SelectedItemCount() override;
-  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
+  virtual LocalAccessible* GetSelectedItem(uint32_t aIndex) override;
   virtual bool IsItemSelected(uint32_t aIndex) override;
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
@@ -72,7 +72,7 @@ class XULTabpanelsAccessible : public AccessibleWrap {
     mType = eXULTabpanelsType;
   }
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
 };
 
@@ -87,7 +87,7 @@ class XULTabpanelAccessible : public AccessibleWrap {
  public:
   XULTabpanelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 };

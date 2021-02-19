@@ -7,7 +7,7 @@
 #define mozilla_a11y_EventTree_h_
 
 #include "AccEvent.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/RefPtr.h"
@@ -29,11 +29,11 @@ class TreeMutation final {
   static const bool kNoEvents = true;
   static const bool kNoShutdown = true;
 
-  explicit TreeMutation(Accessible* aParent, bool aNoEvents = false);
+  explicit TreeMutation(LocalAccessible* aParent, bool aNoEvents = false);
   ~TreeMutation();
 
-  void AfterInsertion(Accessible* aChild);
-  void BeforeRemoval(Accessible* aChild, bool aNoShutdown = false);
+  void AfterInsertion(LocalAccessible* aChild);
+  void BeforeRemoval(LocalAccessible* aChild, bool aNoShutdown = false);
   void Done();
 
  private:
@@ -44,10 +44,10 @@ class TreeMutation final {
   static EventTree* const kNoEventTree;
 
 #ifdef A11Y_LOG
-  static const char* PrefixLog(void* aData, Accessible*);
+  static const char* PrefixLog(void* aData, LocalAccessible*);
 #endif
 
-  Accessible* mParent;
+  LocalAccessible* mParent;
   uint32_t mStartIdx;
   uint32_t mStateFlagsCopy;
 
@@ -71,20 +71,20 @@ class EventTree final {
         mNext(nullptr),
         mContainer(nullptr),
         mFireReorder(false) {}
-  explicit EventTree(Accessible* aContainer, bool aFireReorder)
+  explicit EventTree(LocalAccessible* aContainer, bool aFireReorder)
       : mFirst(nullptr),
         mNext(nullptr),
         mContainer(aContainer),
         mFireReorder(aFireReorder) {}
   ~EventTree() { Clear(); }
 
-  void Shown(Accessible* aTarget);
-  void Hidden(Accessible*, bool);
+  void Shown(LocalAccessible* aTarget);
+  void Hidden(LocalAccessible*, bool);
 
   /**
    * Return an event tree node for the given accessible.
    */
-  const EventTree* Find(const Accessible* aContainer) const;
+  const EventTree* Find(const LocalAccessible* aContainer) const;
 
   /**
    * Add a mutation event to this event tree.
@@ -104,18 +104,18 @@ class EventTree final {
   /**
    * Return an event subtree for the given accessible.
    */
-  EventTree* FindOrInsert(Accessible* aContainer);
+  EventTree* FindOrInsert(LocalAccessible* aContainer);
 
   void Clear();
 
   UniquePtr<EventTree> mFirst;
   UniquePtr<EventTree> mNext;
 
-  Accessible* mContainer;
+  LocalAccessible* mContainer;
   nsTArray<RefPtr<AccMutationEvent>> mDependentEvents;
   bool mFireReorder;
 
-  static NotificationController* Controller(Accessible* aAcc) {
+  static NotificationController* Controller(LocalAccessible* aAcc) {
     return aAcc->Document()->Controller();
   }
 

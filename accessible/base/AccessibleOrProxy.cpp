@@ -52,7 +52,7 @@ AccessibleOrProxy AccessibleOrProxy::Parent() const {
 }
 
 AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
-    int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
+    int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   if (IsProxy()) {
     return AsProxy()->ChildAtPoint(aX, aY, aWhichChild);
   }
@@ -63,18 +63,18 @@ AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
     if (!docRect.Contains(aX, aY)) {
       return nullptr;
     }
-    if (aWhichChild == Accessible::eDirectChild) {
+    if (aWhichChild == LocalAccessible::eDirectChild) {
       return childDoc;
     }
     return childDoc->ChildAtPoint(aX, aY, aWhichChild);
   }
   AccessibleOrProxy target = AsAccessible()->ChildAtPoint(aX, aY, aWhichChild);
-  if (target.IsNull() || aWhichChild == Accessible::eDirectChild) {
+  if (target.IsNull() || aWhichChild == LocalAccessible::eDirectChild) {
     return target;
   }
   childDoc = target.RemoteChildDoc();
   if (childDoc) {
-    // Accessible::ChildAtPoint stopped at an OuterDocAccessible, since it
+    // LocalAccessible::ChildAtPoint stopped at an OuterDocAccessible, since it
     // can't traverse into ProxyAccessibles. Continue the search from childDoc.
     return childDoc->ChildAtPoint(aX, aY, aWhichChild);
   }

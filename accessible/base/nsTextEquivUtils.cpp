@@ -7,7 +7,7 @@
 
 #include "nsTextEquivUtils.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "AccIterator.h"
 #include "nsCoreUtils.h"
 #include "mozilla/dom/Text.h"
@@ -20,13 +20,13 @@ using namespace mozilla::a11y;
  * for bailing out during recursive text computation, or for special cases
  * like step f. of the ARIA implementation guide.
  */
-static const Accessible* sInitiatorAcc = nullptr;
+static const LocalAccessible* sInitiatorAcc = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Public.
 
-nsresult nsTextEquivUtils::GetNameFromSubtree(const Accessible* aAccessible,
-                                              nsAString& aName) {
+nsresult nsTextEquivUtils::GetNameFromSubtree(
+    const LocalAccessible* aAccessible, nsAString& aName) {
   aName.Truncate();
 
   if (sInitiatorAcc) return NS_OK;
@@ -47,9 +47,9 @@ nsresult nsTextEquivUtils::GetNameFromSubtree(const Accessible* aAccessible,
   return NS_OK;
 }
 
-nsresult nsTextEquivUtils::GetTextEquivFromIDRefs(const Accessible* aAccessible,
-                                                  nsAtom* aIDRefsAttr,
-                                                  nsAString& aTextEquiv) {
+nsresult nsTextEquivUtils::GetTextEquivFromIDRefs(
+    const LocalAccessible* aAccessible, nsAtom* aIDRefsAttr,
+    nsAString& aTextEquiv) {
   aTextEquiv.Truncate();
 
   nsIContent* content = aAccessible->GetContent();
@@ -69,7 +69,8 @@ nsresult nsTextEquivUtils::GetTextEquivFromIDRefs(const Accessible* aAccessible,
 }
 
 nsresult nsTextEquivUtils::AppendTextEquivFromContent(
-    const Accessible* aInitiatorAcc, nsIContent* aContent, nsAString* aString) {
+    const LocalAccessible* aInitiatorAcc, nsIContent* aContent,
+    nsAString* aString) {
   // Prevent recursion which can cause infinite loops.
   if (sInitiatorAcc) return NS_OK;
 
@@ -85,7 +86,8 @@ nsresult nsTextEquivUtils::AppendTextEquivFromContent(
   bool goThroughDOMSubtree = true;
 
   if (isVisible) {
-    Accessible* accessible = sInitiatorAcc->Document()->GetAccessible(aContent);
+    LocalAccessible* accessible =
+        sInitiatorAcc->Document()->GetAccessible(aContent);
     if (accessible) {
       rv = AppendFromAccessible(accessible, aString);
       goThroughDOMSubtree = false;
@@ -164,12 +166,12 @@ nsresult nsTextEquivUtils::AppendFromDOMChildren(nsIContent* aContent,
 // nsTextEquivUtils. Private.
 
 nsresult nsTextEquivUtils::AppendFromAccessibleChildren(
-    const Accessible* aAccessible, nsAString* aString) {
+    const LocalAccessible* aAccessible, nsAString* aString) {
   nsresult rv = NS_OK_NO_NAME_CLAUSE_HANDLED;
 
   uint32_t childCount = aAccessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = aAccessible->LocalChildAt(childIdx);
+    LocalAccessible* child = aAccessible->LocalChildAt(childIdx);
     rv = AppendFromAccessible(child, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -177,7 +179,7 @@ nsresult nsTextEquivUtils::AppendFromAccessibleChildren(
   return rv;
 }
 
-nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
+nsresult nsTextEquivUtils::AppendFromAccessible(LocalAccessible* aAccessible,
                                                 nsAString* aString) {
   // XXX: is it necessary to care the accessible is not a document?
   if (aAccessible->IsContent()) {
@@ -222,7 +224,7 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   return rv;
 }
 
-nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
+nsresult nsTextEquivUtils::AppendFromValue(LocalAccessible* aAccessible,
                                            nsAString* aString) {
   if (GetRoleRule(aAccessible->Role()) != eNameFromValueRule) {
     return NS_OK_NO_NAME_CLAUSE_HANDLED;
@@ -329,7 +331,7 @@ uint32_t nsTextEquivUtils::GetRoleRule(role aRole) {
 }
 
 bool nsTextEquivUtils::ShouldIncludeInSubtreeCalculation(
-    Accessible* aAccessible) {
+    LocalAccessible* aAccessible) {
   uint32_t nameRule = GetRoleRule(aAccessible->Role());
   if (nameRule == eNameFromSubtreeRule) {
     return true;
@@ -345,7 +347,7 @@ bool nsTextEquivUtils::ShouldIncludeInSubtreeCalculation(
     return false;
   }
 
-  // sInitiatorAcc can be null when, for example, Accessible::Value calls
+  // sInitiatorAcc can be null when, for example, LocalAccessible::Value calls
   // GetTextEquivFromSubtree.
   role initiatorRole = sInitiatorAcc ? sInitiatorAcc->Role() : roles::NOTHING;
   if (initiatorRole == roles::OUTLINEITEM &&

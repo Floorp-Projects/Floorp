@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 #include "HyperTextAccessible.h"
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
@@ -24,7 +24,7 @@ static AtkHyperlink* getLinkCB(AtkHypertext* aText, gint aLinkIndex) {
     HyperTextAccessible* hyperText = accWrap->AsHyperText();
     NS_ENSURE_TRUE(hyperText, nullptr);
 
-    Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
+    LocalAccessible* hyperLink = hyperText->LinkAt(aLinkIndex);
     if (!hyperLink || !hyperLink->IsLink()) {
       return nullptr;
     }

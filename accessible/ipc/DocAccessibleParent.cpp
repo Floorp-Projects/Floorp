@@ -817,7 +817,7 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
 
   // XXX get the bounds from the browserParent instead of poking at accessibles
   // which might not exist yet.
-  Accessible* outerDoc = OuterDocOfRemoteBrowser();
+  LocalAccessible* outerDoc = OuterDocOfRemoteBrowser();
   if (!outerDoc) {
     return;
   }
@@ -870,7 +870,7 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
   MOZ_ASSERT(hWnd);
 }
 
-void DocAccessibleParent::SendParentCOMProxy(Accessible* aOuterDoc) {
+void DocAccessibleParent::SendParentCOMProxy(LocalAccessible* aOuterDoc) {
   // Make sure that we're not racing with a tab shutdown
   auto tab = static_cast<dom::BrowserParent*>(Manager());
   MOZ_ASSERT(tab);

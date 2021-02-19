@@ -32,7 +32,7 @@
 #include "mozilla/Maybe.h"
 
 #ifdef ACCESSIBILITY
-#  include "mozilla/a11y/Accessible.h"
+#  include "mozilla/a11y/LocalAccessible.h"
 #endif
 #include "mozilla/EventForwards.h"
 #include "mozilla/TouchEvents.h"
@@ -581,7 +581,7 @@ class nsWindow final : public nsBaseWidget {
   bool mAlwaysOnTop;
 
 #ifdef ACCESSIBILITY
-  RefPtr<mozilla::a11y::Accessible> mRootAccessible;
+  RefPtr<mozilla::a11y::LocalAccessible> mRootAccessible;
 
   /**
    * Request to create the accessible for this window if it is top level.

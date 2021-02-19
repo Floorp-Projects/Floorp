@@ -14,7 +14,7 @@ class nsIAccessible;
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 class AccessibleOrProxy;
 
 /**
@@ -96,7 +96,7 @@ class xpcAccessible : public nsIAccessible {
   virtual ~xpcAccessible() {}
 
  private:
-  Accessible* Intl();
+  LocalAccessible* Intl();
   AccessibleOrProxy IntlGeneric();
 
   xpcAccessible(const xpcAccessible&) = delete;

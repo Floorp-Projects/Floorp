@@ -15,7 +15,7 @@ webidl Node;
 %{C++
 namespace mozilla {
 namespace a11y {
-class Accessible;
+class LocalAccessible;
 }
 }
 %}
@@ -336,7 +336,7 @@ interface nsIAccessible : nsISupports
   void announce(in AString announcement, in unsigned short priority);
 
   %{C++
-  virtual mozilla::a11y::Accessible* ToInternalAccessible() const = 0;
+  virtual mozilla::a11y::LocalAccessible* ToInternalAccessible() const = 0;
   %}
 
 };

@@ -319,7 +319,7 @@ uint16_t RotorHeadingLevelRule::Match(const AccessibleOrProxy& aAccOrProxy) {
   // "unmatch" otherwise, the match persists.
   if ((result & nsIAccessibleTraversalRule::FILTER_MATCH)) {
     int32_t currLevel = 0;
-    if (Accessible* acc = aAccOrProxy.AsAccessible()) {
+    if (LocalAccessible* acc = aAccOrProxy.AsAccessible()) {
       currLevel = acc->GroupPosition().level;
     } else if (ProxyAccessible* proxy = aAccOrProxy.AsProxy()) {
       currLevel = proxy->GroupPosition().level;

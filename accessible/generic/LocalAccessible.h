@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _Accessible_H_
-#define _Accessible_H_
+#ifndef _LocalAccessible_H_
+#define _LocalAccessible_H_
 
 #include "mozilla/a11y/AccTypes.h"
 #include "mozilla/a11y/RelationType.h"
@@ -30,7 +30,7 @@ class Element;
 namespace mozilla {
 namespace a11y {
 
-class Accessible;
+class LocalAccessible;
 class AccEvent;
 class AccGroupInfo;
 class ApplicationAccessible;
@@ -55,8 +55,8 @@ class XULTreeAccessible;
 
 #ifdef A11Y_LOG
 namespace logging {
-typedef const char* (*GetTreePrefix)(void* aData, Accessible*);
-void Tree(const char* aTitle, const char* aMsgText, Accessible* aRoot,
+typedef const char* (*GetTreePrefix)(void* aData, LocalAccessible*);
+void Tree(const char* aTitle, const char* aMsgText, LocalAccessible* aRoot,
           GetTreePrefix aPrefixFunc, void* GetTreePrefixData);
 };  // namespace logging
 #endif
@@ -120,7 +120,7 @@ class index_t {
   int32_t mVal;
 };
 
-typedef nsRefPtrHashtable<nsPtrHashKey<const void>, Accessible>
+typedef nsRefPtrHashtable<nsPtrHashKey<const void>, LocalAccessible>
     AccessibleHashtable;
 
 #define NS_ACCESSIBLE_IMPL_IID                       \
@@ -130,12 +130,12 @@ typedef nsRefPtrHashtable<nsPtrHashKey<const void>, Accessible>
     }                                                \
   }
 
-class Accessible : public nsISupports {
+class LocalAccessible : public nsISupports {
  public:
-  Accessible(nsIContent* aContent, DocAccessible* aDoc);
+  LocalAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(Accessible)
+  NS_DECL_CYCLE_COLLECTION_CLASS(LocalAccessible)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_IID)
 
@@ -319,13 +319,13 @@ class Accessible : public nsISupports {
    * @param  aWhichChild  [in] flag points if deepest or direct child
    *                        should be returned
    */
-  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild);
+  virtual LocalAccessible* ChildAtPoint(int32_t aX, int32_t aY,
+                                        EWhichChildAtPoint aWhichChild);
 
   /**
    * Return the focused child if any.
    */
-  virtual Accessible* FocusedChild();
+  virtual LocalAccessible* FocusedChild();
 
   /**
    * Return calculated group level based on accessible hierarchy.
@@ -363,37 +363,37 @@ class Accessible : public nsISupports {
   /**
    * Append/insert/remove a child. Return true if operation was successful.
    */
-  bool AppendChild(Accessible* aChild) {
+  bool AppendChild(LocalAccessible* aChild) {
     return InsertChildAt(mChildren.Length(), aChild);
   }
-  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild);
+  virtual bool InsertChildAt(uint32_t aIndex, LocalAccessible* aChild);
 
   /**
    * Inserts a child after given sibling. If the child cannot be inserted,
    * then the child is unbound from the document, and false is returned. Make
    * sure to null out any references on the child object as it may be destroyed.
    */
-  bool InsertAfter(Accessible* aNewChild, Accessible* aRefChild);
+  bool InsertAfter(LocalAccessible* aNewChild, LocalAccessible* aRefChild);
 
-  virtual bool RemoveChild(Accessible* aChild);
+  virtual bool RemoveChild(LocalAccessible* aChild);
 
   /**
    * Reallocates the child within its parent.
    */
-  virtual void RelocateChild(uint32_t aNewIndex, Accessible* aChild);
+  virtual void RelocateChild(uint32_t aNewIndex, LocalAccessible* aChild);
 
   //////////////////////////////////////////////////////////////////////////////
-  // Accessible tree traverse methods
+  // LocalAccessible tree traverse methods
 
   /**
    * Return parent accessible.
    */
-  Accessible* LocalParent() const { return mParent; }
+  LocalAccessible* LocalParent() const { return mParent; }
 
   /**
    * Return child accessible at the given index.
    */
-  virtual Accessible* LocalChildAt(uint32_t aIndex) const;
+  virtual LocalAccessible* LocalChildAt(uint32_t aIndex) const;
 
   /**
    * Return child accessible count.
@@ -403,7 +403,7 @@ class Accessible : public nsISupports {
   /**
    * Return index of the given child accessible.
    */
-  int32_t GetIndexOf(const Accessible* aChild) const {
+  int32_t GetIndexOf(const LocalAccessible* aChild) const {
     return (aChild->mParent != this) ? -1 : aChild->IndexInParent();
   }
 
@@ -420,10 +420,14 @@ class Accessible : public nsISupports {
   /**
    * Return first/last/next/previous sibling of the accessible.
    */
-  inline Accessible* LocalNextSibling() const { return GetSiblingAtOffset(1); }
-  inline Accessible* LocalPrevSibling() const { return GetSiblingAtOffset(-1); }
-  inline Accessible* LocalFirstChild() const { return LocalChildAt(0); }
-  inline Accessible* LocalLastChild() const {
+  inline LocalAccessible* LocalNextSibling() const {
+    return GetSiblingAtOffset(1);
+  }
+  inline LocalAccessible* LocalPrevSibling() const {
+    return GetSiblingAtOffset(-1);
+  }
+  inline LocalAccessible* LocalFirstChild() const { return LocalChildAt(0); }
+  inline LocalAccessible* LocalLastChild() const {
     uint32_t childCount = ChildCount();
     return childCount != 0 ? LocalChildAt(childCount - 1) : nullptr;
   }
@@ -436,12 +440,12 @@ class Accessible : public nsISupports {
   /**
    * Return embedded accessible child at the given index.
    */
-  Accessible* GetEmbeddedChildAt(uint32_t aIndex);
+  LocalAccessible* GetEmbeddedChildAt(uint32_t aIndex);
 
   /**
    * Return index of the given embedded accessible child.
    */
-  int32_t GetIndexOfEmbeddedChild(Accessible* aChild);
+  int32_t GetIndexOfEmbeddedChild(LocalAccessible* aChild);
 
   /**
    * Return number of content children/content child at index. The content
@@ -449,7 +453,7 @@ class Accessible : public nsISupports {
    * parent accessible (like treeitem accessibles for XUL trees).
    */
   uint32_t ContentChildCount() const { return mChildren.Length(); }
-  Accessible* ContentChildAt(uint32_t aIndex) const {
+  LocalAccessible* ContentChildAt(uint32_t aIndex) const {
     return mChildren.ElementAt(aIndex);
   }
 
@@ -640,7 +644,7 @@ class Accessible : public nsISupports {
   bool IsTableCell() const { return mGenericTypes & eTableCell; }
   virtual TableCellAccessible* AsTableCell() { return nullptr; }
   const TableCellAccessible* AsTableCell() const {
-    return const_cast<Accessible*>(this)->AsTableCell();
+    return const_cast<LocalAccessible*>(this)->AsTableCell();
   }
 
   bool IsTableRow() const { return HasGenericType(eTableRow); }
@@ -751,7 +755,7 @@ class Accessible : public nsISupports {
   /**
    * Returns an anchor accessible at the given index.
    */
-  virtual Accessible* AnchorAt(uint32_t aAnchorIndex);
+  virtual LocalAccessible* AnchorAt(uint32_t aAnchorIndex);
 
   /**
    * Returns an anchor URI at the given index.
@@ -770,7 +774,7 @@ class Accessible : public nsISupports {
   /**
    * Return an array of selected items.
    */
-  virtual void SelectedItems(nsTArray<Accessible*>* aItems);
+  virtual void SelectedItems(nsTArray<LocalAccessible*>* aItems);
 
   /**
    * Return the number of selected items.
@@ -780,7 +784,7 @@ class Accessible : public nsISupports {
   /**
    * Return selected item at the given index.
    */
-  virtual Accessible* GetSelectedItem(uint32_t aIndex);
+  virtual LocalAccessible* GetSelectedItem(uint32_t aIndex);
 
   /**
    * Determine if item at the given index is selected.
@@ -841,17 +845,17 @@ class Accessible : public nsISupports {
    * Return the current item of the widget, i.e. an item that has or will have
    * keyboard focus when widget gets active.
    */
-  virtual Accessible* CurrentItem() const;
+  virtual LocalAccessible* CurrentItem() const;
 
   /**
    * Set the current item of the widget.
    */
-  virtual void SetCurrentItem(const Accessible* aItem);
+  virtual void SetCurrentItem(const LocalAccessible* aItem);
 
   /**
    * Return container widget this accessible belongs to.
    */
-  virtual Accessible* ContainerWidget() const;
+  virtual LocalAccessible* ContainerWidget() const;
 
   /**
    * Return the localized string for the given key.
@@ -990,7 +994,7 @@ class Accessible : public nsISupports {
   void MaybeFireFocusableStateChange(bool aPreviouslyFocusable);
 
  protected:
-  virtual ~Accessible();
+  virtual ~LocalAccessible();
 
   /**
    * Return the accessible name provided by native markup. It doesn't take
@@ -1021,14 +1025,14 @@ class Accessible : public nsISupports {
   /**
    * Set accessible parent and index in parent.
    */
-  void BindToParent(Accessible* aParent, uint32_t aIndexInParent);
+  void BindToParent(LocalAccessible* aParent, uint32_t aIndexInParent);
   void UnbindFromParent();
 
   /**
    * Return sibling accessible at the given offset.
    */
-  virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
-                                         nsresult* aError = nullptr) const;
+  virtual LocalAccessible* GetSiblingAtOffset(int32_t aOffset,
+                                              nsresult* aError = nullptr) const;
 
   /**
    * Flags used to describe the state of this accessible.
@@ -1158,8 +1162,8 @@ class Accessible : public nsISupports {
   nsCOMPtr<nsIContent> mContent;
   RefPtr<DocAccessible> mDoc;
 
-  Accessible* mParent;
-  nsTArray<Accessible*> mChildren;
+  LocalAccessible* mParent;
+  nsTArray<LocalAccessible*> mChildren;
   int32_t mIndexInParent;
 
   static const uint8_t kStateFlagsBits = 11;
@@ -1188,7 +1192,7 @@ class Accessible : public nsISupports {
 
 #ifdef A11Y_LOG
   friend void logging::Tree(const char* aTitle, const char* aMsgText,
-                            Accessible* aRoot,
+                            LocalAccessible* aRoot,
                             logging::GetTreePrefix aPrefixFunc,
                             void* aGetTreePrefixData);
 #endif
@@ -1211,12 +1215,12 @@ class Accessible : public nsISupports {
   friend class AccGroupInfo;
 
  private:
-  Accessible() = delete;
-  Accessible(const Accessible&) = delete;
-  Accessible& operator=(const Accessible&) = delete;
+  LocalAccessible() = delete;
+  LocalAccessible(const LocalAccessible&) = delete;
+  LocalAccessible& operator=(const LocalAccessible&) = delete;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(Accessible, NS_ACCESSIBLE_IMPL_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(LocalAccessible, NS_ACCESSIBLE_IMPL_IID)
 
 /**
  * Represent key binding associated with accessible (such as access key and

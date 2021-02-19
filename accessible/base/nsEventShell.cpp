@@ -20,7 +20,7 @@ using namespace mozilla::a11y;
 void nsEventShell::FireEvent(AccEvent* aEvent) {
   if (!aEvent || aEvent->mEventRule == AccEvent::eDoNotEmit) return;
 
-  Accessible* accessible = aEvent->GetAccessible();
+  LocalAccessible* accessible = aEvent->GetAccessible();
   NS_ENSURE_TRUE_VOID(accessible);
 
   nsINode* node = accessible->GetNode();
@@ -46,7 +46,7 @@ void nsEventShell::FireEvent(AccEvent* aEvent) {
   sEventTargetNode = nullptr;
 }
 
-void nsEventShell::FireEvent(uint32_t aEventType, Accessible* aAccessible,
+void nsEventShell::FireEvent(uint32_t aEventType, LocalAccessible* aAccessible,
                              EIsFromUserInput aIsFromUserInput) {
   NS_ENSURE_TRUE_VOID(aAccessible);
 

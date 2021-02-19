@@ -11,7 +11,7 @@
 #import "RotorRules.h"
 
 #include "AccIterator.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "XULTreeAccessible.h"
@@ -49,13 +49,13 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
   mChildren = [[NSMutableArray alloc] init];
 
-  if (Accessible* acc = [mParent geckoAccessible].AsAccessible()) {
+  if (LocalAccessible* acc = [mParent geckoAccessible].AsAccessible()) {
     TableAccessible* table = acc->AsTable();
     MOZ_ASSERT(table, "Got null table when fetching column children!");
     uint32_t numRows = table->RowCount();
 
     for (uint32_t j = 0; j < numRows; j++) {
-      Accessible* cell = table->CellAt(j, mIndex);
+      LocalAccessible* cell = table->CellAt(j, mIndex);
       mozAccessible* nativeCell =
           cell ? GetNativeFromGeckoAccessible(cell) : nil;
       if ([nativeCell isAccessibilityElement]) {
@@ -196,7 +196,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   }
 
   bool tableGuess;
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     tableGuess = acc->AsTable()->IsProbablyLayoutTable();
   } else {
     ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
@@ -263,7 +263,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   mColContainers = [[NSMutableArray alloc] init];
   uint32_t numCols = 0;
 
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     numCols = acc->AsTable()->ColCount();
   } else {
     numCols = mGeckoAccessible.AsProxy()->TableColumnCount();
@@ -293,7 +293,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   uint32_t numCols = 0;
   TableAccessible* table = nullptr;
 
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     table = mGeckoAccessible.AsAccessible()->AsTable();
     numCols = table->ColCount();
   } else {
@@ -410,7 +410,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
   if (mGeckoAccessible.IsAccessible()) {
     TableCellAccessible* cell = mGeckoAccessible.AsAccessible()->AsTableCell();
-    AutoTArray<Accessible*, 10> headerCells;
+    AutoTArray<LocalAccessible*, 10> headerCells;
     cell->RowHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   } else {
@@ -426,7 +426,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
   if (mGeckoAccessible.IsAccessible()) {
     TableCellAccessible* cell = mGeckoAccessible.AsAccessible()->AsTableCell();
-    AutoTArray<Accessible*, 10> headerCells;
+    AutoTArray<LocalAccessible*, 10> headerCells;
     cell->ColHeaderCells(&headerCells);
     return utils::ConvertToNSArray(headerCells);
   } else {
@@ -463,18 +463,18 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 }
 
 - (NSArray*)moxColumns {
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     if (acc->IsContent() && acc->GetContent()->IsXULElement(nsGkAtoms::tree)) {
       XULTreeAccessible* treeAcc = (XULTreeAccessible*)acc;
       NSMutableArray* cols = [[NSMutableArray alloc] init];
       // XUL trees store their columns in a group at the tree's first
       // child. Here, we iterate over that group to get each column's
       // native accessible and add it to our col array.
-      Accessible* treeColumns = treeAcc->LocalChildAt(0);
+      LocalAccessible* treeColumns = treeAcc->LocalChildAt(0);
       if (treeColumns) {
         uint32_t colCount = treeColumns->ChildCount();
         for (uint32_t i = 0; i < colCount; i++) {
-          Accessible* treeColumnItem = treeColumns->LocalChildAt(i);
+          LocalAccessible* treeColumnItem = treeColumns->LocalChildAt(i);
           [cols addObject:GetNativeFromGeckoAccessible(treeColumnItem)];
         }
         return cols;
@@ -567,7 +567,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
 - (NSNumber*)moxDisclosureLevel {
   GroupPos groupPos;
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     groupPos = acc->GroupPosition();
   } else if (ProxyAccessible* proxy = mGeckoAccessible.AsProxy()) {
     groupPos = proxy->GroupPosition();
@@ -612,7 +612,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
 - (NSString*)moxLabel {
   nsAutoString title;
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
+  if (LocalAccessible* acc = mGeckoAccessible.AsAccessible()) {
     acc->Name(title);
   } else {
     mGeckoAccessible.AsProxy()->Name(title);

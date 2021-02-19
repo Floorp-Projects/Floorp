@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HyperTextAccessibleWrap.h"
-#include "Accessible-inl.h"
+#include "LocalAccessible-inl.h"
 
 #include "nsEventShell.h"
 
@@ -48,7 +48,7 @@ nsresult HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
       eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
-    Accessible* accessible = aEvent->GetAccessible();
+    LocalAccessible* accessible = aEvent->GetAccessible();
     if (accessible && accessible->IsHyperText()) {
       AccTextChangeEvent* event = downcast_accEvent(aEvent);
       HyperTextAccessibleWrap* text =

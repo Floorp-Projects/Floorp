@@ -52,7 +52,7 @@ class HyperTextAccessible : public AccessibleWrap {
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HyperTextAccessible, AccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual nsAtom* LandmarkRole() const override;
   virtual int32_t GetLevelInternal() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
@@ -60,8 +60,8 @@ class HyperTextAccessible : public AccessibleWrap {
   virtual uint64_t NativeState() const override;
 
   virtual void Shutdown() override;
-  virtual bool RemoveChild(Accessible* aAccessible) override;
-  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
+  virtual bool RemoveChild(LocalAccessible* aAccessible) override;
+  virtual bool InsertChildAt(uint32_t aIndex, LocalAccessible* aChild) override;
   virtual Relation RelationByType(RelationType aType) const override;
 
   // HyperTextAccessible (static helper method)
@@ -85,12 +85,14 @@ class HyperTextAccessible : public AccessibleWrap {
   /**
    * Return link accessible at the given index.
    */
-  Accessible* LinkAt(uint32_t aIndex) { return GetEmbeddedChildAt(aIndex); }
+  LocalAccessible* LinkAt(uint32_t aIndex) {
+    return GetEmbeddedChildAt(aIndex);
+  }
 
   /**
    * Return index for the given link accessible.
    */
-  int32_t LinkIndexOf(Accessible* aLink) {
+  int32_t LinkIndexOf(LocalAccessible* aLink) {
     return GetIndexOfEmbeddedChild(aLink);
   }
 
@@ -98,7 +100,7 @@ class HyperTextAccessible : public AccessibleWrap {
    * Return link accessible at the given text offset.
    */
   int32_t LinkIndexAtOffset(uint32_t aOffset) {
-    Accessible* child = GetChildAtOffset(aOffset);
+    LocalAccessible* child = GetChildAtOffset(aOffset);
     return child ? LinkIndexOf(child) : -1;
   }
 
@@ -130,7 +132,7 @@ class HyperTextAccessible : public AccessibleWrap {
   /**
    * Transform the given a11y point into the offset relative this hypertext.
    */
-  uint32_t TransformOffset(Accessible* aDescendant, uint32_t aOffset,
+  uint32_t TransformOffset(LocalAccessible* aDescendant, uint32_t aOffset,
                            bool aIsEndOffset) const;
 
   /**
@@ -167,7 +169,7 @@ class HyperTextAccessible : public AccessibleWrap {
     int32_t childIdx = GetChildIndexAtOffset(aOffset);
     if (childIdx == -1) return false;
 
-    Accessible* child = LocalChildAt(childIdx);
+    LocalAccessible* child = LocalChildAt(childIdx);
     child->AppendTextTo(aChar, aOffset - GetChildOffset(childIdx), 1);
 
     if (aStartOffset && aEndOffset) {
@@ -235,7 +237,7 @@ class HyperTextAccessible : public AccessibleWrap {
    * @param  aInvalidateAfter [in, optional] indicates whether invalidate
    *                           cached offsets for next siblings of the child
    */
-  int32_t GetChildOffset(const Accessible* aChild,
+  int32_t GetChildOffset(const LocalAccessible* aChild,
                          bool aInvalidateAfter = false) const {
     int32_t index = GetIndexOf(aChild);
     return index == -1 ? -1 : GetChildOffset(index, aInvalidateAfter);
@@ -259,7 +261,7 @@ class HyperTextAccessible : public AccessibleWrap {
    *
    * @param  aOffset  [in] the given text offset
    */
-  Accessible* GetChildAtOffset(uint32_t aOffset) const {
+  LocalAccessible* GetChildAtOffset(uint32_t aOffset) const {
     return LocalChildAt(GetChildIndexAtOffset(aOffset));
   }
 
@@ -380,7 +382,7 @@ class HyperTextAccessible : public AccessibleWrap {
   /**
    * Return a range containing the given accessible.
    */
-  void RangeByChild(Accessible* aChild, TextRange& aRange) const;
+  void RangeByChild(LocalAccessible* aChild, TextRange& aRange) const;
 
   /**
    * Return a range containing an accessible at the given point.
@@ -414,7 +416,7 @@ class HyperTextAccessible : public AccessibleWrap {
  protected:
   virtual ~HyperTextAccessible() {}
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // HyperTextAccessible
@@ -515,7 +517,7 @@ class HyperTextAccessible : public AccessibleWrap {
 
   // Helpers
   nsresult GetDOMPointByFrameOffset(nsIFrame* aFrame, int32_t aOffset,
-                                    Accessible* aAccessible,
+                                    LocalAccessible* aAccessible,
                                     mozilla::a11y::DOMPoint* aPoint);
 
   /**
@@ -549,9 +551,9 @@ class HyperTextAccessible : public AccessibleWrap {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible downcasting method
+// LocalAccessible downcasting method
 
-inline HyperTextAccessible* Accessible::AsHyperText() {
+inline HyperTextAccessible* LocalAccessible::AsHyperText() {
   return IsHyperText() ? static_cast<HyperTextAccessible*>(this) : nullptr;
 }
 

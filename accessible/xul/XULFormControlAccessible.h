@@ -29,7 +29,7 @@ class XULButtonAccessible : public AccessibleWrap {
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(XULButtonAccessible, AccessibleWrap)
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 
@@ -42,7 +42,7 @@ class XULButtonAccessible : public AccessibleWrap {
   virtual bool IsWidget() const override;
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
-  virtual Accessible* ContainerWidget() const override;
+  virtual LocalAccessible* ContainerWidget() const override;
 
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
@@ -61,7 +61,7 @@ class XULDropmarkerAccessible : public LeafAccessible {
   enum { eAction_Click = 0 };
   XULDropmarkerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 
@@ -81,12 +81,12 @@ class XULGroupboxAccessible final : public AccessibleWrap {
  public:
   XULGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
@@ -97,12 +97,12 @@ class XULRadioButtonAccessible : public RadioButtonAccessible {
  public:
   XULRadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const override;
+  virtual LocalAccessible* ContainerWidget() const override;
 };
 
 /**
@@ -112,7 +112,7 @@ class XULRadioGroupAccessible : public XULSelectControlAccessible {
  public:
   XULRadioGroupAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
@@ -120,8 +120,8 @@ class XULRadioGroupAccessible : public XULSelectControlAccessible {
   virtual bool IsWidget() const override;
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
-  virtual Accessible* CurrentItem() const override;
-  virtual void SetCurrentItem(const Accessible* aItem) override;
+  virtual LocalAccessible* CurrentItem() const override;
+  virtual void SetCurrentItem(const LocalAccessible* aItem) override;
 };
 
 /**
@@ -131,7 +131,7 @@ class XULStatusBarAccessible : public AccessibleWrap {
  public:
   XULStatusBarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
 };
 
@@ -142,12 +142,12 @@ class XULToolbarButtonAccessible : public XULButtonAccessible {
  public:
   XULToolbarButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual void GetPositionAndSizeInternal(int32_t* aPosInSet,
                                           int32_t* aSetSize) override;
 
   // nsXULToolbarButtonAccessible
-  static bool IsSeparator(Accessible* aAccessible);
+  static bool IsSeparator(LocalAccessible* aAccessible);
 
   // Widgets
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
@@ -160,11 +160,11 @@ class XULToolbarAccessible : public AccessibleWrap {
  public:
   XULToolbarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
 
  protected:
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
@@ -175,7 +175,7 @@ class XULToolbarSeparatorAccessible : public LeafAccessible {
  public:
   XULToolbarSeparatorAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 };

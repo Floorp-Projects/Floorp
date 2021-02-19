@@ -19,7 +19,7 @@ using namespace mozilla::a11y;
 // AccIterator
 ////////////////////////////////////////////////////////////////////////////////
 
-AccIterator::AccIterator(const Accessible* aAccessible,
+AccIterator::AccIterator(const LocalAccessible* aAccessible,
                          filters::FilterFuncPtr aFilterFunc)
     : mFilterFunc(aFilterFunc) {
   mState = new IteratorState(aAccessible);
@@ -33,9 +33,9 @@ AccIterator::~AccIterator() {
   }
 }
 
-Accessible* AccIterator::Next() {
+LocalAccessible* AccIterator::Next() {
   while (mState) {
-    Accessible* child = mState->mParent->LocalChildAt(mState->mIndex++);
+    LocalAccessible* child = mState->mParent->LocalChildAt(mState->mIndex++);
     if (!child) {
       IteratorState* tmp = mState;
       mState = mState->mParentState;
@@ -59,7 +59,7 @@ Accessible* AccIterator::Next() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccIterator::IteratorState
 
-AccIterator::IteratorState::IteratorState(const Accessible* aParent,
+AccIterator::IteratorState::IteratorState(const LocalAccessible* aParent,
                                           IteratorState* mParentState)
     : mParent(aParent), mIndex(0), mParentState(mParentState) {}
 
@@ -79,7 +79,7 @@ RelatedAccIterator::RelatedAccIterator(DocAccessible* aDocument,
   }
 }
 
-Accessible* RelatedAccIterator::Next() {
+LocalAccessible* RelatedAccIterator::Next() {
   if (!mProviders) return nullptr;
 
   while (mIndex < mProviders->Length()) {
@@ -87,7 +87,7 @@ Accessible* RelatedAccIterator::Next() {
 
     // Return related accessible for the given attribute.
     if (provider->mRelAttr == mRelAttr) {
-      Accessible* related = mDocument->GetAccessible(provider->mContent);
+      LocalAccessible* related = mDocument->GetAccessible(provider->mContent);
       if (related) {
         return related;
       }
@@ -108,22 +108,22 @@ Accessible* RelatedAccIterator::Next() {
 ////////////////////////////////////////////////////////////////////////////////
 
 HTMLLabelIterator::HTMLLabelIterator(DocAccessible* aDocument,
-                                     const Accessible* aAccessible,
+                                     const LocalAccessible* aAccessible,
                                      LabelFilter aFilter)
     : mRelIter(aDocument, aAccessible->GetContent(), nsGkAtoms::_for),
       mAcc(aAccessible),
       mLabelFilter(aFilter) {}
 
-bool HTMLLabelIterator::IsLabel(Accessible* aLabel) {
+bool HTMLLabelIterator::IsLabel(LocalAccessible* aLabel) {
   dom::HTMLLabelElement* labelEl =
       dom::HTMLLabelElement::FromNode(aLabel->GetContent());
   return labelEl && labelEl->GetControl() == mAcc->GetContent();
 }
 
-Accessible* HTMLLabelIterator::Next() {
+LocalAccessible* HTMLLabelIterator::Next() {
   // Get either <label for="[id]"> element which explicitly points to given
   // element, or <label> ancestor which implicitly point to it.
-  Accessible* label = nullptr;
+  LocalAccessible* label = nullptr;
   while ((label = mRelIter.Next())) {
     if (IsLabel(label)) {
       return label;
@@ -136,7 +136,7 @@ Accessible* HTMLLabelIterator::Next() {
   // Go up tree to get a name of ancestor label if there is one (an ancestor
   // <label> implicitly points to us). Don't go up farther than form or
   // document.
-  Accessible* walkUp = mAcc->LocalParent();
+  LocalAccessible* walkUp = mAcc->LocalParent();
   while (walkUp && !walkUp->IsDoc()) {
     nsIContent* walkUpEl = walkUp->GetContent();
     if (IsLabel(walkUp) &&
@@ -161,8 +161,8 @@ HTMLOutputIterator::HTMLOutputIterator(DocAccessible* aDocument,
                                        nsIContent* aElement)
     : mRelIter(aDocument, aElement, nsGkAtoms::_for) {}
 
-Accessible* HTMLOutputIterator::Next() {
-  Accessible* output = nullptr;
+LocalAccessible* HTMLOutputIterator::Next() {
+  LocalAccessible* output = nullptr;
   while ((output = mRelIter.Next())) {
     if (output->GetContent()->IsHTMLElement(nsGkAtoms::output)) return output;
   }
@@ -178,8 +178,8 @@ XULLabelIterator::XULLabelIterator(DocAccessible* aDocument,
                                    nsIContent* aElement)
     : mRelIter(aDocument, aElement, nsGkAtoms::control) {}
 
-Accessible* XULLabelIterator::Next() {
-  Accessible* label = nullptr;
+LocalAccessible* XULLabelIterator::Next() {
+  LocalAccessible* label = nullptr;
   while ((label = mRelIter.Next())) {
     if (label->GetContent()->IsXULElement(nsGkAtoms::label)) return label;
   }
@@ -195,8 +195,8 @@ XULDescriptionIterator::XULDescriptionIterator(DocAccessible* aDocument,
                                                nsIContent* aElement)
     : mRelIter(aDocument, aElement, nsGkAtoms::control) {}
 
-Accessible* XULDescriptionIterator::Next() {
-  Accessible* descr = nullptr;
+LocalAccessible* XULDescriptionIterator::Next() {
+  LocalAccessible* descr = nullptr;
   while ((descr = mRelIter.Next())) {
     if (descr->GetContent()->IsXULElement(nsGkAtoms::description)) return descr;
   }
@@ -264,10 +264,10 @@ dom::Element* IDRefsIterator::GetElem(const nsDependentSubstring& aID) {
   return GetElem(mContent, aID);
 }
 
-Accessible* IDRefsIterator::Next() {
+LocalAccessible* IDRefsIterator::Next() {
   nsIContent* nextEl = nullptr;
   while ((nextEl = NextElem())) {
-    Accessible* acc = mDoc->GetAccessible(nextEl);
+    LocalAccessible* acc = mDoc->GetAccessible(nextEl);
     if (acc) {
       return acc;
     }
@@ -279,8 +279,8 @@ Accessible* IDRefsIterator::Next() {
 // SingleAccIterator
 ////////////////////////////////////////////////////////////////////////////////
 
-Accessible* SingleAccIterator::Next() {
-  RefPtr<Accessible> nextAcc;
+LocalAccessible* SingleAccIterator::Next() {
+  RefPtr<LocalAccessible> nextAcc;
   mAcc.swap(nextAcc);
   if (!nextAcc || nextAcc->IsDefunct()) {
     return nullptr;
@@ -292,7 +292,7 @@ Accessible* SingleAccIterator::Next() {
 // ItemIterator
 ////////////////////////////////////////////////////////////////////////////////
 
-Accessible* ItemIterator::Next() {
+LocalAccessible* ItemIterator::Next() {
   if (mContainer) {
     mAnchor = AccGroupInfo::FirstItemOf(mContainer);
     mContainer = nullptr;
@@ -318,7 +318,7 @@ XULTreeItemIterator::XULTreeItemIterator(const XULTreeAccessible* aXULTree,
   if (aRowIdx != -1) mTreeView->GetLevel(aRowIdx, &mContainerLevel);
 }
 
-Accessible* XULTreeItemIterator::Next() {
+LocalAccessible* XULTreeItemIterator::Next() {
   while (mCurrRowIdx < mRowCount) {
     int32_t level = 0;
     mTreeView->GetLevel(mCurrRowIdx, &level);

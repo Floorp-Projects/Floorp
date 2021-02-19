@@ -134,7 +134,7 @@ child:
    */
   async RestoreFocus();
 
-  // Accessible
+  // LocalAccessible
   [Nested=inside_sync] sync State(uint64_t aID) returns(uint64_t states);
   [Nested=inside_sync] sync NativeState(uint64_t aID) returns(uint64_t states);
   [Nested=inside_sync] sync Name(uint64_t aID) returns(nsString name, uint32_t flag);

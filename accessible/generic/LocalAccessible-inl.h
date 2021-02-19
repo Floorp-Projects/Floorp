@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace a11y {
 
-inline mozilla::a11y::role Accessible::Role() const {
+inline mozilla::a11y::role LocalAccessible::Role() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole) {
     return ARIATransformRole(NativeRole());
@@ -29,25 +29,25 @@ inline mozilla::a11y::role Accessible::Role() const {
   return ARIATransformRole(roleMapEntry->role);
 }
 
-inline bool Accessible::HasARIARole() const {
+inline bool LocalAccessible::HasARIARole() const {
   return mRoleMapEntryIndex != aria::NO_ROLE_MAP_ENTRY_INDEX;
 }
 
-inline bool Accessible::IsARIARole(nsAtom* aARIARole) const {
+inline bool LocalAccessible::IsARIARole(nsAtom* aARIARole) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return roleMapEntry && roleMapEntry->Is(aARIARole);
 }
 
-inline bool Accessible::HasStrongARIARole() const {
+inline bool LocalAccessible::HasStrongARIARole() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return roleMapEntry && roleMapEntry->roleRule == kUseMapRole;
 }
 
-inline const nsRoleMapEntry* Accessible::ARIARoleMap() const {
+inline const nsRoleMapEntry* LocalAccessible::ARIARoleMap() const {
   return aria::GetRoleMapFromIndex(mRoleMapEntryIndex);
 }
 
-inline mozilla::a11y::role Accessible::ARIARole() {
+inline mozilla::a11y::role LocalAccessible::ARIARole() {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole) {
     return mozilla::a11y::roles::NOTHING;
@@ -56,11 +56,12 @@ inline mozilla::a11y::role Accessible::ARIARole() {
   return ARIATransformRole(roleMapEntry->role);
 }
 
-inline void Accessible::SetRoleMapEntry(const nsRoleMapEntry* aRoleMapEntry) {
+inline void LocalAccessible::SetRoleMapEntry(
+    const nsRoleMapEntry* aRoleMapEntry) {
   mRoleMapEntryIndex = aria::GetIndexFromRoleMap(aRoleMapEntry);
 }
 
-inline bool Accessible::IsSearchbox() const {
+inline bool LocalAccessible::IsSearchbox() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return (roleMapEntry && roleMapEntry->Is(nsGkAtoms::searchbox)) ||
          (mContent->IsHTMLElement(nsGkAtoms::input) &&
@@ -68,17 +69,17 @@ inline bool Accessible::IsSearchbox() const {
                                              nsGkAtoms::search, eCaseMatters));
 }
 
-inline bool Accessible::HasGenericType(AccGenericType aType) const {
+inline bool LocalAccessible::HasGenericType(AccGenericType aType) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return (mGenericTypes & aType) ||
          (roleMapEntry && roleMapEntry->IsOfType(aType));
 }
 
-inline bool Accessible::NativeHasNumericValue() const {
+inline bool LocalAccessible::NativeHasNumericValue() const {
   return mStateFlags & eHasNumericValue;
 }
 
-inline bool Accessible::ARIAHasNumericValue() const {
+inline bool LocalAccessible::ARIAHasNumericValue() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) return false;
 
@@ -89,18 +90,18 @@ inline bool Accessible::ARIAHasNumericValue() const {
   return true;
 }
 
-inline bool Accessible::HasNumericValue() const {
+inline bool LocalAccessible::HasNumericValue() const {
   return NativeHasNumericValue() || ARIAHasNumericValue();
 }
 
-inline bool Accessible::IsDefunct() const {
+inline bool LocalAccessible::IsDefunct() const {
   MOZ_ASSERT(mStateFlags & eIsDefunct || IsApplication() || IsDoc() ||
                  mStateFlags & eSharedNode || mContent,
              "No content");
   return mStateFlags & eIsDefunct;
 }
 
-inline void Accessible::ScrollTo(uint32_t aHow) const {
+inline void LocalAccessible::ScrollTo(uint32_t aHow) const {
   if (mContent) {
     RefPtr<PresShell> presShell = mDoc->PresShellPtr();
     nsCOMPtr<nsIContent> content = mContent;
@@ -108,8 +109,8 @@ inline void Accessible::ScrollTo(uint32_t aHow) const {
   }
 }
 
-inline bool Accessible::InsertAfter(Accessible* aNewChild,
-                                    Accessible* aRefChild) {
+inline bool LocalAccessible::InsertAfter(LocalAccessible* aNewChild,
+                                         LocalAccessible* aRefChild) {
   MOZ_ASSERT(aNewChild, "No new child to insert");
 
   if (aRefChild && aRefChild->LocalParent() != this) {

@@ -11,12 +11,12 @@
 #define mozilla_a11y_AccessibleWrap_h_
 
 #include "nsCOMPtr.h"
-#include "Accessible.h"
+#include "LocalAccessible.h"
 
 namespace mozilla {
 namespace a11y {
 
-class AccessibleWrap : public Accessible {
+class AccessibleWrap : public LocalAccessible {
  public:  // construction, destruction
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~AccessibleWrap();

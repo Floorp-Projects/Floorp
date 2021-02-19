@@ -23,7 +23,7 @@ class XULColumAccessible : public AccessibleWrap {
  public:
   XULColumAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 };
@@ -36,7 +36,7 @@ class XULColumnItemAccessible : public LeafAccessible {
  public:
   XULColumnItemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
 
@@ -59,23 +59,23 @@ class XULListboxAccessible : public XULSelectControlAccessible,
   // TableAccessible
   virtual uint32_t ColCount() const override;
   virtual uint32_t RowCount() override;
-  virtual Accessible* CellAt(uint32_t aRowIndex,
-                             uint32_t aColumnIndex) override;
+  virtual LocalAccessible* CellAt(uint32_t aRowIndex,
+                                  uint32_t aColumnIndex) override;
   virtual bool IsColSelected(uint32_t aColIdx) override;
   virtual bool IsRowSelected(uint32_t aRowIdx) override;
   virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) override;
   virtual uint32_t SelectedCellCount() override;
   virtual uint32_t SelectedColCount() override;
   virtual uint32_t SelectedRowCount() override;
-  virtual void SelectedCells(nsTArray<Accessible*>* aCells) override;
+  virtual void SelectedCells(nsTArray<LocalAccessible*>* aCells) override;
   virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
   virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
   virtual void SelectRow(uint32_t aRowIdx) override;
   virtual void UnselectRow(uint32_t aRowIdx) override;
-  virtual Accessible* AsAccessible() override { return this; }
+  virtual LocalAccessible* AsAccessible() override { return this; }
 
-  // Accessible
+  // LocalAccessible
   virtual TableAccessible* AsTable() override { return this; }
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
@@ -85,7 +85,7 @@ class XULListboxAccessible : public XULSelectControlAccessible,
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
 
-  virtual Accessible* ContainerWidget() const override;
+  virtual LocalAccessible* ContainerWidget() const override;
 
  protected:
   virtual ~XULListboxAccessible() {}
@@ -105,7 +105,7 @@ class XULListitemAccessible : public XULMenuitemAccessible {
 
   XULListitemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // Accessible
+  // LocalAccessible
   virtual void Description(nsString& aDesc) override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
@@ -115,12 +115,12 @@ class XULListitemAccessible : public XULMenuitemAccessible {
   virtual void ActionNameAt(uint8_t index, nsAString& aName) override;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const override;
+  virtual LocalAccessible* ContainerWidget() const override;
 
  protected:
   virtual ~XULListitemAccessible();
 
-  // Accessible
+  // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // XULListitemAccessible
@@ -128,7 +128,7 @@ class XULListitemAccessible : public XULMenuitemAccessible {
   /**
    * Return listbox accessible for the listitem.
    */
-  Accessible* GetListAccessible() const;
+  LocalAccessible* GetListAccessible() const;
 
  private:
   bool mIsCheckbox;

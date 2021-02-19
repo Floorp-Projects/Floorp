@@ -66,9 +66,9 @@ class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap {
 
   virtual nsIntRect Bounds() const override {
     // OuterDocAccessible can return a DocProxyAccessibleWrap as a child.
-    // Accessible::ChildAtPoint on an ancestor might retrieve this proxy and
-    // call Bounds() on it. This will crash on a proxy, so we override it to do
-    // nothing here.
+    // LocalAccessible::ChildAtPoint on an ancestor might retrieve this proxy
+    // and call Bounds() on it. This will crash on a proxy, so we override it to
+    // do nothing here.
     return nsIntRect();
   }
 
@@ -115,9 +115,9 @@ class RemoteIframeDocProxyAccessibleWrap : public HyperTextAccessibleWrap {
 
   virtual nsIntRect Bounds() const override {
     // OuterDocAccessible can return a RemoteIframeDocProxyAccessibleWrap as a
-    // child. Accessible::ChildAtPoint on an ancestor might retrieve this proxy
-    // and call Bounds() on it. This will crash on a proxy, so we override it
-    // to do nothing here.
+    // child. LocalAccessible::ChildAtPoint on an ancestor might retrieve this
+    // proxy and call Bounds() on it. This will crash on a proxy, so we override
+    // it to do nothing here.
     return nsIntRect();
   }
 
