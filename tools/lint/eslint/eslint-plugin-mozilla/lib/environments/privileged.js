@@ -180,6 +180,7 @@ module.exports = {
     FontFaceSet: false,
     FontFaceSetLoadEvent: false,
     FormData: false,
+    FrameCrashedEvent: false,
     FrameLoader: false,
     GainNode: false,
     Gamepad: false,
