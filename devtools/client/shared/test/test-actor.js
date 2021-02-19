@@ -34,6 +34,11 @@ Services.scriptloader.loadSubScript(
   EventUtils
 );
 
+var ChromeUtils = require("ChromeUtils");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
 const protocol = require("devtools/shared/protocol");
 const { Arg, RetVal } = protocol;
 
@@ -937,13 +942,21 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     return eyeDropper.getElement(elementId).getAttribute(attributeName);
   },
 
-  getEyeDropperColorValue(inspectorActorID) {
+  async getEyeDropperColorValue(inspectorActorID) {
     const eyeDropper = this._getEyeDropper(inspectorActorID);
     if (!eyeDropper) {
       return null;
     }
 
-    return eyeDropper.getElement("color-value").getTextContent();
+    // It might happen that while the eyedropper isn't hidden anymore, the color-value
+    // is not set yet.
+    const color = await TestUtils.waitForCondition(() => {
+      const colorValueElement = eyeDropper.getElement("color-value");
+      const textContent = colorValueElement.getTextContent();
+      return textContent;
+    }, "Couldn't get a non-empty text content for the color-value element");
+
+    return color;
   },
 });
 exports.TestActor = TestActor;

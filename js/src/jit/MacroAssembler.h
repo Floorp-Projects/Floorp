@@ -214,6 +214,7 @@ struct ExpandoAndGeneration;
 namespace js {
 
 class TypedArrayObject;
+class TypeDescr;
 
 namespace wasm {
 class CalleeDesc;
@@ -1596,6 +1597,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                        Register shape, Label* label);
   inline void branchTestObjGroupUnsafe(Condition cond, Register obj,
                                        const ObjectGroup* group, Label* label);
+
+  void branchTestObjTypeDescr(Condition cond, Register obj, Register descr,
+                              Register scratch, Register spectreRegToZero,
+                              Label* label);
+  void branchTestObjTypeDescr(Condition cond, Register obj, TypeDescr* descr,
+                              Register scratch, Register spectreRegToZero,
+                              Label* label);
 
   void branchTestObjCompartment(Condition cond, Register obj,
                                 const Address& compartment, Register scratch,

@@ -624,7 +624,10 @@ class StyleSheetWatcher {
     styleSheet,
     { isCreatedByDevTools = false, fileName = null } = {}
   ) {
-    const resourceId = `stylesheet:${this._resourceCount++}`;
+    // It's important to prefix the resourceId with the target actorID so we can't have
+    // duplicated resource ids when the client connects to multiple targets.
+    const resourceId = `${this._targetActor.actorID}:stylesheet:${this
+      ._resourceCount++}`;
 
     const resource = {
       resourceId,

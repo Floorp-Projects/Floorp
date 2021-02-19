@@ -453,6 +453,9 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   constructor(props) {
     super(props);
     this.handleAction = this.handleAction.bind(this);
+    this.state = {
+      alternateContent: ""
+    };
   }
 
   handleOpenURL(action, flowParams, UTMTerm) {
@@ -521,6 +524,23 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
         await window.AWWaitForMigrationClose();
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, "migrate_close");
       }
+    } // Wait until we become default browser to continue rest of action.
+
+
+    if (action.waitForDefault) {
+      // Update the UI to show additional "waiting" content.
+      this.setState({
+        alternateContent: "waiting_for_default"
+      }); // Keep checking frequently as we want the UI to be responsive.
+
+      await new Promise(resolve => async function checkDefault() {
+        if (await window.AWIsDefaultBrowser()) {
+          resolve();
+        } else {
+          setTimeout(checkDefault, 100);
+        }
+      }());
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, "default_browser");
     } // A special tiles.action.theme value indicates we should use the event's value vs provided value.
 
 
@@ -668,10 +688,16 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   }
 
   render() {
+    // Use the provided content or switch to an alternate one.
     const {
       content,
       topSites
     } = this.props;
+
+    if (content[this.state.alternateContent]) {
+      Object.assign(content, content[this.state.alternateContent]);
+    }
+
     const showImportableSitesDisclaimer = content.tiles && content.tiles.type === "topsites" && topSites && topSites.showImportable;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
       className: `screen ${this.props.id}`
@@ -690,7 +716,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       className: "primary",
       value: "primary_button",
       onClick: this.handleAction
-    }))), content.secondary_button ? this.renderSecondaryCTA() : null, content.help_text && content.help_text.position === "default" ? this.renderHelpText() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
+    }))), content.help_text && content.help_text.position === "default" ? this.renderHelpText() : null, content.secondary_button ? this.renderSecondaryCTA() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
       className: content.help_text && content.help_text.position === "footer" || showImportableSitesDisclaimer ? "steps has-helptext" : "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": `{"current": ${parseInt(this.props.order, 10) + 1}, "total": ${this.props.totalNumberOfScreens}}`

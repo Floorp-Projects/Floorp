@@ -3553,6 +3553,44 @@ void MacroAssembler::branchTestObjGroup(Condition cond, Register obj,
   }
 }
 
+void MacroAssembler::branchTestObjTypeDescr(Condition cond, Register obj,
+                                            Register descr, Register scratch,
+                                            Register spectreRegToZero,
+                                            Label* label) {
+  MOZ_ASSERT(obj != scratch);
+  MOZ_ASSERT(obj != descr);
+  MOZ_ASSERT(spectreRegToZero != scratch);
+
+  if (JitOptions.spectreObjectMitigationsMisc) {
+    move32(Imm32(0), scratch);
+  }
+
+  branchPtr(cond, Address(obj, TypedObject::offsetOfTypeDescr()), descr, label);
+
+  if (JitOptions.spectreObjectMitigationsMisc) {
+    spectreMovePtr(cond, scratch, spectreRegToZero);
+  }
+}
+
+void MacroAssembler::branchTestObjTypeDescr(Condition cond, Register obj,
+                                            TypeDescr* descr, Register scratch,
+                                            Register spectreRegToZero,
+                                            Label* label) {
+  MOZ_ASSERT(obj != scratch);
+  MOZ_ASSERT(spectreRegToZero != scratch);
+
+  if (JitOptions.spectreObjectMitigationsMisc) {
+    move32(Imm32(0), scratch);
+  }
+
+  branchPtr(cond, Address(obj, TypedObject::offsetOfTypeDescr()),
+            ImmGCPtr(descr), label);
+
+  if (JitOptions.spectreObjectMitigationsMisc) {
+    spectreMovePtr(cond, scratch, spectreRegToZero);
+  }
+}
+
 void MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
                                               const Address& compartment,
                                               Register scratch, Label* label) {

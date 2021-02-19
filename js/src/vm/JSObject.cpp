@@ -3652,9 +3652,8 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     return InlineTypedObject::allocKindForTypeDescriptor(&descr);
   }
 
-  // Outline typed objects use the minimum allocation kind.
   if (is<OutlineTypedObject>()) {
-    return gc::AllocKind::OBJECT0;
+    return OutlineTypedObject::allocKind;
   }
 
   // All nursery allocatable non-native objects are handled above.
@@ -3764,7 +3763,7 @@ const char16_t JS::ubi::Concrete<JSObject>::concreteTypeName[] = u"JSObject";
 void JSObject::traceChildren(JSTracer* trc) {
   TraceCellHeaderEdge(trc, this, "group");
 
-  traceShape(trc);
+  TraceEdge(trc, shapePtr(), "shape");
 
   const JSClass* clasp = group()->clasp();
   if (clasp->isNative()) {

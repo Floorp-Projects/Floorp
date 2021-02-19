@@ -9326,6 +9326,58 @@ class LWasmReduceSimd128ToInt64
   wasm::SimdOp simdOp() const { return mir_->toWasmReduceSimd128()->simdOp(); }
 };
 
+class LWasmLoadLaneSimd128 : public LInstructionHelper<1, 3, 0> {
+ public:
+  LIR_HEADER(WasmLoadLaneSimd128);
+
+  static constexpr uint32_t Src = 2;
+
+  explicit LWasmLoadLaneSimd128(const LAllocation& ptr, const LAllocation& src,
+                                const LAllocation& memoryBase = LAllocation())
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, ptr);
+    setOperand(1, memoryBase);
+    setOperand(Src, src);
+  }
+
+  const LAllocation* ptr() { return getOperand(0); }
+  const LAllocation* memoryBase() { return getOperand(1); }
+  const LAllocation* src() { return getOperand(Src); }
+  MWasmLoadLaneSimd128* mir() const { return mir_->toWasmLoadLaneSimd128(); }
+  uint32_t laneSize() const {
+    return mir_->toWasmLoadLaneSimd128()->laneSize();
+  }
+  uint32_t laneIndex() const {
+    return mir_->toWasmLoadLaneSimd128()->laneIndex();
+  }
+};
+
+class LWasmStoreLaneSimd128 : public LInstructionHelper<1, 3, 0> {
+ public:
+  LIR_HEADER(WasmStoreLaneSimd128);
+
+  static constexpr uint32_t Src = 2;
+
+  explicit LWasmStoreLaneSimd128(const LAllocation& ptr, const LAllocation& src,
+                                 const LAllocation& memoryBase = LAllocation())
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, ptr);
+    setOperand(1, memoryBase);
+    setOperand(Src, src);
+  }
+
+  const LAllocation* ptr() { return getOperand(0); }
+  const LAllocation* memoryBase() { return getOperand(1); }
+  const LAllocation* src() { return getOperand(Src); }
+  MWasmStoreLaneSimd128* mir() const { return mir_->toWasmStoreLaneSimd128(); }
+  uint32_t laneSize() const {
+    return mir_->toWasmStoreLaneSimd128()->laneSize();
+  }
+  uint32_t laneIndex() const {
+    return mir_->toWasmStoreLaneSimd128()->laneIndex();
+  }
+};
+
 // End Wasm SIMD
 
 }  // namespace jit
