@@ -655,12 +655,9 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget* aDrawTarget,
   }
 }
 
-
-// Returns the right scale for points in a 14x14 unit box centered at 0x0 to
-// fill aRect in the smaller dimension.
-static float ScaleToFillRect(const LayoutDeviceRect& aRect) {
-  static constexpr float kPathPointsScale = 14.0f;
-  return std::min(aRect.width, aRect.height) / kPathPointsScale;
+// Returns the right scale to cover aRect in the smaller dimension.
+static float ScaleToWidgetRect(const LayoutDeviceRect& aRect) {
+  return std::min(aRect.width, aRect.height) / kMinimumWidgetSize;
 }
 
 void nsNativeBasicTheme::PaintCheckMark(DrawTarget* aDrawTarget,
@@ -672,7 +669,7 @@ void nsNativeBasicTheme::PaintCheckMark(DrawTarget* aDrawTarget,
   const float checkPolygonY[] = {0.5f,  4.0f, 4.0f,  -2.5f, -4.0f,
                                  -4.0f, 1.0f, 1.25f, -1.0f};
   const int32_t checkNumPoints = sizeof(checkPolygonX) / sizeof(float);
-  const float scale = ScaleToFillRect(aRect);
+  const float scale = ScaleToWidgetRect(aRect);
   auto center = aRect.Center().ToUnknownPoint();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
@@ -692,7 +689,7 @@ void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget* aDrawTarget,
                                                 const LayoutDeviceRect& aRect,
                                                 const EventStates& aState) {
   const CSSCoord borderWidth = 2.0f;
-  const float scale = ScaleToFillRect(aRect);
+  const float scale = ScaleToWidgetRect(aRect);
 
   Rect rect = aRect.ToUnknownRect();
   rect.y += (rect.height / 2) - (borderWidth * scale / 2);
@@ -791,7 +788,7 @@ void nsNativeBasicTheme::PaintRadioCheckmark(DrawTarget* aDrawTarget,
                                              const EventStates& aState,
                                              DPIRatio aDpiRatio) {
   const CSSCoord borderWidth = 2.0f;
-  const float scale = ScaleToFillRect(aRect);
+  const float scale = ScaleToWidgetRect(aRect);
   auto [backgroundColor, checkColor] = ComputeRadioCheckmarkColors(aState);
 
   LayoutDeviceRect rect(aRect);
@@ -856,7 +853,7 @@ void nsNativeBasicTheme::PaintArrow(DrawTarget* aDrawTarget,
                                     const float aArrowPolygonY[],
                                     const int32_t aArrowNumPoints,
                                     const sRGBColor aFillColor) {
-  const float scale = ScaleToFillRect(aRect);
+  const float scale = ScaleToWidgetRect(aRect);
 
   auto center = aRect.Center().ToUnknownPoint();
 
@@ -903,7 +900,7 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
   const float arrowPolygonY[] = {-1.875f, 2.625f, 2.625f, -1.875f, -4.125f,
                                  -4.125f, 0.375f, 0.375f, -4.125f, -4.125f};
   const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
-  const float scaleX = ScaleToFillRect(aRect);
+  const float scaleX = ScaleToWidgetRect(aRect);
   const float scaleY =
       aAppearance == StyleAppearance::SpinnerDownbutton ? scaleX : -scaleX;
 
@@ -1549,10 +1546,6 @@ auto nsNativeBasicTheme::GetScrollbarSizes(nsPresContext* aPresContext,
   return {s, s};
 }
 
-nscoord nsNativeBasicTheme::GetCheckboxRadioPrefSize() {
-  return CSSPixel::ToAppUnits(10);
-}
-
 NS_IMETHODIMP
 nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          nsIFrame* aFrame,
@@ -1561,8 +1554,7 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          bool* aIsOverridable) {
   DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
 
-  aResult->width = aResult->height = 0;
-  *aIsOverridable = true;
+  aResult->width = aResult->height = (kMinimumWidgetSize * dpiRatio).Rounded();
 
   switch (aAppearance) {
     case StyleAppearance::Button:
@@ -1629,6 +1621,7 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
   }
 
+  *aIsOverridable = true;
   return NS_OK;
 }
 
