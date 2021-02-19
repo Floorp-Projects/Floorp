@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2020 Mozilla Foundation
+ * Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,8 +48,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(3);
 
-const pdfjsVersion = '2.8.61';
-const pdfjsBuild = '884c65c60';
+const pdfjsVersion = '2.8.117';
+const pdfjsBuild = '3d80c21a8';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
@@ -63,6 +63,7 @@ window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
 
 function getViewerConfiguration() {
+  let errorWrapper = null;
   return {
     appContainer: document.body,
     mainContainer: document.getElementById("viewerContainer"),
@@ -108,12 +109,6 @@ function getViewerConfiguration() {
       spreadOddButton: document.getElementById("spreadOdd"),
       spreadEvenButton: document.getElementById("spreadEven"),
       documentPropertiesButton: document.getElementById("documentProperties")
-    },
-    fullscreen: {
-      contextFirstPage: document.getElementById("contextFirstPage"),
-      contextLastPage: document.getElementById("contextLastPage"),
-      contextPageRotateCw: document.getElementById("contextPageRotateCw"),
-      contextPageRotateCcw: document.getElementById("contextPageRotateCcw")
     },
     sidebar: {
       outerContainer: document.getElementById("outerContainer"),
@@ -175,14 +170,7 @@ function getViewerConfiguration() {
         linearized: document.getElementById("linearizedField")
       }
     },
-    errorWrapper: {
-      container: document.getElementById("errorWrapper"),
-      errorMessage: document.getElementById("errorMessage"),
-      closeButton: document.getElementById("errorClose"),
-      errorMoreInfo: document.getElementById("errorMoreInfo"),
-      moreInfoButton: document.getElementById("errorShowMore"),
-      lessInfoButton: document.getElementById("errorShowLess")
-    },
+    errorWrapper,
     printContainer: document.getElementById("printContainer"),
     openFileInputName: "fileInput",
     debuggerScriptPath: "./debugger.js"
@@ -653,6 +641,25 @@ const PDFViewerApplication = {
   _scriptingInstance: null,
   _mouseState: Object.create(null),
 
+  _localizeMessage(key, args = null) {
+    const DEFAULT_L10N_STRINGS = {
+      error_file: "File: {{file}}",
+      error_line: "Line: {{line}}",
+      error_message: "Message: {{message}}",
+      error_stack: "Stack: {{stack}}",
+      error_version_info: "PDF.js v{{version}} (build: {{build}})",
+      invalid_file_error: "Invalid or corrupted PDF file.",
+      loading_error: "An error occurred while loading the PDF.",
+      missing_file_error: "Missing PDF file.",
+      printing_not_ready: "Warning: The PDF is not fully loaded for printing.",
+      printing_not_supported: "Warning: Printing is not fully supported by this browser.",
+      rendering_error: "An error occurred while rendering the page.",
+      unexpected_response_error: "Unexpected server response.",
+      web_fonts_disabled: "Web fonts are disabled: unable to use embedded PDF fonts."
+    };
+    return this.l10n.get(key || "", args, DEFAULT_L10N_STRINGS[key]);
+  },
+
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
     this.appConfig = appConfig;
@@ -888,8 +895,7 @@ const PDFViewerApplication = {
       this.pdfPresentationMode = new _pdf_presentation_mode.PDFPresentationMode({
         container,
         pdfViewer: this.pdfViewer,
-        eventBus,
-        contextMenuItems: appConfig.fullscreen
+        eventBus
       });
     }
 
@@ -1011,47 +1017,33 @@ const PDFViewerApplication = {
 
   initPassiveLoading() {
     this.externalServices.initPassiveLoading({
-      onOpenWithTransport(url, length, transport) {
-        PDFViewerApplication.open(url, {
+      onOpenWithTransport: (url, length, transport) => {
+        this.open(url, {
           length,
           range: transport
         });
       },
-
-      onOpenWithData(data) {
-        PDFViewerApplication.open(data);
+      onOpenWithData: data => {
+        this.open(data);
       },
-
-      onOpenWithURL(url, length, originalUrl) {
-        let file = url,
-            args = null;
-
-        if (length !== undefined) {
-          args = {
-            length
-          };
-        }
-
-        if (originalUrl !== undefined) {
-          file = {
-            url,
-            originalUrl
-          };
-        }
-
-        PDFViewerApplication.open(file, args);
+      onOpenWithURL: (url, length, originalUrl) => {
+        const file = originalUrl !== undefined ? {
+          url,
+          originalUrl
+        } : url;
+        const args = length !== undefined ? {
+          length
+        } : null;
+        this.open(file, args);
       },
-
-      onError(err) {
-        PDFViewerApplication.l10n.get("loading_error", null, "An error occurred while loading the PDF.").then(msg => {
-          PDFViewerApplication._documentError(msg, err);
+      onError: err => {
+        this._localizeMessage("loading_error").then(msg => {
+          this._documentError(msg, err);
         });
       },
-
-      onProgress(loaded, total) {
-        PDFViewerApplication.progress(loaded / total);
+      onProgress: (loaded, total) => {
+        this.progress(loaded / total);
       }
-
     });
   },
 
@@ -1127,9 +1119,6 @@ const PDFViewerApplication = {
 
   async close() {
     this._unblockDocumentLoadEvent();
-
-    const errorWrapper = this.appConfig.errorWrapper.container;
-    errorWrapper.hidden = true;
 
     if (!this.pdfLoadingTask) {
       return undefined;
@@ -1252,22 +1241,19 @@ const PDFViewerApplication = {
         return undefined;
       }
 
-      const message = exception?.message;
-      let loadingErrorMessage;
+      let key = "loading_error";
 
       if (exception instanceof _pdfjsLib.InvalidPDFException) {
-        loadingErrorMessage = this.l10n.get("invalid_file_error", null, "Invalid or corrupted PDF file.");
+        key = "invalid_file_error";
       } else if (exception instanceof _pdfjsLib.MissingPDFException) {
-        loadingErrorMessage = this.l10n.get("missing_file_error", null, "Missing PDF file.");
+        key = "missing_file_error";
       } else if (exception instanceof _pdfjsLib.UnexpectedResponseException) {
-        loadingErrorMessage = this.l10n.get("unexpected_response_error", null, "Unexpected server response.");
-      } else {
-        loadingErrorMessage = this.l10n.get("loading_error", null, "An error occurred while loading the PDF.");
+        key = "unexpected_response_error";
       }
 
-      return loadingErrorMessage.then(msg => {
+      return this._localizeMessage(key).then(msg => {
         this._documentError(msg, {
-          message
+          message: exception?.message
         });
 
         throw exception;
@@ -1370,6 +1356,7 @@ const PDFViewerApplication = {
 
     switch (featureId) {
       case _pdfjsLib.UNSUPPORTED_FEATURES.errorFontLoadNative:
+      case _pdfjsLib.UNSUPPORTED_FEATURES.errorFontMissing:
         return;
     }
 
@@ -1399,31 +1386,31 @@ const PDFViewerApplication = {
   },
 
   _otherError(message, moreInfo = null) {
-    const moreInfoText = [this.l10n.get("error_version_info", {
+    const moreInfoText = [this._localizeMessage("error_version_info", {
       version: _pdfjsLib.version || "?",
       build: _pdfjsLib.build || "?"
-    }, "PDF.js v{{version}} (build: {{build}})")];
+    })];
 
     if (moreInfo) {
-      moreInfoText.push(this.l10n.get("error_message", {
+      moreInfoText.push(this._localizeMessage("error_message", {
         message: moreInfo.message
-      }, "Message: {{message}}"));
+      }));
 
       if (moreInfo.stack) {
-        moreInfoText.push(this.l10n.get("error_stack", {
+        moreInfoText.push(this._localizeMessage("error_stack", {
           stack: moreInfo.stack
-        }, "Stack: {{stack}}"));
+        }));
       } else {
         if (moreInfo.filename) {
-          moreInfoText.push(this.l10n.get("error_file", {
+          moreInfoText.push(this._localizeMessage("error_file", {
             file: moreInfo.filename
-          }, "File: {{file}}"));
+          }));
         }
 
         if (moreInfo.lineNumber) {
-          moreInfoText.push(this.l10n.get("error_line", {
+          moreInfoText.push(this._localizeMessage("error_line", {
             line: moreInfo.lineNumber
-          }, "Line: {{line}}"));
+          }));
         }
       }
     }
@@ -1616,18 +1603,15 @@ const PDFViewerApplication = {
           pdfDocument
         });
       });
+      const callback = window.requestIdleCallback(() => {
+        this._collectTelemetry(pdfDocument);
 
-      if ("requestIdleCallback" in window) {
-        const callback = window.requestIdleCallback(() => {
-          this._collectTelemetry(pdfDocument);
+        this._idleCallbacks.delete(callback);
+      }, {
+        timeout: 1000
+      });
 
-          this._idleCallbacks.delete(callback);
-        }, {
-          timeout: 1000
-        });
-
-        this._idleCallbacks.add(callback);
-      }
+      this._idleCallbacks.add(callback);
 
       this._initializeJavaScript(pdfDocument);
     });
@@ -1664,9 +1648,7 @@ const PDFViewerApplication = {
 
     if (!this.documentInfo) {
       await new Promise(resolve => {
-        this.eventBus._on("metadataloaded", evt => {
-          resolve();
-        }, {
+        this.eventBus._on("metadataloaded", resolve, {
           once: true
         });
       });
@@ -1678,9 +1660,7 @@ const PDFViewerApplication = {
 
     if (!this._contentLength) {
       await new Promise(resolve => {
-        this.eventBus._on("documentloaded", evt => {
-          resolve();
-        }, {
+        this.eventBus._on("documentloaded", resolve, {
           once: true
         });
       });
@@ -1946,13 +1926,7 @@ const PDFViewerApplication = {
     this._contentDispositionFilename = contentDispositionFilename;
     this._contentLength ??= contentLength;
     console.log(`PDF ${pdfDocument.fingerprint} [${info.PDFFormatVersion} ` + `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` + `(PDF.js: ${_pdfjsLib.version || "-"}` + `${this.pdfViewer.enableWebGL ? " [WebGL]" : ""})`);
-    let pdfTitle;
-    const infoTitle = info?.Title;
-
-    if (infoTitle) {
-      pdfTitle = infoTitle;
-    }
-
+    let pdfTitle = info?.Title;
     const metadataTitle = metadata?.get("dc:title");
 
     if (metadataTitle) {
@@ -2192,16 +2166,18 @@ const PDFViewerApplication = {
     }
 
     if (!this.supportsPrinting) {
-      this.l10n.get("printing_not_supported", null, "Warning: Printing is not fully supported by this browser.").then(printMessage => {
-        this._otherError(printMessage);
+      this._localizeMessage("printing_not_supported").then(msg => {
+        this._otherError(msg);
       });
+
       return;
     }
 
     if (!this.pdfViewer.pageViewsReady) {
-      this.l10n.get("printing_not_ready", null, "Warning: The PDF is not fully loaded for printing.").then(notReadyMessage => {
-        window.alert(notReadyMessage);
+      this._localizeMessage("printing_not_ready").then(msg => {
+        window.alert(msg);
       });
+
       return;
     }
 
@@ -2604,7 +2580,7 @@ function webViewerInitialized() {
   if (!PDFViewerApplication.supportsDocumentFonts) {
     _app_options.AppOptions.set("disableFontFace", true);
 
-    PDFViewerApplication.l10n.get("web_fonts_disabled", null, "Web fonts are disabled: unable to use embedded PDF fonts.").then(msg => {
+    PDFViewerApplication._localizeMessage("web_fonts_disabled").then(msg => {
       console.warn(msg);
     });
   }
@@ -2634,7 +2610,7 @@ function webViewerInitialized() {
   try {
     webViewerOpenFileViaURL(file);
   } catch (reason) {
-    PDFViewerApplication.l10n.get("loading_error", null, "An error occurred while loading the PDF.").then(msg => {
+    PDFViewerApplication._localizeMessage("loading_error").then(msg => {
       PDFViewerApplication._documentError(msg, reason);
     });
   }
@@ -2679,7 +2655,7 @@ function webViewerPageRendered({
   }
 
   if (error) {
-    PDFViewerApplication.l10n.get("rendering_error", null, "An error occurred while rendering the page.").then(msg => {
+    PDFViewerApplication._localizeMessage("rendering_error").then(msg => {
       PDFViewerApplication._otherError(msg, error);
     });
   }
@@ -3929,7 +3905,7 @@ function getPDFFileNameFromURL(url, defaultFilename = "document.pdf") {
 }
 
 function normalizeWheelEventDirection(evt) {
-  let delta = Math.sqrt(evt.deltaX * evt.deltaX + evt.deltaY * evt.deltaY);
+  let delta = Math.hypot(evt.deltaX, evt.deltaY);
   const angle = Math.atan2(evt.deltaY, evt.deltaX);
 
   if (-0.25 * Math.PI < angle && angle < 0.75 * Math.PI) {
@@ -4366,9 +4342,6 @@ class PDFCursorTools {
 
     this.eventBus._on("presentationmodechanged", evt => {
       switch (evt.state) {
-        case _ui_utils.PresentationModeState.CHANGING:
-          break;
-
         case _ui_utils.PresentationModeState.FULLSCREEN:
           {
             const previouslyActive = this.active;
@@ -8141,8 +8114,7 @@ class PDFPresentationMode {
   constructor({
     container,
     pdfViewer,
-    eventBus,
-    contextMenuItems = null
+    eventBus
   }) {
     this.container = container;
     this.pdfViewer = pdfViewer;
@@ -8153,33 +8125,6 @@ class PDFPresentationMode {
     this.mouseScrollTimeStamp = 0;
     this.mouseScrollDelta = 0;
     this.touchSwipeState = null;
-
-    if (contextMenuItems) {
-      contextMenuItems.contextFirstPage.addEventListener("click", () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch("firstpage", {
-          source: this
-        });
-      });
-      contextMenuItems.contextLastPage.addEventListener("click", () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch("lastpage", {
-          source: this
-        });
-      });
-      contextMenuItems.contextPageRotateCw.addEventListener("click", () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch("rotatecw", {
-          source: this
-        });
-      });
-      contextMenuItems.contextPageRotateCcw.addEventListener("click", () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch("rotateccw", {
-          source: this
-        });
-      });
-    }
   }
 
   request() {
@@ -8213,7 +8158,7 @@ class PDFPresentationMode {
 
     evt.preventDefault();
     const delta = (0, _ui_utils.normalizeWheelEventDelta)(evt);
-    const currentTime = new Date().getTime();
+    const currentTime = Date.now();
     const storedTime = this.mouseScrollTimeStamp;
 
     if (currentTime > storedTime && currentTime - storedTime < MOUSE_SCROLL_COOLDOWN_TIME) {
@@ -8297,7 +8242,6 @@ class PDFPresentationMode {
     this._showControls();
 
     this.contextMenuOpen = false;
-    this.container.setAttribute("contextmenu", "viewerContextMenu");
     window.getSelection().removeAllRanges();
   }
 
@@ -8322,7 +8266,6 @@ class PDFPresentationMode {
 
     this._resetMouseScrollState();
 
-    this.container.removeAttribute("contextmenu");
     this.contextMenuOpen = false;
   }
 
@@ -9871,7 +9814,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.8.61';
+    const viewerVersion = '2.8.117';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9887,7 +9830,7 @@ class BaseViewer {
     this.removePageBorders = options.removePageBorders || false;
     this.textLayerMode = Number.isInteger(options.textLayerMode) ? options.textLayerMode : _ui_utils.TextLayerMode.ENABLE;
     this.imageResourcesPath = options.imageResourcesPath || "";
-    this.renderInteractiveForms = typeof options.renderInteractiveForms === "boolean" ? options.renderInteractiveForms : true;
+    this.renderInteractiveForms = options.renderInteractiveForms !== false;
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
     this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
     this.enableWebGL = options.enableWebGL || false;
@@ -10383,7 +10326,7 @@ class BaseViewer {
   }
 
   get _pageWidthScaleFactor() {
-    if (this.spreadMode !== _ui_utils.SpreadMode.NONE && this.scrollMode !== _ui_utils.ScrollMode.HORIZONTAL && !this.isInPresentationMode) {
+    if (this._spreadMode !== _ui_utils.SpreadMode.NONE && this._scrollMode !== _ui_utils.ScrollMode.HORIZONTAL && !this.isInPresentationMode) {
       return 2;
     }
 
@@ -11177,7 +11120,7 @@ class BaseViewer {
     return true;
   }
 
-  initializeScriptingEvents() {
+  async initializeScriptingEvents() {
     if (!this.enableScripting || this._pageOpenPendingSet) {
       return;
     }
@@ -11440,7 +11383,7 @@ class PDFPageView {
     this.hasRestrictedScaling = false;
     this.textLayerMode = Number.isInteger(options.textLayerMode) ? options.textLayerMode : _ui_utils.TextLayerMode.ENABLE;
     this.imageResourcesPath = options.imageResourcesPath || "";
-    this.renderInteractiveForms = typeof options.renderInteractiveForms === "boolean" ? options.renderInteractiveForms : true;
+    this.renderInteractiveForms = options.renderInteractiveForms !== false;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
     this.maxCanvasPixels = options.maxCanvasPixels || MAX_CANVAS_PIXELS;
     this.eventBus = options.eventBus;
