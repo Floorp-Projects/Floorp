@@ -44,7 +44,7 @@ if (
         "jsep_track_unittest.cpp",
         "mediapipeline_unittest.cpp",
         "sdp_unittests.cpp",
-#        "videoconduit_unittests.cpp",
+        "videoconduit_unittests.cpp",
     ]
 
     FINAL_LIBRARY = "xul-gtest"
