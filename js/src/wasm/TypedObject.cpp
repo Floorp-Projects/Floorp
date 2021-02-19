@@ -194,10 +194,13 @@ OutlineTypedObject* OutlineTypedObject::createUnattached(JSContext* cx,
     return nullptr;
   }
 
+  MOZ_ASSERT(gc::GetGCObjectKindForBytes(sizeof(OutlineTypedObject)) ==
+             allocKind);
+
   NewObjectKind newKind =
       (heap == gc::TenuredHeap) ? TenuredObject : GenericObject;
-  OutlineTypedObject* obj = NewObjectWithGroup<OutlineTypedObject>(
-      cx, group, gc::AllocKind::OBJECT0, newKind);
+  OutlineTypedObject* obj =
+      NewObjectWithGroup<OutlineTypedObject>(cx, group, allocKind, newKind);
   if (!obj) {
     return nullptr;
   }

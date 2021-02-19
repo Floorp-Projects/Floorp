@@ -3652,9 +3652,8 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     return InlineTypedObject::allocKindForTypeDescriptor(&descr);
   }
 
-  // Outline typed objects use the minimum allocation kind.
   if (is<OutlineTypedObject>()) {
-    return gc::AllocKind::OBJECT0;
+    return OutlineTypedObject::allocKind;
   }
 
   // All nursery allocatable non-native objects are handled above.
