@@ -892,6 +892,48 @@ class FunctionCompiler {
     access.setZeroExtendSimd128Load();
     return load(addr.base, &access, ValType::V128);
   }
+
+  MDefinition* loadLaneSimd128(uint32_t laneSize,
+                               const LinearMemoryAddress<MDefinition*>& addr,
+                               uint32_t laneIndex, MDefinition* src) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+
+    MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
+                            bytecodeIfNotAsmJS());
+    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MDefinition* base = addr.base;
+    MOZ_ASSERT(!moduleEnv_.isAsmJS());
+    checkOffsetAndAlignmentAndBounds(&access, &base);
+    MInstruction* load = MWasmLoadLaneSimd128::New(
+        alloc(), memoryBase, base, access, laneSize, laneIndex, src);
+    if (!load) {
+      return nullptr;
+    }
+    curBlock_->add(load);
+    return load;
+  }
+
+  void storeLaneSimd128(uint32_t laneSize,
+                        const LinearMemoryAddress<MDefinition*>& addr,
+                        uint32_t laneIndex, MDefinition* src) {
+    if (inDeadCode()) {
+      return;
+    }
+    MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
+                            bytecodeIfNotAsmJS());
+    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MDefinition* base = addr.base;
+    MOZ_ASSERT(!moduleEnv_.isAsmJS());
+    checkOffsetAndAlignmentAndBounds(&access, &base);
+    MInstruction* store = MWasmStoreLaneSimd128::New(
+        alloc(), memoryBase, base, access, laneSize, laneIndex, src);
+    if (!store) {
+      return;
+    }
+    curBlock_->add(store);
+  }
 #endif  // ENABLE_WASM_SIMD
 
  private:
@@ -4382,6 +4424,30 @@ static bool EmitLoadZeroSimd128(FunctionCompiler& f, Scalar::Type viewType,
   f.iter().setResult(f.loadZeroSimd128(viewType, numBytes, addr));
   return true;
 }
+
+static bool EmitLoadLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
+  uint32_t laneIndex;
+  MDefinition* src;
+  LinearMemoryAddress<MDefinition*> addr;
+  if (!f.iter().readLoadLane(laneSize, &addr, &laneIndex, &src)) {
+    return false;
+  }
+
+  f.iter().setResult(f.loadLaneSimd128(laneSize, addr, laneIndex, src));
+  return true;
+}
+
+static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
+  uint32_t laneIndex;
+  MDefinition* src;
+  LinearMemoryAddress<MDefinition*> addr;
+  if (!f.iter().readStoreLane(laneSize, &addr, &laneIndex, &src)) {
+    return false;
+  }
+
+  f.storeLaneSimd128(laneSize, addr, laneIndex, src);
+  return true;
+}
 #endif
 
 static bool EmitBodyExprs(FunctionCompiler& f) {
@@ -5142,6 +5208,22 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitLoadZeroSimd128(f, Scalar::Float32, 4));
           case uint32_t(SimdOp::V128Load64Zero):
             CHECK(EmitLoadZeroSimd128(f, Scalar::Float64, 8));
+          case uint32_t(SimdOp::V128Load8Lane):
+            CHECK(EmitLoadLaneSimd128(f, 1));
+          case uint32_t(SimdOp::V128Load16Lane):
+            CHECK(EmitLoadLaneSimd128(f, 2));
+          case uint32_t(SimdOp::V128Load32Lane):
+            CHECK(EmitLoadLaneSimd128(f, 4));
+          case uint32_t(SimdOp::V128Load64Lane):
+            CHECK(EmitLoadLaneSimd128(f, 8));
+          case uint32_t(SimdOp::V128Store8Lane):
+            CHECK(EmitStoreLaneSimd128(f, 1));
+          case uint32_t(SimdOp::V128Store16Lane):
+            CHECK(EmitStoreLaneSimd128(f, 2));
+          case uint32_t(SimdOp::V128Store32Lane):
+            CHECK(EmitStoreLaneSimd128(f, 4));
+          case uint32_t(SimdOp::V128Store64Lane):
+            CHECK(EmitStoreLaneSimd128(f, 8));
           default:
             return f.iter().unrecognizedOpcode(&op);
         }  // switch (op.b1)

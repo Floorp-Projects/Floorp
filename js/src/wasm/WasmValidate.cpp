@@ -1201,6 +1201,46 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readLoadSplat(8, &addr));
           }
 
+          case uint32_t(SimdOp::V128Load8Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadLane(1, &addr, &noIndex, &nothing));
+          }
+
+          case uint32_t(SimdOp::V128Load16Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadLane(2, &addr, &noIndex, &nothing));
+          }
+
+          case uint32_t(SimdOp::V128Load32Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadLane(4, &addr, &noIndex, &nothing));
+          }
+
+          case uint32_t(SimdOp::V128Load64Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadLane(8, &addr, &noIndex, &nothing));
+          }
+
+          case uint32_t(SimdOp::V128Store8Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readStoreLane(1, &addr, &noIndex, &nothing));
+          }
+
+          case uint32_t(SimdOp::V128Store16Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readStoreLane(2, &addr, &noIndex, &nothing));
+          }
+
+          case uint32_t(SimdOp::V128Store32Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readStoreLane(4, &addr, &noIndex, &nothing));
+          }
+
+          case uint32_t(SimdOp::V128Store64Lane): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readStoreLane(8, &addr, &noIndex, &nothing));
+          }
+
           default:
             return iter.unrecognizedOpcode(&op);
         }
