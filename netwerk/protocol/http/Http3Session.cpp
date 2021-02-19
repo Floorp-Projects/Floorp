@@ -1134,7 +1134,7 @@ void Http3Session::Close(nsresult aReason) {
     mError = aReason;
     // If necko closes connection, this will map to the "closing" key and the
     // value HTTP3_TELEMETRY_APP_NECKO.
-    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE,
+    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE_2,
                           "app_closing"_ns, HTTP3_TELEMETRY_APP_NECKO);
     CloseInternal(true);
   }
@@ -1683,6 +1683,10 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
       key = "transport_internal"_ns;
       value = aError.transport_internal_error._0;
       break;
+    case CloseError::Tag::TransportInternalErrorOther:
+      key = "transport_other"_ns;
+      value = aError.transport_internal_error_other._0;
+      break;
     case CloseError::Tag::TransportError:
       key = "transport"_ns;
       value = GetTransportErrorCodeForTelemetry(aError.transport_error._0);
@@ -1711,7 +1715,7 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
 
   key.Append(aClosing ? "_closing"_ns : "_closed"_ns);
 
-  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE, key, value);
+  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE_2, key, value);
 
   Http3Stats stats;
   mHttp3Connection->GetStats(&stats);
