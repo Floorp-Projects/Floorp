@@ -94,7 +94,11 @@ browsertime-tp6:
             default: []
     pageload: cold
     fission-tier: 2
-    fission-run-on-projects: ["mozilla-central"]
+    fission-run-on-projects:
+        by-test-platform:
+            windows7.*: []
+            windows10.*shippable[^-qr].*: []
+            default: ["mozilla-central"]
     run-on-projects:
         by-app:
             firefox:
@@ -102,6 +106,7 @@ browsertime-tp6:
                     (linux|windows|macos)(?!.*shippable).*: []
                     linux.*shippable.*: ["trunk", "mozilla-beta"]
                     macos.*shippable.*: ["trunk", "mozilla-beta"]
+                    windows10.*shippable.*: ["trunk", "mozilla-beta"]
                     default: []
             default: []
     limit-platforms:
@@ -109,6 +114,7 @@ browsertime-tp6:
             chrome:
                 - linux.*shippable[^-qr].*
                 - macosx1014-64-shippable-qr/opt
+                - windows10.*shippable[^-qr].*
             chromium:
                 # Run on non-QR shippable, but test-platforms.yml doesn't have
                 # any more non-QR macosx shippable things. So for macosx we want
@@ -116,6 +122,7 @@ browsertime-tp6:
                 # this on macosx at all.
                 - .*shippable[^-qr].*
                 - macosx1014-64-shippable-qr/opt
+                - windows10.*shippable[^-qr].*
             default: []
     treeherder-symbol: Btime(tp6)
     max-run-time: 4000

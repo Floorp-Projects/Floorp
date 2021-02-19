@@ -870,13 +870,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             # Select some browsertime tasks as desktop smoke-tests
             if "browsertime" in try_name:
                 if "chrome" in try_name:
-                    if "linux" in platform or "macos" in platform:
-                        return True
-                    return False
+                    return True
                 if "chromium" in try_name:
-                    if "linux" in platform or "macos" in platform:
-                        return True
-                    return False
+                    return True
                 if "-fis" in try_name:
                     return False
                 if "-wr" in try_name:
@@ -886,7 +882,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                         return True
             else:
                 # Run tests on all chrome variants
-                if ("linux" in platform or "macos" in platform) and "tp6" in try_name:
+                if (
+                    "linux" in platform or "macos" in platform or "windows" in platform
+                ) and "tp6" in try_name:
                     return False
                 if "-chrome" in try_name:
                     return True
@@ -1286,10 +1284,15 @@ def target_tasks_raptor_tp6_windows10_64_ref_hw_2017(
         try_name = attributes.get("raptor_try_name")
         if "raptor" in try_name:
             if "-tp6" in try_name:
-                if "-cold" in try_name:
-                    return True
                 return False
             return True
+        elif "browsertime" in try_name:
+            if "-tp6" in try_name:
+                if "tumblr" in try_name:
+                    # See bug 1693108
+                    return False
+                return True
+            return False
 
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
