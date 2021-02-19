@@ -2991,12 +2991,6 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
                 MOZ_ALWAYS_TRUE(mgr->mDeviceIDs.put(std::move(id)));
               }
             }
-
-            if (!mgr->IsWindowStillActive(aWindowId)) {
-              return MgrPromise::CreateAndReject(
-                  MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
-                  __func__);
-            }
             MediaManager::AnonymizeDevices(*aOutDevices, *originKey, aWindowId);
             return MgrPromise::CreateAndResolve(false, __func__);
           },
