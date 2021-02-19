@@ -695,7 +695,9 @@ normandy:
       reason: A code describing the reason the unenroll failed.
       enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
       changedPref: For preference_study, the preference that was detected to change that caused the attempted unenrollment.
-    bug_numbers: [1443560]
+      caller: The function that caused the stop to happen, included on Nightly to aid debugging.
+      originalReason: The code that would had been used for the unenrollment, had it not failed.
+    bug_numbers: [1443560, 1693402]
     notification_emails: ["normandy-notifications@mozilla.com"]
     products:
       - "firefox"

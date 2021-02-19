@@ -78,6 +78,11 @@
 
 ChromeUtils.defineModuleGetter(
   this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
@@ -612,6 +617,7 @@ var PreferenceExperiments = {
             resetValue: false,
             reason: "user-preference-changed",
             changedPref: preferenceName,
+            caller: "PreferenceExperiments.startObserver.observerInfo.observer",
           }).catch(Cu.reportError);
         }
       },
@@ -705,10 +711,10 @@ var PreferenceExperiments = {
    */
   async stop(
     experimentSlug,
-    { resetValue = true, reason = "unknown", changedPref } = {}
+    { resetValue = true, reason = "unknown", changedPref, caller } = {}
   ) {
     log.debug(
-      `PreferenceExperiments.stop(${experimentSlug}, {resetValue: ${resetValue}, reason: ${reason}})`
+      `PreferenceExperiments.stop(${experimentSlug}, {resetValue: ${resetValue}, reason: ${reason}, changedPref: ${changedPref}, caller: ${caller}})`
     );
     if (reason === "unknown") {
       log.warn(`experiment ${experimentSlug} ending for unknown reason`);
@@ -722,7 +728,7 @@ var PreferenceExperiments = {
         experimentSlug,
         {
           reason: "does-not-exist",
-
+          originalReason: reason,
           ...(changedPref ? { changedPref } : {}),
         }
       );
@@ -733,16 +739,23 @@ var PreferenceExperiments = {
 
     const experiment = store.data.experiments[experimentSlug];
     if (experiment.expired) {
+      const extra = {
+        reason: "already-unenrolled",
+        originalReason: reason,
+        enrollmentId:
+          experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      };
+      if (changedPref) {
+        extra.changedPref = changedPref;
+      }
+      if (caller && AppConstants.NIGHTLY_BUILD) {
+        extra.caller = caller;
+      }
       TelemetryEvents.sendEvent(
         "unenrollFailed",
         "preference_study",
         experimentSlug,
-        {
-          reason: "already-unenrolled",
-          enrollmentId:
-            experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-          ...(changedPref ? { changedPref } : {}),
-        }
+        extra
       );
       throw new Error(
         `Cannot stop preference experiment "${experimentSlug}" because it is already expired`
@@ -997,6 +1010,7 @@ var PreferenceExperiments = {
             await PreferenceExperiments.stop(experiment.slug, {
               resetValue: true,
               reason: "migration-removing-single-pref-action",
+              caller: "migration05RemoveOldAction",
             });
           } catch (e) {
             log.error(

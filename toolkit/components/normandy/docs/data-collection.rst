@@ -232,6 +232,10 @@ Unenroll Failed
       changedPref
          In some cases, the preference that was detected to change that
          caused the attempted unenrollment.
+      caller
+         On Nightly builds only, a string identifying the source of the requested stop.
+      originalReason
+         The code that would had been used for the unenrollment, had it not failed.
 
 
 Preference Rollouts
