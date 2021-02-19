@@ -66,7 +66,6 @@ const kPrefAutoTouchMode = "browser.touchmode.auto";
 const kPrefAutoHideDownloadsButton = "browser.download.autohideButton";
 const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
 const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";
-const kPrefLibraryButtonUsed = "browser.engagement.library-button.has-used";
 
 const kExpectedWindowURL = AppConstants.BROWSER_CHROME_URL;
 
@@ -261,7 +260,7 @@ var CustomizableUIInternal = {
       "urlbar-container",
       "spring",
       "downloads-button",
-      gProtonToolbarEnabled ? null : "library-button",
+      "library-button",
       AppConstants.MOZ_DEV_EDITION ? "developer-button" : null,
       "sidebar-button",
       "fxa-toolbar-menu-button",
@@ -602,7 +601,7 @@ var CustomizableUIInternal = {
   },
 
   _updateForNewProtonVersion() {
-    const VERSION = 2;
+    const VERSION = 1;
     let currentVersion = Services.prefs.getIntPref(
       kPrefProtonToolbarVersion,
       0
@@ -617,10 +616,9 @@ var CustomizableUIInternal = {
       return;
     }
 
-    let placements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
-
     // Remove the home button if it hasn't been used and is set to about:home
     if (currentVersion < 1) {
+      let placements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
       let homePage = HomePage.get();
       if (
         placements.includes("home-button") &&
@@ -630,19 +628,9 @@ var CustomizableUIInternal = {
       ) {
         placements.splice(placements.indexOf("home-button"), 1);
       }
-    }
 
-    // Remove the library button if it hasn't been used
-    if (currentVersion < 2) {
-      if (
-        placements.includes("library-button") &&
-        !Services.prefs.getBoolPref(kPrefLibraryButtonUsed)
-      ) {
-        placements.splice(placements.indexOf("library-button"), 1);
-      }
+      Services.prefs.setIntPref(kPrefProtonToolbarVersion, VERSION);
     }
-
-    Services.prefs.setIntPref(kPrefProtonToolbarVersion, VERSION);
   },
 
   /**
