@@ -39,6 +39,7 @@ private fun BrowserState.setSearchEngines(
         hiddenSearchEngines = action.hiddenSearchEngines,
         additionalSearchEngines = action.additionalSearchEngines,
         additionalAvailableSearchEngines = action.additionalAvailableSearchEngines,
+        regionSearchEnginesOrder = action.regionSearchEnginesOrder,
         complete = true
     ))
 }
@@ -95,7 +96,9 @@ private fun BrowserState.showSearchEngine(
     return if (searchEngine != null) {
         copy(search = search.copy(
             hiddenSearchEngines = search.hiddenSearchEngines - searchEngine,
-            regionSearchEngines = search.regionSearchEngines + searchEngine
+            regionSearchEngines = (search.regionSearchEngines + searchEngine).sortedBy {
+                search.regionSearchEnginesOrder.indexOf(it.id)
+            }
         ))
     } else {
         this

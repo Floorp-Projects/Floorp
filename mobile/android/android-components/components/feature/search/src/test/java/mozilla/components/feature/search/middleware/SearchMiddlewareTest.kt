@@ -862,6 +862,85 @@ class SearchMiddlewareTest {
             assertTrue(selectedSearchEngine.resultUrls[0].startsWith("https://www.amazon.com/"))
         }
     }
+
+    @Test
+    fun `Reorders list of region search engines after adding previously removed search engines`() {
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher)
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware)
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(SearchAction.SetRegionAction(
+            RegionState("US", "US")
+        )).joinBlocking()
+
+        wait(store, dispatcher)
+
+        // ///////////////////////////////////////////////////////////////////////////////////////////
+        // Verify initial state
+        // ///////////////////////////////////////////////////////////////////////////////////////////
+
+        assertEquals(5, store.state.search.regionSearchEngines.size)
+
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.com", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+
+        store.dispatch(SearchAction.HideSearchEngineAction(
+            "google-b-1-m"
+        )).joinBlocking()
+
+        store.dispatch(SearchAction.HideSearchEngineAction(
+            "ddg"
+        )).joinBlocking()
+
+        // ///////////////////////////////////////////////////////////////////////////////////////////
+        // Verify after hiding search engines
+        // ///////////////////////////////////////////////////////////////////////////////////////////
+
+        assertEquals(3, store.state.search.regionSearchEngines.size)
+
+        assertEquals("Bing", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Amazon.com", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[2].name)
+
+        assertEquals("Bing", store.state.search.selectedOrDefaultSearchEngine!!.name)
+
+        println(store.state.search.regionSearchEngines)
+
+        store.dispatch(
+            SearchAction.ShowSearchEngineAction("google-b-1-m")
+        ).joinBlocking()
+
+        store.dispatch(
+            SearchAction.ShowSearchEngineAction("ddg")
+        ).joinBlocking()
+
+        // ///////////////////////////////////////////////////////////////////////////////////////////
+        // Verify state after adding search engines back
+        // ///////////////////////////////////////////////////////////////////////////////////////////
+
+        assertEquals(5, store.state.search.regionSearchEngines.size)
+
+        assertEquals("Google", store.state.search.regionSearchEngines[0].name)
+        assertEquals("Bing", store.state.search.regionSearchEngines[1].name)
+        assertEquals("Amazon.com", store.state.search.regionSearchEngines[2].name)
+        assertEquals("DuckDuckGo", store.state.search.regionSearchEngines[3].name)
+        assertEquals("Wikipedia", store.state.search.regionSearchEngines[4].name)
+
+        assertEquals("Google", store.state.search.selectedOrDefaultSearchEngine!!.name)
+    }
 }
 
 private fun wait(store: BrowserStore, dispatcher: TestCoroutineDispatcher) {

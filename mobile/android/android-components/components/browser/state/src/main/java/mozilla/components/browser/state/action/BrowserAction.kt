@@ -1035,7 +1035,8 @@ sealed class SearchAction : BrowserAction() {
         val additionalAvailableSearchEngines: List<SearchEngine>,
         val userSelectedSearchEngineId: String?,
         val userSelectedSearchEngineName: String?,
-        val regionDefaultSearchEngineId: String
+        val regionDefaultSearchEngineId: String,
+        val regionSearchEnginesOrder: List<String>
     ) : SearchAction()
 
     /**

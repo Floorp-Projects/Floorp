@@ -119,7 +119,8 @@ class SearchMiddleware(
             customSearchEngines = customSearchEngines.await(),
             hiddenSearchEngines = hiddenSearchEngines,
             additionalSearchEngines = additionalSearchEngines,
-            additionalAvailableSearchEngines = additionalAvailableSearchEngines
+            additionalAvailableSearchEngines = additionalAvailableSearchEngines,
+            regionSearchEnginesOrder = regionSearchEngineIds
         )
 
         store.dispatch(action)
