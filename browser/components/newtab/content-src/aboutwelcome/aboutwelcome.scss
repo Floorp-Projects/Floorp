@@ -556,6 +556,14 @@ body {
     }
   }
 
+  .tiles-delayed {
+    animation: fadein 0.4s;
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; }
+  }
+
   button {
     font-family: inherit;
     cursor: pointer;

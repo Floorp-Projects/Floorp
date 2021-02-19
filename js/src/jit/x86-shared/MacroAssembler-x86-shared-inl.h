@@ -1249,12 +1249,12 @@ void MacroAssembler::extractLaneFloat64x2(uint32_t lane, FloatRegister src,
 
 void MacroAssembler::replaceLaneInt8x16(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
-  vpinsrb(lane, rhs, lhsDest, lhsDest);
+  vpinsrb(lane, Operand(rhs), lhsDest, lhsDest);
 }
 
 void MacroAssembler::replaceLaneInt16x8(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
-  vpinsrw(lane, rhs, lhsDest, lhsDest);
+  vpinsrw(lane, Operand(rhs), lhsDest, lhsDest);
 }
 
 void MacroAssembler::replaceLaneInt32x4(unsigned lane, Register rhs,

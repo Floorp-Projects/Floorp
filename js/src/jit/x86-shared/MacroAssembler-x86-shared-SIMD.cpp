@@ -95,7 +95,7 @@ void MacroAssemblerX86Shared::extractLaneFloat64x2(FloatRegister input,
 void MacroAssemblerX86Shared::extractLaneInt16x8(FloatRegister input,
                                                  Register output, unsigned lane,
                                                  SimdSign sign) {
-  vpextrw(lane, input, output);
+  vpextrw(lane, input, Operand(output));
   if (sign == SimdSign::Signed) {
     movswl(output, output);
   }
@@ -104,7 +104,7 @@ void MacroAssemblerX86Shared::extractLaneInt16x8(FloatRegister input,
 void MacroAssemblerX86Shared::extractLaneInt8x16(FloatRegister input,
                                                  Register output, unsigned lane,
                                                  SimdSign sign) {
-  vpextrb(lane, input, output);
+  vpextrb(lane, input, Operand(output));
   if (sign == SimdSign::Signed) {
     movsbl(output, output);
   }

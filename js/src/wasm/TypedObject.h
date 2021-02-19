@@ -88,6 +88,8 @@ using HandleTypeDescr = Handle<TypeDescr*>;
 /* Base type for typed objects. */
 class TypedObject : public JSObject {
  protected:
+  GCPtr<TypeDescr*> typeDescr_;
+
   static const ObjectOps objectOps_;
 
   [[nodiscard]] static bool obj_lookupProperty(
@@ -134,7 +136,10 @@ class TypedObject : public JSObject {
     // Typed objects' prototypes can't be modified.
     return staticPrototype()->as<TypedProto>();
   }
-  TypeDescr& typeDescr() const { return group()->typeDescr(); }
+  TypeDescr& typeDescr() const {
+    MOZ_ASSERT(typeDescr_);
+    return *typeDescr_;
+  }
 
   static JS::Result<TypedObject*, JS::OOM> create(JSContext* cx,
                                                   js::gc::AllocKind kind,
@@ -161,7 +166,9 @@ class TypedObject : public JSObject {
   static TypedObject* createZeroed(JSContext* cx, HandleTypeDescr typeObj,
                                    gc::InitialHeap heap = gc::DefaultHeap);
 
-  Shape** addressOfShapeFromGC() { return shape_.unbarrieredAddress(); }
+  static constexpr size_t offsetOfTypeDescr() {
+    return offsetof(TypedObject, typeDescr_);
+  }
 };
 
 using HandleTypedObject = Handle<TypedObject*>;
@@ -180,6 +187,8 @@ class OutlineTypedObject : public TypedObject {
   void setData(uint8_t* data) { data_ = data; }
 
  public:
+  static constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT2;
+
   // JIT accessors.
   static size_t offsetOfData() { return offsetof(OutlineTypedObject, data_); }
   static size_t offsetOfOwner() { return offsetof(OutlineTypedObject, owner_); }

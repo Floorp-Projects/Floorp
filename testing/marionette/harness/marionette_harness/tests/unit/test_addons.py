@@ -9,6 +9,7 @@ import sys
 from unittest import skipIf
 
 from marionette_driver.addons import Addons, AddonInstallException
+from marionette_driver.errors import UnknownException
 from marionette_harness import MarionetteTestCase
 
 
@@ -126,3 +127,7 @@ class TestAddons(MarionetteTestCase):
 
         self.addons.uninstall(addon_id)
         self.assertNotIn(addon_id, self.all_addon_ids)
+
+    def test_uninstall_nonexistent_addon(self):
+        with self.assertRaises(UnknownException):
+            self.addons.uninstall("i-do-not-exist-as-an-id")

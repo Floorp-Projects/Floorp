@@ -1510,16 +1510,6 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   LOG(("  orig mBounds x=%d y=%d width=%d height=%d\n", mBounds.x, mBounds.y,
        mBounds.width, mBounds.height));
 
-  // Remove signal handler because it can also be called from
-  // xdg_popup_configure
-  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
-  if (g_signal_handler_find(
-          gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
-          FuncToGpointer(NativeMoveResizeWaylandPopupCallback), this)) {
-    LOG(("  Disconnecting NativeMoveResizeWaylandPopupCallback"));
-    g_signal_handlers_disconnect_by_func(
-        gdkWindow, FuncToGpointer(NativeMoveResizeWaylandPopupCallback), this);
-  }
   mWaitingForMoveToRectCB = false;
 
   // We ignore the callback position data because the another resize has been
@@ -1565,8 +1555,12 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   int32_t newWidth = NSToIntRound(scale * newBounds.width);
   int32_t newHeight = NSToIntRound(scale * newBounds.height);
 
-  LOG(("  new mBounds  x=%d y=%d width=%d height=%d\n", newBounds.x,
-       newBounds.y, newWidth, newHeight));
+  // Convert newBounds to "absolute" coordinates (relative to toplevel)
+  newBounds.x += x_parent * GdkScaleFactor();
+  newBounds.y += y_parent * GdkScaleFactor();
+
+  LOG(("  new mBounds  x=%d y=%d width=%d height=%d x_parent=%d y_parent=%d\n",
+       newBounds.x, newBounds.y, newWidth, newHeight, x_parent, y_parent));
 
   bool needsPositionUpdate =
       (newBounds.x != mBounds.x || newBounds.y != mBounds.y);
@@ -1590,6 +1584,8 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
       RefPtr<PresShell> presShell = popupFrame->PresShell();
       presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
+      // Force to trigger popup crop to fit the screen
+      popupFrame->SetPopupPosition(nullptr, true, false);
     }
   }
 
@@ -1687,8 +1683,10 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   }
   if (popupFrame) {
 #ifdef MOZ_WAYLAND
-    anchorRect = LayoutDeviceIntRect::FromAppUnitsToOutside(
-        popupFrame->GetAnchorRect(), p2a);
+    nsRect anchorRectAppUnits = popupFrame->GetAnchorRect();
+    anchorRect = LayoutDeviceIntRect::FromUnknownRect(
+        anchorRectAppUnits.ToNearestPixels(p2a));
+
 #endif
   }
 
