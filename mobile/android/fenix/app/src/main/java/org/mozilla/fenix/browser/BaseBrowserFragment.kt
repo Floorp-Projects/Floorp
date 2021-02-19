@@ -474,13 +474,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     didFail = downloadJobStatus == DownloadState.Status.FAILED,
                     tryAgain = downloadFeature::tryAgain,
                     onCannotOpenFile = {
-                        FenixSnackbar.make(
-                            view = view.browserLayout,
-                            duration = Snackbar.LENGTH_SHORT,
-                            isDisplayedWithBrowserToolbar = true
-                        )
-                            .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
-                            .show()
+                        showCannotOpenFileError(view.browserLayout, context, it)
                     },
                     view = view.viewDynamicDownloadDialog,
                     toolbarHeight = toolbarHeight,
@@ -783,16 +777,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             }
         }
 
-        val onCannotOpenFile = {
-            FenixSnackbar.make(
-                view = view.browserLayout,
-                duration = Snackbar.LENGTH_SHORT,
-                isDisplayedWithBrowserToolbar = true
-            )
-                .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
-                .show()
-        }
-
         val onDismiss: () -> Unit =
             { sharedViewModel.downloadDialogState.remove(sessionId) }
 
@@ -802,7 +786,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             metrics = requireComponents.analytics.metrics,
             didFail = savedDownloadState.second,
             tryAgain = onTryAgain,
-            onCannotOpenFile = onCannotOpenFile,
+            onCannotOpenFile = {
+                showCannotOpenFileError(view.browserLayout, context, it)
+            },
             view = view.viewDynamicDownloadDialog,
             toolbarHeight = toolbarHeight,
             onDismiss = onDismiss
@@ -1278,6 +1264,19 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         breadcrumb(
             message = "onDetach()"
         )
+    }
+
+    private fun showCannotOpenFileError(
+        view: View,
+        context: Context,
+        downloadState: DownloadState
+    ) {
+        FenixSnackbar.make(
+            view = view,
+            duration = Snackbar.LENGTH_SHORT,
+            isDisplayedWithBrowserToolbar = true
+        ).setText(DynamicDownloadDialog.getCannotOpenFileErrorMessage(context, downloadState))
+            .show()
     }
 
     companion object {

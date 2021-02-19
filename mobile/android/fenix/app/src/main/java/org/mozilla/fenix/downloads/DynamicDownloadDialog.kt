@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.downloads
 
+import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.MimeTypeMap
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.download_dialog_layout.view.*
@@ -30,7 +32,7 @@ class DynamicDownloadDialog(
     private val metrics: MetricController,
     private val didFail: Boolean,
     private val tryAgain: (String) -> Unit,
-    private val onCannotOpenFile: () -> Unit,
+    private val onCannotOpenFile: (DownloadState) -> Unit,
     private val view: View,
     private val toolbarHeight: Int,
     private val onDismiss: () -> Unit
@@ -110,7 +112,7 @@ class DynamicDownloadDialog(
                     )
 
                     if (!fileWasOpened) {
-                        onCannotOpenFile()
+                        onCannotOpenFile(downloadState)
                     }
 
                     context.metrics.track(Event.InAppNotificationDownloadOpen)
@@ -137,5 +139,16 @@ class DynamicDownloadDialog(
     private fun dismiss(view: View) {
         view.visibility = View.GONE
         onDismiss()
+    }
+
+    companion object {
+        fun getCannotOpenFileErrorMessage(context: Context, download: DownloadState): String {
+            val fileExt = MimeTypeMap.getFileExtensionFromUrl(
+                download.filePath
+            )
+            return context.getString(
+                R.string.mozac_feature_downloads_open_not_supported1, fileExt
+            )
+        }
     }
 }
