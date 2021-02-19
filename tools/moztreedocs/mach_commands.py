@@ -8,7 +8,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import fnmatch
 import multiprocessing
 import os
-import re
 import subprocess
 import sys
 import time
@@ -166,9 +165,6 @@ class Documentation(MachCommandBase):
         else:
             print("\nGenerated documentation:\n%s" % savedir)
 
-        print("Post processing HTML files")
-        self._post_process_html(savedir)
-
         # Upload the artifact containing the link to S3
         # This would be used by code-review to post the link to Phabricator
         if write_url is not None:
@@ -262,36 +258,6 @@ class Documentation(MachCommandBase):
         print("Run sphinx with:")
         print(args)
         return sphinx.cmd.build.build_main(args)
-
-    def _post_process_html(self, savedir):
-        """
-        Perform some operations on the generated html to fix some URL
-        """
-        MERMAID_VERSION = "8.4.4"
-        for root, _, files in os.walk(savedir):
-            for file in files:
-                if file.endswith(".html"):
-                    p = os.path.join(root, file)
-
-                    with open(p, "r", encoding="utf_8") as file:
-                        filedata = file.read()
-
-                    # Workaround https://bugzilla.mozilla.org/show_bug.cgi?id=1607143
-                    # to avoid a CSP error
-                    # This method should be removed once
-                    # https://github.com/mgaitan/sphinxcontrib-mermaid/pull/37 is merged
-                    # As sphinx-mermaid currently uses an old version, also force
-                    # a more recent version
-                    filedata = re.sub(
-                        r"https://unpkg.com/mermaid@.*/dist",
-                        r"https://cdnjs.cloudflare.com/ajax/libs/mermaid/{}".format(
-                            MERMAID_VERSION
-                        ),
-                        filedata,
-                    )
-
-                    with open(p, "w", encoding="utf_8") as file:
-                        file.write(filedata)
 
     @property
     def manager(self):
