@@ -567,6 +567,11 @@ workers:
             implementation: generic-worker
             os: macosx
             worker-type: 'gecko-{alias}'
+        t-osx-1015-r8-qa:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: macosx
+            worker-type: 'gecko-{alias}'
         t-osx-1014-power:
             provisioner: releng-hardware
             implementation: generic-worker
