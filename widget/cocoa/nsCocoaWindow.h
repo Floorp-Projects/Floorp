@@ -103,6 +103,7 @@ typedef struct _nsCocoaWindowList {
 - (NSRect)getAndResetNativeDirtyRect;
 
 - (void)setUseMenuStyle:(BOOL)aValue;
+@property(nonatomic) mozilla::StyleWindowShadow shadowStyle;
 
 - (void)releaseJSObjects;
 
@@ -348,7 +349,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                               bool aRectIsFrameRect);
   nsresult CreatePopupContentView(const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData);
   void DestroyNativeWindow();
-  void AdjustWindowShadow();
   void UpdateBounds();
   int32_t GetWorkspaceID();
 
