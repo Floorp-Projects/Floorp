@@ -281,8 +281,13 @@ def android_lldb_server(target, host, ndk, lldb):
             )
         log.debug("Found version %s" % quote(clang_subdirs[0]))
 
+        if target.cpu == "x86":
+            target_cpu = "i386"
+        else:
+            target_cpu = target.cpu
+
         full_path = os.path.join(
-            clang_path, clang_subdirs[0], llvm_lib, target.cpu, "lldb-server"
+            clang_path, clang_subdirs[0], llvm_lib, target_cpu, "lldb-server"
         )
         log.debug("Trying %s" % quote(full_path))
 
