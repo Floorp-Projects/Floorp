@@ -113,7 +113,6 @@ extern "C" {
 typedef NSInteger CGSConnection;
 typedef NSUInteger CGSSpaceID;
 typedef NSInteger CGSWindow;
-typedef NSUInteger CGSWindowFilterRef;
 typedef enum {
   kCGSSpaceIncludesCurrent = 1 << 0,
   kCGSSpaceIncludesOthers = 1 << 1,
@@ -127,7 +126,6 @@ extern CGSConnection _CGSDefaultConnection(void);
 extern CGError CGSSetWindowShadowAndRimParameters(const CGSConnection cid, CGSWindow wid,
                                                   float standardDeviation, float density,
                                                   int offsetX, int offsetY, unsigned int flags);
-extern CGError CGSSetWindowBackgroundBlurRadius(CGSConnection cid, CGSWindow wid, NSUInteger blur);
 extern CGError CGSSetWindowTransform(CGSConnection cid, CGSWindow wid, CGAffineTransform transform);
 }
 
@@ -853,7 +851,6 @@ void nsCocoaWindow::Show(bool bState) {
       NS_OBJC_END_TRY_IGNORE_BLOCK;
       SendSetZLevelEvent();
       AdjustWindowShadow();
-      SetWindowBackgroundBlur();
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has opened.  This is how the OS knows to
       // close other programs' context menus when ours open.
@@ -1052,22 +1049,6 @@ void nsCocoaWindow::AdjustWindowShadow() {
   CGSConnection cid = _CGSDefaultConnection();
   CGSSetWindowShadowAndRimParameters(cid, [mWindow windowNumber], params.standardDeviation,
                                      params.density, params.offsetX, params.offsetY, params.flags);
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
-static const NSUInteger kWindowBackgroundBlurRadius = 4;
-
-void nsCocoaWindow::SetWindowBackgroundBlur() {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  if (!mWindow || ![mWindow isVisible] || [mWindow windowNumber] == -1) return;
-
-  // Only blur the background of menus and fake sheets.
-  if (mShadowStyle != StyleWindowShadow::Menu && mShadowStyle != StyleWindowShadow::Sheet) return;
-
-  CGSConnection cid = _CGSDefaultConnection();
-  CGSSetWindowBackgroundBlurRadius(cid, [mWindow windowNumber], kWindowBackgroundBlurRadius);
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -2344,7 +2325,6 @@ void nsCocoaWindow::SetWindowShadowStyle(StyleWindowShadow aStyle) {
 
   [mWindow setUseMenuStyle:(aStyle == StyleWindowShadow::Menu)];
   AdjustWindowShadow();
-  SetWindowBackgroundBlur();
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
