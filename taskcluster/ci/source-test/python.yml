@@ -20,6 +20,10 @@ job-defaults:
                     RUSTUP_HOME: /build/rust
                     CARGO_HOME: /build/rust
                     CLANG_FORMAT: /builds/worker/fetches/clang-tidy/bin/clang-format
+            macosx.*:
+                max-run-time: 3600
+                env:
+                    PATH: "/usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin"
             default:
                 max-run-time: 3600
     treeherder:

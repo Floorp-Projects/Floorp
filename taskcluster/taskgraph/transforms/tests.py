@@ -155,6 +155,7 @@ WINDOWS_WORKER_TYPES = {
 MACOSX_WORKER_TYPES = {
     "macosx1014-64": "t-osx-1014",
     "macosx1014-64-power": "t-osx-1014-power",
+    "macosx1015-64": "t-osx-1015-r8-qa",
 }
 
 
