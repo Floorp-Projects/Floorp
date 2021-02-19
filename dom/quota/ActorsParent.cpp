@@ -10464,9 +10464,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
                       QM_NewLocalFile(permanentStoragePath));
       }
 
-      QM_TRY_INSPECT(const auto& leafName,
-                     MOZ_TO_RESULT_INVOKE_TYPED(
-                         nsAutoString, aOriginProps.mDirectory, GetLeafName));
+      const nsAString& leafName = aOriginProps.mLeafName;
 
       QM_TRY_INSPECT(const auto& newDirectory,
                      CloneFileAndAppend(*mPermanentStorageDir, leafName));
@@ -10542,14 +10540,10 @@ nsresult UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
       *aOriginProps.mDirectory, aOriginProps.mTimestamp,
       /* aPersisted */ false, aOriginProps.mOriginMetadata));
 
-  QM_TRY_INSPECT(const auto& oldName,
-                 MOZ_TO_RESULT_INVOKE_TYPED(
-                     nsAutoString, aOriginProps.mDirectory, GetLeafName));
-
   const auto newName =
       MakeSanitizedOriginString(aOriginProps.mOriginMetadata.mOrigin);
 
-  if (!oldName.Equals(newName)) {
+  if (!aOriginProps.mLeafName.Equals(newName)) {
     QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newName));
   }
 
