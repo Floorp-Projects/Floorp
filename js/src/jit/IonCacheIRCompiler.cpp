@@ -688,6 +688,25 @@ bool IonCacheIRCompiler::emitGuardGroup(ObjOperandId objId,
   return true;
 }
 
+bool IonCacheIRCompiler::emitGuardTypeDescr(ObjOperandId objId,
+                                            uint32_t descrOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  TypeDescr* descr = &objectStubField(descrOffset)->as<TypeDescr>();
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchTestObjTypeDescr(Assembler::NotEqual, obj, descr, scratch, obj,
+                              failure->label());
+  return true;
+}
+
 bool IonCacheIRCompiler::emitGuardProto(ObjOperandId objId,
                                         uint32_t protoOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
