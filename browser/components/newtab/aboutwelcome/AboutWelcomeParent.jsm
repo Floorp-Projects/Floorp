@@ -267,6 +267,8 @@ class AboutWelcomeParent extends JSWindowActorParent {
           this.RegionHomeObserver = new RegionHomeObserver(this);
         }
         return this.RegionHomeObserver.promiseRegionHome();
+      case "AWPage:IS_DEFAULT_BROWSER":
+        return window.getShellService().isDefaultBrowser();
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         return new Promise(resolve =>
           Services.ww.registerNotification(function observer(subject, topic) {
