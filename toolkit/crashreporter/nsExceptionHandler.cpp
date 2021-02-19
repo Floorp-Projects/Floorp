@@ -194,15 +194,15 @@ static const char kCrashMainID[] = "crash.main.3\n";
 static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 static mozilla::Atomic<bool> gEncounteredChildException(false);
 
-static XP_CHAR* pendingDirectory;
-static XP_CHAR* crashReporterPath;
-static XP_CHAR* memoryReportPath;
+static xpstring pendingDirectory;
+static xpstring crashReporterPath;
+static xpstring memoryReportPath;
 #ifdef XP_MACOSX
-static XP_CHAR* libraryPath;  // Path where the NSS library is
+static xpstring libraryPath;  // Path where the NSS library is
 #endif
 
 // Where crash events should go.
-static XP_CHAR* eventsDirectory;
+static xpstring eventsDirectory;
 
 // If this is false, we don't launch the crash reporter
 static bool doReport = true;
@@ -402,10 +402,6 @@ static inline void my_u64tostring(uint64_t aValue, char* aBuffer,
 #ifdef XP_WIN
 static void CreateFileFromPath(const xpstring& path, nsIFile** file) {
   NS_NewLocalFile(nsDependentString(path.c_str()), false, file);
-}
-
-static void CreateFileFromPath(const wchar_t* path, nsIFile** file) {
-  CreateFileFromPath(std::wstring(path), file);
 }
 
 static xpstring* CreatePathFromFile(nsIFile* file) {
@@ -1177,7 +1173,7 @@ static bool LaunchProgram(const XP_CHAR* aProgramPath,
   }
 #  elif defined(XP_MACOSX)
   // Needed to locate NSS and its dependencies
-  setenv("DYLD_LIBRARY_PATH", libraryPath, /* overwrite */ 1);
+  setenv("DYLD_LIBRARY_PATH", libraryPath.c_str(), /* overwrite */ 1);
 
   pid_t pid = 0;
   char* const my_argv[] = {const_cast<char*>(aProgramPath),
@@ -1217,8 +1213,8 @@ static bool LaunchProgram(const XP_CHAR* aProgramPath,
  * @param aMinidumpPath The path to the crash minidump file
  */
 
-static bool LaunchCrashHandlerService(XP_CHAR* aProgramPath,
-                                      XP_CHAR* aMinidumpPath) {
+static bool LaunchCrashHandlerService(const XP_CHAR* aProgramPath,
+                                      const XP_CHAR* aMinidumpPath) {
   static XP_CHAR extrasPath[XP_PATH_MAX];
   size_t size = XP_PATH_MAX;
 
@@ -1357,7 +1353,7 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
     writer.Write(Annotation::TextureUsage, gTexturesSize);
   }
 
-  if (memoryReportPath) {
+  if (!memoryReportPath.empty()) {
     writer.Write(Annotation::ContainsMemoryReport, "1");
   }
 
@@ -1400,11 +1396,11 @@ static void WriteCrashEventFile(time_t crashTime, const char* crashTimeString,
 
   PlatformWriter eventFile;
 
-  if (eventsDirectory) {
+  if (!eventsDirectory.empty()) {
     static XP_CHAR crashEventPath[XP_PATH_MAX];
     size_t size = XP_PATH_MAX;
     XP_CHAR* p;
-    p = Concat(crashEventPath, eventsDirectory, &size);
+    p = Concat(crashEventPath, eventsDirectory.c_str(), &size);
     p = Concat(p, XP_PATH_SEPARATOR, &size);
 #ifdef XP_LINUX
     Concat(p, id_ascii, &size);
@@ -1466,11 +1462,11 @@ bool MinidumpCallback(
 #endif
   Concat(p, memoryReportExtension, &size);
 
-  if (memoryReportPath) {
+  if (!memoryReportPath.empty()) {
 #ifdef XP_WIN
-    CopyFile(memoryReportPath, memoryReportLocalPath, false);
+    CopyFile(memoryReportPath.c_str(), memoryReportLocalPath, false);
 #else
-    copy_file(memoryReportPath, memoryReportLocalPath);
+    copy_file(memoryReportPath.c_str(), memoryReportLocalPath);
 #endif
   }
 
@@ -1517,9 +1513,10 @@ bool MinidumpCallback(
   }
 
 #if defined(MOZ_WIDGET_ANDROID)  // Android
-  returnValue = LaunchCrashHandlerService(crashReporterPath, minidumpPath);
+  returnValue =
+      LaunchCrashHandlerService(crashReporterPath.c_str(), minidumpPath);
 #else  // Windows, Mac, Linux, etc...
-  returnValue = LaunchProgram(crashReporterPath, minidumpPath);
+  returnValue = LaunchProgram(crashReporterPath.c_str(), minidumpPath);
 #  ifdef XP_WIN
   TerminateProcess(GetCurrentProcess(), 1);
 #  endif
@@ -1966,19 +1963,19 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
 #  endif  // XP_MACOSX
 
 #  ifdef XP_WIN
-  crashReporterPath =
-      reinterpret_cast<wchar_t*>(ToNewUnicode(crashReporterPath_temp));
+  crashReporterPath = xpstring(crashReporterPath_temp.get());
 #  else
-  crashReporterPath = ToNewCString(crashReporterPath_temp);
+  crashReporterPath =
+      xpstring(NS_ConvertUTF16toUTF8(crashReporterPath_temp).get());
 #    ifdef XP_MACOSX
-  libraryPath = ToNewCString(libraryPath_temp);
+  libraryPath = xpstring(NS_ConvertUTF16toUTF8(libraryPath_temp).get());
 #    endif
 #  endif  // XP_WIN
 #else
   // On Android, we launch a service defined via MOZ_ANDROID_CRASH_HANDLER
   const char* androidCrashHandler = PR_GetEnv("MOZ_ANDROID_CRASH_HANDLER");
   if (androidCrashHandler) {
-    crashReporterPath = strdup(androidCrashHandler);
+    crashReporterPath = xpstring(androidCrashHandler);
   } else {
     NS_WARNING("No Android crash handler set");
   }
@@ -2355,33 +2352,6 @@ nsresult UnsetExceptionHandler() {
 
   TeardownAnnotationFacilities();
 
-  if (pendingDirectory) {
-    free(pendingDirectory);
-    pendingDirectory = nullptr;
-  }
-
-  if (crashReporterPath) {
-    free(crashReporterPath);
-    crashReporterPath = nullptr;
-  }
-
-#ifdef XP_MACOSX
-  if (libraryPath) {
-    free(libraryPath);
-    libraryPath = nullptr;
-  }
-#endif  // XP_MACOSX
-
-  if (eventsDirectory) {
-    free(eventsDirectory);
-    eventsDirectory = nullptr;
-  }
-
-  if (memoryReportPath) {
-    free(memoryReportPath);
-    memoryReportPath = nullptr;
-  }
-
   if (!gExceptionHandler) return NS_ERROR_NOT_INITIALIZED;
 
   gExceptionHandler = nullptr;
@@ -2480,7 +2450,7 @@ static void AddCommonAnnotations(AnnotationTable& aAnnotations) {
   uptimeStr.AppendFloat(uptimeTS);
   aAnnotations[Annotation::UptimeTS] = uptimeStr;
 
-  if (memoryReportPath) {
+  if (!memoryReportPath.empty()) {
     aAnnotations[Annotation::ContainsMemoryReport] = "1"_ns;
   }
 }
@@ -2865,20 +2835,15 @@ static void SetCrashEventsDir(nsIFile* aDir) {
     EnsureDirectoryExists(eventsDir);
   }
 
-  if (eventsDirectory) {
-    free(eventsDirectory);
-  }
-
   xpstring* path = CreatePathFromFile(eventsDir);
   if (!path) {
     return;  // There's no clean failure from this
   }
 
+  eventsDirectory = xpstring(*path);
 #ifdef XP_WIN
-  eventsDirectory = wcsdup(path->c_str());
   SetEnvironmentVariableW(eventsDirectoryEnv, path->c_str());
 #else
-  eventsDirectory = strdup(path->c_str());
   setenv(eventsDirectoryEnv, path->c_str(), /* overwrite */ 1);
 #endif
 
@@ -2932,11 +2897,10 @@ void UpdateCrashEventsDir() {
 }
 
 bool GetCrashEventsDir(nsAString& aPath) {
-  if (!eventsDirectory) {
+  if (eventsDirectory.empty()) {
     return false;
   }
-
-  aPath = CONVERT_XP_CHAR_TO_UTF16(eventsDirectory);
+  aPath = CONVERT_XP_CHAR_TO_UTF16(eventsDirectory.c_str());
   return true;
 }
 
@@ -2947,11 +2911,11 @@ void SetMemoryReportFile(nsIFile* aFile) {
 #ifdef XP_WIN
   nsString path;
   aFile->GetPath(path);
-  memoryReportPath = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
+  memoryReportPath = xpstring(path.get());
 #else
   nsCString path;
   aFile->GetNativePath(path);
-  memoryReportPath = ToNewCString(path);
+  memoryReportPath = xpstring(path.get());
 #endif
 }
 
@@ -2980,8 +2944,9 @@ nsresult GetDefaultMemoryReportFile(nsIFile** aFile) {
 }
 
 static void FindPendingDir() {
-  if (pendingDirectory) return;
-
+  if (!pendingDirectory.empty()) {
+    return;
+  }
   nsCOMPtr<nsIFile> pendingDir;
   nsresult rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(pendingDir));
   if (NS_FAILED(rv)) {
@@ -2995,11 +2960,11 @@ static void FindPendingDir() {
 #ifdef XP_WIN
     nsString path;
     pendingDir->GetPath(path);
-    pendingDirectory = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
+    pendingDirectory = path.get();
 #else
     nsCString path;
     pendingDir->GetNativePath(path);
-    pendingDirectory = ToNewCString(path);
+    pendingDirectory = xpstring(path.get());
 #endif
   }
 }
@@ -3009,7 +2974,7 @@ static void FindPendingDir() {
 // we store the pending directory as a path.
 static bool GetPendingDir(nsIFile** dir) {
   // MOZ_ASSERT(OOPInitialized());
-  if (!pendingDirectory) {
+  if (pendingDirectory.empty()) {
     return false;
   }
 
@@ -3019,9 +2984,9 @@ static bool GetPendingDir(nsIFile** dir) {
     return false;
   }
 #ifdef XP_WIN
-  pending->InitWithPath(nsDependentString(pendingDirectory));
+  pending->InitWithPath(nsDependentString(pendingDirectory.c_str()));
 #else
-  pending->InitWithNativePath(nsDependentCString(pendingDirectory));
+  pending->InitWithNativePath(nsDependentCString(pendingDirectory.c_str()));
 #endif
   pending.swap(*dir);
   return true;
@@ -3258,7 +3223,7 @@ static void OnChildProcessDumpRequested(void* aContext,
   ProcessId pid = aClientInfo.pid();
   if (ShouldReport()) {
     nsCOMPtr<nsIFile> memoryReport;
-    if (memoryReportPath) {
+    if (!memoryReportPath.empty()) {
       CreateFileFromPath(memoryReportPath, getter_AddRefs(memoryReport));
       MOZ_ASSERT(memoryReport);
     }
