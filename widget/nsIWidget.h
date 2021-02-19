@@ -1644,7 +1644,11 @@ class nsIWidget : public nsISupports {
     // ALL_BITS used for validity checking during IPC serialization
     ALL_BITS = (1 << 4) - 1
   };
-
+  /*
+   * TouchpadPinchPhase states for SynthesizeNativeTouchPadPinch. Match
+   * Phase states in nsIDOMWindowUtils.idl.
+   */
+  enum TouchpadPinchPhase { PHASE_BEGIN = 0, PHASE_UPDATE = 1, PHASE_END = 2 };
   /*
    * Create a new or update an existing touch pointer on the digitizer.
    * To trigger os level gestures, individual touch points should
@@ -1666,6 +1670,13 @@ class nsIWidget : public nsISupports {
                                               double aPointerPressure,
                                               uint32_t aPointerOrientation,
                                               nsIObserver* aObserver) = 0;
+  /*
+   * See nsIDOMWindowUtils.sendNativeTouchpadPinch().
+   */
+  virtual nsresult SynthesizeNativeTouchPadPinch(TouchpadPinchPhase aEventPhase,
+                                                 float aScale,
+                                                 LayoutDeviceIntPoint aPoint,
+                                                 int32_t aModifierFlags) = 0;
 
   /*
    * Helper for simulating a simple tap event with one touch point. When

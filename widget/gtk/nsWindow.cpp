@@ -8032,6 +8032,56 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   return NS_OK;
 }
 
+nsresult nsWindow::SynthesizeNativeTouchPadPinch(TouchpadPinchPhase aEventPhase,
+                                                 float aScale,
+                                                 LayoutDeviceIntPoint aPoint,
+                                                 int32_t aModifierFlags) {
+  if (!mGdkWindow) {
+    return NS_OK;
+  }
+  GdkEvent event;
+  memset(&event, 0, sizeof(GdkEvent));
+
+  GdkEventTouchpadPinch* touchpad_event =
+      reinterpret_cast<GdkEventTouchpadPinch*>(&event);
+  touchpad_event->type = GDK_TOUCHPAD_PINCH;
+
+  switch (aEventPhase) {
+    case PHASE_BEGIN:
+      touchpad_event->phase = GDK_TOUCHPAD_GESTURE_PHASE_BEGIN;
+      break;
+    case PHASE_UPDATE:
+      touchpad_event->phase = GDK_TOUCHPAD_GESTURE_PHASE_UPDATE;
+      break;
+    case PHASE_END:
+      touchpad_event->phase = GDK_TOUCHPAD_GESTURE_PHASE_END;
+      break;
+
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  touchpad_event->window = mGdkWindow;
+  // We only set the fields of GdkEventTouchpadPinch which are
+  // actually used in OnTouchpadPinchEvent().
+  // GdkEventTouchpadPinch has additional fields (for example, `dx` and `dy`).
+  // If OnTouchpadPinchEvent() is changed to use other fields, this function
+  // will need to change to set them as well.
+  touchpad_event->time = GDK_CURRENT_TIME;
+  touchpad_event->scale = aScale;
+  touchpad_event->x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
+  touchpad_event->y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
+
+  LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
+  touchpad_event->x = DevicePixelsToGdkCoordRoundDown(pointInWindow.x);
+  touchpad_event->y = DevicePixelsToGdkCoordRoundDown(pointInWindow.y);
+  touchpad_event->state = aModifierFlags;
+
+  gdk_event_put(&event);
+
+  return NS_OK;
+}
+
 nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
   if (sGtkWindowDecoration != GTK_DECORATION_UNKNOWN) {
     return sGtkWindowDecoration;

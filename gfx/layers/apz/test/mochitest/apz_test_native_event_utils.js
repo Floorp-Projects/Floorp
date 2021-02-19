@@ -1015,7 +1015,61 @@ async function pinchZoomInWithTouch(focusX, focusY) {
   // Wait for TransformEnd to fire.
   await transformEndPromise;
 }
+// This generates a touchpad pinch zoom-in gesture that is expected
+// to succeed. It returns after APZ has completed the zoom and reaches the end
+// of the transform. The focus point is expected to be in CSS coordinates
+// relative to the document body.
+async function pinchZoomInWithTouchpad(focusX, focusY) {
+  // Register the listener for the TransformEnd observer topic
+  let transformEndPromise = promiseTopic("APZ:TransformEnd");
 
+  var scales = [
+    1.0,
+    1.019531,
+    1.035156,
+    1.054688,
+    1.070312,
+    1.089844,
+    1.109375,
+    1.128906,
+    1.144531,
+    1.160156,
+    1.175781,
+    1.191406,
+    1.207031,
+    1.222656,
+    1.234375,
+    1.246094,
+    1.261719,
+    1.273438,
+    1.285156,
+    1.296875,
+    1.3125,
+    1.328125,
+    1.347656,
+    1.363281,
+    1.382812,
+    1.402344,
+    1.421875,
+    1.0,
+  ];
+  var modifierFlags = 0;
+  var pt = coordinatesRelativeToScreen(focusX, focusY, document.body);
+  var utils = utilsForTarget(document.body);
+  for (let i = 0; i < scales.length; i++) {
+    var phase;
+    if (i === 0) {
+      phase = SpecialPowers.DOMWindowUtils.PHASE_BEGIN;
+    } else if (i === scales.length - 1) {
+      phase = SpecialPowers.DOMWindowUtils.PHASE_END;
+    } else {
+      phase = SpecialPowers.DOMWindowUtils.PHASE_UPDATE;
+    }
+    utils.sendNativeTouchpadPinch(phase, scales[i], pt.x, pt.y, modifierFlags);
+  }
+  // Wait for TransformEnd to fire.
+  await transformEndPromise;
+}
 // This generates a touch-based pinch gesture that is expected to succeed
 // and trigger an APZ:TransformEnd observer notification.
 // It returns after that notification has been dispatched.

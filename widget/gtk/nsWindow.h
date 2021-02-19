@@ -363,6 +363,10 @@ class nsWindow final : public nsBaseWidget {
                                               uint32_t aPointerOrientation,
                                               nsIObserver* aObserver) override;
 
+  virtual nsresult SynthesizeNativeTouchPadPinch(
+      TouchpadPinchPhase aEventPhase, float aScale, LayoutDeviceIntPoint aPoint,
+      int32_t aModifierFlags) override;
+
 #ifdef MOZ_X11
   Display* XDisplay() { return mXDisplay; }
 #endif
