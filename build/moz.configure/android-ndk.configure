@@ -25,6 +25,10 @@ option(
 option("--with-android-toolchain", nargs=1, help="location of the Android toolchain")
 
 option(
+    "--with-android-lldb-server", nargs=1, help="location of the Android LLDB server"
+)
+
+option(
     "--with-android-googlevr-sdk", nargs=1, help="location of the Android GoogleVR SDK"
 )
 
@@ -246,6 +250,48 @@ def android_toolchain(target, host, ndk, toolchain):
 
 
 set_config("ANDROID_TOOLCHAIN", android_toolchain)
+
+
+@depends(target, host, ndk, "--with-android-lldb-server")
+@checking("for the Android LLDB server", lambda x: x or "not found")
+@imports(_from="os", _import="listdir")
+@imports(_from="os.path", _import="isdir")
+@imports(_from="os.path", _import="isfile")
+@imports(_from="mozbuild.shellutil", _import="quote")
+def android_lldb_server(target, host, ndk, lldb):
+    if not ndk:
+        return
+    if lldb:
+        return lldb[0]
+    else:
+        clang_format = "toolchains/llvm/prebuilt/%s-%s/lib64/clang"
+        llvm_lib = "lib/linux"
+
+        host_kernel = "windows" if host.kernel == "WINNT" else host.kernel.lower()
+        clang_path = os.path.join(ndk, clang_format % (host_kernel, host.cpu))
+        log.debug("Listing subdirectories of %s" % quote(clang_path))
+        clang_subdirs = [
+            x for x in listdir(clang_path) if isdir(os.path.join(clang_path, x))
+        ]
+        log.debug("Got %r" % clang_subdirs)
+        if len(clang_subdirs) != 1:
+            die(
+                "Could not resolve lldb-server in %s. Please specify --with-android-lldb-server=/path/to/android/lldb-server"
+                % quote(clang_path)
+            )
+        log.debug("Found version %s" % quote(clang_subdirs[0]))
+
+        full_path = os.path.join(
+            clang_path, clang_subdirs[0], llvm_lib, target.cpu, "lldb-server"
+        )
+        log.debug("Trying %s" % quote(full_path))
+
+        if isfile(full_path):
+            return full_path
+        die("Please specify --with-android-lldb-server=/path/to/android/lldb-server")
+
+
+set_config("ANDROID_LLDB_SERVER", android_lldb_server)
 
 
 @depends(target)
