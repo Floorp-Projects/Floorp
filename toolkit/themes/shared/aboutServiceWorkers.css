@@ -2,36 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-body {
-  min-width: 330px;
-  max-width: 100%;
-  min-height: 330px;
-  max-height: 100%;
-}
-
 .warningBackground {
   display: none;
-  background: -moz-Dialog;
+  background-color: var(--in-content-page-background);
   width: 100%;
   height: 100%;
   z-index: 10;
   top: 0;
   inset-inline-start: 0;
-  position:fixed;
+  position: fixed;
 }
 
 .warningMessage {
-  color: FieldText;
-  position: relative;
   min-width: 330px;
   max-width: 50em;
   margin: 4em auto;
-  border: 1px solid ThreeDShadow;
+  border: 1px solid var(--in-content-box-border-color);
   border-radius: 10px;
   padding: 3em;
-  padding-inline-start: 30px;
-  background: Field;
-  margin-inline-start: auto;
+  background-color: var(--in-content-box-background);
   text-align: center;
 }
 
