@@ -8555,14 +8555,6 @@
   value: false
   mirror: always
 
-# When this pref is true we enforce a 253 character limit on domains we try to
-# resolve. See bug 1264117. If it doesn't cause any web-compat issues we can
-# remove it in a few releases
-- name: network.dns.limit_253_chars
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
