@@ -28,17 +28,25 @@ def mock_command_output(monkeypatch):
     this method simply returns a string representation of the command that was
     received.
 
+    As an exception, if the command begins with "forward tcp:0 ", this method
+    returns a mock port number.
+
     :param object monkeypatch: pytest provided fixture for mocking.
     """
 
     def command_output_wrapper(object, cmd, timeout):
-        """Actual monkeypatch implementation of the comand_output method call.
+        """Actual monkeypatch implementation of the command_output method call.
 
         :param object object: placeholder object representing ADBDevice
         :param str cmd: command to be executed
         :param timeout: unused parameter to represent timeout threshold
         :returns: string - string representation of command to be executed
+                  int - mock port number (only used when cmd begins with "forward tcp:0 ")
         """
+
+        if cmd[0] == "forward" and cmd[1] == "tcp:0":
+            return 7777
+
         print(str(cmd))
         return str(cmd)
 

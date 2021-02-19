@@ -1195,16 +1195,30 @@ class ADBDevice(ADBCommand):
                 except ADBError:
                     self._logger.debug("Check for root adbd failed")
 
-    def _pidof(self, appname, timeout=None):
+    def pidof(self, app_name, timeout=None):
+        """
+        Return a list of pids for all extant processes running within the
+        specified application package.
+
+        :param str app_name: The name of the application package to examine
+        :param int timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per
+            adb call. The total time spent may exceed this
+            value. If it is not specified, the value set
+            in the ADBDevice constructor is used.
+        :return: List of integers containing the pid(s) of the various processes.
+        :raises: :exc:`ADBTimeoutError`
+        """
         if self._have_pidof:
             try:
-                pid_output = self.shell_output("pidof %s" % appname, timeout=timeout)
+                pid_output = self.shell_output("pidof %s" % app_name, timeout=timeout)
                 re_pids = re.compile(r"[0-9]+")
                 pids = re_pids.findall(pid_output)
                 if self._have_flaky_pidof and not pids:
                     time.sleep(0.1)
                     pid_output = self.shell_output(
-                        "pidof %s" % appname, timeout=timeout
+                        "pidof %s" % app_name, timeout=timeout
                     )
                     pids = re_pids.findall(pid_output)
             except ADBError:
@@ -1213,8 +1227,9 @@ class ADBDevice(ADBCommand):
             procs = self.get_process_list(timeout=timeout)
             # limit the comparion to the first 75 characters due to a
             # limitation in processname length in android.
-            pids = [proc[0] for proc in procs if proc[1] == appname[:75]]
-        return pids
+            pids = [proc[0] for proc in procs if proc[1] == app_name[:75]]
+
+        return [int(pid) for pid in pids]
 
     def _sync(self, timeout=None):
         """Sync the file system using shell_output in order that exceptions
@@ -1736,6 +1751,8 @@ class ADBDevice(ADBCommand):
             for any spawned adb process to complete before throwing
             an ADBTimeoutError. If it is not specified, the value
             set in the ADBDevice constructor is used.
+        :return: When forwarding from "tcp:0", an int containing the port number
+                 of the local port assigned by adb, otherwise None.
         :raises: :exc:`ValueError`
                  :exc:`ADBTimeoutError`
                  :exc:`ADBError`
@@ -1751,7 +1768,18 @@ class ADBDevice(ADBCommand):
             cmd.insert(1, "--no-rebind")
 
         # execute commands to establish socket connection.
-        self.command_output(cmd, timeout=timeout)
+        cmd_output = self.command_output(cmd, timeout=timeout)
+
+        # If we want to forward using local port "tcp:0", then we're letting
+        # adb assign the port for us, so we need to return that assignment.
+        if (
+            direction == self.SOCKET_DIRECTION_FORWARD
+            and local == "tcp:0"
+            and cmd_output
+        ):
+            return int(cmd_output)
+
+        return None
 
     def list_socket_connections(self, direction, timeout=None):
         """Return a list of tuples specifying active socket connectionss.
@@ -1806,9 +1834,12 @@ class ADBDevice(ADBCommand):
     def forward(self, local, remote, allow_rebind=True, timeout=None):
         """Forward a local port to a specific port on the device.
 
+        :return: When forwarding from "tcp:0", an int containing the port number
+                 of the local port assigned by adb, otherwise None.
+
         See `ADBDevice.create_socket_connection`.
         """
-        self.create_socket_connection(
+        return self.create_socket_connection(
             self.SOCKET_DIRECTION_FORWARD, local, remote, allow_rebind, timeout
         )
 
@@ -3274,7 +3305,7 @@ class ADBDevice(ADBCommand):
         :raises: :exc:`ADBTimeoutError`
                  :exc:`ADBError`
         """
-        pids = self._pidof(appname, timeout=timeout)
+        pids = self.pidof(appname, timeout=timeout)
 
         if not pids:
             return
@@ -3320,7 +3351,7 @@ class ADBDevice(ADBCommand):
         parts = pieces[0].split("/")
         app = parts[-1]
 
-        if self._pidof(app, timeout=timeout):
+        if self.pidof(app, timeout=timeout):
             return True
         return False
 
