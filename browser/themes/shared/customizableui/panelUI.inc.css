@@ -1242,10 +1242,55 @@ panelview .toolbarbutton-1,
 }
 
 @supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+#appMenu-zoomReduce-button2@buttonStateHoverOrFocus@,
+#appMenu-zoomReduce-button2@buttonStateActive@,
+#appMenu-zoomEnlarge-button2@buttonStateHoverOrFocus@,
+#appMenu-zoomEnlarge-button2@buttonStateActive@,
+#appMenu-fullscreen-button2@buttonStateHoverOrFocus@,
+#appMenu-fullscreen-button2@buttonStateActive@ {
+  color: unset;
+  background-color: unset;
+  box-shadow: unset;
+}
+
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
-  display: unset;
+  -moz-context-properties: fill;
+  fill: rgb(91,91,102); /** Named color: Dark Grey / 05 **/
+}
+
+#appMenu-zoomReduce-button2 > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
+  border-radius: 500px;
+}
+
+#appMenu-fullscreen-button2 > .toolbarbutton-icon {
+  border-radius: 2px;
+}
+
+#appMenu-zoomReduce-button2 > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
+#appMenu-fullscreen-button2 > .toolbarbutton-icon {
+  background-color: rgb(240,240,244); /** Named color: Theme Buttons / Secondary **/
+}
+
+#appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon,
+#appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
+  background-color: rgb(224,224,230); /** Named color: Theme Buttons / Secondary Hover **/
+}
+
+#appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon,
+#appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
+  background-color: rgb(207,207,216); /** Named color: Light Theme Buttons / Secondary Pressed **/
+}
+
+#appMenu-zoomReduce-button2@buttonStateFocus@ > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2@buttonStateFocus@ > .toolbarbutton-icon,
+#appMenu-fullscreen-button2@buttonStateFocus@ > .toolbarbutton-icon {
+  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
 }
 
 #appMenu-zoom-controls2 > .subviewbutton {
