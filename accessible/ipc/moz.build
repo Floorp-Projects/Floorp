@@ -44,14 +44,14 @@ if CONFIG["ACCESSIBILITY"]:
     EXPORTS.mozilla.a11y += [
         "DocAccessibleChildBase.h",
         "DocAccessibleParent.h",
-        "ProxyAccessibleBase.h",
-        "ProxyAccessibleShared.h",
+        "RemoteAccessibleBase.h",
+        "RemoteAccessibleShared.h",
     ]
 
     UNIFIED_SOURCES += [
         "DocAccessibleChildBase.cpp",
         "DocAccessibleParent.cpp",
-        "ProxyAccessibleBase.cpp",
+        "RemoteAccessibleBase.cpp",
     ]
 
     LOCAL_INCLUDES += [

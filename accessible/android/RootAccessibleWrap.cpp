@@ -9,7 +9,7 @@
 #include "AccessibleOrProxy.h"
 #include "DocAccessibleParent.h"
 #include "DocAccessible-inl.h"
-#include "ProxyAccessibleWrap.h"
+#include "RemoteAccessibleWrap.h"
 #include "SessionAccessibility.h"
 #include "mozilla/PresShell.h"
 
@@ -23,7 +23,7 @@ RootAccessibleWrap::RootAccessibleWrap(dom::Document* aDoc,
 RootAccessibleWrap::~RootAccessibleWrap() {}
 
 AccessibleWrap* RootAccessibleWrap::GetContentAccessible() {
-  if (ProxyAccessible* proxy = GetPrimaryRemoteTopLevelContentDoc()) {
+  if (RemoteAccessible* proxy = GetPrimaryRemoteTopLevelContentDoc()) {
     return WrapperFor(proxy);
   }
 
@@ -52,7 +52,7 @@ AccessibleWrap* RootAccessibleWrap::FindAccessibleById(int32_t aID) {
   }
 
   if (contentAcc->IsProxy()) {
-    return FindAccessibleById(static_cast<DocProxyAccessibleWrap*>(contentAcc),
+    return FindAccessibleById(static_cast<DocRemoteAccessibleWrap*>(contentAcc),
                               aID);
   }
 
@@ -61,12 +61,12 @@ AccessibleWrap* RootAccessibleWrap::FindAccessibleById(int32_t aID) {
 }
 
 AccessibleWrap* RootAccessibleWrap::FindAccessibleById(
-    DocProxyAccessibleWrap* aDoc, int32_t aID) {
+    DocRemoteAccessibleWrap* aDoc, int32_t aID) {
   AccessibleWrap* acc = aDoc->GetAccessibleByID(aID);
   uint32_t index = 0;
   while (!acc) {
-    auto child =
-        static_cast<DocProxyAccessibleWrap*>(aDoc->GetChildDocumentAt(index++));
+    auto child = static_cast<DocRemoteAccessibleWrap*>(
+        aDoc->GetChildDocumentAt(index++));
     if (!child) {
       break;
     }

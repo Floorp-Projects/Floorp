@@ -161,7 +161,7 @@ void SessionAccessibility::Paste(int32_t aID) {
 }
 
 RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
-    ProxyAccessible* aAccessible) {
+    RemoteAccessible* aAccessible) {
   auto tab =
       static_cast<dom::BrowserParent*>(aAccessible->Document()->Manager());
   dom::Element* frame = tab->GetOwnerElement();

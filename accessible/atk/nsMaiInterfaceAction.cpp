@@ -10,7 +10,7 @@
 #include "nsMai.h"
 #include "Role.h"
 #include "mozilla/Likely.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "nsString.h"
 
 using namespace mozilla::a11y;
@@ -23,7 +23,7 @@ static gboolean doActionCB(AtkAction* aAction, gint aActionIndex) {
     return accWrap->DoAction(aActionIndex);
   }
 
-  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
+  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
   return proxy && proxy->DoAction(aActionIndex);
 }
 
@@ -33,7 +33,7 @@ static gint getActionCountCB(AtkAction* aAction) {
     return accWrap->ActionCount();
   }
 
-  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
+  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
   return proxy ? proxy->ActionCount() : 0;
 }
 
@@ -43,7 +43,7 @@ static const gchar* getActionDescriptionCB(AtkAction* aAction,
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (accWrap) {
     accWrap->ActionDescriptionAt(aActionIndex, description);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
     proxy->ActionDescriptionAt(aActionIndex, description);
   } else {
     return nullptr;
@@ -57,7 +57,7 @@ static const gchar* getActionNameCB(AtkAction* aAction, gint aActionIndex) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (accWrap) {
     accWrap->ActionNameAt(aActionIndex, autoStr);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
     proxy->ActionNameAt(aActionIndex, autoStr);
   } else {
     return nullptr;
@@ -71,7 +71,7 @@ static const gchar* getKeyBindingCB(AtkAction* aAction, gint aActionIndex) {
   AccessibleWrap* acc = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (acc) {
     AccessibleWrap::GetKeyBinding(acc, keyBindingsStr);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
     proxy->AtkKeyBinding(keyBindingsStr);
   } else {
     return nullptr;

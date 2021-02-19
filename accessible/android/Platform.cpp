@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Platform.h"
-#include "ProxyAccessibleWrap.h"
+#include "RemoteAccessibleWrap.h"
 #include "DocAccessibleWrap.h"
 #include "SessionAccessibility.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Components.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessiblePivot.h"
@@ -25,19 +25,19 @@ void a11y::PlatformInit() {}
 
 void a11y::PlatformShutdown() { NS_IF_RELEASE(sStringBundle); }
 
-void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
+void a11y::ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces) {
   AccessibleWrap* wrapper = nullptr;
   if (aProxy->IsDoc()) {
-    wrapper = new DocProxyAccessibleWrap(aProxy->AsDoc());
+    wrapper = new DocRemoteAccessibleWrap(aProxy->AsDoc());
   } else {
-    wrapper = new ProxyAccessibleWrap(aProxy);
+    wrapper = new RemoteAccessibleWrap(aProxy);
   }
 
   wrapper->AddRef();
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
 }
 
-void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
+void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   AccessibleWrap* wrapper =
       reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 
@@ -53,7 +53,7 @@ void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
   wrapper->Release();
 }
 
-void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
+void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
   if (!sessionAcc) {
@@ -67,7 +67,7 @@ void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
   }
 }
 
-void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
+void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
                                  bool aEnabled) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
@@ -99,7 +99,7 @@ void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
   }
 }
 
-void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
+void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
                                bool aIsSelectionCollapsed) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
@@ -109,7 +109,7 @@ void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
+void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
                                 int32_t aStart, uint32_t aLen, bool aIsInsert,
                                 bool aFromUser) {
   RefPtr<SessionAccessibility> sessionAcc =
@@ -121,19 +121,20 @@ void a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
   }
 }
 
-void a11y::ProxyShowHideEvent(ProxyAccessible* aTarget,
-                              ProxyAccessible* aParent, bool aInsert,
+void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget,
+                              RemoteAccessible* aParent, bool aInsert,
                               bool aFromUser) {
   // We rely on the window content changed events to be dispatched
   // after the viewport cache is refreshed.
 }
 
-void a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t) {}
+void a11y::ProxySelectionEvent(RemoteAccessible*, RemoteAccessible*, uint32_t) {
+}
 
 void a11y::ProxyVirtualCursorChangeEvent(
-    ProxyAccessible* aTarget, ProxyAccessible* aOldPosition,
+    RemoteAccessible* aTarget, RemoteAccessible* aOldPosition,
     int32_t aOldStartOffset, int32_t aOldEndOffset,
-    ProxyAccessible* aNewPosition, int32_t aNewStartOffset,
+    RemoteAccessible* aNewPosition, int32_t aNewStartOffset,
     int32_t aNewEndOffset, int16_t aReason, int16_t aBoundaryType,
     bool aFromUser) {
   if (!aNewPosition || !aFromUser) {
@@ -160,7 +161,7 @@ void a11y::ProxyVirtualCursorChangeEvent(
   }
 }
 
-void a11y::ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
+void a11y::ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
                                uint32_t aScrollX, uint32_t aScrollY,
                                uint32_t aMaxScrollX, uint32_t aMaxScrollY) {
   if (aEventType == nsIAccessibleEvent::EVENT_SCROLLING) {
@@ -174,7 +175,7 @@ void a11y::ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
   }
 }
 
-void a11y::ProxyAnnouncementEvent(ProxyAccessible* aTarget,
+void a11y::ProxyAnnouncementEvent(RemoteAccessible* aTarget,
                                   const nsString& aAnnouncement,
                                   uint16_t aPriority) {
   RefPtr<SessionAccessibility> sessionAcc =
@@ -186,8 +187,8 @@ void a11y::ProxyAnnouncementEvent(ProxyAccessible* aTarget,
   }
 }
 
-void a11y::ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
-                      const nsTArray<ProxyAccessible*>& aAccessibles,
+void a11y::ProxyBatch(RemoteAccessible* aDocument, const uint64_t aBatchType,
+                      const nsTArray<RemoteAccessible*>& aAccessibles,
                       const nsTArray<BatchData>& aData) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aDocument);

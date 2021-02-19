@@ -27,7 +27,7 @@ if CONFIG["ACCESSIBILITY"]:
         "DocAccessibleChild.h",
         "HandlerProvider.h",
         "PlatformChild.h",
-        "ProxyAccessible.h",
+        "RemoteAccessible.h",
     ]
 
     SOURCES += [
@@ -36,7 +36,7 @@ if CONFIG["ACCESSIBILITY"]:
         "DocAccessibleChild.cpp",
         "HandlerProvider.cpp",
         "PlatformChild.cpp",
-        "ProxyAccessible.cpp",
+        "RemoteAccessible.cpp",
     ]
 
     # Give some symbols a unique name in each translation unit, to avoid

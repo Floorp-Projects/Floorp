@@ -194,7 +194,7 @@ bool OuterDocAccessible::IsAcceptableChild(nsIContent* aEl) const {
 #if defined(XP_WIN)
 
 LocalAccessible* OuterDocAccessible::RemoteChildDocAccessible() const {
-  ProxyAccessible* docProxy = RemoteChildDoc();
+  RemoteAccessible* docProxy = RemoteChildDoc();
   if (docProxy) {
     // We're in the parent process, but we're embedding a remote document.
     return WrapperFor(docProxy);

@@ -13,7 +13,7 @@
 #include "nsMai.h"
 #include "mozilla/Likely.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
 
 using namespace mozilla::a11y;
@@ -39,7 +39,7 @@ static gboolean grabFocusCB(AtkComponent* aComponent) {
     return TRUE;
   }
 
-  ProxyAccessible* proxy = GetProxy(atkObject);
+  RemoteAccessible* proxy = GetProxy(atkObject);
   if (proxy) {
     proxy->TakeFocus();
     return TRUE;
@@ -57,7 +57,7 @@ static gboolean scrollToCB(AtkComponent* aComponent, AtkScrollType type) {
     return TRUE;
   }
 
-  ProxyAccessible* proxy = GetProxy(atkObject);
+  RemoteAccessible* proxy = GetProxy(atkObject);
   if (proxy) {
     proxy->ScrollTo(type);
     return TRUE;
@@ -76,7 +76,7 @@ static gboolean scrollToPointCB(AtkComponent* aComponent, AtkCoordType coords,
     return TRUE;
   }
 
-  ProxyAccessible* proxy = GetProxy(atkObject);
+  RemoteAccessible* proxy = GetProxy(atkObject);
   if (proxy) {
     proxy->ScrollToPoint(coords, x, y);
     return TRUE;
@@ -162,7 +162,7 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
     return;
   }
 
-  if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+  if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
     proxy->Extents(aCoordType == ATK_XY_WINDOW, aX, aY, aWidth, aHeight);
   }
 }

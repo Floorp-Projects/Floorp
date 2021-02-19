@@ -177,7 +177,7 @@ xpcAccessibleGeneric* xpcAccessibleDocument::GetAccessible(
 }
 
 xpcAccessibleGeneric* xpcAccessibleDocument::GetXPCAccessible(
-    ProxyAccessible* aProxy) {
+    RemoteAccessible* aProxy) {
   MOZ_ASSERT(mRemote);
   MOZ_ASSERT(aProxy->Document() == mIntl.AsProxy());
   if (aProxy->IsDoc()) {

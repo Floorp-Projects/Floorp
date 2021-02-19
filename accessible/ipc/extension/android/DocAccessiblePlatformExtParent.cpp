@@ -27,9 +27,9 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtParent::RecvSetPivotBoundaries(
     return IPC_OK();
   }
 
-  ProxyAccessible* first =
+  RemoteAccessible* first =
       static_cast<DocAccessibleParent*>(aFirstDoc)->GetAccessible(aFirst);
-  ProxyAccessible* last =
+  RemoteAccessible* last =
       static_cast<DocAccessibleParent*>(aLastDoc)->GetAccessible(aLast);
 
   // We may not have proxy accessibles available yet for those accessibles

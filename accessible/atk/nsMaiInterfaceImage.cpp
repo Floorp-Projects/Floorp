@@ -11,7 +11,7 @@
 #include "mozilla/Likely.h"
 #include "nsMai.h"
 #include "nsIAccessibleTypes.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -31,7 +31,7 @@ static void getImagePositionCB(AtkImage* aImage, gint* aAccX, gint* aAccY,
   if (accWrap && accWrap->IsImage()) {
     ImageAccessible* image = accWrap->AsImage();
     pos = image->Position(geckoCoordType);
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aImage))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aImage))) {
     pos = proxy->ImagePosition(geckoCoordType);
   }
 
@@ -49,7 +49,7 @@ static void getImageSizeCB(AtkImage* aImage, gint* aAccWidth,
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
   if (accWrap && accWrap->IsImage()) {
     size = accWrap->AsImage()->Size();
-  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aImage))) {
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aImage))) {
     size = proxy->ImageSize();
   }
 

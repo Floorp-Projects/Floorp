@@ -12,7 +12,7 @@
 #include "nsAccUtils.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "OuterDocAccessible.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "DocAccessibleParent.h"
 #include "RootAccessible.h"
 #include "TableAccessible.h"
@@ -518,7 +518,7 @@ const gchar* getNameCB(AtkObject* aAtkObj) {
   AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
   if (accWrap) {
     accWrap->Name(name);
-  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
     proxy->Name(name);
   } else {
     return nullptr;
@@ -559,7 +559,7 @@ const gchar* getDescriptionCB(AtkObject* aAtkObj) {
     if (accWrap->IsDefunct()) return nullptr;
 
     accWrap->Description(uniDesc);
-  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
     proxy->Description(uniDesc);
   } else {
     return nullptr;
@@ -687,7 +687,7 @@ AtkAttributeSet* getAttributesCB(AtkObject* aAtkObj) {
   AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
   if (accWrap) return GetAttributeSet(accWrap);
 
-  ProxyAccessible* proxy = GetProxy(aAtkObj);
+  RemoteAccessible* proxy = GetProxy(aAtkObj);
   if (!proxy) return nullptr;
 
   AutoTArray<Attribute, 10> attrs;
@@ -750,7 +750,7 @@ gint getChildCountCB(AtkObject* aAtkObj) {
     }
   }
 
-  ProxyAccessible* proxy = GetProxy(aAtkObj);
+  RemoteAccessible* proxy = GetProxy(aAtkObj);
   if (proxy && !nsAccUtils::MustPrune(proxy)) {
     return proxy->EmbeddedChildCount();
   }
@@ -777,16 +777,16 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
     } else {
       OuterDocAccessible* docOwner = accWrap->AsOuterDoc();
       if (docOwner) {
-        ProxyAccessible* proxyDoc = docOwner->RemoteChildDoc();
+        RemoteAccessible* proxyDoc = docOwner->RemoteChildDoc();
         if (proxyDoc) childAtkObj = GetWrapperFor(proxyDoc);
       }
     }
-  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
     if (nsAccUtils::MustPrune(proxy)) {
       return nullptr;
     }
 
-    ProxyAccessible* child = proxy->EmbeddedChildAt(aChildIndex);
+    RemoteAccessible* child = proxy->EmbeddedChildAt(aChildIndex);
     if (child) childAtkObj = GetWrapperFor(child);
   } else {
     return nullptr;
@@ -807,8 +807,8 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
 gint getIndexInParentCB(AtkObject* aAtkObj) {
   // We don't use LocalAccessible::IndexInParent() because we don't include text
   // leaf nodes as children in ATK.
-  if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
-    if (ProxyAccessible* parent = proxy->RemoteParent()) {
+  if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
+    if (RemoteAccessible* parent = proxy->RemoteParent()) {
       return parent->IndexOfEmbeddedChild(proxy);
     }
 
@@ -863,7 +863,7 @@ AtkStateSet* refStateSetCB(AtkObject* aAtkObj) {
   AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
   if (accWrap) {
     TranslateStates(accWrap->State(), accWrap->Role(), state_set);
-  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
     TranslateStates(proxy->State(), proxy->Role(), state_set);
   } else {
     TranslateStates(states::DEFUNCT, roles::NOTHING, state_set);
@@ -889,7 +889,7 @@ static void UpdateAtkRelation(RelationType aType, LocalAccessible* aAcc,
   }
 
   if (aType == RelationType::EMBEDS && aAcc->IsRoot()) {
-    if (ProxyAccessible* proxyDoc =
+    if (RemoteAccessible* proxyDoc =
             aAcc->AsRoot()->GetPrimaryRemoteTopLevelContentDoc()) {
       targets.AppendElement(GetWrapperFor(proxyDoc));
     }
@@ -913,9 +913,9 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
 #undef RELATIONTYPE
   };
 
-  if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+  if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
     nsTArray<RelationType> types;
-    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    nsTArray<nsTArray<RemoteAccessible*>> targetSets;
     proxy->Relations(&types, &targetSets);
 
     size_t relationCount = types.Length();
@@ -980,7 +980,7 @@ AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj) {
   return accWrap;
 }
 
-ProxyAccessible* GetProxy(AtkObject* aObj) {
+RemoteAccessible* GetProxy(AtkObject* aObj) {
   return GetInternalObj(aObj).AsProxy();
 }
 
@@ -990,7 +990,7 @@ AccessibleOrProxy GetInternalObj(AtkObject* aObj) {
   return MAI_ATK_OBJECT(aObj)->accWrap;
 }
 
-AtkObject* GetWrapperFor(ProxyAccessible* aProxy) {
+AtkObject* GetWrapperFor(RemoteAccessible* aProxy) {
   return reinterpret_cast<AtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
 }
 
@@ -1002,7 +1002,7 @@ AtkObject* GetWrapperFor(AccessibleOrProxy aObj) {
   return AccessibleWrap::GetAtkObject(aObj.AsAccessible());
 }
 
-static uint16_t GetInterfacesForProxy(ProxyAccessible* aProxy,
+static uint16_t GetInterfacesForProxy(RemoteAccessible* aProxy,
                                       uint32_t aInterfaces) {
   uint16_t interfaces = 1 << MAI_INTERFACE_COMPONENT;
   if (aInterfaces & Interfaces::HYPERTEXT) {
@@ -1039,7 +1039,7 @@ static uint16_t GetInterfacesForProxy(ProxyAccessible* aProxy,
   return interfaces;
 }
 
-void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
+void a11y::ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces) {
   GType type = GetMaiAtkType(GetInterfacesForProxy(aProxy, aInterfaces));
   NS_ASSERTION(type, "why don't we have a type!");
 
@@ -1053,7 +1053,7 @@ void a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces) {
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(obj) | IS_PROXY);
 }
 
-void a11y::ProxyDestroyed(ProxyAccessible* aProxy) {
+void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
   auto obj = reinterpret_cast<MaiAtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
   if (!obj) {
     return;
@@ -1340,7 +1340,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   return NS_OK;
 }
 
-void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
+void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
 
   switch (aEventType) {
@@ -1385,13 +1385,13 @@ void a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType) {
   }
 }
 
-void a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
+void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
                                  bool aEnabled) {
   MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
   atkObj->FireStateChangeEvent(aState, aEnabled);
 }
 
-void a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset,
+void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
                                bool aIsSelectionCollapsed) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
   g_signal_emit_by_name(wrapper, "text_caret_moved", aOffset);
@@ -1426,7 +1426,7 @@ void MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled) {
   }
 }
 
-void a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
+void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
                                 int32_t aStart, uint32_t aLen, bool aIsInsert,
                                 bool aFromUser) {
   MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
@@ -1468,8 +1468,8 @@ void MaiAtkObject::FireTextChangeEvent(const nsString& aStr, int32_t aStart,
   }
 }
 
-void a11y::ProxyShowHideEvent(ProxyAccessible* aTarget,
-                              ProxyAccessible* aParent, bool aInsert,
+void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget,
+                              RemoteAccessible* aParent, bool aInsert,
                               bool aFromUser) {
   MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
   obj->FireAtkShowHideEvent(GetWrapperFor(aParent), aInsert, aFromUser);
@@ -1490,7 +1490,7 @@ void MaiAtkObject::FireAtkShowHideEvent(AtkObject* aParent, bool aIsAdded,
   g_signal_emit_by_name(aParent, signal_name, indexInParent, this, nullptr);
 }
 
-void a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible* aWidget,
+void a11y::ProxySelectionEvent(RemoteAccessible*, RemoteAccessible* aWidget,
                                uint32_t) {
   MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aWidget));
   g_signal_emit_by_name(obj, "selection_changed");

@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccessibleWrap.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "AccessibleOrProxy.h"
 
 #import <Cocoa/Cocoa.h>
@@ -36,7 +36,7 @@ inline mozAccessible* GetNativeFromGeckoAccessible(
     return native;
   }
 
-  ProxyAccessible* proxy = aAccOrProxy.AsProxy();
+  RemoteAccessible* proxy = aAccOrProxy.AsProxy();
   return reinterpret_cast<mozAccessible*>(proxy->GetWrapper());
 }
 

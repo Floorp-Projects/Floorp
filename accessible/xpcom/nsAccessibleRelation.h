@@ -12,7 +12,7 @@
 #include "nsTArray.h"
 #include "nsIMutableArray.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -27,7 +27,7 @@ class nsAccessibleRelation final : public nsIAccessibleRelation {
   nsAccessibleRelation(uint32_t aType, Relation* aRel);
 
   nsAccessibleRelation(uint32_t aType,
-                       const nsTArray<ProxyAccessible*>* aTargets);
+                       const nsTArray<RemoteAccessible*>* aTargets);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLERELATION

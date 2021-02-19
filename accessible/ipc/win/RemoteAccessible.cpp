@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Accessible2.h"
-#include "ProxyAccessible.h"
+#include "RemoteAccessible.h"
 #include "ia2AccessibleRelation.h"
 #include "ia2AccessibleValue.h"
 #include "IGeckoCustom.h"
@@ -26,7 +26,7 @@ static const VARIANT kChildIdSelf = {{{VT_I4}}};
 namespace mozilla {
 namespace a11y {
 
-bool ProxyAccessible::GetCOMInterface(void** aOutAccessible) const {
+bool RemoteAccessible::GetCOMInterface(void** aOutAccessible) const {
   if (!aOutAccessible) {
     return false;
   }
@@ -35,7 +35,7 @@ bool ProxyAccessible::GetCOMInterface(void** aOutAccessible) const {
     // See if we can lazily obtain a COM proxy
     AccessibleWrap* wrap = WrapperFor(this);
     bool isDefunct = false;
-    ProxyAccessible* thisPtr = const_cast<ProxyAccessible*>(this);
+    RemoteAccessible* thisPtr = const_cast<RemoteAccessible*>(this);
     // NB: Don't pass CHILDID_SELF here, use the absolute MSAA ID. Otherwise
     // GetIAccessibleFor will recurse into this function and we will just
     // overflow the stack.
@@ -87,7 +87,7 @@ struct InterfaceIID<IAccessible2_2> {
  */
 template <typename Interface>
 static already_AddRefed<Interface> QueryInterface(
-    const ProxyAccessible* aProxy) {
+    const RemoteAccessible* aProxy) {
   RefPtr<IAccessible> acc;
   if (!aProxy->GetCOMInterface((void**)getter_AddRefs(acc))) {
     return nullptr;
@@ -102,8 +102,8 @@ static already_AddRefed<Interface> QueryInterface(
   return acc2.forget();
 }
 
-static ProxyAccessible* GetProxyFor(DocAccessibleParent* aDoc,
-                                    IUnknown* aCOMProxy) {
+static RemoteAccessible* GetProxyFor(DocAccessibleParent* aDoc,
+                                     IUnknown* aCOMProxy) {
   RefPtr<IGeckoCustom> custom;
   if (FAILED(aCOMProxy->QueryInterface(IID_IGeckoCustom,
                                        (void**)getter_AddRefs(custom)))) {
@@ -118,7 +118,7 @@ static ProxyAccessible* GetProxyFor(DocAccessibleParent* aDoc,
   return aDoc->GetAccessible(id);
 }
 
-uint32_t ProxyAccessible::Name(nsString& aName) const {
+uint32_t RemoteAccessible::Name(nsString& aName) const {
   /* The return values here exist only to match behvaiour required
    * by the header declaration of this function. On Mac, we'd like
    * to return the associated ENameValueFlag, but we don't have
@@ -140,7 +140,7 @@ uint32_t ProxyAccessible::Name(nsString& aName) const {
   return eNameOK;
 }
 
-void ProxyAccessible::Value(nsString& aValue) const {
+void RemoteAccessible::Value(nsString& aValue) const {
   aValue.Truncate();
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
@@ -156,7 +156,7 @@ void ProxyAccessible::Value(nsString& aValue) const {
   aValue = (wchar_t*)resultWrap;
 }
 
-double ProxyAccessible::Step() {
+double RemoteAccessible::Step() {
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
     return 0;
@@ -171,7 +171,7 @@ double ProxyAccessible::Step() {
   return increment;
 }
 
-void ProxyAccessible::Description(nsString& aDesc) const {
+void RemoteAccessible::Description(nsString& aDesc) const {
   aDesc.Truncate();
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
@@ -187,7 +187,7 @@ void ProxyAccessible::Description(nsString& aDesc) const {
   aDesc = (wchar_t*)resultWrap;
 }
 
-uint64_t ProxyAccessible::State() const {
+uint64_t RemoteAccessible::State() const {
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
     return 0;
@@ -201,7 +201,7 @@ uint64_t ProxyAccessible::State() const {
   return state;
 }
 
-nsIntRect ProxyAccessible::Bounds() {
+nsIntRect RemoteAccessible::Bounds() {
   nsIntRect rect;
 
   RefPtr<IAccessible> acc;
@@ -221,7 +221,7 @@ nsIntRect ProxyAccessible::Bounds() {
   return rect;
 }
 
-nsIntRect ProxyAccessible::BoundsInCSSPixels() {
+nsIntRect RemoteAccessible::BoundsInCSSPixels() {
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
     return nsIntRect();
@@ -233,7 +233,7 @@ nsIntRect ProxyAccessible::BoundsInCSSPixels() {
   return rect;
 }
 
-void ProxyAccessible::Language(nsString& aLocale) {
+void RemoteAccessible::Language(nsString& aLocale) {
   aLocale.Truncate();
 
   RefPtr<IAccessible> acc;
@@ -329,7 +329,7 @@ static bool ConvertBSTRAttributesToArray(const nsAString& aStr,
   return true;
 }
 
-void ProxyAccessible::Attributes(nsTArray<Attribute>* aAttrs) const {
+void RemoteAccessible::Attributes(nsTArray<Attribute>* aAttrs) const {
   aAttrs->Clear();
 
   RefPtr<IAccessible> acc;
@@ -354,11 +354,11 @@ void ProxyAccessible::Attributes(nsTArray<Attribute>* aAttrs) const {
       nsDependentString((wchar_t*)attrs, attrsWrap.length()), aAttrs);
 }
 
-nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
+nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
     RelationType aType) const {
   RefPtr<IAccessible2_2> acc = QueryInterface<IAccessible2_2>(this);
   if (!acc) {
-    return nsTArray<ProxyAccessible*>();
+    return nsTArray<RemoteAccessible*>();
   }
 
   _bstr_t relationType;
@@ -370,7 +370,7 @@ nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
   }
 
   if (!relationType) {
-    return nsTArray<ProxyAccessible*>();
+    return nsTArray<RemoteAccessible*>();
   }
 
   IUnknown** targets;
@@ -378,10 +378,10 @@ nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
   HRESULT hr =
       acc->get_relationTargetsOfType(relationType, 0, &targets, &nTargets);
   if (FAILED(hr)) {
-    return nsTArray<ProxyAccessible*>();
+    return nsTArray<RemoteAccessible*>();
   }
 
-  nsTArray<ProxyAccessible*> proxies;
+  nsTArray<RemoteAccessible*> proxies;
   for (long idx = 0; idx < nTargets; idx++) {
     IUnknown* target = targets[idx];
     proxies.AppendElement(GetProxyFor(Document(), target));
@@ -392,7 +392,7 @@ nsTArray<ProxyAccessible*> ProxyAccessible::RelationByType(
   return proxies;
 }
 
-double ProxyAccessible::CurValue() {
+double RemoteAccessible::CurValue() {
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return UnspecifiedNaN<double>();
@@ -407,7 +407,7 @@ double ProxyAccessible::CurValue() {
   return currentValue.dblVal;
 }
 
-bool ProxyAccessible::SetCurValue(double aValue) {
+bool RemoteAccessible::SetCurValue(double aValue) {
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return false;
@@ -421,7 +421,7 @@ bool ProxyAccessible::SetCurValue(double aValue) {
   return SUCCEEDED(hr);
 }
 
-double ProxyAccessible::MinValue() {
+double RemoteAccessible::MinValue() {
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return UnspecifiedNaN<double>();
@@ -436,7 +436,7 @@ double ProxyAccessible::MinValue() {
   return minimumValue.dblVal;
 }
 
-double ProxyAccessible::MaxValue() {
+double RemoteAccessible::MaxValue() {
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return UnspecifiedNaN<double>();
@@ -467,8 +467,8 @@ static IA2TextBoundaryType GetIA2TextBoundary(
   }
 }
 
-int32_t ProxyAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
-                                       uint32_t aCoordinateType) {
+int32_t RemoteAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
+                                        uint32_t aCoordinateType) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return -1;
@@ -495,8 +495,8 @@ int32_t ProxyAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
   return static_cast<int32_t>(offset);
 }
 
-bool ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
-                                    nsString& aText) const {
+bool RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                                     nsString& aText) const {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return false;
@@ -515,11 +515,11 @@ bool ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
   return true;
 }
 
-void ProxyAccessible::GetTextBeforeOffset(int32_t aOffset,
-                                          AccessibleTextBoundary aBoundaryType,
-                                          nsString& aText,
-                                          int32_t* aStartOffset,
-                                          int32_t* aEndOffset) {
+void RemoteAccessible::GetTextBeforeOffset(int32_t aOffset,
+                                           AccessibleTextBoundary aBoundaryType,
+                                           nsString& aText,
+                                           int32_t* aStartOffset,
+                                           int32_t* aEndOffset) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -539,10 +539,11 @@ void ProxyAccessible::GetTextBeforeOffset(int32_t aOffset,
   aText = (wchar_t*)result;
 }
 
-void ProxyAccessible::GetTextAfterOffset(int32_t aOffset,
-                                         AccessibleTextBoundary aBoundaryType,
-                                         nsString& aText, int32_t* aStartOffset,
-                                         int32_t* aEndOffset) {
+void RemoteAccessible::GetTextAfterOffset(int32_t aOffset,
+                                          AccessibleTextBoundary aBoundaryType,
+                                          nsString& aText,
+                                          int32_t* aStartOffset,
+                                          int32_t* aEndOffset) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -562,10 +563,10 @@ void ProxyAccessible::GetTextAfterOffset(int32_t aOffset,
   *aEndOffset = end;
 }
 
-void ProxyAccessible::GetTextAtOffset(int32_t aOffset,
-                                      AccessibleTextBoundary aBoundaryType,
-                                      nsString& aText, int32_t* aStartOffset,
-                                      int32_t* aEndOffset) {
+void RemoteAccessible::GetTextAtOffset(int32_t aOffset,
+                                       AccessibleTextBoundary aBoundaryType,
+                                       nsString& aText, int32_t* aStartOffset,
+                                       int32_t* aEndOffset) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -585,7 +586,8 @@ void ProxyAccessible::GetTextAtOffset(int32_t aOffset,
   *aEndOffset = end;
 }
 
-bool ProxyAccessible::AddToSelection(int32_t aStartOffset, int32_t aEndOffset) {
+bool RemoteAccessible::AddToSelection(int32_t aStartOffset,
+                                      int32_t aEndOffset) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return false;
@@ -595,7 +597,7 @@ bool ProxyAccessible::AddToSelection(int32_t aStartOffset, int32_t aEndOffset) {
                                      static_cast<long>(aEndOffset)));
 }
 
-bool ProxyAccessible::RemoveFromSelection(int32_t aSelectionNum) {
+bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return false;
@@ -604,7 +606,7 @@ bool ProxyAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   return SUCCEEDED(acc->removeSelection(static_cast<long>(aSelectionNum)));
 }
 
-int32_t ProxyAccessible::CaretOffset() {
+int32_t RemoteAccessible::CaretOffset() {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return -1;
@@ -619,7 +621,7 @@ int32_t ProxyAccessible::CaretOffset() {
   return static_cast<int32_t>(offset);
 }
 
-void ProxyAccessible::SetCaretOffset(int32_t aOffset) {
+void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -631,9 +633,9 @@ void ProxyAccessible::SetCaretOffset(int32_t aOffset) {
 /**
  * aScrollType should be one of the nsIAccessiblescrollType constants.
  */
-void ProxyAccessible::ScrollSubstringTo(int32_t aStartOffset,
-                                        int32_t aEndOffset,
-                                        uint32_t aScrollType) {
+void RemoteAccessible::ScrollSubstringTo(int32_t aStartOffset,
+                                         int32_t aEndOffset,
+                                         uint32_t aScrollType) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -647,10 +649,10 @@ void ProxyAccessible::ScrollSubstringTo(int32_t aStartOffset,
 /**
  * aCoordinateType is one of the nsIAccessibleCoordinateType constants.
  */
-void ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
-                                             int32_t aEndOffset,
-                                             uint32_t aCoordinateType,
-                                             int32_t aX, int32_t aY) {
+void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
+                                              int32_t aEndOffset,
+                                              uint32_t aCoordinateType,
+                                              int32_t aX, int32_t aY) {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -672,7 +674,7 @@ void ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                               static_cast<long>(aX), static_cast<long>(aY));
 }
 
-uint32_t ProxyAccessible::StartOffset(bool* aOk) {
+uint32_t RemoteAccessible::StartOffset(bool* aOk) {
   RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
   if (!acc) {
     *aOk = false;
@@ -684,7 +686,7 @@ uint32_t ProxyAccessible::StartOffset(bool* aOk) {
   return static_cast<uint32_t>(startOffset);
 }
 
-uint32_t ProxyAccessible::EndOffset(bool* aOk) {
+uint32_t RemoteAccessible::EndOffset(bool* aOk) {
   RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
   if (!acc) {
     *aOk = false;
@@ -696,7 +698,7 @@ uint32_t ProxyAccessible::EndOffset(bool* aOk) {
   return static_cast<uint32_t>(endOffset);
 }
 
-bool ProxyAccessible::IsLinkValid() {
+bool RemoteAccessible::IsLinkValid() {
   RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
   if (!acc) {
     return false;
@@ -710,7 +712,7 @@ bool ProxyAccessible::IsLinkValid() {
   return valid;
 }
 
-uint32_t ProxyAccessible::AnchorCount(bool* aOk) {
+uint32_t RemoteAccessible::AnchorCount(bool* aOk) {
   *aOk = false;
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
@@ -726,7 +728,7 @@ uint32_t ProxyAccessible::AnchorCount(bool* aOk) {
   return count;
 }
 
-ProxyAccessible* ProxyAccessible::AnchorAt(uint32_t aIdx) {
+RemoteAccessible* RemoteAccessible::AnchorAt(uint32_t aIdx) {
   RefPtr<IAccessibleHyperlink> link =
       QueryInterface<IAccessibleHyperlink>(this);
   if (!link) {
@@ -739,12 +741,12 @@ ProxyAccessible* ProxyAccessible::AnchorAt(uint32_t aIdx) {
   }
 
   MOZ_ASSERT(anchor.vt == VT_UNKNOWN);
-  ProxyAccessible* proxyAnchor = GetProxyFor(Document(), anchor.punkVal);
+  RemoteAccessible* proxyAnchor = GetProxyFor(Document(), anchor.punkVal);
   anchor.punkVal->Release();
   return proxyAnchor;
 }
 
-void ProxyAccessible::DOMNodeID(nsString& aID) {
+void RemoteAccessible::DOMNodeID(nsString& aID) {
   aID.Truncate();
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
@@ -760,7 +762,7 @@ void ProxyAccessible::DOMNodeID(nsString& aID) {
   aID = (wchar_t*)resultWrap;
 }
 
-void ProxyAccessible::TakeFocus() {
+void RemoteAccessible::TakeFocus() {
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
     return;
@@ -768,14 +770,14 @@ void ProxyAccessible::TakeFocus() {
   acc->accSelect(SELFLAG_TAKEFOCUS, kChildIdSelf);
 }
 
-ProxyAccessible* ProxyAccessible::ChildAtPoint(
+RemoteAccessible* RemoteAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   RefPtr<IAccessible2_2> target = QueryInterface<IAccessible2_2>(this);
   if (!target) {
     return nullptr;
   }
   DocAccessibleParent* doc = Document();
-  ProxyAccessible* proxy = this;
+  RemoteAccessible* proxy = this;
   // accHitTest only does direct children, but we might want the deepest child.
   for (;;) {
     VARIANT childVar;

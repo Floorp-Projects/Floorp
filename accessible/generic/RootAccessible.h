@@ -42,7 +42,7 @@ class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
   /**
    * Return the primary remote top level document if any.
    */
-  ProxyAccessible* GetPrimaryRemoteTopLevelContentDoc() const;
+  RemoteAccessible* GetPrimaryRemoteTopLevelContentDoc() const;
 
  protected:
   virtual ~RootAccessible();
