@@ -25,6 +25,15 @@
                 "name": "1007+t+https+++developer.cdn.mozilla.net",
                 "dir": true,
                 "entries": [{ "name": ".metadata", "dir": false }]
+              },
+              {
+                "name": "1007+t+https+++developer.cdn.mozilla.org",
+                "dir": true,
+                "entries": [{ "name": ".metadata", "dir": false }]
+              },
+              {
+                "name": "https+++developer.cdn.mozilla.org",
+                "dir": true
               }
             ]
           }
@@ -54,6 +63,14 @@
               {
                 "todo": "This shouldn't exist, it regressed after accidental changes done in bug 1320404",
                 "name": "https+++developer.cdn.mozilla.net",
+                "dir": true,
+                "entries": [
+                  { "name": ".metadata", "dir": false },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              },
+              {
+                "name": "https+++developer.cdn.mozilla.org",
                 "dir": true,
                 "entries": [
                   { "name": ".metadata", "dir": false },
