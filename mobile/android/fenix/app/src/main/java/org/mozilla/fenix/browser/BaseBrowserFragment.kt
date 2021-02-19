@@ -822,12 +822,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     internal fun initializeEngineView(toolbarHeight: Int) {
         val context = requireContext()
 
-        // If there is an a11y service enabled and the user hasn't explicitly set bottom toolbar
-        val isTopToolbarForced =
-            !context.settings().shouldUseBottomToolbar &&
-                context.settings().shouldUseFixedTopToolbar
-
-        if (!isTopToolbarForced && context.settings().isDynamicToolbarEnabled) {
+        if (!context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled) {
             getEngineView().setDynamicToolbarMaxHeight(toolbarHeight)
 
             val toolbarPosition = if (context.settings().shouldUseBottomToolbar) {

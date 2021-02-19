@@ -61,6 +61,16 @@ class BaseBrowserFragmentTest {
     }
 
     @Test
+    fun `initializeEngineView should setDynamicToolbarMaxHeight to 0 if bottom toolbar is forced for a11y`() {
+        every { testContext.settings().shouldUseBottomToolbar } returns true
+        every { testContext.settings().shouldUseFixedTopToolbar } returns true
+
+        fragment.initializeEngineView(13)
+
+        verify { engineView.setDynamicToolbarMaxHeight(0) }
+    }
+
+    @Test
     fun `initializeEngineView should setDynamicToolbarMaxHeight to toolbar height if dynamic toolbar is enabled`() {
         every { testContext.settings().shouldUseFixedTopToolbar } returns false
         every { testContext.settings().isDynamicToolbarEnabled } returns true
@@ -109,6 +119,16 @@ class BaseBrowserFragmentTest {
     @Test
     fun `initializeEngineView should set toolbar height as EngineView parent's bottom margin if top toolbar is forced for a11y`() {
         every { testContext.settings().shouldUseBottomToolbar } returns false
+        every { testContext.settings().shouldUseFixedTopToolbar } returns true
+
+        fragment.initializeEngineView(13)
+
+        verify { (swipeRefreshLayout.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin = 13 }
+    }
+
+    @Test
+    fun `initializeEngineView should set toolbar height as EngineView parent's bottom margin if bottom toolbar is forced for a11y`() {
+        every { testContext.settings().shouldUseBottomToolbar } returns true
         every { testContext.settings().shouldUseFixedTopToolbar } returns true
 
         fragment.initializeEngineView(13)
