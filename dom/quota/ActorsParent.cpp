@@ -2033,6 +2033,19 @@ class StorageOperationBase {
 
   nsresult RemoveObsoleteOrigin(const OriginProps& aOriginProps);
 
+  /**
+   * Rename the origin if the origin string generation from nsIPrincipal
+   * changed. This consists of renaming the origin in the metadata files and
+   * renaming the origin directory itself. For simplicity, the origin in
+   * metadata files is not actually updated, but the metadata files are
+   * recreated instead.
+   *
+   * @param  aOriginProps the properties of the origin to check.
+   *
+   * @return whether origin was renamed.
+   */
+  Result<bool, nsresult> MaybeRenameOrigin(const OriginProps& aOriginProps);
+
   nsresult ProcessOriginDirectories();
 
   virtual nsresult ProcessOriginDirectory(const OriginProps& aOriginProps) = 0;
@@ -2169,19 +2182,6 @@ class UpgradeStorageFrom0_0To1_0Helper final : public RepositoryOperationBase {
       : RepositoryOperationBase(aDirectory, aPersistent) {}
 
  private:
-  /**
-   * Rename the origin if the origin string generation from nsIPrincipal
-   * changed. This consists of renaming the origin in the metadata files and
-   * renaming the origin directory itself. For simplicity, the origin in
-   * metadata files is not actually updated, but the metadata files are
-   * recreated instead.
-   *
-   * @param  aOriginProps the properties of the origin to check.
-   *
-   * @return whether origin was renamed.
-   */
-  Result<bool, nsresult> MaybeRenameOrigin(const OriginProps& aOriginProps);
-
   nsresult PrepareOriginDirectory(OriginProps& aOriginProps,
                                   bool* aRemoved) override;
 
@@ -2204,16 +2204,6 @@ class UpgradeStorageFrom1_0To2_0Helper final : public RepositoryOperationBase {
    * @return whether the origin directory was removed.
    */
   Result<bool, nsresult> MaybeRemoveAppsData(const OriginProps& aOriginProps);
-
-  /**
-   * Strip obsolete origin attributes from the origin in aOriginProps.
-   *
-   * @param  aOriginProps the properties of the origin to check.
-   *
-   * @return whether obsolete origin attributes were stripped.
-   */
-  Result<bool, nsresult> MaybeStripObsoleteOriginAttributes(
-      const OriginProps& aOriginProps);
 
   nsresult PrepareOriginDirectory(OriginProps& aOriginProps,
                                   bool* aRemoved) override;
@@ -9653,6 +9643,51 @@ nsresult StorageOperationBase::RemoveObsoleteOrigin(
   return NS_OK;
 }
 
+Result<bool, nsresult> StorageOperationBase::MaybeRenameOrigin(
+    const OriginProps& aOriginProps) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+
+  const nsAString& oldLeafName = aOriginProps.mLeafName;
+
+  const auto newLeafName =
+      MakeSanitizedOriginString(aOriginProps.mOriginMetadata.mOrigin);
+
+  if (oldLeafName == newLeafName) {
+    return false;
+  }
+
+  QM_TRY(CreateDirectoryMetadata(*aOriginProps.mDirectory,
+                                 aOriginProps.mTimestamp,
+                                 aOriginProps.mOriginMetadata));
+
+  QM_TRY(CreateDirectoryMetadata2(
+      *aOriginProps.mDirectory, aOriginProps.mTimestamp,
+      /* aPersisted */ false, aOriginProps.mOriginMetadata));
+
+  QM_TRY_INSPECT(const auto& newFile,
+                 MOZ_TO_RESULT_INVOKE_TYPED(
+                     nsCOMPtr<nsIFile>, aOriginProps.mDirectory, GetParent));
+
+  QM_TRY(newFile->Append(newLeafName));
+
+  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(newFile, Exists));
+
+  if (exists) {
+    QM_WARNING(
+        "Can't rename %s directory to %s, the target already exists, removing "
+        "instead of renaming!",
+        NS_ConvertUTF16toUTF8(oldLeafName).get(),
+        NS_ConvertUTF16toUTF8(newLeafName).get());
+
+    QM_TRY(aOriginProps.mDirectory->Remove(/* recursive */ true));
+  } else {
+    QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
+  }
+
+  return true;
+}
+
 nsresult StorageOperationBase::ProcessOriginDirectories() {
   AssertIsOnIOThread();
   MOZ_ASSERT(!mOriginProps.IsEmpty());
@@ -10515,51 +10550,6 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
   return NS_OK;
 }
 
-Result<bool, nsresult> UpgradeStorageFrom0_0To1_0Helper::MaybeRenameOrigin(
-    const OriginProps& aOriginProps) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
-
-  const nsAString& oldLeafName = aOriginProps.mLeafName;
-
-  const auto newLeafName =
-      MakeSanitizedOriginString(aOriginProps.mOriginMetadata.mOrigin);
-
-  if (oldLeafName == newLeafName) {
-    return false;
-  }
-
-  QM_TRY(CreateDirectoryMetadata(*aOriginProps.mDirectory,
-                                 aOriginProps.mTimestamp,
-                                 aOriginProps.mOriginMetadata));
-
-  QM_TRY(CreateDirectoryMetadata2(
-      *aOriginProps.mDirectory, aOriginProps.mTimestamp,
-      /* aPersisted */ false, aOriginProps.mOriginMetadata));
-
-  QM_TRY_INSPECT(const auto& newFile,
-                 MOZ_TO_RESULT_INVOKE_TYPED(
-                     nsCOMPtr<nsIFile>, aOriginProps.mDirectory, GetParent));
-
-  QM_TRY(newFile->Append(newLeafName));
-
-  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(newFile, Exists));
-
-  if (exists) {
-    QM_WARNING(
-        "Can't rename %s directory to %s, the target already exists, removing "
-        "instead of renaming!",
-        NS_ConvertUTF16toUTF8(oldLeafName).get(),
-        NS_ConvertUTF16toUTF8(newLeafName).get());
-
-    QM_TRY(aOriginProps.mDirectory->Remove(/* recursive */ true));
-  } else {
-    QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
-  }
-
-  return true;
-}
-
 nsresult UpgradeStorageFrom0_0To1_0Helper::PrepareOriginDirectory(
     OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
@@ -10588,6 +10578,9 @@ nsresult UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
     const OriginProps& aOriginProps) {
   AssertIsOnIOThread();
 
+  // This handles changes in origin string generation from nsIPrincipal,
+  // especially the change from: appId+inMozBrowser+originNoSuffix
+  // to: origin (with origin suffix).
   QM_TRY_INSPECT(const bool& renamed, MaybeRenameOrigin(aOriginProps));
   if (renamed) {
     return NS_OK;
@@ -10666,52 +10659,6 @@ Result<bool, nsresult> UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
   return false;
 }
 
-Result<bool, nsresult>
-UpgradeStorageFrom1_0To2_0Helper::MaybeStripObsoleteOriginAttributes(
-    const OriginProps& aOriginProps) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
-
-  const nsAString& oldLeafName = aOriginProps.mLeafName;
-
-  const auto newLeafName =
-      MakeSanitizedOriginString(aOriginProps.mOriginMetadata.mOrigin);
-
-  if (oldLeafName == newLeafName) {
-    return false;
-  }
-
-  QM_TRY(CreateDirectoryMetadata(*aOriginProps.mDirectory,
-                                 aOriginProps.mTimestamp,
-                                 aOriginProps.mOriginMetadata));
-
-  QM_TRY(CreateDirectoryMetadata2(
-      *aOriginProps.mDirectory, aOriginProps.mTimestamp,
-      /* aPersisted */ false, aOriginProps.mOriginMetadata));
-
-  QM_TRY_INSPECT(const auto& newFile,
-                 MOZ_TO_RESULT_INVOKE_TYPED(
-                     nsCOMPtr<nsIFile>, aOriginProps.mDirectory, GetParent));
-
-  QM_TRY(newFile->Append(newLeafName));
-
-  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(newFile, Exists));
-
-  if (exists) {
-    QM_WARNING(
-        "Can't rename %s directory, %s directory already exists, "
-        "removing!",
-        NS_ConvertUTF16toUTF8(oldLeafName).get(),
-        NS_ConvertUTF16toUTF8(newLeafName).get());
-
-    QM_TRY(aOriginProps.mDirectory->Remove(/* recursive */ true));
-  } else {
-    QM_TRY(aOriginProps.mDirectory->RenameTo(nullptr, newLeafName));
-  }
-
-  return true;
-}
-
 nsresult UpgradeStorageFrom1_0To2_0Helper::PrepareOriginDirectory(
     OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
@@ -10758,9 +10705,10 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
     const OriginProps& aOriginProps) {
   AssertIsOnIOThread();
 
-  QM_TRY_INSPECT(const bool& stripped,
-                 MaybeStripObsoleteOriginAttributes(aOriginProps));
-  if (stripped) {
+  // This handles changes in origin string generation from nsIPrincipal,
+  // especially the stripping of obsolete origin attributes like addonId.
+  QM_TRY_INSPECT(const bool& renamed, MaybeRenameOrigin(aOriginProps));
+  if (renamed) {
     return NS_OK;
   }
 
