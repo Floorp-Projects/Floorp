@@ -349,7 +349,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   nsresult CreatePopupContentView(const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData);
   void DestroyNativeWindow();
   void AdjustWindowShadow();
-  void SetWindowBackgroundBlur();
   void UpdateBounds();
   int32_t GetWorkspaceID();
 
