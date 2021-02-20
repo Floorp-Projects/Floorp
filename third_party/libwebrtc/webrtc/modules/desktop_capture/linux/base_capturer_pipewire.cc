@@ -406,8 +406,7 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
   }
 
   rtc::CritScope lock(&current_frame_lock_);
-  if (!current_frame_ ||
-      (video_metadata_use_ && !video_size_.equals(video_size_prev))) {
+  if (!current_frame_ || !video_size_.equals(video_size_prev)) {
     current_frame_ =
       std::make_unique<uint8_t[]>
         (video_size_.width() * video_size_.height() * kBytesPerPixel);
