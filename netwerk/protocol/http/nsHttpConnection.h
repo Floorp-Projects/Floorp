@@ -217,6 +217,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   [[nodiscard]] nsresult StartLongLivedTCPKeepalives();
   [[nodiscard]] nsresult DisableTCPKeepalives();
 
+  bool CheckCanWrite0RTTData();
+
  private:
   // mTransaction only points to the HTTP Transaction callbacks if the
   // transaction is open, otherwise it is null.
