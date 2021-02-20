@@ -30,3 +30,19 @@ void nsObjCExceptionLog(NSException* aException) {
   NSLog(@"Stack trace:\n%@", [aException callStackSymbols]);
 #endif
 }
+
+namespace mozilla {
+
+bool ShouldIgnoreObjCException(NSException* aException) {
+  // Ignore known exceptions that we've seen in crash reports, which shouldn't cause a MOZ_CRASH in
+  // Nightly.
+  if (aException.name == NSInternalInconsistencyException) {
+    if ([aException.reason containsString:@"Missing Touches."]) {
+      // Seen in bug 1694000.
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace mozilla
