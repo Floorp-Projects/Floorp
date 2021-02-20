@@ -680,46 +680,53 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL& pNewAcl,
     return GetLastError();
   }
 
-  PSID sid;
+  PSID sidBuiltinUsers;
   DWORD SIDSize = SECURITY_MAX_SID_SIZE;
-  sid = LocalAlloc(LMEM_FIXED, SIDSize);
-  if (!sid) {
+  sidBuiltinUsers = LocalAlloc(LMEM_FIXED, SIDSize);
+  if (!sidBuiltinUsers) {
     LOG_WARN(("Could not allocate SID memory.  (%d)", GetLastError()));
     return GetLastError();
   }
+  UniqueSidPtr uniqueSidBuiltinUsers(sidBuiltinUsers);
 
-  if (!CreateWellKnownSid(WinBuiltinUsersSid, nullptr, sid, &SIDSize)) {
+  if (!CreateWellKnownSid(WinBuiltinUsersSid, nullptr, sidBuiltinUsers,
+                          &SIDSize)) {
     DWORD lastError = GetLastError();
-    LOG_WARN(("Could not create well known SID.  (%d)", lastError));
-    LocalFree(sid);
+    LOG_WARN(("Could not create BI\\Users SID.  (%d)", lastError));
     return lastError;
   }
 
-  // Lookup the account name, the function fails if you don't pass in
-  // a buffer for the domain name but it's not used since we're using
-  // the built in account Sid.
-  SID_NAME_USE accountType;
-  WCHAR accountName[UNLEN + 1] = {L'\0'};
-  WCHAR domainName[DNLEN + 1] = {L'\0'};
-  DWORD accountNameSize = UNLEN + 1;
-  DWORD domainNameSize = DNLEN + 1;
-  if (!LookupAccountSidW(nullptr, sid, accountName, &accountNameSize,
-                         domainName, &domainNameSize, &accountType)) {
-    LOG_WARN(("Could not lookup account Sid, will try Users.  (%d)",
-              GetLastError()));
-    wcsncpy(accountName, L"Users", UNLEN);
+  PSID sidInteractive;
+  SIDSize = SECURITY_MAX_SID_SIZE;
+  sidInteractive = LocalAlloc(LMEM_FIXED, SIDSize);
+  if (!sidInteractive) {
+    LOG_WARN(("Could not allocate SID memory.  (%d)", GetLastError()));
+    return GetLastError();
+  }
+  UniqueSidPtr uniqueSidInteractive(sidInteractive);
+
+  if (!CreateWellKnownSid(WinInteractiveSid, nullptr, sidInteractive,
+                          &SIDSize)) {
+    DWORD lastError = GetLastError();
+    LOG_WARN(("Could not create Interactive SID.  (%d)", lastError));
+    return lastError;
   }
 
-  // We already have the group name so we can get rid of the SID
-  FreeSid(sid);
-  sid = nullptr;
+  const size_t eaCount = 2;
+  EXPLICIT_ACCESS ea[eaCount];
+  ZeroMemory(ea, sizeof(ea));
+  ea[0].grfAccessMode = REVOKE_ACCESS;
+  ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+  ea[0].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+  ea[0].Trustee.ptstrName = static_cast<LPWSTR>(sidBuiltinUsers);
+  ea[1].grfAccessPermissions = SERVICE_START | SERVICE_STOP | GENERIC_READ;
+  ea[1].grfAccessMode = SET_ACCESS;
+  ea[1].grfInheritance = NO_INHERITANCE;
+  ea[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+  ea[1].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+  ea[1].Trustee.ptstrName = static_cast<LPWSTR>(sidInteractive);
 
-  // Build the ACE, BuildExplicitAccessWithName cannot fail so it is not logged.
-  EXPLICIT_ACCESS ea;
-  BuildExplicitAccessWithNameW(&ea, accountName,
-                               SERVICE_START | SERVICE_STOP | GENERIC_READ,
-                               SET_ACCESS, NO_INHERITANCE);
-  DWORD lastError = SetEntriesInAclW(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
+  DWORD lastError = SetEntriesInAclW(eaCount, ea, pacl, &pNewAcl);
   if (ERROR_SUCCESS != lastError) {
     LOG_WARN(("Could not set entries in ACL.  (%d)", lastError));
     return lastError;
