@@ -14,7 +14,6 @@
 #include "nsStyleConsts.h"
 
 using namespace mozilla;
-using mozilla::dom::Element;
 using mozilla::dom::HTMLInputElement;
 
 //#define FCF_NOISY
@@ -36,6 +35,13 @@ NS_IMPL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)
 NS_QUERYFRAME_HEAD(nsCheckboxRadioFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
+
+nscoord nsCheckboxRadioFrame::DefaultSize() {
+  if (StyleDisplay()->HasAppearance()) {
+    return PresContext()->Theme()->GetCheckboxRadioPrefSize();
+  }
+  return CSSPixel::ToAppUnits(9);
+}
 
 /* virtual */
 nscoord nsCheckboxRadioFrame::GetMinISize(gfxContext* aRenderingContext) {
