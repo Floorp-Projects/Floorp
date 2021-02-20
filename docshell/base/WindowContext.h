@@ -96,6 +96,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
  public:
   static already_AddRefed<WindowContext> GetById(uint64_t aInnerWindowId);
   static LogModule* GetLog();
+  static LogModule* GetSyncLog();
 
   BrowsingContext* GetBrowsingContext() const { return mBrowsingContext; }
   BrowsingContextGroup* Group() const;

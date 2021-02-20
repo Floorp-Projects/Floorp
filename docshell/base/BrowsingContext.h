@@ -223,6 +223,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   static void Init();
   static LogModule* GetLog();
+  static LogModule* GetSyncLog();
 
   // Look up a BrowsingContext in the current process by ID.
   static already_AddRefed<BrowsingContext> Get(uint64_t aId);
@@ -885,6 +886,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SendCommitTransaction(ContentChild* aChild, const BaseTransaction& aTxn,
                              uint64_t aEpoch);
 
+  using CanSetResult = syncedcontext::CanSetResult;
+
   // Ensure that opener is in the same BrowsingContextGroup.
   bool CanSet(FieldIndex<IDX_OpenerId>, const uint64_t& aValue,
               ContentParent* aSource) {
@@ -947,8 +950,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_EmbedderInnerWindowId>, const uint64_t& aValue,
               ContentParent* aSource);
 
-  bool CanSet(FieldIndex<IDX_CurrentInnerWindowId>, const uint64_t& aValue,
-              ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_CurrentInnerWindowId>,
+                      const uint64_t& aValue, ContentParent* aSource);
 
   void DidSet(FieldIndex<IDX_CurrentInnerWindowId>);
 
