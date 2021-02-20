@@ -19,8 +19,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
-  ExperimentStore:
-    "resource://messaging-system/experiments/ExperimentStore.jsm",
+  ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",

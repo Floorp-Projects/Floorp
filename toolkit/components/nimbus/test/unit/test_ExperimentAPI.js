@@ -1,10 +1,10 @@
 "use strict";
 
 const { ExperimentAPI, ExperimentFeature } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  "resource://nimbus/ExperimentAPI.jsm"
 );
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"

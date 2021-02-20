@@ -5,13 +5,13 @@ const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
-  "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm"
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 const { ExperimentAPI } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  "resource://nimbus/ExperimentAPI.jsm"
 );
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 const { TelemetryFeed } = ChromeUtils.import(
   "resource://activity-stream/lib/TelemetryFeed.jsm"

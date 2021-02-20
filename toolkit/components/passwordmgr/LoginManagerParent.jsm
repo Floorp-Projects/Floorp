@@ -17,7 +17,7 @@ const LoginInfo = new Components.Constructor(
 
 XPCOMUtils.defineLazyGetter(this, "autocompleteFeature", () => {
   const { ExperimentFeature } = ChromeUtils.import(
-    "resource://messaging-system/experiments/ExperimentAPI.jsm"
+    "resource://nimbus/ExperimentAPI.jsm"
   );
   return new ExperimentFeature("password-autocomplete");
 });

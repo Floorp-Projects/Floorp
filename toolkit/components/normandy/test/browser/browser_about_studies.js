@@ -7,10 +7,10 @@ const { RecipeRunner } = ChromeUtils.import(
   "resource://normandy/lib/RecipeRunner.jsm"
 );
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 const { ExperimentManager } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentManager.jsm"
+  "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
 const { NormandyTestUtils } = ChromeUtils.import(

@@ -1,6 +1,6 @@
 "use strict";
 const { ExperimentManager } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentManager.jsm"
+  "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
 const TEST_CONFIG = {

@@ -10,20 +10,15 @@ with Files("**"):
 BROWSER_CHROME_MANIFESTS += [
     "schemas/SpecialMessageActionSchemas/test/browser/browser.ini",
     "schemas/TriggerActionSchemas/test/browser/browser.ini",
-    "test/browser/browser.ini",
 ]
 
 SPHINX_TREES["docs"] = "schemas"
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["targeting/test/unit/xpcshell.ini"]
 
 TESTING_JS_MODULES += [
-    "schemas/ExperimentFeatureManifest.schema.json",
-    "schemas/NimbusExperiment.schema.json",
     "schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.json",
     "schemas/TriggerActionSchemas/TriggerActionSchemas.json",
-    "test/MSTestUtils.jsm",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]

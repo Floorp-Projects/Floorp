@@ -4,7 +4,7 @@
 "use strict";
 
 const { ExperimentStore } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentStore.jsm"
+  "resource://nimbus/lib/ExperimentStore.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,

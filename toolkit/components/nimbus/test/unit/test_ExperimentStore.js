@@ -3,10 +3,10 @@
 const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
 
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 const { ExperimentStore } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentStore.jsm"
+  "resource://nimbus/lib/ExperimentStore.jsm"
 );
 
 // Experiment store caches in prefs Enrollments for fast sync access

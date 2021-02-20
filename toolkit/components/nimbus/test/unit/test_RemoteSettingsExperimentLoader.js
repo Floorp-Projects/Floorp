@@ -1,18 +1,18 @@
 "use strict";
 
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 const { CleanupManager } = ChromeUtils.import(
   "resource://normandy/lib/CleanupManager.jsm"
 );
 
 const { ExperimentManager } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentManager.jsm"
+  "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
-  "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm"
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
