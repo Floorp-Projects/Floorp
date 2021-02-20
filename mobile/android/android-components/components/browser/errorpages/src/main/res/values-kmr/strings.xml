@@ -7,7 +7,7 @@
     <string name="mozac_browser_errorpages_generic_title">Daxwaz nehate temamkirin</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[
-      <p>Derbarê vê çewtî an jî pirsgirêkê de agahiya ekstra niha ne mewcûd e..</p>
+      <p>Derbarê vê çewtiyê an jî pirsgirêkê de agahiya ekstra niha ne mewcûd e.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
@@ -16,8 +16,8 @@
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
-        <li>Ji ber ku rastiya agahiyên hatine wergirtin nayê pesdendkirin, rûpela tu dikî vekî nayê nîşandan.</li>
-        <li>Tika ye bi xwediyê malperê re peywendiyê çêke û wî/wê derbarê vê problemê de agahdar bike.</li>
+        <li>Rûpela ku tu hewl didî wê bibînî, nayê nîşandan ji ber ku rastbûna daneyên ku hatine stendin nayê piştrastkirin.</li>
+        <li>Ji kerema xwe bi xwediyên malperê re têkeve têkiliyê û hayê wan ji vê pirsgirêkê çêke.</li>
       </ul>
     ]]></string>
 
@@ -27,8 +27,8 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
-        <li>Dibe ku ev ji problemeke têkildarî eyarên pêşkêşkarê be yan jî tiştekî din be ku dike pêşkêşkarê teqlîd bike.</li>
-        <li>Heke te bi vê pêşkêşkarê re berê peywendî çêkiribe, dibe ku çewtî demdemî be, û tu dikarî paşê dîsa biceribînî.</li>
+        <li>Dibe ku ev problemeke têkildarî eyarên pêşkêşkarê be yan jî tiştekî din be ku dike pêşkêşkarê teqlîd bike.</li>
+        <li>Heke tu berê bi vê pêşkêşkarê re bi serkeftî hatibî girêdan, dibe ku çewtî demkî be û tu dikarî paşê dîsa biceribînî.</li>
       </ul>
     ]]></string>
 
@@ -36,9 +36,9 @@
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Pêşketî…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
-        <label>Dibe ku hinek pêşkêşkarê teqlîd dikin û  divê tu dewam nekî. </label>
+        <label>Dibe ku hinek pêşkêşkarê teqlîd dikin û divê tu dewam nekî. </label>
         <br> <br>
-        <label>Malper nasnameyên xwe bi sertîfîkayan îsbat dikin. Ji ber ku belavkara wê ya sertîfîkayê nayê nasîn, %1$s bawerî bi <b>%2$s</b> nayne, sertîfîka bi xwe hatiye îmzekirin, yan jî pêşkêşkar sertîfîkayên navberê yên rast naşîne. </label>
+        <label>Malper nasnameyên xwe bi sertîfîkayan îsbat dikin. Ji ber ku belavkara wê ya sertîfîkayê nayê nasîn, %1$s baweriyê bi <b>%2$s</b>’ê nayîne. Yan sertîfîka bi xwe hatiye îmzekirin yan jî pêşkêşkar sertîfîkayên navberê yên rast naşîne. </label>
     ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Vegere (tê pêşniyarkirin)</string>
@@ -54,7 +54,7 @@
       <p>Gerokê bi serfirazî girêdan çêkir, lê di şandina agahiyan de girêdan qut bû. Tika ye careke din biceribîne.</p>
       <ul>
         <li>Dibe ku malper demekê ne berdest be yan mijûl be. Piştî çend xulekan dîsa biceribîne. </li>
-        <li>Heke tu nikarî ti rûpelan bar bikî, girêdana daneyan û Wi-Fiya amûra xwe kontrol bike. </li>
+        <li>Heke tu nikarî ti rûpelan bar bikî, girêdana daneyî û Wi-Fi’ya cîhaza xwe kontrol bike.</li>
       </ul>
     ]]></string>
 
@@ -63,12 +63,12 @@
 
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>Malpera ku hat xwestin bersiva daxwaza pêwendiyekê neda û gerok li benda bersivekê sekinî. </p>
+      <p>Malpera ku hat xwestin bersiva daxwaza pêwendiye neda û gerokê jî li bendemayîna ji bo bersivê rawestand. </p>
       <ul>
-        <li>Gelo dibe ku ji pêşkêşkarê re gelek daxwaz hene yan jî qutbûneke demdemî heye. </li>
-        <li>Gelo tu nikarî malperên din jî vekî? Girêdana amûrê ya bi torê re kontrol bike.</li>
-        <li>Amûr an tora te ji hêla firewall an wekîlekê ve tê parastin? Eyarên çewt dikarin lêgerîna webê asteng bikin. </li>
-        <li>Hê jî pirsgirêk heye? Ji bo alîkariyê bi rêveberê tora xwe yan peydakera Internetnternetê re peywnediyê çêkin. </li>
+        <li>Gelo dibe ku ji pêşkêşkarê re gelek daxwaz hene yan jî qutbûneke demkî hebe. </li>
+        <li>Gelo tu nikarî malperên din jî vekî? Girêdana înternetê ya cîhazê xwe kontrol bike.</li>
+        <li>Cîhaz an jî tora te ji hêla dîwarê ewlehiyê an proxyê ve tê parastin? Eyarên çewt dikarin lêgerîna webê asteng bikin.</li>
+        <li>Hê jî pirsgirêk heye? Ji bo alîkariyê bi rêveberê xwe yê torê an jî peydakera înternetê re bişêwirin. </li>
       </ul>
     ]]></string>
 
@@ -78,13 +78,13 @@
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
-        <li>Dibe ku malper demkî ne berdest be yan pir mijûl be. Piştî çend xulekan dîsa biceribîne</li>
-        <li>Heke tu nikarî rûpelên din jî bar bikî, girêdana daneyan yan ya Wi-Fiyê ya amûra xwe kontrol bike.</li>
+        <li>Dibe ku malper bi awayekî demkî ne berdest be yan jî pir mijûl be. Piştî çend xulekan dîsa biceribîne</li>
+        <li>Heke tu nikarî rûpelên din jî bar bikî, girêdana daneyî yan jî Wi-Fi’ya cîhaza xwe kontrol bike.</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
-    <string name="mozac_browser_errorpages_unknown_socket_type_title">Bersiva nediyar ji serverê</string>
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Bersiva nebende ji serverê</string>
 
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
@@ -96,10 +96,10 @@
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>Gerokê hewildana vegerandina tiştê daxwazkirî sekinand</p>
+      <p>Gerokê dest ji hewla vegerandina hêmana daxwazkirî berda. Malper daxwazê bi rengekî ku ew ê ti carî temam nebe, dibersivîne</p>
       <ul>
-        <li>Gelo te çerezên ji bo vê malperê hewce neçalak yan asteng kirine? </li>
-        <li>Heke qebûlkirina çerezên malperê pirsgirêkê çareser neke, nexwe pirsgirêk ji sazkariyên pêşkêşkarê ye û ne ji amûra te ye.</li>
+        <li>Te çerezên ku ji hêla vê malperê ve hatine xwestin neçalak an jî asteng kirine? </li>
+        <li>Heke qebûlkirina çerezên malperê pirsgirêkê çareser neke, nexwe pirsgirêk ji sazkariyên pêşkêşkarê ye û ne ji cîhaza te ye.</li>
       </ul>
     ]]></string>
 
@@ -130,9 +130,9 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Girêdana înternetê tune</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
-    <string name="mozac_browser_errorpages_no_internet_message">Girêdana xwe ya torê kontrol bike an jî bîstek din hewl bide ku rûpelê ji nû ve bar bike.</string>
+    <string name="mozac_browser_errorpages_no_internet_message">Girêdana înterneta xwe kontrol bike an jî bîstek din rûpelê ji nû ve bar bike.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
-    <string name="mozac_browser_errorpages_no_internet_refresh_button">Dîsa bar bike</string>
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Ji nû ve bar bike</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Navnîşana nederbasdar</string>
