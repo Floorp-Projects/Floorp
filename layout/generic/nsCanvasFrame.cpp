@@ -749,6 +749,11 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
   // We may also have a nsPopupSetFrame child (mPopupSetFrame).
   const WritingMode wm = aReflowInput.GetWritingMode();
   aDesiredSize.SetSize(wm, aReflowInput.ComputedSize());
+  if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
+    // Set the block-size to zero for now in case we don't have any non-
+    // placeholder children that would update the size in the loop below.
+    aDesiredSize.BSize(wm) = nscoord(0);
+  }
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   nsIFrame* nextKid = nullptr;
   for (auto* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = nextKid) {
