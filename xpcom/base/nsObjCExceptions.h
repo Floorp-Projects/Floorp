@@ -18,6 +18,14 @@
 
 void nsObjCExceptionLog(NSException* aException);
 
+namespace mozilla {
+
+// Check if this is an exception that's outside of our control.
+// Called when an exception bubbles up to the native event loop.
+bool ShouldIgnoreObjCException(NSException* aException);
+
+}
+
 // For wrapping blocks of Obj-C calls which are not expected to throw exception.
 // Causes a MOZ_CRASH if an Obj-C exception is encountered.
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK @try {
