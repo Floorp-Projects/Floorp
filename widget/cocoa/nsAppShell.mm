@@ -143,7 +143,10 @@ void OnUncaughtException(NSException* aException) {
   }
 
   nsObjCExceptionLog(aException);
+
+#ifdef NIGHTLY_BUILD
   MOZ_CRASH("Uncaught Objective C exception from -[GeckoNSApplication reportException:]");
+#endif
 }
 
 - (void)sendEvent:(NSEvent*)anEvent {
