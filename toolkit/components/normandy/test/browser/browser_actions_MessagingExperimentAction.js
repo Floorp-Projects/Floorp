@@ -9,7 +9,7 @@ const { MessagingExperimentAction } = ChromeUtils.import(
 );
 
 const { _ExperimentManager, ExperimentManager } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentManager.jsm"
+  "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
 decorate_task(

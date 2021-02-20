@@ -19,8 +19,7 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentFeature:
-    "resource://messaging-system/experiments/ExperimentAPI.jsm",
+  ExperimentFeature: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

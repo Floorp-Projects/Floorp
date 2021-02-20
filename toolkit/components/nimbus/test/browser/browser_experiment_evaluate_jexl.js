@@ -1,13 +1,13 @@
 "use strict";
 
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
-  "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm"
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 const { ExperimentManager } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentManager.jsm"
+  "resource://nimbus/lib/ExperimentManager.jsm"
 );
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 
 add_task(async function setup() {

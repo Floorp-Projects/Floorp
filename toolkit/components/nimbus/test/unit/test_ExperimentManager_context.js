@@ -1,7 +1,7 @@
 "use strict";
 
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 
 const { FirstStartup } = ChromeUtils.import(

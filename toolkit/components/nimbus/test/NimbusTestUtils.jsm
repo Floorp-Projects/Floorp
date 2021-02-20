@@ -10,14 +10,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  _ExperimentManager:
-    "resource://messaging-system/experiments/ExperimentManager.jsm",
-  ExperimentStore:
-    "resource://messaging-system/experiments/ExperimentStore.jsm",
+  _ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
+  ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   _RemoteSettingsExperimentLoader:
-    "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm",
+    "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
   Ajv: "resource://testing-common/ajv-4.1.1.js",
 });
 
