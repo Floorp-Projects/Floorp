@@ -85,10 +85,12 @@ class Transaction {
   // `Commit`, which will perform the necessary synchronization.
   //
   // `Validate` must be called before calling this method.
-  void Apply(Context* aOwner);
+  void Apply(Context* aOwner, bool aFromIPC);
 
   // Returns the set of fields which failed to validate, or an empty set if
   // there were no validation errors.
+  //
+  // NOTE: This method mutates `this` if any changes were reverted.
   IndexSet Validate(Context* aOwner, ContentParent* aSource);
 
   template <typename F>
@@ -191,6 +193,17 @@ class FieldStorage {
   // Data Members
   std::array<uint64_t, Values::count> mEpochs{};
   Values mValues;
+};
+
+// Alternative return type enum for `CanSet` validators which allows specifying
+// more behaviour.
+enum class CanSetResult : uint8_t {
+  // The set attempt is denied. This is equivalent to returning `false`.
+  Deny,
+  // The set attempt is allowed. This is equivalent to returning `true`.
+  Allow,
+  // The set attempt is reverted non-fatally.
+  Revert,
 };
 
 // Helper type traits to use concrete types rather than generic forwarding
