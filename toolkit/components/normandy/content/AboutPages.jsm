@@ -31,7 +31,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "ExperimentManager",
-  "resource://messaging-system/experiments/ExperimentManager.jsm"
+  "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
 var EXPORTED_SYMBOLS = ["AboutPages"];

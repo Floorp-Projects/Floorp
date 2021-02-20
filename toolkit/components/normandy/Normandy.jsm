@@ -24,10 +24,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
-  ExperimentManager:
-    "resource://messaging-system/experiments/ExperimentManager.jsm",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettingsExperimentLoader:
-    "resource://messaging-system/lib/RemoteSettingsExperimentLoader.jsm",
+    "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["Normandy"];

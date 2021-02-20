@@ -12,7 +12,7 @@
 const EXPORTED_SYMBOLS = ["ExperimentStore"];
 
 const { SharedDataMap } = ChromeUtils.import(
-  "resource://messaging-system/lib/SharedDataMap.jsm"
+  "resource://nimbus/lib/SharedDataMap.jsm"
 );
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

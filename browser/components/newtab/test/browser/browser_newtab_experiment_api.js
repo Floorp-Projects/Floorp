@@ -1,7 +1,7 @@
 "use strict";
 
 const { ExperimentAPI } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  "resource://nimbus/ExperimentAPI.jsm"
 );
 
 /**

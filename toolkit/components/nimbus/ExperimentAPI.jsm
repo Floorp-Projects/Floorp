@@ -56,10 +56,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentStore:
-    "resource://messaging-system/experiments/ExperimentStore.jsm",
-  ExperimentManager:
-    "resource://messaging-system/experiments/ExperimentManager.jsm",
+  ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 

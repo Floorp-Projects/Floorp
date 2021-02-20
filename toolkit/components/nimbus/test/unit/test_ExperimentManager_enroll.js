@@ -1,7 +1,7 @@
 "use strict";
 
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"

@@ -2,7 +2,7 @@ const { ChromeMigrationUtils } = ChromeUtils.import(
   "resource:///modules/ChromeMigrationUtils.jsm"
 );
 const { ExperimentAPI } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  "resource://nimbus/ExperimentAPI.jsm"
 );
 const { MigrationUtils } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"

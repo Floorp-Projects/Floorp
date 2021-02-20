@@ -21,8 +21,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
-  ExperimentManager:
-    "resource://messaging-system/experiments/ExperimentManager.jsm",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
 });

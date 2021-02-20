@@ -64,7 +64,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 });

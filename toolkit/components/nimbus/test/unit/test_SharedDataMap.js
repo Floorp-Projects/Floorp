@@ -1,5 +1,5 @@
 const { SharedDataMap } = ChromeUtils.import(
-  "resource://messaging-system/lib/SharedDataMap.jsm"
+  "resource://nimbus/lib/SharedDataMap.jsm"
 );
 const { FileTestUtils } = ChromeUtils.import(
   "resource://testing-common/FileTestUtils.jsm"
@@ -8,7 +8,7 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 
 const PATH = FileTestUtils.getTempFile("shared-data-map").path;

@@ -1,10 +1,10 @@
 "use strict";
 
 const { ExperimentAPI } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  "resource://nimbus/ExperimentAPI.jsm"
 );
 const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/MSTestUtils.jsm"
+  "resource://testing-common/NimbusTestUtils.jsm"
 );
 
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
