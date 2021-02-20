@@ -138,6 +138,10 @@ void OnUncaughtException(NSException* aException) {
 // exception propagates up into the native event loop. It is possible that it is also called in
 // other cases.
 - (void)reportException:(NSException*)aException {
+  if (ShouldIgnoreObjCException(aException)) {
+    return;
+  }
+
   nsObjCExceptionLog(aException);
   MOZ_CRASH("Uncaught Objective C exception from -[GeckoNSApplication reportException:]");
 }
