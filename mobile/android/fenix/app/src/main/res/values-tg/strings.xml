@@ -130,6 +130,8 @@
     <string name="browser_menu_edit_bookmark">Таҳрир кардани хатбарак</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Ҷузъҳои иловагӣ</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Васеъшавиҳо</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Дар ин ҷо ягон ҷузъи иловагӣ нест</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -525,6 +527,10 @@
     <string name="library_desktop_bookmarks_unfiled">Хатбаракҳои дигар</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Таърих</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Варақаи нав</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Ҷустуҷӯ дар саҳифа</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Варақаҳои ҳамоҳангшуда</string>
     <!-- Option in Library to open Reading List -->
