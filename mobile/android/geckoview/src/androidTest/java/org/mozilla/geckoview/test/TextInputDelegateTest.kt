@@ -923,4 +923,30 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertText("Can set input string by keypress after calling blur and focus",
                    ic, "bar")
     }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_bug1650705() {
+        // no way on designmode.
+        assumeThat("Not in designmode", id, not(equalTo("#designmode")))
+
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        commitText(ic, "foo", 1)
+        setSelection(ic, 0, 3)
+
+        mainSession.evaluateJS("""
+            input_event_count = 0;
+            document.querySelector('$id').addEventListener('input', () => {
+                input_event_count++;
+            })
+        """)
+
+        setComposingText(ic, "barbaz", 1)
+
+        val count = mainSession.evaluateJS("input_event_count") as Double;
+        assertThat("input event is once", count, equalTo(1.0))
+
+        finishComposingText(ic)
+    }
 }
