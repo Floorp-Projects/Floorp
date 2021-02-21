@@ -1155,3 +1155,9 @@ function waitToClearOutAnyPotentialScrolls(aWindow) {
     });
   });
 }
+
+function waitForScrollEvent(target) {
+  return new Promise(resolve => {
+    target.addEventListener("scroll", resolve, { once: true });
+  });
+}
