@@ -914,7 +914,10 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
   const bool composing = !mIMERanges->IsEmpty();
   nsEventStatus status = nsEventStatus_eIgnore;
   bool textChanged = composing;
-  bool performDeletion = true;
+  // Whether deleting content before setting or committing composition text.
+  bool performDeletion = false;
+  // Dispatch composition start to set current composition.
+  bool needDispatchCompositionStart = false;
 
   if (!mIMEKeyEvents.IsEmpty() || !composition || !mDispatcher->IsComposing() ||
       uint32_t(aStart) != composition->NativeOffsetOfStartComposition() ||
@@ -988,8 +991,14 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     }
 
     if (aStart != aEnd) {
-      // Perform a deletion first.
-      performDeletion = true;
+      if (composing) {
+        // Actually Gecko doesn't start composition, so it is unnecessary to
+        // delete content before setting composition string.
+        needDispatchCompositionStart = true;
+      } else {
+        // Perform a deletion first.
+        performDeletion = true;
+      }
     }
   } else if (composition->String().Equals(string)) {
     /* If the new text is the same as the existing composition text,
@@ -1014,7 +1023,14 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     }
   }
 
-  if (performDeletion) {
+  if (needDispatchCompositionStart) {
+    // StartComposition sets composition string from selected string.
+    nsEventStatus status = nsEventStatus_eIgnore;
+    mDispatcher->StartComposition(status);
+    if (!mDispatcher || widget->Destroyed()) {
+      return false;
+    }
+  } else if (performDeletion) {
     WidgetContentCommandEvent event(true, eContentCommandDelete, widget);
     event.mTime = PR_Now() / 1000;
     widget->DispatchEvent(&event, status);
