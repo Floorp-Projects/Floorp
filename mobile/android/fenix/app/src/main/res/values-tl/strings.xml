@@ -55,6 +55,10 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ikaw ay nasa pribadong sesyon</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        Inaalis ng %1$s ang iyong bakas sa paghahanap at pag-browse sa mga pribadong tab kapag isinara mo sila o umalis sa app. Bagaman makikilala ka pa rin ng mga website o internet service provider mo, nakatutulong pa rin ito para mapanatiling pribado ang mga gawain mo online sa ibang gagamit ng device na ito.</string>
     <string name="private_browsing_common_myths">
        Mga karaniwang pamahiin tungkol sa pribadong pag-browse
     </string>
@@ -91,6 +95,8 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Alisin</string>
 
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Baguhin ang layout ng mga nakabukas na tab. Pumunta sa mga setting at piliin ang grid sa tab view.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Pumunta sa settings</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -541,6 +547,8 @@
     <string name="library_search">Hanapin</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Mga Setting</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menu para sa listahan ng kasaysayan</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Isara</string>
 
@@ -561,6 +569,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Mga Tab</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Tab view</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Listahan</string>
     <!-- Option for a grid tab view -->
@@ -616,12 +626,18 @@
     <string name="tab_tray_menu_item_close">Isara lahat ng mga tab</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Bagong Tab</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Pumunta sa home</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">i-Toggle ang tab mode</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Bookmark</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Isara</string>
     <!-- Content description for tabs tray multiselect share button -->
     <string name="tab_tray_multiselect_share_content_description">Ibahagi ang mga piniling mga tab</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Menu para sa mga napiling tab</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Tanggalin ang tab sa collection</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -759,6 +775,9 @@
     <!-- Content Description for session item share button -->
     <string name="content_description_session_share">Ibahagi ang session</string>
 
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Bookmark menu</string>
     <!-- Screen title for editing bookmarks -->
     <string name="bookmark_edit">i-Edit ang bookmark</string>
     <!-- Screen title for selecting a bookmarks folder -->
@@ -835,8 +854,20 @@
     <string name="permissions_header">Mga permiso</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Pumunta sa mga Setting</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Listahan ng mga quick setting</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Inirerekomenda</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">i-Manage ang mga site permission</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Alisin ang pahintulot</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Alisin ang pahintulot</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Alisin ang mga pahintulot sa lahat ng site</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
     <string name="preference_browser_feature_autoplay">Autoplay</string>
     <!-- Preference for altering the camera access for all websites -->
@@ -865,16 +896,22 @@
     <string name="tracking_protection_on">Nakabukas</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Nakasara</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Payagan ang audio at video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Payagan ang audio at video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Harangin ang audio at video kapag naka-cellular data lamang</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Aandar ang audio at video sa Wi-Fi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Harangin ang audio lamang</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Harangin ang audio lamang</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Harangin ang audio at video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Harangin ang audio at video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">On</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1053,6 +1090,8 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Mga nakabukas na tab</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Kasaysayan ng pag-browse at site data</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d address</string>
@@ -1067,6 +1106,8 @@
     <string name="preferences_delete_browsing_data_cookies_subtitle">Mala-log out ka sa karamihan ng mga site</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Mga naka-cache na larawan at file</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Nagpapaluwag ng storage space</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Mga site permission</string>
     <!-- Title for the downloads item in Delete browsing data -->
@@ -1161,6 +1202,11 @@
     <string name="onboarding_firefox_account_sync_is_on">Nakabukas ang Sync</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Bigong makapag-sign-in</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Awtomatikong pribasiya</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Hinaharang ng mga setting ng pribasiya at seguridad ang mga tracker, malware, at kumpanyang nagmamanman sa iyo.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Karaniwan (default)</string>
     <!-- text for standard blocking option button description -->
@@ -1311,8 +1357,12 @@
     <string name="etp_cookies_description">Hinaharang ang mga cookie na ginagamit ng mga ad network at analytics company para pagsama-samahin ang iyong browsing data sa iba\'t-ibang mga site.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Mga cryptominer</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Pinipigilan ang mga mapanghamak na script sa pag-access sa device mo para magmina ng digital currency.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Mga fingerprinter</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Pinipigilang makolekta ang mga bukod-tanging data ng pagkakakilanlan sa device mo na pwedeng gamitin sa pagsubaybay.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Tracking Content</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -1340,6 +1390,9 @@
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Mga Redirect Tracker</string>
 
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Inaalis ang mga cookie na itinakda ng mga redirect sa mga kilalang tracking website.</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Suporta</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1353,9 +1406,40 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Mga library na ginagamit namin</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Debug menu: %1$d natitirang click para ma-enable</string>
+    <string name="about_debug_menu_toast_done">Naka-enable na ang debug menu</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 tab</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d tab</string>
+
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Kopyahin</string>
+
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">i-Paste at Puntahan</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">i-Paste</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Nakopya na ang URL sa clipboard</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Idagdag sa Home screen</string>
+
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Kanselahin</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Idagdag</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Magpatuloy sa website</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Pangalan ng shortcut</string>
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Madali lang maidagdag ang website na ito sa Home screen ng iyong device para agarang ma-access at ma-browse na parang app lamang.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Mga login at password</string>
@@ -1365,10 +1449,16 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Tanungin kung ise-save</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Huwag mag-save kailanman</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Autofill</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Mag-sync ng mga login</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Nakabukas</string>
     <!-- Syncing saved logins in Fenix is off -->
     <string name="preferences_passwords_sync_logins_off">Nakasara</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Kumonekta muli</string>
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Mag-sign in sa Sync</string>
     <!-- Preference to access list of saved logins -->
@@ -1383,8 +1473,12 @@
     <string name="preferences_passwords_exceptions_description_empty">Ang mga login at password na hindi naka-save ay ipapakita rito.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Hindi ise-save ang mga login at password para sa mga site na ito.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Burahin lahat ng mga exception</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Hanapin sa mga login</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alpabetikal</string>
     <!-- Option to sort logins list by most recently used -->
     <string name="preferences_passwords_saved_logins_recently_used">Ginamit kamakailan</string>
     <!-- The header for the site that a login is for -->
@@ -1395,10 +1489,32 @@
     <string name="preferences_passwords_saved_logins_password">Password</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">Muling ipasok ang PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">i-Unlock para makita ang mga naka-save na login</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Ang koneksyong ito ay di-ligtas. Maaaring makompromiso ang mga login na ipapasok dito.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Alamin</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Gusto mo bang i-save ng %s ang login na ito?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">i-Save</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Huwag i-save</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Nakopya na ang password sa clipboard</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nakopya na ang username sa clipboard</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Nakopya na ang site sa clipboard</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopyahin ang password</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Alisin ang password</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopyahin ang username</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Alisin ang username</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Kopyahin ang site</string>
 
@@ -1408,11 +1524,19 @@
     <string name="saved_login_reveal_password">Ipakita ang password</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Itago ang password</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">i-Unlock para makita ang mga naka-save na login</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Pakaingatan ang iyong mga login at password</string>
 
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Magtakda ng device lock pattern, PIN, o password para maprotektahan ang mga naka-save mong login at password sakaling may ibang may hawak sa device mo.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Mamaya</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Mag-set up ngayon din</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">i-Unlock ang iyong device</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Mag-zoom sa lahat ng mga website</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
@@ -1422,10 +1546,182 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Huling ginamit</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu sa pagsunud-sunod ng login</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Magdagdag ng search engine</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">i-Edit ang search engine</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Magdagdag</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">i-Save</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">i-Edit</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Burahin</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Iba pa</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Pangalan</string>
+
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Gagamiting teksto ng paghahanap</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Palitan ang query ng “%s”. Halimbawa:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Alamin</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Pasadyang detalye ng search engine</string>
+
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Link para sa Alamin</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Ipasok ang pangalan ng search engine</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Mayroon nang search engine na nagngangalang “%s”.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Magpasok ng search string</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Siguruhing tugma ang search string sa format ng halimbawa</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Nagkaproblema kumonekta sa “%s”</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Nalikha na ang %s</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Nai-save na ang %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Nabura na ang %s</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Maligayang pagdating sa isang bagung-bagong %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Nasa harapan mo ang isang bagong-disenyong browser, na pinaghusay ang performance at mga feature na makatutulong sa iyo nang husto online.\n\nMangyaring maghintay habang ina-update namin ang %s kasama ang iyong</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Ina-update ang %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Simulan ang %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Tapos na ang pag-angkat</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Mga password</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Para payagan ito:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Pumunta sa Android Settings</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. i-Tap ang <b>Mga pahintulot</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. i-Toggle ang <b>%1$s</b> sa nakabukas]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Ligtas na Koneksyon</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Hindi Ligtas na Koneksyon</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Sigurado ka bang gusto mong alisin lahat ng mga pahintulot sa lahat ng mga site?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Sigurado ka bang gusto mong alisin lahat ng mga pahintulot sa site na ito?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Sigurado ka bang gusto mong alisin itong pahintulot sa site na ito?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Walang mga site exception</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Mga Pangunahing Artikulo</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Sigurado ka bang gusto mong burahin itong bookmark?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Idagdag sa mga top site</string>
 
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Pinatunayan Ni: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Burahin</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">i-Edit</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Sigurado ka bang gusto mong burahin itong login?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Burahin</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Mga pagpipilian sa login</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Ang editable text field para sa web address ng login.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Ang editable text field para sa username ng login.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Ang editable text field para sa password ng login.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">i-Save ang mga pagbabago sa login.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Isantabi ang mga pagbabago</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">i-Edit</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Kinakailangan ang password</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Paghanap gamit ang boses</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Magsalita na</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Mayroon nang login na may ganyang username</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Magkonekta ng isa pang device.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Mangyaring mag-re-authenticate.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Paki-enable ang pag-sync ng tab.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Wala kang mga nakabukas na tab sa Firefox sa iba mo pang mga device.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Tingnan ang listahan ng mga tab mula sa iba mong mga device.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Mag-sign in sa sync</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Walang nakabukas na mga tab</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Naabot na ang hangganan ng bilang sa top site</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Magtanggal ng isa para makapagdagdag ng bagong pangunahing site. Pindutin nang matagal ang site at piliin ang tanggalin.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">OK, Nakuha ko</string>
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Ipakita ang pinakamadalas na bisitahing site</string>
 
-    </resources>
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Pangalan</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Pangalan ng pangunahing site</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Kanselahin</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Tanggalin</string>
+
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Sulitin ang %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Pindutin para sa karagdagang detalye</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Kolektahin ang mga bagay na mahalaga sa iyo</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Pangkatin ang mga magkakatulad na hinahanap, site, at tab para madaling makuha sa susunod.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Naka-sign in ka bilang %s sa isa pang Firefox browser sa teleponong ito. Nais mo bang mag-sign in gamit ito?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Madali lang maidagdag ang website na ito sa Home screen ng iyong telepono para agarang ma-access at ma-browse na parang app lamang.</string>
+</resources>
