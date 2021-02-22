@@ -53,7 +53,6 @@ macosx64-clang-tidy:
         symbol: TM(clang-tidy)
     worker-type: b-linux-large
     run:
-        using: toolchain-script
         script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-tidy-macosx64.json'
@@ -67,8 +66,32 @@ macosx64-clang-tidy:
             - linux64-cctools-port-clang-11
             - linux64-clang-11-macosx-cross
             - linux64-gcc-7
-            - linux64-node
             - macosx64-sdk-10.12
+
+macosx64-arch64-clang-tidy:
+    index:
+        job-name: macosx64-aarch64-clang-tidy
+    treeherder:
+        symbol: TM(clang-tidy-aarch64)
+    worker-type: b-linux-large
+    worker:
+        env:
+            OSX_ARCH: arm64
+    run:
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-tidy-macosx64.json'
+        resources:
+            - 'build/build-clang/clang-tidy-macosx64.json'
+    run-on-projects:
+        - trunk
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11-macosx-cross
+            - linux64-gcc-7
+            - macosx64-sdk-11.0
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"
