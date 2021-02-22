@@ -3224,12 +3224,33 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     visibleRegion = aDirtyRegion;
   }
 
+  Maybe<nsPoint> originalScrollPosition;
+  auto maybeResetScrollPosition = MakeScopeExit([&]() {
+    if (originalScrollPosition && rootScrollFrame) {
+      nsIScrollableFrame* rootScrollableFrame =
+          presShell->GetRootScrollFrameAsScrollable();
+      MOZ_ASSERT(rootScrollableFrame->GetScrolledFrame()->GetPosition() ==
+                 nsPoint());
+      rootScrollableFrame->GetScrolledFrame()->SetPosition(
+          *originalScrollPosition);
+    }
+  });
+
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
   bool ignoreViewportScrolling =
       !aFrame->GetParent() && presShell->IgnoringViewportScrolling();
   if (ignoreViewportScrolling && rootScrollFrame) {
     nsIScrollableFrame* rootScrollableFrame =
         presShell->GetRootScrollFrameAsScrollable();
+    if (aFlags & PaintFrameFlags::ResetViewportScrolling) {
+      // Temporarily scroll the root scroll frame to 0,0 so that position:fixed
+      // elements will appear fixed to the top-left of the document. We manually
+      // set the position of the scrolled frame instead of using ScrollTo, since
+      // the latter fires scroll listeners, which we don't want.
+      originalScrollPosition.emplace(
+          rootScrollableFrame->GetScrolledFrame()->GetPosition());
+      rootScrollableFrame->GetScrolledFrame()->SetPosition(nsPoint());
+    }
     if (aFlags & PaintFrameFlags::DocumentRelative) {
       // Make visibleRegion and aRenderingContext relative to the
       // scrolled frame instead of the root frame.

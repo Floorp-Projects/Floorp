@@ -1098,6 +1098,7 @@ class nsLayoutUtils {
     Compressed = 0x200,
     ForWebRender = 0x400,
     UseHighQualityScaling = 0x800,
+    ResetViewportScrolling = 0x1000,
   };
 
   /**
@@ -1126,6 +1127,9 @@ class nsLayoutUtils {
    * as being relative to the document (normally it's relative to the CSS
    * viewport) and the document is painted as if no scrolling has occured.
    * Only considered if PresShell::IgnoringViewportScrolling is true.
+   * If ResetViewportScrolling is used, then the root scroll frame's scroll
+   * position is set to 0 during painting, so that position:fixed elements
+   * are drawn in their initial position.
    * PAINT_TO_WINDOW sets painting to window to true on the display list
    * builder even if we can't tell that we are painting to the window.
    * If PAINT_EXISTING_TRANSACTION is set, then BeginTransaction() has already

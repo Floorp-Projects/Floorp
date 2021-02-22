@@ -779,6 +779,9 @@ class PresShell final : public nsStubDocumentObserver,
    * might choose not to paint themes.
    *   set RenderDocumentFlags::IgnoreViewportScrolling to ignore clipping and
    *  scrollbar painting due to scrolling in the viewport
+   *   set RenderDocumentFlags::ResetViewportScrolling to temporarily set the
+   * viewport scroll position to 0 so that position:fixed elements are drawn
+   * at their initial position.
    *   set RenderDocumentFlags::DrawCaret to draw the caret if one would be
    *  visible (by default the caret is never drawn)
    *   set RenderDocumentFlags::UseWidgetLayers to force rendering to go
