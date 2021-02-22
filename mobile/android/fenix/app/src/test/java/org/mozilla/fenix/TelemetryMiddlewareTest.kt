@@ -25,10 +25,11 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
-import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,7 +39,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.GleanMetrics.Engine as EngineMetrics
+import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
 @RunWith(FenixRobolectricTestRunner::class)
 @ExperimentalCoroutinesApi
@@ -284,14 +285,14 @@ class TelemetryMiddlewareTest {
             selectedTabId = "foreground"
         )).joinBlocking()
 
-        Assert.assertFalse(EngineMetrics.tabKills["foreground"].testHasValue())
-        Assert.assertFalse(EngineMetrics.tabKills["background"].testHasValue())
+        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
+        assertFalse(EngineMetrics.kills["background"].testHasValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("foreground")
         ).joinBlocking()
 
-        Assert.assertTrue(EngineMetrics.tabKills["foreground"].testHasValue())
+        assertTrue(EngineMetrics.kills["foreground"].testHasValue())
     }
 
     @Test
@@ -305,24 +306,24 @@ class TelemetryMiddlewareTest {
             selectedTabId = "foreground"
         )).joinBlocking()
 
-        Assert.assertFalse(EngineMetrics.tabKills["foreground"].testHasValue())
-        Assert.assertFalse(EngineMetrics.tabKills["background"].testHasValue())
+        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
+        assertFalse(EngineMetrics.kills["background"].testHasValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("background_pocket")
         ).joinBlocking()
 
-        Assert.assertFalse(EngineMetrics.tabKills["foreground"].testHasValue())
-        Assert.assertTrue(EngineMetrics.tabKills["background"].testHasValue())
-        assertEquals(1, EngineMetrics.tabKills["background"].testGetValue())
+        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
+        assertTrue(EngineMetrics.kills["background"].testHasValue())
+        assertEquals(1, EngineMetrics.kills["background"].testGetValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("background_verge")
         ).joinBlocking()
 
-        Assert.assertFalse(EngineMetrics.tabKills["foreground"].testHasValue())
-        Assert.assertTrue(EngineMetrics.tabKills["background"].testHasValue())
-        assertEquals(2, EngineMetrics.tabKills["background"].testGetValue())
+        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
+        assertTrue(EngineMetrics.kills["background"].testHasValue())
+        assertEquals(2, EngineMetrics.kills["background"].testGetValue())
     }
 
     @Test
@@ -343,8 +344,8 @@ class TelemetryMiddlewareTest {
             engineSession = mock()
         )).joinBlocking()
 
-        Assert.assertFalse(EngineMetrics.killForegroundAge.testHasValue())
-        Assert.assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
+        assertFalse(EngineMetrics.killForegroundAge.testHasValue())
+        assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
 
         clock.elapsedTime = 500
 
@@ -352,9 +353,9 @@ class TelemetryMiddlewareTest {
             EngineAction.KillEngineSessionAction("foreground")
         ).joinBlocking()
 
-        Assert.assertTrue(EngineMetrics.killForegroundAge.testHasValue())
-        Assert.assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
-        assertEquals(400, EngineMetrics.killForegroundAge.testGetValue())
+        assertTrue(EngineMetrics.killForegroundAge.testHasValue())
+        assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
+        assertEquals(400_000_000, EngineMetrics.killForegroundAge.testGetValue().sum)
     }
 
     @Test
@@ -377,16 +378,16 @@ class TelemetryMiddlewareTest {
 
         clock.elapsedTime = 700
 
-        Assert.assertFalse(EngineMetrics.killForegroundAge.testHasValue())
-        Assert.assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
+        assertFalse(EngineMetrics.killForegroundAge.testHasValue())
+        assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("background_pocket")
         ).joinBlocking()
 
-        Assert.assertTrue(EngineMetrics.killBackgroundAge.testHasValue())
-        Assert.assertFalse(EngineMetrics.killForegroundAge.testHasValue())
-        assertEquals(600, EngineMetrics.killBackgroundAge.testGetValue())
+        assertTrue(EngineMetrics.killBackgroundAge.testHasValue())
+        assertFalse(EngineMetrics.killForegroundAge.testHasValue())
+        assertEquals(600_000_000, EngineMetrics.killBackgroundAge.testGetValue().sum)
     }
 }
 

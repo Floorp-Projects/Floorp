@@ -24,7 +24,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.GleanMetrics.Engine as EngineMetrics
+import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
 /**
  * [Middleware] to record telemetry in response to [BrowserAction]s.
@@ -138,24 +138,24 @@ class TelemetryMiddleware(
         }
 
         val isSelected = tab.id == state.selectedTabId
-        val ageNanos = tab.engineState.ageNanos()
+        val age = tab.engineState.age()
 
         // Increment the counter of killed foreground/background tabs
         val tabKillLabel = if (isSelected) { "foreground" } else { "background" }
-        EngineMetrics.tabKills[tabKillLabel].add()
+        EngineMetrics.kills[tabKillLabel].add()
 
         // Record the age of the engine session of the killed foreground/background tab.
-        if (isSelected && ageNanos != null) {
-            EngineMetrics.killForegroundAge.setRawNanos(ageNanos)
-        } else if (ageNanos != null) {
-            EngineMetrics.killBackgroundAge.setRawNanos(ageNanos)
+        if (isSelected && age != null) {
+            EngineMetrics.killForegroundAge.accumulateSamples(listOf(age).toLongArray())
+        } else if (age != null) {
+            EngineMetrics.killBackgroundAge.accumulateSamples(listOf(age).toLongArray())
         }
     }
 }
 
 @Suppress("MagicNumber")
-private fun EngineState.ageNanos(): Long? {
+private fun EngineState.age(): Long? {
     val timestamp = (timestamp ?: return null)
     val now = Clock.elapsedRealtime()
-    return (now - timestamp) * 1_000_000
+    return (now - timestamp)
 }

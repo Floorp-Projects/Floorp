@@ -4487,8 +4487,8 @@ contextual_menu:
       - fenix-core@mozilla.com
     expires: "2021-06-01"
 
-engine:
-  tab_kills:
+engine_tab:
+  kills:
     type: labeled_counter
     labels:
       - foreground
@@ -4507,7 +4507,7 @@ engine:
       - skaspari@mozilla.com
     expires: "2021-12-31"
   kill_foreground_age:
-    type: timespan
+    type: timing_distribution
     time_unit: millisecond
     description: |
       Measures the age of the engine session of a foreground (selected) tab
@@ -4523,7 +4523,7 @@ engine:
       - skaspari@mozilla.com
     expires: "2021-12-31"
   kill_background_age:
-    type: timespan
+    type: timing_distribution
     time_unit: millisecond
     description: |
       Measures the age of the engine session of a background tab at the
