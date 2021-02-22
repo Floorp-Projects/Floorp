@@ -108,25 +108,25 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         func = sandbox._depends[sandbox["valid_yasm_version"]]._func
 
         # Missing yasm is not an error when nothing requires it.
-        func(None, False, False, False)
+        func(None, False, False)
 
         # Any version of yasm works when nothing requires it.
-        func(Version("1.0"), False, False, False)
+        func(Version("1.0"), False, False)
 
         # Any version of yasm works when something requires any version.
-        func(Version("1.0"), True, False, False)
-        func(Version("1.0"), True, True, False)
-        func(Version("1.0"), False, True, False)
+        func(Version("1.0"), True, False)
+        func(Version("1.0"), True, True)
+        func(Version("1.0"), False, True)
 
         # A version of yasm greater than any requirement works.
-        func(Version("1.5"), Version("1.0"), True, False)
-        func(Version("1.5"), True, Version("1.0"), False)
-        func(Version("1.5"), Version("1.1"), Version("1.0"), False)
+        func(Version("1.5"), Version("1.0"), True)
+        func(Version("1.5"), True, Version("1.0"))
+        func(Version("1.5"), Version("1.1"), Version("1.0"))
 
         out.truncate(0)
         out.seek(0)
         with self.assertRaises(SystemExit):
-            func(None, Version("1.0"), False, False)
+            func(None, Version("1.0"), False)
 
         self.assertEqual(
             out.getvalue(),
@@ -139,7 +139,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         out.truncate(0)
         out.seek(0)
         with self.assertRaises(SystemExit):
-            func(None, Version("1.0"), Version("1.0"), False)
+            func(None, Version("1.0"), Version("1.0"))
 
         self.assertEqual(
             out.getvalue(),
@@ -152,12 +152,12 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         out.truncate(0)
         out.seek(0)
         with self.assertRaises(SystemExit):
-            func(None, Version("1.0"), Version("1.0"), Version("1.0"))
+            func(None, Version("1.0"), Version("1.0"))
 
         self.assertEqual(
             out.getvalue(),
             (
-                "ERROR: Yasm is required to build with jpeg, libav and vpx, but you do not appear "
+                "ERROR: Yasm is required to build with jpeg and vpx, but you do not appear "
                 "to have Yasm installed.\n"
             ),
         )
@@ -165,7 +165,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         out.truncate(0)
         out.seek(0)
         with self.assertRaises(SystemExit):
-            func(Version("1.0"), Version("1.1"), Version("1.0"), False)
+            func(Version("1.0"), Version("1.1"), Version("1.0"))
 
         self.assertEqual(
             out.getvalue(),
@@ -175,7 +175,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
         out.truncate(0)
         out.seek(0)
         with self.assertRaises(SystemExit):
-            func(Version("1.0"), True, Version("1.0.1"), False)
+            func(Version("1.0"), True, Version("1.0.1"))
 
         self.assertEqual(
             out.getvalue(),

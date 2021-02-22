@@ -1857,15 +1857,10 @@ with only_when(compile_environment):
             else:
                 flags = ["-D__x86_64__", "-DPIC", "-DELF"]
         if flags:
-            if target.kernel == "Linux" and target.os == "GNU":
-                need_yasm = Version("1.0.1")
-            else:
-                need_yasm = Version("1.1")
-            return namespace(flags=flags, need_yasm=need_yasm)
+            return namespace(flags=flags)
 
     set_config("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
     set_define("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
-    set_config("LIBAV_FFT_ASFLAGS", libav_fft.flags)
 
 
 # FFmpeg's ffvpx configuration
@@ -1934,15 +1929,13 @@ with only_when(compile_environment | artifact_builds):
     yasm_version,
     in_tree_vpx.need_yasm,
     in_tree_jpeg.use_yasm,
-    libav_fft.need_yasm,
     ffvpx.need_yasm,
 )
-def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_libav, for_ffvpx=False):
+def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_ffvpx=False):
     # Note: the default for for_ffvpx above only matters for unit tests.
     requires = {
         "vpx": for_vpx,
         "jpeg": for_jpeg,
-        "libav": for_libav,
         "ffvpx": for_ffvpx,
     }
     requires = {k: v for (k, v) in requires.items() if v}
