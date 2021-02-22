@@ -4607,6 +4607,10 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
     mRenderingStateFlags |= RenderingStateFlags::IgnoringViewportScrolling;
   }
+  if (aFlags & RenderDocumentFlags::ResetViewportScrolling) {
+    wouldFlushRetainedLayers = true;
+    flags |= PaintFrameFlags::ResetViewportScrolling;
+  }
   if (aFlags & RenderDocumentFlags::DrawWindowNotFlushing) {
     mRenderingStateFlags |= RenderingStateFlags::DrawWindowNotFlushing;
   }
