@@ -124,6 +124,22 @@ void MacroAssemblerMIPS64Compat::convertDoubleToInt32(FloatRegister src,
   ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 
+void MacroAssemblerMIPS64Compat::convertDoubleToPtr(FloatRegister src,
+                                                    Register dest, Label* fail,
+                                                    bool negativeZeroCheck) {
+  if (negativeZeroCheck) {
+    moveFromDouble(src, dest);
+    ma_drol(dest, dest, Imm32(1));
+    ma_b(dest, Imm32(1), fail, Assembler::Equal);
+  }
+  as_truncld(ScratchDoubleReg, src);
+  as_cfc1(ScratchRegister, Assembler::FCSR);
+  moveFromDouble(ScratchDoubleReg, dest);
+  ma_ext(ScratchRegister, ScratchRegister, CauseBitPos, CauseBitCount);
+  as_andi(ScratchRegister, ScratchRegister, CauseIOrVMask);
+  ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
+}
+
 // Checks whether a float32 is representable as a 32-bit integer. If so, the
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
@@ -387,15 +403,15 @@ void MacroAssemblerMIPS64::ma_daddu(Register rd, Imm32 imm) {
   ma_daddu(rd, rd, imm);
 }
 
-void MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs,
-                                              Register rt, Label* overflow) {
+void MacroAssemblerMIPS64::ma_add32TestOverflow(Register rd, Register rs,
+                                                Register rt, Label* overflow) {
   as_daddu(SecondScratchReg, rs, rt);
   as_addu(rd, rs, rt);
   ma_b(rd, SecondScratchReg, overflow, Assembler::NotEqual);
 }
 
-void MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs,
-                                              Imm32 imm, Label* overflow) {
+void MacroAssemblerMIPS64::ma_add32TestOverflow(Register rd, Register rs,
+                                                Imm32 imm, Label* overflow) {
   // Check for signed range because of as_daddiu
   if (Imm16::IsInSignedRange(imm.value)) {
     as_daddiu(SecondScratchReg, rs, imm.value);
@@ -403,7 +419,67 @@ void MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs,
     ma_b(rd, SecondScratchReg, overflow, Assembler::NotEqual);
   } else {
     ma_li(ScratchRegister, imm);
-    ma_addTestOverflow(rd, rs, ScratchRegister, overflow);
+    ma_add32TestOverflow(rd, rs, ScratchRegister, overflow);
+  }
+}
+
+void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
+                                                 Register rt, Label* overflow) {
+  SecondScratchRegisterScope scratch2(asMasm());
+  MOZ_ASSERT_IF(rs == rd, rs != rt);
+  MOZ_ASSERT(rd != rt);
+  MOZ_ASSERT(rd != scratch2);
+
+  if (rs == rt) {
+    as_daddu(rd, rs, rs);
+    as_xor(scratch2, rs, rd);
+  } else {
+    ScratchRegisterScope scratch(asMasm());
+    MOZ_ASSERT(rs != scratch);
+    MOZ_ASSERT(rt != scratch);
+    MOZ_ASSERT(rd != scratch);
+
+    // If the sign of rs and rt are different, no overflow
+    as_xor(scratch, rs, rt);
+    as_nor(scratch, scratch, zero);
+
+    as_daddu(rd, rs, rt);
+    as_xor(scratch2, rd, rt);
+    as_and(scratch2, scratch2, scratch);
+  }
+
+  ma_b(scratch2, zero, overflow, Assembler::LessThan);
+}
+
+void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
+                                                 Imm32 imm, Label* overflow) {
+  ma_li(ScratchRegister, imm);
+  ma_addPtrTestOverflow(rd, rs, ScratchRegister, overflow);
+}
+
+void MacroAssemblerMIPS64::ma_addPtrTestCarry(Condition cond, Register rd,
+                                              Register rs, Register rt,
+                                              Label* overflow) {
+  SecondScratchRegisterScope scratch2(asMasm());
+  as_daddu(rd, rs, rt);
+  as_sltu(scratch2, rd, rt);
+  ma_b(scratch2, scratch2, overflow,
+       cond == Assembler::CarrySet ? Assembler::NonZero : Assembler::Zero);
+}
+
+void MacroAssemblerMIPS64::ma_addPtrTestCarry(Condition cond, Register rd,
+                                              Register rs, Imm32 imm,
+                                              Label* overflow) {
+  // Check for signed range because of as_daddiu
+  if (Imm16::IsInSignedRange(imm.value)) {
+    SecondScratchRegisterScope scratch2(asMasm());
+    as_daddiu(rd, rs, imm.value);
+    as_sltiu(scratch2, rd, imm.value);
+    ma_b(scratch2, scratch2, overflow,
+         cond == Assembler::CarrySet ? Assembler::NonZero : Assembler::Zero);
+  } else {
+    ma_li(ScratchRegister, imm);
+    ma_addPtrTestCarry(cond, rd, rs, ScratchRegister, overflow);
   }
 }
 
@@ -425,11 +501,48 @@ void MacroAssemblerMIPS64::ma_dsubu(Register rd, Imm32 imm) {
   ma_dsubu(rd, rd, imm);
 }
 
-void MacroAssemblerMIPS64::ma_subTestOverflow(Register rd, Register rs,
-                                              Register rt, Label* overflow) {
+void MacroAssemblerMIPS64::ma_sub32TestOverflow(Register rd, Register rs,
+                                                Register rt, Label* overflow) {
   as_dsubu(SecondScratchReg, rs, rt);
   as_subu(rd, rs, rt);
   ma_b(rd, SecondScratchReg, overflow, Assembler::NotEqual);
+}
+
+void MacroAssemblerMIPS64::ma_subPtrTestOverflow(Register rd, Register rs,
+                                                 Register rt, Label* overflow) {
+  SecondScratchRegisterScope scratch2(asMasm());
+  MOZ_ASSERT_IF(rs == rd, rs != rt);
+  MOZ_ASSERT(rd != rt);
+  MOZ_ASSERT(rs != scratch2);
+  MOZ_ASSERT(rt != scratch2);
+  MOZ_ASSERT(rd != scratch2);
+
+  Register rs_copy = rs;
+
+  if (rs == rd) {
+    ma_move(scratch2, rs);
+    rs_copy = scratch2;
+  }
+
+  {
+    ScratchRegisterScope scratch(asMasm());
+    MOZ_ASSERT(rd != scratch);
+
+    as_dsubu(rd, rs, rt);
+    // If the sign of rs and rt are the same, no overflow
+    as_xor(scratch, rs_copy, rt);
+    // Check if the sign of rd and rs are the same
+    as_xor(scratch2, rd, rs_copy);
+    as_and(scratch2, scratch2, scratch);
+  }
+
+  ma_b(scratch2, zero, overflow, Assembler::LessThan);
+}
+
+void MacroAssemblerMIPS64::ma_subPtrTestOverflow(Register rd, Register rs,
+                                                 Imm32 imm, Label* overflow) {
+  ma_li(ScratchRegister, imm);
+  ma_subPtrTestOverflow(rd, rs, ScratchRegister, overflow);
 }
 
 void MacroAssemblerMIPS64::ma_dmult(Register rs, Imm32 imm) {
@@ -443,8 +556,25 @@ void MacroAssemblerMIPS64::ma_dmult(Register rs, Imm32 imm) {
 #endif
 }
 
-// Memory.
+void MacroAssemblerMIPS64::ma_mulPtrTestOverflow(Register rd, Register rs,
+                                                 Register rt, Label* overflow) {
+#ifdef MIPSR6
+  if (rd == rs) {
+    ma_move(SecondScratchReg, rs);
+    rs = SecondScratchReg;
+  }
+  as_dmul(rd, rs, rt);
+  as_dmuh(SecondScratchReg, rs, rt);
+#else
+  as_dmult(rs, rt);
+  as_mflo(rd);
+  as_mfhi(SecondScratchReg);
+#endif
+  as_dsra32(ScratchRegister, rd, 63);
+  ma_b(ScratchRegister, SecondScratchReg, overflow, Assembler::NotEqual);
+}
 
+// Memory.
 void MacroAssemblerMIPS64::ma_load(Register dest, Address address,
                                    LoadStoreSize size,
                                    LoadStoreExtension extension) {
@@ -788,6 +918,12 @@ void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Register rs, ImmWord imm,
 void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Register rs, ImmPtr imm,
                                       Condition c) {
   ma_cmp_set(rd, rs, ImmWord(uintptr_t(imm.value)), c);
+}
+
+void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Address address, Imm32 imm,
+                                      Condition c) {
+  ma_load(ScratchRegister, address, SizeWord, SignExtend);
+  ma_cmp_set(rd, ScratchRegister, imm, c);
 }
 
 // fp instructions
