@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface nsIAsyncShutdownClient;
-
 /**
  * IOUtils is a simple, efficient interface for performing file I/O from a
  * privileged chrome-only context. All asynchronous I/O tasks are run on
@@ -206,12 +204,6 @@ namespace IOUtils {
    * @return A promise that resolves to whether or not the given file exists.
    */
   Promise<boolean> exists(DOMString path);
-};
-
-[Exposed=Window]
-partial namespace IOUtils {
-  [Throws]
-  readonly attribute any profileBeforeChange;
 };
 
 /**
