@@ -1144,14 +1144,15 @@ bool TryPreserveWrapper(JS::Handle<JSObject*> obj) {
 
   // The addProperty hook for WebIDL classes does wrapper preservation, and
   // nothing else, so call it, if present.
-  const DOMJSClass* domClass = GetDOMClass(obj);
-  const JSClass* clasp = domClass->ToJSClass();
-  JSAddPropertyOp addProperty = clasp->getAddProperty();
+
+  const JSClass* clasp = JS::GetClass(obj);
+  const DOMJSClass* domClass = GetDOMClass(clasp);
 
   // We expect all proxies to be nsISupports.
-  MOZ_RELEASE_ASSERT(!clasp->isProxy(),
+  MOZ_RELEASE_ASSERT(clasp->isNativeObject(),
                      "Should not call addProperty for proxies.");
 
+  JSAddPropertyOp addProperty = clasp->getAddProperty();
   if (!addProperty) {
     return true;
   }
@@ -1172,10 +1173,11 @@ bool HasReleasedWrapper(JS::Handle<JSObject*> obj) {
   if (nsISupports* native = UnwrapDOMObjectToISupports(obj)) {
     CallQueryInterface(native, &cache);
   } else {
-    const DOMJSClass* domClass = GetDOMClass(obj);
+    const JSClass* clasp = JS::GetClass(obj);
+    const DOMJSClass* domClass = GetDOMClass(clasp);
 
     // We expect all proxies to be nsISupports.
-    MOZ_RELEASE_ASSERT(!domClass->ToJSClass()->isProxy(),
+    MOZ_RELEASE_ASSERT(clasp->isNativeObject(),
                        "Should not call getWrapperCache for proxies.");
 
     WrapperCacheGetter getter = domClass->mWrapperCacheGetter;

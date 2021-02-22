@@ -117,7 +117,7 @@
 MOZ_ALWAYS_INLINE size_t JSSLOT_FREE(const JSClass* clasp) {
   // Proxy classes have reserved slots, but proxies manage their own slot
   // layout.
-  MOZ_ASSERT(!clasp->isProxy());
+  MOZ_ASSERT(!clasp->isProxyObject());
   return JSCLASS_RESERVED_SLOTS(clasp);
 }
 
@@ -1284,7 +1284,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     // Proxy classes have reserved slots, but proxies manage their own slot
     // layout. This means all non-native object shapes have nfixed == 0 and
     // slotSpan == 0.
-    uint32_t free = clasp->isProxy() ? 0 : JSSLOT_FREE(clasp);
+    uint32_t free = clasp->isProxyObject() ? 0 : JSSLOT_FREE(clasp);
     return hasMissingSlot() ? free : std::max(free, maybeSlot() + 1);
   }
 

@@ -826,7 +826,7 @@ bool CDataArrayProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id,
 }
 
 static JSObject* MaybeUnwrapArrayWrapper(JSObject* obj) {
-  if (IsProxy(obj) &&
+  if (obj->is<ProxyObject>() &&
       obj->as<ProxyObject>().handler() == &CDataArrayProxyHandler::singleton) {
     return obj->as<ProxyObject>().target();
   }
