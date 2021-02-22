@@ -120,7 +120,6 @@ TestRunner.slowestTestTime = 0;
 TestRunner.slowestTestURL = "";
 TestRunner.interactiveDebugger = false;
 TestRunner.cleanupCrashes = false;
-TestRunner.timeoutAspass = false;
 
 TestRunner._expectingProcessCrash = false;
 TestRunner._structuredFormatter = new StructuredFormatter();
@@ -141,11 +140,7 @@ var coverageCollector = {};
 TestRunner._checkForHangs = function() {
   function reportError(win, msg) {
     if ("SimpleTest" in win) {
-      if (TestRunner.timeoutAsPass) {
-        win.SimpleTest.record(false, msg, "", "", false);
-      } else {
-        win.SimpleTest.ok(false, msg);
-      }
+      win.SimpleTest.ok(false, msg);
     } else if ("W3CTest" in win) {
       win.W3CTest.logFailure(msg);
     }

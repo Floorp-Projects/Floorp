@@ -1734,10 +1734,6 @@ toolbar#nav-bar {
             d["jscovDirPrefix"] = options.jscov_dir_prefix
         if not options.keep_open:
             d["closeWhenDone"] = "1"
-
-        d["runFailures"] = False
-        if options.runFailures:
-            d["runFailures"] = True
         content = json.dumps(d)
 
         with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
@@ -2332,8 +2328,6 @@ toolbar#nav-bar {
         bisectChunk=None,
         marionette_args=None,
         e10s=True,
-        runFailures=False,
-        crashAsPass=False,
     ):
         """
         Run the app, log the duration it took to execute, return the status code.
@@ -2543,16 +2537,10 @@ toolbar#nav-bar {
             # record post-test information
             if status:
                 self.message_logger.dump_buffered()
-                if crashAsPass:
-                    self.log.info(
-                        "TEST-PASS | %s | application terminated with exit code %s"
-                        % (self.lastTestSeen, status)
-                    )
-                else:
-                    self.log.error(
-                        "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s"
-                        % (self.lastTestSeen, status)
-                    )
+                self.log.error(
+                    "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s"
+                    % (self.lastTestSeen, status)
+                )
             else:
                 self.lastTestSeen = "Main app process exited normally"
 
@@ -2567,23 +2555,13 @@ toolbar#nav-bar {
             )
 
             # check for crashes
-            quiet = False
-            if crashAsPass:
-                quiet = True
             minidump_path = os.path.join(self.profile.profile, "minidumps")
             crash_count = mozcrash.log_crashes(
-                self.log,
-                minidump_path,
-                symbolsPath,
-                test=self.lastTestSeen,
-                quiet=quiet,
+                self.log, minidump_path, symbolsPath, test=self.lastTestSeen
             )
 
             if crash_count or zombieProcesses:
                 status = 1
-
-            if crashAsPass:
-                status = 0
 
         finally:
             # cleanup
@@ -3123,12 +3101,6 @@ toolbar#nav-bar {
                 if self.urlOpts:
                     testURL += "?" + "&".join(self.urlOpts)
 
-                if options.runFailures:
-                    testURL += "&runFailures=true"
-
-                if options.timeoutAsPass:
-                    testURL += "&timeoutAsPass=true"
-
                 self.log.info("runtests.py | Running with scheme: {}".format(scheme))
                 self.log.info(
                     "runtests.py | Running with e10s: {}".format(options.e10s)
@@ -3172,8 +3144,6 @@ toolbar#nav-bar {
                     bisectChunk=options.bisectChunk,
                     marionette_args=marionette_args,
                     e10s=options.e10s,
-                    runFailures=options.runFailures,
-                    crashAsPass=options.crashAsPass,
                 )
                 status = ret or status
         except KeyboardInterrupt:

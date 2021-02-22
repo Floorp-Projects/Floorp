@@ -200,11 +200,6 @@ class XPCShellTestThread(Thread):
         self.extraPrefs = kwargs.get("extraPrefs")
         self.verboseIfFails = kwargs.get("verboseIfFails")
         self.headless = kwargs.get("headless")
-        self.runFailures = kwargs.get("runFailures")
-        self.timeoutAsPass = kwargs.get("timeoutAsPass")
-        self.crashAsPass = kwargs.get("crashAsPass")
-        if self.runFailures:
-            retry = False
 
         # Default the test prefsFile to the rootPrefsFile.
         self.prefsFile = self.rootPrefsFile
@@ -327,12 +322,8 @@ class XPCShellTestThread(Thread):
         Simple wrapper to check for crashes.
         On a remote system, this is more complex and we need to overload this function.
         """
-        quiet = False
-        if self.crashAsPass:
-            quiet = True
-
         return mozcrash.log_crashes(
-            self.log, dump_directory, symbols_path, test=test_name, quiet=quiet
+            self.log, dump_directory, symbols_path, test=test_name
         )
 
     def logCommand(self, name, completeCmd, testdir):
@@ -396,14 +387,10 @@ class XPCShellTestThread(Thread):
                 message="Test timed out",
             )
         else:
-            result = "TIMEOUT"
-            if self.timeoutAsPass:
-                expected = "FAIL"
-                result = "FAIL"
             self.failCount = 1
             self.log.test_end(
                 self.test_object["id"],
-                result,
+                "TIMEOUT",
                 expected=expected,
                 message="Test timed out",
             )
@@ -1656,8 +1643,6 @@ class XPCShellTests(object):
         self.enable_webrender = options.get("enable_webrender")
         self.headless = options.get("headless")
         self.runFailures = options.get("runFailures")
-        self.timeoutAsPass = options.get("timeoutAsPass")
-        self.crashAsPass = options.get("crashAsPass")
 
         self.testCount = 0
         self.passCount = 0
@@ -1758,9 +1743,6 @@ class XPCShellTests(object):
             "extraPrefs": options.get("extraPrefs") or [],
             "verboseIfFails": self.verboseIfFails,
             "headless": self.headless,
-            "runFailures": self.runFailures,
-            "timeoutAsPass": self.timeoutAsPass,
-            "crashAsPass": self.crashAsPass,
         }
 
         if self.sequential:
@@ -2060,13 +2042,6 @@ class XPCShellTests(object):
             self.log.error("No tests run. Did you pass an invalid --test-path?")
             self.failCount = 1
 
-        # doing this allows us to pass the mozharness parsers that
-        # report an orange job for failCount>0
-        if self.runFailures:
-            passed = self.passCount
-            self.passCount = self.failCount
-            self.failCount = passed
-
         self.log.info("INFO | Result summary:")
         self.log.info("INFO | Passed: %d" % self.passCount)
         self.log.info("INFO | Failed: %d" % self.failCount)
@@ -2082,7 +2057,7 @@ class XPCShellTests(object):
             return False
 
         self.log.suite_end()
-        return self.runFailures or self.failCount == 0
+        return self.failCount == 0
 
 
 def main():
