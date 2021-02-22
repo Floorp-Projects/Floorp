@@ -73,7 +73,7 @@ inline bool IsExtensible(JSContext* cx, JS::Handle<JSObject*> obj,
   // If the following assertion fails, there's somewhere else a missing
   // call to shrinkCapacityToInitializedLength() which needs to be found and
   // fixed.
-  MOZ_ASSERT_IF(obj->isNative() && !*extensible,
+  MOZ_ASSERT_IF(obj->is<NativeObject>() && !*extensible,
                 obj->as<NativeObject>().getDenseInitializedLength() ==
                     obj->as<NativeObject>().getDenseCapacity());
   return true;

@@ -1429,7 +1429,7 @@ static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
                                       size_t* properties, bool* optimized) {
   *optimized = false;
 
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return true;
   }
 

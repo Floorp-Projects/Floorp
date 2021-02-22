@@ -445,7 +445,7 @@ static bool IsCacheableProtoChain(JSObject* obj, JSObject* holder) {
      * altered during the lookupProperty call.
      */
     JSObject* proto = obj->staticPrototype();
-    if (!proto || !proto->isNative()) {
+    if (!proto || !proto->is<NativeObject>()) {
       return false;
     }
     obj = proto;
@@ -517,7 +517,7 @@ static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
 }
 
 static bool CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return false;
   }
   // Don't handle proto chains with resolve hooks.
@@ -2376,7 +2376,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
 AttachDecision GetPropIRGenerator::tryAttachDenseElement(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -2425,7 +2425,7 @@ static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
       break;
     }
 
-    if (!proto->isNative()) {
+    if (!proto->is<NativeObject>()) {
       return false;
     }
 
@@ -2443,7 +2443,7 @@ static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
 AttachDecision GetPropIRGenerator::tryAttachDenseElementHole(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -2469,7 +2469,7 @@ AttachDecision GetPropIRGenerator::tryAttachDenseElementHole(
 AttachDecision GetPropIRGenerator::tryAttachSparseElement(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
   NativeObject* nobj = &obj->as<NativeObject>();
@@ -2588,7 +2588,7 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
 AttachDecision GetPropIRGenerator::tryAttachGenericElement(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -3101,7 +3101,7 @@ AttachDecision HasPropIRGenerator::tryAttachDense(HandleObject obj,
                                                   ObjOperandId objId,
                                                   uint32_t index,
                                                   Int32OperandId indexId) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -3125,7 +3125,7 @@ AttachDecision HasPropIRGenerator::tryAttachDenseHole(HandleObject obj,
                                                       Int32OperandId indexId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -3161,7 +3161,7 @@ AttachDecision HasPropIRGenerator::tryAttachSparse(HandleObject obj,
                                                    Int32OperandId indexId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
   if (!obj->as<NativeObject>().isIndexed()) {
@@ -3446,7 +3446,7 @@ AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(JSObject* obj,
                                                              jsid key,
                                                              ValOperandId keyId,
                                                              bool hasOwn) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -3614,7 +3614,7 @@ static Shape* LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id) {
 
 static bool CanAttachNativeSetSlot(JSOp op, HandleObject obj, HandleId id,
                                    MutableHandleShape propShape) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return false;
   }
 
@@ -3906,7 +3906,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
 AttachDecision SetPropIRGenerator::tryAttachSetDenseElement(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId, ValOperandId rhsId) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -3962,7 +3962,7 @@ static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
       break;
     }
 
-    if (!proto->isNative()) {
+    if (!proto->is<NativeObject>()) {
       return false;
     }
 
@@ -3983,7 +3983,7 @@ static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
 AttachDecision SetPropIRGenerator::tryAttachSetDenseElementHole(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId, ValOperandId rhsId) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -4062,7 +4062,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
     return AttachDecision::NoAction;
   }
 
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
   NativeObject* nobj = &obj->as<NativeObject>();
@@ -4483,7 +4483,7 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
   // native, and that all prototypes have no setter defined on the property.
   for (JSObject* proto = obj->staticPrototype(); proto;
        proto = proto->staticPrototype()) {
-    if (!proto->isNative()) {
+    if (!proto->is<NativeObject>()) {
       return false;
     }
 
@@ -4540,7 +4540,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
     return AttachDecision::NoAction;
   }
 
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -4817,7 +4817,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
     return AttachDecision::NoAction;
   }
 
-  MOZ_ASSERT(obj->isNative());
+  MOZ_ASSERT(obj->is<NativeObject>());
 
   // Guard on the receiver's shape.
   TestMatchingNativeReceiver(writer, &obj->as<NativeObject>(), objId);

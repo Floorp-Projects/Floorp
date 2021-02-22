@@ -256,7 +256,7 @@ inline bool JSObject::hasUncacheableProto() const {
 }
 
 MOZ_ALWAYS_INLINE bool JSObject::maybeHasInterestingSymbolProperty() const {
-  if (isNative()) {
+  if (is<js::NativeObject>()) {
     return as<js::NativeObject>().hasInterestingSymbol();
   }
   return true;

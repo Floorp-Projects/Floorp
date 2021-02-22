@@ -482,14 +482,14 @@ static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
         return false;
       }
 
-      if (pobj->isNative()) {
+      if (pobj->is<NativeObject>()) {
         if (!EnumerateNativeProperties(cx, pobj.as<NativeObject>(), flags,
                                        &visited, props, true)) {
           return false;
         }
       }
 
-    } else if (pobj->isNative()) {
+    } else if (pobj->is<NativeObject>()) {
       // Give the object a chance to resolve all lazy properties
       if (JSEnumerateOp enumerate = pobj->getClass()->getEnumerate()) {
         if (!enumerate(cx, pobj.as<NativeObject>())) {
@@ -800,7 +800,7 @@ bool IteratorHashPolicy::match(PropertyIteratorObject* obj,
 }
 
 static inline bool CanCompareIterableObjectToCache(JSObject* obj) {
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     return obj->as<NativeObject>().getDenseInitializedLength() == 0;
   }
   return false;
@@ -852,8 +852,6 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
 
 static bool CanStoreInIteratorCache(JSObject* obj) {
   do {
-    MOZ_ASSERT(obj->isNative());
-
     MOZ_ASSERT(obj->as<NativeObject>().getDenseInitializedLength() == 0);
 
     // Typed arrays have indexed properties not captured by the Shape guard.

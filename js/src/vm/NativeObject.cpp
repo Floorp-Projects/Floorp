@@ -177,7 +177,7 @@ void js::NativeObject::checkShapeConsistency() {
     return;
   }
 
-  MOZ_ASSERT(isNative());
+  MOZ_ASSERT(is<NativeObject>());
 
   Shape* shape = lastProperty();
   Shape* prev = nullptr;
@@ -299,12 +299,12 @@ bool js::NativeObject::isNumFixedSlots(uint32_t nfixed) const {
 #endif /* DEBUG */
 
 Shape* js::NativeObject::lookup(JSContext* cx, jsid id) {
-  MOZ_ASSERT(isNative());
+  MOZ_ASSERT(is<NativeObject>());
   return Shape::search(cx, lastProperty(), id);
 }
 
 Shape* js::NativeObject::lookupPure(jsid id) {
-  MOZ_ASSERT(isNative());
+  MOZ_ASSERT(is<NativeObject>());
   return Shape::searchNoHashify(lastProperty(), id);
 }
 
@@ -498,7 +498,7 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
 
 bool NativeObject::willBeSparseElements(uint32_t requiredCapacity,
                                         uint32_t newElementsHint) {
-  MOZ_ASSERT(isNative());
+  MOZ_ASSERT(is<NativeObject>());
   MOZ_ASSERT(requiredCapacity > MIN_SPARSE_INDEX);
 
   uint32_t cap = getDenseCapacity();
@@ -1234,7 +1234,7 @@ static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
   RootedObject proto(cx, obj->staticPrototype());
   while (proto) {
     // Lookups will not be cached through non-native protos.
-    if (!proto->isNative()) {
+    if (!proto->is<NativeObject>()) {
       break;
     }
 
@@ -1258,7 +1258,7 @@ static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
   // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
 
   // Inlined fast path for non-prototype/non-native objects.
-  if (!obj->isDelegate() || !obj->isNative()) {
+  if (!obj->isDelegate() || !obj->is<NativeObject>()) {
     return true;
   }
 
@@ -2016,7 +2016,7 @@ bool js::NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     // plumbing of HasProperty; the top of the loop is where
     // we're going to end up anyway. But if pobj is non-native,
     // that optimization would be incorrect.
-    if (!proto->isNative()) {
+    if (!proto->is<NativeObject>()) {
       RootedObject protoRoot(cx, proto);
       return HasProperty(cx, protoRoot, id, foundp);
     }
@@ -2397,7 +2397,7 @@ static bool MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id) {
 static bool NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj,
                                           HandleShape shape, HandleValue v,
                                           ObjectOpResult& result) {
-  MOZ_ASSERT(obj->isNative());
+  MOZ_ASSERT(obj->is<NativeObject>());
   MOZ_ASSERT(shape->isDataDescriptor());
 
   if (shape->hasDefaultSetter()) {
@@ -2679,7 +2679,7 @@ bool js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     // plumbing of SetProperty; the top of the loop is where we're going to
     // end up anyway. But if pobj is non-native, that optimization would be
     // incorrect.
-    if (!proto->isNative()) {
+    if (!proto->is<NativeObject>()) {
       // Unqualified assignments are not specified to go through [[Set]]
       // at all, but they do go through this function. So check for
       // unqualified assignment to a nonexistent global (a strict error).
@@ -2839,7 +2839,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
     key = shape->propid();
     MOZ_ASSERT(!JSID_IS_INT(key));
 
-    MOZ_ASSERT(from->isNative());
+    MOZ_ASSERT(from->is<NativeObject>());
     MOZ_ASSERT(from->lastProperty() == fromShape);
 
     value = from->getSlot(shape->slot());

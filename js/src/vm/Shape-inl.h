@@ -275,7 +275,7 @@ inline AutoRooterGetterSetter::AutoRooterGetterSetter(JSContext* cx,
 
 static inline uint8_t GetPropertyAttributes(JSObject* obj,
                                             PropertyResult prop) {
-  MOZ_ASSERT(obj->isNative());
+  MOZ_ASSERT(obj->is<NativeObject>());
 
   if (prop.isDenseElement()) {
     return obj->as<NativeObject>().getElementsHeader()->elementAttributes();
