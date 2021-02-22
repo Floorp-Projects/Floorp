@@ -50,6 +50,7 @@
   border-radius: 0;
   text-align: start;
   min-height: initial;
+  font-weight: normal;
 }
 
 .menuitem-button:dir(rtl) {
