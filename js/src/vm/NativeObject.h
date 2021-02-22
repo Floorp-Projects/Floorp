@@ -1670,7 +1670,7 @@ extern bool GetNameBoundInEnvironment(JSContext* cx, HandleObject env,
 
 template <>
 inline bool JSObject::is<js::NativeObject>() const {
-  return isNative();
+  return getClass()->isNative();
 }
 
 namespace js {

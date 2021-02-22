@@ -86,7 +86,7 @@ inline void NativeObject::removeDenseElementForSparseIndex(uint32_t index) {
 }
 
 inline void NativeObject::markDenseElementsNotPacked() {
-  MOZ_ASSERT(isNative());
+  MOZ_ASSERT(is<NativeObject>());
   getElementsHeader()->markNonPacked();
 }
 
@@ -378,7 +378,7 @@ DenseElementResult NativeObject::extendDenseElements(JSContext* cx,
 inline DenseElementResult NativeObject::ensureDenseElements(JSContext* cx,
                                                             uint32_t index,
                                                             uint32_t extra) {
-  MOZ_ASSERT(isNative());
+  MOZ_ASSERT(is<NativeObject>());
   MOZ_ASSERT(isExtensible() || (containsDenseElement(index) && extra == 1));
 
   uint32_t requiredCapacity;
@@ -811,7 +811,7 @@ static MOZ_ALWAYS_INLINE bool LookupPropertyInline(
     if (!proto) {
       break;
     }
-    if (!proto->isNative()) {
+    if (!proto->template is<NativeObject>()) {
       MOZ_ASSERT(!cx->isHelperThreadContext());
       if constexpr (!allowGC) {
         return false;

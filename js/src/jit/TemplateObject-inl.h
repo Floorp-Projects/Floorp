@@ -19,7 +19,9 @@ inline gc::AllocKind TemplateObject::getAllocKind() const {
   return obj_->asTenured().getAllocKind();
 }
 
-inline bool TemplateObject::isNative() const { return obj_->isNative(); }
+inline bool TemplateObject::isNative() const {
+  return obj_->is<NativeObject>();
+}
 
 inline bool TemplateObject::isArrayObject() const {
   return obj_->is<ArrayObject>();

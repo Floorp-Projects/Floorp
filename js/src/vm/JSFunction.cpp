@@ -2438,7 +2438,7 @@ void js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args,
   switch (thisv.type()) {
     case ValueType::Object:
       MOZ_ASSERT(thisv.toObject().getClass() != clasp ||
-                 !thisv.toObject().isNative() ||
+                 !thisv.toObject().is<NativeObject>() ||
                  !thisv.toObject().staticPrototype() ||
                  thisv.toObject().staticPrototype()->getClass() != clasp);
       break;

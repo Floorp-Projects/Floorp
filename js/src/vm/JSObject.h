@@ -105,8 +105,6 @@ class JSObject
   void setGroupRaw(js::ObjectGroup* group) { setHeaderPtr(group); }
 
  public:
-  bool isNative() const { return getClass()->isNative(); }
-
   const JSClass* getClass() const { return group()->clasp(); }
   bool hasClass(const JSClass* c) const { return getClass() == c; }
 
@@ -322,7 +320,6 @@ class JSObject
   bool hasDynamicPrototype() const {
     bool dynamic = taggedProto().isDynamic();
     MOZ_ASSERT_IF(dynamic, uninlinedIsProxy());
-    MOZ_ASSERT_IF(dynamic, !isNative());
     return dynamic;
   }
 

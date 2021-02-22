@@ -513,7 +513,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
   }
 
   // Steps 6-9, loosely interpreted.
-  if (obj->isNative() && !obj->as<NativeObject>().inDictionaryMode() &&
+  if (obj->is<NativeObject>() && !obj->as<NativeObject>().inDictionaryMode() &&
       !obj->is<TypedArrayObject>() && !obj->is<MappedArgumentsObject>()) {
     HandleNativeObject nobj = obj.as<NativeObject>();
 
@@ -616,7 +616,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
   }
 
   // Finally, freeze or seal the dense elements.
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     if (!ObjectElements::FreezeOrSeal(cx, obj.as<NativeObject>(), level)) {
       return false;
     }
@@ -665,7 +665,7 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
   }
 
   // Fast path for native objects.
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     HandleNativeObject nobj = obj.as<NativeObject>();
 
     // Force lazy properties to be resolved.
@@ -1449,7 +1449,7 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
 void JSObject::fixDictionaryShapeAfterSwap() {
   // Dictionary shapes can point back to their containing objects, so after
   // swapping the guts of those objects fix the pointers up.
-  if (isNative() && as<NativeObject>().inDictionaryMode()) {
+  if (is<NativeObject>() && as<NativeObject>().inDictionaryMode()) {
     shape()->dictNext.setObject(this);
   }
 }
@@ -1579,9 +1579,9 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   // teleporting optimizations.
   //
   // See: ReshapeForProtoMutation, ReshapeForShadowedProp
-  MOZ_ASSERT_IF(a->isNative() && a->isDelegate(),
+  MOZ_ASSERT_IF(a->is<NativeObject>() && a->isDelegate(),
                 a->taggedProto() == TaggedProto());
-  MOZ_ASSERT_IF(b->isNative() && b->isDelegate(),
+  MOZ_ASSERT_IF(b->is<NativeObject>() && b->isDelegate(),
                 b->taggedProto() == TaggedProto());
 
   bool aIsProxyWithInlineValues =
@@ -1627,8 +1627,8 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     // When the objects have different sizes, they will have different
     // numbers of fixed slots before and after the swap, so the slots for
     // native objects will need to be rearranged.
-    NativeObject* na = a->isNative() ? &a->as<NativeObject>() : nullptr;
-    NativeObject* nb = b->isNative() ? &b->as<NativeObject>() : nullptr;
+    NativeObject* na = a->is<NativeObject>() ? &a->as<NativeObject>() : nullptr;
+    NativeObject* nb = b->is<NativeObject>() ? &b->as<NativeObject>() : nullptr;
 
     // Remember the original values from the objects.
     RootedValueVector avals(cx);
@@ -1827,7 +1827,7 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
 
   RootedObject pobj(cx, obj);
 
-  while (pobj && pobj->isNative()) {
+  while (pobj && pobj->is<NativeObject>()) {
     if (!JSObject::setUncacheableProto(cx, pobj)) {
       return false;
     }
@@ -2164,7 +2164,7 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     *isTypedArrayOutOfRange = false;
   }
 
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     // Search for a native dense element, typed array element, or property.
 
     if (JSID_IS_INT(id)) {
@@ -2254,7 +2254,7 @@ bool js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp) {
     return true;
   }
 
-  return pobj->isNative() &&
+  return pobj->is<NativeObject>() &&
          NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp, cx);
 }
 
@@ -2272,7 +2272,7 @@ bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
   }
 
   *found = true;
-  return obj->isNative() &&
+  return obj->is<NativeObject>() &&
          NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp, cx);
 }
 
@@ -3095,7 +3095,7 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
   uint32_t slot = uint32_t(tcx->index());
 
   Shape* shape;
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     shape = obj->as<NativeObject>().lastProperty();
     while (shape && (shape->isEmptyShape() || !shape->isDataProperty() ||
                      shape->slot() != slot)) {
@@ -3360,7 +3360,7 @@ void JSObject::dump(js::GenericPrinter& out) const {
   }
 
   const NativeObject* nobj =
-      obj->isNative() ? &obj->as<NativeObject>() : nullptr;
+      obj->is<NativeObject>() ? &obj->as<NativeObject>() : nullptr;
   if (nobj) {
     if (nobj->inDictionaryMode()) {
       out.put(" inDictionaryMode");

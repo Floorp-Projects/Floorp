@@ -2076,7 +2076,7 @@ static bool intrinsic_CopyDataPropertiesOrGetOwnKeys(JSContext* cx,
   RootedObject from(cx, &args[1].toObject());
   RootedObject excludedItems(cx, args[2].toObjectOrNull());
 
-  if (from->isNative() && target->is<PlainObject>() &&
+  if (from->is<NativeObject>() && target->is<PlainObject>() &&
       (!excludedItems || excludedItems->is<PlainObject>())) {
     bool optimized;
     if (!CopyDataPropertiesNative(
@@ -3138,7 +3138,7 @@ static JSObject* CloneObject(JSContext* cx,
   } else if (selfHostedObject->is<ArrayObject>()) {
     clone = NewTenuredDenseEmptyArray(cx, nullptr);
   } else {
-    MOZ_ASSERT(selfHostedObject->isNative());
+    MOZ_ASSERT(selfHostedObject->is<NativeObject>());
     clone = NewObjectWithGivenProto(
         cx, selfHostedObject->getClass(), nullptr,
         selfHostedObject->asTenured().getAllocKind(), TenuredObject);
