@@ -22,12 +22,6 @@
 namespace js {
 namespace gc {
 
-// Specializations for barriered types.
-template <typename T>
-inline Cell* ToMarkable(WriteBarriered<T>* thingp) {
-  return ToMarkable(thingp->get());
-}
-
 namespace detail {
 
 template <typename T>
@@ -186,7 +180,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
   }
 
   if (keyColor) {
-    gc::Cell* cellValue = gc::ToMarkable(&value);
+    gc::Cell* cellValue = gc::ToMarkable(value);
     if (cellValue) {
       gc::AutoSetMarkColor autoColor(*marker, std::min(mapColor, keyColor));
       CellColor valueColor = gc::detail::GetEffectiveColor(rt, cellValue);
