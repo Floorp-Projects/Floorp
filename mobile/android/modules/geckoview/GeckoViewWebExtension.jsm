@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = [
   "GeckoViewConnection",
   "GeckoViewWebExtension",
   "mobileWindowTracker",
+  "DownloadTracker",
 ];
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -46,6 +47,52 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 const { debug, warn } = GeckoViewUtils.initLogging("Console");
+
+const DOWNLOAD_CHANGED_MESSAGE = "GeckoView:WebExtension:DownloadChanged";
+
+var DownloadTracker = new (class extends EventEmitter {
+  constructor() {
+    super();
+
+    // maps numeric IDs to DownloadItem objects
+    this._downloads = new Map();
+  }
+
+  onEvent(event, data, callback) {
+    switch (event) {
+      case "GeckoView:WebExtension:DownloadChanged": {
+        const downloadItem = this.getDownloadItemById(data.downloadItemId);
+
+        if (!downloadItem) {
+          callback.onError("Error: Trying to update unknown download");
+          return;
+        }
+
+        const delta = downloadItem.update(data);
+        if (delta) {
+          this.emit("download-changed", {
+            delta,
+            downloadItem,
+          });
+        }
+      }
+    }
+  }
+
+  addDownloadItem(item) {
+    this._downloads.set(item.id, item);
+  }
+
+  /**
+   * Finds and returns a DownloadItem with a certain numeric ID
+   *
+   * @param {number} id
+   * @returns {DownloadItem} download item
+   */
+  getDownloadItemById(id) {
+    return this._downloads.get(id);
+  }
+})();
 
 /** Provides common logic between page and browser actions */
 class ExtensionActionHelper {

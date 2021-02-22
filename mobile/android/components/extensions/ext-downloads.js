@@ -10,6 +10,9 @@ ChromeUtils.defineModuleGetter(
   "DownloadPaths",
   "resource://gre/modules/DownloadPaths.jsm"
 );
+XPCOMUtils.defineLazyModuleGetters(this, {
+  DownloadTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
+});
 
 var { ignoreEvent } = ExtensionCommon;
 
@@ -51,8 +54,43 @@ const STATE_MAP = new Map([
   [2, State.COMPLETE],
 ]);
 
+const INTERRUPT_REASON_MAP = new Map([
+  [0, undefined],
+  [1, "FILE_FAILED"],
+  [2, "FILE_ACCESS_DENIED"],
+  [3, "FILE_NO_SPACE"],
+  [4, "FILE_NAME_TOO_LONG"],
+  [5, "FILE_TOO_LARGE"],
+  [6, "FILE_VIRUS_INFECTED"],
+  [7, "FILE_TRANSIENT_ERROR"],
+  [8, "FILE_BLOCKED"],
+  [9, "FILE_SECURITY_CHECK_FAILED"],
+  [10, "FILE_TOO_SHORT"],
+  [11, "NETWORK_FAILED"],
+  [12, "NETWORK_TIMEOUT"],
+  [13, "NETWORK_DISCONNECTED"],
+  [14, "NETWORK_SERVER_DOWN"],
+  [15, "NETWORK_INVALID_REQUEST"],
+  [16, "SERVER_FAILED"],
+  [17, "SERVER_NO_RANGE"],
+  [18, "SERVER_BAD_CONTENT"],
+  [19, "SERVER_UNAUTHORIZED"],
+  [20, "SERVER_CERT_PROBLEM"],
+  [21, "SERVER_FORBIDDEN"],
+  [22, "USER_CANCELED"],
+  [23, "USER_SHUTDOWN"],
+  [24, "CRASH"],
+]);
+
 // TODO Bug 1247794: make id and extension info persistent
 class DownloadItem {
+  /**
+   * Initializes an object that represents a download
+   *
+   * @param {Object} downloadInfo - an object from Java when creating a download
+   * @param {Object} options - an object passed in to download() function
+   * @param {Extension} extension - instance of an extension object
+   */
   constructor(downloadInfo, options, extension) {
     this.id = downloadInfo.id;
     this.url = options.url;
@@ -71,6 +109,41 @@ class DownloadItem {
     this.exists = downloadInfo.exists;
     this.byExtensionId = extension?.id;
     this.byExtensionName = extension?.name;
+  }
+
+  /**
+   * This function updates the download item it was called on.
+   *
+   * @param {Object} data that arrived from the app (Java)
+   * @returns {Object|null} an object of <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/downloads/onChanged#downloaddelta>downloadDelta type</a>
+   */
+  update(data) {
+    const { downloadItemId } = data;
+    const delta = {};
+
+    data.state = STATE_MAP.get(data.state);
+    data.error = INTERRUPT_REASON_MAP.get(data.error);
+    delete data.downloadItemId;
+
+    let changed = false;
+    for (const prop in data) {
+      const current = data[prop] ?? null;
+      const previous = this[prop] ?? null;
+      if (current !== previous) {
+        delta[prop] = { current, previous };
+        this[prop] = current;
+        changed = true;
+      }
+    }
+
+    // Don't send empty onChange events
+    if (!changed) {
+      return null;
+    }
+
+    delta.id = downloadItemId;
+
+    return delta;
   }
 }
 
@@ -141,6 +214,7 @@ this.downloads = class extends ExtensionAPI {
             })
             .then(value => {
               const downloadItem = new DownloadItem(value, options, extension);
+              DownloadTracker.addDownloadItem(downloadItem);
               return downloadItem.id;
             });
         },
@@ -185,7 +259,23 @@ this.downloads = class extends ExtensionAPI {
           throw new ExtensionError("Not implemented");
         },
 
-        onChanged: ignoreEvent(context, "downloads.onChanged"),
+        onChanged: new EventManager({
+          context,
+          name: "downloads.onChanged",
+          register: fire => {
+            const listener = (eventName, event) => {
+              const { delta, downloadItem } = event;
+              if (context.privateBrowsingAllowed || !downloadItem.incognito) {
+                fire.async(delta);
+              }
+            };
+
+            DownloadTracker.on("download-changed", listener);
+            return () => {
+              DownloadTracker.off("download-changed", listener);
+            };
+          },
+        }).api(),
 
         onCreated: ignoreEvent(context, "downloads.onCreated"),
 
