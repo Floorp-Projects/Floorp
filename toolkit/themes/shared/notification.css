@@ -17,7 +17,7 @@
 }
 
 notification {
-  height: 56px;
+  min-height: 40px;
   padding-inline-start: 16px;
   background: var(--notification-background);
   color: var(--notification-text);
@@ -80,21 +80,19 @@ notification[type="critical"] > .close-icon:hover:active {
 
 .messageText {
   margin-inline-start: 12px !important;
-  margin-block: 12px;
+  margin-block: 0;
 }
 
 .messageText > .text-link {
   color: inherit !important;
   text-decoration: underline;
-  margin-top: 0;
-  margin-bottom: 0;
-  margin-inline-start: 0;
-  margin-inline-end: 0;
+  margin: 0;
 }
 
 .messageImage {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
+  margin: 4px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -138,13 +136,13 @@ notification[type="critical"] > hbox > .messageImage {
 .notification-button {
   appearance: none;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: 4px;
   background-color: var(--notification-button-background);
   /* Override button.css hover & active styles */
   color: var(--notification-button-text) !important;
-  padding: 0 8px;
+  padding: 0 6px;
   margin: 4px 8px;
-  height: 32px;
+  height: 24px;
 }
 
 .notification-button[disabled] {
