@@ -34,6 +34,7 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsIObserverService.h"
 #include "nsISupports.h"
 #include "nsLocalFile.h"
 #include "nsPrintfCString.h"
@@ -184,6 +185,42 @@ void IOUtils::DispatchAndResolve(Promise* aPromise, Fn aFunc) {
         [promise = RefPtr(aPromise)](const IOError& err) {
           RejectJSPromise(promise, err);
         });
+  }
+}
+
+/* static */
+void IOUtils::RegisterInitObserver() {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  auto guard = sEventQueue.Lock();
+  MOZ_RELEASE_ASSERT(!sShutdownFinished);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (!obs) {
+    sShutdownFinished = true;
+    return;
+  }
+
+  nsCOMPtr<nsIObserver> observer = new IOUtilsInitObserver();
+  obs->AddObserver(observer, "profile-after-change", false);
+}
+
+/* static */
+void IOUtils::Init() {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  auto eventQueue = sEventQueue.Lock();
+  MOZ_RELEASE_ASSERT(!sShutdownFinished);
+
+  MOZ_RELEASE_ASSERT(!eventQueue.ref());
+  eventQueue.ref() = new IOUtils::EventQueue();
+
+  if (nsresult rv = eventQueue.ref()->SetShutdownHooks();
+      NS_WARN_IF(NS_FAILED(rv))) {
+    sShutdownFinished = true;
+    eventQueue.ref() = nullptr;
   }
 }
 
@@ -1395,20 +1432,9 @@ Maybe<IOUtils::EventQueueMutex::AutoLock> IOUtils::GetEventQueue() {
     return Nothing{};
   }
 
-  if (!eventQueue.ref()) {
-    eventQueue.ref() = new IOUtils::EventQueue();
-
-    if (NS_IsMainThread()) {
-      eventQueue.ref()->SetShutdownHooks();
-    } else {
-      NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, []() {
-        auto guard = IOUtils::sEventQueue.Lock();
-        MOZ_RELEASE_ASSERT(guard.ref());
-        guard.ref()->SetShutdownHooks();
-      }));
-    }
-  }
-
+  // IOUtils cannot be used until the first profile-after-change notification,
+  // which will initialize the eventQueue.
+  MOZ_RELEASE_ASSERT(eventQueue.ref());
   return Some(std::move(eventQueue));
 }
 
@@ -1436,13 +1462,9 @@ nsresult IOUtils::EventQueue::SetShutdownHooks() {
   MOZ_RELEASE_ASSERT(profileBeforeChange);
 
   nsCOMPtr<nsIAsyncShutdownBlocker> blocker = new IOUtilsShutdownBlocker();
-  nsresult rv = profileBeforeChange->AddBlocker(
+  MOZ_TRY(profileBeforeChange->AddBlocker(
       blocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      u"IOUtils::SetShutdownHooks"_ns);
-
-  if (NS_FAILED(rv)) {
-    IOUtils::sShutdownFinished = true;
-  }
+      u"IOUtils::SetShutdownHooks"_ns));
 
   return NS_OK;
 }
@@ -1473,6 +1495,23 @@ IOUtils::EventQueue::ProfileBeforeChangeClient() {
 already_AddRefed<nsIAsyncShutdownBarrier>
 IOUtils::EventQueue::ProfileBeforeChangeBarrier() {
   return do_AddRef(mProfileBeforeChangeBarrier);
+}
+
+NS_IMPL_ISUPPORTS(IOUtilsInitObserver, nsIObserver);
+
+NS_IMETHODIMP
+IOUtilsInitObserver::Observe(nsISupports*, const char* aTopic,
+                             const char16_t*) {
+  MOZ_RELEASE_ASSERT(!strcmp(aTopic, "profile-after-change"));
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  MOZ_RELEASE_ASSERT(obs);
+
+  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, aTopic));
+
+  IOUtils::Init();
+
+  return NS_OK;
 }
 
 /* static */
