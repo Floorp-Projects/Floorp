@@ -275,6 +275,11 @@ class StorageUI {
       this._onTargetDestroyed
     );
 
+    // This is a distionarry of arrays, keyed by storage key
+    // - Keys are storage keys, available on each storage resource, via ${resource.resourceKey}
+    //   and are typically "Cache", "cookies", "indexedDB", "localStorage", ...
+    // - Values are arrays of storage fronts. This isn't the deprecated global storage front (target.getFront(storage), only used by legacy listener),
+    //   but rather the storage specific front, i.e. a storage resource. Storage resources are fronts.
     this.storageTypes = {};
 
     this._onResourceListAvailable = this._onResourceListAvailable.bind(this);
@@ -344,6 +349,15 @@ class StorageUI {
   }
 
   _onTargetDestroyed({ targetFront }) {
+    // Remove all storages related to this target
+    for (const type in this.storageTypes) {
+      this.storageTypes[type] = this.storageTypes[type].filter(storage => {
+        // Note that the storage front may already be destroyed,
+        // and have a null targetFront attribute. So also remove all already destroyed fronts.
+        return !storage.isDestroyed() && storage.targetFront != targetFront;
+      });
+    }
+
     // Only support top level target and navigation to new processes.
     // i.e. ignore additional targets created for remote <iframes>
     if (!targetFront.isTopLevel) {
