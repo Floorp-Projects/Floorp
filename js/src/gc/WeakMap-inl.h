@@ -24,16 +24,6 @@ namespace gc {
 
 namespace detail {
 
-template <typename T>
-static T ExtractUnbarriered(const WriteBarriered<T>& v) {
-  return v.get();
-}
-
-template <typename T>
-static T* ExtractUnbarriered(T* v) {
-  return v;
-}
-
 // Return the effective cell color given the current marking state.
 // This must be kept in sync with ShouldMark in Marking.cpp.
 template <typename T>
@@ -68,7 +58,7 @@ static JSObject* GetDelegateInternal(JSObject* key) {
 // avoid calling barriers).
 template <typename T>
 static inline JSObject* GetDelegate(const T& key) {
-  return GetDelegateInternal(ExtractUnbarriered(key));
+  return GetDelegateInternal(key);
 }
 
 template <>
@@ -303,7 +293,7 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
       // the lookup key in the list of weak keys. If the key has a delegate,
       // then the lookup key is the delegate (because marking the key will end
       // up marking the delegate and thereby mark the entry.)
-      gc::Cell* weakKey = gc::detail::ExtractUnbarriered(e.front().key());
+      gc::Cell* weakKey = e.front().key();
       gc::WeakMarkable markable(this, weakKey);
       if (JSObject* delegate = gc::detail::GetDelegate(e.front().key())) {
         addWeakEntry(marker, delegate, markable);
@@ -398,7 +388,7 @@ bool WeakMap<K, V>::findSweepGroupEdges() {
 template <class K, class V>
 void WeakMap<K, V>::assertEntriesNotAboutToBeFinalized() {
   for (Range r = Base::all(); !r.empty(); r.popFront()) {
-    auto k = gc::detail::ExtractUnbarriered(r.front().key());
+    UnbarrieredKey k = r.front().key();
     MOZ_ASSERT(!gc::IsAboutToBeFinalizedUnbarriered(&k));
     JSObject* delegate = gc::detail::GetDelegate(k);
     if (delegate) {
