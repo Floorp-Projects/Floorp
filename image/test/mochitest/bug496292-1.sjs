@@ -9,7 +9,7 @@ function handleRequest(request, response)
   file.append("test");
   file.append("mochitest");
 
-  if (request.getHeader("Accept") == "image/avif,image/webp,*/*") {
+  if (request.getHeader("Accept") == "image/webp,*/*") {
     file.append('blue.png');
   } else {
     file.append('red.png');
