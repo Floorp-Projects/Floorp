@@ -901,7 +901,10 @@ static already_AddRefed<nsIPrincipal> CreateRemoteTypeIsolationPrincipal(
   nsAutoCString origin(
       Substring(aRemoteType, offset, aRemoteType.Length() - offset));
 
-  return BasePrincipal::CreateContentPrincipal(origin);
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> principal;
+  ssm->CreateContentPrincipalFromOrigin(origin, getter_AddRefs(principal));
+  return principal.forget();
 }
 
 /*static*/
@@ -1429,7 +1432,8 @@ bool ContentParent::ValidatePrincipal(
     return true;
   }
 
-  if (RemoteTypePrefix(mRemoteType) != FISSION_WEB_REMOTE_TYPE) {
+  if (!mRemoteTypeIsolationPrincipal ||
+      RemoteTypePrefix(mRemoteType) != FISSION_WEB_REMOTE_TYPE) {
     return true;
   }
 
