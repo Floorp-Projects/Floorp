@@ -29,10 +29,13 @@ interface nsIContentDispatchChooser : nsISupports {
   *        The principal making the request.
   * @param aBrowsingContext
   *        The browsing context where the load should happen.
+  * @param aWasTriggeredExternally
+  *        True if the load was tripped by an external app.
   */
   void handleURI(in nsIHandlerInfo aHandler,
            in nsIURI aURI,
            in nsIPrincipal aTriggeringPrincipal,
-           in BrowsingContext aBrowsingContext);
+           in BrowsingContext aBrowsingContext,
+           [optional] in bool aWasTriggeredExternally);
 };
 
