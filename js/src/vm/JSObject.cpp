@@ -784,7 +784,7 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
   if (clasp->isJSFunction()) {
     JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
                               JSFunction::create(cx, kind, heap, shape, group));
-  } else if (MOZ_LIKELY(clasp->isNative())) {
+  } else if (MOZ_LIKELY(clasp->isNativeObject())) {
     JS_TRY_VAR_OR_RETURN_NULL(
         cx, obj, NativeObject::create(cx, kind, heap, shape, group));
   } else {
@@ -810,7 +810,7 @@ bool js::NewObjectWithTaggedProtoIsCachable(JSContext* cx,
                                             NewObjectKind newKind,
                                             const JSClass* clasp) {
   return !cx->isHelperThreadContext() && proto.isObject() &&
-         newKind == GenericObject && clasp->isNative() &&
+         newKind == GenericObject && clasp->isNativeObject() &&
          !proto.toObject()->is<GlobalObject>();
 }
 
@@ -861,7 +861,7 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
 static bool NewObjectIsCachable(JSContext* cx, NewObjectKind newKind,
                                 const JSClass* clasp) {
   return !cx->isHelperThreadContext() && newKind == GenericObject &&
-         clasp->isNative();
+         clasp->isNativeObject();
 }
 
 JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
@@ -928,7 +928,7 @@ JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
 static bool NewObjectWithGroupIsCachable(JSContext* cx, HandleObjectGroup group,
                                          NewObjectKind newKind) {
   if (!group->proto().isObject() || newKind != GenericObject ||
-      !group->clasp()->isNative() || cx->isHelperThreadContext()) {
+      !group->clasp()->isNativeObject() || cx->isHelperThreadContext()) {
     return false;
   }
 
@@ -3766,7 +3766,7 @@ void JSObject::traceChildren(JSTracer* trc) {
   TraceEdge(trc, shapePtr(), "shape");
 
   const JSClass* clasp = group()->clasp();
-  if (clasp->isNative()) {
+  if (clasp->isNativeObject()) {
     NativeObject* nobj = &as<NativeObject>();
 
     {
@@ -3943,7 +3943,7 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
   // Non-native classes manage their own data and slots, so numFixedSlots and
   // slotSpan are always 0. Note that proxy classes can have reserved slots
   // but they're also not included in numFixedSlots/slotSpan.
-  if (!clasp->isNative()) {
+  if (!clasp->isNativeObject()) {
     MOZ_ASSERT_IF(!clasp->isProxy(), JSCLASS_RESERVED_SLOTS(clasp) == 0);
     MOZ_ASSERT(!clasp->hasPrivate());
     MOZ_ASSERT_IF(shape, shape->numFixedSlots() == 0);

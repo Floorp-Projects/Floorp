@@ -423,7 +423,7 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   // If we want external slots, add them.
   ObjectSlots* slotsHeader = nullptr;
   if (nDynamicSlots) {
-    MOZ_ASSERT(clasp->isNative());
+    MOZ_ASSERT(clasp->isNativeObject());
     void* allocation =
         allocateBuffer(cx->zone(), ObjectSlots::allocSize(nDynamicSlots));
     if (!allocation) {
