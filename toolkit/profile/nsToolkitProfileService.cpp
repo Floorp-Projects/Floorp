@@ -747,9 +747,6 @@ nsresult nsToolkitProfileService::Init() {
   rv = UpdateFileStats(mProfileDBFile, &mProfileDBExists,
                        &mProfileDBModifiedTime, &mProfileDBFileSize);
   if (NS_SUCCEEDED(rv) && mProfileDBExists) {
-    mProfileDBFile->GetFileSize(&mProfileDBFileSize);
-    mProfileDBFile->GetLastModifiedTime(&mProfileDBModifiedTime);
-
     rv = mProfileDB.Init(mProfileDBFile);
     // Init does not fail on parsing errors, only on OOM/really unexpected
     // conditions.
