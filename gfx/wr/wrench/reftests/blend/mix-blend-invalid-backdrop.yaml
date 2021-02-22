@@ -4,20 +4,26 @@
 ---
 root:
   items:
-    - type: clip
-      id: 2
-      bounds: [0, 0, 100, 100]
+    # Ensure a filter is placed here to force this mix-blend to isolate from
+    # the tile cache backdrop - otherwise the surface won't get clipped, which
+    # is what we're trying to test.
     - type: stacking-context
-      blend-container: true
-      clip-node: 2
+      filters: [identity]
       items:
-        - type: rect
-          bounds: [0, 0, 100, 100]
-          color: red
-        - type: stacking-context
-          bounds: [100, 0, 100, 100]
-          mix-blend-mode: multiply
-          items:
-            - type: rect
-              bounds: [0, 0, 100, 100]
-              color: green
+      - type: clip
+        id: 2
+        bounds: [0, 0, 100, 100]
+      - type: stacking-context
+        blend-container: true
+        clip-node: 2
+        items:
+          - type: rect
+            bounds: [0, 0, 100, 100]
+            color: red
+          - type: stacking-context
+            bounds: [100, 0, 100, 100]
+            mix-blend-mode: multiply
+            items:
+              - type: rect
+                bounds: [0, 0, 100, 100]
+                color: green

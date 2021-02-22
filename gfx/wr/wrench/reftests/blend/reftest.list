@@ -1,6 +1,6 @@
 == multiply.yaml multiply-ref.yaml
 fuzzy(1,32) == multiply-2.yaml multiply-2-ref.yaml
-fuzzy(1,32) == color_targets(4) alpha_targets(0) multiply-3.yaml multiply-2-ref.yaml
+fuzzy(1,32) == color_targets(3) alpha_targets(0) multiply-3.yaml multiply-2-ref.yaml
 == difference.yaml difference-ref.yaml
 fuzzy(1,30000) == difference-transparent.yaml difference-transparent-ref.yaml
 fuzzy-if(platform(swgl),1,10000) == darken.yaml darken-ref.yaml

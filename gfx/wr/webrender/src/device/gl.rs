@@ -1063,7 +1063,7 @@ pub struct Device {
     bound_textures: [gl::GLuint; 16],
     bound_program: gl::GLuint,
     bound_vao: gl::GLuint,
-    bound_read_fbo: FBOId,
+    bound_read_fbo: (FBOId, DeviceIntPoint),
     bound_draw_fbo: FBOId,
     program_mode_id: UniformLocation,
     default_read_fbo: FBOId,
@@ -1078,7 +1078,7 @@ pub struct Device {
     /// Whether to use draw calls instead of regular blitting commands.
     ///
     /// Note: this currently only applies to the batched texture uploads
-    /// path. 
+    /// path.
     use_draw_calls_for_texture_copy: bool,
 
     // HW or API capabilities
@@ -1320,6 +1320,11 @@ pub enum ReadTarget {
     External {
         fbo: FBOId,
     },
+    /// An FBO bound to a native (OS compositor) surface
+    NativeSurface {
+        fbo_id: FBOId,
+        offset: DeviceIntPoint,
+    },
 }
 
 impl ReadTarget {
@@ -1331,19 +1336,40 @@ impl ReadTarget {
             fbo_id: texture.fbos[layer],
         }
     }
+
+    fn offset(&self) -> DeviceIntPoint {
+        match *self {
+            ReadTarget::Default |
+            ReadTarget::Texture { .. } |
+            ReadTarget::External { .. } => {
+                DeviceIntPoint::zero()
+            }
+
+            ReadTarget::NativeSurface { offset, .. } => {
+                offset
+            }
+        }
+    }
 }
 
 impl From<DrawTarget> for ReadTarget {
     fn from(t: DrawTarget) -> Self {
         match t {
-            DrawTarget::Default { .. } => ReadTarget::Default,
-            DrawTarget::NativeSurface { .. } => {
-                unreachable!("bug: native surfaces cannot be read targets");
+            DrawTarget::Default { .. } => {
+                ReadTarget::Default
             }
-            DrawTarget::Texture { fbo_id, .. } =>
-                ReadTarget::Texture { fbo_id },
-            DrawTarget::External { fbo, .. } =>
-                ReadTarget::External { fbo },
+            DrawTarget::NativeSurface { external_fbo_id, offset, .. } => {
+                ReadTarget::NativeSurface {
+                    fbo_id: FBOId(external_fbo_id),
+                    offset,
+                }
+            }
+            DrawTarget::Texture { fbo_id, .. } => {
+                ReadTarget::Texture { fbo_id }
+            }
+            DrawTarget::External { fbo, .. } => {
+                ReadTarget::External { fbo }
+            }
         }
     }
 }
@@ -1727,7 +1753,7 @@ impl Device {
             bound_textures: [0; 16],
             bound_program: 0,
             bound_vao: 0,
-            bound_read_fbo: FBOId(0),
+            bound_read_fbo: (FBOId(0), DeviceIntPoint::zero()),
             bound_draw_fbo: FBOId(0),
             program_mode_id: UniformLocation::INVALID,
             default_read_fbo: FBOId(0),
@@ -1857,8 +1883,8 @@ impl Device {
         self.bound_vao = 0;
         self.gl.bind_vertex_array(0);
 
-        self.bound_read_fbo = self.default_read_fbo;
-        self.gl.bind_framebuffer(gl::READ_FRAMEBUFFER, self.bound_read_fbo.0);
+        self.bound_read_fbo = (self.default_read_fbo, DeviceIntPoint::zero());
+        self.gl.bind_framebuffer(gl::READ_FRAMEBUFFER, self.default_read_fbo.0);
 
         self.bound_draw_fbo = self.default_draw_fbo;
         self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, self.bound_draw_fbo.0);
@@ -2032,13 +2058,18 @@ impl Device {
         self.bind_texture_impl(slot.into(), external_texture.id, external_texture.target, None);
     }
 
-    pub fn bind_read_target_impl(&mut self, fbo_id: FBOId) {
+    pub fn bind_read_target_impl(
+        &mut self,
+        fbo_id: FBOId,
+        offset: DeviceIntPoint,
+    ) {
         debug_assert!(self.inside_frame);
 
-        if self.bound_read_fbo != fbo_id {
-            self.bound_read_fbo = fbo_id;
+        if self.bound_read_fbo != (fbo_id, offset) {
             fbo_id.bind(self.gl(), FBOTarget::Read);
         }
+
+        self.bound_read_fbo = (fbo_id, offset);
     }
 
     pub fn bind_read_target(&mut self, target: ReadTarget) {
@@ -2046,9 +2077,10 @@ impl Device {
             ReadTarget::Default => self.default_read_fbo,
             ReadTarget::Texture { fbo_id } => fbo_id,
             ReadTarget::External { fbo } => fbo,
+            ReadTarget::NativeSurface { fbo_id, .. } => fbo_id,
         };
 
-        self.bind_read_target_impl(fbo_id)
+        self.bind_read_target_impl(fbo_id, target.offset())
     }
 
     fn bind_draw_target_impl(&mut self, fbo_id: FBOId) {
@@ -2062,7 +2094,7 @@ impl Device {
 
     pub fn reset_read_target(&mut self) {
         let fbo = self.default_read_fbo;
-        self.bind_read_target_impl(fbo);
+        self.bind_read_target_impl(fbo, DeviceIntPoint::zero());
     }
 
 
@@ -2757,11 +2789,14 @@ impl Device {
             TextureFilter::Linear | TextureFilter::Trilinear => gl::LINEAR,
         };
 
+        let src_x0 = src_rect.origin.x + self.bound_read_fbo.1.x;
+        let src_y0 = src_rect.origin.y + self.bound_read_fbo.1.y;
+
         self.gl.blit_framebuffer(
-            src_rect.origin.x,
-            src_rect.origin.y,
-            src_rect.origin.x + src_rect.size.width,
-            src_rect.origin.y + src_rect.size.height,
+            src_x0,
+            src_y0,
+            src_x0 + src_rect.size.width,
+            src_y0 + src_rect.size.height,
             dest_rect.origin.x,
             dest_rect.origin.y,
             dest_rect.origin.x + dest_rect.size.width,
@@ -2815,7 +2850,7 @@ impl Device {
                     ),
                 ).intersection(&dimensions.into()).unwrap_or_else(DeviceIntRect::zero);
 
-                self.bind_read_target_impl(fbo);
+                self.bind_read_target_impl(fbo, DeviceIntPoint::zero());
                 self.bind_texture_impl(
                     DEFAULT_TEXTURE,
                     id,

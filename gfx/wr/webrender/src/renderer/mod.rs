@@ -5673,7 +5673,7 @@ impl Renderer {
 
         self.device.begin_frame();
         let _gm = self.gpu_profiler.start_marker("read GPU data");
-        self.device.bind_read_target_impl(self.read_fbo);
+        self.device.bind_read_target_impl(self.read_fbo, DeviceIntPoint::zero());
 
         if config.bits.contains(CaptureBits::EXTERNAL_RESOURCES) && !deferred_images.is_empty() {
             info!("saving external images");

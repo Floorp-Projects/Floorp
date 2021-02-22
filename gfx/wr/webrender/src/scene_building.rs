@@ -1905,6 +1905,7 @@ impl<'a> SceneBuilder<'a> {
                 context_3d,
                 is_redundant,
                 is_backdrop_root: flags.contains(StackingContextFlags::IS_BACKDROP_ROOT),
+                flags,
             });
         }
 
@@ -1941,6 +1942,26 @@ impl<'a> SceneBuilder<'a> {
         }
 
         let stacking_context = self.sc_stack.pop().unwrap();
+
+        // If the stacking context is a blend container, and if we're at the top level
+        // of the stacking context tree, we can make this blend container into a tile
+        // cache. This means that we get caching and correct scrolling invalidation for
+        // root level blend containers. For these cases, the readbacks of the backdrop
+        // are handled by doing partial reads of the picture cache tiles during rendering.
+        if stacking_context.flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) &&
+           self.sc_stack.is_empty() &&
+           self.tile_cache_builder.can_add_container_tile_cache()
+        {
+            self.tile_cache_builder.add_tile_cache(
+                stacking_context.prim_list,
+                &self.spatial_tree,
+                &self.clip_store,
+                self.interners,
+                &self.config,
+            );
+
+            return;
+        }
 
         let parent_is_empty = match self.sc_stack.last() {
             Some(parent_sc) => {
@@ -3616,6 +3637,9 @@ struct FlattenedStackingContext {
 
     /// True if this stacking context is redundant (i.e. doesn't require a surface)
     is_redundant: bool,
+
+    /// Flags identifying the type of container (among other things) this stacking context is
+    flags: StackingContextFlags,
 }
 
 impl FlattenedStackingContext {
