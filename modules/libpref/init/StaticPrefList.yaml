@@ -10486,6 +10486,8 @@
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && defined(NIGHTLY_BUILD) && !defined(ANDROID)
   value: true
+#elif defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  value: true
 #else
   value: false
 #endif
