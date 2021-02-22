@@ -11,6 +11,8 @@ import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.private.RecordedExperimentData
 import mozilla.telemetry.glean.Glean as GleanCore
 
+typealias BuildInfo = mozilla.telemetry.glean.BuildInfo
+
 /**
  * In contrast with other glean-ac classes (i.e. Configuration), we can't
  * use typealias to export mozilla.telemetry.glean.Glean, as we need to provide
@@ -32,8 +34,42 @@ object Glean {
      * as shared preferences
      * @param uploadEnabled A [Boolean] that determines the initial state of the uploader
      * @param configuration A Glean [Configuration] object with global settings.
+     * @param buildInfo A Glean [BuildInfo] object with build-time metadata. This
+     *     object is generated at build time by glean_parser at the import path
+     *     ${YOUR_PACKAGE_ROOT}.GleanMetrics.GleanBuildInfo.buildInfo
      */
     @MainThread
+    fun initialize(
+        applicationContext: Context,
+        uploadEnabled: Boolean,
+        configuration: Configuration,
+        buildInfo: BuildInfo
+    ) {
+        GleanCore.initialize(
+            applicationContext = applicationContext,
+            uploadEnabled = uploadEnabled,
+            configuration = configuration.toWrappedConfiguration(),
+            buildInfo = buildInfo
+        )
+    }
+
+    /**
+     * Initialize Glean.
+     *
+     * This should only be initialized once by the application, and not by
+     * libraries using Glean. A message is logged to error and no changes are made
+     * to the state if initialize is called a more than once.
+     *
+     * A LifecycleObserver will be added to send pings when the application goes
+     * into the background.
+     *
+     * @param applicationContext [Context] to access application features, such
+     * as shared preferences
+     * @param uploadEnabled A [Boolean] that determines the initial state of the uploader
+     * @param configuration A Glean [Configuration] object with global settings.
+     */
+    @MainThread
+    @Suppress("DEPRECATION")
     fun initialize(
         applicationContext: Context,
         uploadEnabled: Boolean,

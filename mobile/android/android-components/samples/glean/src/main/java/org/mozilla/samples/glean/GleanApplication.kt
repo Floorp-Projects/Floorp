@@ -19,6 +19,7 @@ import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import org.mozilla.samples.glean.GleanMetrics.Basic
+import org.mozilla.samples.glean.GleanMetrics.GleanBuildInfo
 import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.Custom
 import org.mozilla.samples.glean.GleanMetrics.Pings
@@ -49,7 +50,12 @@ class GleanApplication : Application() {
         val client by lazy { HttpURLConnectionClient() }
         val httpClient = ConceptFetchHttpUploader.fromClient(client)
         val config = Configuration(httpClient = httpClient)
-        Glean.initialize(applicationContext, uploadEnabled = true, configuration = config)
+        Glean.initialize(
+            applicationContext,
+            uploadEnabled = true,
+            configuration = config,
+            buildInfo = GleanBuildInfo.buildInfo
+        )
 
         /** Begin Nimbus component specific code. Note: this is not relevant to Glean */
         initNimbus(isFirstRun)

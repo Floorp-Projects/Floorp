@@ -76,7 +76,7 @@ permalink: /changelog/
   * Add `threadNamePrefix` parameter to `Store` to give threads created by the `Store` a specific name.
 
 * **service-glean**
-  * 🆙 Updated Glean to version 34.1.0 ([changelog](https://github.com/mozilla/glean/releases/tag/v34.1.0))
+  * 🆙 Updated Glean to version 35.0.0 ([changelog](https://github.com/mozilla/glean/releases/tag/v35.0.0))
 
 # 72.0.0
 
