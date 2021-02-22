@@ -24,6 +24,8 @@ var gGestureSupport = {
   /**
    * Add or remove mouse gesture event listeners
    *
+   * @param aElement
+   *        The element which the listeners should be attached to.
    * @param aAddListener
    *        True to add/init listeners and false to remove/uninit
    */
@@ -44,12 +46,12 @@ var gGestureSupport = {
       "PressTapGesture",
     ];
 
-    let addRemove = aAddListener
-      ? window.addEventListener
-      : window.removeEventListener;
-
     for (let event of gestureEvents) {
-      addRemove("Moz" + event, this, true);
+      if (aAddListener) {
+        gBrowser.tabbox.addEventListener("Moz" + event, this, true);
+      } else {
+        gBrowser.tabbox.removeEventListener("Moz" + event, this, true);
+      }
     }
   },
 
