@@ -67,6 +67,11 @@ class PerformanceEventTiming final
     mDuration = aDuration;
   }
 
+  // nsRFPService::ReduceTimePrecisionAsMSecs might causes
+  // some memory overhead, using the raw timestamp internally
+  // to avoid calling in unnecessarily.
+  DOMHighResTimeStamp RawDuration() const { return mDuration; }
+
   DOMHighResTimeStamp Duration() const override {
     if (mCachedDuration.isNothing()) {
       mCachedDuration.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
@@ -76,6 +81,10 @@ class PerformanceEventTiming final
     }
     return mCachedDuration.value();
   }
+
+  // Similar as RawDuration; Used to avoid calling
+  // nsRFPService::ReduceTimePrecisionAsMSecs unnecessarily.
+  DOMHighResTimeStamp RawStartTime() const { return mStartTime; }
 
   DOMHighResTimeStamp StartTime() const override {
     if (mCachedStartTime.isNothing()) {
