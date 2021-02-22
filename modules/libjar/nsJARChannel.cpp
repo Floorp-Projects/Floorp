@@ -847,6 +847,9 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   uint32_t from = findFilenameStart(aSpec);
   nsAutoCString fileName(Substring(aSpec, from));
 
+  nsAutoCString errorCString;
+  mozilla::GetErrorName(aStatus, errorCString);
+
   // To test this telemetry we use a zip file and we want to make
   // sure don't filter it out.
   bool isTest = fileName.Find("test_empty_file.zip!") != -1;
@@ -877,17 +880,36 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   } else if (StringEndsWith(fileName, ".xml"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Xml;
   } else if (StringEndsWith(fileName, ".xhtml"_ns)) {
+    // This error seems to be very common and is not strongly
+    // correlated to YSOD.
+    if (errorCString.EqualsLiteral("NS_ERROR_PARSED_DATA_CACHED")) {
+      return;
+    }
+
+    // We're not investigating YSODs from extensions for now.
+    if (!StringBeginsWith(fileName, "omni.ja!"_ns)) {
+      return;
+    }
+
+    // This file seems to be correlated with all sorts of zero_byte_loads
+    // but doesn't show up in YSOD, so we can filter it out for now.
+    if (fileName.Find("aboutNetError.xhtml") != -1) {
+      return;
+    }
+
     eventType = Telemetry::EventID::Zero_byte_load_Load_Xhtml;
   }
 
-  // We're going to skip reporting telemetry on other types of files.
+  // We're going to, for now, filter out `other` category
+  // except of HTML and CSS files in `omni.ja!` since those
+  // are common parts of the UI.
   // See Bug 1693711 for investigation into those empty loads.
-  if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Others) {
+  if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Others &&
+      !StringBeginsWith(fileName, "omni.ja!"_ns) &&
+      !StringEndsWith(fileName, ".html"_ns) &&
+      !StringEndsWith(fileName, ".css"_ns)) {
     return;
   }
-
-  nsAutoCString errorCString;
-  mozilla::GetErrorName(aStatus, errorCString);
 
   // FTL uses I/O to test for file presence, so we get
   // a high volume of events from it, but it is not erronous.
