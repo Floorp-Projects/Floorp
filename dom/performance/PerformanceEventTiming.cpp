@@ -138,7 +138,7 @@ bool PerformanceEventTiming::ShouldAddEntryToBuffer(double aDuration) const {
     return true;
   }
   MOZ_ASSERT(GetEntryType() == nsGkAtoms::event);
-  return Duration() >= aDuration;
+  return RawDuration() >= aDuration;
 }
 
 bool PerformanceEventTiming::ShouldAddEntryToObserverBuffer(

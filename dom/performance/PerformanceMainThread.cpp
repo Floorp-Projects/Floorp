@@ -245,10 +245,10 @@ void PerformanceMainThread::DispatchPendingEventTimingEntries() {
     RefPtr<PerformanceEventTiming> entry =
         mPendingEventTimingEntries.popFirst();
 
-    entry->SetDuration(renderingTime - entry->StartTime());
+    entry->SetDuration(renderingTime - entry->RawStartTime());
     IncEventCount(entry->GetName());
 
-    if (entry->Duration() >= kDefaultEventTimingMinDuration) {
+    if (entry->RawDuration() >= kDefaultEventTimingMinDuration) {
       QueueEntry(entry);
     }
 
