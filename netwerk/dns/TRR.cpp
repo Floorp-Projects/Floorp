@@ -760,7 +760,11 @@ nsresult TRR::FailData(nsresult error) {
 void TRR::HandleDecodeError(nsresult aStatusCode) {
   auto rcode = mPacket->GetRCode();
   if (rcode.isOk() && rcode.unwrap() != 0) {
-    RecordReason(nsHostRecord::TRR_RCODE_FAIL);
+    if (rcode.unwrap() == 0x03) {
+      RecordReason(nsHostRecord::TRR_NXDOMAIN);
+    } else {
+      RecordReason(nsHostRecord::TRR_RCODE_FAIL);
+    }
   } else if (aStatusCode == NS_ERROR_UNKNOWN_HOST ||
              aStatusCode == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
     RecordReason(nsHostRecord::TRR_NO_ANSWERS);
