@@ -8,7 +8,7 @@
 
 :root {
   --in-content-page-color: #0c0c0d;
-  --in-content-page-background: #f9f9fa;
+  --in-content-page-background: #fff;
   --in-content-text-color: var(--grey-90);
   --in-content-deemphasized-text: var(--grey-60);
   --in-content-selected-text: #fff;
@@ -41,12 +41,26 @@
   --in-content-link-color-active: var(--blue-80);
   --in-content-link-color-visited: var(--blue-60);
    /* button background states are also used for checkboxes and radiobuttons */
-  --in-content-button-background: var(--grey-90-a10);
-  --in-content-button-background-hover: var(--grey-90-a20);
-  --in-content-button-background-active: var(--grey-90-a30);
-  --in-content-primary-button-background: var(--blue-60);
-  --in-content-primary-button-background-hover: var(--blue-70);
-  --in-content-primary-button-background-active: var(--blue-80);
+  --in-content-button-background: rgba(207, 207, 216, 0.33);
+  --in-content-button-background-hover: rgba(207, 207, 216, 0.66);
+  --in-content-button-background-active: rgba(207, 207, 216, 1);
+  --in-content-primary-button-background: #0061e0;
+  --in-content-primary-button-background-hover: #0250bb;
+  --in-content-primary-button-background-active: #053e94;
+  /* Once proton ships, these can probably stop being variables. */
+  --in-content-button-border-radius: 4px;
+  /* Make outline-radius slightly bigger than the border-radius,
+   * to make the thicker outline corners look smooth */
+  --in-content-focus-outline-radius: 6px;
+  --in-content-focus-outline-offset: 2px;
+  --in-content-focus-outline-color: var(--in-content-primary-button-background);
+  --in-content-button-box-shadow: transparent;
+
+  /* Note: 1px smaller than we want because we have a 1px transparent border. */
+  /* Once proton ships, these can probably stop being variables. */
+  --in-content-button-horizontal-padding: 15px;
+  --in-content-button-vertical-padding: 7px;
+
   --in-content-table-background: #ebebeb;
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
@@ -101,6 +115,27 @@
   --card-shadow: var(--shadow-10);
   --card-outline-color: var(--grey-30);
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+:root {
+  --in-content-page-background: #f9f9fa;
+  --in-content-button-background: var(--grey-90-a10);
+  --in-content-button-background-hover: var(--grey-90-a20);
+  --in-content-button-background-active: var(--grey-90-a30);
+  --in-content-primary-button-background: var(--blue-60);
+  --in-content-primary-button-background-hover: var(--blue-70);
+  --in-content-primary-button-background-active: var(--blue-80);
+  --in-content-button-border-radius: 2px;
+  --in-content-focus-outline-radius: 3px;
+  --in-content-focus-outline-offset: -1px;
+  --in-content-focus-outline-color: var(--in-content-border-active);
+
+  --in-content-button-horizontal-padding: 8px;
+  --in-content-button-vertical-padding: 0;
+
+  --in-content-button-box-shadow: var(--in-content-border-active-shadow);
+}
 }
 
 @media (prefers-color-scheme: dark) {
@@ -229,7 +264,6 @@ xul|tab[selected] {
 /* html buttons */
 
 html|button {
-  padding: 3px;
   font: inherit;
 }
 
@@ -244,14 +278,42 @@ xul|menulist {
   /* !important overrides button.css for disabled and default XUL buttons: */
   color: inherit !important;
   border: 1px solid transparent; /* needed for high-contrast mode, where it'll show up */
-  border-radius: 2px;
+  border-radius: var(--in-content-button-border-radius);
   background-color: var(--in-content-button-background);
   font-weight: 400;
-  padding: 0 8px;
+  padding: var(--in-content-button-vertical-padding) var(--in-content-button-horizontal-padding);
   text-decoration: none;
   margin: 4px 8px;
   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
   font-size: 1em;
+}
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+button {
+  font-weight: 600;
+}
+/* Medium and small buttons get sized to 7/14 and 6/12px padding (when adding
+ * the 1px border): */
+button.medium {
+  --in-content-button-vertical-padding: 6px;
+  --in-content-button-horizontal-padding: 13px;
+  min-height: 28px;
+  font-size: 0.95em;
+}
+
+button.small {
+  --in-content-button-vertical-padding: 5px;
+  --in-content-button-horizontal-padding: 11px;
+  min-height: 24px;
+  font-size: 0.9em;
+}
+
+/* Remove margin and padding added by button.css */
+xul|button > .button-box,
+xul|button > .button-box > .button-text {
+  padding: 0;
+  margin: 0;
+}
 }
 
 xul|button,
@@ -268,13 +330,11 @@ button:-moz-focusring,
 html|select:-moz-focusring,
 html|input:is([type="checkbox"], [type="color"], [type="radio"]):-moz-focusring,
 xul|menulist:-moz-focusring {
-  outline: 2px solid var(--in-content-border-active);
+  outline: 2px solid var(--in-content-focus-outline-color);
   /* offset outline to align with 1px border-width set for buttons/menulists above. */
-  outline-offset: -1px;
-  /* Make outline-radius slightly bigger than the border-radius set above,
-   * to make the thicker outline corners look smooth */
-  -moz-outline-radius: 3px;
-  box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
+  outline-offset: var(--in-content-focus-outline-offset);
+  -moz-outline-radius: var(--in-content-focus-outline-radius);
+  box-shadow: 0 0 0 4px var(--in-content-button-box-shadow);
 }
 
 html|input[type="radio"]:-moz-focusring {
