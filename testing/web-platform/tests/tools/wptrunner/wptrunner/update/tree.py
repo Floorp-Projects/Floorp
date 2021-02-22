@@ -3,8 +3,6 @@ import re
 import subprocess
 import tempfile
 
-from six.moves import range
-
 from .. import vcs
 from ..vcs import git, hg
 
