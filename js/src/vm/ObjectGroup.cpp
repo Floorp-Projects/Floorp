@@ -70,7 +70,7 @@ ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
 
 void ObjectGroup::setProtoUnchecked(TaggedProto proto) {
   proto_ = proto;
-  MOZ_ASSERT_IF(proto_.isObject() && proto_.toObject()->isNative(),
+  MOZ_ASSERT_IF(proto_.isObject() && proto_.toObject()->is<NativeObject>(),
                 proto_.toObject()->isDelegate());
 }
 

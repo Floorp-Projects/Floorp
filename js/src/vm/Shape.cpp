@@ -1418,7 +1418,7 @@ bool JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
     return false;
   }
 
-  if (obj->isNative() && obj->as<NativeObject>().inDictionaryMode()) {
+  if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
     if (generateShape == GENERATE_SHAPE) {
       if (!NativeObject::generateOwnShape(cx, obj.as<NativeObject>())) {
         return false;

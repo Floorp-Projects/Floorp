@@ -417,7 +417,7 @@ class ElementSpecific {
                "use setFromTypedArray instead of this method");
 
     size_t i = 0;
-    if (source->isNative()) {
+    if (source->is<NativeObject>()) {
       // Attempt fast-path infallible conversion of dense elements up to
       // the first potentially side-effectful lookup or conversion.
       size_t bound = std::min<size_t>(

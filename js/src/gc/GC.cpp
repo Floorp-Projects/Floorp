@@ -2051,7 +2051,7 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
     auto* srcObj = static_cast<JSObject*>(static_cast<Cell*>(src));
     auto* dstObj = static_cast<JSObject*>(static_cast<Cell*>(dst));
 
-    if (srcObj->isNative()) {
+    if (srcObj->is<NativeObject>()) {
       NativeObject* srcNative = &srcObj->as<NativeObject>();
       NativeObject* dstNative = &dstObj->as<NativeObject>();
 
@@ -2073,7 +2073,7 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
     }
 
     MOZ_ASSERT_IF(
-        dstObj->isNative(),
+        dstObj->is<NativeObject>(),
         !PtrIsInRange(
             (const Value*)dstObj->as<NativeObject>().getDenseElements(), src,
             thingSize));
@@ -2090,7 +2090,7 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
   JSObject* srcObj = IsObjectAllocKind(thingKind)
                          ? static_cast<JSObject*>(static_cast<Cell*>(src))
                          : nullptr;
-  if (!srcObj || !srcObj->isNative() ||
+  if (!srcObj || !srcObj->is<NativeObject>() ||
       !srcObj->as<NativeObject>().hasFixedElements()) {
     AlwaysPoison(reinterpret_cast<uint8_t*>(src) + sizeof(uintptr_t),
                  JS_MOVED_TENURED_PATTERN, thingSize - sizeof(uintptr_t),

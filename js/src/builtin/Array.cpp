@@ -305,7 +305,7 @@ template <typename T>
 static bool HasAndGetElement(JSContext* cx, HandleObject obj,
                              HandleObject receiver, T index, bool* hole,
                              MutableHandleValue vp) {
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     NativeObject* nobj = &obj->as<NativeObject>();
     if (index < nobj->getDenseInitializedLength()) {
       vp.set(nobj->getDenseElement(size_t(index)));
@@ -475,7 +475,7 @@ bool js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length,
 
 static inline bool GetArrayElement(JSContext* cx, HandleObject obj,
                                    uint64_t index, MutableHandleValue vp) {
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     NativeObject* nobj = &obj->as<NativeObject>();
     if (index < nobj->getDenseInitializedLength()) {
       vp.set(nobj->getDenseElement(size_t(index)));
@@ -955,7 +955,7 @@ static bool array_addProperty(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static inline bool ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return true;
   }
 
@@ -977,7 +977,7 @@ static inline bool ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
  * indexed properties or elements along its prototype chain.
  */
 bool js::ObjectMayHaveExtraIndexedProperties(JSObject* obj) {
-  MOZ_ASSERT_IF(obj->hasDynamicPrototype(), !obj->isNative());
+  MOZ_ASSERT_IF(obj->hasDynamicPrototype(), !obj->is<NativeObject>());
 
   if (ObjectMayHaveExtraIndexedOwnProperties(obj)) {
     return true;
@@ -1392,7 +1392,7 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
   // An optimized version of a special case of steps 5-8: when length==1 and
   // the 0th element is a string, ToString() of that element is a no-op and
   // so it can be immediately returned as the result.
-  if (length == 1 && obj->isNative()) {
+  if (length == 1 && obj->is<NativeObject>()) {
     NativeObject* nobj = &obj->as<NativeObject>();
     if (nobj->getDenseInitializedLength() == 1) {
       Value elem0 = nobj->getDenseElement(0);
@@ -2989,7 +2989,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       MOZ_ASSERT(sourceIndex <= len && targetIndex <= len && len <= UINT32_MAX,
                  "sourceIndex and targetIndex are uint32 array indices");
       MOZ_ASSERT(finalLength < len, "finalLength is strictly less than len");
-      MOZ_ASSERT(obj->isNative());
+      MOZ_ASSERT(obj->is<NativeObject>());
 
       /* Steps 15.a-b. */
       HandleArrayObject arr = obj.as<ArrayObject>();
@@ -3199,7 +3199,7 @@ static bool GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj,
   // properties.
   JSObject* pobj = obj;
   do {
-    if (!pobj->isNative() || pobj->getClass()->getResolve() ||
+    if (!pobj->is<NativeObject>() || pobj->getClass()->getResolve() ||
         pobj->getOpsLookupProperty()) {
       return true;
     }
@@ -3412,7 +3412,8 @@ static bool ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin,
     }
   }
 
-  if (obj->isNative() && obj->as<NativeObject>().isIndexed() && count > 1000) {
+  if (obj->is<NativeObject>() && obj->as<NativeObject>().isIndexed() &&
+      count > 1000) {
     if (!SliceSparse(cx, obj, begin, end, narr)) {
       return false;
     }

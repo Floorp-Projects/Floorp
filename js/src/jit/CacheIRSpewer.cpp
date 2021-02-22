@@ -406,7 +406,7 @@ void CacheIRSpewer::valueProperty(const char* name, const Value& v) {
     }
 
     if (NativeObject* nobj =
-            object.isNative() ? &object.as<NativeObject>() : nullptr) {
+            object.is<NativeObject>() ? &object.as<NativeObject>() : nullptr) {
       j.beginListProperty("flags");
       {
         if (nobj->isIndexed()) {

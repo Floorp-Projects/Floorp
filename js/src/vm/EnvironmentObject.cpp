@@ -3485,7 +3485,7 @@ bool js::CheckLexicalNameConflict(JSContext* cx,
   } else if ((shape = lexicalEnv->lookup(cx, name))) {
     // ES 15.1.11 step 5.b
     redeclKind = shape->writable() ? "let" : "const";
-  } else if (varObj->isNative() &&
+  } else if (varObj->is<NativeObject>() &&
              (shape = varObj->as<NativeObject>().lookup(cx, name))) {
     // Faster path for ES 15.1.11 step 5.c-d when the shape can be found
     // without going through a resolve hook.
@@ -3703,7 +3703,8 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
      * storing the function in the stack frame (for non-aliased variables) or on
      * the scope object (for aliased).
      */
-    MOZ_ASSERT(varObj->isNative() || varObj->is<DebugEnvironmentProxy>());
+    MOZ_ASSERT(varObj->is<NativeObject>() ||
+               varObj->is<DebugEnvironmentProxy>());
     if (varObj->is<GlobalObject>()) {
       Shape* shape = prop.shape();
       if (shape->configurable()) {

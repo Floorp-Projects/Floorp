@@ -1959,7 +1959,9 @@ JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(JSContext* cx,
   return CreateThis(cx, clasp, newTarget);
 }
 
-JS_PUBLIC_API bool JS_IsNative(JSObject* obj) { return obj->isNative(); }
+JS_PUBLIC_API bool JS_IsNative(JSObject* obj) {
+  return obj->is<NativeObject>();
+}
 
 JS_PUBLIC_API void JS::AssertObjectBelongsToCurrentThread(JSObject* obj) {
   JSRuntime* rt = obj->compartment()->runtimeFromAnyThread();
@@ -2919,7 +2921,7 @@ JS_PUBLIC_API bool JS_AlreadyHasOwnPropertyById(JSContext* cx, HandleObject obj,
   CHECK_THREAD(cx);
   cx->check(obj, id);
 
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return js::HasOwnProperty(cx, obj, id, foundp);
   }
 
@@ -2999,7 +3001,7 @@ JS_PUBLIC_API bool JS_DeepFreezeObject(JSContext* cx, HandleObject obj) {
   }
 
   // Walk slots in obj and if any value is a non-null object, seal it.
-  if (obj->isNative()) {
+  if (obj->is<NativeObject>()) {
     RootedNativeObject nobj(cx, &obj->as<NativeObject>());
     for (uint32_t i = 0, n = nobj->slotSpan(); i < n; ++i) {
       if (!DeepFreezeSlot(cx, nobj->getSlot(i))) {
@@ -3181,7 +3183,7 @@ JS_PUBLIC_API bool JS::ObjectToCompletePropertyDescriptor(
 }
 
 JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj) {
-  if (!obj->isNative()) {
+  if (!obj->is<NativeObject>()) {
     return;
   }
 
