@@ -937,6 +937,32 @@ static void blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
 #define swgl_commitTextureLinearColorYUV(...) \
   swgl_commitTextureLinearYUV(__VA_ARGS__)
 
+// Each gradient stops entry is a pair of RGBA32F start color and end step.
+struct GradientStops {
+  Float startColor;
+  union {
+    Float stepColor;
+    vec4_scalar stepData;
+  };
+
+  // Whether this gradient entry can be merged with an adjacent entry. The
+  // step will be equal with the adjacent step if and only if they can be
+  // merged, or rather, that the stops are actually part of a single larger
+  // gradient.
+  bool can_merge(const GradientStops& next) const {
+    return stepData == next.stepData;
+  }
+
+  // Get the interpolated color within the entry based on the offset from its
+  // start.
+  Float interpolate(float offset) const {
+    return startColor + stepColor * offset;
+  }
+
+  // Get the end color of the entry where interpolation stops.
+  Float end_color() const { return startColor + stepColor; }
+};
+
 // Checks if a gradient table of the specified size exists at the UV coords of
 // the address within an RGBA32F texture. If so, a linear address within the
 // texture is returned that may be used to sample the gradient table later. If
@@ -947,14 +973,11 @@ static inline int swgl_validateGradient(sampler2D sampler, ivec2_scalar address,
   return sampler->format == TextureFormat::RGBA32F && address.y >= 0 &&
                  address.y < int(sampler->height) && address.x >= 0 &&
                  address.x < int(sampler->width) && entries > 0 &&
-                 address.x + 2 * entries <= int(sampler->width)
+                 address.x +
+                         int(sizeof(GradientStops) / sizeof(Float)) * entries <=
+                     int(sampler->width)
              ? address.y * sampler->stride + address.x * 4
              : -1;
-}
-
-// Swizzle RGBA gradient result to BGRA.
-static ALWAYS_INLINE HalfRGBA8 swizzleGradient(HalfRGBA8 v) {
-  return SHUFFLE(v, v, 2, 1, 0, 3, 6, 5, 4, 7);
 }
 
 static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
@@ -967,18 +990,18 @@ static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
   // entry colors.
   Float offset = entry - cast(index);
   // Every entry is a pair of colors blended by the fractional offset.
-  index *= 2;
-  assert(test_all(index >= 0 && index < int(sampler->width) - 1));
-  Float* buf = (Float*)&sampler->buf[address];
+  assert(test_all(index >= 0 &&
+                  index * int(sizeof(GradientStops) / sizeof(Float)) <
+                      int(sampler->width)));
+  GradientStops* stops = (GradientStops*)&sampler->buf[address];
   // Blend between the colors for each SIMD lane, then pack them to RGBA8
   // result. Since the layout of the RGBA8 framebuffer is actually BGRA while
   // the gradient table has RGBA colors, swizzling is required.
-  return combine(swizzleGradient(packRGBA8(
-                     round_pixel(buf[index.x] + buf[index.x + 1] * offset.x),
-                     round_pixel(buf[index.y] + buf[index.y + 1] * offset.y))),
-                 swizzleGradient(packRGBA8(
-                     round_pixel(buf[index.z] + buf[index.z + 1] * offset.z),
-                     round_pixel(buf[index.w] + buf[index.w + 1] * offset.w))));
+  return combine(
+      packRGBA8(round_pixel(stops[index.x].interpolate(offset.x).zyxw),
+                round_pixel(stops[index.y].interpolate(offset.y).zyxw)),
+      packRGBA8(round_pixel(stops[index.z].interpolate(offset.z).zyxw),
+                round_pixel(stops[index.w].interpolate(offset.w).zyxw)));
 }
 
 // Samples a gradient entry from the gradient at the provided linearized
@@ -992,6 +1015,175 @@ static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
 #define swgl_commitGradientColorRGBA8(sampler, address, entry, color)         \
   swgl_commitChunk(RGBA8, applyColor(sampleGradient(sampler, address, entry), \
                                      packColor(swgl_OutRGBA, color)))
+
+// Samples an entire span of a linear gradient by crawling the gradient table
+// and looking for consecutive stops that can be merged into a single larger
+// gradient, then interpolating between those larger gradients within the span.
+template <bool BLEND>
+static void commitLinearGradient(sampler2D sampler, int address, float size,
+                                 bool repeat, Float offset, uint32_t* buf,
+                                 int span) {
+  assert(sampler->format == TextureFormat::RGBA32F);
+  assert(address >= 0 && address < int(sampler->height * sampler->stride));
+  GradientStops* stops = (GradientStops*)&sampler->buf[address];
+  // Get the chunk delta from the difference in offset steps. This represents
+  // how far within the gradient table we advance for every step in output,
+  // normalized to gradient table size.
+  float delta = (offset.y - offset.x) * 4.0f;
+  for (; span > 0;) {
+    // If repeat is desired, we need to limit the offset to a fractional value.
+    if (repeat) {
+      offset = fract(offset);
+    }
+    // Try to process as many chunks as are within the span if possible.
+    float chunks = 0.25f * span;
+    // To properly handle both clamping and repeating of the table offset, we
+    // need to ensure we don't run past the 0 and 1 points. Here we compute the
+    // intercept points depending on whether advancing forwards or backwards in
+    // the gradient table to ensure the chunk count is limited by the amount
+    // before intersection. If there is no delta, then we compute no intercept.
+    float startEntry;
+    int minIndex, maxIndex;
+    if (offset.x < 0) {
+      // If we're below the gradient table, use the first color stop. We can
+      // only intercept the table if walking forward.
+      startEntry = 0;
+      minIndex = int(startEntry);
+      maxIndex = minIndex;
+      if (delta > 0) {
+        chunks = min(chunks, -offset.x / delta);
+      }
+    } else if (offset.x >= 1) {
+      // If we're above the gradient table, use the last color stop. We can
+      // only intercept the table if walking backward.
+      startEntry = 1.0f + size;
+      minIndex = int(startEntry);
+      maxIndex = minIndex;
+      if (delta < 0) {
+        chunks = min(chunks, (1 - offset.x) / delta);
+      }
+    } else {
+      // Otherwise, we're inside the gradient table. Depending on the direction
+      // we're walking the the table, we may intersect either the 0 or 1 offset.
+      // Compute the start entry based on our initial offset, and compute the
+      // end entry based on the available chunks limited by intercepts. Clamp
+      // them into the valid range of the table.
+      startEntry = 1.0f + offset.x * size;
+      if (delta < 0) {
+        chunks = min(chunks, -offset.x / delta);
+      } else if (delta > 0) {
+        chunks = min(chunks, (1 - offset.x) / delta);
+      }
+      float endEntry = clamp(1.0f + (offset.x + delta * int(chunks)) * size,
+                             0.0f, 1.0f + size);
+      // Now that we know the range of entries we need to sample, we want to
+      // find the largest possible merged gradient within that range. Depending
+      // on which direction we are advancing in the table, we either walk up or
+      // down the table trying to merge the current entry with the adjacent
+      // entry. We finally limit the chunks to only sample from this merged
+      // gradient.
+      minIndex = int(startEntry);
+      maxIndex = minIndex;
+      if (delta > 0) {
+        while (maxIndex + 1 < endEntry &&
+               stops[maxIndex].can_merge(stops[maxIndex + 1])) {
+          maxIndex++;
+        }
+        chunks = min(chunks, (maxIndex + 1 - startEntry) / (delta * size));
+      } else if (delta < 0) {
+        while (minIndex - 1 > endEntry &&
+               stops[minIndex - 1].can_merge(stops[minIndex])) {
+          minIndex--;
+        }
+        chunks = min(chunks, (minIndex - startEntry) / (delta * size));
+      }
+    }
+    // If there are any amount of whole chunks of a merged gradient found,
+    // then we want to process that as a single gradient span with the start
+    // and end colors from the min and max entries.
+    int inside = int(chunks);
+    if (inside > 0) {
+      // Sample the start color from the min entry and the end color from the
+      // max entry of the merged gradient. These are scaled to a range of
+      // 0..0xFF00, as that is the largest shifted value that can fit in a U16.
+      // Since we are only doing addition with the step value, we can still
+      // represent negative step values without having to use an explicit sign
+      // bit, as the result will still come out the same, allowing us to gain an
+      // extra bit of precision. We will later shift these into 8 bit output
+      // range while committing the span, but stepping with higher precision to
+      // avoid banding. We convert from RGBA to BGRA here to avoid doing this in
+      // the inner loop.
+      auto minColorF = stops[minIndex].startColor.zyxw * float(0xFF00);
+      auto maxColorF = stops[maxIndex].end_color().zyxw * float(0xFF00);
+      // Get the color range of the merged gradient, normalized to its size.
+      auto colorRangeF =
+          (maxColorF - minColorF) * (1.0f / (maxIndex + 1 - minIndex));
+      // Compute the actual starting color of the current start offset within
+      // the merged gradient. The value 0.5 is added to the low bits (0x80) so
+      // that the color will effective round to the nearest increment below.
+      auto colorF =
+          minColorF + colorRangeF * (startEntry - minIndex) + float(0x80);
+      // Compute the portion of the color range that we advance on each chunk.
+      Float deltaColorF = colorRangeF * (delta * size);
+      // Quantize the color delta and current color. These have already been
+      // scaled to the 0..0xFF00 range, so we just need to round them to U16.
+      auto deltaColor = repeat4(CONVERT(round_pixel(deltaColorF, 1), U16));
+      auto color =
+          combine(CONVERT(round_pixel(colorF, 1), U16),
+                  CONVERT(round_pixel(colorF + deltaColorF * 0.25f, 1), U16),
+                  CONVERT(round_pixel(colorF + deltaColorF * 0.5f, 1), U16),
+                  CONVERT(round_pixel(colorF + deltaColorF * 0.75f, 1), U16));
+      // Finally, step the current color through the output chunks, shifting
+      // it into 8 bit range and outputting as we go.
+      for (auto* end = buf + inside * 4; buf < end; buf += 4) {
+        commit_blend_span<BLEND>(buf, bit_cast<WideRGBA8>(color >> 8));
+        color += deltaColor;
+      }
+      // Deduct the number of chunks inside the gradient from the remaining
+      // overall span. If we exhausted the span, bail out.
+      span -= inside * 4;
+      if (span <= 0) {
+        break;
+      }
+      // Otherwise, assume we're in a transitional section of the gradient that
+      // will probably require per-sample table lookups, so fall through below.
+      offset += inside * delta;
+      if (repeat) {
+        offset = fract(offset);
+      }
+    }
+    // If we get here, there were no whole chunks of a merged gradient found
+    // that we could process, but we still have a non-zero amount of span left.
+    // That means we have segments of gradient that begin or end at the current
+    // entry we're on. For this case, we just fall back to sampleGradient which
+    // will calculate a table entry for each sample, assuming the samples may
+    // have different table entries.
+    Float entry = clamp(offset * size + 1.0f, 0.0f, 1.0f + size);
+    commit_blend_span<BLEND>(buf, sampleGradient(sampler, address, entry));
+    span -= 4;
+    buf += 4;
+    offset += delta;
+  }
+}
+
+// Commits an entire span of a linear gradient, given the address of a table
+// previously resolved with swgl_validateGradient. The size of the inner portion
+// of the table is given, assuming the table start and ends with a single entry
+// each to deal with clamping. Repeating will be handled if necessary. The
+// initial offset within the table is used to designate where to start the span
+// and how to step through the gradient table.
+#define swgl_commitLinearGradientRGBA8(sampler, address, size, repeat, offset) \
+  do {                                                                         \
+    if (blend_key) {                                                           \
+      commitLinearGradient<true>(sampler, address, size, repeat, offset,       \
+                                 swgl_OutRGBA8, swgl_SpanLength);              \
+    } else {                                                                   \
+      commitLinearGradient<false>(sampler, address, size, repeat, offset,      \
+                                  swgl_OutRGBA8, swgl_SpanLength);             \
+    }                                                                          \
+    swgl_OutRGBA8 += swgl_SpanLength;                                          \
+    swgl_SpanLength = 0;                                                       \
+  } while (0)
 
 // Extension to set a clip mask image to be sampled during blending. The offset
 // specifies the positioning of the clip mask image relative to the viewport

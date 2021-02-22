@@ -8,7 +8,6 @@
 
 flat varying vec2 v_center;
 flat varying float v_start_radius;
-flat varying float v_radius_scale;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -54,39 +53,35 @@ void brush_vs(
         gradient.stretch_size
     );
 
-    v_center = gradient.center_start_end_radius.xy;
-    v_start_radius = gradient.center_start_end_radius.z;
-    if (gradient.center_start_end_radius.z != gradient.center_start_end_radius.w) {
-      // Store 1/rd where rd = end_radius - start_radius
-      v_radius_scale = 1.0 / (gradient.center_start_end_radius.w - gradient.center_start_end_radius.z);
-    } else {
-      // If rd = 0, we can't get its reciprocal. Instead, just use a zero scale.
-      v_radius_scale = 0.0;
-    }
+    // Store 1/rd where rd = end_radius - start_radius
+    // If rd = 0, we can't get its reciprocal. Instead, just use a zero scale.
+    float radius_scale =
+        gradient.center_start_end_radius.z != gradient.center_start_end_radius.w
+            ? 1.0 / (gradient.center_start_end_radius.w - gradient.center_start_end_radius.z)
+            : 0.0;
+    v_center = gradient.center_start_end_radius.xy * radius_scale;
+    v_start_radius = gradient.center_start_end_radius.z * radius_scale;
+    v_repeated_size *= radius_scale;
 
     // Transform all coordinates by the y scale so the
     // fragment shader can work with circles
     v_center.y *= gradient.ratio_xy;
-    v_repeated_size.y *=  gradient.ratio_xy;
+    v_repeated_size.y *= gradient.ratio_xy;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-float get_gradient_offset() {
-    // Get the brush position to solve for gradient offset.
-    vec2 pos = compute_gradient_pos();
-
+float get_gradient_offset(vec2 pos) {
     // Rescale UV to actual repetition size. This can't be done in the vertex
     // shader due to the use of length() below.
     pos *= v_repeated_size;
 
     // Solve for t in length(pd) = v_start_radius + t * rd
-    vec2 pd = pos - v_center;
-    return (length(pd) - v_start_radius) * v_radius_scale;
+    return length(pos - v_center) - v_start_radius;
 }
 
 Fragment brush_fs() {
-    vec4 color = sample_gradient(get_gradient_offset());
+    vec4 color = sample_gradient(get_gradient_offset(compute_repeated_pos()));
 
 #ifdef WR_FEATURE_ALPHA_PASS
     color *= antialias_brush();
@@ -101,20 +96,12 @@ void swgl_drawSpanRGBA8() {
     if (address < 0) {
         return;
     }
-    if (v_gradient_repeat != 0.0) {
-        // The gradient repeats, so use fract() on the offset.
-        while (swgl_SpanLength > 0) {
-            float entry = clamp_gradient_entry(fract(get_gradient_offset()));
-            swgl_commitGradientRGBA8(sGpuCache, address, entry);
-            v_pos += swgl_interpStep(v_pos);
-        }
-    } else {
-        // The gradient offset is only clamped.
-        while (swgl_SpanLength > 0) {
-            float entry = clamp_gradient_entry(get_gradient_offset());
-            swgl_commitGradientRGBA8(sGpuCache, address, entry);
-            v_pos += swgl_interpStep(v_pos);
-        }
+    while (swgl_SpanLength > 0) {
+        float offset = get_gradient_offset(compute_repeated_pos());
+        if (v_gradient_repeat != 0.0) offset = fract(offset); 
+        float entry = clamp_gradient_entry(offset);
+        swgl_commitGradientRGBA8(sGpuCache, address, entry);
+        v_pos += swgl_interpStep(v_pos);
     }
 }
 #endif

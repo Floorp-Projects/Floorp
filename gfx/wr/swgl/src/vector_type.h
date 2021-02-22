@@ -426,6 +426,16 @@ SI VectorType<T, N> combineHigh(VectorType<T, N> a, VectorType<T, N> b) {
   return combine(highHalf(a), highHalf(b));
 }
 
+template <typename T, int N>
+SI VectorType<T, N * 2> repeat2(VectorType<T, N> a) {
+  return combine(a, a);
+}
+
+template <typename T, int N>
+SI VectorType<T, N * 4> repeat4(VectorType<T, N> a) {
+  return combine(a, a, a, a);
+}
+
 template <typename T>
 SI VectorType<T, 4> zipLow(VectorType<T, 4> a, VectorType<T, 4> b) {
   return SHUFFLE(a, b, 0, 4, 1, 5);
