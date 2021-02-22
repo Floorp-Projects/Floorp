@@ -18,11 +18,21 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+const ONBOARDING_COUNT_PREF = "quicksuggest.onboardingCount";
+const ONBOARDING_MAX_COUNT_PREF = "quicksuggest.onboardingMaxCount";
+
+// TODO (bug 1693671): Replace this URL with the final URL of the blog post.
+const ONBOARDING_URL = "https://mozilla.org/";
+const ONBOARDING_TEXT = "Learn more about Firefox Suggests";
+
 /**
  * A provider that returns a suggested url to the user based on what
  * they have currently typed so they can navigate directly.
  */
 class ProviderQuickSuggest extends UrlbarProvider {
+  // Whether we added a result during the most recent query.
+  _addedResultInLastQuery = false;
+
   /**
    * Returns the name of this provider.
    * @returns {string} the name of this provider.
@@ -46,6 +56,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
+    this._addedResultInLastQuery = false;
+
     // If the sources don't include search or the user used a restriction
     // character other than search, don't allow any suggestions.
     if (
@@ -81,21 +93,62 @@ class ProviderQuickSuggest extends UrlbarProvider {
     if (!suggestion || instance != this.queryInstance) {
       return;
     }
+
+    let payload = {
+      title: suggestion.title,
+      url: suggestion.url,
+      icon: suggestion.icon,
+      isSponsored: true,
+    };
+
+    // Show the help button if we haven't reached the max onboarding count yet.
+    if (this._onboardingCount < this._onboardingMaxCount) {
+      payload.helpUrl = ONBOARDING_URL;
+      payload.helpTitle = ONBOARDING_TEXT;
+    }
+
     let result = new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-      {
-        title: suggestion.title,
-        url: suggestion.url,
-        icon: suggestion.icon,
-        isSponsored: true,
-      }
+      payload
     );
     result.suggestedIndex = UrlbarPrefs.get("quicksuggest.suggestedIndex");
     if (result.suggestedIndex == -1) {
       result.suggestedIndex = UrlbarPrefs.get("maxRichResults") - 1;
     }
     addCallback(this, result);
+
+    this._addedResultInLastQuery = true;
+  }
+
+  /**
+   * Called when the user starts and ends an engagement with the urlbar.
+   *
+   * @param {boolean} isPrivate True if the engagement is in a private context.
+   * @param {string} state The state of the engagement, one of: start,
+   *        engagement, abandonment, discard.
+   */
+  onEngagement(isPrivate, state) {
+    if (
+      state == "engagement" &&
+      this._addedResultInLastQuery &&
+      this._onboardingCount < this._onboardingMaxCount
+    ) {
+      this._onboardingCount++;
+    }
+    this._addedResultInLastQuery = false;
+  }
+
+  get _onboardingCount() {
+    return UrlbarPrefs.get(ONBOARDING_COUNT_PREF);
+  }
+
+  set _onboardingCount(value) {
+    UrlbarPrefs.set(ONBOARDING_COUNT_PREF, value);
+  }
+
+  get _onboardingMaxCount() {
+    return UrlbarPrefs.get(ONBOARDING_MAX_COUNT_PREF);
   }
 }
 
