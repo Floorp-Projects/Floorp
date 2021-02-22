@@ -20,7 +20,7 @@ using namespace js;
 static gc::AllocKind GetProxyGCObjectKind(const JSClass* clasp,
                                           const BaseProxyHandler* handler,
                                           const Value& priv) {
-  MOZ_ASSERT(clasp->isProxy());
+  MOZ_ASSERT(clasp->isProxyObject());
 
   uint32_t nreserved = JSCLASS_RESERVED_SLOTS(clasp);
 
@@ -73,7 +73,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   Rooted<TaggedProto> proto(cx, proto_);
 
   MOZ_ASSERT(!clasp->isNativeObject());
-  MOZ_ASSERT(clasp->isProxy());
+  MOZ_ASSERT(clasp->isProxyObject());
   MOZ_ASSERT(isValidProxyClass(clasp));
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
   MOZ_ASSERT_IF(proto.isObject(),

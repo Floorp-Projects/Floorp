@@ -5223,7 +5223,7 @@ MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  MOZ_ASSERT(!GetObjectKnownJSClass(object())->isProxy());
+  MOZ_ASSERT(!GetObjectKnownJSClass(object())->isProxyObject());
   AssertKnownClass(alloc, this, object());
   return object();
 }

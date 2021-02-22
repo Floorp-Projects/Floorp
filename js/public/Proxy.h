@@ -371,7 +371,7 @@ class JS_FRIEND_API BaseProxyHandler {
 extern JS_FRIEND_DATA const JSClass ProxyClass;
 
 inline bool IsProxy(const JSObject* obj) {
-  return JS::GetClass(obj)->isProxy();
+  return JS::GetClass(obj)->isProxyObject();
 }
 
 namespace detail {

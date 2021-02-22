@@ -411,8 +411,8 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
 
   // Sanity check the finalizer.
-  MOZ_ASSERT_IF(clasp->hasFinalize(),
-                CanNurseryAllocateFinalizedClass(clasp) || clasp->isProxy());
+  MOZ_ASSERT_IF(clasp->hasFinalize(), CanNurseryAllocateFinalizedClass(clasp) ||
+                                          clasp->isProxyObject());
 
   auto* obj = reinterpret_cast<JSObject*>(
       allocateCell(cx->zone(), size, JS::TraceKind::Object));

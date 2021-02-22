@@ -432,7 +432,7 @@ bool js::GetObjectProto(JSContext* cx, JS::Handle<JSObject*> obj,
                         JS::MutableHandle<JSObject*> proto) {
   cx->check(obj);
 
-  if (IsProxy(obj)) {
+  if (obj->is<ProxyObject>()) {
     return JS_GetPrototype(cx, obj, proto);
   }
 
@@ -453,7 +453,7 @@ JS_FRIEND_API bool js::GetRealmOriginalEval(JSContext* cx,
 
 void JS::detail::SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
                                             const Value& value) {
-  if (IsProxy(obj)) {
+  if (obj->is<ProxyObject>()) {
     obj->as<ProxyObject>().setReservedSlot(slot, value);
   } else {
     obj->as<NativeObject>().setSlot(slot, value);
