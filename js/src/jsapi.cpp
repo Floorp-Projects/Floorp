@@ -3413,7 +3413,7 @@ JS_PUBLIC_API bool JS_IsNativeFunction(JSObject* funobj, JSNative call) {
     return false;
   }
   JSFunction* fun = &funobj->as<JSFunction>();
-  return fun->isNative() && fun->native() == call;
+  return fun->isNativeFun() && fun->native() == call;
 }
 
 extern JS_PUBLIC_API bool JS_IsConstructor(JSFunction* fun) {
@@ -3643,7 +3643,7 @@ JS_PUBLIC_API unsigned JS_GetScriptBaseLineNumber(JSContext* cx,
 
 JS_PUBLIC_API JSScript* JS_GetFunctionScript(JSContext* cx,
                                              HandleFunction fun) {
-  if (fun->isNative()) {
+  if (fun->isNativeFun()) {
     return nullptr;
   }
 

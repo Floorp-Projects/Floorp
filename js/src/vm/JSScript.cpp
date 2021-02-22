@@ -4288,7 +4288,7 @@ static JSObject* CloneScriptObject(JSContext* cx, PrivateScriptData* srcData,
 
   if (obj->is<JSFunction>()) {
     HandleFunction innerFun = obj.as<JSFunction>();
-    if (innerFun->isNative()) {
+    if (innerFun->isNativeFun()) {
       if (cx->realm() != innerFun->realm()) {
         MOZ_ASSERT(innerFun->isAsmJSNative());
         JS_ReportErrorASCII(cx, "AsmJS modules do not yet support cloning.");
