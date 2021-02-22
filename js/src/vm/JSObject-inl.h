@@ -282,16 +282,6 @@ static MOZ_ALWAYS_INLINE bool IsFunctionObject(const js::Value& v,
   return false;
 }
 
-static MOZ_ALWAYS_INLINE bool IsNativeFunction(const js::Value& v) {
-  JSFunction* fun;
-  return IsFunctionObject(v, &fun) && fun->isNative();
-}
-
-static MOZ_ALWAYS_INLINE bool IsNativeFunction(const js::Value& v,
-                                               JSFunction** fun) {
-  return IsFunctionObject(v, fun) && (*fun)->isNative();
-}
-
 static MOZ_ALWAYS_INLINE bool IsNativeFunction(const js::Value& v,
                                                JSNative native) {
   JSFunction* fun;

@@ -971,7 +971,7 @@ bool IonCacheIRCompiler::emitCallNativeGetterResult(
   ValueOperand receiver = allocator.useValueRegister(masm, receiverId);
 
   JSFunction* target = &objectStubField(getterOffset)->as<JSFunction>();
-  MOZ_ASSERT(target->isNative());
+  MOZ_ASSERT(target->isNativeFun());
 
   AutoScratchRegisterMaybeOutput argJSContext(allocator, masm, output);
   AutoScratchRegister argUintN(allocator, masm);
@@ -1481,7 +1481,7 @@ bool IonCacheIRCompiler::emitCallNativeSetter(ObjOperandId receiverId,
 
   Register receiver = allocator.useRegister(masm, receiverId);
   JSFunction* target = &objectStubField(setterOffset)->as<JSFunction>();
-  MOZ_ASSERT(target->isNative());
+  MOZ_ASSERT(target->isNativeFun());
   ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
 
   AutoScratchRegister argJSContext(allocator, masm);

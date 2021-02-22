@@ -2469,7 +2469,7 @@ static JSFunction* EnsureNativeFunction(const Value& value,
   }
 
   JSFunction* fun = &value.toObject().as<JSFunction>();
-  if (!fun->isNative() || (fun->isExtended() && !allowExtended)) {
+  if (!fun->isNativeFun() || (fun->isExtended() && !allowExtended)) {
     return nullptr;
   }
 

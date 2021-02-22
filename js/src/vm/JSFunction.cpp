@@ -1217,7 +1217,7 @@ bool JSFunction::getLength(JSContext* cx, HandleFunction fun,
                            uint16_t* length) {
   MOZ_ASSERT(!fun->isBoundFunction());
 
-  if (fun->isNative()) {
+  if (fun->isNativeFun()) {
     *length = fun->nargs();
     return true;
   }
@@ -1932,7 +1932,7 @@ bool JSFunction::isBuiltinFunctionConstructor() {
 }
 
 bool JSFunction::needsExtraBodyVarEnvironment() const {
-  if (isNative()) {
+  if (isNativeFun()) {
     return false;
   }
 
@@ -1957,7 +1957,7 @@ bool JSFunction::needsNamedLambdaEnvironment() const {
 }
 
 bool JSFunction::needsCallObject() const {
-  if (isNative()) {
+  if (isNativeFun()) {
     return false;
   }
 
@@ -2042,7 +2042,7 @@ JSFunction* js::NewFunctionWithProto(
     fun->initScript(nullptr);
     fun->initEnvironment(enclosingEnv);
   } else {
-    MOZ_ASSERT(fun->isNative());
+    MOZ_ASSERT(fun->isNativeFun());
     fun->initNative(native, nullptr);
   }
   if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
@@ -2236,7 +2236,7 @@ JSFunction* js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun,
 }
 
 JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
-  MOZ_ASSERT(fun->isNative());
+  MOZ_ASSERT(fun->isNativeFun());
   MOZ_ASSERT(IsAsmJSModule(fun));
   MOZ_ASSERT(fun->isExtended());
   MOZ_ASSERT(cx->compartment() == fun->compartment());
@@ -2256,7 +2256,7 @@ JSFunction* js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun) {
 }
 
 JSFunction* js::CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun) {
-  MOZ_ASSERT(fun->isNative());
+  MOZ_ASSERT(fun->isNativeFun());
   MOZ_ASSERT(fun->realm()->isSelfHostingRealm());
   MOZ_ASSERT(!fun->isExtended());
   MOZ_ASSERT(cx->compartment() != fun->compartment());

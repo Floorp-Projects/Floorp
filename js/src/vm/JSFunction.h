@@ -160,7 +160,7 @@ class JSFunction : public js::NativeObject {
 
   /* A function can be classified as either native (C++) or interpreted (JS): */
   bool isInterpreted() const { return flags_.isInterpreted(); }
-  bool isNative() const { return flags_.isNative(); }
+  bool isNativeFun() const { return flags_.isNativeFun(); }
 
   bool isConstructor() const { return flags_.isConstructor(); }
 
@@ -511,7 +511,7 @@ class JSFunction : public js::NativeObject {
   }
 
   JSNative native() const {
-    MOZ_ASSERT(isNative());
+    MOZ_ASSERT(isNativeFun());
     return u.native.func_;
   }
   JSNative nativeUnchecked() const {
@@ -522,7 +522,7 @@ class JSFunction : public js::NativeObject {
   JSNative maybeNative() const { return isInterpreted() ? nullptr : native(); }
 
   void initNative(js::Native native, const JSJitInfo* jitInfo) {
-    MOZ_ASSERT(isNative());
+    MOZ_ASSERT(isNativeFun());
     MOZ_ASSERT_IF(jitInfo, isBuiltinNative());
     MOZ_ASSERT(native);
     u.native.func_ = native;
