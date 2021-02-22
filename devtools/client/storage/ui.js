@@ -116,7 +116,6 @@ class StorageUI {
     this._window = panelWin;
     this._panelDoc = panelWin.document;
     this._toolbox = toolbox;
-    this.storageResources = null;
     this.sidebarToggledOpen = null;
     this.shouldLoadMoreItems = true;
 
@@ -266,6 +265,13 @@ class StorageUI {
   }
 
   async init() {
+    // This is a distionarry of arrays, keyed by storage key
+    // - Keys are storage keys, available on each storage resource, via ${resource.resourceKey}
+    //   and are typically "Cache", "cookies", "indexedDB", "localStorage", ...
+    // - Values are arrays of storage fronts. This isn't the deprecated global storage front (target.getFront(storage), only used by legacy listener),
+    //   but rather the storage specific front, i.e. a storage resource. Storage resources are fronts.
+    this.storageResources = {};
+
     const { targetList } = this._toolbox;
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
@@ -274,13 +280,6 @@ class StorageUI {
       this._onTargetAvailable,
       this._onTargetDestroyed
     );
-
-    // This is a distionarry of arrays, keyed by storage key
-    // - Keys are storage keys, available on each storage resource, via ${resource.resourceKey}
-    //   and are typically "Cache", "cookies", "indexedDB", "localStorage", ...
-    // - Values are arrays of storage fronts. This isn't the deprecated global storage front (target.getFront(storage), only used by legacy listener),
-    //   but rather the storage specific front, i.e. a storage resource. Storage resources are fronts.
-    this.storageResources = {};
 
     this._onResourceListAvailable = this._onResourceListAvailable.bind(this);
 
@@ -314,16 +313,15 @@ class StorageUI {
   }
 
   async _onResourceListAvailable(resources) {
-    const storages = {};
-
     for (const resource of resources) {
       const { resourceKey } = resource;
+
       // NOTE: We might be getting more than 1 resource per storage type when
       //       we have remote frames, so we need an array to store these.
-      if (!storages[resourceKey]) {
-        storages[resourceKey] = [];
+      if (!this.storageResources[resourceKey]) {
+        this.storageResources[resourceKey] = [];
       }
-      storages[resourceKey].push(resource);
+      this.storageResources[resourceKey].push(resource);
       resource.on(
         "single-store-update",
         this._onStoreUpdate.bind(this, resource)
@@ -335,7 +333,7 @@ class StorageUI {
     }
 
     try {
-      await this.populateStorageTree(storages);
+      await this.populateStorageTree();
     } catch (e) {
       if (!this._toolbox || this._toolbox._destroyer) {
         // The toolbox is in the process of being destroyed... in this case throwing here
@@ -894,12 +892,8 @@ class StorageUI {
   /**
    * Populates the storage tree which displays the list of storages present for
    * the page.
-   *
-   * @param {object} storageResources
-   *        List of storages and their corresponding hosts returned by the
-   *        StorageFront.listStores call.
    */
-  async populateStorageTree(storageResources) {
+  async populateStorageTree() {
     const populateTreeFromResource = (type, resource) => {
       for (const host in resource.hosts) {
         const label = this.getReadableLabelFromHostname(host);
@@ -934,12 +928,7 @@ class StorageUI {
     // see comment above.
     const initialSelectedItem = this.tree.selectedItem;
 
-    for (const type in storageResources) {
-      // Ignore `from` field, which is just a protocol.js implementation
-      // artifact.
-      if (type === "from") {
-        continue;
-      }
+    for (const [type, resources] of Object.entries(this.storageResources)) {
       let typeLabel = type;
       try {
         typeLabel = L10N.getStr("tree.labels." + type);
@@ -949,13 +938,9 @@ class StorageUI {
 
       this.tree.add([{ id: type, label: typeLabel, type: "store" }]);
 
-      const resourcesWithHosts = storageResources[type].filter(x => x.hosts);
-      for (const resource of resourcesWithHosts) {
-        if (!this.storageResources[type]) {
-          this.storageResources[type] = [];
-        }
-        this.storageResources[type].push(resource);
-
+      // storageResources values are arrays, with storage resources.
+      // we may have many storage resources per type if we get remote iframes.
+      for (const resource of resources) {
         populateTreeFromResource(type, resource);
       }
     }
