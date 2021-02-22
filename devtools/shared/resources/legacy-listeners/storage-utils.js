@@ -56,22 +56,19 @@ function makeStorageLegacyListener(storageKey, storageType) {
     storage.resourceId = storageType;
     onAvailable([storage]);
 
+    // Maps global events from `storageFront` shared for all storage-types,
+    // down to storage-type's specific front `storage`.
     // Any item in the store gets updated
     storageFront.on("stores-update", response => {
       response = getFilteredStorageEvents(response, storageKey);
       if (!response) {
         return;
       }
-      onUpdated([
-        {
-          resourceId: storageType,
-          resourceType: storageType,
-          resourceKey: storageKey,
-          changed: response.changed,
-          added: response.added,
-          deleted: response.deleted,
-        },
-      ]);
+      storage.emit("single-store-update", {
+        changed: response.changed,
+        added: response.added,
+        deleted: response.deleted,
+      });
     });
 
     // When a store gets cleared
@@ -82,14 +79,9 @@ function makeStorageLegacyListener(storageKey, storageType) {
         return;
       }
 
-      onDestroyed([
-        {
-          resourceId: storageType,
-          resourceType: storageType,
-          resourceKey: storageKey,
-          clearedHostsOrPaths: cleared,
-        },
-      ]);
+      storage.emit("single-store-cleared", {
+        clearedHostsOrPaths: cleared,
+      });
     });
   };
 }

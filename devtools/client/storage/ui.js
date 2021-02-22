@@ -278,10 +278,6 @@ class StorageUI {
     this.storageTypes = {};
 
     this._onResourceListAvailable = this._onResourceListAvailable.bind(this);
-    this._onResourceUpdated = this._onResourceUpdated.bind(this);
-    this._onResourceListUpdated = this._onResourceListUpdated.bind(this);
-    this._onResourceDestroyed = this._onResourceDestroyed.bind(this);
-    this._onResourceListDestroyed = this._onResourceListDestroyed.bind(this);
 
     const { resourceWatcher } = this._toolbox;
 
@@ -298,8 +294,6 @@ class StorageUI {
       ],
       {
         onAvailable: this._onResourceListAvailable,
-        onUpdated: this._onResourceListUpdated,
-        onDestroyed: this._onResourceListDestroyed,
       }
     );
   }
@@ -325,6 +319,14 @@ class StorageUI {
         storages[resourceKey] = [];
       }
       storages[resourceKey].push(resource);
+      resource.on(
+        "single-store-update",
+        this._onStoreUpdate.bind(this, resource)
+      );
+      resource.on(
+        "single-store-cleared",
+        this._onStoreCleared.bind(this, resource)
+      );
     }
 
     try {
@@ -370,8 +372,6 @@ class StorageUI {
       ],
       {
         onAvailable: this._onResourceListAvailable,
-        onUpdated: this._onResourceListUpdated,
-        onDestroyed: this._onResourceListDestroyed,
       }
     );
 
@@ -516,12 +516,6 @@ class StorageUI {
     await this.updateObjectSidebar();
   }
 
-  async _onResourceListDestroyed(clearedList) {
-    for (const cleared of clearedList) {
-      await this._onResourceDestroyed(cleared);
-    }
-  }
-
   /**
    * Event handler for "stores-cleared" event coming from the storage actor.
    *
@@ -529,7 +523,8 @@ class StorageUI {
    *        An object containing which hosts/paths are cleared from a
    *        storage
    */
-  _onResourceDestroyed({ resourceKey, clearedHostsOrPaths }) {
+  _onStoreCleared(resource, { clearedHostsOrPaths }) {
+    const { resourceKey } = resource;
     function* enumPaths() {
       if (Array.isArray(clearedHostsOrPaths)) {
         // Handle the legacy response with array of hosts
@@ -573,12 +568,6 @@ class StorageUI {
     }
   }
 
-  async _onResourceListUpdated(updates) {
-    for (const update of updates) {
-      await this._onResourceUpdated(update.update);
-    }
-  }
-
   /**
    * Event handler for "stores-update" event coming from the storage actor.
    *
@@ -602,7 +591,8 @@ class StorageUI {
    *        of the changed store objects. This array is empty for deleted object
    *        if the host was completely removed.
    */
-  async _onResourceUpdated({ changed, added, deleted }) {
+  async _onStoreUpdate(resource, update) {
+    const { changed, added, deleted } = update;
     if (added) {
       await this.handleAddedItems(added);
     }

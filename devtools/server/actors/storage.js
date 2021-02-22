@@ -273,6 +273,9 @@ StorageActors.defaults = function(typeName, observationTopics) {
      *        The window which was added.
      */
     async onWindowReady(window) {
+      if (!this.hostVsStores) {
+        return;
+      }
       const host = this.getHostName(window.location);
       if (host && !this.hostVsStores.has(host)) {
         await this.populateStoresForHost(host, window);
@@ -295,6 +298,9 @@ StorageActors.defaults = function(typeName, observationTopics) {
      *        The window which was removed.
      */
     onWindowDestroyed(window) {
+      if (!this.hostVsStores) {
+        return;
+      }
       if (!window.location) {
         // Nothing can be done if location object is null
         return;
@@ -3375,6 +3381,11 @@ function trimHttpHttpsPort(url) {
 
 /**
  * The main Storage Actor.
+ *
+ * This class is meant to be dropped once we implement all storage
+ * types via a Watcher class. (bug 1644192)
+ * listStores will have been replaced by the ResourceWatcher API
+ * which will distribute all storage type specific actors.
  */
 const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
   typeName: "storage",
