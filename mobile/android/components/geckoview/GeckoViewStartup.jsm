@@ -200,6 +200,11 @@ class GeckoViewStartup {
           }
         );
 
+        GeckoViewUtils.addLazyGetter(this, "DownloadTracker", {
+          module: "resource://gre/modules/GeckoViewWebExtension.jsm",
+          ged: ["GeckoView:WebExtension:DownloadChanged"],
+        });
+
         ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 
         // Initialize safe browsing module. This is required for content

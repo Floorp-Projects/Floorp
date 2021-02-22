@@ -14,6 +14,7 @@ import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.gecko.EventDispatcher
 import org.mozilla.geckoview.*
 import org.mozilla.geckoview.WebExtension.*
 import org.mozilla.geckoview.WebExtension.BrowsingDataDelegate.Type.*
@@ -2299,4 +2300,202 @@ class WebExtensionTest : BaseSessionTest() {
         assertNotNull(downloadCreated.id)
         sessionRule.waitForResult(controller.uninstall(webExtension))
     }
+
+    @Test
+    fun testOnChanged() {
+        val uri = createTestUrl("/assets/www/images/test.gif")
+        val downloadId = 4
+        val unfinishedDownloadSize = 5L
+        val finishedDownloadSize = 25L
+        val expectedFilename = "test.gif"
+        val expectedMime = "image/gif"
+        val expectedEndTime = Date().time
+        val expectedFilesize = 48L
+
+        // first and second update
+        val downloadData = object : Download.Info {
+            var endTime : Long? = null
+            val startTime = Date().time - 50000
+            var fileExists = false
+            var totalBytes: Long = -1
+            var mime = ""
+            var fileSize: Long = -1
+            var filename = ""
+            var state = Download.STATE_IN_PROGRESS
+
+            override fun state(): Int {
+                return state
+            }
+
+            override fun endTime(): Long? {
+                return endTime
+            }
+
+            override fun startTime(): Long {
+                return startTime
+            }
+
+            override fun fileExists(): Boolean {
+                return fileExists;
+            }
+
+            override fun totalBytes(): Long {
+                return totalBytes
+            }
+
+            override fun mime(): String {
+                return mime
+            }
+
+            override fun fileSize(): Long {
+                return fileSize
+            }
+
+            override fun filename(): String {
+                return filename
+            }
+        }
+
+        val webExtension = sessionRule.waitForResult(
+                controller.installBuiltIn("resource://android/assets/web_extensions/download-onChanged/"))
+
+        val assertOnDownloadCalled = GeckoResult<Download>()
+        val downloadDelegate = object : DownloadDelegate {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.DownloadInitData>? {
+                assertEquals(webExtension!!.id, source.id)
+                assertEquals(uri, request.request.uri)
+
+                val download = controller.createDownload(downloadId)
+                assertOnDownloadCalled.complete(download)
+                return GeckoResult.fromValue(DownloadInitData(download, downloadData))
+            }
+        }
+
+        val updates = mutableListOf<JSONObject>()
+
+        val thirdUpdateReceived = GeckoResult<JSONObject>()
+        val messageDelegate = object : MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any, sender: MessageSender): GeckoResult<Any>? {
+                val current = (message as JSONObject).getJSONObject("current")
+
+                updates.add(message)
+
+                // Once we get the size finished download, that means we got the last update
+                if (current.getLong("totalBytes") == finishedDownloadSize) {
+                    thirdUpdateReceived.complete(message)
+                }
+
+                return GeckoResult.fromValue(message)
+            }
+        }
+
+        webExtension.setDownloadDelegate(downloadDelegate)
+        webExtension.setMessageDelegate(messageDelegate, "browser")
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        val downloadCreated = sessionRule.waitForResult(assertOnDownloadCalled)
+        assertEquals(downloadId, downloadCreated.id)
+
+        // first and second update (they are identical)
+        downloadData.filename = expectedFilename
+        downloadData.mime = expectedMime
+        downloadData.totalBytes = unfinishedDownloadSize
+
+        downloadCreated.update(downloadData)
+        downloadCreated.update(downloadData)
+
+        downloadData.fileSize = expectedFilesize
+        downloadData.endTime = expectedEndTime
+        downloadData.totalBytes = finishedDownloadSize
+        downloadData.state = Download.STATE_COMPLETE
+        downloadCreated.update(downloadData)
+
+        sessionRule.waitForResult(thirdUpdateReceived)
+
+        // The second update should not be there because the data was identical
+        assertEquals(2, updates.size)
+
+        val firstUpdateCurrent = updates[0].getJSONObject("current")
+        val firstUpdatePrevious = updates[0].getJSONObject("previous")
+        assertEquals(3, firstUpdateCurrent.length())
+        assertEquals(3, firstUpdatePrevious.length())
+        assertEquals(expectedMime, firstUpdateCurrent.getString("mime"))
+        assertEquals("", firstUpdatePrevious.getString("mime"))
+        assertEquals(expectedFilename, firstUpdateCurrent.getString("filename"))
+        assertEquals("", firstUpdatePrevious.getString("filename"))
+        assertEquals(unfinishedDownloadSize, firstUpdateCurrent.getLong("totalBytes"))
+        assertEquals(-1, firstUpdatePrevious.getLong("totalBytes"))
+
+        val secondUpdateCurrent = updates[1].getJSONObject("current")
+        val secondUpdatePrevious = updates[1].getJSONObject("previous")
+        assertEquals(4, secondUpdateCurrent.length())
+        assertEquals(4, secondUpdatePrevious.length())
+        assertEquals(finishedDownloadSize, secondUpdateCurrent.getLong("totalBytes"))
+        assertEquals(firstUpdateCurrent.getLong("totalBytes"), secondUpdatePrevious.getLong("totalBytes"))
+        assertEquals("complete", secondUpdateCurrent.get("state").toString())
+        assertEquals("in_progress", secondUpdatePrevious.get("state").toString())
+        assertEquals(expectedEndTime.toString(), secondUpdateCurrent.getString("endTime"))
+        assertEquals("null", secondUpdatePrevious.getString("endTime"))
+        assertEquals(expectedFilesize, secondUpdateCurrent.getLong("fileSize"))
+        assertEquals(-1, secondUpdatePrevious.getLong("fileSize"))
+
+        sessionRule.waitForResult(controller.uninstall(webExtension))
+    }
+
+    @Test
+    fun testOnChangedWrongId() {
+        val uri = createTestUrl("/assets/www/images/test.gif")
+        val downloadId = 5
+
+        val webExtension = sessionRule.waitForResult(
+                controller.installBuiltIn("resource://android/assets/web_extensions/download-onChanged/"))
+
+        val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
+        val downloadDelegate = object : DownloadDelegate {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.DownloadInitData>? {
+                assertEquals(webExtension!!.id, source.id)
+                assertEquals(uri, request.request.uri)
+
+                val download = controller.createDownload(downloadId)
+                assertOnDownloadCalled.complete(download)
+                return GeckoResult.fromValue(DownloadInitData(download, object : Download.Info {}))
+            }
+        }
+
+        val onMessageCalled = GeckoResult<String>()
+        val messageDelegate = object : MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any, sender: MessageSender): GeckoResult<Any>? {
+                onMessageCalled.complete(message as String)
+                return GeckoResult.fromValue(message)
+            }
+        }
+
+        webExtension.setDownloadDelegate(downloadDelegate)
+        webExtension.setMessageDelegate(messageDelegate, "browser")
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        val updateData = object : WebExtension.Download.Info {
+            override fun state(): Int {
+                return WebExtension.Download.STATE_COMPLETE
+            }
+        }
+
+        val randomDownload = controller.createDownload(25)
+
+        val r = randomDownload!!.update(updateData)
+
+        try {
+            sessionRule.waitForResult(r!!)
+        } catch (ex: Exception) {
+            val a = ex.message!!
+            assertEquals("Error: Trying to update unknown download", a)
+            sessionRule.waitForResult(controller.uninstall(webExtension))
+            return
+        }
+    }
+
 }

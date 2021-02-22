@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v88
+- Added [`WebExtension.Download#update`][88.1] that can be used to
+  implement the WebExtension `downloads` API. This method is used to communicate
+  updates in the download status to the Web Extension
+
+[88.1]: {{javadoc_uri}}/WebExtension.Download.html#update-org.mozilla.geckoview.WebExtension.Download.Info-
+
 ## v87
 - ⚠ Added [`WebExtension.DownloadInitData`][87.1] class that can be used to
   implement the WebExtension `downloads` API. This class represents initial state of a download.
@@ -896,4 +903,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d9171ae05286c279c35515eb3ac3e42258cec583
+[api-version]: 2ca865a6a509dfc7100d38f906877c5467c43cd0
