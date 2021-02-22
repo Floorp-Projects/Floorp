@@ -259,10 +259,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             dirs["abs_test_install_dir"], "config", "marionette_requirements.txt"
         )
 
-        # marionette_requirements.txt must use the legacy resolver until bug 1684969 is resolved.
-        self.register_virtualenv_module(
-            requirements=[requirements], two_pass=True, legacy_resolver=True
-        )
+        self.register_virtualenv_module(requirements=[requirements], two_pass=True)
 
     def _query_geckodriver(self):
         path = None
