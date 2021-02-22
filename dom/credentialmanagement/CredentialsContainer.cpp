@@ -64,6 +64,12 @@ static bool IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent) {
 
   WindowGlobalChild* wgc = aParent->GetWindowGlobalChild();
 
+  // If there's no WindowGlobalChild, the inner window has already been
+  // destroyed, so fail safe and return false.
+  if (!wgc) {
+    return false;
+  }
+
   // Check that all ancestors are the same origin, repeating until we find a
   // null parent
   for (WindowContext* parentContext =
