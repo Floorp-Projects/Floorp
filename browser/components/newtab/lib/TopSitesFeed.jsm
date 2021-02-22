@@ -234,7 +234,19 @@ this.TopSitesFeed = class TopSitesFeed {
       if (siteData.search_shortcut) {
         link = await this.topSiteToSearchTopSite(link);
       } else if (siteData.sponsored_position) {
-        link.sponsored_position = siteData.sponsored_position;
+        const {
+          sponsored_position,
+          sponsored_tile_id,
+          sponsored_impression_url,
+          sponsored_click_url,
+        } = siteData;
+        link = {
+          sponsored_position,
+          sponsored_tile_id,
+          sponsored_impression_url,
+          sponsored_click_url,
+          ...link,
+        };
       }
       DEFAULT_TOP_SITES.push(link);
     }
