@@ -113,6 +113,8 @@ xpcshell-apple-silicon:
             - unittests/mac_unittest.py
         extra-options:
             - --run-failures=apple_silicon
+            - --timeout-as-pass
+            - --crash-as-pass
     fetches:
         toolchain:
             - macosx64-node
