@@ -168,6 +168,14 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the QuickSuggest experiment is enabled.
   ["quicksuggest.enabled", false],
 
+  // The number of times the onboarding help button has been shown in
+  // QuickSuggest results.
+  ["quicksuggest.onboardingCount", 0],
+
+  // The max number of times the onboarding help button should be shown in
+  // QuickSuggest results.
+  ["quicksuggest.onboardingMaxCount", 5],
+
   // The index where we show QuickSuggest results, -1 means they
   // will be shown as the last result.
   ["quicksuggest.suggestedIndex", -1],
