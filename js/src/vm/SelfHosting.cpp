@@ -1951,21 +1951,12 @@ static bool intrinsic_IsTopLevelAwaitEnabled(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_SetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedModuleObject cycleRoot(cx, &args[1].toObject().as<ModuleObject>());
-  module->setCycleRoot(cycleRoot);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_GetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
+static bool intrinsic_GetAsyncCycleRoot(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
   RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  JSObject* result = module->getCycleRoot();
+  JSObject* result = js::GetAsyncCycleRoot(module);
   if (!result) {
     return false;
   }
@@ -2606,8 +2597,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_InstantiateModuleFunctionDeclarations, 1, 0),
     JS_FN("ExecuteModule", intrinsic_ExecuteModule, 1, 0),
     JS_FN("IsTopLevelAwaitEnabled", intrinsic_IsTopLevelAwaitEnabled, 0, 0),
-    JS_FN("SetCycleRoot", intrinsic_SetCycleRoot, 2, 0),
-    JS_FN("GetCycleRoot", intrinsic_GetCycleRoot, 1, 0),
+    JS_FN("GetAsyncCycleRoot", intrinsic_GetAsyncCycleRoot, 1, 0),
     JS_FN("AppendAsyncParentModule", intrinsic_AppendAsyncParentModule, 2, 0),
     JS_FN("CreateTopLevelCapability", intrinsic_CreateTopLevelCapability, 1, 0),
     JS_FN("ModuleTopLevelCapabilityResolve",
