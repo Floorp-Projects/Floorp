@@ -10,7 +10,6 @@
 const { execFileSync } = require("child_process");
 const { chdir } = require("process");
 const path = require("path");
-const flow = require("flow-bin");
 
 const dbgPath = path.join(__dirname, "..");
 
@@ -35,28 +34,6 @@ function logErrors(tool, errors) {
 
 function logStart(name) {
   console.log(`TEST START | ${name}`);
-}
-
-function runFlowJson() {
-  const { out } = execOut(flow, ["check", "--json"]);
-  const results = JSON.parse(out);
-
-  if (!results.passed) {
-    for (const error of results.errors) {
-      for (const message of error.message) {
-        console.log(`TEST-UNEXPECTED-FAIL flow | ${message.descr}`);
-      }
-    }
-  }
-
-  return results.passed;
-}
-
-function runFlow() {
-  logStart("Flow");
-  const { out } = execOut(flow, ["check"]);
-  console.log(out);
-  return runFlowJson();
 }
 
 function jest() {
@@ -95,19 +72,16 @@ function lintMd() {
 }
 
 chdir(dbgPath);
-const flowPassed = runFlow();
 const jestPassed = jest();
 const styleLintPassed = stylelint();
 const remarkPassed = lintMd();
 
 const success =
-  flowPassed &&
   jestPassed &&
   styleLintPassed &&
   remarkPassed;
 
 console.log({
-  flowPassed,
   jestPassed,
   styleLintPassed,
   remarkPassed,
