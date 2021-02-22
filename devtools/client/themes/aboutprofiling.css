@@ -88,6 +88,7 @@ h2 {
 
 .perf-settings-feature-label {
   display: block;
+  margin: 1.3em 0;
 }
 
 .perf-settings-thread-label {
@@ -103,10 +104,6 @@ h2 {
   box-sizing: border-box;
 }
 
-.perf-settings-feature-label {
-  margin: 1.3em 0;
-}
-
 .perf-settings-feature-title {
   font-size: 13px;
   margin-block: 0.2em 0;
@@ -117,6 +114,10 @@ h2 {
 
 .perf-settings-subtext {
   font-weight: bold;
+}
+
+.perf-settings-checkbox-label {
+  max-width: max-content;
 }
 
 .perf-settings-checkbox-label-disabled {
@@ -181,6 +182,7 @@ h2 {
   padding: 7px 0;
   display: flex;
   align-items: start;
+  max-width: max-content;
 }
 
 .perf-back {
