@@ -51,7 +51,6 @@
 #include "nsListControlFrame.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/dom/IOUtils.h"
 #include "mozilla/dom/SVGElementFactory.h"
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
@@ -254,10 +253,6 @@ nsresult nsLayoutStatics::Initialize() {
   IMEStateManager::Init();
 
   ServiceWorkerRegistrar::Initialize();
-
-  if (XRE_IsParentProcess()) {
-    IOUtils::RegisterInitObserver();
-  }
 
   MediaDecoder::InitStatics();
 
