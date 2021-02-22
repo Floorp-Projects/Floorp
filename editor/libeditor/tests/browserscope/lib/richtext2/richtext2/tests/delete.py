@@ -262,9 +262,9 @@ DELETE_TESTS = {
           'expected':   'foo^qoz' },
 
         { 'id':         'DIV:ce:false-1_SB',
-          'desc':       'Delete from immediately after a nested non-editable <div> (should be no-op)',
+          'desc':       'Delete from immediately after a nested non-editable <div>',
           'pad':        'foobar<div contenteditable="false">NESTED</div>^bazqoz',
-          'expected':   'foobar<div contenteditable="false">NESTED</div>^bazqoz' },
+          'expected':   'foobar^bazqoz' },
 
         { 'id':         'DIV:ce:false-1_SL',
           'desc':       'Delete nested non-editable <div> with oblique selection',
