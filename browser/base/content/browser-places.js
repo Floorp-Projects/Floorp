@@ -1674,8 +1674,8 @@ var BookmarkingUI = {
     let menuPopup = document.createXULElement("menupopup");
     menuPopup.append(
       alwaysShowMenuItem,
-      alwaysHideMenuItem,
-      showOnNewTabMenuItem
+      showOnNewTabMenuItem,
+      alwaysHideMenuItem
     );
     let menu = document.createXULElement("menu");
     menu.appendChild(menuPopup);
