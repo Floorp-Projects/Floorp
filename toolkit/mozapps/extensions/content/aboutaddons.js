@@ -477,7 +477,7 @@ let loadViewFn;
 
 /**
  * This function is set in initialize() by the parent about:addons window. It
- * is a helper for gViewController.replaceView(defaultViewId). This should be
+ * is a helper for gViewController.resetView(). This should be
  * used to reset the view if we try to load an invalid view.
  */
 let replaceWithDefaultViewFn;
