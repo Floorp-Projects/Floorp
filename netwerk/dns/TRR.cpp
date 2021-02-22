@@ -176,8 +176,8 @@ bool TRR::MaybeBlockRequest() {
         gTRRService->IsTemporarilyBlocked(mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
         // count only blocklist for A records to avoid double counts
-        Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED2,
-                              TRRService::AutoDetectedKey(), true);
+        Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED3,
+                              TRRService::ProviderKey(), true);
       }
 
       RecordReason(nsHostRecord::TRR_HOST_BLOCKED_TEMPORARY);
@@ -191,8 +191,8 @@ bool TRR::MaybeBlockRequest() {
     }
 
     if (UseDefaultServer() && (mType == TRRTYPE_A)) {
-      Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED2,
-                            TRRService::AutoDetectedKey(), false);
+      Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED3,
+                            TRRService::ProviderKey(), false);
     }
   }
 
