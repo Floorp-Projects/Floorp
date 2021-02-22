@@ -441,7 +441,7 @@ void SocketProcessChild::RemoveDataBridgeFromMap(uint64_t aChannelId) {
 Maybe<RefPtr<BackgroundDataBridgeParent>>
 SocketProcessChild::GetAndRemoveDataBridge(uint64_t aChannelId) {
   MutexAutoLock lock(mMutex);
-  return mBackgroundDataBridgeMap.GetAndRemove(aChannelId);
+  return mBackgroundDataBridgeMap.Extract(aChannelId);
 }
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvClearSessionCache() {

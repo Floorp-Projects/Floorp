@@ -560,7 +560,7 @@ inline nsScriptObjectTracer* JSHolderMap::Get(void* aHolder) const {
   return entry->mTracer;
 }
 
-inline nsScriptObjectTracer* JSHolderMap::GetAndRemove(void* aHolder) {
+inline nsScriptObjectTracer* JSHolderMap::Extract(void* aHolder) {
   MOZ_ASSERT(aHolder);
 
   auto ptr = mJSHolderMap.lookup(aHolder);
@@ -1431,7 +1431,7 @@ struct ClearJSHolder : public TraceCallbacks {
 };
 
 void CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder) {
-  nsScriptObjectTracer* tracer = mJSHolders.GetAndRemove(aHolder);
+  nsScriptObjectTracer* tracer = mJSHolders.Extract(aHolder);
   if (tracer) {
     // Bug 1531951: The analysis can't see through the virtual call but we know
     // that the ClearJSHolder tracer will never GC.

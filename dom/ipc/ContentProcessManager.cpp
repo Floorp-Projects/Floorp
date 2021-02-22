@@ -82,7 +82,7 @@ bool ContentProcessManager::RegisterRemoteFrame(BrowserParent* aChildBp) {
 void ContentProcessManager::UnregisterRemoteFrame(const TabId& aChildTabId) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  auto childBp = mBrowserParentMap.GetAndRemove(aChildTabId);
+  auto childBp = mBrowserParentMap.Extract(aChildTabId);
   MOZ_DIAGNOSTIC_ASSERT(childBp);
 
   // Clear the corresponding keepalive which was added in `RegisterRemoteFrame`.

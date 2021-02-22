@@ -26,7 +26,7 @@ bool nsGenConList::DestroyNodesFor(nsIFrame* aFrame) {
   // each frame is mapped to only one (nsIContent, pseudoType) pair,
   // and the nodes in the linked list are put in the tree order based
   // on that pair and offset inside frame.
-  nsGenConNode* node = mNodes.GetAndRemove(aFrame).valueOr(nullptr);
+  nsGenConNode* node = mNodes.Extract(aFrame).valueOr(nullptr);
   if (!node) {
     return false;
   }
