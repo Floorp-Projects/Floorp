@@ -922,11 +922,30 @@ impl GradientGpuBlockBuilder {
         // within the segment of the gradient space represented by that entry. To lookup a gradient result,
         // first the entry index is calculated to determine which two colors to interpolate between, then
         // the offset within that entry bucket is used to interpolate between the two colors in that entry.
-        // This layout preserves hard stops, as the end color for a given entry can differ from the start
-        // color for the following entry, despite them being adjacent. Colors are stored within in BGRA8
-        // format for texture upload. This table requires the gradient color stops to be normalized to the
-        // range [0, 1]. The first and last entries hold the first and last color stop colors respectively,
-        // while the entries in between hold the interpolated color stop values for the range [0, 1].
+        // This layout is motivated by the fact that if one naively tries to store a single color per entry
+        // and interpolate directly between entries, then hard stops will become softened because the end
+        // color of an entry actually differs from the start color of the next entry, even though they fall
+        // at the same edge offset in the gradient space. Instead, the two-color-per-entry layout preserves
+        // hard stops, as the end color for a given entry can differ from the start color for the following
+        // entry.
+        // Colors are stored in RGBA32F format (in the GPU cache). This table requires the gradient color
+        // stops to be normalized to the range [0, 1]. The first and last entries hold the first and last
+        // color stop colors respectively, while the entries in between hold the interpolated color stop
+        // values for the range [0, 1].
+        // As a further optimization, rather than directly storing the end color, the difference of the end
+        // color from the start color is stored instead, so that an entry can be evaluated more cheaply
+        // with start+diff*offset instead of mix(start,end,offset). Further, the color difference in two
+        // adjacent entries will always be the same if they were generated from the same set of stops/run.
+        // To allow fast searching of the table, if two adjacent entries generated from different sets of
+        // stops (a boundary) have the same difference, the floating-point bits of the stop will be nudged
+        // so that they compare differently without perceptibly altering the interpolation result. This way,
+        // one can quickly scan the table and recover runs just by comparing the color differences of the
+        // current and next entry.
+        // For example, a table with 2 inside entries (startR,startG,startB):(diffR,diffG,diffB) might look
+        // like so:
+        //     first           | 0.0              | 0.5              | last
+        //     (0,0,0):(0,0,0) | (1,0,0):(-1,1,0) | (0,0,1):(0,1,-1) | (1,1,1):(0,0,0)
+        //     ^ solid black     ^ red to green     ^ blue to green    ^ solid white
         let mut entries = [GradientDataEntry::white(); GRADIENT_DATA_SIZE];
         let mut prev_step = cur_color;
         if reverse_stops {
