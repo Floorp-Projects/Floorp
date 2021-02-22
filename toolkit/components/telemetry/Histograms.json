@@ -4220,6 +4220,17 @@
     "n_buckets": 50,
     "description": "Time from the last received byte of the response until we have notified the consumer with a DNS record (msec)"
   },
+  "DNS_TRR_HTTP_VERSION": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["h_1", "h_2", "h_3"],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["nhnt11@mozilla.com", "necko@mozilla.com"],
+    "bug_numbers": [1460314],
+    "description": "HTTP version used by DoH endpoint"
+  },
   "DNS_NATIVE_LOOKUP_TIME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
