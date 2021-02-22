@@ -61,22 +61,19 @@ void brush_vs(
 
     v_center = gradient.center_point;
     v_angle = PI / 2.0 - gradient.angle;
-    v_start_offset = gradient.start_end_offset.x;
-    if (gradient.start_end_offset.x != gradient.start_end_offset.y) {
-      // Store 1/scale where scale = end_offset - start_offset
-      v_offset_scale = 1.0 / (gradient.start_end_offset.y - gradient.start_end_offset.x);
-    } else {
-      // If scale = 0, we can't get its reciprocal. Instead, just use a zero scale.
-      v_offset_scale = 0.0;
-    }
+
+    // Store 1/scale where scale = end_offset - start_offset
+    // If scale = 0, we can't get its reciprocal. Instead, just use a zero scale.
+    v_offset_scale =
+        gradient.start_end_offset.x != gradient.start_end_offset.y
+            ? 1.0 / (gradient.start_end_offset.y - gradient.start_end_offset.x)
+            : 0.0;
+    v_start_offset = gradient.start_end_offset.x * v_offset_scale;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-float get_gradient_offset() {
-    // Get the brush position to solve for gradient offset.
-    vec2 pos = compute_gradient_pos();
-
+float get_gradient_offset(vec2 pos) {
     // Rescale UV to actual repetition size. This can't be done in the vertex
     // shader due to the use of atan() below.
     pos *= v_repeated_size;
@@ -84,11 +81,11 @@ float get_gradient_offset() {
     // Use inverse trig to find the angle offset from the relative position.
     vec2 current_dir = pos - v_center;
     float current_angle = atan(current_dir.y, current_dir.x) + v_angle;
-    return (fract(current_angle / (2.0 * PI)) - v_start_offset) * v_offset_scale;
+    return fract(current_angle / (2.0 * PI)) * v_offset_scale - v_start_offset;
 }
 
 Fragment brush_fs() {
-    vec4 color = sample_gradient(get_gradient_offset());
+    vec4 color = sample_gradient(get_gradient_offset(compute_repeated_pos()));
 
 #ifdef WR_FEATURE_ALPHA_PASS
     color *= antialias_brush();
