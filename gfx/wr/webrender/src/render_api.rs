@@ -1262,35 +1262,6 @@ impl RenderApi {
         })
     }
 
-    /// Creates a transaction message from a single scene message.
-    fn scene_message(&self, msg: SceneMsg, document_id: DocumentId) -> Box<TransactionMsg> {
-        Box::new(TransactionMsg {
-            document_id,
-            scene_ops: vec![msg],
-            frame_ops: Vec::new(),
-            resource_updates: Vec::new(),
-            notifications: Vec::new(),
-            generate_frame: GenerateFrame::No,
-            invalidate_rendered_frame: false,
-            use_scene_builder_thread: false,
-            low_priority: false,
-            blob_rasterizer: None,
-            blob_requests: Vec::new(),
-            rasterized_blobs: Vec::new(),
-            profile: TransactionProfile::new(),
-        })
-    }
-
-    /// A helper method to send document messages.
-    fn send_scene_msg(&self, document_id: DocumentId, msg: SceneMsg) {
-        // This assertion fails on Servo use-cases, because it creates different
-        // `RenderApi` instances for layout and compositor.
-        //assert_eq!(document_id.0, self.namespace_id);
-        self.api_sender
-            .send(ApiMsg::UpdateDocuments(vec![self.scene_message(msg, document_id)]))
-            .unwrap()
-    }
-
     /// A helper method to send document messages.
     fn send_frame_msg(&self, document_id: DocumentId, msg: FrameMsg) {
         // This assertion fails on Servo use-cases, because it creates different
@@ -1353,21 +1324,6 @@ impl RenderApi {
         );
 
         HitTesterRequest { rx }
-    }
-
-    /// Setup the output region in the framebuffer for a given document.
-    pub fn set_document_view(
-        &self,
-        document_id: DocumentId,
-        device_rect: DeviceIntRect,
-        device_pixel_ratio: f32,
-    ) {
-        assert!(device_pixel_ratio > 0.0);
-        window_size_sanity_check(device_rect.size);
-        self.send_scene_msg(
-            document_id,
-            SceneMsg::SetDocumentView { device_rect, device_pixel_ratio },
-        );
     }
 
     ///
