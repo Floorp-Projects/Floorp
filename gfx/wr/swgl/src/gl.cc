@@ -3439,20 +3439,20 @@ static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
   case BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC1_COLOR): {
     WideRGBA8 secondary =
         muldiv256(dst,
-            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.0f));
+            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.49f));
     return src + dst - secondary;
   }
   case MASK_BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC1_COLOR): {
     WideRGBA8 secondary =
         muldiv256(dst,
-            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.0f));
+            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.49f));
     WideRGBA8 mask = load_clip_mask(buf, span);
     return muldiv255(src, mask) + dst - muldiv255(secondary, mask);
   }
   case AA_BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC1_COLOR): {
     WideRGBA8 secondary =
         muldiv256(dst,
-            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.0f));
+            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.49f));
     DO_AA(RGBA8, {
       src = muldiv256(src, aa);
       secondary = muldiv256(secondary, aa);
@@ -3462,7 +3462,7 @@ static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
   case AA_MASK_BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC1_COLOR): {
     WideRGBA8 secondary =
         muldiv256(dst,
-            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.0f));
+            pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor, 256.49f));
     WideRGBA8 mask = load_clip_mask(buf, span);
     DO_AA(RGBA8, mask = muldiv256(mask, aa));
     return muldiv255(src, mask) + dst - muldiv255(secondary, mask);
