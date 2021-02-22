@@ -1321,43 +1321,6 @@ impl RenderApi {
         }
     }
 
-    /// Send multiple transactions.
-    pub fn send_transactions(&mut self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
-        debug_assert!(document_ids.len() == transactions.len());
-        let msgs: Vec<Box<TransactionMsg>> = transactions.drain(..).zip(document_ids)
-            .map(|(txn, id)| {
-                let mut txn = txn.finalize(id);
-                self.resources.update(&mut txn);
-                if txn.generate_frame.as_bool() {
-                    txn.profile.start_time(profiler::API_SEND_TIME);
-                    txn.profile.start_time(profiler::TOTAL_FRAME_CPU_TIME);
-                }
-
-                txn
-            })
-            .collect();
-
-        let use_scene_builder = msgs.iter().any(
-            |msg| msg.use_scene_builder_thread
-        );
-
-        let high_priority = msgs.iter().any(
-            |msg| !msg.low_priority
-        );
-
-        if use_scene_builder {
-            let sender = if high_priority {
-                &mut self.scene_sender
-            } else {
-                &mut self.low_priority_scene_sender
-            };
-
-            sender.send(SceneBuilderRequest::Transactions(msgs)).unwrap();
-        } else {
-            self.api_sender.send(ApiMsg::UpdateDocuments(msgs)).unwrap();
-        }
-    }
-
     /// Does a hit test on display items in the specified document, at the given
     /// point. If a pipeline_id is specified, it is used to further restrict the
     /// hit results so that only items inside that pipeline are matched. The vector
