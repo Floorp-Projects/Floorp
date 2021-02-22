@@ -1873,14 +1873,8 @@ with only_when(compile_environment):
 # Artifact builds need MOZ_FFVPX defined as if compilation happened.
 with only_when(compile_environment | artifact_builds):
 
-    @depends_if(yasm_version)
-    def yasm_has_avx2(yasm_version):
-        return yasm_version >= "1.2"
-
-    set_config("YASM_HAS_AVX2", yasm_has_avx2)
-
-    @depends(yasm_has_avx2, libav_fft, vpx_as_flags, target)
-    def ffvpx(yasm_has_avx2, libav_fft, vpx_as_flags, target):
+    @depends(libav_fft, vpx_as_flags, target)
+    def ffvpx(libav_fft, vpx_as_flags, target):
         enable = flac_only = use_yasm = False
         flags = []
         if (
@@ -1920,18 +1914,10 @@ with only_when(compile_environment | artifact_builds):
         if use_yasm:
             # default disabled components
             flags.append("-Pdefaults_disabled.asm")
-            if not yasm_has_avx2:
-                flags.extend(
-                    (
-                        "-DHAVE_AVX2=0",
-                        "-DHAVE_AVX2_INTERNAL=0",
-                        "-DHAVE_AVX2_EXTERNAL=0",
-                    )
-                )
 
         return namespace(
             enable=enable,
-            use_yasm=use_yasm,
+            need_yasm="1.2" if use_yasm else False,
             flac_only=flac_only,
             flags=flags,
         )
@@ -1941,7 +1927,7 @@ with only_when(compile_environment | artifact_builds):
     set_config("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.flac_only)
     set_define("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.flac_only)
     set_config("FFVPX_ASFLAGS", ffvpx.flags)
-    set_config("FFVPX_USE_YASM", True, when=ffvpx.use_yasm)
+    set_config("FFVPX_USE_YASM", True, when=ffvpx.need_yasm)
 
 
 @depends(
@@ -1949,7 +1935,7 @@ with only_when(compile_environment | artifact_builds):
     in_tree_vpx.need_yasm,
     in_tree_jpeg.use_yasm,
     libav_fft.need_yasm,
-    ffvpx.use_yasm,
+    ffvpx.need_yasm,
 )
 def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_libav, for_ffvpx=False):
     # Note: the default for for_ffvpx above only matters for unit tests.
