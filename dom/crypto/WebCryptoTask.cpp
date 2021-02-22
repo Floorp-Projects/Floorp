@@ -3201,6 +3201,11 @@ WebCryptoTask* WebCryptoTask::CreateUnwrapKeyTask(
     importTask =
         new ImportRsaKeyTask(aGlobal, aCx, aFormat, aUnwrappedKeyAlgorithm,
                              aExtractable, aKeyUsages);
+  } else if (keyAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
+             keyAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
+    importTask =
+        new ImportEcKeyTask(aGlobal, aCx, aFormat, aUnwrappedKeyAlgorithm,
+                            aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   }
