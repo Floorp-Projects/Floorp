@@ -154,6 +154,7 @@ def log_crashes(
     test=None,
     stackwalk_binary=None,
     dump_save_path=None,
+    quiet=False,
 ):
     """Log crashes using a structured logger"""
     crash_count = 0
@@ -164,9 +165,10 @@ def log_crashes(
         stackwalk_binary=stackwalk_binary,
     ):
         crash_count += 1
-        kwargs = info._asdict()
-        kwargs.pop("extra")
-        logger.crash(process=process, test=test, **kwargs)
+        if not quiet:
+            kwargs = info._asdict()
+            kwargs.pop("extra")
+            logger.crash(process=process, test=test, **kwargs)
     return crash_count
 
 
