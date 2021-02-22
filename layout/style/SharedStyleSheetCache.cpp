@@ -313,7 +313,7 @@ void SharedStyleSheetCache::LoadCompletedInternal(
   if (aData.mIsLoading) {
     MOZ_ASSERT(aCache);
     SheetLoadDataHashKey key(aData);
-    Maybe<SheetLoadData*> loadingData = aCache->mLoadingDatas.GetAndRemove(key);
+    Maybe<SheetLoadData*> loadingData = aCache->mLoadingDatas.Extract(key);
     MOZ_DIAGNOSTIC_ASSERT(loadingData);
     MOZ_DIAGNOSTIC_ASSERT(loadingData.value() == &aData);
     Unused << loadingData;

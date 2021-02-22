@@ -208,8 +208,7 @@ void MsaaIdGenerator::ReleaseContentProcessIDFor(
     return;
   }
 
-  Maybe<uint32_t> mapping =
-      sContentParentIdMap->GetAndRemove(aIPCContentProcessID);
+  Maybe<uint32_t> mapping = sContentParentIdMap->Extract(aIPCContentProcessID);
   if (!mapping) {
     // Since Content IDs are generated lazily, ContentParent might attempt
     // to release an ID that was never allocated to begin with.

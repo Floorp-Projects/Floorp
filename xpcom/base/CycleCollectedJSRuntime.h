@@ -98,7 +98,7 @@ class JSHolderMap {
 
   bool Has(void* aHolder) const;
   nsScriptObjectTracer* Get(void* aHolder) const;
-  nsScriptObjectTracer* GetAndRemove(void* aHolder);
+  nsScriptObjectTracer* Extract(void* aHolder);
   void Put(void* aHolder, nsScriptObjectTracer* aTracer, JS::Zone* aZone);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;

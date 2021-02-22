@@ -395,7 +395,7 @@ ipc::IPCResult ChromiumCDMParent::RecvOnResolveNewSessionPromise(
     return IPC_OK();
   }
 
-  Maybe<uint32_t> token = mPromiseToCreateSessionToken.GetAndRemove(aPromiseId);
+  Maybe<uint32_t> token = mPromiseToCreateSessionToken.Extract(aPromiseId);
   if (token.isNothing()) {
     RejectPromiseWithStateError(aPromiseId,
                                 "Lost session token for new session."_ns);

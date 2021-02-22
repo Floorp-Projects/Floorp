@@ -439,7 +439,7 @@ nsresult CrossProcessPaint::ResolveInternal(dom::TabId aTabId,
 
   CPP_LOG("Resolving fragment %" PRIu64 ".\n", (uint64_t)aTabId);
 
-  Maybe<PaintFragment> fragment = mReceivedFragments.GetAndRemove(aTabId);
+  Maybe<PaintFragment> fragment = mReceivedFragments.Extract(aTabId);
   if (!fragment) {
     return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
   }
