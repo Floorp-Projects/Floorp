@@ -70,6 +70,10 @@ const SPOOFED_PLATFORM = {
   other: "Linux x86_64",
 };
 
+// If comparison with this value fails in the future,
+// it's time to evaluate if exposing a new Windows
+// version to the Web is appropriate. See
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1693295
 const WindowsOscpu =
   cpuArch == "x86_64"
     ? `Windows NT ${osVersion}; Win64; x64`
