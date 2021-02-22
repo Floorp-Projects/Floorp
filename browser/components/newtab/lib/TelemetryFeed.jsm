@@ -100,6 +100,7 @@ const STRUCTURED_INGESTION_ENDPOINT_PREF =
 // They are defined in https://github.com/mozilla-services/mozilla-pipeline-schemas
 const STRUCTURED_INGESTION_NAMESPACE_AS = "activity-stream";
 const STRUCTURED_INGESTION_NAMESPACE_MS = "messaging-system";
+const STRUCTURED_INGESTION_NAMESPACE_CS = "contextual-services";
 
 // Used as the missing value for timestamps in the session ping
 const TIMESTAMP_MISSING_VALUE = -1;
@@ -117,6 +118,19 @@ XPCOMUtils.defineLazyGetter(
   "browserSessionId",
   () => TelemetrySession.getMetadata("").sessionId
 );
+
+// The scalar category for TopSites of Contextual Services
+const SCALAR_CATEGORY_TOPSITES = "contextual.services.topsites";
+// `contextId` is a unique identifier used by Contextual Services
+const CONTEXT_ID_PREF = "browser.contextual-services.contextId";
+XPCOMUtils.defineLazyGetter(this, "contextId", () => {
+  let _contextId = Services.prefs.getStringPref(CONTEXT_ID_PREF, null);
+  if (!_contextId) {
+    _contextId = String(gUUIDGenerator.generateUUID());
+    Services.prefs.setStringPref(CONTEXT_ID_PREF, _contextId);
+  }
+  return _contextId;
+});
 
 this.TelemetryFeed = class TelemetryFeed {
   constructor() {
@@ -813,6 +827,40 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
+  handleTopSitesImpressionStats(action) {
+    const { data } = action;
+    const { type, position, source } = data;
+    let pingType;
+
+    if (type === "impression") {
+      pingType = "topsites-impression";
+      Services.telemetry.keyedScalarAdd(
+        `${SCALAR_CATEGORY_TOPSITES}.impression`,
+        `${source}_${position}`,
+        1
+      );
+    } else if (type === "click") {
+      pingType = "topsites-click";
+      Services.telemetry.keyedScalarAdd(
+        `${SCALAR_CATEGORY_TOPSITES}.click`,
+        `${source}_${position}`,
+        1
+      );
+    } else {
+      Cu.reportError("Unknown ping type for TopSites impression");
+      return;
+    }
+
+    let payload = { ...data, context_id: contextId };
+    delete payload.type;
+    this.sendStructuredIngestionEvent(
+      payload,
+      STRUCTURED_INGESTION_NAMESPACE_CS,
+      pingType,
+      "1"
+    );
+  }
+
   handleUserEvent(action) {
     let userEvent = this.createUserEvent(action);
     this.sendEvent(userEvent);
@@ -958,6 +1006,9 @@ this.TelemetryFeed = class TelemetryFeed {
       // Intentional fall-through
       case at.AS_ROUTER_TELEMETRY_USER_EVENT:
         this.handleASRouterUserEvent(action);
+        break;
+      case at.TOP_SITES_IMPRESSION_STATS:
+        this.handleTopSitesImpressionStats(action);
         break;
       case at.UNINIT:
         this.uninit();

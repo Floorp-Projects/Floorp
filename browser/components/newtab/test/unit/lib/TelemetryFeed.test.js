@@ -1466,6 +1466,21 @@ describe("TelemetryFeed", () => {
         data
       );
     });
+    it("should call .handleTopSitesImpressionStats on a TOP_SITES_IMPRESSION_STATS action", () => {
+      const session = {};
+      sandbox.stub(instance.sessions, "get").returns(session);
+      const data = { type: "impression", tile_id: 42, position: 1 };
+      const action = { type: at.TOP_SITES_IMPRESSION_STATS, data };
+      sandbox.spy(instance, "handleTopSitesImpressionStats");
+
+      instance.onAction(ac.AlsoToMain(action));
+
+      assert.calledOnce(instance.handleTopSitesImpressionStats);
+      assert.deepEqual(
+        instance.handleTopSitesImpressionStats.firstCall.args[0].data,
+        data
+      );
+    });
   });
   describe("#handleNewTabInit", () => {
     it("should set the session as preloaded if the browser is preloaded", () => {
@@ -1806,6 +1821,100 @@ describe("TelemetryFeed", () => {
         "featureId",
         "cfr"
       );
+    });
+  });
+  describe("#handleTopSitesImpressionStats", () => {
+    it("should call sendStructuredIngestionEvent on an impression event", async () => {
+      const data = {
+        type: "impression",
+        tile_id: 42,
+        source: "newtab",
+        position: 1,
+        reporting_url: "https://test.reporting.net/",
+      };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
+      sandbox.spy(Services.telemetry, "keyedScalarAdd");
+
+      await instance.handleTopSitesImpressionStats({ data });
+
+      // Scalar should be added
+      assert.calledOnce(Services.telemetry.keyedScalarAdd);
+      assert.calledWith(
+        Services.telemetry.keyedScalarAdd,
+        "contextual.services.topsites.impression",
+        "newtab_1",
+        1
+      );
+
+      assert.calledOnce(instance.sendStructuredIngestionEvent);
+
+      const { args } = instance.sendStructuredIngestionEvent.firstCall;
+      // payload
+      assert.deepEqual(args[0], {
+        context_id: FAKE_UUID,
+        tile_id: 42,
+        source: "newtab",
+        position: 1,
+        reporting_url: "https://test.reporting.net/",
+      });
+      // namespace
+      assert.equal(args[1], "contextual-services");
+      // docType
+      assert.equal(args[2], "topsites-impression");
+      // version
+      assert.equal(args[3], "1");
+    });
+    it("should call sendStructuredIngestionEvent on a click event", async () => {
+      const data = {
+        type: "click",
+        tile_id: 42,
+        source: "newtab",
+        position: 1,
+        reporting_url: "https://test.reporting.net/",
+      };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
+      sandbox.spy(Services.telemetry, "keyedScalarAdd");
+
+      await instance.handleTopSitesImpressionStats({ data });
+
+      // Scalar should be added
+      assert.calledOnce(Services.telemetry.keyedScalarAdd);
+      assert.calledWith(
+        Services.telemetry.keyedScalarAdd,
+        "contextual.services.topsites.click",
+        "newtab_1",
+        1
+      );
+
+      assert.calledOnce(instance.sendStructuredIngestionEvent);
+
+      const { args } = instance.sendStructuredIngestionEvent.firstCall;
+      // payload
+      assert.deepEqual(args[0], {
+        context_id: FAKE_UUID,
+        tile_id: 42,
+        source: "newtab",
+        position: 1,
+        reporting_url: "https://test.reporting.net/",
+      });
+      // namespace
+      assert.equal(args[1], "contextual-services");
+      // docType
+      assert.equal(args[2], "topsites-click");
+      // version
+      assert.equal(args[3], "1");
+    });
+    it("should reportError on unknown pingTypes", async () => {
+      const data = { type: "unknown_type" };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
+
+      await instance.handleTopSitesImpressionStats({ data });
+
+      assert.calledOnce(global.Cu.reportError);
+      assert.notCalled(instance.sendStructuredIngestionEvent);
     });
   });
 });
