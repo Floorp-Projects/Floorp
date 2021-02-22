@@ -3780,6 +3780,14 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
     );
     declare_function(
         state,
+        "swgl_commitRadialGradientRGBA8",
+        None,
+        Type::new(Void),
+        vec![Type::new(Sampler2D), Type::new(Int), Type::new(Float), Type::new(Bool), Type::new(Vec2),
+             Type::new(Float)],
+    );
+    declare_function(
+        state,
         "swgl_commitGradientRGBA8",
         None,
         Type::new(Void),
