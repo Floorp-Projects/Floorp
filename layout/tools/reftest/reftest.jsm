@@ -403,8 +403,26 @@ function ReadTests() {
             manifests = JSON.parse(manifests);
             g.urlsFilterRegex = manifests[null];
 
-            var globalFilter = manifests.hasOwnProperty("") ? new RegExp(manifests[""]) : null;
-            delete manifests[""];
+            var globalFilter = null;
+            if (manifests.hasOwnProperty("")) {
+                let filterAndId = manifests[""];
+                if (!Array.isArray(filterAndId)) {
+                    logger.error(`manifest[""] should be an array`);
+                    DoneTests();
+                }
+                if (filterAndId.length === 0) {
+                    logger.error(`manifest[""] should contain a filter pattern in the 1st item`);
+                    DoneTests();
+                }
+                let filter = filterAndId[0];
+                if (typeof filter !== "string") {
+                    logger.error(`The first item of manifest[""] should be a string`);
+                    DoneTests();
+                }
+                globalFilter = new RegExp(filter);
+                delete manifests[""];
+            }
+
             var manifestURLs = Object.keys(manifests);
 
             // Ensure we read manifests from higher up the directory tree first so that we
