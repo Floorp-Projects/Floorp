@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { PureComponent } from "react";
 import { connect } from "../../../utils/connect";
 import actions from "../../../actions";
@@ -20,27 +19,10 @@ import {
 
 import SourceIcon from "../../shared/SourceIcon";
 
-import type { Source, Breakpoint, Context } from "../../../types";
 import showContextMenu from "./BreakpointHeadingsContextMenu";
 
-type OwnProps = {|
-  sources: Source[],
-  source: Source,
-|};
-type Props = {
-  cx: Context,
-  sources: Source[],
-  source: Source,
-  hasSiblingOfSameName: boolean,
-  breakpointsForSource: Breakpoint[],
-  disableBreakpointsInSource: typeof actions.disableBreakpointsInSource,
-  enableBreakpointsInSource: typeof actions.enableBreakpointsInSource,
-  removeBreakpointsInSource: typeof actions.removeBreakpointsInSource,
-  selectSource: typeof actions.selectSource,
-};
-
-class BreakpointHeading extends PureComponent<Props> {
-  onContextMenu = (e: SyntheticEvent<HTMLElement>) => {
+class BreakpointHeading extends PureComponent {
+  onContextMenu = e => {
     showContextMenu({ ...this.props, contextMenuEvent: e });
   };
 
@@ -84,7 +66,7 @@ const mapStateToProps = (state, { source }) => ({
   breakpointsForSource: getBreakpointsForSource(state, source.id),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+export default connect(mapStateToProps, {
   selectSource: actions.selectSource,
   enableBreakpointsInSource: actions.enableBreakpointsInSource,
   disableBreakpointsInSource: actions.disableBreakpointsInSource,

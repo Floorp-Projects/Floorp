@@ -2,22 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getSymbols,
   getSource,
   getSelectedFrame,
   getCurrentThread,
 } from "../../selectors";
-import type { ThreadContext } from "../../types";
-import type { ThunkArgs } from "../types";
 
 // a is an ast location with start and end positions (line and column).
 // b is a single position (line and column).
 // This function tests to see if the b position
 // falls within the range given in a.
-function inHouseContainsPosition(a: Object, b: Object): boolean {
+function inHouseContainsPosition(a, b) {
   const bColumn = b.column || 0;
   const startsBefore =
     a.start.line < b.line ||
@@ -28,8 +24,8 @@ function inHouseContainsPosition(a: Object, b: Object): boolean {
   return startsBefore && endsAfter;
 }
 
-export function highlightCalls(cx: ThreadContext) {
-  return async function({ dispatch, getState, parser, client }: ThunkArgs) {
+export function highlightCalls(cx) {
+  return async function({ dispatch, getState, parser, client }) {
     if (!cx) {
       return;
     }
@@ -88,8 +84,8 @@ export function highlightCalls(cx: ThreadContext) {
   };
 }
 
-export function unhighlightCalls(cx: ThreadContext) {
-  return async function({ dispatch, getState, parser, client }: ThunkArgs) {
+export function unhighlightCalls(cx) {
+  return async function({ dispatch, getState, parser, client }) {
     const { thread } = cx;
     return dispatch({
       type: "UNHIGHLIGHT_CALLS",

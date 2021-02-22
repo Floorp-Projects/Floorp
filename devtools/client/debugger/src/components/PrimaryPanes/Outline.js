@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React, { Component } from "react";
 import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
@@ -27,42 +25,13 @@ import "./Outline.css";
 import PreviewFunction from "../shared/PreviewFunction";
 import { uniq, sortBy } from "lodash";
 
-import type { Symbols } from "../../reducers/ast";
-
-import type {
-  SymbolDeclaration,
-  FunctionDeclaration,
-} from "../../workers/parser";
-import type { SourceWithContent, Context, SourceLocation } from "../../types";
-
-type OwnProps = {|
-  alphabetizeOutline: boolean,
-  onAlphabetizeClick: Function,
-|};
-type Props = {
-  cx: Context,
-  symbols: ?Symbols,
-  selectedSource: ?SourceWithContent,
-  alphabetizeOutline: boolean,
-  onAlphabetizeClick: Function,
-  getFunctionText: Function,
-  cursorPosition: ?SourceLocation,
-  selectLocation: typeof actions.selectLocation,
-  flashLineRange: typeof actions.flashLineRange,
-};
-
-type State = {
-  filter: string,
-  focusedItem: ?SymbolDeclaration,
-};
-
 // Set higher to make the fuzzaldrin filter more specific
 const FUZZALDRIN_FILTER_THRESHOLD = 15000;
 
 /**
  * Check whether the name argument matches the fuzzy filter argument
  */
-const filterOutlineItem = (name: string, filter: string) => {
+const filterOutlineItem = (name, filter) => {
   if (!filter) {
     return true;
   }
@@ -75,7 +44,7 @@ const filterOutlineItem = (name: string, filter: string) => {
 };
 
 // Checks if an element is visible inside its parent element
-function isVisible(element: HTMLLIElement, parent: HTMLElement) {
+function isVisible(element, parent) {
   const parentRect = parent.getBoundingClientRect();
   const elementRect = element.getBoundingClientRect();
 
@@ -87,16 +56,14 @@ function isVisible(element: HTMLLIElement, parent: HTMLElement) {
   return parentTop < elTop && parentBottom > elBottom;
 }
 
-export class Outline extends Component<Props, State> {
-  focusedElRef: ?React$ElementRef<"li">;
-
-  constructor(props: Props) {
+export class Outline extends Component {
+  constructor(props) {
     super(props);
     this.focusedElRef = null;
     this.state = { filter: "", focusedItem: null };
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps) {
     const { cursorPosition, symbols } = this.props;
     if (
       cursorPosition &&
@@ -114,7 +81,7 @@ export class Outline extends Component<Props, State> {
     }
   }
 
-  setFocus(cursorPosition: SourceLocation) {
+  setFocus(cursorPosition) {
     const { symbols } = this.props;
     let classes = [];
     let functions = [];
@@ -141,7 +108,7 @@ export class Outline extends Component<Props, State> {
     this.setState({ focusedItem: closestItem });
   }
 
-  selectItem(selectedItem: ?SymbolDeclaration) {
+  selectItem(selectedItem) {
     const { cx, selectedSource, selectLocation } = this.props;
     if (!selectedSource || !selectedItem) {
       return;
@@ -156,7 +123,7 @@ export class Outline extends Component<Props, State> {
     this.setState({ focusedItem: selectedItem });
   }
 
-  onContextMenu(event: SyntheticEvent<HTMLElement>, func: SymbolDeclaration) {
+  onContextMenu(event, func) {
     event.stopPropagation();
     event.preventDefault();
 
@@ -187,7 +154,7 @@ export class Outline extends Component<Props, State> {
     showMenu(event, menuOptions);
   }
 
-  updateFilter = (filter: string) => {
+  updateFilter = filter => {
     this.setState({ filter: filter.trim() });
   };
 
@@ -205,7 +172,7 @@ export class Outline extends Component<Props, State> {
     );
   }
 
-  renderFunction(func: FunctionDeclaration) {
+  renderFunction(func) {
     const { focusedItem } = this.state;
     const { name, location, parameterNames } = func;
     const isFocused = focusedItem === func;
@@ -228,7 +195,7 @@ export class Outline extends Component<Props, State> {
     );
   }
 
-  renderClassHeader(klass: string) {
+  renderClassHeader(klass) {
     return (
       <div>
         <span className="keyword">class</span> {klass}
@@ -236,7 +203,7 @@ export class Outline extends Component<Props, State> {
     );
   }
 
-  renderClassFunctions(klass: ?string, functions: FunctionDeclaration[]) {
+  renderClassFunctions(klass, functions) {
     const { symbols } = this.props;
 
     if (!symbols || symbols.loading || klass == null || functions.length == 0) {
@@ -276,7 +243,7 @@ export class Outline extends Component<Props, State> {
     );
   }
 
-  renderFunctions(functions: Array<FunctionDeclaration>) {
+  renderFunctions(functions) {
     const { filter } = this.state;
     let classes = uniq(functions.map(({ klass }) => klass));
     let namedFunctions = functions.filter(
@@ -358,7 +325,7 @@ const mapStateToProps = state => {
   return {
     cx: getContext(state),
     symbols,
-    selectedSource: (selectedSource: ?SourceWithContent),
+    selectedSource: selectedSource,
     cursorPosition: getCursorPosition(state),
     getFunctionText: line => {
       if (selectedSource) {
@@ -370,7 +337,7 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+export default connect(mapStateToProps, {
   selectLocation: actions.selectLocation,
   flashLineRange: actions.flashLineRange,
 })(Outline);

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getSelectedFrame,
   getThreadContext,
@@ -18,13 +16,8 @@ import { recordEvent } from "../../utils/telemetry";
 import { features } from "../../utils/prefs";
 import assert from "../../utils/assert";
 
-import type { ThreadId, Context, ThreadContext, Frame } from "../../types";
-
-import type { ThunkArgs } from "../types";
-import type { Command } from "../../reducers/types";
-
-export function selectThread(cx: Context, thread: ThreadId) {
-  return async ({ dispatch, getState, client }: ThunkArgs) => {
+export function selectThread(cx, thread) {
+  return async ({ dispatch, getState, client }) => {
     if (getCurrentThread(getState()) === thread) {
       return;
     }
@@ -55,8 +48,8 @@ export function selectThread(cx: Context, thread: ThreadId) {
  * @memberof actions/pause
  * @static
  */
-export function command(cx: ThreadContext, type: Command) {
-  return async ({ dispatch, getState, client }: ThunkArgs) => {
+export function command(cx, type) {
+  return async ({ dispatch, getState, client }) => {
     if (!type) {
       return;
     }
@@ -79,8 +72,8 @@ export function command(cx: ThreadContext, type: Command) {
  * @static
  * @returns {Function} {@link command}
  */
-export function stepIn(cx: ThreadContext) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function stepIn(cx) {
+  return ({ dispatch, getState }) => {
     if (cx.isPaused) {
       return dispatch(command(cx, "stepIn"));
     }
@@ -93,8 +86,8 @@ export function stepIn(cx: ThreadContext) {
  * @static
  * @returns {Function} {@link command}
  */
-export function stepOver(cx: ThreadContext) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function stepOver(cx) {
+  return ({ dispatch, getState }) => {
     if (cx.isPaused) {
       return dispatch(command(cx, "stepOver"));
     }
@@ -107,8 +100,8 @@ export function stepOver(cx: ThreadContext) {
  * @static
  * @returns {Function} {@link command}
  */
-export function stepOut(cx: ThreadContext) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function stepOut(cx) {
+  return ({ dispatch, getState }) => {
     if (cx.isPaused) {
       return dispatch(command(cx, "stepOut"));
     }
@@ -121,8 +114,8 @@ export function stepOut(cx: ThreadContext) {
  * @static
  * @returns {Function} {@link command}
  */
-export function resume(cx: ThreadContext) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function resume(cx) {
+  return ({ dispatch, getState }) => {
     if (cx.isPaused) {
       recordEvent("continue");
       return dispatch(command(cx, "resume"));
@@ -135,8 +128,8 @@ export function resume(cx: ThreadContext) {
  * @memberof actions/pause
  * @static
  */
-export function restart(cx: ThreadContext, frame: Frame) {
-  return async ({ dispatch, getState, client }: ThunkArgs) => {
+export function restart(cx, frame) {
+  return async ({ dispatch, getState, client }) => {
     if (cx.isPaused) {
       return dispatch({
         type: "COMMAND",

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import { endTruncateStr } from "./utils";
 import {
   isPretty,
@@ -11,16 +10,6 @@ import {
   getSourceQueryString,
 } from "./source";
 
-import type { Location as BabelLocation } from "@babel/types";
-import type { Symbols } from "../reducers/ast";
-import type { QuickOpenType } from "../reducers/quick-open";
-import type { Tab } from "../reducers/tabs";
-import type { Source } from "../types";
-import type {
-  SymbolDeclaration,
-  IdentifierDeclaration,
-} from "../workers/parser";
-
 export const MODIFIERS = {
   "@": "functions",
   "#": "variables",
@@ -28,7 +17,7 @@ export const MODIFIERS = {
   "?": "shortcuts",
 };
 
-export function parseQuickOpenQuery(query: string): QuickOpenType {
+export function parseQuickOpenQuery(query) {
   const startsWithModifier =
     query[0] === "@" ||
     query[0] === "#" ||
@@ -49,7 +38,7 @@ export function parseQuickOpenQuery(query: string): QuickOpenType {
   return "sources";
 }
 
-export function parseLineColumn(query: string) {
+export function parseLineColumn(query) {
   const [, line, column] = query.split(":");
   const lineNumber = parseInt(line, 10);
   const columnNumber = parseInt(column, 10);
@@ -61,10 +50,7 @@ export function parseLineColumn(query: string) {
   }
 }
 
-export function formatSourcesForList(
-  source: Source,
-  tabUrls: Set<$PropertyType<Tab, "url">>
-) {
+export function formatSourcesForList(source, tabUrls) {
   const title = getFilename(source);
   const relativeUrlWithQuery = `${source.relativeUrl}${getSourceQueryString(
     source
@@ -83,23 +69,7 @@ export function formatSourcesForList(
   };
 }
 
-export type QuickOpenResult = {|
-  id: string,
-  value: string,
-  title: string | React$Element<"div">,
-  subtitle?: string,
-  location?: BabelLocation,
-  url?: string,
-  icon?: string,
-|};
-
-export type FormattedSymbolDeclarations = {|
-  functions: Array<QuickOpenResult>,
-|};
-
-export function formatSymbol(
-  symbol: SymbolDeclaration | IdentifierDeclaration
-): QuickOpenResult {
+export function formatSymbol(symbol) {
   return {
     id: `${symbol.name}:${symbol.location.start.line}`,
     title: symbol.name,
@@ -109,7 +79,7 @@ export function formatSymbol(
   };
 }
 
-export function formatSymbols(symbols: ?Symbols): FormattedSymbolDeclarations {
+export function formatSymbols(symbols) {
   if (!symbols || symbols.loading) {
     return { functions: [] };
   }
@@ -121,7 +91,7 @@ export function formatSymbols(symbols: ?Symbols): FormattedSymbolDeclarations {
   };
 }
 
-export function formatShortcutResults(): Array<QuickOpenResult> {
+export function formatShortcutResults() {
   return [
     {
       value: L10N.getStr("symbolSearch.search.functionsPlaceholder.title"),
@@ -141,11 +111,8 @@ export function formatShortcutResults(): Array<QuickOpenResult> {
   ];
 }
 
-export function formatSources(
-  sources: Source[],
-  tabUrls: Set<$PropertyType<Tab, "url">>
-): Array<QuickOpenResult> {
-  const formattedSources: Array<QuickOpenResult> = [];
+export function formatSources(sources, tabUrls) {
+  const formattedSources = [];
 
   for (let i = 0; i < sources.length; ++i) {
     const source = sources[i];

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getSources,
   getSelectedSource,
@@ -12,8 +10,6 @@ import {
 import { getCurrentThreadFrames } from "../reducers/pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isOriginal } from "../utils/source";
-import type { State, SourceResourceState } from "../reducers/types";
-import type { Frame, Source } from "../types";
 import { createSelector } from "reselect";
 
 function getLocation(frame, isGeneratedSource) {
@@ -22,20 +18,12 @@ function getLocation(frame, isGeneratedSource) {
     : frame.location;
 }
 
-function getSourceForFrame(
-  sources: SourceResourceState,
-  frame: Frame,
-  isGeneratedSource
-): ?Source {
+function getSourceForFrame(sources, frame, isGeneratedSource) {
   const sourceId = getLocation(frame, isGeneratedSource).sourceId;
   return getSourceInSources(sources, sourceId);
 }
 
-function appendSource(
-  sources: SourceResourceState,
-  frame: Frame,
-  selectedSource: ?Source
-): Frame {
+function appendSource(sources, frame, selectedSource) {
   const isGeneratedSource = selectedSource && !isOriginal(selectedSource);
   return {
     ...frame,
@@ -44,16 +32,12 @@ function appendSource(
   };
 }
 
-export function formatCallStackFrames(
-  frames: Frame[],
-  sources: SourceResourceState,
-  selectedSource: Source
-): ?(Frame[]) {
+export function formatCallStackFrames(frames, sources, selectedSource) {
   if (!frames) {
     return null;
   }
 
-  const formattedFrames: Frame[] = frames
+  const formattedFrames = frames
     .filter(frame => getSourceForFrame(sources, frame))
     .map(frame => appendSource(sources, frame, selectedSource))
     .filter(frame => !frame?.source?.isBlackBoxed);
@@ -62,7 +46,7 @@ export function formatCallStackFrames(
 }
 
 // eslint-disable-next-line
-export const getCallStackFrames: State => Frame[] = (createSelector: any)(
+export const getCallStackFrames = (createSelector)(
   getCurrentThreadFrames,
   getSources,
   getSelectedSource,

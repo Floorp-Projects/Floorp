@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { Component } from "react";
 import classnames from "classnames";
 
@@ -10,27 +9,13 @@ import AccessibleImage from "./AccessibleImage";
 
 import "./ResultList.css";
 
-type Props = {
-  items: Array<any>,
-  selected: number,
-  selectItem: (
-    event: SyntheticKeyboardEvent<HTMLElement>,
-    item: any,
-    index: number
-  ) => void,
-  size: string,
-  role: string,
-};
-
-export default class ResultList extends Component<Props> {
-  displayName: "ResultList";
-
+export default class ResultList extends Component {
   static defaultProps = {
     size: "small",
     role: "listbox",
   };
 
-  renderListItem = (item: any, index: number) => {
+  renderListItem = (item, index) => {
     if (item.value === "/" && item.title === "") {
       item.title = "(index)";
     }

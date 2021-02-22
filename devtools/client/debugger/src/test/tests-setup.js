@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-// $FlowIgnore
 global.Worker = require("workerjs");
 
 import path from "path";
 import Enzyme from "enzyme";
-// $FlowIgnore
 import Adapter from "enzyme-adapter-react-16";
 import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";

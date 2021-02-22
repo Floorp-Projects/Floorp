@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   hasInScopeLines,
   getSourceWithContent,
@@ -15,13 +13,7 @@ import { getSourceLineCount } from "../../utils/source";
 import { range, flatMap, uniq, without } from "lodash";
 import { isFulfilled } from "../../utils/async-value";
 
-import type { AstLocation } from "../../workers/parser";
-import type { ThunkArgs } from "../types";
-import type { Context, SourceLocation } from "../../types";
-
-function getOutOfScopeLines(
-  outOfScopeLocations: ?(AstLocation[])
-): ?(AstLocation[]) {
+function getOutOfScopeLines(outOfScopeLocations) {
   if (!outOfScopeLocations) {
     return null;
   }
@@ -33,19 +25,12 @@ function getOutOfScopeLines(
   );
 }
 
-async function getInScopeLines(
-  cx: Context,
-  location: SourceLocation,
-  { dispatch, getState, parser }: ThunkArgs
-) {
+async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
   const source = getSourceWithContent(getState(), location.sourceId);
 
   let locations = null;
   if (location.line && source && !source.isWasm) {
-    locations = await parser.findOutOfScopeLocations(
-      source.id,
-      ((location: any): parser.AstPosition)
-    );
+    locations = await parser.findOutOfScopeLocations(source.id, location);
   }
 
   const linesOutOfScope = getOutOfScopeLines(locations);
@@ -61,8 +46,8 @@ async function getInScopeLines(
     : without(sourceLines, ...linesOutOfScope);
 }
 
-export function setInScopeLines(cx: Context) {
-  return async (thunkArgs: ThunkArgs) => {
+export function setInScopeLines(cx) {
+  return async thunkArgs => {
     const { getState, dispatch } = thunkArgs;
     const visibleFrame = getVisibleSelectedFrame(getState());
 

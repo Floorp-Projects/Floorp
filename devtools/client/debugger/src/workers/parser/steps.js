@@ -2,19 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import * as t from "@babel/types";
-import type { SimplePath } from "./utils/simple-path";
-import type { SourceLocation, SourceId } from "../../types";
-import type { AstPosition } from "./types";
 import { getClosestPath } from "./utils/closest";
 import { isAwaitExpression, isYieldExpression } from "./utils/helpers";
 
-export function getNextStep(
-  sourceId: SourceId,
-  pausedPosition: AstPosition
-): ?SourceLocation {
+export function getNextStep(sourceId, pausedPosition) {
   const currentExpression = getSteppableExpression(sourceId, pausedPosition);
   if (!currentExpression) {
     return null;
@@ -33,10 +25,7 @@ export function getNextStep(
   return _getNextStep(currentStatement, sourceId, pausedPosition);
 }
 
-function getSteppableExpression(
-  sourceId: SourceId,
-  pausedPosition: AstPosition
-) {
+function getSteppableExpression(sourceId, pausedPosition) {
   const closestPath = getClosestPath(sourceId, pausedPosition);
 
   if (!closestPath) {
@@ -52,11 +41,7 @@ function getSteppableExpression(
   );
 }
 
-function _getNextStep(
-  statement: SimplePath,
-  sourceId: SourceId,
-  position: AstPosition
-): ?SourceLocation {
+function _getNextStep(statement, sourceId, position) {
   const nextStatement = statement.getSibling(1);
   if (nextStatement) {
     return {

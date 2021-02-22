@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React from "react";
 import { shallow } from "enzyme";
 import { showMenu } from "../../../context-menu/menu";
@@ -38,7 +36,7 @@ const blackBoxAllContexMenuItem = {
 
 describe("SourceTreeItem", () => {
   afterEach(() => {
-    (copyToTheClipboard: any).mockClear();
+    copyToTheClipboard.mockClear();
     showMenu.mockClear();
   });
 
@@ -582,7 +580,6 @@ function generateDefaults(overrides) {
 
 function render(overrides = {}) {
   const props = generateDefaults(overrides);
-  // $FlowIgnore
   const component = shallow(<SourcesTreeItem.WrappedComponent {...props} />);
   const defaultState = component.state();
   const instance = component.instance();

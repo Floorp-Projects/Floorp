@@ -1,4 +1,3 @@
-// @flow
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -10,10 +9,7 @@ import { getSelectedLocation } from "../reducers/sources";
 import { getSelectedLocation as _getSelectedLocation } from "../utils/selected-location";
 import { createSelector } from "reselect";
 
-import type { Frame, SourceLocation, ThreadId } from "../types";
-import type { Selector, State } from "../reducers/types";
-
-export const getSelectedFrames: Selector<{ [string]: ?Frame }> = createSelector(
+export const getSelectedFrames = createSelector(
   state => state.pause.threads,
   threadPauseState => {
     const selectedFrames = {};
@@ -30,15 +26,12 @@ export const getSelectedFrames: Selector<{ [string]: ?Frame }> = createSelector(
   }
 );
 
-export function getSelectedFrame(state: State, thread: ThreadId): ?Frame {
+export function getSelectedFrame(state, thread) {
   const selectedFrames = getSelectedFrames(state);
   return selectedFrames[thread];
 }
 
-export const getVisibleSelectedFrame: Selector<?{
-  id: string,
-  location: SourceLocation,
-}> = createSelector(
+export const getVisibleSelectedFrame = createSelector(
   getSelectedLocation,
   getSelectedFrames,
   getCurrentThread,

@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import SourceEditor from "./source-editor";
 import { features, prefs } from "../prefs";
 
-export function createEditor(): SourceEditor {
+export function createEditor() {
   const gutters = ["breakpoints", "hit-markers", "CodeMirror-linenumbers"];
 
   if (features.codeFolding) {
@@ -39,7 +37,7 @@ export function createEditor(): SourceEditor {
   });
 }
 
-export function createHeadlessEditor(): SourceEditor {
+export function createHeadlessEditor() {
   const editor = createEditor();
   editor.appendToLocalElement(document.createElement("div"));
   return editor;

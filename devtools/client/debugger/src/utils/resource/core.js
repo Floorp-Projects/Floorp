@@ -2,39 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-export type Resource<R: ResourceBound> = $ReadOnly<$Exact<R>>;
-
-export type ResourceBound = {
-  +id: string,
-};
-export type Id<R: ResourceBound> = $ElementType<R, "id">;
-
-type ResourceSubset<R: ResourceBound> = $ReadOnly<{
-  +id: Id<R>,
-  ...$Shape<$Rest<R, { +id: Id<R> }>>,
-}>;
-
-export opaque type ResourceIdentity: { [string]: mixed } = {||};
-export type ResourceValues<R: ResourceBound> = { [Id<R>]: R };
-
-export opaque type ResourceState<R: ResourceBound> = {
-  identity: { [Id<R>]: ResourceIdentity },
-  values: ResourceValues<R>,
-};
-
-export function createInitial<R: ResourceBound>(): ResourceState<R> {
+export function createInitial() {
   return {
     identity: {},
     values: {},
   };
 }
 
-export function insertResources<R: ResourceBound>(
-  state: ResourceState<R>,
-  resources: $ReadOnlyArray<R>
-): ResourceState<R> {
+export function insertResources(state, resources) {
   if (resources.length === 0) {
     return state;
   }
@@ -65,10 +40,7 @@ export function insertResources<R: ResourceBound>(
   return state;
 }
 
-export function removeResources<R: ResourceBound>(
-  state: ResourceState<R>,
-  resources: $ReadOnlyArray<ResourceSubset<R> | Id<R>>
-): ResourceState<R> {
+export function removeResources(state, resources) {
   if (resources.length === 0) {
     return state;
   }
@@ -98,10 +70,7 @@ export function removeResources<R: ResourceBound>(
   return state;
 }
 
-export function updateResources<R: ResourceBound>(
-  state: ResourceState<R>,
-  resources: $ReadOnlyArray<ResourceSubset<R>>
-): ResourceState<R> {
+export function updateResources(state, resources) {
   if (resources.length === 0) {
     return state;
   }
@@ -149,19 +118,11 @@ export function updateResources<R: ResourceBound>(
   return state;
 }
 
-export function makeIdentity(): ResourceIdentity {
-  return ({}: any);
+export function makeIdentity() {
+  return {};
 }
 
-export function getValidatedResource<R: ResourceBound>(
-  state: ResourceState<R>,
-  id: Id<R>
-):
-  | (ResourceState<R> & {
-      values: Array<R>,
-      identity: Array<string>,
-    })
-  | null {
+export function getValidatedResource(state, id) {
   const value = state.values[id];
   const identity = state.identity[id];
   if ((value && !identity) || (!value && identity)) {
@@ -170,11 +131,9 @@ export function getValidatedResource<R: ResourceBound>(
     );
   }
 
-  return value ? (state: any) : null;
+  return value ? state : null;
 }
 
-export function getResourceValues<R: ResourceBound>(
-  state: ResourceState<R>
-): ResourceValues<R> {
+export function getResourceValues(state) {
   return state.values;
 }

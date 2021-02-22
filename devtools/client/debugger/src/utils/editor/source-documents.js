@@ -2,57 +2,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getMode } from "../source";
 
 import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
 import { isMinified } from "../isMinified";
 import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
-import SourceEditor from "./source-editor";
 
-import type {
-  SourceId,
-  Source,
-  SourceContent,
-  SourceWithContent,
-  SourceDocuments,
-} from "../../types";
-import type { SymbolDeclarations } from "../../workers/parser";
+let sourceDocs = {};
 
-let sourceDocs: SourceDocuments = {};
-
-export function getDocument(key: string): Object {
+export function getDocument(key) {
   return sourceDocs[key];
 }
 
-export function hasDocument(key: string): boolean {
+export function hasDocument(key) {
   return !!getDocument(key);
 }
 
-export function setDocument(key: string, doc: any): void {
+export function setDocument(key, doc) {
   sourceDocs[key] = doc;
 }
 
-export function removeDocument(key: string): void {
+export function removeDocument(key) {
   delete sourceDocs[key];
 }
 
-export function clearDocuments(): void {
+export function clearDocuments() {
   sourceDocs = {};
 }
 
-function resetLineNumberFormat(editor: SourceEditor): void {
+function resetLineNumberFormat(editor) {
   const cm = editor.codeMirror;
   cm.setOption("lineNumberFormatter", number => number);
   resizeBreakpointGutter(cm);
   resizeToggleButton(cm);
 }
 
-export function updateLineNumberFormat(
-  editor: SourceEditor,
-  sourceId: SourceId
-): void {
+export function updateLineNumberFormat(editor, sourceId) {
   if (!isWasm(sourceId)) {
     return resetLineNumberFormat(editor);
   }
@@ -63,7 +48,7 @@ export function updateLineNumberFormat(
   resizeToggleButton(cm);
 }
 
-export function updateDocument(editor: SourceEditor, source: Source): void {
+export function updateDocument(editor, source) {
   if (!source) {
     return;
   }
@@ -76,7 +61,7 @@ export function updateDocument(editor: SourceEditor, source: Source): void {
 }
 
 /* used to apply the context menu wrap line option change to all the docs */
-export function updateDocuments(updater: Function) {
+export function updateDocuments(updater) {
   for (const key in sourceDocs) {
     if (sourceDocs[key].cm == null) {
       continue;
@@ -86,7 +71,7 @@ export function updateDocuments(updater: Function) {
   }
 }
 
-export function clearEditor(editor: SourceEditor) {
+export function clearEditor(editor) {
   const doc = editor.createDocument();
   editor.replaceDocument(doc);
   editor.setText("");
@@ -94,7 +79,7 @@ export function clearEditor(editor: SourceEditor) {
   resetLineNumberFormat(editor);
 }
 
-export function showLoading(editor: SourceEditor): void {
+export function showLoading(editor) {
   let doc = getDocument("loading");
 
   if (doc) {
@@ -108,7 +93,7 @@ export function showLoading(editor: SourceEditor): void {
   }
 }
 
-export function showErrorMessage(editor: Object, msg: string): void {
+export function showErrorMessage(editor, msg) {
   let error;
   if (msg.includes("WebAssembly binary source is not available")) {
     error = L10N.getStr("wasmIsNotAvailable");
@@ -122,11 +107,7 @@ export function showErrorMessage(editor: Object, msg: string): void {
   resetLineNumberFormat(editor);
 }
 
-function setEditorText(
-  editor: Object,
-  sourceId: SourceId,
-  content: SourceContent
-): void {
+function setEditorText(editor, sourceId, content) {
   if (content.type === "wasm") {
     const wasmLines = renderWasmText(sourceId, content);
     // cm will try to split into lines anyway, saving memory
@@ -137,12 +118,7 @@ function setEditorText(
   }
 }
 
-function setMode(
-  editor,
-  source: SourceWithContent,
-  content: SourceContent,
-  symbols
-): void {
+function setMode(editor, source, content, symbols) {
   // Disable modes for minified files with 1+ million characters Bug 1569829
   if (
     content.type === "text" &&
@@ -163,12 +139,7 @@ function setMode(
  * Handle getting the source document or creating a new
  * document with the correct mode and text.
  */
-export function showSourceText(
-  editor: Object,
-  source: SourceWithContent,
-  content: SourceContent,
-  symbols?: SymbolDeclarations
-): void {
+export function showSourceText(editor, source, content, symbols) {
   if (hasDocument(source.id)) {
     const doc = getDocument(source.id);
     if (editor.codeMirror.doc === doc) {

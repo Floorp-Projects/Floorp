@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { setBreakpointPositions } from "./breakpointPositions";
 import { setSymbols } from "../sources/symbols";
 import {
@@ -19,26 +17,9 @@ import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
 import { getSource } from "../../selectors";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 
-import type { ThunkArgs } from "../types";
-import type { LoadedSymbols } from "../../reducers/types";
-
-import type {
-  SourceLocation,
-  ASTLocation,
-  PendingBreakpoint,
-  SourceId,
-  Source,
-  BreakpointPositions,
-  Context,
-} from "../../types";
-
-async function findBreakpointPosition(
-  cx: Context,
-  { getState, dispatch }: ThunkArgs,
-  location: SourceLocation
-) {
+async function findBreakpointPosition(cx, { getState, dispatch }, location) {
   const { sourceId, line } = location;
-  const positions: BreakpointPositions = await dispatch(
+  const positions = await dispatch(
     setBreakpointPositions({ cx, sourceId, line })
   );
 
@@ -47,15 +28,13 @@ async function findBreakpointPosition(
 }
 
 async function findNewLocation(
-  cx: Context,
-  { name, offset, index }: ASTLocation,
-  location: SourceLocation,
-  source: Source,
-  thunkArgs: ThunkArgs
+  cx,
+  { name, offset, index },
+  location,
+  source,
+  thunkArgs
 ) {
-  const symbols: LoadedSymbols = await thunkArgs.dispatch(
-    setSymbols({ cx, source })
-  );
+  const symbols = await thunkArgs.dispatch(setSymbols({ cx, source }));
   const func = symbols ? findFunctionByName(symbols, name, index) : null;
 
   // Fallback onto the location line, if we do not find a function.
@@ -89,12 +68,8 @@ async function findNewLocation(
 //   has changed, we need to make sure that only a single breakpoint is added
 //   to the reducer for the new location corresponding to the original location
 //   in the pending breakpoint.
-export function syncBreakpoint(
-  cx: Context,
-  sourceId: SourceId,
-  pendingBreakpoint: PendingBreakpoint
-) {
-  return async (thunkArgs: ThunkArgs) => {
+export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
+  return async thunkArgs => {
     const { getState, client, dispatch } = thunkArgs;
     assertPendingBreakpoint(pendingBreakpoint);
 

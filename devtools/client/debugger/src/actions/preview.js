@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { isConsole } from "../utils/preview";
 import { findBestMatchExpression } from "../utils/ast";
 import { getGrip, getFront } from "../utils/evaluation-result";
@@ -25,11 +23,7 @@ import {
 
 import { getMappedExpression } from "./expressions";
 
-import type { Action, ThunkArgs } from "./types";
-import type { Position, Context } from "../types";
-import type { AstLocation } from "../workers/parser";
-
-function findExpressionMatch(state, codeMirror: any, tokenPos: Object) {
+function findExpressionMatch(state, codeMirror, tokenPos) {
   const source = getSelectedSource(state);
   if (!source) {
     return;
@@ -46,13 +40,8 @@ function findExpressionMatch(state, codeMirror: any, tokenPos: Object) {
   return match;
 }
 
-export function updatePreview(
-  cx: Context,
-  target: HTMLElement,
-  tokenPos: Object,
-  codeMirror: any
-) {
-  return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+export function updatePreview(cx, target, tokenPos, codeMirror) {
+  return ({ dispatch, getState, client, sourceMaps }) => {
     const cursorPos = target.getBoundingClientRect();
 
     if (
@@ -78,14 +67,14 @@ export function updatePreview(
 }
 
 export function setPreview(
-  cx: Context,
-  expression: string,
-  location: AstLocation,
-  tokenPos: Position,
-  cursorPos: ClientRect,
-  target: HTMLElement
+  cx,
+  expression,
+  location,
+  tokenPos,
+  cursorPos,
+  target
 ) {
-  return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+  return async ({ dispatch, getState, client, sourceMaps }) => {
     dispatch({ type: "START_PREVIEW" });
     const previewCount = getPreviewCount(getState());
     if (getPreview(getState())) {
@@ -176,29 +165,22 @@ export function setPreview(
   };
 }
 
-export function clearPreview(cx: Context) {
-  return ({ dispatch, getState, client }: ThunkArgs) => {
+export function clearPreview(cx) {
+  return ({ dispatch, getState, client }) => {
     const currentSelection = getPreview(getState());
     if (!currentSelection) {
       return;
     }
 
-    return dispatch(
-      ({
-        type: "CLEAR_PREVIEW",
-        cx,
-      }: Action)
-    );
+    return dispatch({
+      type: "CLEAR_PREVIEW",
+      cx,
+    });
   };
 }
 
-export function setExceptionPreview(
-  cx: Context,
-  target: HTMLElement,
-  tokenPos: Object,
-  codeMirror: any
-) {
-  return async ({ dispatch, getState }: ThunkArgs) => {
+export function setExceptionPreview(cx, target, tokenPos, codeMirror) {
+  return async ({ dispatch, getState }) => {
     const cursorPos = target.getBoundingClientRect();
 
     const match = findExpressionMatch(getState(), codeMirror, tokenPos);

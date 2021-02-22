@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-export function mockPendingBreakpoint(overrides: Object = {}) {
+export function mockPendingBreakpoint(overrides = {}) {
   const { sourceUrl, line, column, condition, disabled, hidden } = overrides;
   return {
     location: {
@@ -33,11 +31,7 @@ export function mockPendingBreakpoint(overrides: Object = {}) {
   };
 }
 
-export function generateBreakpoint(
-  filename: string,
-  line: number = 5,
-  column: number = 0
-) {
+export function generateBreakpoint(filename, line = 5, column = 0) {
   return {
     id: "breakpoint",
     originalText: "",

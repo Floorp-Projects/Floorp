@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React, { Component } from "react";
 import Modal from "./shared/Modal";
 import classnames from "classnames";
@@ -11,14 +9,8 @@ import { formatKeyShortcut } from "../utils/text";
 
 import "./ShortcutsModal.css";
 
-type Props = {
-  enabled: boolean,
-  additionalClass: string,
-  handleClose: () => void,
-};
-
-export class ShortcutsModal extends Component<Props> {
-  renderPrettyCombos(combo: string) {
+export class ShortcutsModal extends Component {
+  renderPrettyCombos(combo) {
     return combo
       .split(" ")
       .map(c => (
@@ -29,7 +21,7 @@ export class ShortcutsModal extends Component<Props> {
       .reduce((prev, curr) => [prev, " + ", curr]);
   }
 
-  renderShorcutItem(title: string, combo: string) {
+  renderShorcutItem(title, combo) {
     return (
       <li>
         <span>{title}</span>

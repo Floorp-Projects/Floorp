@@ -1,14 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-// @flow
 
 let root;
-function setAssetRootURL(assetRoot: string): void {
+function setAssetRootURL(assetRoot) {
   root = assetRoot;
 }
 
-async function getDwarfToWasmData(name: string): Promise<ArrayBuffer> {
+async function getDwarfToWasmData(name) {
   if (!root) {
     throw new Error(`No wasm path - Unable to resolve ${name}`);
   }

@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-// $FlowIgnore
 const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 import { isNode } from "./environment";
@@ -161,15 +158,14 @@ export const features = new PrefsHelper("devtools.debugger.features", {
 });
 
 // Import the asyncStore already spawned by the TargetMixin class
-// $FlowIgnore
 const ThreadUtils = require("devtools/client/shared/thread-utils");
 export const asyncStore = ThreadUtils.asyncStore;
 
-export function resetSchemaVersion(): void {
+export function resetSchemaVersion() {
   prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
 }
 
-export function verifyPrefSchema(): void {
+export function verifyPrefSchema() {
   if (prefs.debuggerPrefsSchemaVersion < prefsSchemaVersion) {
     asyncStore.pendingBreakpoints = {};
     asyncStore.tabs = [];

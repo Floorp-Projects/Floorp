@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * This file is for use by unit tests for isolated debugger components that do
  * not need to interact with the redux store. When these tests need to construct
@@ -11,33 +9,11 @@
  * literals.
  */
 
-import type {
-  ActorId,
-  Breakpoint,
-  DisplaySource,
-  Expression,
-  Frame,
-  FrameId,
-  Scope,
-  Source,
-  SourceId,
-  SourceWithContentAndType,
-  SourceWithContent,
-  TextSourceContent,
-  URL,
-  WasmSourceContent,
-  Why,
-  Thread,
-} from "../types";
 import * as asyncValue from "./async-value";
 
 import { initialState } from "../reducers/index";
 
-import type { SourceBase } from "../reducers/sources";
-import type { State } from "../reducers/types";
-import type { FulfilledValue } from "./async-value";
-
-function makeMockSource(url: URL = "url", id: SourceId = "source"): SourceBase {
+function makeMockSource(url = "url", id = "source") {
   return {
     id,
     url,
@@ -51,10 +27,7 @@ function makeMockSource(url: URL = "url", id: SourceId = "source"): SourceBase {
   };
 }
 
-function makeMockDisplaySource(
-  url: URL = "url",
-  id: SourceId = "source"
-): DisplaySource {
+function makeMockDisplaySource(url = "url", id = "source") {
   return {
     ...makeMockSource(url, id),
     displayURL: url,
@@ -62,11 +35,11 @@ function makeMockDisplaySource(
 }
 
 function makeMockSourceWithContent(
-  url?: string,
-  id?: SourceId,
-  contentType?: string = "text/javascript",
-  text?: string = ""
-): SourceWithContent {
+  url,
+  id,
+  contentType = "text/javascript",
+  text = ""
+) {
   const source = makeMockSource(url, id);
 
   return {
@@ -82,11 +55,11 @@ function makeMockSourceWithContent(
 }
 
 function makeMockSourceAndContent(
-  url?: string,
-  id?: SourceId,
-  contentType?: string = "text/javascript",
-  text: string = ""
-): { ...SourceBase, content: TextSourceContent } {
+  url,
+  id,
+  contentType = "text/javascript",
+  text = ""
+) {
   const source = makeMockSource(url, id);
 
   return {
@@ -100,9 +73,9 @@ function makeMockSourceAndContent(
 }
 
 function makeFullfilledMockSourceContent(
-  text: string = "",
-  contentType?: string = "text/javascript"
-): FulfilledValue<TextSourceContent> {
+  text = "",
+  contentType = "text/javascript"
+) {
   return asyncValue.fulfilled({
     type: "text",
     value: text,
@@ -110,7 +83,7 @@ function makeFullfilledMockSourceContent(
   });
 }
 
-function makeMockWasmSource(): SourceBase {
+function makeMockWasmSource() {
   return {
     id: "wasm-source-id",
     url: "url",
@@ -124,9 +97,7 @@ function makeMockWasmSource(): SourceBase {
   };
 }
 
-function makeMockWasmSourceWithContent(text: {|
-  binary: Object,
-|}): SourceWithContentAndType<WasmSourceContent> {
+function makeMockWasmSourceWithContent(text) {
   const source = makeMockWasmSource();
 
   return {
@@ -138,11 +109,7 @@ function makeMockWasmSourceWithContent(text: {|
   };
 }
 
-function makeMockScope(
-  actor: ActorId = "scope-actor",
-  type: string = "block",
-  parent: ?Scope = null
-): Scope {
+function makeMockScope(actor = "scope-actor", type = "block", parent = null) {
   return {
     actor,
     parent,
@@ -157,18 +124,14 @@ function makeMockScope(
   };
 }
 
-function mockScopeAddVariable(scope: Scope, name: string) {
+function mockScopeAddVariable(scope, name) {
   if (!scope.bindings) {
     throw new Error("no scope bindings");
   }
   scope.bindings.variables[name] = { value: null };
 }
 
-function makeMockBreakpoint(
-  source: Source = makeMockSource(),
-  line: number = 1,
-  column: ?number
-): Breakpoint {
+function makeMockBreakpoint(source = makeMockSource(), line = 1, column) {
   const location = column
     ? { sourceId: source.id, line, column }
     : { sourceId: source.id, line };
@@ -185,13 +148,13 @@ function makeMockBreakpoint(
 }
 
 function makeMockFrame(
-  id: FrameId = "frame",
-  source: Source = makeMockSource("url"),
-  scope: Scope = makeMockScope(),
-  line: number = 4,
-  displayName: string = `display-${id}`,
-  index: number = 0
-): Frame {
+  id = "frame",
+  source = makeMockSource("url"),
+  scope = makeMockScope(),
+  line = 4,
+  displayName = `display-${id}`,
+  index = 0
+) {
   const location = { sourceId: source.id, line };
   return {
     id,
@@ -209,22 +172,22 @@ function makeMockFrame(
   };
 }
 
-function makeMockFrameWithURL(url: URL): Frame {
+function makeMockFrameWithURL(url) {
   return makeMockFrame(undefined, makeMockSource(url));
 }
 
-function makeWhyNormal(frameReturnValue: any = undefined): Why {
+function makeWhyNormal(frameReturnValue = undefined) {
   if (frameReturnValue) {
     return { type: "why-normal", frameFinished: { return: frameReturnValue } };
   }
   return { type: "why-normal" };
 }
 
-function makeWhyThrow(frameThrowValue: any): Why {
+function makeWhyThrow(frameThrowValue) {
   return { type: "why-throw", frameFinished: { throw: frameThrowValue } };
 }
 
-function makeMockExpression(value: Object): Expression {
+function makeMockExpression(value) {
   return {
     input: "input",
     value,
@@ -242,7 +205,7 @@ const mockthreadcx = {
   isPaused: false,
 };
 
-function makeMockThread(fields: $Shape<Thread>) {
+function makeMockThread(fields) {
   return {
     actor: "test",
     url: "example.com",
@@ -252,7 +215,7 @@ function makeMockThread(fields: $Shape<Thread>) {
   };
 }
 
-function makeMockState(state: $Shape<State>) {
+function makeMockState(state) {
   return {
     ...initialState(),
     ...state,

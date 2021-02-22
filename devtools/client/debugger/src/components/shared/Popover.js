@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { Component } from "react";
 import classNames from "classnames";
 import BracketArrow from "./BracketArrow";
@@ -10,35 +9,7 @@ import SmartGap from "./SmartGap";
 
 import "./Popover.css";
 
-type Props = {
-  editorRef: ?HTMLDivElement,
-  targetPosition: Object,
-  children: ?React$Element<any>,
-  target: HTMLDivElement,
-  type?: "popover" | "tooltip",
-  mouseout: Function,
-};
-
-type Orientation = "up" | "down" | "right";
-type TargetMid = {
-  x: number,
-  y: number,
-};
-export type Coords = {
-  left: number,
-  top: number,
-  targetMid: TargetMid,
-  orientation: Orientation,
-};
-
-type State = { coords: Coords };
-
-class Popover extends Component<Props, State> {
-  $popover: ?HTMLDivElement;
-  $tooltip: ?HTMLDivElement;
-  $gap: ?HTMLDivElement;
-  timerId: ?TimeoutID;
-  wasOnGap: boolean;
+class Popover extends Component {
   state = {
     coords: {
       left: 0,
@@ -48,8 +19,6 @@ class Popover extends Component<Props, State> {
     },
   };
   firstRender = true;
-  gapHeight: number;
-  gapHeight: number;
 
   static defaultProps = {
     type: "popover",
@@ -57,7 +26,6 @@ class Popover extends Component<Props, State> {
 
   componentDidMount() {
     const { type } = this.props;
-    // $FlowIgnore
     this.gapHeight = this.$gap.getBoundingClientRect().height;
     const coords =
       type == "popover" ? this.getPopoverCoords() : this.getTooltipCoords();
@@ -106,12 +74,7 @@ class Popover extends Component<Props, State> {
     this.props.mouseout();
   };
 
-  calculateLeft(
-    target: ClientRect,
-    editor: ClientRect,
-    popover: ClientRect,
-    orientation?: Orientation
-  ) {
+  calculateLeft(target, editor, popover, orientation) {
     const estimatedLeft = target.left;
     const estimatedRight = estimatedLeft + popover.width;
     const isOverflowingRight = estimatedRight > editor.right;
@@ -125,11 +88,7 @@ class Popover extends Component<Props, State> {
     return estimatedLeft;
   }
 
-  calculateTopForRightOrientation = (
-    target: ClientRect,
-    editor: ClientRect,
-    popover: ClientRect
-  ) => {
+  calculateTopForRightOrientation = (target, editor, popover) => {
     if (popover.height <= editor.height) {
       const rightOrientationTop = target.top - popover.height / 2;
       if (rightOrientationTop < editor.top) {
@@ -144,11 +103,7 @@ class Popover extends Component<Props, State> {
     return editor.top - target.height;
   };
 
-  calculateOrientation(
-    target: ClientRect,
-    editor: ClientRect,
-    popover: ClientRect
-  ) {
+  calculateOrientation(target, editor, popover) {
     const estimatedBottom = target.bottom + popover.height;
     if (editor.bottom > estimatedBottom) {
       return "down";
@@ -161,12 +116,7 @@ class Popover extends Component<Props, State> {
     return "right";
   }
 
-  calculateTop = (
-    target: ClientRect,
-    editor: ClientRect,
-    popover: ClientRect,
-    orientation?: string
-  ) => {
+  calculateTop = (target, editor, popover, orientation) => {
     if (orientation === "down") {
       return target.bottom;
     }
@@ -270,14 +220,13 @@ class Popover extends Component<Props, State> {
           type={this.props.type}
           gapHeight={this.gapHeight}
           coords={this.state.coords}
-          // $FlowIgnore
           offset={this.$gap.getBoundingClientRect().left}
         />
       </div>
     );
   }
 
-  getPopoverArrow(orientation: Orientation, left: number, top: number) {
+  getPopoverArrow(orientation, left, top) {
     let arrowProps = {};
 
     if (orientation === "up") {

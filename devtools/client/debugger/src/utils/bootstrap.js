@@ -2,21 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React from "react";
 import { bindActionCreators, combineReducers } from "redux";
 import ReactDOM from "react-dom";
 const { Provider } = require("react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
-// $FlowIgnore
 import flags from "devtools/shared/flags";
 
-// $FlowIgnore
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
-import SourceMaps from "devtools-source-map";
 import * as search from "../workers/search";
 import * as prettyPrint from "../workers/pretty-print";
 import { ParserDispatcher } from "../workers/parser";
@@ -28,21 +23,9 @@ import App from "../components/App";
 import { asyncStore, prefs } from "./prefs";
 import { persistTabs } from "../utils/tabs";
 
-import type { Panel } from "../client/firefox/types";
-
 let parser;
 
-type Workers = {
-  sourceMaps: typeof SourceMaps,
-  evaluationsParser: typeof ParserDispatcher,
-};
-
-export function bootstrapStore(
-  client: any,
-  workers: Workers,
-  panel: Panel,
-  initialState: Object
-): any {
+export function bootstrapStore(client, workers, panel, initialState) {
   const debugJsModules = AppConstants.DEBUG_JS_MODULES == "1";
   const createStore = configureStore({
     log: prefs.logging || flags.testing,
@@ -63,7 +46,7 @@ export function bootstrapStore(
   return { store, actions, selectors };
 }
 
-export function bootstrapWorkers(panelWorkers: Workers): Object {
+export function bootstrapWorkers(panelWorkers) {
   const workerPath = "resource://devtools/client/debugger/dist";
 
   prettyPrint.start(`${workerPath}/pretty-print-worker.js`);
@@ -74,13 +57,13 @@ export function bootstrapWorkers(panelWorkers: Workers): Object {
   return { ...panelWorkers, prettyPrint, parser, search };
 }
 
-export function teardownWorkers(): void {
+export function teardownWorkers() {
   prettyPrint.stop();
   parser.stop();
   search.stop();
 }
 
-export function bootstrapApp(store: any, panel: Panel): void {
+export function bootstrapApp(store, panel) {
   const mount = getMountElement();
   if (!mount) {
     return;
@@ -120,7 +103,7 @@ function registerStoreObserver(store, subscriber) {
   });
 }
 
-function updatePrefs(state: any, oldState: any): void {
+function updatePrefs(state, oldState) {
   const hasChanged = selector =>
     selector(oldState) && selector(oldState) !== selector(state);
 

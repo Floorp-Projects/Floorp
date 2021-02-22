@@ -2,12 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-function findInsertionLocation<T>(
-  array: Array<T>,
-  callback: T => number
-): number {
+function findInsertionLocation(array, callback) {
   let left = 0;
   let right = array.length;
   while (left < right) {
@@ -38,10 +33,7 @@ function findInsertionLocation<T>(
   return i;
 }
 
-export function filterSortedArray<T>(
-  array: Array<T>,
-  callback: T => number
-): Array<T> {
+export function filterSortedArray(array, callback) {
   const start = findInsertionLocation(array, callback);
 
   const results = [];

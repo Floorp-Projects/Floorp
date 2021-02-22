@@ -3,8 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export function memoizeLast(fn) {
-  let lastArgs: any[];
-  let lastResult: any;
+  let lastArgs;
+  let lastResult;
 
   const memoized = (...args) => {
     if (

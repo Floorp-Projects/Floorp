@@ -2,13 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getURL } from "../getURL";
 import { makeMockSource } from "../../../utils/test-mockup";
-import type { Source } from "../../../types";
 
-function createMockSource(props): Source {
+function createMockSource(props) {
   const rv = {
     ...makeMockSource(),
     ...Object.assign(
@@ -23,7 +20,7 @@ function createMockSource(props): Source {
       props
     ),
   };
-  return (rv: any);
+  return rv;
 }
 
 describe("getUrl", () => {

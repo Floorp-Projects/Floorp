@@ -2,12 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { findIndex } from "lodash";
 
 // eslint-disable-next-line max-len
-import type { Frame } from "../../../types";
 import { getFrameUrl } from "./getFrameUrl";
 
 function collapseLastFrames(frames) {
@@ -24,10 +21,7 @@ function collapseLastFrames(frames) {
   return { newFrames, lastGroup };
 }
 
-type FrameGroup = Frame[];
-type GroupedFrames = Array<FrameGroup | Frame>;
-
-export function collapseFrames(frames: Frame[]): GroupedFrames {
+export function collapseFrames(frames) {
   // We collapse groups of one so that user frames
   // are not in a group of one
   function addGroupToList(group, list) {

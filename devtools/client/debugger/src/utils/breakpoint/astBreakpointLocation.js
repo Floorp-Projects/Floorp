@@ -2,18 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { findClosestFunction } from "../ast";
 
-import type { SourceLocation, Source, ASTLocation } from "../../types";
-import type { Symbols } from "../../reducers/ast";
-
-export function getASTLocation(
-  source: Source,
-  symbols: ?Symbols,
-  location: SourceLocation
-): ASTLocation {
+export function getASTLocation(source, symbols, location) {
   if (source.isWasm || !symbols || symbols.loading) {
     return { name: undefined, offset: location, index: 0 };
   }
@@ -32,11 +23,7 @@ export function getASTLocation(
   return { name: undefined, offset: location, index: 0 };
 }
 
-export function findFunctionByName(
-  symbols: Symbols,
-  name: ?string,
-  index: number
-) {
+export function findFunctionByName(symbols, name, index) {
   if (symbols.loading) {
     return null;
   }

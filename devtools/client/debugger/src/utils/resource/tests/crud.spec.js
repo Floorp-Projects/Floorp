@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-declare var describe: (name: string, func: () => void) => void;
-declare var it: (desc: string, func: () => void) => void;
-declare var expect: (value: any) => any;
-
 import {
   createInitial,
   insertResources,
@@ -16,32 +11,23 @@ import {
   getResourceIds,
   getResource,
   getMappedResource,
-  type Resource,
-  type ResourceIdentity,
 } from "..";
 
-type TestResource = Resource<{
-  id: string,
-  name: string,
-  data: number,
-  obj: {},
-}>;
-
-const makeResource = (id: string): TestResource => ({
+const makeResource = id => ({
   id,
   name: `name-${id}`,
   data: 42,
   obj: {},
 });
 
-const mapName = (resource: TestResource) => resource.name;
-const mapWithIdent = (resource: TestResource, identity: ResourceIdentity) => ({
+const mapName = resource => resource.name;
+const mapWithIdent = (resource, identity) => ({
   resource,
   identity,
   obj: {},
 });
 
-const clone = <T>(v: T): T => (JSON.parse((JSON.stringify(v): any)): any);
+const clone = v => JSON.parse(JSON.stringify(v));
 
 describe("resource CRUD operations", () => {
   let r1, r2, r3;

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getScopes } from "..";
 import {
   makeMockFrame,
@@ -13,11 +11,8 @@ import {
   mockScopeAddVariable,
 } from "../../../test-mockup";
 
-import type { Scope } from "../../../../types";
-import type { RenderableScope } from "../getScope";
-
-function convertScope(scope: Scope): RenderableScope {
-  return (scope: any);
+function convertScope(scope) {
+  return scope;
 }
 
 describe("scopes", () => {

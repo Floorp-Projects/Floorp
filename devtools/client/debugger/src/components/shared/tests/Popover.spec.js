@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React from "react";
 import { mount } from "enzyme";
 
@@ -12,7 +10,7 @@ import Popover from "../Popover";
 describe("Popover", () => {
   const onMouseLeave = jest.fn();
   const onKeyDown = jest.fn();
-  const editorRef: any = {
+  const editorRef = {
     getBoundingClientRect() {
       return {
         x: 0,
@@ -27,7 +25,7 @@ describe("Popover", () => {
     },
   };
 
-  const targetRef: any = {
+  const targetRef = {
     getBoundingClientRect() {
       return {
         x: 0,
@@ -121,7 +119,7 @@ describe("Popover", () => {
   });
 
   it("tooltip normally displays above the target", () => {
-    const editor: any = {
+    const editor = {
       getBoundingClientRect() {
         return {
           width: 500,
@@ -161,7 +159,7 @@ describe("Popover", () => {
   });
 
   it("tooltop won't display above the target when insufficient space", () => {
-    const editor: any = {
+    const editor = {
       getBoundingClientRect() {
         return {
           width: 100,

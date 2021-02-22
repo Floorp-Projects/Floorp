@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import { Component } from "react";
 import { toEditorLine, endOperation, startOperation } from "../../utils/editor";
 import { getDocument, hasDocument } from "../../utils/editor/source-documents";
@@ -16,29 +15,7 @@ import {
   getCurrentThread,
 } from "../../selectors";
 
-import type {
-  SourceLocation,
-  SourceWithContent,
-  SourceDocuments,
-} from "../../types";
-import type { Command } from "../../reducers/types";
-
-type HighlightFrame = {
-  location: SourceLocation,
-};
-
-type OwnProps = {||};
-type Props = {
-  pauseCommand: Command,
-  selectedFrame: ?HighlightFrame,
-  selectedLocation: SourceLocation,
-  selectedSource: ?SourceWithContent,
-};
-
-function isDebugLine(
-  selectedFrame: ?HighlightFrame,
-  selectedLocation: SourceLocation
-) {
+function isDebugLine(selectedFrame, selectedLocation) {
   if (!selectedFrame) {
     return;
   }
@@ -49,7 +26,7 @@ function isDebugLine(
   );
 }
 
-function isDocumentReady(selectedSource: ?SourceWithContent, selectedLocation) {
+function isDocumentReady(selectedSource, selectedLocation) {
   return (
     selectedLocation &&
     selectedSource &&
@@ -58,16 +35,16 @@ function isDocumentReady(selectedSource: ?SourceWithContent, selectedLocation) {
   );
 }
 
-export class HighlightLine extends Component<Props> {
-  isStepping: boolean = false;
-  previousEditorLine: ?number = null;
+export class HighlightLine extends Component {
+  isStepping = false;
+  previousEditorLine = null;
 
-  shouldComponentUpdate(nextProps: Props) {
+  shouldComponentUpdate(nextProps) {
     const { selectedLocation, selectedSource } = nextProps;
     return this.shouldSetHighlightLine(selectedLocation, selectedSource);
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps) {
     this.completeHighlightLine(prevProps);
   }
 
@@ -75,10 +52,7 @@ export class HighlightLine extends Component<Props> {
     this.completeHighlightLine(null);
   }
 
-  shouldSetHighlightLine(
-    selectedLocation: SourceLocation,
-    selectedSource: ?SourceWithContent
-  ) {
+  shouldSetHighlightLine(selectedLocation, selectedSource) {
     const { sourceId, line } = selectedLocation;
     const editorLine = toEditorLine(sourceId, line);
 
@@ -93,7 +67,7 @@ export class HighlightLine extends Component<Props> {
     return true;
   }
 
-  completeHighlightLine(prevProps: Props | null) {
+  completeHighlightLine(prevProps) {
     const {
       pauseCommand,
       selectedLocation,
@@ -115,11 +89,7 @@ export class HighlightLine extends Component<Props> {
     endOperation();
   }
 
-  setHighlightLine(
-    selectedLocation: SourceLocation,
-    selectedFrame: ?HighlightFrame,
-    selectedSource: ?SourceWithContent
-  ) {
+  setHighlightLine(selectedLocation, selectedFrame, selectedSource) {
     const { sourceId, line } = selectedLocation;
     if (!this.shouldSetHighlightLine(selectedLocation, selectedSource)) {
       return;
@@ -138,10 +108,8 @@ export class HighlightLine extends Component<Props> {
     this.resetHighlightLine(doc, editorLine);
   }
 
-  resetHighlightLine(doc: SourceDocuments, editorLine: number) {
-    const editorWrapper: HTMLElement | null = document.querySelector(
-      ".editor-wrapper"
-    );
+  resetHighlightLine(doc, editorLine) {
+    const editorWrapper = document.querySelector(".editor-wrapper");
 
     if (editorWrapper === null) {
       return;
@@ -161,10 +129,7 @@ export class HighlightLine extends Component<Props> {
     );
   }
 
-  clearHighlightLine(
-    selectedLocation: SourceLocation,
-    selectedSource: ?SourceWithContent
-  ) {
+  clearHighlightLine(selectedLocation, selectedSource) {
     if (!isDocumentReady(selectedSource, selectedLocation)) {
       return;
     }
@@ -180,7 +145,7 @@ export class HighlightLine extends Component<Props> {
   }
 }
 
-export default connect<Props, OwnProps, _, _, _, _>(state => {
+export default connect(state => {
   const selectedLocation = getSelectedLocation(state);
 
   if (!selectedLocation) {

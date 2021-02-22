@@ -2,89 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import {
-  getResourceValues,
-  getValidatedResource,
-  makeIdentity,
-  type ResourceBound,
-  type Id,
-  type ResourceState,
-  type ResourceValues,
-  type ResourceIdentity,
-} from "./core";
+import { getResourceValues, getValidatedResource, makeIdentity } from "./core";
 import { arrayShallowEqual } from "./compare";
 
-export type ResourceQuery<R: ResourceBound, Args, Reduced> = (
-  ResourceState<R>,
-  Args
-) => Reduced;
-
-export type QueryFilter<R: ResourceBound, Args> = (
-  ResourceValues<R>,
-  Args
-) => Array<Id<R>>;
-
-export type QueryMap<R: ResourceBound, Args, Mapped> =
-  | QueryMapNoArgs<R, Mapped>
-  | QueryMapWithArgs<R, Args, Mapped>;
-export type QueryMapNoArgs<R: ResourceBound, Mapped> = {
-  +needsArgs?: false,
-  (R, ResourceIdentity): Mapped,
-};
-export type QueryMapWithArgs<R: ResourceBound, Args, Mapped> = {
-  +needsArgs: true,
-  (R, ResourceIdentity, Args): Mapped,
-};
-
-export type QueryReduce<R: ResourceBound, Args, Mapped, Reduced> = (
-  $ReadOnlyArray<Mapped>,
-  $ReadOnlyArray<Id<R>>,
-  Args
-) => Reduced;
-
-export type QueryContext<Args> = {
-  args: Args,
-  identMap: WeakMap<ResourceIdentity, ResourceIdentity>,
-};
-export type QueryResult<Mapped, Reduced> = {
-  mapped: Array<Mapped>,
-  reduced: Reduced,
-};
-export type QueryResultCompare<Reduced> = (Reduced, Reduced) => boolean;
-
-export type QueryCacheHandler<R: ResourceBound, Args, Mapped, Reduced> = (
-  ResourceState<R>,
-  QueryContext<Args>,
-  QueryResult<Mapped, Reduced> | null
-) => QueryResult<Mapped, Reduced>;
-
-export type QueryCache<R: ResourceBound, Args, Mapped, Reduced> = (
-  handler: QueryCacheHandler<R, Args, Mapped, Reduced>
-) => ResourceQuery<R, Args, Reduced>;
-
-export function makeMapWithArgs<R: ResourceBound, Args, Mapped>(
-  map: (R, ResourceIdentity, Args) => Mapped
-): QueryMapWithArgs<R, Args, Mapped> {
+export function makeMapWithArgs(map) {
   const wrapper = (resource, identity, args) => map(resource, identity, args);
   wrapper.needsArgs = true;
   return wrapper;
 }
 
-export function makeResourceQuery<R: ResourceBound, Args, Mapped, Reduced>({
+export function makeResourceQuery({
   cache,
   filter,
   map,
   reduce,
   resultCompare,
-}: {|
-  cache: QueryCache<R, Args, Mapped, Reduced>,
-  filter: QueryFilter<R, Args>,
-  map: QueryMap<R, Args, Mapped>,
-  reduce: QueryReduce<R, Args, Mapped, Reduced>,
-  resultCompare: QueryResultCompare<Reduced>,
-|}): ResourceQuery<R, Args, Reduced> {
+}) {
   const loadResource = makeResourceMapper(map);
 
   return cache((state, context, existing) => {
@@ -107,15 +40,7 @@ export function makeResourceQuery<R: ResourceBound, Args, Mapped, Reduced>({
   });
 }
 
-type ResourceLoader<R: ResourceBound, Args, Mapped> = (
-  ResourceState<R>,
-  Id<R>,
-  QueryContext<Args>
-) => Mapped;
-
-function makeResourceMapper<R: ResourceBound, Args, Mapped>(
-  map: QueryMap<R, Args, Mapped>
-): ResourceLoader<R, Args, Mapped> {
+function makeResourceMapper(map) {
   return map.needsArgs
     ? makeResourceArgsMapper(map)
     : makeResourceNoArgsMapper(map);
@@ -127,31 +52,18 @@ function makeResourceMapper<R: ResourceBound, Args, Mapped>(
  * _and_ the arguments being passed to the query. That means they need extra
  * logic when loading those resources.
  */
-function makeResourceArgsMapper<R: ResourceBound, Args, Mapped>(
-  map: QueryMapWithArgs<R, Args, Mapped>
-): ResourceLoader<R, Args, Mapped> {
+function makeResourceArgsMapper(map) {
   const mapper = (value, identity, context) =>
     map(value, getIdentity(context.identMap, identity), context.args);
   return (state, id, context) => getCachedResource(state, id, context, mapper);
 }
 
-function makeResourceNoArgsMapper<R: ResourceBound, Args, Mapped>(
-  map: QueryMapNoArgs<R, Mapped>
-): ResourceLoader<R, Args, Mapped> {
+function makeResourceNoArgsMapper(map) {
   const mapper = (value, identity, context) => map(value, identity);
   return (state, id, context) => getCachedResource(state, id, context, mapper);
 }
 
-function getCachedResource<R: ResourceBound, Args, Mapped>(
-  state: ResourceState<R>,
-  id: Id<R>,
-  context: QueryContext<Args>,
-  map: (
-    value: R,
-    identity: ResourceIdentity,
-    context: QueryContext<Args>
-  ) => Mapped
-): Mapped {
+function getCachedResource(state, id, context, map) {
   const validatedState = getValidatedResource(state, id);
   if (!validatedState) {
     throw new Error(`Resource ${id} does not exist`);
@@ -160,10 +72,7 @@ function getCachedResource<R: ResourceBound, Args, Mapped>(
   return map(validatedState.values[id], validatedState.identity[id], context);
 }
 
-function getIdentity(
-  identMap: WeakMap<ResourceIdentity, ResourceIdentity>,
-  identity: ResourceIdentity
-) {
+function getIdentity(identMap, identity) {
   let ident = identMap.get(identity);
   if (!ident) {
     ident = makeIdentity();

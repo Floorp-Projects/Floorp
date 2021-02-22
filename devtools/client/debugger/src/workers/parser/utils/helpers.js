@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import * as t from "@babel/types";
-import type { Node } from "@babel/types";
-import type { SimplePath } from "./simple-path";
 import generate from "@babel/generator";
 
-export function isFunction(node: Node) {
+export function isFunction(node) {
   return (
     t.isFunction(node) ||
     t.isArrowFunctionExpression(node) ||
@@ -18,7 +14,7 @@ export function isFunction(node: Node) {
   );
 }
 
-export function isAwaitExpression(path: SimplePath) {
+export function isAwaitExpression(path) {
   const { node, parent } = path;
   return (
     t.isAwaitExpression(node) ||
@@ -27,7 +23,7 @@ export function isAwaitExpression(path: SimplePath) {
   );
 }
 
-export function isYieldExpression(path: SimplePath) {
+export function isYieldExpression(path) {
   const { node, parent } = path;
   return (
     t.isYieldExpression(node) ||
@@ -36,7 +32,7 @@ export function isYieldExpression(path: SimplePath) {
   );
 }
 
-export function isObjectShorthand(parent: Node): boolean {
+export function isObjectShorthand(parent) {
   if (!t.isObjectProperty(parent)) {
     return false;
   }
@@ -55,7 +51,7 @@ export function isObjectShorthand(parent: Node): boolean {
   );
 }
 
-export function getObjectExpressionValue(node: Node) {
+export function getObjectExpressionValue(node) {
   const { value } = node;
 
   if (t.isIdentifier(value)) {
@@ -71,11 +67,11 @@ export function getObjectExpressionValue(node: Node) {
   return shouldWrap ? `(${code})` : code;
 }
 
-export function getCode(node: Node) {
+export function getCode(node) {
   return generate(node).code;
 }
 
-export function getComments(ast: any) {
+export function getComments(ast) {
   if (!ast || !ast.comments) {
     return [];
   }
@@ -85,7 +81,7 @@ export function getComments(ast: any) {
   }));
 }
 
-export function getSpecifiers(specifiers: any) {
+export function getSpecifiers(specifiers) {
   if (!specifiers) {
     return [];
   }
@@ -93,11 +89,11 @@ export function getSpecifiers(specifiers: any) {
   return specifiers.map(specifier => specifier.local?.name);
 }
 
-export function isComputedExpression(expression: string): boolean {
+export function isComputedExpression(expression) {
   return /^\[/m.test(expression);
 }
 
-export function getMemberExpression(root: Node) {
+export function getMemberExpression(root) {
   function _getMemberExpression(node, expr) {
     if (t.isMemberExpression(node)) {
       expr = [node.property.name].concat(expr);
@@ -119,7 +115,7 @@ export function getMemberExpression(root: Node) {
   return expr.join(".");
 }
 
-export function getVariables(dec: Node) {
+export function getVariables(dec) {
   if (!dec.id) {
     return [];
   }
@@ -151,7 +147,7 @@ export function getVariables(dec: Node) {
   ];
 }
 
-export function getPatternIdentifiers(pattern: Node) {
+export function getPatternIdentifiers(pattern) {
   let items = [];
   if (t.isObjectPattern(pattern)) {
     items = pattern.properties.map(({ value }) => value);
@@ -183,16 +179,16 @@ function getIdentifiers(items) {
 
 // Top Level checks the number of "body" nodes in the ancestor chain
 // if the node is top-level, then it shoul only have one body.
-export function isTopLevel(ancestors: Node[]) {
+export function isTopLevel(ancestors) {
   return ancestors.filter(ancestor => ancestor.key == "body").length == 1;
 }
 
-export function nodeLocationKey(a: Node) {
+export function nodeLocationKey(a) {
   const { start, end } = a.location;
   return `${start.line}:${start.column}:${end.line}:${end.column}`;
 }
 
-export function getFunctionParameterNames(path: SimplePath): string[] {
+export function getFunctionParameterNames(path) {
   if (path.node.params != null) {
     return path.node.params.map(param => {
       if (param.type !== "AssignmentPattern") {

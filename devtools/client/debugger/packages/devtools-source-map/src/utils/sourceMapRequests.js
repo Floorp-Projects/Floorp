@@ -24,17 +24,11 @@ function clearSourceMaps() {
   sourceMapRequests.clear();
 }
 
-function getSourceMapWithMetadata(
-  generatedSourceId: string
-): ?Promise<?{
-  map: SourceMapConsumer,
-  urlsById: Map<SourceId, url>,
-  sources: Array<{ id: SourceId, url: string }>,
-}> {
+function getSourceMapWithMetadata(generatedSourceId) {
   return sourceMapRequests.get(generatedSourceId);
 }
 
-function getSourceMap(generatedSourceId: string): ?Promise<?SourceMapConsumer> {
+function getSourceMap(generatedSourceId) {
   const request = getSourceMapWithMetadata(generatedSourceId);
   if (!request) {
     return null;
@@ -43,7 +37,7 @@ function getSourceMap(generatedSourceId: string): ?Promise<?SourceMapConsumer> {
   return request.then(result => (result ? result.map : null));
 }
 
-function setSourceMap(generatedId: string, request) {
+function setSourceMap(generatedId, request) {
   sourceMapRequests.set(
     generatedId,
     request.then(map => {

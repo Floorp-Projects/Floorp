@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getTokenLocation } from "../get-token-location";
 
 describe("getTokenLocation", () => {
@@ -13,7 +11,7 @@ describe("getTokenLocation", () => {
       ch: "C",
     })),
   };
-  const token: any = {
+  const token = {
     getBoundingClientRect() {
       return {
         left: 10,

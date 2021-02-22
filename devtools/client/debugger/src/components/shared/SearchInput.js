@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React, { Component } from "react";
 
 import { CloseButton } from "./Button";
@@ -28,38 +26,7 @@ const arrowBtn = (onClick, type, className, tooltip) => {
   );
 };
 
-type Props = {
-  count: number,
-  expanded: boolean,
-  handleClose?: (e: SyntheticMouseEvent<HTMLDivElement>) => void,
-  handleNext?: (e: SyntheticMouseEvent<HTMLButtonElement>) => void,
-  handlePrev?: (e: SyntheticMouseEvent<HTMLButtonElement>) => void,
-  hasPrefix?: boolean,
-  onBlur?: (e: SyntheticFocusEvent<HTMLInputElement>) => void,
-  onChange: (e: SyntheticInputEvent<HTMLInputElement>) => void,
-  onFocus?: (e: SyntheticFocusEvent<HTMLInputElement>) => void,
-  onKeyDown: (e: SyntheticKeyboardEvent<HTMLInputElement>) => void,
-  onKeyUp?: (e: SyntheticKeyboardEvent<HTMLInputElement>) => void,
-  onHistoryScroll?: (historyValue: string) => void,
-  placeholder: string,
-  query: string,
-  selectedItemId?: string,
-  shouldFocus?: boolean,
-  showErrorEmoji: boolean,
-  size: string,
-  summaryMsg: string,
-  showClose: boolean,
-  isLoading: boolean,
-};
-
-type State = {
-  history: Array<string>,
-};
-
-class SearchInput extends Component<Props, State> {
-  displayName: "SearchInput";
-  $input: ?HTMLInputElement;
-
+class SearchInput extends Component {
   static defaultProps = {
     expanded: false,
     hasPrefix: false,
@@ -68,7 +35,7 @@ class SearchInput extends Component<Props, State> {
     showClose: true,
   };
 
-  constructor(props: Props) {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -80,7 +47,7 @@ class SearchInput extends Component<Props, State> {
     this.setFocus();
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps) {
     if (this.props.shouldFocus && !prevProps.shouldFocus) {
       this.setFocus();
     }
@@ -124,7 +91,7 @@ class SearchInput extends Component<Props, State> {
     ];
   }
 
-  onFocus = (e: SyntheticFocusEvent<HTMLInputElement>) => {
+  onFocus = e => {
     const { onFocus } = this.props;
 
     if (onFocus) {
@@ -132,7 +99,7 @@ class SearchInput extends Component<Props, State> {
     }
   };
 
-  onBlur = (e: SyntheticFocusEvent<HTMLInputElement>) => {
+  onBlur = e => {
     const { onBlur } = this.props;
 
     if (onBlur) {
@@ -140,7 +107,7 @@ class SearchInput extends Component<Props, State> {
     }
   };
 
-  onKeyDown = (e: any) => {
+  onKeyDown = e => {
     const { onHistoryScroll, onKeyDown } = this.props;
     if (!onHistoryScroll) {
       return onKeyDown(e);
@@ -175,7 +142,7 @@ class SearchInput extends Component<Props, State> {
     }
   };
 
-  saveEnteredTerm(query: string) {
+  saveEnteredTerm(query) {
     const { history } = this.state;
     const previousIndex = history.indexOf(query);
     if (previousIndex !== -1) {

@@ -2,42 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { fromPairs, toPairs } from "lodash";
 import { executeSoon } from "../../../utils/DevToolsUtils";
-import type { ThunkArgs } from "../../types";
 
-type BasePromiseAction = {|
-  +"@@dispatch/promise": Promise<mixed>,
-|};
-
-export type StartPromiseAction = {|
-  ...BasePromiseAction,
-  +status: "start",
-|};
-
-export type DonePromiseAction = {|
-  ...BasePromiseAction,
-  +status: "done",
-  +value: any,
-|};
-
-export type ErrorPromiseAction = {|
-  ...BasePromiseAction,
-  +status: "error",
-  +error: any,
-|};
-
-import {
-  pending,
-  rejected,
-  fulfilled,
-  type AsyncValue,
-} from "../../../utils/async-value";
-export function asyncActionAsValue<T>(
-  action: PromiseAction<mixed, T>
-): AsyncValue<T> {
+import { pending, rejected, fulfilled } from "../../../utils/async-value";
+export function asyncActionAsValue(action) {
   if (action.status === "start") {
     return pending();
   }
@@ -47,43 +16,18 @@ export function asyncActionAsValue<T>(
   return fulfilled(action.value);
 }
 
-export type PromiseAction<+Action, Value = any> =
-  // | {| ...Action, "@@dispatch/promise": Promise<Object> |}
-  | {|
-      ...BasePromiseAction,
-      ...Action,
-      +status: "start",
-      value: void,
-    |}
-  | {|
-      ...BasePromiseAction,
-      ...Action,
-      +status: "done",
-      +value: Value,
-    |}
-  | {|
-      ...BasePromiseAction,
-      ...Action,
-      +status: "error",
-      +error?: any,
-      value: void,
-    |};
-
 let seqIdVal = 1;
 
 function seqIdGen() {
   return seqIdVal++;
 }
 
-function filterAction(action: Object): Object {
+function filterAction(action) {
   return fromPairs(toPairs(action).filter(pair => pair[0] !== PROMISE));
 }
 
-function promiseMiddleware({
-  dispatch,
-  getState,
-}: ThunkArgs): Function | Promise<mixed> {
-  return (next: Function) => (action: Object) => {
+function promiseMiddleware({ dispatch, getState }) {
+  return next => action => {
     if (!(PROMISE in action)) {
       return next(action);
     }

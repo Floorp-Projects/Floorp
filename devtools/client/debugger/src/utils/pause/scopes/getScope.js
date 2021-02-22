@@ -2,31 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-// $FlowIgnore
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 import { getBindingVariables } from "./getVariables";
 import { getFramePopVariables, getThisVariable } from "./utils";
 import { simplifyDisplayName } from "../../pause/frames";
-
-import type { Frame, Why, Scope } from "../../../types";
-
-import type { NamedValue } from "./types";
-
-export type RenderableScope = {
-  type: $ElementType<Scope, "type">,
-  scopeKind: $ElementType<Scope, "scopeKind">,
-  actor: $ElementType<Scope, "actor">,
-  bindings: $ElementType<Scope, "bindings">,
-  parent: ?RenderableScope,
-  object?: ?Object,
-  function?: ?{
-    displayName: string,
-  },
-  block?: ?{
-    displayName: string,
-  },
-};
 
 const {
   utils: {
@@ -34,7 +13,7 @@ const {
   },
 } = objectInspector;
 
-function getScopeTitle(type, scope: RenderableScope): string | void {
+function getScopeTitle(type, scope) {
   if (type === "block" && scope.block && scope.block.displayName) {
     return scope.block.displayName;
   }
@@ -47,13 +26,7 @@ function getScopeTitle(type, scope: RenderableScope): string | void {
   return L10N.getStr("scopes.block");
 }
 
-export function getScope(
-  scope: RenderableScope,
-  selectedFrame: Frame,
-  frameScopes: RenderableScope,
-  why: Why,
-  scopeIndex: number
-): ?NamedValue {
+export function getScope(scope, selectedFrame, frameScopes, why, scopeIndex) {
   const { type, actor } = scope;
 
   const isLocalScope = scope.actor === frameScopes.actor;
@@ -111,14 +84,9 @@ export function getScope(
   return null;
 }
 
-export function mergeScopes(
-  scope: RenderableScope,
-  parentScope: RenderableScope,
-  item: NamedValue,
-  parentItem: NamedValue
-): NamedValue | void {
+export function mergeScopes(scope, parentScope, item, parentItem) {
   if (scope.scopeKind == "function lexical" && parentScope.type == "function") {
-    const contents = (item.contents: any).concat(parentItem.contents);
+    const contents = item.contents.concat(parentItem.contents);
     contents.sort((a, b) => a.name.localeCompare(b.name));
 
     return {

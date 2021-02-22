@@ -2,27 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { cloneElement, Component } from "react";
 import AccessibleImage from "./AccessibleImage";
 
 import "./Accordion.css";
 
-type AccordionItem = {
-  buttons?: Array<Object>,
-  component: React$Element<any>,
-  componentProps: Object,
-  header: string,
-  className: string,
-  opened: boolean,
-  onToggle?: () => void,
-  shouldOpen?: () => void,
-};
-
-type Props = { items: Array<Object> };
-
-class Accordion extends Component<Props> {
-  handleHeaderClick(i: number) {
+class Accordion extends Component {
+  handleHeaderClick(i) {
     const item = this.props.items[i];
     const opened = !item.opened;
     item.opened = opened;
@@ -36,16 +22,13 @@ class Accordion extends Component<Props> {
     this.forceUpdate();
   }
 
-  onHandleHeaderKeyDown(
-    e: SyntheticKeyboardEvent<HTMLHeadingElement>,
-    i: number
-  ) {
+  onHandleHeaderKeyDown(e, i) {
     if (e && (e.key === " " || e.key === "Enter")) {
       this.handleHeaderClick(i);
     }
   }
 
-  renderContainer = (item: AccordionItem, i: number) => {
+  renderContainer = (item, i) => {
     const { opened } = item;
 
     return (

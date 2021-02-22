@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /* global window */
 
 /**
@@ -11,7 +9,7 @@
  * @module utils/create-store
  */
 
-import { createStore, applyMiddleware, type StoreCreator } from "redux";
+import { createStore, applyMiddleware } from "redux";
 import { waitUntilService } from "./middleware/wait-service";
 import { log } from "./middleware/log";
 import { promise } from "./middleware/promise";
@@ -23,13 +21,6 @@ import { context } from "./middleware/context";
  * @memberof utils/create-store
  * @static
  */
-type ReduxStoreOptions = {
-  makeThunkArgs?: Function,
-  history?: Array<Object>,
-  middleware?: Function[],
-  log?: boolean,
-  timing?: boolean,
-};
 
 /**
  * This creates a dispatcher with all the standard middleware in place
@@ -44,10 +35,8 @@ type ReduxStoreOptions = {
  * @memberof utils/create-store
  * @static
  */
-const configureStore = (
-  opts: ReduxStoreOptions = {}
-): StoreCreator<any, any, any> => {
-  const middleware: any = [
+const configureStore = (opts = {}) => {
+  const middleware = [
     thunk(opts.makeThunkArgs),
     context,
     promise,

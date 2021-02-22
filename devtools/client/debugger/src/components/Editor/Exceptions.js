@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
 
@@ -14,16 +13,7 @@ import {
 } from "../../selectors";
 import { getDocument } from "../../utils/editor";
 
-import type { Source, Exception as Exc } from "../../types";
-
-type Props = {
-  selectedSource: ?Source,
-  exceptions: Exc[],
-};
-
-type OwnProps = {||};
-
-class Exceptions extends Component<Props> {
+class Exceptions extends Component {
   render() {
     const { exceptions, selectedSource } = this.props;
 
@@ -48,7 +38,7 @@ class Exceptions extends Component<Props> {
   }
 }
 
-export default connect<Props, OwnProps, _, _, _, _>(state => ({
+export default connect(state => ({
   exceptions: getSelectedSourceExceptions(state),
   selectedSource: getSelectedSource(state),
 }))(Exceptions);

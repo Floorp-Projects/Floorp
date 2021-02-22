@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * Ast reducer
  * @module reducers/ast
@@ -11,38 +9,14 @@
 
 import { makeBreakpointId } from "../utils/breakpoint";
 
-import type { SymbolDeclarations } from "../workers/parser";
-
-import type { Source, SourceLocation } from "../types";
-import type { Action, DonePromiseAction } from "../actions/types";
-
-type EmptyLinesType = number[];
-
-export type LoadedSymbols = SymbolDeclarations;
-export type Symbols = LoadedSymbols | {| loading: true |};
-
-export type EmptyLinesMap = { [k: string]: EmptyLinesType };
-export type SymbolsMap = { [k: string]: Symbols };
-
-export type SourceMetaDataType = {
-  framework: ?string,
-};
-
-export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
-
-export type ASTState = {
-  +symbols: SymbolsMap,
-  +inScopeLines: { [string]: Array<number> },
-};
-
-export function initialASTState(): ASTState {
+export function initialASTState() {
   return {
     symbols: {},
     inScopeLines: {},
   };
 }
 
-function update(state: ASTState = initialASTState(), action: Action): ASTState {
+function update(state = initialASTState(), action) {
   switch (action.type) {
     case "SET_SYMBOLS": {
       const { sourceId } = action;
@@ -53,7 +27,7 @@ function update(state: ASTState = initialASTState(), action: Action): ASTState {
         };
       }
 
-      const value = ((action: any): DonePromiseAction).value;
+      const value = action.value;
       return {
         ...state,
         symbols: { ...state.symbols, [sourceId]: value },
@@ -86,9 +60,8 @@ function update(state: ASTState = initialASTState(), action: Action): ASTState {
 
 // NOTE: we'd like to have the app state fully typed
 // https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
-type OuterState = { ast: ASTState };
 
-export function getSymbols(state: OuterState, source: ?Source): ?Symbols {
+export function getSymbols(state, source) {
   if (!source) {
     return null;
   }
@@ -96,7 +69,7 @@ export function getSymbols(state: OuterState, source: ?Source): ?Symbols {
   return state.ast.symbols[source.id] || null;
 }
 
-export function hasSymbols(state: OuterState, source: Source): boolean {
+export function hasSymbols(state, source) {
   const symbols = getSymbols(state, source);
 
   if (!symbols) {
@@ -106,14 +79,14 @@ export function hasSymbols(state: OuterState, source: Source): boolean {
   return !symbols.loading;
 }
 
-export function getFramework(state: OuterState, source: Source): ?string {
+export function getFramework(state, source) {
   const symbols = getSymbols(state, source);
   if (symbols && !symbols.loading) {
     return symbols.framework;
   }
 }
 
-export function isSymbolsLoading(state: OuterState, source: ?Source): boolean {
+export function isSymbolsLoading(state, source) {
   const symbols = getSymbols(state, source);
   if (!symbols) {
     return false;
@@ -122,14 +95,11 @@ export function isSymbolsLoading(state: OuterState, source: ?Source): boolean {
   return symbols.loading;
 }
 
-export function getInScopeLines(state: OuterState, location: SourceLocation) {
+export function getInScopeLines(state, location) {
   return state.ast.inScopeLines[makeBreakpointId(location)];
 }
 
-export function hasInScopeLines(
-  state: OuterState,
-  location: SourceLocation
-): boolean {
+export function hasInScopeLines(state, location) {
   return !!getInScopeLines(state, location);
 }
 

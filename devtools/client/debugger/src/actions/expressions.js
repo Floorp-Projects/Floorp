@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getExpression,
   getExpressions,
@@ -22,9 +20,6 @@ import { wrapExpression } from "../utils/expressions";
 import { features } from "../utils/prefs";
 import { isOriginal } from "../utils/source";
 
-import type { Expression, ThreadContext } from "../types";
-import type { ThunkArgs } from "./types";
-
 /**
  * Add expression for debugger to watch
  *
@@ -33,8 +28,8 @@ import type { ThunkArgs } from "./types";
  * @memberof actions/pause
  * @static
  */
-export function addExpression(cx: ThreadContext, input: string) {
-  return async ({ dispatch, getState, evaluationsParser }: ThunkArgs) => {
+export function addExpression(cx, input) {
+  return async ({ dispatch, getState, evaluationsParser }) => {
     if (!input) {
       return;
     }
@@ -55,8 +50,8 @@ export function addExpression(cx: ThreadContext, input: string) {
   };
 }
 
-export function autocomplete(cx: ThreadContext, input: string, cursor: number) {
-  return async ({ dispatch, getState, client }: ThunkArgs) => {
+export function autocomplete(cx, input, cursor) {
+  return async ({ dispatch, getState, client }) => {
     if (!input) {
       return;
     }
@@ -74,12 +69,8 @@ export function clearExpressionError() {
   return { type: "CLEAR_EXPRESSION_ERROR" };
 }
 
-export function updateExpression(
-  cx: ThreadContext,
-  input: string,
-  expression: Expression
-) {
-  return async ({ dispatch, getState, parser }: ThunkArgs) => {
+export function updateExpression(cx, input, expression) {
+  return async ({ dispatch, getState, parser }) => {
     if (!input) {
       return;
     }
@@ -104,8 +95,8 @@ export function updateExpression(
  * @memberof actions/pause
  * @static
  */
-export function deleteExpression(expression: Expression) {
-  return ({ dispatch }: ThunkArgs) => {
+export function deleteExpression(expression) {
+  return ({ dispatch }) => {
     dispatch({
       type: "DELETE_EXPRESSION",
       input: expression.input,
@@ -119,8 +110,8 @@ export function deleteExpression(expression: Expression) {
  * @param {number} selectedFrameId
  * @static
  */
-export function evaluateExpressions(cx: ThreadContext) {
-  return async function({ dispatch, getState, client }: ThunkArgs) {
+export function evaluateExpressions(cx) {
+  return async function({ dispatch, getState, client }) {
     const expressions = getExpressions(getState());
     const inputs = expressions.map(({ input }) => input);
     const frameId = getSelectedFrameId(getState(), cx.thread);
@@ -132,8 +123,8 @@ export function evaluateExpressions(cx: ThreadContext) {
   };
 }
 
-function evaluateExpression(cx: ThreadContext, expression: Expression) {
-  return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
+function evaluateExpression(cx, expression) {
+  return async function({ dispatch, getState, client, sourceMaps }) {
     if (!expression.input) {
       console.warn("Expressions should not be empty");
       return;
@@ -175,14 +166,14 @@ function evaluateExpression(cx: ThreadContext, expression: Expression) {
  * Gets information about original variable names from the source map
  * and replaces all posible generated names.
  */
-export function getMappedExpression(expression: string) {
+export function getMappedExpression(expression) {
   return async function({
     dispatch,
     getState,
     client,
     sourceMaps,
     evaluationsParser,
-  }: ThunkArgs) {
+  }) {
     const thread = getCurrentThread(getState());
     const mappings = getSelectedScopeMappings(getState(), thread);
     const bindings = getSelectedFrameBindings(getState(), thread);
