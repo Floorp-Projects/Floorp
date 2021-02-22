@@ -11,6 +11,7 @@
 #include "HostWebGLContext.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/SanitizeRenderer.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebGLContextEvent.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -2055,7 +2056,9 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
         const auto maybe = GetString(driverEnum);
         if (maybe) {
-          retval.set(StringValue(cx, *maybe, rv));
+          std::string renderer = *maybe;
+          mozilla::dom::SanitizeRenderer(renderer);
+          retval.set(StringValue(cx, renderer, rv));
         }
         return;
       }
