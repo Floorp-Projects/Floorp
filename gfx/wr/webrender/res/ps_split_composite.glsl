@@ -121,14 +121,10 @@ void main(void) {
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    if (!swgl_isTextureLinear(sColor0)) {
-        return;
-    }
-
     float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, vPerspective);
     vec2 uv = vUv * perspective_divisor;
 
-    swgl_commitTextureLinearRGBA8(sColor0, uv, vUvSampleBounds, 0.0);
+    swgl_commitTextureRGBA8(sColor0, uv, vUvSampleBounds, 0.0);
 }
 #endif
 
