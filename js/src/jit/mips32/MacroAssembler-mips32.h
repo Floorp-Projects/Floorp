@@ -72,7 +72,7 @@ class MacroAssemblerMIPS : public MacroAssemblerMIPSShared {
   using MacroAssemblerMIPSShared::ma_sd;
   using MacroAssemblerMIPSShared::ma_ss;
   using MacroAssemblerMIPSShared::ma_store;
-  using MacroAssemblerMIPSShared::ma_subTestOverflow;
+  using MacroAssemblerMIPSShared::ma_sub32TestOverflow;
 
   void ma_li(Register dest, CodeLabel* label);
 
@@ -90,13 +90,50 @@ class MacroAssemblerMIPS : public MacroAssemblerMIPSShared {
 
   // arithmetic based ops
   // add
-  void ma_addTestOverflow(Register rd, Register rs, Register rt,
-                          Label* overflow);
-  void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
+  void ma_add32TestOverflow(Register rd, Register rs, Register rt,
+                            Label* overflow);
+  void ma_add32TestOverflow(Register rd, Register rs, Imm32 imm,
+                            Label* overflow);
+
+  void ma_addPtrTestOverflow(Register rd, Register rs, Register rt,
+                             Label* overflow) {
+    ma_add32TestOverflow(rd, rs, rt, overflow);
+  }
+
+  void ma_addPtrTestOverflow(Register rd, Register rs, Imm32 imm,
+                             Label* overflow) {
+    ma_add32TestOverflow(rd, rs, imm, overflow);
+  }
+
+  void ma_addPtrTestCarry(Condition cond, Register rd, Register rs, Register rt,
+                          Label* overflow) {
+    ma_add32TestCarry(cond, rd, rs, rt, overflow);
+  }
+
+  void ma_addPtrTestCarry(Condition cond, Register rd, Register rs, Imm32 imm,
+                          Label* overflow) {
+    ma_add32TestCarry(cond, rd, rs, imm, overflow);
+  }
 
   // subtract
-  void ma_subTestOverflow(Register rd, Register rs, Register rt,
-                          Label* overflow);
+  void ma_sub32TestOverflow(Register rd, Register rs, Register rt,
+                            Label* overflow);
+
+  void ma_subPtrTestOverflow(Register rd, Register rs, Register rt,
+                             Label* overflow) {
+    ma_sub32TestOverflow(rd, rs, rt, overflow);
+  }
+
+  void ma_subPtrTestOverflow(Register rd, Register rs, Imm32 imm,
+                             Label* overflow) {
+    ma_li(ScratchRegister, imm);
+    ma_sub32TestOverflow(rd, rs, ScratchRegister, overflow);
+  }
+
+  void ma_mulPtrTestOverflow(Register rd, Register rs, Register rt,
+                             Label* overflow) {
+    ma_mul32TestOverflow(rd, rs, rt, overflow);
+  }
 
   // memory
   // shortcut for when we know we're transferring 32 bits of data
@@ -202,6 +239,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   void convertDoubleToFloat32(FloatRegister src, FloatRegister dest);
   void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                             bool negativeZeroCheck = true);
+  void convertDoubleToPtr(FloatRegister src, Register dest, Label* fail,
+                          bool negativeZeroCheck = true);
   void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,
                              bool negativeZeroCheck = true);
 

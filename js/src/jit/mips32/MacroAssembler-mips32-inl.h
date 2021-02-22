@@ -68,6 +68,10 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
   ma_sra(dest.high, dest.low, Imm32(31));
 }
 
+void MacroAssembler::move32SignExtendToPtr(Register src, Register dest) {
+  move32(src, dest);
+}
+
 void MacroAssembler::move32ZeroExtendToPtr(Register src, Register dest) {
   move32(src, dest);
 }
@@ -937,6 +941,17 @@ void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+void MacroAssembler::cmpPtrMovePtr(Condition cond, Register lhs, Register rhs,
+                                   Register src, Register dest) {
+  cmp32Move32(cond, lhs, rhs, src, dest);
+}
+
+void MacroAssembler::cmpPtrMovePtr(Condition cond, Register lhs,
+                                   const Address& rhs, Register src,
+                                   Register dest) {
+  cmp32Move32(cond, lhs, rhs, src, dest);
+}
 
 void MacroAssemblerMIPSCompat::incrementInt32Value(const Address& addr) {
   asMasm().add32(Imm32(1), ToPayload(addr));

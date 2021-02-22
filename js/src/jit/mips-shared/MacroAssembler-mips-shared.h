@@ -133,23 +133,24 @@ class MacroAssemblerMIPSShared : public Assembler {
   void ma_addu(Register rd, Register rs, Imm32 imm);
   void ma_addu(Register rd, Register rs);
   void ma_addu(Register rd, Imm32 imm);
-  void ma_addTestCarry(Condition cond, Register rd, Register rs, Register rt,
-                       Label* overflow);
-  void ma_addTestCarry(Condition cond, Register rd, Register rs, Imm32 imm,
-                       Label* overflow);
+  void ma_add32TestCarry(Condition cond, Register rd, Register rs, Register rt,
+                         Label* overflow);
+  void ma_add32TestCarry(Condition cond, Register rd, Register rs, Imm32 imm,
+                         Label* overflow);
 
   // subtract
   void ma_subu(Register rd, Register rs, Imm32 imm);
   void ma_subu(Register rd, Register rs);
   void ma_subu(Register rd, Imm32 imm);
-  void ma_subTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
+  void ma_sub32TestOverflow(Register rd, Register rs, Imm32 imm,
+                            Label* overflow);
 
   // multiplies.  For now, there are only few that we care about.
   void ma_mul(Register rd, Register rs, Imm32 imm);
-  void ma_mul_branch_overflow(Register rd, Register rs, Register rt,
-                              Label* overflow);
-  void ma_mul_branch_overflow(Register rd, Register rs, Imm32 imm,
-                              Label* overflow);
+  void ma_mul32TestOverflow(Register rd, Register rs, Register rt,
+                            Label* overflow);
+  void ma_mul32TestOverflow(Register rd, Register rs, Imm32 imm,
+                            Label* overflow);
 
   // divisions
   void ma_div_branch_overflow(Register rd, Register rs, Register rt,
@@ -202,6 +203,7 @@ class MacroAssemblerMIPSShared : public Assembler {
 
   void ma_cmp_set(Register dst, Register lhs, Register rhs, Condition c);
   void ma_cmp_set(Register dst, Register lhs, Imm32 imm, Condition c);
+  // void ma_cmp_set(Register dst, Address address, Imm32 imm, Condition c);
   void ma_cmp_set_double(Register dst, FloatRegister lhs, FloatRegister rhs,
                          DoubleCondition c);
   void ma_cmp_set_float32(Register dst, FloatRegister lhs, FloatRegister rhs,
