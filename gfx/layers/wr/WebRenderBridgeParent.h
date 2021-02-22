@@ -202,7 +202,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       nsTArray<CompositionPayload>&& aPayloads,
       const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
-  TransactionId FlushTransactionIdsForEpoch(
+  Maybe<TransactionId> FlushTransactionIdsForEpoch(
       const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
       const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
       const TimeStamp& aEndTime, UiCompositorControllerParent* aUiController,

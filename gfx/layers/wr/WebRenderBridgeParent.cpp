@@ -2277,12 +2277,12 @@ void WebRenderBridgeParent::NotifyDidSceneBuild(
   CompositeToTarget(mCompositorScheduler->GetLastVsyncId(), nullptr, nullptr);
 }
 
-TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
+Maybe<TransactionId> WebRenderBridgeParent::FlushTransactionIdsForEpoch(
     const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
     const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
     const TimeStamp& aEndTime, UiCompositorControllerParent* aUiController,
     wr::RendererStats* aStats, nsTArray<FrameStats>* aOutputStats) {
-  TransactionId id{0};
+  Maybe<TransactionId> id = Nothing();
   while (!mPendingTransactionIds.empty()) {
     const auto& transactionId = mPendingTransactionIds.front();
 
@@ -2339,7 +2339,7 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
 
     RecordCompositionPayloadsPresented(aEndTime, transactionId.mPayloads);
 
-    id = transactionId.mId;
+    id = Some(transactionId.mId);
     mPendingTransactionIds.pop_front();
   }
   return id;

@@ -2275,12 +2275,16 @@ void CompositorBridgeParent::NotifyPipelineRendered(
   RefPtr<UiCompositorControllerParent> uiController =
       UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeID);
 
-  TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(
+  Maybe<TransactionId> transactionId = wrBridge->FlushTransactionIdsForEpoch(
       aEpoch, aCompositeStartId, aCompositeStart, aRenderStart, aCompositeEnd,
       uiController, aStats, &stats);
+  if (!transactionId) {
+    MOZ_ASSERT(stats.IsEmpty());
+    return;
+  }
 
   LayersId layersId = isRoot ? LayersId{0} : wrBridge->GetLayersId();
-  Unused << compBridge->SendDidComposite(layersId, transactionId,
+  Unused << compBridge->SendDidComposite(layersId, *transactionId,
                                          aCompositeStart, aCompositeEnd);
 
   if (!stats.IsEmpty()) {
