@@ -22,6 +22,9 @@ MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(
   mSurface = MacIOSurface::LookupSurface(
       aDescriptor.surfaceId(), aDescriptor.scaleFactor(),
       !aDescriptor.isOpaque(), aDescriptor.yUVColorSpace());
+  if (!mSurface) {
+    gfxCriticalNote << "Failed to look up MacIOSurface";
+  }
 }
 
 MacIOSurfaceTextureHostOGL::~MacIOSurfaceTextureHostOGL() {
@@ -139,6 +142,10 @@ void MacIOSurfaceTextureHostOGL::CreateRenderTexture(
 }
 
 uint32_t MacIOSurfaceTextureHostOGL::NumSubTextures() {
+  if (!mSurface) {
+    return 0;
+  }
+
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
