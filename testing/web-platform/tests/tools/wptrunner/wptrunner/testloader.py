@@ -50,6 +50,16 @@ class TestGroupsFile(object):
     def __getitem__(self, key):
         return self._data[key]
 
+def read_include_from_file(file):
+    new_include = []
+    with open(file) as f:
+        for line in f:
+            line = line.strip()
+            # Allow whole-line comments;
+            # fragments mean we can't have partial line #-based comments
+            if len(line) > 0 and not line.startswith("#"):
+                new_include.append(line)
+    return new_include
 
 def update_include_for_groups(test_groups, include):
     if include is None:
