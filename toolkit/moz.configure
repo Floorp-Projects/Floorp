@@ -1838,73 +1838,68 @@ with only_when(compile_environment):
     set_config("LIBJPEG_TURBO_ASFLAGS", in_tree_jpeg.flags)
 
 
-# Libav-fft Support
+# FFmpeg's ffvpx configuration
 # ==============================================================
 with only_when(compile_environment):
 
     @depends(target)
     def libav_fft(target):
-        flags = None
-        if target.kernel == "WINNT" and target.cpu == "x86":
-            flags = ["-DPIC", "-DWIN32"]
-        elif target.kernel == "WINNT" and target.cpu == "aarch64":
-            flags = ["-DPIC", "-DWIN64"]
-        elif target.cpu == "x86_64":
-            if target.kernel == "Darwin":
-                flags = ["-D__x86_64__", "-DPIC", "-DMACHO"]
-            elif target.kernel == "WINNT":
-                flags = ["-D__x86_64__", "-DPIC", "-DWIN64", "-DMSVC"]
-            else:
-                flags = ["-D__x86_64__", "-DPIC", "-DELF"]
-        if flags:
-            return namespace(flags=flags)
+        return target.kernel == "WINNT" or target.cpu == "x86_64"
 
     set_config("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
     set_define("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
 
 
-# FFmpeg's ffvpx configuration
-# ==============================================================
 # Artifact builds need MOZ_FFVPX defined as if compilation happened.
 with only_when(compile_environment | artifact_builds):
 
-    @depends(libav_fft, vpx_as_flags, target)
-    def ffvpx(libav_fft, vpx_as_flags, target):
-        enable = flac_only = use_yasm = False
+    @depends(vpx_as_flags, target)
+    def ffvpx(vpx_as_flags, target):
+        enable = use_yasm = True
+        flac_only = False
         flags = []
-        if (
-            target.cpu in ("x86", "x86_64")
-            or target.cpu == "aarch64"
-            and target.kernel in ("WINNT", "Darwin")
-        ):
-            enable = True
-            if libav_fft and libav_fft.flags:
-                use_yasm = True
-                flags.extend(libav_fft.flags)
-                if target.kernel == "WINNT":
-                    if target.cpu == "x86":
-                        # 32-bit windows need to prefix symbols with an underscore.
-                        flags.extend(("-DPREFIX", "-Pconfig_win32.asm"))
-                    elif target.cpu == "aarch64":
-                        use_yasm = False
-                    else:
-                        flags.append("-Pconfig_win64.asm")
-                elif target.kernel == "Darwin":
-                    # 32/64-bit macosx assemblers need to prefix symbols with an
-                    # underscore.
-                    flags.extend(("-DPREFIX", "-Pconfig_darwin64.asm"))
-                else:
-                    # Default to unix.
-                    flags.append("-Pconfig_unix64.asm")
+
+        if target.kernel == "WINNT":
+            if target.cpu == "x86":
+                # 32-bit windows need to prefix symbols with an underscore.
+                flags = ["-DPIC", "-DWIN32", "-DPREFIX", "-Pconfig_win32.asm"]
+            elif target.cpu == "x86_64":
+                flags = [
+                    "-D__x86_64__",
+                    "-DPIC",
+                    "-DWIN64",
+                    "-DMSVC",
+                    "-Pconfig_win64.asm",
+                ]
+            elif target.cpu == "aarch64":
+                flags = ["-DPIC", "-DWIN64"]
+                use_yasm = False
+        elif target.kernel == "Darwin":
+            if target.cpu == "x86_64":
+                # 32/64-bit macosx asemblers need to prefix symbols with an
+                # underscore.
+                flags = [
+                    "-D__x86_64__",
+                    "-DPIC",
+                    "-DMACHO",
+                    "-DPREFIX",
+                    "-Pconfig_darwin64.asm",
+                ]
             else:
                 flac_only = True
-        elif target.cpu in ("arm", "aarch64") and target.kernel not in (
-            "WINNT",
-            "Darwin",
-        ):
-            enable = flac_only = True
+        elif target.cpu == "x86_64":
+            flags = ["-D__x86_64__", "-DPIC", "-DELF", "-Pconfig_unix64.asm"]
+        elif target.cpu == "x86":
+            flac_only = True
+        elif target.cpu in ("arm", "aarch64"):
+            flac_only = True
             if vpx_as_flags:
                 flags.extend(vpx_as_flags)
+        else:
+            enable = False
+
+        if flac_only or not enable:
+            use_yasm = False
 
         if use_yasm:
             # default disabled components
