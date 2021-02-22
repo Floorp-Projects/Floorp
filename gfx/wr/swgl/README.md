@@ -84,26 +84,26 @@ during span rasterization, it uses the same distance field method as WR on
 those span boundary pixels to estimate the coverage based on edge slope.
 
 ```
-swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+void swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+void swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds, float layer);
 
-swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
-swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
 
-swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
-swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
+void swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
 
-swgl_commitTextureNearestRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-swgl_commitTextureNearestColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureNearestRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+void swgl_commitTextureNearestColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
 
-swgl_commitTextureNearestRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
-swgl_commitTextureNearestRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureNearestRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
+void swgl_commitTextureNearestRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
 
-swgl_commitTextureRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-swgl_commitTextureColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+void swgl_commitTextureColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
 
-swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
-swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
+void swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
 ```
 
 Samples and commits an entire span of texture starting at the given uv and
@@ -125,4 +125,14 @@ scale and offset the UVs, assuming the UVs are normalized to repeat in the
 range 0 to 1. For NearestRepeat variations, it is assumed the repeat rect is
 always within the bounds.
 
+```
+// Premultiplied alpha over blend, but with source color set to source alpha modulated with a constant color.
+void swgl_blendDropShadow(vec4 color);
+```
+
+SWGL allows overriding the blend mode per-primitive by calling swgl_blend
+intrinsics in the vertex shader. The existing blend mode set by the GL is
+replaced with the one specified by the intrinsic for the current primitive.
+The blend mode will be reset to the blend mode set by the GL for the next
+primitive after the current one, even within the same draw call.
 

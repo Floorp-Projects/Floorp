@@ -55,6 +55,14 @@ static ALWAYS_INLINE NoColor packColor(UNUSED P* buf, NoColor noColor) {
   return noColor;
 }
 
+// Single argument variation that takes an explicit destination buffer type.
+template <typename P, typename C>
+static ALWAYS_INLINE auto packColor(C color) {
+  // Just pass in a typed null pointer, as the pack routines never use the
+  // pointer's value, just its type.
+  return packColor((P*)0, color);
+}
+
 static ALWAYS_INLINE void commit_span(uint32_t* buf, WideRGBA8 r) {
   unaligned_store(buf, pack(r));
 }
@@ -1663,6 +1671,13 @@ static ALWAYS_INLINE int calcAAEdgeMask(bvec4_scalar mask) {
     if (swgl_AAEdgeMask) {                   \
       swgl_ClipFlags |= SWGL_CLIP_FLAG_AA;   \
     }                                        \
+  } while (0)
+
+#define swgl_blendDropShadow(color)                         \
+  do {                                                      \
+    swgl_ClipFlags |= SWGL_CLIP_FLAG_BLEND_OVERRIDE;        \
+    swgl_BlendOverride = BLEND_KEY(SWGL_BLEND_DROP_SHADOW); \
+    swgl_BlendColorRGBA8 = packColor<uint32_t>(color);      \
   } while (0)
 
 // Dispatch helper used by the GLSL translator to swgl_drawSpan functions.
