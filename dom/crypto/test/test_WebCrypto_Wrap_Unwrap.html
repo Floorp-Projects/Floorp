@@ -179,7 +179,7 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
-  "JWK wrap/unwrap round-trip, with AES-GCM",
+  "HMAC JWK wrap/unwrap round-trip, with AES-GCM",
   function() {
     var that = this;
     var genAlg = { name: "HMAC", hash: "SHA-384", length: 512 };
@@ -213,6 +213,51 @@ TestArray.addTest(
       .then(
         complete(that, function(x) {
           return exists(x.k) && x.k == originalKeyJwk.k;
+        }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "ECDSA private JWK wrap/unwrap round-trip, with AES-GCM",
+  function() {
+    var that = this;
+    var genAlg = { name: "ECDSA", namedCurve: "P-256" };
+    var wrapAlg = { name: "AES-GCM", iv: tv.aes_gcm_enc.iv };
+    var wrapKey, originalKey, originalKeyJwk;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+    function doWrap() {
+      return crypto.subtle.wrapKey("jwk", originalKey, wrapKey, wrapAlg);
+    }
+    function doUnwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey("jwk", wrappedKey, wrapKey, wrapAlg,
+                                     genAlg, true, ["sign"]);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk,
+                              "AES-GCM", false, ["wrapKey", "unwrapKey"])
+        .then(function(x) { wrapKey = x; }),
+      crypto.subtle.generateKey(genAlg, true, ["sign", "verify"])
+        .then(function(x) { originalKey = x.privateKey; return x.privateKey; })
+        .then(doExport)
+        .then(function(x) { originalKeyJwk = x; }),
+    ])
+      .then(doWrap)
+      .then(doUnwrap)
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+     return (x.kty == originalKeyJwk.kty) &&
+            (x.crv == originalKeyJwk.crv) &&
+            (x.d == originalKeyJwk.d) &&
+            (x.x == originalKeyJwk.x) &&
+            (x.y == originalKeyJwk.y);
         }),
         error(that)
       );
