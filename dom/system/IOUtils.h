@@ -14,12 +14,14 @@
 #include "mozilla/DataMutex.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Result.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISerialEventTarget.h"
 #include "nsPrintfCString.h"
+#include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
@@ -119,6 +121,10 @@ class IOUtils final {
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
 
+  static void GetProfileBeforeChange(GlobalObject& aGlobal,
+                                     JS::MutableHandle<JS::Value>,
+                                     ErrorResult& aRv);
+
   class JsBuffer;
 
   /**
@@ -142,23 +148,33 @@ class IOUtils final {
   struct InternalFileInfo;
   struct InternalWriteOpts;
   class MozLZ4;
+  class EventQueue;
 
-  static StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
-      sBackgroundEventTarget;
-  static StaticRefPtr<nsIAsyncShutdownClient> sBarrier;
-  static Atomic<bool> sShutdownStarted;
-
-  static already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier();
-
-  static already_AddRefed<nsISerialEventTarget> GetBackgroundEventTarget();
-
-  static void SetShutdownHooks();
-
+  /**
+   * Dispatch a task on the event queue.
+   *
+   * If shutdown has finished, the promise will be rejected appropriately.
+   *
+   * @param aFunc The task to run.
+   *
+   * @return The MozPromise for chaining effects on the task that was run.
+   *
+   *         If the event queue is already shut down, a reject promise is
+   * returned.
+   */
   template <typename OkT, typename Fn>
-  static RefPtr<IOPromise<OkT>> RunOnBackgroundThread(Fn aFunc);
+  static RefPtr<IOPromise<OkT>> Dispatch(Fn aFunc);
 
+  /**
+   * Dispatch a task on the event queue and resolve or reject the associated
+   * promise based on the result.
+   *
+   * @param aPromise The promise corresponding to the task running on the event
+   * queue.
+   * @param aFunc The task to run.
+   */
   template <typename OkT, typename Fn>
-  static void RunOnBackgroundThreadAndResolve(Promise* aPromise, Fn aFunc);
+  static void DispatchAndResolve(Promise* aPromise, Fn aFunc);
 
   /**
    * Creates a new JS Promise.
@@ -365,6 +381,67 @@ class IOUtils final {
    * @return Whether or not the file exists.
    */
   static Result<bool, IOError> ExistsSync(nsIFile* aFile);
+
+  using EventQueueMutex = StaticDataMutex<StaticAutoPtr<EventQueue>>;
+
+  /**
+   * Lock the event queue and return a handle. If shutdown has not yet
+   * finished, the event queue will be constructed if necessary.
+   *
+   *
+   * @returns A lock handle to the event queue mutex, which can be used to
+   *          retrieve the EventQueue. If |Some| is returned, the event queue is
+   *          guaranteed to be non-null.
+   *          If shutdown has finished, |Nothing| will be returned instead.
+   */
+  static Maybe<EventQueueMutex::AutoLock> GetEventQueue();
+
+  /**
+   * Our event queue.
+   *
+   * This mutex also guards writing to sShutdownFinished.
+   */
+  static EventQueueMutex sEventQueue;
+  static Atomic<bool> sShutdownFinished;
+};
+
+/**
+ * The IOUtils event queue.
+ */
+class IOUtils::EventQueue final {
+ public:
+  EventQueue();
+
+  EventQueue(const EventQueue&) = delete;
+  EventQueue(EventQueue&&) = delete;
+  EventQueue& operator=(const EventQueue&) = delete;
+  EventQueue& operator=(EventQueue&&) = delete;
+
+  /**
+   * Set up shutdown hooks to free our internals at shutdown.
+   *
+   * NB: Must be called on main thread.
+   */
+  nsresult SetShutdownHooks();
+
+  template <typename OkT, typename Fn>
+  RefPtr<IOPromise<OkT>> Dispatch(Fn aFunc);
+
+  /**
+   * Set the shutdown started flag, preventing further jobs from being
+   * scheduled.
+   */
+  void SetShutdownFinished() {
+    MOZ_ASSERT(!IOUtils::sShutdownFinished);
+    IOUtils::sShutdownFinished = true;
+  }
+
+  already_AddRefed<nsIAsyncShutdownClient> ProfileBeforeChangeClient();
+  already_AddRefed<nsIAsyncShutdownBarrier> ProfileBeforeChangeBarrier();
+
+ private:
+  nsCOMPtr<nsISerialEventTarget> mBackgroundEventTarget = nullptr;
+  nsCOMPtr<nsIAsyncShutdownBarrier> mProfileBeforeChangeBarrier = nullptr;
 };
 
 /**
@@ -477,13 +554,19 @@ class IOUtils::MozLZ4 {
       Span<const uint8_t> aFileContents, IOUtils::BufferKind);
 };
 
-class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker {
+class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker,
+                               public nsIAsyncShutdownCompletionCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
+  NS_DECL_NSIASYNCSHUTDOWNCOMPLETIONCALLBACK
 
  private:
   virtual ~IOUtilsShutdownBlocker() = default;
+
+  nsresult Done(IOUtils::EventQueue& aEventQueue);
+
+  nsMainThreadPtrHandle<nsIAsyncShutdownClient> mParentClient;
 };
 
 /**
