@@ -59,7 +59,7 @@ fuzzy-if(Android,0-19,0-4) fuzzy-if(webrender&&gtkWidget,13-13,28-32) fuzzy-if(w
 fuzzy-if(Android,0-7,0-4) fuzzy-if(webrender&&gtkWidget,29-30,28-32) fuzzy-if(webrender&&cocoaWidget,19-20,44-44) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html # Bug 1604338
 skip-if(!asyncPan) == perspective-scrolling-5.html perspective-scrolling-5-ref.html
 pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) == disable-apz-for-sle-pages.html disable-apz-for-sle-pages-ref.html
-fuzzy-if(browserIsRemote&&d2d,0-1,0-22) skip-if(!asyncPan) fuzzy-if(geckoview,2-2,242-242) skip-if(geckoview&&debug) == background-blend-mode-1.html background-blend-mode-1-ref.html # bug 1558286 for GV
+fuzzy-if(browserIsRemote&&d2d,0-1,0-22) skip-if(!asyncPan) fuzzy-if(geckoview,2-2,242-242) skip-if(geckoview&&debug) fuzzy-if(webrender&&swgl,0-255,0-11) == background-blend-mode-1.html background-blend-mode-1-ref.html # bug 1558286 for GV
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
 fuzzy-if(Android,0-19,0-4) fuzzy-if(webrender&&gtkWidget,19-19,28-32) fuzzy-if(webrender&&cocoaWidget,21-21,44-44) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html # Bug 1604338
