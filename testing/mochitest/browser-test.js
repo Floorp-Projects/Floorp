@@ -780,6 +780,7 @@ Tester.prototype = {
                 "We expect at least one assertion to fail because this" +
                 " test file is marked as fail-if in the manifest.",
               todo: true,
+              knownFailure: this.currentTest.allowFailure,
             })
           );
         }
@@ -1206,8 +1207,15 @@ Tester.prototype = {
               return;
             }
 
+            let knownFailure = false;
+            if (gConfig.timeoutAsPass) {
+              knownFailure = true;
+            }
             self.currentTest.addResult(
-              new testResult({ name: "Test timed out" })
+              new testResult({
+                name: "Test timed out",
+                allowFailure: knownFailure,
+              })
             );
             self.currentTest.timedOut = true;
             self.currentTest.scope.__waitTimer = null;

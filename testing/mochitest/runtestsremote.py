@@ -364,6 +364,8 @@ class MochiRemote(MochitestDesktop):
         bisectChunk=None,
         marionette_args=None,
         e10s=True,
+        runFailures=False,
+        crashAsPass=False,
     ):
         """
         Run the app, log the duration it took to execute, return the status code.
@@ -396,6 +398,9 @@ class MochiRemote(MochitestDesktop):
             env=self.environment(env=env, crashreporter=not debuggerInfo),
             e10s=e10s,
         )
+
+        # TODO: not using runFailures or crashAsPass, if we choose to use them
+        # we need to adjust status and check_for_crashes
         self.log.info("runtestsremote.py | Application pid: %d" % pid)
         if not rpm.wait(timeout):
             status = 1
