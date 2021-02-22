@@ -335,39 +335,6 @@ static JSObject* ResolveModuleObjectProperty(JSContext* aCx,
   return aModObj;
 }
 
-static mozilla::Result<nsCString, nsresult> ReadScript(
-    ComponentLoaderInfo& aInfo);
-
-static nsresult AnnotateScriptContents(CrashReporter::Annotation aName,
-                                       const nsACString& aURI) {
-  ComponentLoaderInfo info(aURI);
-
-  nsCString str;
-  MOZ_TRY_VAR(str, ReadScript(info));
-
-  // The crash reporter won't accept any strings with embedded nuls. We
-  // shouldn't have any here, but if we do because of data corruption, we
-  // still want the annotation. So replace any embedded nuls before
-  // annotating.
-  str.ReplaceSubstring("\0"_ns, "\\0"_ns);
-
-  CrashReporter::AnnotateCrashReport(aName, str);
-
-  return NS_OK;
-}
-
-nsresult mozJSComponentLoader::AnnotateCrashReport() {
-  Unused << AnnotateScriptContents(
-      CrashReporter::Annotation::nsAsyncShutdownComponent,
-      "resource://gre/components/nsAsyncShutdown.js"_ns);
-
-  Unused << AnnotateScriptContents(
-      CrashReporter::Annotation::AsyncShutdownModule,
-      "resource://gre/modules/AsyncShutdown.jsm"_ns);
-
-  return NS_OK;
-}
-
 const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
   if (!NS_IsMainThread()) {
     MOZ_ASSERT(false, "Don't use JS components off the main thread");
@@ -397,34 +364,12 @@ const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
   jsapi.Init();
   JSContext* cx = jsapi.cx();
 
-  bool isCriticalModule = StringEndsWith(spec, "/nsAsyncShutdown.js"_ns);
-
   auto entry = MakeUnique<ModuleEntry>(RootingContext::get(cx));
   RootedValue exn(cx);
   rv = ObjectForLocation(info, file, &entry->obj, &entry->thisObjectKey,
-                         &entry->location, isCriticalModule, &exn);
-  if (NS_FAILED(rv)) {
-    // Temporary debugging assertion for bug 1403348:
-    if (isCriticalModule && !exn.isUndefined()) {
-      AnnotateCrashReport();
-
-      JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
-      JS_WrapValue(cx, &exn);
-
-      nsAutoCString file;
-      uint32_t line;
-      uint32_t column;
-      nsAutoString msg;
-      nsContentUtils::ExtractErrorValues(cx, exn, file, &line, &column, msg);
-
-      NS_ConvertUTF16toUTF8 cMsg(msg);
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Failed to load module \"%s\": "
-          "[\"%s\" {file: \"%s\", line: %u}]",
-          spec.get(), cMsg.get(), file.get(), line);
-    }
-    return nullptr;
-  }
+                         &entry->location, /* aPropagateExceptions */ false,
+                         &exn);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIComponentManager> cm;
   rv = NS_GetComponentManager(getter_AddRefs(cm));
