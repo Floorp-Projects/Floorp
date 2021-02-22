@@ -44,6 +44,7 @@
     #define SWGL_DRAW_SPAN
     #define SWGL_CLIP_MASK
     #define SWGL_ANTIALIAS
+    #define SWGL_BLEND
 #endif
 
 #ifdef WR_VERTEX_SHADER

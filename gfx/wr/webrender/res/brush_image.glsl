@@ -236,8 +236,14 @@ void brush_vs(
     switch (color_mode) {
         case COLOR_MODE_ALPHA:
         case COLOR_MODE_BITMAP:
-            v_mask_swizzle = vec2(0.0, 1.0);
-            v_color = image_data.color;
+            #ifdef SWGL_BLEND
+                swgl_blendDropShadow(image_data.color);
+                v_mask_swizzle = vec2(1.0, 0.0);
+                v_color = vec4(1.0);
+            #else
+                v_mask_swizzle = vec2(0.0, 1.0);
+                v_color = image_data.color;
+            #endif
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
         case COLOR_MODE_IMAGE:
