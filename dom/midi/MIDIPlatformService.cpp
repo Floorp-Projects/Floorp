@@ -81,7 +81,7 @@ void MIDIPlatformService::QueueMessages(const nsAString& aId,
   ::mozilla::ipc::AssertIsOnBackgroundThread();
   {
     MutexAutoLock lock(mMessageQueueMutex);
-    MIDIMessageQueue* msgQueue = mMessageQueues.LookupOrAdd(aId);
+    MIDIMessageQueue* msgQueue = mMessageQueues.GetOrInsertNew(aId);
     msgQueue->Add(aMsgs);
     ScheduleSend(aId);
   }

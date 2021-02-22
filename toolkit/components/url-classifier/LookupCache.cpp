@@ -933,7 +933,7 @@ void LookupCacheV2::AddGethashResultToCache(
         reinterpret_cast<const char*>(add.CompleteHash().buf), COMPLETE_SIZE);
 
     CachedFullHashResponse* response =
-        mFullHashCache.LookupOrAdd(add.ToUint32());
+        mFullHashCache.GetOrInsertNew(add.ToUint32());
     response->negativeCacheExpirySec = defaultExpirySec;
 
     FullHashExpiryCache& fullHashes = response->fullHashes;
@@ -942,7 +942,7 @@ void LookupCacheV2::AddGethashResultToCache(
 
   for (const Prefix& prefix : aMissPrefixes) {
     CachedFullHashResponse* response =
-        mFullHashCache.LookupOrAdd(prefix.ToUint32());
+        mFullHashCache.GetOrInsertNew(prefix.ToUint32());
 
     response->negativeCacheExpirySec = defaultExpirySec;
   }

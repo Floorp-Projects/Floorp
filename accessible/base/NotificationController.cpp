@@ -428,7 +428,7 @@ void NotificationController::ScheduleChildDocBinding(DocAccessible* aDocument) {
 void NotificationController::ScheduleContentInsertion(
     LocalAccessible* aContainer, nsTArray<nsCOMPtr<nsIContent>>& aInsertions) {
   if (!aInsertions.IsEmpty()) {
-    mContentInsertions.LookupOrAdd(aContainer)->AppendElements(aInsertions);
+    mContentInsertions.GetOrInsertNew(aContainer)->AppendElements(aInsertions);
     ScheduleProcessing();
   }
 }
@@ -741,7 +741,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
           mDocument->AccessibleOrTrueContainer(containerNode, true);
       if (container) {
         nsTArray<nsCOMPtr<nsIContent>>* list =
-            mContentInsertions.LookupOrAdd(container);
+            mContentInsertions.GetOrInsertNew(container);
         list->AppendElement(textNode);
       }
     }

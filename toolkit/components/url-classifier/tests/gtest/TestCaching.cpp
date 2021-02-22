@@ -46,7 +46,7 @@ static void SetupCacheEntry(LookupCacheV4* aLookupCache,
   Prefix prefix;
   prefix.FromPlaintext(aCompletion);
 
-  CachedFullHashResponse* response = map.LookupOrAdd(prefix.ToUint32());
+  CachedFullHashResponse* response = map.GetOrInsertNew(prefix.ToUint32());
 
   response->negativeCacheExpirySec =
       aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
@@ -255,7 +255,7 @@ TEST(UrlClassifierCaching, NegativeCacheExpireV4)
   nsCOMPtr<nsICryptoHash> cryptoHash =
       do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
   prefix.FromPlaintext(NEG_CACHE_EXPIRED_URL);
-  CachedFullHashResponse* response = map.LookupOrAdd(prefix.ToUint32());
+  CachedFullHashResponse* response = map.GetOrInsertNew(prefix.ToUint32());
 
   response->negativeCacheExpirySec = EXPIRED_TIME_SEC;
 

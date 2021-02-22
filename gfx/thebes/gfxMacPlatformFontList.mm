@@ -1079,7 +1079,7 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
           MOZ_ASSERT(false, "single-face family already known");
           break;
         }
-        auto aliasData = mAliasTable.LookupOrAdd(key);
+        auto aliasData = mAliasTable.GetOrInsertNew(key);
         // The "alias" here isn't based on an existing family, so we don't call
         // aliasData->InitFromFamily(); the various flags are left as defaults.
         aliasData->mFaces.AppendElement(facePtrs[i]);
@@ -1885,7 +1885,7 @@ void gfxMacPlatformFontList::ReadFaceNamesForFamily(fontlist::Family* aFamily,
     for (const auto& alias : otherFamilyNames) {
       nsAutoCString key;
       GenerateFontListKey(alias, key);
-      auto aliasData = mAliasTable.LookupOrAdd(key);
+      auto aliasData = mAliasTable.GetOrInsertNew(key);
       aliasData->InitFromFamily(aFamily, canonicalName);
       aliasData->mFaces.AppendElement(facePtrs[i]);
     }

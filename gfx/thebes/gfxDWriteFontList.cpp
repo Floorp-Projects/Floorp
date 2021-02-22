@@ -1427,7 +1427,7 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
       for (const auto& alias : otherFamilyNames) {
         nsAutoCString key(alias);
         ToLowerCase(key);
-        auto aliasData = mAliasTable.LookupOrAdd(key);
+        auto aliasData = mAliasTable.GetOrInsertNew(key);
         aliasData->InitFromFamily(aFamily, familyName);
         aliasData->mFaces.AppendElement(facePtrs[i]);
       }

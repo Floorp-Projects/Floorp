@@ -352,7 +352,7 @@ CustomElementDefinition* CustomElementRegistry::LookupCustomElementDefinition(
     mElementCreationCallbacks.Get(aTypeAtom, getter_AddRefs(callback));
     if (callback) {
       mElementCreationCallbacks.Remove(aTypeAtom);
-      mElementCreationCallbacksUpgradeCandidatesMap.LookupOrAdd(aTypeAtom);
+      mElementCreationCallbacksUpgradeCandidatesMap.GetOrInsertNew(aTypeAtom);
       RefPtr<Runnable> runnable =
           new RunCustomElementCreationCallback(this, aTypeAtom, callback);
       nsContentUtils::AddScriptRunner(runnable.forget());
@@ -409,7 +409,7 @@ void CustomElementRegistry::RegisterUnresolvedElement(Element* aElement,
   }
 
   nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>* unresolved =
-      mCandidatesMap.LookupOrAdd(typeName);
+      mCandidatesMap.GetOrInsertNew(typeName);
   nsWeakPtr elem = do_GetWeakReference(aElement);
   unresolved->PutEntry(elem);
 }

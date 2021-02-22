@@ -269,7 +269,7 @@ void CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
   mCookiesMap.Get(key, &cookiesList);
 
   if (!cookiesList) {
-    cookiesList = mCookiesMap.LookupOrAdd(key);
+    cookiesList = mCookiesMap.GetOrInsertNew(key);
   }
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
     Cookie* cookie = cookiesList->ElementAt(i);

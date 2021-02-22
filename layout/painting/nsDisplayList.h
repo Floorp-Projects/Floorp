@@ -958,7 +958,8 @@ class nsDisplayListBuilder {
       return;
     }
 
-    nsTArray<ThemeGeometry>* geometries = mThemeGeometries.LookupOrAdd(aItem);
+    nsTArray<ThemeGeometry>* geometries =
+        mThemeGeometries.GetOrInsertNew(aItem);
     geometries->AppendElement(ThemeGeometry(aWidgetType, aRect));
   }
 
