@@ -35,6 +35,16 @@ function createStorageSpec(options) {
   childSpecs[options.typeName] = protocol.generateActorSpec({
     typeName: options.typeName,
     methods,
+    events: {
+      "single-store-update": {
+        type: "storesUpdate",
+        data: Arg(0, "storeUpdateObject"),
+      },
+      "single-store-cleared": {
+        type: "storesCleared",
+        data: Arg(0, "json"),
+      },
+    },
   });
 }
 
