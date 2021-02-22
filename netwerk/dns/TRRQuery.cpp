@@ -254,22 +254,22 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookup(
   if (resolverType == DNSResolverType::TRR) {
     if (mTrrAUsed == OK) {
       AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAOK);
+          TRRService::ProviderKey(),
+          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::trrAOK);
     } else if (mTrrAUsed == FAILED) {
       AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAFail);
+          TRRService::ProviderKey(),
+          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::trrAFail);
     }
 
     if (mTrrAAAAUsed == OK) {
       AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAAAAOK);
+          TRRService::ProviderKey(),
+          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::trrAAAAOK);
     } else if (mTrrAAAAUsed == FAILED) {
       AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAAAAFail);
+          TRRService::ProviderKey(),
+          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::trrAAAAFail);
     }
   }
 

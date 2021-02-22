@@ -406,9 +406,9 @@ void AddrHostRecord::ResolveComplete() {
       Telemetry::Accumulate(Telemetry::DNS_NATIVE_LOOKUP_TIME, millis);
     }
     AccumulateCategoricalKeyed(
-        TRRService::AutoDetectedKey(),
-        mNativeSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::osOK
-                       : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::osFail);
+        TRRService::ProviderKey(),
+        mNativeSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::osOK
+                       : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::osFail);
   }
 
   if (mResolverType == DNSResolverType::ODoH) {
@@ -429,13 +429,13 @@ void AddrHostRecord::ResolveComplete() {
   if (mResolverType == DNSResolverType::TRR) {
     if (mTRRSuccess) {
       uint32_t millis = static_cast<uint32_t>(mTrrDuration.ToMilliseconds());
-      Telemetry::Accumulate(Telemetry::DNS_TRR_LOOKUP_TIME2,
-                            TRRService::AutoDetectedKey(), millis);
+      Telemetry::Accumulate(Telemetry::DNS_TRR_LOOKUP_TIME3,
+                            TRRService::ProviderKey(), millis);
     }
     AccumulateCategoricalKeyed(
-        TRRService::AutoDetectedKey(),
-        mTRRSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrOK
-                    : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrFail);
+        TRRService::ProviderKey(),
+        mTRRSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::trrOK
+                    : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::trrFail);
   }
 
   if (nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
@@ -451,25 +451,25 @@ void AddrHostRecord::ResolveComplete() {
   if (mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
     if (flags & nsIDNSService::RESOLVE_DISABLE_TRR) {
       // TRR is disabled on request, which is a next-level back-off method.
-      Telemetry::Accumulate(Telemetry::DNS_TRR_DISABLED2,
-                            TRRService::AutoDetectedKey(), mNativeSuccess);
+      Telemetry::Accumulate(Telemetry::DNS_TRR_DISABLED3,
+                            TRRService::ProviderKey(), mNativeSuccess);
     } else {
       if (mTRRSuccess) {
-        AccumulateCategoricalKeyed(TRRService::AutoDetectedKey(),
-                                   Telemetry::LABELS_DNS_TRR_FIRST3::TRR);
+        AccumulateCategoricalKeyed(TRRService::ProviderKey(),
+                                   Telemetry::LABELS_DNS_TRR_FIRST4::TRR);
       } else if (mNativeSuccess) {
         if (mResolverType == DNSResolverType::TRR) {
           AccumulateCategoricalKeyed(
-              TRRService::AutoDetectedKey(),
-              Telemetry::LABELS_DNS_TRR_FIRST3::NativeAfterTRR);
+              TRRService::ProviderKey(),
+              Telemetry::LABELS_DNS_TRR_FIRST4::NativeAfterTRR);
         } else {
-          AccumulateCategoricalKeyed(TRRService::AutoDetectedKey(),
-                                     Telemetry::LABELS_DNS_TRR_FIRST3::Native);
+          AccumulateCategoricalKeyed(TRRService::ProviderKey(),
+                                     Telemetry::LABELS_DNS_TRR_FIRST4::Native);
         }
       } else {
         AccumulateCategoricalKeyed(
-            TRRService::AutoDetectedKey(),
-            Telemetry::LABELS_DNS_TRR_FIRST3::BothFailed);
+            TRRService::ProviderKey(),
+            Telemetry::LABELS_DNS_TRR_FIRST4::BothFailed);
       }
     }
   }
