@@ -449,7 +449,7 @@
       <menuitem id="toolbar-context-autohide-downloads-button"
                 oncommand="ToolbarContextMenu.onDownloadsAutoHideChange(event);"
                 type="checkbox"
-                data-lazy-l10n-id="toolbar-context-menu-auto-hide-downloads-button"
+                data-lazy-l10n-id="toolbar-context-menu-auto-hide-downloads-button-2"
                 contexttype="toolbaritem"/>
       <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode, 'toolbar-context-menu')"
                 data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"
@@ -479,7 +479,7 @@
                 contexttype="tabbar"
                 data-lazy-l10n-id="toolbar-context-menu-undo-close-tabs"
                 observes="History:UndoCloseTab"/>
-      <menuseparator/>
+      <menuseparator id="toolbarItemsMenuSeparator"/>
       <menuseparator id="viewToolbarsMenuSeparator"/>
       <!-- XXXgijs: we're using oncommand handler here to avoid the event being
                     redirected to the command element, thus preventing
@@ -490,7 +490,7 @@
       <menuitem oncommand="gCustomizeMode.enter()"
                 observes="cmd_CustomizeToolbars"
                 class="viewCustomizeToolbar"
-                data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar"/>
+                data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar-2"/>
     </menupopup>
 
     <menupopup id="blockedPopupOptions"
