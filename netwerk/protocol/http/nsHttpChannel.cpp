@@ -7329,8 +7329,8 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
   } else if (gTRRService && gTRRService->IsConfirmed()) {
     // Note this telemetry probe is not working when DNS resolution is done in
     // the socket process.
-    Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_TRR,
-                          TRRService::AutoDetectedKey(), NS_SUCCEEDED(mStatus));
+    Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_TRR2,
+                          TRRService::ProviderKey(), NS_SUCCEEDED(mStatus));
   }
 
   if (mRaceCacheWithNetwork) {

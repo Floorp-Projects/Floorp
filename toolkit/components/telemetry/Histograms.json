@@ -3138,14 +3138,14 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"]
   },
-  "HTTP_CHANNEL_ONSTART_SUCCESS_TRR" : {
+  "HTTP_CHANNEL_ONSTART_SUCCESS_TRR2" : {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
-    "description": "Successfully started HTTP channels when TRR is enabled; Keyed by TRR auto-detected",
-    "bug_numbers": [1640867],
+    "description": "Successfully started HTTP channels when TRR is enabled; Keyed by TRR domain",
+    "bug_numbers": [1640867, 1646452],
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
@@ -4195,7 +4195,7 @@
     "n_buckets": 50,
     "description": "Time for a successful DNS resolution (msec)"
   },
-  "DNS_TRR_LOOKUP_TIME2": {
+  "DNS_TRR_LOOKUP_TIME3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
@@ -4203,10 +4203,10 @@
     "high": 60000,
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1434852, 1640867],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
+    "bug_numbers": [1434852, 1640867, 1646452],
     "n_buckets": 50,
-    "description": "Time for a completed TRR resolution (msec); Keyed by TRR auto-detected"
+    "description": "Time for a completed TRR resolution (msec); Keyed by TRR domain"
   },
   "DNS_TRR_PROCESSING_TIME": {
     "record_in_processes": ["main"],
@@ -4290,48 +4290,48 @@
     "releaseChannelCollection": "opt-out",
     "description": "When in TRR-first mode if DNS succeeded, it lists the reason we may have skipped TRR"
   },
-  "DNS_TRR_FIRST3": {
+  "DNS_TRR_FIRST4": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "keyed": true,
     "labels": ["TRR", "NativeAfterTRR", "Native", "BothFailed"],
-    "bug_numbers": [1497252, 1640867],
+    "bug_numbers": [1497252, 1640867, 1646452],
     "releaseChannelCollection": "opt-out",
-    "description": "TRR-first mode distribution. 0=Worked, 1=fell back fine after TRR fail, 2=native worked, 3=both failed; Keyed by TRR auto-detected"
+    "description": "TRR-first mode distribution. 0=Worked, 1=fell back fine after TRR fail, 2=native worked, 3=both failed; Keyed by TRR domain"
   },
-  "DNS_TRR_DISABLED2": {
+  "DNS_TRR_DISABLED3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
-    "description": "Resolve success rate when in TRR-first and called TRR-disabled (fall-back mode); Keyed by TRR auto-detected",
-    "bug_numbers": [1472659, 1640867],
+    "description": "Resolve success rate when in TRR-first and called TRR-disabled (fall-back mode); Keyed by TRR domain",
+    "bug_numbers": [1472659, 1640867, 1646452],
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com"]
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
-  "DNS_TRR_BLACKLISTED2": {
+  "DNS_TRR_BLACKLISTED3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
-    "description": "DNS check for TRR was blocked by blacklist; Keyed by TRR auto-detected",
-    "bug_numbers": [1434852, 1640867],
-    "alert_emails": ["necko@mozilla.com"]
+    "description": "DNS check for TRR was blocked by blacklist; Keyed by TRR domain",
+    "bug_numbers": [1434852, 1640867, 1646452],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
-  "DNS_TRR_NS_VERFIFIED2": {
+  "DNS_TRR_NS_VERFIFIED3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
-    "description": "TRR managed to verify NS entry; Keyed by TRR auto-detected",
-    "bug_numbers": [1453825, 1640867],
-    "alert_emails": ["necko@mozilla.com"]
+    "description": "TRR managed to verify NS entry; Keyed by TRR domain",
+    "bug_numbers": [1453825, 1640867, 1646452],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
   "DNS_TRR_REQUEST_PER_CONN": {
     "record_in_processes": ["main", "content"],
@@ -4344,17 +4344,17 @@
     "bug_numbers": [1470853],
     "description": "Number of DOH requests per connection"
   },
-  "DNS_TRR_SUCCESS2": {
+  "DNS_TRR_SUCCESS3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "categorical",
     "keyed": true,
     "labels": ["Fine", "Timeout", "Bad"],
-    "description": "How often TRR (Trusted Recursive Resolver) requests are fine, time-out or error. Keyed by TRR auto-detected",
-    "bug_numbers": [1497438, 1640867],
+    "description": "How often TRR (Trusted Recursive Resolver) requests are fine, time-out or error. Keyed by TRR domain",
+    "bug_numbers": [1497438, 1640867, 1646452],
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com"]
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
   "DNS_LOOKUP_ALGORITHM": {
     "record_in_processes": ["main"],
@@ -4366,18 +4366,18 @@
     "bug_numbers": [1434852],
     "description": "DNS: lookup algorithm"
   },
-  "DNS_LOOKUP_DISPOSITION2": {
+  "DNS_LOOKUP_DISPOSITION3": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "keyed": true,
     "labels": ["trrOK", "trrFail", "trrAOK", "trrAFail",
 	       "trrAAAAOK", "trrAAAAFail", "osOK", "osFail"],
-    "bug_numbers": [1434852, 1640867],
+    "bug_numbers": [1434852, 1640867, 1646452],
     "releaseChannelCollection": "opt-out",
-    "description": "DNS: lookup algorithm; Keyed by TRR auto-detected"
+    "description": "DNS: lookup algorithm; Keyed by TRR domain"
   },
   "DNS_RENEWAL_TIME": {
     "record_in_processes": ["main"],
