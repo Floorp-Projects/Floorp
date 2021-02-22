@@ -3825,42 +3825,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             vec![Type::new(*s)],
             RunClass::Scalar,
         );
-        declare_function_ext(
-            state,
-            "swgl_textureLayerOffset",
-            None,
-            Type::new(Int),
-            vec![Type::new(*s), Type::new(Float)],
-            RunClass::Scalar,
-        );
-        declare_function(
-            state,
-            "swgl_linearQuantize",
-            None,
-            Type::new(Vec2),
-            vec![Type::new(*s), Type::new(Vec2)],
-        );
-        declare_function(
-            state,
-            "swgl_linearQuantizeStep",
-            None,
-            Type::new(Vec2),
-            vec![Type::new(*s), Type::new(Vec2)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearChunkRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Int)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearChunkColorRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Int)],
-        );
         declare_function(
             state,
             "swgl_commitTextureLinearRGBA8",
@@ -3896,6 +3860,80 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float), Type::new(Float)],
         );
+
+        declare_function(
+            state,
+            "swgl_commitTextureLinearRepeatRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureLinearRepeatColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+
+        declare_function(
+            state,
+            "swgl_commitTextureNearestRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureNearestColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureNearestRepeatRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureNearestRepeatColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+
+        declare_function(
+            state,
+            "swgl_commitTextureRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureRepeatRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureRepeatColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+        );
+
         declare_function(
             state,
             "swgl_commitGaussianBlurRGBA8",

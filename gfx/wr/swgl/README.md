@@ -59,29 +59,6 @@ the edge ends on that vertex. The easiest way to understand this ordering
 is that for a rectangle (x0,y0,x1,y1) then the edge Nth edge bit corresponds
 to the edge where Nth coordinate in the rectangle is constant.
 
-```
-swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-
-swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
-swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
-
-swgl_commitTextureLinearChunkRGBA8(sampler, vec2 uv, int layerOffset);
-swgl_commitTextureLinearChunkColorRGBA8(sampler, vec2 uv, vec4 color, int layerOffset);
-```
-
-Samples and commits an entire span of texture starting at the given uv and
-within the supplied uv bounds from the given layer. The color variations
-also accept a supplied color that modulates the result.
-
-The RGBA8 versions may only be used to commit within swgl_drawSpanRGBA8, and
-the R8 versions may only be used to commit within swgl_drawSpanR8.
-
-The chunk variations only commit a single chunk rather than an entire span. The
-uv coordinates must be clamped beforehand and then scaled appropriately with
-swgl_linearQuantize. The layer offset must be resolved to a linear offset with
-with swgl_textureLayerOffset.
-
 SWGL tries to use an anti-aliasing method that is reasonably close to WR's
 signed-distance field approximation. WR would normally try to discern the
 2D local-space coordinates of a given destination pixel relative to the
@@ -105,3 +82,47 @@ Essentially, SWGL just performs anti-aliasing on the actual geometry bounds,
 but when the pixels on a span's edge are determined to be partially covered
 during span rasterization, it uses the same distance field method as WR on
 those span boundary pixels to estimate the coverage based on edge slope.
+
+```
+swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+
+swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+
+swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
+swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+
+swgl_commitTextureNearestRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+swgl_commitTextureNearestColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+
+swgl_commitTextureNearestRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
+swgl_commitTextureNearestRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+
+swgl_commitTextureRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+swgl_commitTextureColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+
+swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
+swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+```
+
+Samples and commits an entire span of texture starting at the given uv and
+within the supplied uv bounds from the given layer. The color variations
+also accept a supplied color that modulates the result.
+
+The RGBA8 versions may only be used to commit within swgl_drawSpanRGBA8, and
+the R8 versions may only be used to commit within swgl_drawSpanR8.
+
+The Linear variations use a linear filter that bilinearly interpolates between
+the four samples near the pixel. The Nearest variations use a nearest filter
+that chooses the closest aliased sample to the center of the pixel. If neither
+Linear nor Nearest is specified in the swgl_commitTexture variation name, then
+it will automatically select either the Linear or Nearest variation depending
+on the sampler's specified filter.
+
+The Repeat variations require an optional repeat rect that specifies how to
+scale and offset the UVs, assuming the UVs are normalized to repeat in the
+range 0 to 1. For NearestRepeat variations, it is assumed the repeat rect is
+always within the bounds.
+
+
