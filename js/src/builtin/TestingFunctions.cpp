@@ -4877,7 +4877,7 @@ static bool ByteSizeOfScript(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-  if (fun->isNative()) {
+  if (fun->isNativeFun()) {
     JS_ReportErrorASCII(cx, "Argument must be a scripted function");
     return false;
   }

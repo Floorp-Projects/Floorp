@@ -411,20 +411,20 @@ JS_FRIEND_API JSFunction* js::NewFunctionByIdWithReserved(
 
 JS_FRIEND_API const Value& js::GetFunctionNativeReserved(JSObject* fun,
                                                          size_t which) {
-  MOZ_ASSERT(fun->as<JSFunction>().isNative());
+  MOZ_ASSERT(fun->as<JSFunction>().isNativeFun());
   return fun->as<JSFunction>().getExtendedSlot(which);
 }
 
 JS_FRIEND_API void js::SetFunctionNativeReserved(JSObject* fun, size_t which,
                                                  const Value& val) {
-  MOZ_ASSERT(fun->as<JSFunction>().isNative());
+  MOZ_ASSERT(fun->as<JSFunction>().isNativeFun());
   MOZ_ASSERT_IF(val.isObject(),
                 val.toObject().compartment() == fun->compartment());
   fun->as<JSFunction>().setExtendedSlot(which, val);
 }
 
 JS_FRIEND_API bool js::FunctionHasNativeReserved(JSObject* fun) {
-  MOZ_ASSERT(fun->as<JSFunction>().isNative());
+  MOZ_ASSERT(fun->as<JSFunction>().isNativeFun());
   return fun->as<JSFunction>().isExtended();
 }
 

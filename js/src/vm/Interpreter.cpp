@@ -508,7 +508,7 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
 
   /* Invoke native functions. */
   RootedFunction fun(cx, &args.callee().as<JSFunction>());
-  if (fun->isNative()) {
+  if (fun->isNativeFun()) {
     MOZ_ASSERT_IF(construct, !fun->isConstructor());
     JSNative native = fun->native();
     if (!construct && args.ignoresReturnValue() && fun->hasJitInfo()) {
@@ -566,7 +566,7 @@ static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
     // |this| already.  But don't do that if fval is a DOM function.
     HandleValue fval = args.calleev();
     if (!fval.isObject() || !fval.toObject().is<JSFunction>() ||
-        !fval.toObject().as<JSFunction>().isNative() ||
+        !fval.toObject().as<JSFunction>().isNativeFun() ||
         !fval.toObject().as<JSFunction>().hasJitInfo() ||
         fval.toObject()
             .as<JSFunction>()
@@ -620,7 +620,7 @@ static bool InternalConstruct(JSContext* cx, const AnyConstructArgs& args) {
   if (callee.is<JSFunction>()) {
     RootedFunction fun(cx, &callee.as<JSFunction>());
 
-    if (fun->isNative()) {
+    if (fun->isNativeFun()) {
       return CallJSNativeConstructor(cx, fun->native(), args);
     }
 
@@ -4562,7 +4562,7 @@ JSObject* js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent) {
   MOZ_ASSERT(!fun->isArrow());
 
   JSFunction* clone;
-  if (fun->isNative()) {
+  if (fun->isNativeFun()) {
     MOZ_ASSERT(IsAsmJSModule(fun));
     clone = CloneAsmJSModuleFunction(cx, fun);
   } else {
