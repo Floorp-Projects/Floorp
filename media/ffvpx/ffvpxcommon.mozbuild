@@ -20,10 +20,6 @@ if CONFIG['FFVPX_ASFLAGS']:
         DEFINES['_USE_MATH_DEFINES'] = True
         DEFINES['inline'] = "__inline"
 
-    if USE_YASM and not CONFIG['YASM_HAS_AVX2']:
-        DEFINES['YASM_MISSING_AVX2'] = True
-
-
 LOCAL_INCLUDES += ['/media/ffvpx']
 
 # We allow warnings for third-party code that can be updated from upstream.
