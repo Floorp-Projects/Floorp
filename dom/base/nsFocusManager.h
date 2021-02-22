@@ -258,6 +258,8 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void FireDelayedEvents(Document* aDocument);
 
+  void WasNuked(nsPIDOMWindowOuter* aWindow);
+
   /**
    * Indicate that a plugin wishes to take the focus. This is similar to a
    * normal focus except that the widget focus is not changed. Updating the
@@ -752,7 +754,8 @@ class nsFocusManager final : public nsIFocusManager,
                                      int32_t aFlags, bool aGettingFocus,
                                      bool aShouldShowFocusRing);
 
-  void SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow);
+  void SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow,
+                                bool aSyncBrowsingContext = true);
 
   bool TryDocumentNavigation(nsIContent* aCurrentContent,
                              bool* aCheckSubDocument,
