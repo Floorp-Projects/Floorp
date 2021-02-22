@@ -1594,13 +1594,9 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
             .get();
   }
 
-  return data->mJobQueues
-      .WithEntryHandle(aScope,
-                       [](auto&& entry) {
-                         return entry.OrInsertWith(
-                             [] { return new ServiceWorkerJobQueue(); });
-                       })
-      .forget();
+  RefPtr queue = data->mJobQueues.GetOrInsertWith(
+      aScope, [] { return new ServiceWorkerJobQueue(); });
+  return queue.forget();
 }
 
 /* static */
@@ -1911,12 +1907,11 @@ void ServiceWorkerManager::AddScopeAndRegistration(
   MOZ_ASSERT(!scopeKey.IsEmpty());
 
   auto* const data =
-      swm->mRegistrationInfos.WithEntryHandle(scopeKey, [](auto&& entry) {
-        return entry
-            .OrInsertWith(
-                [] { return MakeUnique<RegistrationDataPerPrincipal>(); })
-            .get();
-      });
+      swm->mRegistrationInfos
+          .GetOrInsertWith(
+              scopeKey,
+              [] { return MakeUnique<RegistrationDataPerPrincipal>(); })
+          .get();
 
   data->mScopeContainer.InsertScope(aScope);
   data->mInfos.Put(aScope, RefPtr{aInfo});

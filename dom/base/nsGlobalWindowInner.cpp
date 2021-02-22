@@ -7160,13 +7160,13 @@ ChromeMessageBroadcaster* nsGlobalWindowInner::GetGroupMessageManager(
     const nsAString& aGroup) {
   MOZ_ASSERT(IsChromeWindow());
 
-  return mChromeFields.mGroupMessageManagers.WithEntryHandle(
-      aGroup, [&](auto&& entry) {
-        return entry
-            .OrInsertWith(
-                [&] { return new ChromeMessageBroadcaster(MessageManager()); })
-            .get();
-      });
+  return mChromeFields.mGroupMessageManagers
+      .GetOrInsertWith(
+          aGroup,
+          [&] {
+            return MakeAndAddRef<ChromeMessageBroadcaster>(MessageManager());
+          })
+      .get();
 }
 
 void nsGlobalWindowInner::InitWasOffline() { mWasOffline = NS_IsOffline(); }

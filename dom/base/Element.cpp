@@ -3954,14 +3954,12 @@ void Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver) {
     return;
   }
 
-  observers->WithEntryHandle(aObserver, [](auto&& entry) {
-    // Value can be:
-    //   -2:   Makes sure next calculated threshold always differs, leading to a
-    //         notification task being scheduled.
-    //   -1:   Non-intersecting.
-    //   >= 0: Intersecting, valid index of aObserver->mThresholds.
-    entry.OrInsert(eUninitialized);
-  });
+  // Value can be:
+  //   -2:   Makes sure next calculated threshold always differs, leading to a
+  //         notification task being scheduled.
+  //   -1:   Non-intersecting.
+  //   >= 0: Intersecting, valid index of aObserver->mThresholds.
+  Unused << observers->GetOrInsert(aObserver, eUninitialized);
 }
 
 void Element::UnregisterIntersectionObserver(

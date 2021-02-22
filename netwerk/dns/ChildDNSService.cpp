@@ -135,12 +135,11 @@ nsresult ChildDNSService::AsyncResolveInternal(
     nsCString key;
     GetDNSRecordHashKey(hostname, DNSResolverInfo::URL(aResolver), type,
                         aOriginAttributes, flags, originalListenerAddr, key);
-    mPendingRequests.WithEntryHandle(key, [&](auto&& entry) {
-      entry
-          .OrInsertWith(
-              [] { return MakeUnique<nsTArray<RefPtr<DNSRequestSender>>>(); })
-          ->AppendElement(sender);
-    });
+    mPendingRequests
+        .GetOrInsertWith(
+            key,
+            [] { return MakeUnique<nsTArray<RefPtr<DNSRequestSender>>>(); })
+        ->AppendElement(sender);
   }
 
   sender->StartRequest();

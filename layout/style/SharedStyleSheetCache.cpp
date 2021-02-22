@@ -573,9 +573,8 @@ void SharedStyleSheetCache::CancelLoadsForLoader(css::Loader& aLoader) {
 
 void SharedStyleSheetCache::RegisterLoader(css::Loader& aLoader) {
   MOZ_ASSERT(aLoader.GetDocument());
-  mLoaderPrincipalRefCnt.WithEntryHandle(
-      aLoader.GetDocument()->NodePrincipal(),
-      [](auto&& entry) { entry.OrInsert(0) += 1; });
+  mLoaderPrincipalRefCnt.GetOrInsert(aLoader.GetDocument()->NodePrincipal(),
+                                     0) += 1;
 }
 
 void SharedStyleSheetCache::UnregisterLoader(css::Loader& aLoader) {

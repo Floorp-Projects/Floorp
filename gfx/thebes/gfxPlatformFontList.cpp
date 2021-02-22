@@ -1588,10 +1588,9 @@ gfxFontEntry* gfxPlatformFontList::FindFontForFamily(
 
 gfxFontEntry* gfxPlatformFontList::GetOrCreateFontEntry(
     fontlist::Face* aFace, const fontlist::Family* aFamily) {
-  return mFontEntries.WithEntryHandle(aFace, [&](auto&& entry) {
-    return entry.OrInsertWith([=] { return CreateFontEntry(aFace, aFamily); })
-        .get();
-  });
+  return mFontEntries
+      .GetOrInsertWith(aFace, [=] { return CreateFontEntry(aFace, aFamily); })
+      .get();
 }
 
 void gfxPlatformFontList::AddOtherFamilyName(
