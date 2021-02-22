@@ -882,6 +882,28 @@ void TRR::ReportStatus(nsresult aStatusCode) {
   }
 }
 
+static void RecordHttpVersion(nsIHttpChannel* aHttpChannel) {
+  nsAutoCString protocol;
+  nsresult rv = aHttpChannel->GetProtocolVersion(protocol);
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to get protocol version, rv=%x", (int)rv));
+    return;
+  }
+
+  if (protocol.LowerCaseEqualsLiteral("h2")) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_DNS_TRR_HTTP_VERSION::h_2);
+  } else if (protocol.LowerCaseEqualsLiteral("h3")) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_DNS_TRR_HTTP_VERSION::h_3);
+  } else {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_DNS_TRR_HTTP_VERSION::h_1);
+  }
+
+  LOG(("DoH endpoint responded using HTTP version: %s", protocol.get()));
+}
+
 NS_IMETHODIMP
 TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // The dtor will be run after the function returns
@@ -927,6 +949,7 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
       if (NS_SUCCEEDED(rv) && UseDefaultServer()) {
         RecordReason(nsHostRecord::TRR_OK);
         RecordProcessingTime(channel);
+        RecordHttpVersion(httpChannel);
         return rv;
       }
     } else {
