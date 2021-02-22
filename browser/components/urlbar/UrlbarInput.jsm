@@ -3037,7 +3037,18 @@ class UrlbarInput {
     }
     let oldEnd = oldValue.substring(this.selectionEnd);
 
-    let pasteData = UrlbarUtils.stripUnsafeProtocolOnPaste(originalPasteData);
+    let pasteData = originalPasteData;
+    try {
+      Services.uriFixup.getFixupURIInfo(
+        pasteData,
+        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+      );
+    } catch (e) {
+      pasteData = pasteData.replace(/\s/g, " ");
+    }
+
+    pasteData = UrlbarUtils.stripUnsafeProtocolOnPaste(pasteData);
+
     if (originalPasteData != pasteData) {
       // Unfortunately we're not allowed to set the bits being pasted
       // so cancel this event:
