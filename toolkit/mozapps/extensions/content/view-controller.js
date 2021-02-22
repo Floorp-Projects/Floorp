@@ -33,16 +33,16 @@ async function initialize(resolvePromiseInitialized) {
 
   // If the initial view has already been selected (by a call to loadView from
   // the above notifications) then bail out now
-  if (gViewController.initialViewSelected) {
+  if (gViewController.currentViewId) {
     return;
   }
 
   if (history.state) {
     // If there is a history state to restore then use that
-    gViewController.updateState(history.state);
+    gViewController.renderState(history.state);
   } else if (!gViewController.currentViewId) {
     // Fallback to the last category or first valid category view otherwise.
-    gViewController.loadInitialView(
+    gViewController.loadView(
       document.querySelector("categories-box").initialViewId
     );
   }
@@ -80,30 +80,22 @@ async function recordViewTelemetry(param) {
 }
 
 // Used by external callers to load a specific view into the manager
-async function loadView(aViewId) {
+async function loadView(viewId) {
   // Make sure to wait about:addons initialization before loading
   // a view triggered by external callers.
   await window.promiseInitialized;
 
-  if (!gViewController.initialViewSelected) {
-    // The caller opened the window and immediately loaded the view so it
-    // should be the initial history entry
-
-    gViewController.loadInitialView(aViewId);
-  } else {
-    gViewController.loadView(aViewId);
-  }
+  gViewController.loadView(viewId);
 }
 
 var gViewController = {
-  currentViewId: "",
+  currentViewId: null,
   get defaultViewId() {
     if (!isDiscoverEnabled()) {
       return "addons://list/extension";
     }
     return "addons://discover/";
   },
-  initialViewSelected: false,
   isLoading: true,
   // All historyEntryId values must be unique within one session, because the
   // IDs are used to map history entries to page state. It is not possible to
@@ -119,91 +111,69 @@ var gViewController = {
         await this.loadView(viewId);
       },
       replaceWithDefaultViewFn: async () => {
-        await this.replaceView(this.defaultViewId);
+        await this.resetState();
       },
     });
 
     window.addEventListener("popstate", e => {
-      this.updateState(e.state);
+      this.renderState(e.state);
     });
   },
 
-  updateState(state) {
-    this.loadViewInternal(state.view, state.previousView, state);
-  },
-
   parseViewId(aViewId) {
-    var matchRegex = /^addons:\/\/([^\/]+)\/(.*)$/;
-    var [, viewType, viewParam] = aViewId.match(matchRegex) || [];
+    const matchRegex = /^addons:\/\/([^\/]+)\/(.*)$/;
+    const [, viewType, viewParam] = aViewId.match(matchRegex) || [];
     return { type: viewType, param: decodeURIComponent(viewParam) };
   },
 
-  loadView(aViewId) {
-    if (aViewId == this.currentViewId) {
-      return;
+  loadView(viewId, replace = false) {
+    if (viewId == this.currentViewId) {
+      return Promise.resolve();
     }
 
-    var state = {
-      view: aViewId,
-      previousView: this.currentViewId,
+    // Always rewrite history state instead of pushing incorrect state for initial load.
+    replace = replace || !this.currentViewId;
+
+    const state = {
+      view: viewId,
+      previousView: replace ? null : this.currentViewId,
       historyEntryId: ++this.nextHistoryEntryId,
     };
-    history.pushState(state, "");
-    this.loadViewInternal(aViewId, this.currentViewId, state);
-  },
-
-  // Replaces the existing view with a new one, rewriting the current history
-  // entry to match.
-  replaceView(aViewId) {
-    if (aViewId == this.currentViewId) {
-      return;
+    if (replace) {
+      history.replaceState(state, "");
+    } else {
+      history.pushState(state, "");
     }
-
-    var state = {
-      view: aViewId,
-      previousView: null,
-      historyEntryId: ++this.nextHistoryEntryId,
-    };
-    history.replaceState(state, "");
-    this.loadViewInternal(aViewId, null, state);
+    return this.renderState(state);
   },
 
-  loadInitialView(aViewId) {
-    let state = {
-      view: aViewId,
-      previousView: null,
-      historyEntryId: ++this.nextHistoryEntryId,
-    };
-    history.replaceState(state, "");
-    this.loadViewInternal(aViewId, null, state);
-  },
-
-  loadViewInternal(aViewId, aPreviousView, aState) {
-    const view = this.parseViewId(aViewId);
+  renderState(state) {
+    const view = this.parseViewId(state.view);
     const viewTypes = ["shortcuts", "list", "detail", "updates", "discover"];
 
     if (!view.type || !viewTypes.includes(view.type)) {
       throw Components.Exception("Invalid view: " + view.type);
     }
 
-    this.currentViewId = aViewId;
+    this.currentViewId = state.view;
     this.isLoading = true;
 
     recordViewTelemetry(view.param);
 
     let promiseLoad;
-    if (aViewId != aPreviousView) {
-      promiseLoad = showView(view.type, view.param, aState).then(() => {
+    if (state.view != state.previousView) {
+      promiseLoad = showView(view.type, view.param, state).then(() => {
         this.isLoading = false;
 
-        var event = document.createEvent("Events");
+        const event = document.createEvent("Events");
         event.initEvent("ViewChanged", true, true);
         document.dispatchEvent(event);
       });
     }
-
-    this.initialViewSelected = true;
-
     return promiseLoad;
+  },
+
+  resetState() {
+    return this.loadView(this.defaultViewId, true);
   },
 };

@@ -587,18 +587,20 @@ add_task(async function test_discopane_second_history_entry() {
 
 add_task(async function test_initialSelectedView_on_aboutaddons_reload() {
   let managerWindow = await open_manager("addons://list/extension");
-  ok(
-    managerWindow.gViewController.initialViewSelected,
-    "initialViewSelected is true as expected on first about:addons load"
+  isnot(
+    managerWindow.gViewController.currentViewId,
+    null,
+    "Got a non null currentViewId on first load"
   );
 
   managerWindow.location.reload();
   await wait_for_manager_load(managerWindow);
   await wait_for_view_load(managerWindow);
 
-  ok(
-    managerWindow.gViewController.initialViewSelected,
-    "initialViewSelected is true as expected on first about:addons load"
+  isnot(
+    managerWindow.gViewController.currentViewId,
+    null,
+    "Got a non null currentViewId on reload"
   );
 
   await close_manager(managerWindow);
