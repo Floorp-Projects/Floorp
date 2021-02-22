@@ -356,7 +356,7 @@ typedef nsClassHashtable<nsUint32HashKey, CachedFullHashResponse>
 template <class T>
 void CopyClassHashTable(const T& aSource, T& aDestination) {
   for (auto iter = aSource.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = aDestination.LookupOrAdd(iter.Key());
+    auto value = aDestination.GetOrInsertNew(iter.Key());
     *value = *(iter.Data());
   }
 }

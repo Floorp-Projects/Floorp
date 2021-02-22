@@ -211,7 +211,7 @@ void TableUpdateV4::SetSHA256(const std::string& aSHA256) {
 nsresult TableUpdateV4::NewFullHashResponse(
     const Prefix& aPrefix, const CachedFullHashResponse& aResponse) {
   CachedFullHashResponse* response =
-      mFullHashResponseMap.LookupOrAdd(aPrefix.ToUint32());
+      mFullHashResponseMap.GetOrInsertNew(aPrefix.ToUint32());
   if (!response) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

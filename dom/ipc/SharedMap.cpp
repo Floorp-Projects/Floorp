@@ -397,7 +397,7 @@ void WritableSharedMap::Set(JSContext* aCx, const nsACString& aName,
     return;
   }
 
-  Entry* entry = mEntries.LookupOrAdd(aName, *this, aName);
+  Entry* entry = mEntries.GetOrInsertNew(aName, *this, aName);
   entry->TakeData(std::move(holder));
 
   KeyChanged(aName);

@@ -1535,7 +1535,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealMouseMoveEvent(
     const uint64_t& aInputBlockId) {
   if (mCoalesceMouseMoveEvents && mCoalescedMouseEventFlusher) {
     CoalescedMouseData* data =
-        mCoalescedMouseData.LookupOrAdd(aEvent.pointerId);
+        mCoalescedMouseData.GetOrInsertNew(aEvent.pointerId);
     MOZ_ASSERT(data);
     if (data->CanCoalesce(aEvent, aGuid, aInputBlockId)) {
       data->Coalesce(aEvent, aGuid, aInputBlockId);

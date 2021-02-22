@@ -118,7 +118,7 @@ nsresult PrefixArrayToPrefixStringMap(const _PrefixArray& aPrefixArray,
   // all prefixes of that length.
   nsClassHashtable<nsUint32HashKey, _PrefixArray> table;
   for (const auto& prefix : aPrefixArray) {
-    _PrefixArray* array = table.LookupOrAdd(prefix.Length());
+    _PrefixArray* array = table.GetOrInsertNew(prefix.Length());
     array->AppendElement(prefix);
   }
 

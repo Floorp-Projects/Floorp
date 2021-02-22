@@ -7918,7 +7918,7 @@ uint64_t ConnectionPool::Start(
 
   for (const nsString& objectStoreName : aObjectStoreNames) {
     TransactionInfoPair* blockInfo =
-        blockingTransactions.LookupOrAdd(objectStoreName);
+        blockingTransactions.GetOrInsertNew(objectStoreName);
 
     // Mark what we are blocking on.
     if (const auto maybeBlockingRead = blockInfo->mLastBlockingReads) {
@@ -12555,7 +12555,7 @@ nsresult QuotaClient::AsyncDeleteFile(FileManager* aFileManager,
       DeleteTimerCallback, this, kDeleteTimeoutMs, nsITimer::TYPE_ONE_SHOT,
       "dom::indexeddb::QuotaClient::AsyncDeleteFile"));
 
-  mPendingDeleteInfos.LookupOrAdd(aFileManager)->AppendElement(aFileId);
+  mPendingDeleteInfos.GetOrInsertNew(aFileManager)->AppendElement(aFileId);
 
   return NS_OK;
 }

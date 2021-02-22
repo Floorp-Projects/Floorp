@@ -70,7 +70,7 @@ WindowsDllInterceptor* FunctionHook::GetDllInterceptorFor(
              "Non-ASCII module names are not supported");
   NS_ConvertASCIItoUTF16 moduleName(aModuleName);
 
-  WindowsDllInterceptor* ret = sDllInterceptorCache->LookupOrAdd(moduleName);
+  WindowsDllInterceptor* ret = sDllInterceptorCache->GetOrInsertNew(moduleName);
   MOZ_ASSERT(ret);
   ret->Init(moduleName.get());
   return ret;

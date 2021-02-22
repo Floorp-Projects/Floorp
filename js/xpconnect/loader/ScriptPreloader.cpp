@@ -795,7 +795,7 @@ void ScriptPreloader::NoteScript(const nsCString& url,
   }
 
   auto script =
-      mScripts.LookupOrAdd(cachePath, *this, url, cachePath, jsscript);
+      mScripts.GetOrInsertNew(cachePath, *this, url, cachePath, jsscript);
   if (isRunOnce) {
     script->mIsRunOnce = true;
   }
@@ -824,7 +824,8 @@ void ScriptPreloader::NoteScript(const nsCString& url,
     return;
   }
 
-  auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, nullptr);
+  auto script =
+      mScripts.GetOrInsertNew(cachePath, *this, url, cachePath, nullptr);
 
   if (!script->HasRange()) {
     MOZ_ASSERT(!script->HasArray());

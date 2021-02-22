@@ -2323,7 +2323,8 @@ void DocAccessible::DoARIAOwnsRelocation(LocalAccessible* aOwner) {
   logging::TreeInfo("aria owns relocation", logging::eVerbose, aOwner);
 #endif
 
-  nsTArray<RefPtr<LocalAccessible>>* owned = mARIAOwnsHash.LookupOrAdd(aOwner);
+  nsTArray<RefPtr<LocalAccessible>>* owned =
+      mARIAOwnsHash.GetOrInsertNew(aOwner);
 
   IDRefsIterator iter(this, aOwner->Elm(), nsGkAtoms::aria_owns);
   uint32_t idx = 0;
@@ -2420,7 +2421,7 @@ void DocAccessible::DoARIAOwnsRelocation(LocalAccessible* aOwner) {
     if (MoveChild(child, aOwner, insertIdx)) {
       child->SetRelocated(true);
       MOZ_ASSERT(owned == mARIAOwnsHash.Get(aOwner));
-      owned = mARIAOwnsHash.LookupOrAdd(aOwner);
+      owned = mARIAOwnsHash.GetOrInsertNew(aOwner);
       owned->InsertElementAt(idx, child);
       idx++;
     }

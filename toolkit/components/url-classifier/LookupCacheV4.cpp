@@ -274,7 +274,7 @@ static nsresult AppendPrefixToMap(PrefixStringMap& prefixes,
     return NS_OK;
   }
 
-  nsCString* prefixString = prefixes.LookupOrAdd(len);
+  nsCString* prefixString = prefixes.GetOrInsertNew(len);
   if (!prefixString->Append(prefix, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -523,7 +523,7 @@ VLPrefixSet::VLPrefixSet(const PrefixStringMap& aMap) : mCount(0) {
 
 void VLPrefixSet::Merge(PrefixStringMap& aPrefixMap) {
   for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCString* prefixString = aPrefixMap.LookupOrAdd(iter.Key());
+    nsCString* prefixString = aPrefixMap.GetOrInsertNew(iter.Key());
     PrefixString* str = iter.UserData();
 
     nsAutoCString remainingString;

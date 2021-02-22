@@ -56,7 +56,7 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
    * KeyClass will be created (using the arguments provided) and then returned.
    */
   template <typename... Args>
-  UserDataType LookupOrAdd(KeyType aKey, Args&&... aConstructionArgs);
+  UserDataType GetOrInsertNew(KeyType aKey, Args&&... aConstructionArgs);
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -92,8 +92,8 @@ inline void ImplCycleCollectionTraverse(
 
 template <class KeyClass, class T>
 template <typename... Args>
-T* nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
-                                              Args&&... aConstructionArgs) {
+T* nsClassHashtable<KeyClass, T>::GetOrInsertNew(KeyType aKey,
+                                                 Args&&... aConstructionArgs) {
   return this
       ->GetOrInsertWith(std::move(aKey),
                         [&] {
