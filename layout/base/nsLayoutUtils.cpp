@@ -75,6 +75,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/ScrollOrigin.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleSetInlines.h"
