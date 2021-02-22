@@ -430,9 +430,9 @@ void MacroAssembler::createGCObject(Register obj, Register temp,
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
 
   uint32_t nDynamicSlots = 0;
-  if (templateObj.isNative()) {
-    const NativeTemplateObject& ntemplate =
-        templateObj.asNativeTemplateObject();
+  if (templateObj.isNativeObject()) {
+    const TemplateNativeObject& ntemplate =
+        templateObj.asTemplateNativeObject();
     nDynamicSlots = ntemplate.numDynamicSlots();
   }
 
@@ -576,7 +576,7 @@ void MacroAssembler::newGCBigInt(Register result, Register temp, Label* fail,
 }
 
 void MacroAssembler::copySlotsFromTemplate(
-    Register obj, const NativeTemplateObject& templateObj, uint32_t start,
+    Register obj, const TemplateNativeObject& templateObj, uint32_t start,
     uint32_t end) {
   uint32_t nfixed = std::min(templateObj.numFixedSlots(), end);
   for (unsigned i = start; i < nfixed; i++) {
@@ -638,7 +638,7 @@ void MacroAssembler::fillSlotsWithUninitialized(Address base, Register temp,
 }
 
 static void FindStartOfUninitializedAndUndefinedSlots(
-    const NativeTemplateObject& templateObj, uint32_t nslots,
+    const TemplateNativeObject& templateObj, uint32_t nslots,
     uint32_t* startOfUninitialized, uint32_t* startOfUndefined) {
   MOZ_ASSERT(nslots == templateObj.slotSpan());
   MOZ_ASSERT(nslots > 0);
@@ -747,7 +747,7 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
 }
 
 void MacroAssembler::initGCSlots(Register obj, Register temp,
-                                 const NativeTemplateObject& templateObj,
+                                 const TemplateNativeObject& templateObj,
                                  bool initContents) {
   // Slots of non-array objects are required to be initialized.
   // Use the values currently in the template object.
@@ -831,9 +831,9 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
   storePtr(ImmGCPtr(templateObj.shape()),
            Address(obj, JSObject::offsetOfShape()));
 
-  if (templateObj.isNative()) {
-    const NativeTemplateObject& ntemplate =
-        templateObj.asNativeTemplateObject();
+  if (templateObj.isNativeObject()) {
+    const TemplateNativeObject& ntemplate =
+        templateObj.asTemplateNativeObject();
     MOZ_ASSERT(!ntemplate.hasDynamicElements());
 
     // If the object has dynamic slots, the slots member has already been
