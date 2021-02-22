@@ -64,7 +64,7 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
     if (clasp->isNativeObject()) {
       objKind = DOMObjectKind::Native;
     } else {
-      MOZ_ASSERT(clasp->isProxy());
+      MOZ_ASSERT(clasp->isProxyObject());
       objKind = DOMObjectKind::Proxy;
     }
   }

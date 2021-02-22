@@ -236,7 +236,7 @@ inline bool JSObject::hasAllFlags(js::BaseShape::Flag flags) const {
 }
 
 inline bool JSObject::nonProxyIsExtensible() const {
-  MOZ_ASSERT(!uninlinedIsProxy());
+  MOZ_ASSERT(!uninlinedIsProxyObject());
 
   // [[Extensible]] for ordinary non-proxy objects is an object flag.
   return !hasAllFlags(js::BaseShape::NOT_EXTENSIBLE);

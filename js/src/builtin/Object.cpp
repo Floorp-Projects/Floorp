@@ -546,7 +546,7 @@ static MOZ_ALWAYS_INLINE JSString* GetBuiltinTagFast(JSObject* obj,
                                                      const JSClass* clasp,
                                                      JSContext* cx) {
   MOZ_ASSERT(clasp == obj->getClass());
-  MOZ_ASSERT(!clasp->isProxy());
+  MOZ_ASSERT(!clasp->isProxyObject());
 
   // Optimize the non-proxy case to bypass GetBuiltinClass.
   if (clasp == &PlainObject::class_) {
@@ -674,7 +674,7 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   // When |obj| is a non-proxy object, compute |builtinTag| only when needed.
   RootedString builtinTag(cx);
   const JSClass* clasp = obj->getClass();
-  if (MOZ_UNLIKELY(clasp->isProxy())) {
+  if (MOZ_UNLIKELY(clasp->isProxyObject())) {
     builtinTag = GetBuiltinTagSlow(cx, obj);
     if (!builtinTag) {
       return false;

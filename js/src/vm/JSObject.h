@@ -299,7 +299,7 @@ class JSObject
 
   js::TaggedProto taggedProto() const { return group()->proto(); }
 
-  bool uninlinedIsProxy() const;
+  bool uninlinedIsProxyObject() const;
 
   JSObject* staticPrototype() const {
     MOZ_ASSERT(hasStaticPrototype());
@@ -319,7 +319,7 @@ class JSObject
   // the wrapper/wrappee [[Prototype]]s consistent.)
   bool hasDynamicPrototype() const {
     bool dynamic = taggedProto().isDynamic();
-    MOZ_ASSERT_IF(dynamic, uninlinedIsProxy());
+    MOZ_ASSERT_IF(dynamic, uninlinedIsProxyObject());
     return dynamic;
   }
 

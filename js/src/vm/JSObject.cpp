@@ -1467,7 +1467,7 @@ bool js::ObjectMayBeSwapped(const JSObject* obj) {
   // WindowProxy, Wrapper, DeadProxyObject, DOMProxy, and DOMClass (non-global)
   // types may be swapped. It is hard to detect DOMProxy from shell, so target
   // proxies in general.
-  return clasp->isProxy() || clasp->isDOMClass();
+  return clasp->isProxyObject() || clasp->isDOMClass();
 }
 
 [[nodiscard]] static bool CopyProxyValuesBeforeSwap(
@@ -1500,7 +1500,7 @@ bool js::ObjectMayBeSwapped(const JSObject* obj) {
 
 bool ProxyObject::initExternalValueArrayAfterSwap(
     JSContext* cx, const HandleValueVector values) {
-  MOZ_ASSERT(getClass()->isProxy());
+  MOZ_ASSERT(getClass()->isProxyObject());
 
   size_t nreserved = numReservedSlots();
 
@@ -3322,7 +3322,7 @@ bool JSObject::hasSameRealmAs(JSContext* cx) const {
   return nonCCWRealm() == cx->realm();
 }
 
-bool JSObject::uninlinedIsProxy() const { return is<ProxyObject>(); }
+bool JSObject::uninlinedIsProxyObject() const { return is<ProxyObject>(); }
 
 bool JSObject::uninlinedNonProxyIsExtensible() const {
   return nonProxyIsExtensible();
@@ -3637,7 +3637,7 @@ js::gc::AllocKind JSObject::allocKindForTenure(
   }
 
   // Proxies that are CrossCompartmentWrappers may be nursery allocated.
-  if (IsProxy(this)) {
+  if (is<ProxyObject>()) {
     return as<ProxyObject>().allocKindForTenure();
   }
 
@@ -3924,7 +3924,7 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
       JSCLASS_FOREGROUND_FINALIZE | JSCLASS_BACKGROUND_FINALIZE;
   uint32_t flags = clasp->flags;
   uint32_t finalizeFlags = flags & FinalizeMask;
-  if (clasp->hasFinalize() && !clasp->isProxy()) {
+  if (clasp->hasFinalize() && !clasp->isProxyObject()) {
     MOZ_ASSERT(finalizeFlags == JSCLASS_FOREGROUND_FINALIZE ||
                finalizeFlags == JSCLASS_BACKGROUND_FINALIZE);
     MOZ_ASSERT((finalizeFlags == JSCLASS_BACKGROUND_FINALIZE) ==
@@ -3936,7 +3936,7 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
   MOZ_ASSERT_IF(clasp->hasFinalize(),
                 heap == gc::TenuredHeap ||
                     CanNurseryAllocateFinalizedClass(clasp) ||
-                    clasp->isProxy());
+                    clasp->isProxyObject());
 
   MOZ_ASSERT(!group->realm()->hasObjectPendingMetadata());
 
@@ -3944,7 +3944,7 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
   // slotSpan are always 0. Note that proxy classes can have reserved slots
   // but they're also not included in numFixedSlots/slotSpan.
   if (!clasp->isNativeObject()) {
-    MOZ_ASSERT_IF(!clasp->isProxy(), JSCLASS_RESERVED_SLOTS(clasp) == 0);
+    MOZ_ASSERT_IF(!clasp->isProxyObject(), JSCLASS_RESERVED_SLOTS(clasp) == 0);
     MOZ_ASSERT(!clasp->hasPrivate());
     MOZ_ASSERT_IF(shape, shape->numFixedSlots() == 0);
     MOZ_ASSERT_IF(shape, shape->slotSpan() == 0);

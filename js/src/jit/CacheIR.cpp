@@ -1005,7 +1005,7 @@ static bool CanAttachDOMCall(JSContext* cx, JSJitInfo::OpType type,
     return false;
   }
 
-  if (type != JSJitInfo::Method && clasp->isProxy()) {
+  if (type != JSJitInfo::Method && clasp->isProxyObject()) {
     return false;
   }
 
@@ -1319,7 +1319,7 @@ static bool GetXrayExpandoShapeWrapper(JSContext* cx, HandleObject xray,
 AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
     HandleObject obj, ObjOperandId objId, HandleId id,
     ValOperandId receiverId) {
-  if (!IsProxy(obj)) {
+  if (!obj->is<ProxyObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -1357,7 +1357,7 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
       cx_->clearPendingException();
       return AttachDecision::NoAction;
     }
-    if (!holder || !IsProxy(holder) ||
+    if (!holder || !holder->is<ProxyObject>() ||
         !info->isCrossCompartmentXray(GetProxyHandler(holder))) {
       return AttachDecision::NoAction;
     }
@@ -5809,7 +5809,7 @@ AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
   MOZ_ASSERT(args_[0].isObject());
 
   // Only optimize when the object isn't a proxy.
-  if (isPossiblyWrapped && IsProxy(&args_[0].toObject())) {
+  if (isPossiblyWrapped && args_[0].toObject().is<ProxyObject>()) {
     return AttachDecision::NoAction;
   }
 
