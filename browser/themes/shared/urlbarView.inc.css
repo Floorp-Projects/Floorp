@@ -201,6 +201,14 @@
   direction: ltr !important;
 }
 
+.urlbarView-url:-moz-locale-dir(rtl) {
+  /* .urlbarView-url can grow due to `flex-grow: 1`, so without `text-align:
+     right`, the URL text would be left-aligned within .urlbarView-url for RTL
+     due to the `direction: ltr` rule.  .urlbarView-title does not have this
+     problem since it does not have flex. */
+  text-align: right;
+}
+
 .urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
 .urlbarView-row[has-help] > .urlbarView-row-inner:hover {
   background: var(--arrowpanel-dimmed);
