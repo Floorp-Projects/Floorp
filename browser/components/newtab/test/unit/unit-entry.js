@@ -291,6 +291,7 @@ const TEST_GLOBAL = {
       setEventRecordingEnabled: () => {},
       recordEvent: eventDetails => {},
       scalarSet: () => {},
+      keyedScalarAdd: () => {},
     },
     console: { logStringMessage: () => {} },
     prefs: {
