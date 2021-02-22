@@ -4,8 +4,6 @@ import json
 import os
 import sys
 
-from six import iteritems, itervalues
-
 import wptserve
 from wptserve import sslutils
 
@@ -117,7 +115,7 @@ def list_disabled(test_paths, product, **kwargs):
     run_info, test_loader = get_loader(test_paths, product,
                                        run_info_extras=run_info_extras, **kwargs)
 
-    for test_type, tests in iteritems(test_loader.disabled_tests):
+    for test_type, tests in test_loader.disabled_tests.items():
         for test in tests:
             rv.append({"test": test.id, "reason": test.disabled()})
     print(json.dumps(rv, indent=2))
@@ -144,7 +142,7 @@ def get_pause_after_test(test_loader, **kwargs):
         if kwargs["debug_test"]:
             return True
         tests = test_loader.tests
-        is_single_testharness = (sum(len(item) for item in itervalues(tests)) == 1 and
+        is_single_testharness = (sum(len(item) for item in tests.values()) == 1 and
                                  len(tests.get("testharness", [])) == 1)
         if kwargs["repeat"] == 1 and kwargs["rerun"] == 1 and is_single_testharness:
             return True
