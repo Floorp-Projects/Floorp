@@ -96,13 +96,18 @@ void swgl_drawSpanRGBA8() {
     if (address < 0) {
         return;
     }
-    while (swgl_SpanLength > 0) {
-        float offset = get_gradient_offset(compute_repeated_pos());
-        if (v_gradient_repeat != 0.0) offset = fract(offset); 
-        float entry = clamp_gradient_entry(offset);
-        swgl_commitGradientRGBA8(sGpuCache, address, entry);
-        v_pos += swgl_interpStep(v_pos);
-    }
+    #ifndef WR_FEATURE_ALPHA_PASS
+        swgl_commitRadialGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, v_gradient_repeat != 0.0,
+                                       v_pos * v_repeated_size - v_center, v_start_radius);
+    #else
+        while (swgl_SpanLength > 0) {
+            float offset = get_gradient_offset(compute_repeated_pos());
+            if (v_gradient_repeat != 0.0) offset = fract(offset);
+            float entry = clamp_gradient_entry(offset);
+            swgl_commitGradientRGBA8(sGpuCache, address, entry);
+            v_pos += swgl_interpStep(v_pos);
+        }
+    #endif
 }
 #endif
 
