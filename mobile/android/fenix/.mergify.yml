@@ -21,7 +21,7 @@ pull_request_rules:
     conditions:
       - author=mozilla-l10n-automation-bot
       - status-success=pr-complete
-      - files~=(strings.xml)
+      - files~=(strings.xml|l10n.toml)
     actions:
       review:
         type: APPROVE
