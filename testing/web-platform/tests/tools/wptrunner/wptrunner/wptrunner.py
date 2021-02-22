@@ -65,6 +65,8 @@ def get_loader(test_paths, product, debug=None, run_info_extras=None, chunker_kw
     manifest_filters = []
 
     include = kwargs["include"]
+    if kwargs["include_file"]:
+        include.extend(testloader.read_include_from_file(kwargs["include_file"]))
     if test_groups:
         include = testloader.update_include_for_groups(test_groups, include)
 
