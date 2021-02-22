@@ -3,7 +3,6 @@
 const PAGE =
   "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 const COMMENTS = "Here's my test comment!";
-const EMAIL = "foo@privacy.com";
 
 // Avoid timeouts, as in bug 1325530
 requestLongerTimeout(2);
@@ -30,10 +29,6 @@ add_task(async function setup() {
  *
  *        comments (String)
  *          The comments to put in the comment textarea
- *        email (String)
- *          The email address to put in the email address input
- *        emailMe (bool)
- *          The checked value of the "Email me" checkbox
  *        includeURL (bool)
  *          The checked value of the "Include URL" checkbox
  *
@@ -53,9 +48,7 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
     async function(browser) {
       let prefs = TabCrashHandler.prefs;
       let originalSendReport = prefs.getBoolPref("sendReport");
-      let originalEmailMe = prefs.getBoolPref("emailMe");
       let originalIncludeURL = prefs.getBoolPref("includeURL");
-      let originalEmail = prefs.getCharPref("email");
 
       let tab = gBrowser.getTabForBrowser(browser);
       await BrowserTestUtils.crashFrame(browser);
@@ -64,20 +57,10 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
       // Since about:tabcrashed will run in the parent process, we can safely
       // manipulate its DOM nodes directly
       let comments = doc.getElementById("comments");
-      let email = doc.getElementById("email");
-      let emailMe = doc.getElementById("emailMe");
       let includeURL = doc.getElementById("includeURL");
 
       if (fieldValues.hasOwnProperty("comments")) {
         comments.value = fieldValues.comments;
-      }
-
-      if (fieldValues.hasOwnProperty("email")) {
-        email.value = fieldValues.email;
-      }
-
-      if (fieldValues.hasOwnProperty("emailMe")) {
-        emailMe.checked = fieldValues.emailMe;
       }
 
       if (fieldValues.hasOwnProperty("includeURL")) {
@@ -93,17 +76,14 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
       // Submitting the crash report may have set some prefs regarding how to
       // send tab crash reports. Let's reset them for the next test.
       prefs.setBoolPref("sendReport", originalSendReport);
-      prefs.setBoolPref("emailMe", originalEmailMe);
       prefs.setBoolPref("includeURL", originalIncludeURL);
-      prefs.setCharPref("email", originalEmail);
     }
   );
 }
 
 /**
  * Tests what we send with the crash report by default. By default, we do not
- * send any comments, the URL of the crashing page, or the email address of
- * the user.
+ * send any comments or the URL of the crashing page.
  */
 add_task(async function test_default() {
   await crashTabTestHelper(
@@ -111,7 +91,6 @@ add_task(async function test_default() {
     {
       Comments: null,
       URL: "",
-      Email: null,
     }
   );
 });
@@ -127,41 +106,6 @@ add_task(async function test_just_a_comment() {
     {
       Comments: COMMENTS,
       URL: "",
-      Email: null,
-    }
-  );
-});
-
-/**
- * Test that we don't send email if emailMe is unchecked
- */
-add_task(async function test_no_email() {
-  await crashTabTestHelper(
-    {
-      email: EMAIL,
-      emailMe: false,
-    },
-    {
-      Comments: null,
-      URL: "",
-      Email: null,
-    }
-  );
-});
-
-/**
- * Test that we can send an email address if emailMe is checked
- */
-add_task(async function test_yes_email() {
-  await crashTabTestHelper(
-    {
-      email: EMAIL,
-      emailMe: true,
-    },
-    {
-      Comments: null,
-      URL: "",
-      Email: EMAIL,
     }
   );
 });
@@ -177,26 +121,22 @@ add_task(async function test_send_URL() {
     {
       Comments: null,
       URL: PAGE,
-      Email: null,
     }
   );
 });
 
 /**
- * Test that we can send comments, the email address, and the URL
+ * Test that we can send comments and the URL
  */
 add_task(async function test_send_all() {
   await crashTabTestHelper(
     {
       includeURL: true,
-      emailMe: true,
-      email: EMAIL,
       comments: COMMENTS,
     },
     {
       Comments: COMMENTS,
       URL: PAGE,
-      Email: EMAIL,
     }
   );
 });
