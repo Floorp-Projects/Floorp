@@ -3,10 +3,6 @@
 
 "use strict";
 
-const {
-  gDevToolsBrowser,
-} = require("devtools/client/framework/devtools-browser");
-
 add_task(async function() {
   const thisFirefoxClient = createThisFirefoxClientMock();
   // Prepare a worker mock.
@@ -39,10 +35,8 @@ add_task(async function() {
 
   info("Enable mocks");
   enableRuntimeClientFactoryMock(runtimeClientFactoryMock);
-  const originalOpenWorkerForToolbox = gDevToolsBrowser.openWorkerToolbox;
   registerCleanupFunction(() => {
     disableRuntimeClientFactoryMock();
-    gDevToolsBrowser.openWorkerToolbox = originalOpenWorkerForToolbox;
   });
 
   const { document, tab, window } = await openAboutDebugging();

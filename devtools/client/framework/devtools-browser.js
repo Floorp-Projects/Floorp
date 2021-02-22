@@ -414,23 +414,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
   },
 
   /**
-   * Open a window-hosted toolbox to debug the worker associated to the provided
-   * worker actor.
-   *
-   * @param  {WorkerDescriptorFront} workerDescriptorFront
-   *         descriptor front of the worker to debug
-   * @param  {String} toolId (optional)
-   *        The id of the default tool to show
-   */
-  async openWorkerToolbox(workerDescriptorFront, toolId) {
-    await gDevTools.showToolbox(
-      workerDescriptorFront,
-      toolId,
-      Toolbox.HostType.WINDOW
-    );
-  },
-
-  /**
    * Add the devtools-browser stylesheet to browser window's document. Returns a promise.
    *
    * @param  {Window} win
