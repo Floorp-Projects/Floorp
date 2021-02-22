@@ -81,4 +81,4 @@ fuzzy(1,15) platform(linux) force_subpixel_aa_where_possible(false) == text-fixe
 # most pixels are off by a small amount, but a few pixels on the edge vary by a lot, pushing up the fuzzy max-diff;
 # the main goal of the test is that everything is in the same place, at the same scale, clipped the same way,
 # despite 4x on-the-fly scale change.
-skip_on(android) fuzzy-range(<=3,*21700,<=20,*3500,<=115,*543) fuzzy-if(platform(swgl),103,24907) == raster_root_C_8192.yaml raster_root_C_ref.yaml
+skip_on(android) fuzzy-range(<=3,*21700,<=20,*3500,<=119,*590) fuzzy-if(platform(swgl),108,24907) == raster_root_C_8192.yaml raster_root_C_ref.yaml
