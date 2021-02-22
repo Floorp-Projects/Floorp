@@ -21,6 +21,15 @@ use crate::util::VecHelper;
  and into here.
  */
 
+// If the page would create too many slices (an arbitrary definition where
+// it's assumed the GPU memory + compositing overhead would be too high)
+// then create a single picture cache for the remaining content. This at
+// least means that we can cache small content changes efficiently when
+// scrolling isn't occurring. Scrolling regions will be handled reasonably
+// efficiently by the dirty rect tracking (since it's likely that if the
+// page has so many slices there isn't a single major scroll region).
+const MAX_CACHE_SLICES: usize = 12;
+
 /// Created during scene building, describes how to create a tile cache for a given slice.
 pub struct PendingTileCache {
     /// List of primitives that are part of this slice
@@ -89,6 +98,124 @@ impl TileCacheBuilder {
         slice_flags: SliceFlags,
     ) {
         self.force_new_tile_cache = Some(slice_flags);
+    }
+
+    /// Returns true if it's OK to add a container tile cache (will return false
+    /// if too many slices have been created).
+    pub fn can_add_container_tile_cache(&self) -> bool {
+        // See the logic and comments around MAX_CACHE_SLICES in add_prim
+        // to explain why < MAX_CACHE_SLICES-1 is used.
+        self.pending_tile_caches.len() < MAX_CACHE_SLICES-1
+    }
+
+    /// Create a new tile cache for an existing prim_list
+    pub fn add_tile_cache(
+        &mut self,
+        prim_list: PrimitiveList,
+        spatial_tree: &SpatialTree,
+        clip_store: &ClipStore,
+        interners: &Interners,
+        config: &FrameBuilderConfig,
+    ) {
+        assert!(self.can_add_container_tile_cache());
+
+        if prim_list.is_empty() {
+            return;
+        }
+
+        // Iterate the clusters and determine which is the most commonly occurring
+        // scroll root. This is a reasonable heuristic to decide which spatial node
+        // should be considered the scroll root of this tile cache, in order to
+        // minimize the invalidations that occur due to scrolling. It's often the
+        // case that a blend container will have only a single scroll root.
+        let mut found_scroll_roots = FastHashMap::default();
+
+        for cluster in &prim_list.clusters {
+            let scroll_root = self.find_scroll_root(
+                cluster.spatial_node_index,
+                spatial_tree,
+            );
+
+            *found_scroll_roots.entry(scroll_root).or_insert(0) += 1;
+        }
+
+        // Select the scroll root by finding the most commonly occurring one
+        let scroll_root = *found_scroll_roots
+            .iter()
+            .max_by_key(|entry | entry.1)
+            .unwrap()
+            .0;
+
+        let mut first = true;
+        let prim_clips_buffer = &mut self.prim_clips_buffer;
+        let mut shared_clips = Vec::new();
+
+        // Work out which clips are shared by all prim instances and can thus be applied
+        // at the tile cache level. In future, we aim to remove this limitation by knowing
+        // during initial scene build which are the relevant compositor clips, but for now
+        // this is unlikely to be a significant cost.
+        for cluster in &prim_list.clusters {
+            for prim_instance in &prim_list.prim_instances[cluster.prim_range()] {
+                if first {
+                    add_clips(
+                        scroll_root,
+                        prim_instance.clip_set.clip_chain_id,
+                        &mut shared_clips,
+                        clip_store,
+                        interners,
+                        spatial_tree,
+                    );
+
+                    self.last_checked_clip_chain = prim_instance.clip_set.clip_chain_id;
+                    first = false;
+                } else {
+                    if self.last_checked_clip_chain != prim_instance.clip_set.clip_chain_id {
+                        prim_clips_buffer.clear();
+
+                        add_clips(
+                            scroll_root,
+                            prim_instance.clip_set.clip_chain_id,
+                            prim_clips_buffer,
+                            clip_store,
+                            interners,
+                            spatial_tree,
+                        );
+
+                        shared_clips.retain(|h1: &ClipInstance| {
+                            let uid = h1.handle.uid();
+                            prim_clips_buffer.iter().any(|h2| {
+                                uid == h2.handle.uid() &&
+                                h1.spatial_node_index == h2.spatial_node_index
+                            })
+                        });
+
+                        self.last_checked_clip_chain = prim_instance.clip_set.clip_chain_id;
+                    }
+                }
+            }
+        }
+
+        // Construct the new tile cache and add to the list to be built
+        let slice = self.pending_tile_caches.len();
+
+        let params = TileCacheParams {
+            slice,
+            slice_flags: SliceFlags::empty(),
+            spatial_node_index: scroll_root,
+            background_color: None,
+            shared_clips,
+            shared_clip_chain: ClipChainId::NONE,
+            virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
+        };
+
+        self.pending_tile_caches.push(PendingTileCache {
+            prim_list,
+            params,
+        });
+
+        // Add a tile cache barrier so that the next prim definitely gets added to a
+        // new tile cache, even if it's otherwise compatible with the blend container.
+        self.force_new_tile_cache = Some(SliceFlags::empty());
     }
 
     /// Add a primitive, either to the current tile cache, or a new one, depending on various conditions.
@@ -193,14 +320,6 @@ impl TileCacheBuilder {
         }
 
         if want_new_tile_cache {
-            // If the page would create too many slices (an arbitrary definition where
-            // it's assumed the GPU memory + compositing overhead would be too high)
-            // then create a single picture cache for the remaining content. This at
-            // least means that we can cache small content changes efficiently when
-            // scrolling isn't occurring. Scrolling regions will be handled reasonably
-            // efficiently by the dirty rect tracking (since it's likely that if the
-            // page has so many slices there isn't a single major scroll region).
-            const MAX_CACHE_SLICES: usize = 12;
             let slice = self.pending_tile_caches.len();
 
             // If we have exceeded the maximum number of slices, skip creating a new
