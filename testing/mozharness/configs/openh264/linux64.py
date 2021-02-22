@@ -21,6 +21,16 @@ config = {
     "arch": "x64",
     "operating_system": "linux",
     "partial_env": {
+        "CXXFLAGS": (
+            "--sysroot {MOZ_FETCHES_DIR}/sysroot".format(
+                MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
+            )
+        ),
+        "LDFLAGS": (
+            "--sysroot {MOZ_FETCHES_DIR}/sysroot".format(
+                MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
+            )
+        ),
         "PATH": (
             "{MOZ_FETCHES_DIR}/clang/bin:"
             "{MOZ_FETCHES_DIR}/binutils/bin:"
