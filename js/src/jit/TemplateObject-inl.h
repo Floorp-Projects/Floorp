@@ -19,7 +19,7 @@ inline gc::AllocKind TemplateObject::getAllocKind() const {
   return obj_->asTenured().getAllocKind();
 }
 
-inline bool TemplateObject::isNative() const {
+inline bool TemplateObject::isNativeObject() const {
   return obj_->is<NativeObject>();
 }
 
@@ -55,76 +55,76 @@ inline gc::Cell* TemplateObject::shape() const {
   return shape;
 }
 
-inline const NativeTemplateObject& TemplateObject::asNativeTemplateObject()
+inline const TemplateNativeObject& TemplateObject::asTemplateNativeObject()
     const {
-  MOZ_ASSERT(isNative());
-  return *static_cast<const NativeTemplateObject*>(this);
+  MOZ_ASSERT(isNativeObject());
+  return *static_cast<const TemplateNativeObject*>(this);
 }
 
-inline bool NativeTemplateObject::hasDynamicSlots() const {
-  return asNative().hasDynamicSlots();
+inline bool TemplateNativeObject::hasDynamicSlots() const {
+  return asNativeObject().hasDynamicSlots();
 }
 
-inline uint32_t NativeTemplateObject::numDynamicSlots() const {
-  return asNative().numDynamicSlots();
+inline uint32_t TemplateNativeObject::numDynamicSlots() const {
+  return asNativeObject().numDynamicSlots();
 }
 
-inline uint32_t NativeTemplateObject::numUsedFixedSlots() const {
-  return asNative().numUsedFixedSlots();
+inline uint32_t TemplateNativeObject::numUsedFixedSlots() const {
+  return asNativeObject().numUsedFixedSlots();
 }
 
-inline uint32_t NativeTemplateObject::numFixedSlots() const {
-  return asNative().numFixedSlots();
+inline uint32_t TemplateNativeObject::numFixedSlots() const {
+  return asNativeObject().numFixedSlots();
 }
 
-inline uint32_t NativeTemplateObject::slotSpan() const {
+inline uint32_t TemplateNativeObject::slotSpan() const {
   // Don't call NativeObject::slotSpan, it uses shape->base->clasp and the
   // shape's BaseShape can change when we create a ShapeTable for it.
-  return asNative().shape()->slotSpan(obj_->getClass());
+  return asNativeObject().shape()->slotSpan(obj_->getClass());
 }
 
-inline Value NativeTemplateObject::getSlot(uint32_t i) const {
-  return asNative().getSlot(i);
+inline Value TemplateNativeObject::getSlot(uint32_t i) const {
+  return asNativeObject().getSlot(i);
 }
 
-inline const Value* NativeTemplateObject::getDenseElements() const {
-  return asNative().getDenseElements();
+inline const Value* TemplateNativeObject::getDenseElements() const {
+  return asNativeObject().getDenseElements();
 }
 
 #ifdef DEBUG
-inline bool NativeTemplateObject::isSharedMemory() const {
-  return asNative().isSharedMemory();
+inline bool TemplateNativeObject::isSharedMemory() const {
+  return asNativeObject().isSharedMemory();
 }
 #endif
 
-inline uint32_t NativeTemplateObject::getDenseCapacity() const {
-  return asNative().getDenseCapacity();
+inline uint32_t TemplateNativeObject::getDenseCapacity() const {
+  return asNativeObject().getDenseCapacity();
 }
 
-inline uint32_t NativeTemplateObject::getDenseInitializedLength() const {
-  return asNative().getDenseInitializedLength();
+inline uint32_t TemplateNativeObject::getDenseInitializedLength() const {
+  return asNativeObject().getDenseInitializedLength();
 }
 
-inline uint32_t NativeTemplateObject::getArrayLength() const {
+inline uint32_t TemplateNativeObject::getArrayLength() const {
   return obj_->as<ArrayObject>().length();
 }
 
-inline bool NativeTemplateObject::hasDynamicElements() const {
-  return asNative().hasDynamicElements();
+inline bool TemplateNativeObject::hasDynamicElements() const {
+  return asNativeObject().hasDynamicElements();
 }
 
-inline bool NativeTemplateObject::hasPrivate() const {
-  return asNative().hasPrivate();
+inline bool TemplateNativeObject::hasPrivate() const {
+  return asNativeObject().hasPrivate();
 }
 
-inline gc::Cell* NativeTemplateObject::regExpShared() const {
+inline gc::Cell* TemplateNativeObject::regExpShared() const {
   RegExpObject* regexp = &obj_->as<RegExpObject>();
   MOZ_ASSERT(regexp->hasShared());
   return regexp->getShared();
 }
 
-inline void* NativeTemplateObject::getPrivate() const {
-  return asNative().getPrivate();
+inline void* TemplateNativeObject::getPrivate() const {
+  return asNativeObject().getPrivate();
 }
 
 }  // namespace jit
