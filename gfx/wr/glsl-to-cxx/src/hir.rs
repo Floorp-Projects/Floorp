@@ -2282,6 +2282,19 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                                             .insert((sampler, base), TexelFetchOffsets::new(x, y));
                                     }
                                 }
+                            } else if name == "swgl_stepInterp" {
+                                let mut globals = state.modified_globals.borrow_mut();
+                                for (i, sym) in state.syms.iter().enumerate() {
+                                    match &sym.borrow().decl {
+                                        SymDecl::Global(StorageClass::In, _, _, RunClass::Vector) => {
+                                            let symref = SymRef(i as u32);
+                                            if !globals.contains(&symref) {
+                                                globals.push(symref);
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
                             }
                             let sym = match state.lookup(name) {
                                 Some(s) => s,
