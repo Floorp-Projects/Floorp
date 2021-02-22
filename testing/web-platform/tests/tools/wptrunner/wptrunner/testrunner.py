@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import threading
 import traceback
-from six.moves.queue import Empty
+from queue import Empty
 from collections import namedtuple
 
 from mozlog import structuredlog, capture
