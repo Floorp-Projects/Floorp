@@ -24,8 +24,6 @@ var gGestureSupport = {
   /**
    * Add or remove mouse gesture event listeners
    *
-   * @param aElement
-   *        The element which the listeners should be attached to.
    * @param aAddListener
    *        True to add/init listeners and false to remove/uninit
    */
