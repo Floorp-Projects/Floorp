@@ -28,7 +28,7 @@ RemoteLookAndFeel::RemoteLookAndFeel(FullLookAndFeel&& aData)
              "Only content processes should be using a RemoteLookAndFeel");
 
 #ifdef MOZ_WIDGET_GTK
-  if (!StaticPrefs::widget_disable_native_theme_for_content()) {
+  if (!StaticPrefs::widget_non_native_theme_enabled()) {
     // Configure the theme in this content process with the Gtk theme that was
     // chosen by WithThemeConfiguredForContent in the parent process.
     nsLookAndFeel::ConfigureTheme(aData.theme());
@@ -45,7 +45,7 @@ void RemoteLookAndFeel::SetDataImpl(FullLookAndFeel&& aData) {
   mTables = std::move(aData.tables());
 
 #ifdef MOZ_WIDGET_GTK
-  if (!StaticPrefs::widget_disable_native_theme_for_content()) {
+  if (!StaticPrefs::widget_non_native_theme_enabled()) {
     // Configure the theme in this content process with the Gtk theme that was
     // chosen by WithThemeConfiguredForContent in the parent process.
     nsLookAndFeel::ConfigureTheme(aData.theme());

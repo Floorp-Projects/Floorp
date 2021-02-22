@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=869314
   let Ci = SpecialPowers.Ci;
   let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
   let osName = sysInfo.getProperty("name");
-  let isNNT = SpecialPowers.getBoolPref("widget.disable-native-theme-for-content");
+  let isNNT = SpecialPowers.getBoolPref("widget.non-native-theme.enabled");
   if (osName == "Darwin" && !isNNT) { // Native styled macOS form controls.
     // This test is for macOS with native styled form controls only. See bug for more info.
     ok(document.getElementById("selectbox1").clientWidth >

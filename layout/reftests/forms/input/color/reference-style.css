@@ -15,7 +15,7 @@ button.input-color {
   height: 23px;
 }
 
-@supports -moz-bool-pref("widget.disable-native-theme-for-content") {
+@supports -moz-bool-pref("widget.non-native-theme.enabled") {
   /* The non-native theme has different widget-supplied padding values
    * for <input type="color"> and <button> -- `4px 4px 4px 4px` for the
    * former, and `1px 4px 1px 4px` for the latter.  So we size the

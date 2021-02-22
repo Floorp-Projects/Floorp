@@ -19,7 +19,7 @@
     body > button:nth-child(15) { margin: 0px; padding: 2px 4px 6px 8px; }
     body > button:nth-child(16) { margin: 2px 4px 6px 8px; padding: 0px; }
 
-    @supports -moz-bool-pref("widget.disable-native-theme-for-content") {
+    @supports -moz-bool-pref("widget.non-native-theme.enabled") {
       /* The non-native theme has different widget-supplied padding values
        * for <input type="color"> and <button>, and so we must calculate
        * the color swatch height explicitly.  These are computed as the

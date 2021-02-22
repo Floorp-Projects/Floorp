@@ -101,7 +101,8 @@ if (outerRect.width == outer.clientWidth &&
 
   let canvas = snapshotRect(window, outerRect);
   let stats = countPixels(canvas);
-  let isNNT = SpecialPowers.getBoolPref("widget.disable-native-theme-for-content");
+  let isNNT = SpecialPowers.getBoolPref("widget.non-native-theme.enabled");
+
   let references;
   if (navigator.platform.startsWith("Win")) {
     references = isNNT ? WIN_NNT_REFERENCES : WIN_REFERENCES;
