@@ -19,6 +19,7 @@
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsIAsyncShutdown.h"
+#include "nsIObserver.h"
 #include "nsISerialEventTarget.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
@@ -57,6 +58,8 @@ namespace dom {
 class IOUtils final {
  public:
   class IOError;
+
+  static void RegisterInitObserver();
 
   static already_AddRefed<Promise> Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
@@ -145,10 +148,13 @@ class IOUtils final {
   using IOPromise = MozPromise<T, IOError, true>;
 
   friend class IOUtilsShutdownBlocker;
+  friend class IOUtilsInitObserver;
   struct InternalFileInfo;
   struct InternalWriteOpts;
   class MozLZ4;
   class EventQueue;
+
+  static void Init();
 
   /**
    * Dispatch a task on the event queue.
@@ -442,6 +448,15 @@ class IOUtils::EventQueue final {
  private:
   nsCOMPtr<nsISerialEventTarget> mBackgroundEventTarget = nullptr;
   nsCOMPtr<nsIAsyncShutdownBarrier> mProfileBeforeChangeBarrier = nullptr;
+};
+
+class IOUtilsInitObserver : public nsIObserver {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+ private:
+  virtual ~IOUtilsInitObserver() = default;
 };
 
 /**
