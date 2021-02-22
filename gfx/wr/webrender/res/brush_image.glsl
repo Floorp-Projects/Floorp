@@ -273,9 +273,10 @@ void brush_vs(
 #ifdef WR_FRAGMENT_SHADER
 
 vec2 compute_repeated_uvs(float perspective_divisor) {
+#ifdef WR_FEATURE_REPETITION
     vec2 uv_size = v_uv_bounds.zw - v_uv_bounds.xy;
 
-#ifdef WR_FEATURE_ALPHA_PASS
+    #if defined(WR_FEATURE_ALPHA_PASS) && !defined(SWGL_ANTIALIAS)
     // This prevents the uv on the top and left parts of the primitive that was inflated
     // for anti-aliasing purposes from going beyound the range covered by the regular
     // (non-inflated) primitive.
@@ -293,21 +294,19 @@ vec2 compute_repeated_uvs(float perspective_divisor) {
     if (local_uv.y >= v_tile_repeat.y) {
         repeated_uv.y = v_uv_bounds.w;
     }
-#else
+    #else
     vec2 repeated_uv = fract(v_uv * perspective_divisor) * uv_size + v_uv_bounds.xy;
-#endif
+    #endif
 
     return repeated_uv;
+#else
+    return v_uv * perspective_divisor + v_uv_bounds.xy;
+#endif
 }
 
 Fragment brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_layer_and_perspective.y);
-
-#ifdef WR_FEATURE_REPETITION
     vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
-#else
-    vec2 repeated_uv = v_uv * perspective_divisor + v_uv_bounds.xy;
-#endif
 
     // Clamp the uvs to avoid sampling artifacts.
     vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
@@ -341,7 +340,7 @@ Fragment brush_fs() {
 
 #if defined(SWGL_DRAW_SPAN) && (!defined(WR_FEATURE_ALPHA_PASS) || !defined(WR_FEATURE_DUAL_SOURCE_BLENDING))
 void swgl_drawSpanRGBA8() {
-    if (!swgl_isTextureRGBA8(sColor0) || !swgl_isTextureLinear(sColor0)) {
+    if (!swgl_isTextureRGBA8(sColor0)) {
         return;
     }
 
@@ -353,39 +352,29 @@ void swgl_drawSpanRGBA8() {
 
     float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_layer_and_perspective.y);
 
-    #ifndef WR_FEATURE_REPETITION
-        vec2 uv = v_uv * perspective_divisor + v_uv_bounds.xy;
-
-        #ifdef WR_FEATURE_ALPHA_PASS
-        if (v_color != vec4(1.0)) {
-            swgl_commitTextureLinearColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color, v_layer_and_perspective.x);
-            return;
-        }
-        #endif
-        swgl_commitTextureLinearRGBA8(sColor0, uv, v_uv_sample_bounds, v_layer_and_perspective.x);
+    #ifdef WR_FEATURE_REPETITION
+        // Get the UVs before any repetition, scaling, or offsetting has occurred...
+        vec2 uv = v_uv * perspective_divisor;
     #else
-        int layer = swgl_textureLayerOffset(sColor0, v_layer_and_perspective.x);
+        vec2 uv = compute_repeated_uvs(perspective_divisor);
+    #endif
 
-        #ifdef WR_FEATURE_ALPHA_PASS
-        if (v_color != vec4(1.0)) {
-            while (swgl_SpanLength > 0) {
-                vec4 color = v_color;
-                vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
-                vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
-                swgl_commitTextureLinearChunkColorRGBA8(sColor0, swgl_linearQuantize(sColor0, uv), color, layer);
-                v_uv += swgl_interpStep(v_uv);
-            }
-            return;
-        }
-        // No clip or color scaling required, so just fall through to a normal textured span...
+    #ifdef WR_FEATURE_ALPHA_PASS
+    if (v_color != vec4(1.0)) {
+        #ifdef WR_FEATURE_REPETITION
+            swgl_commitTextureRepeatColorRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds, v_color, v_layer_and_perspective.x);
+        #else
+            swgl_commitTextureColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color, v_layer_and_perspective.x);
         #endif
+        return;
+    }
+    // No color scaling required, so just fall through to a normal textured span...
+    #endif
 
-        while (swgl_SpanLength > 0) {
-            vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
-            vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
-            swgl_commitTextureLinearChunkRGBA8(sColor0, swgl_linearQuantize(sColor0, uv), layer);
-            v_uv += swgl_interpStep(v_uv);
-        }
+    #ifdef WR_FEATURE_REPETITION
+        swgl_commitTextureRepeatRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds, v_layer_and_perspective.x);
+    #else
+        swgl_commitTextureRGBA8(sColor0, uv, v_uv_sample_bounds, v_layer_and_perspective.x);
     #endif
 }
 #endif

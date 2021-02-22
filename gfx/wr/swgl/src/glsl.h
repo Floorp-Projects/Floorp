@@ -1672,6 +1672,14 @@ struct vec4_scalar {
     return *this;
   }
 
+  vec4_scalar& operator*=(vec4_scalar a) {
+    x *= a.x;
+    y *= a.y;
+    z *= a.z;
+    w *= a.w;
+    return *this;
+  }
+
   friend bool operator==(const vec4_scalar& l, const vec4_scalar& r) {
     return l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w;
   }
@@ -1864,6 +1872,13 @@ struct vec4 {
     y /= a.y;
     z /= a.z;
     w /= a.w;
+    return *this;
+  }
+  vec4& operator*=(vec4 a) {
+    x *= a.x;
+    y *= a.y;
+    z *= a.z;
+    w *= a.w;
     return *this;
   }
   vec4& operator*=(Float a) {
