@@ -895,6 +895,24 @@ class MochitestArguments(ArgumentContainer):
                 "help": "Run fail-if/skip-if tests that match a keyword given.",
             },
         ],
+        [
+            ["--timeout-as-pass"],
+            {
+                "action": "store_true",
+                "dest": "timeoutAsPass",
+                "default": False,
+                "help": "treat harness level timeouts as passing (used for quarantine jobs).",
+            },
+        ],
+        [
+            ["--crash-as-pass"],
+            {
+                "action": "store_true",
+                "dest": "crashAsPass",
+                "default": False,
+                "help": "treat harness level crashes as passing (used for quarantine jobs).",
+            },
+        ],
     ]
 
     defaults = {
