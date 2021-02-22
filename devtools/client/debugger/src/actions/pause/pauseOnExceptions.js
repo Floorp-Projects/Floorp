@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { PROMISE } from "../utils/middleware/promise";
 import { recordEvent } from "../../utils/telemetry";
-import type { ThunkArgs } from "../types";
 
 /**
  *
@@ -14,10 +11,10 @@ import type { ThunkArgs } from "../types";
  * @static
  */
 export function pauseOnExceptions(
-  shouldPauseOnExceptions: boolean,
-  shouldPauseOnCaughtExceptions: boolean
+  shouldPauseOnExceptions,
+  shouldPauseOnCaughtExceptions
 ) {
-  return ({ dispatch, getState, client }: ThunkArgs) => {
+  return ({ dispatch, getState, client }) => {
     recordEvent("pause_on_exceptions", {
       exceptions: shouldPauseOnExceptions,
       // There's no "n" in the key below (#1463117)

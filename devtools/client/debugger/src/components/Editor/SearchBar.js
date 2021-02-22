@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
@@ -25,17 +23,11 @@ import { removeOverlay } from "../../utils/editor";
 import { scrollList } from "../../utils/result-list";
 import classnames from "classnames";
 
-import type { Source, Context } from "../../types";
-import type { Modifiers, SearchResults } from "../../reducers/file-search";
-
 import SearchInput from "../shared/SearchInput";
 import { debounce } from "lodash";
 import "./SearchBar.css";
 
-// $FlowIgnore
 const { PluralForm } = require("devtools/shared/plural-form");
-
-import type SourceEditor from "../../utils/editor/source-editor";
 
 function getShortcuts() {
   const searchAgainKey = L10N.getStr("sourceSearch.search.again.key3");
@@ -49,40 +41,8 @@ function getShortcuts() {
   };
 }
 
-type State = {
-  query: string,
-  selectedResultIndex: number,
-  count: number,
-  index: number,
-  inputFocused: boolean,
-};
-
-type OwnProps = {|
-  editor: SourceEditor,
-  showClose?: boolean,
-  size?: string,
-|};
-type Props = {
-  cx: Context,
-  editor: SourceEditor,
-  selectedSource: ?Source,
-  selectedContentLoaded: boolean,
-  searchOn: boolean,
-  searchResults: SearchResults,
-  modifiers: Modifiers,
-  query: string,
-  showClose?: boolean,
-  size?: string,
-  toggleFileSearchModifier: typeof actions.toggleFileSearchModifier,
-  setFileSearchQuery: typeof actions.setFileSearchQuery,
-  setActiveSearch: typeof actions.setActiveSearch,
-  closeFileSearch: typeof actions.closeFileSearch,
-  doSearch: typeof actions.doSearch,
-  traverseResults: typeof actions.traverseResults,
-};
-
-class SearchBar extends Component<Props, State> {
-  constructor(props: Props) {
+class SearchBar extends Component {
+  constructor(props) {
     super(props);
     this.state = {
       query: props.query,
@@ -126,13 +86,13 @@ class SearchBar extends Component<Props, State> {
     shortcuts.on(searchAgainShortcut, e => this.traverseResults(e, false));
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.refs.resultList && this.refs.resultList.refs) {
       scrollList(this.refs.resultList.refs, this.state.selectedResultIndex);
     }
   }
 
-  onEscape = (e: SyntheticKeyboardEvent<HTMLElement>) => {
+  onEscape = e => {
     this.closeSearch(e);
   };
 
@@ -144,7 +104,7 @@ class SearchBar extends Component<Props, State> {
     }
   };
 
-  closeSearch = (e: SyntheticKeyboardEvent<HTMLElement>) => {
+  closeSearch = e => {
     const { cx, closeFileSearch, editor, searchOn, query } = this.props;
     this.clearSearch();
     if (editor && searchOn) {
@@ -155,7 +115,7 @@ class SearchBar extends Component<Props, State> {
     this.setState({ query, inputFocused: false });
   };
 
-  toggleSearch = (e: SyntheticKeyboardEvent<HTMLElement>) => {
+  toggleSearch = e => {
     e.stopPropagation();
     e.preventDefault();
     const { editor, searchOn, setActiveSearch } = this.props;
@@ -179,7 +139,7 @@ class SearchBar extends Component<Props, State> {
     }
   };
 
-  doSearch = (query: string) => {
+  doSearch = query => {
     const { cx, selectedSource, selectedContentLoaded } = this.props;
     if (!selectedSource || !selectedContentLoaded) {
       return;
@@ -188,7 +148,7 @@ class SearchBar extends Component<Props, State> {
     this.props.doSearch(cx, query, this.props.editor);
   };
 
-  traverseResults = (e: SyntheticEvent<HTMLElement>, rev: boolean) => {
+  traverseResults = (e, rev) => {
     e.stopPropagation();
     e.preventDefault();
     const { editor } = this.props;
@@ -201,21 +161,21 @@ class SearchBar extends Component<Props, State> {
 
   // Handlers
 
-  onChange = (e: SyntheticInputEvent<HTMLElement>) => {
+  onChange = e => {
     this.setState({ query: e.target.value });
 
     return this.doSearch(e.target.value);
   };
 
-  onFocus = (e: SyntheticFocusEvent<HTMLElement>) => {
+  onFocus = e => {
     this.setState({ inputFocused: true });
   };
 
-  onBlur = (e: SyntheticFocusEvent<HTMLElement>) => {
+  onBlur = e => {
     this.setState({ inputFocused: false });
   };
 
-  onKeyDown = (e: any) => {
+  onKeyDown = e => {
     if (e.key !== "Enter" && e.key !== "F3") {
       return;
     }
@@ -225,7 +185,7 @@ class SearchBar extends Component<Props, State> {
     return this.doSearch(e.target.value);
   };
 
-  onHistoryScroll = (query: string) => {
+  onHistoryScroll = query => {
     this.setState({ query });
     this.doSearch(query);
   };
@@ -271,7 +231,7 @@ class SearchBar extends Component<Props, State> {
             toggleFileSearchModifier(cx, modVal);
             doSearch(query);
           }}
-          onKeyDown={(e: any) => {
+          onKeyDown={e => {
             if (e.key === "Enter") {
               toggleFileSearchModifier(cx, modVal);
               doSearch(query);
@@ -369,7 +329,7 @@ SearchBar.contextTypes = {
   shortcuts: PropTypes.object,
 };
 
-const mapStateToProps = (state, p: OwnProps) => {
+const mapStateToProps = (state, p) => {
   const selectedSource = getSelectedSource(state);
 
   return {
@@ -385,7 +345,7 @@ const mapStateToProps = (state, p: OwnProps) => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+export default connect(mapStateToProps, {
   toggleFileSearchModifier: actions.toggleFileSearchModifier,
   setFileSearchQuery: actions.setFileSearchQuery,
   setActiveSearch: actions.setActiveSearch,

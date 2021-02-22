@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React from "react";
 import lodash from "lodash";
 
@@ -17,11 +15,10 @@ jest.unmock("lodash");
 
 import { filter } from "fuzzaldrin-plus";
 
-// $FlowIgnore
 lodash.throttle = jest.fn(fn => fn);
 
 function generateModal(propOverrides, renderType = "shallow") {
-  const props: any = {
+  const props = {
     cx: mockcx,
     enabled: false,
     query: "",
@@ -119,10 +116,7 @@ describe("QuickOpenModal", () => {
       {
         enabled: true,
         query: "",
-        displayedSources: [
-          // $FlowIgnore
-          { url: "mozilla.com", relativeUrl: true },
-        ],
+        displayedSources: [{ url: "mozilla.com", relativeUrl: true }],
         tabs: [generateTab("mozilla.com")],
       },
       "shallow"

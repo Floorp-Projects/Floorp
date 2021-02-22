@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   traverseResults,
   toEditorLine,
@@ -24,7 +22,7 @@ import {
 import { makeMockSource } from "../../test-mockup";
 
 describe("traverseResults", () => {
-  const e: any = { stopPropagation: jest.fn(), preventDefault: jest.fn() };
+  const e = { stopPropagation: jest.fn(), preventDefault: jest.fn() };
   const ctx = {};
   const query = "Awesome books";
   const modifiers = {
@@ -154,7 +152,7 @@ describe("markText", () => {
 
 describe("lineAtHeight", () => {
   it("calls codemirror API lineAtHeight", () => {
-    const e: any = { clientX: 30, clientY: 60 };
+    const e = { clientX: 30, clientY: 60 };
     expect(lineAtHeight(editor, "test-123", e)).toEqual(301);
     expect(editor.codeMirror.lineAtHeight).toHaveBeenCalledWith(e.clientY);
   });
@@ -163,7 +161,7 @@ describe("lineAtHeight", () => {
 describe("getSourceLocationFromMouseEvent", () => {
   it("calls codemirror API coordsChar & returns location", () => {
     const source = makeMockSource(undefined, "test-123");
-    const e: any = { clientX: 30, clientY: 60 };
+    const e = { clientX: 30, clientY: 60 };
     expect(getSourceLocationFromMouseEvent(editor, source, e)).toEqual({
       sourceId: "test-123",
       line: 7,

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /* eslint max-nested-callbacks: ["error", 4]*/
 
 import { makeMockDisplaySource } from "../../../utils/test-mockup";
@@ -17,9 +15,7 @@ import {
   nodeHasChildren,
 } from "../index";
 
-type RawSource = {| url: string, id: string, actors?: any |};
-
-function createSourcesMap(sources: RawSource[]) {
+function createSourcesMap(sources) {
   const sourcesMap = sources.reduce((map, source) => {
     map[source.id] = makeMockDisplaySource(source.url, source.id);
     return map;
@@ -28,7 +24,7 @@ function createSourcesMap(sources: RawSource[]) {
   return sourcesMap;
 }
 
-function createSourcesList(sources: { url: string, id?: string }[]) {
+function createSourcesList(sources) {
   return sources.map((s, i) => makeMockDisplaySource(s.url, s.id));
 }
 

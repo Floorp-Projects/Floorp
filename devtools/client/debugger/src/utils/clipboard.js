@@ -7,10 +7,8 @@
  * https://searchfox.org/mozilla-central/source/devtools/shared/platform/clipboard.js
  */
 
-// @flow
-
-export function copyToTheClipboard(string: string): void {
-  const doCopy = function(e: any) {
+export function copyToTheClipboard(string) {
+  const doCopy = function(e) {
     e.clipboardData.setData("text/plain", string);
     e.preventDefault();
   };

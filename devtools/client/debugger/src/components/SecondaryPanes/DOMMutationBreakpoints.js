@@ -22,18 +22,6 @@ import { connect } from "../../utils/connect";
 import { CloseButton } from "../shared/Button";
 
 import "./DOMMutationBreakpoints.css";
-import type { DOMMutationBreakpoint } from "../../types";
-
-type Props = {
-  breakpoints: DOMMutationBreakpoint[],
-  openElementInInspector: typeof actions.openElementInInspectorCommand,
-  highlightDomElement: typeof actions.highlightDomElement,
-  unHighlightDomElement: typeof actions.unHighlightDomElement,
-  openInspector: typeof actions.openInspector,
-  deleteBreakpoint: typeof deleteDOMMutationBreakpoint,
-  toggleBreakpoint: typeof toggleDOMMutationBreakpointState,
-  setSkipPausing: typeof actions.setSkipPausing,
-};
 
 const localizationTerms = {
   subtree: L10N.getStr("domMutationTypes.subtree"),
@@ -41,7 +29,7 @@ const localizationTerms = {
   removal: L10N.getStr("domMutationTypes.removal"),
 };
 
-class DOMMutationBreakpointsContents extends Component<Props> {
+class DOMMutationBreakpointsContents extends Component {
   handleBreakpoint(breakpointId, shouldEnable) {
     const { toggleBreakpoint, setSkipPausing } = this.props;
 
@@ -53,7 +41,7 @@ class DOMMutationBreakpointsContents extends Component<Props> {
     toggleBreakpoint(breakpointId, shouldEnable);
   }
 
-  renderItem(breakpoint: DOMMutationBreakpoint) {
+  renderItem(breakpoint) {
     const {
       openElementInInspector,
       highlightDomElement,
@@ -138,7 +126,7 @@ const DOMMutationBreakpointsPanel = connect(
   { storeKey: "toolbox-store" }
 )(DOMMutationBreakpointsContents);
 
-class DomMutationBreakpoints extends Component<Props> {
+class DomMutationBreakpoints extends Component {
   render() {
     return (
       <DOMMutationBreakpointsPanel

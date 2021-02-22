@@ -2,47 +2,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { ThunkArgs } from "./types";
-import type { Grip, URL } from "../types";
-
 /**
  * @memberof actions/toolbox
  * @static
  */
-export function openLink(url: URL) {
-  return async function({ panel }: ThunkArgs) {
+export function openLink(url) {
+  return async function({ panel }) {
     return panel.openLink(url);
   };
 }
 
-export function evaluateInConsole(inputString: string) {
-  return async ({ panel }: ThunkArgs) => {
+export function evaluateInConsole(inputString) {
+  return async ({ panel }) => {
     return panel.openConsoleAndEvaluate(inputString);
   };
 }
 
-export function openElementInInspectorCommand(grip: Grip) {
-  return async ({ panel }: ThunkArgs) => {
+export function openElementInInspectorCommand(grip) {
+  return async ({ panel }) => {
     return panel.openElementInInspector(grip);
   };
 }
 
-export function openInspector(grip: Grip) {
-  return async ({ panel }: ThunkArgs) => {
+export function openInspector(grip) {
+  return async ({ panel }) => {
     return panel.openInspector();
   };
 }
 
-export function highlightDomElement(grip: Grip) {
-  return async ({ panel }: ThunkArgs) => {
+export function highlightDomElement(grip) {
+  return async ({ panel }) => {
     return panel.highlightDomElement(grip);
   };
 }
 
-export function unHighlightDomElement(grip: Grip) {
-  return async ({ panel }: ThunkArgs) => {
+export function unHighlightDomElement(grip) {
+  return async ({ panel }) => {
     return panel.unHighlightDomElement(grip);
   };
 }

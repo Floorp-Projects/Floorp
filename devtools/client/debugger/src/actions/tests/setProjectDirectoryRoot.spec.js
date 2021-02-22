@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   createStore,
   selectors,
@@ -58,9 +56,9 @@ describe("setProjectDirectoryRoot", () => {
     );
 
     const filteredSourcesByThread = getDisplayedSources(getState());
-    const filteredSources = (Object.values(
+    const filteredSources = Object.values(
       filteredSourcesByThread.FakeThread
-    ): any)[0];
+    )[0];
 
     expect(filteredSources.url).toEqual(
       "http://localhost:8000/examples/js/scopes.js"

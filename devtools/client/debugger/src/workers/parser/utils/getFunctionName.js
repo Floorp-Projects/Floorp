@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import * as t from "@babel/types";
-import type { Node } from "@babel/types";
 
 // Perform ES6's anonymous function name inference for all
 // locations where static analysis is possible.
 // eslint-disable-next-line complexity
-export default function getFunctionName(node: Node, parent: Node): string {
+export default function getFunctionName(node, parent) {
   if (t.isIdentifier(node.id)) {
     return node.id.name;
   }

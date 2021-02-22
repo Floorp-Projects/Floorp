@@ -2,17 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { isOriginalId } from "devtools-source-map";
 import { getSourceActorsForSource, getBreakableLines } from "../../selectors";
 import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 import { union } from "lodash";
-import type { Context, SourceId } from "../../types";
-import type { ThunkArgs } from "../../actions/types";
 import { loadSourceActorBreakableLines } from "../source-actors";
 
-function calculateBreakableLines(positions): number[] {
+function calculateBreakableLines(positions) {
   const lines = [];
   for (const line in positions) {
     if (positions[line].length > 0) {
@@ -23,8 +19,8 @@ function calculateBreakableLines(positions): number[] {
   return lines;
 }
 
-export function setBreakableLines(cx: Context, sourceId: SourceId) {
-  return async ({ getState, dispatch, client }: ThunkArgs) => {
+export function setBreakableLines(cx, sourceId) {
+  return async ({ getState, dispatch, client }) => {
     let breakableLines;
     if (isOriginalId(sourceId)) {
       const positions = await dispatch(

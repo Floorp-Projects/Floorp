@@ -2,44 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import typeof SourceMaps from "devtools-source-map";
-
 import { locColumn } from "./locColumn";
 import { positionCmp } from "./positionCmp";
 import { filterSortedArray } from "./filtering";
-
-import type { SourceScope } from "../../../workers/parser";
-import type { PartialPosition, SourceLocation } from "../../../types";
-
-type SourceOriginalRange = {
-  line: number,
-  columnStart: number,
-  columnEnd: number,
-};
 
 // * match - Range contains a single identifier with matching start location
 // * contains - Range contains a single identifier with non-matching start
 // * multiple - Range contains multiple identifiers
 // * empty - Range contains no identifiers
-type MappedOriginalRangeType = "match" | "contains" | "multiple" | "empty";
-export type MappedOriginalRange = {
-  type: MappedOriginalRangeType,
-  singleDeclaration: boolean,
-  line: number,
-  columnStart: number,
-  columnEnd: number,
-};
 
 export async function loadRangeMetadata(
-  location: SourceLocation,
-  originalAstScopes: Array<SourceScope>,
-  sourceMaps: SourceMaps
-): Promise<Array<MappedOriginalRange>> {
-  const originalRanges: Array<SourceOriginalRange> = await sourceMaps.getOriginalRanges(
-    location.sourceId
-  );
+  location,
+  originalAstScopes,
+  sourceMaps
+) {
+  const originalRanges = await sourceMaps.getOriginalRanges(location.sourceId);
 
   const sortedOriginalAstBindings = [];
   for (const item of originalAstScopes) {
@@ -117,10 +94,7 @@ export async function loadRangeMetadata(
   });
 }
 
-export function findMatchingRange(
-  sortedOriginalRanges: Array<MappedOriginalRange>,
-  bindingRange: { +end: PartialPosition, +start: PartialPosition }
-): ?MappedOriginalRange {
+export function findMatchingRange(sortedOriginalRanges, bindingRange) {
   return filterSortedArray(sortedOriginalRanges, range => {
     if (range.line < bindingRange.start.line) {
       return -1;

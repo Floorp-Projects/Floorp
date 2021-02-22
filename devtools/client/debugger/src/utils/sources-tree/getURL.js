@@ -2,25 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { parse } from "../url";
 
 const {
   getUnicodeHostname,
   getUnicodeUrlPath,
-  // $FlowIgnore
 } = require("devtools/client/shared/unicode-url");
 
-import type { DisplaySource, Source } from "../../types";
-export type ParsedURL = {
-  path: string,
-  search: string,
-  group: string,
-  filename: string,
-};
-
-export function getFilenameFromPath(pathname?: string): string {
+export function getFilenameFromPath(pathname) {
   let filename = "";
   if (pathname) {
     filename = pathname.substring(pathname.lastIndexOf("/") + 1);
@@ -35,7 +24,7 @@ export function getFilenameFromPath(pathname?: string): string {
 const NoDomain = "(no domain)";
 const def = { path: "", search: "", group: "", filename: "" };
 
-export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
+export function getURL(source, defaultDomain = "") {
   const { url } = source;
   if (!url) {
     return def;
@@ -43,10 +32,7 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
   return getURLInternal(url, defaultDomain);
 }
 
-export function getDisplayURL(
-  source: DisplaySource,
-  defaultDomain: ?string = ""
-): ParsedURL {
+export function getDisplayURL(source, defaultDomain = "") {
   const { displayURL } = source;
   if (!displayURL) {
     return def;
@@ -54,7 +40,7 @@ export function getDisplayURL(
   return getURLInternal(displayURL, defaultDomain);
 }
 
-function getURLInternal(url: string, defaultDomain: ?string): ParsedURL {
+function getURLInternal(url, defaultDomain) {
   const { pathname, search, protocol, host } = parse(url);
   const filename = getUnicodeUrlPath(getFilenameFromPath(pathname));
 

@@ -2,34 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import typeof SourceMaps from "devtools-source-map";
-
-import {
-  type SourceScope,
-  type BindingData,
-  type BindingLocation,
-} from "../../../workers/parser";
-import type { RenderableScope } from "../scopes/getScope";
+import {} from "../../../workers/parser";
 import { locColumn } from "./locColumn";
-import {
-  loadRangeMetadata,
-  findMatchingRange,
-  type MappedOriginalRange,
-} from "./rangeMetadata";
+import { loadRangeMetadata, findMatchingRange } from "./rangeMetadata";
 
 // eslint-disable-next-line max-len
 import {
   findGeneratedReference,
   findGeneratedImportReference,
   findGeneratedImportDeclaration,
-  type GeneratedDescriptor,
 } from "./findGeneratedBindingFromPosition";
 import {
   buildGeneratedBindingList,
   buildFakeBindingList,
-  type GeneratedBindingLocation,
 } from "./buildGeneratedBindingList";
 import {
   originalRangeStartsInside,
@@ -38,36 +23,14 @@ import {
 import { getOptimizedOutGrip } from "./optimizedOut";
 
 import { log } from "../../log";
-import type { ThunkArgs } from "../../../actions/types";
-
-import type {
-  PartialPosition,
-  Scope,
-  Source,
-  SourceContent,
-  Frame,
-  BindingContents,
-  ScopeBindings,
-  MappedLocation,
-} from "../../../types";
-
-export type OriginalScope = RenderableScope;
-export type MappedFrameLocation = MappedLocation & {
-  this?: $ElementType<Frame, "this">,
-};
 
 export async function buildMappedScopes(
-  source: Source,
-  content: SourceContent,
-  frame: MappedFrameLocation,
-  scopes: ?Scope,
-  { client, parser, sourceMaps }: ThunkArgs
-): Promise<?{
-  mappings: {
-    [string]: string,
-  },
-  scope: OriginalScope,
-}> {
+  source,
+  content,
+  frame,
+  scopes,
+  { client, parser, sourceMaps }
+) {
   const originalAstScopes = await parser.getScopes(frame.location);
   const generatedAstScopes = await parser.getScopes(frame.generatedLocation);
 
@@ -123,9 +86,9 @@ export async function buildMappedScopes(
 }
 
 async function mapOriginalBindingsToGenerated(
-  source: Source,
-  content: SourceContent,
-  originalRanges: Array<MappedOriginalRange>,
+  source,
+  content,
+  originalRanges,
   originalAstScopes,
   generatedAstBindings,
   client,
@@ -187,7 +150,7 @@ async function mapOriginalBindingsToGenerated(
  * Consider a scope and its parents reliable if the vast majority of its
  * bindings were successfully mapped to generated scope bindings.
  */
-function isReliableScope(scope: OriginalScope): boolean {
+function isReliableScope(scope) {
   let totalBindings = 0;
   let unknownBindings = 0;
 
@@ -211,17 +174,13 @@ function isReliableScope(scope: OriginalScope): boolean {
   return totalBindings === 0 || unknownBindings / totalBindings < 0.25;
 }
 
-function hasLineMappings(ranges): boolean {
+function hasLineMappings(ranges) {
   return ranges.every(
     range => range.columnStart === 0 && range.columnEnd === Infinity
   );
 }
 
-function batchScopeMappings(
-  originalAstScopes: Array<SourceScope>,
-  source: Source,
-  sourceMaps: SourceMaps
-) {
+function batchScopeMappings(originalAstScopes, source, sourceMaps) {
   const precalculatedRanges = new Map();
   const precalculatedLocations = new Map();
 
@@ -274,21 +233,18 @@ function batchScopeMappings(
     },
   };
 }
-function buildLocationKey(loc: PartialPosition): string {
+function buildLocationKey(loc) {
   return `${loc.line}:${locColumn(loc)}`;
 }
 
-function generateClientScope(
-  globalLexicalScope: OriginalScope,
-  originalScopes: Array<SourceScope & { generatedBindings: ScopeBindings }>
-): OriginalScope {
+function generateClientScope(globalLexicalScope, originalScopes) {
   // Build a structure similar to the client's linked scope object using
   // the original AST scopes, but pulling in the generated bindings
   // linked to each scope.
   const result = originalScopes
     .slice(0, -2)
     .reverse()
-    .reduce((acc, orig, i): OriginalScope => {
+    .reduce((acc, orig, i) => {
       const {
         // The 'this' binding data we have is handled independently, so
         // the binding data is not included here.
@@ -334,14 +290,13 @@ function generateClientScope(
   return result;
 }
 
-function getGlobalFromScope(scopes: Scope): OriginalScope {
+function getGlobalFromScope(scopes) {
   // Pull the root object scope and root lexical scope to reuse them in
   // our mapped scopes. This assumes that file being processed is
   // a CommonJS or ES6 module, which might not be ideal. Potentially
   // should add some logic to try to detect those cases?
-  let globalLexicalScope: ?OriginalScope = null;
+  let globalLexicalScope = null;
   for (let s = scopes; s.parent; s = s.parent) {
-    // $FlowIgnore - Flow doesn't like casting 'parent'.
     globalLexicalScope = s;
   }
   if (!globalLexicalScope) {
@@ -350,9 +305,7 @@ function getGlobalFromScope(scopes: Scope): OriginalScope {
   return globalLexicalScope;
 }
 
-function generateGlobalFromAst(
-  generatedScopes: Array<SourceScope>
-): OriginalScope {
+function generateGlobalFromAst(generatedScopes) {
   const globalLexicalAst = generatedScopes[generatedScopes.length - 2];
   if (!globalLexicalAst) {
     throw new Error("Assertion failure - there should always be a scope");
@@ -367,7 +320,6 @@ function generateGlobalFromAst(
         Object.keys(globalLexicalAst).map(key => [key, getOptimizedOutGrip()])
       ),
     },
-    // $FlowIgnore - Flow doesn't like casting 'parent'.
     parent: {
       actor: "generatedActor0",
       object: getOptimizedOutGrip(),
@@ -377,10 +329,7 @@ function generateGlobalFromAst(
   };
 }
 
-function hasValidIdent(
-  range: MappedOriginalRange,
-  pos: BindingLocation
-): boolean {
+function hasValidIdent(range, pos) {
   return (
     range.type === "match" ||
     // For declarations, we allow the range on the identifier to be a
@@ -391,18 +340,15 @@ function hasValidIdent(
 
 // eslint-disable-next-line complexity
 async function findGeneratedBinding(
-  sourceMaps: any,
-  client: any,
-  source: Source,
-  content: SourceContent,
-  name: string,
-  originalBinding: BindingData,
-  originalRanges: Array<MappedOriginalRange>,
-  generatedAstBindings: Array<GeneratedBindingLocation>
-): Promise<?{
-  grip: BindingContents,
-  expression: string | null,
-}> {
+  sourceMaps,
+  client,
+  source,
+  content,
+  name,
+  originalBinding,
+  originalRanges,
+  generatedAstBindings
+) {
   // If there are no references to the implicits, then we have no way to
   // even attempt to map it back to the original since there is no location
   // data to use. Bail out instead of just showing it as unmapped.
@@ -447,7 +393,7 @@ async function findGeneratedBinding(
   const { refs } = originalBinding;
 
   let hadApplicableBindings = false;
-  let genContent: GeneratedDescriptor | null = null;
+  let genContent = null;
   for (const pos of refs) {
     const applicableBindings = await loadApplicableBindings(pos, pos.type);
 

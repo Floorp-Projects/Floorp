@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-export function getIndentation(line: ?string): number {
+export function getIndentation(line) {
   if (!line) {
     return 0;
   }
@@ -17,7 +15,7 @@ export function getIndentation(line: ?string): number {
   return lineMatch[0].length;
 }
 
-function getMaxIndentation(lines: string[]): number {
+function getMaxIndentation(lines) {
   const firstLine = lines[0];
   const secondLine = lines[1];
   const lastLine = lines[lines.length - 1];
@@ -31,7 +29,7 @@ function getMaxIndentation(lines: string[]): number {
   return Math.max(...indentations);
 }
 
-export function correctIndentation(text: string): string {
+export function correctIndentation(text) {
   const lines = text.trim().split("\n");
   const indentation = getMaxIndentation(lines);
   const formattedLines = lines.map(_line =>

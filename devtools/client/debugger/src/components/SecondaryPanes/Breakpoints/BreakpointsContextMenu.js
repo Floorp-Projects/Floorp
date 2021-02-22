@@ -2,34 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { buildMenu, showMenu } from "../../../context-menu/menu";
 import { getSelectedLocation } from "../../../utils/selected-location";
-import actions from "../../../actions";
 import { features } from "../../../utils/prefs";
 import { formatKeyShortcut } from "../../../utils/text";
 
-import type { Breakpoint, Source, Context } from "../../../types";
-
-type Props = {
-  cx: Context,
-  breakpoint: Breakpoint,
-  breakpoints: Breakpoint[],
-  selectedSource: ?Source,
-  removeBreakpoint: typeof actions.removeBreakpoint,
-  removeBreakpoints: typeof actions.removeBreakpoints,
-  removeAllBreakpoints: typeof actions.removeAllBreakpoints,
-  toggleBreakpoints: typeof actions.toggleBreakpoints,
-  toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
-  toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
-  selectSpecificLocation: typeof actions.selectSpecificLocation,
-  setBreakpointOptions: typeof actions.setBreakpointOptions,
-  openConditionalPanel: typeof actions.openConditionalPanel,
-  contextMenuEvent: SyntheticEvent<HTMLElement>,
-};
-
-export default function showContextMenu(props: Props) {
+export default function showContextMenu(props) {
   const {
     cx,
     breakpoint,

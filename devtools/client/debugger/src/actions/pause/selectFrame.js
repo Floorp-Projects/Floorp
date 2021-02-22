@@ -2,22 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { selectLocation } from "../sources";
 import { evaluateExpressions } from "../expressions";
 import { fetchScopes } from "./fetchScopes";
 import assert from "../../utils/assert";
 
-import type { Frame, ThreadContext } from "../../types";
-import type { ThunkArgs } from "../types";
-
 /**
  * @memberof actions/pause
  * @static
  */
-export function selectFrame(cx: ThreadContext, frame: Frame) {
-  return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
+export function selectFrame(cx, frame) {
+  return async ({ dispatch, client, getState, sourceMaps }) => {
     assert(cx.thread == frame.thread, "Thread mismatch");
 
     // Frames that aren't on-stack do not support evalling and may not

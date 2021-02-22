@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 export * from "../reducers/expressions";
 export * from "../reducers/sources";
 export * from "../reducers/tabs";
@@ -56,7 +54,6 @@ export {
   getVisibleSelectedFrame,
 } from "./pause";
 
-// $FlowIgnore
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 const { reducer } = objectInspector;

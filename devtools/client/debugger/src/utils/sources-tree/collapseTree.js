@@ -2,16 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { createDirectoryNode } from "./utils";
-
-import type { TreeDirectory, TreeNode } from "./types";
 
 /**
  * Take an existing source tree, and return a new one with collapsed nodes.
  */
-function _collapseTree(node: TreeNode, depth: number): TreeNode {
+function _collapseTree(node, depth) {
   // Node is a folder.
   if (node.type === "directory") {
     if (!Array.isArray(node.contents)) {
@@ -49,7 +45,7 @@ function _collapseTree(node: TreeNode, depth: number): TreeNode {
   return node;
 }
 
-export function collapseTree(node: TreeDirectory): TreeDirectory {
+export function collapseTree(node) {
   const tree = _collapseTree(node, 0);
-  return ((tree: any): TreeDirectory);
+  return tree;
 }

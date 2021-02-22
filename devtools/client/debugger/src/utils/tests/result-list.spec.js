@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { scrollList } from "../result-list.js";
 
 describe("scrollList", () => {
@@ -20,7 +18,7 @@ describe("scrollList", () => {
     const ul = document.createElement("ul");
     const li = document.createElement("li");
 
-    (li: any).scrollIntoView = jest.fn();
+    li.scrollIntoView = jest.fn();
     ul.appendChild(li);
 
     scrollList([li], 0);

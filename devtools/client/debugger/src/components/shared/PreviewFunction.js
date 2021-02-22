@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 
@@ -11,34 +9,18 @@ import { times, zip, flatten } from "lodash";
 
 import { formatDisplayName } from "../../utils/pause/frames";
 
-import type { URL } from "../../types";
-
 import "./PreviewFunction.css";
-
-type FunctionType = {
-  name?: string,
-  displayName?: string,
-  userDisplayName?: string,
-  parameterNames?: string[],
-  location?: {
-    url: URL,
-    line: number,
-    column: number,
-  },
-};
-
-type Props = { func: FunctionType };
 
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
-export default class PreviewFunction extends Component<Props> {
-  renderFunctionName(func: FunctionType) {
+export default class PreviewFunction extends Component {
+  renderFunctionName(func) {
     const { l10n } = this.context;
-    const name = formatDisplayName((func: any), undefined, l10n);
+    const name = formatDisplayName(func, undefined, l10n);
     return <span className="function-name">{name}</span>;
   }
 
-  renderParams(func: FunctionType) {
+  renderParams(func) {
     const { parameterNames = [] } = func;
     const params = parameterNames.filter(Boolean).map(param => (
       <span className="param" key={param}>
@@ -52,11 +34,10 @@ export default class PreviewFunction extends Component<Props> {
       </span>
     ));
 
-    // $FlowIgnore
     return flatten(zip(params, commas));
   }
 
-  jumpToDefinitionButton(func: FunctionType) {
+  jumpToDefinitionButton(func) {
     const { location } = func;
 
     if (

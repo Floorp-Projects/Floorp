@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { ThunkArgs } from "../types";
 import { getSkipPausing } from "../../selectors";
 
 /**
@@ -12,7 +9,7 @@ import { getSkipPausing } from "../../selectors";
  * @static
  */
 export function toggleSkipPausing() {
-  return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
+  return async ({ dispatch, client, getState, sourceMaps }) => {
     const skipPausing = !getSkipPausing(getState());
     await client.setSkipPausing(skipPausing);
     dispatch({ type: "TOGGLE_SKIP_PAUSING", skipPausing });
@@ -23,8 +20,8 @@ export function toggleSkipPausing() {
  * @memberof actions/pause
  * @static
  */
-export function setSkipPausing(skipPausing: boolean) {
-  return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
+export function setSkipPausing(skipPausing) {
+  return async ({ dispatch, client, getState, sourceMaps }) => {
     const currentlySkipping = getSkipPausing(getState());
     if (currentlySkipping === skipPausing) {
       return;

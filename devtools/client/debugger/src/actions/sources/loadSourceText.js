@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { PROMISE } from "../utils/middleware/promise";
 import {
   getSource,
@@ -21,30 +19,15 @@ import { prettyPrintSource } from "./prettyPrint";
 import { isFulfilled, fulfilled } from "../../utils/async-value";
 
 import { isOriginal, isPretty } from "../../utils/source";
-import {
-  memoizeableAction,
-  type MemoizedAction,
-} from "../../utils/memoizableAction";
+import { memoizeableAction } from "../../utils/memoizableAction";
 
-// $FlowIgnore
 const Telemetry = require("devtools/client/shared/telemetry");
-
-import type { ThunkArgs } from "../types";
-import type { Source, Context, SourceId } from "../../types";
-import type { State } from "../../reducers/types";
 
 // Measures the time it takes for a source to load
 const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
 const telemetry = new Telemetry();
 
-async function loadSource(
-  state: State,
-  source: Source,
-  { sourceMaps, client, getState }
-): Promise<?{
-  text: string,
-  contentType: string,
-}> {
+async function loadSource(state, source, { sourceMaps, client, getState }) {
   if (isPretty(source) && isOriginal(source)) {
     const generatedSource = getGeneratedSource(state, source);
     if (!generatedSource) {
@@ -99,16 +82,16 @@ async function loadSource(
   }
 
   return {
-    text: (response: any).source,
-    contentType: (response: any).contentType || "text/javascript",
+    text: response.source,
+    contentType: response.contentType || "text/javascript",
   };
 }
 
 async function loadSourceTextPromise(
-  cx: Context,
-  source: Source,
-  { dispatch, getState, client, sourceMaps, parser }: ThunkArgs
-): Promise<?Source> {
+  cx,
+  source,
+  { dispatch, getState, client, sourceMaps, parser }
+) {
   const epoch = getSourcesEpoch(getState());
   await dispatch({
     type: "LOAD_SOURCE_TEXT",
@@ -140,17 +123,14 @@ async function loadSourceTextPromise(
   }
 }
 
-export function loadSourceById(cx: Context, sourceId: SourceId) {
-  return ({ getState, dispatch }: ThunkArgs) => {
+export function loadSourceById(cx, sourceId) {
+  return ({ getState, dispatch }) => {
     const source = getSourceFromId(getState(), sourceId);
     return dispatch(loadSourceText({ cx, source }));
   };
 }
 
-export const loadSourceText: MemoizedAction<
-  {| cx: Context, source: Source |},
-  ?Source
-> = memoizeableAction("loadSourceText", {
+export const loadSourceText = memoizeableAction("loadSourceText", {
   getValue: ({ source }, { getState }) => {
     source = source ? getSource(getState(), source.id) : null;
     if (!source) {

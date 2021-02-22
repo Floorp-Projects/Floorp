@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * CodeMirror source editor utils
  * @module utils/source-editor
@@ -11,7 +9,6 @@
 
 const CodeMirror = require("codemirror");
 
-// $FlowIgnore
 require("raw!chrome://devtools/content/shared/sourceeditor/codemirror/lib/codemirror.css");
 require("codemirror/mode/javascript/javascript");
 require("codemirror/mode/htmlmixed/htmlmixed");
@@ -32,68 +29,50 @@ require("codemirror/addon/display/placeholder");
 require("codemirror/mode/clike/clike");
 require("codemirror/mode/rust/rust");
 
-// $FlowIgnore
 require("raw!chrome://devtools/content/debugger/src/utils/editor/source-editor.css");
 
 // NOTE: we should eventually use debugger-html context type mode
-type Mode = string | Object;
-export type AlignOpts = "top" | "center" | "bottom";
 
 // Maximum allowed margin (in number of lines) from top or bottom of the editor
 // while shifting to a line which was initially out of view.
 const MAX_VERTICAL_OFFSET = 3;
 
-type SourceEditorOpts = {
-  enableCodeFolding: boolean,
-  extraKeys: Object,
-  gutters: string[],
-  foldGutter: boolean,
-  lineNumbers: boolean,
-  lineWrapping: boolean,
-  matchBrackets: boolean,
-  mode: string,
-  readOnly: boolean,
-  showAnnotationRuler: boolean,
-  theme: string,
-  value: string,
-};
-
 export default class SourceEditor {
-  opts: SourceEditorOpts;
-  editor: any;
+  opts;
+  editor;
 
-  constructor(opts: SourceEditorOpts): void {
+  constructor(opts) {
     this.opts = opts;
   }
 
-  appendToLocalElement(node: any): void {
+  appendToLocalElement(node) {
     this.editor = CodeMirror(node, this.opts);
   }
 
-  destroy(): void {
+  destroy() {
     // Unlink the current document.
     if (this.editor.doc) {
       this.editor.doc.cm = null;
     }
   }
 
-  get codeMirror(): Object {
+  get codeMirror() {
     return this.editor;
   }
 
-  get CodeMirror(): Object {
+  get CodeMirror() {
     return CodeMirror;
   }
 
-  setText(str: string): void {
+  setText(str) {
     this.editor.setValue(str);
   }
 
-  getText(): string {
+  getText() {
     return this.editor.getValue();
   }
 
-  setMode(value: Mode): void {
+  setMode(value) {
     this.editor.setOption("mode", value);
   }
 
@@ -101,7 +80,7 @@ export default class SourceEditor {
    * Replaces the current document with a new source document
    * @memberof utils/source-editor
    */
-  replaceDocument(doc: any): void {
+  replaceDocument(doc) {
     this.editor.swapDoc(doc);
   }
 
@@ -110,7 +89,7 @@ export default class SourceEditor {
    * @returns CodeMirror.Doc
    * @memberof utils/source-editor
    */
-  createDocument(): Object {
+  createDocument() {
     return new CodeMirror.Doc("");
   }
 
@@ -120,7 +99,7 @@ export default class SourceEditor {
    * bottom.
    * @memberof utils/source-editor
    */
-  alignLine(line: number, align: AlignOpts = "top"): void {
+  alignLine(line, align = "top") {
     const cm = this.editor;
     const editorClientRect = cm.getWrapperElement().getBoundingClientRect();
 
@@ -159,7 +138,7 @@ export default class SourceEditor {
    * Scrolls the view such that the given line number is the first visible line.
    * @memberof utils/source-editor
    */
-  setFirstVisibleLine(line: number): void {
+  setFirstVisibleLine(line) {
     const { top } = this.editor.charCoords({ line, ch: 0 }, "local");
     this.editor.scrollTo(0, top);
   }

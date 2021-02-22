@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import { PureComponent } from "react";
 import {
   toEditorPosition,
@@ -23,29 +22,12 @@ import {
   getPausePreviewLocation,
 } from "../../selectors";
 
-import type { SourceLocation, Why, SourceWithContent } from "../../types";
-
-type OwnProps = {||};
-type Props = {
-  location: ?SourceLocation,
-  why: ?Why,
-  source: ?SourceWithContent,
-};
-
-type TextClasses = {
-  markTextClass: string,
-  lineClass: string,
-};
-
-function isDocumentReady(
-  source: ?SourceWithContent,
-  location: ?SourceLocation
-) {
+function isDocumentReady(source, location) {
   return location && source && source.content && hasDocument(location.sourceId);
 }
 
-export class DebugLine extends PureComponent<Props> {
-  debugExpression: null;
+export class DebugLine extends PureComponent {
+  debugExpression;
 
   componentDidMount() {
     const { why, location, source } = this.props;
@@ -57,7 +39,7 @@ export class DebugLine extends PureComponent<Props> {
     this.clearDebugLine(why, location, source);
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps) {
     const { why, location, source } = this.props;
 
     startOperation();
@@ -66,11 +48,7 @@ export class DebugLine extends PureComponent<Props> {
     endOperation();
   }
 
-  setDebugLine(
-    why: ?Why,
-    location: ?SourceLocation,
-    source: ?SourceWithContent
-  ) {
+  setDebugLine(why, location, source) {
     if (!location || !isDocumentReady(source, location)) {
       return;
     }
@@ -99,11 +77,7 @@ export class DebugLine extends PureComponent<Props> {
     );
   }
 
-  clearDebugLine(
-    why: ?Why,
-    location: ?SourceLocation,
-    source: ?SourceWithContent
-  ) {
+  clearDebugLine(why, location, source) {
     if (!location || !isDocumentReady(source, location)) {
       return;
     }
@@ -118,7 +92,7 @@ export class DebugLine extends PureComponent<Props> {
     doc.removeLineClass(line, "wrapClass", lineClass);
   }
 
-  getTextClasses(why: ?Why): TextClasses {
+  getTextClasses(why) {
     if (why && isException(why)) {
       return {
         markTextClass: "debug-expression-error",
@@ -146,4 +120,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(DebugLine);
+export default connect(mapStateToProps)(DebugLine);

@@ -2,18 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { prefs } from "../../utils/prefs";
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
-import type { URL } from "../../types";
-
 let dispatcher;
 let workerPath;
 
-export const start = (path: string) => {
+export const start = path => {
   workerPath = path;
 };
 export const stop = () => {
@@ -24,12 +20,7 @@ export const stop = () => {
   }
 };
 
-type PrettyPrintOpts = {
-  text: string,
-  url: URL,
-};
-
-export async function prettyPrint({ text, url }: PrettyPrintOpts) {
+export async function prettyPrint({ text, url }) {
   if (!dispatcher) {
     dispatcher = new WorkerDispatcher();
     dispatcher.start(workerPath);

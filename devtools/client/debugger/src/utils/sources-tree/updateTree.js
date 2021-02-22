@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { addToTree } from "./addToTree";
 import { collapseTree } from "./collapseTree";
 import {
@@ -20,17 +18,7 @@ import {
 
 import { getDisplayURL } from "./getURL";
 
-import type { SourcesMapByThread } from "../../reducers/types";
-import type { Thread, DisplaySource, URL } from "../../types";
-import type { TreeDirectory, TreeSource, TreeNode } from "./types";
-
-function getSourcesDiff(
-  newSources,
-  prevSources
-): {
-  toAdd: Array<DisplaySource>,
-  toUpdate: Array<[DisplaySource, DisplaySource]>,
-} {
+function getSourcesDiff(newSources, prevSources) {
   const toAdd = [];
   const toUpdate = [];
 
@@ -47,26 +35,7 @@ function getSourcesDiff(
   return { toAdd, toUpdate };
 }
 
-type UpdateTreeParams = {
-  newSources: SourcesMapByThread,
-  prevSources: SourcesMapByThread,
-  uncollapsedTree: TreeDirectory,
-  debuggeeUrl: URL,
-  threads: Thread[],
-  sourceTree?: TreeNode,
-};
-
-type CreateTreeParams = {
-  sources: SourcesMapByThread,
-  debuggeeUrl: URL,
-  threads: Thread[],
-};
-
-export function createTree({
-  debuggeeUrl,
-  sources,
-  threads,
-}: CreateTreeParams) {
+export function createTree({ debuggeeUrl, sources, threads }) {
   const uncollapsedTree = createDirectoryNode("root", "", []);
   const result = updateTree({
     debuggeeUrl,
@@ -91,9 +60,9 @@ export function updateTree({
   threads,
   create,
   sourceTree,
-}: UpdateTreeParams) {
+}) {
   const debuggeeHost = getDomain(debuggeeUrl);
-  const contexts = (Object.keys(newSources): any);
+  const contexts = Object.keys(newSources);
 
   let shouldUpdate = !sourceTree;
   for (const context of contexts) {
@@ -103,8 +72,8 @@ export function updateTree({
     }
 
     const { toAdd, toUpdate } = getSourcesDiff(
-      (Object.values(newSources[context]): any),
-      prevSources[context] ? (Object.values(prevSources[context]): any) : null
+      Object.values(newSources[context]),
+      prevSources[context] ? Object.values(prevSources[context]) : null
     );
 
     for (const source of toAdd) {
@@ -138,12 +107,12 @@ export function updateTree({
 }
 
 export function updateInTree(
-  tree: TreeDirectory,
-  prevSource: DisplaySource,
-  newSource: DisplaySource,
-  debuggeeHost: ?string,
-  thread: string
-): void {
+  tree,
+  prevSource,
+  newSource,
+  debuggeeHost,
+  thread
+) {
   const newUrl = getDisplayURL(newSource, debuggeeHost);
   const prevUrl = getDisplayURL(prevSource, debuggeeHost);
 
@@ -174,7 +143,7 @@ export function updateInTree(
         const { node, index } = prevEntries.pop();
         // This is guaranteed to be a TreeSource or else findEntries would
         // not have returned anything.
-        const fileNode: TreeSource = (node.contents[index]: any);
+        const fileNode = node.contents[index];
         fileNode.name = parts[parts.length - 1].part;
         fileNode.path = parts[parts.length - 1].path;
         fileNode.contents = newSource;
@@ -198,12 +167,7 @@ export function updateInTree(
   addToTree(tree, newSource, debuggeeHost, thread);
 }
 
-type Entry = {
-  node: TreeDirectory,
-  index: number,
-};
-
-function findEntries(tree, url, source, thread, debuggeeHost): ?Array<Entry> {
+function findEntries(tree, url, source, thread, debuggeeHost) {
   const parts = getPathParts(url, thread, debuggeeHost);
 
   // We're searching for the directory containing the file so we pop off the

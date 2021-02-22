@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getSelectedFrameId,
   getSource,
@@ -20,43 +18,25 @@ import assert from "../../utils/assert";
 
 import { log } from "../../utils/log";
 import { isGenerated, isOriginal } from "../../utils/source";
-import type {
-  Frame,
-  Scope,
-  ThreadContext,
-  XScopeVariables,
-  SourceLocation,
-} from "../../types";
 
-import type { ThunkArgs } from "../types";
-
-import {
-  buildMappedScopes,
-  type MappedFrameLocation,
-} from "../../utils/pause/mapScopes";
+import { buildMappedScopes } from "../../utils/pause/mapScopes";
 import { isFulfilled } from "../../utils/async-value";
 
-import type { OriginalScope } from "../../utils/pause/mapScopes";
 import { getMappedLocation } from "../../utils/source-maps";
 
 const expressionRegex = /\bfp\(\)/g;
 
 export async function buildOriginalScopes(
-  frame: Frame,
-  client: any,
-  cx: ThreadContext,
-  frameId: any,
-  generatedScopes: Promise<Scope>
-): Promise<?{
-  mappings: {
-    [string]: string,
-  },
-  scope: OriginalScope,
-}> {
+  frame,
+  client,
+  cx,
+  frameId,
+  generatedScopes
+) {
   if (!frame.originalVariables) {
     throw new TypeError("(frame.originalVariables: XScopeVariables)");
   }
-  const originalVariables: XScopeVariables = frame.originalVariables;
+  const originalVariables = frame.originalVariables;
   const frameBase = originalVariables.frameBase || "";
 
   const inputs = [];
@@ -102,7 +82,7 @@ export async function buildOriginalScopes(
 }
 
 export function toggleMapScopes() {
-  return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
+  return async function({ dispatch, getState, client, sourceMaps }) {
     if (isMapScopesEnabled(getState())) {
       return dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: false });
     }
@@ -125,12 +105,8 @@ export function toggleMapScopes() {
   };
 }
 
-export function mapScopes(
-  cx: ThreadContext,
-  scopes: Promise<Scope>,
-  frame: Frame
-) {
-  return async function(thunkArgs: ThunkArgs) {
+export function mapScopes(cx, scopes, frame) {
+  return async function(thunkArgs) {
     const { dispatch, client, getState } = thunkArgs;
     assert(cx.thread == frame.thread, "Thread mismatch");
 
@@ -151,12 +127,8 @@ export function mapScopes(
   };
 }
 
-export function getMappedScopes(
-  cx: ThreadContext,
-  scopes: ?Promise<Scope>,
-  frame: MappedFrameLocation
-) {
-  return async function(thunkArgs: ThunkArgs) {
+export function getMappedScopes(cx, scopes, frame) {
+  return async function(thunkArgs) {
     const { getState, dispatch } = thunkArgs;
     const generatedSource = getSource(
       getState(),
@@ -202,11 +174,11 @@ export function getMappedScopes(
   };
 }
 
-export function getMappedScopesForLocation(location: SourceLocation) {
-  return async function(thunkArgs: ThunkArgs) {
+export function getMappedScopesForLocation(location) {
+  return async function(thunkArgs) {
     const { dispatch, getState, sourceMaps } = thunkArgs;
     const cx = getThreadContext(getState());
-    const mappedLocation: $Shape<MappedFrameLocation> = await getMappedLocation(
+    const mappedLocation = await getMappedLocation(
       getState(),
       sourceMaps,
       location

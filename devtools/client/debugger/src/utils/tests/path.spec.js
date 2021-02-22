@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { basename, dirname, isURL, isAbsolute, join } from "../path";
 
 const fullTestURL = "https://www.example.com/some/endpoint";

@@ -2,27 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { has } from "lodash";
-import type { SourceScope, BindingLocation } from "../../../workers/parser";
-import type { Scope, BindingContents } from "../../../types";
 import { clientCommands } from "../../../client/firefox";
 
 import { locColumn } from "./locColumn";
 import { getOptimizedOutGrip } from "./optimizedOut";
 
-export type GeneratedBindingLocation = {
-  name: string,
-  loc: BindingLocation,
-  desc: () => Promise<BindingContents | null>,
-};
-
 export function buildGeneratedBindingList(
-  scopes: Scope,
-  generatedAstScopes: SourceScope[],
-  thisBinding: ?BindingContents
-): Array<GeneratedBindingLocation> {
+  scopes,
+  generatedAstScopes,
+  thisBinding
+) {
   // The server's binding data doesn't include general 'this' binding
   // information, so we manually inject the one 'this' binding we have into
   // the normal binding data we are working with.
@@ -119,9 +109,7 @@ export function buildGeneratedBindingList(
   return sortBindings(generatedBindings);
 }
 
-export function buildFakeBindingList(
-  generatedAstScopes: SourceScope[]
-): Array<GeneratedBindingLocation> {
+export function buildFakeBindingList(generatedAstScopes) {
   // TODO if possible, inject real bindings for the global scope
   const generatedBindings = generatedAstScopes.reduce((acc, generated) => {
     for (const name of Object.keys(generated.bindings)) {
@@ -142,7 +130,7 @@ export function buildFakeBindingList(
   return sortBindings(generatedBindings);
 }
 
-function sortBindings(generatedBindings: Array<GeneratedBindingLocation>) {
+function sortBindings(generatedBindings) {
   return generatedBindings.sort((a, b) => {
     const aStart = a.loc.start;
     const bStart = b.loc.start;

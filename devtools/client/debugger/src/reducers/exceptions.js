@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * Exceptions reducer
  * @module reducers/exceptionss
@@ -12,27 +10,13 @@
 import { createSelector } from "reselect";
 import { getSelectedSource, getSourceActorsForSource } from "../selectors";
 
-import type { Exception, SourceActorId, SourceActor } from "../types";
-
-import type { Action } from "../actions/types";
-import type { Selector, State } from "./types";
-
-export type ExceptionMap = { [SourceActorId]: Exception[] };
-
-export type ExceptionState = {
-  exceptions: ExceptionMap,
-};
-
 export function initialExceptionsState() {
   return {
     exceptions: {},
   };
 }
 
-function update(
-  state: ExceptionState = initialExceptionsState(),
-  action: Action
-): ExceptionState {
+function update(state = initialExceptionsState(), action) {
   switch (action.type) {
     case "ADD_EXCEPTION":
       return updateExceptions(state, action);
@@ -64,16 +48,14 @@ function updateExceptions(state, action) {
 }
 
 // Selectors
-export function getExceptionsMap(state: State): ExceptionMap {
+export function getExceptionsMap(state) {
   return state.exceptions.exceptions;
 }
 
-export const getSelectedSourceExceptions: Selector<
-  Exception[]
-> = createSelector(
+export const getSelectedSourceExceptions = createSelector(
   getSelectedSourceActors,
   getExceptionsMap,
-  (sourceActors: Array<SourceActor>, exceptions) => {
+  (sourceActors, exceptions) => {
     const sourceExceptions = [];
 
     sourceActors.forEach(sourceActor => {
@@ -96,19 +78,11 @@ function getSelectedSourceActors(state) {
   return getSourceActorsForSource(state, selectedSource.id);
 }
 
-export function hasException(
-  state: State,
-  line: number,
-  column: number
-): boolean {
+export function hasException(state, line, column) {
   return !!getSelectedException(state, line, column);
 }
 
-export function getSelectedException(
-  state: State,
-  line: number,
-  column: number
-): ?Exception {
+export function getSelectedException(state, line, column) {
   const sourceExceptions = getSelectedSourceExceptions(state);
 
   if (!sourceExceptions) {

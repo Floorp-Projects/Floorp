@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getTokenLocation } from ".";
 import { isEqual } from "lodash";
 
-function isInvalidTarget(target: HTMLElement): boolean {
+function isInvalidTarget(target) {
   if (!target || !target.innerText) {
     return true;
   }
@@ -44,7 +42,7 @@ function dispatch(codeMirror, eventName, data) {
   codeMirror.constructor.signal(codeMirror, eventName, data);
 }
 
-function invalidLeaveTarget(target: ?HTMLElement) {
+function invalidLeaveTarget(target) {
   if (!target || target.closest(".popover")) {
     return true;
   }
@@ -52,7 +50,7 @@ function invalidLeaveTarget(target: ?HTMLElement) {
   return false;
 }
 
-export function onMouseOver(codeMirror: any): any {
+export function onMouseOver(codeMirror) {
   let prevTokenPos = null;
 
   function onMouseLeave(event) {
@@ -71,7 +69,7 @@ export function onMouseOver(codeMirror: any): any {
     });
   }
 
-  return (enterEvent: any) => {
+  return enterEvent => {
     const { target } = enterEvent;
 
     if (isInvalidTarget(target)) {

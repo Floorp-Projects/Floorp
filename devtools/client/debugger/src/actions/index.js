@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import * as ast from "./ast";
 import * as breakpoints from "./breakpoints";
 import * as exceptions from "./exceptions";
@@ -23,7 +21,6 @@ import * as threads from "./threads";
 import * as toolbox from "./toolbox";
 import * as preview from "./preview";
 
-// $FlowIgnore
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 export default {

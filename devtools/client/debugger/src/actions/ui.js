@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getActiveSearch,
   getPaneCollapse,
@@ -15,7 +13,6 @@ import {
   getProjectDirectoryRoot,
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
-import type { ThunkArgs, panelPositionType } from "./types";
 import {
   getEditor,
   getLocationsInViewport,
@@ -25,29 +22,19 @@ import { searchContents } from "./file-search";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
 
-import type { SourceLocation, Context, Source, SourceId } from "../types";
-import type {
-  ActiveSearchType,
-  OrientationType,
-  SelectedPrimaryPaneTabType,
-} from "../reducers/ui";
-import type { UIAction } from "./types/UIAction";
-
-export function setPrimaryPaneTab(
-  tabName: SelectedPrimaryPaneTabType
-): UIAction {
+export function setPrimaryPaneTab(tabName) {
   return { type: "SET_PRIMARY_PANE_TAB", tabName };
 }
 
-export function closeActiveSearch(): UIAction {
+export function closeActiveSearch() {
   return {
     type: "TOGGLE_ACTIVE_SEARCH",
     value: null,
   };
 }
 
-export function setActiveSearch(activeSearch?: ActiveSearchType) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function setActiveSearch(activeSearch) {
+  return ({ dispatch, getState }) => {
     const activeSearchState = getActiveSearch(getState());
     if (activeSearchState === activeSearch) {
       return;
@@ -64,8 +51,8 @@ export function setActiveSearch(activeSearch?: ActiveSearchType) {
   };
 }
 
-export function updateActiveFileSearch(cx: Context) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function updateActiveFileSearch(cx) {
+  return ({ dispatch, getState }) => {
     const isFileSearchOpen = getActiveSearch(getState()) === "file";
     const fileSearchQuery = getFileSearchQuery(getState());
     if (isFileSearchOpen && fileSearchQuery) {
@@ -75,8 +62,8 @@ export function updateActiveFileSearch(cx: Context) {
   };
 }
 
-export function toggleFrameworkGrouping(toggleValue: boolean) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function toggleFrameworkGrouping(toggleValue) {
+  return ({ dispatch, getState }) => {
     dispatch({
       type: "TOGGLE_FRAMEWORK_GROUPING",
       value: toggleValue,
@@ -84,8 +71,8 @@ export function toggleFrameworkGrouping(toggleValue: boolean) {
   };
 }
 
-export function toggleInlinePreview(toggleValue: boolean) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function toggleInlinePreview(toggleValue) {
+  return ({ dispatch, getState }) => {
     dispatch({
       type: "TOGGLE_INLINE_PREVIEW",
       value: toggleValue,
@@ -93,8 +80,8 @@ export function toggleInlinePreview(toggleValue: boolean) {
   };
 }
 
-export function toggleEditorWrapping(toggleValue: boolean) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function toggleEditorWrapping(toggleValue) {
+  return ({ dispatch, getState }) => {
     updateDocuments(doc => doc.cm.setOption("lineWrapping", toggleValue));
 
     dispatch({
@@ -104,8 +91,8 @@ export function toggleEditorWrapping(toggleValue: boolean) {
   };
 }
 
-export function toggleSourceMapsEnabled(toggleValue: boolean) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function toggleSourceMapsEnabled(toggleValue) {
+  return ({ dispatch, getState }) => {
     dispatch({
       type: "TOGGLE_SOURCE_MAPS_ENABLED",
       value: toggleValue,
@@ -113,8 +100,8 @@ export function toggleSourceMapsEnabled(toggleValue: boolean) {
   };
 }
 
-export function showSource(cx: Context, sourceId: SourceId) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function showSource(cx, sourceId) {
+  return ({ dispatch, getState }) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
       return;
@@ -136,11 +123,8 @@ export function showSource(cx: Context, sourceId: SourceId) {
   };
 }
 
-export function togglePaneCollapse(
-  position: panelPositionType,
-  paneCollapsed: boolean
-) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function togglePaneCollapse(position, paneCollapsed) {
+  return ({ dispatch, getState }) => {
     const prevPaneCollapse = getPaneCollapse(getState(), position);
     if (prevPaneCollapse === paneCollapsed) {
       return;
@@ -158,23 +142,15 @@ export function togglePaneCollapse(
  * @memberof actions/sources
  * @static
  */
-export function highlightLineRange(location: {
-  start: number,
-  end: number,
-  sourceId: SourceId,
-}) {
+export function highlightLineRange(location) {
   return {
     type: "HIGHLIGHT_LINES",
     location,
   };
 }
 
-export function flashLineRange(location: {
-  start: number,
-  end: number,
-  sourceId: SourceId,
-}) {
-  return ({ dispatch }: ThunkArgs) => {
+export function flashLineRange(location) {
+  return ({ dispatch }) => {
     dispatch(highlightLineRange(location));
     setTimeout(() => dispatch(clearHighlightLineRange()), 200);
   };
@@ -184,16 +160,13 @@ export function flashLineRange(location: {
  * @memberof actions/sources
  * @static
  */
-export function clearHighlightLineRange(): UIAction {
+export function clearHighlightLineRange() {
   return {
     type: "CLEAR_HIGHLIGHT_LINES",
   };
 }
 
-export function openConditionalPanel(
-  location: ?SourceLocation,
-  log: boolean = false
-): ?UIAction {
+export function openConditionalPanel(location, log = false) {
   if (!location) {
     return;
   }
@@ -205,13 +178,13 @@ export function openConditionalPanel(
   };
 }
 
-export function closeConditionalPanel(): UIAction {
+export function closeConditionalPanel() {
   return {
     type: "CLOSE_CONDITIONAL_PANEL",
   };
 }
 
-export function clearProjectDirectoryRoot(cx: Context): UIAction {
+export function clearProjectDirectoryRoot(cx) {
   return {
     type: "SET_PROJECT_DIRECTORY_ROOT",
     cx,
@@ -220,12 +193,8 @@ export function clearProjectDirectoryRoot(cx: Context): UIAction {
   };
 }
 
-export function setProjectDirectoryRoot(
-  cx: Context,
-  newRoot: string,
-  newName: string
-) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function setProjectDirectoryRoot(cx, newRoot, newName) {
+  return ({ dispatch, getState }) => {
     const threadActor = startsWithThreadActor(getState(), newRoot);
 
     let curRoot = getProjectDirectoryRoot(getState());
@@ -257,23 +226,23 @@ export function setProjectDirectoryRoot(
   };
 }
 
-export function updateViewport(): UIAction {
+export function updateViewport() {
   return {
     type: "SET_VIEWPORT",
     viewport: getLocationsInViewport(getEditor()),
   };
 }
 
-export function updateCursorPosition(cursorPosition: SourceLocation): UIAction {
+export function updateCursorPosition(cursorPosition) {
   return { type: "SET_CURSOR_POSITION", cursorPosition };
 }
 
-export function setOrientation(orientation: OrientationType): UIAction {
+export function setOrientation(orientation) {
   return { type: "SET_ORIENTATION", orientation };
 }
 
-export function copyToClipboard(source: Source) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function copyToClipboard(source) {
+  return ({ dispatch, getState }) => {
     const content = getSourceContent(getState(), source.id);
     if (content && isFulfilled(content) && content.value.type === "text") {
       copyToTheClipboard(content.value.value);

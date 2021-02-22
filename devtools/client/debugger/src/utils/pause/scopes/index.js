@@ -2,24 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
+import { getScope, mergeScopes } from "./getScope";
 
-import { getScope, mergeScopes, type RenderableScope } from "./getScope";
-
-import type { Frame, Why, BindingContents } from "../../../types";
-
-export type NamedValue = {
-  name: string,
-  generatedName?: string,
-  path: string,
-  contents: BindingContents | NamedValue[],
-};
-
-export function getScopes(
-  why: ?Why,
-  selectedFrame: Frame,
-  frameScopes: ?RenderableScope
-): ?(NamedValue[]) {
+export function getScopes(why, selectedFrame, frameScopes) {
   if (!why || !selectedFrame) {
     return null;
   }

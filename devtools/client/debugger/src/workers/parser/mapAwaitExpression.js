@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import generate from "@babel/generator";
 import * as t from "@babel/types";
 
 import { hasNode, replaceNode } from "./utils/ast";
 import { isTopLevel } from "./utils/helpers";
 
-function hasTopLevelAwait(ast: Object): boolean {
+function hasTopLevelAwait(ast) {
   const hasAwait = hasNode(
     ast,
     (node, ancestors, b) => t.isAwaitExpression(node) && isTopLevel(ancestors)
@@ -20,7 +18,7 @@ function hasTopLevelAwait(ast: Object): boolean {
 }
 
 // translates new bindings `var a = 3` into `a = 3`.
-function translateDeclarationIntoAssignment(node: Object): Object[] {
+function translateDeclarationIntoAssignment(node) {
   return node.declarations.reduce((acc, declaration) => {
     // Don't translate declaration without initial assignment (e.g. `var a;`)
     if (!declaration.init) {
@@ -39,7 +37,7 @@ function translateDeclarationIntoAssignment(node: Object): Object[] {
  * Given an AST, compute its last statement and replace it with a
  * return statement.
  */
-function addReturnNode(ast: Object): Object {
+function addReturnNode(ast) {
   const statements = ast.program.body;
   const lastStatement = statements[statements.length - 1];
   return statements
@@ -47,7 +45,7 @@ function addReturnNode(ast: Object): Object {
     .concat(t.returnStatement(lastStatement.expression));
 }
 
-function getDeclarations(node: Object) {
+function getDeclarations(node) {
   const { kind, declarations } = node;
   const declaratorNodes = declarations.reduce((acc, d) => {
     const declarators = getVariableDeclarators(d.id);
@@ -63,7 +61,7 @@ function getDeclarations(node: Object) {
   );
 }
 
-function getVariableDeclarators(node: Object): Object[] | Object {
+function getVariableDeclarators(node) {
   if (t.isIdentifier(node)) {
     return t.variableDeclarator(t.identifier(node.name));
   }
@@ -98,7 +96,7 @@ function getVariableDeclarators(node: Object): Object[] | Object {
  * Given an AST and an array of variableDeclaration nodes, return a new AST with
  * all the declarations at the top of the AST.
  */
-function addTopDeclarationNodes(ast: Object, declarationNodes: Object[]) {
+function addTopDeclarationNodes(ast, declarationNodes) {
   const statements = [];
   declarationNodes.forEach(declarationNode => {
     statements.push(getDeclarations(declarationNode));
@@ -114,9 +112,7 @@ function addTopDeclarationNodes(ast: Object, declarationNodes: Object[]) {
  *   - declarations: {Array<Node>} An array of all the declaration nodes needed
  *                   outside of the async iife.
  */
-function translateDeclarationsIntoAssignment(
-  ast: Object
-): { newAst: Object, declarations: Node[] } {
+function translateDeclarationsIntoAssignment(ast) {
   const declarations = [];
   t.traverse(ast, (node, ancestors) => {
     const parent = ancestors[ancestors.length - 1];
@@ -154,7 +150,7 @@ function translateDeclarationsIntoAssignment(
  *   return a = await 123;
  * })();
  */
-function wrapExpressionFromAst(ast: Object): string {
+function wrapExpressionFromAst(ast) {
   // Transform let and var declarations into assignments, and get back an array
   // of variable declarations.
   let { newAst, declarations } = translateDeclarationsIntoAssignment(ast);
@@ -174,10 +170,7 @@ function wrapExpressionFromAst(ast: Object): string {
   return generate(newAst).code;
 }
 
-export default function mapTopLevelAwait(
-  expression: string,
-  ast?: Object
-): string {
+export default function mapTopLevelAwait(expression, ast) {
   if (!ast) {
     // If there's no ast this means the expression is malformed. And if the
     // expression contains the await keyword, we still want to wrap it in an

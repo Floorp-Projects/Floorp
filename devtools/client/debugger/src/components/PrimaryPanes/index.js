@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React, { Component } from "react";
 import classnames from "classnames";
 import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
@@ -24,33 +22,10 @@ import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
 import AccessibleImage from "../shared/AccessibleImage";
 
-import type { SelectedPrimaryPaneTabType } from "../../selectors";
-import type { Thread, Context } from "../../types";
-
 import "./Sources.css";
 
-type State = {
-  alphabetizeOutline: boolean,
-};
-
-type OwnProps = {|
-  horizontal: boolean,
-|};
-type Props = {
-  cx: Context,
-  selectedTab: SelectedPrimaryPaneTabType,
-  horizontal: boolean,
-  projectRootName: string,
-  sourceSearchOn: boolean,
-  setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
-  setActiveSearch: typeof actions.setActiveSearch,
-  closeActiveSearch: typeof actions.closeActiveSearch,
-  clearProjectDirectoryRoot: typeof actions.clearProjectDirectoryRoot,
-  threads: Thread[],
-};
-
-class PrimaryPanes extends Component<Props, State> {
-  constructor(props: Props) {
+class PrimaryPanes extends Component {
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -58,11 +33,11 @@ class PrimaryPanes extends Component<Props, State> {
     };
   }
 
-  componentDidCatch(error: Error) {
+  componentDidCatch(error) {
     console.log(error);
   }
 
-  showPane = (selectedPane: SelectedPrimaryPaneTabType) => {
+  showPane = selectedPane => {
     this.props.setPrimaryPaneTab(selectedPane);
   };
 
@@ -72,7 +47,7 @@ class PrimaryPanes extends Component<Props, State> {
     this.setState({ alphabetizeOutline });
   };
 
-  onActivateTab = (index: number) => {
+  onActivateTab = index => {
     if (index === 0) {
       this.showPane("sources");
     } else {
@@ -175,7 +150,7 @@ const mapStateToProps = state => {
   };
 };
 
-const connector = connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+const connector = connect(mapStateToProps, {
   setPrimaryPaneTab: actions.setPrimaryPaneTab,
   setActiveSearch: actions.setActiveSearch,
   closeActiveSearch: actions.closeActiveSearch,

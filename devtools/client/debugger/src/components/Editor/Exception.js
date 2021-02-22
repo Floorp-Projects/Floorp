@@ -2,28 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import { PureComponent } from "react";
 
 import { toEditorPosition, getTokenEnd } from "../../utils/editor";
 
 import { getIndentation } from "../../utils/indentation";
 
-import type { SourceDocuments, Exception as Exc, SourceId } from "../../types";
-
-type Props = {
-  exception: Exc,
-  doc: SourceDocuments,
-  selectedSourceId: SourceId,
-};
-
-type MarkText = {
-  clear: Function,
-};
-
-export default class Exception extends PureComponent<Props> {
-  exceptionLine: ?number;
-  markText: ?MarkText;
+export default class Exception extends PureComponent {
+  exceptionLine;
+  markText;
 
   componentDidMount() {
     this.addEditorExceptionLine();
@@ -38,12 +25,7 @@ export default class Exception extends PureComponent<Props> {
     this.clearEditorExceptionLine();
   }
 
-  setEditorExceptionLine(
-    doc: SourceDocuments,
-    line: number,
-    column: number,
-    lineText: string
-  ) {
+  setEditorExceptionLine(doc, line, column, lineText) {
     doc.addLineClass(line, "wrapClass", "line-exception");
 
     column = Math.max(column, getIndentation(lineText));

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { setupCommands, clientCommands } from "./firefox/commands";
 import {
   setupCreate,
@@ -20,12 +18,12 @@ let targetList;
 let resourceWatcher;
 
 export async function onConnect(
-  devToolsClient: any,
-  _targetList: any,
-  _resourceWatcher: any,
-  _actions: Object,
-  store: any
-): Promise<void> {
+  devToolsClient,
+  _targetList,
+  _resourceWatcher,
+  _actions,
+  store
+) {
   actions = _actions;
   targetList = _targetList;
   resourceWatcher = _resourceWatcher;
@@ -80,10 +78,7 @@ export function onDisconnect() {
   sourceQueue.clear();
 }
 
-async function onTargetAvailable({
-  targetFront,
-  isTargetSwitching,
-}): Promise<void> {
+async function onTargetAvailable({ targetFront, isTargetSwitching }) {
   const isBrowserToolbox = targetList.targetFront.isParentProcess;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&
@@ -143,7 +138,7 @@ async function onTargetAvailable({
   await actions.addTarget(targetFront);
 }
 
-function onTargetDestroyed({ targetFront }): void {
+function onTargetDestroyed({ targetFront }) {
   if (targetFront.isTopLevel) {
     targetFront.off("will-navigate", actions.willNavigate);
     targetFront.off("navigate", actions.navigated);

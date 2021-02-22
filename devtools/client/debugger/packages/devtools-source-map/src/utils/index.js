@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 const md5 = require("md5");
 
-function originalToGeneratedId(sourceId: string) {
+function originalToGeneratedId(sourceId) {
   if (isGeneratedId(sourceId)) {
     return sourceId;
   }
@@ -16,24 +14,24 @@ function originalToGeneratedId(sourceId: string) {
   return lastIndex !== -1 ? sourceId.slice(0, lastIndex) : "";
 }
 
-const getMd5 = memoize((url: string) => md5(url));
+const getMd5 = memoize(url => md5(url));
 
-function generatedToOriginalId(generatedId: string, url: string) {
+function generatedToOriginalId(generatedId, url) {
   return `${generatedId}/originalSource-${getMd5(url)}`;
 }
 
-function isOriginalId(id: string) {
+function isOriginalId(id) {
   return id.includes("/originalSource");
 }
 
-function isGeneratedId(id: string) {
+function isGeneratedId(id) {
   return !isOriginalId(id);
 }
 
 /**
  * Trims the query part or reference identifier of a URL string, if necessary.
  */
-function trimUrlQuery(url: string): string {
+function trimUrlQuery(url) {
   const length = url.length;
 
   for (let i = 0; i < length; ++i) {
@@ -67,7 +65,7 @@ const contentMap = {
  * @return String
  *         The content type.
  */
-function getContentType(url: string): string {
+function getContentType(url) {
   url = trimUrlQuery(url);
   const dot = url.lastIndexOf(".");
   if (dot >= 0) {
@@ -79,15 +77,15 @@ function getContentType(url: string): string {
   return "text/plain";
 }
 
-function memoize<T: Function, A, R>(func: T): A => R {
+function memoize(func) {
   const map = new Map();
 
-  return (arg: A) => {
+  return arg => {
     if (map.has(arg)) {
-      return ((map.get(arg): any): R);
+      return map.get(arg);
     }
 
-    const result: R = func(arg);
+    const result = func(arg);
     map.set(arg, result);
     return result;
   };

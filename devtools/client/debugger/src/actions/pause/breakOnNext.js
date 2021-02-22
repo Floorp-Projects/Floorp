@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { ThunkArgs } from "../types";
-import type { ThreadContext } from "../../types";
-
 /**
  * Debugger breakOnNext command.
  * It's different from the comand action because we also want to
@@ -15,8 +10,8 @@ import type { ThreadContext } from "../../types";
  * @memberof actions/pause
  * @static
  */
-export function breakOnNext(cx: ThreadContext): any {
-  return async ({ dispatch, getState, client }: ThunkArgs) => {
+export function breakOnNext(cx) {
+  return async ({ dispatch, getState, client }) => {
     await client.breakOnNext(cx.thread);
     return dispatch({ type: "BREAK_ON_NEXT", thread: cx.thread });
   };

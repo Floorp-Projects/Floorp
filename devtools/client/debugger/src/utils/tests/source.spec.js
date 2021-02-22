@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getFilename,
   getTruncatedFileName,
@@ -28,8 +26,6 @@ import {
   makeFullfilledMockSourceContent,
 } from "../test-mockup";
 import { isFulfilled } from "../async-value.js";
-
-import type { Source } from "../../types";
 
 const defaultSymbolDeclarations = {
   classes: [],
@@ -118,7 +114,7 @@ describe("sources", () => {
 
   describe("getDisplayPath", () => {
     it("should give us the path for files with same name", () => {
-      const sources: Source[] = [
+      const sources = [
         makeMockSource("http://localhost.com:7999/increment/xyz/hello.html"),
         makeMockSource("http://localhost.com:7999/increment/abc/hello.html"),
         makeMockSource("http://localhost.com:7999/increment/hello.html"),
@@ -133,7 +129,7 @@ describe("sources", () => {
 
     it(`should give us the path for files with same name
       in directories with same name`, () => {
-      const sources: Source[] = [
+      const sources = [
         makeMockSource(
           "http://localhost.com:7999/increment/xyz/web/hello.html"
         ),
@@ -153,7 +149,7 @@ describe("sources", () => {
     });
 
     it("should give no path for files with unique name", () => {
-      const sources: Source[] = [
+      const sources = [
         makeMockSource("http://localhost.com:7999/increment/xyz.html"),
         makeMockSource("http://localhost.com:7999/increment/abc.html"),
         makeMockSource("http://localhost.com:7999/increment/hello.html"),
@@ -166,7 +162,7 @@ describe("sources", () => {
       ).toBe(undefined);
     });
     it("should not show display path for pretty file", () => {
-      const sources: Source[] = [
+      const sources = [
         makeMockSource("http://localhost.com:7999/increment/abc/web/hell.html"),
         makeMockSource(
           "http://localhost.com:7999/increment/abc/web/hello.html"
@@ -186,7 +182,7 @@ describe("sources", () => {
     });
     it(`should give us the path for files with same name when both
       are pretty and different path`, () => {
-      const sources: Source[] = [
+      const sources = [
         makeMockSource(
           "http://localhost.com:7999/increment/xyz/web/hello.html:formatted"
         ),
@@ -291,7 +287,7 @@ describe("sources", () => {
   });
 
   describe("getMode", () => {
-    it("//@flow", () => {
+    it("//     ", () => {
       const source = makeMockSourceAndContent(
         undefined,
         undefined,

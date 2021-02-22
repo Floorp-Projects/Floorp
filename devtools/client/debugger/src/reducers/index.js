@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * Reducer index
  * @module reducers/index
@@ -32,9 +30,6 @@ import eventListenerBreakpoints, {
 } from "./event-listeners";
 import exceptions, { initialExceptionsState } from "./exceptions";
 
-import type { SourceActorsState } from "./source-actors";
-
-// $FlowIgnore
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 import { createInitial } from "../utils/resource";
@@ -43,7 +38,7 @@ export function initialState() {
   return {
     sources: initialSourcesState(),
     expressions: initialExpressionState(),
-    sourceActors: (createInitial(): SourceActorsState),
+    sourceActors: createInitial(),
     tabs: initialTabState(),
     breakpoints: initialBreakpointsState(),
     pendingBreakpoints: {},

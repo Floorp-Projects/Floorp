@@ -2,13 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { PureComponent } from "react";
 import { connect } from "../../utils/connect";
 import AccessibleImage from "../shared/AccessibleImage";
 import actions from "../../actions";
 
-// $FlowIgnore
 import Reps from "devtools/client/shared/components/reps/index";
 const {
   REPS: { Rep },
@@ -21,28 +19,11 @@ import {
   getPaneCollapse,
   getPauseReason as getWhy,
 } from "../../selectors";
-import type { Grip, Why } from "../../types";
 
 import "./WhyPaused.css";
 
-type OwnProps = {|
-  +delay?: number,
-|};
-type Props = {
-  endPanelCollapsed: boolean,
-  +delay: ?number,
-  why: ?Why,
-  openElementInInspector: typeof actions.openElementInInspectorCommand,
-  highlightDomElement: typeof actions.highlightDomElement,
-  unHighlightDomElement: typeof actions.unHighlightDomElement,
-};
-
-type State = {
-  hideWhyPaused: string,
-};
-
-class WhyPaused extends PureComponent<Props, State> {
-  constructor(props: Props) {
+class WhyPaused extends PureComponent {
+  constructor(props) {
     super(props);
     this.state = { hideWhyPaused: "" };
   }
@@ -59,7 +40,7 @@ class WhyPaused extends PureComponent<Props, State> {
     }
   }
 
-  renderExceptionSummary(exception: string | Grip) {
+  renderExceptionSummary(exception) {
     if (typeof exception === "string") {
       return exception;
     }
@@ -72,7 +53,7 @@ class WhyPaused extends PureComponent<Props, State> {
     return `${preview.name}: ${preview.message}`;
   }
 
-  renderMessage(why: Why) {
+  renderMessage(why) {
     const { type, exception, message } = why;
 
     if (type == "exception" && exception) {
@@ -166,7 +147,7 @@ const mapStateToProps = state => ({
   why: getWhy(state, getCurrentThread(state)),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+export default connect(mapStateToProps, {
   openElementInInspector: actions.openElementInInspectorCommand,
   highlightDomElement: actions.highlightDomElement,
   unHighlightDomElement: actions.unHighlightDomElement,

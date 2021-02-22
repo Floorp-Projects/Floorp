@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * Utils for Jest
  * @module utils/test-head
  */
 
-import { combineReducers, type Store } from "redux";
+import { combineReducers } from "redux";
 import sourceMaps from "devtools-source-map";
 import reducers from "../reducers";
 import actions from "../actions";
@@ -17,25 +15,6 @@ import * as selectors from "../selectors";
 import { parserWorker, evaluationsParser } from "../test/tests-setup";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
-import type {
-  ThreadContext,
-  Source,
-  OriginalSourceData,
-  GeneratedSourceData,
-} from "../types";
-import type { State } from "../reducers/types";
-import type { Action } from "../actions/types";
-
-type TestStore = Store<State, Action, any> & {
-  thunkArgs: () => {
-    dispatch: any,
-    getState: () => State,
-    client: any,
-    sourceMaps: any,
-    panel: {||},
-  },
-  cx: ThreadContext,
-};
 
 /**
  * This file contains older interfaces used by tests that have not been
@@ -46,12 +25,8 @@ type TestStore = Store<State, Action, any> & {
  * @memberof utils/test-head
  * @static
  */
-function createStore(
-  client: any,
-  initialState: any = {},
-  sourceMapsMock: any
-): TestStore {
-  const store: any = configureStore({
+function createStore(client, initialState = {}, sourceMapsMock) {
+  const store = configureStore({
     log: false,
     makeThunkArgs: args => {
       return {
@@ -87,11 +62,11 @@ function createStore(
  * @memberof utils/test-head
  * @static
  */
-function commonLog(msg: string, data: any = {}) {
+function commonLog(msg, data = {}) {
   console.log(`[INFO] ${msg} ${JSON.stringify(data)}`);
 }
 
-function makeFrame({ id, sourceId, thread }: Object, opts: Object = {}) {
+function makeFrame({ id, sourceId, thread }, opts = {}) {
   return {
     id,
     scope: { bindings: { variables: {}, arguments: [] } },
@@ -101,46 +76,31 @@ function makeFrame({ id, sourceId, thread }: Object, opts: Object = {}) {
   };
 }
 
-function createSourceObject(
-  filename: string,
-  props: {
-    isBlackBoxed?: boolean,
-  } = {}
-): Source {
-  return ({
+function createSourceObject(filename, props = {}) {
+  return {
     id: filename,
     url: makeSourceURL(filename),
     isBlackBoxed: !!props.isBlackBoxed,
     isPrettyPrinted: false,
     isExtension: false,
     isOriginal: filename.includes("originalSource"),
-  }: any);
+  };
 }
 
-function createOriginalSourceObject(generated: Source): Source {
+function createOriginalSourceObject(generated) {
   const rv = {
     ...generated,
     id: `${generated.id}/originalSource`,
   };
 
-  return (rv: any);
+  return rv;
 }
 
-function makeSourceURL(filename: string) {
+function makeSourceURL(filename) {
   return `http://localhost:8000/examples/${filename}`;
 }
 
-type MakeSourceProps = {
-  sourceMapBaseURL?: string,
-  sourceMapURL?: string,
-  introductionType?: string,
-  isBlackBoxed?: boolean,
-};
-function createMakeSource(): (
-  // The name of the file that this actor is part of.
-  name: string,
-  props?: MakeSourceProps
-) => GeneratedSourceData {
+function createMakeSource() {
   const indicies = {};
 
   return function(name, props = {}) {
@@ -174,7 +134,7 @@ beforeEach(() => {
 afterEach(() => {
   creator = null;
 });
-function makeSource(name: string, props?: MakeSourceProps) {
+function makeSource(name, props) {
   if (!creator) {
     throw new Error("makeSource() cannot be called outside of a test");
   }
@@ -182,7 +142,7 @@ function makeSource(name: string, props?: MakeSourceProps) {
   return creator(name, props);
 }
 
-function makeOriginalSource(source: Source): OriginalSourceData {
+function makeOriginalSource(source) {
   return {
     id: `${source.id}/originalSource`,
     url: `${source.url}-original`,
@@ -203,12 +163,7 @@ function makeFuncLocation(startLine, endLine) {
   };
 }
 
-function makeSymbolDeclaration(
-  name: string,
-  start: number,
-  end: ?number,
-  klass: ?string
-) {
+function makeSymbolDeclaration(name, start, end, klass) {
   return {
     id: `${name}:${start}`,
     name,
@@ -221,7 +176,7 @@ function makeSymbolDeclaration(
  * @memberof utils/test-head
  * @static
  */
-function waitForState(store: any, predicate: any): Promise<void> {
+function waitForState(store, predicate) {
   return new Promise(resolve => {
     let ret = predicate(store.getState());
     if (ret) {
@@ -239,7 +194,7 @@ function waitForState(store: any, predicate: any): Promise<void> {
   });
 }
 
-function watchForState(store: any, predicate: any): () => boolean {
+function watchForState(store, predicate) {
   let sawState = false;
   const checkState = function() {
     if (!sawState && predicate(store.getState())) {
@@ -266,11 +221,11 @@ function watchForState(store: any, predicate: any): () => boolean {
   };
 }
 
-function getTelemetryEvents(eventName: string) {
+function getTelemetryEvents(eventName) {
   return window.dbg._telemetry.events[eventName] || [];
 }
 
-function waitATick(callback: Function): Promise<*> {
+function waitATick(callback) {
   return new Promise(resolve => {
     setTimeout(() => {
       callback();

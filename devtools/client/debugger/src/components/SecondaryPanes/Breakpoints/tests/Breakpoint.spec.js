@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React from "react";
 import { shallow } from "enzyme";
 
@@ -59,7 +57,6 @@ const location = { sourceId: "foo/original", line: 5, column: 7 };
 
 function render(overrides = {}, breakpointOverrides = {}) {
   const props = generateDefaults(overrides, breakpointOverrides);
-  // $FlowIgnore
   const component = shallow(<Breakpoint.WrappedComponent {...props} />);
   const defaultState = component.state();
   const instance = component.instance();
@@ -86,7 +83,7 @@ function generateDefaults(overrides = {}, breakpointOverrides = {}) {
     source,
     breakpoint,
     selectedSource,
-    frame: (null: any),
+    frame: null,
     editor: {
       CodeMirror: {
         runMode: function() {
