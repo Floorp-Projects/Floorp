@@ -74,9 +74,6 @@ function runTest()
 
   synthesizeMouse($("b1"), 4, 4, { });
   checkFocus($("b1"), false, "appearance on button after mouse focus with :moz-focusring");
-  if (navigator.platform.includes("Mac")) {
-    ok(compareSnapshots(snapShot($("b1")), snapShot($("b2")), false)[0], "focus after mouse shows no ring");
-  }
 
   synthesizeMouse($("b2"), 4, 4, { });
   checkFocus($("b2"), !isMac, "appearance on button after mouse focus with :focus");
