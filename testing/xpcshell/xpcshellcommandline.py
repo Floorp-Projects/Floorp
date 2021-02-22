@@ -306,20 +306,6 @@ def add_common_arguments(parser):
         dest="runFailures",
         help="Run failures matching keyword",
     )
-    parser.add_argument(
-        "--timeout-as-pass",
-        action="store_true",
-        default=False,
-        dest="timeoutAsPass",
-        help="Harness level timeouts will be treated as passing",
-    )
-    parser.add_argument(
-        "--crash-as-pass",
-        action="store_true",
-        default=False,
-        dest="crashAsPass",
-        help="Harness level crashes will be treated as passing",
-    )
 
 
 def add_remote_arguments(parser):
