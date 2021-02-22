@@ -25,6 +25,7 @@ namespace js {
   MOZ_ASSERT(shape && group);
   MOZ_ASSERT(clasp == shape->getObjectClass());
   MOZ_ASSERT(clasp == &ArrayObject::class_);
+  MOZ_ASSERT(clasp->isNativeObject());
   MOZ_ASSERT_IF(clasp->hasFinalize(), heap == gc::TenuredHeap);
 
   // Arrays can use their fixed slots to store elements, so can't have shapes

@@ -46,7 +46,7 @@ JSObject* js::AllocateObject(JSContext* cx, AllocKind kind,
       sizeof(JSObject_Slots0) >= MinCellSize,
       "All allocations must be at least the allocator-imposed minimum size.");
 
-  MOZ_ASSERT_IF(nDynamicSlots != 0, clasp->isNative());
+  MOZ_ASSERT_IF(nDynamicSlots != 0, clasp->isNativeObject());
 
   // We cannot trigger GC or make runtime assertions when nursery allocation
   // is suppressed, either explicitly or because we are off-thread.

@@ -84,10 +84,9 @@ inline void JSObject::finalize(JSFreeOp* fop) {
 #endif
 
   const JSClass* clasp = getClass();
-  js::NativeObject* nobj = nullptr;
-  if (clasp->isNative()) {
-    nobj = &as<js::NativeObject>();
-  }
+  js::NativeObject* nobj =
+      clasp->isNativeObject() ? &as<js::NativeObject>() : nullptr;
+
   if (clasp->hasFinalize()) {
     clasp->doFinalize(fop, this);
   }
@@ -168,7 +167,7 @@ inline bool ClassCanHaveFixedData(const JSClass* clasp) {
   // arrays we only use enough to cover the class reserved slots, so that
   // the remaining space in the object's allocation is available for the
   // buffer's data.
-  return !clasp->isNative() || clasp == &js::ArrayBufferObject::class_ ||
+  return !clasp->isNativeObject() || clasp == &js::ArrayBufferObject::class_ ||
          js::IsTypedArrayClass(clasp);
 }
 

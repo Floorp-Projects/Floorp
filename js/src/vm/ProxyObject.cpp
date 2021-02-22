@@ -72,6 +72,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
                               const JSClass* clasp) {
   Rooted<TaggedProto> proto(cx, proto_);
 
+  MOZ_ASSERT(!clasp->isNativeObject());
   MOZ_ASSERT(clasp->isProxy());
   MOZ_ASSERT(isValidProxyClass(clasp));
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
