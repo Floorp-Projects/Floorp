@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 // Maybe reuse file search's functions?
 
 import React from "react";
-import type { Match } from "../components/ProjectSearch";
 
-export function highlightMatches(lineMatch: Match) {
+export function highlightMatches(lineMatch) {
   const { value, matchIndex, match } = lineMatch;
   const len = match.length;
 

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
@@ -15,13 +14,10 @@ import FrameComponent from "./Frame";
 
 import "./Group.css";
 
-import actions from "../../../actions";
-import type { Frame, ThreadContext } from "../../../types";
 import Badge from "../../shared/Badge";
 import FrameIndent from "./FrameIndent";
 
-type FrameLocationProps = { frame: Frame, expanded: boolean };
-function FrameLocation({ frame, expanded }: FrameLocationProps) {
+function FrameLocation({ frame, expanded }) {
   const library = frame.library || getLibraryFromUrl(frame);
   if (!library) {
     return null;
@@ -39,31 +35,8 @@ function FrameLocation({ frame, expanded }: FrameLocationProps) {
 
 FrameLocation.displayName = "FrameLocation";
 
-type Props = {
-  cx: ThreadContext,
-  group: Frame[],
-  selectedFrame: Frame,
-  selectFrame: typeof actions.selectFrame,
-  selectLocation: typeof actions.selectLocation,
-  toggleFrameworkGrouping: Function,
-  copyStackTrace: Function,
-  toggleBlackBox: Function,
-  frameworkGroupingOn: boolean,
-  displayFullUrl: boolean,
-  getFrameTitle?: string => string,
-  disableContextMenu: boolean,
-  panel: "debugger" | "webconsole",
-  restart: typeof actions.restart,
-};
-
-type State = {
-  expanded: boolean,
-};
-
-export default class Group extends Component<Props, State> {
-  toggleFrames: Function;
-
-  constructor(...args: any[]) {
+export default class Group extends Component {
+  constructor(...args) {
     super(...args);
     this.state = { expanded: false };
   }
@@ -72,7 +45,7 @@ export default class Group extends Component<Props, State> {
     return this.props.panel == "webconsole";
   }
 
-  onContextMenu(event: SyntheticMouseEvent<HTMLElement>) {
+  onContextMenu(event) {
     const {
       group,
       copyStackTrace,
@@ -91,7 +64,7 @@ export default class Group extends Component<Props, State> {
     );
   }
 
-  toggleFrames = (event: SyntheticMouseEvent<HTMLElement>) => {
+  toggleFrames = event => {
     event.stopPropagation();
     this.setState(prevState => ({ expanded: !prevState.expanded }));
   };

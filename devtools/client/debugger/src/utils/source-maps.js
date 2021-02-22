@@ -2,19 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import SourceMaps, { isOriginalId } from "devtools-source-map";
+import { isOriginalId } from "devtools-source-map";
 import { getSource } from "../selectors";
 
-import type { SourceLocation, MappedLocation, Source } from "../types";
-
 export async function getGeneratedLocation(
-  state: Object,
-  source: Source,
-  location: SourceLocation,
-  sourceMaps: typeof SourceMaps
-): Promise<SourceLocation> {
+  state,
+  source,
+  location,
+  sourceMaps
+) {
   if (!isOriginalId(location.sourceId)) {
     return location;
   }
@@ -36,10 +32,7 @@ export async function getGeneratedLocation(
   };
 }
 
-export async function getOriginalLocation(
-  generatedLocation: SourceLocation,
-  sourceMaps: typeof SourceMaps
-) {
+export async function getOriginalLocation(generatedLocation, sourceMaps) {
   if (isOriginalId(generatedLocation.sourceId)) {
     return location;
   }
@@ -47,11 +40,7 @@ export async function getOriginalLocation(
   return sourceMaps.getOriginalLocation(generatedLocation);
 }
 
-export async function getMappedLocation(
-  state: Object,
-  sourceMaps: typeof SourceMaps,
-  location: SourceLocation
-): Promise<MappedLocation> {
+export async function getMappedLocation(state, sourceMaps, location) {
   const source = getSource(state, location.sourceId);
 
   if (!source) {
@@ -76,11 +65,7 @@ export async function getMappedLocation(
   return { location: originalLocation, generatedLocation };
 }
 
-export async function mapLocation(
-  state: Object,
-  sourceMaps: typeof SourceMaps,
-  location: SourceLocation
-): Promise<SourceLocation> {
+export async function mapLocation(state, sourceMaps, location) {
   const source = getSource(state, location.sourceId);
 
   if (!source) {
@@ -94,7 +79,7 @@ export async function mapLocation(
   return sourceMaps.getOriginalLocation(location);
 }
 
-export function isOriginalSource(source: ?Source) {
+export function isOriginalSource(source) {
   if (!source) {
     return false;
   }

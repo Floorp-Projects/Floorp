@@ -2,30 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { Component } from "react";
-import type { Node } from "react";
 import "./Dropdown.css";
 
-type Props = {
-  panel: React$Element<any>,
-  icon: Node,
-};
-
-type State = {
-  dropdownShown: boolean,
-};
-
-export class Dropdown extends Component<Props, State> {
-  toggleDropdown: Function;
-  constructor(props: Props) {
+export class Dropdown extends Component {
+  constructor(props) {
     super(props);
     this.state = {
       dropdownShown: false,
     };
   }
 
-  toggleDropdown = (e: SyntheticKeyboardEvent<HTMLElement>) => {
+  toggleDropdown = e => {
     this.setState(prevState => ({
       dropdownShown: !prevState.dropdownShown,
     }));

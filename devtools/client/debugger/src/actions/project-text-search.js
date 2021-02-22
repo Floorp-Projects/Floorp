@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * Redux actions for the search state
  * @module actions/search
@@ -25,30 +23,15 @@ import {
   getTextSearchStatus,
 } from "../reducers/project-text-search";
 
-import type { Action, ThunkArgs } from "./types";
-import type { Context, SourceId } from "../types";
-import type {
-  SearchOperation,
-  StatusType,
-} from "../reducers/project-text-search";
-
-export function addSearchQuery(cx: Context, query: string): Action {
+export function addSearchQuery(cx, query) {
   return { type: "ADD_QUERY", cx, query };
 }
 
-export function addOngoingSearch(
-  cx: Context,
-  ongoingSearch: SearchOperation
-): Action {
+export function addOngoingSearch(cx, ongoingSearch) {
   return { type: "ADD_ONGOING_SEARCH", cx, ongoingSearch };
 }
 
-export function addSearchResult(
-  cx: Context,
-  sourceId: SourceId,
-  filepath: string,
-  matches: Object[]
-): Action {
+export function addSearchResult(cx, sourceId, filepath, matches) {
   return {
     type: "ADD_SEARCH_RESULT",
     cx,
@@ -56,27 +39,27 @@ export function addSearchResult(
   };
 }
 
-export function clearSearchResults(cx: Context): Action {
+export function clearSearchResults(cx) {
   return { type: "CLEAR_SEARCH_RESULTS", cx };
 }
 
-export function clearSearch(cx: Context): Action {
+export function clearSearch(cx) {
   return { type: "CLEAR_SEARCH", cx };
 }
 
-export function updateSearchStatus(cx: Context, status: StatusType): Action {
+export function updateSearchStatus(cx, status) {
   return { type: "UPDATE_STATUS", cx, status };
 }
 
-export function closeProjectSearch(cx: Context) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function closeProjectSearch(cx) {
+  return ({ dispatch, getState }) => {
     dispatch(stopOngoingSearch(cx));
     dispatch({ type: "CLOSE_PROJECT_SEARCH" });
   };
 }
 
-export function stopOngoingSearch(cx: Context) {
-  return ({ dispatch, getState }: ThunkArgs) => {
+export function stopOngoingSearch(cx) {
+  return ({ dispatch, getState }) => {
     const state = getState();
     const ongoingSearch = getTextSearchOperation(state);
     const status = getTextSearchStatus(state);
@@ -87,10 +70,10 @@ export function stopOngoingSearch(cx: Context) {
   };
 }
 
-export function searchSources(cx: Context, query: string) {
+export function searchSources(cx, query) {
   let cancelled = false;
 
-  const search = async ({ dispatch, getState }: ThunkArgs) => {
+  const search = async ({ dispatch, getState }) => {
     dispatch(stopOngoingSearch(cx));
     await dispatch(addOngoingSearch(cx, search));
     await dispatch(clearSearchResults(cx));
@@ -116,8 +99,8 @@ export function searchSources(cx: Context, query: string) {
   return search;
 }
 
-export function searchSource(cx: Context, sourceId: SourceId, query: string) {
-  return async ({ dispatch, getState }: ThunkArgs) => {
+export function searchSource(cx, sourceId, query) {
+  return async ({ dispatch, getState }) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
       return;

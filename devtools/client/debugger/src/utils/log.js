@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-/* @flow */
+/*       */
 
 /**
  *
@@ -23,7 +23,7 @@ import { prefs } from "./prefs";
  * @memberof utils/log
  * @static
  */
-export function log(...args: any[]): void {
+export function log(...args) {
   if (prefs.logging) {
     console.log(...args);
   }

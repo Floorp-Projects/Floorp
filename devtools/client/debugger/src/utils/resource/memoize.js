@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { ResourceBound } from "./core";
-import type { QueryMap } from "./base-query";
 import { shallowEqual } from "./compare";
 
 /**
@@ -14,19 +10,14 @@ import { shallowEqual } from "./compare";
  * even if the input object is different, as long as the identity is the same
  * and the mapped result is shallow-equal to the most recent mapped value.
  */
-export function memoizeResourceShallow<
-  R: ResourceBound,
-  Args,
-  Mapped,
-  T: QueryMap<R, Args, Mapped>
->(map: T): T {
+export function memoizeResourceShallow(map) {
   const cache = new WeakMap();
 
   const fn = (input, identity, args) => {
     let existingEntry = cache.get(identity);
 
     if (!existingEntry || existingEntry.input !== input) {
-      const mapper = (map: any);
+      const mapper = map;
       const output = mapper(input, identity, args);
 
       if (existingEntry) {
@@ -50,5 +41,5 @@ export function memoizeResourceShallow<
     return existingEntry.output;
   };
   fn.needsArgs = map.needsArgs;
-  return (fn: any);
+  return fn;
 }

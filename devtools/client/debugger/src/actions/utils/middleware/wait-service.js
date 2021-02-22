@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * A middleware which acts like a service, because it is stateful
  * and "long-running" in the background. It provides the ability
@@ -25,9 +23,8 @@
  * ```
  */
 export const NAME = "@@service/waitUntil";
-import type { ThunkArgs } from "../../types";
 
-export function waitUntilService({ dispatch, getState }: ThunkArgs) {
+export function waitUntilService({ dispatch, getState }) {
   let pending = [];
 
   function checkPending(action) {
@@ -53,7 +50,7 @@ export function waitUntilService({ dispatch, getState }: ThunkArgs) {
     }
   }
 
-  return (next: Function) => (action: Object) => {
+  return next => action => {
     if (action.type === NAME) {
       pending.push(action);
       return null;

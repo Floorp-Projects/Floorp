@@ -2,34 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getFrames, getSource, getSelectedFrame } from "../../selectors";
 
 import assert from "../../utils/assert";
 
-import type {
-  Frame,
-  FrameId,
-  OriginalFrame,
-  ThreadContext,
-  ThreadId,
-} from "../../types";
-import type { State } from "../../reducers/types";
-import type { ThunkArgs } from "../types";
+import { isGeneratedId } from "devtools-source-map";
 
-import SourceMaps, { isGeneratedId } from "devtools-source-map";
-
-function isFrameBlackboxed(state: State, frame: Frame): boolean {
+function isFrameBlackboxed(state, frame) {
   const source = getSource(state, frame.location.sourceId);
   return !!source?.isBlackBoxed;
 }
 
-function getSelectedFrameId(
-  state: State,
-  thread: ThreadId,
-  frames: Frame[]
-): ?FrameId {
+function getSelectedFrameId(state, thread, frames) {
   let selectedFrame = getSelectedFrame(state, thread);
   if (selectedFrame && !isFrameBlackboxed(state, selectedFrame)) {
     return selectedFrame.id;
@@ -39,10 +23,7 @@ function getSelectedFrameId(
   return selectedFrame?.id;
 }
 
-export function updateFrameLocation(
-  frame: Frame,
-  sourceMaps: typeof SourceMaps
-): Promise<Frame> {
+export function updateFrameLocation(frame, sourceMaps) {
   if (frame.isOriginal) {
     return Promise.resolve(frame);
   }
@@ -53,10 +34,7 @@ export function updateFrameLocation(
   }));
 }
 
-function updateFrameLocations(
-  frames: Frame[],
-  sourceMaps: typeof SourceMaps
-): Promise<Frame[]> {
+function updateFrameLocations(frames, sourceMaps) {
   if (!frames || frames.length == 0) {
     return Promise.resolve(frames);
   }
@@ -66,10 +44,7 @@ function updateFrameLocations(
   );
 }
 
-function isWasmOriginalSourceFrame(
-  frame: Frame,
-  getState: () => State
-): boolean {
+function isWasmOriginalSourceFrame(frame, getState) {
   if (isGeneratedId(frame.location.sourceId)) {
     return false;
   }
@@ -81,11 +56,7 @@ function isWasmOriginalSourceFrame(
   return Boolean(generatedSource?.isWasm);
 }
 
-async function expandFrames(
-  frames: Frame[],
-  sourceMaps: typeof SourceMaps,
-  getState: () => State
-): Promise<Frame[]> {
+async function expandFrames(frames, sourceMaps, getState) {
   const result = [];
   for (let i = 0; i < frames.length; ++i) {
     const frame = frames[i];
@@ -93,7 +64,7 @@ async function expandFrames(
       result.push(frame);
       continue;
     }
-    const originalFrames: ?Array<OriginalFrame> = await sourceMaps.getOriginalStackFrames(
+    const originalFrames = await sourceMaps.getOriginalStackFrames(
       frame.generatedLocation
     );
     if (!originalFrames) {
@@ -148,8 +119,8 @@ async function expandFrames(
  * @memberof actions/pause
  * @static
  */
-export function mapFrames(cx: ThreadContext) {
-  return async function(thunkArgs: ThunkArgs) {
+export function mapFrames(cx) {
+  return async function(thunkArgs) {
     const { dispatch, getState, sourceMaps } = thunkArgs;
     const frames = getFrames(getState(), cx.thread);
     if (!frames) {

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import { Component } from "react";
 import { connect } from "../../utils/connect";
 import {
@@ -13,35 +12,16 @@ import {
 import { getSourceLocationFromMouseEvent } from "../../utils/editor";
 import actions from "../../actions";
 import "./HighlightCalls.css";
-import type {
-  ThreadContext,
-  SourceWithContent,
-  HighlightedCalls as HighlightedCallsType,
-  HighlightedCall,
-} from "../../types";
 
-type OwnProps = {|
-  editor: Object,
-  selectedSource: ?SourceWithContent,
-|};
-
-type Props = {
-  editor: Object,
-  highlightedCalls: ?HighlightedCallsType,
-  cx: ThreadContext,
-  selectedSource: ?SourceWithContent,
-  continueToHere: typeof actions.continueToHere,
-};
-
-export class HighlightCalls extends Component<Props> {
-  previousCalls: HighlightedCallsType | null = null;
+export class HighlightCalls extends Component {
+  previousCalls = null;
 
   componentDidUpdate() {
     this.unhighlightFunctionCalls();
     this.highlightFunctioCalls();
   }
 
-  markCall = (call: HighlightedCall) => {
+  markCall = call => {
     const { editor } = this.props;
     const startLine = call.location.start.line - 1;
     const endLine = call.location.end.line - 1;
@@ -55,7 +35,7 @@ export class HighlightCalls extends Component<Props> {
     return markedCall;
   };
 
-  onClick = (e: MouseEvent) => {
+  onClick = e => {
     const { editor, selectedSource, cx, continueToHere } = this.props;
 
     if (selectedSource) {
@@ -116,7 +96,4 @@ const { continueToHere } = actions;
 
 const mapDispatchToProps = { continueToHere };
 
-export default connect<Props, OwnProps, _, _, _, _>(
-  mapStateToProps,
-  mapDispatchToProps
-)(HighlightCalls);
+export default connect(mapStateToProps, mapDispatchToProps)(HighlightCalls);

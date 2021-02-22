@@ -2,13 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { Why } from "../../../types";
-import type { NamedValue } from "./types";
-
-export function getFramePopVariables(why: Why, path: string): NamedValue[] {
-  const vars: Array<NamedValue> = [];
+export function getFramePopVariables(why, path) {
+  const vars = [];
 
   if (why && why.frameFinished) {
     const { frameFinished } = why;
@@ -40,7 +35,7 @@ export function getFramePopVariables(why: Why, path: string): NamedValue[] {
   return vars;
 }
 
-export function getThisVariable(this_: any, path: string): ?NamedValue {
+export function getThisVariable(this_, path) {
   if (!this_) {
     return null;
   }
@@ -54,7 +49,7 @@ export function getThisVariable(this_: any, path: string): ?NamedValue {
 
 // Get a string path for an scope item which can be used in different pauses for
 // a thread.
-export function getScopeItemPath(item: Object): string {
+export function getScopeItemPath(item) {
   // Calling toString() on item.path allows symbols to be handled.
   return item.path.toString();
 }

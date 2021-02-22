@@ -1,14 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-// @flow
 
 const { SourceMapConsumer } = require("source-map");
 const {
   setAssetRootURL: wasmDwarfSetAssetRootURL,
 } = require("devtools-wasm-dwarf");
 
-function setAssetRootURL(assetRoot: string): void {
+function setAssetRootURL(assetRoot) {
   // Remove any trailing slash so we don't generate a double-slash below.
   const root = assetRoot.replace(/\/$/, "");
 

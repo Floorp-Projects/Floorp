@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { AstLocation, AstPosition } from "./types";
-import type { SourceId } from "../../types";
-
 import findIndex from "lodash/findIndex";
 import findLastIndex from "lodash/findLastIndex";
 
@@ -45,7 +40,7 @@ function getLocation(func) {
  * @param locations Notice! The locations MUST be sorted by `sortByStart`
  *                  so that we can do linear time complexity operation.
  */
-function removeInnerLocations(locations: AstLocation[], position: AstPosition) {
+function removeInnerLocations(locations, position) {
   // First, let's find the nearest position-enclosing function location,
   // which is to find the last location enclosing the position.
   const newLocs = locations.slice();
@@ -81,7 +76,7 @@ function removeInnerLocations(locations: AstLocation[], position: AstPosition) {
  * @param locations Notice! The locations MUST be sorted by `sortByStart`
  *                  so that we can do linear time complexity operation.
  */
-function removeOverlaps(locations: AstLocation[]) {
+function removeOverlaps(locations) {
   if (locations.length == 0) {
     return [];
   }
@@ -100,7 +95,7 @@ function deduplicateNode(nodes, location) {
 /**
  * Sorts an array of locations by start position
  */
-function sortByStart(a: AstLocation, b: AstLocation) {
+function sortByStart(a, b) {
   if (a.start.line < b.start.line) {
     return -1;
   } else if (a.start.line === b.start.line) {
@@ -114,10 +109,7 @@ function sortByStart(a: AstLocation, b: AstLocation) {
  * Returns an array of locations that are considered out of scope for the given
  * location.
  */
-function findOutOfScopeLocations(
-  sourceId: SourceId,
-  position: AstPosition
-): AstLocation[] {
+function findOutOfScopeLocations(sourceId, position) {
   const { functions, comments } = findSymbols(sourceId);
   const commentLocations = comments.map(c => c.location);
   let locations = functions

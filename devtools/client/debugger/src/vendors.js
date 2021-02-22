@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * Vendors.js is a file used to bundle and expose all dependencies needed to run
  * the transpiled debugger modules when running in Firefox.
@@ -16,7 +14,6 @@
  * Both are fine, but cannot be mixed for the same module.
  */
 
-// $FlowIgnore
 import * as devtoolsUtils from "devtools-utils";
 import * as fuzzaldrinPlus from "fuzzaldrin-plus";
 import * as transition from "react-transition-group/Transition";

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   makeBreakpointLocation,
   makeBreakpointId,
@@ -33,17 +31,6 @@ import { getMappedScopesForLocation } from "../pause/mapScopes";
 import { isOriginalSource } from "../../utils/source-maps";
 import { validateNavigateContext } from "../../utils/context";
 
-import type { ThunkArgs } from "../types";
-import type {
-  Breakpoint,
-  BreakpointOptions,
-  BreakpointPosition,
-  SourceLocation,
-  Context,
-} from "../../types";
-import type { ParserDispatcher } from "../../workers/parser";
-import type { State } from "../../reducers/types";
-
 // This file has the primitive operations used to modify individual breakpoints
 // and keep them in sync with the breakpoints installed on server threads. These
 // are collected here to make it easier to preserve the following invariant:
@@ -71,8 +58,8 @@ import type { State } from "../../reducers/types";
 async function clientSetBreakpoint(
   client,
   cx,
-  { getState, dispatch }: ThunkArgs,
-  breakpoint: Breakpoint
+  { getState, dispatch },
+  breakpoint
 ) {
   const breakpointLocation = makeBreakpointLocation(
     getState(),
@@ -89,17 +76,13 @@ async function clientSetBreakpoint(
   return client.setBreakpoint(breakpointLocation, breakpoint.options);
 }
 
-function clientRemoveBreakpoint(
-  client,
-  state: State,
-  generatedLocation: SourceLocation
-) {
+function clientRemoveBreakpoint(client, state, generatedLocation) {
   const breakpointLocation = makeBreakpointLocation(state, generatedLocation);
   return client.removeBreakpoint(breakpointLocation);
 }
 
-export function enableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
-  return (thunkArgs: ThunkArgs) => {
+export function enableBreakpoint(cx, initialBreakpoint) {
+  return thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || !breakpoint.disabled) {
@@ -117,13 +100,13 @@ export function enableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
 }
 
 export function addBreakpoint(
-  cx: Context,
-  initialLocation: SourceLocation,
-  options: BreakpointOptions = {},
-  disabled: boolean = false,
-  shouldCancel: () => boolean = () => false
+  cx,
+  initialLocation,
+  options = {},
+  disabled = false,
+  shouldCancel = () => false
 ) {
-  return async (thunkArgs: ThunkArgs) => {
+  return async thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
     recordEvent("add_breakpoint");
 
@@ -131,7 +114,7 @@ export function addBreakpoint(
 
     await dispatch(setBreakpointPositions({ cx, sourceId, line }));
 
-    const position: ?BreakpointPosition = column
+    const position = column
       ? getBreakpointPositionsForLocation(getState(), initialLocation)
       : getFirstBreakpointPosition(getState(), initialLocation);
 
@@ -201,8 +184,8 @@ export function addBreakpoint(
  * @memberof actions/breakpoints
  * @static
  */
-export function removeBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
-  return ({ dispatch, getState, client }: ThunkArgs) => {
+export function removeBreakpoint(cx, initialBreakpoint) {
+  return ({ dispatch, getState, client }) => {
     recordEvent("remove_breakpoint");
 
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
@@ -234,11 +217,8 @@ export function removeBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
  * @memberof actions/breakpoints
  * @static
  */
-export function removeBreakpointAtGeneratedLocation(
-  cx: Context,
-  target: SourceLocation
-) {
-  return ({ dispatch, getState, client }: ThunkArgs) => {
+export function removeBreakpointAtGeneratedLocation(cx, target) {
+  return ({ dispatch, getState, client }) => {
     // remove breakpoint from the server
     const onBreakpointRemoved = clientRemoveBreakpoint(
       client,
@@ -285,8 +265,8 @@ export function removeBreakpointAtGeneratedLocation(
  * @memberof actions/breakpoints
  * @static
  */
-export function disableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
-  return ({ dispatch, getState, client }: ThunkArgs) => {
+export function disableBreakpoint(cx, initialBreakpoint) {
+  return ({ dispatch, getState, client }) => {
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || breakpoint.disabled) {
       return;
@@ -317,12 +297,8 @@ export function disableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
  * @param {Object} options
  *        Any options to set on the breakpoint
  */
-export function setBreakpointOptions(
-  cx: Context,
-  location: SourceLocation,
-  options: BreakpointOptions = {}
-) {
-  return (thunkArgs: ThunkArgs) => {
+export function setBreakpointOptions(cx, location, options = {}) {
+  return thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
     let breakpoint = getBreakpoint(getState(), location);
     if (!breakpoint) {
@@ -342,9 +318,9 @@ export function setBreakpointOptions(
 }
 
 async function updateExpression(
-  evaluationsParser: ParserDispatcher,
+  evaluationsParser,
   mappings,
-  originalExpression: string
+  originalExpression
 ) {
   const mapped = await evaluationsParser.mapExpression(
     originalExpression,
@@ -362,8 +338,8 @@ async function updateExpression(
   return mapped.expression;
 }
 
-function updateBreakpointSourceMapping(cx: Context, breakpoint: Breakpoint) {
-  return async ({ getState, dispatch, evaluationsParser }: ThunkArgs) => {
+function updateBreakpointSourceMapping(cx, breakpoint) {
+  return async ({ getState, dispatch, evaluationsParser }) => {
     const options = { ...breakpoint.options };
 
     const mappedScopes = await dispatch(

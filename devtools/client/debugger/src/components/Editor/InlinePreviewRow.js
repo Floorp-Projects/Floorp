@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
 
@@ -11,36 +10,20 @@ import assert from "../../utils/assert";
 import { connect } from "../../utils/connect";
 import InlinePreview from "./InlinePreview";
 
-import type { Preview } from "../../types";
-
-type OwnProps = {|
-  editor: Object,
-  line: number,
-  previews: Array<Preview>,
-|};
-type Props = {
-  editor: Object,
-  line: number,
-  previews: Array<Preview>,
-  openElementInInspector: typeof actions.openElementInInspectorCommand,
-  highlightDomElement: typeof actions.highlightDomElement,
-  unHighlightDomElement: typeof actions.unHighlightDomElement,
-};
-
 import "./InlinePreview.css";
 
 // Handles rendering for each line ( row )
 // * Renders single widget for each line in codemirror
 // * Renders InlinePreview for each preview inside the widget
-class InlinePreviewRow extends PureComponent<Props> {
-  bookmark: Object;
-  widgetNode: Object;
+class InlinePreviewRow extends PureComponent {
+  bookmark;
+  widgetNode;
 
   componentDidMount() {
     this.updatePreviewWidget(this.props, null);
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps) {
     this.updatePreviewWidget(this.props, prevProps);
   }
 
@@ -48,7 +31,7 @@ class InlinePreviewRow extends PureComponent<Props> {
     this.updatePreviewWidget(null, this.props);
   }
 
-  updatePreviewWidget(props: Props | null, prevProps: Props | null) {
+  updatePreviewWidget(props, prevProps) {
     if (
       this.bookmark &&
       prevProps &&
@@ -84,7 +67,7 @@ class InlinePreviewRow extends PureComponent<Props> {
 
     ReactDOM.render(
       <React.Fragment>
-        {previews.map((preview: Preview) => (
+        {previews.map(preview => (
           <InlinePreview
             line={line}
             key={`${line}-${preview.name}`}
@@ -113,7 +96,7 @@ class InlinePreviewRow extends PureComponent<Props> {
   }
 }
 
-export default connect<Props, OwnProps, _, _, _, _>(() => ({}), {
+export default connect(() => ({}), {
   openElementInInspector: actions.openElementInInspectorCommand,
   highlightDomElement: actions.highlightDomElement,
   unHighlightDomElement: actions.unHighlightDomElement,

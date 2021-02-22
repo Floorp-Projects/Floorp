@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
 import { connect } from "../../utils/connect";
@@ -30,39 +28,7 @@ import Dropdown from "../shared/Dropdown";
 import AccessibleImage from "../shared/AccessibleImage";
 import CommandBar from "../SecondaryPanes/CommandBar";
 
-import type { Source, Context } from "../../types";
-import type { TabsSources } from "../../reducers/types";
-
-type OwnProps = {|
-  horizontal: boolean,
-  startPanelCollapsed: boolean,
-  endPanelCollapsed: boolean,
-|};
-type Props = {
-  cx: Context,
-  tabSources: TabsSources,
-  selectedSource: ?Source,
-  horizontal: boolean,
-  startPanelCollapsed: boolean,
-  endPanelCollapsed: boolean,
-  moveTab: typeof actions.moveTab,
-  moveTabBySourceId: typeof actions.moveTabBySourceId,
-  closeTab: typeof actions.closeTab,
-  togglePaneCollapse: typeof actions.togglePaneCollapse,
-  showSource: typeof actions.showSource,
-  selectSource: typeof actions.selectSource,
-  isPaused: boolean,
-};
-
-type State = {
-  dropdownShown: boolean,
-  hiddenTabs: TabsSources,
-};
-
-function haveTabSourcesChanged(
-  tabSources: TabsSources,
-  prevTabSources: TabsSources
-): boolean {
+function haveTabSourcesChanged(tabSources, prevTabSources) {
   if (tabSources.length !== prevTabSources.length) {
     return true;
   }
@@ -76,21 +42,8 @@ function haveTabSourcesChanged(
   return false;
 }
 
-class Tabs extends PureComponent<Props, State> {
-  onTabContextMenu: Function;
-  showContextMenu: Function;
-  updateHiddenTabs: Function;
-  toggleSourcesDropdown: Function;
-  renderDropdownSource: Function;
-  renderTabs: Function;
-  renderDropDown: Function;
-  renderStartPanelToggleButton: Function;
-  renderEndPanelToggleButton: Function;
-  onResize: Function;
-  _draggedSource: ?Source;
-  _draggedSourceIndex: ?number;
-
-  constructor(props: Props) {
+class Tabs extends PureComponent {
+  constructor(props) {
     super(props);
     this.state = {
       dropdownShown: false,
@@ -108,7 +61,7 @@ class Tabs extends PureComponent<Props, State> {
       : this._draggedSource;
   }
 
-  set draggedSource(source: ?Source) {
+  set draggedSource(source) {
     this._draggedSource = source;
   }
 
@@ -116,11 +69,11 @@ class Tabs extends PureComponent<Props, State> {
     return this._draggedSourceIndex == null ? -1 : this._draggedSourceIndex;
   }
 
-  set draggedSourceIndex(index: ?number) {
+  set draggedSourceIndex(index) {
     this._draggedSourceIndex = index;
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps) {
     if (
       this.props.selectedSource !== prevProps.selectedSource ||
       haveTabSourcesChanged(this.props.tabSources, prevProps.tabSources)
@@ -173,7 +126,7 @@ class Tabs extends PureComponent<Props, State> {
     }));
   }
 
-  getIconClass(source: Source) {
+  getIconClass(source) {
     if (isPretty(source)) {
       return "prettyPrint";
     }
@@ -183,7 +136,7 @@ class Tabs extends PureComponent<Props, State> {
     return "file";
   }
 
-  renderDropdownSource = (source: Source) => {
+  renderDropdownSource = source => {
     const { cx, selectSource } = this.props;
     const filename = getFilename(source);
 
@@ -198,7 +151,7 @@ class Tabs extends PureComponent<Props, State> {
     );
   };
 
-  onTabDragStart = (source: Source, index: number) => {
+  onTabDragStart = (source, index) => {
     this.draggedSource = source;
     this.draggedSourceIndex = index;
   };
@@ -208,7 +161,7 @@ class Tabs extends PureComponent<Props, State> {
     this.draggedSourceIndex = null;
   };
 
-  onTabDragOver = (e: any, source: Source, hoveredTabIndex: number) => {
+  onTabDragOver = (e, source, hoveredTabIndex) => {
     const { moveTabBySourceId } = this.props;
     if (hoveredTabIndex === this.draggedSourceIndex) {
       return;
@@ -218,8 +171,6 @@ class Tabs extends PureComponent<Props, State> {
       this.refs[`tab_${source.id}`].getWrappedInstance()
     );
 
-    /* $FlowIgnore: tabDOM.nodeType will always be of Node.ELEMENT_NODE since it comes from a ref;
-      however; the return type of findDOMNode is null | Element | Text */
     const tabDOMRect = tabDOM.getBoundingClientRect();
     const { pageX: mouseCursorX } = e;
     if (
@@ -302,7 +253,7 @@ class Tabs extends PureComponent<Props, State> {
       <PaneToggleButton
         position="start"
         collapsed={this.props.startPanelCollapsed}
-        handleClick={(this.props.togglePaneCollapse: any)}
+        handleClick={this.props.togglePaneCollapse}
       />
     );
   }
@@ -317,7 +268,7 @@ class Tabs extends PureComponent<Props, State> {
       <PaneToggleButton
         position="end"
         collapsed={endPanelCollapsed}
-        handleClick={(togglePaneCollapse: any)}
+        handleClick={togglePaneCollapse}
         horizontal={horizontal}
       />
     );
@@ -343,7 +294,7 @@ const mapStateToProps = state => ({
   isPaused: getIsPaused(state, getCurrentThread(state)),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
+export default connect(mapStateToProps, {
   selectSource: actions.selectSource,
   moveTab: actions.moveTab,
   moveTabBySourceId: actions.moveTabBySourceId,

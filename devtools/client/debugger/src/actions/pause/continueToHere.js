@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   getSelectedSource,
   getSelectedFrame,
@@ -15,11 +13,8 @@ import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 
 import { resume } from "./commands";
 
-import type { ThunkArgs } from "../types";
-import type { ThreadContext, SourceLocation } from "../../types";
-
-export function continueToHere(cx: ThreadContext, location: SourceLocation) {
-  return async function({ dispatch, getState }: ThunkArgs) {
+export function continueToHere(cx, location) {
+  return async function({ dispatch, getState }) {
     const { line, column, sourceId } = location;
     const selectedSource = getSelectedSource(getState());
     const selectedFrame = getSelectedFrame(getState(), cx.thread);

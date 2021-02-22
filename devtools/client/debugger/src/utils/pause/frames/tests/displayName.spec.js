@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   formatCopyName,
   formatDisplayName,
@@ -77,7 +75,7 @@ describe("formatting display names", () => {
   });
 
   it("returns anonymous when displayName is null", () => {
-    const frame = { ...makeMockFrame(), displayName: (null: any) };
+    const frame = { ...makeMockFrame(), displayName: null };
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("<anonymous>");
   });
 

@@ -2,27 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 // This module converts Firefox specific types to the generic types
-
-import type { Frame, ThreadId, GeneratedSourceData, Thread } from "../../types";
-import type {
-  PausedPacket,
-  FrameFront,
-  SourcePayload,
-  ThreadFront,
-  Target,
-} from "./types";
 
 import { clientCommands } from "./commands";
 import { hasSourceActor, getSourceActor } from "../../selectors";
 import { stringToSourceActorId } from "../../reducers/source-actors";
 
-type Dependencies = {
-  store: any,
-};
-
-let store: any;
+let store;
 
 /**
  * This function is to be called first before any other
@@ -33,35 +19,27 @@ let store: any;
  * @param {Object} dependencies.store
  *                 The redux store object of the debugger frontend.
  */
-export function setupCreate(dependencies: Dependencies): void {
+export function setupCreate(dependencies) {
   store = dependencies.store;
 }
 
-export function prepareSourcePayload(
-  threadFront: ThreadFront,
-  source: SourcePayload
-): GeneratedSourceData {
+export function prepareSourcePayload(threadFront, source) {
   source = { ...source };
 
   // Maintain backward-compat with servers that only return introductionUrl and
   // not sourceMapBaseURL.
   if (
     typeof source.sourceMapBaseURL === "undefined" &&
-    typeof (source: any).introductionUrl !== "undefined"
+    typeof source.introductionUrl !== "undefined"
   ) {
-    source.sourceMapBaseURL =
-      source.url || (source: any).introductionUrl || null;
-    delete (source: any).introductionUrl;
+    source.sourceMapBaseURL = source.url || source.introductionUrl || null;
+    delete source.introductionUrl;
   }
 
   return { thread: threadFront.actor, source };
 }
 
-export async function createFrame(
-  thread: ThreadId,
-  frame: FrameFront,
-  index: number = 0
-): Promise<?Frame> {
+export async function createFrame(thread, frame, index = 0) {
   if (!frame) {
     return null;
   }
@@ -98,9 +76,7 @@ export async function createFrame(
  * @param {String} sourceActor
  *                 Actor ID of the source to be waiting for.
  */
-async function waitForSourceActorToBeRegisteredInStore(
-  sourceActorIdString: string
-): Promise<any> {
+async function waitForSourceActorToBeRegisteredInStore(sourceActorIdString) {
   const sourceActorId = stringToSourceActorId(sourceActorIdString);
   if (!hasSourceActor(store.getState(), sourceActorId)) {
     await new Promise(resolve => {
@@ -123,7 +99,7 @@ async function waitForSourceActorToBeRegisteredInStore(
   return getSourceActor(store.getState(), sourceActorId);
 }
 
-export function makeSourceId(source: SourcePayload, threadActorId: ThreadId) {
+export function makeSourceId(source, threadActorId) {
   // Source actors with the same URL will be given the same source ID and
   // grouped together under the same source in the client. There is an exception
   // for sources from distinct target types, where there may be multiple processes/threads
@@ -135,7 +111,7 @@ export function makeSourceId(source: SourcePayload, threadActorId: ThreadId) {
   return `source-${source.actor}`;
 }
 
-export async function createPause(thread: string, packet: PausedPacket): any {
+export async function createPause(thread, packet) {
   const frame = await createFrame(thread, packet.frame);
   return {
     ...packet,
@@ -144,7 +120,7 @@ export async function createPause(thread: string, packet: PausedPacket): any {
   };
 }
 
-export function createThread(actor: string, target: Target): Thread {
+export function createThread(actor, target) {
   const name = target.isTopLevel ? L10N.getStr("mainThread") : target.name;
 
   return {

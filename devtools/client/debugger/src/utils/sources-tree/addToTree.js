@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   nodeHasChildren,
   isPathDirectory,
@@ -12,21 +10,11 @@ import {
   createSourceNode,
   createDirectoryNode,
   getPathParts,
-  type PathPart,
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 import { getDisplayURL } from "./getURL";
 
-import type { ParsedURL } from "./getURL";
-import type { TreeDirectory, TreeNode } from "./types";
-import type { DisplaySource, Source } from "../../types";
-
-function createNodeInTree(
-  part: string,
-  path: string,
-  tree: TreeDirectory,
-  index: number
-): TreeDirectory {
+function createNodeInTree(part, path, tree, index) {
   const node = createDirectoryNode(part, path, []);
 
   // we are modifying the tree
@@ -43,15 +31,15 @@ function createNodeInTree(
  * 2. if it does not exist create it
  */
 function findOrCreateNode(
-  parts: PathPart[],
-  subTree: TreeDirectory,
-  path: string,
-  part: string,
-  index: number,
-  url: Object,
-  debuggeeHost: ?string,
-  source: Source
-): TreeDirectory {
+  parts,
+  subTree,
+  path,
+  part,
+  index,
+  url,
+  debuggeeHost,
+  source
+) {
   const addedPartIsFile = partIsFile(index, parts, url);
 
   const { found: childFound, index: childIndex } = findNodeInContents(
@@ -80,20 +68,14 @@ function findOrCreateNode(
   }
 
   // if there is no naming conflict, we can traverse into the child
-  return (child: any);
+  return child;
 }
 
 /*
  * walk the source tree to the final node for a given url,
  * adding new nodes along the way
  */
-function traverseTree(
-  url: ParsedURL,
-  tree: TreeDirectory,
-  debuggeeHost: ?string,
-  source: Source,
-  thread: string
-): TreeNode {
+function traverseTree(url, tree, debuggeeHost, source, thread) {
   const parts = getPathParts(url, thread, debuggeeHost);
   return parts.reduce(
     (subTree, { part, path, debuggeeHostIfRoot }, index) =>
@@ -114,11 +96,7 @@ function traverseTree(
 /*
  * Add a source file to a directory node in the tree
  */
-function addSourceToNode(
-  node: TreeDirectory,
-  url: ParsedURL,
-  source: Source
-): Source | TreeNode[] {
+function addSourceToNode(node, url, source) {
   const isFile = !isPathDirectory(url.path);
 
   if (node.type == "source" && !isFile) {
@@ -128,7 +106,6 @@ function addSourceToNode(
   // if we have a file, and the subtree has no elements, overwrite the
   // subtree contents with the source
   if (isFile) {
-    // $FlowIgnore
     node.type = "source";
     return source;
   }
@@ -168,12 +145,7 @@ function addSourceToNode(
  * @memberof utils/sources-tree
  * @static
  */
-export function addToTree(
-  tree: TreeDirectory,
-  source: DisplaySource,
-  debuggeeHost: ?string,
-  thread: string
-): void {
+export function addToTree(tree, source, debuggeeHost, thread) {
   const url = getDisplayURL(source, debuggeeHost);
 
   if (isInvalidUrl(url, source)) {
@@ -182,6 +154,5 @@ export function addToTree(
 
   const finalNode = traverseTree(url, tree, debuggeeHost, source, thread);
 
-  // $FlowIgnore
   finalNode.contents = addSourceToNode(finalNode, url, source);
 }

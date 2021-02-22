@@ -2,14 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { isStepping, getPauseReason, getThreadContext } from "../../selectors";
 import { evaluateExpressions } from "../expressions";
 import { inDebuggerEval } from "../../utils/pause";
-
-import type { ThunkArgs } from "../types";
-import type { ActorId } from "../../types";
 
 /**
  * Debugger has just resumed
@@ -17,8 +12,8 @@ import type { ActorId } from "../../types";
  * @memberof actions/pause
  * @static
  */
-export function resumed(thread: ActorId) {
-  return async ({ dispatch, client, getState }: ThunkArgs) => {
+export function resumed(thread) {
+  return async ({ dispatch, client, getState }) => {
     const why = getPauseReason(getState(), thread);
     const wasPausedInEval = inDebuggerEval(why);
     const wasStepping = isStepping(getState(), thread);

@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import {
   createStore,
   selectors,
@@ -144,14 +142,11 @@ describe("preview", () => {
 
     let fail = false;
 
-    /* $FlowIgnore[not-a-function] this is guarantied to be initialized because
-       `new new Promise(foo)` calls foo synchronously */
     resolveFirst();
     waitForPreview(store, "firstSetPreview").then(() => {
       fail = true;
     });
 
-    // $FlowIgnore[not-a-function] same as above
     resolveSecond();
     await waitForPreview(store, "secondSetPreview");
     expect(fail).toEqual(false);
@@ -196,12 +191,9 @@ describe("preview", () => {
 
     let fail = false;
 
-    /* $FlowIgnore[not-a-function] this is guarantied to be initialized because
-       `new new Promise(foo)` calls foo synchronously */
     resolveSecond();
     await waitForPreview(store, "secondSetPreview");
 
-    // $FlowIgnore[not-a-function] same as above
     resolveFirst();
     waitForPreview(store, "firstSetPreview").then(() => {
       fail = true;

@@ -2,19 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 const {
   workerUtils: { WorkerDispatcher },
 } = require("devtools-utils");
-
-import type {
-  OriginalFrame,
-  Range,
-  SourceLocation,
-  SourceId,
-} from "../../../src/types";
-import type { SourceMapInput, LocationOptions } from "./source-map";
 
 export const dispatcher = new WorkerDispatcher();
 
@@ -33,91 +23,54 @@ const _getOriginalLocation = dispatcher.task("getOriginalLocation", {
   queue: true,
 });
 
-export const setAssetRootURL = async (assetRoot: string): Promise<void> =>
+export const setAssetRootURL = async assetRoot =>
   dispatcher.invoke("setAssetRootURL", assetRoot);
 
-export const getOriginalURLs = async (
-  generatedSource: SourceMapInput
-): Promise<?Array<{| id: SourceId, url: string |}>> =>
+export const getOriginalURLs = async generatedSource =>
   dispatcher.invoke("getOriginalURLs", generatedSource);
 
-export const hasOriginalURL = async (url: string): Promise<boolean> =>
+export const hasOriginalURL = async url =>
   dispatcher.invoke("hasOriginalURL", url);
 
-export const getOriginalRanges = async (
-  sourceId: SourceId
-): Promise<
-  Array<{
-    line: number,
-    columnStart: number,
-    columnEnd: number,
-  }>
-> => dispatcher.invoke("getOriginalRanges", sourceId);
-export const getGeneratedRanges = async (
-  location: SourceLocation
-): Promise<
-  Array<{
-    line: number,
-    columnStart: number,
-    columnEnd: number,
-  }>
-> => _getGeneratedRanges(location);
+export const getOriginalRanges = async sourceId =>
+  dispatcher.invoke("getOriginalRanges", sourceId);
+export const getGeneratedRanges = async location =>
+  _getGeneratedRanges(location);
 
-export const getGeneratedLocation = async (
-  location: SourceLocation
-): Promise<SourceLocation> => _getGeneratedLocation(location);
+export const getGeneratedLocation = async location =>
+  _getGeneratedLocation(location);
 
-export const getAllGeneratedLocations = async (
-  location: SourceLocation
-): Promise<Array<SourceLocation>> => _getAllGeneratedLocations(location);
+export const getAllGeneratedLocations = async location =>
+  _getAllGeneratedLocations(location);
 
-export const getOriginalLocation = async (
-  location: SourceLocation,
-  options: LocationOptions = {}
-): Promise<SourceLocation> => _getOriginalLocation(location, options);
+export const getOriginalLocation = async (location, options = {}) =>
+  _getOriginalLocation(location, options);
 
-export const getOriginalLocations = async (
-  locations: SourceLocation[],
-  options: LocationOptions = {}
-): Promise<SourceLocation[]> =>
+export const getOriginalLocations = async (locations, options = {}) =>
   dispatcher.invoke("getOriginalLocations", locations, options);
 
 export const getGeneratedRangesForOriginal = async (
-  sourceId: SourceId,
-  mergeUnmappedRegions?: boolean
-): Promise<Range[]> =>
+  sourceId,
+  mergeUnmappedRegions
+) =>
   dispatcher.invoke(
     "getGeneratedRangesForOriginal",
     sourceId,
     mergeUnmappedRegions
   );
 
-export const getFileGeneratedRange = async (
-  originalSourceId: SourceId
-): Promise<Range> =>
+export const getFileGeneratedRange = async originalSourceId =>
   dispatcher.invoke("getFileGeneratedRange", originalSourceId);
 
-export const getOriginalSourceText = async (
-  originalSourceId: SourceId
-): Promise<?{
-  text: string,
-  contentType: string,
-}> => dispatcher.invoke("getOriginalSourceText", originalSourceId);
+export const getOriginalSourceText = async originalSourceId =>
+  dispatcher.invoke("getOriginalSourceText", originalSourceId);
 
-export const applySourceMap = async (
-  generatedId: string,
-  url: string,
-  code: string,
-  mappings: Object
-): Promise<void> =>
+export const applySourceMap = async (generatedId, url, code, mappings) =>
   dispatcher.invoke("applySourceMap", generatedId, url, code, mappings);
 
-export const clearSourceMaps = async (): Promise<void> =>
-  dispatcher.invoke("clearSourceMaps");
+export const clearSourceMaps = async () => dispatcher.invoke("clearSourceMaps");
 
-export const getOriginalStackFrames = async (
-  generatedLocation: SourceLocation
-): Promise<?Array<OriginalFrame>> =>
+export const getOriginalStackFrames = async generatedLocation =>
   dispatcher.invoke("getOriginalStackFrames", generatedLocation);
 
 export {
@@ -127,7 +80,7 @@ export {
   isOriginalId,
 } from "./utils";
 
-export const startSourceMapWorker = (url: string, assetRoot: string) => {
+export const startSourceMapWorker = (url, assetRoot) => {
   dispatcher.start(url);
   setAssetRootURL(assetRoot);
 };

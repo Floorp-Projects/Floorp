@@ -2,40 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * File Search reducer
  * @module reducers/fileSearch
  */
 
 import { prefs } from "../utils/prefs";
-
-import type { Action } from "../actions/types";
-
-export type Modifiers = {
-  caseSensitive: boolean,
-  wholeWord: boolean,
-  regexMatch: boolean,
-};
-
-export type MatchedLocations = {
-  line: number,
-  ch: number,
-};
-
-export type SearchResults = {
-  matches: Array<MatchedLocations>,
-  matchIndex: number,
-  index: number,
-  count: number,
-};
-
-export type FileSearchState = {
-  searchResults: SearchResults,
-  query: string,
-  modifiers: Modifiers,
-};
 
 const emptySearchResults = Object.freeze({
   matches: Object.freeze([]),
@@ -54,10 +26,7 @@ export const initialFileSearchState = () => ({
   },
 });
 
-function update(
-  state: FileSearchState = initialFileSearchState(),
-  action: Action
-): FileSearchState {
+function update(state = initialFileSearchState(), action) {
   switch (action.type) {
     case "UPDATE_FILE_SEARCH_QUERY": {
       return { ...state, query: action.query };
@@ -100,17 +69,16 @@ function update(
 
 // NOTE: we'd like to have the app state fully typed
 // https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
-type OuterState = { fileSearch: FileSearchState };
 
-export function getFileSearchQuery(state: OuterState): string {
+export function getFileSearchQuery(state) {
   return state.fileSearch.query;
 }
 
-export function getFileSearchModifiers(state: OuterState): Modifiers {
+export function getFileSearchModifiers(state) {
   return state.fileSearch.modifiers;
 }
 
-export function getFileSearchResults(state: OuterState): SearchResults {
+export function getFileSearchResults(state) {
   return state.fileSearch.searchResults;
 }
 

@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-import SourceMaps, { generatedToOriginalId } from "devtools-source-map";
+import { generatedToOriginalId } from "devtools-source-map";
 
 import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
@@ -28,26 +27,17 @@ import {
   getThreadContext,
 } from "../../selectors";
 
-import type { Action, ThunkArgs } from "../types";
 import { selectSource } from "./select";
-import type {
-  Source,
-  SourceId,
-  SourceContent,
-  SourceActor,
-  Context,
-  SourceLocation,
-} from "../../types";
 
-function getPrettyOriginalSourceURL(generatedSource: Source) {
+function getPrettyOriginalSourceURL(generatedSource) {
   return getPrettySourceURL(generatedSource.url || generatedSource.id);
 }
 
 export async function prettyPrintSource(
-  sourceMaps: typeof SourceMaps,
-  generatedSource: Source,
-  content: SourceContent,
-  actors: Array<SourceActor>
+  sourceMaps,
+  generatedSource,
+  content,
+  actors
 ) {
   if (!isJavaScript(generatedSource, content) || content.type !== "text") {
     throw new Error("Can't prettify non-javascript files.");
@@ -71,8 +61,8 @@ export async function prettyPrintSource(
   };
 }
 
-export function createPrettySource(cx: Context, sourceId: SourceId) {
-  return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
+export function createPrettySource(cx, sourceId) {
+  return async ({ dispatch, getState, sourceMaps }) => {
     const source = getSourceFromId(getState(), sourceId);
     const url = getPrettyOriginalSourceURL(source);
     const id = generatedToOriginalId(sourceId, url);
@@ -89,7 +79,7 @@ export function createPrettySource(cx: Context, sourceId: SourceId) {
       isOriginal: true,
     };
 
-    dispatch(({ type: "ADD_SOURCE", cx, source: prettySource }: Action));
+    dispatch({ type: "ADD_SOURCE", cx, source: prettySource });
 
     await dispatch(selectSource(cx, id));
 
@@ -97,12 +87,8 @@ export function createPrettySource(cx: Context, sourceId: SourceId) {
   };
 }
 
-function selectPrettyLocation(
-  cx: Context,
-  prettySource: Source,
-  generatedLocation: ?SourceLocation
-) {
-  return async ({ dispatch, sourceMaps, getState }: ThunkArgs) => {
+function selectPrettyLocation(cx, prettySource, generatedLocation) {
+  return async ({ dispatch, sourceMaps, getState }) => {
     let location = generatedLocation
       ? generatedLocation
       : getSelectedLocation(getState());
@@ -131,8 +117,8 @@ function selectPrettyLocation(
  *          A promise that resolves to [aSource, prettyText] or rejects to
  *          [aSource, error].
  */
-export function togglePrettyPrint(cx: Context, sourceId: SourceId) {
-  return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+export function togglePrettyPrint(cx, sourceId) {
+  return async ({ dispatch, getState, client, sourceMaps }) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
       return {};

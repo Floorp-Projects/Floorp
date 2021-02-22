@@ -2,34 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { locColumn } from "./locColumn";
 import { mappingContains } from "./mappingContains";
 
-import type { BindingContents } from "../../../types";
 // eslint-disable-next-line max-len
-import type { ApplicableBinding } from "./getApplicableBindingsForOriginalPosition";
 
 import { clientCommands } from "../../../client/firefox";
-
-export type GeneratedDescriptor = {
-  name: string,
-  // Falsy if the binding itself matched a location, but the location didn't
-  // have a value descriptor attached. Happens if the binding was 'this'
-  // or if there was a mismatch between client and generated scopes.
-  desc: ?BindingContents,
-
-  expression: string,
-};
 
 /**
  * Given a mapped range over the generated source, attempt to resolve a real
  * binding descriptor that can be used to access the value.
  */
-export async function findGeneratedReference(
-  applicableBindings: Array<ApplicableBinding>
-): Promise<GeneratedDescriptor | null> {
+export async function findGeneratedReference(applicableBindings) {
   // We can adjust this number as we go, but these are a decent start as a
   // general heuristic to assume the bindings were bad or just map a chunk of
   // whole line or something.
@@ -48,9 +32,7 @@ export async function findGeneratedReference(
   return null;
 }
 
-export async function findGeneratedImportReference(
-  applicableBindings: Array<ApplicableBinding>
-): Promise<GeneratedDescriptor | null> {
+export async function findGeneratedImportReference(applicableBindings) {
   // When wrapped, for instance as `Object(ns.default)`, the `Object` binding
   // will be the first in the list. To avoid resolving `Object` as the
   // value of the import itself, we potentially skip the first binding.
@@ -94,9 +76,9 @@ export async function findGeneratedImportReference(
  * the import's value.
  */
 export async function findGeneratedImportDeclaration(
-  applicableBindings: Array<ApplicableBinding>,
-  importName: string
-): Promise<GeneratedDescriptor | null> {
+  applicableBindings,
+  importName
+) {
   // We can adjust this number as we go, but these are a decent start as a
   // general heuristic to assume the bindings were bad or just map a chunk of
   // whole line or something.
@@ -160,7 +142,7 @@ async function mapBindingReferenceToDescriptor({
   range,
   firstInRange,
   firstOnLine,
-}: ApplicableBinding): Promise<GeneratedDescriptor | null> {
+}) {
   // Allow the mapping to point anywhere within the generated binding
   // location to allow for less than perfect sourcemaps. Since you also
   // need at least one character between identifiers, we also give one
@@ -191,10 +173,7 @@ async function mapBindingReferenceToDescriptor({
  * evaluate accessed properties within the mapped range to resolve the actual
  * imported value.
  */
-async function mapImportReferenceToDescriptor({
-  binding,
-  range,
-}: ApplicableBinding): Promise<GeneratedDescriptor | null> {
+async function mapImportReferenceToDescriptor({ binding, range }) {
   if (binding.loc.type !== "ref") {
     return null;
   }
@@ -286,10 +265,10 @@ async function mapImportReferenceToDescriptor({
     : null;
 }
 
-function isPrimitiveValue(desc: ?BindingContents) {
+function isPrimitiveValue(desc) {
   return desc && (!desc.value || typeof desc.value !== "object");
 }
-function isObjectValue(desc: ?BindingContents) {
+function isObjectValue(desc) {
   return (
     desc &&
     !isPrimitiveValue(desc) &&
@@ -300,10 +279,7 @@ function isObjectValue(desc: ?BindingContents) {
   );
 }
 
-async function readDescriptorProperty(
-  desc: ?BindingContents,
-  property: string
-): Promise<?BindingContents> {
+async function readDescriptorProperty(desc, property) {
   if (!desc) {
     return null;
   }

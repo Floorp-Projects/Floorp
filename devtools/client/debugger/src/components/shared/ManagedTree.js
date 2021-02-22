@@ -2,43 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import React, { Component } from "react";
 import "./ManagedTree.css";
 
-// $FlowIgnore
 const Tree = require("devtools/client/shared/components/Tree");
 
-export type Item = {
-  contents: any,
-  name: string,
-  path: string,
-};
-
-type Props = {
-  autoExpandAll: boolean,
-  autoExpandDepth: number,
-  getChildren: Object => Object[],
-  getPath: (Object, index?: number) => string,
-  getParent: Item => any,
-  getRoots: () => any,
-  highlightItems?: Array<Item>,
-  itemHeight: number,
-  listItems?: Array<Item>,
-  onFocus: (item: any) => void,
-  onExpand?: (item: Item, expanded: Set<string>) => void,
-  onCollapse?: (item: Item, expanded: Set<string>) => void,
-  renderItem: any,
-  focused?: any,
-  expanded?: any,
-};
-
-type State = {
-  expanded: any,
-};
-
-class ManagedTree extends Component<Props, State> {
-  constructor(props: Props) {
+class ManagedTree extends Component {
+  constructor(props) {
     super(props);
     this.state = {
       expanded: props.expanded || new Set(),
@@ -49,7 +19,7 @@ class ManagedTree extends Component<Props, State> {
     onFocus: () => {},
   };
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentWillReceiveProps(nextProps) {
     const { listItems, highlightItems } = this.props;
     if (nextProps.listItems && nextProps.listItems != listItems) {
       this.expandListItems(nextProps.listItems);
@@ -64,11 +34,7 @@ class ManagedTree extends Component<Props, State> {
     }
   }
 
-  setExpanded = (
-    item: Item,
-    isExpanded: boolean,
-    shouldIncludeChildren: boolean
-  ) => {
+  setExpanded = (item, isExpanded, shouldIncludeChildren) => {
     const expandItem = i => {
       const path = this.props.getPath(i);
       if (isExpanded) {
@@ -104,14 +70,14 @@ class ManagedTree extends Component<Props, State> {
     }
   };
 
-  expandListItems(listItems: Array<Item>) {
+  expandListItems(listItems) {
     const { expanded } = this.state;
     listItems.forEach(item => expanded.add(this.props.getPath(item)));
     this.props.onFocus(listItems[0]);
     this.setState({ expanded });
   }
 
-  highlightItem(highlightItems: Array<Item>) {
+  highlightItem(highlightItems) {
     const { expanded } = this.state;
     // This file is visible, so we highlight it.
     if (expanded.has(this.props.getPath(highlightItems[0]))) {

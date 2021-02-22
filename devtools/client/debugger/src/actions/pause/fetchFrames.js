@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { ThreadContext } from "../../types";
-import type { ThunkArgs } from "../types";
 import { isValidThreadContext } from "../../utils/context";
 
-export function fetchFrames(cx: ThreadContext) {
-  return async function({ dispatch, client, getState }: ThunkArgs) {
+export function fetchFrames(cx) {
+  return async function({ dispatch, client, getState }) {
     const { thread } = cx;
     let frames;
     try {

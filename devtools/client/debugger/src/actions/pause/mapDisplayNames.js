@@ -2,16 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getFrames, getSymbols, getSource } from "../../selectors";
 
 import { findClosestFunction } from "../../utils/ast";
 
-import type { Frame, ThreadContext } from "../../types";
-import type { ThunkArgs } from "../types";
-
-function mapDisplayName(frame: Frame, { getState }) {
+function mapDisplayName(frame, { getState }) {
   if (frame.isOriginal) {
     return frame;
   }
@@ -38,8 +33,8 @@ function mapDisplayName(frame: Frame, { getState }) {
   return { ...frame, originalDisplayName };
 }
 
-export function mapDisplayNames(cx: ThreadContext) {
-  return function({ dispatch, getState }: ThunkArgs) {
+export function mapDisplayNames(cx) {
+  return function({ dispatch, getState }) {
     const frames = getFrames(getState(), cx.thread);
 
     if (!frames) {

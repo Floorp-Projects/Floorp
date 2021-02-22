@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import parseScriptTags from "parse-script-tags";
 import * as babelParser from "@babel/parser";
 import * as t from "@babel/types";
 import isEmpty from "lodash/isEmpty";
 import { getSource } from "../sources";
-
-import type { SourceId } from "../../../types";
 
 let ASTs = new Map();
 
@@ -55,7 +51,7 @@ const sourceOptions = {
   },
 };
 
-export function parse(text: ?string, opts?: Object): any {
+export function parse(text, opts) {
   let ast;
   if (!text) {
     return;
@@ -107,7 +103,7 @@ function parseVueScript(code) {
   return ast;
 }
 
-export function parseConsoleScript(text: string, opts?: Object): Object | null {
+export function parseConsoleScript(text, opts) {
   try {
     return _parse(text, {
       plugins: [
@@ -124,11 +120,11 @@ export function parseConsoleScript(text: string, opts?: Object): Object | null {
   }
 }
 
-export function parseScript(text: string, opts?: Object) {
+export function parseScript(text, opts) {
   return _parse(text, opts);
 }
 
-export function getAst(sourceId: SourceId) {
+export function getAst(sourceId) {
   if (ASTs.has(sourceId)) {
     return ASTs.get(sourceId);
   }
@@ -179,12 +175,7 @@ export function clearASTs() {
   ASTs = new Map();
 }
 
-type Visitor = { enter: Function };
-export function traverseAst<T>(
-  sourceId: SourceId,
-  visitor: Visitor,
-  state?: T
-) {
+export function traverseAst(sourceId, visitor, state) {
   const ast = getAst(sourceId);
   if (isEmpty(ast)) {
     return null;
@@ -194,7 +185,7 @@ export function traverseAst<T>(
   return ast;
 }
 
-export function hasNode(rootNode: Node, predicate: Function) {
+export function hasNode(rootNode, predicate) {
   try {
     t.traverse(rootNode, {
       enter: (node, ancestors) => {
@@ -211,7 +202,7 @@ export function hasNode(rootNode: Node, predicate: Function) {
   return false;
 }
 
-export function replaceNode(ancestors: Object[], node: Object) {
+export function replaceNode(ancestors, node) {
   const parent = ancestors[ancestors.length - 1];
 
   if (typeof parent.index === "number") {

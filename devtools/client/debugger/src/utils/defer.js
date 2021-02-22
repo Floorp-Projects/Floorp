@@ -2,15 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-type Deferred<T> = {
-  promise: Promise<T>,
-  resolve: (arg: T) => mixed,
-  reject: (arg: mixed) => mixed,
-};
-
-export default function defer<T>(): Deferred<T> {
+export default function defer() {
   let resolve = () => {};
   let reject = () => {};
   const promise = new Promise((_res, _rej) => {

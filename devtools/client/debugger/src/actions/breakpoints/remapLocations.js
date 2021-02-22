@@ -2,28 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import typeof SourceMaps from "devtools-source-map";
-
-import type { Breakpoint, SourceId } from "../../types";
-
-export default function remapLocations(
-  breakpoints: Breakpoint[],
-  sourceId: SourceId,
-  sourceMaps: SourceMaps
-): Promise<Breakpoint[]> {
-  const sourceBreakpoints: Promise<Breakpoint>[] = breakpoints.map(
-    async breakpoint => {
-      if (breakpoint.location.sourceId !== sourceId) {
-        return breakpoint;
-      }
-      const location = await sourceMaps.getOriginalLocation(
-        breakpoint.location
-      );
-      return { ...breakpoint, location };
+export default function remapLocations(breakpoints, sourceId, sourceMaps) {
+  const sourceBreakpoints = breakpoints.map(async breakpoint => {
+    if (breakpoint.location.sourceId !== sourceId) {
+      return breakpoint;
     }
-  );
+    const location = await sourceMaps.getOriginalLocation(breakpoint.location);
+    return { ...breakpoint, location };
+  });
 
   return Promise.all(sourceBreakpoints);
 }

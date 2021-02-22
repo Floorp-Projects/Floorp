@@ -42,9 +42,6 @@
  * );
  */
 
-// @flow
-
-// $FlowIgnore
 const Telemetry = require("devtools/client/shared/telemetry");
 
 import { isNode } from "./environment";
@@ -55,7 +52,7 @@ const telemetry = new Telemetry();
  * @memberof utils/telemetry
  * @static
  */
-export function recordEvent(eventName: string, fields: {} = {}): void {
+export function recordEvent(eventName, fields = {}) {
   let sessionId = -1;
 
   if (typeof window !== "object") {

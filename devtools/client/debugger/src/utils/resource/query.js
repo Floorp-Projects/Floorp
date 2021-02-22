@@ -2,32 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { ResourceBound, Id, ResourceValues } from "./core";
-
-import {
-  makeResourceQuery,
-  type ResourceQuery,
-  type QueryFilter,
-  type QueryMap,
-  type QueryReduce,
-} from "./base-query";
+import { makeResourceQuery } from "./base-query";
 
 import {
   queryCacheWeak,
   queryCacheShallow,
   queryCacheStrict,
-  type WeakArgsBound,
-  type ShallowArgsBound,
 } from "./query-cache";
 
 import { memoizeResourceShallow } from "./memoize";
 import { shallowEqual } from "./compare";
 
-export function filterAllIds<R: ResourceBound>(
-  values: ResourceValues<R>
-): Array<Id<R>> {
+export function filterAllIds(values) {
   return Object.keys(values);
 }
 
@@ -35,25 +21,7 @@ export function filterAllIds<R: ResourceBound>(
  * Create a query function to take a list of IDs and map each Reduceding
  * resource object into a mapped form.
  */
-export type WeakQuery<
-  R: ResourceBound,
-  Args: WeakArgsBound,
-  Reduced
-> = ResourceQuery<R, Args, Reduced>;
-export function makeWeakQuery<
-  R: ResourceBound,
-  Args: WeakArgsBound,
-  Mapped,
-  Reduced
->({
-  filter,
-  map,
-  reduce,
-}: {|
-  filter: QueryFilter<R, Args>,
-  map: QueryMap<R, Args, Mapped>,
-  reduce: QueryReduce<R, Args, Mapped, Reduced>,
-|}): WeakQuery<R, Args, Reduced> {
+export function makeWeakQuery({ filter, map, reduce }) {
   return makeResourceQuery({
     cache: queryCacheWeak,
     filter,
@@ -67,25 +35,7 @@ export function makeWeakQuery<
  * Create a query function to take a list of IDs and map each Reduceding
  * resource object into a mapped form.
  */
-export type ShallowQuery<R: ResourceBound, Args, Reduced> = ResourceQuery<
-  R,
-  Args,
-  Reduced
->;
-export function makeShallowQuery<
-  R: ResourceBound,
-  Args: ShallowArgsBound,
-  Mapped,
-  Reduced
->({
-  filter,
-  map,
-  reduce,
-}: {|
-  filter: QueryFilter<R, Args>,
-  map: QueryMap<R, Args, Mapped>,
-  reduce: QueryReduce<R, Args, Mapped, Reduced>,
-|}): ShallowQuery<R, Args, Reduced> {
+export function makeShallowQuery({ filter, map, reduce }) {
   return makeResourceQuery({
     cache: queryCacheShallow,
     filter,
@@ -99,20 +49,7 @@ export function makeShallowQuery<
  * Create a query function to take a list of IDs and map each Reduceding
  * resource object into a mapped form.
  */
-export type StrictQuery<R: ResourceBound, Args, Reduced> = ResourceQuery<
-  R,
-  Args,
-  Reduced
->;
-export function makeStrictQuery<R: ResourceBound, Args, Mapped, Reduced>({
-  filter,
-  map,
-  reduce,
-}: {|
-  filter: QueryFilter<R, Args>,
-  map: QueryMap<R, Args, Mapped>,
-  reduce: QueryReduce<R, Args, Mapped, Reduced>,
-|}): StrictQuery<R, Args, Reduced> {
+export function makeStrictQuery({ filter, map, reduce }) {
   return makeResourceQuery({
     cache: queryCacheStrict,
     filter,
@@ -126,14 +63,7 @@ export function makeStrictQuery<R: ResourceBound, Args, Mapped, Reduced>({
  * Create a query function to take a list of IDs and map each Reduceding
  * resource object into a mapped form.
  */
-export type IdQuery<R: ResourceBound, Mapped> = WeakQuery<
-  R,
-  Array<Id<R>>,
-  Array<Mapped>
->;
-export function makeIdQuery<R: ResourceBound, Mapped>(
-  map: QueryMap<R, void, Mapped>
-): IdQuery<R, Mapped> {
+export function makeIdQuery(map) {
   return makeWeakQuery({
     filter: (state, ids) => ids,
     map: (r, identity) => map(r, identity),
@@ -145,14 +75,7 @@ export function makeIdQuery<R: ResourceBound, Mapped>(
  * Create a query function to take a list of IDs and map each Reduceding
  * resource object into a mapped form.
  */
-export type LoadQuery<R: ResourceBound, Mapped> = WeakQuery<
-  R,
-  Array<Id<R>>,
-  $ReadOnly<{ [Id<R>]: Mapped }>
->;
-export function makeLoadQuery<R: ResourceBound, Mapped>(
-  map: QueryMap<R, void, Mapped>
-): LoadQuery<R, Mapped> {
+export function makeLoadQuery(map) {
   return makeWeakQuery({
     filter: (state, ids) => ids,
     map: (r, identity) => map(r, identity),
@@ -164,15 +87,7 @@ export function makeLoadQuery<R: ResourceBound, Mapped>(
  * Create a query function that accepts an argument and can filter the
  * resource items to a subset before mapping each reduced resource.
  */
-export type FilterQuery<
-  R: ResourceBound,
-  Args: WeakArgsBound,
-  Mapped
-> = WeakQuery<R, Args, $ReadOnly<{ [Id<R>]: Mapped }>>;
-export function makeFilterQuery<R: ResourceBound, Args: WeakArgsBound, Mapped>(
-  filter: (R, Args) => boolean,
-  map: QueryMap<R, Args, Mapped>
-): FilterQuery<R, Args, Mapped> {
+export function makeFilterQuery(filter, map) {
   return makeWeakQuery({
     filter: (values, args) => {
       const ids = [];
@@ -192,20 +107,7 @@ export function makeFilterQuery<R: ResourceBound, Args: WeakArgsBound, Mapped>(
  * Create a query function that accepts an argument and can filter the
  * resource items to a subset before mapping each resulting resource.
  */
-export type ReduceQuery<
-  R: ResourceBound,
-  Args: ShallowArgsBound,
-  Reduced
-> = ShallowQuery<R, Args, Reduced>;
-export function makeReduceQuery<
-  R: ResourceBound,
-  Args: ShallowArgsBound,
-  Mapped,
-  Reduced
->(
-  map: QueryMap<R, Args, Mapped>,
-  reduce: QueryReduce<R, Args, Mapped, Reduced>
-): ReduceQuery<R, Args, Reduced> {
+export function makeReduceQuery(map, reduce) {
   return makeShallowQuery({
     filter: filterAllIds,
     map,
@@ -217,15 +119,7 @@ export function makeReduceQuery<
  * Create a query function that accepts an argument and can filter the
  * resource items to a subset before mapping each resulting resource.
  */
-export type ReduceAllQuery<R: ResourceBound, Reduced> = ShallowQuery<
-  R,
-  void,
-  Reduced
->;
-export function makeReduceAllQuery<R: ResourceBound, Mapped, Reduced>(
-  map: QueryMap<R, void, Mapped>,
-  reduce: QueryReduce<R, void, Mapped, Reduced>
-): ReduceAllQuery<R, Reduced> {
+export function makeReduceAllQuery(map, reduce) {
   return makeStrictQuery({
     filter: filterAllIds,
     map,
@@ -233,12 +127,8 @@ export function makeReduceAllQuery<R: ResourceBound, Mapped, Reduced>(
   });
 }
 
-function reduceMappedArrayToObject<Args, ID, Mapped>(
-  items: $ReadOnlyArray<Mapped>,
-  ids: $ReadOnlyArray<ID>,
-  args: Args
-): { [ID]: Mapped } {
-  return items.reduce((acc: { [ID]: Mapped }, item, i) => {
+function reduceMappedArrayToObject(items, ids, args) {
+  return items.reduce((acc, item, i) => {
     acc[ids[i]] = item;
     return acc;
   }, {});

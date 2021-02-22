@@ -2,24 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
 
 import { getAllThreads } from "../../selectors";
 import Thread from "./Thread";
 
-import type { Thread as ThreadType } from "../../types";
-
 import "./Threads.css";
 
-type OwnProps = {||};
-type Props = {
-  threads: ThreadType[],
-};
-
-export class Threads extends Component<Props> {
+export class Threads extends Component {
   render() {
     const { threads } = this.props;
 
@@ -37,4 +28,4 @@ const mapStateToProps = state => ({
   threads: getAllThreads(state),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(Threads);
+export default connect(mapStateToProps)(Threads);

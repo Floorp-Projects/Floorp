@@ -2,15 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 import escapeRegExp from "lodash/escapeRegExp";
-
-import type { SearchModifiers } from "../types";
-
-type QueryOptions = {
-  isGlobal?: boolean,
-  ignoreSpaces?: boolean,
-};
 
 /**
  * Ignore doing outline matches for less than 3 whitespaces
@@ -18,11 +10,11 @@ type QueryOptions = {
  * @memberof utils/source-search
  * @static
  */
-function ignoreWhiteSpace(str: string): string {
+function ignoreWhiteSpace(str) {
   return /^\s{0,2}$/.test(str) ? "(?!\\s*.*)" : str;
 }
 
-function wholeMatch(query: string, wholeWord: boolean): string {
+function wholeMatch(query, wholeWord) {
   if (query === "" || !wholeWord) {
     return query;
   }
@@ -30,7 +22,7 @@ function wholeMatch(query: string, wholeWord: boolean): string {
   return `\\b${query}\\b`;
 }
 
-function buildFlags(caseSensitive: boolean, isGlobal: boolean): ?RegExp$flags {
+function buildFlags(caseSensitive, isGlobal) {
   if (caseSensitive && isGlobal) {
     return "g";
   }
@@ -45,10 +37,10 @@ function buildFlags(caseSensitive: boolean, isGlobal: boolean): ?RegExp$flags {
 }
 
 export default function buildQuery(
-  originalQuery: string,
-  modifiers: SearchModifiers,
-  { isGlobal = false, ignoreSpaces = false }: QueryOptions
-): RegExp {
+  originalQuery,
+  modifiers,
+  { isGlobal = false, ignoreSpaces = false }
+) {
   const { caseSensitive, regexMatch, wholeWord } = modifiers;
 
   if (originalQuery === "") {

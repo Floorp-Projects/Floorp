@@ -2,26 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { zip } from "lodash";
 
-export function getAsyncTimes(name: string): number[] {
+export function getAsyncTimes(name) {
   return zip(
     window.performance.getEntriesByName(`${name}_start`),
     window.performance.getEntriesByName(`${name}_end`)
   ).map(([start, end]) => +(end.startTime - start.startTime).toPrecision(2));
 }
 
-function getTimes(name): number[] {
+function getTimes(name) {
   return window.performance
     .getEntriesByName(name)
     .map(time => +time.duration.toPrecision(2));
 }
 
-function getStats(
-  times: number[]
-): {| times: number[], avg: ?number, median: ?number |} {
+function getStats(times) {
   if (times.length == 0) {
     return { times: [], avg: null, median: null };
   }
@@ -35,7 +31,7 @@ function getStats(
   };
 }
 
-export function steppingTimings(): any {
+export function steppingTimings() {
   const commandTimings = getAsyncTimes("COMMAND");
   const pausedTimings = getTimes("PAUSED");
 

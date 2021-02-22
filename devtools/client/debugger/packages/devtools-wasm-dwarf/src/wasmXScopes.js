@@ -2,30 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
 /* eslint camelcase: 0*/
-
-import type { OriginalFrame, SourceLocation, SourceId } from "debugger-html";
-import type { Expr } from "./wasmDwarfExpressions";
 
 const { decodeExpr } = require("./wasmDwarfExpressions");
 
 const xScopes = new Map();
 
-type XScopeItem = any;
-type XScopeItemsIndex = Map<string | number, XScopeItem>;
-
-type XScopeVariable = {
-  name: string,
-  expr?: Expr,
-};
-
-type XScopeVariables = {
-  vars: XScopeVariable[],
-  frameBase?: Expr | null,
-};
-
-function indexLinkingNames(items: XScopeItem[]): XScopeItemsIndex {
+function indexLinkingNames(items) {
   const result = new Map();
   let queue = [...items];
   while (queue.length > 0) {
@@ -44,10 +27,7 @@ function indexLinkingNames(items: XScopeItem[]): XScopeItemsIndex {
   return result;
 }
 
-function getIndexedItem(
-  index: XScopeItemsIndex,
-  key: string | { uid: number }
-): XScopeItem {
+function getIndexedItem(index, key) {
   if (typeof key === "object" && key != null) {
     return index.get(key.uid);
   }
@@ -57,22 +37,7 @@ function getIndexedItem(
   return null;
 }
 
-type XScopeData = {
-  code_section_offset: number,
-  debug_info: Array<XScopeItem>,
-  idIndex: XScopeItemsIndex,
-  sources: Array<string>,
-};
-
-async function getXScopes(
-  sourceId: SourceId,
-  getSourceMap: (
-    sourceId: SourceId
-  ) => {
-    sources: string[],
-    xScopes?: XScopeData,
-  }
-): Promise<?XScopeData> {
+async function getXScopes(sourceId, getSourceMap) {
   if (xScopes.has(sourceId)) {
     return xScopes.get(sourceId);
   }
@@ -92,7 +57,7 @@ async function getXScopes(
   return xScope;
 }
 
-function isInRange(item: XScopeItem, pc: number): boolean {
+function isInRange(item, pc) {
   if ("ranges" in item) {
     return item.ranges.some(r => r[0] <= pc && pc < r[1]);
   }
@@ -102,22 +67,7 @@ function isInRange(item: XScopeItem, pc: number): boolean {
   return false;
 }
 
-type FoundScope = {
-  id: string,
-  name?: string,
-  variables: XScopeVariables,
-  file?: number,
-  line?: number,
-};
-
-type EncodedExpr =
-  | string
-  | Array<{
-      expr: string,
-      range: number[],
-    }>;
-
-function decodeExprAt(expr: EncodedExpr, pc: number): ?Expr {
+function decodeExprAt(expr, pc) {
   if (typeof expr === "string") {
     return decodeExpr(expr);
   }
@@ -125,7 +75,7 @@ function decodeExprAt(expr: EncodedExpr, pc: number): ?Expr {
   return foundAt ? decodeExpr(foundAt.expr) : null;
 }
 
-function getVariables(scope: XScopeItem, pc: number): XScopeVariables {
+function getVariables(scope, pc) {
   const vars = scope.children
     ? scope.children.reduce((result, item) => {
         switch (item.tag) {
@@ -152,12 +102,7 @@ function getVariables(scope: XScopeItem, pc: number): XScopeVariables {
   };
 }
 
-function filterScopes(
-  items: XScopeItem[],
-  pc: number,
-  lastItem: ?FoundScope,
-  index: XScopeItemsIndex
-): FoundScope[] {
+function filterScopes(items, pc, lastItem, index) {
   if (!items) {
     return [];
   }
@@ -181,7 +126,7 @@ function filterScopes(
         break;
       case "subprogram":
         if (isInRange(item, pc)) {
-          const s: FoundScope = {
+          const s = {
             id: item.linkage_name,
             name: item.name,
             variables: getVariables(item, pc),
@@ -192,7 +137,7 @@ function filterScopes(
       case "inlined_subroutine":
         if (isInRange(item, pc)) {
           const linkedItem = getIndexedItem(index, item.abstract_origin);
-          const s: FoundScope = {
+          const s = {
             id: item.abstract_origin,
             name: linkedItem ? linkedItem.name : void 0,
             variables: getVariables(item, pc),
@@ -209,24 +154,16 @@ function filterScopes(
   }, []);
 }
 
-interface XScopeSourceMapContext {
-  getSourceMap(sourceId: SourceId): any;
-  generatedToOriginalId(sourceId: SourceId, url: string): SourceId;
-}
-
 class XScope {
-  xScope: XScopeData;
-  sourceMapContext: XScopeSourceMapContext;
+  xScope;
+  sourceMapContext;
 
-  constructor(
-    xScopeData: XScopeData,
-    sourceMapContext: XScopeSourceMapContext
-  ) {
+  constructor(xScopeData, sourceMapContext) {
     this.xScope = xScopeData;
     this.sourceMapContext = sourceMapContext;
   }
 
-  search(generatedLocation: SourceLocation): Array<OriginalFrame> {
+  search(generatedLocation) {
     const { code_section_offset, debug_info, sources, idIndex } = this.xScope;
     const pc = generatedLocation.line - (code_section_offset || 0);
     const scopes = filterScopes(debug_info, pc, null, idIndex);
@@ -255,10 +192,7 @@ class XScope {
   }
 }
 
-async function getWasmXScopes(
-  sourceId: SourceId,
-  sourceMapContext: XScopeSourceMapContext
-): Promise<?XScope> {
+async function getWasmXScopes(sourceId, sourceMapContext) {
   const { getSourceMap } = sourceMapContext;
   const xScopeData = await getXScopes(sourceId, getSourceMap);
   if (!xScopeData) {

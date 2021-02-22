@@ -2,12 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import React from "react";
 import { shallow } from "enzyme";
 import Editor from "../index";
-import type { Source, SourceWithContent, SourceBase } from "../../../types";
 import { getDocument } from "../../../utils/editor/source-documents";
 import * as asyncValue from "../../../utils/async-value";
 
@@ -55,17 +52,7 @@ function createMockEditor() {
   };
 }
 
-function createMockSourceWithContent(
-  overrides: $Shape<
-    Source & {
-      loadedState: "loaded" | "loading" | "unloaded",
-      text: string,
-      contentType: ?string,
-      error: string,
-      isWasm: boolean,
-    }
-  >
-): SourceWithContent {
+function createMockSourceWithContent(overrides) {
   const {
     loadedState = "loaded",
     text = "the text",
@@ -74,11 +61,11 @@ function createMockSourceWithContent(
     ...otherOverrides
   } = overrides;
 
-  const source: SourceBase = ({
+  const source = {
     id: "foo",
     url: "foo",
     ...otherOverrides,
-  }: any);
+  };
   let content = null;
   if (loadedState === "loaded") {
     if (typeof text !== "string") {
@@ -104,7 +91,6 @@ function render(overrides = {}) {
   const props = generateDefaults(overrides);
   const mockEditor = createMockEditor();
 
-  // $FlowIgnore
   const component = shallow(<Editor.WrappedComponent {...props} />, {
     context: {
       shortcuts: { on: jest.fn() },

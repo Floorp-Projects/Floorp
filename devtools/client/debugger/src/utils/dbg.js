@@ -2,33 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import * as timings from "./timings";
 import { prefs, asyncStore, features } from "./prefs";
 import { getDocument } from "./editor/source-documents";
-import type { Source, URL } from "../types";
-import type { ThreadFront } from "../client/firefox/types";
 
-function getThreadFront(dbg: Object): ThreadFront {
+function getThreadFront(dbg) {
   return dbg.targetList.targetFront.threadFront;
 }
 
-function findSource(dbg: any, url: URL): Source {
+function findSource(dbg, url) {
   const sources = dbg.selectors.getSourceList();
   return sources.find(s => (s.url || "").includes(url));
 }
 
-function findSources(dbg: any, url: URL): Source[] {
+function findSources(dbg, url) {
   const sources = dbg.selectors.getSourceList();
   return sources.filter(s => (s.url || "").includes(url));
 }
 
-function evaluate(dbg: Object, expression: any) {
+function evaluate(dbg, expression) {
   return dbg.client.evaluate(expression);
 }
 
-function bindSelectors(obj: Object): Object {
+function bindSelectors(obj) {
   return Object.keys(obj.selectors).reduce((bound, selector) => {
     bound[selector] = (a, b, c) =>
       obj.selectors[selector](obj.store.getState(), a, b, c);
@@ -36,8 +32,8 @@ function bindSelectors(obj: Object): Object {
   }, {});
 }
 
-function getCM(): Object {
-  const cm: any = document.querySelector(".CodeMirror");
+function getCM() {
+  const cm = document.querySelector(".CodeMirror");
   return cm?.CodeMirror;
 }
 
@@ -68,9 +64,9 @@ function getDocumentForUrl(dbg, url) {
 
 const diff = (a, b) => Object.keys(a).filter(key => !Object.is(a[key], b[key]));
 
-export function setupHelper(obj: Object) {
+export function setupHelper(obj) {
   const selectors = bindSelectors(obj);
-  const dbg: Object = {
+  const dbg = {
     ...obj,
     selectors,
     prefs,

@@ -2,20 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { parse } from "../url";
 
 import { nodeHasChildren } from "./utils";
 
-import type { TreeNode } from "./types";
-
-import type { Source } from "../../types";
-
 /*
  * Gets domain from url (without www prefix)
  */
-export function getDomain(url?: string): ?string {
+export function getDomain(url) {
   if (!url) {
     return null;
   }
@@ -29,7 +23,7 @@ export function getDomain(url?: string): ?string {
 /*
  * Checks if node name matches debugger host/domain.
  */
-function isExactDomainMatch(part: string, debuggeeHost: string): boolean {
+function isExactDomainMatch(part, debuggeeHost) {
   return part.startsWith("www.")
     ? part.substr("www.".length) === debuggeeHost
     : part === debuggeeHost;
@@ -38,7 +32,7 @@ function isExactDomainMatch(part: string, debuggeeHost: string): boolean {
 /*
  * Checks if node name matches IndexName
  */
-function isIndexName(part: string, ...rest): boolean {
+function isIndexName(part, ...rest) {
   return part === IndexName;
 }
 
@@ -48,7 +42,6 @@ function isIndexName(part: string, ...rest): boolean {
  * stands earlier in sorting order, positive number if the node stands later
  * in sorting order, or zero if the node is found.
  */
-export type FindNodeInContentsMatcher = (node: TreeNode) => number;
 
 /*
  * Performs a binary search to insert a node into contents. Returns positive
@@ -57,10 +50,7 @@ export type FindNodeInContentsMatcher = (node: TreeNode) => number;
  * The matcher is a function that returns result of comparision of a node with
  * lookup value.
  */
-export function findNodeInContents(
-  tree: TreeNode,
-  matcher: FindNodeInContentsMatcher
-): {| found: boolean, index: number |} {
+export function findNodeInContents(tree, matcher) {
   if (tree.type === "source" || tree.contents.length === 0) {
     return { found: false, index: 0 };
   }
@@ -100,13 +90,13 @@ const matcherFunctions = [isIndexName, isExactDomainMatch];
  * - files sorted by name
  */
 export function createTreeNodeMatcher(
-  part: string,
-  isDir: boolean,
-  debuggeeHost: ?string,
-  source?: Source,
-  sortByUrl?: boolean
-): FindNodeInContentsMatcher {
-  return (node: TreeNode) => {
+  part,
+  isDir,
+  debuggeeHost,
+  source,
+  sortByUrl
+) {
+  return node => {
     for (let i = 0; i < matcherFunctions.length; i++) {
       // Check part against exceptions
       if (matcherFunctions[i](part, debuggeeHost)) {

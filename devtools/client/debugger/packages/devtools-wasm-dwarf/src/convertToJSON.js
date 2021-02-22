@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-// @flow
 
 /* eslint camelcase: 0*/
 
@@ -43,7 +42,7 @@ function convertDwarf(wasm, instance) {
   return output;
 }
 
-async function convertToJSON(buffer: ArrayBuffer): any {
+async function convertToJSON(buffer) {
   // Note: We don't 'await' here because it could mean that multiple
   // calls to 'convertToJSON' could cause multiple fetches to be started.
   cachedWasmModule = cachedWasmModule || loadConverterModule();

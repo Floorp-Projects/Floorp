@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 export * from "./source-documents";
 export * from "./get-token-location";
 export * from "./source-search";
@@ -15,17 +13,7 @@ import { findNext, findPrev } from "./source-search";
 
 import { isWasm, lineToWasmOffset, wasmOffsetToLine } from "../wasm";
 
-import type { AstLocation } from "../../workers/parser";
-import type { EditorPosition, EditorRange } from "../editor/types";
-import type {
-  SearchModifiers,
-  Source,
-  SourceLocation,
-  SourceId,
-} from "../../types";
-type Editor = Object;
-
-let editor: ?Editor;
+let editor;
 
 export function getEditor() {
   if (editor) {
@@ -62,13 +50,7 @@ export function endOperation() {
   codeMirror.endOperation();
 }
 
-export function traverseResults(
-  e: Event,
-  ctx: any,
-  query: string,
-  dir: string,
-  modifiers: SearchModifiers
-) {
+export function traverseResults(e, ctx, query, dir, modifiers) {
   e.stopPropagation();
   e.preventDefault();
 
@@ -79,7 +61,7 @@ export function traverseResults(
   }
 }
 
-export function toEditorLine(sourceId: SourceId, lineOrOffset: number): number {
+export function toEditorLine(sourceId, lineOrOffset) {
   if (isWasm(sourceId)) {
     // TODO ensure offset is always "mappable" to edit line.
     return wasmOffsetToLine(sourceId, lineOrOffset) || 0;
@@ -88,7 +70,7 @@ export function toEditorLine(sourceId: SourceId, lineOrOffset: number): number {
   return lineOrOffset ? lineOrOffset - 1 : 1;
 }
 
-export function fromEditorLine(sourceId: SourceId, line: number): number {
+export function fromEditorLine(sourceId, line) {
   if (isWasm(sourceId)) {
     return lineToWasmOffset(sourceId, line) || 0;
   }
@@ -96,17 +78,14 @@ export function fromEditorLine(sourceId: SourceId, line: number): number {
   return line + 1;
 }
 
-export function toEditorPosition(location: SourceLocation): EditorPosition {
+export function toEditorPosition(location) {
   return {
     line: toEditorLine(location.sourceId, location.line),
     column: isWasm(location.sourceId) || !location.column ? 0 : location.column,
   };
 }
 
-export function toEditorRange(
-  sourceId: SourceId,
-  location: AstLocation
-): EditorRange {
+export function toEditorRange(sourceId, location) {
   const { start, end } = location;
   return {
     start: toEditorPosition({ ...start, sourceId }),
@@ -114,11 +93,11 @@ export function toEditorRange(
   };
 }
 
-export function toSourceLine(sourceId: SourceId, line: number): ?number {
+export function toSourceLine(sourceId, line) {
   return isWasm(sourceId) ? lineToWasmOffset(sourceId, line) : line + 1;
 }
 
-export function scrollToColumn(codeMirror: any, line: number, column: number) {
+export function scrollToColumn(codeMirror, line, column) {
   const { top, left } = codeMirror.charCoords({ line, ch: column }, "local");
 
   if (!isVisible(codeMirror, top, left)) {
@@ -130,7 +109,7 @@ export function scrollToColumn(codeMirror: any, line: number, column: number) {
   }
 }
 
-function isVisible(codeMirror: any, top: number, left: number) {
+function isVisible(codeMirror, top, left) {
   function withinBounds(x, min, max) {
     return x >= min && x <= max;
   }
@@ -156,11 +135,11 @@ function isVisible(codeMirror: any, top: number, left: number) {
 }
 
 export function getLocationsInViewport(
-  { codeMirror }: Object,
+  { codeMirror },
   // Offset represents an allowance of characters or lines offscreen to improve
   // perceived performance of column breakpoint rendering
-  offsetHorizontalCharacters: number = 100,
-  offsetVerticalLines: number = 20
+  offsetHorizontalCharacters = 100,
+  offsetVerticalLines = 20
 ) {
   // Get scroll position
   if (!codeMirror) {
@@ -197,11 +176,7 @@ export function getLocationsInViewport(
   };
 }
 
-export function markText(
-  { codeMirror }: Object,
-  className: string,
-  { start, end }: EditorRange
-) {
+export function markText({ codeMirror }, className, { start, end }) {
   return codeMirror.markText(
     { ch: start.column, line: start.line },
     { ch: end.column, line: end.line },
@@ -209,20 +184,12 @@ export function markText(
   );
 }
 
-export function lineAtHeight(
-  { codeMirror }: Object,
-  sourceId: SourceId,
-  event: MouseEvent
-) {
+export function lineAtHeight({ codeMirror }, sourceId, event) {
   const _editorLine = codeMirror.lineAtHeight(event.clientY);
   return toSourceLine(sourceId, _editorLine);
 }
 
-export function getSourceLocationFromMouseEvent(
-  { codeMirror }: Object,
-  source: Source,
-  e: MouseEvent
-) {
+export function getSourceLocationFromMouseEvent({ codeMirror }, source, e) {
   const { line, ch } = codeMirror.coordsChar({
     left: e.clientX,
     top: e.clientY,
@@ -236,39 +203,35 @@ export function getSourceLocationFromMouseEvent(
   };
 }
 
-export function forEachLine(codeMirror: Object, iter: Function) {
+export function forEachLine(codeMirror, iter) {
   codeMirror.operation(() => {
     codeMirror.doc.iter(0, codeMirror.lineCount(), iter);
   });
 }
 
-export function removeLineClass(
-  codeMirror: Object,
-  line: number,
-  className: string
-) {
+export function removeLineClass(codeMirror, line, className) {
   codeMirror.removeLineClass(line, "wrapClass", className);
 }
 
-export function clearLineClass(codeMirror: Object, className: string) {
+export function clearLineClass(codeMirror, className) {
   forEachLine(codeMirror, line => {
     removeLineClass(codeMirror, line, className);
   });
 }
 
-export function getTextForLine(codeMirror: Object, line: number): string {
+export function getTextForLine(codeMirror, line) {
   return codeMirror.getLine(line - 1).trim();
 }
 
-export function getCursorLine(codeMirror: Object): number {
+export function getCursorLine(codeMirror) {
   return codeMirror.getCursor().line;
 }
 
-export function getCursorColumn(codeMirror: Object): number {
+export function getCursorColumn(codeMirror) {
   return codeMirror.getCursor().ch;
 }
 
-export function getTokenEnd(codeMirror: Object, line: number, column: number) {
+export function getTokenEnd(codeMirror, line, column) {
   const token = codeMirror.getTokenAt({
     line,
     ch: column + 1,

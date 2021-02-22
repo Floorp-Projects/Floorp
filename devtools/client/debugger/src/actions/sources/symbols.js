@@ -2,29 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getSymbols } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 import { updateTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
 
-import {
-  memoizeableAction,
-  type MemoizedAction,
-} from "../../utils/memoizableAction";
+import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 
-import type { ThunkArgs } from "../../actions/types";
-import type { Source, Context } from "../../types";
-import type { Symbols } from "../../reducers/types";
-
-async function doSetSymbols(
-  cx: Context,
-  source: Source,
-  { dispatch, getState, parser }: ThunkArgs
-) {
+async function doSetSymbols(cx, source, { dispatch, getState, parser }) {
   const sourceId = source.id;
 
   await dispatch(loadSourceText({ cx, source }));
@@ -42,10 +29,7 @@ async function doSetSymbols(
   }
 }
 
-export const setSymbols: MemoizedAction<
-  {| cx: Context, source: Source |},
-  ?Symbols
-> = memoizeableAction("setSymbols", {
+export const setSymbols = memoizeableAction("setSymbols", {
   getValue: ({ source }, { getState }) => {
     if (source.isWasm) {
       return fulfilled(null);

@@ -2,14 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { SourceMapInput } from "../source-map";
-
 const { networkRequest } = require("devtools-utils");
 const { getSourceMap, setSourceMap } = require("./sourceMapRequests");
 const { WasmRemap } = require("./wasmRemap");
-const { SourceMapConsumer } = require("source-map");
 const { convertToJSON } = require("devtools-wasm-dwarf");
 const { createConsumer } = require("./createConsumer");
 
@@ -20,11 +15,11 @@ function clearOriginalURLs() {
   originalURLs.clear();
 }
 
-function hasOriginalURL(url: string): boolean {
+function hasOriginalURL(url) {
   return originalURLs.has(url);
 }
 
-function _resolveSourceMapURL(source: SourceMapInput) {
+function _resolveSourceMapURL(source) {
   let { sourceMapBaseURL, sourceMapURL } = source;
   sourceMapBaseURL = sourceMapBaseURL || "";
   sourceMapURL = sourceMapURL || "";
@@ -57,9 +52,7 @@ function _resolveSourceMapURL(source: SourceMapInput) {
   return { sourceMapURL: resolvedString, baseURL };
 }
 
-async function _resolveAndFetch(
-  generatedSource: SourceMapInput
-): SourceMapConsumer {
+async function _resolveAndFetch(generatedSource) {
   // Fetch the sourcemap over the network and create it.
   const { sourceMapURL, baseURL } = _resolveSourceMapURL(generatedSource);
 
@@ -87,7 +80,7 @@ async function _resolveAndFetch(
   return map;
 }
 
-function fetchSourceMap(generatedSource: SourceMapInput): SourceMapConsumer {
+function fetchSourceMap(generatedSource) {
   const existingRequest = getSourceMap(generatedSource.id);
 
   // If it has already been requested, return the request. Make sure

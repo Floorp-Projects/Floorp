@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-import type { Frame } from "../../../types";
 import { getFrameUrl } from "./getFrameUrl";
 
 const libraryMap = [
@@ -107,10 +104,7 @@ const libraryMap = [
   },
 ];
 
-export function getLibraryFromUrl(
-  frame: Frame,
-  callStack: Array<Frame> = []
-): ?string | void {
+export function getLibraryFromUrl(frame, callStack = []) {
   // @TODO each of these fns calls getFrameUrl, just call it once
   // (assuming there's not more complex logic to identify a lib)
   const frameUrl = getFrameUrl(frame);

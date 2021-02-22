@@ -2,44 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
-export type FulfilledValue<+T> = {|
-  state: "fulfilled",
-  +value: T,
-|};
-export type RejectedValue = {|
-  state: "rejected",
-  value: mixed,
-|};
-export type PendingValue = {|
-  state: "pending",
-|};
-export type SettledValue<+T> = FulfilledValue<T> | RejectedValue;
-export type AsyncValue<+T> = SettledValue<T> | PendingValue;
-
-export function pending(): PendingValue {
+export function pending() {
   return { state: "pending" };
 }
-export function fulfilled<+T>(value: T): FulfilledValue<T> {
+export function fulfilled(value) {
   return { state: "fulfilled", value };
 }
-export function rejected(value: mixed): RejectedValue {
+export function rejected(value) {
   return { state: "rejected", value };
 }
 
-export function asSettled<T>(
-  value: AsyncValue<T> | null
-): SettledValue<T> | null {
+export function asSettled(value) {
   return value && value.state !== "pending" ? value : null;
 }
 
-export function isPending(value: AsyncValue<mixed>): boolean %checks {
+export function isPending(value) {
   return value.state === "pending";
 }
-export function isFulfilled(value: AsyncValue<mixed>): boolean %checks {
+export function isFulfilled(value) {
   return value.state === "fulfilled";
 }
-export function isRejected(value: AsyncValue<mixed>): boolean %checks {
+export function isRejected(value) {
   return value.state === "rejected";
 }
