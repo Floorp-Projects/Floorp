@@ -34,11 +34,9 @@ already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetOrCreate(
     ClearOnShutdown(&sBrowsingContextGroups);
   }
 
-  return sBrowsingContextGroups->WithEntryHandle(aId, [&aId](auto&& entry) {
-    RefPtr<BrowsingContextGroup> group = entry.OrInsertWith(
-        [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); });
-    return group.forget();
-  });
+  RefPtr<BrowsingContextGroup> group = sBrowsingContextGroups->GetOrInsertWith(
+      aId, [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); });
+  return group.forget();
 }
 
 already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create() {

@@ -1105,12 +1105,8 @@ already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
     return promise.forget();
   }
 
-  return mWhenDefinedPromiseMap
-      .WithEntryHandle(nameAtom,
-                       [&promise](auto&& entry) -> RefPtr<Promise> {
-                         return entry.OrInsert(std::move(promise));
-                       })
-      .forget();
+  return do_AddRef(
+      mWhenDefinedPromiseMap.GetOrInsert(nameAtom, std::move(promise)));
 }
 
 namespace {

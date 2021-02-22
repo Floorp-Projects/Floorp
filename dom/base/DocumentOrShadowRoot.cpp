@@ -218,11 +218,8 @@ void DocumentOrShadowRoot::CloneAdoptedSheetsFrom(
   MOZ_ASSERT(clonedSheetMap);
 
   for (const StyleSheet* sheet : aSource.mAdoptedStyleSheets) {
-    RefPtr<StyleSheet> clone = clonedSheetMap->WithEntryHandle(
-        sheet, [&sheet, &ownerDoc](auto&& entry) {
-          return entry.OrInsertWith(
-              [&] { return sheet->CloneAdoptedSheet(ownerDoc); });
-        });
+    RefPtr<StyleSheet> clone = clonedSheetMap->GetOrInsertWith(
+        sheet, [&] { return sheet->CloneAdoptedSheet(ownerDoc); });
     MOZ_ASSERT(clone);
     MOZ_DIAGNOSTIC_ASSERT(clone->ConstructorDocumentMatches(ownerDoc));
     DebugOnly<bool> succeeded = list.AppendElement(std::move(clone), fallible);
@@ -755,10 +752,9 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetRadioGroup(
 
 nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
     const nsAString& aName) {
-  return mRadioGroups.WithEntryHandle(aName, [](auto&& entry) {
-    return entry.OrInsertWith([] { return MakeUnique<nsRadioGroupStruct>(); })
-        .get();
-  });
+  return mRadioGroups
+      .GetOrInsertWith(aName, [] { return MakeUnique<nsRadioGroupStruct>(); })
+      .get();
 }
 
 int32_t DocumentOrShadowRoot::StyleOrderIndexOfSheet(

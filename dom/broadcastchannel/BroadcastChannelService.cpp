@@ -82,12 +82,11 @@ void BroadcastChannelService::RegisterActor(
   MOZ_ASSERT(aParent);
 
   auto* const parents =
-      mAgents.WithEntryHandle(aOriginChannelKey, [](auto&& entry) {
-        return entry
-            .OrInsertWith(
-                [] { return MakeUnique<nsTArray<BroadcastChannelParent*>>(); })
-            .get();
-      });
+      mAgents
+          .GetOrInsertWith(
+              aOriginChannelKey,
+              [] { return MakeUnique<nsTArray<BroadcastChannelParent*>>(); })
+          .get();
 
   MOZ_ASSERT(!parents->Contains(aParent));
   parents->AppendElement(aParent);

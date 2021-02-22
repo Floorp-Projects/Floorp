@@ -1150,18 +1150,18 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
     MutexAutoLock lock(mMutex);
 
     auto* const domainInfo =
-        mDomainMap.WithEntryHandle(domain, [&](auto&& entry) {
-          return entry
-              .OrInsertWith([&domain, parent] {
-                NS_ASSERTION(!parent, "Shouldn't have a parent here!");
-                Unused << parent;  // silence clang -Wunused-lambda-capture in
-                                   // opt builds
-                auto wdi = MakeUnique<WorkerDomainInfo>();
-                wdi->mDomain = domain;
-                return wdi;
-              })
-              .get();
-        });
+        mDomainMap
+            .GetOrInsertWith(
+                domain,
+                [&domain, parent] {
+                  NS_ASSERTION(!parent, "Shouldn't have a parent here!");
+                  Unused << parent;  // silence clang -Wunused-lambda-capture in
+                                     // opt builds
+                  auto wdi = MakeUnique<WorkerDomainInfo>();
+                  wdi->mDomain = domain;
+                  return wdi;
+                })
+            .get();
 
     queued = gMaxWorkersPerDomain &&
              domainInfo->ActiveWorkerCount() >= gMaxWorkersPerDomain &&
@@ -1222,14 +1222,12 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
     if (!isServiceWorker) {
       // Service workers are excluded since their lifetime is separate from
       // that of dom windows.
-      if (auto* const windowArray = mWindowMap.WithEntryHandle(
-              window,
-              [](auto&& entry) {
-                return entry
-                    .OrInsertWith(
-                        [] { return MakeUnique<nsTArray<WorkerPrivate*>>(1); })
-                    .get();
-              });
+      if (auto* const windowArray =
+              mWindowMap
+                  .GetOrInsertWith(
+                      window,
+                      [] { return MakeUnique<nsTArray<WorkerPrivate*>>(1); })
+                  .get();
           !windowArray->Contains(&aWorkerPrivate)) {
         windowArray->AppendElement(&aWorkerPrivate);
       } else {

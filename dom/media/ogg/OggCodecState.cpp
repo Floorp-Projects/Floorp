@@ -1712,14 +1712,13 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
 
           if ((i == 0 && IsAscii(strMsg)) || (i != 0 && IsUtf8(strMsg))) {
             EMsgHeaderType eHeaderType = kFieldTypeMaps[i].mMsgHeaderType;
-            field->mValuesStore.WithEntryHandle(eHeaderType, [=](auto&& entry) {
-              entry.OrInsertWith([i, msgHead, msgProbe]() {
-                uint32_t nameLen =
-                    strlen(kFieldTypeMaps[i].mPatternToRecognize);
-                return MakeUnique<nsCString>(msgHead + nameLen,
-                                             msgProbe - msgHead - nameLen);
-              });
-            });
+            Unused << field->mValuesStore.GetOrInsertWith(
+                eHeaderType, [i, msgHead, msgProbe]() {
+                  uint32_t nameLen =
+                      strlen(kFieldTypeMaps[i].mPatternToRecognize);
+                  return MakeUnique<nsCString>(msgHead + nameLen,
+                                               msgProbe - msgHead - nameLen);
+                });
             isContentTypeParsed = i == 0 ? true : isContentTypeParsed;
           }
           break;
