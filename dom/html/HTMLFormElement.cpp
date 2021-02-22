@@ -2170,10 +2170,8 @@ HTMLFormElement::WalkRadioGroup(const nsAString& aName,
 void HTMLFormElement::AddToRadioGroup(const nsAString& aName,
                                       HTMLInputElement* aRadio) {
   if (aRadio->IsRequired()) {
-    mRequiredRadioButtonCounts.WithEntryHandle(aName, [](auto&& entry) {
-      uint32_t& value = entry.OrInsert(0);
-      ++value;
-    });
+    uint32_t& value = mRequiredRadioButtonCounts.GetOrInsert(aName, 0);
+    ++value;
   }
 }
 

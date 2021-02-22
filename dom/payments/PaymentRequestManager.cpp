@@ -380,8 +380,7 @@ nsresult PaymentRequestManager::SendRequestPayment(
   }
 
   if (aResponseExpected) {
-    mActivePayments.WithEntryHandle(aRequest,
-                                    [](auto&& count) { ++count.OrInsert(0); });
+    ++mActivePayments.GetOrInsert(aRequest, 0);
   }
   return NS_OK;
 }

@@ -240,23 +240,14 @@ void EffectCompositor::RequestRestyle(dom::Element* aElement,
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashEntry::KeyType key = {aElement, aPseudoType};
 
+  bool& restyleEntry = elementsToRestyle.GetOrInsert(key, false);
   if (aRestyleType == RestyleType::Throttled) {
-    elementsToRestyle.WithEntryHandle(
-        key, [](auto&& entry) { entry.OrInsert(false); });
     mPresContext->PresShell()->SetNeedThrottledAnimationFlush();
   } else {
-    // Update hashtable first in case PostRestyleForAnimation mutates it.
+    // Update hashtable first in case PostRestyleForAnimation mutates it
+    // and invalidates the restyleEntry reference.
     // (It shouldn't, but just to be sure.)
-    const bool skipRestyle =
-        elementsToRestyle.WithEntryHandle(key, [](auto&& p) {
-          if (p) {
-            return std::exchange(p.Data(), true);
-          }
-
-          p.Insert(true);
-          return false;
-        });
-
+    bool skipRestyle = std::exchange(restyleEntry, true);
     if (!skipRestyle) {
       PostRestyleForAnimation(aElement, aPseudoType, aCascadeLevel);
     }

@@ -318,8 +318,7 @@ void UntrustedModulesData::AddNewLoads(
       continue;
     }
 
-    mModules.WithEntryHandle(
-        iter.Key(), [&](auto&& addPtr) { addPtr.OrInsert(iter.Data()); });
+    Unused << mModules.GetOrInsert(iter.Key(), iter.Data());
   }
 
   // This constant matches the maximum in Telemetry::CombinedStacks

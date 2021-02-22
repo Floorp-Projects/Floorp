@@ -5451,8 +5451,7 @@ void Snapshot::SaveItem(const nsAString& aKey, const LSValue& aOldValue,
   }
 
   if (!mLoadedItems.GetEntry(aKey) && !mUnknownItems.GetEntry(aKey)) {
-    mValues.WithEntryHandle(aKey,
-                            [&](auto&& entry) { entry.OrInsert(aOldValue); });
+    Unused << mValues.GetOrInsert(aKey, aOldValue);
   }
 
   if (aAffectsOrder && !mSavedKeys) {

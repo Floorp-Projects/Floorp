@@ -169,38 +169,37 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
   }
 
   auto* const frameSet =
-      mRequestToFrameMap.WithEntryHandle(aRequest, [&](auto&& entry) {
-        return entry
-            .OrInsertWith([&] {
-              mDocument->ImageTracker()->Add(aRequest);
+      mRequestToFrameMap
+          .GetOrInsertWith(
+              aRequest,
+              [&] {
+                mDocument->ImageTracker()->Add(aRequest);
 
-              if (auto entry = sImages->Lookup(aRequest)) {
-                DebugOnly<bool> inserted =
-                    entry.Data()->mImageLoaders.EnsureInserted(this);
-                MOZ_ASSERT(inserted);
-              } else {
-                MOZ_ASSERT_UNREACHABLE(
-                    "Shouldn't be associating images not in sImages");
-              }
+                if (auto entry = sImages->Lookup(aRequest)) {
+                  DebugOnly<bool> inserted =
+                      entry.Data()->mImageLoaders.EnsureInserted(this);
+                  MOZ_ASSERT(inserted);
+                } else {
+                  MOZ_ASSERT_UNREACHABLE(
+                      "Shouldn't be associating images not in sImages");
+                }
 
-              if (nsPresContext* presContext = GetPresContext()) {
-                nsLayoutUtils::RegisterImageRequestIfAnimated(
-                    presContext, aRequest, nullptr);
-              }
-              return MakeUnique<FrameSet>();
-            })
-            .get();
-      });
+                if (nsPresContext* presContext = GetPresContext()) {
+                  nsLayoutUtils::RegisterImageRequestIfAnimated(
+                      presContext, aRequest, nullptr);
+                }
+                return MakeUnique<FrameSet>();
+              })
+          .get();
 
   auto* const requestSet =
-      mFrameToRequestMap.WithEntryHandle(aFrame, [=](auto&& entry) {
-        return entry
-            .OrInsertWith([=]() {
-              aFrame->SetHasImageRequest(true);
-              return MakeUnique<RequestSet>();
-            })
-            .get();
-      });
+      mFrameToRequestMap
+          .GetOrInsertWith(aFrame,
+                           [=]() {
+                             aFrame->SetHasImageRequest(true);
+                             return MakeUnique<RequestSet>();
+                           })
+          .get();
 
   // Add frame to the frameSet, and handle any special processing the
   // frame might require.
@@ -441,9 +440,8 @@ already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
   if (NS_FAILED(rv) || !request) {
     return nullptr;
   }
-  sImages->WithEntryHandle(request, [](auto&& entry) {
-    entry.OrInsertWith([] { return MakeUnique<ImageTableEntry>(); });
-  });
+  sImages->GetOrInsertWith(request,
+                           [] { return MakeUnique<ImageTableEntry>(); });
   return request.forget();
 }
 

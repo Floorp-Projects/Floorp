@@ -1637,9 +1637,7 @@ class Document : public nsINode,
     RawServoSelectorList* GetListOrInsertFrom(const nsACString& aSelector,
                                               F&& aFrom) {
       MOZ_ASSERT(NS_IsMainThread());
-      return mTable.WithEntryHandle(aSelector, [&aFrom](auto&& entry) {
-        return entry.OrInsertWith(std::forward<F>(aFrom)).get();
-      });
+      return mTable.GetOrInsertWith(aSelector, std::forward<F>(aFrom)).get();
     }
 
     ~SelectorCache();
