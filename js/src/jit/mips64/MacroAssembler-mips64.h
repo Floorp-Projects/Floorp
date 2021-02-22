@@ -68,7 +68,7 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared {
   using MacroAssemblerMIPSShared::ma_sd;
   using MacroAssemblerMIPSShared::ma_ss;
   using MacroAssemblerMIPSShared::ma_store;
-  using MacroAssemblerMIPSShared::ma_subTestOverflow;
+  using MacroAssemblerMIPSShared::ma_sub32TestOverflow;
 
   void ma_li(Register dest, CodeLabel* label);
   void ma_li(Register dest, ImmWord imm);
@@ -113,19 +113,33 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared {
   void ma_daddu(Register rd, Register rs, Imm32 imm);
   void ma_daddu(Register rd, Register rs);
   void ma_daddu(Register rd, Imm32 imm);
-  void ma_addTestOverflow(Register rd, Register rs, Register rt,
+  void ma_add32TestOverflow(Register rd, Register rs, Register rt,
+                            Label* overflow);
+  void ma_add32TestOverflow(Register rd, Register rs, Imm32 imm,
+                            Label* overflow);
+  void ma_addPtrTestOverflow(Register rd, Register rs, Register rt,
+                             Label* overflow);
+  void ma_addPtrTestOverflow(Register rd, Register rs, Imm32 imm,
+                             Label* overflow);
+  void ma_addPtrTestCarry(Condition cond, Register rd, Register rs, Register rt,
                           Label* overflow);
-  void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
-
+  void ma_addPtrTestCarry(Condition cond, Register rd, Register rs, Imm32 imm,
+                          Label* overflow);
   // subtract
   void ma_dsubu(Register rd, Register rs, Imm32 imm);
   void ma_dsubu(Register rd, Register rs);
   void ma_dsubu(Register rd, Imm32 imm);
-  void ma_subTestOverflow(Register rd, Register rs, Register rt,
-                          Label* overflow);
+  void ma_sub32TestOverflow(Register rd, Register rs, Register rt,
+                            Label* overflow);
+  void ma_subPtrTestOverflow(Register rd, Register rs, Register rt,
+                             Label* overflow);
+  void ma_subPtrTestOverflow(Register rd, Register rs, Imm32 imm,
+                             Label* overflow);
 
   // multiplies.  For now, there are only few that we care about.
   void ma_dmult(Register rs, Imm32 imm);
+  void ma_mulPtrTestOverflow(Register rd, Register rs, Register rt,
+                             Label* overflow);
 
   // stack
   void ma_pop(Register r);
@@ -166,6 +180,7 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared {
 
   void ma_cmp_set(Register dst, Register lhs, ImmWord imm, Condition c);
   void ma_cmp_set(Register dst, Register lhs, ImmPtr imm, Condition c);
+  void ma_cmp_set(Register dst, Address address, Imm32 imm, Condition c);
 
   // These functions abstract the access to high part of the double precision
   // float register. They are intended to work on both 32 bit and 64 bit
@@ -196,6 +211,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void convertDoubleToFloat32(FloatRegister src, FloatRegister dest);
   void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                             bool negativeZeroCheck = true);
+  void convertDoubleToPtr(FloatRegister src, Register dest, Label* fail,
+                          bool negativeZeroCheck = true);
   void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,
                              bool negativeZeroCheck = true);
 

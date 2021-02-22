@@ -273,11 +273,11 @@ void CodeGenerator::visitAddI(LAddI* ins) {
 
   Label overflow;
   if (rhs->isConstant()) {
-    masm.ma_addTestOverflow(ToRegister(dest), ToRegister(lhs),
-                            Imm32(ToInt32(rhs)), &overflow);
+    masm.ma_add32TestOverflow(ToRegister(dest), ToRegister(lhs),
+                              Imm32(ToInt32(rhs)), &overflow);
   } else {
-    masm.ma_addTestOverflow(ToRegister(dest), ToRegister(lhs), ToRegister(rhs),
-                            &overflow);
+    masm.ma_add32TestOverflow(ToRegister(dest), ToRegister(lhs),
+                              ToRegister(rhs), &overflow);
   }
 
   bailoutFrom(&overflow, ins->snapshot());
@@ -316,11 +316,11 @@ void CodeGenerator::visitSubI(LSubI* ins) {
 
   Label overflow;
   if (rhs->isConstant()) {
-    masm.ma_subTestOverflow(ToRegister(dest), ToRegister(lhs),
-                            Imm32(ToInt32(rhs)), &overflow);
+    masm.ma_sub32TestOverflow(ToRegister(dest), ToRegister(lhs),
+                              Imm32(ToInt32(rhs)), &overflow);
   } else {
-    masm.ma_subTestOverflow(ToRegister(dest), ToRegister(lhs), ToRegister(rhs),
-                            &overflow);
+    masm.ma_sub32TestOverflow(ToRegister(dest), ToRegister(lhs),
+                              ToRegister(rhs), &overflow);
   }
 
   bailoutFrom(&overflow, ins->snapshot());
@@ -378,7 +378,7 @@ void CodeGenerator::visitMulI(LMulI* ins) {
       case 2:
         if (mul->canOverflow()) {
           Label mulTwoOverflow;
-          masm.ma_addTestOverflow(dest, src, src, &mulTwoOverflow);
+          masm.ma_add32TestOverflow(dest, src, src, &mulTwoOverflow);
 
           bailoutFrom(&mulTwoOverflow, ins->snapshot());
         } else {
@@ -432,8 +432,8 @@ void CodeGenerator::visitMulI(LMulI* ins) {
 
         if (mul->canOverflow()) {
           Label mulConstOverflow;
-          masm.ma_mul_branch_overflow(dest, ToRegister(lhs),
-                                      Imm32(ToInt32(rhs)), &mulConstOverflow);
+          masm.ma_mul32TestOverflow(dest, ToRegister(lhs), Imm32(ToInt32(rhs)),
+                                    &mulConstOverflow);
 
           bailoutFrom(&mulConstOverflow, ins->snapshot());
         } else {
@@ -445,8 +445,8 @@ void CodeGenerator::visitMulI(LMulI* ins) {
     Label multRegOverflow;
 
     if (mul->canOverflow()) {
-      masm.ma_mul_branch_overflow(dest, ToRegister(lhs), ToRegister(rhs),
-                                  &multRegOverflow);
+      masm.ma_mul32TestOverflow(dest, ToRegister(lhs), ToRegister(rhs),
+                                &multRegOverflow);
       bailoutFrom(&multRegOverflow, ins->snapshot());
     } else {
       masm.as_mul(dest, ToRegister(lhs), ToRegister(rhs));
@@ -2056,8 +2056,8 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
   Register out = ToRegister(lir->output());
 
   Label ok;
-  masm.ma_addTestCarry(Assembler::CarryClear, out, base, Imm32(mir->offset()),
-                       &ok);
+  masm.ma_add32TestCarry(Assembler::CarryClear, out, base, Imm32(mir->offset()),
+                         &ok);
   masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
   masm.bind(&ok);
 }

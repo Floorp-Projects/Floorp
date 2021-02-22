@@ -116,6 +116,12 @@ void MacroAssemblerMIPSCompat::convertDoubleToFloat32(FloatRegister src,
   as_cvtsd(dest, src);
 }
 
+void MacroAssemblerMIPSCompat::convertDoubleToPtr(FloatRegister src,
+                                                  Register dest, Label* fail,
+                                                  bool negativeZeroCheck) {
+  convertDoubleToInt32(src, dest, fail, negativeZeroCheck);
+}
+
 const int CauseBitPos = int(Assembler::CauseI);
 const int CauseBitCount = 1 + int(Assembler::CauseV) - int(Assembler::CauseI);
 const int CauseIOrVMask = ((1 << int(Assembler::CauseI)) |
@@ -207,8 +213,8 @@ void MacroAssemblerMIPS::ma_liPatchable(Register dest, ImmWord imm) {
 // Arithmetic-based ops.
 
 // Add.
-void MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs,
-                                            Register rt, Label* overflow) {
+void MacroAssemblerMIPS::ma_add32TestOverflow(Register rd, Register rs,
+                                              Register rt, Label* overflow) {
   MOZ_ASSERT_IF(rs == rd, rs != rt);
   MOZ_ASSERT(rs != ScratchRegister);
   MOZ_ASSERT(rt != ScratchRegister);
@@ -234,8 +240,8 @@ void MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs,
   ma_b(SecondScratchReg, Imm32(0), overflow, Assembler::LessThan);
 }
 
-void MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm,
-                                            Label* overflow) {
+void MacroAssemblerMIPS::ma_add32TestOverflow(Register rd, Register rs,
+                                              Imm32 imm, Label* overflow) {
   MOZ_ASSERT(rs != ScratchRegister);
   MOZ_ASSERT(rs != SecondScratchReg);
   MOZ_ASSERT(rd != ScratchRegister);
@@ -268,8 +274,8 @@ void MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm,
 }
 
 // Subtract.
-void MacroAssemblerMIPS::ma_subTestOverflow(Register rd, Register rs,
-                                            Register rt, Label* overflow) {
+void MacroAssemblerMIPS::ma_sub32TestOverflow(Register rd, Register rs,
+                                              Register rt, Label* overflow) {
   // The rs == rt case should probably be folded at MIR stage.
   // Happens for Number_isInteger*. Not worth specializing here.
   MOZ_ASSERT_IF(rs == rd, rs != rt);
