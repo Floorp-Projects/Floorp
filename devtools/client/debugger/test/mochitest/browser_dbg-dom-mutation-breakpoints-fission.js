@@ -78,7 +78,7 @@ add_task(async function() {
   info(
     "Click the button in the remote iframe, should not hit the breakpoint"
   );
-  BrowserTestUtils.synthesizeMouse("button", 0, 0, {}, frameBC);
+  BrowserTestUtils.synthesizeMouseAtCenter("button", {}, frameBC);
 
   info("Wait until the input is enabled");
   await asyncWaitUntil(() =>
@@ -106,7 +106,7 @@ add_task(async function() {
   await waitFor(() => checkbox.checked);
 
   info("Click the button in the remote iframe, to trigger the breakpoint");
-  BrowserTestUtils.synthesizeMouse("button", 0, 0, {}, frameBC);
+  BrowserTestUtils.synthesizeMouseAtCenter("button", {}, frameBC);
 
   info("Wait for paused");
   await waitForPaused(dbg);
