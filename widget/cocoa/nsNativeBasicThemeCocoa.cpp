@@ -44,7 +44,7 @@ auto nsNativeBasicThemeCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
 }
 
 void nsNativeBasicThemeCocoa::PaintScrollbarThumb(
-    DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
@@ -52,33 +52,33 @@ void nsNativeBasicThemeCocoa::PaintScrollbarThumb(
       ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
   auto rect = aRect.ToUnknownRect();
   if (aDpiRatio.scale >= 2.0f) {
-    mozilla::gfx::AutoRestoreTransform autoRestoreTransform(aDrawTarget);
-    aDrawTarget->SetTransform(aDrawTarget->GetTransform().PreScale(2.0f, 2.0f));
+    mozilla::gfx::AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
+    aDrawTarget.SetTransform(aDrawTarget.GetTransform().PreScale(2.0f, 2.0f));
     rect.Scale(1.0f / 2.0f);
-    ScrollbarDrawingMac::DrawScrollbarThumb(*aDrawTarget, rect, params);
+    ScrollbarDrawingMac::DrawScrollbarThumb(aDrawTarget, rect, params);
   } else {
-    ScrollbarDrawingMac::DrawScrollbarThumb(*aDrawTarget, rect, params);
+    ScrollbarDrawingMac::DrawScrollbarThumb(aDrawTarget, rect, params);
   }
 }
 
 void nsNativeBasicThemeCocoa::PaintScrollbarTrack(
-    DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, DPIRatio aDpiRatio) {
   ScrollbarParams params =
       ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
   auto rect = aRect.ToUnknownRect();
   if (aDpiRatio.scale >= 2.0f) {
-    mozilla::gfx::AutoRestoreTransform autoRestoreTransform(aDrawTarget);
-    aDrawTarget->SetTransform(aDrawTarget->GetTransform().PreScale(2.0f, 2.0f));
+    mozilla::gfx::AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
+    aDrawTarget.SetTransform(aDrawTarget.GetTransform().PreScale(2.0f, 2.0f));
     rect.Scale(1.0f / 2.0f);
-    ScrollbarDrawingMac::DrawScrollbarTrack(*aDrawTarget, rect, params);
+    ScrollbarDrawingMac::DrawScrollbarTrack(aDrawTarget, rect, params);
   } else {
-    ScrollbarDrawingMac::DrawScrollbarTrack(*aDrawTarget, rect, params);
+    ScrollbarDrawingMac::DrawScrollbarTrack(aDrawTarget, rect, params);
   }
 }
 
-void nsNativeBasicThemeCocoa::PaintScrollbar(DrawTarget* aDrawTarget,
+void nsNativeBasicThemeCocoa::PaintScrollbar(DrawTarget& aDrawTarget,
                                              const LayoutDeviceRect& aRect,
                                              bool aHorizontal, nsIFrame* aFrame,
                                              const ComputedStyle& aStyle,
@@ -88,19 +88,19 @@ void nsNativeBasicThemeCocoa::PaintScrollbar(DrawTarget* aDrawTarget,
 }
 
 void nsNativeBasicThemeCocoa::PaintScrollCorner(
-    DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
   ScrollbarParams params =
       ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, aStyle, false);
   if (aDpiRatio.scale >= 2.0f) {
-    mozilla::gfx::AutoRestoreTransform autoRestoreTransform(aDrawTarget);
-    aDrawTarget->SetTransform(aDrawTarget->GetTransform().PreScale(2.0f, 2.0f));
+    mozilla::gfx::AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
+    aDrawTarget.SetTransform(aDrawTarget.GetTransform().PreScale(2.0f, 2.0f));
     auto rect = aRect.ToUnknownRect();
     rect.Scale(1 / 2.0f);
-    ScrollbarDrawingMac::DrawScrollCorner(*aDrawTarget, rect, params);
+    ScrollbarDrawingMac::DrawScrollCorner(aDrawTarget, rect, params);
   } else {
     auto rect = aRect.ToUnknownRect();
-    ScrollbarDrawingMac::DrawScrollCorner(*aDrawTarget, rect, params);
+    ScrollbarDrawingMac::DrawScrollCorner(aDrawTarget, rect, params);
   }
 }

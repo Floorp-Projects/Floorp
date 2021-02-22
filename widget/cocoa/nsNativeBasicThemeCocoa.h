@@ -26,23 +26,23 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
-  void PaintScrollbarThumb(DrawTarget* aDrawTarget,
+  void PaintScrollbarThumb(DrawTarget&,
                            const LayoutDeviceRect& aRect, bool aHorizontal,
                            nsIFrame* aFrame, const ComputedStyle& aStyle,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState,
                            DPIRatio aDpiRatio) override;
-  void PaintScrollbarTrack(DrawTarget* aDrawTarget,
+  void PaintScrollbarTrack(DrawTarget&,
                            const LayoutDeviceRect& aRect, bool aHorizontal,
                            nsIFrame* aFrame, const ComputedStyle& aStyle,
                            const EventStates& aDocumentState,
                            DPIRatio aDpiRatio) override;
-  void PaintScrollbar(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
+  void PaintScrollbar(DrawTarget&, const LayoutDeviceRect& aRect,
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
                       const EventStates& aDocumentState,
                       DPIRatio aDpiRatio) override;
-  void PaintScrollCorner(DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
+  void PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
                          const EventStates& aDocumentState,
                          DPIRatio aDpiRatio) override;
