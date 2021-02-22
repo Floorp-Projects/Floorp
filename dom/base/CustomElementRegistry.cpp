@@ -1083,30 +1083,48 @@ void CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
 
 already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
     const nsAString& aName, ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  // Define a function that lazily creates a Promise and perform some action on
+  // it when creation succeeded. It's needed in multiple cases below, but not in
+  // all of them.
+  auto createPromise = [&](auto&& action) -> already_AddRefed<Promise> {
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
+    RefPtr<Promise> promise = Promise::Create(global, aRv);
 
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+
+    action(promise);
+
+    return promise.forget();
+  };
 
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
   Document* doc = mWindow->GetExtantDoc();
   uint32_t nameSpaceID =
       doc ? doc->GetDefaultNamespaceID() : kNameSpaceID_XHTML;
   if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
-    promise->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
-    return promise.forget();
+    return createPromise([](const RefPtr<Promise>& promise) {
+      promise->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+    });
   }
 
   if (CustomElementDefinition* definition =
           mCustomDefinitions.GetWeak(nameAtom)) {
-    promise->MaybeResolve(definition->mConstructor);
-    return promise.forget();
+    return createPromise([&](const RefPtr<Promise>& promise) {
+      promise->MaybeResolve(definition->mConstructor);
+    });
   }
 
-  return do_AddRef(
-      mWhenDefinedPromiseMap.GetOrInsert(nameAtom, std::move(promise)));
+  return mWhenDefinedPromiseMap.WithEntryHandle(
+      nameAtom, [&](auto&& entry) -> already_AddRefed<Promise> {
+        if (!entry) {
+          return createPromise([&entry](const RefPtr<Promise>& promise) {
+            entry.Insert(promise);
+          });
+        }
+        return do_AddRef(entry.Data());
+      });
 }
 
 namespace {
