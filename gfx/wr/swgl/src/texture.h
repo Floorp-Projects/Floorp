@@ -1055,6 +1055,17 @@ static PackedRGBA8 textureLinearPackedRGBA8(S sampler, ivec2 i,
 }
 
 template <typename S>
+static PackedRGBA8 textureNearestPackedRGBA8(S sampler, ivec2 i,
+                                             int zoffset = 0) {
+  assert(sampler->format == TextureFormat::RGBA8);
+  I32 row = computeRow(sampler, i, zoffset, 0);
+  return combine(unaligned_load<V4<uint8_t>>(&sampler->buf[row.x]),
+                 unaligned_load<V4<uint8_t>>(&sampler->buf[row.y]),
+                 unaligned_load<V4<uint8_t>>(&sampler->buf[row.z]),
+                 unaligned_load<V4<uint8_t>>(&sampler->buf[row.w]));
+}
+
+template <typename S>
 static PackedR8 textureLinearPackedR8(S sampler, ivec2 i, int zoffset = 0) {
   return pack(textureLinearUnpackedR8(sampler, i, zoffset));
 }
