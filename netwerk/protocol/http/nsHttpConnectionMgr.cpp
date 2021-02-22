@@ -2601,7 +2601,7 @@ void nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction* aTrans) {
   bool throttled = aTrans->EligibleForThrottling();
 
   nsTArray<RefPtr<nsHttpTransaction>>* transactions =
-      mActiveTransactions[throttled].LookupOrAdd(tabId);
+      mActiveTransactions[throttled].GetOrInsertNew(tabId);
 
   MOZ_ASSERT(!transactions->Contains(aTrans));
 

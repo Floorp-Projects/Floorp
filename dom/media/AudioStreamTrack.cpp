@@ -92,7 +92,7 @@ RefPtr<GenericPromise> AudioStreamTrack::SetAudioOutputDevice(
   }
 
   // We are setting a non-default output device.
-  UniquePtr<CrossGraphPort>& crossGraphPtr = *mCrossGraphs.LookupOrAdd(key);
+  UniquePtr<CrossGraphPort>& crossGraphPtr = *mCrossGraphs.GetOrInsertNew(key);
   if (crossGraphPtr) {
     // This key already has a non-default output device set. Destroy it.
     crossGraphPtr->Destroy();

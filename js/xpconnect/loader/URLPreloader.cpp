@@ -306,7 +306,7 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
 
       LOG(Debug, "Cached file: %s %s", key.TypeString(), key.mPath.get());
 
-      auto entry = mCachedURLs.LookupOrAdd(key, key);
+      auto entry = mCachedURLs.GetOrInsertNew(key, key);
       entry->mResultCode = NS_ERROR_NOT_INITIALIZED;
 
       pendingURLs.insertBack(entry);
@@ -458,7 +458,7 @@ Result<nsCString, nsresult> URLPreloader::ReadInternal(const CacheKey& key,
     return entry.Read();
   }
 
-  auto entry = mCachedURLs.LookupOrAdd(key, key);
+  auto entry = mCachedURLs.GetOrInsertNew(key, key);
 
   entry->UpdateUsedTime();
 

@@ -132,7 +132,7 @@ bool VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
   if (aRegion.IsEmpty()) {
     return mVibrantRegions.Remove(uint32_t(aType));
   }
-  auto& vr = *mVibrantRegions.LookupOrAdd(uint32_t(aType));
+  auto& vr = *mVibrantRegions.GetOrInsertNew(uint32_t(aType));
   return vr.UpdateRegion(aRegion, mCoordinateConverter, mContainerView, ^() {
     return this->CreateEffectView(aType);
   });

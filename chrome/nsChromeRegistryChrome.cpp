@@ -477,7 +477,7 @@ void nsChromeRegistryChrome::ManifestContent(ManifestProcessingContext& cx,
   }
 
   nsDependentCString packageName(package);
-  PackageEntry* entry = mPackagesHash.LookupOrAdd(packageName);
+  PackageEntry* entry = mPackagesHash.GetOrInsertNew(packageName);
   entry->baseURI = resolved;
   entry->flags = flags;
 
@@ -514,7 +514,7 @@ void nsChromeRegistryChrome::ManifestLocale(ManifestProcessingContext& cx,
   }
 
   nsDependentCString packageName(package);
-  PackageEntry* entry = mPackagesHash.LookupOrAdd(packageName);
+  PackageEntry* entry = mPackagesHash.GetOrInsertNew(packageName);
   entry->locales.SetBase(nsDependentCString(provider), resolved);
 
   if (mDynamicRegistration) {
@@ -559,7 +559,7 @@ void nsChromeRegistryChrome::ManifestSkin(ManifestProcessingContext& cx,
   }
 
   nsDependentCString packageName(package);
-  PackageEntry* entry = mPackagesHash.LookupOrAdd(packageName);
+  PackageEntry* entry = mPackagesHash.GetOrInsertNew(packageName);
   entry->skins.SetBase(nsDependentCString(provider), resolved);
 
   if (mDynamicRegistration) {

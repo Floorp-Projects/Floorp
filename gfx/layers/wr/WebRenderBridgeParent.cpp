@@ -983,7 +983,7 @@ void WebRenderBridgeParent::AddPendingScrollPayload(
     CompositionPayload& aPayload, const VsyncId& aCompositeStartId) {
   auto pendingScrollPayloads = mPendingScrollPayloads.Lock();
   nsTArray<CompositionPayload>* payloads =
-      pendingScrollPayloads->LookupOrAdd(aCompositeStartId.mId);
+      pendingScrollPayloads->GetOrInsertNew(aCompositeStartId.mId);
 
   payloads->AppendElement(aPayload);
 }

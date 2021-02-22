@@ -44,7 +44,7 @@ DDLifetime& DDLifetimes::CreateLifetime(
   if (--sTag > 0) {
     sTag = -1;
   }
-  LifetimesForObject* lifetimes = mLifetimes.LookupOrAdd(aObject, 1);
+  LifetimesForObject* lifetimes = mLifetimes.GetOrInsertNew(aObject, 1);
   DDLifetime& lifetime = *lifetimes->AppendElement(
       DDLifetime(aObject, aIndex, aConstructionTimeStamp, sTag));
   return lifetime;

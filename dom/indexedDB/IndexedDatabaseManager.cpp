@@ -697,7 +697,7 @@ void IndexedDatabaseManager::AddFileManager(
   NS_ASSERTION(aFileManager, "Null file manager!");
 
   const auto& origin = aFileManager->Origin();
-  mFileManagerInfos.LookupOrAdd(origin)->AddFileManager(
+  mFileManagerInfos.GetOrInsertNew(origin)->AddFileManager(
       std::move(aFileManager));
 }
 

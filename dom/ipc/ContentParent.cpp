@@ -732,7 +732,7 @@ uint32_t ContentParent::GetPoolSize(const nsACString& aContentProcessType) {
         new nsClassHashtable<nsCStringHashKey, nsTArray<ContentParent*>>;
   }
 
-  return *sBrowserContentParents->LookupOrAdd(aContentProcessType);
+  return *sBrowserContentParents->GetOrInsertNew(aContentProcessType);
 }
 
 const nsDependentCSubstring RemoteTypePrefix(

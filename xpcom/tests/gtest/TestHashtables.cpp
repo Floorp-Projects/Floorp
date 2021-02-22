@@ -1442,7 +1442,7 @@ TEST(Hashtables, ClassHashtable_WithEntryHandle)
   ASSERT_TRUE(0 == EntToUniClass.Count());
 }
 
-TEST(Hashtables, ClassHashtable_LookupOrAdd_Present)
+TEST(Hashtables, ClassHashtable_GetOrInsertNew_Present)
 {
   nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
@@ -1451,16 +1451,16 @@ TEST(Hashtables, ClassHashtable_LookupOrAdd_Present)
                       mozilla::MakeUnique<TestUniCharDerived>(entity.mUnicode));
   }
 
-  auto* entry = EntToUniClass.LookupOrAdd("uml"_ns, 42);
+  auto* entry = EntToUniClass.GetOrInsertNew("uml"_ns, 42);
   EXPECT_EQ(168u, entry->GetChar());
 }
 
-TEST(Hashtables, ClassHashtable_LookupOrAdd_NotPresent)
+TEST(Hashtables, ClassHashtable_GetOrInsertNew_NotPresent)
 {
   nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
   // This is going to insert a TestUniChar.
-  auto* entry = EntToUniClass.LookupOrAdd("uml"_ns, 42);
+  auto* entry = EntToUniClass.GetOrInsertNew("uml"_ns, 42);
   EXPECT_EQ(42u, entry->GetChar());
 }
 

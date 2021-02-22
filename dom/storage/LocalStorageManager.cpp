@@ -99,7 +99,7 @@ nsAutoCString LocalStorageManager::CreateOrigin(
 
 LocalStorageCache* LocalStorageManager::GetCache(
     const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix) {
-  CacheOriginHashtable* table = mCaches.LookupOrAdd(aOriginSuffix);
+  CacheOriginHashtable* table = mCaches.GetOrInsertNew(aOriginSuffix);
   LocalStorageCacheHashKey* entry = table->GetEntry(aOriginNoSuffix);
   if (!entry) {
     return nullptr;
@@ -131,7 +131,7 @@ already_AddRefed<StorageUsage> LocalStorageManager::GetOriginUsage(
 already_AddRefed<LocalStorageCache> LocalStorageManager::PutCache(
     const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix,
     const nsACString& aQuotaKey, nsIPrincipal* aPrincipal) {
-  CacheOriginHashtable* table = mCaches.LookupOrAdd(aOriginSuffix);
+  CacheOriginHashtable* table = mCaches.GetOrInsertNew(aOriginSuffix);
   LocalStorageCacheHashKey* entry = table->PutEntry(aOriginNoSuffix);
   RefPtr<LocalStorageCache> cache = entry->cache();
 
@@ -147,7 +147,7 @@ void LocalStorageManager::DropCache(LocalStorageCache* aCache) {
         "down?");
   }
 
-  CacheOriginHashtable* table = mCaches.LookupOrAdd(aCache->OriginSuffix());
+  CacheOriginHashtable* table = mCaches.GetOrInsertNew(aCache->OriginSuffix());
   table->RemoveEntry(aCache->OriginNoSuffix());
 }
 

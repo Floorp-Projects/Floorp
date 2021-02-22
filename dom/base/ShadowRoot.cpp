@@ -195,7 +195,7 @@ void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
   nsAutoString name;
   aSlot->GetName(name);
 
-  SlotArray& currentSlots = *mSlotMap.LookupOrAdd(name);
+  SlotArray& currentSlots = *mSlotMap.GetOrInsertNew(name);
 
   size_t index = currentSlots.Insert(*aSlot);
   if (index != 0) {
