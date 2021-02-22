@@ -6,6 +6,7 @@
 #include "gfxPlatformMac.h"
 
 #include "gfxQuartzSurface.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/gfx/2D.h"
 
 #include "gfxMacPlatformFontList.h"
@@ -721,12 +722,19 @@ class OSXVsyncSource final : public VsyncSource {
 
   class OSXDisplay final : public VsyncSource::Display {
    public:
-    OSXDisplay() : mDisplayLink(nullptr) {
+    OSXDisplay()
+        : mDisplayLink(nullptr, "OSXVsyncSource::OSXDisplay::mDisplayLink") {
       MOZ_ASSERT(NS_IsMainThread());
       mTimer = NS_NewTimer();
+      CGDisplayRegisterReconfigurationCallback(DisplayReconfigurationCallback,
+                                               this);
     }
 
-    virtual ~OSXDisplay() { MOZ_ASSERT(NS_IsMainThread()); }
+    virtual ~OSXDisplay() {
+      MOZ_ASSERT(NS_IsMainThread());
+      CGDisplayRemoveReconfigurationCallback(DisplayReconfigurationCallback,
+                                             this);
+    }
 
     static void RetryEnableVsync(nsITimer* aTimer, void* aOsxDisplay) {
       MOZ_ASSERT(NS_IsMainThread());
@@ -741,12 +749,14 @@ class OSXVsyncSource final : public VsyncSource {
         return;
       }
 
+      auto displayLink = mDisplayLink.Lock();
+
       // Create a display link capable of being used with all active displays
       // TODO: See if we need to create an active DisplayLink for each monitor
       // in multi-monitor situations. According to the docs, it is compatible
       // with all displays running on the computer But if we have different
       // monitors at different display rates, we may hit issues.
-      CVReturn retval = CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
+      CVReturn retval = CVDisplayLinkCreateWithActiveCGDisplays(&*displayLink);
 
       // Workaround for bug 1201401: CVDisplayLinkCreateWithCGDisplays()
       // (called by CVDisplayLinkCreateWithActiveCGDisplays()) sometimes
@@ -758,7 +768,7 @@ class OSXVsyncSource final : public VsyncSource {
       // which is accessible via CVDisplayLinkGetCurrentCGDisplay(). In
       // normal conditions the current display is never zero.
       if ((retval == kCVReturnSuccess) &&
-          (CVDisplayLinkGetCurrentCGDisplay(mDisplayLink) == 0)) {
+          (CVDisplayLinkGetCurrentCGDisplay(*displayLink) == 0)) {
         retval = kCVReturnInvalidDisplay;
       }
 
@@ -766,8 +776,8 @@ class OSXVsyncSource final : public VsyncSource {
         NS_WARNING(
             "Could not create a display link with all active displays. "
             "Retrying");
-        CVDisplayLinkRelease(mDisplayLink);
-        mDisplayLink = nullptr;
+        CVDisplayLinkRelease(*displayLink);
+        *displayLink = nullptr;
 
         // bug 1142708 - When coming back from sleep,
         // or when changing displays, active displays may not be ready yet,
@@ -788,23 +798,23 @@ class OSXVsyncSource final : public VsyncSource {
         return;
       }
 
-      if (CVDisplayLinkSetOutputCallback(mDisplayLink, &VsyncCallback, this) !=
+      if (CVDisplayLinkSetOutputCallback(*displayLink, &VsyncCallback, this) !=
           kCVReturnSuccess) {
         NS_WARNING("Could not set displaylink output callback");
-        CVDisplayLinkRelease(mDisplayLink);
-        mDisplayLink = nullptr;
+        CVDisplayLinkRelease(*displayLink);
+        *displayLink = nullptr;
         return;
       }
 
       mPreviousTimestamp = TimeStamp::Now();
-      if (CVDisplayLinkStart(mDisplayLink) != kCVReturnSuccess) {
+      if (CVDisplayLinkStart(*displayLink) != kCVReturnSuccess) {
         NS_WARNING("Could not activate the display link");
-        CVDisplayLinkRelease(mDisplayLink);
-        mDisplayLink = nullptr;
+        CVDisplayLinkRelease(*displayLink);
+        *displayLink = nullptr;
       }
 
       CVTime vsyncRate =
-          CVDisplayLinkGetNominalOutputVideoRefreshPeriod(mDisplayLink);
+          CVDisplayLinkGetNominalOutputVideoRefreshPeriod(*displayLink);
       if (vsyncRate.flags & kCVTimeIsIndefinite) {
         NS_WARNING("Could not get vsync rate, setting to 60.");
         mVsyncRate = TimeDuration::FromMilliseconds(1000.0 / 60.0);
@@ -824,15 +834,17 @@ class OSXVsyncSource final : public VsyncSource {
       }
 
       // Release the display link
-      if (mDisplayLink) {
-        CVDisplayLinkRelease(mDisplayLink);
-        mDisplayLink = nullptr;
+      auto displayLink = mDisplayLink.Lock();
+      if (*displayLink) {
+        CVDisplayLinkRelease(*displayLink);
+        *displayLink = nullptr;
       }
     }
 
     bool IsVsyncEnabled() override {
       MOZ_ASSERT(NS_IsMainThread());
-      return mDisplayLink != nullptr;
+      auto displayLink = mDisplayLink.Lock();
+      return *displayLink != nullptr;
     }
 
     TimeDuration GetVsyncRate() override { return mVsyncRate; }
@@ -852,8 +864,42 @@ class OSXVsyncSource final : public VsyncSource {
     TimeStamp mPreviousTimestamp;
 
    private:
-    // Manages the display link render thread
-    CVDisplayLinkRef mDisplayLink;
+    static void DisplayReconfigurationCallback(
+        CGDirectDisplayID aDisplay, CGDisplayChangeSummaryFlags aFlags,
+        void* aUserInfo) {
+      static_cast<OSXDisplay*>(aUserInfo)->OnDisplayReconfiguration(aDisplay,
+                                                                    aFlags);
+    }
+
+    void OnDisplayReconfiguration(CGDirectDisplayID aDisplay,
+                                  CGDisplayChangeSummaryFlags aFlags) {
+      // Display reconfiguration notifications are fired in two phases: Before
+      // the reconfiguration and after the reconfiguration.
+      // All displays are notified before (with a "BeginConfiguration" flag),
+      // and the reconfigured displays are notified again after the
+      // configuration.
+      if (aFlags & kCGDisplayBeginConfigurationFlag) {
+        // We're only interested in the "after" notification, for the display
+        // link's current display.
+        return;
+      }
+
+      auto displayLink = mDisplayLink.Lock();
+      if (*displayLink &&
+          CVDisplayLinkGetCurrentCGDisplay(*displayLink) == aDisplay) {
+        // The link's current display has been reconfigured.
+        // Stop and start the display link, because otherwise it may be stuck
+        // for a while in some cases, e.g. after fast user switching or sleep.
+        CVDisplayLinkStop(*displayLink);
+        CVDisplayLinkStart(*displayLink);
+      }
+    }
+
+    // Accessed from main thread and from display reconfiguration callback
+    // thread.
+    DataMutex<CVDisplayLinkRef> mDisplayLink;
+
+    // Accessed only from the main thread.
     RefPtr<nsITimer> mTimer;
     TimeDuration mVsyncRate;
   };  // OSXDisplay
