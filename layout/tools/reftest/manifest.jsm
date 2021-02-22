@@ -584,7 +584,7 @@ function BuildConditionSandbox(aURL) {
     sandbox.windowsDefaultTheme = g.containingWindow.matchMedia("(-moz-windows-default-theme)").matches;
 
     try {
-        sandbox.nativeThemePref = !prefs.getBoolPref("widget.disable-native-theme-for-content");
+        sandbox.nativeThemePref = !prefs.getBoolPref("widget.non-native-theme.enabled");
     } catch (e) {
         sandbox.nativeThemePref = true;
     }

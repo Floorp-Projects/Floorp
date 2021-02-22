@@ -9695,7 +9695,7 @@
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   # Run content processes in headless mode and disallow connections to
   # the X server.  Experimental; breaks WebGL and Flash, and requires
-  # `widget.disable-native-theme-for-content` and `widget.remote-look-and-feel`.
+  # `widget.non-native-theme.enabled` and `widget.remote-look-and-feel`.
   # Changing it requires a restart because sandbox policy information dependent
   # on it is cached.  See bug 1640345 for details.
 - name: security.sandbox.content.headless
@@ -10482,7 +10482,7 @@
 #
 # NOTE(emilio): When changing this make sure to update the non_native_theme
 # entry in python/mozbuild/mozbuild/mozinfo.py
-- name: widget.disable-native-theme-for-content
+- name: widget.non-native-theme.enabled
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && defined(NIGHTLY_BUILD) && !defined(ANDROID)
   value: true
@@ -10494,38 +10494,38 @@
   mirror: always
 
 # The size in CSS pixels at full zoom of the minimum scrollbar width.
-- name: widget.gtk.non-native.scrollbar.normal-size
+- name: widget.non-native-theme.gtk.scrollbar.normal-size
   type: uint32_t
   value: 12
   mirror: always
 
 # The size in CSS pixels at full zoom of the "thin" scrollbars.
-- name: widget.gtk.non-native.scrollbar.thin-size
+- name: widget.non-native-theme.gtk.scrollbar.thin-size
   type: uint32_t
   value: 6
   mirror: always
 
 # The amount of space that the thumb should fill the scrollbar, from zero to
 # one.
-- name: widget.gtk.non-native.scrollbar.thumb-size
+- name: widget.non-native-theme.gtk.scrollbar.thumb-size
   type: float
   value: 0.75
   mirror: always
 
 # The minimum size of the scroll thumb, in the scrollbar direction.
-- name: widget.gtk.non-native.scrollbar.thumb-cross-size
+- name: widget.non-native-theme.gtk.scrollbar.thumb-cross-size
   type: uint32_t
   value: 40
   mirror: always
 
 # Whether the thumb should be rounded for the non-native scrollbars.
-- name: widget.gtk.non-native.round-thumb
+- name: widget.non-native-theme.gtk.scrollbar.round-thumb
   type: bool
   value: true
   mirror: always
 
 # Whether buttons shouldn't be suppressed for non-native scrollbars.
-- name: widget.gtk.non-native.scrollbar.allow-buttons
+- name: widget.non-native-theme.gtk.scrollbar.allow-buttons
   type: bool
   value: false
   mirror: always
@@ -10534,7 +10534,7 @@
 #
 # TODO(emilio): This should probably do the right thing in most other
 # platforms, but stick to the standard colors on those.
-- name: widget.non-native.use-theme-accent
+- name: widget.non-native-theme.use-theme-accent
   type: bool
 #ifdef MOZ_WIDGET_GTK
   value: true

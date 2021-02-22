@@ -68,7 +68,7 @@ static LayoutDeviceIntCoord SnapBorderWidth(
 }
 
 static nscolor ThemedAccentColor(bool aBackground) {
-  MOZ_ASSERT(StaticPrefs::widget_non_native_use_theme_accent());
+  MOZ_ASSERT(StaticPrefs::widget_non_native_theme_use_theme_accent());
   nscolor color = LookAndFeel::GetColor(
       aBackground ? LookAndFeel::ColorID::MozAccentColor
                   : LookAndFeel::ColorID::MozAccentColorForeground);
@@ -103,7 +103,7 @@ void nsNativeBasicTheme::LookAndFeelChanged() { RecomputeAccentColors(); }
 void nsNativeBasicTheme::RecomputeAccentColors() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (!StaticPrefs::widget_non_native_use_theme_accent()) {
+  if (!StaticPrefs::widget_non_native_theme_use_theme_accent()) {
     sAccentColorForeground = sColorWhite;
     sAccentColor =
         sRGBColor::UnusualFromARGB(0xff0060df);  // Luminance: 13.69346%
