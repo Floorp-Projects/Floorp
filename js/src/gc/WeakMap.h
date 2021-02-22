@@ -83,7 +83,7 @@ bool CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key, Cell* value);
 //    - when key is marked, weakKeys[key] triggers marking of value in
 //      `markImplicitEdges()`
 //   map marked, key inserted into map, key marked:
-//    - value marked by insert barrier in `barrierForInsert`
+//    - value was live when inserted and must get marked at some point
 //
 
 using WeakMapColors = HashMap<WeakMapBase*, js::gc::CellColor,
@@ -272,46 +272,31 @@ class WeakMap
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
-    if (!Base::add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v))) {
-      return false;
-    }
-    barrierForInsert(p->key(), p->value());
-    return true;
+    return Base::add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
-    if (!Base::relookupOrAdd(p, std::forward<KeyInput>(k),
-                             std::forward<ValueInput>(v))) {
-      return false;
-    }
-    barrierForInsert(p->key(), p->value());
-    return true;
+    return Base::relookupOrAdd(p, std::forward<KeyInput>(k),
+                               std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool put(KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
-    AddPtr p = lookupForAdd(k);
-    if (p) {
-      p->value() = std::forward<ValueInput>(v);
-      return true;
-    }
-    return add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
+    return Base::put(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool putNew(KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
-    barrierForInsert(k, v);
     return Base::putNew(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   void putNewInfallible(KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
-    barrierForInsert(k, v);
     Base::putNewInfallible(std::forward(k), std::forward<KeyInput>(k));
   }
 
@@ -339,25 +324,6 @@ class WeakMap
 
  protected:
   inline void forgetKey(UnbarrieredKey key);
-
-  void barrierForInsert(Key k, const Value& v) {
-    auto mapZone = JS::shadow::Zone::from(zone());
-    MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(mapZone));
-
-    assertMapIsSameZoneWithValue(v);
-    if (!mapColor) {
-      return;
-    }
-
-    if (!mapZone->needsIncrementalBarrier()) {
-      return;
-    }
-
-    JSTracer* trc = mapZone->barrierTracer();
-    Value tmp = v;
-    TraceEdge(trc, &tmp, "weakmap inserted value");
-    MOZ_ASSERT(tmp == v);
-  }
 
   inline void assertMapIsSameZoneWithValue(const Value& v);
 
