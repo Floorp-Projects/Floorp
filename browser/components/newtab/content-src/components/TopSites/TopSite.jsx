@@ -18,7 +18,9 @@ import React from "react";
 import { ScreenshotUtils } from "content-src/lib/screenshot-utils";
 import { TOP_SITES_MAX_SITES_PER_ROW } from "common/Reducers.jsm";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
+import { TopSiteImpressionWrapper } from "./TopSiteImpressionWrapper";
 const SPOC_TYPE = "SPOC";
+const NEWTAB_SOURCE = "newtab";
 
 export class TopSiteLink extends React.PureComponent {
   constructor(props) {
@@ -393,6 +395,19 @@ export class TopSiteLink extends React.PureComponent {
               source={TOP_SITES_SOURCE}
             />
           ) : null}
+          {/* Set up an impression wrapper for the sponsored TopSite */}
+          {link.sponsored_position ? (
+            <TopSiteImpressionWrapper
+              tile={{
+                position: this.props.index + 1,
+                tile_id: link.sponsored_tile_id || -1,
+                reporting_url: link.sponsored_impression_url,
+                advertiser: title.toLocaleLowerCase(),
+                source: NEWTAB_SOURCE,
+              }}
+              dispatch={this.props.dispatch}
+            />
+          ) : null}
         </div>
       </li>
     );
@@ -490,6 +505,22 @@ export class TopSite extends React.PureComponent {
             data: {
               targetURL: this.props.link.url,
               source: "newtab",
+            },
+          })
+        );
+      }
+      if (this.props.link.sponsored_position) {
+        const title = this.props.link.label || this.props.link.hostname;
+        this.props.dispatch(
+          ac.OnlyToMain({
+            type: at.TOP_SITES_IMPRESSION_STATS,
+            data: {
+              type: "click",
+              position: this.props.index + 1,
+              tile_id: this.props.link.sponsored_tile_id || -1,
+              reporting_url: this.props.link.sponsored_click_url,
+              advertiser: title.toLocaleLowerCase(),
+              source: NEWTAB_SOURCE,
             },
           })
         );
