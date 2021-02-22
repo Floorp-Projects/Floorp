@@ -62,6 +62,7 @@ EXPORTS.mozilla.dom += [
     "IpdlQueue.h",
     "OffscreenCanvas.h",
     "QueueParamTraits.h",
+    "SanitizeRenderer.h",
     "TextMetrics.h",
     "WebGLChild.h",
     "WebGLCommandQueue.h",
@@ -175,6 +176,10 @@ SOURCES += [
 
 IPDL_SOURCES += [
     "PWebGL.ipdl",
+]
+
+TEST_DIRS += [
+    "gtest",
 ]
 
 # Suppress warnings from third-party code.
