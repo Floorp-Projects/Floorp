@@ -308,7 +308,10 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
             "tests",
             metavar="TEST_PATH",
             nargs="*",
-            help="Path to test file, manifest file, or directory containing tests",
+            help="Path to test file, manifest file, or directory containing "
+            "tests. For jstestbrowser, the relative path can be either from "
+            "topsrcdir or the staged area "
+            "($OBJDIR/dist/test-stage/jsreftest/tests)",
         )
 
         self.add_argument(
