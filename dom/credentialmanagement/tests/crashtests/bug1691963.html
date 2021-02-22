@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const frame = document.createElement("frame");
+      document.body.appendChild(frame);
+      const { credentials } = frame.contentWindow.navigator;
+
+      let i = 0;
+      setInterval(async () => {
+        if (i++ > 3) {
+          document.documentElement.removeAttribute("class");
+        }
+        try {
+          await credentials.get({
+            publicKey: {
+              challenge: new Uint8Array(128),
+              allowCredentials: [{ type: 'public-key', id: new TextEncoder().encode('FOOBAR'), }],
+            },
+          });
+        } catch (e) {}
+        frame.remove();
+      }, 1000);
+    }, { once: true });
+  </script>
+</head>
+</html>
