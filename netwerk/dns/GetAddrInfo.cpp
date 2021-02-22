@@ -446,7 +446,7 @@ NS_IMETHODIMP NativeDNSResolverOverride::ClearHostOverride(
     const nsACString& aHost) {
   AutoWriteLock lock(mLock);
   mCnames.Remove(aHost);
-  auto overrides = mOverrides.GetAndRemove(aHost);
+  auto overrides = mOverrides.Extract(aHost);
   if (!overrides) {
     return NS_OK;
   }

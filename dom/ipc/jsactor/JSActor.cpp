@@ -324,7 +324,7 @@ void JSActor::ReceiveQueryReply(JSContext* aCx,
     return;
   }
 
-  Maybe<PendingQuery> query = mPendingQueries.GetAndRemove(aMetadata.queryId());
+  Maybe<PendingQuery> query = mPendingQueries.Extract(aMetadata.queryId());
   if (NS_WARN_IF(!query)) {
     aRv.ThrowUnknownError("Received reply for non-pending query");
     return;

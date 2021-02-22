@@ -380,7 +380,7 @@ struct DefaultConstructible_DefaultConstructible {
   static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue_Fallible = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Remove_OutputParam = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Remove = 1;
-  static constexpr uint32_t kExpectedAddRefCnt_GetAndRemove = 1;
+  static constexpr uint32_t kExpectedAddRefCnt_Extract = 1;
   static constexpr uint32_t kExpectedAddRefCnt_RemoveIf = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Lookup = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Lookup_Remove = 1;
@@ -415,7 +415,7 @@ struct NonDefaultConstructible_NonDefaultConstructible {
   static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue = 2;
   static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue_Fallible = 2;
   static constexpr uint32_t kExpectedAddRefCnt_Remove = 2;
-  static constexpr uint32_t kExpectedAddRefCnt_GetAndRemove = 3;
+  static constexpr uint32_t kExpectedAddRefCnt_Extract = 3;
   static constexpr uint32_t kExpectedAddRefCnt_RemoveIf = 2;
   static constexpr uint32_t kExpectedAddRefCnt_Lookup = 2;
   static constexpr uint32_t kExpectedAddRefCnt_Lookup_Remove = 2;
@@ -447,7 +447,7 @@ struct NonDefaultConstructible_MovingNonDefaultConstructible {
   static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue_Fallible = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Remove = 1;
-  static constexpr uint32_t kExpectedAddRefCnt_GetAndRemove = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Extract = 2;
   static constexpr uint32_t kExpectedAddRefCnt_RemoveIf = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Lookup = 1;
   static constexpr uint32_t kExpectedAddRefCnt_Lookup_Remove = 1;
@@ -800,11 +800,11 @@ TYPED_TEST_P(BaseHashtableTest, Remove) {
   EXPECT_TRUE(res);
 }
 
-TYPED_TEST_P(BaseHashtableTest, GetAndRemove) {
+TYPED_TEST_P(BaseHashtableTest, Extract) {
   auto table =
-      MakeBaseHashtable<TypeParam>(TypeParam::kExpectedAddRefCnt_GetAndRemove);
+      MakeBaseHashtable<TypeParam>(TypeParam::kExpectedAddRefCnt_Extract);
 
-  auto maybeData = table.GetAndRemove(1);
+  auto maybeData = table.Extract(1);
   EXPECT_TRUE(maybeData);
   EXPECT_EQ(maybeData->CharRef()->GetChar(), 42u);
 }
@@ -995,9 +995,9 @@ REGISTER_TYPED_TEST_CASE_P(
     GetOrInsert_Default, GetOrInsert_NonDefault,
     GetOrInsert_NonDefault_AlreadyPresent, GetOrInsertWith,
     GetOrInsertWith_AlreadyPresent, Put, Put_Fallible, Put_Rvalue,
-    Put_Rvalue_Fallible, Remove_OutputParam, Remove, GetAndRemove, RemoveIf,
-    Lookup, Lookup_Remove, WithEntryHandle_NoOp,
-    WithEntryHandle_NotFound_OrInsert, WithEntryHandle_NotFound_OrInsertFrom,
+    Put_Rvalue_Fallible, Remove_OutputParam, Remove, Extract, RemoveIf, Lookup,
+    Lookup_Remove, WithEntryHandle_NoOp, WithEntryHandle_NotFound_OrInsert,
+    WithEntryHandle_NotFound_OrInsertFrom,
     WithEntryHandle_NotFound_OrInsertFrom_Exists,
     WithEntryHandle_NotFound_OrRemove, WithEntryHandle_NotFound_OrRemove_Exists,
     Iter, ConstIter, begin_end, cbegin_cend, Clear, ShallowSizeOfExcludingThis,
