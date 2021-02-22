@@ -125,7 +125,7 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 }
 
 void nsNativeBasicThemeGTK::PaintScrollbarThumb(
-    DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
@@ -149,7 +149,7 @@ void nsNativeBasicThemeGTK::PaintScrollbarThumb(
                              radius / aDpiRatio, aDpiRatio);
 }
 
-void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget* aDrawTarget,
+void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget& aDrawTarget,
                                            const LayoutDeviceRect& aRect,
                                            bool aHorizontal, nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
@@ -158,11 +158,11 @@ void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget* aDrawTarget,
   auto [trackColor, borderColor] =
       ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
   Unused << borderColor;
-  aDrawTarget->FillRect(aRect.ToUnknownRect(),
-                        gfx::ColorPattern(ToDeviceColor(trackColor)));
+  aDrawTarget.FillRect(aRect.ToUnknownRect(),
+                       gfx::ColorPattern(ToDeviceColor(trackColor)));
 }
 
-void nsNativeBasicThemeGTK::PaintScrollCorner(DrawTarget* aDrawTarget,
+void nsNativeBasicThemeGTK::PaintScrollCorner(DrawTarget& aDrawTarget,
                                               const LayoutDeviceRect& aRect,
                                               nsIFrame* aFrame,
                                               const ComputedStyle& aStyle,
@@ -171,6 +171,6 @@ void nsNativeBasicThemeGTK::PaintScrollCorner(DrawTarget* aDrawTarget,
   auto [trackColor, borderColor] =
       ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
   Unused << borderColor;
-  aDrawTarget->FillRect(aRect.ToUnknownRect(),
-                        gfx::ColorPattern(ToDeviceColor(trackColor)));
+  aDrawTarget.FillRect(aRect.ToUnknownRect(),
+                       gfx::ColorPattern(ToDeviceColor(trackColor)));
 }
