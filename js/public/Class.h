@@ -790,7 +790,7 @@ struct alignas(js::gc::JSClassAlignBytes) JSClass {
    */
   static const uint32_t NON_NATIVE = JSCLASS_INTERNAL_FLAG2;
 
-  bool isNative() const { return !(flags & NON_NATIVE); }
+  bool isNativeObject() const { return !(flags & NON_NATIVE); }
 
   bool hasPrivate() const { return !!(flags & JSCLASS_HAS_PRIVATE); }
 

@@ -2011,7 +2011,7 @@ bool js::intrinsic_GetElemBaseForLambda(JSContext* cx, unsigned argc,
 
   JSObject& bobj = b.toObject();
   const JSClass* clasp = bobj.getClass();
-  if (!clasp->isNative() || clasp->getOpsLookupProperty() ||
+  if (!clasp->isNativeObject() || clasp->getOpsLookupProperty() ||
       clasp->getOpsGetProperty()) {
     return true;
   }

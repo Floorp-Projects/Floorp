@@ -450,7 +450,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   debugCheckNewObject(group, shape, kind, heap);
 
   const JSClass* clasp = group->clasp();
-  MOZ_ASSERT(clasp->isNative());
+  MOZ_ASSERT(clasp->isNativeObject());
   MOZ_ASSERT(!clasp->isJSFunction(), "should use JSFunction::create");
 
   size_t nDynamicSlots =
