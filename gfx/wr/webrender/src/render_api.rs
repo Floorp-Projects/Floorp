@@ -155,8 +155,13 @@ pub struct Transaction {
     /// Persistent resource updates to apply as part of this transaction.
     pub resource_updates: Vec<ResourceUpdate>,
 
-    /// If true the transaction is piped through the scene building thread, if false
-    /// it will be applied directly on the render backend.
+    /// True if the transaction needs the scene building thread's attention.
+    /// False for things that can skip the scene builder, like APZ changes and
+    /// async images.
+    ///
+    /// Before this `Transaction` is converted to a `TransactionMsg`, we look
+    /// over its contents and set this if we're doing anything the scene builder
+    /// needs to know about, so this is only a default.
     use_scene_builder_thread: bool,
 
     /// Whether to generate a frame, and if so, an id that allows tracking this
@@ -1302,7 +1307,6 @@ impl RenderApi {
 
         self.resources.update(&mut transaction);
 
-        transaction.use_scene_builder_thread |= !transaction.scene_ops.is_empty();
         if transaction.generate_frame.as_bool() {
             transaction.profile.start_time(profiler::API_SEND_TIME);
             transaction.profile.start_time(profiler::TOTAL_FRAME_CPU_TIME);
