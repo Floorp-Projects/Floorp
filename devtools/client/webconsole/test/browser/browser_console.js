@@ -72,6 +72,11 @@ async function testMessages(hud) {
   Cu.reportError(error);
   Cu.nukeSandbox(sandbox);
 
+  // Check privileged message from a content process
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    Cu.reportError("privileged content process message");
+  });
+
   // Add a message from a content window.
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.console.log("message from content window");
@@ -81,11 +86,9 @@ async function testMessages(hud) {
   execute(hud, "document.location.href");
 
   // Test eval frame script
-  execute(
-    hud,
-    `gBrowser.selectedBrowser.messageManager.loadFrameScript(` +
-      `'data:application/javascript,console.log("framescript-message")', false);` +
-      `"framescript-eval";`
+  gBrowser.selectedBrowser.messageManager.loadFrameScript(
+    `data:application/javascript,console.log("framescript-message")`,
+    false
   );
 
   // Check for network requests.
@@ -112,10 +115,10 @@ async function testMessages(hud) {
     "error thrown from test-cu-reporterror.js via Cu.reportError()"
   );
   await checkMessageExists(hud, "error from nuked globals");
+  await checkMessageExists(hud, "privileged content process message");
   await checkMessageExists(hud, "message from content window");
   await checkMessageExists(hud, "browser.xhtml");
-  await checkMessageExists(hud, "framescript-eval");
-  await checkMessageExists(hud, "framescript-message");
+  await checkMessageExists(hud, "framescript-message", 2);
   await checkMessageExists(hud, "foobarException");
   await checkMessageExists(hud, "test-console.html");
   await checkMessageExists(hud, "404.html");
@@ -124,9 +127,9 @@ async function testMessages(hud) {
 
 async function checkMessageExists(hud, msg) {
   info(`Checking "${msg}" was logged`);
-  const message = await waitFor(
-    () => findMessage(hud, msg),
-    `Couldn't find "${msg}"`
-  );
-  ok(message, `"${msg}" was logged`);
+  const messages = await waitFor(() => {
+    const msgs = findMessages(hud, msg);
+    return msgs.length > 0 ? msgs : null;
+  });
+  is(messages.length, 1, `"${msg}" was logged once`);
 }

@@ -143,11 +143,11 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           //
           // New server-side resources can be gated behind
           // `devtools.testing.enableServerWatcherSupport` if needed.
-          [Resources.TYPES.CONSOLE_MESSAGE]: true,
+          [Resources.TYPES.CONSOLE_MESSAGE]: hasBrowserElement,
           [Resources.TYPES.CSS_CHANGE]: hasBrowserElement,
-          [Resources.TYPES.CSS_MESSAGE]: true,
+          [Resources.TYPES.CSS_MESSAGE]: hasBrowserElement,
           [Resources.TYPES.DOCUMENT_EVENT]: hasBrowserElement,
-          [Resources.TYPES.ERROR_MESSAGE]: true,
+          [Resources.TYPES.ERROR_MESSAGE]: hasBrowserElement,
           [Resources.TYPES.LOCAL_STORAGE]: hasBrowserElement,
           [Resources.TYPES.SESSION_STORAGE]: hasBrowserElement,
           [Resources.TYPES.PLATFORM_MESSAGE]: true,
