@@ -179,6 +179,8 @@ mochitest-browser-chrome-apple-silicon:
         chunked: true
         extra-options:
             - --run-failures=apple_silicon
+            - --timeout-as-pass
+            - --crash-as-pass
 
 browser-screenshots:
     description: "Browser Screenshots"
@@ -411,6 +413,8 @@ mochitest-media-apple-silicon:
         extra-options:
             - --setpref=webgl.out-of-process=false
             - --run-failures=apple_silicon
+            - --timeout-as-pass
+            - --crash-as-pass
 
 mochitest-plain-headless:
     description: "Mochitest plain headless run"
