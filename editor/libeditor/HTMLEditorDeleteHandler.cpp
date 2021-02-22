@@ -258,6 +258,23 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       AutoRangeArray& aRangesToDelete) const;
 
   /**
+   * GetAtomicContnetToDelete() returns better content that is deletion of
+   * atomic element.  If aScanFromCaretPointResult is special, since this
+   * point may not be editable, we look for better point to remove atomic
+   * content.
+   *
+   * @param aDirectionAndAmount       Direction of the deletion.
+   * @param aWSRunScannerAtCaret      WSRunScanner instance which was
+   *                                  initialized with the caret point.
+   * @param aScanFromCaretPointResult Scan result of aWSRunScannerAtCaret
+   *                                  toward aDirectionAndAmount.
+   */
+  static nsIContent* GetAtomicContentToDelete(
+      nsIEditor::EDirection aDirectionAndAmount,
+      const WSRunScanner& aWSRunScannerAtCaret,
+      const WSScanResult& aScanFromCaretPointResult) MOZ_NONNULL_RETURN;
+
+  /**
    * HandleDeleteHRElement() handles deletion around `<hr>` element.  If
    * aDirectionAndAmount is nsIEditor::ePrevious, aHTElement is removed only
    * when caret is at next sibling of the `<hr>` element and inter line position
@@ -1637,8 +1654,16 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
         aWSRunScannerAtCaret.GetEditingHost()) {
       return NS_OK;
     }
+    nsIContent* atomicContent = GetAtomicContentToDelete(
+        aDirectionAndAmount, aWSRunScannerAtCaret, aScanFromCaretPointResult);
+    if (!HTMLEditUtils::IsRemovableNode(*atomicContent)) {
+      NS_WARNING(
+          "AutoDeleteRangesHandler::GetAtomicContentToDelete() cannot find "
+          "removable atomic content");
+      return NS_ERROR_FAILURE;
+    }
     nsresult rv = ComputeRangesToDeleteAtomicContent(
-        aHTMLEditor, *aScanFromCaretPointResult.GetContent(), aRangesToDelete);
+        aHTMLEditor, *atomicContent, aRangesToDelete);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "AutoDeleteRangesHandler::ComputeRangesToDeleteAtomicContent() failed");
@@ -1665,6 +1690,10 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
     if (NS_WARN_IF(!aScanFromCaretPointResult.GetContent()->IsElement())) {
       return NS_ERROR_FAILURE;
     }
+    // TODO(m_kato):
+    // When aScanFromCaretPointResult.GetContent isn't editable and is
+    // removable, PrepareToDeleteAtOtherBlockBoundary will return false.
+    // But this should be removed.
     AutoBlockElementsJoiner joiner(*this);
     if (!joiner.PrepareToDeleteAtOtherBlockBoundary(
             aHTMLEditor, aDirectionAndAmount,
@@ -1764,9 +1793,17 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
         aWSRunScannerAtCaret.GetEditingHost()) {
       return EditActionHandled();
     }
+    nsCOMPtr<nsIContent> atomicContent = GetAtomicContentToDelete(
+        aDirectionAndAmount, aWSRunScannerAtCaret, aScanFromCaretPointResult);
+    if (!HTMLEditUtils::IsRemovableNode(*atomicContent)) {
+      NS_WARNING(
+          "AutoDeleteRangesHandler::GetAtomicContentToDelete() cannot find "
+          "removable atomic content");
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
     EditActionResult result = HandleDeleteAtomicContent(
-        aHTMLEditor, MOZ_KnownLive(*aScanFromCaretPointResult.GetContent()),
-        aWSRunScannerAtCaret.ScanStartRef(), aWSRunScannerAtCaret);
+        aHTMLEditor, *atomicContent, aWSRunScannerAtCaret.ScanStartRef(),
+        aWSRunScannerAtCaret);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "AutoDeleteRangesHandler::HandleDeleteAtomicContent() failed");
@@ -2262,6 +2299,38 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteHRElement(
                        "WhiteSpaceVisibilityKeeper::"
                        "DeleteContentNodeAndJoinTextNodesAroundIt() failed");
   return EditActionHandled(rv);
+}
+
+// static
+nsIContent* HTMLEditor::AutoDeleteRangesHandler::GetAtomicContentToDelete(
+    nsIEditor::EDirection aDirectionAndAmount,
+    const WSRunScanner& aWSRunScannerAtCaret,
+    const WSScanResult& aScanFromCaretPointResult) {
+  MOZ_ASSERT(aScanFromCaretPointResult.GetContent());
+
+  if (!aScanFromCaretPointResult.ReachedSpecialContent()) {
+    return aScanFromCaretPointResult.GetContent();
+  }
+
+  if (!aScanFromCaretPointResult.GetContent()->IsText() ||
+      HTMLEditUtils::IsRemovableNode(*aScanFromCaretPointResult.GetContent())) {
+    return aScanFromCaretPointResult.GetContent();
+  }
+
+  // aScanFromCaretPointResult is non-removable text node.
+  // Since we try removing atomic content, we look for removable node from
+  // scanned point that is non-removable text.
+  nsIContent* removableRoot = aScanFromCaretPointResult.GetContent();
+  while (removableRoot && !HTMLEditUtils::IsRemovableNode(*removableRoot)) {
+    removableRoot = removableRoot->GetParent();
+  }
+
+  if (removableRoot) {
+    return removableRoot;
+  }
+
+  // Not found better content. This content may not be removable.
+  return aScanFromCaretPointResult.GetContent();
 }
 
 nsresult
