@@ -848,15 +848,28 @@ impl GradientGpuBlockBuilder {
         start_color: &PremultipliedColorF,
         end_color: &PremultipliedColorF,
         entries: &mut [GradientDataEntry; GRADIENT_DATA_SIZE],
-    ) {
+        prev_step: &PremultipliedColorF,
+    ) -> PremultipliedColorF {
         // Calculate the color difference for individual steps in the ramp.
         let inv_steps = 1.0 / (end_idx - start_idx) as f32;
-        let step = PremultipliedColorF {
+        let mut step = PremultipliedColorF {
             r: (end_color.r - start_color.r) * inv_steps,
             g: (end_color.g - start_color.g) * inv_steps,
             b: (end_color.b - start_color.b) * inv_steps,
             a: (end_color.a - start_color.a) * inv_steps,
         };
+        // As a subtle form of compression, we ensure that the step values for
+        // each stop range are the same if and only if they belong to the same
+        // stop range. However, if two different stop ranges have the same step,
+        // we need to modify the steps so they compare unequally between ranges.
+        // This allows to quickly compare if two adjacent stops belong to the
+        // same range by comparing their steps.
+        if step == *prev_step {
+            // Modify the step alpha value as if by nextafter(). The difference
+            // here should be so small as to be unnoticeable, but yet allow it
+            // to compare differently.
+            step.a = f32::from_bits(if step.a == 0.0 { 1 } else { step.a.to_bits() + 1 });
+        }
 
         let mut cur_color = *start_color;
 
@@ -870,6 +883,8 @@ impl GradientGpuBlockBuilder {
             cur_color.a += step.a;
             entry.end_step = step;
         }
+
+        step
     }
 
     /// Compute an index into the gradient entry table based on a gradient stop offset. This
@@ -913,15 +928,16 @@ impl GradientGpuBlockBuilder {
         // range [0, 1]. The first and last entries hold the first and last color stop colors respectively,
         // while the entries in between hold the interpolated color stop values for the range [0, 1].
         let mut entries = [GradientDataEntry::white(); GRADIENT_DATA_SIZE];
-
+        let mut prev_step = cur_color;
         if reverse_stops {
             // Fill in the first entry (for reversed stops) with the first color stop
-            GradientGpuBlockBuilder::fill_colors(
+            prev_step = GradientGpuBlockBuilder::fill_colors(
                 GRADIENT_DATA_LAST_STOP,
                 GRADIENT_DATA_LAST_STOP + 1,
                 &cur_color,
                 &cur_color,
                 &mut entries,
+                &prev_step,
             );
 
             // Fill in the center of the gradient table, generating a color ramp between each consecutive pair
@@ -933,12 +949,13 @@ impl GradientGpuBlockBuilder {
                 let next_idx = Self::get_index(1.0 - next.offset);
 
                 if next_idx < cur_idx {
-                    GradientGpuBlockBuilder::fill_colors(
+                    prev_step = GradientGpuBlockBuilder::fill_colors(
                         next_idx,
                         cur_idx,
                         &next_color,
                         &cur_color,
                         &mut entries,
+                        &prev_step,
                     );
                     cur_idx = next_idx;
                 }
@@ -956,15 +973,17 @@ impl GradientGpuBlockBuilder {
                 &cur_color,
                 &cur_color,
                 &mut entries,
+                &prev_step,
             );
         } else {
             // Fill in the first entry with the first color stop
-            GradientGpuBlockBuilder::fill_colors(
+            prev_step = GradientGpuBlockBuilder::fill_colors(
                 GRADIENT_DATA_FIRST_STOP,
                 GRADIENT_DATA_FIRST_STOP + 1,
                 &cur_color,
                 &cur_color,
                 &mut entries,
+                &prev_step,
             );
 
             // Fill in the center of the gradient table, generating a color ramp between each consecutive pair
@@ -976,12 +995,13 @@ impl GradientGpuBlockBuilder {
                 let next_idx = Self::get_index(next.offset);
 
                 if next_idx > cur_idx {
-                    GradientGpuBlockBuilder::fill_colors(
+                    prev_step = GradientGpuBlockBuilder::fill_colors(
                         cur_idx,
                         next_idx,
                         &cur_color,
                         &next_color,
                         &mut entries,
+                        &prev_step,
                     );
                     cur_idx = next_idx;
                 }
@@ -999,6 +1019,7 @@ impl GradientGpuBlockBuilder {
                 &cur_color,
                 &cur_color,
                 &mut entries,
+                &prev_step,
             );
         }
 
