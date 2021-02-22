@@ -316,7 +316,9 @@ class Settings extends PureComponent {
           threadColumns.map(this._renderThreadsColumns)
         ),
         div(
-          { className: "perf-settings-all-threads" },
+          {
+            className: "perf-settings-checkbox-label perf-settings-all-threads",
+          },
           label(
             {
               className: "toggle-container-with-text",
