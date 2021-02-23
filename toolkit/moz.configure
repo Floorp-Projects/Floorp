@@ -1910,7 +1910,7 @@ with only_when(compile_environment | artifact_builds):
     # on a compiler test, so we have to do a little bit of dance here.
     @depends(ffvpx, vpx_as_flags, target)
     def ffvpx(ffvpx, vpx_as_flags, target):
-        if ffvpx and target.cpu in ("arm", "aarch64"):
+        if ffvpx and vpx_as_flags and target.cpu in ("arm", "aarch64"):
             ffvpx.flags.extend(vpx_as_flags)
         return ffvpx
 
