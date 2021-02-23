@@ -627,7 +627,9 @@ add_resultBuckets_task({
     // remote suggestions: round(10 * (1 / 3)) = 3
     ...makeIndexRange(MAX_RESULTS, 3),
     // form history: round(10 * (1 / 3)) = 3
-    ...makeIndexRange(0, 3),
+    // The first three form history results dupe the three remote suggestions,
+    // so they should not be included.
+    ...makeIndexRange(3, 3),
   ],
 });
 
@@ -661,7 +663,9 @@ add_resultBuckets_task({
     // remote suggestions: round(10 * (1 / 4)) = 3
     ...makeIndexRange(MAX_RESULTS, 3),
     // form history: round(10 * (1 / 4)) = 3, but context.maxResults is 10, so 2
-    ...makeIndexRange(0, 2),
+    // The first three form history results dupe the three remote suggestions,
+    // so they should not be included.
+    ...makeIndexRange(3, 2),
   ],
 });
 
@@ -695,7 +699,9 @@ add_resultBuckets_task({
     // remote suggestions: round(10 * (2 / 4)) = 5
     ...makeIndexRange(MAX_RESULTS, 5),
     // form history: round(10 * (1 / 4)) = 3, but context.maxResults is 10, so 2
-    ...makeIndexRange(0, 2),
+    // The first five form history results dupe the five remote suggestions, so
+    // they should not be included.
+    ...makeIndexRange(5, 2),
   ],
 });
 
@@ -729,7 +735,9 @@ add_resultBuckets_task({
     // remote suggestions: round(10 * (1 / 4)) = 3
     ...makeIndexRange(MAX_RESULTS, 3),
     // form history: round(10 * (2 / 4)) = 5, but context.maxResults is 10, so 4
-    ...makeIndexRange(0, 4),
+    // The first three form history results dupe the three remote suggestions,
+    // so they should not be included.
+    ...makeIndexRange(3, 4),
   ],
 });
 
@@ -763,7 +771,9 @@ add_resultBuckets_task({
     // remote suggestions
     ...makeIndexRange(MAX_RESULTS, 1),
     // form history: 10 - (2 + 1) = 7
-    ...makeIndexRange(0, 7),
+    // The first form history result dupes the remote suggestion, so it should
+    // not be included.
+    ...makeIndexRange(1, 7),
   ],
 });
 
@@ -797,7 +807,9 @@ add_resultBuckets_task({
     // remote suggestions
     ...makeIndexRange(MAX_RESULTS, 1),
     // form history: 10 - (2 + 1) = 7
-    ...makeIndexRange(0, 7),
+    // The first form history result dupes the remote suggestion, so it should
+    // not be included.
+    ...makeIndexRange(1, 7),
   ],
 });
 
@@ -862,7 +874,9 @@ add_resultBuckets_task({
     // remote suggestions
     ...makeIndexRange(MAX_RESULTS, 1),
     // form history: round(9 * (1 / (2 + 0 + 1))) = 3
-    ...makeIndexRange(0, 3),
+    // The first form history result dupes the remote suggestion, so it should
+    // not be included.
+    ...makeIndexRange(1, 3),
   ],
 });
 
@@ -975,7 +989,9 @@ add_resultBuckets_task({
     // remote suggestions: round(7 * (2 / (2 + 1))) = 5
     ...makeIndexRange(0, 5),
     // form history: round(3 * (2 / (2 + 1))) = 2
-    ...makeIndexRange(MAX_RESULTS, 2),
+    // The first five form history results dupe the five remote suggestions, so
+    // they should not be included.
+    ...makeIndexRange(MAX_RESULTS + 5, 2),
     // general: round(3 * (1 / (2 + 1))) = 1
     ...makeIndexRange(2 * MAX_RESULTS + 2, 1),
   ],
@@ -1019,7 +1035,9 @@ add_resultBuckets_task({
     // remote suggestions: round(7 * (2 / (2 + 1))) = 5
     ...makeIndexRange(0, 5),
     // form history: round(3 * (2 / (2 + 1))) = 2
-    ...makeIndexRange(MAX_RESULTS, 3),
+    // The first five form history results dupe the five remote suggestions, so
+    // they should not be included.
+    ...makeIndexRange(MAX_RESULTS + 5, 3),
   ],
 });
 
@@ -1058,7 +1076,9 @@ add_resultBuckets_task({
     // remote suggestions: round(7 * (2 / (2 + 1))) = 5
     ...makeIndexRange(0, 5),
     // form history: round(3 * (2 / (2 + 1))) = 2
-    ...makeIndexRange(MAX_RESULTS, 3),
+    // The first five form history results dupe the five remote suggestions, so
+    // they should not be included.
+    ...makeIndexRange(MAX_RESULTS + 5, 3),
   ],
 });
 
@@ -1111,7 +1131,9 @@ add_resultBuckets_task({
 
     // outer 2: form history & general: round(10 * (1 / (2 + 1))) = 3
     // inner 1: form history: round(3 * (2 / (2 + 1))) = 2
-    ...makeIndexRange(MAX_RESULTS, 2),
+    // The first five form history results dupe the five remote suggestions, so
+    // they should not be included.
+    ...makeIndexRange(MAX_RESULTS + 5, 2),
     // inner 2: general: round(3 * (1 / (2 + 1))) = 1
     ...makeIndexRange(2 * MAX_RESULTS + 2, 1),
   ],
@@ -1164,7 +1186,9 @@ add_resultBuckets_task({
 
     // outer 2: form history & general: round(10 * (1 / (2 + 1))) = 3
     // inner 1: form history: round(3 * (2 / (2 + 0))) = 3
-    ...makeIndexRange(MAX_RESULTS, 3),
+    // The first seven form history results dupe the seven remote suggestions,
+    // so they should not be included.
+    ...makeIndexRange(MAX_RESULTS + 7, 3),
     // inner 2: general: no results
   ],
 });
