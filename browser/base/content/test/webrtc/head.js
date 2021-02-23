@@ -736,15 +736,55 @@ async function reloadAndAssertClosedStreams() {
 function checkDeviceSelectors(aAudio, aVideo, aScreen, aWindow = window) {
   let document = aWindow.document;
   let micSelector = document.getElementById("webRTC-selectMicrophone");
+  let micDeck = document.getElementById("webRTC-selectMicrophone-deck");
+  let micLabel = document.getElementById("webRTC-selectMicrophone-label");
   if (aAudio) {
     ok(!micSelector.hidden, "microphone selector visible");
+    let micSelectorList = document.getElementById(
+      "webRTC-selectMicrophone-menulist"
+    );
+    // If there's only 1 device listed, the deck should show the label instead.
+    if (micSelectorList.itemCount == 1) {
+      is(micDeck.selectedIndex, "1", "Should be showing the microphone label.");
+      is(
+        micLabel.value,
+        micSelectorList.selectedItem.getAttribute("label"),
+        "Label should be showing the lone device label."
+      );
+    } else {
+      is(
+        micDeck.selectedIndex,
+        "0",
+        "Should be showing the microphone menulist."
+      );
+    }
   } else {
     ok(micSelector.hidden, "microphone selector hidden");
   }
 
   let cameraSelector = document.getElementById("webRTC-selectCamera");
+  let cameraDeck = document.getElementById("webRTC-selectCamera-deck");
+  let cameraLabel = document.getElementById("webRTC-selectCamera-label");
   if (aVideo) {
     ok(!cameraSelector.hidden, "camera selector visible");
+    let cameraSelectorList = document.getElementById(
+      "webRTC-selectCamera-menulist"
+    );
+    // If there's only 1 device listed, the deck should show the label instead.
+    if (cameraSelectorList.itemCount == 1) {
+      is(cameraDeck.selectedIndex, "1", "Should be showing the camera label.");
+      is(
+        cameraLabel.value,
+        cameraSelectorList.selectedItem.getAttribute("label"),
+        "Label should be showing the lone device label."
+      );
+    } else {
+      is(
+        cameraDeck.selectedIndex,
+        "0",
+        "Should be showing the camera menulist."
+      );
+    }
   } else {
     ok(cameraSelector.hidden, "camera selector hidden");
   }
