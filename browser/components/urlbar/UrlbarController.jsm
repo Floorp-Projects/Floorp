@@ -743,7 +743,12 @@ class TelemetryEvent {
       searchString,
     };
 
-    this._controller.manager.notifyEngagementChange(this._isPrivate, "start");
+    let { queryContext } = this._controller._lastQueryContextWrapper || {};
+    this._controller.manager.notifyEngagementChange(
+      this._isPrivate,
+      "start",
+      queryContext
+    );
   }
 
   /**
@@ -783,9 +788,11 @@ class TelemetryEvent {
   _internalRecord(event, details) {
     if (!this._category || !this._startEventInfo) {
       if (this._discarded && this._category) {
+        let { queryContext } = this._controller._lastQueryContextWrapper || {};
         this._controller.manager.notifyEngagementChange(
           this._isPrivate,
-          "discard"
+          "discard",
+          queryContext
         );
       }
       return;
@@ -859,7 +866,13 @@ class TelemetryEvent {
       extra
     );
 
-    this._controller.manager.notifyEngagementChange(this._isPrivate, method);
+    let { queryContext } = this._controller._lastQueryContextWrapper || {};
+    this._controller.manager.notifyEngagementChange(
+      this._isPrivate,
+      method,
+      queryContext,
+      details
+    );
   }
 
   /**
