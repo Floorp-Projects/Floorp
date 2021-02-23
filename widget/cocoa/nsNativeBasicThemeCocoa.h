@@ -26,26 +26,64 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
-  void PaintScrollbarThumb(DrawTarget&,
-                           const LayoutDeviceRect& aRect, bool aHorizontal,
-                           nsIFrame* aFrame, const ComputedStyle& aStyle,
+  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState,
                            DPIRatio aDpiRatio) override;
-  void PaintScrollbarTrack(DrawTarget&,
-                           const LayoutDeviceRect& aRect, bool aHorizontal,
-                           nsIFrame* aFrame, const ComputedStyle& aStyle,
+  bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
+                           const EventStates& aElementState,
+                           const EventStates& aDocumentState,
+                           DPIRatio aDpiRatio) override {
+    // TODO: Seems this should be relatively straight-forward.
+    return false;
+  }
+
+  bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
                            const EventStates& aDocumentState,
                            DPIRatio aDpiRatio) override;
-  void PaintScrollbar(DrawTarget&, const LayoutDeviceRect& aRect,
+  bool PaintScrollbarTrack(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                           bool aHorizontal, nsIFrame* aFrame,
+                           const ComputedStyle& aStyle,
+                           const EventStates& aDocumentState,
+                           DPIRatio aDpiRatio) override {
+    // TODO: Seems this should be relatively straight-forward.
+    return false;
+  }
+
+  bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect& aRect,
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
                       const EventStates& aDocumentState,
-                      DPIRatio aDpiRatio) override;
-  void PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
+                      DPIRatio aDpiRatio) override {
+    // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
+    return true;
+  }
+  bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                      bool aHorizontal, nsIFrame* aFrame,
+                      const ComputedStyle& aStyle,
+                      const EventStates& aDocumentState,
+                      DPIRatio aDpiRatio) override {
+    // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
+    return true;
+  }
+
+  bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
                          const EventStates& aDocumentState,
                          DPIRatio aDpiRatio) override;
+  bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect& aRect,
+                         nsIFrame* aFrame, const ComputedStyle& aStyle,
+                         const EventStates& aDocumentState,
+                         DPIRatio aDpiRatio) override {
+    // TODO: Seems this should be relatively straight-forward.
+    return false;
+  }
 
  protected:
   virtual ~nsNativeBasicThemeCocoa() = default;

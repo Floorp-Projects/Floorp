@@ -468,16 +468,22 @@ static inline wr::BorderRadius EmptyBorderRadius() {
 }
 
 static inline wr::BorderRadius ToBorderRadius(
-    const mozilla::LayoutDeviceSize& topLeft,
-    const mozilla::LayoutDeviceSize& topRight,
-    const mozilla::LayoutDeviceSize& bottomLeft,
-    const mozilla::LayoutDeviceSize& bottomRight) {
+    const LayoutDeviceSize& topLeft, const LayoutDeviceSize& topRight,
+    const LayoutDeviceSize& bottomLeft, const LayoutDeviceSize& bottomRight) {
   wr::BorderRadius br;
   br.top_left = ToLayoutSize(topLeft);
   br.top_right = ToLayoutSize(topRight);
   br.bottom_left = ToLayoutSize(bottomLeft);
   br.bottom_right = ToLayoutSize(bottomRight);
   return br;
+}
+
+static inline wr::BorderRadius ToBorderRadius(
+    const gfx::RectCornerRadii& aRadii) {
+  return ToBorderRadius(LayoutDeviceSize::FromUnknownSize(aRadii[0]),
+                        LayoutDeviceSize::FromUnknownSize(aRadii[1]),
+                        LayoutDeviceSize::FromUnknownSize(aRadii[3]),
+                        LayoutDeviceSize::FromUnknownSize(aRadii[2]));
 }
 
 static inline wr::ComplexClipRegion ToComplexClipRegion(
