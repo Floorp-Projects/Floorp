@@ -124,9 +124,10 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsNativeBasicThemeGTK::PaintScrollbarThumb(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+template <typename PaintBackendData>
+bool nsNativeBasicThemeGTK::DoPaintScrollbarThumb(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
   sRGBColor thumbColor =
@@ -146,32 +147,91 @@ void nsNativeBasicThemeGTK::PaintScrollbarThumb(
           ? (aHorizontal ? thumbRect.height : thumbRect.width) / 2.0f
           : 0.0f;
 
-  PaintRoundedRectWithRadius(aDrawTarget, thumbRect, thumbColor, sRGBColor(), 0,
+  PaintRoundedRectWithRadius(aPaintData, thumbRect, thumbColor, sRGBColor(), 0,
                              radius / aDpiRatio, aDpiRatio);
+  return true;
 }
 
-void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget& aDrawTarget,
+bool nsNativeBasicThemeGTK::PaintScrollbarThumb(
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    DPIRatio aDpiRatio) {
+  return DoPaintScrollbarThumb(aDrawTarget, aRect, aHorizontal, aFrame, aStyle,
+                               aElementState, aDocumentState, aDpiRatio);
+}
+
+bool nsNativeBasicThemeGTK::PaintScrollbarThumb(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    DPIRatio aDpiRatio) {
+  return DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
+                               aElementState, aDocumentState, aDpiRatio);
+}
+
+template <typename PaintBackendData>
+bool nsNativeBasicThemeGTK::DoPaintScrollbar(PaintBackendData& aPaintData,
+                                             const LayoutDeviceRect& aRect,
+                                             bool aHorizontal, nsIFrame* aFrame,
+                                             const ComputedStyle& aStyle,
+                                             const EventStates& aDocumentState,
+                                             DPIRatio aDpiRatio) {
+  auto [trackColor, borderColor] =
+      ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
+  Unused << borderColor;
+  FillRect(aPaintData, aRect, trackColor);
+  return true;
+}
+
+bool nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget& aDrawTarget,
                                            const LayoutDeviceRect& aRect,
                                            bool aHorizontal, nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
                                            DPIRatio aDpiRatio) {
+  return DoPaintScrollbar(aDrawTarget, aRect, aHorizontal, aFrame, aStyle,
+                          aDocumentState, aDpiRatio);
+}
+
+bool nsNativeBasicThemeGTK::PaintScrollbar(WebRenderBackendData& aWrData,
+                                           const LayoutDeviceRect& aRect,
+                                           bool aHorizontal, nsIFrame* aFrame,
+                                           const ComputedStyle& aStyle,
+                                           const EventStates& aDocumentState,
+                                           DPIRatio aDpiRatio) {
+  return DoPaintScrollbar(aWrData, aRect, aHorizontal, aFrame, aStyle,
+                          aDocumentState, aDpiRatio);
+}
+
+template <typename PaintBackendData>
+bool nsNativeBasicThemeGTK::DoPaintScrollCorner(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
   auto [trackColor, borderColor] =
       ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
   Unused << borderColor;
-  aDrawTarget.FillRect(aRect.ToUnknownRect(),
-                       gfx::ColorPattern(ToDeviceColor(trackColor)));
+  FillRect(aPaintData, aRect, trackColor);
+  return true;
 }
 
-void nsNativeBasicThemeGTK::PaintScrollCorner(DrawTarget& aDrawTarget,
+bool nsNativeBasicThemeGTK::PaintScrollCorner(DrawTarget& aDrawTarget,
                                               const LayoutDeviceRect& aRect,
                                               nsIFrame* aFrame,
                                               const ComputedStyle& aStyle,
                                               const EventStates& aDocumentState,
                                               DPIRatio aDpiRatio) {
-  auto [trackColor, borderColor] =
-      ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
-  Unused << borderColor;
-  aDrawTarget.FillRect(aRect.ToUnknownRect(),
-                       gfx::ColorPattern(ToDeviceColor(trackColor)));
+  return DoPaintScrollCorner(aDrawTarget, aRect, aFrame, aStyle, aDocumentState,
+                             aDpiRatio);
+}
+
+bool nsNativeBasicThemeGTK::PaintScrollCorner(WebRenderBackendData& aWrData,
+                                              const LayoutDeviceRect& aRect,
+                                              nsIFrame* aFrame,
+                                              const ComputedStyle& aStyle,
+                                              const EventStates& aDocumentState,
+                                              DPIRatio aDpiRatio) {
+  return DoPaintScrollCorner(aWrData, aRect, aFrame, aStyle, aDocumentState,
+                             aDpiRatio);
 }
