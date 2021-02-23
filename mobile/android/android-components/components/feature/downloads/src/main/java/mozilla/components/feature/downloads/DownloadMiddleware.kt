@@ -15,11 +15,13 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.DownloadAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_REMOVE_PRIVATE_DOWNLOAD
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
@@ -31,7 +33,7 @@ import kotlin.coroutines.CoroutineContext
  * purpose is to react to global download state changes (e.g. of [BrowserState.downloads])
  * and notify the download service, as needed.
  */
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "TooManyFunctions")
 class DownloadMiddleware(
     private val applicationContext: Context,
     private val downloadServiceClass: Class<*>,
@@ -67,6 +69,10 @@ class DownloadMiddleware(
         next(action)
 
         when (action) {
+            is TabListAction.RemoveAllTabsAction,
+            is TabListAction.RemoveAllPrivateTabsAction -> removePrivateNotifications(context.store)
+            is TabListAction.RemoveTabsAction -> removePrivateNotifications(context.store, action.tabIds)
+            is TabListAction.RemoveTabAction -> removePrivateNotifications(context.store, listOf(action.tabId))
             is DownloadAction.AddDownloadAction -> sendDownloadIntent(action.download)
             is DownloadAction.RestoreDownloadStateAction -> sendDownloadIntent(action.download)
         }
@@ -135,5 +141,28 @@ class DownloadMiddleware(
     @VisibleForTesting
     internal fun startForegroundService(intent: Intent) {
         ContextCompat.startForegroundService(applicationContext, intent)
+    }
+
+    @VisibleForTesting
+    internal fun removeStatusBarNotification(store: Store<BrowserState, BrowserAction>, download: DownloadState) {
+        download.notificationId?.let {
+            val intent = Intent(applicationContext, downloadServiceClass)
+            intent.action = ACTION_REMOVE_PRIVATE_DOWNLOAD
+            intent.putExtra(DownloadManager.EXTRA_DOWNLOAD_ID, download.id)
+            applicationContext.startService(intent)
+            store.dispatch(DownloadAction.DismissDownloadNotificationAction(download.id))
+        }
+    }
+
+    @VisibleForTesting
+    internal fun removePrivateNotifications(store: Store<BrowserState, BrowserAction>) {
+        val privateDownloads = store.state.downloads.filterValues { it.private }
+        privateDownloads.forEach { removeStatusBarNotification(store, it.value) }
+    }
+
+    @VisibleForTesting
+    internal fun removePrivateNotifications(store: Store<BrowserState, BrowserAction>, tabIds: List<String>) {
+        val privateDownloads = store.state.downloads.filterValues { it.sessionId in tabIds && it.private }
+        privateDownloads.forEach { removeStatusBarNotification(store, it.value) }
     }
 }

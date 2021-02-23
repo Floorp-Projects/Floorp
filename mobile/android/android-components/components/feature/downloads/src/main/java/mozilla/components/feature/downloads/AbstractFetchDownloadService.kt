@@ -256,6 +256,27 @@ abstract class AbstractFetchDownloadService : Service() {
             store.state.downloads[it]
         } ?: return START_REDELIVER_INTENT
 
+        if (intent.action == ACTION_REMOVE_PRIVATE_DOWNLOAD) {
+            handleRemovePrivateDownloadIntent(download)
+        } else {
+            handleDownloadIntent(download)
+        }
+
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    @VisibleForTesting
+    internal fun handleRemovePrivateDownloadIntent(download: DownloadState) {
+        if (download.private) {
+            downloadJobs[download.id]?.let {
+                removeDownloadJob(it)
+            }
+            store.dispatch(DownloadAction.RemoveDownloadAction(download.id))
+        }
+    }
+
+    @VisibleForTesting
+    internal fun handleDownloadIntent(download: DownloadState) {
         // If the job already exists, then don't create a new ID. This can happen when calling tryAgain
         val foregroundServiceId = downloadJobs[download.id]?.foregroundServiceId ?: Random.nextInt()
 
@@ -263,7 +284,7 @@ abstract class AbstractFetchDownloadService : Service() {
 
         // Create a new job and add it, with its downloadState to the map
         val downloadJobState = DownloadJobState(
-            state = download.copy(status = actualStatus),
+            state = download.copy(status = actualStatus, notificationId = foregroundServiceId),
             foregroundServiceId = foregroundServiceId,
             status = actualStatus
         )
@@ -287,8 +308,6 @@ abstract class AbstractFetchDownloadService : Service() {
                 if (downloadJobs.isEmpty()) cancel()
             }
         }
-
-        return super.onStartCommand(intent, flags, startId)
     }
 
     /**
@@ -1002,6 +1021,7 @@ abstract class AbstractFetchDownloadService : Service() {
         const val ACTION_RESUME = "mozilla.components.feature.downloads.RESUME"
         const val ACTION_CANCEL = "mozilla.components.feature.downloads.CANCEL"
         const val ACTION_DISMISS = "mozilla.components.feature.downloads.DISMISS"
+        const val ACTION_REMOVE_PRIVATE_DOWNLOAD = "mozilla.components.feature.downloads.ACTION_REMOVE_PRIVATE_DOWNLOAD"
         const val ACTION_TRY_AGAIN = "mozilla.components.feature.downloads.TRY_AGAIN"
         const val COMPAT_DEFAULT_FOREGROUND_ID = -1
     }

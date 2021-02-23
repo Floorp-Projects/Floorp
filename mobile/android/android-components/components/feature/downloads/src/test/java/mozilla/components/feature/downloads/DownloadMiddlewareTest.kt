@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.DownloadAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
@@ -336,5 +337,142 @@ class DownloadMiddlewareTest {
             downloadMiddleware.sendDownloadIntent(download)
             verify(downloadMiddleware, times(index + 1)).startForegroundService(any())
         }
+    }
+
+    @Test
+    fun `WHEN RemoveAllTabsAction and RemoveAllPrivateTabsAction are received THEN removePrivateNotifications must be called`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val store = BrowserStore(
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        val actions = listOf(TabListAction.RemoveAllTabsAction, TabListAction.RemoveAllPrivateTabsAction)
+
+        actions.forEach {
+            store.dispatch(it).joinBlocking()
+
+            dispatcher.advanceUntilIdle()
+            store.waitUntilIdle()
+
+            verify(downloadMiddleware, times(1)).removePrivateNotifications(any())
+            reset(downloadMiddleware)
+        }
+    }
+
+    @Test
+    fun `WHEN RemoveTabsAction is received THEN removePrivateNotifications must be called`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val store = BrowserStore(
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        store.dispatch(TabListAction.RemoveTabsAction(listOf("tab1"))).joinBlocking()
+
+        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(downloadMiddleware, times(1)).removePrivateNotifications(any(), any())
+        reset(downloadMiddleware)
+    }
+
+    @Test
+    fun `WHEN RemoveTabAction is received THEN removePrivateNotifications must be called`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val store = BrowserStore(
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        store.dispatch(TabListAction.RemoveTabAction("tab1")).joinBlocking()
+
+        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(downloadMiddleware, times(1)).removePrivateNotifications(any(), any())
+    }
+
+    @Test
+    fun `WHEN removeStatusBarNotification is called THEN an ACTION_REMOVE_PRIVATE_DOWNLOAD intent must be created`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val download = DownloadState("https://mozilla.org/download", notificationId = 100)
+        val store = mock<BrowserStore>()
+
+        downloadMiddleware.removeStatusBarNotification(store, download)
+
+        verify(store, times(1)).dispatch(DownloadAction.DismissDownloadNotificationAction(download.id))
+        verify(applicationContext, times(1)).startService(any())
+    }
+
+    @Test
+    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called only for private download`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val download = DownloadState("https://mozilla.org/download", notificationId = 100)
+        val privateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true)
+        val store = BrowserStore(
+            initialState = BrowserState(
+                downloads = mapOf(download.id to download, privateDownload.id to privateDownload)
+            ),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        downloadMiddleware.removePrivateNotifications(store)
+
+        verify(downloadMiddleware, times(1)).removeStatusBarNotification(store, privateDownload)
+    }
+
+    @Test
+    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called only for private download in the tabIds list`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val download = DownloadState("https://mozilla.org/download", notificationId = 100, sessionId = "tab1")
+        val privateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true, sessionId = "tab2")
+        val anotherPrivateDownload = DownloadState("https://mozilla.org/download", notificationId = 100, private = true, sessionId = "tab3")
+        val store = BrowserStore(
+            initialState = BrowserState(
+                downloads = mapOf(download.id to download, privateDownload.id to privateDownload, anotherPrivateDownload.id to anotherPrivateDownload)
+            ),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        downloadMiddleware.removePrivateNotifications(store, listOf("tab2"))
+
+        verify(downloadMiddleware, times(1)).removeStatusBarNotification(any(), any())
     }
 }

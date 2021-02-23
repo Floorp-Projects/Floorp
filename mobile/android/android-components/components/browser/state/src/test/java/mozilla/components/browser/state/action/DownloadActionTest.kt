@@ -10,6 +10,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -29,6 +31,32 @@ class DownloadActionTest {
         store.dispatch(DownloadAction.AddDownloadAction(download2)).joinBlocking()
         assertEquals(download2, store.state.downloads[download2.id])
         assertEquals(2, store.state.downloads.size)
+    }
+
+    @Test
+    fun `WHEN DismissDownloadNotificationAction is dispatched THEN notificationId is set to null`() {
+        val store = BrowserStore(BrowserState())
+
+        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "", notificationId = 100)
+        store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
+        assertNotNull(store.state.downloads[download.id]!!.notificationId)
+
+        store.dispatch(DownloadAction.DismissDownloadNotificationAction(download.id)).joinBlocking()
+        assertNull(store.state.downloads[download.id]!!.notificationId)
+    }
+
+    @Test
+    fun `WHEN DismissDownloadNotificationAction is dispatched with an invalid downloadId THEN the state must not change`() {
+        val store = BrowserStore(BrowserState())
+
+        val download = DownloadState("https://mozilla.org/download1", destinationDirectory = "", notificationId = 100)
+        store.dispatch(DownloadAction.AddDownloadAction(download)).joinBlocking()
+        assertNotNull(store.state.downloads[download.id]!!.notificationId)
+        assertEquals(1, store.state.downloads.size)
+
+        store.dispatch(DownloadAction.DismissDownloadNotificationAction("-1")).joinBlocking()
+        assertNotNull(store.state.downloads[download.id]!!.notificationId)
+        assertEquals(download, store.state.downloads[download.id])
     }
 
     @Test

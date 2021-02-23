@@ -28,6 +28,8 @@ import java.util.UUID
  * @property createdTime A timestamp when the download was created.
  * @property response A response object associated with this request, when provided can be
  * used instead of performing a manual a download.
+ * @property notificationId Identifies the download notification in the status bar, if this
+ * [DownloadState] has one otherwise null.
  */
 @Suppress("Deprecation")
 data class DownloadState(
@@ -45,7 +47,8 @@ data class DownloadState(
     val sessionId: String? = null,
     val private: Boolean = false,
     val createdTime: Long = System.currentTimeMillis(),
-    val response: Response? = null
+    val response: Response? = null,
+    val notificationId: Int? = null
 ) {
     val filePath: String get() =
         Environment.getExternalStoragePublicDirectory(destinationDirectory).path + File.separatorChar + fileName

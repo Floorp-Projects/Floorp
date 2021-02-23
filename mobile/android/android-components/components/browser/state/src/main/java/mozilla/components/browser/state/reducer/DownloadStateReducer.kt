@@ -19,6 +19,14 @@ internal object DownloadStateReducer {
             is DownloadAction.UpdateDownloadAction -> {
                 updateDownloads(state, action.download)
             }
+            is DownloadAction.DismissDownloadNotificationAction -> {
+                val download = state.downloads[action.downloadId]
+                if (download != null) {
+                    updateDownloads(state, download.copy(notificationId = null))
+                } else {
+                    state
+                }
+            }
             is DownloadAction.RemoveDownloadAction -> {
                 state.copy(downloads = state.downloads - action.downloadId)
             }
