@@ -23,6 +23,7 @@
 .tab-icon-sound[activemedia-blocked] > .tab-icon-sound-playing-label,
 .tab-icon-sound[muted] > .tab-icon-sound-playing-label,
 .tab-icon-sound[pictureinpicture] > .tab-icon-sound-playing-label,
+.tab-icon-sound[pictureinpicture] > .tab-icon-sound-muted-label,
 .tab-icon-sound:not([pictureinpicture]) > .tab-icon-sound-pip-label,
 .tab-icon-sound:not([muted]) > .tab-icon-sound-muted-label {
   display: none;
