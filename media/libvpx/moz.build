@@ -9,8 +9,8 @@ with Files('*'):
 
 include('sources.mozbuild')
 
-if CONFIG['VPX_USE_YASM']:
-    USE_YASM = True
+if CONFIG['VPX_USE_NASM']:
+    USE_NASM = True
 
 # Linux, Mac and Win share file lists for x86* but not configurations.
 if CONFIG['CPU_ARCH'] == 'x86_64':
