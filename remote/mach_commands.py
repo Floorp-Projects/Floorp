@@ -462,7 +462,7 @@ class PuppeteerRunner(MozbuildObject):
             env["EXTRA_LAUNCH_OPTIONS"] = json.dumps(extra_options)
 
         expected_path = os.path.join(
-            os.path.dirname(__file__), "puppeteer-expected.json"
+            os.path.dirname(__file__), "test", "puppeteer-expected.json"
         )
         if product == "firefox" and os.path.exists(expected_path):
             with open(expected_path) as f:
@@ -558,7 +558,7 @@ def create_parser_puppeteer():
         action="store",
         nargs="?",
         default=None,
-        const=os.path.join(os.path.dirname(__file__), "puppeteer-expected.json"),
+        const=os.path.join(os.path.dirname(__file__), "test", "puppeteer-expected.json"),
         help="Path to write updated results to (defaults to the "
         "expectations file if the argument is provided but "
         "no path is passed)",
