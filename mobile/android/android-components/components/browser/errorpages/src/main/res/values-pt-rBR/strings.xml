@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Problema ao carregar a página</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Tentar novamente</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Voltar</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Não foi possível concluir a solicitação</string>
@@ -141,7 +136,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
-    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipo de arquivo inseguro</string>
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Tipo de arquivo não seguro</string>
 
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[

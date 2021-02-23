@@ -7,9 +7,9 @@
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">Pigilan ang pahinang ito sa pagpapakita ng mga karagdagang dialog</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
-    <string name="mozac_feature_prompts_set_date">i-Set</string>
+    <string name="mozac_feature_prompts_set_date">Itakda</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
-    <string name="mozac_feature_prompts_clear">Burahin</string>
+    <string name="mozac_feature_prompts_clear">Alisin</string>
     <!-- Text for the title of an authentication dialog. -->
     <string name="mozac_feature_prompt_sign_in">Mag-sign in</string>
     <!-- Text for username field in an authentication dialog. -->
@@ -57,29 +57,29 @@
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">Pumili ng buwan</string>
     <!-- January (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_jan">Jan</string>
+    <string name="mozac_feature_prompts_jan">Ene</string>
     <!-- February month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_feb">Feb</string>
+    <string name="mozac_feature_prompts_feb">Peb</string>
     <!-- March month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_mar">Mar</string>
     <!-- April month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_apr">Apr</string>
+    <string name="mozac_feature_prompts_apr">Abr</string>
     <!-- May month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_may">May</string>
     <!-- June month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_jun">Jun</string>
+    <string name="mozac_feature_prompts_jun">Hun</string>
     <!-- July month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_jul">Jul</string>
+    <string name="mozac_feature_prompts_jul">Hul</string>
     <!-- August month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_aug">Aug</string>
+    <string name="mozac_feature_prompts_aug">Ago</string>
     <!-- September month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_sep">Sep</string>
+    <string name="mozac_feature_prompts_sep">Set</string>
     <!-- October month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_oct">Oct</string>
+    <string name="mozac_feature_prompts_oct">Okt</string>
     <!-- November month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_nov">Nov</string>
+    <string name="mozac_feature_prompts_nov">Nob</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
-    <string name="mozac_feature_prompts_dec">Dec</string>
+    <string name="mozac_feature_prompts_dec">Dis</string>
 
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">i-Manage ang mga login</string>

@@ -17,7 +17,7 @@
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">Madilim</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_dark_color_scheme_desc">Madilim na scheme ng kulay</string>
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Madilim na color scheme</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">Sepia</string>
     <!-- Accessible description for the color option -->
@@ -25,5 +25,5 @@
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">Maliwanag</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_light_color_scheme_desc">Banayad na scheme ng kulay</string>
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Maliwanag na color scheme</string>
 </resources>
