@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,6 +27,7 @@ class FenixApplicationTest {
         application = ApplicationProvider.getApplicationContext()
     }
 
+    @Ignore("See https://github.com/mozilla-mobile/fenix/issues/18102")
     @Test
     fun `GIVEN onCreate is called THEN the duration is measured`() {
         // application.onCreate is called before the test as part of test set up:
