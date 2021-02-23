@@ -1,6 +1,8 @@
+import sys
 from io import BytesIO
 
 import pytest
+from six import PY2
 
 from wptserve.request import InputFile
 
@@ -119,6 +121,8 @@ def test_readlines():
     assert input_file.readlines() == test_file.readlines()
 
 
+@pytest.mark.xfail(sys.platform == "win32" and PY2,
+                   reason="https://github.com/web-platform-tests/wpt/issues/12949")
 def test_readlines_file_bigger_than_buffer():
     old_max_buf = InputFile.max_buffer_size
     InputFile.max_buffer_size = 10
@@ -136,6 +140,8 @@ def test_iter():
         assert a == b
 
 
+@pytest.mark.xfail(sys.platform == "win32" and PY2,
+                   reason="https://github.com/web-platform-tests/wpt/issues/12949")
 def test_iter_file_bigger_than_buffer():
     old_max_buf = InputFile.max_buffer_size
     InputFile.max_buffer_size = 10

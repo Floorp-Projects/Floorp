@@ -8,9 +8,7 @@ Installing and Using plugins
 This section talks about installing and using third party plugins.
 For writing your own plugins, please refer to :ref:`writing-plugins`.
 
-Installing a third party plugin can be easily done with ``pip``:
-
-.. code-block:: bash
+Installing a third party plugin can be easily done with ``pip``::
 
     pip install pytest-NAME
     pip uninstall pytest-NAME
@@ -41,7 +39,8 @@ Here is a little annotated list for some popular plugins:
 * `pytest-instafail <https://pypi.org/project/pytest-instafail/>`_:
   to report failures while the test run is happening.
 
-* `pytest-bdd <https://pypi.org/project/pytest-bdd/>`_:
+* `pytest-bdd <https://pypi.org/project/pytest-bdd/>`_ and
+  `pytest-konira <https://pypi.org/project/pytest-konira/>`_
   to write tests using behaviour-driven testing.
 
 * `pytest-timeout <https://pypi.org/project/pytest-timeout/>`_:
@@ -70,7 +69,7 @@ You may also discover more plugins through a `pytest- pypi.org search`_.
 Requiring/Loading plugins in a test module or conftest file
 -----------------------------------------------------------
 
-You can require plugins in a test module or a conftest file using :globalvar:`pytest_plugins`:
+You can require plugins in a test module or a conftest file like this:
 
 .. code-block:: python
 
@@ -80,7 +79,6 @@ When the test module or conftest plugin is loaded the specified plugins
 will be loaded as well.
 
 .. note::
-
     Requiring plugins using a ``pytest_plugins`` variable in non-root
     ``conftest.py`` files is deprecated. See
     :ref:`full explanation <requiring plugins in non-root conftests>`
@@ -97,9 +95,7 @@ Finding out which plugins are active
 ------------------------------------
 
 If you want to find out which plugins are active in your
-environment you can type:
-
-.. code-block:: bash
+environment you can type::
 
     pytest --trace-config
 
@@ -112,9 +108,7 @@ and their names. It will also print local plugins aka
 Deactivating / unregistering a plugin by name
 ---------------------------------------------
 
-You can prevent plugins from loading or unregister them:
-
-.. code-block:: bash
+You can prevent plugins from loading or unregister them::
 
     pytest -p no:NAME
 

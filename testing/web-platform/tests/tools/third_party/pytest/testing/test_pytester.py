@@ -1,33 +1,36 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import subprocess
 import sys
 import time
-from typing import List
 
 import py.path
 
 import _pytest.pytester as pytester
 import pytest
-from _pytest.config import ExitCode
 from _pytest.config import PytestPluginManager
+from _pytest.main import EXIT_NOTESTSCOLLECTED
+from _pytest.main import EXIT_OK
+from _pytest.main import EXIT_TESTSFAILED
 from _pytest.pytester import CwdSnapshot
 from _pytest.pytester import HookRecorder
 from _pytest.pytester import LineMatcher
 from _pytest.pytester import SysModulesSnapshot
 from _pytest.pytester import SysPathsSnapshot
-from _pytest.pytester import Testdir
 
 
-def test_make_hook_recorder(testdir) -> None:
+def test_make_hook_recorder(testdir):
     item = testdir.getitem("def test_func(): pass")
     recorder = testdir.make_hook_recorder(item.config.pluginmanager)
     assert not recorder.getfailures()
 
-    # (The silly condition is to fool mypy that the code below this is reachable)
-    if 1 + 1 == 2:
-        pytest.xfail("internal reportrecorder tests need refactoring")
+    pytest.xfail("internal reportrecorder tests need refactoring")
 
-    class rep:
+    class rep(object):
         excinfo = None
         passed = False
         failed = True
@@ -40,23 +43,23 @@ def test_make_hook_recorder(testdir) -> None:
     failures = recorder.getfailures()
     assert failures == [rep]
 
-    class rep2:
+    class rep(object):
         excinfo = None
         passed = False
         failed = False
         skipped = True
         when = "call"
 
-    rep2.passed = False
-    rep2.skipped = True
-    recorder.hook.pytest_runtest_logreport(report=rep2)
+    rep.passed = False
+    rep.skipped = True
+    recorder.hook.pytest_runtest_logreport(report=rep)
 
     modcol = testdir.getmodulecol("")
-    rep3 = modcol.config.hook.pytest_make_collect_report(collector=modcol)
-    rep3.passed = False
-    rep3.failed = True
-    rep3.skipped = False
-    recorder.hook.pytest_collectreport(report=rep3)
+    rep = modcol.config.hook.pytest_make_collect_report(collector=modcol)
+    rep.passed = False
+    rep.failed = True
+    rep.skipped = False
+    recorder.hook.pytest_collectreport(report=rep)
 
     passed, skipped, failed = recorder.listoutcomes()
     assert not passed and skipped and failed
@@ -69,17 +72,18 @@ def test_make_hook_recorder(testdir) -> None:
 
     recorder.unregister()
     recorder.clear()
-    recorder.hook.pytest_runtest_logreport(report=rep3)
+    recorder.hook.pytest_runtest_logreport(report=rep)
     pytest.raises(ValueError, recorder.getfailures)
 
 
-def test_parseconfig(testdir) -> None:
+def test_parseconfig(testdir):
     config1 = testdir.parseconfig()
     config2 = testdir.parseconfig()
-    assert config2 is not config1
+    assert config2 != config1
+    assert config1 != pytest.config
 
 
-def test_testdir_runs_with_plugin(testdir) -> None:
+def test_testdir_runs_with_plugin(testdir):
     testdir.makepyfile(
         """
         pytest_plugins = "pytester"
@@ -91,30 +95,7 @@ def test_testdir_runs_with_plugin(testdir) -> None:
     result.assert_outcomes(passed=1)
 
 
-def test_testdir_with_doctest(testdir):
-    """Check that testdir can be used within doctests.
-
-    It used to use `request.function`, which is `None` with doctests."""
-    testdir.makepyfile(
-        **{
-            "sub/t-doctest.py": """
-        '''
-        >>> import os
-        >>> testdir = getfixture("testdir")
-        >>> str(testdir.makepyfile("content")).replace(os.sep, '/')
-        '.../basetemp/sub.t-doctest0/sub.py'
-        '''
-    """,
-            "sub/__init__.py": "",
-        }
-    )
-    result = testdir.runpytest(
-        "-p", "pytester", "--doctest-modules", "sub/t-doctest.py"
-    )
-    assert result.ret == 0
-
-
-def test_runresult_assertion_on_xfail(testdir) -> None:
+def test_runresult_assertion_on_xfail(testdir):
     testdir.makepyfile(
         """
         import pytest
@@ -131,7 +112,7 @@ def test_runresult_assertion_on_xfail(testdir) -> None:
     assert result.ret == 0
 
 
-def test_runresult_assertion_on_xpassed(testdir) -> None:
+def test_runresult_assertion_on_xpassed(testdir):
     testdir.makepyfile(
         """
         import pytest
@@ -148,7 +129,18 @@ def test_runresult_assertion_on_xpassed(testdir) -> None:
     assert result.ret == 0
 
 
-def test_xpassed_with_strict_is_considered_a_failure(testdir) -> None:
+def test_runresult_repr():
+    from _pytest.pytester import RunResult
+
+    assert (
+        repr(
+            RunResult(ret="ret", outlines=[""], errlines=["some", "errors"], duration=1)
+        )
+        == "<RunResult ret='ret' len(stdout.lines)=1 len(stderr.lines)=2 duration=1.00s>"
+    )
+
+
+def test_xpassed_with_strict_is_considered_a_failure(testdir):
     testdir.makepyfile(
         """
         import pytest
@@ -166,28 +158,28 @@ def test_xpassed_with_strict_is_considered_a_failure(testdir) -> None:
 
 
 def make_holder():
-    class apiclass:
+    class apiclass(object):
         def pytest_xyz(self, arg):
-            """X"""
+            "x"
 
         def pytest_xyz_noarg(self):
-            """X"""
+            "x"
 
     apimod = type(os)("api")
 
     def pytest_xyz(arg):
-        """X"""
+        "x"
 
     def pytest_xyz_noarg():
-        """X"""
+        "x"
 
-    apimod.pytest_xyz = pytest_xyz  # type: ignore
-    apimod.pytest_xyz_noarg = pytest_xyz_noarg  # type: ignore
+    apimod.pytest_xyz = pytest_xyz
+    apimod.pytest_xyz_noarg = pytest_xyz_noarg
     return apiclass, apimod
 
 
 @pytest.mark.parametrize("holder", make_holder())
-def test_hookrecorder_basic(holder) -> None:
+def test_hookrecorder_basic(holder):
     pm = PytestPluginManager()
     pm.add_hookspecs(holder)
     rec = HookRecorder(pm)
@@ -201,35 +193,42 @@ def test_hookrecorder_basic(holder) -> None:
     assert call._name == "pytest_xyz_noarg"
 
 
-def test_makepyfile_unicode(testdir) -> None:
-    testdir.makepyfile(chr(0xFFFD))
+def test_makepyfile_unicode(testdir):
+    global unichr
+    try:
+        unichr(65)
+    except NameError:
+        unichr = chr
+    testdir.makepyfile(unichr(0xFFFD))
 
 
-def test_makepyfile_utf8(testdir) -> None:
+def test_makepyfile_utf8(testdir):
     """Ensure makepyfile accepts utf-8 bytes as input (#2738)"""
-    utf8_contents = """
+    utf8_contents = u"""
         def setup_function(function):
-            mixed_encoding = 'São Paulo'
-    """.encode()
+            mixed_encoding = u'São Paulo'
+    """.encode(
+        "utf-8"
+    )
     p = testdir.makepyfile(utf8_contents)
-    assert "mixed_encoding = 'São Paulo'".encode() in p.read("rb")
+    assert u"mixed_encoding = u'São Paulo'".encode("utf-8") in p.read("rb")
 
 
-class TestInlineRunModulesCleanup:
-    def test_inline_run_test_module_not_cleaned_up(self, testdir) -> None:
+class TestInlineRunModulesCleanup(object):
+    def test_inline_run_test_module_not_cleaned_up(self, testdir):
         test_mod = testdir.makepyfile("def test_foo(): assert True")
         result = testdir.inline_run(str(test_mod))
-        assert result.ret == ExitCode.OK
+        assert result.ret == EXIT_OK
         # rewrite module, now test should fail if module was re-imported
         test_mod.write("def test_foo(): assert False")
         result2 = testdir.inline_run(str(test_mod))
-        assert result2.ret == ExitCode.TESTS_FAILED
+        assert result2.ret == EXIT_TESTSFAILED
 
     def spy_factory(self):
-        class SysModulesSnapshotSpy:
-            instances = []  # type: List[SysModulesSnapshotSpy]
+        class SysModulesSnapshotSpy(object):
+            instances = []
 
-            def __init__(self, preserve=None) -> None:
+            def __init__(self, preserve=None):
                 SysModulesSnapshotSpy.instances.append(self)
                 self._spy_restore_count = 0
                 self._spy_preserve = preserve
@@ -243,7 +242,7 @@ class TestInlineRunModulesCleanup:
 
     def test_inline_run_taking_and_restoring_a_sys_modules_snapshot(
         self, testdir, monkeypatch
-    ) -> None:
+    ):
         spy_factory = self.spy_factory()
         monkeypatch.setattr(pytester, "SysModulesSnapshot", spy_factory)
         testdir.syspathinsert()
@@ -264,7 +263,7 @@ class TestInlineRunModulesCleanup:
 
     def test_inline_run_sys_modules_snapshot_restore_preserving_modules(
         self, testdir, monkeypatch
-    ) -> None:
+    ):
         spy_factory = self.spy_factory()
         monkeypatch.setattr(pytester, "SysModulesSnapshot", spy_factory)
         test_mod = testdir.makepyfile("def test_foo(): pass")
@@ -275,7 +274,7 @@ class TestInlineRunModulesCleanup:
         assert spy._spy_preserve("zope.interface")
         assert spy._spy_preserve("zopelicious")
 
-    def test_external_test_module_imports_not_cleaned_up(self, testdir) -> None:
+    def test_external_test_module_imports_not_cleaned_up(self, testdir):
         testdir.syspathinsert()
         testdir.makepyfile(imported="data = 'you son of a silly person'")
         import imported
@@ -290,16 +289,15 @@ class TestInlineRunModulesCleanup:
         assert imported.data == 42
 
 
-def test_assert_outcomes_after_pytest_error(testdir) -> None:
+def test_assert_outcomes_after_pytest_error(testdir):
     testdir.makepyfile("def test_foo(): assert True")
 
     result = testdir.runpytest("--unexpected-argument")
-    with pytest.raises(ValueError, match="Pytest terminal summary report not found"):
+    with pytest.raises(ValueError, match="Pytest terminal report not found"):
         result.assert_outcomes(passed=0)
 
 
-def test_cwd_snapshot(testdir: Testdir) -> None:
-    tmpdir = testdir.tmpdir
+def test_cwd_snapshot(tmpdir):
     foo = tmpdir.ensure("foo", dir=1)
     bar = tmpdir.ensure("bar", dir=1)
     foo.chdir()
@@ -310,19 +308,19 @@ def test_cwd_snapshot(testdir: Testdir) -> None:
     assert py.path.local() == foo
 
 
-class TestSysModulesSnapshot:
+class TestSysModulesSnapshot(object):
     key = "my-test-module"
 
-    def test_remove_added(self) -> None:
+    def test_remove_added(self):
         original = dict(sys.modules)
         assert self.key not in sys.modules
         snapshot = SysModulesSnapshot()
-        sys.modules[self.key] = "something"  # type: ignore
+        sys.modules[self.key] = "something"
         assert self.key in sys.modules
         snapshot.restore()
         assert sys.modules == original
 
-    def test_add_removed(self, monkeypatch) -> None:
+    def test_add_removed(self, monkeypatch):
         assert self.key not in sys.modules
         monkeypatch.setitem(sys.modules, self.key, "something")
         assert self.key in sys.modules
@@ -333,17 +331,17 @@ class TestSysModulesSnapshot:
         snapshot.restore()
         assert sys.modules == original
 
-    def test_restore_reloaded(self, monkeypatch) -> None:
+    def test_restore_reloaded(self, monkeypatch):
         assert self.key not in sys.modules
         monkeypatch.setitem(sys.modules, self.key, "something")
         assert self.key in sys.modules
         original = dict(sys.modules)
         snapshot = SysModulesSnapshot()
-        sys.modules[self.key] = "something else"  # type: ignore
+        sys.modules[self.key] = "something else"
         snapshot.restore()
         assert sys.modules == original
 
-    def test_preserve_modules(self, monkeypatch) -> None:
+    def test_preserve_modules(self, monkeypatch):
         key = [self.key + str(i) for i in range(3)]
         assert not any(k in sys.modules for k in key)
         for i, k in enumerate(key):
@@ -354,17 +352,17 @@ class TestSysModulesSnapshot:
             return name in (key[0], key[1], "some-other-key")
 
         snapshot = SysModulesSnapshot(preserve=preserve)
-        sys.modules[key[0]] = original[key[0]] = "something else0"  # type: ignore
-        sys.modules[key[1]] = original[key[1]] = "something else1"  # type: ignore
-        sys.modules[key[2]] = "something else2"  # type: ignore
+        sys.modules[key[0]] = original[key[0]] = "something else0"
+        sys.modules[key[1]] = original[key[1]] = "something else1"
+        sys.modules[key[2]] = "something else2"
         snapshot.restore()
         assert sys.modules == original
 
-    def test_preserve_container(self, monkeypatch) -> None:
+    def test_preserve_container(self, monkeypatch):
         original = dict(sys.modules)
         assert self.key not in original
         replacement = dict(sys.modules)
-        replacement[self.key] = "life of brian"  # type: ignore
+        replacement[self.key] = "life of brian"
         snapshot = SysModulesSnapshot()
         monkeypatch.setattr(sys, "modules", replacement)
         snapshot.restore()
@@ -373,14 +371,14 @@ class TestSysModulesSnapshot:
 
 
 @pytest.mark.parametrize("path_type", ("path", "meta_path"))
-class TestSysPathsSnapshot:
+class TestSysPathsSnapshot(object):
     other_path = {"path": "meta_path", "meta_path": "path"}
 
     @staticmethod
-    def path(n: int) -> str:
+    def path(n):
         return "my-dirty-little-secret-" + str(n)
 
-    def test_restore(self, monkeypatch, path_type) -> None:
+    def test_restore(self, monkeypatch, path_type):
         other_path_type = self.other_path[path_type]
         for i in range(10):
             assert self.path(i) not in getattr(sys, path_type)
@@ -403,12 +401,12 @@ class TestSysPathsSnapshot:
         assert getattr(sys, path_type) == original
         assert getattr(sys, other_path_type) == original_other
 
-    def test_preserve_container(self, monkeypatch, path_type) -> None:
+    def test_preserve_container(self, monkeypatch, path_type):
         other_path_type = self.other_path[path_type]
         original_data = list(getattr(sys, path_type))
         original_other = getattr(sys, other_path_type)
         original_other_data = list(original_other)
-        new = []  # type: List[object]
+        new = []
         snapshot = SysPathsSnapshot()
         monkeypatch.setattr(sys, path_type, new)
         snapshot.restore()
@@ -418,43 +416,22 @@ class TestSysPathsSnapshot:
         assert getattr(sys, other_path_type) == original_other_data
 
 
-def test_testdir_subprocess(testdir) -> None:
+def test_testdir_subprocess(testdir):
     testfile = testdir.makepyfile("def test_one(): pass")
     assert testdir.runpytest_subprocess(testfile).ret == 0
 
 
-def test_testdir_subprocess_via_runpytest_arg(testdir) -> None:
-    testfile = testdir.makepyfile(
-        """
-        def test_testdir_subprocess(testdir):
-            import os
-            testfile = testdir.makepyfile(
-                \"""
-                import os
-                def test_one():
-                    assert {} != os.getpid()
-                \""".format(os.getpid())
-            )
-            assert testdir.runpytest(testfile).ret == 0
-        """
-    )
-    result = testdir.runpytest_subprocess(
-        "-p", "pytester", "--runpytest", "subprocess", testfile
-    )
-    assert result.ret == 0
+def test_unicode_args(testdir):
+    result = testdir.runpytest("-k", u"💩")
+    assert result.ret == EXIT_NOTESTSCOLLECTED
 
 
-def test_unicode_args(testdir) -> None:
-    result = testdir.runpytest("-k", "אבג")
-    assert result.ret == ExitCode.NO_TESTS_COLLECTED
-
-
-def test_testdir_run_no_timeout(testdir) -> None:
+def test_testdir_run_no_timeout(testdir):
     testfile = testdir.makepyfile("def test_no_timeout(): pass")
-    assert testdir.runpytest_subprocess(testfile).ret == ExitCode.OK
+    assert testdir.runpytest_subprocess(testfile).ret == EXIT_OK
 
 
-def test_testdir_run_with_timeout(testdir) -> None:
+def test_testdir_run_with_timeout(testdir):
     testfile = testdir.makepyfile("def test_no_timeout(): pass")
 
     timeout = 120
@@ -464,11 +441,11 @@ def test_testdir_run_with_timeout(testdir) -> None:
     end = time.time()
     duration = end - start
 
-    assert result.ret == ExitCode.OK
+    assert result.ret == EXIT_OK
     assert duration < timeout
 
 
-def test_testdir_run_timeout_expires(testdir) -> None:
+def test_testdir_run_timeout_expires(testdir):
     testfile = testdir.makepyfile(
         """
         import time
@@ -480,147 +457,35 @@ def test_testdir_run_timeout_expires(testdir) -> None:
         testdir.runpytest_subprocess(testfile, timeout=1)
 
 
-def test_linematcher_with_nonlist() -> None:
+def test_linematcher_with_nonlist():
     """Test LineMatcher with regard to passing in a set (accidentally)."""
-    from _pytest._code.source import Source
-
     lm = LineMatcher([])
-    with pytest.raises(TypeError, match="invalid type for lines2: set"):
-        lm.fnmatch_lines(set())  # type: ignore[arg-type]
-    with pytest.raises(TypeError, match="invalid type for lines2: dict"):
-        lm.fnmatch_lines({})  # type: ignore[arg-type]
-    with pytest.raises(TypeError, match="invalid type for lines2: set"):
-        lm.re_match_lines(set())  # type: ignore[arg-type]
-    with pytest.raises(TypeError, match="invalid type for lines2: dict"):
-        lm.re_match_lines({})  # type: ignore[arg-type]
-    with pytest.raises(TypeError, match="invalid type for lines2: Source"):
-        lm.fnmatch_lines(Source())  # type: ignore[arg-type]
+
+    with pytest.raises(AssertionError):
+        lm.fnmatch_lines(set())
+    with pytest.raises(AssertionError):
+        lm.fnmatch_lines({})
     lm.fnmatch_lines([])
     lm.fnmatch_lines(())
-    lm.fnmatch_lines("")
-    assert lm._getlines({}) == {}  # type: ignore[arg-type,comparison-overlap]
-    assert lm._getlines(set()) == set()  # type: ignore[arg-type,comparison-overlap]
-    assert lm._getlines(Source()) == []
-    assert lm._getlines(Source("pass\npass")) == ["pass", "pass"]
+
+    assert lm._getlines({}) == {}
+    assert lm._getlines(set()) == set()
 
 
-def test_linematcher_match_failure() -> None:
-    lm = LineMatcher(["foo", "foo", "bar"])
-    with pytest.raises(pytest.fail.Exception) as e:
-        lm.fnmatch_lines(["foo", "f*", "baz"])
-    assert e.value.msg is not None
-    assert e.value.msg.splitlines() == [
-        "exact match: 'foo'",
-        "fnmatch: 'f*'",
-        "   with: 'foo'",
-        "nomatch: 'baz'",
-        "    and: 'bar'",
-        "remains unmatched: 'baz'",
-    ]
-
-    lm = LineMatcher(["foo", "foo", "bar"])
-    with pytest.raises(pytest.fail.Exception) as e:
-        lm.re_match_lines(["foo", "^f.*", "baz"])
-    assert e.value.msg is not None
-    assert e.value.msg.splitlines() == [
-        "exact match: 'foo'",
-        "re.match: '^f.*'",
-        "    with: 'foo'",
-        " nomatch: 'baz'",
-        "     and: 'bar'",
-        "remains unmatched: 'baz'",
-    ]
-
-
-def test_linematcher_consecutive():
-    lm = LineMatcher(["1", "", "2"])
-    with pytest.raises(pytest.fail.Exception) as excinfo:
-        lm.fnmatch_lines(["1", "2"], consecutive=True)
-    assert str(excinfo.value).splitlines() == [
-        "exact match: '1'",
-        "no consecutive match: '2'",
-        "   with: ''",
-    ]
-
-    lm.re_match_lines(["1", r"\d?", "2"], consecutive=True)
-    with pytest.raises(pytest.fail.Exception) as excinfo:
-        lm.re_match_lines(["1", r"\d", "2"], consecutive=True)
-    assert str(excinfo.value).splitlines() == [
-        "exact match: '1'",
-        r"no consecutive match: '\\d'",
-        "    with: ''",
-    ]
-
-
-@pytest.mark.parametrize("function", ["no_fnmatch_line", "no_re_match_line"])
-def test_linematcher_no_matching(function) -> None:
-    if function == "no_fnmatch_line":
-        good_pattern = "*.py OK*"
-        bad_pattern = "*X.py OK*"
-    else:
-        assert function == "no_re_match_line"
-        good_pattern = r".*py OK"
-        bad_pattern = r".*Xpy OK"
-
-    lm = LineMatcher(
-        [
-            "cachedir: .pytest_cache",
-            "collecting ... collected 1 item",
-            "",
-            "show_fixtures_per_test.py OK",
-            "=== elapsed 1s ===",
-        ]
-    )
-
-    # check the function twice to ensure we don't accumulate the internal buffer
-    for i in range(2):
-        with pytest.raises(pytest.fail.Exception) as e:
-            func = getattr(lm, function)
-            func(good_pattern)
-        obtained = str(e.value).splitlines()
-        if function == "no_fnmatch_line":
-            assert obtained == [
-                "nomatch: '{}'".format(good_pattern),
-                "    and: 'cachedir: .pytest_cache'",
-                "    and: 'collecting ... collected 1 item'",
-                "    and: ''",
-                "fnmatch: '{}'".format(good_pattern),
-                "   with: 'show_fixtures_per_test.py OK'",
-            ]
-        else:
-            assert obtained == [
-                " nomatch: '{}'".format(good_pattern),
-                "     and: 'cachedir: .pytest_cache'",
-                "     and: 'collecting ... collected 1 item'",
-                "     and: ''",
-                "re.match: '{}'".format(good_pattern),
-                "    with: 'show_fixtures_per_test.py OK'",
-            ]
-
-    func = getattr(lm, function)
-    func(bad_pattern)  # bad pattern does not match any line: passes
-
-
-def test_linematcher_no_matching_after_match() -> None:
-    lm = LineMatcher(["1", "2", "3"])
-    lm.fnmatch_lines(["1", "3"])
-    with pytest.raises(pytest.fail.Exception) as e:
-        lm.no_fnmatch_line("*")
-    assert str(e.value).splitlines() == ["fnmatch: '*'", "   with: '1'"]
-
-
-def test_pytester_addopts_before_testdir(request, monkeypatch) -> None:
-    orig = os.environ.get("PYTEST_ADDOPTS", None)
+def test_pytester_addopts(request, monkeypatch):
     monkeypatch.setenv("PYTEST_ADDOPTS", "--orig-unused")
+
     testdir = request.getfixturevalue("testdir")
-    assert "PYTEST_ADDOPTS" not in os.environ
-    testdir.finalize()
-    assert os.environ.get("PYTEST_ADDOPTS") == "--orig-unused"
-    monkeypatch.undo()
-    assert os.environ.get("PYTEST_ADDOPTS") == orig
+
+    try:
+        assert "PYTEST_ADDOPTS" not in os.environ
+    finally:
+        testdir.finalize()
+
+    assert os.environ["PYTEST_ADDOPTS"] == "--orig-unused"
 
 
-def test_run_stdin(testdir) -> None:
+def test_run_stdin(testdir):
     with pytest.raises(testdir.TimeoutExpired):
         testdir.run(
             sys.executable,
@@ -650,7 +515,7 @@ def test_run_stdin(testdir) -> None:
     assert result.ret == 0
 
 
-def test_popen_stdin_pipe(testdir) -> None:
+def test_popen_stdin_pipe(testdir):
     proc = testdir.popen(
         [sys.executable, "-c", "import sys; print(sys.stdin.read())"],
         stdout=subprocess.PIPE,
@@ -664,7 +529,7 @@ def test_popen_stdin_pipe(testdir) -> None:
     assert proc.returncode == 0
 
 
-def test_popen_stdin_bytes(testdir) -> None:
+def test_popen_stdin_bytes(testdir):
     proc = testdir.popen(
         [sys.executable, "-c", "import sys; print(sys.stdin.read())"],
         stdout=subprocess.PIPE,
@@ -677,41 +542,34 @@ def test_popen_stdin_bytes(testdir) -> None:
     assert proc.returncode == 0
 
 
-def test_popen_default_stdin_stderr_and_stdin_None(testdir) -> None:
+def test_popen_default_stdin_stderr_and_stdin_None(testdir):
     # stdout, stderr default to pipes,
     # stdin can be None to not close the pipe, avoiding
     # "ValueError: flush of closed file" with `communicate()`.
-    #
-    # Wraps the test to make it not hang when run with "-s".
     p1 = testdir.makepyfile(
-        '''
+        """
         import sys
-
-        def test_inner(testdir):
-            p1 = testdir.makepyfile(
-                """
-                import sys
-                print(sys.stdin.read())  # empty
-                print('stdout')
-                sys.stderr.write('stderr')
-                """
-            )
-            proc = testdir.popen([sys.executable, str(p1)], stdin=None)
-            stdout, stderr = proc.communicate(b"ignored")
-            assert stdout.splitlines() == [b"", b"stdout"]
-            assert stderr.splitlines() == [b"stderr"]
-            assert proc.returncode == 0
-        '''
+        print(sys.stdin.read())  # empty
+        print('stdout')
+        sys.stderr.write('stderr')
+        """
     )
-    result = testdir.runpytest("-p", "pytester", str(p1))
-    assert result.ret == 0
+    proc = testdir.popen([sys.executable, str(p1)], stdin=None)
+    stdout, stderr = proc.communicate(b"ignored")
+    assert stdout.splitlines() == [b"", b"stdout"]
+    assert stderr.splitlines() == [b"stderr"]
+    assert proc.returncode == 0
 
 
-def test_spawn_uses_tmphome(testdir) -> None:
+def test_spawn_uses_tmphome(testdir):
+    import os
+
     tmphome = str(testdir.tmpdir)
-    assert os.environ.get("HOME") == tmphome
 
-    testdir.monkeypatch.setenv("CUSTOMENV", "42")
+    # Does use HOME only during run.
+    assert os.environ.get("HOME") != tmphome
+
+    testdir._env_run_update["CUSTOMENV"] = "42"
 
     p1 = testdir.makepyfile(
         """
@@ -727,83 +585,3 @@ def test_spawn_uses_tmphome(testdir) -> None:
     child = testdir.spawn_pytest(str(p1))
     out = child.read()
     assert child.wait() == 0, out.decode("utf8")
-
-
-def test_run_result_repr() -> None:
-    outlines = ["some", "normal", "output"]
-    errlines = ["some", "nasty", "errors", "happened"]
-
-    # known exit code
-    r = pytester.RunResult(1, outlines, errlines, duration=0.5)
-    assert (
-        repr(r) == "<RunResult ret=ExitCode.TESTS_FAILED len(stdout.lines)=3"
-        " len(stderr.lines)=4 duration=0.50s>"
-    )
-
-    # unknown exit code: just the number
-    r = pytester.RunResult(99, outlines, errlines, duration=0.5)
-    assert (
-        repr(r) == "<RunResult ret=99 len(stdout.lines)=3"
-        " len(stderr.lines)=4 duration=0.50s>"
-    )
-
-
-def test_testdir_outcomes_with_multiple_errors(testdir):
-    p1 = testdir.makepyfile(
-        """
-        import pytest
-
-        @pytest.fixture
-        def bad_fixture():
-            raise Exception("bad")
-
-        def test_error1(bad_fixture):
-            pass
-
-        def test_error2(bad_fixture):
-            pass
-    """
-    )
-    result = testdir.runpytest(str(p1))
-    result.assert_outcomes(errors=2)
-
-    assert result.parseoutcomes() == {"errors": 2}
-
-
-def test_parse_summary_line_always_plural():
-    """Parsing summaries always returns plural nouns (#6505)"""
-    lines = [
-        "some output 1",
-        "some output 2",
-        "======= 1 failed, 1 passed, 1 warning, 1 error in 0.13s ====",
-        "done.",
-    ]
-    assert pytester.RunResult.parse_summary_nouns(lines) == {
-        "errors": 1,
-        "failed": 1,
-        "passed": 1,
-        "warnings": 1,
-    }
-
-    lines = [
-        "some output 1",
-        "some output 2",
-        "======= 1 failed, 1 passed, 2 warnings, 2 errors in 0.13s ====",
-        "done.",
-    ]
-    assert pytester.RunResult.parse_summary_nouns(lines) == {
-        "errors": 2,
-        "failed": 1,
-        "passed": 1,
-        "warnings": 2,
-    }
-
-
-def test_makefile_joins_absolute_path(testdir: Testdir) -> None:
-    absfile = testdir.tmpdir / "absfile"
-    if sys.platform == "win32":
-        with pytest.raises(OSError):
-            testdir.makepyfile(**{str(absfile): ""})
-    else:
-        p1 = testdir.makepyfile(**{str(absfile): ""})
-        assert str(p1) == (testdir.tmpdir / absfile) + ".py"

@@ -82,17 +82,17 @@ promise_test(async t => {
   const lengthScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.px(20), 'auto']
+    startScrollOffset: CSS.px(20)
   });
   const percentageScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.percent(20), 'auto']
+    startScrollOffset: CSS.percent(20)
   });
   const calcScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.percent(20).sub(CSS.px(5)), 'auto']
+    startScrollOffset: CSS.percent(20).sub(CSS.px(5))
   });
 
   // Unscrolled all timelines should read a current time of 0, as the
@@ -215,21 +215,22 @@ promise_test(async t => {
   const inclusiveAutoScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
+    endScrollOffset: 'auto'
   });
   const inclusiveLengthScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.px(scrollerSize)]
+    endScrollOffset: CSS.px(scrollerSize)
   });
   const inclusivePercentageScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.percent(100)]
+    endScrollOffset: CSS.percent(100)
   });
   const inclusiveCalcScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.percent(80).add(CSS.px(0.2 * scrollerSize))]
+    endScrollOffset: CSS.percent(80).add(CSS.px(0.2 * scrollerSize))
   });
 
   scroller.scrollTop = scrollerSize;
@@ -261,17 +262,17 @@ promise_test(async t => {
   const lengthScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.px(scrollerSize - 20)]
+    endScrollOffset: CSS.px(scrollerSize - 20)
   });
   const percentageScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.percent(80)]
+    endScrollOffset: CSS.percent(80)
   });
   const calcScrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.percent(80).add(CSS.px(5))]
+    endScrollOffset: CSS.percent(80).add(CSS.px(5))
   });
 
   // Check the length-based ScrollTimeline.
@@ -368,7 +369,8 @@ promise_test(async t => {
   const scrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.px(20), CSS.px(scrollerSize - 50)]
+    startScrollOffset: CSS.px(20),
+    endScrollOffset: CSS.px(scrollerSize - 50)
   });
 
   scroller.scrollTop = 150;
@@ -385,7 +387,8 @@ promise_test(async t => {
   const scrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.px(20), CSS.px(20)]
+    startScrollOffset: CSS.px(20),
+    endScrollOffset: CSS.px(20)
   });
 
   scroller.scrollTop = 150;
@@ -401,7 +404,8 @@ promise_test(async t => {
   const scrollTimeline = new ScrollTimeline({
     scrollSource: scroller,
     orientation: 'block',
-    scrollOffsets: [CSS.px(50), CSS.px(10)]
+    startScrollOffset: CSS.px(50),
+    endScrollOffset: CSS.px(10)
   });
 
   scroller.scrollTop = 40;

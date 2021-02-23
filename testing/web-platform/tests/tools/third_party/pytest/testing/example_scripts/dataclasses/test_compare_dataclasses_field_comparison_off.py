@@ -1,12 +1,13 @@
+# -*- coding: utf-8 -*-
 from dataclasses import dataclass
 from dataclasses import field
 
 
-def test_dataclasses_with_attribute_comparison_off() -> None:
+def test_dataclasses_with_attribute_comparison_off():
     @dataclass
-    class SimpleDataObject:
+    class SimpleDataObject(object):
         field_a: int = field()
-        field_b: str = field(compare=False)
+        field_b: int = field(compare=False)
 
     left = SimpleDataObject(1, "b")
     right = SimpleDataObject(1, "c")
