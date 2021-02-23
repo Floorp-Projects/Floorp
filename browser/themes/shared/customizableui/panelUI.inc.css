@@ -1519,6 +1519,8 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
 }
 
 .subview-subheader {
+  font-size: inherit;
+  font-weight: inherit;
   color: var(--panel-description-color);
 }
 
@@ -2001,19 +2003,21 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   }
 } /** END not Proton **/
 
-.panel-header > label {
+.panel-header > h1 {
+  display: inline;
   flex: auto;
+  font-size: inherit;
   font-weight: 600;
   margin: 4px 0;
   text-align: center;
 }
 
-.panel-header > label > span {
+.panel-header > h1 > span {
   display: inline-block;
   white-space: pre-wrap;
 }
 
-.panel-header > .subviewbutton-back + label {
+.panel-header > .subviewbutton-back + h1 {
   /* Add the size of the back button to center properly. */
   margin-inline-end: 32px;
 }
