@@ -12,9 +12,12 @@
       <popupnotificationcontent id="webRTC-selectCamera" orient="vertical">
         <label data-l10n-id="popup-select-camera"
                control="webRTC-selectCamera-menulist"/>
-        <menulist id="webRTC-selectCamera-menulist">
-          <menupopup id="webRTC-selectCamera-menupopup"/>
-        </menulist>
+        <deck id="webRTC-selectCamera-deck">
+          <menulist id="webRTC-selectCamera-menulist">
+            <menupopup id="webRTC-selectCamera-menupopup"/>
+          </menulist>
+          <label id="webRTC-selectCamera-label" class="webRTC-selectDevice-label"></label>
+        </deck>
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectWindowOrScreen" orient="vertical">
@@ -38,9 +41,12 @@
       <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
         <label data-l10n-id="popup-select-microphone"
                control="webRTC-selectMicrophone-menulist"/>
-        <menulist id="webRTC-selectMicrophone-menulist">
-          <menupopup id="webRTC-selectMicrophone-menupopup"/>
-        </menulist>
+        <deck id="webRTC-selectMicrophone-deck">
+          <menulist id="webRTC-selectMicrophone-menulist">
+            <menupopup id="webRTC-selectMicrophone-menupopup"/>
+          </menulist>
+          <label id="webRTC-selectMicrophone-label" class="webRTC-selectDevice-label"></label>
+        </deck>
       </popupnotificationcontent>
     </popupnotification>
 

@@ -700,19 +700,27 @@ function prompt(aActor, aBrowser, aRequest) {
         return true;
       }
 
-      function listDevices(menupopup, devices) {
+      function listDevices(menupopup, devices, label, deck) {
         while (menupopup.lastChild) {
           menupopup.removeChild(menupopup.lastChild);
         }
+        let menulist = menupopup.parentNode;
         // Removing the child nodes of the menupopup doesn't clear the value
         // attribute of the menulist. This can have unfortunate side effects
         // when the list is rebuilt with a different content, so we remove
         // the value attribute and unset the selectedItem explicitly.
-        menupopup.parentNode.removeAttribute("value");
-        menupopup.parentNode.selectedItem = null;
+        menulist.removeAttribute("value");
+        menulist.selectedItem = null;
 
         for (let device of devices) {
           addDeviceToList(menupopup, device.name, device.deviceIndex);
+        }
+
+        if (devices.length == 1) {
+          label.value = devices[0].name;
+          deck.selectedIndex = 1;
+        } else {
+          deck.selectedIndex = 0;
         }
       }
 
@@ -988,14 +996,18 @@ function prompt(aActor, aBrowser, aRequest) {
         listScreenShareDevices(windowMenupopup, videoDevices);
         checkDisabledWindowMenuItem();
       } else {
-        listDevices(camMenupopup, videoDevices);
+        let label = doc.getElementById("webRTC-selectCamera-label");
+        let deck = doc.getElementById("webRTC-selectCamera-deck");
+        listDevices(camMenupopup, videoDevices, label, deck);
         doc
           .getElementById("webRTC-shareDevices-notification")
           .removeAttribute("invalidselection");
       }
 
       if (!sharingAudio) {
-        listDevices(micMenupopup, audioDevices);
+        let label = doc.getElementById("webRTC-selectMicrophone-label");
+        let deck = doc.getElementById("webRTC-selectMicrophone-deck");
+        listDevices(micMenupopup, audioDevices, label, deck);
       }
 
       this.mainAction.callback = async function(aState) {
