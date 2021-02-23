@@ -1,4 +1,7 @@
-"""Generate an executable with pytest runner embedded using PyInstaller."""
+# -*- coding: utf-8 -*-
+"""
+Generates an executable with pytest runner embedded using PyInstaller.
+"""
 if __name__ == "__main__":
     import pytest
     import subprocess

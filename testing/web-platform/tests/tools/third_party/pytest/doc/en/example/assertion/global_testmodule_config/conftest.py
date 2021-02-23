@@ -1,8 +1,9 @@
-import os.path
+# -*- coding: utf-8 -*-
+import py
 
 import pytest
 
-mydir = os.path.dirname(__file__)
+mydir = py.path.local(__file__).dirpath()
 
 
 def pytest_runtest_setup(item):

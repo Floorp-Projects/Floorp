@@ -28,7 +28,7 @@ Running pytest now produces this output:
 
     $ pytest test_show_warnings.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-4.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -40,8 +40,8 @@ Running pytest now produces this output:
       $REGENDOC_TMPDIR/test_show_warnings.py:5: UserWarning: api v1, should use functions from v2
         warnings.warn(UserWarning("api v1, should use functions from v2"))
 
-    -- Docs: https://docs.pytest.org/en/stable/warnings.html
-    ======================= 1 passed, 1 warning in 0.12s =======================
+    -- Docs: https://docs.pytest.org/en/latest/warnings.html
+    =================== 1 passed, 1 warnings in 0.12 seconds ===================
 
 The ``-W`` flag can be passed to control which warnings will be displayed or even turn
 them into errors:
@@ -64,34 +64,18 @@ them into errors:
     E       UserWarning: api v1, should use functions from v2
 
     test_show_warnings.py:5: UserWarning
-    ========================= short test summary info ==========================
-    FAILED test_show_warnings.py::test_one - UserWarning: api v1, should use ...
-    1 failed in 0.12s
+    1 failed in 0.12 seconds
 
-The same option can be set in the ``pytest.ini`` or ``pyproject.toml`` file using the
-``filterwarnings`` ini option. For example, the configuration below will ignore all
-user warnings and specific deprecation warnings matching a regex, but will transform
+The same option can be set in the ``pytest.ini`` file using the ``filterwarnings`` ini option.
+For example, the configuration below will ignore all user warnings, but will transform
 all other warnings into errors.
 
 .. code-block:: ini
 
-    # pytest.ini
     [pytest]
     filterwarnings =
         error
         ignore::UserWarning
-        ignore:function ham\(\) is deprecated:DeprecationWarning
-
-.. code-block:: toml
-
-    # pyproject.toml
-    [tool.pytest.ini_options]
-    filterwarnings = [
-        "error",
-        "ignore::UserWarning",
-        # note the use of single quote below to denote "raw" strings in TOML
-        'ignore:function ham\(\) is deprecated:DeprecationWarning',
-    ]
 
 
 When a warning matches more than one option in the list, the action for the last matching option
@@ -131,7 +115,7 @@ Filters applied using a mark take precedence over filters passed on the command 
 by the ``filterwarnings`` ini option.
 
 You may apply a filter to all tests of a class by using the ``filterwarnings`` mark as a class
-decorator or to all tests in a module by setting the :globalvar:`pytestmark` variable:
+decorator or to all tests in a module by setting the ``pytestmark`` variable:
 
 .. code-block:: python
 
@@ -143,7 +127,7 @@ decorator or to all tests in a module by setting the :globalvar:`pytestmark` var
 *Credits go to Florian Schulze for the reference implementation in the* `pytest-warnings`_
 *plugin.*
 
-.. _`-W option`: https://docs.python.org/3/using/cmdline.html#cmdoption-w
+.. _`-W option`: https://docs.python.org/3/using/cmdline.html?highlight=#cmdoption-W
 .. _warnings.simplefilter: https://docs.python.org/3/library/warnings.html#warnings.simplefilter
 .. _`pytest-warnings`: https://github.com/fschulze/pytest-warnings
 
@@ -196,7 +180,6 @@ This will ignore all warnings of type ``DeprecationWarning`` where the start of 
 the regular expression ``".*U.*mode is deprecated"``.
 
 .. note::
-
     If warnings are configured at the interpreter level, using
     the `PYTHONWARNINGS <https://docs.python.org/3/using/cmdline.html#envvar-PYTHONWARNINGS>`_ environment variable or the
     ``-W`` command-line option, pytest will not configure any filters by default.
@@ -214,7 +197,7 @@ the regular expression ``".*U.*mode is deprecated"``.
 Ensuring code triggers a deprecation warning
 --------------------------------------------
 
-You can also use :func:`pytest.deprecated_call` for checking
+You can also call a global helper for checking
 that a certain function call triggers a ``DeprecationWarning`` or
 ``PendingDeprecationWarning``:
 
@@ -223,18 +206,13 @@ that a certain function call triggers a ``DeprecationWarning`` or
     import pytest
 
 
-    def test_myfunction_deprecated():
-        with pytest.deprecated_call():
-            myfunction(17)
-
-This test will fail if ``myfunction`` does not issue a deprecation warning
-when called with a ``17`` argument.
+    def test_global():
+        pytest.deprecated_call(myfunction, 17)
 
 By default, ``DeprecationWarning`` and ``PendingDeprecationWarning`` will not be
-caught when using :func:`pytest.warns` or :ref:`recwarn <recwarn>` because
-the default Python warnings filters hide
-them. If you wish to record them in your own code, use
-``warnings.simplefilter('always')``:
+caught when using ``pytest.warns`` or ``recwarn`` because default Python warnings filters hide
+them. If you wish to record them in your own code, use the
+command ``warnings.simplefilter('always')``:
 
 .. code-block:: python
 
@@ -244,13 +222,19 @@ them. If you wish to record them in your own code, use
 
     def test_deprecation(recwarn):
         warnings.simplefilter("always")
-        myfunction(17)
+        warnings.warn("deprecated", DeprecationWarning)
         assert len(recwarn) == 1
         assert recwarn.pop(DeprecationWarning)
 
+You can also use it as a contextmanager:
 
-The :ref:`recwarn <recwarn>` fixture automatically ensures to reset the warnings
-filter at the end of the test, so no global state is leaked.
+.. code-block:: python
+
+    def test_global():
+        with pytest.deprecated_call():
+            myobject.deprecated_method()
+
+
 
 .. _`asserting warnings`:
 
@@ -293,9 +277,7 @@ argument ``match`` to assert that the exception matches a text or regex::
       ...
     Failed: DID NOT WARN. No warnings of type ...UserWarning... was emitted...
 
-You can also call ``pytest.warns`` on a function or code string:
-
-.. code-block:: python
+You can also call ``pytest.warns`` on a function or code string::
 
     pytest.warns(expected_warning, func, *args, **kwargs)
     pytest.warns(expected_warning, "func(*args, **kwargs)")
@@ -367,7 +349,7 @@ warnings, or index into it to get a particular recorded warning.
 
 .. currentmodule:: _pytest.warnings
 
-Full API: :class:`~_pytest.recwarn.WarningsRecorder`.
+Full API: :class:`WarningsRecorder`.
 
 .. _custom_failure_messages:
 
@@ -395,6 +377,8 @@ custom error message.
 Internal pytest warnings
 ------------------------
 
+
+
 pytest may generate its own warnings in some situations, such as improper usage or deprecated features.
 
 For example, pytest will emit a warning if it encounters a class that matches :confval:`python_classes` but also
@@ -419,12 +403,32 @@ defines an ``__init__`` constructor, as this prevents the class from being insta
       $REGENDOC_TMPDIR/test_pytest_warnings.py:1: PytestCollectionWarning: cannot collect test class 'Test' because it has a __init__ constructor (from: test_pytest_warnings.py)
         class Test:
 
-    -- Docs: https://docs.pytest.org/en/stable/warnings.html
-    1 warning in 0.12s
+    -- Docs: https://docs.pytest.org/en/latest/warnings.html
+    1 warnings in 0.12 seconds
 
 These warnings might be filtered using the same builtin mechanisms used to filter other types of warnings.
 
 Please read our :ref:`backwards-compatibility` to learn how we proceed about deprecating and eventually removing
 features.
 
-The full list of warnings is listed in :ref:`the reference documentation <warnings ref>`.
+The following warning types ares used by pytest and are part of the public API:
+
+.. autoclass:: pytest.PytestWarning
+
+.. autoclass:: pytest.PytestAssertRewriteWarning
+
+.. autoclass:: pytest.PytestCacheWarning
+
+.. autoclass:: pytest.PytestCollectionWarning
+
+.. autoclass:: pytest.PytestConfigWarning
+
+.. autoclass:: pytest.PytestDeprecationWarning
+
+.. autoclass:: pytest.PytestExperimentalApiWarning
+
+.. autoclass:: pytest.PytestUnhandledCoroutineWarning
+
+.. autoclass:: pytest.PytestUnknownMarkWarning
+
+.. autoclass:: pytest.RemovedInPytest4Warning
