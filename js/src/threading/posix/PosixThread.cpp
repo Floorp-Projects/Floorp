@@ -88,9 +88,16 @@ void ThisThread::SetName(const char* name) {
   MOZ_RELEASE_ASSERT(name);
 
 #if (defined(__APPLE__) && defined(__MACH__)) || defined(__linux__)
-  // On linux and OS X the name may not be longer than 16 bytes, including
+#  if defined(XP_DARWIN)
+  // Mac OS X has a length limit of 63 characters, but there is no API
+  // exposing it.
+#    define SETNAME_LENGTH_CONSTRAINT 63
+#  else
+  // On linux the name may not be longer than 16 bytes, including
   // the null terminator. Truncate the name to 15 characters.
-  char nameBuf[16];
+#    define SETNAME_LENGTH_CONSTRAINT 15
+#  endif
+  char nameBuf[SETNAME_LENGTH_CONSTRAINT + 1];
 
   strncpy(nameBuf, name, sizeof nameBuf - 1);
   nameBuf[sizeof nameBuf - 1] = '\0';
