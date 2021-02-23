@@ -2890,11 +2890,6 @@
           } else {
             this.pinTab(tab);
           }
-          if (gMultiProcessBrowser && !tab.linkedBrowser.isRemoteBrowser) {
-            this.updateBrowserRemoteness(tab.linkedBrowser, {
-              remoteType: E10SUtils.DEFAULT_REMOTE_TYPE,
-            });
-          }
         }
 
         // Add a new tab if needed.
