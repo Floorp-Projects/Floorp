@@ -10,6 +10,6 @@ def Library(name):
 
 Library("dummy")
 
-USE_YASM = True
+USE_NASM = True
 
 SOURCES += ["test1.S"]
