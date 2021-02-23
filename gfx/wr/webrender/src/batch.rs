@@ -1575,7 +1575,8 @@ impl BatchBuilder {
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
 
                         let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
-                            && surface.opaque_rect.contains_rect(&surface.rect);
+                            && surface.opaque_rect.contains_rect(&surface.rect)
+                            && transform_kind == TransformedRectKind::AxisAligned;
 
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {
