@@ -23,7 +23,298 @@ ChromeUtils.defineModuleGetter(
   "resource://services-sync/main.js"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
+});
+
 const MIN_STATUS_ANIMATION_DURATION = 1600;
+
+this.SyncedTabsPanelList = class SyncedTabsPanelList {
+  static sRemoteTabsDeckIndices = {
+    DECKINDEX_TABS: 0,
+    DECKINDEX_FETCHING: 1,
+    DECKINDEX_TABSDISABLED: 2,
+    DECKINDEX_NOCLIENTS: 3,
+  };
+
+  static sRemoteTabsPerPage = 25;
+  static sRemoteTabsNextPageMinTabs = 5;
+
+  constructor(panelview, deck, tabsList, separator) {
+    this.QueryInterface = ChromeUtils.generateQI([
+      "nsIObserver",
+      "nsISupportsWeakReference",
+    ]);
+
+    Services.obs.addObserver(this, SyncedTabs.TOPIC_TABS_CHANGED, true);
+    this.deck = deck;
+    this.tabsList = tabsList;
+    this.separator = separator;
+    this._showSyncedTabsPromise = Promise.resolve();
+
+    this.createSyncedTabs();
+  }
+
+  observe(subject, topic, data) {
+    if (topic == SyncedTabs.TOPIC_TABS_CHANGED) {
+      this._showSyncedTabs();
+    }
+  }
+
+  createSyncedTabs() {
+    if (SyncedTabs.isConfiguredToSyncTabs) {
+      if (SyncedTabs.hasSyncedThisSession) {
+        this.deck.selectedIndex =
+          SyncedTabsPanelList.sRemoteTabsDeckIndices.DECKINDEX_TABS;
+      } else {
+        // Sync hasn't synced tabs yet, so show the "fetching" panel.
+        this.deck.selectedIndex =
+          SyncedTabsPanelList.sRemoteTabsDeckIndices.DECKINDEX_FETCHING;
+      }
+      // force a background sync.
+      SyncedTabs.syncTabs().catch(ex => {
+        Cu.reportError(ex);
+      });
+      this.deck.toggleAttribute("syncingtabs", true);
+      // show the current list - it will be updated by our observer.
+      this._showSyncedTabs();
+      if (this.separator) {
+        this.separator.hidden = false;
+      }
+    } else {
+      // not configured to sync tabs, so no point updating the list.
+      this.deck.selectedIndex =
+        SyncedTabsPanelList.sRemoteTabsDeckIndices.DECKINDEX_TABSDISABLED;
+      this.deck.toggleAttribute("syncingtabs", false);
+      if (this.separator) {
+        this.separator.hidden = true;
+      }
+    }
+  }
+
+  // Update the synced tab list after any existing in-flight updates are complete.
+  _showSyncedTabs(paginationInfo) {
+    this._showSyncedTabsPromise = this._showSyncedTabsPromise.then(
+      () => {
+        return this.__showSyncedTabs(paginationInfo);
+      },
+      e => {
+        Cu.reportError(e);
+      }
+    );
+  }
+
+  // Return a new promise to update the tab list.
+  __showSyncedTabs(paginationInfo) {
+    if (!this.tabsList) {
+      // Closed between the previous `this._showSyncedTabsPromise`
+      // resolving and now.
+      return undefined;
+    }
+    return SyncedTabs.getTabClients()
+      .then(clients => {
+        let noTabs = !UIState.get().syncEnabled || !clients.length;
+        this.deck.toggleAttribute("syncingtabs", !noTabs);
+        if (this.separator) {
+          this.separator.hidden = noTabs;
+        }
+
+        // The view may have been hidden while the promise was resolving.
+        if (!this.tabsList) {
+          return;
+        }
+        if (clients.length === 0 && !SyncedTabs.hasSyncedThisSession) {
+          // the "fetching tabs" deck is being shown - let's leave it there.
+          // When that first sync completes we'll be notified and update.
+          return;
+        }
+
+        if (clients.length === 0) {
+          this.deck.selectedIndex =
+            SyncedTabsPanelList.sRemoteTabsDeckIndices.DECKINDEX_NOCLIENTS;
+          return;
+        }
+        this.deck.selectedIndex =
+          SyncedTabsPanelList.sRemoteTabsDeckIndices.DECKINDEX_TABS;
+        this._clearSyncedTabList();
+        SyncedTabs.sortTabClientsByLastUsed(clients);
+        let fragment = document.createDocumentFragment();
+
+        let clientNumber = 0;
+        for (let client of clients) {
+          // add a menu separator for all clients other than the first.
+          if (fragment.lastElementChild) {
+            let separator = document.createXULElement("menuseparator");
+            fragment.appendChild(separator);
+          }
+          // We add the client's elements to a container, and indicate which
+          // element labels it.
+          let labelId = `synced-tabs-client-${clientNumber++}`;
+          let container = document.createXULElement("vbox");
+          container.classList.add("PanelUI-remotetabs-clientcontainer");
+          container.setAttribute("role", "group");
+          container.setAttribute("aria-labelledby", labelId);
+          if (paginationInfo && paginationInfo.clientId == client.id) {
+            this._appendSyncClient(
+              client,
+              container,
+              labelId,
+              paginationInfo.maxTabs
+            );
+          } else {
+            this._appendSyncClient(client, container, labelId);
+          }
+          fragment.appendChild(container);
+        }
+        this.tabsList.appendChild(fragment);
+        PanelView.forNode(
+          this.tabsList.closest("panelview")
+        ).descriptionHeightWorkaround();
+      })
+      .catch(err => {
+        Cu.reportError(err);
+      })
+      .then(() => {
+        // an observer for tests.
+        Services.obs.notifyObservers(
+          null,
+          "synced-tabs-menu:test:tabs-updated"
+        );
+      });
+  }
+
+  _clearSyncedTabList() {
+    let list = this.tabsList;
+    while (list.lastChild) {
+      list.lastChild.remove();
+    }
+  }
+
+  _appendMessageLabel(messageAttr, appendTo = null) {
+    if (!appendTo) {
+      appendTo = this.tabsList;
+    }
+    let message = this.tabsList.getAttribute(messageAttr);
+    let messageLabel = document.createXULElement("label");
+    messageLabel.textContent = message;
+    appendTo.appendChild(messageLabel);
+    return messageLabel;
+  }
+
+  _appendSyncClient(
+    client,
+    container,
+    labelId,
+    maxTabs = SyncedTabsPanelList.sRemoteTabsPerPage
+  ) {
+    // Create the element for the remote client.
+    let clientItem = document.createXULElement("label");
+    clientItem.setAttribute("id", labelId);
+    clientItem.setAttribute("itemtype", "client");
+    clientItem.setAttribute(
+      "tooltiptext",
+      gSync.fluentStrings.formatValueSync("appmenu-fxa-last-sync", {
+        time: gSync.formatLastSyncDate(new Date(client.lastModified)),
+      })
+    );
+    clientItem.textContent = client.name;
+
+    container.appendChild(clientItem);
+
+    if (!client.tabs.length) {
+      let label = this._appendMessageLabel("notabsforclientlabel", container);
+      label.setAttribute("class", "PanelUI-remotetabs-notabsforclient-label");
+    } else {
+      // If this page will display all tabs, show no additional buttons.
+      // If the next page will display all the remaining tabs, show a "Show All" button
+      // Otherwise, show a "Shore More" button
+      let hasNextPage = client.tabs.length > maxTabs;
+      let nextPageIsLastPage =
+        hasNextPage &&
+        maxTabs + SyncedTabsPanelList.sRemoteTabsPerPage >= client.tabs.length;
+      if (nextPageIsLastPage) {
+        // When the user clicks "Show All", try to have at least sRemoteTabsNextPageMinTabs more tabs
+        // to display in order to avoid user frustration
+        maxTabs = Math.min(
+          client.tabs.length - SyncedTabsPanelList.sRemoteTabsNextPageMinTabs,
+          maxTabs
+        );
+      }
+      if (hasNextPage) {
+        client.tabs = client.tabs.slice(0, maxTabs);
+      }
+      for (let tab of client.tabs) {
+        let tabEnt = this._createSyncedTabElement(tab);
+        container.appendChild(tabEnt);
+      }
+      if (hasNextPage) {
+        let showAllEnt = this._createShowMoreSyncedTabsElement(client.id);
+        container.appendChild(showAllEnt);
+      }
+    }
+  }
+
+  _createSyncedTabElement(tabInfo) {
+    let item = document.createXULElement("toolbarbutton");
+    let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
+    item.setAttribute("itemtype", "tab");
+    item.setAttribute("class", "subviewbutton");
+    item.setAttribute("targetURI", tabInfo.url);
+    item.setAttribute(
+      "label",
+      tabInfo.title != "" ? tabInfo.title : tabInfo.url
+    );
+    item.setAttribute("image", tabInfo.icon);
+    item.setAttribute("tooltiptext", tooltipText);
+    // We need to use "click" instead of "command" here so openUILink
+    // respects different buttons (eg, to open in a new tab).
+    item.addEventListener("click", e => {
+      document.defaultView.openUILink(tabInfo.url, e, {
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+          {}
+        ),
+      });
+      if (document.defaultView.whereToOpenLink(e) != "current") {
+        e.preventDefault();
+        e.stopPropagation();
+      } else {
+        CustomizableUI.hidePanelForNode(item);
+      }
+    });
+    return item;
+  }
+
+  _createShowMoreSyncedTabsElement(clientId) {
+    let labelAttr = "showMoreLabel";
+    let tooltipAttr = "showMoreTooltipText";
+    let showCount = Infinity;
+
+    let showMoreItem = document.createXULElement("toolbarbutton");
+    showMoreItem.setAttribute("itemtype", "showmorebutton");
+    showMoreItem.classList.add(
+      "subviewbutton",
+      "subviewbutton-nav",
+      "subviewbutton-nav-down"
+    );
+    let label = this.tabsList.getAttribute(labelAttr);
+    showMoreItem.setAttribute("label", label);
+    let tooltipText = this.tabsList.getAttribute(tooltipAttr);
+    showMoreItem.setAttribute("tooltiptext", tooltipText);
+    showMoreItem.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._showSyncedTabs({ clientId, maxTabs: showCount });
+    });
+    return showMoreItem;
+  }
+
+  destroy() {
+    Services.obs.removeObserver(this, SyncedTabs.TOPIC_TABS_CHANGED);
+    this.tabsList = null;
+    this.deck = null;
+    this.separator = null;
+  }
+};
 
 var gSync = {
   _initialized: false,
@@ -47,6 +338,14 @@ var gSync = {
     delete this.fxaStrings;
     return (this.fxaStrings = Services.strings.createBundle(
       "chrome://browser/locale/accounts.properties"
+    ));
+  },
+
+  get fluentStrings() {
+    delete this.fluentStrings;
+    return (this.fluentStrings = new Localization(
+      ["branding/brand.ftl", "browser/appmenu.ftl"],
+      true
     ));
   },
 
@@ -173,7 +472,7 @@ var gSync = {
     // Label for the sync buttons.
     const appMenuLabel = PanelMultiView.getViewNode(
       document,
-      "appMenu-fxa-label"
+      PanelUI.protonAppMenuEnabled ? "appMenu-fxa-label2" : "appMenu-fxa-label"
     );
     if (!appMenuLabel) {
       // We are in a window without our elements - just abort now, without
@@ -192,6 +491,17 @@ var gSync = {
       "PanelUI-remotetabs-setupsync"
     ).hidden = false;
 
+    if (PanelUI.protonAppMenuEnabled) {
+      // We must initialize the label attribute here instead of the markup
+      // due to a timing error. The fluent label attribute was being applied
+      // after we had updated appMenuLabel and thus displayed an incorrect
+      // label for signed in users.
+      appMenuLabel.setAttribute(
+        "label",
+        this.fluentStrings.formatValueSync("appmenu-fxa-signed-in-label")
+      );
+    }
+
     for (let topic of this._obs) {
       Services.obs.addObserver(this, topic, true);
     }
@@ -199,6 +509,10 @@ var gSync = {
     this.maybeUpdateUIState();
 
     EnsureFxAccountsWebChannel();
+
+    let fxaPanelView = PanelMultiView.getViewNode(document, "PanelUI-fxa");
+    fxaPanelView.addEventListener("ViewShowing", this);
+    fxaPanelView.addEventListener("ViewHiding", this);
 
     this._initialized = true;
   },
@@ -213,6 +527,32 @@ var gSync = {
     }
 
     this._initialized = false;
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "ViewShowing": {
+        this.onFxAPanelViewShowing(event.target);
+        break;
+      }
+      case "ViewHiding": {
+        this.onFxAPanelViewHiding(event.target);
+      }
+    }
+  },
+
+  onFxAPanelViewShowing(panelview) {
+    panelview.syncedTabsPanelList = new SyncedTabsPanelList(
+      panelview,
+      PanelMultiView.getViewNode(document, "PanelUI-fxa-remotetabs-deck"),
+      PanelMultiView.getViewNode(document, "PanelUI-fxa-remotetabs-tabslist"),
+      PanelMultiView.getViewNode(document, "PanelUI-remote-tabs-separator")
+    );
+  },
+
+  onFxAPanelViewHiding(panelview) {
+    panelview.syncedTabsPanelList.destroy();
+    panelview.syncedTabsPanelList = null;
   },
 
   observe(subject, topic, data) {
@@ -366,10 +706,15 @@ var gSync = {
         if (clientId) {
           item.classList.add("subviewbutton-iconic");
           if (lastModified) {
-            item.setAttribute(
-              "tooltiptext",
-              gSync.formatLastSyncDate(lastModified)
-            );
+            let lastSyncDate = gSync.formatLastSyncDate(lastModified);
+            if (lastSyncDate) {
+              item.setAttribute(
+                "tooltiptext",
+                this.fluentStrings.formatValueSync("appmenu-fxa-last-sync", {
+                  time: lastSyncDate,
+                })
+              );
+            }
           }
         }
 
@@ -411,7 +756,6 @@ var gSync = {
   },
 
   toggleAccountPanel(
-    viewId,
     anchor = document.getElementById("fxa-toolbar-menu-button"),
     aEvent
   ) {
@@ -429,17 +773,45 @@ var gSync = {
       return;
     }
 
+    if (
+      PanelUI.protonAppMenuEnabled &&
+      UIState.get().status === UIState.STATUS_NOT_CONFIGURED
+    ) {
+      this.openFxAEmailFirstPageFromFxaMenu(
+        PanelMultiView.getViewNode(document, "PanelUI-fxa")
+      );
+      PanelUI.hide();
+      return;
+    }
+
     if (!gFxaToolbarAccessed) {
       Services.prefs.setBoolPref("identity.fxaccounts.toolbar.accessed", true);
     }
+    const fxaSignOutButtonEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-account-signout-button"
+    );
+    const fxaSignOutSeparator = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-sign-out-separator"
+    );
+    fxaSignOutButtonEl.hidden = fxaSignOutSeparator.hidden =
+      UIState.get().status != UIState.STATUS_SIGNED_IN;
 
     this.enableSendTabIfValidTab();
+
+    if (!this.getSendTabTargets().length) {
+      PanelMultiView.getViewNode(
+        document,
+        "PanelUI-fxa-menu-sendtab-button"
+      ).hidden = true;
+    }
 
     if (anchor.getAttribute("open") == "true") {
       PanelUI.hide();
     } else {
       this.emitFxaToolbarTelemetry("toolbar_icon", anchor);
-      PanelUI.showSubView(viewId, anchor, aEvent);
+      PanelUI.showSubView("PanelUI-fxa", anchor, aEvent);
     }
   },
 
@@ -451,6 +823,10 @@ var gSync = {
     // state shows an avatar with an email icon, `login-failed` state shows an avatar
     // with a danger icon and the `verified` state will show the users
     // custom profile image or a filled avatar.
+    // In the proton app menu, the avatar is not shown.
+    if (PanelUI.protonAppMenuEnabled) {
+      PanelMultiView.getViewNode(document, "fxa-menu-avatar").hidden = true;
+    }
     let stateValue = "not_configured";
 
     const menuHeaderTitleEl = PanelMultiView.getViewNode(
@@ -493,14 +869,23 @@ var gSync = {
       "defaultLabel"
     );
 
-    const appMenuFxAButtonEl = PanelMultiView.getViewNode(
+    const syncNowLabel = PanelMultiView.getViewNode(
       document,
-      "appMenu-fxa-label"
+      "PanelUI-fxa-menu-syncnow-label"
+    );
+    const lastSyncedLabel = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-appMenu-fxa-label-last-synced"
     );
 
-    let panelTitle = this.fxaStrings.GetStringFromName("account.title");
+    if (PanelUI.protonAppMenuEnabled) {
+      // TODO: sign out button icon is still showing despite removing class
+      let toolbarbuttons = fxaMenuPanel.querySelectorAll("toolbarbutton");
+      for (let toolbarbutton of toolbarbuttons) {
+        toolbarbutton.classList.remove("subviewbutton-iconic");
+      }
+    }
 
-    fxaMenuPanel.removeAttribute("title");
     cadButtonEl.setAttribute("disabled", true);
     syncNowButtonEl.hidden = true;
     fxaMenuAccountButtonEl.classList.remove("subviewbutton-nav");
@@ -510,20 +895,31 @@ var gSync = {
 
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
       mainWindowEl.style.removeProperty("--avatar-image-url");
+      if (PanelUI.protonAppMenuEnabled) {
+        headerDescription = this.fluentStrings.formatValueSync(
+          "appmenu-fxa-signed-in-label"
+        );
+      }
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "login-failed";
-      headerTitle = this.fxaStrings.GetStringFromName("account.reconnectToFxA");
-      headerDescription = state.email;
+      headerTitle = state.email;
+      headerDescription = this.fxaStrings.GetStringFromName(
+        "account.reconnectToFxA"
+      );
       mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_NOT_VERIFIED) {
       stateValue = "unverified";
-      headerTitle = this.fxaStrings.GetStringFromName(
+      headerTitle = state.email;
+      headerDescription = this.fxaStrings.GetStringFromName(
         "account.finishAccountSetup"
       );
-      headerDescription = state.email;
     } else if (state.status === UIState.STATUS_SIGNED_IN) {
       stateValue = "signedin";
-      if (state.avatarURL && !state.avatarIsDefault) {
+      if (
+        state.avatarURL &&
+        !state.avatarIsDefault &&
+        !PanelUI.protonAppMenuEnabled
+      ) {
         // The user has specified a custom avatar, attempt to load the image on all the menu buttons.
         const bgImage = `url("${state.avatarURL}")`;
         let img = new Image();
@@ -548,25 +944,32 @@ var gSync = {
         syncNowButtonEl.removeAttribute("hidden");
         syncPrefsButtonEl.removeAttribute("hidden");
         syncSetupButtonEl.hidden = true;
+        document.l10n.setAttributes(
+          syncNowLabel,
+          "appmenuitem-fxa-toolbar-sync-now"
+        );
+        let lastSyncDate = this.formatLastSyncDate(state.lastSync);
+        if (lastSyncDate) {
+          document.l10n.setAttributes(
+            lastSyncedLabel,
+            "appmenu-fxa-last-sync",
+            {
+              time: lastSyncDate,
+            }
+          );
+        }
       }
 
-      fxaMenuAccountButtonEl.classList.add("subviewbutton-nav");
-      fxaMenuAccountButtonEl.setAttribute("closemenu", "none");
-
-      headerTitle = state.email;
-      headerDescription = this.fxaStrings.GetStringFromName(
-        "account.accountSettings"
+      headerTitle = this.fluentStrings.formatValueSync(
+        "appmenuitem-fxa-manage-account"
       );
 
-      panelTitle = state.displayName ? state.displayName : panelTitle;
+      headerDescription = state.email;
     }
     mainWindowEl.setAttribute("fxastatus", stateValue);
 
     menuHeaderTitleEl.value = headerTitle;
     menuHeaderDescriptionEl.value = headerDescription;
-    appMenuFxAButtonEl.setAttribute("label", headerTitle);
-
-    fxaMenuPanel.setAttribute("title", panelTitle);
   },
 
   enableSendTabIfValidTab() {
@@ -576,17 +979,10 @@ var gSync = {
       this.isSendableURI(t.linkedBrowser.currentURI.spec)
     );
 
-    if (canSendAllURIs) {
-      PanelMultiView.getViewNode(
-        document,
-        "PanelUI-fxa-menu-sendtab-button"
-      ).removeAttribute("disabled");
-    } else {
-      PanelMultiView.getViewNode(
-        document,
-        "PanelUI-fxa-menu-sendtab-button"
-      ).setAttribute("disabled", true);
-    }
+    PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-sendtab-button"
+    ).hidden = !canSendAllURIs;
   },
 
   emitFxaToolbarTelemetry(type, panel) {
@@ -630,24 +1026,35 @@ var gSync = {
     );
     const appMenuLabel = PanelMultiView.getViewNode(
       document,
-      "appMenu-fxa-label"
+      PanelUI.protonAppMenuEnabled ? "appMenu-fxa-label2" : "appMenu-fxa-label"
     );
     const appMenuAvatar = PanelMultiView.getViewNode(
       document,
       "appMenu-fxa-avatar"
     );
+    const appMenuHeaderText = PanelMultiView.getViewNode(
+      document,
+      "appMenu-fxa-text"
+    );
 
-    let defaultLabel = appMenuStatus.getAttribute("defaultlabel");
+    let defaultLabel = PanelUI.protonAppMenuEnabled
+      ? this.fluentStrings.formatValueSync("appmenu-fxa-signed-in-label")
+      : appMenuStatus.getAttribute("defaultlabel");
     const status = state.status;
     // Reset the status bar to its original state.
     appMenuLabel.setAttribute("label", defaultLabel);
     appMenuStatus.removeAttribute("fxastatus");
     appMenuAvatar.style.removeProperty("list-style-image");
-    appMenuLabel.classList.remove("subviewbutton-nav");
 
     if (status == UIState.STATUS_NOT_CONFIGURED) {
+      if (PanelUI.protonAppMenuEnabled) {
+        appMenuHeaderText.hidden = false;
+        appMenuHeaderText.style.visibility = "visible";
+        appMenuStatus.classList.add("toolbaritem-combined-buttons");
+      }
       return;
     }
+    appMenuLabel.classList.remove("subviewbutton-nav");
 
     // At this point we consider sync to be configured (but still can be in an error state).
     if (status == UIState.STATUS_LOGIN_FAILED) {
@@ -655,8 +1062,10 @@ var gSync = {
         "reconnectDescription",
         [state.email]
       );
-      let errorLabel = appMenuStatus.getAttribute("errorlabel");
       appMenuStatus.setAttribute("fxastatus", "login-failed");
+      let errorLabel = this.fxaStrings.GetStringFromName(
+        "account.reconnectToFxA"
+      );
       appMenuLabel.setAttribute("label", errorLabel);
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
@@ -665,16 +1074,25 @@ var gSync = {
         "verifyDescription",
         [state.email]
       );
-      let unverifiedLabel = appMenuStatus.getAttribute("unverifiedlabel");
       appMenuStatus.setAttribute("fxastatus", "unverified");
+      let unverifiedLabel = this.fxaStrings.GetStringFromName(
+        "account.finishAccountSetup"
+      );
       appMenuLabel.setAttribute("label", unverifiedLabel);
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       return;
     }
 
+    if (PanelUI.protonAppMenuEnabled) {
+      appMenuHeaderText.style.visibility = "collapse";
+      appMenuStatus.classList.remove("toolbaritem-combined-buttons");
+    } else {
+      appMenuLabel.classList.add("subviewbutton-iconic");
+    }
+
     // At this point we consider sync to be logged-in.
     appMenuStatus.setAttribute("fxastatus", "signedin");
-    appMenuLabel.setAttribute("label", state.displayName || state.email);
+    appMenuLabel.setAttribute("label", state.email);
     appMenuLabel.classList.add("subviewbutton-nav");
     appMenuStatus.removeAttribute("tooltiptext");
   },
@@ -779,7 +1197,7 @@ var gSync = {
         this.openPrefsFromFxaMenu("sync_settings", panel);
         break;
       case UIState.STATUS_SIGNED_IN:
-        PanelUI.showSubView("PanelUI-fxa-menu-account-panel", panel);
+        this.openFxAManagePageFromFxaMenu(panel);
     }
   },
 
@@ -791,7 +1209,10 @@ var gSync = {
   async openFxAEmailFirstPageFromFxaMenu(panel = undefined) {
     this.emitFxaToolbarTelemetry("login", panel);
     let entryPoint = "fxa_discoverability_native";
-    if (this.isPanelInsideAppMenu(panel)) {
+    if (
+      this.isPanelInsideAppMenu(panel) ||
+      (PanelUI.protonAppMenuEnabled && panel)
+    ) {
       entryPoint = "fxa_app_menu";
     }
     this.openFxAEmailFirstPage(entryPoint);
@@ -1040,38 +1461,6 @@ var gSync = {
       }
       addTargetDevice(target.id, target.name, type, lastModified);
     }
-
-    if (targets.length > 1) {
-      // "Send to All Devices" menu item
-      const separator = createDeviceNodeFn();
-      separator.classList.add("sync-menuitem");
-      fragment.appendChild(separator);
-      const allDevicesLabel = this.fxaStrings.GetStringFromName(
-        "sendToAllDevices.menuitem"
-      );
-      addTargetDevice("", allDevicesLabel, "");
-
-      // "Manage devices" menu item
-      const manageDevicesLabel = this.fxaStrings.GetStringFromName(
-        "manageDevices.menuitem"
-      );
-      // We piggyback on the createDeviceNodeFn implementation,
-      // it's a big disgusting.
-      const targetDevice = createDeviceNodeFn(
-        null,
-        manageDevicesLabel,
-        null,
-        null
-      );
-      targetDevice.addEventListener(
-        "command",
-        () => gSync.openDevicesManagementPage("sendtab"),
-        true
-      );
-      targetDevice.classList.add("sync-menuitem", "sendtab-target");
-      targetDevice.setAttribute("label", manageDevicesLabel);
-      fragment.appendChild(targetDevice);
-    }
   },
 
   _appendSendTabSingleDevice(fragment, createDeviceNodeFn) {
@@ -1307,7 +1696,7 @@ var gSync = {
     document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.removeAttribute("syncstatus");
       el.removeAttribute("disabled");
-      document.l10n.setAttributes(el, "fxa-toolbar-sync-now");
+      document.l10n.setAttributes(el, "appmenuitem-fxa-toolbar-sync-now");
     });
 
     document
@@ -1316,7 +1705,7 @@ var gSync = {
       .forEach(el => {
         el.removeAttribute("syncstatus");
         el.removeAttribute("disabled");
-        document.l10n.setAttributes(el, "fxa-toolbar-sync-now");
+        document.l10n.setAttributes(el, "appmenuitem-fxa-toolbar-sync-now");
       });
 
     Services.obs.notifyObservers(null, "test:browser-sync:activity-stop");
@@ -1529,7 +1918,13 @@ var gSync = {
       );
     } else {
       // Sync appears configured - format the "last synced at" time.
-      tooltiptext = this.formatLastSyncDate(state.lastSync);
+      let lastSyncDate = this.formatLastSyncDate(state.lastSync);
+      if (lastSyncDate) {
+        tooltiptext = this.fluentStrings.formatValueSync(
+          "appmenu-fxa-last-sync",
+          { time: lastSyncDate }
+        );
+      }
     }
 
     document.querySelectorAll(".syncNowBtn").forEach(el => {
@@ -1561,16 +1956,24 @@ var gSync = {
   },
 
   formatLastSyncDate(date) {
+    const lastSyncedImage = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-appMenu-fxa-image-last-synced"
+    );
     if (!date) {
+      lastSyncedImage.hidden = true;
       // Date can be null before the first sync!
       return null;
     }
     try {
-      const relativeDateStr = this.relativeTimeFormat.formatBestUnit(date);
-      return this.syncStrings.formatStringFromName("lastSync2.label", [
-        relativeDateStr,
-      ]);
+      lastSyncedImage.hidden = false;
+      let adjustedDate = new Date(Date.now() - 1000);
+      let relativeDateStr = this.relativeTimeFormat.formatBestUnit(
+        date < adjustedDate ? date : adjustedDate
+      );
+      return relativeDateStr;
     } catch (ex) {
+      lastSyncedImage.hidden = true;
       // shouldn't happen, but one client having an invalid date shouldn't
       // break the entire feature.
       this.log.warn("failed to format lastSync time", date, ex);

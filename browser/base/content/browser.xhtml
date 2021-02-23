@@ -760,7 +760,7 @@
                         class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                         label="&fxa.menu.signin.label;"
                         closemenu="none"
-                        oncommand="gSync.toggleAccountPanel('PanelUI-fxa', this, event)"/>
+                        oncommand="gSync.toggleAccountPanel(this, event)"/>
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
         <toolbaritem>
@@ -967,6 +967,15 @@
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>
+        <toolbaritem id="appMenu-fxa-status2"
+                     class="subviewbutton toolbaritem-combined-buttons">
+          <label id="appMenu-fxa-text" class="toolbarbutton-text" data-l10n-id="appmenu-fxa-sync-and-save-data"/>
+          <toolbarbutton id="appMenu-fxa-label2"
+                        class="subviewbutton"
+                        closemenu="none"
+                        oncommand="gSync.toggleAccountPanel(this, event)"/>
+        </toolbaritem>
+        <toolbarseparator/>
         <toolbarbutton id="appMenu-new-tab-button2"
                        class="subviewbutton"
                        label="&tabCmd.label;"
@@ -1358,7 +1367,7 @@
                            <observes element="sidebar-box" attribute="positionend"/>
             </toolbarbutton>
             <toolbarbutton id="PanelUI-remotetabs-syncnow"
-                           data-l10n-id="fxa-toolbar-sync-now"
+                           data-l10n-id="appmenuitem-fxa-toolbar-sync-now"
                            syncinglabel="fxa-toolbar-sync-syncing-tabs"
                            class="syncNowBtn subviewbutton subviewbutton-iconic"
                            oncommand="gSync.doSync();"
@@ -1377,6 +1386,10 @@
                     notabsforclientlabel="&appMenuRemoteTabs.notabs.label;"
                     />
             </vbox>
+            <!-- Sync is ready to Sync but we are still fetching the tabs to show -->
+            <vbox id="PanelUI-remotetabs-fetching">
+              <!-- Show intentionally blank panel, see bug 1239845 -->
+            </vbox>
             <!-- Sync is ready to Sync but the "tabs" engine isn't enabled-->
             <hbox id="PanelUI-remotetabs-tabsdisabledpane" pack="center" flex="1">
               <vbox class="PanelUI-remotetabs-instruction-box" align="center">
@@ -1392,10 +1405,6 @@
                 </hbox>
               </vbox>
             </hbox>
-            <!-- Sync is ready to Sync but we are still fetching the tabs to show -->
-            <vbox id="PanelUI-remotetabs-fetching">
-              <!-- Show intentionally blank panel, see bug 1239845 -->
-            </vbox>
             <!-- Sync has only 1 (ie, this) device connected -->
             <hbox id="PanelUI-remotetabs-nodevicespane" pack="center" flex="1">
               <vbox class="PanelUI-remotetabs-instruction-box" align="center">
@@ -1469,11 +1478,11 @@
       </vbox>
     </panelview>
 
-    <panelview id="PanelUI-fxa" title="&fxa.menu.account.label;" class="PanelUI-subView" descriptionheightworkaround="true">
+    <panelview id="PanelUI-fxa" data-l10n-id="appmenu-fxa-header" class="PanelUI-subView" descriptionheightworkaround="true">
       <vbox id="PanelUI-fxa-menu" class="panel-subview-body">
         <toolbarbutton id="fxa-manage-account-button"
                        align="center"
-                       class="fxa-menu-header subviewbutton"
+                       class="subviewbutton"
                        oncommand="gSync.clickFxAMenuHeaderButton(this);">
           <image role="presentation" id="fxa-menu-avatar"/>
           <vbox flex="1">
@@ -1487,76 +1496,64 @@
                    defaultLabel="&fxa.menu.turnOnSync.label;"/>
           </vbox>
         </toolbarbutton>
-        <toolbarseparator/>
-        <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
-                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                        closemenu="none"
-                        oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
-        <toolbarseparator/>
+        <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
+                       align="center"
+                       class="subviewbutton subviewbutton-iconic"
+                       oncommand="gSync.doSyncFromFxaMenu(this);"
+                       closemenu="none">
+          <vbox flex="1">
+            <label id="PanelUI-fxa-menu-syncnow-label"
+                   crop="end"/>
+            <hbox>
+              <label id="PanelUI-appMenu-fxa-label-last-synced"
+                     crop="end"/>
+              <image id="PanelUI-appMenu-fxa-image-last-synced"
+                     class="syncNowBtn"
+                     syncinglabel="fxa-toolbar-sync-syncing-tabs"/>
+            </hbox>
+          </vbox>
+        </toolbarbutton>
+        <toolbarbutton id="PanelUI-fxa-menu-setup-sync-button"
+                        class="subviewbutton subviewbutton-iconic"
+                        data-l10n-id="appmenu-fxa-setup-sync"
+                        oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
         <!-- The `Connect Another Device` button is disabled by default until the user logs into Sync. -->
         <toolbarbutton id="PanelUI-fxa-menu-connect-device-button"
                         class="subviewbutton subviewbutton-iconic"
                         label="&fxa.menu.connectAnotherDevice2.label;"
                         disabled="true"
                         oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
-        <toolbarseparator/>
-        <!-- The `Sync Now` button is hidden by default until the user logs into Sync. -->
-        <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
-                        data-l10n-id="fxa-toolbar-sync-now"
-                        syncinglabel="fxa-toolbar-sync-syncing"
-                        hidden="true"
-                        class="syncNowBtn subviewbutton subviewbutton-iconic"
-                        onmouseover="gSync.refreshSyncButtonsTooltip();"
-                        oncommand="gSync.doSyncFromFxaMenu(this);"
-                        closemenu="none"/>
-        <toolbarbutton id="PanelUI-fxa-menu-setup-sync-button"
-                        class="subviewbutton subviewbutton-iconic"
-                        label="&fxa.menu.setupSync.label;"
-                        oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
-        <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
-                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                        label="&appMenuRemoteTabs.label;"
+        <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
+                        class="subviewbutton subviewbutton-nav subviewbutton-iconic"
                         closemenu="none"
-                        oncommand="gSync.showRemoteTabsFromFxaMenu(this);"/>
+                        oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
         <toolbarbutton id="PanelUI-fxa-menu-sync-prefs-button"
                         class="subviewbutton subviewbutton-iconic"
                         label="&fxa.menu.syncSettings2.label;"
                         hidden="true"
                         oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
-        <toolbarseparator/>
-        <toolbarbutton id="PanelUI-fxa-menu-logins-button"
-                        class="subviewbutton subviewbutton-iconic"
-                        label="&logins.label;"
-                        oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'fxamenu' })"/>
-        <toolbarseparator id="fxa-menu-service-separator"/>
-        <label id="fxa-menu-service-label"
-               value="&fxa.menu.firefoxServices.label;"
-               class="subview-subheader"/>
-        <toolbarbutton id="PanelUI-fxa-menu-monitor-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&monitorFullName;"
-                       type="open-to-new"
-                       oncommand="gSync.openMonitorFromFxaMenu(this);"/>
-        <toolbarbutton id="PanelUI-fxa-menu-send-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&sendFullName;"
-                       type="open-to-new"
-                       oncommand="gSync.openSendFromFxaMenu(this);"/>
-      </vbox>
-    </panelview>
-
-    <panelview id="PanelUI-fxa-menu-account-panel" flex="1" title="&fxa.menu.accountSettings.label;" class="PanelUI-subView" descriptionheightworkaround="true">
-      <vbox class="panel-subview-body">
-        <toolbarbutton id="PanelUI-fxa-menu-account-settings-button"
-                      class="subviewbutton subviewbutton-iconic"
-                      label="&fxa.menu.manageAccount2.label;"
-                      type="open-to-new"
-                      oncommand="gSync.openFxAManagePageFromFxaMenu(this)"/>
-        <toolbarseparator/>
+        <toolbarseparator id="PanelUI-sign-out-separator"/>
         <toolbarbutton id="PanelUI-fxa-menu-account-signout-button"
                 class="subviewbutton subviewbutton-iconic"
                 label="&fxa.menu.signOut.label;"
                 oncommand="gSync.disconnect();"/>
+        <toolbarseparator id="PanelUI-remote-tabs-separator"/>
+        <deck id="PanelUI-fxa-remotetabs-deck">
+          <!-- Sync is ready to Sync and the "tabs" engine is enabled -->
+          <vbox id="PanelUI-fxa-remotetabs-tabspane">
+            <vbox id="PanelUI-fxa-remotetabs-tabslist"
+                  showAllLabel="&appMenuRemoteTabs.showAll.label;"
+                  showAllTooltipText="&appMenuRemoteTabs.showAll.tooltip;"
+                  showMoreLabel="&appMenuRemoteTabs.showMore.label;"
+                  showMoreTooltipText="&appMenuRemoteTabs.showMore.tooltip;"
+                  notabsforclientlabel="&appMenuRemoteTabs.notabs.label;"
+                  />
+          </vbox>
+          <!-- Sync is ready to Sync but we are still fetching the tabs to show -->
+          <vbox id="PanelUI-fxa-remotetabs-fetching">
+            <!-- Show intentionally blank panel, see bug 1239845 -->
+          </vbox>
+        </deck>
       </vbox>
     </panelview>
 
@@ -2076,8 +2073,8 @@
 
         <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                        badged="true"
-                       onmousedown="gSync.toggleAccountPanel('PanelUI-fxa', this, event)"
-                       onkeypress="gSync.toggleAccountPanel('PanelUI-fxa', this, event)"
+                       onmousedown="gSync.toggleAccountPanel(this, event)"
+                       onkeypress="gSync.toggleAccountPanel(this, event)"
                        consumeanchor="fxa-toolbar-menu-button"
                        closemenu="none"
                        label="&fxa.menu.firefoxAccount;"

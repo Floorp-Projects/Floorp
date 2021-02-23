@@ -36,7 +36,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY fxa.menu.signin.label "Sign in to &brandProductName;">
 <!ENTITY fxa.menu.turnOnSync.label "Turn on &syncBrand.shortName.label;">
 <!ENTITY fxa.menu.firefoxServices.label "&brandProductName; Services">
-<!ENTITY fxa.menu.account.label "Account">
 <!ENTITY fxa.menu.settings.label "Settings">
 <!ENTITY fxa.menu.accountSettings.label "Account Settings">
 <!ENTITY fxa.menu.manageAccount2.label "Manage Account">
