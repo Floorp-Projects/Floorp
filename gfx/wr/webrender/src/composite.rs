@@ -5,7 +5,7 @@
 use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering, ExternalImageId, ImageBufferKind};
 use api::units::*;
 use api::ColorDepth;
-use crate::batch::{resolve_image};
+use crate::image_source::resolve_image;
 use euclid::Transform3D;
 use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
