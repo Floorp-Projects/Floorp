@@ -878,6 +878,8 @@ static bool HandleMachException(const ExceptionRequest& request) {
 static mach_port_t sMachDebugPort = MACH_PORT_NULL;
 
 static void MachExceptionHandlerThread() {
+  ThisThread::SetName("JS Wasm MachExceptionHandler");
+
   // Taken from mach_exc in /usr/include/mach/mach_exc.defs.
   static const unsigned EXCEPTION_MSG_ID = 2405;
 
