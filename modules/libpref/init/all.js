@@ -4398,11 +4398,7 @@ pref("toolkit.aboutProcesses.showThreads", false);
   pref("toolkit.crashreporter.include_context_heap", true);
 #endif
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
-  pref("layers.omtp.enabled", true);
-#else
-  pref("layers.omtp.enabled", false);
-#endif
+pref("layers.omtp.enabled", false);
 
 // Support for legacy customizations that rely on checking the
 // user profile directory for these stylesheets:
