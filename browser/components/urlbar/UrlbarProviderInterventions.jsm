@@ -697,7 +697,7 @@ class ProviderInterventions extends UrlbarProvider {
     }
   }
 
-  onEngagement(isPrivate, state) {
+  onEngagement(isPrivate, state, queryContext, details) {
     if (["engagement", "abandonment"].includes(state)) {
       for (let tip of this.tipsShownInCurrentEngagement) {
         Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);

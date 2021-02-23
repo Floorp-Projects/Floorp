@@ -243,16 +243,23 @@ class UrlbarProviderExtension extends UrlbarProvider {
   }
 
   /**
-   * This method is called when the user starts and ends an engagement with the
-   * urlbar.
+   * Called when the user starts and ends an engagement with the urlbar.  For
+   * details on parameters, see UrlbarProvider.onEngagement().
    *
    * @param {boolean} isPrivate
    *   True if the engagement is in a private context.
    * @param {string} state
    *   The state of the engagement, one of: start, engagement, abandonment,
-   *   discard.
+   *   discard
+   * @param {UrlbarQueryContext} queryContext
+   *   The engagement's query context.  This is *not* guaranteed to be defined
+   *   when `state` is "start".  It will always be defined for "engagement" and
+   *   "abandonment".
+   * @param {object} details
+   *   This is defined only when `state` is "engagement" or "abandonment", and
+   *   it describes the search string and picked result.
    */
-  onEngagement(isPrivate, state) {
+  onEngagement(isPrivate, state, queryContext, details) {
     this._notifyListener("engagement", isPrivate, state);
   }
 
