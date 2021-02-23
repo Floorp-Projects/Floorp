@@ -24,12 +24,6 @@ const { shortURL } = ChromeUtils.import(
 const { SectionsManager } = ChromeUtils.import(
   "resource://activity-stream/lib/SectionsManager.jsm"
 );
-const { UserDomainAffinityProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/UserDomainAffinityProvider.jsm"
-);
-const { PersonalityProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm"
-);
 const { PersistentCache } = ChromeUtils.import(
   "resource://activity-stream/lib/PersistentCache.jsm"
 );
@@ -43,7 +37,6 @@ ChromeUtils.defineModuleGetter(
 const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
 const STORIES_NOW_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
-const MIN_DOMAIN_AFFINITIES_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
 const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
 const SECTION_ID = "topstories";
 const IMPRESSION_SOURCE = "TOP_STORIES";
@@ -53,7 +46,6 @@ const DISCOVERY_STREAM_PREF_ENABLED = "discoverystream.enabled";
 const DISCOVERY_STREAM_PREF_ENABLED_PATH =
   "browser.newtabpage.activity-stream.discoverystream.enabled";
 const REC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.rec.impressions";
-const OPTIONS_PREF = "feeds.section.topstories.options";
 const PREF_USER_TOPSTORIES = "feeds.section.topstories";
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 const DISCOVERY_STREAM_PREF = "discoverystream.config";
@@ -100,16 +92,11 @@ this.TopStoriesFeed = class TopStoriesFeed {
       );
       this.read_more_endpoint = options.read_more_endpoint;
       this.stories_referrer = options.stories_referrer;
-      this.personalized = options.personalized;
       this.show_spocs = options.show_spocs;
-      this.maxHistoryQueryResults = options.maxHistoryQueryResults;
       this.storiesLastUpdated = 0;
       this.topicsLastUpdated = 0;
       this.storiesLoaded = false;
-      this.domainAffinitiesLastUpdated = 0;
-      this.processAffinityProividerVersion(options);
       this.dispatchPocketCta(this._prefs.get("pocketCta"), false);
-      Services.obs.addObserver(this, "idle-daily");
 
       // Cache is used for new page loads, which shouldn't have changed data.
       // If we have changed data, cache should be cleared,
@@ -137,14 +124,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
     SectionsManager.onceInitialized(this.onInit.bind(this));
   }
 
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "idle-daily":
-        this.updateDomainAffinityScores();
-        break;
-    }
-  }
-
   async clearCache() {
     await this.cache.set("stories", {});
     await this.cache.set("topics", {});
@@ -153,12 +132,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
   uninit() {
     this.storiesLoaded = false;
-    try {
-      Services.obs.removeObserver(this, "idle-daily");
-    } catch (e) {
-      // Attempt to remove unassociated observer which is possible when discovery stream
-      // is enabled and user never used activity stream experience
-    }
     SectionsManager.disableSection(SECTION_ID);
   }
 
@@ -214,42 +187,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.dispatchUpdateEvent(shouldBroadcast, updateProps);
   }
 
-  async onPersonalityProviderInit() {
-    const data = await this.cache.get();
-    let stories = data.stories && data.stories.recommendations;
-    this.stories = this.rotate(this.transform(stories));
-    this.doContentUpdate({ stories: this.stories }, false);
-
-    const affinities = this.affinityProvider.getAffinities();
-    this.domainAffinitiesLastUpdated = Date.now();
-    affinities._timestamp = this.domainAffinitiesLastUpdated;
-    this.cache.set("domainAffinities", affinities);
-  }
-
-  affinityProividerSwitcher(...args) {
-    const { affinityProviderV2 } = this;
-    if (affinityProviderV2 && affinityProviderV2.use_v2) {
-      const provider = this.PersonalityProvider(...args, {
-        modelKeys: affinityProviderV2.model_keys,
-        dispatch: this.store.dispatch,
-      });
-      provider.init(this.onPersonalityProviderInit.bind(this));
-      return provider;
-    }
-
-    const v1Provider = this.UserDomainAffinityProvider(...args);
-
-    return v1Provider;
-  }
-
-  PersonalityProvider(...args) {
-    return new PersonalityProvider(...args);
-  }
-
-  UserDomainAffinityProvider(...args) {
-    return new UserDomainAffinityProvider(...args);
-  }
-
   async fetchStories() {
     if (!this.stories_endpoint) {
       return null;
@@ -292,17 +229,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
     let stories = data.stories && data.stories.recommendations;
     let topics = data.topics && data.topics.topics;
 
-    let affinities = data.domainAffinities;
-    if (this.personalized && affinities && affinities.scores) {
-      this.affinityProvider = this.affinityProividerSwitcher(
-        affinities.timeSegments,
-        affinities.parameterSets,
-        affinities.maxHistoryQueryResults,
-        affinities.version,
-        affinities.scores
-      );
-      this.domainAffinitiesLastUpdated = affinities._timestamp;
-    }
     if (stories && !!stories.length && this.storiesLastUpdated === 0) {
       this.updateSettings(data.stories.settings);
       this.stories = this.rotate(this.transform(stories));
@@ -348,10 +274,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
           referrer: this.stories_referrer,
           url: s.url,
           min_score: s.min_score || 0,
-          score:
-            this.personalized && this.affinityProvider
-              ? this.affinityProvider.calculateItemRelevanceScore(s)
-              : s.item_score || 1,
+          score: s.item_score || 1,
           spoc_meta: this.show_spocs
             ? { campaign_id: s.campaign_id, caps: s.caps }
             : {},
@@ -364,7 +287,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
         return mapped;
       })
-      .sort(this.personalized ? this.compareScore : (a, b) => 0);
+      .sort(this.compareScore);
 
     return calcResult;
   }
@@ -404,59 +327,16 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return b.score - a.score;
   }
 
-  updateSettings(settings) {
-    if (!this.personalized) {
-      return;
-    }
-
-    this.spocsPerNewTabs = settings.spocsPerNewTabs; // Probability of a new tab getting a spoc [0,1]
-    this.timeSegments = settings.timeSegments;
-    this.domainAffinityParameterSets = settings.domainAffinityParameterSets;
+  updateSettings(settings = {}) {
+    this.spocsPerNewTabs = settings.spocsPerNewTabs || 1; // Probability of a new tab getting a spoc [0,1]
     this.recsExpireTime = settings.recsExpireTime;
-    this.version = settings.version;
-
-    if (
-      this.affinityProvider &&
-      this.affinityProvider.version !== this.version
-    ) {
-      this.resetDomainAffinityScores();
-    }
   }
 
-  updateDomainAffinityScores() {
-    if (
-      !this.personalized ||
-      !this.domainAffinityParameterSets ||
-      Date.now() - this.domainAffinitiesLastUpdated <
-        MIN_DOMAIN_AFFINITIES_UPDATE_TIME
-    ) {
-      return;
-    }
-
-    this.affinityProvider = this.affinityProividerSwitcher(
-      this.timeSegments,
-      this.domainAffinityParameterSets,
-      this.maxHistoryQueryResults,
-      this.version,
-      undefined
-    );
-
-    const affinities = this.affinityProvider.getAffinities();
-    this.domainAffinitiesLastUpdated = Date.now();
-    affinities._timestamp = this.domainAffinitiesLastUpdated;
-    this.cache.set("domainAffinities", affinities);
-  }
-
-  resetDomainAffinityScores() {
-    delete this.affinityProvider;
-    this.cache.set("domainAffinities", {});
-  }
-
-  // If personalization is turned on, we have to rotate stories on the client so that
+  // We rotate stories on the client so that
   // active stories are at the front of the list, followed by stories that have expired
   // impressions i.e. have been displayed for longer than recsExpireTime.
   rotate(items) {
-    if (!this.personalized || items.length <= 3) {
+    if (items.length <= 3) {
       return items;
     }
 
@@ -717,30 +597,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.init();
   }
 
-  /**
-   * Decides if we need to change the personality provider version or not.
-   * Changes the version if it determines we need to.
-   *
-   * @param data {object} The top stories pref, we need version and model_keys
-   * @return {boolean} Returns true only if the version was changed.
-   */
-  processAffinityProividerVersion(data) {
-    const version2 = data.version === 2 && !this.affinityProviderV2;
-    const version1 = data.version === 1 && this.affinityProviderV2;
-    if (version2 || version1) {
-      if (version1) {
-        this.affinityProviderV2 = null;
-      } else {
-        this.affinityProviderV2 = {
-          use_v2: true,
-          model_keys: data.model_keys,
-        };
-      }
-      return true;
-    }
-    return false;
-  }
-
   lazyLoadTopStories(options = {}) {
     let { dsPref, userPref } = options;
     if (!dsPref) {
@@ -837,11 +693,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
           this.spocs = this.spocs.filter(s => s.url !== action.data.url);
         }
         break;
-      case at.PLACES_HISTORY_CLEARED:
-        if (this.personalized) {
-          this.resetDomainAffinityScores();
-        }
-        break;
       case at.TELEMETRY_IMPRESSION_STATS: {
         // We want to make sure we only track impressions from Top Stories,
         // otherwise unexpected things that are not properly handled can happen.
@@ -862,12 +713,10 @@ this.TopStoriesFeed = class TopStoriesFeed {
                 }
               });
             }
-            if (this.personalized) {
-              const topRecs = payload.tiles
-                .filter(t => !this.spocCampaignMap.has(t.id))
-                .map(t => t.id);
-              this.recordTopRecImpressions(topRecs);
-            }
+            const topRecs = payload.tiles
+              .filter(t => !this.spocCampaignMap.has(t.id))
+              .map(t => t.id);
+            this.recordTopRecImpressions(topRecs);
           }
         }
         break;
@@ -891,20 +740,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
         if (action.data.name === "pocketCta") {
           this.dispatchPocketCta(action.data.value, true);
         }
-        if (action.data.name === OPTIONS_PREF) {
-          try {
-            const options = JSON.parse(action.data.value);
-            if (this.processAffinityProividerVersion(options)) {
-              await this.clearCache();
-              this.uninit();
-              this.init();
-            }
-          } catch (e) {
-            Cu.reportError(
-              `Problem initializing affinity provider v2: ${e.message}`
-            );
-          }
-        }
         break;
     }
   }
@@ -915,7 +750,6 @@ this.TOPICS_UPDATE_TIME = TOPICS_UPDATE_TIME;
 this.SECTION_ID = SECTION_ID;
 this.SPOC_IMPRESSION_TRACKING_PREF = SPOC_IMPRESSION_TRACKING_PREF;
 this.REC_IMPRESSION_TRACKING_PREF = REC_IMPRESSION_TRACKING_PREF;
-this.MIN_DOMAIN_AFFINITIES_UPDATE_TIME = MIN_DOMAIN_AFFINITIES_UPDATE_TIME;
 this.DEFAULT_RECS_EXPIRE_TIME = DEFAULT_RECS_EXPIRE_TIME;
 const EXPORTED_SYMBOLS = [
   "TopStoriesFeed",
@@ -923,7 +757,6 @@ const EXPORTED_SYMBOLS = [
   "TOPICS_UPDATE_TIME",
   "SECTION_ID",
   "SPOC_IMPRESSION_TRACKING_PREF",
-  "MIN_DOMAIN_AFFINITIES_UPDATE_TIME",
   "REC_IMPRESSION_TRACKING_PREF",
   "DEFAULT_RECS_EXPIRE_TIME",
 ];
