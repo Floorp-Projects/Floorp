@@ -42,69 +42,69 @@ TestD  hd() MOZ_NO_ADDREF_RELEASE_ON_RETURN;
 
 void test() {
   S s;
-  s.f()->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'f'}}
-  s.f()->Release(); // expected-error{{'Release' cannot be called on the return value of 'f'}}
+  s.f()->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'S::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  s.f()->Release(); // expected-error{{'Release' must not be called on the return value of 'S::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   s.f()->foo();
-  s.g().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'g'}}
-  s.g().Release(); // expected-error{{'Release' cannot be called on the return value of 'g'}}
+  s.g().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'S::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  s.g().Release(); // expected-error{{'Release' must not be called on the return value of 'S::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   s.g().foo();
-  s.h().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'h'}}
-  s.h().Release(); // expected-error{{'Release' cannot be called on the return value of 'h'}}
+  s.h().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'S::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  s.h().Release(); // expected-error{{'Release' must not be called on the return value of 'S::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   s.h().foo();
   SD sd;
-  sd.f()->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'f'}}
-  sd.f()->Release(); // expected-error{{'Release' cannot be called on the return value of 'f'}}
+  sd.f()->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'SD::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  sd.f()->Release(); // expected-error{{'Release' must not be called on the return value of 'SD::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   sd.f()->foo();
-  sd.g().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'g'}}
-  sd.g().Release(); // expected-error{{'Release' cannot be called on the return value of 'g'}}
+  sd.g().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'SD::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  sd.g().Release(); // expected-error{{'Release' must not be called on the return value of 'SD::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   sd.g().foo();
-  sd.h().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'h'}}
-  sd.h().Release(); // expected-error{{'Release' cannot be called on the return value of 'h'}}
+  sd.h().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'SD::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  sd.h().Release(); // expected-error{{'Release' must not be called on the return value of 'SD::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   sd.h().foo();
   X<Test> x;
-  x.f()->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'f'}}
-  x.f()->Release(); // expected-error{{'Release' cannot be called on the return value of 'f'}}
+  x.f()->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'X<Test>::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  x.f()->Release(); // expected-error{{'Release' must not be called on the return value of 'X<Test>::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   x.f()->foo();
-  x.g().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'g'}}
-  x.g().Release(); // expected-error{{'Release' cannot be called on the return value of 'g'}}
+  x.g().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'X<Test>::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  x.g().Release(); // expected-error{{'Release' must not be called on the return value of 'X<Test>::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   x.g().foo();
-  x.h().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'h'}}
-  x.h().Release(); // expected-error{{'Release' cannot be called on the return value of 'h'}}
+  x.h().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'X<Test>::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  x.h().Release(); // expected-error{{'Release' must not be called on the return value of 'X<Test>::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   x.h().foo();
   X<TestD> xd;
-  xd.f()->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'f'}}
-  xd.f()->Release(); // expected-error{{'Release' cannot be called on the return value of 'f'}}
+  xd.f()->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'X<TestD>::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  xd.f()->Release(); // expected-error{{'Release' must not be called on the return value of 'X<TestD>::f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   xd.f()->foo();
-  xd.g().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'g'}}
-  xd.g().Release(); // expected-error{{'Release' cannot be called on the return value of 'g'}}
+  xd.g().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'X<TestD>::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  xd.g().Release(); // expected-error{{'Release' must not be called on the return value of 'X<TestD>::g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   xd.g().foo();
-  xd.h().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'h'}}
-  xd.h().Release(); // expected-error{{'Release' cannot be called on the return value of 'h'}}
+  xd.h().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'X<TestD>::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  xd.h().Release(); // expected-error{{'Release' must not be called on the return value of 'X<TestD>::h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   xd.h().foo();
   SP<Test> sp;
-  sp->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'operator->'}}
-  sp->Release(); // expected-error{{'Release' cannot be called on the return value of 'operator->'}}
+  sp->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'SP<Test>::operator->' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  sp->Release(); // expected-error{{'Release' must not be called on the return value of 'SP<Test>::operator->' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   sp->foo();
   SP<TestD> spd;
-  spd->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'operator->'}}
-  spd->Release(); // expected-error{{'Release' cannot be called on the return value of 'operator->'}}
+  spd->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'SP<TestD>::operator->' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  spd->Release(); // expected-error{{'Release' must not be called on the return value of 'SP<TestD>::operator->' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   spd->foo();
-  f()->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'f'}}
-  f()->Release(); // expected-error{{'Release' cannot be called on the return value of 'f'}}
+  f()->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  f()->Release(); // expected-error{{'Release' must not be called on the return value of 'f' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   f()->foo();
-  g().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'g'}}
-  g().Release(); // expected-error{{'Release' cannot be called on the return value of 'g'}}
+  g().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  g().Release(); // expected-error{{'Release' must not be called on the return value of 'g' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   g().foo();
-  h().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'h'}}
-  h().Release(); // expected-error{{'Release' cannot be called on the return value of 'h'}}
+  h().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  h().Release(); // expected-error{{'Release' must not be called on the return value of 'h' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   h().foo();
-  fd()->AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'fd'}}
-  fd()->Release(); // expected-error{{'Release' cannot be called on the return value of 'fd'}}
+  fd()->AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'fd' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  fd()->Release(); // expected-error{{'Release' must not be called on the return value of 'fd' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   fd()->foo();
-  gd().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'gd'}}
-  gd().Release(); // expected-error{{'Release' cannot be called on the return value of 'gd'}}
+  gd().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'gd' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  gd().Release(); // expected-error{{'Release' must not be called on the return value of 'gd' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   gd().foo();
-  hd().AddRef(); // expected-error{{'AddRef' cannot be called on the return value of 'hd'}}
-  hd().Release(); // expected-error{{'Release' cannot be called on the return value of 'hd'}}
+  hd().AddRef(); // expected-error{{'AddRef' must not be called on the return value of 'hd' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
+  hd().Release(); // expected-error{{'Release' must not be called on the return value of 'hd' which is marked with MOZ_NO_ADDREF_RELEASE_ON_RETURN}}
   hd().foo();
 }
