@@ -4,8 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import platform
-
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
 
@@ -43,7 +41,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             "nasm",
             "pulseaudio-libs-devel",
             "wireless-tools-devel",
-            "yasm",
             "gcc-c++",
         ]
 
@@ -119,19 +116,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # TODO: Figure out what not to install for artifact mode
         self.dnf_groupinstall(*self.browser_group_packages)
         self.dnf_install(*self.browser_packages)
-
-        if self.distro in ("centos") and self.version == 6:
-            yasm = (
-                "http://dl.fedoraproject.org/pub/epel/6/i386/"
-                "Packages/y/yasm-1.2.0-1.el6.i686.rpm"
-            )
-            if platform.architecture()[0] == "64bit":
-                yasm = (
-                    "http://dl.fedoraproject.org/pub/epel/6/x86_64/"
-                    "Packages/y/yasm-1.2.0-1.el6.x86_64.rpm"
-                )
-
-            self.run_as_root(["rpm", "-ivh", yasm])
 
     def ensure_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         # Install Android specific packages.

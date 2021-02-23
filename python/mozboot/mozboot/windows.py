@@ -58,7 +58,6 @@ class WindowsBootstrapper(BaseBootstrapper):
 
     BROWSER_PACKAGES = [
         "mingw-w64-x86_64-nasm",
-        "mingw-w64-x86_64-yasm",
         "mingw-w64-i686-nsis",
     ]
 

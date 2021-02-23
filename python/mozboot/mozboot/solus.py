@@ -43,7 +43,6 @@ class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "gst-plugins-good",
         "pulseaudio",
         "xorg-server-xvfb",
-        "yasm",
     ]
 
     MOBILE_ANDROID_COMMON_PACKAGES = [

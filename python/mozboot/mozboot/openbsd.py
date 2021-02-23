@@ -23,7 +23,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
         self.browser_packages = [
             "llvm",
             "nasm",
-            "yasm",
             "gtk+2",
             "gtk+3",
             "dbus-glib",

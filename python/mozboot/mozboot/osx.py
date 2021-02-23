@@ -212,12 +212,10 @@ class OSXBootstrapper(BaseBootstrapper):
         getattr(self, "ensure_%s_system_packages" % self.package_manager)(not hg_modern)
 
     def install_browser_packages(self, mozconfig_builder):
-        getattr(self, "ensure_%s_browser_packages" % self.package_manager)()
+        pass
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
-        getattr(self, "ensure_%s_browser_packages" % self.package_manager)(
-            artifact_mode=True
-        )
+        pass
 
     def install_mobile_android_packages(self, mozconfig_builder):
         getattr(self, "ensure_%s_mobile_android_packages" % self.package_manager)(
@@ -389,13 +387,6 @@ class OSXBootstrapper(BaseBootstrapper):
             packages.append("mercurial")
         self._ensure_homebrew_packages(packages)
 
-    def ensure_homebrew_browser_packages(self, artifact_mode=False):
-        # TODO: Figure out what not to install for artifact mode
-        packages = [
-            "yasm",
-        ]
-        self._ensure_homebrew_packages(packages)
-
     def ensure_homebrew_mobile_android_packages(
         self, mozconfig_builder, artifact_mode=False
     ):
@@ -466,14 +457,6 @@ class OSXBootstrapper(BaseBootstrapper):
             self.run_as_root([self.port, "select", "--set", "python", "python27"])
         else:
             print("The right python version is already active.")
-
-    def ensure_macports_browser_packages(self, artifact_mode=False):
-        # TODO: Figure out what not to install for artifact mode
-        packages = [
-            "yasm",
-        ]
-
-        self._ensure_macports_packages(packages)
 
     def ensure_macports_mobile_android_packages(
         self, mozconfig_builder, artifact_mode=False
