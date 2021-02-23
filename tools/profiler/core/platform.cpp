@@ -2623,9 +2623,9 @@ static void StreamMetaJSCustomObject(
   }
   aWriter.EndObject();
 
-  // We should avoid collecting extension metadata for profiler while XPCOM is
-  // shutting down since it cannot create a new ExtensionPolicyService.
-  if (!gXPCOMShuttingDown) {
+  // We should avoid collecting extension metadata for profiler when there is no
+  // observer service, since a ExtensionPolicyService could not be created then.
+  if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
     aWriter.StartObjectProperty("extensions");
     {
       {
