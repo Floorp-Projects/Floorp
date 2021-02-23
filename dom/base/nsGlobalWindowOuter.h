@@ -1071,7 +1071,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // close us when the JS stops executing or that we have a close
   // event posted.  If this is set, just ignore window.close() calls.
   bool mHavePendingClose : 1;
-  bool mIsPopupSpam : 1;
 
   // Indicates whether scripts are allowed to close this window.
   bool mBlockScriptedClosingFlag : 1;
