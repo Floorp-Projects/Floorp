@@ -37,3 +37,13 @@ function evalHandler() {
     //# sourceURL=http://example.com/eval-test.js
   `);
 }
+
+document.getElementById("focus-text").addEventListener("focusin", inputFocused);
+function inputFocused() {
+  console.log("focused");
+}
+
+document.getElementById("focus-text").addEventListener("focusout", inputFocusOut);
+function inputFocusOut() {
+  console.log("focus lost");
+}

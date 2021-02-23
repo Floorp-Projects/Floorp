@@ -16,6 +16,8 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "event-breakpoints");
 
   await dbg.actions.addEventListenerBreakpoints([
+    "event.control.focusin",
+    "event.control.focusout",
     "event.mouse.click",
     "event.xhr.load",
     "timer.timeout.set",
@@ -47,6 +49,16 @@ add_task(async function() {
   assertPauseLocation(dbg, 2, "http://example.com/eval-test.js");
   await resume(dbg);
 
+  invokeOnElement("#focus-text", "focus");
+  await waitForPaused(dbg);
+  assertPauseLocation(dbg, 43);
+  await resume(dbg);
+
+  // wait for focus-out event to fire
+  await waitForPaused(dbg);
+  assertPauseLocation(dbg, 48);
+  await resume(dbg);
+
   // Test that we don't pause on event breakpoints when source is blackboxed.
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg, "BLACKBOX");
@@ -74,4 +86,11 @@ function assertPauseLocation(dbg, line, url = "event-breakpoints.js") {
   is(location.line, line, `correct line`);
 
   assertPausedLocation(dbg);
+}
+
+async function invokeOnElement(selector, action) {
+  await SpecialPowers.focus(gBrowser.selectedBrowser);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [selector, action], (_selector, _action) => {
+    content.document.querySelector(_selector)[_action]();
+  });
 }

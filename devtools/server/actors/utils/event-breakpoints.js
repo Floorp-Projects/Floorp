@@ -125,6 +125,8 @@ const AVAILABLE_BREAKPOINTS = [
       generalEvent("control", "scroll"),
       generalEvent("control", "zoom"),
       generalEvent("control", "focus"),
+      generalEvent("control", "focusin"),
+      generalEvent("control", "focusout"),
       generalEvent("control", "blur"),
       generalEvent("control", "select"),
       generalEvent("control", "change"),
