@@ -39,14 +39,15 @@ class TopSitesUseCasesTest {
     }
 
     @Test
-    fun `RenameTopSiteUseCase`() = runBlocking {
+    fun `UpdateTopSiteUseCase`() = runBlocking {
         val topSitesStorage: TopSitesStorage = mock()
         val topSite: TopSite = mock()
         val useCases = TopSitesUseCases(topSitesStorage)
 
         val title = "New title"
-        useCases.renameTopSites(topSite, title)
+        val url = "https://www.example.com/new-url"
+        useCases.updateTopSites(topSite, title, url)
 
-        verify(topSitesStorage).renameTopSite(topSite, title)
+        verify(topSitesStorage).updateTopSite(topSite, title, url)
     }
 }

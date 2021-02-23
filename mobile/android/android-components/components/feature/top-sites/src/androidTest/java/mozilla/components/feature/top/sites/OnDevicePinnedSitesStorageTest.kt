@@ -28,7 +28,7 @@ import java.util.concurrent.Executors
 private const val MIGRATION_TEST_DB = "migration-test"
 
 @Suppress("LargeClass")
-class PinnedSitesStorageTest {
+class OnDevicePinnedSitesStorageTest {
     private lateinit var context: Context
     private lateinit var storage: PinnedSiteStorage
     private lateinit var executor: ExecutorService
@@ -153,7 +153,7 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    fun testRenamingPinnedSites() = runBlocking {
+    fun testUpdatingPinnedSites() = runBlocking {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         var pinnedSites = storage.getPinnedSites()
 
@@ -162,20 +162,20 @@ class PinnedSitesStorageTest {
         assertEquals("https://www.mozilla.org", pinnedSites[0].url)
         assertEquals("Mozilla", pinnedSites[0].title)
 
-        storage.renamePinnedSite(pinnedSites[0], "")
+        storage.updatePinnedSite(pinnedSites[0], "", "")
 
         pinnedSites = storage.getPinnedSites()
         assertEquals(1, pinnedSites.size)
         assertEquals(1, storage.getPinnedSitesCount())
-        assertEquals("https://www.mozilla.org", pinnedSites[0].url)
+        assertEquals("", pinnedSites[0].url)
         assertEquals("", pinnedSites[0].title)
 
-        storage.renamePinnedSite(pinnedSites[0], "Mozilla Firefox")
+        storage.updatePinnedSite(pinnedSites[0], "Mozilla Firefox", "https://www.firefox.com")
 
         pinnedSites = storage.getPinnedSites()
         assertEquals(1, pinnedSites.size)
         assertEquals(1, storage.getPinnedSitesCount())
-        assertEquals("https://www.mozilla.org", pinnedSites[0].url)
+        assertEquals("https://www.firefox.com", pinnedSites[0].url)
         assertEquals("Mozilla Firefox", pinnedSites[0].title)
     }
 

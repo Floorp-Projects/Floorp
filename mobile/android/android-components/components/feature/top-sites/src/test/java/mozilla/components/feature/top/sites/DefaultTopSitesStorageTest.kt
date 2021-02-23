@@ -109,7 +109,7 @@ class DefaultTopSitesStorageTest {
     }
 
     @Test
-    fun `renameTopSite`() = runBlockingTest {
+    fun `updateTopSite`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
             historyStorage,
@@ -124,9 +124,9 @@ class DefaultTopSitesStorageTest {
             createdAt = 1,
             type = TopSite.Type.DEFAULT
         )
-        defaultTopSitesStorage.renameTopSite(defaultSite, "Mozilla Firefox")
+        defaultTopSitesStorage.updateTopSite(defaultSite, "Mozilla Firefox", "https://mozilla.com")
 
-        verify(pinnedSitesStorage).renamePinnedSite(defaultSite, "Mozilla Firefox")
+        verify(pinnedSitesStorage).updatePinnedSite(defaultSite, "Mozilla Firefox", "https://mozilla.com")
 
         val pinnedSite = TopSite(
             id = 2,
@@ -135,9 +135,9 @@ class DefaultTopSitesStorageTest {
             createdAt = 2,
             type = TopSite.Type.PINNED
         )
-        defaultTopSitesStorage.renameTopSite(pinnedSite, "Wiki")
+        defaultTopSitesStorage.updateTopSite(pinnedSite, "Wiki", "https://en.wikipedia.org/wiki/Wiki")
 
-        verify(pinnedSitesStorage).renamePinnedSite(pinnedSite, "Wiki")
+        verify(pinnedSitesStorage).updatePinnedSite(pinnedSite, "Wiki", "https://en.wikipedia.org/wiki/Wiki")
 
         val frecentSite = TopSite(
             id = 1,
@@ -146,9 +146,9 @@ class DefaultTopSitesStorageTest {
             createdAt = 1,
             type = TopSite.Type.FRECENT
         )
-        defaultTopSitesStorage.renameTopSite(frecentSite, "Moz")
+        defaultTopSitesStorage.updateTopSite(frecentSite, "Moz", "")
 
-        verify(pinnedSitesStorage, never()).renamePinnedSite(frecentSite, "Moz")
+        verify(pinnedSitesStorage, never()).updatePinnedSite(frecentSite, "Moz", "")
     }
 
     @Test

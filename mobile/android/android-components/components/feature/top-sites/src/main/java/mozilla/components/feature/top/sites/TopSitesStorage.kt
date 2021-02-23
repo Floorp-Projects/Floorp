@@ -29,12 +29,13 @@ interface TopSitesStorage : Observable<TopSitesStorage.Observer> {
     fun removeTopSite(topSite: TopSite)
 
     /**
-     * Renames the given [TopSite].
+     * Updates the given [TopSite].
      *
      * @param topSite The top site.
      * @param title The new title for the top site.
+     * @param url The new url for the top site.
      */
-    fun renameTopSite(topSite: TopSite, title: String)
+    fun updateTopSite(topSite: TopSite, title: String, url: String)
 
     /**
      * Return a unified list of top sites based on the given number of sites desired.

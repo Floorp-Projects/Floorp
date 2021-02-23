@@ -51,17 +51,18 @@ class TopSitesUseCases(topSitesStorage: TopSitesStorage) {
     }
 
     /**
-     * Rename a top site use case.
+     * Update a top site use case.
      */
-    class RenameTopSiteUseCase internal constructor(private val storage: TopSitesStorage) {
+    class UpdateTopSiteUseCase internal constructor(private val storage: TopSitesStorage) {
         /**
-         * Renames the given [TopSite].
+         * Updates the given [TopSite].
          *
          * @param topSite The top site.
          * @param title The new title for the top site.
+         * @param url The new url for the top site.
          */
-        operator fun invoke(topSite: TopSite, title: String) {
-            storage.renameTopSite(topSite, title)
+        operator fun invoke(topSite: TopSite, title: String, url: String) {
+            storage.updateTopSite(topSite, title, url)
         }
     }
 
@@ -73,7 +74,7 @@ class TopSitesUseCases(topSitesStorage: TopSitesStorage) {
         RemoveTopSiteUseCase(topSitesStorage)
     }
 
-    val renameTopSites: RenameTopSiteUseCase by lazy {
-        RenameTopSiteUseCase(topSitesStorage)
+    val updateTopSites: UpdateTopSiteUseCase by lazy {
+        UpdateTopSiteUseCase(topSitesStorage)
     }
 }
