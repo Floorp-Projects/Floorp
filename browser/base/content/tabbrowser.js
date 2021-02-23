@@ -2878,7 +2878,11 @@
 
         // Re-use existing selected tab if possible to avoid the overhead of
         // selecting a new tab.
-        if (select && this.selectedTab.userContextId == userContextId) {
+        if (
+          select &&
+          this.selectedTab.userContextId == userContextId &&
+          !SessionStore.isTabRestoring(this.selectedTab)
+        ) {
           tabWasReused = true;
           tab = this.selectedTab;
           if (!tabData.pinned) {
