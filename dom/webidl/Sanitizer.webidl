@@ -24,7 +24,7 @@ interface Sanitizer {
   [Throws]
   constructor(optional SanitizerOptions options = {}); // optionality still discussed in spec
   [Throws]
-  DocumentFragment sanitize(SanitizerInput input);
+  DocumentFragment sanitize(optional SanitizerInput input);
   [Throws]
-  DOMString sanitizeToString(SanitizerInput input);
+  DOMString sanitizeToString(optional SanitizerInput input);
 };
