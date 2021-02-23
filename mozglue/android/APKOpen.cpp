@@ -35,6 +35,7 @@
 
 #include "mozilla/arm.h"
 #include "mozilla/Bootstrap.h"
+#include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -57,6 +58,9 @@ __attribute__((constructor)) void make_dumpable() { prctl(PR_SET_DUMPABLE, 1); }
 #endif
 
 typedef int mozglueresult;
+
+using LoadGeckoLibsResult =
+    mozilla::Result<mozilla::Ok, mozilla::BootstrapError>;
 
 enum StartupEvent {
 #define mozilla_StartupTimeline_Event(ev, z) ev,
@@ -179,24 +183,17 @@ static void EnsureBaseProfilerInitialized() {
   sInitialized = true;
 }
 
-static mozglueresult loadGeckoLibs() {
+static LoadGeckoLibsResult loadGeckoLibs() {
   TimeStamp t0 = TimeStamp::Now();
   struct rusage usage1_thread, usage1;
   getrusage(RUSAGE_THREAD, &usage1_thread);
   getrusage(RUSAGE_SELF, &usage1);
 
   static const char* libxul = getenv("MOZ_ANDROID_LIBDIR_OVERRIDE");
-  if (libxul) {
-    gBootstrap = GetBootstrap(libxul, LibLoadingStrategy::ReadAhead);
-  } else {
-    gBootstrap = GetBootstrap(getUnpackedLibraryName("libxul.so").get(),
-                              LibLoadingStrategy::ReadAhead);
-  }
-  if (!gBootstrap) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad",
-                        "Couldn't get a handle to libxul!");
-    return FAILURE;
-  }
+  MOZ_TRY_VAR(
+      gBootstrap,
+      GetBootstrap(libxul ? libxul : getUnpackedLibraryName("libxul.so").get(),
+                   LibLoadingStrategy::ReadAhead));
 
   TimeStamp t1 = TimeStamp::Now();
   struct rusage usage2_thread, usage2;
@@ -220,7 +217,7 @@ static mozglueresult loadGeckoLibs() {
 
   gBootstrap->XRE_StartupTimelineRecord(LINKER_INITIALIZED, t0);
   gBootstrap->XRE_StartupTimelineRecord(LIBRARIES_LOADED, t1);
-  return SUCCESS;
+  return Ok();
 }
 
 static mozglueresult loadNSSLibs();
@@ -284,10 +281,22 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(
 
   jenv->GetJavaVM(&sJavaVM);
 
-  int res = loadGeckoLibs();
-  if (res != SUCCESS) {
-    JNI_Throw(jenv, "java/lang/Exception", "Error loading gecko libraries");
+  LoadGeckoLibsResult res = loadGeckoLibs();
+  if (res.isOk()) {
+    return;
   }
+
+  const BootstrapError& errorInfo = res.inspectErr();
+
+  auto msg = errorInfo.match(
+      [](const nsresult& aRv) {
+        return Smprintf("Error loading Gecko libraries: nsresult 0x%08X", aRv);
+      },
+      [](const DLErrorType& aErr) {
+        return Smprintf("Error loading Gecko libraries: %s", aErr.get());
+      });
+
+  JNI_Throw(jenv, "java/lang/Exception", msg.get());
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
@@ -404,7 +413,7 @@ extern "C" APKOPEN_EXPORT mozglueresult ChildProcessInit(int argc,
   if (loadSQLiteLibs() != SUCCESS) {
     return FAILURE;
   }
-  if (loadGeckoLibs() != SUCCESS) {
+  if (loadGeckoLibs().isErr()) {
     return FAILURE;
   }
 
