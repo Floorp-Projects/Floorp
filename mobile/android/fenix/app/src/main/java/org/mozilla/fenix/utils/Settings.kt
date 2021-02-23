@@ -468,6 +468,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         true
     )
 
+    /**
+     * Prefer to use a fixed top toolbar when:
+     * - a talkback service is enabled or
+     * - switch access is enabled.
+     *
+     * This is automatically inferred based on the current system status. Not a setting in our app.
+     */
     val shouldUseFixedTopToolbar: Boolean
         get() {
             return touchExplorationIsEnabled || switchServiceIsEnabled
