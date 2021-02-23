@@ -1,3 +1,5 @@
+defaults pref(layout.css.moz-submit-invalid.enabled,true)
+
 == static-valid.html valid-ref.html
 == dynamic-valid.html valid-ref.html
 == static-invalid.html invalid-ref.html
