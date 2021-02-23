@@ -20,12 +20,6 @@
   --panel-disabled-color: GrayText;
   --panel-description-color: GrayText;
 
-  /*
-   * Overridden below for the default windows 10 theme.
-   */
-  --menuitem-hover-background-color: -moz-menuhover;
-  --menuitem-hover-color: -moz-menuhovertext;
-
   /* ::::: Styles ::::: */
   background-color: -moz-Dialog;
   color: -moz-DialogText;
@@ -36,18 +30,16 @@
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   :root {
     /* Override some menu color variables for light browser themes. */
-    --menuitem-hover-background-color: #0250bb;
-    --menuitem-disabled-hover-background-color: rgba(207, 207, 216, 0.3);
-    --menuitem-hover-color: white;
+    --menuitem-hover-background-color: #e0e0e6;
+    --menuitem-hover-color: black;
     --menu-background-color: #f9f9fb;
     --menu-color: black;
     --menu-disabled-color: rgba(21, 20, 26, 0.4);
     --menu-border-color: #f0f0f4;
 
     /* Declare menu colors for dark themes, but don't override anything yet. */
-    --dark-menuitem-hover-background-color: #00b4f5;
-    --dark-menuitem-disabled-hover-background-color: rgba(74, 74, 85, 0.5);
-    --dark-menuitem-hover-color: black;
+    --dark-menuitem-hover-background-color: #53535f;
+    --dark-menuitem-hover-color: white;
     --dark-menu-background-color: #15141a;
     --dark-menu-color: white;
     --dark-menu-disabled-color: rgba(251, 251, 254, 0.6);
@@ -57,7 +49,6 @@
   /* Override the menu color variables for dark browser themes. */
   :root:-moz-lwtheme-brighttext {
     --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
-    --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
     --menuitem-hover-color: var(--dark-menuitem-hover-color);
     --menu-background-color: var(--dark-menu-background-color);
     --menu-color: var(--dark-menu-color);
@@ -72,7 +63,6 @@
   @media (prefers-color-scheme: dark) {
     :root:not(:-moz-lwtheme) {
       --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
-      --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
       --menuitem-hover-color: var(--dark-menuitem-hover-color);
       --menu-background-color: var(--dark-menu-background-color);
       --menu-color: var(--dark-menu-color);
