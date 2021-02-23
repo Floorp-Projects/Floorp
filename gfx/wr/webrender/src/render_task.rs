@@ -12,7 +12,7 @@ use crate::frame_builder::FrameBuilderConfig;
 use crate::frame_graph::PassId;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
-use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex};
+use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
 use crate::prim_store::{ClipData, PictureIndex};
 use crate::prim_store::image::ImageCacheKey;
@@ -1353,6 +1353,19 @@ impl RenderTask {
             }
             RenderTaskLocation::Unallocated { .. } |
             RenderTaskLocation::Static { .. } => {
+                unreachable!();
+            }
+        }
+    }
+
+    pub fn get_texture_source(&self) -> TextureSource {
+        match self.location {
+            RenderTaskLocation::Dynamic { texture_id, .. } => {
+                assert_ne!(texture_id, CacheTextureId::INVALID);
+                TextureSource::TextureCache(texture_id, Swizzle::default())
+            }
+            RenderTaskLocation::Static { .. } |
+            RenderTaskLocation::Unallocated { .. } => {
                 unreachable!();
             }
         }

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering, ImageBufferKind};
+use api::{AlphaType, ClipMode, ImageRendering, ImageBufferKind};
 use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
@@ -16,7 +16,8 @@ use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance}
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
-use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter, DeferredResolveIndex};
+use crate::image_source::resolve_image;
+use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::picture::{ClusterFlags, SurfaceIndex, SurfaceRenderTasks};
 use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, ClipData};
@@ -28,8 +29,8 @@ use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::RenderTaskAddress;
 use crate::renderer::{BlendMode, ShaderColorMode};
-use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
-use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
+use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
+use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
@@ -3357,71 +3358,6 @@ impl RenderTaskGraph {
                 clip_mask,
             ),
         )
-    }
-}
-
-pub fn resolve_image(
-    request: ImageRequest,
-    resource_cache: &ResourceCache,
-    gpu_cache: &mut GpuCache,
-    deferred_resolves: &mut Vec<DeferredResolve>,
-) -> CacheItem {
-    match resource_cache.get_image_properties(request.key) {
-        Some(image_properties) => {
-            // Check if an external image that needs to be resolved
-            // by the render thread.
-            match image_properties.external_image {
-                Some(external_image) => {
-                    // This is an external texture - we will add it to
-                    // the deferred resolves list to be patched by
-                    // the render thread...
-                    let cache_handle = gpu_cache.push_deferred_per_frame_blocks(BLOCKS_PER_UV_RECT);
-
-                    let deferred_resolve_index = DeferredResolveIndex(deferred_resolves.len() as u32);
-
-                    let image_buffer_kind = match external_image.image_type {
-                        ExternalImageType::TextureHandle(target) => {
-                            target
-                        }
-                        ExternalImageType::Buffer => {
-                            // The ExternalImageType::Buffer should be handled by resource_cache.
-                            // It should go through the non-external case.
-                            panic!("Unexpected non-texture handle type");
-                        }
-                    };
-
-                    let cache_item = CacheItem {
-                        texture_id: TextureSource::External(deferred_resolve_index, image_buffer_kind),
-                        uv_rect_handle: cache_handle,
-                        uv_rect: DeviceIntRect::new(
-                            DeviceIntPoint::zero(),
-                            image_properties.descriptor.size,
-                        ),
-                        texture_layer: 0,
-                        user_data: [0.0, 0.0, 0.0],
-                    };
-
-                    deferred_resolves.push(DeferredResolve {
-                        image_properties,
-                        address: gpu_cache.get_address(&cache_handle),
-                        rendering: request.rendering,
-                    });
-
-                    cache_item
-                }
-                None => {
-                    if let Ok(cache_item) = resource_cache.get_cached_image(request) {
-                        cache_item
-                    } else {
-                        // There is no usable texture entry for the image key. Just return an invalid texture here.
-                        CacheItem::invalid()
-                    }
-                }
-            }
-        }
-        None => {
-            CacheItem::invalid()
-        }
     }
 }
 
