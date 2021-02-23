@@ -822,7 +822,7 @@ nsJARChannel::SetContentLength(int64_t aContentLength) {
 }
 
 static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
-                                  nsresult aStatus) {
+                                  nsresult aStatus, bool aCanceled) {
   // The event can only hold 80 characters.
   // We only save the file name and path inside the jar.
   auto findFilenameStart = [](const nsCString& aSpec) -> uint32_t {
@@ -882,7 +882,7 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   } else if (StringEndsWith(fileName, ".xhtml"_ns)) {
     // This error seems to be very common and is not strongly
     // correlated to YSOD.
-    if (errorCString.EqualsLiteral("NS_ERROR_PARSED_DATA_CACHED")) {
+    if (aStatus == NS_ERROR_PARSED_DATA_CACHED) {
       return;
     }
 
@@ -891,23 +891,23 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
       return;
     }
 
-    // This file seems to be correlated with all sorts of zero_byte_loads
-    // but doesn't show up in YSOD, so we can filter it out for now.
-    if (fileName.Find("aboutNetError.xhtml") != -1) {
-      return;
-    }
-
     eventType = Telemetry::EventID::Zero_byte_load_Load_Xhtml;
+  } else if (StringEndsWith(fileName, ".css"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Css;
+  } else if (StringEndsWith(fileName, ".json"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Json;
+  } else if (StringEndsWith(fileName, ".html"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Html;
+  } else if (StringEndsWith(fileName, ".png"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Png;
+  } else if (StringEndsWith(fileName, ".svg"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Svg;
   }
 
-  // We're going to, for now, filter out `other` category
-  // except of HTML and CSS files in `omni.ja!` since those
-  // are common parts of the UI.
+  // We're going to, for now, filter out `other` category.
   // See Bug 1693711 for investigation into those empty loads.
   if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Others &&
-      !StringBeginsWith(fileName, "omni.ja!"_ns) &&
-      !StringEndsWith(fileName, ".html"_ns) &&
-      !StringEndsWith(fileName, ".css"_ns)) {
+      !StringBeginsWith(fileName, "omni.ja!"_ns)) {
     return;
   }
 
@@ -916,17 +916,21 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   // Also, Fluent is resilient to empty loads, so even if any
   // of the errors are real errors, they don't cause YSOD.
   // We can investigate them separately.
-  if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Ftl &&
-      errorCString.EqualsLiteral("NS_ERROR_FILE_NOT_FOUND")) {
+  if (!isTest &&
+      (eventType == Telemetry::EventID::Zero_byte_load_Load_Ftl ||
+       eventType == Telemetry::EventID::Zero_byte_load_Load_Json) &&
+      aStatus == NS_ERROR_FILE_NOT_FOUND) {
     return;
   }
 
   auto res = CopyableTArray<Telemetry::EventExtraEntry>{};
-  res.SetCapacity(3);
+  res.SetCapacity(4);
   res.AppendElement(
       Telemetry::EventExtraEntry{"sync"_ns, aIsSync ? "true"_ns : "false"_ns});
   res.AppendElement(Telemetry::EventExtraEntry{"file_name"_ns, fileName});
   res.AppendElement(Telemetry::EventExtraEntry{"status"_ns, errorCString});
+  res.AppendElement(Telemetry::EventExtraEntry{
+      "cancelled"_ns, aCanceled ? "true"_ns : "false"_ns});
   Telemetry::RecordEvent(eventType, Nothing{}, Some(res));
 }
 
@@ -940,7 +944,7 @@ nsJARChannel::Open(nsIInputStream** aStream) {
 
   auto recordEvent = MakeScopeExit([&] {
     if (mContentLength <= 0 || NS_FAILED(rv)) {
-      RecordZeroLengthEvent(true, mSpec, rv);
+      RecordZeroLengthEvent(true, mSpec, rv, mCanceled);
     }
   });
 
@@ -1153,7 +1157,7 @@ nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
 
   if (mListener) {
     if (!mOnDataCalled || NS_FAILED(status)) {
-      RecordZeroLengthEvent(false, mSpec, status);
+      RecordZeroLengthEvent(false, mSpec, status, mCanceled);
     }
 
     mListener->OnStopRequest(this, status);
