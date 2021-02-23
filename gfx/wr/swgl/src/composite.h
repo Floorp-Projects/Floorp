@@ -690,11 +690,10 @@ const int STEP_BITS = 8;
 // half-resolution paired U/V R8 textures. This allows us to more efficiently
 // pack YUV samples into vectors to substantially reduce math operations even
 // further.
-static inline void upscaleYUV42R8(uint32_t* dest, int span,
-                                  sampler2D_impl sampler[3], I32 yU,
-                                  int32_t yDU, int32_t yOffsetV,
-                                  int32_t yStrideV, int16_t yFracV, I32 cU,
-                                  int32_t cDU, int32_t cOffsetV,
+static inline void upscaleYUV42R8(uint32_t* dest, int span, uint8_t* yRow,
+                                  I32 yU, int32_t yDU, int32_t yStrideV,
+                                  int16_t yFracV, uint8_t* cRow1,
+                                  uint8_t* cRow2, I32 cU, int32_t cDU,
                                   int32_t cStrideV, int16_t cFracV,
                                   const YUVMatrix& colorSpace) {
   // As much as possible try to utilize the fact that we're only using half
@@ -714,9 +713,6 @@ static inline void upscaleYUV42R8(uint32_t* dest, int span,
   auto ycFracV = combine(I16(yFracV), I16(cFracV));
   I32 yI = yU >> (STEP_BITS + 7);
   I32 cI = cU >> (STEP_BITS + 7);
-  uint8_t* yRow = (uint8_t*)sampler[0].buf + yOffsetV;
-  uint8_t* cRow1 = (uint8_t*)sampler[1].buf + cOffsetV;
-  uint8_t* cRow2 = (uint8_t*)sampler[2].buf + cOffsetV;
   // Load initial combined YUV samples for each row and blend them.
   auto ycSrc0 =
       CONVERT(combine(unaligned_load<V4<uint8_t>>(&yRow[yI.x]),
@@ -812,9 +808,14 @@ static inline void upscaleYUV42R8(uint32_t* dest, int span,
   }
 }
 
-static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
-                           float srcDU, const vec2_scalar& chromaUV,
-                           float chromaDU, sampler2D_impl sampler[3],
+// This is the inner loop driver of CompositeYUV that processes an axis-aligned
+// YUV span, dispatching based on appropriate format and scaling. This is also
+// reused by blendYUV to accelerate some cases of texture sampling in the
+// shader.
+static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
+                           const vec2_scalar& srcUV, float srcDU,
+                           sampler2DRect samplerU, sampler2DRect samplerV,
+                           const vec2_scalar& chromaUV, float chromaDU,
                            int colorDepth, const YUVMatrix& colorSpace) {
   // Calculate varying and constant interp data for Y plane.
   I32 yU = cast(init_interp(srcUV.x, srcDU) * (1 << STEP_BITS));
@@ -828,16 +829,15 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
   int32_t yDU = int32_t((4 << STEP_BITS) * srcDU);
   int32_t cDU = int32_t((4 << STEP_BITS) * chromaDU);
 
-  if (sampler[0].width < 2 || sampler[1].width < 2) {
+  if (samplerY->width < 2 || samplerU->width < 2) {
     // If the source row has less than 2 pixels, it's not safe to use a linear
     // filter because it may overread the row. Just convert the single pixel
     // with nearest filtering and fill the row with it.
-    I16 yuv =
-        CONVERT(round_pixel((Float){
-                    texelFetch(&sampler[0], ivec2(srcUV), 0).x.x,
-                    texelFetch(&sampler[1], ivec2(chromaUV), 0).x.x,
-                    texelFetch(&sampler[2], ivec2(chromaUV), 0).x.x, 1.0f}),
-                I16);
+    I16 yuv = CONVERT(
+        round_pixel((Float){texelFetch(samplerY, ivec2(srcUV)).x.x,
+                            texelFetch(samplerU, ivec2(chromaUV)).x.x,
+                            texelFetch(samplerV, ivec2(chromaUV)).x.x, 1.0f}),
+        I16);
     auto rgb = colorSpace.convert(zip(I16(yuv.x), I16(yuv.x)),
                                   zip(I16(yuv.y), I16(yuv.z)));
     for (; span >= 4; span -= 4) {
@@ -847,7 +847,7 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     if (span > 0) {
       partial_store_span(dest, rgb, span);
     }
-  } else if (sampler[0].format == TextureFormat::R16) {
+  } else if (samplerY->format == TextureFormat::R16) {
     // Sample each YUV plane, rescale it to fit in low 8 bits of word, and
     // then transform them by the appropriate color space.
     assert(colorDepth > 8);
@@ -858,13 +858,13 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     int rescaleBits = (colorDepth - 1) - 8;
     for (; span >= 4; span -= 4) {
       auto yPx =
-          textureLinearUnpackedR16(&sampler[0], ivec2(yU >> STEP_BITS, yV)) >>
+          textureLinearUnpackedR16(samplerY, ivec2(yU >> STEP_BITS, yV)) >>
           rescaleBits;
       auto uPx =
-          textureLinearUnpackedR16(&sampler[1], ivec2(cU >> STEP_BITS, cV)) >>
+          textureLinearUnpackedR16(samplerU, ivec2(cU >> STEP_BITS, cV)) >>
           rescaleBits;
       auto vPx =
-          textureLinearUnpackedR16(&sampler[2], ivec2(cU >> STEP_BITS, cV)) >>
+          textureLinearUnpackedR16(samplerV, ivec2(cU >> STEP_BITS, cV)) >>
           rescaleBits;
       unaligned_store(dest, colorSpace.convert(zip(yPx, yPx), zip(uPx, vPx)));
       dest += 4;
@@ -874,34 +874,34 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     if (span > 0) {
       // Handle any remaining pixels...
       auto yPx =
-          textureLinearUnpackedR16(&sampler[0], ivec2(yU >> STEP_BITS, yV)) >>
+          textureLinearUnpackedR16(samplerY, ivec2(yU >> STEP_BITS, yV)) >>
           rescaleBits;
       auto uPx =
-          textureLinearUnpackedR16(&sampler[1], ivec2(cU >> STEP_BITS, cV)) >>
+          textureLinearUnpackedR16(samplerU, ivec2(cU >> STEP_BITS, cV)) >>
           rescaleBits;
       auto vPx =
-          textureLinearUnpackedR16(&sampler[2], ivec2(cU >> STEP_BITS, cV)) >>
+          textureLinearUnpackedR16(samplerV, ivec2(cU >> STEP_BITS, cV)) >>
           rescaleBits;
       partial_store_span(dest, colorSpace.convert(zip(yPx, yPx), zip(uPx, vPx)),
                          span);
     }
   } else {
-    assert(sampler[0].format == TextureFormat::R8);
+    assert(samplerY->format == TextureFormat::R8);
     assert(colorDepth == 8);
 
     // Calculate varying and constant interp data for Y plane.
     int16_t yFracV = yV & 0x7F;
     yV >>= 7;
-    int32_t yOffsetV = clampCoord(yV, sampler[0].height) * sampler[0].stride;
+    int32_t yOffsetV = clampCoord(yV, samplerY->height) * samplerY->stride;
     int32_t yStrideV =
-        yV >= 0 && yV < int32_t(sampler[0].height) - 1 ? sampler[0].stride : 0;
+        yV >= 0 && yV < int32_t(samplerY->height) - 1 ? samplerY->stride : 0;
 
     // Calculate varying and constant interp data for chroma planes.
     int16_t cFracV = cV & 0x7F;
     cV >>= 7;
-    int32_t cOffsetV = clampCoord(cV, sampler[1].height) * sampler[1].stride;
+    int32_t cOffsetV = clampCoord(cV, samplerU->height) * samplerU->stride;
     int32_t cStrideV =
-        cV >= 0 && cV < int32_t(sampler[1].height) - 1 ? sampler[1].stride : 0;
+        cV >= 0 && cV < int32_t(samplerU->height) - 1 ? samplerU->stride : 0;
 
     // If we're sampling the UV planes at half the resolution of the Y plane,
     // then try to use half resolution fast-path.
@@ -910,11 +910,10 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
       // Ensure that samples don't fall outside of the valid bounds of each
       // planar texture. Step until the initial X coordinates are positive.
       for (; (yU.x < 0 || cU.x < 0) && span >= 4; span -= 4) {
-        auto yPx = textureLinearRowR8(&sampler[0], yU >> STEP_BITS, yOffsetV,
+        auto yPx = textureLinearRowR8(samplerY, yU >> STEP_BITS, yOffsetV,
                                       yStrideV, yFracV);
-        auto uvPx =
-            textureLinearRowPairedR8(&sampler[1], &sampler[2], cU >> STEP_BITS,
-                                     cOffsetV, cStrideV, cFracV);
+        auto uvPx = textureLinearRowPairedR8(
+            samplerU, samplerV, cU >> STEP_BITS, cOffsetV, cStrideV, cFracV);
         unaligned_store(dest, colorSpace.convert(yPx, uvPx));
         dest += 4;
         yU += yDU;
@@ -923,13 +922,16 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
       // Calculate the number of aligned chunks that we can step inside the
       // bounds of each planar texture without overreading.
       int inside = min(
-          min((((int(sampler[0].width) - 4) << (STEP_BITS + 7)) - yU.x) / yDU,
-              (((int(sampler[1].width) - 4) << (STEP_BITS + 7)) - cU.x) / cDU) *
+          min((((int(samplerY->width) - 4) << (STEP_BITS + 7)) - yU.x) / yDU,
+              (((int(samplerU->width) - 4) << (STEP_BITS + 7)) - cU.x) / cDU) *
               4,
           span & ~3);
       if (inside > 0) {
-        upscaleYUV42R8(dest, inside, sampler, yU, yDU, yOffsetV, yStrideV,
-                       yFracV, cU, cDU, cOffsetV, cStrideV, cFracV, colorSpace);
+        uint8_t* yRow = (uint8_t*)samplerY->buf + yOffsetV;
+        uint8_t* cRow1 = (uint8_t*)samplerU->buf + cOffsetV;
+        uint8_t* cRow2 = (uint8_t*)samplerV->buf + cOffsetV;
+        upscaleYUV42R8(dest, inside, yRow, yU, yDU, yStrideV, yFracV, cRow1,
+                       cRow2, cU, cDU, cStrideV, cFracV, colorSpace);
         span -= inside;
         dest += inside;
         yU += (inside / 4) * yDU;
@@ -941,11 +943,10 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     for (; span >= 4; span -= 4) {
       // Sample each YUV plane and then transform them by the appropriate
       // color space.
-      auto yPx = textureLinearRowR8(&sampler[0], yU >> STEP_BITS, yOffsetV,
+      auto yPx = textureLinearRowR8(samplerY, yU >> STEP_BITS, yOffsetV,
                                     yStrideV, yFracV);
-      auto uvPx =
-          textureLinearRowPairedR8(&sampler[1], &sampler[2], cU >> STEP_BITS,
-                                   cOffsetV, cStrideV, cFracV);
+      auto uvPx = textureLinearRowPairedR8(samplerU, samplerV, cU >> STEP_BITS,
+                                           cOffsetV, cStrideV, cFracV);
       unaligned_store(dest, colorSpace.convert(yPx, uvPx));
       dest += 4;
       yU += yDU;
@@ -953,11 +954,10 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     }
     if (span > 0) {
       // Handle any remaining pixels...
-      auto yPx = textureLinearRowR8(&sampler[0], yU >> STEP_BITS, yOffsetV,
+      auto yPx = textureLinearRowR8(samplerY, yU >> STEP_BITS, yOffsetV,
                                     yStrideV, yFracV);
-      auto uvPx =
-          textureLinearRowPairedR8(&sampler[1], &sampler[2], cU >> STEP_BITS,
-                                   cOffsetV, cStrideV, cFracV);
+      auto uvPx = textureLinearRowPairedR8(samplerU, samplerV, cU >> STEP_BITS,
+                                           cOffsetV, cStrideV, cFracV);
       partial_store_span(dest, colorSpace.convert(yPx, uvPx), span);
     }
   }
@@ -976,7 +976,7 @@ static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
     return;
   }
   // Initialize samplers for source textures
-  sampler2D_impl sampler[3];
+  sampler2DRect_impl sampler[3];
   init_sampler(&sampler[0], ytex);
   init_sampler(&sampler[1], utex);
   init_sampler(&sampler[2], vtex);
@@ -1010,8 +1010,9 @@ static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
   char* dest = dsttex.sample_ptr(dstReq, dstBounds, 0);
   int span = dstBounds.width();
   for (int rows = dstBounds.height(); rows > 0; rows--) {
-    linear_row_yuv((uint32_t*)dest, span, srcUV, srcDUV.x, chromaUV,
-                   chromaDUV.x, sampler, colorDepth, yuvMatrix[colorSpace]);
+    linear_row_yuv((uint32_t*)dest, span, &sampler[0], srcUV, srcDUV.x,
+                   &sampler[1], &sampler[2], chromaUV, chromaDUV.x, colorDepth,
+                   yuvMatrix[colorSpace]);
     dest += destStride;
     srcUV.y += srcDUV.y;
     chromaUV.y += chromaDUV.y;
