@@ -604,7 +604,6 @@ pub fn update_primitive_visibility(
                     prim_instance,
                     world_culling_rect,
                     &map_surface_to_world,
-                    frame_state,
                 );
             }
         }
@@ -703,7 +702,6 @@ fn update_prim_post_visibility(
     prim_instance: &mut PrimitiveInstance,
     world_culling_rect: WorldRect,
     map_surface_to_world: &SpaceMapper<PicturePixel, WorldPixel>,
-    frame_state: &mut FrameVisibilityState,
 ) {
     profile_scope!("update_prim_post_visibility");
     match prim_instance.kind {
@@ -726,13 +724,6 @@ fn update_prim_post_visibility(
             // on an opaque surface.
             // TODO(gw): We might be able to detect simple cases of this earlier,
             //           during the picture traversal. But it's probably not worth it?
-        }
-        PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
-            let prim_data = &mut frame_state.data_stores.yuv_image[data_handle];
-            prim_data.kind.request_resources(
-                frame_state.resource_cache,
-                frame_state.gpu_cache,
-            );
         }
         _ => {}
     }

@@ -2948,11 +2948,23 @@ impl TileCacheInstance {
         api_keys: &[ImageKey; 3],
         resource_cache: &mut ResourceCache,
         composite_state: &mut CompositeState,
+        gpu_cache: &mut GpuCache,
         image_rendering: ImageRendering,
         color_depth: ColorDepth,
         color_space: YuvColorSpace,
         format: YuvFormat,
     ) -> bool {
+        for &key in api_keys {
+            // TODO: See comment in setup_compositor_surfaces_rgb.
+            resource_cache.request_image(ImageRequest {
+                    key,
+                    rendering: image_rendering,
+                    tile: None,
+                },
+                gpu_cache,
+            );
+        }
+
         self.setup_compositor_surfaces_impl(
             prim_info,
             flags,
@@ -3488,6 +3500,7 @@ impl TileCacheInstance {
                         &prim_data.kind.yuv_key,
                         resource_cache,
                         composite_state,
+                        gpu_cache,
                         prim_data.kind.image_rendering,
                         prim_data.kind.color_depth,
                         prim_data.kind.color_space,
