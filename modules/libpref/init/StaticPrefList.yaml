@@ -2113,13 +2113,6 @@
   value: 1000
   mirror: always
 
-- name: dom.ipc.processPrelaunch.startupDelayMs
-  type: uint32_t
-# delay starting content processes for a short time after browser start
-# to provide time for the UI to come up
-  value: 1000
-  mirror: always
-
 # Process preallocation cache
 # Only used in fission; in e10s we use 1 always
 - name: dom.ipc.processPrelaunch.fission.number
