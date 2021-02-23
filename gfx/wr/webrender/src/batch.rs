@@ -16,7 +16,6 @@ use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance}
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
-use crate::image_source::resolve_image;
 use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::picture::{ClusterFlags, SurfaceIndex, SurfaceRenderTasks};
@@ -2341,26 +2340,19 @@ impl BatchBuilder {
                 let channel_count = yuv_image_data.format.get_plane_num();
                 debug_assert!(channel_count <= 3);
                 for channel in 0 .. channel_count {
-                    let image_key = yuv_image_data.yuv_key[channel];
 
-                    let cache_item = resolve_image(
-                        ImageRequest {
-                            key: image_key,
-                            rendering: yuv_image_data.image_rendering,
-                            tile: None,
-                        },
-                        ctx.resource_cache,
-                        gpu_cache,
-                        deferred_resolves,
-                    );
+                    let src_channel = yuv_image_data.src_yuv[channel].resolve(render_tasks, ctx, gpu_cache);
 
-                    if cache_item.texture_id == TextureSource::Invalid {
-                        warn!("Warnings: skip a PrimitiveKind::YuvImage");
-                        return;
-                    }
+                    let (uv_rect_address, texture_source) = match src_channel {
+                        Some(src) => src,
+                        None => {
+                            warn!("Warnings: skip a PrimitiveKind::YuvImage");
+                            return;
+                        }
+                    };
 
-                    textures.colors[channel] = cache_item.texture_id;
-                    uv_rect_addresses[channel] = cache_item.uv_rect_handle.as_int(gpu_cache);
+                    textures.colors[channel] = texture_source;
+                    uv_rect_addresses[channel] = uv_rect_address.as_int();
                 }
 
                 // All yuv textures should be the same type.

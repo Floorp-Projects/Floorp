@@ -482,6 +482,7 @@ impl InternDebug for YuvImageKey {}
 pub struct YuvImageData {
     pub color_depth: ColorDepth,
     pub yuv_key: [ApiImageKey; 3],
+    pub src_yuv: [ImageSourceHandle; 3],
     pub format: YuvFormat,
     pub color_space: YuvColorSpace,
     pub color_range: ColorRange,
@@ -493,6 +494,11 @@ impl From<YuvImage> for YuvImageData {
         YuvImageData {
             color_depth: image.color_depth,
             yuv_key: image.yuv_key,
+            src_yuv: [
+                ImageSourceHandle::None,
+                ImageSourceHandle::None,
+                ImageSourceHandle::None,
+            ],
             format: image.format,
             color_space: image.color_space,
             color_range: image.color_range,
@@ -511,6 +517,34 @@ impl YuvImageData {
         common: &mut PrimTemplateCommonData,
         frame_state: &mut FrameBuildingState,
     ) {
+
+        self.src_yuv = [
+            ImageSourceHandle::None,
+            ImageSourceHandle::None,
+            ImageSourceHandle::None,
+        ];
+
+        let channel_num = self.format.get_plane_num();
+        debug_assert!(channel_num <= 3);
+        for channel in 0 .. channel_num {
+            let request = ImageRequest {
+                key: self.yuv_key[channel],
+                rendering: self.image_rendering,
+                tile: None,
+            };
+
+            let size = frame_state.resource_cache.request_image(
+                request,
+                frame_state.gpu_cache,
+            );
+
+            let task_id = frame_state.rg_builder.add().init(
+                RenderTask::new_image(size, request)
+            );
+
+            self.src_yuv[channel] = ImageSourceHandle::RenderTask(task_id);
+        }
+
         if let Some(mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
             self.write_prim_gpu_blocks(&mut request);
         };
@@ -612,6 +646,6 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<ImageTemplate>(), 72, "ImageTemplate size changed");
     assert_eq!(mem::size_of::<ImageKey>(), 52, "ImageKey size changed");
     assert_eq!(mem::size_of::<YuvImage>(), 32, "YuvImage size changed");
-    assert_eq!(mem::size_of::<YuvImageTemplate>(), 60, "YuvImageTemplate size changed");
+    assert_eq!(mem::size_of::<YuvImageTemplate>(), 96, "YuvImageTemplate size changed");
     assert_eq!(mem::size_of::<YuvImageKey>(), 52, "YuvImageKey size changed");
 }
