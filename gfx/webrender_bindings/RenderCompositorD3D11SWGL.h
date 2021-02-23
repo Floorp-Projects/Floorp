@@ -10,13 +10,15 @@
 #include "mozilla/layers/ScreenshotGrabber.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/CompositorD3D11.h"
-#include "mozilla/webrender/RenderCompositor.h"
+#include "mozilla/webrender/RenderCompositorLayersSWGL.h"
 
 namespace mozilla {
 
 namespace wr {
 
-class RenderCompositorD3D11SWGL : public RenderCompositor {
+class SurfaceD3D11SWGL;
+
+class RenderCompositorD3D11SWGL : public RenderCompositorLayersSWGL {
  public:
   static UniquePtr<RenderCompositor> Create(
       RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError);
@@ -26,29 +28,11 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
                             void* aContext);
   virtual ~RenderCompositorD3D11SWGL();
 
-  void* swgl() const override { return mContext; }
-
-  bool MakeCurrent() override;
-
-  bool BeginFrame() override;
-  void CancelFrame() override;
-  RenderedFrameId EndFrame(const nsTArray<DeviceIntRect>& aDirtyRects) final;
-
   void Pause() override;
   bool Resume() override;
 
-  bool SurfaceOriginIsTopLeft() override { return true; }
-
-  LayoutDeviceIntSize GetBufferSize() override;
-
   GLenum IsContextLost(bool aForce) override;
 
-  // Should we support this?
-  bool SupportsExternalBufferTextures() const override { return false; }
-
-  layers::WebRenderBackend BackendType() const override {
-    return layers::WebRenderBackend::SOFTWARE;
-  }
   layers::WebRenderCompositor CompositorType() const override {
     return layers::WebRenderCompositor::D3D11;
   }
@@ -56,55 +40,18 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
     return this;
   }
 
-  // Interface for wr::Compositor
-  CompositorCapabilities GetCompositorCapabilities() override;
-
-  bool ShouldUseNativeCompositor() override { return true; }
-
-  void CompositorBeginFrame() override {}
-  void CompositorEndFrame() override;
-  void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
-            wr::DeviceIntRect aDirtyRect,
-            wr::DeviceIntRect aValidRect) override;
-  void Unbind() override;
-  bool MapTile(wr::NativeTileId aId, wr::DeviceIntRect aDirtyRect,
-               wr::DeviceIntRect aValidRect, void** aData,
-               int32_t* aStride) override;
-  void UnmapTile() override;
-  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aVirtualOffset,
-                     wr::DeviceIntSize aTileSize, bool aIsOpaque) override;
-  void CreateExternalSurface(wr::NativeSurfaceId aId, bool aIsOpaque) override;
-  void DestroySurface(NativeSurfaceId aId) override;
-  void CreateTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) override;
-  void DestroyTile(wr::NativeSurfaceId, int32_t aX, int32_t aY) override;
-  void AttachExternalImage(wr::NativeSurfaceId aId,
-                           wr::ExternalImageId aExternalImage) override;
-  void AddSurface(wr::NativeSurfaceId aId,
-                  const wr::CompositorSurfaceTransform& aTransform,
-                  wr::DeviceIntRect aClipRect,
-                  wr::ImageRendering aImageRendering) override;
-  void EnableNativeCompositor(bool aEnable) override {}
-  void DeInit() override {}
+  bool BeginFrame() override;
 
   bool MaybeReadback(const gfx::IntSize& aReadbackSize,
                      const wr::ImageFormat& aReadbackFormat,
                      const Range<uint8_t>& aReadbackBuffer,
                      bool* aNeedsYFlip) override;
-  void MaybeRequestAllowFrameRecording(bool aWillRecord) override;
-  bool MaybeRecordFrame(layers::CompositionRecorder& aRecorder) override;
-  bool MaybeGrabScreenshot(const gfx::IntSize& aWindowSize) override;
-  bool MaybeProcessScreenshotQueue() override;
 
-  // TODO: Screenshots etc
+  layers::CompositorD3D11* GetCompositorD3D11() {
+    return mCompositor->AsCompositorD3D11();
+  }
 
-  struct TileKey {
-    TileKey(int32_t aX, int32_t aY) : mX(aX), mY(aY) {}
-
-    int32_t mX;
-    int32_t mY;
-  };
-
-  ID3D11Device* GetDevice() { return mCompositor->GetDevice(); }
+  ID3D11Device* GetDevice() { return GetCompositorD3D11()->GetDevice(); }
 
  private:
   already_AddRefed<ID3D11Texture2D> CreateStagingTexture(
@@ -112,51 +59,34 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   already_AddRefed<DataSourceSurface> CreateStagingSurface(
       const gfx::IntSize aSize);
 
-  RefPtr<layers::CompositorD3D11> mCompositor;
-  void* mContext = nullptr;
+  void HandleExternalImage(RenderTextureHost* aExternalImage,
+                           FrameSurface& aFrameSurface) override;
+  UniquePtr<RenderCompositorLayersSWGL::Surface> DoCreateSurface(
+      wr::DeviceIntSize aTileSize, bool aIsOpaque) override;
+  UniquePtr<RenderCompositorLayersSWGL::Tile> DoCreateTile(
+      Surface* aSurface) override;
 
-  struct Tile {
-    // Each tile retains a texture, and a DataSourceSurface of the
-    // same size. We draw into the source surface, and then copy the
-    // changed area into the texture.
+  class TileD3D11 : public RenderCompositorLayersSWGL::Tile {
+   public:
+    TileD3D11(layers::DataTextureSourceD3D11* aTexture,
+              ID3D11Texture2D* aStagingTexture,
+              DataSourceSurface* aDataSourceSurface, Surface* aOwner,
+              RenderCompositorD3D11SWGL* aRenderCompositor);
+    virtual ~TileD3D11() {}
+
+    bool Map(wr::DeviceIntRect aDirtyRect, wr::DeviceIntRect aValidRect,
+             void** aData, int32_t* aStride) override;
+    void Unmap(const gfx::IntRect& aDirtyRect) override;
+    layers::DataTextureSource* GetTextureSource() override { return mTexture; }
+    bool IsValid() override;
+
+   private:
     RefPtr<layers::DataTextureSourceD3D11> mTexture;
     RefPtr<ID3D11Texture2D> mStagingTexture;
     RefPtr<DataSourceSurface> mSurface;
-    gfx::Rect mValidRect;
-    bool mIsTemp = false;
-
-    struct KeyHashFn {
-      std::size_t operator()(const TileKey& aId) const {
-        return HashGeneric(aId.mX, aId.mY);
-      }
-    };
+    SurfaceD3D11SWGL* mOwner;
+    RenderCompositorD3D11SWGL* mRenderCompositor;
   };
-
-  struct Surface {
-    explicit Surface(wr::DeviceIntSize aTileSize, bool aIsOpaque)
-        : mTileSize(aTileSize), mIsOpaque(aIsOpaque) {}
-    gfx::IntSize TileSize() {
-      return gfx::IntSize(mTileSize.width, mTileSize.height);
-    }
-
-    // External images can change size depending on which image
-    // is attached, so mTileSize will be 0,0 when mIsExternal
-    // is true.
-    wr::DeviceIntSize mTileSize;
-    bool mIsOpaque;
-    bool mIsExternal = false;
-    std::unordered_map<TileKey, Tile, Tile::KeyHashFn> mTiles;
-    RefPtr<RenderTextureHost> mExternalImage;
-
-    nsTArray<RefPtr<ID3D11Texture2D>> mStagingPool;
-
-    struct IdHashFn {
-      std::size_t operator()(const wr::NativeSurfaceId& aId) const {
-        return HashGeneric(wr::AsUint64(aId));
-      }
-    };
-  };
-  std::unordered_map<wr::NativeSurfaceId, Surface, Surface::IdHashFn> mSurfaces;
 
   enum UploadMode {
     Upload_Immediate,
@@ -167,28 +97,19 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
   UploadMode GetUploadMode();
   UploadMode mUploadMode = Upload_Staging;
 
-  // Temporary state held between MapTile and UnmapTile
-  Tile mCurrentTile;
-  gfx::IntRect mCurrentTileDirty;
-  wr::NativeTileId mCurrentTileId;
-
-  // The set of surfaces added to be composited for the current frame
-  struct FrameSurface {
-    wr::NativeSurfaceId mId;
-    gfx::Matrix4x4 mTransform;
-    gfx::IntRect mClipRect;
-    gfx::SamplingFilter mFilter;
-  };
-  nsTArray<FrameSurface> mFrameSurfaces;
-  bool mInFrame = false;
-
-  layers::ScreenshotGrabber mProfilerScreenshotGrabber;
+  RefPtr<ID3D11Texture2D> mCurrentStagingTexture;
+  bool mCurrentStagingTextureIsTemp = false;
 };
 
-static inline bool operator==(const RenderCompositorD3D11SWGL::TileKey& a0,
-                              const RenderCompositorD3D11SWGL::TileKey& a1) {
-  return a0.mX == a1.mX && a0.mY == a1.mY;
-}
+class SurfaceD3D11SWGL : public RenderCompositorLayersSWGL::Surface {
+ public:
+  SurfaceD3D11SWGL(wr::DeviceIntSize aTileSize, bool aIsOpaque);
+  virtual ~SurfaceD3D11SWGL() {}
+
+  SurfaceD3D11SWGL* AsSurfaceD3D11SWGL() override { return this; }
+
+  nsTArray<RefPtr<ID3D11Texture2D>> mStagingPool;
+};
 
 }  // namespace wr
 }  // namespace mozilla
