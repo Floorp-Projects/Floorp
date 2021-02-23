@@ -1542,6 +1542,31 @@ add_task(async function formHistory() {
     ],
   });
 
+  // Add a form history entry that dupes the first remote suggestion and do a
+  // search that triggers both.  The form history should be included but the
+  // remote suggestion should not since it dupes the form history.
+  let suggestionPrefix = "dupe";
+  let dupeSuggestion = makeRemoteSuggestionResults(context, {
+    suggestionPrefix,
+  })[0].payload.suggestion;
+  Assert.ok(dupeSuggestion, "Sanity check: dupeSuggestion is defined");
+  await UrlbarTestUtils.formHistory.add([dupeSuggestion]);
+
+  context = createContext(suggestionPrefix, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeFormHistoryResult(context, {
+        suggestion: dupeSuggestion,
+        engineName: ENGINE_NAME,
+      }),
+      ...makeRemoteSuggestionResults(context, { suggestionPrefix }).slice(1),
+    ],
+  });
+
+  await UrlbarTestUtils.formHistory.remove([dupeSuggestion]);
+
   // Add these form history strings to use below.
   let formHistoryStrings = ["foo", "foobar", "fooquux"];
   await UrlbarTestUtils.formHistory.add(formHistoryStrings);
@@ -1571,8 +1596,8 @@ add_task(async function formHistory() {
 
   // Add a visit that matches "foo" and will autofill so that the heuristic is
   // not a search result.  Now the "foo" and "foobar" form history should be
-  // included.  The "foo" remote suggestion should also be included since the
-  // heuristic is not a search result.
+  // included.  The "foo" remote suggestion should not be included since it
+  // dupes the "foo" form history.
   await PlacesTestUtils.addVisits("http://foo.example.com/");
   context = createContext("foo", { isPrivate: false });
   await check_results({
@@ -1594,10 +1619,6 @@ add_task(async function formHistory() {
       }),
       makeFormHistoryResult(context, {
         suggestion: "fooquux",
-        engineName: ENGINE_NAME,
-      }),
-      makeSearchResult(context, {
-        suggestion: "foo",
         engineName: ENGINE_NAME,
       }),
       ...makeRemoteSuggestionResults(context, {
