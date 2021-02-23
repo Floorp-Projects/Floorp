@@ -40,28 +40,27 @@ add_task(async function test_support_backgrounds_position() {
   );
 
   let toolboxCS = window.getComputedStyle(toolbox);
-  let rootCS = window.getComputedStyle(docEl);
-  let rootBgImage = rootCS.backgroundImage.split(",")[0].trim();
   let bgImage = toolboxCS.backgroundImage.split(",")[0].trim();
-  Assert.ok(
-    rootBgImage.includes("face1.png"),
-    `The backgroundImage should use face1.png. Actual value is: ${rootBgImage}`
-  );
   Assert.equal(
     toolboxCS.backgroundImage,
-    Array(3)
-      .fill(bgImage)
+    [1, 2, 2, 2]
+      .map(num => bgImage.replace(/face[\d]*/, `face${num}`))
       .join(", "),
-    "The backgroundImage should use face2.png three times."
+    "The backgroundImage should use face1.png once and face2.png three times."
   );
   Assert.equal(
     toolboxCS.backgroundPosition,
-    "0% 0%, 50% 0%, 100% 100%",
-    "The backgroundPosition should use the three values provided."
+    "100% 0%, 0% 0%, 50% 0%, 100% 100%",
+    "The backgroundPosition should use the three values provided, preceded by the default for theme_frame."
   );
+  /**
+   * We expect duplicate background-repeat values because we apply `no-repeat`
+   * once for theme_frame, and again as the default value of
+   * --lwt-background-tiling.
+   */
   Assert.equal(
     toolboxCS.backgroundRepeat,
-    "no-repeat",
+    "no-repeat, no-repeat",
     "The backgroundPosition should use the default value."
   );
 
@@ -71,9 +70,6 @@ add_task(async function test_support_backgrounds_position() {
   toolboxCS = window.getComputedStyle(toolbox);
 
   // Styles should've reverted to their initial values.
-  Assert.equal(rootCS.backgroundImage, "none");
-  Assert.equal(rootCS.backgroundPosition, "0% 0%");
-  Assert.equal(rootCS.backgroundRepeat, "repeat");
   Assert.equal(toolboxCS.backgroundImage, "none");
   Assert.equal(toolboxCS.backgroundPosition, "0% 0%");
   Assert.equal(toolboxCS.backgroundRepeat, "repeat");
@@ -116,37 +112,29 @@ add_task(async function test_support_backgrounds_repeat() {
     "LWT text color attribute should be set"
   );
 
-  let rootCS = window.getComputedStyle(docEl);
   let toolboxCS = window.getComputedStyle(toolbox);
-  let bgImage = rootCS.backgroundImage.split(",")[0].trim();
-  Assert.ok(
-    bgImage.includes("face0.png"),
-    `The backgroundImage should use face.png. Actual value is: ${bgImage}`
-  );
+  let bgImage = toolboxCS.backgroundImage.split(",")[0].trim();
   Assert.equal(
-    [1, 2, 3].map(num => bgImage.replace(/face[\d]*/, `face${num}`)).join(", "),
+    [0, 1, 2, 3]
+      .map(num => bgImage.replace(/face[\d]*/, `face${num}`))
+      .join(", "),
     toolboxCS.backgroundImage,
-    "The backgroundImage should use face.png three times."
+    "The backgroundImage should use face.png four times."
   );
-  Assert.equal(
-    rootCS.backgroundPosition,
-    "100% 0%",
-    "The backgroundPosition should use the default value for root."
-  );
+  /**
+   * We expect duplicate background-position values because we apply `right top`
+   * once for theme_frame, and again as the default value of
+   * --lwt-background-alignment.
+   */
   Assert.equal(
     toolboxCS.backgroundPosition,
-    "100% 0%",
+    "100% 0%, 100% 0%",
     "The backgroundPosition should use the default value for navigator-toolbox."
   );
   Assert.equal(
-    rootCS.backgroundRepeat,
-    "no-repeat",
-    "The backgroundRepeat should use the default values for root."
-  );
-  Assert.equal(
     toolboxCS.backgroundRepeat,
-    "repeat-x, repeat-y, repeat",
-    "The backgroundRepeat should use the three values provided for navigator-toolbox."
+    "no-repeat, repeat-x, repeat-y, repeat",
+    "The backgroundRepeat should use the three values provided for --lwt-background-tiling, preceeded by the default for theme_frame."
   );
 
   await extension.unload();
@@ -187,27 +175,21 @@ add_task(async function test_additional_images_check() {
     "LWT text color attribute should be set"
   );
 
-  let rootCS = window.getComputedStyle(docEl);
   let toolboxCS = window.getComputedStyle(toolbox);
-  let bgImage = rootCS.backgroundImage.split(",")[0];
+  let bgImage = toolboxCS.backgroundImage.split(",")[0];
   Assert.ok(
     bgImage.includes("face.png"),
     `The backgroundImage should use face.png. Actual value is: ${bgImage}`
   );
   Assert.equal(
-    "none",
-    toolboxCS.backgroundImage,
-    "The backgroundImage should not use face.png."
-  );
-  Assert.equal(
-    rootCS.backgroundPosition,
-    "100% 0%",
+    toolboxCS.backgroundPosition,
+    "100% 0%, 100% 0%",
     "The backgroundPosition should use the default value."
   );
   Assert.equal(
-    rootCS.backgroundRepeat,
-    "no-repeat",
-    "The backgroundPosition should use only one (default) value."
+    toolboxCS.backgroundRepeat,
+    "no-repeat, no-repeat",
+    "The backgroundRepeat should use the default value."
   );
 
   await extension.unload();
