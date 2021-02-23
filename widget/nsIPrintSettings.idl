@@ -61,6 +61,14 @@ interface nsIPrintSettings : nsISupports
 
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
+  // These settings should be read from global prefs. Other settings should be
+  // read only from printer-specific prefs.
+  const unsigned long kGlobalSettings =
+      kInitSaveHeaderLeft | kInitSaveHeaderCenter | kInitSaveHeaderRight |
+      kInitSaveFooterLeft | kInitSaveFooterCenter | kInitSaveFooterRight |
+      kInitSaveEdges | kInitSaveReversed | kInitSaveInColor |
+      kInitSaveBGColors | kInitSaveBGImages | kInitSaveShrinkToFit;
+
   /* Justification Enums */
   const long kJustLeft   = 0;
   const long kJustCenter = 1;
