@@ -91,6 +91,12 @@ class GeckoEngineView @JvmOverloads constructor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var currentSelection: BasicSelectionActionDelegate? = null
 
+    /**
+     * Cache of the last valid input result we got from GeckoView.
+     */
+    @VisibleForTesting
+    internal var lastInputResult: EngineView.InputResult = EngineView.InputResult.INPUT_RESULT_UNHANDLED
+
     override var selectionActionDelegate: SelectionActionDelegate? = null
 
     init {
@@ -174,12 +180,19 @@ class GeckoEngineView @JvmOverloads constructor(
         // Direct mapping of GeckoView's returned values.
         // If not fail fast to allow for a quick fix.
         val input = geckoView.inputResult
-        return when (input) {
+        lastInputResult = when (input) {
             0 -> EngineView.InputResult.INPUT_RESULT_UNHANDLED
-            1, 3 -> EngineView.InputResult.INPUT_RESULT_HANDLED
+            1 -> EngineView.InputResult.INPUT_RESULT_HANDLED
             2 -> EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT
-            else -> throw IllegalArgumentException("Unexpected geckoView.inputResult: \"${geckoView.inputResult}\"")
+            3 -> {
+                // Drop this result and return the previous.
+                // See https://bugzilla.mozilla.org/show_bug.cgi?id=1687430 for details
+                lastInputResult
+            }
+            else -> throw IllegalArgumentException("Unexpected geckoView.inputResult: \"$input\"")
         }
+
+        return lastInputResult
     }
 
     override fun setVerticalClipping(clippingHeight: Int) {

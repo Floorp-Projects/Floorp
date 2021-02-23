@@ -87,7 +87,10 @@ class GeckoWebExtensionTest {
         verify(messageHandler).onPortMessage(eq(portMessage), portCaptor.capture())
         assertSame(port, (portCaptor.value as GeckoPort).nativePort)
 
-        // Verify disconnected port is forwarded to message handler
+        // Verify disconnected port is forwarded to message handler if connected
+        portDelegate.onDisconnect(mock())
+        verify(messageHandler, never()).onPortDisconnected(portCaptor.capture())
+
         portDelegate.onDisconnect(port)
         verify(messageHandler).onPortDisconnected(portCaptor.capture())
         assertSame(port, (portCaptor.value as GeckoPort).nativePort)
@@ -146,7 +149,10 @@ class GeckoWebExtensionTest {
         assertSame(port, (portCaptor.value as GeckoPort).nativePort)
         assertSame(session, (portCaptor.value as GeckoPort).engineSession)
 
-        // Verify disconnected port is forwarded to message handler
+        // Verify disconnected port is forwarded to message handler if connected
+        portDelegate.onDisconnect(mock())
+        verify(messageHandler, never()).onPortDisconnected(portCaptor.capture())
+
         portDelegate.onDisconnect(port)
         verify(messageHandler).onPortDisconnected(portCaptor.capture())
         assertSame(port, (portCaptor.value as GeckoPort).nativePort)
