@@ -92,11 +92,6 @@ ApplicationBuildID:
     Product application's build ID.
   type: string
 
-AsyncShutdownModule:
-  description: >
-    Holds the contents of the AsyncShutdown.js script
-  type: string
-
 AsyncShutdownTimeout:
   description: >
     This annotation is present if a shutdown blocker was not released in time
