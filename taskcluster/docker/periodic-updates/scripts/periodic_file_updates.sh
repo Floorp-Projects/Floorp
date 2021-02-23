@@ -437,7 +437,7 @@ function push_repo {
     echo '{"transactions": [{"type":"abandon"}], "objectIdentifier": "'"${diff}"'"}' | arc call-conduit differential.revision.edit
   done
 
-  $ARC diff --verbatim --reviewers "${REVIEWERS}"
+  $ARC diff --verbatim --less-context --reviewers "${REVIEWERS}"
 }
 
 
