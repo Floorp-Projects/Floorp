@@ -2197,19 +2197,14 @@ impl BatchBuilder {
                 let common_data = &prim_data.common;
                 let border_data = &prim_data.kind;
 
-                let cache_item = resolve_image(
-                    border_data.request,
-                    ctx.resource_cache,
-                    gpu_cache,
-                    deferred_resolves,
-                );
-                if cache_item.texture_id == TextureSource::Invalid {
-                    return;
-                }
+                let (uv_rect_address, texture) = match border_data.src_color.resolve(render_tasks, ctx, gpu_cache) {
+                    Some(src) => src,
+                    None => {
+                        return;
+                    }
+                };
 
-                let textures = TextureSet::prim_textured(
-                    cache_item.texture_id,
-                );
+                let textures = TextureSet::prim_textured(texture);
                 let prim_cache_address = gpu_cache.get_address(&common_data.gpu_cache_handle);
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
                 let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
@@ -2229,7 +2224,7 @@ impl BatchBuilder {
                 };
 
                 let batch_params = BrushBatchParameters::shared(
-                    BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
+                    BrushBatchKind::Image(texture.image_buffer_kind()),
                     textures,
                     ImageBrushData {
                         color_mode: ShaderColorMode::Image,
@@ -2237,7 +2232,7 @@ impl BatchBuilder {
                         raster_space: RasterizationSpace::Local,
                         opacity: 1.0,
                     }.encode(),
-                    cache_item.uv_rect_handle.as_int(gpu_cache),
+                    uv_rect_address.as_int(),
                 );
 
                 let prim_header_index = prim_headers.push(

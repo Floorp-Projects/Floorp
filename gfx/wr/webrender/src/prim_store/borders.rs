@@ -8,7 +8,7 @@ use crate::border::create_border_segments;
 use crate::border::NormalBorderAu;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingState};
-use crate::gpu_cache::{GpuCache, GpuDataRequest};
+use crate::gpu_cache::GpuDataRequest;
 use crate::intern;
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
@@ -17,7 +17,10 @@ use crate::prim_store::{
     PrimitiveInstanceKind, PrimitiveOpacity,
     PrimitiveStore, InternablePrimitive,
 };
-use crate::resource_cache::{ImageRequest, ResourceCache};
+use crate::resource_cache::ImageRequest;
+use crate::image_source::ImageSourceHandle;
+use crate::render_task::RenderTask;
+use crate::render_backend::FrameId;
 
 use super::storage;
 
@@ -229,6 +232,9 @@ pub struct ImageBorderData {
     #[ignore_malloc_size_of = "Arc"]
     pub request: ImageRequest,
     pub brush_segments: Vec<BrushSegment>,
+    pub src_color: ImageSourceHandle,
+    pub frame_id: FrameId,
+    pub is_opaque: bool,
 }
 
 impl ImageBorderData {
@@ -246,28 +252,31 @@ impl ImageBorderData {
             self.write_segment_gpu_blocks(request);
         }
 
-        let image_properties = frame_state
-            .resource_cache
-            .get_image_properties(self.request.key);
+        let frame_id = frame_state.rg_builder.frame_id();
+        if self.frame_id != frame_id {
+            self.frame_id = frame_id;
 
-        common.opacity = if let Some(image_properties) = image_properties {
-            PrimitiveOpacity {
-                is_opaque: image_properties.descriptor.is_opaque(),
-            }
-        } else {
-            PrimitiveOpacity::opaque()
+            let size = frame_state.resource_cache.request_image(
+                self.request,
+                frame_state.gpu_cache,
+            );
+
+            let task_id = frame_state.rg_builder.add().init(
+                RenderTask::new_image(size, self.request)
+            );
+
+            self.src_color = ImageSourceHandle::RenderTask(task_id);
+
+            let image_properties = frame_state
+                .resource_cache
+                .get_image_properties(self.request.key);
+
+            self.is_opaque = image_properties
+                .map(|properties| properties.descriptor.is_opaque())
+                .unwrap_or(true);
         }
-    }
 
-    pub fn request_resources(
-        &mut self,
-        resource_cache: &mut ResourceCache,
-        gpu_cache: &mut GpuCache,
-    ) {
-        resource_cache.request_image(
-            self.request,
-            gpu_cache,
-        );
+        common.opacity = PrimitiveOpacity { is_opaque: self.is_opaque };
     }
 
     fn write_prim_gpu_blocks(
@@ -314,6 +323,9 @@ impl From<ImageBorderKey> for ImageBorderTemplate {
             kind: ImageBorderData {
                 request: key.kind.request,
                 brush_segments,
+                src_color: ImageSourceHandle::None,
+                frame_id: FrameId::INVALID,
+                is_opaque: false,
             }
         }
     }
@@ -371,6 +383,6 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<NormalBorderTemplate>(), 216, "NormalBorderTemplate size changed");
     assert_eq!(mem::size_of::<NormalBorderKey>(), 104, "NormalBorderKey size changed");
     assert_eq!(mem::size_of::<ImageBorder>(), 84, "ImageBorder size changed");
-    assert_eq!(mem::size_of::<ImageBorderTemplate>(), 80, "ImageBorderTemplate size changed");
+    assert_eq!(mem::size_of::<ImageBorderTemplate>(), 104, "ImageBorderTemplate size changed");
     assert_eq!(mem::size_of::<ImageBorderKey>(), 104, "ImageBorderKey size changed");
 }
