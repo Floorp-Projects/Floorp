@@ -1041,10 +1041,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetInProcessParentInternal();
 
- public:
-  // popup tracking
-  bool IsPopupSpamWindow();
-
  private:
   // Call the given method on the immediate children of this window.  The
   // CallState returned by the last child method invocation is returned or
@@ -1537,14 +1533,6 @@ inline nsIScriptContext* nsGlobalWindowInner::GetContextInternal() {
 inline nsGlobalWindowOuter* nsGlobalWindowInner::GetOuterWindowInternal()
     const {
   return nsGlobalWindowOuter::Cast(GetOuterWindow());
-}
-
-inline bool nsGlobalWindowInner::IsPopupSpamWindow() {
-  if (!mOuterWindow) {
-    return false;
-  }
-
-  return GetOuterWindowInternal()->mIsPopupSpam;
 }
 
 #endif /* nsGlobalWindowInner_h___ */
