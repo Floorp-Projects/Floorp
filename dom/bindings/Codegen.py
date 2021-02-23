@@ -18022,8 +18022,23 @@ class CGBindingRoot(CGThing):
             for d in descriptors
         )
 
-        # XXX Not sure when we actually need this
-        bindingHeaders["GeckoProfiler.h"] = True
+        # The conditions for which we generate profiler labels are fairly
+        # complicated. The check below is a little imprecise to make it simple.
+        # It includes the profiler header in all cases where it is necessary and
+        # generates only a few false positives.
+        bindingHeaders["mozilla/ProfilerLabels.h"] = any(
+            # constructor profiler label
+            d.interface.namedConstructors
+            or (d.interface.hasInterfaceObject() and d.interface.ctor())
+            or any(
+                # getter/setter profiler labels
+                m.isAttr()
+                # method profiler label
+                or m.isMethod()
+                for m in d.interface.members
+            )
+            for d in descriptors
+        )
 
         def descriptorHasCrossOriginProperties(desc):
             def hasCrossOriginProperty(m):
