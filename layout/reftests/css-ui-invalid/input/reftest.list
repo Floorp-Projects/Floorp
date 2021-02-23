@@ -38,5 +38,4 @@ fuzzy-if(skiaContent,0-1,0-3) == input-fieldset-legend.html input-fieldset-legen
 == input-radio-dyn-valid-2.html success-ref.html
 == input-radio-nogroup-required-valid.html success-ref.html
 == input-radio-nogroup-required-invalid.html success-ref.html
-fuzzy-if(skiaContent,0-1,0-3) == input-novalidate.html input-ref.html
 # input type='hidden' shouldn't show
