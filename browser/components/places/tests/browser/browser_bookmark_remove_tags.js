@@ -54,7 +54,7 @@ add_task(async function test_remove_tags_from_BookmarkStar() {
   // Check if the "Edit This Bookmark" panel is open.
   let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
   Assert.equal(
-    bookmarkPanelTitle.value,
+    bookmarkPanelTitle.textContent,
     gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
     "Bookmark panel title is correct."
   );
