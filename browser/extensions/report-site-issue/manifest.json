@@ -27,6 +27,14 @@
         "paths": [["browserInfo"]]
       }
     },
+    "helpMenu": {
+      "schema": "experimentalAPIs/helpMenu.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experimentalAPIs/helpMenu.js",
+        "paths": [["helpMenu"]]
+      }
+    },
     "l10n": {
       "schema": "experimentalAPIs/l10n.json",
       "parent": {
@@ -67,12 +75,5 @@
     "scripts": [
       "background.js"
     ]
-  },
-  "page_action": {
-    "browser_style": true,
-    "default_icon": "icons/lightbulb.svg",
-    "default_title": "Report Site Issue…",
-    "pinned": false,
-    "show_matches": ["http://*/*", "https://*/*"]
   }
 }

@@ -1,0 +1,28 @@
+[
+  {
+    "namespace": "helpMenu",
+    "events": [
+      {
+        "name": "onHelpMenuCommand",
+        "type": "function",
+        "async": "callback",
+        "description": "Fired when the command event for the Report Site Issue menuitem in Help is fired.",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [
+              {
+                "name": "tab",
+                "$ref": "tabs.Tab",
+                "optional": true,
+                "description": "Details about the selected tab in the window where the menuitem command fired."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

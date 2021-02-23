@@ -1099,6 +1099,30 @@ function buildHelpMenu() {
   if (typeof gSafeBrowsing != "undefined") {
     gSafeBrowsing.setReportPhishingMenu();
   }
+
+  // We're testing to see if the WebCompat team's "Report Site Issue"
+  // access point makes sense in the Help menu. Normally checking this
+  // pref wouldn't be enough, since there's also the case that the
+  // add-on has somehow been disabled by the user or third-party software
+  // without flipping the pref. Since this add-on is only used on pre-release
+  // channels, and since the jury is still out on whether or not the Help menu
+  // is the right place for this item, we're going to do a least-effort
+  // approach here and assume that the pref is enough to determine whether the
+  // menuitem should appear.
+  //
+  // See bug 1690573 for further details.
+  let reportSiteIssueEnabled = Services.prefs.getBoolPref(
+    "extensions.webcompat-reporter.enabled",
+    false
+  );
+  let reportSiteIssue = document.getElementById("help_reportSiteIssue");
+  reportSiteIssue.hidden = !reportSiteIssueEnabled;
+  if (reportSiteIssueEnabled) {
+    let uri = gBrowser.currentURI;
+    let isReportablePage =
+      uri && (uri.schemeIs("http") || uri.schemeIs("https"));
+    reportSiteIssue.disabled = !isReportablePage;
+  }
 }
 
 function isElementVisible(aElement) {

@@ -484,6 +484,11 @@
                           onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-taskmanager"
                           appmenu-data-l10n-id="appmenu-help-taskmanager"/>
+                <menuitem id="help_reportSiteIssue"
+                          oncommand="ReportSiteIssue();"
+                          data-l10n-id="menu-help-report-site-issue"
+                          appmenu-data-l10n-id="appmenu-help-report-site-issue"
+                          hidden="true"/>
                 <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
                           disabled="true"
                           oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
