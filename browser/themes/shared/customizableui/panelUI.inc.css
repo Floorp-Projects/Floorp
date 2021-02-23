@@ -721,9 +721,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
-#PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon {
+#PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
+#PanelUI-appMenu-fxa-image-last-synced[syncstatus="active"] {
   animation: syncRotate 0.8s linear infinite;
   fill: var(--toolbarbutton-icon-fill-attention);
+}
+
+#PanelUI-appMenu-fxa-image-last-synced {
+  -moz-context-properties: fill;
+  fill: var(--panel-description-color);
+  height: 8px;
+  width: 8px;
 }
 
 #appMenu-fxa-status {
@@ -944,6 +952,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 #fxa-menu-header-description {
   color: var(--panel-description-color);
+  font-weight: 600;
+}
+
+#PanelUI-appMenu-fxa-label-last-synced {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--panel-description-color);
 }
 
 #fxa-menu-avatar {
@@ -1134,6 +1149,10 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 }
 
 #PanelUI-remotetabs-main[devices-status="single"] > #PanelUI-remotetabs-buttons {
+  display: none;
+}
+
+#PanelUI-fxa-remotetabs-deck:not([syncingtabs]) {
   display: none;
 }
 
@@ -1350,6 +1369,10 @@ panelview .toolbarbutton-1,
   fill-opacity: 0.6;
   float: inline-end;
   transform: translateY(1px);
+}
+
+.PanelUI-subView .subviewbutton-nav-down::after {
+  transform: translateY(1px) rotate(90deg);
 }
 
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {

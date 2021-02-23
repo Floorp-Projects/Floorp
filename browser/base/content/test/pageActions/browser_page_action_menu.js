@@ -503,16 +503,6 @@ add_task(async function sendToDevice_syncNotReady_configured() {
             attrs,
           });
         }
-        expectedItems.push(null, {
-          attrs: {
-            label: "Send to All Devices",
-          },
-        });
-        expectedItems.push(null, {
-          attrs: {
-            label: "Manage Devices...",
-          },
-        });
         checkSendToDeviceItems(expectedItems);
       } else {
         ok(false, "This should never happen");
@@ -736,17 +726,6 @@ add_task(async function sendToDevice_devices() {
           clientId: "3",
           label: "no client record device",
           clientType: "phone",
-        },
-      },
-      null,
-      {
-        attrs: {
-          label: "Send to All Devices",
-        },
-      },
-      {
-        attrs: {
-          label: "Manage Devices...",
         },
       },
     ];
@@ -1007,17 +986,6 @@ add_task(async function sendToDevice_inUrlbar() {
           clientId: "3",
           label: "no client record device",
           clientType: "phone",
-        },
-      },
-      null,
-      {
-        attrs: {
-          label: "Send to All Devices",
-        },
-      },
-      {
-        attrs: {
-          label: "Manage Devices...",
         },
       },
     ];
