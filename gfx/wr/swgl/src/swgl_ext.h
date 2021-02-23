@@ -1129,6 +1129,90 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
   return span;
 }
 
+// A variant of the blendYUV that attempts to reuse the inner loops from the
+// CompositeYUV infrastructure. CompositeYUV imposes stricter requirements on
+// the source data, which in turn allows it to be much faster than blendYUV.
+// At a minimum, we need to ensure no blending is used, that we are outputting
+// to a BGRA8 framebuffer, and that no color scaling is applied, which we can
+// accomplish via template specialization.
+template <>
+int blendYUV<false, sampler2DRect, sampler2DRect, sampler2DRect, uint32_t,
+             NoColor>(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
+                      const vec4_scalar uv_rect0, float z0,
+                      sampler2DRect sampler1, vec2 uv1,
+                      const vec4_scalar uv_rect1, float z1,
+                      sampler2DRect sampler2, vec2 uv2,
+                      const vec4_scalar uv_rect2, float z2, int colorSpace,
+                      int rescaleFactor, UNUSED NoColor noColor) {
+  if (!swgl_isTextureLinear(sampler0) || !swgl_isTextureLinear(sampler1) ||
+      !swgl_isTextureLinear(sampler2)) {
+    return 0;
+  }
+  LINEAR_QUANTIZE_UV(sampler0, uv0, uv_step0, uv_rect0, min_uv0, max_uv0, z0,
+                     layer0);
+  LINEAR_QUANTIZE_UV(sampler1, uv1, uv_step1, uv_rect1, min_uv1, max_uv1, z1,
+                     layer1);
+  LINEAR_QUANTIZE_UV(sampler2, uv2, uv_step2, uv_rect2, min_uv2, max_uv2, z2,
+                     layer2);
+  auto* end = buf + span;
+  // CompositeYUV imposes further restrictions on the source textures, such that
+  // the the Y/U/V samplers must all have a matching format, the U/V samplers
+  // must have matching sizes and sample coordinates, and there must be no
+  // change in row across the entire span.
+  if (sampler0->format == sampler1->format &&
+      sampler1->format == sampler2->format &&
+      sampler1->width == sampler2->width &&
+      sampler1->height == sampler2->height && uv_step0.y == 0 &&
+      uv_step0.x > 0 && uv_step1.y == 0 && uv_step1.x > 0 &&
+      uv_step1 == uv_step2 && uv1.x.x == uv2.x.x && uv1.y.x == uv2.y.x) {
+    // CompositeYUV does not support a clamp rect, so we must take care to
+    // advance till we're inside the bounds of the clamp rect.
+    for (; (uv0.x.x < min_uv0.x || uv1.x.x < min_uv1.x) && buf < end;
+         buf += swgl_StepSize, uv0 += uv_step0, uv1 += uv_step1,
+         uv2 += uv_step2) {
+      commit_span(
+          buf, sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)), layer0,
+                         sampler1, ivec2(clamp(uv1, min_uv1, max_uv1)), layer1,
+                         sampler2, ivec2(clamp(uv2, min_uv2, max_uv2)), layer2,
+                         colorSpace, rescaleFactor));
+    }
+    // Find the amount of chunks inside the clamp rect before we hit the
+    // maximum. If there are any chunks inside, we can finally dispatch to
+    // CompositeYUV.
+    int inside = min(int(min((max_uv0.x - uv0.x.x) / uv_step0.x,
+                             (max_uv1.x - uv1.x.x) / uv_step1.x)),
+                     (end - buf) / swgl_StepSize);
+    if (inside > 0) {
+      // We need the color depth, which is relative to the texture format and
+      // rescale factor.
+      int colorDepth =
+          (sampler0->format == TextureFormat::R16 ? 16 : 8) - rescaleFactor;
+      // Finally, call the inner loop of CompositeYUV.
+      linear_row_yuv(buf, inside * swgl_StepSize, sampler0, force_scalar(uv0),
+                     uv_step0.x / swgl_StepSize, sampler1, sampler2,
+                     force_scalar(uv1), uv_step1.x / swgl_StepSize, colorDepth,
+                     yuvMatrix[colorSpace]);
+      // Now that we're done, advance past the processed inside portion.
+      buf += inside * swgl_StepSize;
+      uv0.x += inside * uv_step0.x;
+      uv1.x += inside * uv_step1.x;
+      uv2.x += inside * uv_step2.x;
+    }
+  }
+  // We either got here because we have some samples outside the clamp rect, or
+  // because some of the preconditions were not satisfied. Process whatever is
+  // left of the span.
+  for (; buf < end; buf += swgl_StepSize, uv0 += uv_step0, uv1 += uv_step1,
+                    uv2 += uv_step2) {
+    commit_span(buf,
+                sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)), layer0,
+                          sampler1, ivec2(clamp(uv1, min_uv1, max_uv1)), layer1,
+                          sampler2, ivec2(clamp(uv2, min_uv2, max_uv2)), layer2,
+                          colorSpace, rescaleFactor));
+  }
+  return span;
+}
+
 // Commit a single chunk of a YUV surface represented by multiple planar
 // textures. This requires a color space specifier selecting how to convert
 // from YUV to RGB output. In the case of HDR formats, a rescaling factor
