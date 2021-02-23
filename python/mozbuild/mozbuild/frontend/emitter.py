@@ -1598,17 +1598,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         computed_as_flags.resolve_flags("MOZBUILD", context.get("ASFLAGS"))
 
-        if context.get("USE_YASM") is True:
-            yasm = context.config.substs.get("YASM")
-            if not yasm:
-                raise SandboxValidationError("yasm is not available", context)
-            passthru.variables["AS"] = yasm
-            passthru.variables["AS_DASH_C_FLAG"] = ""
-            passthru.variables["ASOUTOPTION"] = "-o "
-            computed_as_flags.resolve_flags(
-                "OS", context.config.substs.get("YASM_ASFLAGS", [])
-            )
-
         if context.get("USE_NASM") is True:
             nasm = context.config.substs.get("NASM")
             if not nasm:
