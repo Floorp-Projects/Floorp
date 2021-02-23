@@ -11,9 +11,6 @@ import android.os.Bundle
 import android.service.autofill.FillResponse
 import android.view.autofill.AutofillManager
 import androidx.annotation.RequiresApi
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Deferred
@@ -21,7 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.autofill.AutofillConfiguration
-import mozilla.components.feature.autofill.R
+import mozilla.components.feature.autofill.authenticator.Authenticator
+import mozilla.components.feature.autofill.authenticator.createAuthenticator
 import mozilla.components.feature.autofill.handler.FillRequestHandler
 
 /**
@@ -34,6 +32,7 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
 
     private var fillResponse: Deferred<FillResponse?>? = null
     private val fillHandler by lazy { FillRequestHandler(context = this, configuration) }
+    private val authenticator: Authenticator? by lazy { createAuthenticator(this, configuration) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,31 +42,29 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
         // While the user is asked to authenticate, we already try to build the fill response asynchronously.
         fillResponse = lifecycleScope.async(Dispatchers.IO) { fillHandler.handle(structure, forceUnlock = true) }
 
-        // Currently we are only using the biometric prompt API here. We need a fallback where this
-        // is not available:
-        // https://github.com/mozilla-mobile/android-components/issues/9713
-        val executor = ContextCompat.getMainExecutor(this)
-        val biometricPrompt = BiometricPrompt(this, executor, PromptCallback())
-
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            )
-            .setTitle(
-                getString(R.string.mozac_feature_autofill_popup_unlock_application, configuration.applicationName)
-            )
-            .build()
-
-        biometricPrompt.authenticate(promptInfo)
+        if (authenticator == null) {
+            // If no authenticator is available then we just bail here. Instead we should ask the user to
+            // enroll, or show an error message instead.
+            // https://github.com/mozilla-mobile/android-components/issues/9756
+            setResult(RESULT_CANCELED)
+            finish()
+        } else {
+            authenticator!!.prompt(this, PromptCallback())
+        }
     }
 
-    internal inner class PromptCallback : BiometricPrompt.AuthenticationCallback() {
-        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        authenticator?.onActivityResult(requestCode, resultCode)
+    }
+
+    internal inner class PromptCallback : Authenticator.Callback {
+        override fun onAuthenticationError() {
             setResult(RESULT_CANCELED)
             finish()
         }
 
-        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+        override fun onAuthenticationSucceeded() {
             configuration.lock.unlock()
 
             val replyIntent = Intent().apply {
