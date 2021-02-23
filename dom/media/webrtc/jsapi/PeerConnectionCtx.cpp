@@ -2,32 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "common/browser_logging/CSFLog.h"
-
-#include "PeerConnectionImpl.h"
 #include "PeerConnectionCtx.h"
-#include "transport/runnable_utils.h"
-#include "prcvar.h"
 
-#include "mozilla/Telemetry.h"
+#include "common/browser_logging/CSFLog.h"
 #include "common/browser_logging/WebRtcLog.h"
-
-#include "mozilla/dom/RTCPeerConnectionBinding.h"
-#include "mozilla/Preferences.h"
-#include <mozilla/Types.h>
-
-#include "nsNetCID.h"               // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
-#include "nsServiceManagerUtils.h"  // do_GetService
-#include "nsIObserverService.h"
-#include "nsIObserver.h"
-#include "mozilla/Services.h"
-#include "mozilla/StaticPtr.h"
-
-#include "nsCRTGlue.h"
-#include "nsIIOService.h"
-
 #include "gmp-video-decode.h"  // GMP_API_VIDEO_DECODER
 #include "gmp-video-encode.h"  // GMP_API_VIDEO_ENCODER
+#include "mozilla/dom/RTCPeerConnectionBinding.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/Types.h"
+#include "nsCRTGlue.h"
+#include "nsIIOService.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsNetCID.h"               // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
+#include "nsServiceManagerUtils.h"  // do_GetService
+#include "PeerConnectionImpl.h"
+#include "prcvar.h"
+#include "transport/runnable_utils.h"
+#include "WebrtcGlobalChild.h"
 
 static const char* pccLogTag = "PeerConnectionCtx";
 #ifdef LOGTAG
@@ -108,31 +104,21 @@ class PeerConnectionCtxObserver : public nsIObserver {
 };
 
 NS_IMPL_ISUPPORTS(PeerConnectionCtxObserver, nsIObserver);
-}  // namespace mozilla
-
-namespace mozilla {
 
 PeerConnectionCtx* PeerConnectionCtx::gInstance;
 nsIThread* PeerConnectionCtx::gMainThread;
 StaticRefPtr<PeerConnectionCtxObserver>
     PeerConnectionCtx::gPeerConnectionCtxObserver;
 
-const std::map<const std::string, PeerConnectionImpl*>&
-PeerConnectionCtx::GetPeerConnections() {
-  return mPeerConnections;
-}
-
-nsresult PeerConnectionCtx::InitializeGlobal(nsIThread* mainThread,
-                                             nsISerialEventTarget* stsThread) {
+nsresult PeerConnectionCtx::InitializeGlobal(nsIThread* mainThread) {
   if (!gMainThread) {
     gMainThread = mainThread;
-  } else {
-    MOZ_ASSERT(gMainThread == mainThread);
   }
 
-  nsresult res;
-
+  MOZ_ASSERT(gMainThread == mainThread);
   MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult res;
 
   if (!gInstance) {
     CSFLogDebug(LOGTAG, "Creating PeerConnectionCtx");
@@ -302,6 +288,37 @@ void PeerConnectionCtx::UpdateNetworkState(bool online) {
   }
 }
 
+void PeerConnectionCtx::RemovePeerConnection(const std::string& aKey) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mPeerConnections.erase(aKey);
+}
+
+void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
+                                          PeerConnectionImpl* aPeerConnection) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPeerConnections.count(aKey) == 0,
+             "PeerConnection with this key should not already exist");
+  mPeerConnections[aKey] = aPeerConnection;
+}
+
+PeerConnectionImpl* PeerConnectionCtx::GetPeerConnection(
+    const std::string& aKey) const {
+  MOZ_ASSERT(NS_IsMainThread());
+  auto iterator = mPeerConnections.find(aKey);
+  if (iterator == mPeerConnections.end()) {
+    return nullptr;
+  }
+  return iterator->second;
+}
+
+template <typename Function>
+void PeerConnectionCtx::ForEachPeerConnection(Function&& aFunction) const {
+  MOZ_ASSERT(NS_IsMainThread());
+  for (const auto& pair : mPeerConnections) {
+    aFunction(pair.second);
+  }
+}
+
 nsresult PeerConnectionCtx::Initialize() {
   initGMP();
 
@@ -355,6 +372,7 @@ void PeerConnectionCtx::initGMP() {
 
 nsresult PeerConnectionCtx::Cleanup() {
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
+  MOZ_ASSERT(NS_IsMainThread());
 
   mQueuedJSEPOperations.Clear();
   mGMPService = nullptr;
@@ -363,6 +381,7 @@ nsresult PeerConnectionCtx::Cleanup() {
     (void)id;
     pc->Close();
   }
+  mPeerConnections.clear();
   return NS_OK;
 }
 
