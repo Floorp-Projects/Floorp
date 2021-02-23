@@ -8,7 +8,7 @@
  * macOS vibrancy effects only work when there is no background colour behind
  * the effect.
  */
-:root:-moz-lwtheme-darktext {
+#navigator-toolbox:-moz-lwtheme-darktext {
   background-color: transparent;
 }
 

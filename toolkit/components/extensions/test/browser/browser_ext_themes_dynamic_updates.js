@@ -21,7 +21,10 @@ function hexToRGB(hex) {
 
 function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
   let docEl = window.document.documentElement;
-  let style = window.getComputedStyle(docEl);
+  let rootCS = window.getComputedStyle(docEl);
+
+  let toolbox = document.querySelector("#navigator-toolbox");
+  let toolboxCS = window.getComputedStyle(toolbox);
 
   if (isLWT) {
     Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
@@ -33,7 +36,7 @@ function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
   }
 
   Assert.ok(
-    style.backgroundImage.includes(backgroundImage),
+    toolboxCS.backgroundImage.includes(backgroundImage),
     "Expected correct background image"
   );
   if (accentColor.startsWith("#")) {
@@ -43,11 +46,11 @@ function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
     textColor = hexToRGB(textColor);
   }
   Assert.equal(
-    style.backgroundColor,
+    toolboxCS.backgroundColor,
     accentColor,
     "Expected correct accent color"
   );
-  Assert.equal(style.color, textColor, "Expected correct text color");
+  Assert.equal(rootCS.color, textColor, "Expected correct text color");
 }
 
 add_task(async function test_dynamic_theme_updates() {
@@ -74,7 +77,10 @@ add_task(async function test_dynamic_theme_updates() {
     },
   });
 
-  let defaultStyle = window.getComputedStyle(window.document.documentElement);
+  let rootCS = window.getComputedStyle(window.document.documentElement);
+  let toolboxCS = window.getComputedStyle(
+    window.document.documentElement.querySelector("#navigator-toolbox")
+  );
   await extension.startup();
 
   extension.sendMessage("update-theme", {
@@ -111,7 +117,8 @@ add_task(async function test_dynamic_theme_updates() {
 
   await extension.awaitMessage("theme-reset");
 
-  let { backgroundImage, backgroundColor, color } = defaultStyle;
+  let { color } = rootCS;
+  let { backgroundImage, backgroundColor } = toolboxCS;
   validateTheme(backgroundImage, backgroundColor, color, false);
 
   await extension.unload();
@@ -140,7 +147,10 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
     },
   });
 
-  let defaultStyle = window.getComputedStyle(window.document.documentElement);
+  let rootCS = window.getComputedStyle(window.document.documentElement);
+  let toolboxCS = window.getComputedStyle(
+    window.document.documentElement.querySelector("#navigator-toolbox")
+  );
   await extension.startup();
 
   extension.sendMessage("update-theme", {
@@ -175,7 +185,8 @@ add_task(async function test_dynamic_theme_updates_with_data_url() {
 
   await extension.awaitMessage("theme-reset");
 
-  let { backgroundImage, backgroundColor, color } = defaultStyle;
+  let { color } = rootCS;
+  let { backgroundImage, backgroundColor } = toolboxCS;
   validateTheme(backgroundImage, backgroundColor, color, false);
 
   await extension.unload();

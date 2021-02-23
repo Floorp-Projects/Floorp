@@ -75,10 +75,6 @@ xul|iframe {
 
 /* ::::: Miscellaneous formatting ::::: */
 
-:root:-moz-lwtheme {
-  appearance: none;
-}
-
 :root[lwtheme-image]:-moz-lwtheme-darktext {
   text-shadow: 0 -0.5px 1.5px white;
 }

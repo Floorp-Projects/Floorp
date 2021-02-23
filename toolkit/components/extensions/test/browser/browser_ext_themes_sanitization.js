@@ -137,9 +137,11 @@ add_task(async function test_sanitization_transparent_frame_color() {
 
   await extension.startup();
 
-  let docEl = document.documentElement;
+  let toolbox = document.querySelector("#navigator-toolbox");
+  let toolboxCS = window.getComputedStyle(toolbox);
+
   Assert.equal(
-    window.getComputedStyle(docEl).backgroundColor,
+    toolboxCS.backgroundColor,
     "rgb(255, 255, 255)",
     "Accent color should be white"
   );
