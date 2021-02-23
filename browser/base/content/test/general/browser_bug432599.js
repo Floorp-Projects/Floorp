@@ -84,12 +84,12 @@ function checkBookmarksPanel(phase) {
     case 3:
       return promisePopupShown(popupElement);
     case 2:
-      initialValue = titleElement.value;
+      initialValue = titleElement.textContent;
       initialRemoveHidden = removeElement.hidden;
       return promisePopupHidden(popupElement);
     case 4:
       Assert.equal(
-        titleElement.value,
+        titleElement.textContent,
         initialValue,
         "The bookmark panel's title should be the same"
       );

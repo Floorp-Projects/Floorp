@@ -236,7 +236,7 @@ var StarUI = {
     this._isNewBookmark = aIsNewBookmark;
     this._itemGuids = null;
 
-    this._element("editBookmarkPanelTitle").value = this._isNewBookmark
+    this._element("editBookmarkPanelTitle").textContent = this._isNewBookmark
       ? gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle")
       : gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle");
 
