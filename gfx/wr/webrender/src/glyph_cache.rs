@@ -58,6 +58,7 @@ pub struct GlyphKeyCacheInfo {
     eviction_notice: EvictionNotice,
     #[cfg(debug_assertions)]
     #[allow(dead_code)]
+    #[cfg_attr(feature = "replay", serde(default))]
     last_frame_used: FrameId,
 }
 
