@@ -1,9 +1,14 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import subprocess
 import sys
 
 import pytest
 
-# Test for _argcomplete but not specific for any application.
+# test for _argcomplete but not specific for any application
 
 
 def equal_with_bash(prefix, ffc, fc, out=None):
@@ -18,20 +23,32 @@ def equal_with_bash(prefix, ffc, fc, out=None):
     return retval
 
 
-# Copied from argcomplete.completers as import from there.
-# Also pulls in argcomplete.__init__ which opens filedescriptor 9.
-# This gives an OSError at the end of testrun.
+# copied from argcomplete.completers as import from there
+# also pulls in argcomplete.__init__ which opens filedescriptor 9
+# this gives an IOError at the end of testrun
 
 
 def _wrapcall(*args, **kargs):
     try:
-        return subprocess.check_output(*args, **kargs).decode().splitlines()
+        if sys.version_info > (2, 7):
+            return subprocess.check_output(*args, **kargs).decode().splitlines()
+        if "stdout" in kargs:
+            raise ValueError("stdout argument not allowed, it will be overridden.")
+        process = subprocess.Popen(stdout=subprocess.PIPE, *args, **kargs)
+        output, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            cmd = kargs.get("args")
+            if cmd is None:
+                cmd = args[0]
+            raise subprocess.CalledProcessError(retcode, cmd)
+        return output.decode().splitlines()
     except subprocess.CalledProcessError:
         return []
 
 
-class FilesCompleter:
-    """File completer class, optionally takes a list of allowed extensions."""
+class FilesCompleter(object):
+    "File completer class, optionally takes a list of allowed extensions"
 
     def __init__(self, allowednames=(), directories=True):
         # Fix if someone passes in a string instead of a list
@@ -73,7 +90,7 @@ class FilesCompleter:
         return completion
 
 
-class TestArgComplete:
+class TestArgComplete(object):
     @pytest.mark.skipif("sys.platform in ('win32', 'darwin')")
     def test_compare_with_compgen(self, tmpdir):
         from _pytest._argcomplete import FastFilesCompleter
@@ -91,7 +108,9 @@ class TestArgComplete:
 
     @pytest.mark.skipif("sys.platform in ('win32', 'darwin')")
     def test_remove_dir_prefix(self):
-        """This is not compatible with compgen but it is with bash itself: ls /usr/<TAB>."""
+        """this is not compatible with compgen but it is with bash itself:
+        ls /usr/<TAB>
+        """
         from _pytest._argcomplete import FastFilesCompleter
 
         ffc = FastFilesCompleter()

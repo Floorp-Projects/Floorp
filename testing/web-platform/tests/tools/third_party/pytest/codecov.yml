@@ -1,6 +1,7 @@
-# reference: https://docs.codecov.io/docs/codecovyml-reference
 coverage:
   status:
+    project: true
     patch: true
-    project: false
-comment: false
+    changes: true
+
+comment: off

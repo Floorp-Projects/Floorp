@@ -1,5 +1,5 @@
-.. image:: https://docs.pytest.org/en/stable/_static/pytest1.png
-   :target: https://docs.pytest.org/en/stable/
+.. image:: https://docs.pytest.org/en/latest/_static/pytest1.png
+   :target: https://docs.pytest.org/en/latest/
    :align: center
    :alt: pytest
 
@@ -22,18 +22,14 @@
 .. image:: https://travis-ci.org/pytest-dev/pytest.svg?branch=master
     :target: https://travis-ci.org/pytest-dev/pytest
 
-.. image:: https://github.com/pytest-dev/pytest/workflows/main/badge.svg
-    :target: https://github.com/pytest-dev/pytest/actions?query=workflow%3Amain
+.. image:: https://dev.azure.com/pytest-dev/pytest/_apis/build/status/pytest-CI?branchName=master
+    :target: https://dev.azure.com/pytest-dev/pytest
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
+    :target: https://github.com/python/black
 
 .. image:: https://www.codetriage.com/pytest-dev/pytest/badges/users.svg
     :target: https://www.codetriage.com/pytest-dev/pytest
-
-.. image:: https://readthedocs.org/projects/pytest/badge/?version=latest
-    :target: https://pytest.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
 
 The ``pytest`` framework makes it easy to write small tests, yet
 scales to support complex functional testing for applications and libraries.
@@ -71,33 +67,33 @@ To execute it::
     ========================== 1 failed in 0.04 seconds ===========================
 
 
-Due to ``pytest``'s detailed assertion introspection, only plain ``assert`` statements are used. See `getting-started <https://docs.pytest.org/en/stable/getting-started.html#our-first-test-run>`_ for more examples.
+Due to ``pytest``'s detailed assertion introspection, only plain ``assert`` statements are used. See `getting-started <https://docs.pytest.org/en/latest/getting-started.html#our-first-test-run>`_ for more examples.
 
 
 Features
 --------
 
-- Detailed info on failing `assert statements <https://docs.pytest.org/en/stable/assert.html>`_ (no need to remember ``self.assert*`` names)
+- Detailed info on failing `assert statements <https://docs.pytest.org/en/latest/assert.html>`_ (no need to remember ``self.assert*`` names);
 
 - `Auto-discovery
-  <https://docs.pytest.org/en/stable/goodpractices.html#python-test-discovery>`_
-  of test modules and functions
+  <https://docs.pytest.org/en/latest/goodpractices.html#python-test-discovery>`_
+  of test modules and functions;
 
-- `Modular fixtures <https://docs.pytest.org/en/stable/fixture.html>`_ for
-  managing small or parametrized long-lived test resources
+- `Modular fixtures <https://docs.pytest.org/en/latest/fixture.html>`_ for
+  managing small or parametrized long-lived test resources;
 
-- Can run `unittest <https://docs.pytest.org/en/stable/unittest.html>`_ (or trial),
-  `nose <https://docs.pytest.org/en/stable/nose.html>`_ test suites out of the box
+- Can run `unittest <https://docs.pytest.org/en/latest/unittest.html>`_ (or trial),
+  `nose <https://docs.pytest.org/en/latest/nose.html>`_ test suites out of the box;
 
-- Python 3.5+ and PyPy3
+- Python 2.7, Python 3.4+, PyPy 2.3, Jython 2.5 (untested);
 
-- Rich plugin architecture, with over 850+ `external plugins <http://plugincompat.herokuapp.com>`_ and thriving community
+- Rich plugin architecture, with over 315+ `external plugins <http://plugincompat.herokuapp.com>`_ and thriving community;
 
 
 Documentation
 -------------
 
-For full documentation, including installation, tutorials and PDF documents, please see https://docs.pytest.org/en/stable/.
+For full documentation, including installation, tutorials and PDF documents, please see https://docs.pytest.org/en/latest/.
 
 
 Bugs/Requests
@@ -109,39 +105,25 @@ Please use the `GitHub issue tracker <https://github.com/pytest-dev/pytest/issue
 Changelog
 ---------
 
-Consult the `Changelog <https://docs.pytest.org/en/stable/changelog.html>`__ page for fixes and enhancements of each version.
+Consult the `Changelog <https://docs.pytest.org/en/latest/changelog.html>`__ page for fixes and enhancements of each version.
 
 
 Support pytest
 --------------
 
-`Open Collective`_ is an online funding platform for open and transparent communities.
-It provides tools to raise money and share your finances in full transparency.
+You can support pytest by obtaining a `Tideflift subscription`_.
 
-It is the platform of choice for individuals and companies that want to make one-time or
-monthly donations directly to the project.
-
-See more details in the `pytest collective`_.
-
-.. _Open Collective: https://opencollective.com
-.. _pytest collective: https://opencollective.com/pytest
+Tidelift gives software development teams a single source for purchasing and maintaining their software,
+with professional grade assurances from the experts who know it best, while seamlessly integrating with existing tools.
 
 
-pytest for enterprise
----------------------
+.. _`Tideflift subscription`: https://tidelift.com/subscription/pkg/pypi-pytest?utm_source=pypi-pytest&utm_medium=referral&utm_campaign=readme
 
-Available as part of the Tidelift Subscription.
-
-The maintainers of pytest and thousands of other packages are working with Tidelift to deliver commercial support and
-maintenance for the open source dependencies you use to build your applications.
-Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use.
-
-`Learn more. <https://tidelift.com/subscription/pkg/pypi-pytest?utm_source=pypi-pytest&utm_medium=referral&utm_campaign=enterprise&utm_term=repo>`_
 
 Security
 ^^^^^^^^
 
-pytest has never been associated with a security vulnerability, but in any case, to report a
+pytest has never been associated with a security vunerability, but in any case, to report a
 security vulnerability please use the `Tidelift security contact <https://tidelift.com/security>`_.
 Tidelift will coordinate the fix and disclosure.
 

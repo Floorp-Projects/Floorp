@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 import pytest
 
 
-class TestClass:
+class TestClass(object):
     @pytest.fixture
     def something(self, request):
         return request.instance
