@@ -133,29 +133,12 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame*,
                                   StyleAppearance, const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
-
-  struct WebRenderBackendData {
-    mozilla::wr::DisplayListBuilder& mBuilder;
-    mozilla::wr::IpcResourceUpdateQueue& mResources;
-    const mozilla::layers::StackingContextHelper& mSc;
-    mozilla::layers::RenderRootStateManager* mManager;
-  };
-
-  bool CreateWebRenderCommandsForWidget(
-      mozilla::wr::DisplayListBuilder& aBuilder,
-      mozilla::wr::IpcResourceUpdateQueue& aResources,
-      const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager, nsIFrame*,
-      StyleAppearance, const nsRect& aRect) override;
-
-  // PaintBackendData will be either a DrawTarget, or a WebRenderBackendData.
-  //
-  // The return value represents whether the widget could be painted with the
-  // given back-end.
-  template <typename PaintBackendData>
-  bool DoDrawWidgetBackground(PaintBackendData&, nsIFrame*, StyleAppearance,
-                              const nsRect& aRect);
-
+  /*bool CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder&
+     aBuilder, mozilla::wr::IpcResourceUpdateQueue& aResources, const
+     mozilla::layers::StackingContextHelper& aSc,
+                                        mozilla::layers::RenderRootStateManager*
+     aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect&
+     aRect) override;*/
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
                                                       nsIFrame*,
                                                       StyleAppearance) override;
@@ -232,42 +215,16 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
       nsIFrame*, StyleAppearance, const ComputedStyle&,
       const EventStates& aElementState, const EventStates& aDocumentState);
 
-  template <typename PaintBackendData>
-  void PaintRoundedFocusRect(PaintBackendData&, const LayoutDeviceRect&,
-                             DPIRatio, CSSCoord aRadius, CSSCoord aOffset);
-  template <typename PaintBackendData>
-  void PaintAutoStyleOutline(nsIFrame*, PaintBackendData&,
-                             const LayoutDeviceRect&, DPIRatio);
-
-  static void PaintRoundedRectWithRadius(DrawTarget&,
-                                         const LayoutDeviceRect& aRect,
-                                         const LayoutDeviceRect& aClipRect,
-                                         const sRGBColor& aBackgroundColor,
-                                         const sRGBColor& aBorderColor,
-                                         CSSCoord aBorderWidth,
-                                         CSSCoord aRadius, DPIRatio);
-  static void PaintRoundedRectWithRadius(WebRenderBackendData&,
-                                         const LayoutDeviceRect& aRect,
-                                         const LayoutDeviceRect& aClipRect,
-                                         const sRGBColor& aBackgroundColor,
-                                         const sRGBColor& aBorderColor,
-                                         CSSCoord aBorderWidth,
-                                         CSSCoord aRadius, DPIRatio);
-  template <typename PaintBackendData>
-  static void PaintRoundedRectWithRadius(PaintBackendData& aData,
-                                         const LayoutDeviceRect& aRect,
-                                         const sRGBColor& aBackgroundColor,
-                                         const sRGBColor& aBorderColor,
-                                         CSSCoord aBorderWidth,
-                                         CSSCoord aRadius, DPIRatio aDpiRatio) {
-    PaintRoundedRectWithRadius(aData, aRect, aRect, aBackgroundColor,
-                               aBorderColor, aBorderWidth, aRadius, aDpiRatio);
-  }
-
-  static void FillRect(DrawTarget&, const LayoutDeviceRect&, const sRGBColor&);
-  static void FillRect(WebRenderBackendData&, const LayoutDeviceRect&,
-                       const sRGBColor&);
-
+  void PaintRoundedFocusRect(DrawTarget&, const LayoutDeviceRect&, DPIRatio,
+                             CSSCoord aRadius, CSSCoord aOffset);
+  void PaintAutoStyleOutline(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
+                             DPIRatio);
+  void PaintRoundedRectWithRadius(DrawTarget& aDrawTarget,
+                                  const LayoutDeviceRect&,
+                                  const sRGBColor& aBackgroundColor,
+                                  const sRGBColor& aBorderColor,
+                                  CSSCoord aBorderWidth, CSSCoord aRadius,
+                                  DPIRatio);
   void PaintCheckboxControl(DrawTarget& aDrawTarget, const LayoutDeviceRect&,
                             const EventStates&, DPIRatio);
   void PaintCheckMark(DrawTarget&, const LayoutDeviceRect&, const EventStates&);
@@ -284,15 +241,12 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                          const EventStates&, DPIRatio);
   void PaintRadioCheckmark(DrawTarget&, const LayoutDeviceRect&,
                            const EventStates&, DPIRatio);
-  template <typename PaintBackendData>
-  void PaintTextField(PaintBackendData&, const LayoutDeviceRect&,
-                      const EventStates&, DPIRatio);
-  template <typename PaintBackendData>
-  void PaintListbox(PaintBackendData&, const LayoutDeviceRect&,
-                    const EventStates&, DPIRatio);
-  template <typename PaintBackendData>
-  void PaintMenulist(PaintBackendData&, const LayoutDeviceRect&,
-                     const EventStates&, DPIRatio);
+  void PaintTextField(DrawTarget&, const LayoutDeviceRect&, const EventStates&,
+                      DPIRatio);
+  void PaintListbox(DrawTarget&, const LayoutDeviceRect&, const EventStates&,
+                    DPIRatio);
+  void PaintMenulist(DrawTarget&, const LayoutDeviceRect&, const EventStates&,
+                     DPIRatio);
   void PaintArrow(DrawTarget&, const LayoutDeviceRect&,
                   const float aArrowPolygonX[], const float aArrowPolygonY[],
                   const int32_t aArrowNumPoints, const sRGBColor aFillColor);
@@ -302,76 +256,32 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                           const EventStates&, StyleAppearance, DPIRatio);
   void PaintRange(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
                   const EventStates&, DPIRatio, bool aHorizontal);
-  template <typename PaintBackendData>
-  void PaintProgress(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
+  void PaintProgress(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
                      const EventStates&, DPIRatio, bool aIsMeter, bool aBar);
-  template <typename PaintBackendData>
-  void PaintButton(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
+  void PaintButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
                    const EventStates&, DPIRatio);
 
-  void PaintScrollbarButton(DrawTarget&, StyleAppearance,
-                            const LayoutDeviceRect&, nsIFrame*,
-                            const ComputedStyle&,
-                            const EventStates& aElementState,
-                            const EventStates& aDocumentState, DPIRatio);
-
-  virtual bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
+  virtual void PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
                                    bool aHorizontal, nsIFrame*,
                                    const ComputedStyle&,
                                    const EventStates& aElementState,
                                    const EventStates& aDocumentState, DPIRatio);
-  virtual bool PaintScrollbarThumb(WebRenderBackendData&,
-                                   const LayoutDeviceRect&, bool aHorizontal,
-                                   nsIFrame*, const ComputedStyle&,
-                                   const EventStates& aElementState,
+  virtual void PaintScrollbar(DrawTarget&, const LayoutDeviceRect&,
+                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                              const EventStates& aDocumentState, DPIRatio);
+  virtual void PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect&,
+                                   bool aHorizontal, nsIFrame*,
+                                   const ComputedStyle&,
                                    const EventStates& aDocumentState, DPIRatio);
-  template <typename PaintBackendData>
-  bool DoPaintDefaultScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
-                                    bool aHorizontal, nsIFrame*,
+  virtual void PaintScrollCorner(DrawTarget&, const LayoutDeviceRect&,
+                                 nsIFrame*, const ComputedStyle&,
+                                 const EventStates& aDocumentState, DPIRatio);
+  virtual void PaintScrollbarButton(DrawTarget&, StyleAppearance,
+                                    const LayoutDeviceRect&, nsIFrame*,
                                     const ComputedStyle&,
                                     const EventStates& aElementState,
                                     const EventStates& aDocumentState,
                                     DPIRatio);
-
-  virtual bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aDocumentState, DPIRatio);
-  virtual bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aDocumentState, DPIRatio);
-  template <typename PaintBackendData>
-  bool DoPaintDefaultScrollbar(PaintBackendData&, const LayoutDeviceRect&,
-                               bool aHorizontal, nsIFrame*,
-                               const ComputedStyle&,
-                               const EventStates& aDocumentState, DPIRatio);
-
-  virtual bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect&,
-                                   bool aHorizontal, nsIFrame*,
-                                   const ComputedStyle&,
-                                   const EventStates& aDocumentState,
-                                   DPIRatio) {
-    // Draw nothing by default. Subclasses can override this.
-    return true;
-  }
-  virtual bool PaintScrollbarTrack(WebRenderBackendData&,
-                                   const LayoutDeviceRect&, bool aHorizontal,
-                                   nsIFrame*, const ComputedStyle&,
-                                   const EventStates& aDocumentState,
-                                   DPIRatio) {
-    // Draw nothing by default. Subclasses can override this.
-    return true;
-  }
-
-  virtual bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect&,
-                                 nsIFrame*, const ComputedStyle&,
-                                 const EventStates& aDocumentState, DPIRatio);
-  virtual bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect&,
-                                 nsIFrame*, const ComputedStyle&,
-                                 const EventStates& aDocumentState, DPIRatio);
-  template <typename PaintBackendData>
-  bool DoPaintDefaultScrollCorner(PaintBackendData&, const LayoutDeviceRect&,
-                                  nsIFrame*, const ComputedStyle&,
-                                  const EventStates& aDocumentState, DPIRatio);
 
   static sRGBColor sAccentColor;
   static sRGBColor sAccentColorForeground;

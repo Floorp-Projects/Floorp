@@ -43,7 +43,7 @@ auto nsNativeBasicThemeCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
   return {size, size};
 }
 
-bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
+void nsNativeBasicThemeCocoa::PaintScrollbarThumb(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
@@ -59,10 +59,9 @@ bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
   } else {
     ScrollbarDrawingMac::DrawScrollbarThumb(aDrawTarget, rect, params);
   }
-  return true;
 }
 
-bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
+void nsNativeBasicThemeCocoa::PaintScrollbarTrack(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, DPIRatio aDpiRatio) {
@@ -77,10 +76,18 @@ bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
   } else {
     ScrollbarDrawingMac::DrawScrollbarTrack(aDrawTarget, rect, params);
   }
-  return true;
 }
 
-bool nsNativeBasicThemeCocoa::PaintScrollCorner(
+void nsNativeBasicThemeCocoa::PaintScrollbar(DrawTarget& aDrawTarget,
+                                             const LayoutDeviceRect& aRect,
+                                             bool aHorizontal, nsIFrame* aFrame,
+                                             const ComputedStyle& aStyle,
+                                             const EventStates& aDocumentState,
+                                             DPIRatio aDpiRatio) {
+  // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
+}
+
+void nsNativeBasicThemeCocoa::PaintScrollCorner(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
@@ -96,5 +103,4 @@ bool nsNativeBasicThemeCocoa::PaintScrollCorner(
     auto rect = aRect.ToUnknownRect();
     ScrollbarDrawingMac::DrawScrollCorner(aDrawTarget, rect, params);
   }
-  return true;
 }
