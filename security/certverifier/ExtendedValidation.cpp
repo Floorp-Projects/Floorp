@@ -369,19 +369,6 @@ static const struct EVInfo kEVInfos[] = {
     "Ag==",
   },
   {
-    // CN=Chambers of Commerce Root - 2008,O=AC Camerfirma S.A.,serialNumber=A82743287,L=Madrid (see current address at www.camerfirma.com/address),C=EU
-    "1.3.6.1.4.1.17326.10.14.2.1.2",
-    "Camerfirma EV OID a",
-    { 0x06, 0x3E, 0x4A, 0xFA, 0xC4, 0x91, 0xDF, 0xD3, 0x32, 0xF3, 0x08,
-      0x9B, 0x85, 0x42, 0xE9, 0x46, 0x17, 0xD8, 0x93, 0xD7, 0xFE, 0x94,
-      0x4E, 0x10, 0xA7, 0x93, 0x7E, 0xE2, 0x9D, 0x96, 0x93, 0xC0 },
-    "MIGuMQswCQYDVQQGEwJFVTFDMEEGA1UEBxM6TWFkcmlkIChzZWUgY3VycmVudCBh"
-    "ZGRyZXNzIGF0IHd3dy5jYW1lcmZpcm1hLmNvbS9hZGRyZXNzKTESMBAGA1UEBRMJ"
-    "QTgyNzQzMjg3MRswGQYDVQQKExJBQyBDYW1lcmZpcm1hIFMuQS4xKTAnBgNVBAMT"
-    "IENoYW1iZXJzIG9mIENvbW1lcmNlIFJvb3QgLSAyMDA4",
-    "AKPaQn6ksa7a",
-  },
-  {
     // CN=AffirmTrust Commercial,O=AffirmTrust,C=US
     "1.3.6.1.4.1.34697.2.1",
     "AffirmTrust EV OID a",
