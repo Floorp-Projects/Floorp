@@ -17,7 +17,14 @@ from mozperftest.utils import (
     install_package,
 )
 
-URL = "'https://www.example.com'"
+# We specifically select this URL because:
+# - we access Mozilla URLs in tests so any connections to Mozilla URLs may re-use
+# existing connections and have different perf characteristics. We can mostly
+# avoid this problem by using a non-Mozilla URL
+# - we authored the site so we can guarantee it doesn't change or change it if
+# needed
+# - we're not directing traffic to a site we don't own
+URL = "'https://mozilla-mobile.github.io/perf-tools/mozperftest-test-page.html'"
 
 COMMON_OPTIONS = [
     ("processStartTime", "true"),
