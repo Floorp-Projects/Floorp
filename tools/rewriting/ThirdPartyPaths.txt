@@ -140,7 +140,7 @@ netwerk/srtp/src/
 nsprpub/
 other-licenses/
 parser/expat/
-remote/test/browser/chrome-remote-interface.js
+remote/cdp/test/browser/chrome-remote-interface.js
 remote/test/puppeteer/
 security/nss/
 security/sandbox/chromium/

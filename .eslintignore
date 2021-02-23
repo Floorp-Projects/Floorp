@@ -158,7 +158,7 @@ python/
 
 # These are (mainly) imported code that we don't want to lint to make imports easier.
 remote/cdp/Protocol.jsm
-remote/test/browser/chrome-remote-interface.js
+remote/cdp/test/browser/chrome-remote-interface.js
 
 # services/ exclusions
 
