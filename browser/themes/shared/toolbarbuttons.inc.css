@@ -110,12 +110,6 @@ toolbar[brighttext] {
   margin: 0 0 var(--tabs-navbar-shadow-size) !important;
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
-#TabsToolbar .toolbarbutton-1 {
-  margin-block: var(--proton-tab-block-margin) !important;
-}
-} /*** END proton ***/
-
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
   appearance: none;
