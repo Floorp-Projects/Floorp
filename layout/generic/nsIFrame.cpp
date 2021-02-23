@@ -4905,6 +4905,12 @@ NS_IMETHODIMP nsIFrame::HandleDrag(nsPresContext* aPresContext,
   MOZ_ASSERT(aEvent->mClass == eMouseEventClass,
              "HandleDrag can only handle mouse event");
 
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+
+  if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+    return NS_OK;
+  }
+
   RefPtr<nsFrameSelection> frameselection = GetFrameSelection();
   if (!frameselection) {
     return NS_OK;
