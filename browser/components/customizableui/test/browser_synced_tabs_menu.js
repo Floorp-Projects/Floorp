@@ -20,11 +20,9 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/UITour.jsm"
 );
 
-// These are available on the widget implementation, but it seems impossible
-// to grab that impl at runtime.
 const DECKINDEX_TABS = 0;
-const DECKINDEX_TABSDISABLED = 1;
-const DECKINDEX_FETCHING = 2;
+const DECKINDEX_FETCHING = 1;
+const DECKINDEX_TABSDISABLED = 2;
 const DECKINDEX_NOCLIENTS = 3;
 
 const SAMPLE_TAB_URL = "https://example.com/";
@@ -525,12 +523,6 @@ add_task(async function() {
   }
 
   showMoreButton = checkTabsPage(25, "Show More");
-  await clickShowMoreButton();
-
-  showMoreButton = checkTabsPage(50, "Show More");
-  await clickShowMoreButton();
-
-  showMoreButton = checkTabsPage(72, "Show All");
   await clickShowMoreButton();
 
   checkTabsPage(77, null);
