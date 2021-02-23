@@ -3325,7 +3325,6 @@ impl TileCacheInstance {
         // then applied below.
         let mut backdrop_candidate = None;
 
-
         // For pictures, we don't (yet) know the valid clip rect, so we can't correctly
         // use it to calculate the local bounding rect for the tiles. If we include them
         // then we may calculate a bounding rect that is too large, since it won't include

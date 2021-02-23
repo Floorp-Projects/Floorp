@@ -588,14 +588,16 @@ impl FrameBuilder {
 
         profile.start_time(profiler::FRAME_BATCHING_TIME);
 
+        let mut deferred_resolves = vec![];
+
         // Finish creating the frame graph and build it.
         let render_tasks = rg_builder.end_frame(
             resource_cache,
             gpu_cache,
+            &mut deferred_resolves,
         );
 
         let mut passes = Vec::new();
-        let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
         let mut prim_headers = PrimitiveHeaders::new();
         self.prim_headers_prealloc.preallocate_vec(&mut prim_headers.headers_int);
@@ -858,6 +860,9 @@ pub fn build_render_pass(
                 for task_id in &sub_pass.task_ids {
                     texture.add_task(*task_id, render_tasks);
                 }
+            }
+            SubPassSurface::Persistent { surface: StaticRenderTaskSurface::ReadOnly { .. } } => {
+                panic!("Should not create a render pass for read-only task locations.");
             }
         }
     }

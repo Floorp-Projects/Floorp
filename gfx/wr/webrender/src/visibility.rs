@@ -11,8 +11,6 @@ use api::{ColorF, DebugFlags};
 use api::units::*;
 use euclid::Scale;
 use std::{usize, mem};
-use crate::image_tiling;
-use crate::segment::EdgeAaSegmentMask;
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::composite::CompositeState;
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
@@ -25,9 +23,8 @@ use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheI
 use crate::picture::{PrimitiveList, SurfaceIndex, RasterConfig, SliceId};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, PrimitiveInstanceKind};
 use crate::prim_store::{PrimitiveStore, PrimitiveInstance};
-use crate::prim_store::image::VisibleImageTile;
 use crate::render_backend::{DataStores, ScratchBuffer};
-use crate::resource_cache::{ResourceCache, ImageProperties, ImageRequest};
+use crate::resource_cache::ResourceCache;
 use crate::scene::SceneProperties;
 use crate::space::{SpaceMapper, SpaceSnapper};
 use crate::internal_types::Filter;
@@ -604,10 +601,8 @@ pub fn update_primitive_visibility(
                 update_prim_post_visibility(
                     store,
                     prim_instance,
-                    cluster.spatial_node_index,
                     world_culling_rect,
                     &map_surface_to_world,
-                    frame_context,
                     frame_state,
                 );
             }
@@ -705,10 +700,8 @@ pub fn update_primitive_visibility(
 fn update_prim_post_visibility(
     store: &mut PrimitiveStore,
     prim_instance: &mut PrimitiveInstance,
-    prim_spatial_node_index: SpatialNodeIndex,
     world_culling_rect: WorldRect,
     map_surface_to_world: &SpaceMapper<PicturePixel, WorldPixel>,
-    frame_context: &FrameVisibilityContext,
     frame_state: &mut FrameVisibilityState,
 ) {
     profile_scope!("update_prim_post_visibility");
@@ -733,104 +726,8 @@ fn update_prim_post_visibility(
             // TODO(gw): We might be able to detect simple cases of this earlier,
             //           during the picture traversal. But it's probably not worth it?
         }
-        PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
-            let prim_data = &mut frame_state.data_stores.image[data_handle];
-            let common_data = &mut prim_data.common;
-            let image_data = &mut prim_data.kind;
-            let image_instance = &mut store.images[image_instance_index];
+        PrimitiveInstanceKind::Image { .. } => {
 
-            let image_properties = frame_state
-                .resource_cache
-                .get_image_properties(image_data.key);
-
-            let request = ImageRequest {
-                key: image_data.key,
-                rendering: image_data.image_rendering,
-                tile: None,
-            };
-
-            match image_properties {
-                Some(ImageProperties { tiling: None, .. }) => {
-
-                    frame_state.resource_cache.request_image(
-                        request,
-                        frame_state.gpu_cache,
-                    );
-                }
-                Some(ImageProperties { tiling: Some(tile_size), visible_rect, .. }) => {
-                    image_instance.visible_tiles.clear();
-                    // TODO: rename the blob's visible_rect into something that doesn't conflict
-                    // with the terminology we use during culling since it's not really the same
-                    // thing.
-                    let active_rect = visible_rect;
-
-                    // Tighten the clip rect because decomposing the repeated image can
-                    // produce primitives that are partially covering the original image
-                    // rect and we want to clip these extra parts out.
-                    let prim_info = &prim_instance.vis;
-                    let tight_clip_rect = prim_info
-                        .combined_local_clip_rect
-                        .intersection(&common_data.prim_rect).unwrap();
-                    image_instance.tight_local_clip_rect = tight_clip_rect;
-
-                    let visible_rect = compute_conservative_visible_rect(
-                        &prim_instance.vis.clip_chain,
-                        world_culling_rect,
-                        prim_spatial_node_index,
-                        frame_context.spatial_tree,
-                    );
-
-                    let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
-
-                    let stride = image_data.stretch_size + image_data.tile_spacing;
-
-                    // We are performing the decomposition on the CPU here, no need to
-                    // have it in the shader.
-                    common_data.may_need_repetition = false;
-
-                    let repetitions = image_tiling::repetitions(
-                        &common_data.prim_rect,
-                        &visible_rect,
-                        stride,
-                    );
-
-                    for image_tiling::Repetition { origin, edge_flags } in repetitions {
-                        let edge_flags = base_edge_flags | edge_flags;
-
-                        let layout_image_rect = LayoutRect {
-                            origin,
-                            size: image_data.stretch_size,
-                        };
-
-                        let tiles = image_tiling::tiles(
-                            &layout_image_rect,
-                            &visible_rect,
-                            &active_rect,
-                            tile_size as i32,
-                        );
-
-                        for tile in tiles {
-                            frame_state.resource_cache.request_image(
-                                request.with_tile(tile.offset),
-                                frame_state.gpu_cache,
-                            );
-
-                            image_instance.visible_tiles.push(VisibleImageTile {
-                                tile_offset: tile.offset,
-                                edge_flags: tile.edge_flags & edge_flags,
-                                local_rect: tile.rect,
-                                local_clip_rect: tight_clip_rect,
-                            });
-                        }
-                    }
-
-                    if image_instance.visible_tiles.is_empty() {
-                        // Mark as invisible
-                        prim_instance.clear_visibility();
-                    }
-                }
-                None => {}
-            }
         }
         PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
             let prim_data = &mut frame_state.data_stores.image_border[data_handle];
@@ -848,19 +745,6 @@ fn update_prim_post_visibility(
         }
         _ => {}
     }
-}
-
-fn edge_flags_for_tile_spacing(tile_spacing: &LayoutSize) -> EdgeAaSegmentMask {
-    let mut flags = EdgeAaSegmentMask::empty();
-
-    if tile_spacing.width > 0.0 {
-        flags |= EdgeAaSegmentMask::LEFT | EdgeAaSegmentMask::RIGHT;
-    }
-    if tile_spacing.height > 0.0 {
-        flags |= EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::BOTTOM;
-    }
-
-    flags
 }
 
 pub fn compute_conservative_visible_rect(

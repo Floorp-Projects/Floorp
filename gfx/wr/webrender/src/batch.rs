@@ -24,7 +24,6 @@ use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, ClipData};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
 use crate::prim_store::VECS_PER_SEGMENT;
-use crate::prim_store::image::ImageSource;
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::RenderTaskAddress;
@@ -2471,11 +2470,6 @@ impl BatchBuilder {
                     AlphaType::PremultipliedAlpha => BlendMode::PremultipliedAlpha,
                     AlphaType::Alpha => BlendMode::Alpha,
                 };
-                let request = ImageRequest {
-                    key: image_data.key,
-                    rendering: image_data.image_rendering,
-                    tile: None,
-                };
                 let prim_user_data = ImageBrushData {
                     color_mode: ShaderColorMode::Image,
                     alpha_type: image_data.alpha_type,
@@ -2485,38 +2479,20 @@ impl BatchBuilder {
 
                 if image_instance.visible_tiles.is_empty() {
                     if cfg!(debug_assertions) {
-                        match ctx.resource_cache.get_image_properties(request.key) {
+                        match ctx.resource_cache.get_image_properties(image_data.key) {
                             Some(ImageProperties { tiling: None, .. }) | None => (),
                             other => panic!("Non-tiled image with no visible images detected! Properties {:?}", other),
                         }
                     }
 
-                    let cache_item = match image_data.source {
-                        ImageSource::Default => {
-                            resolve_image(
-                                request,
-                                ctx.resource_cache,
-                                gpu_cache,
-                                deferred_resolves,
-                            )
-                        }
-                        ImageSource::Cache { ref handle, .. } => {
-                            let rt_handle = handle
-                                .as_ref()
-                                .expect("bug: render task handle not allocated");
-                            let rt_cache_entry = ctx.resource_cache
-                                .get_cached_render_task(rt_handle);
-                            ctx.resource_cache.get_texture_cache_item(&rt_cache_entry.handle)
+                    let src_color = image_instance.src_color.resolve(render_tasks, ctx, gpu_cache);
+
+                    let (uv_rect_address, texture_source) = match src_color {
+                        Some(src) => src,
+                        None => {
+                            return;
                         }
                     };
-
-                    if cache_item.texture_id == TextureSource::Invalid {
-                        return;
-                    }
-
-                    let textures = TextureSet::prim_textured(
-                        cache_item.texture_id,
-                    );
 
                     let non_segmented_blend_mode = if !common_data.opacity.is_opaque ||
                         prim_info.clip_task_index != ClipTaskIndex::INVALID ||
@@ -2528,10 +2504,10 @@ impl BatchBuilder {
                     };
 
                     let batch_params = BrushBatchParameters::shared(
-                        BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
-                        textures,
+                        BrushBatchKind::Image(texture_source.image_buffer_kind()),
+                        TextureSet::prim_textured(texture_source),
                         prim_user_data,
-                        cache_item.uv_rect_handle.as_int(gpu_cache),
+                        uv_rect_address.as_int(),
                     );
 
                     debug_assert_ne!(image_instance.segment_instance_index, SegmentInstanceIndex::INVALID);
@@ -2605,32 +2581,37 @@ impl BatchBuilder {
                         let prim_header_index = prim_headers.push(&prim_header, z_id, prim_user_data);
 
                         for (i, tile) in chunk.iter().enumerate() {
-                            if let Some((batch_kind, textures, uv_rect_address)) = get_image_tile_params(
-                                ctx.resource_cache,
-                                gpu_cache,
-                                deferred_resolves,
-                                request.with_tile(tile.tile_offset),
+                            let (uv_rect_address, texture) = match tile.src_color.resolve(render_tasks, ctx, gpu_cache) {
+                                Some(result) => result,
+                                None => {
+                                    return;
+                                }
+                            };
+
+                            let textures = BatchTextures::prim_textured(
+                                texture,
                                 clip_mask_texture_id,
-                            ) {
-                                let batch_key = BatchKey {
-                                    blend_mode: specified_blend_mode,
-                                    kind: BatchKind::Brush(batch_kind),
-                                    textures,
-                                };
-                                self.add_brush_instance_to_batches(
-                                    batch_key,
-                                    batch_features,
-                                    bounding_rect,
-                                    z_id,
-                                    i as i32,
-                                    tile.edge_flags,
-                                    clip_task_address,
-                                    BrushFlags::SEGMENT_RELATIVE | BrushFlags::PERSPECTIVE_INTERPOLATION,
-                                    prim_header_index,
-                                    uv_rect_address.as_int(),
-                                    prim_vis_mask,
-                                );
-                            }
+                            );
+
+                            let batch_key = BatchKey {
+                                blend_mode: specified_blend_mode,
+                                kind: BatchKind::Brush(BrushBatchKind::Image(texture.image_buffer_kind())),
+                                textures,
+                            };
+
+                            self.add_brush_instance_to_batches(
+                                batch_key,
+                                batch_features,
+                                bounding_rect,
+                                z_id,
+                                i as i32,
+                                tile.edge_flags,
+                                clip_task_address,
+                                BrushFlags::SEGMENT_RELATIVE | BrushFlags::PERSPECTIVE_INTERPOLATION,
+                                prim_header_index,
+                                uv_rect_address.as_int(),
+                                prim_vis_mask,
+                            );
                         }
                     }
                 }
@@ -3255,36 +3236,6 @@ impl BatchBuilder {
                 prim_vis_mask,
             );
         }
-    }
-}
-
-fn get_image_tile_params(
-    resource_cache: &ResourceCache,
-    gpu_cache: &mut GpuCache,
-    deferred_resolves: &mut Vec<DeferredResolve>,
-    request: ImageRequest,
-    clip_mask_texture_id: TextureSource,
-) -> Option<(BrushBatchKind, BatchTextures, GpuCacheAddress)> {
-
-    let cache_item = resolve_image(
-        request,
-        resource_cache,
-        gpu_cache,
-        deferred_resolves,
-    );
-
-    if cache_item.texture_id == TextureSource::Invalid {
-        None
-    } else {
-        let textures = BatchTextures::prim_textured(
-            cache_item.texture_id,
-            clip_mask_texture_id,
-        );
-        Some((
-            BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
-            textures,
-            gpu_cache.get_address(&cache_item.uv_rect_handle),
-        ))
     }
 }
 
