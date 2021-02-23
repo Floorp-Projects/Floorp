@@ -37,7 +37,6 @@ RUN apt-get update && \
       valgrind \
       vim \
       wget \
-      yasm \
       zip
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb.
