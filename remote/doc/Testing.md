@@ -132,7 +132,7 @@ This check is typically not relevant when running against Chrome.
 To schedule the tests on try, look for `source-test-remote-puppeteer` in
 `./mach try fuzzy`. On try they appear under the `remote(pup)` symbol.
 
-Test expectation metadata is collected in _remote/puppeteer-expected.json_
+Test expectation metadata is collected in _remote/test/puppeteer-expected.json_
 via log parsing and a custom Mocha reporter under
 _remote/test/puppeteer/json-mocha-reporter.js_
 

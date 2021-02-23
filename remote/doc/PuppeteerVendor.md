@@ -78,6 +78,6 @@ process interspersed with some tips.
 [Puppeteer test suite]: https://github.com/GoogleChrome/puppeteer/tree/master/test
 [re-install the project]: https://github.com/puppeteer/puppeteer/blob/main/CONTRIBUTING.md#getting-code
 [run tests against both Chromium and Firefox]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#running-tests
-[puppeteer-expected.json]: https://searchfox.org/mozilla-central/source/remote/puppeteer-expected.json
+[puppeteer-expected.json]: https://searchfox.org/mozilla-central/source/remote/test/puppeteer-expected.json
 [CONTRIBUTING.md]: https://github.com/puppeteer/puppeteer/blob/main/CONTRIBUTING.md
 [unskip]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#skipping-tests-in-specific-conditions
