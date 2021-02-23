@@ -5,17 +5,15 @@
 #ifndef peerconnectionctx_h___h__
 #define peerconnectionctx_h___h__
 
-#include <string>
 #include <map>
+#include <string>
 
-#include "WebrtcGlobalChild.h"
-
+#include "MediaTransportHandler.h"  // Mostly for IceLogPromise
+#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
-#include "PeerConnectionImpl.h"
-#include "mozIGeckoMediaPluginService.h"
 #include "nsIRunnable.h"
-#include "MediaTransportHandler.h"  // Mostly for IceLogPromise
+#include "PeerConnectionImpl.h"
 
 namespace mozilla {
 class PeerConnectionCtxObserver;
@@ -30,8 +28,7 @@ class WebrtcGlobalInformation;
 // * GMP related state
 class PeerConnectionCtx {
  public:
-  static nsresult InitializeGlobal(nsIThread* mainThread,
-                                   nsISerialEventTarget* stsThread);
+  static nsresult InitializeGlobal(nsIThread* mainThread);
   static PeerConnectionCtx* GetInstance();
   static bool isActive();
   static void Destroy();
@@ -55,26 +52,26 @@ class PeerConnectionCtx {
     return mTransportHandler;
   }
 
-  // Make these classes friend so that they can access mPeerconnections.
-  friend class PeerConnectionImpl;
-  friend class PeerConnectionWrapper;
-  friend class mozilla::dom::WebrtcGlobalInformation;
-
   // WebrtcGlobalInformation uses this; we put it here so we don't need to
   // create another shutdown observer class.
   mozilla::dom::Sequence<mozilla::dom::RTCStatsReportInternal>
       mStatsForClosedPeerConnections;
 
-  const std::map<const std::string, PeerConnectionImpl*>& GetPeerConnections();
+  void RemovePeerConnection(const std::string& aKey);
+  void AddPeerConnection(const std::string& aKey,
+                         PeerConnectionImpl* aPeerConnection);
+  PeerConnectionImpl* GetPeerConnection(const std::string& aKey) const;
+  template <typename Function>
+  void ForEachPeerConnection(Function&& aFunction) const;
 
  private:
-  // We could make these available only via accessors but it's too much trouble.
   std::map<const std::string, PeerConnectionImpl*> mPeerConnections;
 
   PeerConnectionCtx()
       : mGMPReady(false),
         mTransportHandler(
             MediaTransportHandler::Create(GetMainThreadSerialEventTarget())) {}
+
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) = delete;
   void operator=(const PeerConnectionCtx& other) = delete;

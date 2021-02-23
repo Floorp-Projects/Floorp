@@ -88,16 +88,18 @@ static RefPtr<PWebrtcGlobalParent::GetStatsPromise>
 GetStatsPromiseForThisProcess(const nsAString& aPcIdFilter) {
   nsTArray<RefPtr<dom::RTCStatsReportPromise>> promises;
 
-  PeerConnectionCtx* ctx = GetPeerConnectionCtx();
-  if (ctx) {
+  if (auto ctx = GetPeerConnectionCtx()) {
     // Grab stats for non-closed PCs
-    for (const auto& [id, pc] : ctx->GetPeerConnections()) {
-      if (aPcIdFilter.IsEmpty() || aPcIdFilter.EqualsASCII(id.c_str())) {
-        if (pc->HasMedia()) {
-          promises.AppendElement(pc->GetStats(nullptr, true));
-        }
+    ctx->ForEachPeerConnection([&](PeerConnectionImpl* aPc) {
+      if (!aPcIdFilter.IsEmpty() &&
+          !aPcIdFilter.EqualsASCII(aPc->GetIdAsAscii().c_str())) {
+        return;
       }
-    }
+      if (!aPc->HasMedia()) {
+        return;
+      }
+      promises.AppendElement(aPc->GetStats(nullptr, true));
+    });
 
     // Grab stats for closed PCs
     for (const auto& report : ctx->mStatsForClosedPeerConnections) {
@@ -147,9 +149,7 @@ static std::map<int32_t, dom::Sequence<nsString>>& GetWebrtcGlobalLogStash() {
 
 static void ClearClosedStats() {
   GetWebrtcGlobalStatsStash().Clear();
-  PeerConnectionCtx* ctx = GetPeerConnectionCtx();
-
-  if (ctx) {
+  if (auto ctx = GetPeerConnectionCtx()) {
     ctx->mStatsForClosedPeerConnections.Clear();
   }
 }
@@ -690,8 +690,7 @@ static void StoreLongTermICEStatisticsImpl_m(RTCStatsReportInternal* report) {
 
   // Finally, store the stats
 
-  PeerConnectionCtx* ctx = GetPeerConnectionCtx();
-  if (ctx) {
+  if (auto ctx = GetPeerConnectionCtx()) {
     if (!ctx->mStatsForClosedPeerConnections.AppendElement(*report, fallible)) {
       mozalloc_handle_oom(0);
     }
