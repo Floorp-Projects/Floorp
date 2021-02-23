@@ -32,7 +32,6 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libcurl-devel",
         "libxcb-devel",
         "libXt-devel",
-        "yasm",
     ]
 
     MOBILE_ANDROID_PACKAGES = [

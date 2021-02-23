@@ -44,7 +44,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "gst-plugins-base-libs",
         "libpulse",
         "xorg-server-xvfb",
-        "yasm",
         "gst-libav",
         "gst-plugins-good",
     ]

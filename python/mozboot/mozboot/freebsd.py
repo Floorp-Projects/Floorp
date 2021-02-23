@@ -34,7 +34,6 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             "nasm",
             "pulseaudio",
             "v4l_compat",
-            "yasm",
         ]
 
         if not which("as"):
