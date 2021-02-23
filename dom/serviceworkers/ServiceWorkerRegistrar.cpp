@@ -31,6 +31,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozJSComponentLoader.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -1212,6 +1213,7 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag** aBagOut) {
 #define RELEASE_ASSERT_SUCCEEDED(rv, name)                                    \
   do {                                                                        \
     if (NS_FAILED(rv)) {                                                      \
+      mozJSComponentLoader::Get()->AnnotateCrashReport();                     \
       if (rv == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {                 \
         if (auto* context = CycleCollectedJSContext::Get()) {                 \
           if (RefPtr<Exception> exn = context->GetPendingException()) {       \
