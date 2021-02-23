@@ -6,6 +6,10 @@
 
 #include <inttypes.h>
 
+#if !defined(WEBRTC_USE_X11) || !defined(MOZ_X11)
+#  error Bad build setup, some X11 defines are missing
+#endif
+
 namespace webrtc {
 
 DesktopDeviceInfo* DesktopDeviceInfoImpl::Create() {
