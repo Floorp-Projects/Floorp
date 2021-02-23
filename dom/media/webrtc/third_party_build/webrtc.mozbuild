@@ -3,8 +3,17 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file mimics the defines used by any headers in libwebrtc that get
+# included in Mozilla code.
+# We currently audit these by hand. Searching for the defines upstream is a good
+# start:
+# https://source.chromium.org/search?q=usage:%23if.*def.*%5B%5E_%5D$%20AND%20path:%5C.h%20AND%20path:%5Ethird_party%2Fwebrtc&ss=chromium
+
 if CONFIG['MOZ_WEBRTC']:
     DEFINES['HAVE_UINT64_T'] = True
+    DEFINES['WEBRTC_MOZILLA_BUILD'] = True
+    DEFINES['RTC_ENABLE_VP9'] = True
 
     if CONFIG['OS_TARGET'] != 'WINNT':
         DEFINES['WEBRTC_POSIX'] = True
@@ -20,7 +29,14 @@ if CONFIG['MOZ_WEBRTC']:
     elif CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
         DEFINES['WEBRTC_BSD'] = True
     elif CONFIG['OS_TARGET'] == 'Android':
+        DEFINES['WEBRTC_LINUX'] = True
         DEFINES['WEBRTC_ANDROID'] = True
+
+    if CONFIG['MOZ_X11']:
+        DEFINES['WEBRTC_USE_X11'] = True
+
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+        DEFINES['WEBRTC_USE_PIPEWIRE'] = True
 
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         CXXFLAGS += ['-Wno-error=shadow']
