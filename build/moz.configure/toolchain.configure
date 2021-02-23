@@ -1968,46 +1968,6 @@ def frame_pointer_flags(enable, flags):
 set_config("MOZ_FRAMEPTR_FLAGS", frame_pointer_flags)
 
 
-# nasm detection
-# ==============================================================
-nasm = check_prog(
-    "NASM", ["nasm"], allow_missing=True, paths=bootstrap_search_path("nasm")
-)
-
-
-@depends_if(nasm)
-@checking("nasm version")
-def nasm_version(nasm):
-    version = (
-        check_cmd_output(nasm, "-v", onerror=lambda: die("Failed to get nasm version."))
-        .splitlines()[0]
-        .split()[2]
-    )
-    return Version(version)
-
-
-@depends(nasm, target)
-def nasm_asflags(nasm, target):
-    if nasm:
-        asflags = {
-            ("OSX", "x86"): ["-f", "macho32"],
-            ("OSX", "x86_64"): ["-f", "macho64"],
-            ("WINNT", "x86"): ["-f", "win32"],
-            ("WINNT", "x86_64"): ["-f", "win64"],
-        }.get((target.os, target.cpu), None)
-        if asflags is None:
-            # We're assuming every x86 platform we support that's
-            # not Windows or Mac is ELF.
-            if target.cpu == "x86":
-                asflags = ["-f", "elf32"]
-            elif target.cpu == "x86_64":
-                asflags = ["-f", "elf64"]
-        return asflags
-
-
-set_config("NASM_ASFLAGS", nasm_asflags)
-
-
 # Code Coverage
 # ==============================================================
 

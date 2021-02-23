@@ -538,17 +538,16 @@ def av1(value):
         return True
 
 
-@depends(target, nasm_version, when=av1 & compile_environment)
-def dav1d_asm(target, nasm_version):
-    if target.cpu == "aarch64":
+@depends(target, when=av1 & compile_environment)
+def dav1d_asm(target):
+    if target.cpu in ("aarch64", "x86", "x86_64"):
         return True
-    elif target.cpu in ("x86", "x86_64"):
-        if (not nasm_version) or nasm_version < "2.14":
-            die(
-                "nasm 2.14 or greater is required for AV1 support. "
-                "Either install nasm or add --disable-av1 to your configure options."
-            )
-        return True
+
+
+@depends(target, when=av1 & compile_environment)
+def dav1d_nasm(target):
+    if target.cpu in ("x86", "x86_64"):
+        return namespace(version="2.14", what="AV1")
 
 
 set_config("MOZ_DAV1D_ASM", dav1d_asm)
@@ -1954,6 +1953,82 @@ def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_ffvpx=False):
                 "Yasm version %s or greater is required to build with %s."
                 % (version, what)
             )
+
+
+# nasm detection
+# ==============================================================
+@depends(dav1d_nasm)
+def need_nasm(*requirements):
+    requires = {
+        x.what: x.version if hasattr(x, "version") else True for x in requirements if x
+    }
+    if requires:
+        items = sorted(requires.keys())
+        if len(items) > 1:
+            what = " and ".join((", ".join(items[:-1]), items[-1]))
+        else:
+            what = items[0]
+        versioned = {k: v for (k, v) in requires.items() if v is not True}
+        return namespace(what=what, versioned=versioned)
+
+
+nasm = check_prog(
+    "NASM",
+    ["nasm"],
+    allow_missing=True,
+    paths=bootstrap_search_path("nasm", when=need_nasm),
+    when=need_nasm,
+)
+
+
+@depends(nasm, need_nasm.what)
+def check_nasm(nasm, what):
+    if not nasm and what:
+        die("Nasm is required to build with %s, but it was not found." % what)
+    return nasm
+
+
+@depends_if(check_nasm)
+@checking("nasm version")
+def nasm_version(nasm):
+    version = (
+        check_cmd_output(nasm, "-v", onerror=lambda: die("Failed to get nasm version."))
+        .splitlines()[0]
+        .split()[2]
+    )
+    return Version(version)
+
+
+@depends(nasm_version, need_nasm.versioned, when=need_nasm.versioned)
+def check_nasm_version(nasm_version, versioned):
+    by_version = sorted(versioned.items(), key=lambda x: x[1])
+    what, version = by_version[-1]
+    if nasm_version < version:
+        die(
+            "Nasm version %s or greater is required to build with %s." % (version, what)
+        )
+    return nasm_version
+
+
+@depends(target, when=check_nasm_version)
+def nasm_asflags(target):
+    asflags = {
+        ("OSX", "x86"): ["-f", "macho32"],
+        ("OSX", "x86_64"): ["-f", "macho64"],
+        ("WINNT", "x86"): ["-f", "win32"],
+        ("WINNT", "x86_64"): ["-f", "win64"],
+    }.get((target.os, target.cpu), None)
+    if asflags is None:
+        # We're assuming every x86 platform we support that's
+        # not Windows or Mac is ELF.
+        if target.cpu == "x86":
+            asflags = ["-f", "elf32"]
+        elif target.cpu == "x86_64":
+            asflags = ["-f", "elf64"]
+    return asflags
+
+
+set_config("NASM_ASFLAGS", nasm_asflags)
 
 
 # ANGLE OpenGL->D3D translator for WebGL
