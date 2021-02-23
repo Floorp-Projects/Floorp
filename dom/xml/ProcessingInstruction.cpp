@@ -86,7 +86,7 @@ already_AddRefed<CharacterData> ProcessingInstruction::CloneDataNode(
   return do_AddRef(new (nim) ProcessingInstruction(ni.forget(), data));
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
 void ProcessingInstruction::List(FILE* out, int32_t aIndent) const {
   int32_t index;
   for (index = aIndent; --index >= 0;) fputs("  ", out);

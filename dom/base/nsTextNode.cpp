@@ -16,7 +16,7 @@
 #include "nsThreadUtils.h"
 #include "nsStubMutationObserver.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
 #  include "nsRange.h"
 #endif
 
@@ -127,7 +127,7 @@ void nsTextNode::UnbindFromTree(bool aNullParent) {
   CharacterData::UnbindFromTree(aNullParent);
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
 void nsTextNode::List(FILE* out, int32_t aIndent) const {
   int32_t index;
   for (index = aIndent; --index >= 0;) fputs("  ", out);
