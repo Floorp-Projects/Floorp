@@ -31,7 +31,6 @@ use crate::render_backend::SceneView;
 use crate::renderer::{PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
 use std::iter;
-use std::mem::replace;
 use time::precise_time_ns;
 use crate::util::drain_filter;
 use std::thread;
@@ -302,9 +301,9 @@ impl SceneBuilderThread {
                 Ok(SceneBuilderRequest::Flush(tx)) => {
                     self.send(SceneBuilderResult::FlushComplete(tx));
                 }
-                Ok(SceneBuilderRequest::Transactions(mut txns)) => {
-                    let built_txns : Vec<Box<BuiltTransaction>> = txns.iter_mut()
-                        .map(|txn| self.process_transaction(txn))
+                Ok(SceneBuilderRequest::Transactions(txns)) => {
+                    let built_txns : Vec<Box<BuiltTransaction>> = txns.into_iter()
+                        .map(|txn| self.process_transaction(*txn))
                         .collect();
                     #[cfg(feature = "capture")]
                     match built_txns.iter().any(|txn| txn.built_scene.is_some()) {
@@ -551,7 +550,7 @@ impl SceneBuilderThread {
     }
 
     /// Do the bulk of the work of the scene builder thread.
-    fn process_transaction(&mut self, txn: &mut TransactionMsg) -> Box<BuiltTransaction> {
+    fn process_transaction(&mut self, mut txn: TransactionMsg) -> Box<BuiltTransaction> {
         profile_scope!("process_transaction");
 
         if let Some(ref hooks) = self.hooks {
@@ -668,7 +667,7 @@ impl SceneBuilderThread {
             profile.start_time(profiler::BLOB_RASTERIZATION_TIME);
 
             let is_low_priority = false;
-            rasterize_blobs(txn, is_low_priority);
+            rasterize_blobs(&mut txn, is_low_priority);
 
             profile.end_time(profiler::BLOB_RASTERIZATION_TIME);
         }
@@ -689,13 +688,13 @@ impl SceneBuilderThread {
             invalidate_rendered_frame: txn.invalidate_rendered_frame,
             built_scene,
             view: doc.view,
-            rasterized_blobs: replace(&mut txn.rasterized_blobs, Vec::new()),
-            resource_updates: replace(&mut txn.resource_updates, Vec::new()),
-            blob_rasterizer: replace(&mut txn.blob_rasterizer, None),
-            frame_ops: replace(&mut txn.frame_ops, Vec::new()),
+            rasterized_blobs: txn.rasterized_blobs,
+            resource_updates: txn.resource_updates,
+            blob_rasterizer: txn.blob_rasterizer,
+            frame_ops: txn.frame_ops,
             removed_pipelines,
             discard_frame_state_for_pipelines,
-            notifications: replace(&mut txn.notifications, Vec::new()),
+            notifications: txn.notifications,
             interner_updates,
             profile,
         })
