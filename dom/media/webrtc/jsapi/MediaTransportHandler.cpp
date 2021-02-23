@@ -643,14 +643,10 @@ void MediaTransportHandlerSTS::Destroy() {
   }
 
   MOZ_ASSERT(NS_IsMainThread());
-  if (!STSShutdownHandler::Instance()) {
-    CSFLogDebug(LOGTAG, "%s Already shut down. Nothing else to do.", __func__);
-    delete this;
-    return;
+  if (STSShutdownHandler::Instance()) {
+    STSShutdownHandler::Instance()->Deregister(this);
+    Shutdown();
   }
-
-  STSShutdownHandler::Instance()->Deregister(this);
-  Shutdown();
 
   // mIceCtx still has a reference to us via sigslot! We must dispach to STS,
   // and clean up there. However, by the time _that_ happens, we may have
