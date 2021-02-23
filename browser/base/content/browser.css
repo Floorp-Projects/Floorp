@@ -38,18 +38,7 @@ body {
   --toolbar-bgimage: none;
   --toolbar-color: var(--lwt-text-color, inherit);
 
-  background-color: var(--lwt-accent-color);
   color: var(--lwt-text-color);
-}
-
-:root:-moz-lwtheme[lwtheme-image] {
-  background-image: var(--lwt-header-image) !important;
-  background-repeat: no-repeat;
-  background-position: right top !important;
-}
-
-:root:-moz-lwtheme:-moz-window-inactive {
-  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
 }
 
 :root:not([chromehidden~="toolbar"]) {
@@ -72,12 +61,23 @@ body {
   -moz-box-flex: 1;
 }
 
-/* Set additional backgrounds alignment relative to toolbox */
-
 #navigator-toolbox:-moz-lwtheme {
+  background-color: var(--lwt-accent-color);
   background-image: var(--lwt-additional-images);
-  background-position: var(--lwt-background-alignment);
   background-repeat: var(--lwt-background-tiling);
+  background-position: var(--lwt-background-alignment);
+}
+
+/* When a theme defines both theme_frame and additional_backgrounds, show
+   the latter atop the former. */
+:root[lwtheme-image] #navigator-toolbox {
+  background-image: var(--lwt-header-image), var(--lwt-additional-images);
+  background-repeat: no-repeat, var(--lwt-background-tiling);
+  background-position: right top, var(--lwt-background-alignment);
+}
+
+#navigator-toolbox:-moz-window-inactive:-moz-lwtheme {
+  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
 }
 
 .search-one-offs[compact=true] .search-setting-button,

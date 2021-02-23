@@ -27,7 +27,10 @@ add_task(async function test_deprecated_LWT_properties_ignored() {
   await extension.startup();
 
   let docEl = window.document.documentElement;
-  let style = window.getComputedStyle(docEl);
+  let docStyle = window.getComputedStyle(docEl);
+  let navigatorStyle = window.getComputedStyle(
+    docEl.querySelector("#navigator-toolbox")
+  );
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.ok(
@@ -41,12 +44,12 @@ add_task(async function test_deprecated_LWT_properties_ignored() {
   );
 
   Assert.equal(
-    style.backgroundColor,
+    navigatorStyle.backgroundColor,
     DEFAULT_THEME_BG_COLOR,
     "Expected default theme background color"
   );
   Assert.equal(
-    style.color,
+    docStyle.color,
     DEFAULT_THEME_TEXT_COLOR,
     "Expected default theme text color"
   );
