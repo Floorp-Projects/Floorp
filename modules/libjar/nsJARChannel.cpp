@@ -1186,6 +1186,11 @@ nsJARChannel::OnDataAvailable(nsIRequest* req, nsIInputStream* stream,
 
   nsresult rv;
 
+  // don't send out OnDataAvailable notifications if we've been canceled.
+  if (mCanceled) {
+    return mStatus;
+  }
+
   mOnDataCalled = true;
   rv = mListener->OnDataAvailable(this, stream, offset, count);
 
