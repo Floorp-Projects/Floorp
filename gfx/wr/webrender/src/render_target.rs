@@ -401,6 +401,7 @@ impl RenderTarget for ColorRenderTarget {
                     task_info.extra_gpu_cache_handle.map(|handle| gpu_cache.get_address(&handle)),
                 )
             }
+            RenderTaskKind::Image(..) |
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
@@ -530,6 +531,7 @@ impl RenderTarget for AlphaRenderTarget {
         let (target_rect, _) = task.get_target_rect();
 
         match task.kind {
+            RenderTaskKind::Image(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
@@ -748,6 +750,7 @@ impl TextureCacheRenderTarget {
                     start_stop: [task_info.start_point, task_info.end_point],
                 });
             }
+            RenderTaskKind::Image(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::ClipRegion(..) |
@@ -770,10 +773,7 @@ fn add_blur_instances(
     src_task_id: RenderTaskId,
     render_tasks: &RenderTaskGraph,
 ) {
-    let source = TextureSource::TextureCache(
-        render_tasks[src_task_id].get_target_texture(),
-        Swizzle::default(),
-    );
+    let source = render_tasks[src_task_id].get_texture_source();
 
     let instance = BlurInstance {
         task_address,
@@ -864,21 +864,11 @@ fn add_svg_filter_instances(
     let mut textures = BatchTextures::empty();
 
     if let Some(id) = input_1_task {
-        let task = &render_tasks[id];
-
-        textures.input.colors[0] = TextureSource::TextureCache(
-            task.get_target_texture(),
-            Swizzle::default(),
-        );
+        textures.input.colors[0] = render_tasks[id].get_texture_source();
     }
 
     if let Some(id) = input_2_task {
-        let task = &render_tasks[id];
-
-        textures.input.colors[1] = TextureSource::TextureCache(
-            task.get_target_texture(),
-            Swizzle::default(),
-        );
+        textures.input.colors[1] = render_tasks[id].get_texture_source();
     }
 
     let kind = match filter {

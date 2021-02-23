@@ -56,6 +56,10 @@ impl ImageSourceHandle {
                 let uv_address = task.get_texture_address(gpu_cache);
                 let texture_source = task.get_texture_source();
 
+                if let TextureSource::Invalid = texture_source {
+                    return None;
+                }
+
                 Some((uv_address, texture_source))
             },
             ImageSourceHandle::CachedRenderTask(handle) => {

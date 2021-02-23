@@ -9,7 +9,7 @@ use api::{
 };
 use api::units::*;
 use crate::scene_building::{CreateShadow, IsVisible};
-use crate::frame_builder::FrameBuildingState;
+use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::{LayoutPrimitiveInfo};
@@ -23,16 +23,20 @@ use crate::prim_store::{
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{BlitSource, RenderTask};
 use crate::render_task_cache::{
-    RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent
+    RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent
 };
-use crate::resource_cache::{ImageRequest, ResourceCache};
+use crate::resource_cache::{ImageRequest, ImageProperties, ResourceCache};
 use crate::util::pack_as_float;
+use crate::image_source::ImageSourceHandle;
+use crate::visibility::{PrimitiveVisibility, compute_conservative_visible_rect};
+use crate::spatial_tree::SpatialNodeIndex;
+use crate::image_tiling;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct VisibleImageTile {
-    pub tile_offset: TileOffset,
+    pub src_color: ImageSourceHandle,
     pub edge_flags: EdgeAaSegmentMask,
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
@@ -66,6 +70,7 @@ pub struct ImageInstance {
     pub segment_instance_index: SegmentInstanceIndex,
     pub tight_local_clip_rect: LayoutRect,
     pub visible_tiles: Vec<VisibleImageTile>,
+    pub src_color: ImageSourceHandle,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -96,21 +101,6 @@ impl ImageKey {
 
 impl InternDebug for ImageKey {}
 
-// Where to find the texture data for an image primitive.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, MallocSizeOf)]
-pub enum ImageSource {
-    // A normal image - just reference the texture cache.
-    Default,
-    // An image that is pre-rendered into the texture cache
-    // via a render task.
-    Cache {
-        size: DeviceIntSize,
-        handle: Option<RenderTaskCacheEntryHandle>,
-    },
-}
-
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, MallocSizeOf)]
@@ -119,7 +109,6 @@ pub struct ImageData {
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
     pub color: ColorF,
-    pub source: ImageSource,
     pub image_rendering: ImageRendering,
     pub alpha_type: AlphaType,
 }
@@ -131,7 +120,6 @@ impl From<Image> for ImageData {
             color: image.color.into(),
             stretch_size: image.stretch_size.into(),
             tile_spacing: image.tile_spacing.into(),
-            source: ImageSource::Default,
             image_rendering: image.image_rendering,
             alpha_type: image.alpha_type,
         }
@@ -146,117 +134,214 @@ impl ImageData {
     pub fn update(
         &mut self,
         common: &mut PrimTemplateCommonData,
+        image_instance: &mut ImageInstance,
         parent_surface: SurfaceIndex,
+        prim_spatial_node_index: SpatialNodeIndex,
         frame_state: &mut FrameBuildingState,
+        frame_context: &FrameBuildingContext,
+        visibility: &mut PrimitiveVisibility,
     ) {
+
+        let image_properties = frame_state
+            .resource_cache
+            .get_image_properties(self.key);
+
+        common.opacity = match &image_properties {
+            Some(properties) => {
+                if properties.descriptor.is_opaque() {
+                    PrimitiveOpacity::from_alpha(self.color.a)
+                } else {
+                    PrimitiveOpacity::translucent()
+                }
+            }
+            None => PrimitiveOpacity::opaque(),
+        };
+
+        if self.stretch_size.width >= common.prim_rect.size.width &&
+            self.stretch_size.height >= common.prim_rect.size.height {
+
+            common.may_need_repetition = false;
+        }
+
+        let request = ImageRequest {
+            key: self.key,
+            rendering: self.image_rendering,
+            tile: None,
+        };
+
+        match image_properties {
+            // Non-tiled (most common) path.
+            Some(ImageProperties { tiling: None, ref descriptor, .. }) => {
+                let mut size = frame_state.resource_cache.request_image(
+                    request,
+                    frame_state.gpu_cache,
+                );
+
+                // Every frame, for cached items, we need to request the render
+                // task cache item. The closure will be invoked on the first
+                // time through, and any time the render task output has been
+                // evicted from the texture cache.
+                if self.tile_spacing == LayoutSize::zero() {
+                    // Most common case.
+                    let task_id = frame_state.rg_builder.add().init(
+                        RenderTask::new_image(size, request)
+                    );
+
+                    image_instance.src_color = ImageSourceHandle::RenderTask(task_id);
+                } else {
+                    let padding = DeviceIntSideOffsets::new(
+                        0,
+                        (self.tile_spacing.width * size.width as f32 / self.stretch_size.width) as i32,
+                        (self.tile_spacing.height * size.height as f32 / self.stretch_size.height) as i32,
+                        0,
+                    );
+
+                    size.width += padding.horizontal();
+                    size.height += padding.vertical();
+
+                    if padding != DeviceIntSideOffsets::zero() {
+                        common.opacity = PrimitiveOpacity::translucent();
+                    }
+
+                    let image_cache_key = ImageCacheKey {
+                        request,
+                        texel_rect: None,
+                    };
+                    let target_kind = if descriptor.format.bytes_per_pixel() == 1 {
+                        RenderTargetKind::Alpha
+                    } else {
+                        RenderTargetKind::Color
+                    };
+
+                    // Request a pre-rendered image task.
+                    let cached_task_handle = frame_state.resource_cache.request_render_task(
+                        RenderTaskCacheKey {
+                            size,
+                            kind: RenderTaskCacheKeyKind::Image(image_cache_key),
+                        },
+                        frame_state.gpu_cache,
+                        frame_state.rg_builder,
+                        None,
+                        descriptor.is_opaque(),
+                        RenderTaskParent::Surface(parent_surface),
+                        frame_state.surfaces,
+                        |rg_builder| {
+                            // Create a task to blit from the texture cache to
+                            // a normal transient render task surface. This will
+                            // copy only the sub-rect, if specified.
+                            // TODO: figure out if/when we can do a blit instead.
+                            let cache_to_target_task_id = RenderTask::new_scaling_with_padding(
+                                BlitSource::Image { key: image_cache_key },
+                                rg_builder,
+                                target_kind,
+                                size,
+                                padding,
+                            );
+
+                            // Create a task to blit the rect from the child render
+                            // task above back into the right spot in the persistent
+                            // render target cache.
+                            RenderTask::new_blit(
+                                size,
+                                BlitSource::RenderTask {
+                                    task_id: cache_to_target_task_id,
+                                },
+                                rg_builder,
+                            )
+                        }
+                    );
+
+                    image_instance.src_color = ImageSourceHandle::CachedRenderTask(cached_task_handle);
+                }
+            }
+            // Tiled image path.
+            Some(ImageProperties { tiling: Some(tile_size), visible_rect, .. }) => {
+                // we'll  have a source handle per visible tile instead.
+                image_instance.src_color = ImageSourceHandle::None;
+
+                image_instance.visible_tiles.clear();
+                // TODO: rename the blob's visible_rect into something that doesn't conflict
+                // with the terminology we use during culling since it's not really the same
+                // thing.
+                let active_rect = visible_rect;
+
+                // Tighten the clip rect because decomposing the repeated image can
+                // produce primitives that are partially covering the original image
+                // rect and we want to clip these extra parts out.
+                let tight_clip_rect = visibility
+                    .combined_local_clip_rect
+                    .intersection(&common.prim_rect).unwrap();
+                image_instance.tight_local_clip_rect = tight_clip_rect;
+
+                let visible_rect = compute_conservative_visible_rect(
+                    &visibility.clip_chain,
+                    frame_state.current_dirty_region().combined,
+                    prim_spatial_node_index,
+                    frame_context.spatial_tree,
+                );
+
+                let base_edge_flags = edge_flags_for_tile_spacing(&self.tile_spacing);
+
+                let stride = self.stretch_size + self.tile_spacing;
+
+                // We are performing the decomposition on the CPU here, no need to
+                // have it in the shader.
+                common.may_need_repetition = false;
+
+                let repetitions = image_tiling::repetitions(
+                    &common.prim_rect,
+                    &visible_rect,
+                    stride,
+                );
+
+                for image_tiling::Repetition { origin, edge_flags } in repetitions {
+                    let edge_flags = base_edge_flags | edge_flags;
+
+                    let layout_image_rect = LayoutRect {
+                        origin,
+                        size: self.stretch_size,
+                    };
+
+                    let tiles = image_tiling::tiles(
+                        &layout_image_rect,
+                        &visible_rect,
+                        &active_rect,
+                        tile_size as i32,
+                    );
+
+                    for tile in tiles {
+                        let request = request.with_tile(tile.offset);
+                        let size = frame_state.resource_cache.request_image(
+                            request,
+                            frame_state.gpu_cache,
+                        );
+
+                        let task_id = frame_state.rg_builder.add().init(
+                            RenderTask::new_image(size, request)
+                        );
+
+                        image_instance.visible_tiles.push(VisibleImageTile {
+                            src_color: ImageSourceHandle::RenderTask(task_id),
+                            edge_flags: tile.edge_flags & edge_flags,
+                            local_rect: tile.rect,
+                            local_clip_rect: tight_clip_rect,
+                        });
+                    }
+                }
+
+                if image_instance.visible_tiles.is_empty() {
+                    // Mark as invisible
+                    visibility.reset();
+                }
+            }
+            None => {
+                image_instance.src_color = ImageSourceHandle::None;
+            }
+        }
+
         if let Some(mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
             self.write_prim_gpu_blocks(&mut request);
         }
-
-        common.opacity = {
-            let image_properties = frame_state
-                .resource_cache
-                .get_image_properties(self.key);
-
-            match image_properties {
-                Some(image_properties) => {
-                    let is_tiled = image_properties.tiling.is_some();
-
-                    if self.tile_spacing != LayoutSize::zero() && !is_tiled {
-                        self.source = ImageSource::Cache {
-                            // Size in device-pixels we need to allocate in render task cache.
-                            size: image_properties.descriptor.size.to_i32(),
-                            handle: None,
-                        };
-                    }
-
-                    let mut is_opaque = image_properties.descriptor.is_opaque();
-                    let request = ImageRequest {
-                        key: self.key,
-                        rendering: self.image_rendering,
-                        tile: None,
-                    };
-
-                    // Every frame, for cached items, we need to request the render
-                    // task cache item. The closure will be invoked on the first
-                    // time through, and any time the render task output has been
-                    // evicted from the texture cache.
-                    match self.source {
-                        ImageSource::Cache { ref mut size, ref mut handle } => {
-                            let padding = DeviceIntSideOffsets::new(
-                                0,
-                                (self.tile_spacing.width * size.width as f32 / self.stretch_size.width) as i32,
-                                (self.tile_spacing.height * size.height as f32 / self.stretch_size.height) as i32,
-                                0,
-                            );
-
-                            size.width += padding.horizontal();
-                            size.height += padding.vertical();
-
-                            is_opaque &= padding == DeviceIntSideOffsets::zero();
-
-                            let image_cache_key = ImageCacheKey {
-                                request,
-                                texel_rect: None,
-                            };
-                            let target_kind = if image_properties.descriptor.format.bytes_per_pixel() == 1 {
-                                RenderTargetKind::Alpha
-                            } else {
-                                RenderTargetKind::Color
-                            };
-
-                            // Request a pre-rendered image task.
-                            *handle = Some(frame_state.resource_cache.request_render_task(
-                                RenderTaskCacheKey {
-                                    size: *size,
-                                    kind: RenderTaskCacheKeyKind::Image(image_cache_key),
-                                },
-                                frame_state.gpu_cache,
-                                frame_state.rg_builder,
-                                None,
-                                image_properties.descriptor.is_opaque(),
-                                RenderTaskParent::Surface(parent_surface),
-                                frame_state.surfaces,
-                                |rg_builder| {
-                                    // Create a task to blit from the texture cache to
-                                    // a normal transient render task surface. This will
-                                    // copy only the sub-rect, if specified.
-                                    // TODO: figure out if/when we can do a blit instead.
-                                    let cache_to_target_task_id = RenderTask::new_scaling_with_padding(
-                                        BlitSource::Image { key: image_cache_key },
-                                        rg_builder,
-                                        target_kind,
-                                        *size,
-                                        padding,
-                                    );
-
-                                    // Create a task to blit the rect from the child render
-                                    // task above back into the right spot in the persistent
-                                    // render target cache.
-                                    RenderTask::new_blit(
-                                        *size,
-                                        BlitSource::RenderTask {
-                                            task_id: cache_to_target_task_id,
-                                        },
-                                        rg_builder,
-                                    )
-                                }
-                            ));
-                        }
-                        ImageSource::Default => {}
-                    }
-
-                    if is_opaque {
-                        PrimitiveOpacity::from_alpha(self.color.a)
-                    } else {
-                        PrimitiveOpacity::translucent()
-                    }
-                }
-                None => {
-                    PrimitiveOpacity::opaque()
-                }
-            }
-        };
     }
 
     pub fn write_prim_gpu_blocks(&self, request: &mut GpuDataRequest) {
@@ -272,6 +357,19 @@ impl ImageData {
             0.0,
         ]);
     }
+}
+
+fn edge_flags_for_tile_spacing(tile_spacing: &LayoutSize) -> EdgeAaSegmentMask {
+    let mut flags = EdgeAaSegmentMask::empty();
+
+    if tile_spacing.width > 0.0 {
+        flags |= EdgeAaSegmentMask::LEFT | EdgeAaSegmentMask::RIGHT;
+    }
+    if tile_spacing.height > 0.0 {
+        flags |= EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::BOTTOM;
+    }
+
+    flags
 }
 
 pub type ImageTemplate = PrimTemplate<ImageData>;
@@ -316,6 +414,7 @@ impl InternablePrimitive for Image {
             segment_instance_index: SegmentInstanceIndex::INVALID,
             tight_local_clip_rect: LayoutRect::zero(),
             visible_tiles: Vec::new(),
+            src_color: ImageSourceHandle::None,
         });
 
         PrimitiveInstanceKind::Image {
@@ -513,7 +612,7 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<Image>(), 32, "Image size changed");
-    assert_eq!(mem::size_of::<ImageTemplate>(), 92, "ImageTemplate size changed");
+    assert_eq!(mem::size_of::<ImageTemplate>(), 72, "ImageTemplate size changed");
     assert_eq!(mem::size_of::<ImageKey>(), 52, "ImageKey size changed");
     assert_eq!(mem::size_of::<YuvImage>(), 32, "YuvImage size changed");
     assert_eq!(mem::size_of::<YuvImageTemplate>(), 60, "YuvImageTemplate size changed");

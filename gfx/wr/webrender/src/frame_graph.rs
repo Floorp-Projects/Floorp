@@ -10,10 +10,12 @@ use crate::render_backend::FrameId;
 use crate::render_task_graph::{RenderTaskId};
 use crate::render_task::{StaticRenderTaskSurface, RenderTaskLocation, RenderTask};
 use crate::render_target::RenderTargetKind;
-use crate::render_task::RenderTaskData;
+use crate::render_task::{RenderTaskData, RenderTaskKind};
 use crate::render_task_graph::RenderTaskAllocation;
 use crate::resource_cache::ResourceCache;
 use crate::texture_pack::GuillotineAllocator;
+use crate::prim_store::DeferredResolve;
+use crate::image_source::resolve_image;
 use crate::util::VecHelper;
 use smallvec::SmallVec;
 use std::mem;
@@ -257,6 +259,7 @@ impl FrameGraphBuilder {
         &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
+        deferred_resolves: &mut Vec<DeferredResolve>,
     ) -> FrameGraph {
         // Copy the render tasks over to the immutable graph output
         let task_count = self.tasks.len();
@@ -293,7 +296,9 @@ impl FrameGraphBuilder {
                         assert!(!roots.contains_key(surface));
                         roots.insert(surface.clone(), *root_id);
                     }
-                    RenderTaskLocation::Dynamic { .. } | RenderTaskLocation::Unallocated { .. } => {
+                    RenderTaskLocation::Dynamic { .. }
+                    | RenderTaskLocation::CacheRequest { .. }
+                    | RenderTaskLocation::Unallocated { .. } => {
                         // Intermediate surfaces can't be render roots, they should always
                         // be a dependency of a render root.
                         panic!("bug: invalid root");
@@ -360,8 +365,10 @@ impl FrameGraphBuilder {
 
         // Assign tasks to each pass based on their `render_on` attribute
         for (index, task) in graph.tasks.iter().enumerate() {
-            let id = RenderTaskId { index: index as u32 };
-            graph.passes[task.render_on.0].task_ids.push(id);
+            if task.kind.is_a_rendering_operation() {
+                let id = RenderTaskId { index: index as u32 };
+                graph.passes[task.render_on.0].task_ids.push(id);
+            }
         }
 
         // At this point, tasks are assigned to each dependency pass. Now we
@@ -497,6 +504,9 @@ impl FrameGraphBuilder {
                             task_ids: vec![*task_id],
                         });
                     }
+                    RenderTaskLocation::CacheRequest { .. } => {
+                        // No need to allocate nor to create a sub-path for read-only locations.
+                    }
                     RenderTaskLocation::Dynamic { .. } => {
                         // Dynamic tasks shouldn't be allocated by this point
                         panic!("bug: encountered an already allocated task");
@@ -517,6 +527,7 @@ impl FrameGraphBuilder {
                             }
                         }
                         RenderTaskLocation::Static { .. } => {}
+                        RenderTaskLocation::CacheRequest { .. } => {}
                     }
                 }
             }
@@ -539,6 +550,23 @@ impl FrameGraphBuilder {
         // considered to be immutable for the rest of the frame building process.
 
         for task in &mut graph.tasks {
+            if let RenderTaskKind::Image(request) = task.kind {
+                let cache_item = resolve_image(
+                    request,
+                    resource_cache,
+                    gpu_cache,
+                    deferred_resolves,
+                );
+
+                task.uv_rect_handle = Some(cache_item.uv_rect_handle);
+                task.location = RenderTaskLocation::Static {
+                    surface: StaticRenderTaskSurface::ReadOnly {
+                        source: cache_item.texture_id,
+                    },
+                    rect: cache_item.uv_rect,
+                };
+            }
+
             // Give the render task an opportunity to add any
             // information to the GPU cache, if appropriate.
             let (target_rect, target_index) = task.get_target_rect();
@@ -624,26 +652,34 @@ fn assign_render_pass(
 ) {
     let task = &mut graph.tasks[id.index as usize];
 
-    // Keep count of number of passes needed
-    *pass_count = pass.0.max(*pass_count);
-
-    // TODO(gw): Work around the borrowck - maybe we could structure the dependencies
-    //           storage better, to avoid this?
-    let mut child_task_ids: SmallVec<[RenderTaskId; 8]> = SmallVec::new();
-    child_task_ids.extend_from_slice(&task.children);
-
     // No point in recursing into paths in the graph if this task already
     // has been set to draw after this pass.
     if task.render_on > pass {
         return;
     }
 
+    let next_pass = if task.kind.is_a_rendering_operation() {
+        // Keep count of number of passes needed
+        *pass_count = pass.0.max(*pass_count);
+        PassId(pass.0 + 1)
+    } else {
+        // If the node is not a rendering operation, it doesn't create a
+        // render pass, so we don't increment the pass count. 
+        // For now we expect non-rendering nodes to be leafs of the graph.
+        // We don't strictly depend on it but it simplifies the mental model.
+        debug_assert!(task.children.is_empty());
+        pass
+    };
+
     // A task should be rendered on the earliest pass in the dependency
     // graph that it's required. Using max here ensures the correct value
-    // in the presense of multiple paths to this task from the root(s).
+    // in the presence of multiple paths to this task from the root(s).
     task.render_on = task.render_on.max(pass);
 
-    let next_pass = PassId(pass.0 + 1);
+    // TODO(gw): Work around the borrowck - maybe we could structure the dependencies
+    //           storage better, to avoid this?
+    let mut child_task_ids: SmallVec<[RenderTaskId; 8]> = SmallVec::new();
+    child_task_ids.extend_from_slice(&task.children);
 
     for child_id in child_task_ids {
         assign_render_pass(
@@ -676,6 +712,7 @@ fn assign_free_pass(
         // safe time to free this surface in the presence of multiple paths
         // to this task from the root(s).
         match child_task.location {
+            RenderTaskLocation::CacheRequest { .. } => {}
             RenderTaskLocation::Static { .. } => {
                 // never get freed anyway, so can leave untouched
                 // (could validate that they remain at PassId::MIN)
@@ -732,7 +769,7 @@ impl FrameGraphBuilder {
         let mut rc = ResourceCache::new_for_testing();
         let mut gc =  GpuCache::new();
 
-        let g = self.end_frame(&mut rc, &mut gc);
+        let g = self.end_frame(&mut rc, &mut gc, &mut Vec::new());
         g.print();
 
         assert_eq!(g.passes.len(), pass_count);

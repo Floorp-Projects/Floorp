@@ -19,7 +19,7 @@ use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
 #[cfg(feature = "debugger")]
 use crate::print_tree::{PrintTreePrinter};
-use crate::resource_cache::ResourceCache;
+use crate::resource_cache::{ResourceCache, ImageRequest};
 use std::{usize, f32, i32, u32};
 use crate::render_target::{RenderTargetIndex, RenderTargetKind};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
@@ -70,6 +70,11 @@ pub enum StaticRenderTaskSurface {
         /// What format this texture cache surface is
         target_kind: RenderTargetKind,
     },
+    /// Only used as a source for render tasks, can be any texture including an
+    /// external one.
+    ReadOnly {
+        source: TextureSource,
+    },
     /// This render task will be drawn to a picture cache texture that is
     /// persisted between both frames and scenes, if the content remains valid.
     PictureCache {
@@ -103,6 +108,10 @@ pub enum RenderTaskLocation {
         /// Rectangle in the texture this task occupies
         rect: DeviceIntRect,
     },
+    /// Will be replaced by a Static location after the texture cache update.
+    CacheRequest {
+        size: DeviceIntSize,
+    }
 }
 
 impl RenderTaskLocation {
@@ -119,6 +128,7 @@ impl RenderTaskLocation {
             RenderTaskLocation::Unallocated { size } => *size,
             RenderTaskLocation::Dynamic { rect, .. } => rect.size,
             RenderTaskLocation::Static { rect, .. } => rect.size,
+            RenderTaskLocation::CacheRequest { size } => *size,
         }
     }
 
@@ -131,6 +141,12 @@ impl RenderTaskLocation {
             }
             RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
                 (rect, layer)
+            }
+            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::ReadOnly { .. } } => {
+                (rect, 0)
+            }
+            RenderTaskLocation::CacheRequest { .. } => {
+                panic!("should not be called");
             }
         }
     }
@@ -310,6 +326,7 @@ pub struct RenderTaskData {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskKind {
+    Image(ImageRequest),
     Picture(PictureTask),
     CacheMask(CacheMaskTask),
     ClipRegion(ClipRegionTask),
@@ -327,8 +344,16 @@ pub enum RenderTaskKind {
 }
 
 impl RenderTaskKind {
+    pub fn is_a_rendering_operation(&self) -> bool {
+        match self {
+            &RenderTaskKind::Image(..) => false,
+            _ => true,
+        }
+    }
+
     pub fn as_str(&self) -> &'static str {
         match *self {
+            RenderTaskKind::Image(..) => "Image",
             RenderTaskKind::Picture(..) => "Picture",
             RenderTaskKind::CacheMask(..) => "CacheMask",
             RenderTaskKind::ClipRegion(..) => "ClipRegion",
@@ -348,6 +373,7 @@ impl RenderTaskKind {
 
     pub fn target_kind(&self) -> RenderTargetKind {
         match *self {
+            RenderTaskKind::Image(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Border(..) |
@@ -634,6 +660,7 @@ impl RenderTaskKind {
                     task.blur_region.height as f32,
                 ]
             }
+            RenderTaskKind::Image(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
@@ -761,7 +788,7 @@ pub struct RenderTask {
     ///
     /// Will be set to None if the render task is cached, in which case the texture cache
     /// manages the handle.
-    uv_rect_handle: Option<GpuCacheHandle>,
+    pub uv_rect_handle: Option<GpuCacheHandle>,
     uv_rect_kind: UvRectKind,
 }
 
@@ -797,6 +824,30 @@ impl RenderTask {
         self.uv_rect_kind = uv_rect_kind;
         self
     }
+
+    pub fn new_image(
+        size: DeviceIntSize,
+        request: ImageRequest,
+    ) -> Self {
+        // Note: this is a special constructor for image render tasks that does not
+        // do the render task size sanity check. This is because with SWGL we purposefully
+        // avoid tiling large images. There is no upload with SWGL so whatever was
+        // successfully allocated earlier will be what shaders read, regardless of the size
+        // and copying into tiles would only slow things down.
+        // As a result we can run into very large images being added to the frame graph
+        // (this is covered by a few reftests on the CI).
+
+        RenderTask {
+            location: RenderTaskLocation::CacheRequest { size, },
+            children: TaskDependencies::new(),
+            kind: RenderTaskKind::Image(request),
+            free_after: PassId::MAX,
+            render_on: PassId::MIN,
+            uv_rect_handle: Some(GpuCacheHandle::new()),
+            uv_rect_kind: UvRectKind::Rect,
+        }
+    }
+
 
     #[cfg(test)]
     pub fn new_test(
@@ -1351,6 +1402,7 @@ impl RenderTask {
                 assert_ne!(texture_id, CacheTextureId::INVALID);
                 texture_id
             }
+            RenderTaskLocation::CacheRequest { .. } |
             RenderTaskLocation::Unallocated { .. } |
             RenderTaskLocation::Static { .. } => {
                 unreachable!();
@@ -1364,7 +1416,14 @@ impl RenderTask {
                 assert_ne!(texture_id, CacheTextureId::INVALID);
                 TextureSource::TextureCache(texture_id, Swizzle::default())
             }
+            RenderTaskLocation::Static { surface:  StaticRenderTaskSurface::ReadOnly { source }, .. } => {
+                source
+            }
+            RenderTaskLocation::Static { surface: StaticRenderTaskSurface::TextureCache { texture, .. }, .. } => {
+                TextureSource::TextureCache(texture, Swizzle::default())
+            }
             RenderTaskLocation::Static { .. } |
+            RenderTaskLocation::CacheRequest { .. } |
             RenderTaskLocation::Unallocated { .. } => {
                 unreachable!();
             }
@@ -1407,6 +1466,12 @@ impl RenderTask {
             RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
                 (rect, RenderTargetIndex(layer as usize))
             }
+            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::ReadOnly { .. } } => {
+                (rect, RenderTargetIndex(0))
+            }
+            RenderTaskLocation::CacheRequest { .. }  => {
+                panic!();
+            }
         }
     }
 
@@ -1417,6 +1482,9 @@ impl RenderTask {
     #[cfg(feature = "debugger")]
     pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T, tree: &RenderTaskGraph) -> bool {
         match self.kind {
+            RenderTaskKind::Image(ref task) => {
+                pt.new_level(format!("Image {:?}", task.key));
+            }
             RenderTaskKind::Picture(ref task) => {
                 pt.new_level(format!("Picture of {:?}", task.pic_index));
             }
