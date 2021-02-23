@@ -10,4 +10,3 @@ fuzzy-if(skiaContent,0-2,0-3) == button-type-barred.html button-ref.html
 == button-disabled-fieldset-1.html button-fieldset-ref.html
 fuzzy-if(skiaContent,0-1,0-3) == button-disabled-fieldset-2.html button-fieldset-ref.html
 fuzzy-if(skiaContent,0-1,0-3) == button-fieldset-legend.html button-fieldset-legend-ref.html
-fuzzy-if(skiaContent,0-2,0-2) == button-novalidate.html button-ref.html
