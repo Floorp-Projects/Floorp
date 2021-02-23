@@ -25,6 +25,7 @@ add_task(async function test_quit_shortcut_disabled() {
   async function testQuitShortcut(shouldQuit) {
     let win = await BrowserTestUtils.openNewBrowserWindow();
 
+    let quitRequested = false;
     let observer = {
       observe(subject, topic, data) {
         is(topic, "quit-application-requested", "Right observer topic");
@@ -33,6 +34,8 @@ add_task(async function test_quit_shortcut_disabled() {
         // Don't actually quit the browser when testing.
         let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
         cancelQuit.data = true;
+
+        quitRequested = true;
       },
     };
     Services.obs.addObserver(observer, "quit-application-requested");
@@ -44,8 +47,9 @@ add_task(async function test_quit_shortcut_disabled() {
     EventUtils.synthesizeKey("q", modifiers, win);
 
     await BrowserTestUtils.closeWindow(win);
-
     Services.obs.removeObserver(observer, "quit-application-requested");
+
+    is(quitRequested, shouldQuit, "Expected quit state");
   }
 
   // Quit shortcut should work when pref is not set.
