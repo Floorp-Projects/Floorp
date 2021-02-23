@@ -10557,6 +10557,12 @@
 #endif
   mirror: always
 
+# Whether we should try to use WebRender to render widgets.
+- name: widget.non-native-theme.webrender
+  type: bool
+  value: true
+  mirror: always
+
 # Preference to disable dark scrollbar implementation.
 # This is mainly for testing because dark scrollbars have to be semi-
 # transparent, but many reftests expect scrollbars to look identical
