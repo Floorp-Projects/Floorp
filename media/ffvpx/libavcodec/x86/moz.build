@@ -20,7 +20,6 @@ SOURCES += [
     'imdct36.asm',
     'mpegaudiodsp.c',
     'simple_idct.asm',
-    'simple_idct10.asm',
     'videodsp.asm',
     'videodsp_init.c',
     'vp8dsp.asm',
@@ -39,6 +38,11 @@ SOURCES += [
     'vp9mc.asm',
     'vp9mc_16bpp.asm',
 ]
+
+if CONFIG['CPU_ARCH'] == "x86_64":
+    SOURCES += [
+        'simple_idct10.asm',
+    ]
 
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [
