@@ -2179,6 +2179,11 @@ class nsIFrame : public nsQueryFrame {
       nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
       nsEventStatus* aEventStatus, bool aControlHeld);
 
+  /**
+   * @param aPresContext must be non-nullptr.
+   * @param aEvent must be non-nullptr.
+   * @param aEventStatus must be non-nullptr.
+   */
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         mozilla::WidgetGUIEvent* aEvent,
