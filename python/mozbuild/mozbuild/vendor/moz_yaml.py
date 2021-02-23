@@ -113,17 +113,25 @@ origin:
 # optional
 updatebot:
 
-  # Whether or not updating this library is enabled
-  # Valid values are 'true', 'false'
-  enabled: false
-
   # TODO: allow multiple users to be specified
   # Phabricator username for a maintainer of the library, used for assigning
   # reviewers
-  maintainer_phab: tjr
+  maintainer-phab: tjr
 
   # Bugzilla email address for a maintainer of the library, used for needinfos
-  maintainer_bz: tom@mozilla.com
+  maintainer-bz: tom@mozilla.com
+
+  # The tasks that Updatebot can run. Only one of each task is currently permitted
+  # optional
+  tasks:
+    - type: commit-alert
+      branch: upstream-branch-name
+      cc: ["bugzilla@email.address", "another@example.com"]
+      enabled: True
+      filter: security
+    - type: vendoring
+      branch: master
+      enabled: False
 
 # Configuration for the automated vendoring system.
 # optional
@@ -343,9 +351,34 @@ def _schema_1():
                 Required("revision"): Match(r"^[a-fA-F0-9]{12,40}$"),
             },
             "updatebot": {
-                Required("enabled"): Boolean(),
                 Required("maintainer-phab"): All(str, Length(min=1)),
                 Required("maintainer-bz"): All(str, Length(min=1)),
+                "tasks": All(
+                    UpdatebotTasks(),
+                    [
+                        {
+                            Required("type"): In(
+                                [
+                                    "vendoring",
+                                    "commit-alert",
+                                ],
+                                msg="Invalid type specified in tasks",
+                            ),
+                            "branch": All(str, Length(min=1)),
+                            "enabled": Boolean(),
+                            "cc": Unique([str]),
+                            "filter": In(
+                                [
+                                    "none",
+                                    "security",
+                                    "source-extensions",
+                                ],
+                                msg="Invalid filter value specified in tasks",
+                            ),
+                            "source-extensions": Unique([str]),
+                        }
+                    ],
+                ),
             },
             "vendoring": {
                 Required("url"): FqdnUrl(),
@@ -475,6 +508,36 @@ class UpdateActions(object):
 
     def __repr__(self):
         return "UpdateActions"
+
+
+class UpdatebotTasks(object):
+    """Voluptuous validator which verifies the updatebot task(s) are valid."""
+
+    def __call__(self, values):
+        seenTaskTypes = set()
+        for v in values:
+            if "type" not in v:
+                raise Invalid("All updatebot tasks must specify a valid type")
+
+            if v["type"] in seenTaskTypes:
+                raise Invalid("Only one type of each task is currently supported")
+            seenTaskTypes.add(v["type"])
+
+            if v["type"] == "vendoring":
+                if "filter" in v or "source-extensions" in v:
+                    raise Invalid(
+                        "'filter' and 'source-extensions' only valid for commit-alert task types"
+                    )
+            elif v["type"] == "commit-alert":
+                pass
+            else:
+                # This check occurs before the validator above, so the above is
+                # redundant but we leave it to be verbose.
+                raise Invalid("Supplied type " + v["type"] + " is invalid.")
+        return values
+
+    def __repr__(self):
+        return "UpdatebotTasks"
 
 
 class License(object):
