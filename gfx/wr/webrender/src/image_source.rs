@@ -29,6 +29,7 @@ use crate::internal_types::{TextureSource, DeferredResolveIndex};
 /// enumerating the details of how it was produced. Hopefully we can get there
 /// incrementally).
 #[derive(Debug)]
+#[derive(MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ImageSourceHandle {

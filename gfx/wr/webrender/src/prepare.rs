@@ -517,12 +517,15 @@ fn prepare_interned_prim_for_render(
             profile_scope!("ImageBorder");
             let prim_data = &mut data_stores.image_border[*data_handle];
 
-            // TODO: get access to the ninepatch and to check whwther we need support
+            // TODO: get access to the ninepatch and to check whether we need support
             // for repetitions in the shader.
 
-            // Update the template this instane references, which may refresh the GPU
+            // Update the template this instance references, which may refresh the GPU
             // cache with any shared template data.
-            prim_data.kind.update(&mut prim_data.common, frame_state);
+            prim_data.kind.update(
+                &mut prim_data.common,
+                frame_state
+            );
         }
         PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, color_binding_index, .. } => {
             profile_scope!("Rectangle");

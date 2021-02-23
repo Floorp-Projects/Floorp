@@ -190,7 +190,6 @@ impl FrameGraphBuilder {
         }
     }
 
-    #[cfg(debug_assertions)]
     pub fn frame_id(&self) -> FrameId {
         self.frame_id
     }
