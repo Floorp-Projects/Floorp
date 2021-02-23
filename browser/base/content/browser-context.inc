@@ -355,9 +355,6 @@
       <menuitem id="context-viewsource"
                 data-l10n-id="main-context-menu-view-page-source"
                 oncommand="BrowserViewSource(gContextMenu.browser);"/>
-      <menuitem id="context-viewinfo"
-                data-l10n-id="main-context-menu-view-page-info"
-                oncommand="gContextMenu.viewInfo();"/>
       <menuseparator id="spell-separator"/>
       <menuitem id="spell-check-enabled"
                 label="&spellCheckToggle.label;"

@@ -44,7 +44,6 @@ let contextMenuItems = {
   "context-navigation": "hidden",
   "context-sep-navigation": "hidden",
   "context-viewsource": "",
-  "context-viewinfo": "disabled",
   "inspect-separator": "hidden",
   "context-inspect": "hidden",
   "context-inspect-a11y": "hidden",

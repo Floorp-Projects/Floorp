@@ -178,8 +178,6 @@ add_task(async function test_plaintext() {
     null,
     "context-viewsource",
     true,
-    "context-viewinfo",
-    true,
   ];
   await test_contextmenu("#test-text", plainTextItems, {
     maybeScreenshotsPresent: true,
@@ -714,8 +712,6 @@ add_task(async function test_iframe() {
     null,
     "context-viewsource",
     true,
-    "context-viewinfo",
-    true,
   ]);
 });
 
@@ -1047,8 +1043,6 @@ add_task(async function test_pdf_viewer_in_iframe() {
       null,
       "context-viewsource",
       true,
-      "context-viewinfo",
-      true,
     ],
     { maybeScreenshotsPresent: true, shiftkey: true }
   );
@@ -1293,8 +1287,6 @@ add_task(async function test_pagemenu() {
       null,
       "context-viewsource",
       true,
-      "context-viewinfo",
-      true,
     ],
     {
       async postCheckContextMenuFn() {
@@ -1362,8 +1354,6 @@ add_task(async function test_dom_full_screen() {
       "---",
       null,
       "context-viewsource",
-      true,
-      "context-viewinfo",
       true,
     ],
     {
@@ -1451,8 +1441,6 @@ add_task(async function test_pagemenu2() {
       "---",
       null,
       "context-viewsource",
-      true,
-      "context-viewinfo",
       true,
     ],
     { maybeScreenshotsPresent: true, shiftkey: true }
@@ -1778,8 +1766,6 @@ add_task(async function test_srcdoc() {
     "---",
     null,
     "context-viewsource",
-    true,
-    "context-viewinfo",
     true,
   ]);
 });
