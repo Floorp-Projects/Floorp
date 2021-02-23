@@ -238,8 +238,6 @@ add_task(
           null,
           "context-viewsource",
           true,
-          "context-viewinfo",
-          true,
         ],
         {
           // XXX Bug 1345081. Currently the Screenshots menu option is shown for
