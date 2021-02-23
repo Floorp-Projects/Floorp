@@ -127,6 +127,8 @@
     <string name="browser_menu_edit_bookmark">Deasaich an comharra-lìn</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Tuilleadain</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Leudachain</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Chan eil tuilleadan sam bith an-seo</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -522,6 +524,10 @@
     <string name="library_desktop_bookmarks_unfiled">Comharran-lìn eile</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">An eachdraidh</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Taba ùr</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Lorg san duilleag</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Tabaichean sioncronaichte</string>
     <!-- Option in Library to open Reading List -->
@@ -871,16 +877,22 @@
     <string name="tracking_protection_on">Air</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Dheth</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Ceadaich fuaim is video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Ceadaich fuaim is video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Bac an fhuaim agus video air ceangal dàta mobile a-mhàin</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Gabhaidh fuaim agus video a chluich air WiFi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Na bac ach an fhuaim</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Na bac ach an fhuaim</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Bach an fhuaim agus a’ video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Bach an fhuaim agus a’ video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Air</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1078,6 +1090,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Saoraidh seo stòras</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Ceadan nan làrach</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Luchdaidhean a-nuas</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Sguab an dàta brabhsaidh às</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1202,8 +1216,7 @@
     <string name="onboarding_privacy_notice_header">Do phrìobhaideachd</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Dhealbh sinn %s airson ’s gum bi smachd agad-sa air na cho-roinneas
-        tu air loidhne agus na cho-roinneas tu leinne.</string>
+    <string name="onboarding_privacy_notice_description2">Dhealbh sinn %s airson ’s gum bi smachd agad-sa air na cho-roinneas tu air loidhne agus na cho-roinneas tu leinn.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leugh sanas na prìobhaideachd againn</string>
 
