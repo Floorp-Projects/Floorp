@@ -52,9 +52,12 @@ class ErrorObject : public NativeObject {
   static const uint32_t COLUMNNUMBER_SLOT = LINENUMBER_SLOT + 1;
   static const uint32_t MESSAGE_SLOT = COLUMNNUMBER_SLOT + 1;
   static const uint32_t SOURCEID_SLOT = MESSAGE_SLOT + 1;
-  static const uint32_t WASM_TRAP_SLOT = SOURCEID_SLOT + 1;
 
-  static const uint32_t RESERVED_SLOTS = WASM_TRAP_SLOT + 1;
+  static const uint32_t RESERVED_SLOTS = SOURCEID_SLOT + 1;
+
+  // This slot is only used for errors that could be Wasm traps.
+  static const uint32_t WASM_TRAP_SLOT = SOURCEID_SLOT + 1;
+  static const uint32_t RESERVED_SLOTS_MAYBE_WASM_TRAP = WASM_TRAP_SLOT + 1;
 
  public:
   static const JSClass classes[JSEXN_ERROR_LIMIT];
@@ -105,7 +108,6 @@ class ErrorObject : public NativeObject {
   inline uint32_t lineNumber() const;
   inline uint32_t columnNumber() const;
   inline JSObject* stack() const;
-  inline bool fromWasmTrap() const;
 
   JSString* getMessage() const {
     const HeapSlot& slot = getReservedSlotRef(MESSAGE_SLOT);
@@ -119,6 +121,17 @@ class ErrorObject : public NativeObject {
   static bool setStack_impl(JSContext* cx, const CallArgs& args);
 
   // Used to distinguish errors created from Wasm traps.
+  bool mightBeWasmTrap() const {
+    return type() == JSEXN_WASMRUNTIMEERROR || type() == JSEXN_INTERNALERR;
+  }
+  bool fromWasmTrap() const {
+    if (!mightBeWasmTrap()) {
+      return false;
+    } else {
+      MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(getClass()) > WASM_TRAP_SLOT);
+      return getReservedSlot(WASM_TRAP_SLOT).toBoolean();
+    }
+  }
   void setFromWasmTrap();
 };
 
