@@ -1,8 +1,10 @@
 Testing
 =======
 
-The remote agent has unit- and functional tests located under
-`remote/test/{unit,browser}`.
+The remote agent has unit- and functional tests located under different folders:
+
+  - Shared Modules: `remote/shared/test/xpcshell`
+  - CDP: `remote/cdp/test/{xpcshell,browser}`.
 
 You may run all the tests under a particular subfolder like this:
 
@@ -15,7 +17,7 @@ Unit tests
 Because tests are run in parallel and [xpcshell] itself is quite
 chatty, it can sometimes be useful to run the tests in sequence:
 
-	% ./mach xpcshell-test --sequential remote/test/unit/test_DomainCache.js
+	% ./mach xpcshell-test --sequential remote/cdp/test/unit/test_DomainCache.js
 
 The unit tests will appear as part of the `X` (for _xpcshell_) jobs
 on Treeherder.
@@ -26,10 +28,10 @@ on Treeherder.
 Browser chrome tests
 --------------------
 
-We also have a set of functional [browser chrome] tests located
-under _remote/test/browser_:
+We also have a set of functional [browser chrome] tests for CDP located
+under _remote/cdp/test/browser_:
 
-	% ./mach mochitest remote/test/browser/browser_cdp.js
+	% ./mach mochitest remote/cdp/test/browser/browser_cdp.js
 
 The functional tests will appear under the `M` (for _mochitest_)
 category in the `remote` jobs on Treeherder.
@@ -38,7 +40,7 @@ As the functional tests will sporadically pop up new Firefox
 application windows, a helpful tip is to run them in [headless
 mode]:
 
-	% ./mach mochitest --headless remote/test/browser
+	% ./mach mochitest --headless remote/cdp/test/browser
 
 The `--headless` flag is equivalent to setting the `MOZ_HEADLESS`
 environment variable.  You can additionally use `MOZ_HEADLESS_WIDTH`

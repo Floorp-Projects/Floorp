@@ -3,8 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
+    "cdp",
     "components",
-    "test",
+    "shared",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
