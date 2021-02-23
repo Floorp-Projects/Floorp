@@ -13,7 +13,7 @@
   /* Create a stacking context for the box-shadow */
   position: relative;
   z-index: 1;
-  box-shadow: 0 3px 10px -7px #000;
+  box-shadow: 0 3px 10px -7px #00000080;
 }
 
 notification {
@@ -92,7 +92,7 @@ notification[type="critical"] > .close-icon:hover:active {
 .messageImage {
   width: 24px;
   height: 24px;
-  margin: 4px;
+  margin: 4px 0;
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -120,7 +120,7 @@ notification[type="critical"] > hbox > .messageImage {
   width: 32px !important;
   height: 32px !important;
   /* Close button needs to be clickable from the edge of the window */
-  margin-inline-end: 16px;
+  margin-inline-end: 8px;
 }
 
 .messageCloseButton:-moz-focusring {
