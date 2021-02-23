@@ -427,13 +427,6 @@ class AsmFlags(BaseCompileFlags):
                     debug_flags += ["-F", "cv8"]
                 elif self._context.config.substs.get("OS_ARCH") != "Darwin":
                     debug_flags += ["-F", "dwarf"]
-            elif self._context.get("USE_YASM"):
-                if self._context.config.substs.get(
-                    "OS_ARCH"
-                ) == "WINNT" and not self._context.config.substs.get("GNU_CC"):
-                    debug_flags += ["-g", "cv8"]
-                elif self._context.config.substs.get("OS_ARCH") != "Darwin":
-                    debug_flags += ["-g", "dwarf2"]
             elif (
                 self._context.config.substs.get("OS_ARCH") == "WINNT"
                 and self._context.config.substs.get("CPU_ARCH") == "aarch64"
@@ -2667,19 +2660,6 @@ VARIABLES = {
         this value to ``True`` will cause it to use nasm instead.
 
         If nasm is not available on this system, or does not support the
-        current target architecture, an error will be raised.
-        """,
-    ),
-    "USE_YASM": (
-        bool,
-        bool,
-        """Use the yasm assembler to assemble assembly files from SOURCES.
-
-        By default, the build will use the toolchain assembler, $(AS), to
-        assemble source files in assembly language (.s or .asm files). Setting
-        this value to ``True`` will cause it to use yasm instead.
-
-        If yasm is not available on this system, or does not support the
         current target architecture, an error will be raised.
         """,
     ),

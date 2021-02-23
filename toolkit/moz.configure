@@ -1922,35 +1922,6 @@ with only_when(compile_environment | artifact_builds):
     set_config("FFVPX_USE_NASM", True, when=ffvpx.use_nasm)
 
 
-@depends(
-    yasm_version,
-)
-def valid_yasm_version(yasm_version):
-    requires = {
-    }
-    requires = {k: v for (k, v) in requires.items() if v}
-    if requires and not yasm_version:
-        items = sorted(requires.keys())
-        if len(items) > 1:
-            what = " and ".join((", ".join(items[:-1]), items[-1]))
-        else:
-            what = items[0]
-        die(
-            "Yasm is required to build with %s, but you do not appear to have "
-            "Yasm installed." % what
-        )
-
-    versioned = {k: v for (k, v) in requires.items() if v is not True}
-    by_version = sorted(versioned.items(), key=lambda x: x[1])
-    if by_version:
-        what, version = by_version[-1]
-        if yasm_version < version:
-            die(
-                "Yasm version %s or greater is required to build with %s."
-                % (version, what)
-            )
-
-
 # nasm detection
 # ==============================================================
 @depends(dav1d_nasm, vpx_nasm, jpeg_nasm, ffvpx_nasm)

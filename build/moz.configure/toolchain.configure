@@ -32,48 +32,6 @@ set_config("MOZ_OPTIMIZE", moz_optimize.optimize)
 add_old_configure_assignment("MOZ_OPTIMIZE", moz_optimize.optimize)
 add_old_configure_assignment("MOZ_CONFIGURE_OPTIMIZE_FLAGS", moz_optimize.flags)
 
-# yasm detection
-# ==============================================================
-yasm = check_prog("YASM", ["yasm"], allow_missing=True)
-
-
-@depends_if(yasm)
-@checking("yasm version")
-def yasm_version(yasm):
-    version = (
-        check_cmd_output(
-            yasm, "--version", onerror=lambda: die("Failed to get yasm version.")
-        )
-        .splitlines()[0]
-        .split()[1]
-    )
-    return Version(version)
-
-
-@depends(yasm, target)
-def yasm_asflags(yasm, target):
-    if yasm:
-        asflags = {
-            ("OSX", "x86"): ["-f", "macho32"],
-            ("OSX", "x86_64"): ["-f", "macho64"],
-            ("WINNT", "x86"): ["-f", "win32"],
-            ("WINNT", "x86_64"): ["-f", "x64"],
-        }.get((target.os, target.cpu), None)
-        if asflags is None:
-            # We're assuming every x86 platform we support that's
-            # not Windows or Mac is ELF.
-            if target.cpu == "x86":
-                asflags = ["-f", "elf32"]
-            elif target.cpu == "x86_64":
-                asflags = ["-f", "elf64"]
-        if asflags:
-            asflags += ["-rnasm", "-pnasm"]
-        return asflags
-
-
-set_config("YASM_ASFLAGS", yasm_asflags)
-
-
 # Android NDK
 # ==============================================================
 
