@@ -32,7 +32,7 @@ already_AddRefed<CharacterData> CDATASection::CloneDataNode(
   return it.forget();
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
 void CDATASection::List(FILE* out, int32_t aIndent) const {
   int32_t index;
   for (index = aIndent; --index >= 0;) fputs("  ", out);

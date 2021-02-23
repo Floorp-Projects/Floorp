@@ -85,7 +85,7 @@ class DocumentFragment : public FragmentOrElement {
   static already_AddRefed<DocumentFragment> Constructor(
       const GlobalObject& aGlobal, ErrorResult& aRv);
 
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
   virtual void List(FILE* out, int32_t aIndent) const override;
   virtual void DumpContent(FILE* out, int32_t aIndent,
                            bool aDumpAll) const override;

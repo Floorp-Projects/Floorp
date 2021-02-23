@@ -159,7 +159,9 @@ class CharacterData : public nsIContent {
 
   void SaveSubtreeState() final {}
 
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
+  void ToCString(nsAString& aBuf, int32_t aOffset, int32_t aLen) const;
+
   void List(FILE* out, int32_t aIndent) const override {}
 
   void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override {}
@@ -196,10 +198,6 @@ class CharacterData : public nsIContent {
                    ErrorResult& rv);
 
   //----------------------------------------
-
-#ifdef DEBUG
-  void ToCString(nsAString& aBuf, int32_t aOffset, int32_t aLen) const;
-#endif
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
       CharacterData, nsIContent)

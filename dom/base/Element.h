@@ -1038,7 +1038,7 @@ class Element : public FragmentOrElement {
     return GetParsedAttr(nsGkAtoms::_class);
   }
 
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override {
     List(out, aIndent, ""_ns);
   }
