@@ -768,3 +768,8 @@ menupopup::part(drop-indicator) {
 #sharing-warning-proceed-to-tab:hover {
   background-color: rgb(0,62,170);
 }
+
+.webRTC-selectDevice-label {
+  margin-top: 6px;
+  font-weight: 600;
+}
