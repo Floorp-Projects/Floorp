@@ -17,6 +17,7 @@ add_task(async function test_popup_title() {
 
       // Called after the popup loads
       browser.runtime.onMessage.addListener(async ({ docTitle }) => {
+        const name = browser.runtime.getManifest().name;
         const { id } = await popup;
         const { title } = await browser.windows.get(id);
         browser.windows.remove(id);
