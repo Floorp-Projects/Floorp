@@ -85,15 +85,9 @@ EventStates HTMLOutputElement::IntrinsicState() const {
   // We don't have to call IsCandidateForConstraintValidation()
   // because <output> can't be barred from constraint validation.
   if (IsValid()) {
-    states |= NS_EVENT_STATE_VALID;
-    if (!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
-      states |= NS_EVENT_STATE_MOZ_UI_VALID;
-    }
+    states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
   } else {
-    states |= NS_EVENT_STATE_INVALID;
-    if (!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
-      states |= NS_EVENT_STATE_MOZ_UI_INVALID;
-    }
+    states |= NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
   }
 
   return states;
