@@ -1269,9 +1269,6 @@ var SessionStoreInternal = {
           let body = aBrowser.ownerGlobal
             ? aBrowser.ownerGlobal.document.body
             : listener._lastKnownBody;
-          let userContextId = aBrowser.contentPrincipal
-            ? aBrowser.contentPrincipal.originAttributes.userContextId
-            : listener._lastKnownUserContextId;
           // If aData.sHistoryNeeded we need to collect all session
           // history entries, because with SHIP this indicates that we
           // either saw 'DOMTitleChanged' in
@@ -1283,7 +1280,6 @@ var SessionStoreInternal = {
             uri,
             body,
             aBrowsingContext.sessionHistory,
-            userContextId,
             listener._sHistoryChanges && !aData.sHistoryNeeded
               ? listener._fromIdx
               : -1
