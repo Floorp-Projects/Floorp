@@ -379,7 +379,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
 
   const sRGBColor& backgroundColor = [&] {
     if (isDisabled) {
-      return sColorGrey50Alpha50;
+      return sColorGrey40;
     }
     if (isActive) {
       return sAccentColor;
@@ -780,33 +780,49 @@ void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget& aDrawTarget,
   aDrawTarget.FillRect(rect, ColorPattern(ToDeviceColor(fillColor)));
 }
 
-void nsNativeBasicTheme::PaintStrokedEllipse(DrawTarget& aDrawTarget,
-                                             const LayoutDeviceRect& aRect,
-                                             const sRGBColor& aBackgroundColor,
-                                             const sRGBColor& aBorderColor,
-                                             const CSSCoord aBorderWidth,
-                                             DPIRatio aDpiRatio) {
-  const LayoutDeviceCoord borderWidth(aBorderWidth * aDpiRatio);
-  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-
-  // Deflate for the same reason as PaintRoundedRectWithRadius. Note that the
-  // size is the diameter, so we just shrink by the border width once.
-  auto size = aRect.Size() - LayoutDeviceSize(borderWidth, borderWidth);
-  AppendEllipseToPath(builder, aRect.Center().ToUnknownPoint(),
-                      size.ToUnknownSize());
-  RefPtr<Path> ellipse = builder->Finish();
-
-  aDrawTarget.Fill(ellipse, ColorPattern(ToDeviceColor(aBackgroundColor)));
-  aDrawTarget.Stroke(ellipse, ColorPattern(ToDeviceColor(aBorderColor)),
-                     StrokeOptions(borderWidth));
+template <typename PaintBackendData>
+void nsNativeBasicTheme::PaintStrokedCircle(PaintBackendData& aPaintData,
+                                            const LayoutDeviceRect& aRect,
+                                            const sRGBColor& aBackgroundColor,
+                                            const sRGBColor& aBorderColor,
+                                            const CSSCoord aBorderWidth,
+                                            DPIRatio aDpiRatio) {
+  auto radius = LayoutDeviceCoord(aRect.Size().width) / aDpiRatio;
+  PaintRoundedRectWithRadius(aPaintData, aRect, aBackgroundColor, aBorderColor,
+                             aBorderWidth, radius, aDpiRatio);
 }
 
-void nsNativeBasicTheme::PaintEllipseShadow(DrawTarget& aDrawTarget,
-                                            const LayoutDeviceRect& aRect,
-                                            float aShadowAlpha,
-                                            const CSSPoint& aShadowOffset,
-                                            CSSCoord aShadowBlurStdDev,
-                                            DPIRatio aDpiRatio) {
+void nsNativeBasicTheme::PaintCircleShadow(WebRenderBackendData& aWrData,
+                                           const LayoutDeviceRect& aRect,
+                                           float aShadowAlpha,
+                                           const CSSPoint& aShadowOffset,
+                                           CSSCoord aShadowBlurStdDev,
+                                           DPIRatio aDpiRatio) {
+  const bool kBackfaceIsVisible = true;
+  const LayoutDeviceCoord stdDev = aShadowBlurStdDev * aDpiRatio;
+  const LayoutDevicePoint shadowOffset = aShadowOffset * aDpiRatio;
+  const IntSize inflation =
+      gfxAlphaBoxBlur::CalculateBlurRadius(gfxPoint(stdDev, stdDev));
+  LayoutDeviceRect shadow = aRect;
+  shadow.MoveBy(shadowOffset);
+  shadow.Inflate(inflation.width, inflation.height);
+  const auto shadowRect = wr::ToLayoutRect(shadow);
+  const auto boxRect = wr::ToLayoutRect(aRect);
+  aWrData.mBuilder.PushBoxShadow(
+      shadowRect, shadowRect, kBackfaceIsVisible, boxRect,
+      wr::ToLayoutVector2D(aShadowOffset * aDpiRatio),
+      wr::ToColorF(DeviceColor(0.0f, 0.0f, 0.0f, aShadowAlpha)),
+      stdDev, /* aSpread = */ 0.0f,
+      wr::ToBorderRadius(gfx::RectCornerRadii(aRect.Size().width)),
+      wr::BoxShadowClipMode::Outset);
+}
+
+void nsNativeBasicTheme::PaintCircleShadow(DrawTarget& aDrawTarget,
+                                           const LayoutDeviceRect& aRect,
+                                           float aShadowAlpha,
+                                           const CSSPoint& aShadowOffset,
+                                           CSSCoord aShadowBlurStdDev,
+                                           DPIRatio aDpiRatio) {
   Float stdDev = aShadowBlurStdDev * aDpiRatio;
   Point offset = (aShadowOffset * aDpiRatio).ToUnknownPoint();
 
@@ -846,7 +862,8 @@ void nsNativeBasicTheme::PaintEllipseShadow(DrawTarget& aDrawTarget,
                          destinationPointOfSourceRect);
 }
 
-void nsNativeBasicTheme::PaintRadioControl(DrawTarget& aDrawTarget,
+template <typename PaintBackendData>
+void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
                                            const LayoutDeviceRect& aRect,
                                            const EventStates& aState,
                                            DPIRatio aDpiRatio) {
@@ -854,15 +871,16 @@ void nsNativeBasicTheme::PaintRadioControl(DrawTarget& aDrawTarget,
   auto [backgroundColor, borderColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Radio);
 
-  PaintStrokedEllipse(aDrawTarget, aRect, backgroundColor, borderColor,
-                      borderWidth, aDpiRatio);
+  PaintStrokedCircle(aPaintData, aRect, backgroundColor, borderColor,
+                     borderWidth, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 5.0f, 1.0f);
+    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio, 5.0f, 1.0f);
   }
 }
 
-void nsNativeBasicTheme::PaintRadioCheckmark(DrawTarget& aDrawTarget,
+template <typename PaintBackendData>
+void nsNativeBasicTheme::PaintRadioCheckmark(PaintBackendData& aPaintData,
                                              const LayoutDeviceRect& aRect,
                                              const EventStates& aState,
                                              DPIRatio aDpiRatio) {
@@ -873,8 +891,8 @@ void nsNativeBasicTheme::PaintRadioCheckmark(DrawTarget& aDrawTarget,
   LayoutDeviceRect rect(aRect);
   rect.Deflate(borderWidth * scale);
 
-  PaintStrokedEllipse(aDrawTarget, rect, checkColor, backgroundColor,
-                      borderWidth, aDpiRatio);
+  PaintStrokedCircle(aPaintData, rect, checkColor, backgroundColor, borderWidth,
+                     aDpiRatio);
 }
 
 template <typename PaintBackendData>
@@ -999,7 +1017,9 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
   aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(borderColor)));
 }
 
-void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget& aDrawTarget,
+template <typename PaintBackendData>
+void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
+                                    PaintBackendData& aPaintData,
                                     const LayoutDeviceRect& aRect,
                                     const EventStates& aState,
                                     DPIRatio aDpiRatio, bool aHorizontal) {
@@ -1012,10 +1032,10 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget& aDrawTarget,
   auto rect = aRect;
   LayoutDeviceRect thumbRect(0, 0, kMinimumRangeThumbSize * aDpiRatio,
                              kMinimumRangeThumbSize * aDpiRatio);
-  Rect overflowRect = aRect.ToUnknownRect();
+  LayoutDeviceRect overflowRect = aRect;
   overflowRect.Inflate(CSSCoord(6.0f) * aDpiRatio);  // See GetWidgetOverflow
-  Rect progressClipRect(overflowRect);
-  Rect trackClipRect(overflowRect);
+  LayoutDeviceRect progressClipRect(overflowRect);
+  LayoutDeviceRect trackClipRect(overflowRect);
   const LayoutDeviceCoord verticalSize = kRangeHeight * aDpiRatio;
   if (aHorizontal) {
     rect.height = verticalSize;
@@ -1052,47 +1072,28 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget& aDrawTarget,
       ComputeRangeProgressColors(aState);
   auto [trackColor, trackBorderColor] = ComputeRangeTrackColors(aState);
 
-  // Make a path that clips out the range thumb.
-  RefPtr<PathBuilder> builder =
-      aDrawTarget.CreatePathBuilder(FillRule::FILL_EVEN_ODD);
-  AppendRectToPath(builder, overflowRect);
-  AppendEllipseToPath(builder, thumbRect.Center().ToUnknownPoint(),
-                      thumbRect.Size().ToUnknownSize());
-  RefPtr<Path> path = builder->Finish();
+  PaintRoundedRectWithRadius(aPaintData, rect, progressClipRect, progressColor,
+                             progressBorderColor, borderWidth, radius,
+                             aDpiRatio);
 
-  // Draw the progress and track pieces with the thumb clipped out, so that
-  // they're not visible behind the thumb even if the thumb is partially
-  // transparent (which is the case in the disabled state).
-  aDrawTarget.PushClip(path);
-  {
-    aDrawTarget.PushClipRect(progressClipRect);
-    PaintRoundedRectWithRadius(aDrawTarget, rect, progressColor,
-                               progressBorderColor, borderWidth, radius,
-                               aDpiRatio);
-    aDrawTarget.PopClip();
+  PaintRoundedRectWithRadius(aPaintData, rect, trackClipRect, trackColor,
+                             trackBorderColor, borderWidth, radius, aDpiRatio);
 
-    aDrawTarget.PushClipRect(trackClipRect);
-    PaintRoundedRectWithRadius(aDrawTarget, rect, trackColor, trackBorderColor,
-                               borderWidth, radius, aDpiRatio);
-    aDrawTarget.PopClip();
-
-    if (!aState.HasState(NS_EVENT_STATE_DISABLED)) {
-      // Thumb shadow
-      PaintEllipseShadow(aDrawTarget, thumbRect, 0.3f, CSSPoint(0.0f, 2.0f),
-                         2.0f, aDpiRatio);
-    }
+  if (!aState.HasState(NS_EVENT_STATE_DISABLED)) {
+    // Thumb shadow
+    PaintCircleShadow(aPaintData, thumbRect, 0.3f, CSSPoint(0.0f, 2.0f), 2.0f,
+                      aDpiRatio);
   }
-  aDrawTarget.PopClip();
 
   // Draw the thumb on top.
   const CSSCoord thumbBorderWidth = 2.0f;
   auto [thumbColor, thumbBorderColor] = ComputeRangeThumbColors(aState);
 
-  PaintStrokedEllipse(aDrawTarget, thumbRect, thumbColor, thumbBorderColor,
-                      thumbBorderWidth, aDpiRatio);
+  PaintStrokedCircle(aPaintData, thumbRect, thumbColor, thumbBorderColor,
+                     thumbBorderWidth, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius, 1.0f);
+    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio, radius, 1.0f);
   }
 }
 
@@ -1436,15 +1437,10 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
 
   switch (aAppearance) {
     case StyleAppearance::Radio: {
-      if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
-        // TODO: Need to figure out how to best draw this using WR.
-        return false;
-      } else {
-        auto rect = FixAspectRatio(devPxRect);
-        PaintRadioControl(aPaintData, rect, eventState, dpiRatio);
-        if (IsSelected(aFrame)) {
-          PaintRadioCheckmark(aPaintData, rect, eventState, dpiRatio);
-        }
+      auto rect = FixAspectRatio(devPxRect);
+      PaintRadioControl(aPaintData, rect, eventState, dpiRatio);
+      if (IsSelected(aFrame)) {
+        PaintRadioCheckmark(aPaintData, rect, eventState, dpiRatio);
       }
       break;
     }
@@ -1494,13 +1490,8 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
       }
       break;
     case StyleAppearance::Range:
-      if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
-        // TODO: Need to figure out how to best draw this using WR.
-        return false;
-      } else {
-        PaintRange(aFrame, aPaintData, devPxRect, eventState, dpiRatio,
-                   IsRangeHorizontal(aFrame));
-      }
+      PaintRange(aFrame, aPaintData, devPxRect, eventState, dpiRatio,
+                 IsRangeHorizontal(aFrame));
       break;
     case StyleAppearance::RangeThumb:
       // Painted as part of StyleAppearance::Range.

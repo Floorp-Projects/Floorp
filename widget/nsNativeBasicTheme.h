@@ -273,16 +273,23 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   void PaintCheckMark(DrawTarget&, const LayoutDeviceRect&, const EventStates&);
   void PaintIndeterminateMark(DrawTarget&, const LayoutDeviceRect&,
                               const EventStates&);
-  void PaintStrokedEllipse(DrawTarget&, const LayoutDeviceRect&,
-                           const sRGBColor& aBackgroundColor,
-                           const sRGBColor& aBorderColor,
-                           const CSSCoord aBorderWidth, DPIRatio);
-  void PaintEllipseShadow(DrawTarget&, const LayoutDeviceRect&,
-                          float aShadowAlpha, const CSSPoint& aShadowOffset,
-                          CSSCoord aShadowBlurStdDev, DPIRatio);
-  void PaintRadioControl(DrawTarget&, const LayoutDeviceRect&,
+
+  template <typename PaintBackendData>
+  void PaintStrokedCircle(PaintBackendData&, const LayoutDeviceRect&,
+                          const sRGBColor& aBackgroundColor,
+                          const sRGBColor& aBorderColor,
+                          const CSSCoord aBorderWidth, DPIRatio);
+  void PaintCircleShadow(DrawTarget&, const LayoutDeviceRect&,
+                         float aShadowAlpha, const CSSPoint& aShadowOffset,
+                         CSSCoord aShadowBlurStdDev, DPIRatio);
+  void PaintCircleShadow(WebRenderBackendData&, const LayoutDeviceRect&,
+                         float aShadowAlpha, const CSSPoint& aShadowOffset,
+                         CSSCoord aShadowBlurStdDev, DPIRatio);
+  template <typename PaintBackendData>
+  void PaintRadioControl(PaintBackendData&, const LayoutDeviceRect&,
                          const EventStates&, DPIRatio);
-  void PaintRadioCheckmark(DrawTarget&, const LayoutDeviceRect&,
+  template <typename PaintBackendData>
+  void PaintRadioCheckmark(PaintBackendData&, const LayoutDeviceRect&,
                            const EventStates&, DPIRatio);
   template <typename PaintBackendData>
   void PaintTextField(PaintBackendData&, const LayoutDeviceRect&,
@@ -300,7 +307,8 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                 const EventStates&);
   void PaintSpinnerButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
                           const EventStates&, StyleAppearance, DPIRatio);
-  void PaintRange(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
+  template <typename PaintBackendData>
+  void PaintRange(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
                   const EventStates&, DPIRatio, bool aHorizontal);
   template <typename PaintBackendData>
   void PaintProgress(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
