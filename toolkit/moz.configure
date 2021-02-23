@@ -1800,41 +1800,35 @@ with only_when(compile_environment):
         if system_jpeg:
             return
 
-        flags = ()
-        use_yasm = None
-        need_yasm = False
         if target.kernel == "Darwin":
             if target.cpu == "x86":
-                flags = ("-DPIC", "-DMACHO")
+                return ("-DPIC", "-DMACHO")
             elif target.cpu == "x86_64":
-                flags = ("-D__x86_64__", "-DPIC", "-DMACHO")
+                return ("-D__x86_64__", "-DPIC", "-DMACHO")
         elif target.kernel == "WINNT":
             if target.cpu == "x86":
-                flags = ("-DPIC", "-DWIN32")
+                return ("-DPIC", "-DWIN32")
             elif target.cpu == "x86_64":
-                flags = ("-D__x86_64__", "-DPIC", "-DWIN64", "-DMSVC")
+                return ("-D__x86_64__", "-DPIC", "-DWIN64", "-DMSVC")
         elif target.cpu == "arm":
-            flags = ("-march=armv7-a", "-mfpu=neon")
+            return ("-march=armv7-a", "-mfpu=neon")
         elif target.cpu == "aarch64":
-            flags = ("-march=armv8-a",)
+            return ("-march=armv8-a",)
         elif target.cpu == "mips32":
-            flags = ("-mdspr2",)
+            return ("-mdspr2",)
         elif target.cpu == "x86":
-            flags = ("-DPIC", "-DELF")
+            return ("-DPIC", "-DELF")
         elif target.cpu == "x86_64":
-            flags = ("-D__x86_64__", "-DPIC", "-DELF")
+            return ("-D__x86_64__", "-DPIC", "-DELF")
 
+    @depends(target, when=in_tree_jpeg)
+    def jpeg_nasm(target):
         if target.cpu in ("x86", "x86_64"):
-            use_yasm = True
-            if target.kernel == "Linux" and target.os == "GNU":
-                need_yasm = Version("1.0.1")
-            else:
-                need_yasm = Version("1.1")
+            # libjpeg-turbo 2.0.6 requires nasm 2.10.
+            return namespace(version="2.10", what="JPEG")
 
-        return namespace(flags=flags, use_yasm=use_yasm, need_yasm=need_yasm)
-
-    set_config("LIBJPEG_TURBO_USE_YASM", in_tree_jpeg.use_yasm)
-    set_config("LIBJPEG_TURBO_ASFLAGS", in_tree_jpeg.flags)
+    set_config("LIBJPEG_TURBO_USE_NASM", True, when=jpeg_nasm)
+    set_config("LIBJPEG_TURBO_ASFLAGS", in_tree_jpeg)
 
 
 # FFmpeg's ffvpx configuration
@@ -1921,13 +1915,11 @@ with only_when(compile_environment | artifact_builds):
 
 @depends(
     yasm_version,
-    in_tree_jpeg.use_yasm,
-    ffvpx.need_yasm,
+    ffvpx.use_yasm,
 )
-def valid_yasm_version(yasm_version, for_jpeg, for_ffvpx=False):
+def valid_yasm_version(yasm_version, for_ffvpx=False):
     # Note: the default for for_ffvpx above only matters for unit tests.
     requires = {
-        "jpeg": for_jpeg,
         "ffvpx": for_ffvpx,
     }
     requires = {k: v for (k, v) in requires.items() if v}
@@ -1955,7 +1947,7 @@ def valid_yasm_version(yasm_version, for_jpeg, for_ffvpx=False):
 
 # nasm detection
 # ==============================================================
-@depends(dav1d_nasm, vpx_nasm)
+@depends(dav1d_nasm, vpx_nasm, jpeg_nasm)
 def need_nasm(*requirements):
     requires = {
         x.what: x.version if hasattr(x, "version") else True for x in requirements if x
