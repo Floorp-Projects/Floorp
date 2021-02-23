@@ -1584,6 +1584,18 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // We schedule it for reinsertion. For example, a slotted element
     // can change its slot attribute to a different slot.
     insert = true;
+
+    // If the frame is invisible, remove it.
+    // Normally, layout sends explicit a11y notifications for visibility
+    // changes (see SendA11yNotifications in RestyleManager). However, if a
+    // visibility change also reconstructs the frame, we must handle it here.
+    if (frame && !frame->StyleVisibility()->IsVisible()) {
+      ContentRemoved(aRoot);
+      // There might be visible descendants, so we want to walk the subtree.
+      // However, we know we don't want to reinsert this node, so we set insert
+      // to false.
+      insert = false;
+    }
   } else {
     // If there is no current accessible, and the node has a frame, or is
     // display:contents, schedule it for insertion.

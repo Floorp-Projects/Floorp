@@ -341,6 +341,40 @@
       is(getAccessible("c14").name, "one two three", "subtree has correct order");
     }
 
+    // Ensure that a node is removed when visibility: hidden is set but the
+    // layout frame is reconstructed; e.g. because of position: fixed. Also
+    // ensure that visible children aren't clobbered.
+    async function visibilityHiddenWithReframe() {
+      let msg = "visibilityHiddenWithReframe";
+      info(msg);
+
+      testAccessibleTree("c15", { SECTION: [ // c15
+        { SECTION: [ // c15_inner
+          { TEXT_LEAF: [] }, // Text
+          { PARAGRAPH: [
+            { TEXT_LEAF: [] } // Para
+          ] },
+          { HEADING: [ // c15_visible
+            { TEXT_LEAF: [] } // Visible
+          ] }, // c15_visible
+        ] } // c15_inner
+      ] });
+
+      let events = waitForOrderedEvents([
+          [EVENT_HIDE, "c15_inner"],
+          [EVENT_SHOW, "c15_visible"],
+          [EVENT_REORDER, "c15"],
+        ], msg);
+      getNode("c15_inner").style = "visibility: hidden; position: fixed;";
+      await events;
+
+      testAccessibleTree("c15", { SECTION: [ // c15
+        { HEADING: [ // c15_visible
+          { TEXT_LEAF: [] } // Visible
+        ] }, // c15_visible
+      ] });
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -369,6 +403,9 @@
       await testCSSGeneratedContentRemovedFromButton();
 
       await testSlack();
+
+      await visibilityHiddenWithReframe();
+
       SimpleTest.finish();
     }
 
@@ -447,6 +484,12 @@
         aria-label="three"></div>
     </div>
   </div>
+
+  <div id="c15"><div id="c15_inner">
+    Text
+    <p>Para</p>
+    <h1 id="c15_visible" style="visibility: visible;">Visible</h1>
+  </div></div>
 
   <div id="eventdump"></div>
 </body>
