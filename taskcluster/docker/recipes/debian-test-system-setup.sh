@@ -57,7 +57,6 @@ apt_packages+=('unzip')
 apt_packages+=('uuid')
 apt_packages+=('wget')
 apt_packages+=('xvfb')
-apt_packages+=('yasm')
 apt_packages+=('zip')
 
 # use Ubuntu's Python-2.7 (2.7.3 on Precise)
