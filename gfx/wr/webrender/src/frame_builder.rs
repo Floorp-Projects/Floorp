@@ -800,7 +800,6 @@ pub fn build_render_pass(
                                 render_tasks,
                                 clip_store,
                                 transforms,
-                                deferred_resolves,
                             );
                         }
 
@@ -822,7 +821,6 @@ pub fn build_render_pass(
                                 render_tasks,
                                 clip_store,
                                 transforms,
-                                deferred_resolves,
                             );
                         }
 

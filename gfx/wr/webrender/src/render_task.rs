@@ -15,7 +15,6 @@ use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
 use crate::prim_store::{ClipData, PictureIndex};
-use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
 #[cfg(feature = "debugger")]
 use crate::print_tree::{PrintTreePrinter};
@@ -229,21 +228,7 @@ impl BlurTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScalingTask {
     pub target_kind: RenderTargetKind,
-    pub image: Option<ImageCacheKey>,
     pub padding: DeviceIntSideOffsets,
-}
-
-// Where the source data for a blit task can be found.
-#[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum BlitSource {
-    Image {
-        key: ImageCacheKey,
-    },
-    RenderTask {
-        task_id: RenderTaskId,
-    },
 }
 
 #[derive(Debug)]
@@ -257,7 +242,7 @@ pub struct BorderTask {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BlitTask {
-    pub source: BlitSource,
+    pub source: RenderTaskId,
 }
 
 #[derive(Debug)]
@@ -867,7 +852,7 @@ impl RenderTask {
 
     pub fn new_blit(
         size: DeviceIntSize,
-        source: BlitSource,
+        source: RenderTaskId,
         rg_builder: &mut RenderTaskGraphBuilder,
     ) -> RenderTaskId {
         // If this blit uses a render task as a source,
@@ -875,21 +860,13 @@ impl RenderTask {
         // ensure it gets allocated in the correct pass
         // and made available as an input when this task
         // executes.
-        let child_id = match source {
-            BlitSource::RenderTask { task_id } => Some(task_id),
-            BlitSource::Image { .. } => None,
-        };
 
         let blit_task_id = rg_builder.add().init(RenderTask::new_dynamic(
             size,
-            RenderTaskKind::Blit(BlitTask {
-                source,
-            }),
+            RenderTaskKind::Blit(BlitTask { source }),
         ));
 
-        if let Some(child_id) = child_id {
-            rg_builder.add_dependency(blit_task_id, child_id);
-        }
+        rg_builder.add_dependency(blit_task_id, source);
 
         blit_task_id
     }
@@ -1009,7 +986,7 @@ impl RenderTask {
         size: DeviceIntSize,
     ) -> RenderTaskId {
         Self::new_scaling_with_padding(
-            BlitSource::RenderTask { task_id: src_task_id },
+            src_task_id,
             rg_builder,
             target_kind,
             size,
@@ -1018,31 +995,25 @@ impl RenderTask {
     }
 
     pub fn new_scaling_with_padding(
-        source: BlitSource,
+        source: RenderTaskId,
         rg_builder: &mut RenderTaskGraphBuilder,
         target_kind: RenderTargetKind,
         padded_size: DeviceIntSize,
         padding: DeviceIntSideOffsets,
     ) -> RenderTaskId {
-        let (uv_rect_kind, child, image) = match source {
-            BlitSource::RenderTask { task_id } => (rg_builder.get_task(task_id).uv_rect_kind(), Some(task_id), None),
-            BlitSource::Image { key } => (UvRectKind::Rect, None, Some(key)),
-        };
+        let uv_rect_kind = rg_builder.get_task(source).uv_rect_kind();
 
         let task_id = rg_builder.add().init(
             RenderTask::new_dynamic(
                 padded_size,
                 RenderTaskKind::Scaling(ScalingTask {
                     target_kind,
-                    image,
                     padding,
                 }),
             ).with_uv_rect_kind(uv_rect_kind)
         );
 
-        if let Some(child_id) = child {
-            rg_builder.add_dependency(task_id, child_id);
-        }
+        rg_builder.add_dependency(task_id, source);
 
         task_id
     }
