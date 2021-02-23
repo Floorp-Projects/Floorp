@@ -59,7 +59,7 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
    * @return DocumentFragment of the sanitized HTML
    */
   already_AddRefed<DocumentFragment> Sanitize(
-      const Optional<mozilla::dom::StringOrDocumentFragmentOrDocument>& aInput,
+      const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
       ErrorResult& aRv);
 
   /**
@@ -67,9 +67,8 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
    * @param aInput       "bad" HTML that needs to be sanitized
    * @param outSanitized out-param for the string of sanitized HTML
    */
-  void SanitizeToString(
-      const Optional<StringOrDocumentFragmentOrDocument>& aInput,
-      nsAString& outSanitized, ErrorResult& aRv);
+  void SanitizeToString(const StringOrDocumentFragmentOrDocument& aInput,
+                        nsAString& outSanitized, ErrorResult& aRv);
 
   /**
    * Logs localized message to either content console or browser console
@@ -83,7 +82,7 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
  private:
   ~Sanitizer() = default;
   already_AddRefed<DocumentFragment> InputToNewFragment(
-      const Optional<mozilla::dom::StringOrDocumentFragmentOrDocument>& aInput,
+      const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
       ErrorResult& aRv);
   /**
    * Logs localized message to either content console or browser console
