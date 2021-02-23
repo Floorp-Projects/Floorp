@@ -558,7 +558,9 @@ def create_parser_puppeteer():
         action="store",
         nargs="?",
         default=None,
-        const=os.path.join(os.path.dirname(__file__), "test", "puppeteer-expected.json"),
+        const=os.path.join(
+            os.path.dirname(__file__), "test", "puppeteer-expected.json"
+        ),
         help="Path to write updated results to (defaults to the "
         "expectations file if the argument is provided but "
         "no path is passed)",
