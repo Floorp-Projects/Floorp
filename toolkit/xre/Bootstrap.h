@@ -12,7 +12,11 @@
 #ifndef mozilla_Bootstrap_h
 #define mozilla_Bootstrap_h
 
+#include "mozilla/Maybe.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/Variant.h"
 #include "nscore.h"
 #include "nsXULAppAPI.h"
 
@@ -143,8 +147,18 @@ enum class LibLoadingStrategy {
   ReadAhead,
 };
 
+#if defined(XP_WIN)
+using DLErrorType = unsigned long;  // (DWORD)
+#else
+using DLErrorType = UniqueFreePtr<char>;
+#endif
+
+using BootstrapError = Variant<nsresult, DLErrorType>;
+
+using BootstrapResult = ::mozilla::Result<Bootstrap::UniquePtr, BootstrapError>;
+
 /**
- * Creates and returns the singleton instnace of the bootstrap object.
+ * Creates and returns the singleton instance of the bootstrap object.
  * @param `b` is an outparam. We use a parameter and not a return value
  *        because MSVC doesn't let us return a c++ class from a function with
  *        "C" linkage. On failure this will be null.
@@ -152,14 +166,14 @@ enum class LibLoadingStrategy {
  */
 #ifdef XPCOM_GLUE
 typedef void (*GetBootstrapType)(Bootstrap::UniquePtr&);
-Bootstrap::UniquePtr GetBootstrap(
+BootstrapResult GetBootstrap(
     const char* aXPCOMFile = nullptr,
     LibLoadingStrategy aLibLoadingStrategy = LibLoadingStrategy::NoReadAhead);
 #else
 extern "C" NS_EXPORT void NS_FROZENCALL
 XRE_GetBootstrap(Bootstrap::UniquePtr& b);
 
-inline Bootstrap::UniquePtr GetBootstrap(const char* aXPCOMFile = nullptr) {
+inline BootstrapResult GetBootstrap(const char* aXPCOMFile = nullptr) {
   Bootstrap::UniquePtr bootstrap;
   XRE_GetBootstrap(bootstrap);
   return bootstrap;

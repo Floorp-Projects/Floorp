@@ -54,10 +54,12 @@ static int RunForkServer(Bootstrap::UniquePtr&& bootstrap, int argc,
 }
 
 int main(int argc, char* argv[]) {
-  Bootstrap::UniquePtr bootstrap = GetBootstrap();
-  if (!bootstrap) {
+  auto bootstrapResult = GetBootstrap();
+  if (bootstrapResult.isErr()) {
     return 2;
   }
+
+  Bootstrap::UniquePtr bootstrap = bootstrapResult.unwrap();
 
   int ret;
   if (UseForkServer(argc, argv)) {

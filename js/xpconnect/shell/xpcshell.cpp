@@ -68,10 +68,12 @@ int main(int argc, char** argv, char** envp) {
       mozilla::sandboxing::GetInitializedBrokerServices();
 #endif
 
-  mozilla::Bootstrap::UniquePtr bootstrap = mozilla::GetBootstrap();
-  if (!bootstrap) {
+  auto bootstrapResult = mozilla::GetBootstrap();
+  if (bootstrapResult.isErr()) {
     return 2;
   }
+
+  mozilla::Bootstrap::UniquePtr bootstrap = bootstrapResult.unwrap();
 
   int result = bootstrap->XRE_XPCShellMain(argc, argv, envp, &shellData);
 
