@@ -137,10 +137,15 @@ async function simulateRestart(
         let { AboutHomeStartupCacheChild } = ChromeUtils.import(
           "resource:///modules/AboutNewTabService.jsm"
         );
-        let pageStream = AboutHomeStartupCacheChild._pageInputStream;
-        let scriptStream = AboutHomeStartupCacheChild._scriptInputStream;
         await ContentTaskUtils.waitForCondition(() => {
-          return pageStream.available() && scriptStream.available();
+          let pageStream = AboutHomeStartupCacheChild._pageInputStream;
+          let scriptStream = AboutHomeStartupCacheChild._scriptInputStream;
+          return (
+            pageStream &&
+            pageStream.available() &&
+            scriptStream &&
+            scriptStream.available()
+          );
         });
       });
     }
