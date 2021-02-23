@@ -1122,6 +1122,10 @@ void nsHtml5TreeOpExecutor::PreloadScript(
   if (!uri) {
     return;
   }
+  auto key = PreloadHashKey::CreateAsScript(uri, aCrossOrigin, aType);
+  if (mDocument->Preloads().PreloadExists(key)) {
+    return;
+  }
   mDocument->ScriptLoader()->PreloadURI(
       uri, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, aAsync,
       aDefer, aNoModule, aLinkPreload,
