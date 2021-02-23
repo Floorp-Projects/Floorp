@@ -1672,21 +1672,21 @@ with only_when(compile_environment):
 
         set_config("MOZ_SYSTEM_LIBVPX", True)
 
-    @depends("--with-system-libvpx", target, gnu_as)
-    def in_tree_vpx(system_libvpx, target, gnu_as):
+    @depends("--with-system-libvpx", target)
+    def in_tree_vpx(system_libvpx, target):
         if system_libvpx:
             return
 
-        use_yasm = (target.cpu in ("x86", "x86_64")) or None
-        need_yasm = False
-        arm_asm = (target.cpu == "arm" and gnu_as) or None
+        arm_asm = (target.cpu == "arm") or None
+        return namespace(arm_asm=arm_asm)
 
-        if use_yasm:
-            need_yasm = True
+    @depends(target, when=in_tree_vpx)
+    def vpx_nasm(target):
+        if target.cpu in ("x86", "x86_64"):
             if target.kernel == "WINNT":
-                need_yasm = Version("1.1")
-
-        return namespace(arm_asm=arm_asm, use_yasm=use_yasm, need_yasm=need_yasm)
+                # Version 2.03 is needed for automatic safeseh support.
+                return namespace(version="2.03", what="VPX")
+            return namespace(what="VPX")
 
     # Building with -mfpu=neon requires either the "softfp" or the
     # "hardfp" ABI. Depending on the compiler's default target, and the
@@ -1707,8 +1707,8 @@ with only_when(compile_environment):
         when=in_tree_vpx.arm_asm,
     )
 
-    @depends(in_tree_vpx, softfp, target)
-    def vpx_as_flags(vpx, softfp, target):
+    @depends(in_tree_vpx, vpx_nasm, softfp, target)
+    def vpx_as_flags(vpx, vpx_nasm, softfp, target):
         flags = []
         if vpx and vpx.arm_asm:
             # These flags are a lie; they're just used to enable the requisite
@@ -1716,11 +1716,11 @@ with only_when(compile_environment):
             flags = ["-march=armv7-a", "-mfpu=neon"]
             if softfp:
                 flags.append("-mfloat-abi=softfp")
-        elif vpx and vpx.use_yasm and target.os != "WINNT" and target.cpu != "x86_64":
+        elif vpx and vpx_nasm and target.os != "WINNT" and target.cpu != "x86_64":
             flags = ["-DPIC"]
         return flags
 
-    set_config("VPX_USE_YASM", in_tree_vpx.use_yasm)
+    set_config("VPX_USE_NASM", True, when=vpx_nasm)
     set_config("VPX_ASFLAGS", vpx_as_flags)
 
 
@@ -1921,14 +1921,12 @@ with only_when(compile_environment | artifact_builds):
 
 @depends(
     yasm_version,
-    in_tree_vpx.need_yasm,
     in_tree_jpeg.use_yasm,
     ffvpx.need_yasm,
 )
-def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_ffvpx=False):
+def valid_yasm_version(yasm_version, for_jpeg, for_ffvpx=False):
     # Note: the default for for_ffvpx above only matters for unit tests.
     requires = {
-        "vpx": for_vpx,
         "jpeg": for_jpeg,
         "ffvpx": for_ffvpx,
     }
@@ -1957,7 +1955,7 @@ def valid_yasm_version(yasm_version, for_vpx, for_jpeg, for_ffvpx=False):
 
 # nasm detection
 # ==============================================================
-@depends(dav1d_nasm)
+@depends(dav1d_nasm, vpx_nasm)
 def need_nasm(*requirements):
     requires = {
         x.what: x.version if hasattr(x, "version") else True for x in requirements if x
