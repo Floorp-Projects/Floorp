@@ -156,7 +156,6 @@ class BrowserDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
 // and follows the video pipeline design
 class DesktopCaptureImpl : public DesktopCapturer::Callback,
                            public VideoCaptureModule {
-  // public VideoCaptureExternal {
  public:
   /* Create a screen capture modules object
    */
@@ -178,7 +177,6 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 
   const char* CurrentDeviceName() const override;
 
-  // Implement VideoCaptureExternal
   // |capture_time| must be specified in the NTP time format in milliseconds.
   int32_t IncomingFrame(uint8_t* videoFrame, size_t videoFrameLength,
                         const VideoCaptureCapability& frameInfo,
