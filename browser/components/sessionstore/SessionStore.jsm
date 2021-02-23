@@ -1005,8 +1005,6 @@ var SessionStoreInternal = {
       if (this.browser.currentURI && this.browser.ownerGlobal) {
         this._lastKnownUri = browser.currentURI.displaySpec;
         this._lastKnownBody = browser.ownerGlobal.document.body;
-        this._lastKnownUserContextId =
-          browser.contentPrincipal.originAttributes.userContextId;
       }
     }
     SHistoryListener.prototype = {
@@ -1035,7 +1033,6 @@ var SessionStoreInternal = {
         if (this.browser.currentURI && this.browser.ownerGlobal) {
           this._lastKnownUri = this.browser.currentURI.displaySpec;
           this._lastKnownBody = this.browser.ownerGlobal.document.body;
-          this._lastKnownUserContextId = this.browser.contentPrincipal.originAttributes.userContextId;
         }
       },
 
