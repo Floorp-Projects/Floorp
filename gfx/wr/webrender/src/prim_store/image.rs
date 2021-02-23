@@ -21,7 +21,7 @@ use crate::prim_store::{
     SizeKey, InternablePrimitive,
 };
 use crate::render_target::RenderTargetKind;
-use crate::render_task::{BlitSource, RenderTask};
+use crate::render_task::RenderTask;
 use crate::render_task_cache::{
     RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent
 };
@@ -177,16 +177,16 @@ impl ImageData {
                     frame_state.gpu_cache,
                 );
 
+                let task_id = frame_state.rg_builder.add().init(
+                    RenderTask::new_image(size, request)
+                );
+
                 // Every frame, for cached items, we need to request the render
                 // task cache item. The closure will be invoked on the first
                 // time through, and any time the render task output has been
                 // evicted from the texture cache.
                 if self.tile_spacing == LayoutSize::zero() {
                     // Most common case.
-                    let task_id = frame_state.rg_builder.add().init(
-                        RenderTask::new_image(size, request)
-                    );
-
                     image_instance.src_color = ImageSourceHandle::RenderTask(task_id);
                 } else {
                     let padding = DeviceIntSideOffsets::new(
@@ -227,11 +227,10 @@ impl ImageData {
                         frame_state.surfaces,
                         |rg_builder| {
                             // Create a task to blit from the texture cache to
-                            // a normal transient render task surface. This will
-                            // copy only the sub-rect, if specified.
+                            // a normal transient render task surface.
                             // TODO: figure out if/when we can do a blit instead.
                             let cache_to_target_task_id = RenderTask::new_scaling_with_padding(
-                                BlitSource::Image { key: image_cache_key },
+                                task_id,
                                 rg_builder,
                                 target_kind,
                                 size,
@@ -243,9 +242,7 @@ impl ImageData {
                             // render target cache.
                             RenderTask::new_blit(
                                 size,
-                                BlitSource::RenderTask {
-                                    task_id: cache_to_target_task_id,
-                                },
+                                cache_to_target_task_id,
                                 rg_builder,
                             )
                         }
