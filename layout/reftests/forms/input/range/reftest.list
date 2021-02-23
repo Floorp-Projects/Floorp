@@ -22,7 +22,7 @@ fuzzy-if(skiaContent,0-1,0-40) == stepDown-unthemed.html 75pct-unthemed-common-r
 fuzzy-if(skiaContent,0-1,0-40) == stepUp-unthemed.html 75pct-unthemed-common-ref.html
 == stepUp.html 75pct-common-ref.html
 random-if(Android) == max-prop.html 100pct-common-ref.html # Snapping in different ways in debug and opt builds, bug 1621141
-fuzzy-if((winWidget||gtkWidget)&&!nativeThemePref,0-1,0-4) == reset-value.html reset-value-ref.html
+fuzzy-if(!nativeThemePref,0-1,0-4) == reset-value.html reset-value-ref.html
 
 # 'direction' property:
 == direction-unthemed-1.html direction-unthemed-1-ref.html
