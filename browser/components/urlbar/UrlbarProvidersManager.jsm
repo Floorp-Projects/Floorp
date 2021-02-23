@@ -283,15 +283,27 @@ class ProvidersManager {
 
   /**
    * Notifies all providers when the user starts and ends an engagement with the
-   * urlbar.
+   * urlbar.  For details on parameters, see UrlbarProvider.onEngagement().
    *
-   * @param {boolean} isPrivate True if the engagement is in a private context.
-   * @param {string} state The state of the engagement, one of: start,
-   *        engagement, abandonment, discard.
+   * @param {boolean} isPrivate
+   *   True if the engagement is in a private context.
+   * @param {string} state
+   *   The state of the engagement, one of: start, engagement, abandonment,
+   *   discard
+   * @param {UrlbarQueryContext} queryContext
+   *   The engagement's query context, if available.
+   * @param {object} details
+   *   An object that describes the search string and the picked result, if any.
    */
-  notifyEngagementChange(isPrivate, state) {
+  notifyEngagementChange(isPrivate, state, queryContext, details) {
     for (let provider of this.providers) {
-      provider.tryMethod("onEngagement", isPrivate, state);
+      provider.tryMethod(
+        "onEngagement",
+        isPrivate,
+        state,
+        queryContext,
+        details
+      );
     }
   }
 }

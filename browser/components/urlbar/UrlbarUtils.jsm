@@ -1647,11 +1647,44 @@ class UrlbarProvider {
   /**
    * Called when the user starts and ends an engagement with the urlbar.
    *
-   * @param {boolean} isPrivate True if the engagement is in a private context.
-   * @param {string} state The state of the engagement, one of: start,
-   *        engagement, abandonment, discard.
+   * @param {boolean} isPrivate
+   *   True if the engagement is in a private context.
+   * @param {string} state
+   *   The state of the engagement, one of the following strings:
+   *
+   *   * start
+   *       A new query has started in the urlbar.
+   *   * engagement
+   *       The user picked a result in the urlbar or used paste-and-go.
+   *   * abandonment
+   *       The urlbar was blurred (i.e., lost focus).
+   *   * discard
+   *       This doesn't correspond to a user action, but it means that the
+   *       urlbar has discarded the engagement for some reason, and the
+   *       `onEngagement` implementation should ignore it.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The engagement's query context.  This is *not* guaranteed to be defined
+   *   when `state` is "start".  It will always be defined for "engagement" and
+   *   "abandonment".
+   * @param {object} details
+   *   This is defined only when `state` is "engagement" or "abandonment", and
+   *   it describes the search string and picked result.  For "engagement", it
+   *   has the following properties:
+   *
+   *   * {string} searchString
+   *       The search string for the engagement's query.
+   *   * {number} selIndex
+   *       The index of the picked result.
+   *   * {string} selType
+   *       The type of the selected result.  See TelemetryEvent.record() in
+   *       UrlbarController.jsm.
+   *   * {string} provider
+   *       The name of the provider that produced the picked result.
+   *
+   *   For "abandonment", only `searchString` is defined.
    */
-  onEngagement(isPrivate, state) {}
+  onEngagement(isPrivate, state, queryContext, details) {}
 
   /**
    * Called when a result from the provider is selected. "Selected" refers to
