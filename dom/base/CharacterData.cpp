@@ -358,7 +358,7 @@ nsresult CharacterData::SetTextInternal(
 
 // Implementation of nsIContent
 
-#ifdef DEBUG
+#ifdef MOZ_DOM_LIST
 void CharacterData::ToCString(nsAString& aBuf, int32_t aOffset,
                               int32_t aLen) const {
   if (mText.Is2b()) {
