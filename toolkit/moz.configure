@@ -1846,9 +1846,9 @@ with only_when(compile_environment):
 # Artifact builds need MOZ_FFVPX defined as if compilation happened.
 with only_when(compile_environment | artifact_builds):
 
-    @depends(vpx_as_flags, target)
-    def ffvpx(vpx_as_flags, target):
-        enable = use_yasm = True
+    @depends(target)
+    def ffvpx(target):
+        enable = use_nasm = True
         flac_only = False
         flags = []
 
@@ -1866,7 +1866,7 @@ with only_when(compile_environment | artifact_builds):
                 ]
             elif target.cpu == "aarch64":
                 flags = ["-DPIC", "-DWIN64"]
-                use_yasm = False
+                use_nasm = False
         elif target.kernel == "Darwin":
             if target.cpu == "x86_64":
                 # 32/64-bit macosx asemblers need to prefix symbols with an
@@ -1882,45 +1882,51 @@ with only_when(compile_environment | artifact_builds):
                 flac_only = True
         elif target.cpu == "x86_64":
             flags = ["-D__x86_64__", "-DPIC", "-DELF", "-Pconfig_unix64.asm"]
-        elif target.cpu == "x86":
+        elif target.cpu in ("x86", "arm", "aarch64"):
             flac_only = True
-        elif target.cpu in ("arm", "aarch64"):
-            flac_only = True
-            if vpx_as_flags:
-                flags.extend(vpx_as_flags)
         else:
             enable = False
 
         if flac_only or not enable:
-            use_yasm = False
+            use_nasm = False
 
-        if use_yasm:
+        if use_nasm:
             # default disabled components
             flags.append("-Pdefaults_disabled.asm")
 
         return namespace(
             enable=enable,
-            need_yasm="1.2" if use_yasm else False,
+            use_nasm=use_nasm,
             flac_only=flac_only,
             flags=flags,
         )
+
+    @depends(when=ffvpx.use_nasm)
+    def ffvpx_nasm():
+        # nasm 2.10 for AVX-2 support.
+        return namespace(version="2.10", what="FFVPX")
+
+    # ffvpx_nasm can't indirectly depend on vpx_as_flags, because it depends
+    # on a compiler test, so we have to do a little bit of dance here.
+    @depends(ffvpx, vpx_as_flags, target)
+    def ffvpx(ffvpx, vpx_as_flags, target):
+        if ffvpx and target.cpu in ("arm", "aarch64"):
+            ffvpx.flags.extend(vpx_as_flags)
+        return ffvpx
 
     set_config("MOZ_FFVPX", True, when=ffvpx.enable)
     set_define("MOZ_FFVPX", True, when=ffvpx.enable)
     set_config("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.flac_only)
     set_define("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.flac_only)
     set_config("FFVPX_ASFLAGS", ffvpx.flags)
-    set_config("FFVPX_USE_YASM", True, when=ffvpx.need_yasm)
+    set_config("FFVPX_USE_NASM", True, when=ffvpx.use_nasm)
 
 
 @depends(
     yasm_version,
-    ffvpx.use_yasm,
 )
-def valid_yasm_version(yasm_version, for_ffvpx=False):
-    # Note: the default for for_ffvpx above only matters for unit tests.
+def valid_yasm_version(yasm_version):
     requires = {
-        "ffvpx": for_ffvpx,
     }
     requires = {k: v for (k, v) in requires.items() if v}
     if requires and not yasm_version:
@@ -1947,7 +1953,7 @@ def valid_yasm_version(yasm_version, for_ffvpx=False):
 
 # nasm detection
 # ==============================================================
-@depends(dav1d_nasm, vpx_nasm, jpeg_nasm)
+@depends(dav1d_nasm, vpx_nasm, jpeg_nasm, ffvpx_nasm)
 def need_nasm(*requirements):
     requires = {
         x.what: x.version if hasattr(x, "version") else True for x in requirements if x
