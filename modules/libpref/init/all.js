@@ -340,6 +340,13 @@ pref("browser.triple_click_selects_paragraph", true);
 // Enable fillable forms in the PDF viewer.
 pref("pdfjs.renderInteractiveForms", true);
 
+// Enable JavaScript support in the PDF viewer.
+#ifdef NIGHTLY_BUILD
+  pref("pdfjs.enableScripting", true);
+#else
+  pref("pdfjs.enableScripting", false);
+#endif
+
 // Disable support for MathML
 pref("mathml.disabled",    false);
 
