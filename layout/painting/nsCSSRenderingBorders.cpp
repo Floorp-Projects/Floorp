@@ -3342,11 +3342,7 @@ void nsCSSBorderRenderer::CreateWebRenderCommands(
         wr::ToBorderSide(ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
   }
 
-  wr::BorderRadius borderRadius =
-      wr::ToBorderRadius(LayoutDeviceSize::FromUnknownSize(mBorderRadii[0]),
-                         LayoutDeviceSize::FromUnknownSize(mBorderRadii[1]),
-                         LayoutDeviceSize::FromUnknownSize(mBorderRadii[3]),
-                         LayoutDeviceSize::FromUnknownSize(mBorderRadii[2]));
+  wr::BorderRadius borderRadius = wr::ToBorderRadius(mBorderRadii);
 
   if (mLocalClip) {
     LayoutDeviceRect localClip =
