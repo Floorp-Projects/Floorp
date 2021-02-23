@@ -51,7 +51,6 @@ RUN apt-get update && \
       uuid \
       valgrind \
       wget \
-      yasm \
       zip \
       zlib1g-dev \
       x11-utils \

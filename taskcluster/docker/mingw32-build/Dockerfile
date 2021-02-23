@@ -36,7 +36,6 @@ RUN apt-get update && \
       wget \
       x11-utils \
       xvfb \
-      yasm \
       zip \
       zlib1g-dev \
       libfreetype6-dev:i386 \
