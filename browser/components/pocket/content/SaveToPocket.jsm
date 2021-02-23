@@ -87,10 +87,6 @@ var PocketPageAction = {
               browser.innerWindowID;
           },
           onIframeHidden(iframe, panel) {
-            if (iframe.getAttribute("itemAdded") == "true") {
-              iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
-            }
-
             if (!PocketPageAction.urlbarNode) {
               return;
             }
