@@ -44,6 +44,23 @@ macosx64-nasm:
             - linux64-clang-11-macosx-cross
             - macosx64-sdk-10.12
 
+macosx64-aarch64-nasm:
+    description: "nasm macosx64 build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TM(nasm-aarch64)
+    run:
+        script: build-nasm.sh
+        arguments: ['macosx64-aarch64']
+    fetches:
+        fetch:
+            - nasm-2.14.02
+        toolchain:
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11-macosx-cross
+            - macosx64-sdk-11.0
+
 linux64-nasm:
     description: "nasm linux64 build"
     attributes:
