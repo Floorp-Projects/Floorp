@@ -178,11 +178,21 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
   } else {
     isWidgetEventSynthesized = false;
   }
-  let buttons;
-  if ("buttons" in opts) {
-    buttons = opts.buttons;
-  } else {
-    buttons = domutils.MOUSE_BUTTONS_NOT_SPECIFIED;
+
+  function computeButtons(aEvent, utils) {
+    if (typeof aEvent.buttons != "undefined") {
+      return aEvent.buttons;
+    }
+
+    if (typeof aEvent.button != "undefined") {
+      return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
+    }
+
+    if (typeof aEvent.type != "undefined" && aEvent.type != "mousedown") {
+      return utils.MOUSE_BUTTONS_NO_BUTTON;
+    }
+
+    return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
   }
 
   if ("type" in opts && opts.type) {
@@ -198,7 +208,7 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
       inputSource,
       isDOMEventSynthesized,
       isWidgetEventSynthesized,
-      buttons
+      computeButtons(opts, domutils)
     );
   } else {
     domutils.sendMouseEvent(
@@ -213,7 +223,7 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
       inputSource,
       isDOMEventSynthesized,
       isWidgetEventSynthesized,
-      buttons
+      computeButtons(Object.assign({ type: "mousedown" }, opts), domutils)
     );
     domutils.sendMouseEvent(
       "mouseup",
@@ -227,7 +237,7 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
       inputSource,
       isDOMEventSynthesized,
       isWidgetEventSynthesized,
-      buttons
+      computeButtons(Object.assign({ type: "mouseup" }, opts), domutils)
     );
   }
 };

@@ -184,8 +184,6 @@ async function webdriverClickElement(el, a11y) {
       clickPoint.y,
       {
         type: "mousemove",
-        // Remove buttons attribute with https://bugzilla.mozilla.org/show_bug.cgi?id=1686361
-        buttons: 0,
       },
       win
     );
