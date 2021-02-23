@@ -35,8 +35,4 @@ inline JSObject* js::ErrorObject::stack() const {
   return getReservedSlotRef(STACK_SLOT).toObjectOrNull();
 }
 
-inline bool js::ErrorObject::fromWasmTrap() const {
-  return getReservedSlotRef(WASM_TRAP_SLOT).toBoolean();
-}
-
 #endif /* vm_ErrorObject_inl_h */
