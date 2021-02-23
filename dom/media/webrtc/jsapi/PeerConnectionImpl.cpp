@@ -358,7 +358,7 @@ PeerConnectionImpl::~PeerConnectionImpl() {
     mTransportHandler->ExitPrivateMode();
   }
   if (PeerConnectionCtx::isActive()) {
-    PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
+    PeerConnectionCtx::GetInstance()->RemovePeerConnection(mHandle);
   } else {
     CSFLogError(LOGTAG, "PeerConnectionCtx is already gone. Ignoring...");
   }
@@ -449,7 +449,7 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mName = temp;
 
   STAMP_TIMECARD(mTimeCard, "Initializing PC Ctx");
-  res = PeerConnectionCtx::InitializeGlobal(mThread, mSTSThread);
+  res = PeerConnectionCtx::InitializeGlobal(mThread);
   NS_ENSURE_SUCCESS(res, res);
 
   nsTArray<dom::RTCIceServer> iceServers;
@@ -508,7 +508,7 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  PeerConnectionCtx::GetInstance()->mPeerConnections[mHandle] = this;
+  PeerConnectionCtx::GetInstance()->AddPeerConnection(mHandle, this);
 
   return NS_OK;
 }
@@ -2363,14 +2363,12 @@ bool PeerConnectionImpl::HasMedia() const { return mMedia; }
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     : impl_(nullptr) {
-  if (!PeerConnectionCtx::isActive() ||
-      (PeerConnectionCtx::GetInstance()->mPeerConnections.find(handle) ==
-       PeerConnectionCtx::GetInstance()->mPeerConnections.end())) {
+  PeerConnectionImpl* impl =
+      PeerConnectionCtx::GetInstance()->GetPeerConnection(handle);
+
+  if (!PeerConnectionCtx::isActive() || !impl) {
     return;
   }
-
-  PeerConnectionImpl* impl =
-      PeerConnectionCtx::GetInstance()->mPeerConnections[handle];
 
   if (!impl->media()) return;
 
