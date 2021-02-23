@@ -721,22 +721,6 @@ optgroup:before {
   text-overflow: inherit;
 }
 
-/**
- * Set default style for invalid elements.
- */
-:-moz-ui-invalid {
-  box-shadow: 0 0 1.5px 1px red;
-}
-
-:-moz-ui-invalid:focus-visible {
-  box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
-}
-
-output:-moz-ui-invalid {
-  box-shadow: initial;
-  color: red;
-}
-
 @media print {
   input, textarea, select, button {
     -moz-user-input: none !important;
