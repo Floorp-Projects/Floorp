@@ -141,11 +141,15 @@ bool nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   wr::BorderRadius borderRadius =
       wr::ToBorderRadius(zeroSize, zeroSize, zeroSize, zeroSize);
   if (hasBorderRadius) {
-    gfx::RectCornerRadii borderRadii;
+    mozilla::gfx::RectCornerRadii borderRadii;
     hasBorderRadius = nsCSSRendering::GetBorderRadii(shadowRect, shadowRect,
                                                      mFrame, borderRadii);
     if (hasBorderRadius) {
-      borderRadius = wr::ToBorderRadius(borderRadii);
+      borderRadius = wr::ToBorderRadius(
+          LayoutDeviceSize::FromUnknownSize(borderRadii.TopLeft()),
+          LayoutDeviceSize::FromUnknownSize(borderRadii.TopRight()),
+          LayoutDeviceSize::FromUnknownSize(borderRadii.BottomLeft()),
+          LayoutDeviceSize::FromUnknownSize(borderRadii.BottomRight()));
     }
   }
 
