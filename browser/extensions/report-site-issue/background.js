@@ -19,7 +19,7 @@ const FRAMEWORK_KEYS = ["hasFastClick", "hasMobify", "hasMarfeel"];
 
 browser.pageActionExtras.setLabelForHistogram("webcompat");
 
-browser.pageAction.onClicked.addListener(tab => {
+browser.helpMenu.onHelpMenuCommand.addListener(tab => {
   return getWebCompatInfoForTab(tab).then(
     info => {
       return openWebCompatTab(info);
