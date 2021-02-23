@@ -1924,7 +1924,7 @@ with only_when(compile_environment | artifact_builds):
 
 # nasm detection
 # ==============================================================
-@depends(dav1d_nasm, vpx_nasm, jpeg_nasm, ffvpx_nasm)
+@depends(dav1d_nasm, vpx_nasm, jpeg_nasm, ffvpx_nasm, when=compile_environment)
 def need_nasm(*requirements):
     requires = {
         x.what: x.version if hasattr(x, "version") else True for x in requirements if x
@@ -2333,7 +2333,7 @@ check_prog(
     "DUMP_SYMS",
     ["dump_syms"],
     allow_missing=True,
-    paths=bootstrap_search_path("dump_syms"),
+    paths=bootstrap_search_path("dump_syms", when=compile_environment),
     when=compile_environment,
 )
 
