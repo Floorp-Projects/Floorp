@@ -172,7 +172,7 @@ class GeckoEngineSession(
         }
 
         geckoSession.load(loader)
-        Fact(Component.BROWSER_ENGINE_GECKO, Action.IMPLEMENTATION_DETAIL, "GeckoSession.load").collect()
+        Fact(Component.BROWSER_ENGINE_GECKO_BETA, Action.IMPLEMENTATION_DETAIL, "GeckoSession.load").collect()
     }
 
     /**

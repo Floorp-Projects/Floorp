@@ -241,7 +241,6 @@ class GeckoWebExtension(
      * See [WebExtension.registerTabHandler].
      */
     override fun registerTabHandler(tabHandler: TabHandler, defaultSettings: Settings?) {
-
         val tabDelegate = object : GeckoNativeWebExtension.TabDelegate {
 
             override fun onNewTab(
@@ -253,7 +252,6 @@ class GeckoWebExtension(
                     defaultSettings = defaultSettings,
                     openGeckoSession = false
                 )
-
                 tabHandler.onNewTab(
                     this@GeckoWebExtension,
                     geckoEngineSession,
