@@ -678,7 +678,7 @@ ccache = check_prog(
     progs=(),
     input=ccache,
     paths=bootstrap_search_path(
-        "sccache", when=depends_if("CCACHE")(lambda c: c[0] == "sccache")
+        "sccache", when=depends("CCACHE")(lambda c: len(c) and c[0] == "sccache")
     ),
     allow_missing=True,
 )
