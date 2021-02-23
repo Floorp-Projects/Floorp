@@ -13,8 +13,10 @@ import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.os.Build
 import android.util.Size
+import android.view.Display
 import android.view.Surface
 import android.view.View
+import android.view.WindowManager
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -276,7 +278,7 @@ class QrFragmentTest {
         val imageCaptor = argumentCaptor<BinaryBitmap>()
         val source = mock<LuminanceSource>()
         val bitmap = mock<BinaryBitmap>()
-        val result = mock <com.google.zxing.Result>()
+        val result = mock<com.google.zxing.Result>()
         qrFragment.multiFormatReader = reader
         QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
 
@@ -616,5 +618,69 @@ class QrFragmentTest {
         verify(reader, times(2)).decodeWithState(imageCaptor.capture())
         assertSame(bitmap, imageCaptor.allValues[0])
         assertSame(invertedBitmap, imageCaptor.allValues[1])
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `GIVEN a device rotation of 90 deg WHEN getting the device rotation on a device below SDK 30 THEN the rotation should be 90 deg`() {
+        val mockActivity: FragmentActivity = mock()
+        val mockManager: WindowManager = mock()
+        val mockDisplay: Display = mock()
+
+        val testRotation = Surface.ROTATION_90
+
+        whenever(mockActivity.windowManager).thenReturn(mockManager)
+        whenever(mockManager.defaultDisplay).thenReturn(mockDisplay)
+        whenever(mockDisplay.rotation).thenReturn(testRotation)
+
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val qrFragment = spy(QrFragment.newInstance(listener))
+        whenever(qrFragment.activity).thenReturn(mockActivity)
+
+        val rotation = qrFragment.getScreenRotation()
+
+        assertEquals(testRotation, rotation)
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `configureTransform uses getScreenRotation method to get rotation`() {
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val qrFragment = spy(QrFragment.newInstance(listener))
+        val textureView: AutoFitTextureView = mock()
+
+        qrFragment.previewSize = Size(4, 4)
+        qrFragment.textureView = textureView
+
+        qrFragment.configureTransform(4, 4)
+
+        verify(qrFragment, times(1)).getScreenRotation()
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `setUpCameraOutputs uses getScreenRotation method to get rotation`() {
+        val listener = mock<QrFragment.OnScanCompleteListener>()
+        val qrFragment = spy(QrFragment.newInstance(listener))
+
+        qrFragment.setUpCameraOutputs(4, 4)
+
+        verify(qrFragment, times(1)).getScreenRotation()
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `getDisplaySize calls defaultDisplay getSize for SDK below 30`() {
+        val mockActivity: FragmentActivity = mock()
+        val mockManager: WindowManager = mock()
+        val mockDisplay: Display = mock()
+
+        whenever(mockActivity.windowManager).thenReturn(mockManager)
+        whenever(mockManager.defaultDisplay).thenReturn(mockDisplay)
+        whenever(mockDisplay.getSize(any())).then { }
+
+        mockManager.getDisplaySize()
+
+        verify(mockDisplay, times(1)).getSize(any())
     }
 }
