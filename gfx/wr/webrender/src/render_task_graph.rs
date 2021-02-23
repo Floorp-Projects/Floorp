@@ -38,6 +38,7 @@ impl<'l> RenderTaskAllocation<'l> {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskId {
