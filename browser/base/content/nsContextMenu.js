@@ -626,14 +626,6 @@ class nsContextMenu {
       !Services.prefs.getBoolPref("devtools.policy.disabled", false);
 
     this.showItem("context-viewsource", shouldShow);
-    this.showItem("context-viewinfo", shouldShow);
-    // The page info is broken for WebExtension popups, as the browser is
-    // destroyed when the popup is closed.
-    this.setItemAttr(
-      "context-viewinfo",
-      "disabled",
-      this.webExtBrowserType === "popup"
-    );
     this.showItem("inspect-separator", showInspect);
     this.showItem("context-inspect", showInspect);
 

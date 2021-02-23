@@ -366,10 +366,6 @@ main-context-menu-view-page-source =
     .label = View Page Source
     .accesskey = V
 
-main-context-menu-view-page-info =
-    .label = View Page Info
-    .accesskey = I
-
 main-context-menu-bidi-switch-text =
     .label = Switch Text Direction
     .accesskey = w
