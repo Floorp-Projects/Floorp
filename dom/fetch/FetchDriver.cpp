@@ -955,9 +955,12 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
                 contentLength == InternalResponse::UNKNOWN_BODY_SIZE);
 
   if (httpChannel) {
-    uint32_t responseStatus;
+    uint32_t responseStatus = 0;
     rv = httpChannel->GetResponseStatus(&responseStatus);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_FAILED(rv)) {
+      FailWithNetworkError(rv);
+      return rv;
+    }
 
     if (mozilla::net::nsHttpChannel::IsRedirectStatus(responseStatus)) {
       if (mRequest->GetRedirectMode() == RequestRedirect::Error) {
