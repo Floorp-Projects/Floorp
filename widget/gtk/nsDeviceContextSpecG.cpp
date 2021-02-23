@@ -32,6 +32,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_print.h"
 
+#include <dlfcn.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -135,6 +136,72 @@ struct {
 
 #undef DECLARE_KNOWN_MONOCHROME_SETTING
 
+// https://developer.gnome.org/gtk3/stable/GtkPaperSize.html#gtk-paper-size-new-from-ipp
+static GtkPaperSize* GtkPaperSizeFromIpp(const gchar* aIppName, gdouble aWidth,
+                                         gdouble aHeight) {
+  static auto sPtr = (GtkPaperSize * (*)(const gchar*, gdouble, gdouble))
+      dlsym(RTLD_DEFAULT, "gtk_paper_size_new_from_ipp");
+  if (gtk_check_version(3, 16, 0)) {
+    return nullptr;
+  }
+  return sPtr(aIppName, aWidth, aHeight);
+}
+
+static bool PaperSizeAlmostEquals(GtkPaperSize* aSize,
+                                  GtkPaperSize* aOtherSize) {
+  const double kEpsilon = 1.0;  // millimetres
+  // GTK stores sizes internally in millimetres so just use that.
+  if (fabs(gtk_paper_size_get_height(aSize, GTK_UNIT_MM) -
+           gtk_paper_size_get_height(aOtherSize, GTK_UNIT_MM)) > kEpsilon) {
+    return false;
+  }
+  if (fabs(gtk_paper_size_get_width(aSize, GTK_UNIT_MM) -
+           gtk_paper_size_get_width(aOtherSize, GTK_UNIT_MM)) > kEpsilon) {
+    return false;
+  }
+  return true;
+}
+
+// This is a horrible workaround for some printer driver bugs that treat
+// custom page sizes different to standard ones. If our paper object matches
+// one of a standard one, use a standard paper size object instead.
+//
+// See bug 414314 and bug 1691798 for more info.
+static GtkPaperSize* GetStandardGtkPaperSize(GtkPaperSize* aGeckoPaperSize) {
+  const gchar* geckoName = gtk_paper_size_get_name(aGeckoPaperSize);
+
+  // We try ipp size first because that's the names we get from CUPS, and
+  // because even though gtk_paper_size_new deals with ipp, it has rounding
+  // issues, see https://gitlab.gnome.org/GNOME/gtk/-/issues/3685.
+  GtkPaperSize* size = GtkPaperSizeFromIpp(
+      geckoName, gtk_paper_size_get_width(aGeckoPaperSize, GTK_UNIT_POINTS),
+      gtk_paper_size_get_height(aGeckoPaperSize, GTK_UNIT_POINTS));
+  if (size && !gtk_paper_size_is_custom(size)) {
+    return size;
+  }
+
+  if (size) {
+    gtk_paper_size_free(size);
+  }
+
+  size = gtk_paper_size_new(geckoName);
+  if (gtk_paper_size_is_equal(size, aGeckoPaperSize)) {
+    return size;
+  }
+
+  // gtk_paper_size_is_equal compares just paper names. The name in Gecko
+  // might come from CUPS, which is an ipp size, and gets normalized by gtk.
+  //
+  // So check also for the same actual paper size.
+  if (PaperSizeAlmostEquals(aGeckoPaperSize, size)) {
+    return size;
+  }
+
+  // Not the same after all, so use our custom paper size.
+  gtk_paper_size_free(size);
+  return nullptr;
+}
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
@@ -143,12 +210,10 @@ struct {
 NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
                                            nsIPrintSettings* aPS,
                                            bool aIsPrintPreview) {
-  if (gtk_major_version < 2 ||
-      (gtk_major_version == 2 && gtk_minor_version < 10))
-    return NS_ERROR_NOT_AVAILABLE;  // I'm so sorry bz
-
   mPrintSettings = do_QueryInterface(aPS);
-  if (!mPrintSettings) return NS_ERROR_NO_INTERFACE;
+  if (!mPrintSettings) {
+    return NS_ERROR_NO_INTERFACE;
+  }
 
   // This is only set by embedders
   bool toFile;
@@ -159,14 +224,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
   mGtkPrintSettings = mPrintSettings->GetGtkPrintSettings();
   mGtkPageSetup = mPrintSettings->GetGtkPageSetup();
 
-  // This is a horrible workaround for some printer driver bugs that treat
-  // custom page sizes different to standard ones. If our paper object matches
-  // one of a standard one, use a standard paper size object instead. See bug
-  // 414314 for more info.
-  GtkPaperSize* geckosHackishPaperSize =
-      gtk_page_setup_get_paper_size(mGtkPageSetup);
-  GtkPaperSize* standardGtkPaperSize =
-      gtk_paper_size_new(gtk_paper_size_get_name(geckosHackishPaperSize));
+  GtkPaperSize* geckoPaperSize = gtk_page_setup_get_paper_size(mGtkPageSetup);
+  GtkPaperSize* gtkPaperSize = GetStandardGtkPaperSize(geckoPaperSize);
 
   mGtkPageSetup = gtk_page_setup_copy(mGtkPageSetup);
   mGtkPrintSettings = gtk_print_settings_copy(mGtkPrintSettings);
@@ -185,16 +244,13 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
     nsPrinterCUPS::ForEachExtraMonochromeSetting(applySetting);
   }
 
-  GtkPaperSize* properPaperSize;
-  if (gtk_paper_size_is_equal(geckosHackishPaperSize, standardGtkPaperSize)) {
-    properPaperSize = standardGtkPaperSize;
-  } else {
-    properPaperSize = geckosHackishPaperSize;
-  }
+  GtkPaperSize* properPaperSize = gtkPaperSize ? gtkPaperSize : geckoPaperSize;
   gtk_print_settings_set_paper_size(mGtkPrintSettings, properPaperSize);
   gtk_page_setup_set_paper_size_and_default_margins(mGtkPageSetup,
                                                     properPaperSize);
-  gtk_paper_size_free(standardGtkPaperSize);
+  if (gtkPaperSize) {
+    gtk_paper_size_free(gtkPaperSize);
+  }
 
   return NS_OK;
 }
