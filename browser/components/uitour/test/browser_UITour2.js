@@ -12,16 +12,16 @@ function test() {
 }
 
 var tests = [
-  function test_info_customize_auto_open_close(done) {
+  function test_info_addons_auto_open_close(done) {
     let popup = document.getElementById("UITourTooltip");
-    gContentAPI.showInfo("customize", "Customization", "Customize me please!");
+    gContentAPI.showInfo("addons", "Addons", "Let's get addons!");
 
     let shownPromise = promisePanelShown(window);
     shownPromise.then(() => {
-      UITour.getTarget(window, "customize").then(customizeTarget => {
+      UITour.getTarget(window, "addons").then(addonsTarget => {
         waitForPopupAtAnchor(
           popup,
-          customizeTarget.node,
+          addonsTarget.node,
           function checkPanelIsOpen() {
             isnot(
               PanelUI.panel.state,
@@ -55,12 +55,12 @@ var tests = [
               );
             });
           },
-          "Info panel should be anchored to the customize button"
+          "Info panel should be anchored to the addons button"
         );
       });
     });
   },
-  function test_info_customize_manual_open_close(done) {
+  function test_info_addons_manual_open_close(done) {
     let popup = document.getElementById("UITourTooltip");
     // Manually open the app menu then show an info panel there. The menu should remain open.
     let shownPromise = promisePanelShown(window);
@@ -72,13 +72,9 @@ var tests = [
           PanelUI.panel.hasAttribute("noautohide"),
           "@noautohide on the menu panel should have been set"
         );
-        gContentAPI.showInfo(
-          "customize",
-          "Customization",
-          "Customize me please!"
-        );
+        gContentAPI.showInfo("addons", "Addons", "Let's get addons!");
 
-        UITour.getTarget(window, "customize").then(customizeTarget => {
+        UITour.getTarget(window, "addons").then(customizeTarget => {
           waitForPopupAtAnchor(
             popup,
             customizeTarget.node,

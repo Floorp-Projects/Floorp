@@ -27,7 +27,7 @@ function test() {
 var tests = [
   function test_highlight_move_outside_panel(done) {
     gContentAPI.showInfo("urlbar", "test title", "test text");
-    gContentAPI.showHighlight("customize");
+    gContentAPI.showHighlight("addons");
     waitForElementToBeVisible(
       highlight,
       function checkPanelIsOpen() {
@@ -58,7 +58,7 @@ var tests = [
   },
 
   function test_highlight_panel_hideMenu(done) {
-    gContentAPI.showHighlight("customize");
+    gContentAPI.showHighlight("addons");
     gContentAPI.showInfo("search", "test title", "test text");
     waitForElementToBeVisible(
       highlight,
@@ -122,7 +122,7 @@ var tests = [
 
   function test_highlight_info_panel_click_find(done) {
     gContentAPI.showHighlight("help");
-    gContentAPI.showInfo("customize", "customize me!", "awesome!");
+    gContentAPI.showInfo("addons", "Add addons!", "awesome!");
     waitForElementToBeVisible(
       highlight,
       function checkPanelIsOpen() {
@@ -160,7 +160,7 @@ var tests = [
   },
 
   function test_highlight_panel_open_subview(done) {
-    gContentAPI.showHighlight("customize");
+    gContentAPI.showHighlight("addons");
     gContentAPI.showInfo("backForward", "test title", "test text");
     waitForElementToBeVisible(
       highlight,
@@ -194,7 +194,7 @@ var tests = [
 
   function test_info_panel_open_subview(done) {
     gContentAPI.showHighlight("urlbar");
-    gContentAPI.showInfo("customize", "customize me!", "Open a subview");
+    gContentAPI.showInfo("addons", "Add addons!", "Open a subview");
     waitForElementToBeVisible(
       tooltip,
       function checkPanelIsOpen() {
