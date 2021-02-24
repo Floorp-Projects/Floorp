@@ -15,9 +15,9 @@
 #include <algorithm>
 
 #include "frontend/BytecodeCompilation.h"
-#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil, frontend::CompilationGCOutput
-#include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable
-#include "gc/GC.h"                // gc::MergeRealms
+#include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput, CompilationGCOutput, BorrowingCompilationStencil}
+#include "frontend/ParserAtom.h"          // frontend::ParserAtomsTable
+#include "gc/GC.h"                        // gc::MergeRealms
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
 #include "js/ContextOptions.h"      // JS::ContextOptions
@@ -596,6 +596,9 @@ size_t ParseTask::sizeOfExcludingThis(
       stencilInput_ ? stencilInput_->sizeOfIncludingThis(mallocSizeOf) : 0;
   size_t stencilSize =
       stencil_ ? stencil_->sizeOfIncludingThis(mallocSizeOf) : 0;
+  size_t extensibleStencilSize =
+      extensibleStencil_ ? extensibleStencil_->sizeOfIncludingThis(mallocSizeOf)
+                         : 0;
 
   // TODO: 'errors' requires adding support to `CompileError`. They are not
   // common though.
@@ -603,7 +606,8 @@ size_t ParseTask::sizeOfExcludingThis(
   return options.sizeOfExcludingThis(mallocSizeOf) +
          scripts.sizeOfExcludingThis(mallocSizeOf) +
          sourceObjects.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
-         stencilSize + gcOutput_.sizeOfExcludingThis(mallocSizeOf) +
+         stencilSize + extensibleStencilSize +
+         gcOutput_.sizeOfExcludingThis(mallocSizeOf) +
          gcOutputForDelazification_.sizeOfExcludingThis(mallocSizeOf);
 }
 
@@ -693,14 +697,15 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
 
   if (stencilInput_) {
-    stencil_ = frontend::CompileGlobalScriptToStencil(cx, *stencilInput_, data,
-                                                      scopeKind);
+    extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
+        cx, *stencilInput_, data, scopeKind);
   }
 
-  if (stencil_) {
-    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
+  if (extensibleStencil_) {
+    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
                                          gcOutput_)) {
-      stencil_ = nullptr;
+      extensibleStencil_ = nullptr;
     }
   }
 
@@ -710,12 +715,20 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
 }
 
 bool ParseTask::instantiateStencils(JSContext* cx) {
-  if (!stencil_) {
+  if (!stencil_ && !extensibleStencil_) {
     return false;
   }
 
-  bool result = frontend::InstantiateStencils(
-      cx, *stencilInput_, *stencil_, gcOutput_, &gcOutputForDelazification_);
+  bool result;
+  if (stencil_) {
+    result = frontend::InstantiateStencils(
+        cx, *stencilInput_, *stencil_, gcOutput_, &gcOutputForDelazification_);
+  } else {
+    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+    result =
+        frontend::InstantiateStencils(cx, *stencilInput_, borrowingStencil,
+                                      gcOutput_, &gcOutputForDelazification_);
+  }
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid
@@ -2094,7 +2107,8 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
       DebugAPI::onNewScript(cx, script);
     }
   } else {
-    MOZ_ASSERT(parseTask->stencil_.get());
+    MOZ_ASSERT(parseTask->stencil_.get() ||
+               parseTask->extensibleStencil_.get());
 
     if (!parseTask->instantiateStencils(cx)) {
       return nullptr;
@@ -2114,6 +2128,13 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
       auto* stencil = parseTask->stencil_.get();
       if (!stencil->source->xdrEncodeStencils(cx, *parseTask->stencilInput_,
                                               *stencil, xdrEncoder)) {
+        return nullptr;
+      }
+    } else if (parseTask->extensibleStencil_) {
+      frontend::BorrowingCompilationStencil borrowingStencil(
+          *parseTask->extensibleStencil_);
+      if (!borrowingStencil.source->xdrEncodeStencils(
+              cx, *parseTask->stencilInput_, borrowingStencil, xdrEncoder)) {
         return nullptr;
       }
     }
