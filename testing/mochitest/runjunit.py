@@ -206,7 +206,7 @@ class JUnitTestRunner(MochitestDesktop):
         elif test_filters:
             if len(test_filters) > 1:
                 # Generate the list file from test_filters
-                with tempfile.NamedTemporaryFile(delete=False) as filter_list:
+                with tempfile.NamedTemporaryFile(delete=False, mode="w") as filter_list:
                     for f in test_filters:
                         print(f, file=filter_list)
                     filter_list_name = filter_list.name
