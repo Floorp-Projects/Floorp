@@ -51,7 +51,7 @@ async function test() {
 
   let startHandledPromise = handleTouchStart();
   let endHandledPromise = handleTouchEnd();
-  var pt = coordinatesRelativeToScreen(25, 5, v);
+  var pt = coordinatesRelativeToScreen({ offsetX: 25, offsetY: 5, target: v });
   utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
   await startHandledPromise;
   utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
@@ -60,7 +60,7 @@ async function test() {
 
   startHandledPromise = handleTouchStart();
   endHandledPromise = handleTouchEnd();
-  pt = coordinatesRelativeToScreen(25, 5, a);
+  pt = coordinatesRelativeToScreen({ offsetX: 25, offsetY: 5, target: a });
   utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
   await startHandledPromise;
   utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
@@ -69,7 +69,7 @@ async function test() {
 
   startHandledPromise = handleTouchStart();
   endHandledPromise = handleTouchEnd();
-  pt = coordinatesRelativeToScreen(25, 5, d);
+  pt = coordinatesRelativeToScreen({ offsetX: 25, offsetY: 5, target: d });
   utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
   await startHandledPromise;
   utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
