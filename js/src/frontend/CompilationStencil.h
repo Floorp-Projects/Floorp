@@ -590,6 +590,10 @@ struct CompilationStencil : public BaseCompilationStencil {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
+#ifdef DEBUG
+  void assertNoExternalDependency() const;
+#endif
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
   void dump(js::JSONPrinter& json) const;
@@ -658,6 +662,10 @@ struct ExtensibleCompilationStencil {
   bool isInitialStencil() const {
     return functionKey == BaseCompilationStencil::NullFunctionKey;
   }
+
+#ifdef DEBUG
+  void assertNoExternalDependency() const;
+#endif
 };
 
 struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
