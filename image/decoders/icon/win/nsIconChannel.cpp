@@ -503,6 +503,12 @@ nsresult nsIconChannel::GetHIconFromFile(bool aNonBlocking, HICON* hIcon) {
     filePath = u"."_ns + NS_ConvertUTF8toUTF16(defFileExt);
   }
 
+  if (!localFile && !fileExists &&
+      ((filePath.Length() == 1 && filePath.Last() == '.') ||
+       filePath.Length() == 0)) {
+    filePath = u".MozBogusExtensionMoz"_ns;
+  }
+
   if (aNonBlocking) {
     RefPtr<nsIEventTarget> target = DecodePool::Singleton()->GetIOEventTarget();
     RefPtr<IconAsyncOpenTask> task = new IconAsyncOpenTask(
