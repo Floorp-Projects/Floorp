@@ -327,80 +327,6 @@ using StencilAsmJSContainer =
     HashMap<ScriptIndex, RefPtr<const JS::WasmModule>,
             mozilla::DefaultHasher<ScriptIndex>, js::SystemAllocPolicy>;
 
-struct MOZ_RAII CompilationState {
-  // Until we have dealt with Atoms in the front end, we need to hold
-  // onto them.
-  Directives directives;
-
-  ScopeContext scopeContext;
-
-  UsedNameTracker usedNames;
-  LifoAllocScope& allocScope;
-
-  CompilationInput& input;
-
-  // Temporary space to accumulate stencil data.
-  // Copied to BaseCompilationStencil by `finish` method.
-  //
-  // See corresponding BaseCompilationStencil fields for desription.
-  Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
-  Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
-  Vector<ObjLiteralStencil, 0, js::SystemAllocPolicy> objLiteralData;
-  Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
-  Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
-  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
-  Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
-  Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
-
-  // Accumulate asmJS modules here and then transfer to the stencil during the
-  // `finish` method.
-  StencilAsmJSContainer asmJS;
-
-  // Table of parser atoms for this compilation.
-  ParserAtomsTable parserAtoms;
-
-  // The number of functions that *will* have bytecode.
-  // This doesn't count top-level non-function script.
-  //
-  // This should be counted while parsing, and should be passed to
-  // BaseCompilationStencil.prepareStorageFor *before* start emitting bytecode.
-  size_t nonLazyFunctionCount = 0;
-
-  // End of fields.
-
-  CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
-                   CompilationInput& input, LifoAlloc& stencilAlloc);
-
-  bool init(JSContext* cx, InheritThis inheritThis = InheritThis::No,
-            JSObject* enclosingEnv = nullptr) {
-    return scopeContext.init(cx, input, parserAtoms, inheritThis, enclosingEnv);
-  }
-
-  // Track the state of key allocations and roll them back as parts of parsing
-  // get retried. This ensures iteration during stencil instantiation does not
-  // encounter discarded frontend state.
-  struct RewindToken {
-    // Temporarily share this token struct with CompilationState.
-    size_t scriptDataLength = 0;
-
-    size_t asmJSCount = 0;
-  };
-
-  RewindToken getRewindToken();
-  void rewind(const RewindToken& pos);
-
-  bool finish(JSContext* cx, CompilationStencil& stencil);
-
-  // Allocate space for `length` gcthings, and return the address of the
-  // first element to `cursor` to initialize on the caller.
-  bool allocateGCThingsUninitialized(JSContext* cx, ScriptIndex scriptIndex,
-                                     size_t length,
-                                     TaggedScriptThingIndex** cursor);
-
-  bool appendGCThings(JSContext* cx, ScriptIndex scriptIndex,
-                      mozilla::Span<const TaggedScriptThingIndex> things);
-};
-
 // Store shared data for non-lazy script.
 struct SharedDataContainer {
   // NOTE: While stored, we must hold a ref-count and care must be taken when
@@ -533,18 +459,7 @@ struct BaseCompilationStencil {
 
   BaseCompilationStencil() = default;
 
-  bool prepareStorageFor(JSContext* cx, CompilationState& compilationState) {
-    // NOTE: At this point CompilationState shouldn't be finished, and
-    // BaseCompilationStencil.scriptData field should be empty.
-    // Use CompilationState.scriptData as data source.
-    MOZ_ASSERT(scriptData.empty());
-    size_t allScriptCount = compilationState.scriptData.length();
-    size_t nonLazyScriptCount = compilationState.nonLazyFunctionCount;
-    if (!compilationState.scriptData[0].isFunction()) {
-      nonLazyScriptCount++;
-    }
-    return sharedData.prepareStorageFor(cx, nonLazyScriptCount, allScriptCount);
-  }
+  bool prepareStorageFor(JSContext* cx, CompilationState& compilationState);
 
   static FunctionKey toFunctionKey(const SourceExtent& extent) {
     // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
@@ -681,6 +596,80 @@ inline const CompilationStencil& BaseCompilationStencil::asCompilationStencil()
              "allowed only for initial stencil");
   return *static_cast<const CompilationStencil*>(this);
 }
+
+struct MOZ_RAII CompilationState {
+  // Until we have dealt with Atoms in the front end, we need to hold
+  // onto them.
+  Directives directives;
+
+  ScopeContext scopeContext;
+
+  UsedNameTracker usedNames;
+  LifoAllocScope& allocScope;
+
+  CompilationInput& input;
+
+  // Temporary space to accumulate stencil data.
+  // Copied to BaseCompilationStencil by `finish` method.
+  //
+  // See corresponding BaseCompilationStencil fields for desription.
+  Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
+  Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
+  Vector<ObjLiteralStencil, 0, js::SystemAllocPolicy> objLiteralData;
+  Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
+  Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
+  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
+  Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
+  Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
+
+  // Accumulate asmJS modules here and then transfer to the stencil during the
+  // `finish` method.
+  StencilAsmJSContainer asmJS;
+
+  // Table of parser atoms for this compilation.
+  ParserAtomsTable parserAtoms;
+
+  // The number of functions that *will* have bytecode.
+  // This doesn't count top-level non-function script.
+  //
+  // This should be counted while parsing, and should be passed to
+  // BaseCompilationStencil.prepareStorageFor *before* start emitting bytecode.
+  size_t nonLazyFunctionCount = 0;
+
+  // End of fields.
+
+  CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
+                   CompilationInput& input, LifoAlloc& stencilAlloc);
+
+  bool init(JSContext* cx, InheritThis inheritThis = InheritThis::No,
+            JSObject* enclosingEnv = nullptr) {
+    return scopeContext.init(cx, input, parserAtoms, inheritThis, enclosingEnv);
+  }
+
+  // Track the state of key allocations and roll them back as parts of parsing
+  // get retried. This ensures iteration during stencil instantiation does not
+  // encounter discarded frontend state.
+  struct RewindToken {
+    // Temporarily share this token struct with CompilationState.
+    size_t scriptDataLength = 0;
+
+    size_t asmJSCount = 0;
+  };
+
+  RewindToken getRewindToken();
+  void rewind(const RewindToken& pos);
+
+  bool finish(JSContext* cx, CompilationStencil& stencil);
+
+  // Allocate space for `length` gcthings, and return the address of the
+  // first element to `cursor` to initialize on the caller.
+  bool allocateGCThingsUninitialized(JSContext* cx, ScriptIndex scriptIndex,
+                                     size_t length,
+                                     TaggedScriptThingIndex** cursor);
+
+  bool appendGCThings(JSContext* cx, ScriptIndex scriptIndex,
+                      mozilla::Span<const TaggedScriptThingIndex> things);
+};
 
 // A set of stencils generated by delazifying functions. This should only be
 // used by a CompilationStencil that owns this. This is primarily used for
