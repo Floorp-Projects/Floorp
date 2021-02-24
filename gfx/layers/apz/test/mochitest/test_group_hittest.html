@@ -49,7 +49,7 @@ function addConditionalTests(tests) {
   // function run after loading, because trying to read layerManagerType can
   // throw an NS_ERROR_FAILURE if called too early.
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  var isWebRender = utils.layerManagerType == "WebRender";
+  var isWebRender = utils.layerManagerType.startsWith("WebRender");
   if (isWebRender) {
     tests = tests.concat([
       {"file": "helper_hittest_deep_scene_stack.html", "prefs": prefs},

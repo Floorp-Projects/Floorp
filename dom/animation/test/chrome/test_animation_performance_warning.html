@@ -1482,7 +1482,7 @@ function testTooLargeFrame() {
       // With WebRender we appear to stick to the previous layerization decision
       // after changing the bounds back to a smaller object.
       const isWebRender =
-        SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
+        SpecialPowers.DOMWindowUtils.layerManagerType.startsWith('WebRender');
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ { property: subtest.property, runningOnCompositor: !isWebRender } ]);
@@ -1518,7 +1518,7 @@ function testTooLargeFrame() {
       await waitForFrame();
 
       const isWebRender =
-        SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
+        SpecialPowers.DOMWindowUtils.layerManagerType.startsWith('WebRender');
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
         [ { property: subtest.property, runningOnCompositor: !isWebRender } ]);
@@ -1628,7 +1628,7 @@ function testImportantRuleOverride() {
 }
 
 function testCurrentColor() {
-  if (SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender') {
+  if (SpecialPowers.DOMWindowUtils.layerManagerType.startsWith('WebRender')) {
     return; // skip this test until bug 1510030 landed.
   }
   promise_test(async t => {

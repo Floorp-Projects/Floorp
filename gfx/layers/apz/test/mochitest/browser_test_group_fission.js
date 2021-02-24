@@ -23,7 +23,7 @@ add_task(async function test_main() {
   }
 
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  var isWebRender = utils.layerManagerType == "WebRender";
+  var isWebRender = utils.layerManagerType.startsWith("WebRender");
 
   // Each of these subtests is a dictionary that contains:
   // file (required): filename of the subtest that will get opened in a new tab
