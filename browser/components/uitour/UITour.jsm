@@ -162,13 +162,6 @@ var UITour = {
     ["backForward", { query: "#back-button" }],
     ["bookmarks", { query: "#bookmarks-menu-button" }],
     [
-      "customize",
-      {
-        query: "#appMenu-customize-button",
-        widgetName: "appMenu-customize-button",
-      },
-    ],
-    [
       "devtools",
       {
         query: "#appMenu-developer-button",
@@ -276,12 +269,6 @@ var UITour = {
       {
         query: "#urlbar",
         widgetName: "urlbar-container",
-      },
-    ],
-    [
-      "pageActionButton",
-      {
-        query: "#pageActionButton",
       },
     ],
     [
