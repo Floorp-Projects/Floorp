@@ -1022,7 +1022,9 @@ var gSync = {
   updatePanelPopup(state) {
     const appMenuStatus = PanelMultiView.getViewNode(
       document,
-      "appMenu-fxa-status"
+      PanelUI.protonAppMenuEnabled
+        ? "appMenu-fxa-status2"
+        : "appMenu-fxa-status"
     );
     const appMenuLabel = PanelMultiView.getViewNode(
       document,
