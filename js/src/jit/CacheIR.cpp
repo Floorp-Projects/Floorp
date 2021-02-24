@@ -3211,7 +3211,7 @@ AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
       return AttachDecision::NoAction;
     }
   }
-  if (!prop) {
+  if (prop.isNotFound()) {
     return AttachDecision::NoAction;
   }
 
@@ -4459,7 +4459,7 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
     if (!LookupOwnPropertyPure(cx_, obj, id, &prop)) {
       return false;
     }
-    if (prop) {
+    if (prop.isFound()) {
       return false;
     }
   }
@@ -4536,7 +4536,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
   if (!LookupOwnPropertyPure(cx_, obj, id, &prop)) {
     return AttachDecision::NoAction;
   }
-  if (!prop) {
+  if (prop.isNotFound()) {
     return AttachDecision::NoAction;
   }
 
