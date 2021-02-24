@@ -516,24 +516,26 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
   }
 
   bool invalidateFrame = aForcePaint;
-  const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
-  for (uint32_t i = 0; i < array.Length(); i++) {
-    DisplayItemData* data =
-        DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
-    uint32_t displayItemKey = data->GetDisplayItemKey();
-    if (displayItemKey != 0 && !IsRenderNoImages(displayItemKey)) {
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        DisplayItemType type = GetDisplayItemTypeFromKey(displayItemKey);
-        printf_stderr(
-            "Invalidating display item(type=%d) based on frame %p \
-                       because it might contain an invalidated image\n",
-            static_cast<uint32_t>(type), aFrame);
-      }
+  if (auto* array = aFrame->DisplayItemData()) {
+    for (auto* did : *array) {
+      DisplayItemData* data = DisplayItemData::AssertDisplayItemData(did);
+      uint32_t displayItemKey = data->GetDisplayItemKey();
 
-      data->Invalidate();
-      invalidateFrame = true;
+      if (displayItemKey != 0 && !IsRenderNoImages(displayItemKey)) {
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          DisplayItemType type = GetDisplayItemTypeFromKey(displayItemKey);
+          printf_stderr(
+              "Invalidating display item(type=%d) based on frame %p \
+                         because it might contain an invalidated image\n",
+              static_cast<uint32_t>(type), aFrame);
+        }
+
+        data->Invalidate();
+        invalidateFrame = true;
+      }
     }
   }
+
   if (auto userDataTable =
           aFrame->GetProperty(layers::WebRenderUserDataProperty::Key())) {
     for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
