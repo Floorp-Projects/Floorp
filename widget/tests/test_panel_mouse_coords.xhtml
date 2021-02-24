@@ -29,29 +29,21 @@ SimpleTest.waitForExplicitFinish();
 
 let utils = window.windowUtils;
 let panel = document.getElementById('thepanel');
-let nativeMouseMove;
 let rect;
 
 function startTest() {
-    let widgetToolkit = SpecialPowers.Services.appinfo.widgetToolkit;
-
-    if (widgetToolkit == "cocoa") {
-        nativeMouseMove = 5; // NSEventTypeMouseMoved
-    } else if (widgetToolkit == "windows") {
-        nativeMouseMove = 1; // MOUSEEVENTF_MOVE
-    } else if (/^gtk/.test(widgetToolkit)) {
-        nativeMouseMove = 3; // GDK_MOTION_NOTIFY
-    } else {
-        todo_is("widgetToolkit", widgetToolkit, "Platform not supported");
-        done();
-    }
-
     // This first event is to ensure that the next event will have different
     // coordinates to the previous mouse position, and so actually generates
     // mouse events.  The mouse is not moved off the window, as that might
     // move focus to another application.
-    utils.sendNativeMouseEvent(window.mozInnerScreenX, window.mozInnerScreenY,
-                               nativeMouseMove, 0, window.documentElement);
+    utils.sendNativeMouseEvent(
+      window.mozInnerScreenX,
+      window.mozInnerScreenY,
+      utils.NATIVE_MOUSE_MESSAGE_MOVE,
+      0,
+      0,
+      window.documentElement
+    );
 
     panel.openPopup(document.getElementById("anchor"), "after_start");
 }
@@ -60,8 +52,13 @@ function sendMouseEvent() {
     rect = panel.getBoundingClientRect();
     let x = window.mozInnerScreenX + rect.left + 1;
     let y = window.mozInnerScreenY + rect.top + 2;
-    utils.sendNativeMouseEvent(x, y, nativeMouseMove, 0,
-                               window.documentElement);
+    utils.sendNativeMouseEvent(
+      x,
+      y,
+      utils.NATIVE_MOUSE_MESSAGE_MOVE,
+      0,
+      0,
+      window.documentElement);
 }
 
 function checkCoords(event) {

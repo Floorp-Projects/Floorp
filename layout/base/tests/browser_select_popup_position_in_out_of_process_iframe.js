@@ -23,14 +23,16 @@ function synthesizeNativeMouseClick(aWin, aScreenX, aScreenY) {
   utils.sendNativeMouseEvent(
     aScreenX * scale,
     aScreenY * scale,
-    nativeMouseDownEventMsg(),
+    utils.NATIVE_MOUSE_MESSAGE_BUTTON_DOWN,
+    0,
     0,
     aWin.document.documentElement,
     () => {
       utils.sendNativeMouseEvent(
         aScreenX * scale,
         aScreenY * scale,
-        nativeMouseUpEventMsg(),
+        utils.NATIVE_MOUSE_MESSAGE_BUTTON_UP,
+        0,
         0,
         aWin.document.documentElement
       );

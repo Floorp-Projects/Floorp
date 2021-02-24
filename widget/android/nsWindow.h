@@ -201,7 +201,8 @@ class nsWindow final : public nsBaseWidget {
                                       uint32_t aPointerOrientation,
                                       nsIObserver* aObserver) override;
   nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                      uint32_t aNativeMessage,
+                                      NativeMouseMessage aNativeMessage,
+                                      mozilla::MouseButton aButton,
                                       nsIWidget::Modifiers aModifierFlags,
                                       nsIObserver* aObserver) override;
   nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,

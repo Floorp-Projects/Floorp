@@ -386,13 +386,16 @@ class nsChildView final : public nsBaseWidget {
                                             const nsAString& aUnmodifiedCharacters,
                                             nsIObserver* aObserver) override;
 
-  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                                              NativeMouseMessage aNativeMessage,
+                                              mozilla::MouseButton aButton,
                                               nsIWidget::Modifiers aModifierFlags,
                                               nsIObserver* aObserver) override;
 
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override {
-    return SynthesizeNativeMouseEvent(aPoint, NSEventTypeMouseMoved,
+    return SynthesizeNativeMouseEvent(aPoint, NativeMouseMessage::Move,
+                                      mozilla::MouseButton::eNotPressed,
                                       nsIWidget::Modifiers::NO_MODIFIERS, aObserver);
   }
   virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,

@@ -252,8 +252,9 @@ class PuppetWidget : public nsBaseWidget,
       uint32_t aModifierFlags, const nsAString& aCharacters,
       const nsAString& aUnmodifiedCharacters, nsIObserver* aObserver) override;
   virtual nsresult SynthesizeNativeMouseEvent(
-      LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-      nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) override;
+      LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
+      MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+      nsIObserver* aObserver) override;
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override;
   virtual nsresult SynthesizeNativeMouseScrollEvent(

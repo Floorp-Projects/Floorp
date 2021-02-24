@@ -427,14 +427,16 @@ nsresult PuppetWidget::SynthesizeNativeKeyEvent(
 }
 
 nsresult PuppetWidget::SynthesizeNativeMouseEvent(
-    mozilla::LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-    nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) {
+    mozilla::LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
+    MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+    nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "mouseevent");
   if (!mBrowserChild) {
     return NS_ERROR_FAILURE;
   }
   mBrowserChild->SendSynthesizeNativeMouseEvent(
-      aPoint, aNativeMessage, static_cast<uint32_t>(aModifierFlags),
+      aPoint, static_cast<uint32_t>(aNativeMessage),
+      static_cast<int16_t>(aButton), static_cast<uint32_t>(aModifierFlags),
       notifier.SaveObserver());
   return NS_OK;
 }

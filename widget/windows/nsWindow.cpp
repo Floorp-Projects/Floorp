@@ -6605,17 +6605,10 @@ nsresult nsWindow::SynthesizeNativeKeyEvent(
 }
 
 nsresult nsWindow::SynthesizeNativeMouseEvent(
-    LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-    nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) {
+    LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
+    MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+    nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "mouseevent");
-
-  if (aNativeMessage == MOUSEEVENTF_MOVE) {
-    // Reset sLastMouseMovePoint so that even if we're moving the mouse
-    // to the position it's already at, we still dispatch a mousemove
-    // event, because the callers of this function expect that.
-    sLastMouseMovePoint = {0};
-  }
-  ::SetCursorPos(aPoint.x, aPoint.y);
 
   INPUT input;
   memset(&input, 0, sizeof(input));
@@ -6627,8 +6620,50 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
   // being handled, and MOUSEEVENTF_MOVE may be coalesced by Windows.  So, we
   // need a trick for handling it.
 
+  switch (aNativeMessage) {
+    case NativeMouseMessage::Move:
+      input.mi.dwFlags = MOUSEEVENTF_MOVE;
+      // Reset sLastMouseMovePoint so that even if we're moving the mouse
+      // to the position it's already at, we still dispatch a mousemove
+      // event, because the callers of this function expect that.
+      sLastMouseMovePoint = {0};
+      break;
+    case NativeMouseMessage::ButtonDown:
+    case NativeMouseMessage::ButtonUp: {
+      const bool isDown = aNativeMessage == NativeMouseMessage::ButtonDown;
+      switch (aButton) {
+        case MouseButton::ePrimary:
+          input.mi.dwFlags = isDown ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP;
+          break;
+        case MouseButton::eMiddle:
+          input.mi.dwFlags =
+              isDown ? MOUSEEVENTF_MIDDLEDOWN : MOUSEEVENTF_MIDDLEUP;
+          break;
+        case MouseButton::eSecondary:
+          input.mi.dwFlags =
+              isDown ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP;
+          break;
+        case MouseButton::eX1:
+          input.mi.dwFlags = isDown ? MOUSEEVENTF_XDOWN : MOUSEEVENTF_XUP;
+          input.mi.mouseData = XBUTTON1;
+          break;
+        case MouseButton::eX2:
+          input.mi.dwFlags = isDown ? MOUSEEVENTF_XDOWN : MOUSEEVENTF_XUP;
+          input.mi.mouseData = XBUTTON2;
+          break;
+        default:
+          return NS_ERROR_INVALID_ARG;
+      }
+      break;
+    }
+    case NativeMouseMessage::EnterWindow:
+    case NativeMouseMessage::LeaveWindow:
+      MOZ_ASSERT_UNREACHABLE("Non supported mouse event on Windows");
+      return NS_ERROR_INVALID_ARG;
+  }
+
   input.type = INPUT_MOUSE;
-  input.mi.dwFlags = aNativeMessage;
+  ::SetCursorPos(aPoint.x, aPoint.y);
   ::SendInput(1, &input, sizeof(INPUT));
 
   return NS_OK;
