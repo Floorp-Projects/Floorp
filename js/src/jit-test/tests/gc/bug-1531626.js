@@ -7,6 +7,7 @@
 load(libdir + "asserts.js");
 
 const chunkSizeKB = gcparam('chunkBytes') / 1024;
+const pageSizeKB = gcparam('systemPageSizeKB');
 
 var testSizesKB = [128, 129, 255, 256, 516, 1023, 1024, 3*1024, 4*1024+1, 16*1024];
 
@@ -48,7 +49,7 @@ function allocateSomeThings() {
 }
 
 function nearestLegalSize(sizeKB) {
-  let step = sizeKB >= chunkSizeKB ? chunkSizeKB : 4;
+  let step = sizeKB >= chunkSizeKB ? chunkSizeKB : pageSizeKB;
   return round(sizeKB, step);
 }
 

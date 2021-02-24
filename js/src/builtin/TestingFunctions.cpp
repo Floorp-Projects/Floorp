@@ -651,7 +651,8 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("chunkBytes", JSGC_CHUNK_BYTES, false)                                 \
   _("helperThreadRatio", JSGC_HELPER_THREAD_RATIO, true)                   \
   _("maxHelperThreads", JSGC_MAX_HELPER_THREADS, true)                     \
-  _("helperThreadCount", JSGC_HELPER_THREAD_COUNT, false)
+  _("helperThreadCount", JSGC_HELPER_THREAD_COUNT, false)                  \
+  _("systemPageSizeKB", JSGC_SYSTEM_PAGE_SIZE_KB, false)
 
 static const struct ParamInfo {
   const char* name;
