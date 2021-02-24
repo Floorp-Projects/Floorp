@@ -49,9 +49,10 @@ async function test() {
   ok(iframeResponse, "code_for_oopif_to_run successfully installed");
 
   iframePromise = promiseOneEvent(window, "OOPIF:ClickData", null);
-  synthesizeNativeClick(document.body, 400, 400, function() {
-    dump("Finished synthesizing click, waiting for OOPIF message...\n");
-  });
+  synthesizeNativeMouseClickWithAPZ(
+    { target: document.body, offsetX: 400, offsetY: 400 },
+    () => dump("Finished synthesizing click, waiting for OOPIF message...\n")
+  );
   iframeResponse = await iframePromise;
   dump("OOPIF response: " + JSON.stringify(iframeResponse.data) + "\n");
 

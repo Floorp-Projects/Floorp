@@ -39,7 +39,7 @@
         window.addEventListener("click", resolve);
       });
       let input = document.querySelector("input");
-      synthesizeNativeClick(input, 10, 10);
+      synthesizeNativeMouseClickWithAPZ({ target: input, offsetX: 10, offsetY: 10 });
       let e = await clickPromise;
       is(e.target, input, "got click");
     }
