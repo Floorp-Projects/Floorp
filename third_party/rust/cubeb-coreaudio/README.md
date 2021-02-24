@@ -90,6 +90,8 @@ It's used to verify our callbacks for minitoring the system devices work.
     - `d` to destroy a stream
     - `s` to start the created stream
     - `t` to stop the created stream
+    - `r` to register a device changed callback to the created stream
+    - `v` to set volume to the created stream
     - `q` to quit the test
   - It's useful to simulate the stream bahavior to reproduce the bug we found,
     with some modified code.
