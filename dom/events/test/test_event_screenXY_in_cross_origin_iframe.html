@@ -59,10 +59,11 @@ add_task(async () => {
   });
 
   // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
-  // so we use promiseNativeMouseClick instead.
+  // so we use promiseNativeMouseEvent instead.
   const [expectedScreenXInSameOrigin, expectedScreenYInSameOrigin] =
     getScreenPosition(iframes[0], 10, 10);
-  await promiseNativeMouseClick({
+  await promiseNativeMouseEvent({
+    type: "click",
     target: iframes[0],
     screenX: expectedScreenXInSameOrigin,
     screenY: expectedScreenYInSameOrigin,
@@ -76,7 +77,8 @@ add_task(async () => {
 
   const [expectedScreenXInCrossOrigin, expectedScreenYInCrossOrigin] =
     getScreenPosition(iframes[1], 10, 10);
-  await promiseNativeMouseClick({
+  await promiseNativeMouseEvent({
+    type: "click",
     target: iframes[0],
     screenX: expectedScreenXInCrossOrigin,
     screenY: expectedScreenYInCrossOrigin,

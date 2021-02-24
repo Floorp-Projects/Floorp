@@ -40,7 +40,12 @@ async function test() {
   // Click at the bottom of the scrollbar track to trigger a page-down kind of
   // scroll. This should use "desktop zooming" scrollbar code which should
   // trigger an APZ scroll animation.
-  await promiseNativeMouseClickWithAPZ({ target: anchor, offsetX: xoffset, offsetY: yoffset });
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: anchor,
+    offsetX: xoffset,
+    offsetY: yoffset,
+  });
 
   // Run 1000 frames, that should be enough to let the scroll animation start
   // and run to completion. We check that it scrolled at least half the visible
@@ -57,7 +62,12 @@ async function test() {
   // Now we do two clicks in quick succession, but with a few frames in between
   // to verify the scroll animation from the first click is active before the
   // second click happens.
-  await promiseNativeMouseClickWithAPZ({ target: anchor, offsetX: xoffset, offsetY: yoffset });
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: anchor,
+    offsetX: xoffset,
+    offsetY: yoffset,
+  });
   for (let i = 0; i < 5; i++) {
     utils.advanceTimeAndRefresh(16);
   }
@@ -65,7 +75,12 @@ async function test() {
   let curPos = scroller.scrollTop;
   ok(curPos > pageScrollAmount, `Scroll offset has increased to ${curPos}`);
   ok(curPos < pageScrollAmount * 2, "Second page-scroll is not yet complete");
-  await promiseNativeMouseClickWithAPZ({ target: anchor, offsetX: xoffset, offsetY: yoffset });
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: anchor,
+    offsetX: xoffset,
+    offsetY: yoffset,
+  });
 
   // Run to completion and check that we are around 3x pageScrollAmount, with
   // some allowance for fractional rounding.

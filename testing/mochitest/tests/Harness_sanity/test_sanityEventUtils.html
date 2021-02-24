@@ -146,7 +146,8 @@ function starttest() {
           }
           events = [];
           info(`testSynthesizeNativeMouseClick: sending native mouse click (${test.description})`);
-          await promiseNativeMouseClickAndWaitForEvent({
+          await promiseNativeMouseEventAndWaitForEvent({
+            type: "click",
             target: $("testMouseEvent"),
             atCenter: true,
             modifiers: test.modifiers,
