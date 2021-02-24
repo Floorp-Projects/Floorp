@@ -1071,7 +1071,7 @@ void TRRService::ConfirmationContext::RequestCompleted(
 
 AHostResolver::LookupStatus TRRService::CompleteLookup(
     nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
-    const nsACString& aOriginSuffix, nsHostRecord::TRRSkippedReason aReason,
+    const nsACString& aOriginSuffix, TRRSkippedReason aReason,
     TRR* aTRRRequest) {
   // this is an NS check for the TRR blocklist or confirmationNS check
 

@@ -7,9 +7,9 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "nsHostResolver.h"
 #include "pk11pub.h"
 #include "ScopedNSSTypes.h"
+#include "nsIDNSService.h"
 
 namespace mozilla {
 namespace net {
