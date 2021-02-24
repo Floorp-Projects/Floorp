@@ -1364,6 +1364,17 @@ function testScope(aTester, aTest, expected) {
       Components.stack.caller
     );
   };
+  this.isfuzzy = function test_isfuzzy(a, b, epsilon, name) {
+    self.record(
+      a >= b - epsilon && a <= b + epsilon,
+      name,
+      `Got ${self.repr(a)}, expected ${self.repr(b)} epsilon: +/- ${self.repr(
+        epsilon
+      )}`,
+      false,
+      Components.stack.caller
+    );
+  };
   this.isnot = function test_isnot(a, b, name) {
     self.record(
       !Object.is(a, b),

@@ -6,6 +6,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display"></p>
@@ -25,15 +26,15 @@ var gLeftWindow, gRightWindow, gBrowserElement;
 var gExpectedEvents = [];
 
 function moveMouseTo(x, y, andThen) {
-  var utils = gLeftWindow.windowUtils;
-  utils.sendNativeMouseEvent(
-    x,
-    y,
-    utils.NATIVE_MOUSE_MESSAGE_MOVE,
-    0,
-    0,
-    gLeftWindow.documentElement
-  );
+  // XXX This is really broken.  This test synthesizes native mouse move event
+  //     and wait a tick, but then, check event state even though it's not
+  //     been updated yet.  This must cause bug 1611033.
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    screenX: x,
+    screenY: y,
+    elementOnWidget: gLeftWindow.documentElement,
+  });
   SimpleTest.executeSoon(andThen);
 }
 
