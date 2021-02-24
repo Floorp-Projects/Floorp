@@ -382,7 +382,7 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk> {
   Mark mark() { return Mark(this, end()); }
 
   // Check if a pointer is part of the allocated data of this chunk.
-  bool contains(void* ptr) const {
+  bool contains(const void* ptr) const {
     // Note: We cannot check "ptr < end()" because the mark have a 0-size
     // length.
     return begin() <= ptr && ptr <= end();
@@ -869,7 +869,7 @@ class LifoAlloc {
   JS_DECLARE_NEW_METHODS(newInfallible, allocInfallible, MOZ_ALWAYS_INLINE)
 
 #ifdef DEBUG
-  bool contains(void* ptr) const {
+  bool contains(const void* ptr) const {
     for (const detail::BumpChunk& chunk : chunks_) {
       if (chunk.contains(ptr)) {
         return true;
