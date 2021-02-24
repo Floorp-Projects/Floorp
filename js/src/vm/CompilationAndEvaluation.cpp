@@ -17,10 +17,10 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
-#include "frontend/CompilationStencil.h"  // for frontened::CompilationStencil, frontened::CompilationGCOutput
-#include "frontend/FullParseHandler.h"  // frontend::FullParseHandler
-#include "frontend/ParseContext.h"      // frontend::UsedNameTracker
-#include "frontend/Parser.h"            // frontend::Parser, frontend::ParseGoal
+#include "frontend/CompilationStencil.h"  // for frontened::{CompilationStencil, BorrowingCompilationStencil, CompilationGCOutput}
+#include "frontend/FullParseHandler.h"    // frontend::FullParseHandler
+#include "frontend/ParseContext.h"        // frontend::UsedNameTracker
+#include "frontend/Parser.h"       // frontend::Parser, frontend::ParseGoal
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"            // JS::Rooted
@@ -93,15 +93,16 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
 
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  UniquePtr<frontend::CompilationStencil> stencil =
-      frontend::CompileGlobalScriptToStencil(cx, input.get(), srcBuf,
-                                             scopeKind);
+  auto stencil = frontend::CompileGlobalScriptToExtensibleStencil(
+      cx, input.get(), srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }
 
+  frontend::BorrowingCompilationStencil borrowingStencil(*stencil);
+
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, input.get(), *stencil,
+  if (!frontend::InstantiateStencils(cx, input.get(), borrowingStencil,
                                      gcOutput.get())) {
     return nullptr;
   }
@@ -115,8 +116,8 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
 
-  if (!stencil->source->xdrEncodeInitialStencil(cx, input.get(), *stencil,
-                                                xdrEncoder)) {
+  if (!borrowingStencil.source->xdrEncodeInitialStencil(
+          cx, input.get(), borrowingStencil, xdrEncoder)) {
     return nullptr;
   }
 
