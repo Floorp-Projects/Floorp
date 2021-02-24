@@ -414,15 +414,6 @@ void RenderCompositorNative::AddSurface(
   }
 }
 
-CompositorCapabilities RenderCompositorNative::GetCompositorCapabilities() {
-  CompositorCapabilities caps;
-
-  // CoreAnimation doesn't use virtual surfaces
-  caps.virtual_surface_size = 0;
-
-  return caps;
-}
-
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {

@@ -70,7 +70,6 @@ class RenderCompositorNative : public RenderCompositor {
                   const wr::CompositorSurfaceTransform& aTransform,
                   wr::DeviceIntRect aClipRect,
                   wr::ImageRendering aImageRendering) override;
-  CompositorCapabilities GetCompositorCapabilities() override;
 
   struct TileKey {
     TileKey(int32_t aX, int32_t aY) : mX(aX), mY(aY) {}
