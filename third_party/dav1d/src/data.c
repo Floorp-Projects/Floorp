@@ -102,18 +102,6 @@ void dav1d_data_ref(Dav1dData *const dst, const Dav1dData *const src) {
     *dst = *src;
 }
 
-void dav1d_data_move_ref(Dav1dData *const dst, Dav1dData *const src) {
-    validate_input(dst != NULL);
-    validate_input(dst->data == NULL);
-    validate_input(src != NULL);
-
-    if (src->ref)
-        validate_input(src->data != NULL);
-
-    *dst = *src;
-    memset(src, 0, sizeof(*src));
-}
-
 void dav1d_data_props_copy(Dav1dDataProps *const dst,
                            const Dav1dDataProps *const src)
 {

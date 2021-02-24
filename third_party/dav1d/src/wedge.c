@@ -45,41 +45,41 @@ enum WedgeDirectionType {
 };
 
 typedef struct {
-    enum WedgeDirectionType direction;
-    int x_offset;
-    int y_offset;
+    uint8_t /* enum WedgeDirectionType */ direction;
+    uint8_t x_offset;
+    uint8_t y_offset;
 } wedge_code_type;
 
 static const wedge_code_type wedge_codebook_16_hgtw[16] = {
-    { WEDGE_OBLIQUE27, 4, 4 },  { WEDGE_OBLIQUE63, 4, 4 },
+    { WEDGE_OBLIQUE27,  4, 4 }, { WEDGE_OBLIQUE63,  4, 4 },
     { WEDGE_OBLIQUE117, 4, 4 }, { WEDGE_OBLIQUE153, 4, 4 },
     { WEDGE_HORIZONTAL, 4, 2 }, { WEDGE_HORIZONTAL, 4, 4 },
-    { WEDGE_HORIZONTAL, 4, 6 }, { WEDGE_VERTICAL, 4, 4 },
-    { WEDGE_OBLIQUE27, 4, 2 },  { WEDGE_OBLIQUE27, 4, 6 },
+    { WEDGE_HORIZONTAL, 4, 6 }, { WEDGE_VERTICAL,   4, 4 },
+    { WEDGE_OBLIQUE27,  4, 2 }, { WEDGE_OBLIQUE27,  4, 6 },
     { WEDGE_OBLIQUE153, 4, 2 }, { WEDGE_OBLIQUE153, 4, 6 },
-    { WEDGE_OBLIQUE63, 2, 4 },  { WEDGE_OBLIQUE63, 6, 4 },
+    { WEDGE_OBLIQUE63,  2, 4 }, { WEDGE_OBLIQUE63,  6, 4 },
     { WEDGE_OBLIQUE117, 2, 4 }, { WEDGE_OBLIQUE117, 6, 4 },
 };
 
 static const wedge_code_type wedge_codebook_16_hltw[16] = {
-    { WEDGE_OBLIQUE27, 4, 4 },  { WEDGE_OBLIQUE63, 4, 4 },
+    { WEDGE_OBLIQUE27,  4, 4 }, { WEDGE_OBLIQUE63,  4, 4 },
     { WEDGE_OBLIQUE117, 4, 4 }, { WEDGE_OBLIQUE153, 4, 4 },
-    { WEDGE_VERTICAL, 2, 4 },   { WEDGE_VERTICAL, 4, 4 },
-    { WEDGE_VERTICAL, 6, 4 },   { WEDGE_HORIZONTAL, 4, 4 },
-    { WEDGE_OBLIQUE27, 4, 2 },  { WEDGE_OBLIQUE27, 4, 6 },
+    { WEDGE_VERTICAL,   2, 4 }, { WEDGE_VERTICAL,   4, 4 },
+    { WEDGE_VERTICAL,   6, 4 }, { WEDGE_HORIZONTAL, 4, 4 },
+    { WEDGE_OBLIQUE27,  4, 2 }, { WEDGE_OBLIQUE27,  4, 6 },
     { WEDGE_OBLIQUE153, 4, 2 }, { WEDGE_OBLIQUE153, 4, 6 },
-    { WEDGE_OBLIQUE63, 2, 4 },  { WEDGE_OBLIQUE63, 6, 4 },
+    { WEDGE_OBLIQUE63,  2, 4 }, { WEDGE_OBLIQUE63,  6, 4 },
     { WEDGE_OBLIQUE117, 2, 4 }, { WEDGE_OBLIQUE117, 6, 4 },
 };
 
 static const wedge_code_type wedge_codebook_16_heqw[16] = {
-    { WEDGE_OBLIQUE27, 4, 4 },  { WEDGE_OBLIQUE63, 4, 4 },
+    { WEDGE_OBLIQUE27,  4, 4 }, { WEDGE_OBLIQUE63,  4, 4 },
     { WEDGE_OBLIQUE117, 4, 4 }, { WEDGE_OBLIQUE153, 4, 4 },
     { WEDGE_HORIZONTAL, 4, 2 }, { WEDGE_HORIZONTAL, 4, 6 },
-    { WEDGE_VERTICAL, 2, 4 },   { WEDGE_VERTICAL, 6, 4 },
-    { WEDGE_OBLIQUE27, 4, 2 },  { WEDGE_OBLIQUE27, 4, 6 },
+    { WEDGE_VERTICAL,   2, 4 }, { WEDGE_VERTICAL,   6, 4 },
+    { WEDGE_OBLIQUE27,  4, 2 }, { WEDGE_OBLIQUE27,  4, 6 },
     { WEDGE_OBLIQUE153, 4, 2 }, { WEDGE_OBLIQUE153, 4, 6 },
-    { WEDGE_OBLIQUE63, 2, 4 },  { WEDGE_OBLIQUE63, 6, 4 },
+    { WEDGE_OBLIQUE63,  2, 4 }, { WEDGE_OBLIQUE63,  6, 4 },
     { WEDGE_OBLIQUE117, 2, 4 }, { WEDGE_OBLIQUE117, 6, 4 },
 };
 

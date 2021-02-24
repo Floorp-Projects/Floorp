@@ -41,24 +41,30 @@ static int to_binary(int x) { /* 0-15 -> 0000-1111 */
 static void init_tmp(pixel *buf, const ptrdiff_t stride,
                      const int w, const int h, const int bitdepth_max)
 {
+    const int noise_mask = bitdepth_max >> 4;
+    const int x_off = rnd() & 7, y_off = rnd() & 7;
+
     for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++)
-            buf[x] = rnd() & bitdepth_max;
+        for (int x = 0; x < w; x++) {
+            buf[x] = (((x + x_off) ^ (y + y_off)) & 8 ? bitdepth_max : 0) ^
+                     (rnd() & noise_mask);
+        }
         buf += PXSTRIDE(stride);
     }
 }
 
 static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
-    ALIGN_STK_64(pixel, c_dst, 448 * 64,);
-    ALIGN_STK_64(pixel, a_dst, 448 * 64,);
-    ALIGN_STK_64(pixel, h_edge, 448 * 8,);
-    ALIGN_STK_16(int16_t, filter, 2, [8]);
+    ALIGN_STK_64(pixel, c_src, 448 * 64,), *const c_dst = c_src + 32;
+    ALIGN_STK_64(pixel, a_src, 448 * 64,), *const a_dst = a_src + 32;
+    ALIGN_STK_64(pixel, edge_buf, 448 * 8,), *const h_edge = edge_buf + 32;
     pixel left[64][4];
+    LooprestorationParams params;
+    int16_t (*const filter)[8] = params.filter;
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride,
                  const pixel (*const left)[4],
                  const pixel *lpf, ptrdiff_t lpf_stride,
-                 int w, int h, const int16_t filter[2][8],
+                 int w, int h, const LooprestorationParams *params,
                  enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX);
 
     for (int t = 0; t < 2; t++) {
@@ -80,24 +86,24 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc)
             const int base_h = 1 + (rnd() & 63);
             const int bitdepth_max = (1 << bpc) - 1;
 
-            init_tmp(c_dst, 448 * sizeof(pixel), 448, 64, bitdepth_max);
-            init_tmp(h_edge, 448 * sizeof(pixel), 448, 8, bitdepth_max);
+            init_tmp(c_src, 448 * sizeof(pixel), 448, 64, bitdepth_max);
+            init_tmp(edge_buf, 448 * sizeof(pixel), 448, 8, bitdepth_max);
             init_tmp((pixel *) left, 4 * sizeof(pixel), 4, 64, bitdepth_max);
 
             for (enum LrEdgeFlags edges = 0; edges <= 0xf; edges++) {
                 const int w = edges & LR_HAVE_RIGHT ? 256 : base_w;
                 const int h = edges & LR_HAVE_BOTTOM ? 64 : base_h;
 
-                memcpy(a_dst, c_dst, 448 * 64 * sizeof(pixel));
+                memcpy(a_src, c_src, 448 * 64 * sizeof(pixel));
 
-                call_ref(c_dst + 32, 448 * sizeof(pixel), left,
-                         h_edge + 32, 448 * sizeof(pixel),
-                         w, h, filter, edges HIGHBD_TAIL_SUFFIX);
-                call_new(a_dst + 32, 448 * sizeof(pixel), left,
-                         h_edge + 32, 448 * sizeof(pixel),
-                         w, h, filter, edges HIGHBD_TAIL_SUFFIX);
-                if (checkasm_check_pixel(c_dst + 32, 448 * sizeof(pixel),
-                                         a_dst + 32, 448 * sizeof(pixel),
+                call_ref(c_dst, 448 * sizeof(pixel), left,
+                         h_edge, 448 * sizeof(pixel),
+                         w, h, &params, edges HIGHBD_TAIL_SUFFIX);
+                call_new(a_dst, 448 * sizeof(pixel), left,
+                         h_edge, 448 * sizeof(pixel),
+                         w, h, &params, edges HIGHBD_TAIL_SUFFIX);
+                if (checkasm_check_pixel(c_dst, 448 * sizeof(pixel),
+                                         a_dst, 448 * sizeof(pixel),
                                          w, h, "dst"))
                 {
                     fprintf(stderr, "size = %dx%d, edges = %04d\n",
@@ -105,63 +111,72 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc)
                     break;
                 }
             }
-            bench_new(a_dst + 32, 448 * sizeof(pixel), left,
-                      h_edge + 32, 448 * sizeof(pixel),
-                      256, 64, filter, 0xf HIGHBD_TAIL_SUFFIX);
+            bench_new(a_dst, 448 * sizeof(pixel), left,
+                      h_edge, 448 * sizeof(pixel),
+                      256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
 }
 
 static void check_sgr(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
-    ALIGN_STK_64(pixel, c_dst, 448 * 64,);
-    ALIGN_STK_64(pixel, a_dst, 448 * 64,);
-    ALIGN_STK_64(pixel, h_edge, 448 * 8,);
+    ALIGN_STK_64(pixel, c_src, 448 * 64,), *const c_dst = c_src + 32;
+    ALIGN_STK_64(pixel, a_src, 448 * 64,), *const a_dst = a_src + 32;
+    ALIGN_STK_64(pixel, edge_buf, 448 * 8,), *const h_edge = edge_buf + 32;
     pixel left[64][4];
+    LooprestorationParams params;
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride,
                  const pixel (*const left)[4],
                  const pixel *lpf, ptrdiff_t lpf_stride,
-                 int w, int h, int sgr_idx,
-                 const int16_t sgr_wt[7], enum LrEdgeFlags edges
-                 HIGHBD_DECL_SUFFIX);
+                 int w, int h, const LooprestorationParams *params,
+                 enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX);
 
-    for (int sgr_idx = 14; sgr_idx >= 6; sgr_idx -= 4) {
-        if (check_func(c->selfguided, "selfguided_%s_%dbpc",
-                       sgr_idx == 6 ? "mix" : sgr_idx == 10 ? "3x3" : "5x5", bpc))
-        {
-            int16_t sgr_wt[2];
+    static const struct { char name[4]; uint8_t idx; } sgr_data[3] = {
+        { "5x5", 14 },
+        { "3x3", 10 },
+        { "mix",  0 },
+    };
 
-            sgr_wt[0] = dav1d_sgr_params[sgr_idx][0] ? (rnd() & 127) - 96 : 0;
-            sgr_wt[1] = dav1d_sgr_params[sgr_idx][1] ? (rnd() & 127) - 32 :
-                            iclip(128 - sgr_wt[0], -32, 95);
+    for (int i = 0; i < 3; i++) {
+        if (check_func(c->sgr[i], "sgr_%s_%dbpc", sgr_data[i].name, bpc)) {
+            const uint16_t *const sgr_params = dav1d_sgr_params[sgr_data[i].idx];
+            params.sgr.s0 = sgr_params[0];
+            params.sgr.s1 = sgr_params[1];
+            params.sgr.w0 = sgr_params[0] ? (rnd() & 127) - 96 : 0;
+            params.sgr.w1 = (sgr_params[1] ? 160 - (rnd() & 127) : 33) - params.sgr.w0;
 
             const int base_w = 1 + (rnd() % 384);
             const int base_h = 1 + (rnd() & 63);
             const int bitdepth_max = (1 << bpc) - 1;
 
-            init_tmp(c_dst, 448 * sizeof(pixel), 448, 64, bitdepth_max);
-            init_tmp(h_edge, 448 * sizeof(pixel), 448, 8, bitdepth_max);
+            init_tmp(c_src, 448 * sizeof(pixel), 448, 64, bitdepth_max);
+            init_tmp(edge_buf, 448 * sizeof(pixel), 448, 8, bitdepth_max);
             init_tmp((pixel *) left, 4 * sizeof(pixel), 4, 64, bitdepth_max);
 
             for (enum LrEdgeFlags edges = 0; edges <= 0xf; edges++) {
                 const int w = edges & LR_HAVE_RIGHT ? 256 : base_w;
                 const int h = edges & LR_HAVE_BOTTOM ? 64 : base_h;
 
-                memcpy(a_dst, c_dst, 448 * 64 * sizeof(pixel));
+                memcpy(a_src, c_src, 448 * 64 * sizeof(pixel));
 
-                call_ref(c_dst + 32, 448 * sizeof(pixel), left,
-                         h_edge + 32, 448 * sizeof(pixel),
-                         w, h, sgr_idx, sgr_wt, edges HIGHBD_TAIL_SUFFIX);
-                call_new(a_dst + 32, 448 * sizeof(pixel), left,
-                         h_edge + 32, 448 * sizeof(pixel),
-                         w, h, sgr_idx, sgr_wt, edges HIGHBD_TAIL_SUFFIX);
-                checkasm_check_pixel(c_dst + 32, 448 * sizeof(pixel),
-                                     a_dst + 32, 448 * sizeof(pixel),
-                                     w, h, "dst");
+                call_ref(c_dst, 448 * sizeof(pixel), left,
+                         h_edge, 448 * sizeof(pixel),
+                         w, h, &params, edges HIGHBD_TAIL_SUFFIX);
+                call_new(a_dst, 448 * sizeof(pixel), left,
+                         h_edge, 448 * sizeof(pixel),
+                         w, h, &params, edges HIGHBD_TAIL_SUFFIX);
+                if (checkasm_check_pixel(c_dst, 448 * sizeof(pixel),
+                                         a_dst, 448 * sizeof(pixel),
+                                         w, h, "dst"))
+                {
+                    fprintf(stderr, "size = %dx%d, edges = %04d\n",
+                            w, h, to_binary(edges));
+                    break;
+                }
             }
-            bench_new(a_dst + 32, 448 * sizeof(pixel), left,
-                      h_edge + 32, 448 * sizeof(pixel),
-                      256, 64, sgr_idx, sgr_wt, 0xf HIGHBD_TAIL_SUFFIX);
+            bench_new(a_dst, 448 * sizeof(pixel), left,
+                      h_edge, 448 * sizeof(pixel),
+                      256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
 }

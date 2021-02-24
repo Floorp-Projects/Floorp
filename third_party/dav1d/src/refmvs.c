@@ -51,12 +51,13 @@ static void add_spatial_candidate(refmvs_candidate *const mvstack, int *const cn
                 const mv cand_mv = ((b->mf & 1) && gmv[0].n != INVALID_MV) ?
                                    gmv[0] : b->mv.mv[n];
 
+                *have_refmv_match = 1;
+                *have_newmv_match |= b->mf >> 1;
+
                 const int last = *cnt;
                 for (int m = 0; m < last; m++)
                     if (mvstack[m].mv.mv[0].n == cand_mv.n) {
                         mvstack[m].weight += weight;
-                        *have_refmv_match = 1;
-                        *have_newmv_match |= b->mf >> 1;
                         return;
                     }
 
@@ -65,8 +66,6 @@ static void add_spatial_candidate(refmvs_candidate *const mvstack, int *const cn
                     mvstack[last].weight = weight;
                     *cnt = last + 1;
                 }
-                *have_refmv_match = 1;
-                *have_newmv_match |= b->mf >> 1;
                 return;
             }
         }
@@ -76,12 +75,13 @@ static void add_spatial_candidate(refmvs_candidate *const mvstack, int *const cn
             [1] = ((b->mf & 1) && gmv[1].n != INVALID_MV) ? gmv[1] : b->mv.mv[1],
         }};
 
+        *have_refmv_match = 1;
+        *have_newmv_match |= b->mf >> 1;
+
         const int last = *cnt;
         for (int n = 0; n < last; n++)
             if (mvstack[n].mv.n == cand_mv.n) {
                 mvstack[n].weight += weight;
-                *have_refmv_match = 1;
-                *have_newmv_match |= b->mf >> 1;
                 return;
             }
 
@@ -90,8 +90,6 @@ static void add_spatial_candidate(refmvs_candidate *const mvstack, int *const cn
             mvstack[last].weight = weight;
             *cnt = last + 1;
         }
-        *have_refmv_match = 1;
-        *have_newmv_match |= b->mf >> 1;
     }
 }
 

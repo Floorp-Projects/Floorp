@@ -37,14 +37,7 @@
 
 #include "output/muxer.h"
 
-static const uint8_t s[][4] = {
-    { 7, 12, 17, 22, },
-    { 5,  9, 14, 20, },
-    { 4, 11, 16, 23, },
-    { 6, 10, 15, 21, },
-};
-
-static const unsigned k[] = {
+static const uint32_t k[64] = {
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
     0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
     0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
@@ -62,7 +55,6 @@ static const unsigned k[] = {
     0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391,
 };
-
 
 #if ENDIANNESS_BIG
 #define NE2LE_32(x) (((x & 0x00ff) << 24) |\
@@ -85,8 +77,11 @@ static const unsigned k[] = {
 #endif
 
 typedef struct MuxerPriv {
-    unsigned abcd[4];
-    uint8_t data[64];
+    uint32_t abcd[4];
+    union {
+        uint8_t data[64];
+        uint32_t data32[16];
+    };
     uint64_t len;
     FILE *f;
 #if ENDIANNESS_BIG
@@ -120,42 +115,48 @@ static int md5_open(MD5Context *const md5, const char *const file,
     return 0;
 }
 
-static inline unsigned leftrotate(const unsigned x, const unsigned c) {
+static inline uint32_t leftrotate(const uint32_t x, const int c) {
     return (x << c) | (x >> (32 - c));
 }
 
-static void md5_body(MD5Context *md5, const uint8_t *const _data) {
-    const uint32_t *data = (uint32_t *) _data;
+#define F(i) do { \
+    a = b + leftrotate(a + ((b & c) | (~b & d)) + k[i + 0] + NE2LE_32(data[i + 0]),  7); \
+    d = a + leftrotate(d + ((a & b) | (~a & c)) + k[i + 1] + NE2LE_32(data[i + 1]), 12); \
+    c = d + leftrotate(c + ((d & a) | (~d & b)) + k[i + 2] + NE2LE_32(data[i + 2]), 17); \
+    b = c + leftrotate(b + ((c & d) | (~c & a)) + k[i + 3] + NE2LE_32(data[i + 3]), 22); \
+} while (0)
 
-    unsigned a = md5->abcd[0];
-    unsigned b = md5->abcd[1];
-    unsigned c = md5->abcd[2];
-    unsigned d = md5->abcd[3];
-    unsigned i;
+#define G(i) do { \
+    a = b + leftrotate(a + ((d & b) | (~d & c)) + k[i + 0] + NE2LE_32(data[(i +  1) & 15]),  5); \
+    d = a + leftrotate(d + ((c & a) | (~c & b)) + k[i + 1] + NE2LE_32(data[(i +  6) & 15]),  9); \
+    c = d + leftrotate(c + ((b & d) | (~b & a)) + k[i + 2] + NE2LE_32(data[(i + 11) & 15]), 14); \
+    b = c + leftrotate(b + ((a & c) | (~a & d)) + k[i + 3] + NE2LE_32(data[(i +  0) & 15]), 20); \
+} while (0)
 
-    for (i = 0; i < 64; i++) {
-        unsigned f, g, tmp;
+#define H(i) do { \
+    a = b + leftrotate(a + (b ^ c ^ d) + k[i + 0] + NE2LE_32(data[( 5 - i) & 15]),  4); \
+    d = a + leftrotate(d + (a ^ b ^ c) + k[i + 1] + NE2LE_32(data[( 8 - i) & 15]), 11); \
+    c = d + leftrotate(c + (d ^ a ^ b) + k[i + 2] + NE2LE_32(data[(11 - i) & 15]), 16); \
+    b = c + leftrotate(b + (c ^ d ^ a) + k[i + 3] + NE2LE_32(data[(14 - i) & 15]), 23); \
+} while (0)
 
-        if (i < 16) {
-            f = (b & c) | (~b & d);
-            g = i;
-        } else if (i < 32) {
-            f = (d & b) | (~d & c);
-            g = (5 * i + 1) & 15;
-        } else if (i < 48) {
-            f = b ^ c ^ d;
-            g = (3 * i + 5) & 15;
-        } else {
-            f = c ^ (b | ~d);
-            g = (7 * i) & 15;
-        }
+#define I(i) do { \
+    a = b + leftrotate(a + (c ^ (b | ~d)) + k[i + 0] + NE2LE_32(data[( 0 - i) & 15]),  6); \
+    d = a + leftrotate(d + (b ^ (a | ~c)) + k[i + 1] + NE2LE_32(data[( 7 - i) & 15]), 10); \
+    c = d + leftrotate(c + (a ^ (d | ~b)) + k[i + 2] + NE2LE_32(data[(14 - i) & 15]), 15); \
+    b = c + leftrotate(b + (d ^ (c | ~a)) + k[i + 3] + NE2LE_32(data[( 5 - i) & 15]), 21); \
+} while (0)
 
-        tmp = d;
-        d = c;
-        c = b;
-        b += leftrotate(a + f + k[i] + NE2LE_32(data[g]), s[i >> 4][i & 3]);
-        a = tmp;
-    }
+static void md5_body(MD5Context *const md5, const uint32_t *const data) {
+    uint32_t a = md5->abcd[0];
+    uint32_t b = md5->abcd[1];
+    uint32_t c = md5->abcd[2];
+    uint32_t d = md5->abcd[3];
+
+    F( 0); F( 4); F( 8); F(12);
+    G(16); G(20); G(24); G(28);
+    H(32); H(36); H(40); H(44);
+    I(48); I(52); I(56); I(60);
 
     md5->abcd[0] += a;
     md5->abcd[1] += b;
@@ -167,19 +168,19 @@ static void md5_update(MD5Context *const md5, const uint8_t *data, unsigned len)
     if (!len) return;
 
     if (md5->len & 63) {
-        const unsigned tmp = imin(len, 64 - (md5->len & 63));
+        const unsigned tmp = umin(len, 64 - (md5->len & 63));
 
         memcpy(&md5->data[md5->len & 63], data, tmp);
         len -= tmp;
         data += tmp;
         md5->len += tmp;
         if (!(md5->len & 63))
-            md5_body(md5, md5->data);
+            md5_body(md5, md5->data32);
     }
 
     while (len >= 64) {
         memcpy(md5->data, data, 64);
-        md5_body(md5, md5->data);
+        md5_body(md5, md5->data32);
         md5->len += 64;
         data += 64;
         len -= 64;
@@ -251,12 +252,12 @@ static int md5_write(MD5Context *const md5, Dav1dPicture *const p) {
 
 static void md5_finish(MD5Context *const md5) {
     static const uint8_t bit[2] = { 0x80, 0x00 };
-    uint64_t len = NE2LE_64(md5->len << 3);
+    const uint64_t len = NE2LE_64(md5->len << 3);
 
     md5_update(md5, &bit[0], 1);
     while ((md5->len & 63) != 56)
         md5_update(md5, &bit[1], 1);
-    md5_update(md5, (uint8_t *) &len, 8);
+    md5_update(md5, (const uint8_t *) &len, 8);
 }
 
 static void md5_close(MD5Context *const md5) {
@@ -278,23 +279,20 @@ static void md5_close(MD5Context *const md5) {
         fclose(md5->f);
 }
 
-static int md5_verify(MD5Context *const md5, const char *const md5_str) {
+static int md5_verify(MD5Context *const md5, const char *md5_str) {
     md5_finish(md5);
 
     if (strlen(md5_str) < 32)
-        return 0;
+        return -1;
 
-    const char *p = md5_str;
-    unsigned abcd[4] = { 0 };
+    uint32_t abcd[4] = { 0 };
     char t[3] = { 0 };
     for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            unsigned val;
+        for (int j = 0; j < 32; j += 8) {
             char *ignore;
-            memcpy(t, p, 2);
-            p += 2;
-            val = (unsigned) strtoul(t, &ignore, 16);
-            abcd[i] |= val << (8 * j);
+            memcpy(t, md5_str, 2);
+            md5_str += 2;
+            abcd[i] |= (uint32_t) strtoul(t, &ignore, 16) << j;
         }
     }
 

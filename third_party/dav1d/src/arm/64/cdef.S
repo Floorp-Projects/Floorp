@@ -363,10 +363,8 @@ find_dir 8
         neg             v20.16b, v21.16b              // -imin()
         bsl             v18.16b, v16.16b, v17.16b     // constrain() = apply_sign()
         bsl             v22.16b, v20.16b, v21.16b     // constrain() = apply_sign()
-        smlal           v1.8h,   v18.8b,  v19.8b      // sum += taps[k] * constrain()
-        smlal           v1.8h,   v22.8b,  v19.8b      // sum += taps[k] * constrain()
-        smlal2          v2.8h,   v18.16b, v19.16b     // sum += taps[k] * constrain()
-        smlal2          v2.8h,   v22.16b, v19.16b     // sum += taps[k] * constrain()
+        mla             v1.16b,  v18.16b, v19.16b     // sum += taps[k] * constrain()
+        mla             v2.16b,  v22.16b, v19.16b     // sum += taps[k] * constrain()
 .endm
 
 // void cdef_filterX_edged_8bpc_neon(pixel *dst, ptrdiff_t dst_stride,
@@ -418,8 +416,11 @@ function cdef_filter\w\suffix\()_edged_8bpc_neon
         ld1             {v0.s}[3], [x14]            // px
 .endif
 
-        movi            v1.8h,  #0                  // sum
-        movi            v2.8h,  #0                  // sum
+        // We need 9-bits or two 8-bit accululators to fit the sum.
+        // Max of |sum| > 15*2*6(pri) + 4*4*3(sec) = 228.
+        // Start sum at -1 instead of 0 to help handle rounding later.
+        movi            v1.16b, #255                // sum
+        movi            v2.16b, #0                  // sum
 .if \min
         mov             v3.16b, v0.16b              // min
         mov             v4.16b, v0.16b              // max
@@ -468,16 +469,16 @@ function cdef_filter\w\suffix\()_edged_8bpc_neon
 .endif
         b.ne            2b
 
-        sshr            v5.8h,   v1.8h,   #15       // -(sum < 0)
-        sshr            v6.8h,   v2.8h,   #15       // -(sum < 0)
-        add             v1.8h,   v1.8h,   v5.8h     // sum - (sum < 0)
-        add             v2.8h,   v2.8h,   v6.8h     // sum - (sum < 0)
-        srshr           v1.8h,   v1.8h,   #4        // (8 + sum - (sum < 0)) >> 4
-        srshr           v2.8h,   v2.8h,   #4        // (8 + sum - (sum < 0)) >> 4
-        uaddw           v1.8h,   v1.8h,   v0.8b     // px + (8 + sum ...) >> 4
-        uaddw2          v2.8h,   v2.8h,   v0.16b    // px + (8 + sum ...) >> 4
-        sqxtun          v0.8b,   v1.8h
-        sqxtun2         v0.16b,  v2.8h
+        // Perform halving adds since the value won't fit otherwise.
+        // To handle the offset for negative values, use both halving w/ and w/o rounding.
+        srhadd          v5.16b,  v1.16b,  v2.16b    // sum >> 1
+        shadd           v6.16b,  v1.16b,  v2.16b    // (sum - 1) >> 1
+        sshr            v1.16b,  v5.16b,  #7        // sum < 0
+        bsl             v1.16b,  v6.16b,  v5.16b    // (sum - (sum < 0)) >> 1
+
+        srshr           v1.16b,  v1.16b,  #3        // (8 + sum - (sum < 0)) >> 4
+
+        usqadd          v0.16b,  v1.16b             // px + (8 + sum ...) >> 4
 .if \min
         umin            v0.16b,  v0.16b,  v4.16b
         umax            v0.16b,  v0.16b,  v3.16b    // iclip(px + .., min, max)

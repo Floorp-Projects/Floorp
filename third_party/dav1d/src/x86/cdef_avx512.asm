@@ -109,7 +109,8 @@ DECLARE_REG_TMP 8, 5
 ; 5e 5f 50 51 52 53 54 55
 
 INIT_ZMM avx512icl
-cglobal cdef_filter_4x4, 4, 8, 13, dst, stride, left, top, pri, sec, dir, damping, edge
+cglobal cdef_filter_4x4_8bpc, 4, 8, 13, dst, stride, left, top, \
+                                        pri, sec, dir, damping, edge
 %define base r7-edge_mask
     movq         xmm0, [dstq+strideq*0]
     movhps       xmm0, [dstq+strideq*1]
@@ -269,8 +270,7 @@ DECLARE_REG_TMP 2, 7
 ; L8 L9 40 41 42 43 44 45  8e 8f 80 81 82 83 84 85
 ; La Lb 50 51 52 53 54 55  9e 9f 90 91 92 93 94 95
 
-cglobal cdef_filter_4x8, 4, 9, 22, dst, stride, left, top, \
-                                   pri, sec, dir, damping, edge
+cglobal cdef_filter_4x8_8bpc, 4, 9, 22, dst, stride, left, top, pri, sec, dir, damping, edge
 %define base r8-edge_mask
     vpbroadcastd ym21, strided
     mov           r6d, edgem
@@ -504,8 +504,8 @@ ALIGN function_align
 ; 8e 8f 80 81 82 83 84 85  84 85 86 87 88 89 8a 8b
 ; 9e 9f 90 91 92 93 94 95  94 95 96 97 98 99 9a 9b
 
-cglobal cdef_filter_8x8, 4, 11, 32, 4*64, dst, stride, left, top, \
-                                          pri, sec, dir, damping, edge
+cglobal cdef_filter_8x8_8bpc, 4, 11, 32, 4*64, dst, stride, left, top, \
+                                               pri, sec, dir, damping, edge
 %define base r8-edge_mask
     mov           r6d, edgem
     lea           r10, [dstq+strideq*4-2]

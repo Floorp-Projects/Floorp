@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -33,6 +33,7 @@
 #include "common/attributes.h"
 #include "common/bitdepth.h"
 #include "common/dump.h"
+#include "common/frame.h"
 #include "common/intops.h"
 
 #include "src/cdef_apply.h"
@@ -438,34 +439,39 @@ static int decode_coefs(Dav1dTileContext *const t,
     } else {
         eob = eob_bin;
     }
+    assert(eob >= 0);
 
     // base tokens
     uint16_t (*const eob_cdf)[4] = ts->cdf.coef.eob_base_tok[t_dim->ctx][chroma];
     uint16_t (*const hi_cdf)[4] = ts->cdf.coef.br_tok[imin(t_dim->ctx, 3)][chroma];
-    const uint16_t *const scan = dav1d_scans[tx][tx_class];
-    int dc_tok;
+    unsigned rc, dc_tok;
 
     if (eob) {
         uint16_t (*const lo_cdf)[4] = ts->cdf.coef.base_tok[t_dim->ctx][chroma];
         uint8_t *const levels = t->scratch.levels; // bits 0-5: tok, 6-7: lo_tok
         const int sw = imin(t_dim->w, 8), sh = imin(t_dim->h, 8);
-        const unsigned shift = 2 + imin(t_dim->lh, 3), mask = 4 * sh - 1;
 
         /* eob */
-        unsigned rc = scan[eob], x = rc >> shift, y = rc & mask;
         unsigned ctx = 1 + (eob > sw * sh * 2) + (eob > sw * sh * 4);
         int eob_tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, eob_cdf[ctx], 2);
         int tok = eob_tok + 1;
         int level_tok = tok * 0x41;
         unsigned mag;
-        if (dbg)
-            printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n",
-                   t_dim->ctx, chroma, ctx, eob, rc, tok, ts->msac.rng);
 
 #define DECODE_COEFS_CLASS(tx_class) \
+        unsigned x, y; \
+        if (tx_class == TX_CLASS_2D) \
+            rc = scan[eob], x = rc >> shift, y = rc & mask; \
+        else if (tx_class == TX_CLASS_H) \
+            /* Transposing reduces the stride and padding requirements */ \
+            x = eob & mask, y = eob >> shift, rc = eob; \
+        else /* tx_class == TX_CLASS_V */ \
+            x = eob & mask, y = eob >> shift, rc = (x << shift2) | y; \
+        if (dbg) \
+            printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n", \
+                   t_dim->ctx, chroma, ctx, eob, rc, tok, ts->msac.rng); \
         if (eob_tok == 2) { \
-            ctx = (tx_class == TX_CLASS_2D ? (x | y) > 1 : \
-                   tx_class == TX_CLASS_H ? x != 0 : y != 0) ? 14 : 7; \
+            ctx = (tx_class == TX_CLASS_2D ? (x | y) > 1 : y != 0) ? 14 : 7; \
             tok = dav1d_msac_decode_hi_tok(&ts->msac, hi_cdf[ctx]); \
             level_tok = tok + (3 << 6); \
             if (dbg) \
@@ -473,40 +479,46 @@ static int decode_coefs(Dav1dTileContext *const t,
                        imin(t_dim->ctx, 3), chroma, ctx, eob, rc, tok, \
                        ts->msac.rng); \
         } \
-        cf[rc] = tok; \
-        if (tx_class == TX_CLASS_H) \
-            /* Transposing reduces the stride and padding requirements */ \
-            levels[y * stride + x] = (uint8_t) level_tok; \
-        else \
-            levels[x * stride + y] = (uint8_t) level_tok; \
+        cf[rc] = tok << 11; \
+        levels[x * stride + y] = (uint8_t) level_tok; \
         for (int i = eob - 1; i > 0; i--) { /* ac */ \
-            if (tx_class == TX_CLASS_H) \
-                rc = i, x = rc & mask, y = rc >> shift; \
-            else \
-                rc = scan[i], x = rc >> shift, y = rc & mask; \
+            unsigned rc_i; \
+            if (tx_class == TX_CLASS_2D) \
+                rc_i = scan[i], x = rc_i >> shift, y = rc_i & mask; \
+            else if (tx_class == TX_CLASS_H) \
+                x = i & mask, y = i >> shift, rc_i = i; \
+            else /* tx_class == TX_CLASS_V */ \
+                x = i & mask, y = i >> shift, rc_i = (x << shift2) | y; \
             assert(x < 32 && y < 32); \
             uint8_t *const level = levels + x * stride + y; \
             ctx = get_lo_ctx(level, tx_class, &mag, lo_ctx_offsets, x, y, stride); \
             if (tx_class == TX_CLASS_2D) \
                 y |= x; \
             tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf[ctx], 3); \
-            level_tok = tok * 0x41; \
             if (dbg) \
                 printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n", \
-                       t_dim->ctx, chroma, ctx, i, rc, tok, ts->msac.rng); \
+                       t_dim->ctx, chroma, ctx, i, rc_i, tok, ts->msac.rng); \
             if (tok == 3) { \
                 mag &= 63; \
                 ctx = (y > (tx_class == TX_CLASS_2D) ? 14 : 7) + \
                       (mag > 12 ? 6 : (mag + 1) >> 1); \
                 tok = dav1d_msac_decode_hi_tok(&ts->msac, hi_cdf[ctx]); \
-                level_tok = tok + (3 << 6); \
                 if (dbg) \
                     printf("Post-hi_tok[%d][%d][%d][%d=%d=%d]: r=%d\n", \
-                           imin(t_dim->ctx, 3), chroma, ctx, i, rc, tok, \
+                           imin(t_dim->ctx, 3), chroma, ctx, i, rc_i, tok, \
                            ts->msac.rng); \
+                *level = (uint8_t) (tok + (3 << 6)); \
+                cf[rc_i] = (tok << 11) | rc; \
+                rc = rc_i; \
+            } else { \
+                /* 0x1 for tok, 0x7ff as bitmask for rc, 0x41 for level_tok */ \
+                tok *= 0x17ff41; \
+                *level = (uint8_t) tok; \
+                /* tok ? (tok << 11) | rc : 0 */ \
+                tok = (tok >> 9) & (rc + ~0x7ffu); \
+                if (tok) rc = rc_i; \
+                cf[rc_i] = tok; \
             } \
-            cf[rc] = tok; \
-            *level = (uint8_t) level_tok; \
         } \
         /* dc */ \
         ctx = (tx_class == TX_CLASS_2D) ? 0 : \
@@ -528,27 +540,35 @@ static int decode_coefs(Dav1dTileContext *const t,
         } \
         break
 
+        const uint16_t *scan;
         switch (tx_class) {
         case TX_CLASS_2D: {
             const unsigned nonsquare_tx = tx >= RTX_4X8;
             const uint8_t (*const lo_ctx_offsets)[5] =
                 dav1d_lo_ctx_offsets[nonsquare_tx + (tx & nonsquare_tx)];
+            scan = dav1d_scans[tx];
             const ptrdiff_t stride = 4 * sh;
+            const unsigned shift = t_dim->lh < 4 ? t_dim->lh + 2 : 5, shift2 = 0;
+            const unsigned mask = 4 * sh - 1;
             memset(levels, 0, stride * (4 * sw + 2));
             DECODE_COEFS_CLASS(TX_CLASS_2D);
         }
         case TX_CLASS_H: {
-#define lo_ctx_offsets NULL
+            const uint8_t (*const lo_ctx_offsets)[5] = NULL;
             const ptrdiff_t stride = 16;
+            const unsigned shift = t_dim->lh + 2, shift2 = 0;
+            const unsigned mask = 4 * sh - 1;
             memset(levels, 0, stride * (4 * sh + 2));
             DECODE_COEFS_CLASS(TX_CLASS_H);
         }
         case TX_CLASS_V: {
+            const uint8_t (*const lo_ctx_offsets)[5] = NULL;
             const ptrdiff_t stride = 16;
+            const unsigned shift = t_dim->lw + 2, shift2 = t_dim->lh + 2;
+            const unsigned mask = 4 * sw - 1;
             memset(levels, 0, stride * (4 * sw + 2));
             DECODE_COEFS_CLASS(TX_CLASS_V);
         }
-#undef lo_ctx_offsets
 #undef DECODE_COEFS_CLASS
         default: assert(0);
         }
@@ -564,71 +584,137 @@ static int decode_coefs(Dav1dTileContext *const t,
                 printf("Post-dc_hi_tok[%d][%d][0][%d]: r=%d\n",
                        imin(t_dim->ctx, 3), chroma, dc_tok, ts->msac.rng);
         }
+        rc = 0;
     }
 
     // residual and sign
-    int dc_sign = 1 << 6;
     const uint16_t *const dq_tbl = ts->dq[b->seg_id][plane];
-    const uint8_t *const qm_tbl = f->qm[lossless || is_1d || *txtp == IDTX][tx][plane];
+    const uint8_t *const qm_tbl = *txtp < IDTX ? f->qm[tx][plane] : NULL;
     const int dq_shift = imax(0, t_dim->ctx - 2);
-    const int bitdepth = BITDEPTH == 8 ? 8 : f->cur.p.bpc;
-    const int cf_max = (1 << (7 + bitdepth)) - 1;
-    unsigned cul_level = 0;
+    const unsigned cf_max = ~(~127U << (BITDEPTH == 8 ? 8 : f->cur.p.bpc));
+    unsigned cul_level, dc_sign_level;
 
-    if (dc_tok) { // dc
-        const int dc_sign_ctx = get_dc_sign_ctx(tx, a, l);
-        uint16_t *const dc_sign_cdf =
-            ts->cdf.coef.dc_sign[chroma][dc_sign_ctx];
-        const int sign = dav1d_msac_decode_bool_adapt(&ts->msac, dc_sign_cdf);
-        const unsigned dq = (dq_tbl[0] * qm_tbl[0] + 16) >> 5;
-        if (dbg)
-            printf("Post-dc_sign[%d][%d][%d]: r=%d\n",
-                   chroma, dc_sign_ctx, sign, ts->msac.rng);
-        dc_sign = (sign - 1) & (2 << 6);
+    if (!dc_tok) {
+        cul_level = 0;
+        dc_sign_level = 1 << 6;
+        if (qm_tbl) goto ac_qm;
+        goto ac_noqm;
+    }
+
+    const int dc_sign_ctx = get_dc_sign_ctx(tx, a, l);
+    uint16_t *const dc_sign_cdf = ts->cdf.coef.dc_sign[chroma][dc_sign_ctx];
+    const int dc_sign = dav1d_msac_decode_bool_adapt(&ts->msac, dc_sign_cdf);
+    if (dbg)
+        printf("Post-dc_sign[%d][%d][%d]: r=%d\n",
+               chroma, dc_sign_ctx, dc_sign, ts->msac.rng);
+
+    unsigned dc_dq = dq_tbl[0];
+    dc_sign_level = (dc_sign - 1) & (2 << 6);
+
+    if (qm_tbl) {
+        dc_dq = (dc_dq * qm_tbl[0] + 16) >> 5;
 
         if (dc_tok == 15) {
-            dc_tok += read_golomb(&ts->msac);
+            dc_tok = read_golomb(&ts->msac) + 15;
             if (dbg)
                 printf("Post-dc_residual[%d->%d]: r=%d\n",
                        dc_tok - 15, dc_tok, ts->msac.rng);
 
             dc_tok &= 0xfffff;
+            dc_dq = (dc_dq * dc_tok) & 0xffffff;
+        } else {
+            dc_dq *= dc_tok;
+            assert(dc_dq <= 0xffffff);
         }
+        cul_level = dc_tok;
+        dc_dq >>= dq_shift;
+        cf[0] = (coef) (umin(dc_dq - dc_sign, cf_max) ^ -dc_sign);
 
-        cul_level += dc_tok;
-        dc_tok = ((dq * dc_tok) & 0xffffff) >> dq_shift;
-        cf[0] = imin(dc_tok - sign, cf_max) ^ -sign;
-    }
-    for (int i = 1; i <= eob; i++) { // ac
-        const int rc = scan[i];
-        int tok = cf[rc];
-        if (!tok) continue;
+        if (rc) ac_qm: {
+            const unsigned ac_dq = dq_tbl[1];
+            do {
+                const int sign = dav1d_msac_decode_bool_equi(&ts->msac);
+                if (dbg)
+                    printf("Post-sign[%d=%d]: r=%d\n", rc, sign, ts->msac.rng);
+                const unsigned rc_tok = cf[rc];
+                unsigned tok, dq = (ac_dq * qm_tbl[rc] + 16) >> 5;
 
-        // sign
-        const int sign = dav1d_msac_decode_bool_equi(&ts->msac);
-        const unsigned dq = (dq_tbl[1] * qm_tbl[rc] + 16) >> 5;
-        if (dbg)
-            printf("Post-sign[%d=%d=%d]: r=%d\n", i, rc, sign, ts->msac.rng);
+                if (rc_tok >= (15 << 11)) {
+                    tok = read_golomb(&ts->msac) + 15;
+                    if (dbg)
+                        printf("Post-residual[%d=%d->%d]: r=%d\n",
+                               rc, tok - 15, tok, ts->msac.rng);
 
-        // residual
-        if (tok == 15) {
-            tok += read_golomb(&ts->msac);
+                    tok &= 0xfffff;
+                    dq = (dq * tok) & 0xffffff;
+                } else {
+                    tok = rc_tok >> 11;
+                    dq *= tok;
+                    assert(dq <= 0xffffff);
+                }
+                cul_level += tok;
+                dq >>= dq_shift;
+                cf[rc] = (coef) (umin(dq - sign, cf_max) ^ -sign);
+
+                rc = rc_tok & 0x3ff;
+            } while (rc);
+        }
+    } else {
+        // non-qmatrix is the common case and allows for additional optimizations
+        if (dc_tok == 15) {
+            dc_tok = read_golomb(&ts->msac) + 15;
             if (dbg)
-                printf("Post-residual[%d=%d=%d->%d]: r=%d\n",
-                       i, rc, tok - 15, tok, ts->msac.rng);
+                printf("Post-dc_residual[%d->%d]: r=%d\n",
+                       dc_tok - 15, dc_tok, ts->msac.rng);
 
-            // coefficient parsing, see 5.11.39
-            tok &= 0xfffff;
+            dc_tok &= 0xfffff;
+            dc_dq = ((dc_dq * dc_tok) & 0xffffff) >> dq_shift;
+            dc_dq = umin(dc_dq - dc_sign, cf_max);
+        } else {
+            dc_dq = ((dc_dq * dc_tok) >> dq_shift) - dc_sign;
+            assert(dc_dq <= cf_max);
         }
+        cul_level = dc_tok;
+        cf[0] = (coef) (dc_dq ^ -dc_sign);
 
-        // dequant, see 7.12.3
-        cul_level += tok;
-        tok = ((dq * tok) & 0xffffff) >> dq_shift;
-        cf[rc] = imin(tok - sign, cf_max) ^ -sign;
+        if (rc) ac_noqm: {
+            const unsigned ac_dq = dq_tbl[1];
+            do {
+                const int sign = dav1d_msac_decode_bool_equi(&ts->msac);
+                if (dbg)
+                    printf("Post-sign[%d=%d]: r=%d\n", rc, sign, ts->msac.rng);
+                const unsigned rc_tok = cf[rc];
+                unsigned tok, dq;
+
+                // residual
+                if (rc_tok >= (15 << 11)) {
+                    tok = read_golomb(&ts->msac) + 15;
+                    if (dbg)
+                        printf("Post-residual[%d=%d->%d]: r=%d\n",
+                               rc, tok - 15, tok, ts->msac.rng);
+
+                    // coefficient parsing, see 5.11.39
+                    tok &= 0xfffff;
+
+                    // dequant, see 7.12.3
+                    dq = ((ac_dq * tok) & 0xffffff) >> dq_shift;
+                    dq = umin(dq - sign, cf_max);
+                } else {
+                    // cannot exceed cf_max, so we can avoid the clipping
+                    tok = rc_tok >> 11;
+                    dq = ((ac_dq * tok) >> dq_shift) - sign;
+                    assert(dq <= cf_max);
+                }
+                cul_level += tok;
+                cf[rc] = (coef) (dq ^ -sign);
+
+                rc = rc_tok & 0x3ff; // next non-zero rc, zero if eob
+            } while (rc);
+        }
     }
 
     // context
-    *res_ctx = umin(cul_level, 63) | dc_sign;
+    *res_ctx = umin(cul_level, 63) | dc_sign_level;
 
     return eob;
 }
@@ -1544,7 +1630,7 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTileContext *const t, const enum BlockSize 
         4 * (t->by * PXSTRIDE(f->cur.stride[0]) + t->bx);
     const ptrdiff_t uvdstoff =
         4 * ((t->bx >> ss_hor) + (t->by >> ss_ver) * PXSTRIDE(f->cur.stride[1]));
-    if (!(f->frame_hdr->frame_type & 1)) {
+    if (IS_KEY_OR_INTRA(f->frame_hdr)) {
         // intrabc
         assert(!f->frame_hdr->super_res.enabled);
         res = mc(t, dst, NULL, f->cur.stride[0], bw4, bh4, t->bx, t->by, 0,
@@ -1965,74 +2051,107 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTileContext *const t, const enum BlockSize 
     return 0;
 }
 
-void bytefn(dav1d_filter_sbrow)(Dav1dFrameContext *const f, const int sby) {
-    const int sbsz = f->sb_step, sbh = f->sbh;
-
-    if (f->frame_hdr->loopfilter.level_y[0] ||
-        f->frame_hdr->loopfilter.level_y[1])
-    {
+void bytefn(dav1d_filter_sbrow_deblock)(Dav1dFrameContext*const f, const int sby) {
+    const int y = sby * f->sb_step * 4;
+    const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+    pixel *const p[3] = {
+        f->lf.p[0] + y * PXSTRIDE(f->cur.stride[0]),
+        f->lf.p[1] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver),
+        f->lf.p[2] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver)
+    };
+    Av1Filter *mask = f->lf.mask + (sby >> !f->seq_hdr->sb128) * f->sb128w;
+    if (f->frame_hdr->loopfilter.level_y[0] || f->frame_hdr->loopfilter.level_y[1]) {
         int start_of_tile_row = 0;
         if (f->frame_hdr->tiling.row_start_sb[f->lf.tile_row] == sby)
             start_of_tile_row = f->lf.tile_row++;
-        bytefn(dav1d_loopfilter_sbrow)(f, f->lf.p, f->lf.mask_ptr, sby,
-                                       start_of_tile_row);
+        bytefn(dav1d_loopfilter_sbrow)(f, p, mask, sby, start_of_tile_row);
     }
-
     if (f->lf.restore_planes) {
         // Store loop filtered pixels required by loop restoration
-        bytefn(dav1d_lr_copy_lpf)(f, f->lf.p, sby);
+        bytefn(dav1d_lr_copy_lpf)(f, p, sby);
     }
-    if (f->seq_hdr->cdef) {
-        if (sby) {
-            const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
-            pixel *p_up[3] = {
-                f->lf.p[0] - 8 * PXSTRIDE(f->cur.stride[0]),
-                f->lf.p[1] - (8 * PXSTRIDE(f->cur.stride[1]) >> ss_ver),
-                f->lf.p[2] - (8 * PXSTRIDE(f->cur.stride[1]) >> ss_ver),
-            };
-            bytefn(dav1d_cdef_brow)(f, p_up, f->lf.prev_mask_ptr,
-                                    sby * sbsz - 2, sby * sbsz);
-        }
-        const int n_blks = sbsz - 2 * (sby + 1 < sbh);
-        bytefn(dav1d_cdef_brow)(f, f->lf.p, f->lf.mask_ptr, sby * sbsz,
-                                imin(sby * sbsz + n_blks, f->bh));
-    }
-    if (f->frame_hdr->width[0] != f->frame_hdr->width[1]) {
-        const int has_chroma = f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I400;
-        for (int pl = 0; pl < 1 + 2 * has_chroma; pl++) {
-            const int ss_ver = pl && f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
-            const int h_start = 8 * !!sby >> ss_ver;
-            const ptrdiff_t dst_stride = f->sr_cur.p.stride[!!pl];
-            pixel *dst = f->lf.sr_p[pl] - h_start * PXSTRIDE(dst_stride);
-            const ptrdiff_t src_stride = f->cur.stride[!!pl];
-            const pixel *src = f->lf.p[pl] - h_start * PXSTRIDE(src_stride);
-            const int h_end = 4 * (sbsz - 2 * (sby + 1 < sbh)) >> ss_ver;
-            const int ss_hor = pl && f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I444;
-            const int dst_w = (f->sr_cur.p.p.w + ss_hor) >> ss_hor;
-            const int src_w = (4 * f->bw + ss_hor) >> ss_hor;
-            const int img_h = (f->cur.p.h - sbsz * 4 * sby + ss_ver) >> ss_ver;
+}
 
-            f->dsp->mc.resize(dst, dst_stride, src, src_stride, dst_w,
-                              imin(img_h, h_end) + h_start, src_w,
-                              f->resize_step[!!pl], f->resize_start[!!pl]
-                              HIGHBD_CALL_SUFFIX);
-        }
-    }
-    if (f->lf.restore_planes) {
-        bytefn(dav1d_lr_sbrow)(f, f->lf.sr_p, sby);
-    }
-
+void bytefn(dav1d_filter_sbrow_cdef)(Dav1dFrameContext *const f, const int sby) {
+    const int sbsz = f->sb_step;
+    const int y = sby * sbsz * 4;
     const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
-    f->lf.p[0] += sbsz * 4 * PXSTRIDE(f->cur.stride[0]);
-    f->lf.p[1] += sbsz * 4 * PXSTRIDE(f->cur.stride[1]) >> ss_ver;
-    f->lf.p[2] += sbsz * 4 * PXSTRIDE(f->cur.stride[1]) >> ss_ver;
-    f->lf.sr_p[0] += sbsz * 4 * PXSTRIDE(f->sr_cur.p.stride[0]);
-    f->lf.sr_p[1] += sbsz * 4 * PXSTRIDE(f->sr_cur.p.stride[1]) >> ss_ver;
-    f->lf.sr_p[2] += sbsz * 4 * PXSTRIDE(f->sr_cur.p.stride[1]) >> ss_ver;
-    f->lf.prev_mask_ptr = f->lf.mask_ptr;
-    if ((sby & 1) || f->seq_hdr->sb128) {
-        f->lf.mask_ptr += f->sb128w;
+    pixel *const p[3] = {
+        f->lf.p[0] + y * PXSTRIDE(f->cur.stride[0]),
+        f->lf.p[1] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver),
+        f->lf.p[2] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver)
+    };
+    Av1Filter *prev_mask = f->lf.mask + ((sby - 1) >> !f->seq_hdr->sb128) * f->sb128w;
+    Av1Filter *mask = f->lf.mask + (sby >> !f->seq_hdr->sb128) * f->sb128w;
+    const int start = sby * sbsz;
+    if (sby) {
+        const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+        pixel *p_up[3] = {
+            p[0] - 8 * PXSTRIDE(f->cur.stride[0]),
+            p[1] - (8 * PXSTRIDE(f->cur.stride[1]) >> ss_ver),
+            p[2] - (8 * PXSTRIDE(f->cur.stride[1]) >> ss_ver),
+        };
+        bytefn(dav1d_cdef_brow)(f, p_up, prev_mask, start - 2, start);
     }
+    const int n_blks = sbsz - 2 * (sby + 1 < f->sbh);
+    const int end = imin(start + n_blks, f->bh);
+    bytefn(dav1d_cdef_brow)(f, p, mask, start, end);
+}
+
+void bytefn(dav1d_filter_sbrow_resize)(Dav1dFrameContext *const f, const int sby) {
+    const int sbsz = f->sb_step;
+    const int y = sby * sbsz * 4;
+    const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+    const pixel *const p[3] = {
+        f->lf.p[0] + y * PXSTRIDE(f->cur.stride[0]),
+        f->lf.p[1] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver),
+        f->lf.p[2] + (y * PXSTRIDE(f->cur.stride[1]) >> ss_ver)
+    };
+    pixel *const sr_p[3] = {
+        f->lf.sr_p[0] + y * PXSTRIDE(f->sr_cur.p.stride[0]),
+        f->lf.sr_p[1] + (y * PXSTRIDE(f->sr_cur.p.stride[1]) >> ss_ver),
+        f->lf.sr_p[2] + (y * PXSTRIDE(f->sr_cur.p.stride[1]) >> ss_ver)
+    };
+    const int has_chroma = f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I400;
+    for (int pl = 0; pl < 1 + 2 * has_chroma; pl++) {
+        const int ss_ver = pl && f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+        const int h_start = 8 * !!sby >> ss_ver;
+        const ptrdiff_t dst_stride = f->sr_cur.p.stride[!!pl];
+        pixel *dst = sr_p[pl] - h_start * PXSTRIDE(dst_stride);
+        const ptrdiff_t src_stride = f->cur.stride[!!pl];
+        const pixel *src = p[pl] - h_start * PXSTRIDE(src_stride);
+        const int h_end = 4 * (sbsz - 2 * (sby + 1 < f->sbh)) >> ss_ver;
+        const int ss_hor = pl && f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I444;
+        const int dst_w = (f->sr_cur.p.p.w + ss_hor) >> ss_hor;
+        const int src_w = (4 * f->bw + ss_hor) >> ss_hor;
+        const int img_h = (f->cur.p.h - sbsz * 4 * sby + ss_ver) >> ss_ver;
+
+        f->dsp->mc.resize(dst, dst_stride, src, src_stride, dst_w,
+                          imin(img_h, h_end) + h_start, src_w,
+                          f->resize_step[!!pl], f->resize_start[!!pl]
+                          HIGHBD_CALL_SUFFIX);
+    }
+}
+
+void bytefn(dav1d_filter_sbrow_lr)(Dav1dFrameContext *const f, const int sby) {
+    const int y = sby * f->sb_step * 4;
+    const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+    pixel *const sr_p[3] = {
+        f->lf.sr_p[0] + y * PXSTRIDE(f->sr_cur.p.stride[0]),
+        f->lf.sr_p[1] + (y * PXSTRIDE(f->sr_cur.p.stride[1]) >> ss_ver),
+        f->lf.sr_p[2] + (y * PXSTRIDE(f->sr_cur.p.stride[1]) >> ss_ver)
+    };
+    bytefn(dav1d_lr_sbrow)(f, sr_p, sby);
+}
+
+void bytefn(dav1d_filter_sbrow)(Dav1dFrameContext *const f, const int sby) {
+    bytefn(dav1d_filter_sbrow_deblock)(f, sby);
+    if (f->seq_hdr->cdef)
+        bytefn(dav1d_filter_sbrow_cdef)(f, sby);
+    if (f->frame_hdr->width[0] != f->frame_hdr->width[1])
+        bytefn(dav1d_filter_sbrow_resize)(f, sby);
+    if (f->lf.restore_planes)
+        bytefn(dav1d_filter_sbrow_lr)(f, sby);
 }
 
 void bytefn(dav1d_backup_ipred_edge)(Dav1dTileContext *const t) {

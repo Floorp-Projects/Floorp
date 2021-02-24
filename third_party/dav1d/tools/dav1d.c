@@ -197,7 +197,6 @@ int main(const int argc, char *const *const argv) {
                     seq_skip);
     }
 
-    //getc(stdin);
     if (cli_settings.limit != 0 && cli_settings.limit < total)
         total = cli_settings.limit;
 

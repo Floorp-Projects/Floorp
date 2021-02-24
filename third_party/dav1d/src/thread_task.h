@@ -35,10 +35,33 @@
 #define FRAME_ERROR (UINT_MAX - 1)
 #define TILE_ERROR (INT_MAX - 1)
 
-int dav1d_decode_frame(Dav1dFrameContext *f);
-void *dav1d_frame_task(void *data);
+enum TaskStatus {
+    DAV1D_TASK_DEFAULT,
+    DAV1D_TASK_READY,
+    DAV1D_TASK_RUNNING,
+    DAV1D_TASK_DONE,
+};
 
-int dav1d_decode_tile_sbrow(Dav1dTileContext *t);
+struct Dav1dTask {
+    enum TaskStatus status;     // task status
+    int start;                  // frame thread start flag
+    unsigned frame_idx;         // frame thread id
+    int frame_id;               // frame ordering
+    int sby;                    // sbrow
+    filter_sbrow_fn fn;         // task work
+    Dav1dTask *last_deps[2];    // dependencies
+    Dav1dTask *next_deps[2];    // dependant tasks
+    Dav1dTask *next_exec;       // tasks scheduling
+};
+
+int dav1d_task_create_filter_sbrow(Dav1dFrameContext *f);
+void dav1d_task_schedule(struct PostFilterThreadData *pftd, Dav1dTask *t);
+
+void *dav1d_frame_task(void *data);
 void *dav1d_tile_task(void *data);
+void *dav1d_postfilter_task(void *data);
+
+int dav1d_decode_frame(Dav1dFrameContext *f);
+int dav1d_decode_tile_sbrow(Dav1dTileContext *t);
 
 #endif /* DAV1D_SRC_THREAD_TASK_H */

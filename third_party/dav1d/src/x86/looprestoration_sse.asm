@@ -97,8 +97,8 @@ SECTION .text
 %macro WIENER 0
 %if ARCH_X86_64
 DECLARE_REG_TMP 4, 10, 7, 11, 12, 13, 14 ; ring buffer pointers
-cglobal wiener_filter7, 5, 15, 16, -384*12-16, dst, dst_stride, left, lpf, \
-                                               lpf_stride, w, edge, flt, h, x
+cglobal wiener_filter7_8bpc, 5, 15, 16, -384*12-16, dst, dst_stride, left, lpf, \
+                                                    lpf_stride, w, edge, flt, h, x
     %define base 0
     mov           fltq, fltmp
     mov          edged, r8m
@@ -139,7 +139,7 @@ DECLARE_REG_TMP 4, 0, _, 5
     %define m11         [stk+96]
     %define stk_off     112
 %endif
-cglobal wiener_filter7, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stride
+cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stride
     %define base        r6-pb_right_ext_mask-21
     %define stk         esp
     %define dstq        leftq
@@ -245,7 +245,7 @@ cglobal wiener_filter7, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stride
     add           lpfq, [rsp+gprsize*1]
     call .hv_bottom
 .v1:
-    call mangle(private_prefix %+ _wiener_filter7_ssse3).v
+    call mangle(private_prefix %+ _wiener_filter7_8bpc_ssse3).v
     RET
 .no_top:
     lea             t3, [lpfq+lpf_strideq*4]
@@ -281,9 +281,9 @@ cglobal wiener_filter7, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stride
     dec             hd
     jnz .main
 .v3:
-    call mangle(private_prefix %+ _wiener_filter7_ssse3).v
+    call mangle(private_prefix %+ _wiener_filter7_8bpc_ssse3).v
 .v2:
-    call mangle(private_prefix %+ _wiener_filter7_ssse3).v
+    call mangle(private_prefix %+ _wiener_filter7_8bpc_ssse3).v
     jmp .v1
 .extend_right:
     movd            m2, [lpfq-4]
@@ -685,8 +685,8 @@ ALIGN function_align
 %endif
 
 %if ARCH_X86_64
-cglobal wiener_filter5, 5, 13, 16, 384*8+16, dst, dst_stride, left, lpf, \
-                                             lpf_stride, w, edge, flt, h, x
+cglobal wiener_filter5_8bpc, 5, 13, 16, 384*8+16, dst, dst_stride, left, lpf, \
+                                                  lpf_stride, w, edge, flt, h, x
     mov           fltq, fltmp
     mov          edged, r8m
     mov             wd, wm
@@ -720,7 +720,7 @@ cglobal wiener_filter5, 5, 13, 16, 384*8+16, dst, dst_stride, left, lpf, \
     %define m11         [stk+80]
     %define stk_off     96
 %endif
-cglobal wiener_filter5, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_stride
+cglobal wiener_filter5_8bpc, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_stride
     %define stk         esp
     %define leftmp      [stk+28]
     %define m8          [base+pw_m16380]
@@ -827,14 +827,14 @@ cglobal wiener_filter5, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_stride
     dec             hd
     jnz .main
 .v2:
-    call mangle(private_prefix %+ _wiener_filter5_ssse3).v
+    call mangle(private_prefix %+ _wiener_filter5_8bpc_ssse3).v
     add           dstq, dst_strideq
     mov             t4, t3
     mov             t3, t2
     mov             t2, t1
     movifnidn    dstmp, dstq
 .v1:
-    call mangle(private_prefix %+ _wiener_filter5_ssse3).v
+    call mangle(private_prefix %+ _wiener_filter5_8bpc_ssse3).v
     jmp .end
 .h:
     %define stk esp+4
@@ -873,7 +873,7 @@ cglobal wiener_filter5, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_stride
     jnz .h_have_right
     cmp             xd, -17
     jl .h_have_right
-    call mangle(private_prefix %+ _wiener_filter7 %+ SUFFIX).extend_right
+    call mangle(private_prefix %+ _wiener_filter7_8bpc %+ SUFFIX).extend_right
 .h_have_right:
 %macro %%h5 0
 %if cpuflag(ssse3)
@@ -991,7 +991,7 @@ ALIGN function_align
     jnz .hv_have_right
     cmp             xd, -17
     jl .hv_have_right
-    call mangle(private_prefix %+ _wiener_filter7 %+ SUFFIX).extend_right
+    call mangle(private_prefix %+ _wiener_filter7_8bpc %+ SUFFIX).extend_right
 .hv_have_right:
     %%h5
     mova            m2, [t3+xq*2]
@@ -1161,7 +1161,7 @@ WIENER
 %endmacro
 
 %if ARCH_X86_64
-cglobal sgr_box3_h, 5, 11, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
+cglobal sgr_box3_h_8bpc, 5, 11, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
     mov        xlimd, edgem
     movifnidn     xd, xm
     mov           hd, hm
@@ -1170,7 +1170,7 @@ cglobal sgr_box3_h, 5, 11, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
     add           xd, xlimd
     xor        xlimd, 2                             ; 2*!have_right
 %else
-cglobal sgr_box3_h, 6, 7, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
+cglobal sgr_box3_h_8bpc, 6, 7, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
  %define wq     r0m
  %define xlimd  r1m
  %define hd     hmp
@@ -1287,10 +1287,10 @@ cglobal sgr_box3_h, 6, 7, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
     RET
 
 %if ARCH_X86_64
-cglobal sgr_box3_v, 4, 10, 9, sumsq, sum, w, h, edge, x, y, sumsq_base, sum_base, ylim
+cglobal sgr_box3_v_8bpc, 4, 10, 9, sumsq, sum, w, h, edge, x, y, sumsq_base, sum_base, ylim
     movifnidn  edged, edgem
 %else
-cglobal sgr_box3_v, 3, 7, 8, -28, sumsq, sum, w, edge, h, x, y
+cglobal sgr_box3_v_8bpc, 3, 7, 8, -28, sumsq, sum, w, edge, h, x, y
  %define sumsq_baseq dword [esp+0]
  %define sum_baseq   dword [esp+4]
  %define ylimd       dword [esp+8]
@@ -1383,7 +1383,7 @@ cglobal sgr_box3_v, 3, 7, 8, -28, sumsq, sum, w, edge, h, x, y
     jl .loop_x
     RET
 
-cglobal sgr_calc_ab1, 4, 7, 12, a, b, w, h, s
+cglobal sgr_calc_ab1_8bpc, 4, 7, 12, a, b, w, h, s
     movifnidn     sd, sm
     sub           aq, (384+16-1)*4
     sub           bq, (384+16-1)*2
@@ -1463,8 +1463,8 @@ cglobal sgr_calc_ab1, 4, 7, 12, a, b, w, h, s
     RET
 
 %if ARCH_X86_64
-cglobal sgr_finish_filter1, 5, 13, 16, t, src, stride, a, b, w, h, \
-                                       tmp_base, src_base, a_base, b_base, x, y
+cglobal sgr_finish_filter1_8bpc, 5, 13, 16, t, src, stride, a, b, w, h, \
+                                            tmp_base, src_base, a_base, b_base, x, y
     movifnidn     wd, wm
     mov           hd, hm
     mova         m15, [pw_16]
@@ -1474,7 +1474,7 @@ cglobal sgr_finish_filter1, 5, 13, 16, t, src, stride, a, b, w, h, \
     mov      b_baseq, bq
     xor           xd, xd
 %else
-cglobal sgr_finish_filter1, 7, 7, 8, -144, t, src, stride, a, b, x, y
+cglobal sgr_finish_filter1_8bpc, 7, 7, 8, -144, t, src, stride, a, b, x, y
  %define tmp_baseq  [esp+8]
  %define src_baseq  [esp+12]
  %define a_baseq    [esp+16]
@@ -1688,7 +1688,7 @@ cglobal sgr_finish_filter1, 7, 7, 8, -144, t, src, stride, a, b, x, y
     jl .loop_x
     RET
 
-cglobal sgr_weighted1, 4, 7, 8, dst, stride, t, w, h, wt
+cglobal sgr_weighted1_8bpc, 4, 7, 8, dst, stride, t, w, h, wt
     movifnidn     hd, hm
 %if ARCH_X86_32
     SETUP_PIC r6, 0
@@ -1726,14 +1726,14 @@ cglobal sgr_weighted1, 4, 7, 8, dst, stride, t, w, h, wt
     RET
 
 %if ARCH_X86_64
-cglobal sgr_box5_h, 5, 11, 12, sumsq, sum, left, src, stride, w, h, edge, x, xlim
+cglobal sgr_box5_h_8bpc, 5, 11, 12, sumsq, sum, left, src, stride, w, h, edge, x, xlim
     mov        edged, edgem
     movifnidn     wd, wm
     mov           hd, hm
     mova         m10, [pb_0]
     mova         m11, [pb_0_1]
 %else
-cglobal sgr_box5_h, 7, 7, 8, sumsq, sum, left, src, xlim, x, h, edge
+cglobal sgr_box5_h_8bpc, 7, 7, 8, sumsq, sum, left, src, xlim, x, h, edge
  %define edgeb      byte edgem
  %define wd         xd
  %define wq         wd
@@ -1909,11 +1909,11 @@ cglobal sgr_box5_h, 7, 7, 8, sumsq, sum, left, src, xlim, x, h, edge
     RET
 
 %if ARCH_X86_64
-cglobal sgr_box5_v, 4, 10, 15, sumsq, sum, w, h, edge, x, y, sumsq_ptr, sum_ptr, ylim
+cglobal sgr_box5_v_8bpc, 4, 10, 15, sumsq, sum, w, h, edge, x, y, sumsq_ptr, sum_ptr, ylim
     movifnidn  edged, edgem
     mov        ylimd, edged
 %else
-cglobal sgr_box5_v, 5, 7, 8, -44, sumsq, sum, x, y, ylim, sumsq_ptr, sum_ptr
+cglobal sgr_box5_v_8bpc, 5, 7, 8, -44, sumsq, sum, x, y, ylim, sumsq_ptr, sum_ptr
  %define wm     [esp+0]
  %define hm     [esp+4]
  %define edgem  [esp+8]
@@ -2127,7 +2127,7 @@ cglobal sgr_box5_v, 5, 7, 8, -44, sumsq, sum, x, y, ylim, sumsq_ptr, sum_ptr
     jmp .sum_loop_y_noload
 %endif
 
-cglobal sgr_calc_ab2, 4, 7, 11, a, b, w, h, s
+cglobal sgr_calc_ab2_8bpc, 4, 7, 11, a, b, w, h, s
     movifnidn     sd, sm
     sub           aq, (384+16-1)*4
     sub           bq, (384+16-1)*2
@@ -2205,7 +2205,7 @@ cglobal sgr_calc_ab2, 4, 7, 11, a, b, w, h, s
     RET
 
 %if ARCH_X86_64
-cglobal sgr_finish_filter2, 5, 13, 14, t, src, stride, a, b, w, h, \
+cglobal sgr_finish_filter2_8bpc, 5, 13, 14, t, src, stride, a, b, w, h, \
                                        tmp_base, src_base, a_base, b_base, x, y
     movifnidn     wd, wm
     mov           hd, hm
@@ -2219,7 +2219,7 @@ cglobal sgr_finish_filter2, 5, 13, 14, t, src, stride, a, b, w, h, \
     psrlw        m11, m12, 1                    ; pw_128
     pxor         m13, m13
 %else
-cglobal sgr_finish_filter2, 6, 7, 8, t, src, stride, a, b, x, y
+cglobal sgr_finish_filter2_8bpc, 6, 7, 8, t, src, stride, a, b, x, y
  %define tmp_baseq  r0m
  %define src_baseq  r1m
  %define a_baseq    r3m
@@ -2378,7 +2378,7 @@ cglobal sgr_finish_filter2, 6, 7, 8, t, src, stride, a, b, x, y
     RET
 
 %undef t2
-cglobal sgr_weighted2, 4, 7, 12, dst, stride, t1, t2, w, h, wt
+cglobal sgr_weighted2_8bpc, 4, 7, 12, dst, stride, t1, t2, w, h, wt
     movifnidn     wd, wm
     movd          m0, wtm
 %if ARCH_X86_64

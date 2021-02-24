@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -33,6 +33,7 @@
 
 #include "dav1d/data.h"
 
+#include "common/frame.h"
 #include "common/intops.h"
 
 #include "src/decode.h"
@@ -406,7 +407,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
     else
         hdr->force_integer_mv = 0;
 
-    if (!(hdr->frame_type & 1))
+    if (IS_KEY_OR_INTRA(hdr))
         hdr->force_integer_mv = 1;
 
     if (seqhdr->frame_id_numbers_present)
@@ -420,7 +421,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
 #endif
     hdr->frame_offset = seqhdr->order_hint ?
                         dav1d_get_bits(gb, seqhdr->order_hint_n_bits) : 0;
-    hdr->primary_ref_frame = !hdr->error_resilient_mode && hdr->frame_type & 1 ?
+    hdr->primary_ref_frame = !hdr->error_resilient_mode && IS_INTER_OR_SWITCH(hdr) ?
                              dav1d_get_bits(gb, 3) : DAV1D_PRIMARY_REF_NONE;
 
     if (seqhdr->decoder_model_info_present) {
@@ -439,9 +440,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
         }
     }
 
-    if (hdr->frame_type == DAV1D_FRAME_TYPE_KEY ||
-        hdr->frame_type == DAV1D_FRAME_TYPE_INTRA)
-    {
+    if (IS_KEY_OR_INTRA(hdr)) {
         hdr->refresh_frame_flags = (hdr->frame_type == DAV1D_FRAME_TYPE_KEY &&
                                     hdr->show_frame) ? 0xff : dav1d_get_bits(gb, 8);
         if (hdr->refresh_frame_flags != 0xff && hdr->error_resilient_mode && seqhdr->order_hint)
@@ -569,7 +568,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
         hdr->switchable_motion_mode = dav1d_get_bits(gb, 1);
         hdr->use_ref_frame_mvs = !hdr->error_resilient_mode &&
             seqhdr->ref_frame_mvs && seqhdr->order_hint &&
-            hdr->frame_type & 1 && dav1d_get_bits(gb, 1);
+            IS_INTER_OR_SWITCH(hdr) && dav1d_get_bits(gb, 1);
     }
 #if DEBUG_FRAME_HDR
     printf("HDR: post-frametype-specific-bits: off=%td\n",
@@ -916,13 +915,13 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
     printf("HDR: post-txfmmode: off=%td\n",
            (gb->ptr - init_ptr) * 8 - gb->bits_left);
 #endif
-    hdr->switchable_comp_refs = hdr->frame_type & 1 ? dav1d_get_bits(gb, 1) : 0;
+    hdr->switchable_comp_refs = IS_INTER_OR_SWITCH(hdr) ? dav1d_get_bits(gb, 1) : 0;
 #if DEBUG_FRAME_HDR
     printf("HDR: post-refmode: off=%td\n",
            (gb->ptr - init_ptr) * 8 - gb->bits_left);
 #endif
     hdr->skip_mode_allowed = 0;
-    if (hdr->switchable_comp_refs && hdr->frame_type & 1 && seqhdr->order_hint) {
+    if (hdr->switchable_comp_refs && IS_INTER_OR_SWITCH(hdr) && seqhdr->order_hint) {
         const unsigned poc = hdr->frame_offset;
         unsigned off_before = 0xFFFFFFFFU;
         int off_after = -1;
@@ -982,7 +981,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
     printf("HDR: post-extskip: off=%td\n",
            (gb->ptr - init_ptr) * 8 - gb->bits_left);
 #endif
-    hdr->warp_motion = !hdr->error_resilient_mode && hdr->frame_type & 1 &&
+    hdr->warp_motion = !hdr->error_resilient_mode && IS_INTER_OR_SWITCH(hdr) &&
         seqhdr->warped_motion && dav1d_get_bits(gb, 1);
 #if DEBUG_FRAME_HDR
     printf("HDR: post-warpmotionbit: off=%td\n",
@@ -997,7 +996,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
     for (int i = 0; i < 7; i++)
         hdr->gmv[i] = dav1d_default_wm_params;
 
-    if (hdr->frame_type & 1) {
+    if (IS_INTER_OR_SWITCH(hdr)) {
         for (int i = 0; i < 7; i++) {
             hdr->gmv[i].type = !dav1d_get_bits(gb, 1) ? DAV1D_WM_TYPE_IDENTITY :
                                 dav1d_get_bits(gb, 1) ? DAV1D_WM_TYPE_ROT_ZOOM :

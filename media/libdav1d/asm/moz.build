@@ -83,6 +83,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         # Empty file on all other archs. Nasm produces
         # an error when it compiles empty files.
         SOURCES += [
+            '../../../third_party/dav1d/src/x86/cdef16_avx2.asm', # moved from autovendored
             '../../../third_party/dav1d/src/x86/cdef_avx2.asm',
             '../../../third_party/dav1d/src/x86/cdef_avx512.asm',
             '../../../third_party/dav1d/src/x86/film_grain.asm',
@@ -90,6 +91,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/itx.asm',
             '../../../third_party/dav1d/src/x86/loopfilter.asm',
             '../../../third_party/dav1d/src/x86/looprestoration.asm',
+            '../../../third_party/dav1d/src/x86/looprestoration16_avx2.asm', # moved from autovendored
             '../../../third_party/dav1d/src/x86/mc_avx2.asm',
             '../../../third_party/dav1d/src/x86/mc_avx512.asm',
         ]
@@ -185,7 +187,9 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/32/cdef16.S',
             '../../../third_party/dav1d/src/arm/32/cdef_tmpl.S',
             '../../../third_party/dav1d/src/arm/32/ipred.S',
+            '../../../third_party/dav1d/src/arm/32/ipred16.S',
             '../../../third_party/dav1d/src/arm/32/itx.S',
+            '../../../third_party/dav1d/src/arm/32/itx16.S',
             '../../../third_party/dav1d/src/arm/32/loopfilter.S',
             '../../../third_party/dav1d/src/arm/32/loopfilter16.S',
             '../../../third_party/dav1d/src/arm/32/looprestoration.S',

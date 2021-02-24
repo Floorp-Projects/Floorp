@@ -3066,7 +3066,6 @@ static const uint8_t qm_tbl_32x32_t[][2][528] = {
 };
 
 const uint8_t *dav1d_qm_tbl[16][2][N_RECT_TX_SIZES];
-static uint8_t pb_32x32[32 * 32];
 static uint8_t qm_tbl_4x4[15][2][16];
 static uint8_t qm_tbl_4x8[15][2][32];
 static uint8_t qm_tbl_4x16[15][2][64];
@@ -3145,8 +3144,5 @@ COLD void dav1d_init_qm_tables(void) {
             dav1d_qm_tbl[i][j][RTX_16X64] = dav1d_qm_tbl[i][j][RTX_16X32];
         }
 
-    memset(pb_32x32, 32, sizeof(pb_32x32));
-    for (int j = 0; j < 2; j++)
-        for (int k = 0; k < N_RECT_TX_SIZES; k++)
-            dav1d_qm_tbl[15][j][k] = pb_32x32;
+    // dav1d_qm_tbl[15][*][*] == NULL
 }

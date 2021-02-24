@@ -26,6 +26,7 @@
  */
 
 #include "config.h"
+#include "cli_config.h"
 
 #include <getopt.h>
 #include <limits.h>
@@ -51,6 +52,7 @@ enum {
     ARG_REALTIME_CACHE,
     ARG_FRAME_THREADS,
     ARG_TILE_THREADS,
+    ARG_POSTFILTER_THREADS,
     ARG_VERIFY,
     ARG_FILM_GRAIN,
     ARG_OPPOINT,
@@ -73,6 +75,7 @@ static const struct option long_opts[] = {
     { "realtimecache",  1, NULL, ARG_REALTIME_CACHE },
     { "framethreads",   1, NULL, ARG_FRAME_THREADS },
     { "tilethreads",    1, NULL, ARG_TILE_THREADS },
+    { "pfthreads",      1, NULL, ARG_POSTFILTER_THREADS },
     { "verify",         1, NULL, ARG_VERIFY },
     { "filmgrain",      1, NULL, ARG_FILM_GRAIN },
     { "oppoint",        1, NULL, ARG_OPPOINT },
@@ -81,6 +84,12 @@ static const struct option long_opts[] = {
     { "cpumask",        1, NULL, ARG_CPU_MASK },
     { NULL,             0, NULL, 0 },
 };
+
+#if HAVE_XXHASH_H
+#define AVAILABLE_MUXERS "'md5', 'xxh3', 'yuv', 'yuv4mpeg2' or 'null'"
+#else
+#define AVAILABLE_MUXERS "'md5', 'yuv', 'yuv4mpeg2' or 'null'"
+#endif
 
 #if ARCH_AARCH64 || ARCH_ARM
 #define ALLOWED_CPU_MASKS " or 'neon'"
@@ -107,7 +116,7 @@ static void usage(const char *const app, const char *const reason, ...) {
             " --input/-i $file:     input file\n"
             " --output/-o $file:    output file\n"
             " --demuxer $name:      force demuxer type ('ivf', 'section5' or 'annexb'; default: detect from content)\n"
-            " --muxer $name:        force muxer type ('md5', 'yuv', 'yuv4mpeg2' or 'null'; default: detect from extension)\n"
+            " --muxer $name:        force muxer type (" AVAILABLE_MUXERS "; default: detect from extension)\n"
             " --quiet/-q:           disable status messages\n"
             " --frametimes $file:   dump frame times to file\n"
             " --limit/-l $num:      stop decoding after $num frames\n"
@@ -117,7 +126,8 @@ static void usage(const char *const app, const char *const reason, ...) {
             " --version/-v:         print version and exit\n"
             " --framethreads $num:  number of frame threads (default: 1)\n"
             " --tilethreads $num:   number of tile threads (default: 1)\n"
-            " --filmgrain $num:     enable film grain application (default: 1, except if muxer is md5)\n"
+            " --pfthreads $num:     number of postfilter threads (default: 1)\n"
+            " --filmgrain $num:     enable film grain application (default: 1, except if muxer is md5 or xxh3)\n"
             " --oppoint $num:       select an operating point of a scalable AV1 bitstream (0 - 31)\n"
             " --alllayers $num:     output all spatial layers of a scalable AV1 bitstream (default: 1)\n"
             " --sizelimit $num:     stop decoding if the frame size exceeds the specified limit\n"
@@ -198,24 +208,26 @@ static const EnumParseTable cpu_mask_tbl[] = {
     { "avx2",      X86_CPU_MASK_AVX2 },
     { "avx512icl", X86_CPU_MASK_AVX512ICL },
 #endif
-    { 0 },
+    { "none",      0 },
 };
 
+#define ARRAY_SIZE(n) (sizeof(n)/sizeof(*(n)))
+
 static unsigned parse_enum(char *optarg, const EnumParseTable *const tbl,
-                           const int option, const char *app)
+                           const int tbl_sz, const int option, const char *app)
 {
     char str[1024];
 
     strcpy(str, "any of ");
-    for (int n = 0; tbl[n].str; n++) {
+    for (int n = 0; n < tbl_sz; n++) {
         if (!strcmp(tbl[n].str, optarg))
             return tbl[n].val;
 
         if (n) {
-            if (!tbl[n + 1].str)
-                strcat(str, " or ");
-            else
+            if (n < tbl_sz - 1)
                 strcat(str, ", ");
+            else
+                strcat(str, " or ");
         }
         strcat(str, tbl[n].str);
     }
@@ -295,6 +307,10 @@ void parse(const int argc, char *const *const argv,
             lib_settings->n_tile_threads =
                 parse_unsigned(optarg, ARG_TILE_THREADS, argv[0]);
             break;
+        case ARG_POSTFILTER_THREADS:
+            lib_settings->n_postfilter_threads =
+                parse_unsigned(optarg, ARG_POSTFILTER_THREADS, argv[0]);
+            break;
         case ARG_VERIFY:
             cli_settings->verify = optarg;
             break;
@@ -325,7 +341,7 @@ void parse(const int argc, char *const *const argv,
             fprintf(stderr, "%s\n", dav1d_version());
             exit(0);
         case ARG_CPU_MASK:
-            dav1d_set_cpu_flags_mask(parse_enum(optarg, cpu_mask_tbl,
+            dav1d_set_cpu_flags_mask(parse_enum(optarg, cpu_mask_tbl, ARRAY_SIZE(cpu_mask_tbl),
                                                 ARG_CPU_MASK, argv[0]));
             break;
         default:
@@ -338,8 +354,11 @@ void parse(const int argc, char *const *const argv,
     if (cli_settings->verify) {
         if (cli_settings->outputfile)
             usage(argv[0], "Verification (--verify) requires output file (-o/--output) to not set");
-        if (cli_settings->muxer && !strcmp(cli_settings->muxer, "md5"))
-            usage(argv[0], "Verification (--verify) requires the md5 muxer (--muxer md5)");
+        if (cli_settings->muxer && strcmp(cli_settings->muxer, "md5") &&
+            strcmp(cli_settings->muxer, "xxh3"))
+        {
+            usage(argv[0], "Verification (--verify) requires a checksum muxer (md5 or xxh3)");
+        }
 
         cli_settings->outputfile = "-";
         if (!cli_settings->muxer)
@@ -347,7 +366,8 @@ void parse(const int argc, char *const *const argv,
     }
 
     if (!grain_specified && cli_settings->muxer &&
-        !strcmp(cli_settings->muxer, "md5"))
+        (!strcmp(cli_settings->muxer, "md5") ||
+        !strcmp(cli_settings->muxer, "xxh3")))
     {
         lib_settings->apply_grain = 0;
     }

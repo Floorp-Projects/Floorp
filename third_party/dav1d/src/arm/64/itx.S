@@ -718,7 +718,7 @@ def_fn_4x4 identity, flipadst
         rshrn_sz        \r7, v4,  v5,  #12, \sz                   // t7a
         smull_smlal     v2,  v3,  \r5, \r3, v0.h[7], v0.h[6], \sz // -> t6a
         rshrn_sz        \r3, v6,  v7,  #12, \sz                   // t5a
-        rshrn_sz        \r5, v2,  v3,  #12, \sz                   // taa
+        rshrn_sz        \r5, v2,  v3,  #12, \sz                   // t6a
 
         sqadd           v2\sz,   \r1\sz,  \r3\sz // t4
         sqsub           \r1\sz,  \r1\sz,  \r3\sz // t5a
@@ -1085,7 +1085,7 @@ def_fns_48 8, 4
 
         rshrn_sz        v4,  v4,  v5,  #12, \sz   // t11
         rshrn_sz        v5,  v6,  v7,  #12, \sz   // t12
-        smull_smlal     v6,  v7,  v25, v21, v0.h[0], v0.h[0], \sz // -> t10a
+        smull_smlal     v6,  v7,  v25, v21, v0.h[0], v0.h[0], \sz // -> t13a
         rshrn_sz        v2,  v2,  v3,  #12, \sz   // t10a
         rshrn_sz        v3,  v6,  v7,  #12, \sz   // t13a
 
@@ -3002,29 +3002,6 @@ function inv_txfm_add_vert_dct_8x64_neon
         br              x14
 endfunc
 
-.macro sub_sp space
-#ifdef _WIN32
-.if \space > 8192
-        // Here, we'd need to touch two (or more) pages while decrementing
-        // the stack pointer.
-        .error          "sub_sp_align doesn't support values over 8K at the moment"
-.elseif \space > 4096
-        sub             x16, sp,  #4096
-        ldr             xzr, [x16]
-        sub             sp,  x16, #(\space - 4096)
-.else
-        sub             sp,  sp,  #\space
-.endif
-#else
-.if \space >= 4096
-        sub             sp,  sp,  #(\space)/4096*4096
-.endif
-.if (\space % 4096) != 0
-        sub             sp,  sp,  #(\space)%4096
-.endif
-#endif
-.endm
-
 function inv_txfm_add_dct_dct_64x64_8bpc_neon, export=1
         idct_dc         64,  64,  2
 
@@ -3149,7 +3126,9 @@ function inv_txfm_add_dct_dct_32x64_8bpc_neon, export=1
         mov             w8,  #(32 - \i)
         cmp             w3,  w12
         b.lt            1f
+.if \i < 24
         ldrh            w12, [x13], #2
+.endif
 .endif
         add             x7,  x2,  #(\i*2)
         mov             x8,  #32*2
@@ -3254,7 +3233,9 @@ function inv_txfm_add_dct_dct_16x64_8bpc_neon, export=1
         mov             w8,  #(32 - \i)
         cmp             w3,  w12
         b.lt            1f
+.if \i < 24
         ldrh            w12, [x13], #2
+.endif
 .endif
         add             x7,  x2,  #(\i*2)
         mov             x8,  #32*2

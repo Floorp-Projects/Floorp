@@ -1,7 +1,7 @@
 ;*****************************************************************************
 ;* x86inc.asm: x86 abstraction layer
 ;*****************************************************************************
-;* Copyright (C) 2005-2020 x264 project
+;* Copyright (C) 2005-2021 x264 project
 ;*
 ;* Authors: Loren Merritt <lorenm@u.washington.edu>
 ;*          Henrik Gramner <henrik@gramner.com>
@@ -349,6 +349,28 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
 %define vzeroupper_required (mmsize > 16 && (ARCH_X86_64 == 0 || xmm_regs_used > 16 || notcpuflag(avx512)))
 %define high_mm_regs (16*cpuflag(avx512))
 
+; Large stack allocations on Windows need to use stack probing in order
+; to guarantee that all stack memory is committed before accessing it.
+; This is done by ensuring that the guard page(s) at the end of the
+; currently committed pages are touched prior to any pages beyond that.
+%if WIN64
+    %assign STACK_PROBE_SIZE 8192
+%elifidn __OUTPUT_FORMAT__, win32
+    %assign STACK_PROBE_SIZE 4096
+%else
+    %assign STACK_PROBE_SIZE 0
+%endif
+
+%macro PROBE_STACK 1 ; stack_size
+    %if STACK_PROBE_SIZE
+        %assign %%i STACK_PROBE_SIZE
+        %rep %1 / STACK_PROBE_SIZE
+            mov eax, [rsp-%%i]
+            %assign %%i %%i+STACK_PROBE_SIZE
+        %endrep
+    %endif
+%endmacro
+
 %macro ALLOC_STACK 0-2 0, 0 ; stack_size, n_xmm_regs (for win64 only)
     %ifnum %1
         %if %1 != 0
@@ -369,6 +391,7 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
             %if required_stack_alignment <= STACK_ALIGNMENT
                 ; maintain the current stack alignment
                 %assign stack_size_padded stack_size + %%pad + ((-%%pad-stack_offset-gprsize) & (STACK_ALIGNMENT-1))
+                PROBE_STACK stack_size_padded
                 SUB rsp, stack_size_padded
             %else
                 %assign %%reg_num (regs_used - 1)
@@ -384,6 +407,7 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
                     %xdefine rstkm rstk
                 %endif
                 %assign stack_size_padded stack_size + ((%%pad + required_stack_alignment-1) & ~(required_stack_alignment-1))
+                PROBE_STACK stack_size_padded
                 mov rstk, rsp
                 and rsp, ~(required_stack_alignment-1)
                 sub rsp, stack_size_padded
@@ -1139,8 +1163,7 @@ INIT_XMM
     %endif
     %xdefine %%tmp %%f %+ 0
     %ifnum %%tmp
-        RESET_MM_PERMUTATION
-        AVX512_MM_PERMUTATION
+        DEFINE_MMREGS mmtype
         %assign %%i 0
         %rep num_mmregs
             %xdefine %%tmp %%f %+ %%i

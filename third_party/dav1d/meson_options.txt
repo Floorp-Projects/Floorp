@@ -53,3 +53,7 @@ option('fuzzer_ldflags',
 option('stack_alignment',
     type: 'integer',
     value: 0)
+
+option('xxhash_muxer',
+    type : 'feature',
+    value : 'auto')

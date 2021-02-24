@@ -39,10 +39,10 @@
 
 // TODO Reuse p when no padding is needed (add and remove lpf pixels in p)
 // TODO Chroma only requires 2 rows of padding.
-static void padding(pixel *dst, const pixel *p, const ptrdiff_t p_stride,
-                    const pixel (*left)[4],
-                    const pixel *lpf, const ptrdiff_t lpf_stride,
-                    int unit_w, const int stripe_h, const enum LrEdgeFlags edges)
+static NOINLINE void
+padding(pixel *dst, const pixel *p, const ptrdiff_t p_stride,
+        const pixel (*left)[4], const pixel *lpf, const ptrdiff_t lpf_stride,
+        int unit_w, const int stripe_h, const enum LrEdgeFlags edges)
 {
     const int have_left = !!(edges & LR_HAVE_LEFT);
     const int have_right = !!(edges & LR_HAVE_RIGHT);
@@ -135,7 +135,7 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
                      const pixel (*const left)[4],
                      const pixel *lpf, const ptrdiff_t lpf_stride,
                      const int w, const int h,
-                     const int16_t filter[2][8],
+                     const LooprestorationParams *const params,
                      const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     // Wiener filtering is applied to a maximum stripe height of 64 + 3 pixels
@@ -150,6 +150,7 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
     uint16_t hor[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
     uint16_t *hor_ptr = hor;
 
+    const int16_t (*const filter)[8] = params->filter;
     const int bitdepth = bitdepth_from_max(bitdepth_max);
     const int round_bits_h = 3 + (bitdepth == 12) * 2;
     const int rounding_off_h = 1 << (round_bits_h - 1);
@@ -347,12 +348,12 @@ static void boxsum5(int32_t *sumsq, coef *sum, const pixel *const src,
     }
 }
 
-static void selfguided_filter(coef *dst, const pixel *src,
-                              const ptrdiff_t src_stride, const int w,
-                              const int h, const int n, const int s
-                              HIGHBD_DECL_SUFFIX)
+static NOINLINE void
+selfguided_filter(coef *dst, const pixel *src, const ptrdiff_t src_stride,
+                  const int w, const int h, const int n, const unsigned s
+                  HIGHBD_DECL_SUFFIX)
 {
-    const int sgr_one_by_x = n == 25 ? 164 : 455;
+    const unsigned sgr_one_by_x = n == 25 ? 164 : 455;
 
     // Selfguided filter is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
@@ -446,71 +447,93 @@ static void selfguided_filter(coef *dst, const pixel *src,
 #undef EIGHT_NEIGHBORS
 }
 
-static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
-                         const pixel (*const left)[4],
-                         const pixel *lpf, const ptrdiff_t lpf_stride,
-                         const int w, const int h, const int sgr_idx,
-                         const int16_t sgr_w[2], const enum LrEdgeFlags edges
-                         HIGHBD_DECL_SUFFIX)
+static void sgr_5x5_c(pixel *p, const ptrdiff_t p_stride,
+                      const pixel (*const left)[4], const pixel *lpf,
+                      const ptrdiff_t lpf_stride, const int w, const int h,
+                      const LooprestorationParams *const params,
+                      const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     // Selfguided filter is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
     pixel tmp[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
 
-    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
-
     // Selfguided filter outputs to a maximum stripe height of 64 and a
     // maximum restoration width of 384 (256 * 1.5)
     coef dst[64 * 384];
 
-    // both r1 and r0 can't be zero
-    if (!dav1d_sgr_params[sgr_idx][0]) {
-        const int s1 = dav1d_sgr_params[sgr_idx][3];
-        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 9, s1 HIGHBD_TAIL_SUFFIX);
-        const int w1 = (1 << 7) - sgr_w[1];
-        for (int j = 0; j < h; j++) {
-            for (int i = 0; i < w; i++) {
-                const int u = (p[i] << 4);
-                const int v = (u << 7) + w1 * (dst[j * 384 + i] - u);
-                p[i] = iclip_pixel((v + (1 << 10)) >> 11);
-            }
-            p += PXSTRIDE(p_stride);
+    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25,
+                      params->sgr.s0 HIGHBD_TAIL_SUFFIX);
+
+    const int w0 = params->sgr.w0;
+    for (int j = 0; j < h; j++) {
+        for (int i = 0; i < w; i++) {
+            const int u = (p[i] << 4);
+            const int v = (u << 7) + w0 * (dst[j * 384 + i] - u);
+            p[i] = iclip_pixel((v + (1 << 10)) >> 11);
         }
-    } else if (!dav1d_sgr_params[sgr_idx][1]) {
-        const int s0 = dav1d_sgr_params[sgr_idx][2];
-        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25, s0 HIGHBD_TAIL_SUFFIX);
-        const int w0 = sgr_w[0];
-        for (int j = 0; j < h; j++) {
-            for (int i = 0; i < w; i++) {
-                const int u = (p[i] << 4);
-                const int v = (u << 7) + w0 * (dst[j * 384 + i] - u);
-                p[i] = iclip_pixel((v + (1 << 10)) >> 11);
-            }
-            p += PXSTRIDE(p_stride);
+        p += PXSTRIDE(p_stride);
+    }
+}
+
+static void sgr_3x3_c(pixel *p, const ptrdiff_t p_stride,
+                      const pixel (*const left)[4], const pixel *lpf,
+                      const ptrdiff_t lpf_stride, const int w, const int h,
+                      const LooprestorationParams *const params,
+                      const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
+{
+    pixel tmp[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
+    coef dst[64 * 384];
+
+    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 9,
+                      params->sgr.s1 HIGHBD_TAIL_SUFFIX);
+
+    const int w1 = params->sgr.w1;
+    for (int j = 0; j < h; j++) {
+        for (int i = 0; i < w; i++) {
+            const int u = (p[i] << 4);
+            const int v = (u << 7) + w1 * (dst[j * 384 + i] - u);
+            p[i] = iclip_pixel((v + (1 << 10)) >> 11);
         }
-    } else {
-        coef dst1[64 * 384];
-        const int s0 = dav1d_sgr_params[sgr_idx][2];
-        const int s1 = dav1d_sgr_params[sgr_idx][3];
-        const int w0 = sgr_w[0];
-        const int w1 = (1 << 7) - w0 - sgr_w[1];
-        selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25, s0 HIGHBD_TAIL_SUFFIX);
-        selfguided_filter(dst1, tmp, REST_UNIT_STRIDE, w, h, 9, s1 HIGHBD_TAIL_SUFFIX);
-        for (int j = 0; j < h; j++) {
-            for (int i = 0; i < w; i++) {
-                const int u = (p[i] << 4);
-                const int v = (u << 7) + w0 * (dst[j * 384 + i] - u) +
-                              w1 * (dst1[j * 384 + i] - u);
-                p[i] = iclip_pixel((v + (1 << 10)) >> 11);
-            }
-            p += PXSTRIDE(p_stride);
+        p += PXSTRIDE(p_stride);
+    }
+}
+
+static void sgr_mix_c(pixel *p, const ptrdiff_t p_stride,
+                      const pixel (*const left)[4], const pixel *lpf,
+                      const ptrdiff_t lpf_stride, const int w, const int h,
+                      const LooprestorationParams *const params,
+                      const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
+{
+    pixel tmp[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
+    coef dst0[64 * 384];
+    coef dst1[64 * 384];
+
+    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    selfguided_filter(dst0, tmp, REST_UNIT_STRIDE, w, h, 25,
+                      params->sgr.s0 HIGHBD_TAIL_SUFFIX);
+    selfguided_filter(dst1, tmp, REST_UNIT_STRIDE, w, h,  9,
+                      params->sgr.s1 HIGHBD_TAIL_SUFFIX);
+
+    const int w0 = params->sgr.w0;
+    const int w1 = params->sgr.w1;
+    for (int j = 0; j < h; j++) {
+        for (int i = 0; i < w; i++) {
+            const int u = (p[i] << 4);
+            const int v = (u << 7) + w0 * (dst0[j * 384 + i] - u) +
+                                     w1 * (dst1[j * 384 + i] - u);
+            p[i] = iclip_pixel((v + (1 << 10)) >> 11);
         }
+        p += PXSTRIDE(p_stride);
     }
 }
 
 COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c, int bpc) {
     c->wiener[0] = c->wiener[1] = wiener_c;
-    c->selfguided = selfguided_c;
+    c->sgr[0] = sgr_5x5_c;
+    c->sgr[1] = sgr_3x3_c;
+    c->sgr[2] = sgr_mix_c;
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM

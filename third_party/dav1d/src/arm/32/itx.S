@@ -706,7 +706,7 @@ def_fn_4x4 identity, flipadst
         vrshrn_8h       \r14, \r15, q4,   q5,   #12         // t7a
         vmull_vmlal_8h  q2,   q3,   \r10, \r11, \r6,  \r7,  d1[3], d1[2] // -> t6a
         vrshrn_8h       \r6,  \r7,  q6,   q7,   #12         // t5a
-        vrshrn_8h       \r10, \r11, q2,   q3,   #12         // taa
+        vrshrn_8h       \r10, \r11, q2,   q3,   #12         // t6a
 
         vqadd.s16       q2,   \q1,  \q3 // t4
         vqsub.s16       \q1,  \q1,  \q3 // t5a
@@ -1173,7 +1173,7 @@ function inv_dct_4h_x16_neon, export=1
 
         vrshrn.i32      d6,  q3,  #12  // t11
         vrshrn.i32      d7,  q4,  #12  // t12
-        vmull_vmlal     q4,  d25, d21, d0[0], d0[0]  // -> t10a
+        vmull_vmlal     q4,  d25, d21, d0[0], d0[0]  // -> t13a
         vrshrn.i32      d4,  q2,  #12  // t10a
         vrshrn.i32      d5,  q4,  #12  // t13a
 
@@ -1479,53 +1479,6 @@ function inv_txfm_add_vert_4x16_neon
         load_add_store_4x16 r6, r7
         pop             {pc}
 endfunc
-
-.macro sub_sp_align space
-#if CONFIG_THUMB
-        mov             r7,  sp
-        and             r7,  r7,  #15
-#else
-        and             r7,  sp,  #15
-#endif
-        sub             sp,  sp,  r7
-        // Now the stack is aligned, store the amount of adjustment back
-        // on the stack, as we don't want to waste a register as frame
-        // pointer.
-        str             r7,  [sp, #-16]!
-#ifdef _WIN32
-.if \space > 8192
-        // Here, we'd need to touch two (or more) pages while decrementing
-        // the stack pointer.
-        .error          "sub_sp_align doesn't support values over 8K at the moment"
-.elseif \space > 4096
-        sub             r7,  sp,  #4096
-        ldr             r12, [r7]
-        sub             r7,  r7,  #(\space - 4096)
-        mov             sp,  r7
-.else
-        sub             sp,  sp,  #\space
-.endif
-#else
-.if \space >= 4096
-        sub             sp,  sp,  #(\space)/4096*4096
-.endif
-.if (\space % 4096) != 0
-        sub             sp,  sp,  #(\space)%4096
-.endif
-#endif
-.endm
-
-.macro add_sp_align space
-.if \space >= 4096
-        add             sp,  sp,  #(\space)/4096*4096
-.endif
-.if (\space % 4096) != 0
-        add             sp,  sp,  #(\space)%4096
-.endif
-        ldr             r7,  [sp], #16
-        // Add back the original stack adjustment
-        add             sp,  sp,  r7
-.endm
 
 function inv_txfm_add_16x16_neon
         sub_sp_align    512
@@ -3248,7 +3201,9 @@ function inv_txfm_add_dct_dct_32x64_8bpc_neon, export=1
         mov             r8,  #(32 - \i)
         cmp             r3,  r11
         blt             1f
+.if \i < 28
         ldrh            r11, [r10], #2
+.endif
 .endif
         add             r7,  r2,  #(\i*2)
         mov             r8,  #32*2
@@ -3304,7 +3259,7 @@ function inv_txfm_add_dct_dct_64x16_8bpc_neon, export=1
         add             r6,  r4,  #(\i*64*2)
         mov             r9,  #-2 // shift
         bl              inv_txfm_horz_dct_64x4_neon
-.if \i < 8
+.if \i < 12
         ldrh            r11, [r10], #2
 .endif
 .endr
@@ -3353,7 +3308,9 @@ function inv_txfm_add_dct_dct_16x64_8bpc_neon, export=1
         mov             r8,  #(32 - \i)
         cmp             r3,  r11
         blt             1f
+.if \i < 28
         ldrh            r11, [r10], #2
+.endif
 .endif
         add             r7,  r2,  #(\i*2)
         mov             r8,  #32*2

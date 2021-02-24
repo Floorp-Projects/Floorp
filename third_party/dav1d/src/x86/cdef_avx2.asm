@@ -39,7 +39,7 @@
 %endmacro
 
 %macro CDEF_FILTER_JMP_TABLE 1
-JMP_TABLE cdef_filter_%1, \
+JMP_TABLE cdef_filter_%1_8bpc, \
     d6k0, d6k1, d7k0, d7k1, \
     d0k0, d0k1, d1k0, d1k1, d2k0, d2k1, d3k0, d3k1, \
     d4k0, d4k1, d5k0, d5k1, d6k0, d6k1, d7k0, d7k1, \
@@ -94,7 +94,7 @@ SECTION .text
 %macro PREP_REGS 2 ; w, h
     ; off1/2/3[k] [6 total] from [tapq+12+(dir+0/2/6)*2+k]
     mov           dird, r6m
-    lea         tableq, [cdef_filter_%1x%2_jmptable]
+    lea         tableq, [cdef_filter_%1x%2_8bpc_jmptable]
     lea           dirq, [tableq+dirq*2*4]
 %if %1 == 4
  %if %2 == 4
@@ -397,7 +397,7 @@ SECTION .text
 
 %macro CDEF_FILTER 2 ; w, h
 INIT_YMM avx2
-cglobal cdef_filter_%1x%2, 4, 9, 0, dst, stride, left, top, \
+cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
                                     pri, sec, dir, damping, edge
 %assign stack_offset_entry stack_offset
     mov          edged, edgem
@@ -1592,7 +1592,7 @@ CDEF_FILTER 4, 8
 CDEF_FILTER 4, 4
 
 INIT_YMM avx2
-cglobal cdef_dir, 3, 4, 15, src, stride, var, stride3
+cglobal cdef_dir_8bpc, 3, 4, 15, src, stride, var, stride3
     lea       stride3q, [strideq*3]
     movq           xm0, [srcq+strideq*0]
     movq           xm1, [srcq+strideq*1]
@@ -1622,10 +1622,10 @@ cglobal cdef_dir, 3, 4, 15, src, stride, var, stride3
     psubw           m3, m8
 
     ; shuffle registers to generate partial_sum_diag[0-1] together
-    vpermq          m7, m0, q1032
-    vpermq          m6, m1, q1032
-    vpermq          m5, m2, q1032
-    vpermq          m4, m3, q1032
+    vperm2i128      m7, m0, m0, 0x01
+    vperm2i128      m6, m1, m1, 0x01
+    vperm2i128      m5, m2, m2, 0x01
+    vperm2i128      m4, m3, m3, 0x01
 
     ; start with partial_sum_hv[0-1]
     paddw           m8, m0, m1

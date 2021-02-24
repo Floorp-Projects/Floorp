@@ -311,6 +311,30 @@ endconst
 .endif
 .endm
 
+// Steps for loading and preparing each row
+.macro dir_load_step1 s1, bpc
+.if \bpc == 8
+        ld1             {\s1\().8b}, [x0], x1
+.else
+        ld1             {\s1\().8h}, [x0], x1
+.endif
+.endm
+
+.macro dir_load_step2 s1, bpc
+.if \bpc == 8
+        usubl           \s1\().8h,  \s1\().8b, v31.8b
+.else
+        ushl            \s1\().8h,  \s1\().8h, v8.8h
+.endif
+.endm
+
+.macro dir_load_step3 s1, bpc
+// Nothing for \bpc == 8
+.if \bpc != 8
+        sub             \s1\().8h,  \s1\().8h, v31.8h
+.endif
+.endm
+
 // int dav1d_cdef_find_dir_Xbpc_neon(const pixel *img, const ptrdiff_t stride,
 //                                   unsigned *const var)
 .macro find_dir bpc
@@ -333,21 +357,15 @@ function cdef_find_dir_\bpc\()bpc_neon, export=1
         movi            v3.8h,   #0 // v2-v3 sum_diag[1]
         movi            v5.8h,   #0 // v4-v5 sum_hv[0-1]
         movi            v7.8h,   #0 // v6-v7 sum_alt[0]
+        dir_load_step1  v26, \bpc       // Setup first row early
         movi            v17.8h,  #0 // v16-v17 sum_alt[1]
         movi            v18.8h,  #0 // v18-v19 sum_alt[2]
+        dir_load_step2  v26, \bpc
         movi            v19.8h,  #0
+        dir_load_step3  v26, \bpc
         movi            v21.8h,  #0 // v20-v21 sum_alt[3]
 
 .irpc i, 01234567
-.if \bpc == 8
-        ld1             {v26.8b}, [x0], x1
-        usubl           v26.8h,  v26.8b, v31.8b
-.else
-        ld1             {v26.8h}, [x0], x1
-        ushl            v26.8h,  v26.8h, v8.8h
-        sub             v26.8h,  v26.8h, v31.8h
-.endif
-
         addv            h25,     v26.8h               // [y]
         rev64           v27.8h,  v26.8h
         addp            v28.8h,  v26.8h,  v30.8h      // [(x >> 1)]
@@ -355,30 +373,6 @@ function cdef_find_dir_\bpc\()bpc_neon, export=1
         ext             v27.16b, v27.16b, v27.16b, #8 // [-x]
         rev64           v29.4h,  v28.4h               // [-(x >> 1)]
         ins             v4.h[\i], v25.h[0]            // sum_hv[0]
-
-.if \i == 0
-        mov             v0.16b,  v26.16b              // sum_diag[0]
-        mov             v2.16b,  v27.16b              // sum_diag[1]
-        mov             v6.16b,  v28.16b              // sum_alt[0]
-        mov             v16.16b, v29.16b              // sum_alt[1]
-.else
-        ext             v22.16b, v30.16b, v26.16b, #(16-2*\i)
-        ext             v23.16b, v26.16b, v30.16b, #(16-2*\i)
-        ext             v24.16b, v30.16b, v27.16b, #(16-2*\i)
-        ext             v25.16b, v27.16b, v30.16b, #(16-2*\i)
-        add             v0.8h,   v0.8h,   v22.8h      // sum_diag[0]
-        add             v1.8h,   v1.8h,   v23.8h      // sum_diag[0]
-        add             v2.8h,   v2.8h,   v24.8h      // sum_diag[1]
-        add             v3.8h,   v3.8h,   v25.8h      // sum_diag[1]
-        ext             v22.16b, v30.16b, v28.16b, #(16-2*\i)
-        ext             v23.16b, v28.16b, v30.16b, #(16-2*\i)
-        ext             v24.16b, v30.16b, v29.16b, #(16-2*\i)
-        ext             v25.16b, v29.16b, v30.16b, #(16-2*\i)
-        add             v6.8h,   v6.8h,   v22.8h      // sum_alt[0]
-        add             v7.4h,   v7.4h,   v23.4h      // sum_alt[0]
-        add             v16.8h,  v16.8h,  v24.8h      // sum_alt[1]
-        add             v17.4h,  v17.4h,  v25.4h      // sum_alt[1]
-.endif
 .if \i < 6
         ext             v22.16b, v30.16b, v26.16b, #(16-2*(3-(\i/2)))
         ext             v23.16b, v26.16b, v30.16b, #(16-2*(3-(\i/2)))
@@ -396,6 +390,41 @@ function cdef_find_dir_\bpc\()bpc_neon, export=1
         ext             v25.16b, v26.16b, v30.16b, #(16-2*(\i/2))
         add             v20.8h,  v20.8h,  v24.8h      // sum_alt[3]
         add             v21.4h,  v21.4h,  v25.4h      // sum_alt[3]
+.endif
+.if \i == 0
+        mov             v0.16b,  v26.16b              // sum_diag[0]
+        dir_load_step1  v26, \bpc
+        mov             v2.16b,  v27.16b              // sum_diag[1]
+        dir_load_step2  v26, \bpc
+        mov             v6.16b,  v28.16b              // sum_alt[0]
+        dir_load_step3  v26, \bpc
+        mov             v16.16b, v29.16b              // sum_alt[1]
+.else
+        ext             v22.16b, v30.16b, v26.16b, #(16-2*\i)
+        ext             v23.16b, v26.16b, v30.16b, #(16-2*\i)
+        ext             v24.16b, v30.16b, v27.16b, #(16-2*\i)
+        ext             v25.16b, v27.16b, v30.16b, #(16-2*\i)
+.if \i != 7 // Nothing to load for the final row
+        dir_load_step1  v26, \bpc // Start setting up the next row early.
+.endif
+        add             v0.8h,   v0.8h,   v22.8h      // sum_diag[0]
+        add             v1.8h,   v1.8h,   v23.8h      // sum_diag[0]
+        add             v2.8h,   v2.8h,   v24.8h      // sum_diag[1]
+        add             v3.8h,   v3.8h,   v25.8h      // sum_diag[1]
+.if \i != 7
+        dir_load_step2  v26, \bpc
+.endif
+        ext             v22.16b, v30.16b, v28.16b, #(16-2*\i)
+        ext             v23.16b, v28.16b, v30.16b, #(16-2*\i)
+        ext             v24.16b, v30.16b, v29.16b, #(16-2*\i)
+        ext             v25.16b, v29.16b, v30.16b, #(16-2*\i)
+.if \i != 7
+        dir_load_step3  v26, \bpc
+.endif
+        add             v6.8h,   v6.8h,   v22.8h      // sum_alt[0]
+        add             v7.4h,   v7.4h,   v23.4h      // sum_alt[0]
+        add             v16.8h,  v16.8h,  v24.8h      // sum_alt[1]
+        add             v17.4h,  v17.4h,  v25.4h      // sum_alt[1]
 .endif
 .endr
 

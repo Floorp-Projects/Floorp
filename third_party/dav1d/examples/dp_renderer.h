@@ -66,8 +66,11 @@ typedef struct {
 #define WINDOW_WIDTH  910
 #define WINDOW_HEIGHT 512
 
-#define DAV1D_EVENT_NEW_FRAME 1
-#define DAV1D_EVENT_DEC_QUIT  2
+enum {
+    DAV1D_EVENT_NEW_FRAME,
+    DAV1D_EVENT_SEEK_FRAME,
+    DAV1D_EVENT_DEC_QUIT
+};
 
 /**
  * Renderer info
@@ -84,7 +87,7 @@ typedef struct rdr_info
     void (*destroy_renderer)(void *cookie);
     // Callback to the render function that renders a prevously sent frame
     void (*render)(void *cookie, const Dav1dPlaySettings *settings);
-    // Callback to the send frame function
+    // Callback to the send frame function, _may_ also unref dav1d_pic!
     int (*update_frame)(void *cookie, Dav1dPicture *dav1d_pic,
                         const Dav1dPlaySettings *settings);
     // Callback for alloc/release pictures (optional)

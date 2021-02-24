@@ -169,6 +169,14 @@ static inline void dav1d_set_thread_name(const char *const name) {
     pthread_setname_np(pthread_self(), "%s", (void*)name);
 }
 
+#elif defined(__HAIKU__)
+
+#include <os/kernel/OS.h>
+
+static inline void dav1d_set_thread_name(const char *const name) {
+    rename_thread(find_thread(NULL), name);
+}
+
 #else
 
 #define dav1d_set_thread_name(name) do {} while (0)

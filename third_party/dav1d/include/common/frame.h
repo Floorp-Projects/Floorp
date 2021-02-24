@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019, VideoLAN and dav1d authors
+ * Copyright © 2021, VideoLAN and dav1d authors
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,40 +24,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef DAV1D_COMMON_FRAME_H
+#define DAV1D_COMMON_FRAME_H
+
 /*
- * Dav1dPlay FIFO helper
+ * Checks whether Dav1dFrameType == INTER || == SWITCH
+ * Both are defined as odd numbers {1, 3} and therefore have the LSB set.
+ * See also: AV1 spec 6.8.2
  */
+#define IS_INTER_OR_SWITCH(frame_header) \
+    ((frame_header)->frame_type & 1)
 
-typedef struct dp_fifo Dav1dPlayPtrFifo;
-
-/* Create a FIFO
- *
- * Creates a FIFO with the given capacity.
- * If the capacity is reached, new inserts into the FIFO
- * will block until enough space is available again.
+/*
+ * Checks whether Dav1dFrameType == KEY || == INTRA
+ * See also: AV1 spec 6.8.2
  */
-Dav1dPlayPtrFifo *dp_fifo_create(size_t capacity);
+#define IS_KEY_OR_INTRA(frame_header) \
+    (!IS_INTER_OR_SWITCH(frame_header))
 
-/* Destroy a FIFO
- *
- * The FIFO must be empty before it is destroyed!
- */
-void dp_fifo_destroy(Dav1dPlayPtrFifo *fifo);
-
-/* Shift FIFO
- *
- * Return the first item from the FIFO, thereby removing it from
- * the FIFO and making room for new entries.
- */
-void *dp_fifo_shift(Dav1dPlayPtrFifo *fifo);
-
-/* Push to FIFO
- *
- * Add an item to the end of the FIFO.
- * If the FIFO is full, this call will block until there is again enough
- * space in the FIFO, so calling this from the "consumer" thread if no
- * other thread will call dp_fifo_shift will lead to a deadlock.
- */
-void dp_fifo_push(Dav1dPlayPtrFifo *fifo, void *element);
-
-void dp_fifo_flush(Dav1dPlayPtrFifo *fifo, void (*destroy_elem)(void *));
+#endif /* DAV1D_COMMON_FRAME_H */
