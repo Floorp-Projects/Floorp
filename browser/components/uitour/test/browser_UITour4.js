@@ -7,67 +7,6 @@ var gContentWindow;
 add_task(setup_UITourTest);
 
 add_UITour_task(
-  async function test_highligh_between_pageActionButtonOnUrlbar_and_buttonOnPageActionPanel() {
-    let highlight = document.getElementById("UITourHighlight");
-    is_element_hidden(highlight, "Highlight should initially be hidden");
-
-    // Test highlighting the page action button on the urlbar
-    let pageActionPanel = BrowserPageActions.panelNode;
-    let highlightVisiblePromise = elementVisiblePromise(
-      highlight,
-      "Should show highlight"
-    );
-    gContentAPI.showHighlight("pageActionButton");
-    await highlightVisiblePromise;
-    is(
-      pageActionPanel.state,
-      "closed",
-      "Shouldn't open the page action panel while highlighting the pageActionButton"
-    );
-    is(
-      getShowHighlightTargetName(),
-      "pageActionButton",
-      "Should highlight the pageActionButton"
-    );
-
-    // Test switching the highlight to the copyURL button on the page action panel
-    let panelShownPromise = promisePanelElementShown(window, pageActionPanel);
-    highlightVisiblePromise = elementVisiblePromise(
-      highlight,
-      "Should show highlight"
-    );
-    gContentAPI.showHighlight("pageAction-copyURL");
-    await highlightVisiblePromise;
-    await panelShownPromise;
-    is(
-      pageActionPanel.state,
-      "open",
-      "Should open the page action panel for highlighting the pageAction-copyURL"
-    );
-    is(
-      getShowHighlightTargetName(),
-      "pageAction-copyURL",
-      "Should highlight the pageAction-copyURL"
-    );
-
-    // Test hiding highlight
-    let panelHiddenPromise = promisePanelElementHidden(window, pageActionPanel);
-    let highlightHiddenPromise = elementHiddenPromise(
-      highlight,
-      "Should hide highlight"
-    );
-    gContentAPI.hideHighlight();
-    await highlightHiddenPromise;
-    await panelHiddenPromise;
-    is(
-      pageActionPanel.state,
-      "closed",
-      "Should close the page action panel after hiding highlight"
-    );
-  }
-);
-
-add_UITour_task(
   async function test_highligh_between_buttonOnAppMenu_and_buttonOnPageActionPanel() {
     let highlight = document.getElementById("UITourHighlight");
     is_element_hidden(highlight, "Highlight should initially be hidden");
