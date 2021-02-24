@@ -690,6 +690,7 @@ const int STEP_BITS = 8;
 // half-resolution paired U/V R8 textures. This allows us to more efficiently
 // pack YUV samples into vectors to substantially reduce math operations even
 // further.
+template <bool BLEND>
 static inline void upscaleYUV42R8(uint32_t* dest, int span, uint8_t* yRow,
                                   I32 yU, int32_t yDU, int32_t yStrideV,
                                   int16_t yFracV, uint8_t* cRow1,
@@ -804,7 +805,7 @@ static inline void upscaleYUV42R8(uint32_t* dest, int span, uint8_t* yRow,
                   SHUFFLE(yuvPx, yuvPx, 5, 7, 4, 6, 5, 7, 4, 6)) >>
                  2);
 
-    unaligned_store(dest, colorSpace.convert(yPx, uvPx));
+    commit_blend_span<BLEND>(dest, colorSpace.convert(yPx, uvPx));
   }
 }
 
@@ -812,6 +813,7 @@ static inline void upscaleYUV42R8(uint32_t* dest, int span, uint8_t* yRow,
 // YUV span, dispatching based on appropriate format and scaling. This is also
 // reused by blendYUV to accelerate some cases of texture sampling in the
 // shader.
+template <bool BLEND = false>
 static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
                            const vec2_scalar& srcUV, float srcDU,
                            sampler2DRect samplerU, sampler2DRect samplerV,
@@ -838,15 +840,11 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
                             texelFetch(samplerU, ivec2(chromaUV)).x.x,
                             texelFetch(samplerV, ivec2(chromaUV)).x.x, 1.0f}),
         I16);
-    auto rgb = colorSpace.convert(zip(I16(yuv.x), I16(yuv.x)),
-                                  zip(I16(yuv.y), I16(yuv.z)));
-    for (; span >= 4; span -= 4) {
-      unaligned_store(dest, rgb);
-      dest += 4;
-    }
-    if (span > 0) {
-      partial_store_span(dest, rgb, span);
-    }
+    commit_solid_span<BLEND>(
+        dest,
+        unpack(colorSpace.convert(V8<int16_t>(yuv.x),
+                                  zip(I16(yuv.y), I16(yuv.z)))),
+        span);
   } else if (samplerY->format == TextureFormat::R16) {
     // Sample each YUV plane, rescale it to fit in low 8 bits of word, and
     // then transform them by the appropriate color space.
@@ -866,7 +864,8 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
       auto vPx =
           textureLinearUnpackedR16(samplerV, ivec2(cU >> STEP_BITS, cV)) >>
           rescaleBits;
-      unaligned_store(dest, colorSpace.convert(zip(yPx, yPx), zip(uPx, vPx)));
+      commit_blend_span<BLEND>(
+          dest, colorSpace.convert(zip(yPx, yPx), zip(uPx, vPx)));
       dest += 4;
       yU += yDU;
       cU += cDU;
@@ -882,8 +881,8 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
       auto vPx =
           textureLinearUnpackedR16(samplerV, ivec2(cU >> STEP_BITS, cV)) >>
           rescaleBits;
-      partial_store_span(dest, colorSpace.convert(zip(yPx, yPx), zip(uPx, vPx)),
-                         span);
+      commit_blend_span<BLEND>(
+          dest, colorSpace.convert(zip(yPx, yPx), zip(uPx, vPx)), span);
     }
   } else {
     assert(samplerY->format == TextureFormat::R8);
@@ -914,7 +913,7 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
                                       yStrideV, yFracV);
         auto uvPx = textureLinearRowPairedR8(
             samplerU, samplerV, cU >> STEP_BITS, cOffsetV, cStrideV, cFracV);
-        unaligned_store(dest, colorSpace.convert(yPx, uvPx));
+        commit_blend_span<BLEND>(dest, colorSpace.convert(yPx, uvPx));
         dest += 4;
         yU += yDU;
         cU += cDU;
@@ -930,8 +929,9 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
         uint8_t* yRow = (uint8_t*)samplerY->buf + yOffsetV;
         uint8_t* cRow1 = (uint8_t*)samplerU->buf + cOffsetV;
         uint8_t* cRow2 = (uint8_t*)samplerV->buf + cOffsetV;
-        upscaleYUV42R8(dest, inside, yRow, yU, yDU, yStrideV, yFracV, cRow1,
-                       cRow2, cU, cDU, cStrideV, cFracV, colorSpace);
+        upscaleYUV42R8<BLEND>(dest, inside, yRow, yU, yDU, yStrideV, yFracV,
+                              cRow1, cRow2, cU, cDU, cStrideV, cFracV,
+                              colorSpace);
         span -= inside;
         dest += inside;
         yU += (inside / 4) * yDU;
@@ -947,7 +947,7 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
                                     yStrideV, yFracV);
       auto uvPx = textureLinearRowPairedR8(samplerU, samplerV, cU >> STEP_BITS,
                                            cOffsetV, cStrideV, cFracV);
-      unaligned_store(dest, colorSpace.convert(yPx, uvPx));
+      commit_blend_span<BLEND>(dest, colorSpace.convert(yPx, uvPx));
       dest += 4;
       yU += yDU;
       cU += cDU;
@@ -958,7 +958,7 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
                                     yStrideV, yFracV);
       auto uvPx = textureLinearRowPairedR8(samplerU, samplerV, cU >> STEP_BITS,
                                            cOffsetV, cStrideV, cFracV);
-      partial_store_span(dest, colorSpace.convert(yPx, uvPx), span);
+      commit_blend_span<BLEND>(dest, colorSpace.convert(yPx, uvPx), span);
     }
   }
 }
