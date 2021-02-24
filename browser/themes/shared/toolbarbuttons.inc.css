@@ -22,7 +22,7 @@
 
   --toolbarseparator-color: var(--lwt-toolbar-vertical-separator, rgba(0,0,0,.3));
 
-  --bookmark-block-padding: 1px;
+  --bookmark-block-padding: 4px;
 
   /* This default value of --toolbarbutton-height is defined to prevent
      CSS errors for an invalid variable. The value should not get used,
@@ -46,7 +46,6 @@
 
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 6px;
-  --bookmark-block-padding: 4px;
 }
 } /** END !proton **/
 
@@ -157,7 +156,6 @@ toolbar .toolbarbutton-1 > menupopup {
 }
 
 .findbar-button,
-toolbarbutton.bookmark-item:not(.subviewbutton),
 toolbar .toolbarbutton-1 > .toolbarbutton-icon,
 toolbar .toolbarbutton-1 > .toolbarbutton-text,
 toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
@@ -366,11 +364,65 @@ toolbar .toolbarbutton-1:-moz-focusring {
 
 /* ::::: bookmark buttons ::::: */
 
-#personal-toolbar-empty-description,
-toolbarbutton.bookmark-item:not(.subviewbutton) {
-  margin: 0 2px;
-  padding: var(--bookmark-block-padding) 4px;
-}
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
+  #PersonalToolbar .toolbarbutton-1,
+  #personal-toolbar-empty-description,
+  toolbarbutton.bookmark-item:not(.subviewbutton) {
+    margin: 0 2px;
+    padding: var(--bookmark-block-padding) 4px;
+  }
+
+  #PersonalToolbar .toolbarbutton-1,
+  toolbarbutton.bookmark-item:not(.subviewbutton) {
+    border-radius: var(--toolbarbutton-border-radius);
+  }
+
+  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
+  #PersonalToolbar > #import-button + #personal-bookmarks {
+    border-inline-start: 1px solid;
+    border-image-source: linear-gradient(
+      transparent 3.75px,
+      var(--toolbarseparator-color) 3.75px,
+      var(--toolbarseparator-color) calc(100% - 3.75px),
+      transparent calc(100% - 3.75px) );
+    border-image-slice: 1;
+  }
+
+  /* Add spacing around the separator between the import button and the bookmark
+   * items, such that it matches spacing around bookmark separators. */
+  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
+  #PersonalToolbar > #import-button + #personal-bookmarks {
+    /* space before the separator (added to 2px margin on the import button) */
+    margin-inline-start: 2px;
+    /* space after (same as `padding-inline` for separators above) */
+    padding-inline-start: 4px;
+  }
+
+ @media (min-resolution: 2dppx) {
+    #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
+    #PersonalToolbar > #import-button + #personal-bookmarks {
+      border-inline-start-width: 0.5px;
+    }
+  }
+} /** END !proton **/
+
+@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+  #PersonalToolbar .toolbarbutton-1,
+  #personal-toolbar-empty-description,
+  toolbarbutton.bookmark-item:not(.subviewbutton) {
+    margin: 2px;
+    padding: var(--bookmark-block-padding) 4px;
+  }
+
+  /*
+   * bookmark items' border radius differ from other toolbar items, which is why we don't reuse
+   * --toolbarbutton-border-radius.
+   */
+  #PersonalToolbar .toolbarbutton-1,
+  toolbarbutton.bookmark-item:not(.subviewbutton) {
+    border-radius: 2px;
+  }
+} /** END proton **/
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   max-width: 13em;
@@ -419,11 +471,6 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 
 /* Import button styling in the bookmarks toolbar */
 
-#PersonalToolbar #import-button {
-  padding: 4px !important; /* overrides the styling for other toolbar buttons in the bookmarks toolbar. */
-  margin: 0 2px;
-}
-
 #PersonalToolbar #import-button > .toolbarbutton-text {
   min-height: unset; /* override the .toolbarbutton-1 .toolbarbutton-text rule */
 }
@@ -441,15 +488,11 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   padding-inline: 4px;
   appearance: none;
 }
+
+/* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
 #PlacesToolbarItems > toolbarseparator::before {
   content: "";
   display: block;
-}
-
-/* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
-#PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
-#PersonalToolbar > #import-button + #personal-bookmarks,
-#PlacesToolbarItems > toolbarseparator::before {
   border-inline-start: 1px solid;
   border-image-source: linear-gradient(
     transparent 3.75px,
@@ -460,21 +503,9 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 }
 
 @media (min-resolution: 2dppx) {
-  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
-  #PersonalToolbar > #import-button + #personal-bookmarks,
   #PlacesToolbarItems > toolbarseparator::before {
     border-inline-start-width: 0.5px;
   }
-}
-
-/* Add spacing around the separator between the import button and the bookmark
- * items, such that it matches spacing around bookmark separators. */
-#PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
-#PersonalToolbar > #import-button + #personal-bookmarks {
-  /* space before the separator (added to 2px margin on the import button) */
-  margin-inline-start: 2px;
-  /* space after (same as `padding-inline` for separators above) */
-  padding-inline-start: 4px;
 }
 
 /* The bookmarks toolbar is smaller than the other toolbars, so we
@@ -503,11 +534,6 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   padding: 0 !important;
   background: none !important;
   min-height: 16px;
-}
-
-#PersonalToolbar .toolbarbutton-1 {
-  padding: 1px var(--toolbarbutton-inner-padding);
-  border-radius: var(--toolbarbutton-border-radius);
 }
 
 /* Alternative style for .toolbarbutton-badge used by CFR notifications */

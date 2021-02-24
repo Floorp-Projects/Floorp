@@ -115,7 +115,7 @@
 
 @supports -moz-bool-pref("browser.proton.toolbar.enabled") {
 #PersonalToolbar {
-  padding-inline: 2px;
+  padding-inline: 6px;
 }
 } /*** END proton ***/
 
