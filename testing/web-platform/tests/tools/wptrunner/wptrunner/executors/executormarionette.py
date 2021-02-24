@@ -570,12 +570,19 @@ class MarionetteVirtualAuthenticatorProtocolPart(VirtualAuthenticatorProtocolPar
     def set_user_verified(self, authenticator_id, uv):
         raise NotImplementedError("set_user_verified not yet implemented")
 
+
 class MarionetteSetPermissionProtocolPart(SetPermissionProtocolPart):
     def setup(self):
         self.marionette = self.parent.marionette
 
-    def set_permission(self, name, state, one_realm):
-        raise NotImplementedError("set_permission not yet implemented")
+    def set_permission(self, descriptor, state, one_realm):
+        body = {
+            "descriptor": descriptor,
+            "state": state,
+        }
+        if one_realm is not None:
+            body["oneRealm"] = one_realm
+        self.marionette._send_message("WebDriver:SetPermission", body)
 
 
 class MarionettePrintProtocolPart(PrintProtocolPart):
