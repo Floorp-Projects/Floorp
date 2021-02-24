@@ -836,7 +836,9 @@ static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
 
   if (isAsmJS) {
     RefPtr<const JS::WasmModule> asmJS =
-        stencil.asCompilationStencil().asmJS.lookup(functionIndex)->value();
+        stencil.asCompilationStencil()
+            .asmJS->moduleMap.lookup(functionIndex)
+            ->value();
 
     JSObject* moduleObj = asmJS->createObjectForAsmJS(cx);
     if (!moduleObj) {
@@ -1816,10 +1818,7 @@ bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
     return false;
   }
 
-  MOZ_ASSERT(stencil.asmJS.empty());
-  if (!asmJS.empty()) {
-    std::swap(asmJS, stencil.asmJS);
-  }
+  stencil.asmJS = std::move(asmJS);
 
   stencil.moduleMetadata = std::move(moduleMetadata);
 
@@ -2783,9 +2782,11 @@ void CompilationStencil::dumpFields(js::JSONPrinter& json) const {
   }
 
   json.beginObjectProperty("asmJS");
-  for (auto iter = asmJS.iter(); !iter.done(); iter.next()) {
-    SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
-    json.formatProperty(index, "asm.js");
+  if (asmJS) {
+    for (auto iter = asmJS->moduleMap.iter(); !iter.done(); iter.next()) {
+      SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
+      json.formatProperty(index, "asm.js");
+    }
   }
   json.endObject();
 }
@@ -2933,15 +2934,15 @@ bool CompilationState::appendGCThings(
 }
 
 CompilationState::RewindToken CompilationState::getRewindToken() {
-  return RewindToken{scriptData.length(), asmJS.count()};
+  return RewindToken{scriptData.length(), asmJS ? asmJS->moduleMap.count() : 0};
 }
 
 void CompilationState::rewind(const CompilationState::RewindToken& pos) {
-  if (asmJS.count() != pos.asmJSCount) {
+  if (asmJS && asmJS->moduleMap.count() != pos.asmJSCount) {
     for (size_t i = pos.scriptDataLength; i < scriptData.length(); i++) {
-      asmJS.remove(ScriptIndex(i));
+      asmJS->moduleMap.remove(ScriptIndex(i));
     }
-    MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
+    MOZ_ASSERT(asmJS->moduleMap.count() == pos.asmJSCount);
   }
   scriptData.shrinkTo(pos.scriptDataLength);
 }

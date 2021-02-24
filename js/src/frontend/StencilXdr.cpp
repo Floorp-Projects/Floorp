@@ -626,7 +626,7 @@ template XDRResult XDRBaseCompilationStencil(XDRState<XDR_DECODE>* xdr,
 template <XDRMode mode>
 XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
                                 CompilationStencil& stencil) {
-  if (!stencil.asmJS.empty()) {
+  if (stencil.asmJS) {
     return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
   }
 
