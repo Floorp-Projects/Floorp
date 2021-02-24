@@ -9,7 +9,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"     // mozilla::Utf8Unit
+#include "mozilla/Variant.h"  // mozilla::Variant
 
 #include "builtin/ModuleObject.h"
 #include "frontend/BytecodeCompilation.h"
@@ -172,9 +173,10 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
 };
 
 #ifdef JS_ENABLE_SMOOSH
-static bool TrySmoosh(JSContext* cx, CompilationInput& input,
-                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-                      UniquePtr<CompilationStencil>& stencilOut) {
+[[nodiscard]] static bool TrySmoosh(
+    JSContext* cx, CompilationInput& input,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   MOZ_ASSERT(!stencilOut);
 
   if (!cx->options().trySmoosh()) {
@@ -182,7 +184,8 @@ static bool TrySmoosh(JSContext* cx, CompilationInput& input,
   }
 
   JSRuntime* rt = cx->runtime();
-  if (!Smoosh::tryCompileGlobalScriptToStencil(cx, input, srcBuf, stencilOut)) {
+  if (!Smoosh::tryCompileGlobalScriptToExtensibleStencil(cx, input, srcBuf,
+                                                         stencilOut)) {
     return false;
   }
 
@@ -202,38 +205,51 @@ static bool TrySmoosh(JSContext* cx, CompilationInput& input,
   return stencilOut->source->assignSource(cx, input.options, srcBuf);
 }
 
-static bool TrySmoosh(JSContext* cx, CompilationInput& input,
-                      JS::SourceText<char16_t>& srcBuf,
-                      UniquePtr<CompilationStencil>& stencilOut) {
+[[nodiscard]] static bool TrySmoosh(
+    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
+    UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   MOZ_ASSERT(!stencilOut);
   return true;
 }
 #endif  // JS_ENABLE_SMOOSH
 
-// Compile global script, and return it as either CompilationStencil
-// (without instantiation) or CompilationGCOutput (with instantiation).
+using BytecodeCompilerOutput =
+    mozilla::Variant<UniquePtr<ExtensibleCompilationStencil>,
+                     UniquePtr<CompilationStencil>, CompilationGCOutput*>;
+
+// Compile global script, and return it as one of:
+//   * ExtensibleCompilationStencil (without instantiation)
+//   * CompilationStencil (without instantiation, has no external dependency)
+//   * CompilationGCOutput (with instantiation).
 template <typename Unit>
 [[nodiscard]] static bool CompileGlobalScriptToStencilAndMaybeInstantiate(
     JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
-    ScopeKind scopeKind, UniquePtr<CompilationStencil>* stencilOut,
-    CompilationGCOutput* gcOutputOut) {
-  // Only one of them can be non-null.
-  MOZ_ASSERT_IF(stencilOut, !gcOutputOut);
-  MOZ_ASSERT_IF(!stencilOut, gcOutputOut);
-
+    ScopeKind scopeKind, BytecodeCompilerOutput& output) {
 #ifdef JS_ENABLE_SMOOSH
   {
-    UniquePtr<CompilationStencil> stencil;
-    if (!TrySmoosh(cx, input, srcBuf, stencil)) {
+    UniquePtr<ExtensibleCompilationStencil> extensibleStencil;
+    if (!TrySmoosh(cx, input, srcBuf, extensibleStencil)) {
       return false;
     }
-    if (stencil) {
-      if (stencilOut) {
-        *stencilOut = std::move(stencil);
-      }
-      {
-        MOZ_ASSERT(gcOutputOut);
-        if (!InstantiateStencils(cx, input, *stencil, *gcOutputOut)) {
+    if (extensibleStencil) {
+      if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
+        output.as<UniquePtr<ExtensibleCompilationStencil>>() =
+            std::move(extensibleStencil);
+      } else if (output.is<UniquePtr<CompilationStencil>>()) {
+        auto stencil = cx->make_unique<frontend::CompilationStencil>(input);
+        if (!stencil) {
+          return false;
+        }
+
+        if (!extensibleStencil->finish(cx, *stencil)) {
+          return false;
+        }
+
+        output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
+      } else {
+        BorrowingCompilationStencil borrowingStencil(*extensibleStencil);
+        if (!InstantiateStencils(cx, input, borrowingStencil,
+                                 *(output.as<CompilationGCOutput*>()))) {
           return false;
         }
       }
@@ -270,7 +286,14 @@ template <typename Unit>
     return false;
   }
 
-  if (stencilOut) {
+  if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
+    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
+        std::move(compiler.stencil()));
+    if (!stencil) {
+      return false;
+    }
+    output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
+  } else if (output.is<UniquePtr<CompilationStencil>>()) {
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
@@ -283,12 +306,11 @@ template <typename Unit>
       return false;
     }
 
-    *stencilOut = std::move(stencil);
+    output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
   } else {
-    MOZ_ASSERT(gcOutputOut);
-
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
-    if (!InstantiateStencils(cx, input, borrowingStencil, *gcOutputOut)) {
+    if (!InstantiateStencils(cx, input, borrowingStencil,
+                             *(output.as<CompilationGCOutput*>()))) {
       return false;
     }
   }
@@ -301,12 +323,13 @@ template <typename Unit>
 static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
     JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
     ScopeKind scopeKind) {
-  UniquePtr<CompilationStencil> stencil;
-  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
-          cx, input, srcBuf, scopeKind, &stencil, nullptr)) {
+  using OutputType = UniquePtr<CompilationStencil>;
+  BytecodeCompilerOutput output((OutputType()));
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(cx, input, srcBuf,
+                                                       scopeKind, output)) {
     return nullptr;
   }
-  return stencil;
+  return std::move(output.as<OutputType>());
 }
 
 UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
@@ -319,6 +342,37 @@ UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
     JSContext* cx, CompilationInput& input, JS::SourceText<Utf8Unit>& srcBuf,
     ScopeKind scopeKind) {
   return CompileGlobalScriptToStencilImpl(cx, input, srcBuf, scopeKind);
+}
+
+template <typename Unit>
+static UniquePtr<ExtensibleCompilationStencil>
+CompileGlobalScriptToExtensibleStencilImpl(JSContext* cx,
+                                           CompilationInput& input,
+                                           JS::SourceText<Unit>& srcBuf,
+                                           ScopeKind scopeKind) {
+  using OutputType = UniquePtr<ExtensibleCompilationStencil>;
+  BytecodeCompilerOutput output((OutputType()));
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(cx, input, srcBuf,
+                                                       scopeKind, output)) {
+    return nullptr;
+  }
+  return std::move(output.as<OutputType>());
+}
+
+UniquePtr<ExtensibleCompilationStencil>
+frontend::CompileGlobalScriptToExtensibleStencil(
+    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
+    ScopeKind scopeKind) {
+  return CompileGlobalScriptToExtensibleStencilImpl(cx, input, srcBuf,
+                                                    scopeKind);
+}
+
+UniquePtr<ExtensibleCompilationStencil>
+frontend::CompileGlobalScriptToExtensibleStencil(
+    JSContext* cx, CompilationInput& input, JS::SourceText<Utf8Unit>& srcBuf,
+    ScopeKind scopeKind) {
+  return CompileGlobalScriptToExtensibleStencilImpl(cx, input, srcBuf,
+                                                    scopeKind);
 }
 
 bool frontend::InstantiateStencils(
@@ -365,9 +419,10 @@ static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
-          cx, input.get(), srcBuf, scopeKind, nullptr, gcOutput.address())) {
+  Rooted<CompilationGCOutput> gcOutput(cx);
+  BytecodeCompilerOutput output(gcOutput.address());
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(cx, input.get(), srcBuf,
+                                                       scopeKind, output)) {
     return nullptr;
   }
   return gcOutput.get().script;

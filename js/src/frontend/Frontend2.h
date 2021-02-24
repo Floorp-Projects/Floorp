@@ -29,7 +29,7 @@ class ScriptSourceObject;
 namespace frontend {
 
 struct CompilationInput;
-struct CompilationStencil;
+struct ExtensibleCompilationStencil;
 struct CompilationGCOutput;
 struct CompilationState;
 
@@ -37,10 +37,10 @@ struct CompilationState;
 // declarations in the simple way.
 class Smoosh {
  public:
-  static bool tryCompileGlobalScriptToStencil(
+  [[nodiscard]] static bool tryCompileGlobalScriptToExtensibleStencil(
       JSContext* cx, CompilationInput& input,
       JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-      UniquePtr<CompilationStencil>& stencilOut);
+      UniquePtr<ExtensibleCompilationStencil>& stencilOut);
 };
 
 // Initialize SmooshMonkey globals, such as the logging system.

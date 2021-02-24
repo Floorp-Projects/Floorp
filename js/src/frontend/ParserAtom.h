@@ -560,7 +560,7 @@ class ParserAtomsTable {
  private:
   const WellKnownParserAtoms& wellKnownTable_;
 
-  LifoAlloc& alloc_;
+  LifoAlloc* alloc_;
 
   // The ParserAtom are owned by the LifoAlloc.
   using EntryMap = HashMap<const ParserAtom*, TaggedParserAtomIndex,
@@ -571,6 +571,13 @@ class ParserAtomsTable {
  public:
   ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc);
   ParserAtomsTable(ParserAtomsTable&&) = default;
+  ParserAtomsTable& operator=(ParserAtomsTable&& other) noexcept {
+    entryMap_ = std::move(other.entryMap_);
+    entries_ = std::move(other.entries_);
+    return *this;
+  }
+
+  void fixupAlloc(LifoAlloc& alloc) { alloc_ = &alloc; }
 
  private:
   // Internal APIs for interning to the table after well-known atoms cases have
