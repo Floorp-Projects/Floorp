@@ -52,6 +52,11 @@ async function assertIsQuickSuggest(index = -1) {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
   Assert.equal(result.url, `${TEST_URL}?q=frabbits`);
+
+  if (result.url != `${TEST_URL}?q=frabbits`) {
+    await new Promise(r => {});
+  }
+
   return result;
 }
 
