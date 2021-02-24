@@ -817,7 +817,8 @@ void ScriptDecodeTask::parse(JSContext* cx) {
       return;
     }
 
-    stencil_ = cx->make_unique<frontend::CompilationStencil>(*stencilInput_);
+    stencil_ =
+        cx->make_unique<frontend::CompilationStencil>(stencilInput_->source);
     if (!stencil_) {
       return;
     }
