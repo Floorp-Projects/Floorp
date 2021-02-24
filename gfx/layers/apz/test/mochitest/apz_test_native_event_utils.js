@@ -544,55 +544,6 @@ function promiseNativeWheelAndWaitForScrollEvent(
   });
 }
 
-// Synthesizes a native mouse move event and returns immediately.
-// aX and aY are relative to the top-left of |aTarget|'s bounding rect.
-function synthesizeNativeMouseMove(aTarget, aX, aY) {
-  var pt = coordinatesRelativeToScreen({
-    offsetX: aX,
-    offsetY: aY,
-    target: aTarget,
-  });
-  var utils = utilsForTarget(aTarget);
-  var element = elementForTarget(aTarget);
-  utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseMoveEventMsg(), 0, element);
-  return true;
-}
-
-// Synthesizes a native mouse move event and invokes the callback once the
-// mouse move event is dispatched to |aTarget|'s containing window. If the event
-// targets content in a subdocument, |aTarget| should be inside the
-// subdocument (or the subdocument window). See synthesizeNativeMouseMove for
-// details on the other parameters.
-function synthesizeNativeMouseMoveAndWaitForMoveEvent(
-  aTarget,
-  aX,
-  aY,
-  aCallback
-) {
-  promiseNativeMouseMoveAndWaitForMoveEvent(aTarget, aX, aY).then(aCallback);
-  return true;
-}
-
-// Same as synthesizeNativeMouseMoveAndWaitForMoveEvent but returns a promise
-// instead of taking a callback.
-function promiseNativeMouseMoveAndWaitForMoveEvent(aTarget, aX, aY) {
-  return new Promise((resolve, reject) => {
-    var targetWindow = windowForTarget(aTarget);
-    targetWindow.addEventListener(
-      "mousemove",
-      function(e) {
-        setTimeout(resolve, 0);
-      },
-      { once: true }
-    );
-    try {
-      synthesizeNativeMouseMove(aTarget, aX, aY);
-    } catch (e) {
-      reject();
-    }
-  });
-}
-
 // Synthesizes a native touch event and dispatches it. aX and aY in CSS pixels
 // relative to the top-left of |aTarget|'s bounding rect.
 function synthesizeNativeTouch(
@@ -783,6 +734,8 @@ function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
   return true;
 }
 
+// If the event targets content in a subdocument, |aTarget| should be inside the
+// subdocument (or the subdocument window).
 function synthesizeNativeMouseEventWithAPZ(aParams, aObserver = null) {
   if (aParams.win !== undefined) {
     throw Error(
@@ -886,7 +839,7 @@ function promiseNativeMouseEventWithAPZ(aParams) {
 }
 
 // See synthesizeNativeMouseEventWithAPZ for the detail of aParams.
-function synthesizeNativeMouseEventWithAPZAndWaitForWaitForEvent(
+function synthesizeNativeMouseEventWithAPZAndWaitForEvent(
   aParams,
   aCallback = null
 ) {
@@ -904,7 +857,7 @@ function synthesizeNativeMouseEventWithAPZAndWaitForWaitForEvent(
 
 function promiseNativeMouseEventWithAPZAndWaitForEvent(aParams) {
   return new Promise(resolve => {
-    synthesizeNativeMouseEventWithAPZAndWaitForWaitForEvent(aParams, resolve);
+    synthesizeNativeMouseEventWithAPZAndWaitForEvent(aParams, resolve);
   });
 }
 
@@ -943,7 +896,12 @@ function promiseMoveMouseAndScrollWheelOver(
   waitForScroll = true,
   scrollDelta = 10
 ) {
-  let p = promiseNativeMouseMoveAndWaitForMoveEvent(target, dx, dy);
+  let p = promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "mousemove",
+    target,
+    offsetX: dx,
+    offsetY: dy,
+  });
   if (waitForScroll) {
     p = p.then(() =>
       promiseNativeWheelAndWaitForScrollEvent(target, dx, dy, 0, -scrollDelta)

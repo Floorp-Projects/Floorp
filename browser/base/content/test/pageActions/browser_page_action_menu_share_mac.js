@@ -42,7 +42,12 @@ let stub = sinon
 
 registerCleanupFunction(async function() {
   stub.restore();
-  await EventUtils.synthesizeNativeMouseMove(document.documentElement, 0, 0);
+  EventUtils.synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: document.documentElement,
+    offsetX: 0,
+    offsetY: 0,
+  });
   await PlacesUtils.history.clear();
 });
 

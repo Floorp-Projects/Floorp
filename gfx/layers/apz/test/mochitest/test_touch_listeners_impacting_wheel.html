@@ -78,7 +78,12 @@ async function test() {
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
 
-  await promiseNativeMouseMoveAndWaitForMoveEvent(box, 10, 10);
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "mousemove",
+    target: box,
+    offsetX: 10,
+    offsetY: 10,
+  });
 
   // Take over control of the refresh driver and compositor
   var utils = SpecialPowers.DOMWindowUtils;

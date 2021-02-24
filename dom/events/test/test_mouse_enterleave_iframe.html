@@ -146,12 +146,11 @@ function waitForEnterLeaveEvents(aEnterTarget, aLeaveTarget) {
 }
 
 function moveMouseToInitialPosition() {
-  return new Promise((aResolve) => {
-    let start = document.getElementById("start");
-    let startRect = start.getBoundingClientRect();
-    info("Mouse moves to initial position");
-    synthesizeNativeMouseMove(start, startRect.width / 2, startRect.height / 2,
-                              aResolve);
+  info("Mouse moves to initial position");
+  return promiseNativeMouseEvent({
+    type: "mousemove",
+    target: document.getElementById("start"),
+    atCenter: true,
   });
 }
 
@@ -168,28 +167,38 @@ add_task(async function init() {
 
 add_task(async function testMouseEnterLeave() {
   let div = document.getElementById("div");
-  let divRect = div.getBoundingClientRect();
   let target = document.getElementById("target");
-  let targetRect = target.getBoundingClientRect();
   let iframe = document.getElementById("frame");
 
   info("Mouse moves to the div above iframe");
   let promise = waitForEnterLeaveEvents(div);
-  synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: div,
+    atCenter: true,
+  });
   await promise;
 
   info("Mouse moves into iframe");
   promise = Promise.all([waitForEnterLeaveEvents(target, div),
                          waitForMessage(iframe, "mouseenter", "div"),
                          waitForMessage(iframe, "mouseenter", "html")]);
-  synthesizeNativeMouseMove(target, targetRect.width / 2, targetRect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
   await promise;
 
   info("Mouse moves out from iframe to the div above iframe");
   promise = Promise.all([waitForEnterLeaveEvents(div, target),
                          waitForMessage(iframe, "mouseleave", "div"),
                          waitForMessage(iframe, "mouseleave", "html")]);
-  synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: div,
+    atCenter: true,
+  });
   await promise;
 
   // Move mouse back to initial position. This is to prevent unexpected
@@ -200,18 +209,20 @@ add_task(async function testMouseEnterLeave() {
 
 add_task(async function testMouseEnterLeaveBetweenIframe() {
   let target = document.getElementById("target");
-  let targetRect = target.getBoundingClientRect();
   let iframe = document.getElementById("frame");
 
   info("Mouse moves into the first iframe");
   let promise = Promise.all([waitForEnterLeaveEvents(target),
                              waitForMessage(iframe, "mouseenter", "div"),
                              waitForMessage(iframe, "mouseenter", "html")]);
-  synthesizeNativeMouseMove(target, targetRect.width / 2, targetRect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
   await promise;
 
   let target2 = document.getElementById("target2");
-  let target2Rect = target2.getBoundingClientRect();
   let iframe2 = document.getElementById("frame2");
 
   info("Mouse moves out from the first iframe to the second iframe");
@@ -220,7 +231,11 @@ add_task(async function testMouseEnterLeaveBetweenIframe() {
                          waitForMessage(iframe, "mouseleave", "html"),
                          waitForMessage(iframe2, "mouseenter", "div"),
                          waitForMessage(iframe2, "mouseenter", "html")]);
-  synthesizeNativeMouseMove(target2, target2Rect.width / 2, target2Rect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: target2,
+    atCenter: true,
+  })
   await promise;
 
   info("Mouse moves out from the second iframe to the first iframe");
@@ -229,7 +244,11 @@ add_task(async function testMouseEnterLeaveBetweenIframe() {
                          waitForMessage(iframe2, "mouseleave", "html"),
                          waitForMessage(iframe, "mouseenter", "div"),
                          waitForMessage(iframe, "mouseenter", "html")]);
-  synthesizeNativeMouseMove(target, targetRect.width / 2, targetRect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
   await promise;
 
   // Move mouse back to initial position.
@@ -241,14 +260,17 @@ add_task(async function testMouseEnterLeaveBetweenIframe() {
 
 add_task(async function testMouseEnterLeaveSwitchWindow() {
   let target = document.getElementById("target");
-  let targetRect = target.getBoundingClientRect();
   let iframe = document.getElementById("frame");
 
   info("Mouse moves into iframe");
   let promise = Promise.all([waitForEnterLeaveEvents(target),
                              waitForMessage(iframe, "mouseenter", "div"),
                              waitForMessage(iframe, "mouseenter", "html")]);
-  synthesizeNativeMouseMove(target, targetRect.width / 2, targetRect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
   await promise;
 
   info("Open and switch to new window");
@@ -269,7 +291,11 @@ add_task(async function testMouseEnterLeaveSwitchWindow() {
   reflow();
   // Wait for apz getting stable.
   await waitUntilApzStable();
-  synthesizeNativeMouseMove(target, targetRect.width / 2, targetRect.height / 2);
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target,
+    atCenter: true,
+  });
   await promise;
 
   // Move mouse back to initial position.

@@ -23,7 +23,7 @@ function runTests() {
   let utils = SpecialPowers.getDOMWindowUtils(window);
   utils.advanceTimeAndRefresh(0);
 
-  SimpleTest.executeSoon(() => {
+  SimpleTest.executeSoon(async () => {
     // Flush all pending mouse events before synthesizing events.
 
     target0.addEventListener("pointermove", (ev) => {
@@ -70,15 +70,11 @@ function runTests() {
       SimpleTest.finish();
     }, { once: true });
 
-    synthesizeNativeMouseMove(target0, 5, 5, () => {
-      synthesizeNativeMouseMove(target0, 10, 10, () => {
-        synthesizeNativeMouseMove(target0, 15, 15, () => {
-          synthesizeNativeMouseMove(target0, 20, 20, () => {
-            synthesizeNativeMouseEvent({ type: "click", target: target0, offsetX: 20, offsetY: 20 });
-          });
-        });
-      });
-    });
+    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 5, offsetY: 5 });
+    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 10, offsetY: 10 });
+    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 15, offsetY: 15 });
+    await promiseNativeMouseEvent({ type: "mousemove", target: target0, offsetX: 20, offsetY: 20 });
+    synthesizeNativeMouseEvent({ type: "click", target: target0, offsetX: 20, offsetY: 20 });
   });
 }
 

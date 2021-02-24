@@ -30,13 +30,11 @@ add_task(async function prepare() {
 
   // Move the mouse away from the urlbar one-offs so that a one-off engine is
   // not inadvertently selected.
-  await new Promise(resolve => {
-    EventUtils.synthesizeNativeMouseMove(
-      window.document.documentElement,
-      0,
-      0,
-      resolve
-    );
+  await EventUtils.promiseNativeMouseEvent({
+    type: "mousemove",
+    target: window.document.documentElement,
+    offsetX: 0,
+    offsetY: 0,
   });
 });
 
