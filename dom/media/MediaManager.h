@@ -15,6 +15,7 @@
 #include "nsHashKeys.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 
 #include "nsIDOMNavigatorUserMedia.h"
@@ -134,7 +135,9 @@ typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener>
     WindowTable;
 typedef MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true> SinkInfoPromise;
 
-class MediaManager final : public nsIMediaManagerService, public nsIObserver {
+class MediaManager final : public nsIMediaManagerService,
+                           public nsIMemoryReporter,
+                           public nsIObserver {
   friend SourceListener;
 
  public:
@@ -169,6 +172,7 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSIMEDIAMANAGERSERVICE
 
   media::Parent<media::NonE10s>* GetNonE10sParent();
@@ -333,6 +337,8 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
 
   void RemoveMediaDevicesCallback(uint64_t aWindowID);
   void DeviceListChanged();
+
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
   struct nsStringHasher {
     using Key = nsString;
