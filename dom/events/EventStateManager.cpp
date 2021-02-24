@@ -1016,13 +1016,6 @@ static bool IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame,
       aContent->AsElement()->AsXULControl();
   if (control) return true;
 
-  // HTML area, label and legend elements are never focusable, so
-  // we need to check for them explicitly before giving up.
-  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::area, nsGkAtoms::label,
-                                    nsGkAtoms::legend)) {
-    return true;
-  }
-
   // XUL label elements are never focusable, so we need to check for them
   // explicitly before giving up.
   if (aContent->IsXULElement(nsGkAtoms::label)) {
