@@ -15,7 +15,7 @@ async function test() {
   var subframe = document.getElementById('subframe');
 
   // layerize subframe
-  await promiseNativeClickAndClickEvent(subframe, 10, 10);
+  await promiseNativeMouseClickWithAPZAndClickEvent({ target: subframe, offsetX: 10, offsetY: 10 });
 
   // verify layerization
   await promiseAllPaintsDone();

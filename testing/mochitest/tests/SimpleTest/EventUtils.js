@@ -1054,24 +1054,24 @@ function synthesizeNativeMouseMove(
   utils.sendNativeMouseMove(x * scale, y * scale, null, observer);
 }
 
-function synthesizeNativeMouseClick(
-  aTarget,
-  aOffsetX,
-  aOffsetY,
-  aCallback,
-  aWindow = window
-) {
-  var utils = _getDOMWindowUtils(aWindow);
+function synthesizeNativeMouseClick(aParams, aCallback = null) {
+  const {
+    target, // Origin of offsetX and offsetY, must be an element
+    offsetX, // X offset in `target`
+    offsetY, // Y offset in `target`
+    win = window, // The window to use its utils
+  } = aParams;
+  const utils = _getDOMWindowUtils(win);
   if (!utils) {
     return;
   }
 
-  var rect = aTarget.getBoundingClientRect();
-  var x = aOffsetX + window.mozInnerScreenX + rect.left;
-  var y = aOffsetY + window.mozInnerScreenY + rect.top;
-  var scale = utils.screenPixelsPerCSSPixel;
+  const rect = target.getBoundingClientRect();
+  const x = offsetX + win.mozInnerScreenX + rect.left;
+  const y = offsetY + win.mozInnerScreenY + rect.top;
+  const scale = utils.screenPixelsPerCSSPixel;
 
-  var observer = {
+  const observer = {
     observe: (subject, topic, data) => {
       if (aCallback && topic == "mouseevent") {
         aCallback(data);
@@ -1097,6 +1097,10 @@ function synthesizeNativeMouseClick(
   );
 }
 
+function promiseNativeMouseClick(aParams) {
+  return new Promise(resolve => synthesizeNativeMouseClick(aParams, resolve));
+}
+
 function synthesizeNativeMouseClickAtCenter(
   aTarget,
   aCallback,
@@ -1104,11 +1108,13 @@ function synthesizeNativeMouseClickAtCenter(
 ) {
   let rect = aTarget.getBoundingClientRect();
   return synthesizeNativeMouseClick(
-    aTarget,
-    rect.width / 2,
-    rect.height / 2,
-    aCallback,
-    aWindow
+    {
+      target: aTarget,
+      offsetX: rect.width / 2,
+      offsetY: rect.height / 2,
+      win: aWindow,
+    },
+    aCallback
   );
 }
 
