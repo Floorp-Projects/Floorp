@@ -438,11 +438,13 @@ typedef nsTArray<OwningNonNull<dom::StaticRange>> OwningNonNullStaticRangeArray;
 // FontRange.h
 struct FontRange;
 
-enum MouseButton {
+enum MouseButton : int16_t {
   eNotPressed = -1,
   ePrimary = 0,
   eMiddle = 1,
-  eSecondary = 2
+  eSecondary = 2,
+  eX1 = 3,  // Typically, "back" button
+  eX2 = 4,  // Typically, "forward" button
 };
 
 enum MouseButtonsFlag {

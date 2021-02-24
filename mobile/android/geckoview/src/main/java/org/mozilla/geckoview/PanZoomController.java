@@ -214,15 +214,15 @@ public class PanZoomController {
                 throw new IllegalArgumentException("Pointer ID reserved for mouse");
             }
             synthesizeNativePointer(InputDevice.SOURCE_TOUCHSCREEN, pointerId,
-                    eventType, clientX, clientY, pressure, orientation);
+                    eventType, clientX, clientY, pressure, orientation, 0);
         }
 
         @WrapForJNI(calledFrom = "ui")
         private void synthesizeNativeMouseEvent(final int eventType, final int clientX,
-                                                final int clientY) {
+                                                final int clientY, final int button) {
             synthesizeNativePointer(InputDevice.SOURCE_MOUSE,
                     PointerInfo.RESERVED_MOUSE_POINTER_ID,
-                    eventType, clientX, clientY, 0, 0);
+                    eventType, clientX, clientY, 0, 0, button);
         }
 
         @WrapForJNI(calledFrom = "ui")
@@ -527,6 +527,7 @@ public class PanZoomController {
         public int surfaceY;
         public double pressure;
         public int orientation;
+        public int buttonState;
 
         public MotionEvent.PointerCoords getCoords() {
             MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
@@ -573,6 +574,15 @@ public class PanZoomController {
             return count;
         }
 
+        int getPointerButtonState(final int source) {
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).source == source) {
+                    return pointers.get(i).buttonState;
+                }
+            }
+            return 0;
+        }
+
         MotionEvent.PointerProperties[] getPointerProperties(final int source) {
             MotionEvent.PointerProperties[] props =
                     new MotionEvent.PointerProperties[getPointerCount(source)];
@@ -611,7 +621,8 @@ public class PanZoomController {
     private void synthesizeNativePointer(final int source, final int pointerId,
                                          final int originalEventType,
                                          final int clientX, final int clientY,
-                                         final double pressure, final int orientation) {
+                                         final double pressure, final int orientation,
+                                         final int button) {
         if (mPointerState == null) {
             mPointerState = new SynthesizedEventState();
         }
@@ -677,6 +688,14 @@ public class PanZoomController {
         info.surfaceY = surfaceY;
         info.pressure = pressure;
         info.orientation = orientation;
+        if (source == InputDevice.SOURCE_MOUSE) {
+            if (eventType == MotionEvent.ACTION_DOWN ||
+                eventType == MotionEvent.ACTION_MOVE) {
+                info.buttonState |= button;
+            } else if (eventType == MotionEvent.ACTION_UP) {
+                info.buttonState &= button;
+            }
+        }
 
         // Dispatch the event
         int action = 0;
@@ -688,9 +707,6 @@ public class PanZoomController {
             action &= MotionEvent.ACTION_POINTER_INDEX_MASK;
         }
         action |= (eventType & MotionEvent.ACTION_MASK);
-        boolean isButtonDown = (source == InputDevice.SOURCE_MOUSE) &&
-                               (eventType == MotionEvent.ACTION_DOWN ||
-                                eventType == MotionEvent.ACTION_MOVE);
         final MotionEvent event = MotionEvent.obtain(
             /*downTime*/ mPointerState.downTime,
             /*eventTime*/ SystemClock.uptimeMillis(),
@@ -699,7 +715,7 @@ public class PanZoomController {
             /*pointerProperties*/ mPointerState.getPointerProperties(source),
             /*pointerCoords*/ mPointerState.getPointerCoords(source),
             /*metaState*/ 0,
-            /*buttonState*/ (isButtonDown ? MotionEvent.BUTTON_PRIMARY : 0),
+            /*buttonState*/ mPointerState.getPointerButtonState(source),
             /*xPrecision*/ 0,
             /*yPrecision*/ 0,
             /*deviceId*/ 0,

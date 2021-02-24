@@ -525,15 +525,27 @@ interface nsIDOMWindowUtils : nsISupports {
    * Cannot be accessed from unprivileged context (not content-accessible)
    * Will throw a DOM security error if called without chrome privileges.
    *
-   * NOTE: The synthesized native event will be fired asynchronously, and upon
-   * completion the observer, if provided, will be notified with a "mouseevent"
-   * topic.
+   * @param aScreenX    X offset in the screen in device pixels.
+   * @param aScreenY    Y offset in the screen in derive pixels.
+   * @param aNativeMessage      One of NATIVE_MOUSE_MESSAGE_*
+   * @param aButton     Same as `MouseEvent.button` value.
+   * @param aModifierFlags      See nsIWidget's native modifier flags.
+   * @param aElementOnWidget    An element which is on a widget.
+   * @param aObserver   The synthesized native event will be fired
+   *                    asynchronously, and upon completion the observer, if
+   *                    provided, will be notified with a "mouseevent" topic.
    */
+  const unsigned long NATIVE_MOUSE_MESSAGE_BUTTON_DOWN  = 0x00000001;
+  const unsigned long NATIVE_MOUSE_MESSAGE_BUTTON_UP    = 0x00000002;
+  const unsigned long NATIVE_MOUSE_MESSAGE_MOVE         = 0x00000003;
+  const unsigned long NATIVE_MOUSE_MESSAGE_ENTER_WINDOW = 0x00000004;
+  const unsigned long NATIVE_MOUSE_MESSAGE_LEAVE_WINDOW = 0x00000005;
   void sendNativeMouseEvent(in long aScreenX,
                             in long aScreenY,
-                            in long aNativeMessage,
+                            in unsigned long aNativeMessage,
+                            in short aButton,
                             in unsigned long aModifierFlags,
-                            in Element aElement,
+                            in Element aElementOnWidget,
                             [optional] in nsIObserver aObserver);
 
   /**

@@ -1029,21 +1029,45 @@ nsDOMWindowUtils::SendNativeKeyEvent(int32_t aNativeKeyboardLayout,
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SendNativeMouseEvent(int32_t aScreenX, int32_t aScreenY,
-                                       int32_t aNativeMessage,
+                                       uint32_t aNativeMessage, int16_t aButton,
                                        uint32_t aModifierFlags,
-                                       Element* aElement,
+                                       Element* aElementOnWidget,
                                        nsIObserver* aObserver) {
   // get the widget to send the event to
-  nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElement);
-  if (!widget) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElementOnWidget);
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIWidget::NativeMouseMessage message;
+  switch (aNativeMessage) {
+    case NATIVE_MOUSE_MESSAGE_BUTTON_DOWN:
+      message = nsIWidget::NativeMouseMessage::ButtonDown;
+      break;
+    case NATIVE_MOUSE_MESSAGE_BUTTON_UP:
+      message = nsIWidget::NativeMouseMessage::ButtonUp;
+      break;
+    case NATIVE_MOUSE_MESSAGE_MOVE:
+      message = nsIWidget::NativeMouseMessage::Move;
+      break;
+    case NATIVE_MOUSE_MESSAGE_ENTER_WINDOW:
+      message = nsIWidget::NativeMouseMessage::EnterWindow;
+      break;
+    case NATIVE_MOUSE_MESSAGE_LEAVE_WINDOW:
+      message = nsIWidget::NativeMouseMessage::LeaveWindow;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
 
   NS_DispatchToMainThread(NativeInputRunnable::Create(
-      NewRunnableMethod<LayoutDeviceIntPoint, int32_t, nsIWidget::Modifiers,
-                        nsIObserver*>(
+      NewRunnableMethod<LayoutDeviceIntPoint, nsIWidget::NativeMouseMessage,
+                        MouseButton, nsIWidget::Modifiers, nsIObserver*>(
           "nsIWidget::SynthesizeNativeMouseEvent", widget,
           &nsIWidget::SynthesizeNativeMouseEvent,
-          LayoutDeviceIntPoint(aScreenX, aScreenY), aNativeMessage,
-          GetWidgetModifiers(aModifierFlags), aObserver)));
+          LayoutDeviceIntPoint(aScreenX, aScreenY), message,
+          static_cast<MouseButton>(aButton), GetWidgetModifiers(aModifierFlags),
+          aObserver)));
   return NS_OK;
 }
 

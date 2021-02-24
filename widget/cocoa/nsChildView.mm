@@ -868,7 +868,8 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
 }
 
 nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                                 uint32_t aNativeMessage,
+                                                 NativeMouseMessage aNativeMessage,
+                                                 MouseButton aButton,
                                                  nsIWidget::Modifiers aModifierFlags,
                                                  nsIObserver* aObserver) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
@@ -888,7 +889,49 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   NSEventModifierFlags modifierFlags =
       nsCocoaUtils::ConvertWidgetModifiersToMacModifierFlags(aModifierFlags);
 
-  NSEvent* event = [NSEvent mouseEventWithType:(NSEventType)aNativeMessage
+  if (aButton == MouseButton::eX1 || aButton == MouseButton::eX2) {
+    // NSEvent has `buttonNumber` for `NSEventTypeOther*`.  However, it seems that
+    // there is no way to specify it.  Therefore, we should return error for now.
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NSEventType nativeEventType;
+  switch (aNativeMessage) {
+    case NativeMouseMessage::ButtonDown:
+    case NativeMouseMessage::ButtonUp: {
+      switch (aButton) {
+        case MouseButton::ePrimary:
+          nativeEventType = aNativeMessage == NativeMouseMessage::ButtonDown
+                                ? NSEventTypeLeftMouseDown
+                                : NSEventTypeLeftMouseUp;
+          break;
+        case MouseButton::eMiddle:
+          nativeEventType = aNativeMessage == NativeMouseMessage::ButtonDown
+                                ? NSEventTypeOtherMouseDown
+                                : NSEventTypeOtherMouseUp;
+          break;
+        case MouseButton::eSecondary:
+          nativeEventType = aNativeMessage == NativeMouseMessage::ButtonDown
+                                ? NSEventTypeRightMouseDown
+                                : NSEventTypeRightMouseUp;
+          break;
+        default:
+          return NS_ERROR_INVALID_ARG;
+      }
+      break;
+    }
+    case NativeMouseMessage::Move:
+      nativeEventType = NSEventTypeMouseMoved;
+      break;
+    case NativeMouseMessage::EnterWindow:
+      nativeEventType = NSEventTypeMouseEntered;
+      break;
+    case NativeMouseMessage::LeaveWindow:
+      nativeEventType = NSEventTypeMouseExited;
+      break;
+  }
+
+  NSEvent* event = [NSEvent mouseEventWithType:nativeEventType
                                       location:windowPoint
                                  modifierFlags:modifierFlags
                                      timestamp:[[NSProcessInfo processInfo] systemUptime]
@@ -904,15 +947,15 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     // Tracking area events don't end up in their tracking areas when sent
     // through [NSApp sendEvent:], so pass them directly to the right methods.
     BaseWindow* window = (BaseWindow*)[mView window];
-    if (aNativeMessage == NSEventTypeMouseEntered) {
+    if (nativeEventType == NSEventTypeMouseEntered) {
       [window mouseEntered:event];
       return NS_OK;
     }
-    if (aNativeMessage == NSEventTypeMouseExited) {
+    if (nativeEventType == NSEventTypeMouseExited) {
       [window mouseExited:event];
       return NS_OK;
     }
-    if (aNativeMessage == NSEventTypeMouseMoved) {
+    if (nativeEventType == NSEventTypeMouseMoved) {
       [window mouseMoved:event];
       return NS_OK;
     }

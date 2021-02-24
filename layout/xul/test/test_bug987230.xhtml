@@ -51,10 +51,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
 
   SimpleTest.requestCompleteLog();
 
-  let platform = navigator.platform.toLowerCase();
-  let isWindows = platform.startsWith("win");
-  let mouseMove = isWindows ? 1 : 5;
-
   function onMyPopupHidden(e) {
     ok(true, "Popup hidden");
     if (outerAnchor.id == "toolbarbutton-anchor") {
@@ -73,7 +69,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
       info("Mousemove: " + outsideOfFrameX + ", " + outsideOfFrameY +
            " (from innerscreen " + window.mozInnerScreenX + ", " + window.mozInnerScreenY +
            " and rect width " + frameRect.width + " and scale " + scale + ")");
-      utils.sendNativeMouseEvent(outsideOfFrameX, outsideOfFrameY, mouseMove, 0, null);
+      utils.sendNativeMouseEvent(
+        outsideOfFrameX,
+        outsideOfFrameY,
+        utils.NATIVE_MOUSE_MESSAGE_MOVE,
+        0,
+        0,
+        null
+      );
       SimpleTest.finish();
     }
   }

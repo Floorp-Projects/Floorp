@@ -1576,18 +1576,25 @@ class nsIWidget : public nsISupports {
    * z-order.
    * @param aPoint screen location of the mouse, in device
    * pixels, with origin at the top left
-   * @param aNativeMessage *platform-specific* event type (e.g. on Mac,
-   * NSEventTypeMouseMoved; on Windows, MOUSEEVENTF_MOVE, MOUSEEVENTF_LEFTDOWN
-   * etc)
+   * @param aNativeMessage abstract native message.
+   * @param aButton Mouse button defined by DOM UI Events.
    * @param aModifierFlags Some values of nsIWidget::Modifiers.
    *                       FYI: On Windows, Android and Headless widget on all
    *                       platroms, this hasn't been handled yet.
    * @param aObserver the observer that will get notified once the events
    * have been dispatched.
    */
+  enum class NativeMouseMessage : uint32_t {
+    ButtonDown,   // button down
+    ButtonUp,     // button up
+    Move,         // mouse cursor move
+    EnterWindow,  // mouse cursor comes into a window
+    LeaveWindow,  // mouse cursor leaves from a window
+  };
   virtual nsresult SynthesizeNativeMouseEvent(
-      LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-      nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) = 0;
+      LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
+      mozilla::MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+      nsIObserver* aObserver) = 0;
 
   /**
    * A shortcut to SynthesizeNativeMouseEvent, abstracting away the native

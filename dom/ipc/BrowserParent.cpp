@@ -1780,12 +1780,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeKeyEvent(
 
 mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeMouseEvent(
     const LayoutDeviceIntPoint& aPoint, const uint32_t& aNativeMessage,
-    const uint32_t& aModifierFlags, const uint64_t& aObserverId) {
+    const int16_t& aButton, const uint32_t& aModifierFlags,
+    const uint64_t& aObserverId) {
   AutoSynthesizedEventResponder responder(this, aObserverId, "mouseevent");
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
     widget->SynthesizeNativeMouseEvent(
-        aPoint, aNativeMessage,
+        aPoint, static_cast<nsIWidget::NativeMouseMessage>(aNativeMessage),
+        static_cast<mozilla::MouseButton>(aButton),
         static_cast<nsIWidget::Modifiers>(aModifierFlags),
         responder.GetObserver());
   }
