@@ -120,8 +120,11 @@ var UITour = {
       "accountStatus",
       {
         query: aDocument => {
+          let id = UITour.protonAppMenuEnabled
+            ? "appMenu-fxa-label2"
+            : "appMenu-fxa-label";
           // Use the sync setup icon.
-          let statusButton = aDocument.getElementById("appMenu-fxa-label");
+          let statusButton = aDocument.getElementById(id);
           return statusButton.icon;
         },
         // This is a fake widgetName starting with the "appMenu-" prefix so we know
@@ -129,7 +132,19 @@ var UITour = {
         widgetName: "appMenu-fxa-label",
       },
     ],
-    ["addons", { query: "#appMenu-addons-button" }],
+    [
+      "addons",
+      {
+        query: aDocument => {
+          return UITour.protonAppMenuEnabled
+            ? UITour.getNodeFromDocument(
+                aDocument,
+                "#appMenu-extensions-themes-button"
+              )
+            : UITour.getNodeFromDocument(aDocument, "#appMenu-addons-button");
+        },
+      },
+    ],
     [
       "appMenu",
       {
@@ -171,7 +186,16 @@ var UITour = {
     ["help", { query: "#appMenu-help-button" }],
     ["home", { query: "#home-button" }],
     ["library", { query: "#appMenu-library-button" }],
-    ["logins", { query: "#appMenu-logins-button" }],
+    [
+      "logins",
+      {
+        query: aDocument => {
+          return UITour.protonAppMenuEnabled
+            ? UITour.getNodeFromDocument(aDocument, "#appMenu-passwords-button")
+            : UITour.getNodeFromDocument(aDocument, "#appMenu-logins-button");
+        },
+      },
+    ],
     [
       "pocket",
       {
@@ -188,8 +212,32 @@ var UITour = {
         },
       },
     ],
-    ["privateWindow", { query: "#appMenu-private-window-button" }],
-    ["quit", { query: "#appMenu-quit-button" }],
+    [
+      "privateWindow",
+      {
+        query: aDocument => {
+          return UITour.protonAppMenuEnabled
+            ? UITour.getNodeFromDocument(
+                aDocument,
+                "#appMenu-new-private-window-button2"
+              )
+            : UITour.getNodeFromDocument(
+                aDocument,
+                "#appMenu-private-window-button"
+              );
+        },
+      },
+    ],
+    [
+      "quit",
+      {
+        query: aDocument => {
+          return UITour.protonAppMenuEnabled
+            ? UITour.getNodeFromDocument(aDocument, "#appMenu-quit-button2")
+            : UITour.getNodeFromDocument(aDocument, "#appMenu-quit-button");
+        },
+      },
+    ],
     ["readerMode-urlBar", { query: "#reader-mode-button" }],
     [
       "search",
@@ -310,6 +358,13 @@ var UITour = {
       return Services.urlFormatter.formatURLPref("browser.uitour.url");
     });
 
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "protonAppMenuEnabled",
+      "browser.proton.appmenu.enabled",
+      false
+    );
+
     // Clear the availableTargetsCache on widget changes.
     let listenerMethods = [
       "onWidgetAdded",
@@ -323,6 +378,14 @@ var UITour = {
         listener[method] = () => this.clearAvailableTargetsCache();
         return listener;
       }, {})
+    );
+  },
+
+  getNodeFromDocument(aDocument, aQuery) {
+    let viewCacheTemplate = aDocument.getElementById("appMenu-viewCache");
+    return (
+      aDocument.querySelector(aQuery) ||
+      viewCacheTemplate.content.querySelector(aQuery)
     );
   },
 
@@ -1021,12 +1084,7 @@ var UITour = {
               node = null;
             }
           } else {
-            let viewCacheTemplate = aWindow.document.getElementById(
-              "appMenu-viewCache"
-            );
-            node =
-              aWindow.document.querySelector(targetQuery) ||
-              viewCacheTemplate.content.querySelector(targetQuery);
+            node = this.getNodeFromDocument(aWindow.document, targetQuery);
           }
 
           resolve({
