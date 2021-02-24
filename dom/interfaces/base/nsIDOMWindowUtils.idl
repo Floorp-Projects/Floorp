@@ -535,13 +535,6 @@ interface nsIDOMWindowUtils : nsISupports {
                             in unsigned long aModifierFlags,
                             in Element aElement,
                             [optional] in nsIObserver aObserver);
-  /**
-   * See nsIWidget::SynthesizeNativeMouseMove and sendNativeMouseEvent
-   */
-  void sendNativeMouseMove(in long aScreenX,
-                           in long aScreenY,
-                           in Element aElement,
-                           [optional] in nsIObserver aObserver);
 
   /**
    * Suppress animations that are applied to a window by OS when
