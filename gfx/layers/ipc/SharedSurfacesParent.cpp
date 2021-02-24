@@ -13,7 +13,6 @@
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webrender/RenderSharedSurfaceTextureHost.h"
-#include "mozilla/webrender/RenderSharedSurfaceTextureHostSWGL.h"
 #include "mozilla/webrender/RenderThread.h"
 
 namespace mozilla {
@@ -132,12 +131,7 @@ void SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
   uint64_t id = wr::AsUint64(aId);
   MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
 
-  RefPtr<wr::RenderTextureHost> texture;
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    texture = new wr::RenderSharedSurfaceTextureHostSWGL(surface);
-  } else {
-    texture = new wr::RenderSharedSurfaceTextureHost(surface);
-  }
+  auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
   wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
   surface->AddConsumer();
@@ -187,12 +181,7 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   uint64_t id = wr::AsUint64(aId);
   MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
 
-  RefPtr<wr::RenderTextureHost> texture;
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    texture = new wr::RenderSharedSurfaceTextureHostSWGL(surface);
-  } else {
-    texture = new wr::RenderSharedSurfaceTextureHost(surface);
-  }
+  auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
   wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
   surface->AddConsumer();
