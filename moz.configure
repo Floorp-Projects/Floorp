@@ -293,7 +293,7 @@ target_bootstrap_toolchain_tasks = bootstrap_toolchain_tasks(target)
 
 
 @template
-def bootstrap_path(*path_parts, **kwargs):
+def bootstrap_path(path, **kwargs):
     when = kwargs.pop("when", None)
     context = kwargs.pop("context", host)
     if kwargs:
@@ -301,6 +301,7 @@ def bootstrap_path(*path_parts, **kwargs):
             "bootstrap_path only takes `when` or `context` as keyword arguments"
         )
 
+    path_parts = path.split("/")
     bootstrap_toolchain_tasks = {
         host: host_bootstrap_toolchain_tasks,
         target: target_bootstrap_toolchain_tasks,
@@ -390,9 +391,9 @@ def bootstrap_path(*path_parts, **kwargs):
 
 
 @template
-def bootstrap_search_path(*path_parts, **kwargs):
+def bootstrap_search_path(path, **kwargs):
     @depends(
-        bootstrap_path(*path_parts, **kwargs),
+        bootstrap_path(path, **kwargs),
         bootstrap_search_path_order,
         original_path,
     )
@@ -416,7 +417,7 @@ wine = check_prog(
     ["wine64", "wine"],
     allow_missing=True,
     when=want_wine,
-    paths=bootstrap_search_path("wine", "bin", when=want_wine),
+    paths=bootstrap_search_path("wine/bin", when=want_wine),
 )
 check_prog("WGET", ("wget",), allow_missing=True)
 
