@@ -384,12 +384,8 @@ EventRecordArray* GetEventRecordsForProcess(const StaticMutexAutoLock& lock,
 EventKey* GetEventKey(const StaticMutexAutoLock& lock,
                       const nsACString& category, const nsACString& method,
                       const nsACString& object) {
-  EventKey* event;
   const nsCString& name = UniqueEventName(category, method, object);
-  if (!gEventNameIDMap.Get(name, &event)) {
-    return nullptr;
-  }
-  return event;
+  return gEventNameIDMap.Get(name);
 }
 
 static bool CheckExtraKeysValid(const EventKey& eventKey,
