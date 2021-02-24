@@ -81,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
   let popupHasShown = false;
   function onMyPopupShown(e) {
     popupHasShown = true;
-    synthesizeNativeMouseClick(outerAnchor, 5, 5);
+    synthesizeNativeMouseClick({ target: outerAnchor, offsetX: 5, offsetY: 5 });
   }
 
   function onAnchorClick(e) {
