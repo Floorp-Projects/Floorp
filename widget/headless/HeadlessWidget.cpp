@@ -432,10 +432,9 @@ nsresult HeadlessWidget::DispatchEvent(WidgetGUIEvent* aEvent,
   return NS_OK;
 }
 
-nsresult HeadlessWidget::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                                    uint32_t aNativeMessage,
-                                                    uint32_t aModifierFlags,
-                                                    nsIObserver* aObserver) {
+nsresult HeadlessWidget::SynthesizeNativeMouseEvent(
+    LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+    nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "mouseevent");
   EventMessage msg;
   switch (aNativeMessage) {

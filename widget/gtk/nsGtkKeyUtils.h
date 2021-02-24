@@ -8,8 +8,9 @@
 #ifndef __nsGdkKeyUtils_h__
 #define __nsGdkKeyUtils_h__
 
-#include "nsTArray.h"
 #include "mozilla/EventForwards.h"
+#include "nsIWidget.h"
+#include "nsTArray.h"
 
 #include <gdk/gdk.h>
 #include <X11/XKBlib.h>
@@ -107,6 +108,13 @@ class KeymapWrapper {
    * of WidgetInputEvent
    */
   static uint32_t ComputeKeyModifiers(guint aModifierState);
+
+  /**
+   * Convert native modifiers for `nsIWidget::SynthesizeNative*()` to
+   * GDK's state.
+   */
+  static guint ConvertWidgetModifierToGdkState(
+      nsIWidget::Modifiers aNativeModifiers);
 
   /**
    * InitInputEvent() initializes the aInputEvent with aModifierState.

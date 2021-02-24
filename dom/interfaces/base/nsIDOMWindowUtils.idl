@@ -476,6 +476,30 @@ interface nsIDOMWindowUtils : nsISupports {
                       in unsigned long aOptions);
 
   /**
+   * Native modifiers for sendNativeKeyEvent and sendNativeMouseEvent.
+   * TODO: The other sendNative*Event should take these values instead.
+   */
+  const unsigned long NATIVE_MODIFIER_CAPS_LOCK       = 0x00000001;
+  const unsigned long NATIVE_MODIFIER_NUM_LOCK        = 0x00000002;
+  const unsigned long NATIVE_MODIFIER_SHIFT_LEFT      = 0x00000100;
+  const unsigned long NATIVE_MODIFIER_SHIFT_RIGHT     = 0x00000200;
+  const unsigned long NATIVE_MODIFIER_CONTROL_LEFT    = 0x00000400;
+  const unsigned long NATIVE_MODIFIER_CONTROL_RIGHT   = 0x00000800;
+  const unsigned long NATIVE_MODIFIER_ALT_LEFT        = 0x00001000;
+  const unsigned long NATIVE_MODIFIER_ALT_RIGHT       = 0x00002000;
+  const unsigned long NATIVE_MODIFIER_COMMAND_LEFT    = 0x00004000;
+  const unsigned long NATIVE_MODIFIER_COMMAND_RIGHT   = 0x00008000;
+  const unsigned long NATIVE_MODIFIER_HELP            = 0x00010000;
+  // On Windows, AltGraph key emulates the AltRight key on specific keyboard
+  // layouts.  Therefore, this shouldn't be used without `synthesizeNativeKey`.
+  const unsigned long NATIVE_MODIFIER_ALT_GRAPH       = 0x00020000;
+  // Available only on macOS.
+  const unsigned long NATIVE_MODIFIER_FUNCTION        = 0x00100000;
+  // Available only on macOS.  When pressing a key in numeric key pad, this
+  // must be included.
+  const unsigned long NATIVE_MODIFIER_NUMERIC_KEY_PAD = 0x01000000;
+
+  /**
    * See nsIWidget::SynthesizeNativeKeyEvent
    *
    * Cannot be accessed from unprivileged context (not content-accessible)
@@ -489,7 +513,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void sendNativeKeyEvent(in long aNativeKeyboardLayout,
                           in long aNativeKeyCode,
-                          in long aModifierFlags,
+                          in unsigned long aModifierFlags,
                           in AString aCharacters,
                           in AString aUnmodifiedCharacters,
                           [optional] in nsIObserver aObserver);
@@ -508,7 +532,7 @@ interface nsIDOMWindowUtils : nsISupports {
   void sendNativeMouseEvent(in long aScreenX,
                             in long aScreenY,
                             in long aNativeMessage,
-                            in long aModifierFlags,
+                            in unsigned long aModifierFlags,
                             in Element aElement,
                             [optional] in nsIObserver aObserver);
   /**

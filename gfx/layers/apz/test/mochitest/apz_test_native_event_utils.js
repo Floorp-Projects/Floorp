@@ -148,6 +148,71 @@ function nativeMouseUpEventMsg() {
   );
 }
 
+function parseNativeModifiers(aModifiers, aWindow = window) {
+  let modifiers = 0;
+  if (aModifiers.capsLockKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CAPS_LOCK;
+  }
+  if (aModifiers.numLockKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_NUM_LOCK;
+  }
+  if (aModifiers.shiftKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_SHIFT_LEFT;
+  }
+  if (aModifiers.shiftRightKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_SHIFT_RIGHT;
+  }
+  if (aModifiers.ctrlKey) {
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_LEFT;
+  }
+  if (aModifiers.ctrlRightKey) {
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_RIGHT;
+  }
+  if (aModifiers.altKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_LEFT;
+  }
+  if (aModifiers.altRightKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_RIGHT;
+  }
+  if (aModifiers.metaKey) {
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_LEFT;
+  }
+  if (aModifiers.metaRightKey) {
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_RIGHT;
+  }
+  if (aModifiers.helpKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_HELP;
+  }
+  if (aModifiers.fnKey) {
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_FUNCTION;
+  }
+  if (aModifiers.numericKeyPadKey) {
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_NUMERIC_KEY_PAD;
+  }
+
+  if (aModifiers.accelKey) {
+    modifiers |= _EU_isMac(aWindow)
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_LEFT
+      : SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_LEFT;
+  }
+  if (aModifiers.accelRightKey) {
+    modifiers |= _EU_isMac(aWindow)
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_RIGHT
+      : SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_RIGHT;
+  }
+  if (aModifiers.altGrKey) {
+    modifiers |= _EU_isMac(aWindow)
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_LEFT
+      : SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_GRAPH;
+  }
+  return modifiers;
+}
+
 function getBoundingClientRectRelativeToVisualViewport(aElement) {
   let utils = SpecialPowers.getDOMWindowUtils(window);
   var rect = aElement.getBoundingClientRect();
@@ -750,6 +815,7 @@ function synthesizeNativeMouseClickWithAPZ(aParams, aObserver = null) {
     atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
     screenX, // X offset in screen, offsetX/Y nor atCenter must not be set if this is set
     screenY, // Y offset in screen, offsetX/Y nor atCenter must not be set if this is set
+    modifiers = {}, // Active modifiers, see `parseNativeModifiers`
   } = aParams;
   if (atCenter) {
     if (offsetX != undefined || offsetY != undefined) {
@@ -789,18 +855,19 @@ function synthesizeNativeMouseClickWithAPZ(aParams, aObserver = null) {
   const utils = SpecialPowers.getDOMWindowUtils(
     target.ownerDocument.defaultView
   );
+  const modifierFlags = parseNativeModifiers(modifiers);
   utils.sendNativeMouseEvent(
     pt.x,
     pt.y,
     nativeMouseDownEventMsg(),
-    0,
+    modifierFlags,
     target,
     function() {
       utils.sendNativeMouseEvent(
         pt.x,
         pt.y,
         nativeMouseUpEventMsg(),
-        0,
+        modifierFlags,
         target,
         aObserver
       );

@@ -920,9 +920,96 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
   return rv;
 }
 
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::CAPS_LOCK) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_CAPS_LOCK),
+    "Need to sync CapsLock value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::NUM_LOCK) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_NUM_LOCK),
+    "Need to sync NumLock value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::SHIFT_L) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_SHIFT_LEFT),
+    "Need to sync ShiftLeft value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::SHIFT_R) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_SHIFT_RIGHT),
+    "Need to sync ShiftRight value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::CTRL_L) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_CONTROL_LEFT),
+    "Need to sync ControlLeft value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::CTRL_R) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_CONTROL_RIGHT),
+    "Need to sync ControlRight value between nsIWidget::Modifiers "
+    "and nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::ALT_L) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_ALT_LEFT),
+    "Need to sync AltLeft value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::ALT_R) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_ALT_RIGHT),
+    "Need to sync AltRight value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::COMMAND_L) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_COMMAND_LEFT),
+    "Need to sync CommandLeft value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::COMMAND_R) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_COMMAND_RIGHT),
+    "Need to sync CommandRight value between nsIWidget::Modifiers "
+    "and nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::HELP) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_HELP),
+    "Need to sync Help value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::ALTGRAPH) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_ALT_GRAPH),
+    "Need to sync AltGraph value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(
+    static_cast<uint32_t>(nsIWidget::Modifiers::FUNCTION) ==
+        static_cast<uint32_t>(nsIDOMWindowUtils::NATIVE_MODIFIER_FUNCTION),
+    "Need to sync Function value between nsIWidget::Modifiers and "
+    "nsIDOMWindowUtils");
+static_assert(static_cast<uint32_t>(nsIWidget::Modifiers::NUMERIC_KEY_PAD) ==
+                  static_cast<uint32_t>(
+                      nsIDOMWindowUtils::NATIVE_MODIFIER_NUMERIC_KEY_PAD),
+              "Need to sync NumericKeyPad value between nsIWidget::Modifiers "
+              "and nsIDOMWindowUtils");
+
+static nsIWidget::Modifiers GetWidgetModifiers(uint32_t aNativeModifiers) {
+  nsIWidget::Modifiers widgetModifiers = static_cast<nsIWidget::Modifiers>(
+      aNativeModifiers &
+      (nsIWidget::Modifiers::CAPS_LOCK | nsIWidget::Modifiers::NUM_LOCK |
+       nsIWidget::Modifiers::SHIFT_L | nsIWidget::Modifiers::SHIFT_R |
+       nsIWidget::Modifiers::CTRL_L | nsIWidget::Modifiers::CTRL_R |
+       nsIWidget::Modifiers::ALT_L | nsIWidget::Modifiers::ALT_R |
+       nsIWidget::Modifiers::COMMAND_L | nsIWidget::Modifiers::COMMAND_R |
+       nsIWidget::Modifiers::HELP | nsIWidget::Modifiers::ALTGRAPH |
+       nsIWidget::Modifiers::FUNCTION | nsIWidget::Modifiers::NUMERIC_KEY_PAD));
+  NS_ASSERTION(static_cast<uint32_t>(widgetModifiers) == aNativeModifiers,
+               "Invalid value is specified to the native modifiers");
+  return widgetModifiers;
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::SendNativeKeyEvent(int32_t aNativeKeyboardLayout,
-                                     int32_t aNativeKeyCode, int32_t aModifiers,
+                                     int32_t aNativeKeyCode,
+                                     uint32_t aModifiers,
                                      const nsAString& aCharacters,
                                      const nsAString& aUnmodifiedCharacters,
                                      nsIObserver* aObserver) {
@@ -935,15 +1022,15 @@ nsDOMWindowUtils::SendNativeKeyEvent(int32_t aNativeKeyboardLayout,
                         nsIObserver*>(
           "nsIWidget::SynthesizeNativeKeyEvent", widget,
           &nsIWidget::SynthesizeNativeKeyEvent, aNativeKeyboardLayout,
-          aNativeKeyCode, aModifiers, aCharacters, aUnmodifiedCharacters,
-          aObserver)));
+          aNativeKeyCode, static_cast<uint32_t>(GetWidgetModifiers(aModifiers)),
+          aCharacters, aUnmodifiedCharacters, aObserver)));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SendNativeMouseEvent(int32_t aScreenX, int32_t aScreenY,
                                        int32_t aNativeMessage,
-                                       int32_t aModifierFlags,
+                                       uint32_t aModifierFlags,
                                        Element* aElement,
                                        nsIObserver* aObserver) {
   // get the widget to send the event to
@@ -951,11 +1038,12 @@ nsDOMWindowUtils::SendNativeMouseEvent(int32_t aScreenX, int32_t aScreenY,
   if (!widget) return NS_ERROR_FAILURE;
 
   NS_DispatchToMainThread(NativeInputRunnable::Create(
-      NewRunnableMethod<LayoutDeviceIntPoint, int32_t, int32_t, nsIObserver*>(
+      NewRunnableMethod<LayoutDeviceIntPoint, int32_t, nsIWidget::Modifiers,
+                        nsIObserver*>(
           "nsIWidget::SynthesizeNativeMouseEvent", widget,
           &nsIWidget::SynthesizeNativeMouseEvent,
           LayoutDeviceIntPoint(aScreenX, aScreenY), aNativeMessage,
-          aModifierFlags, aObserver)));
+          GetWidgetModifiers(aModifierFlags), aObserver)));
   return NS_OK;
 }
 

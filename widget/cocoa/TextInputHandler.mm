@@ -4725,27 +4725,8 @@ nsresult TextInputHandlerBase::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardL
                                                         const nsAString& aUnmodifiedCharacters) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  static const uint32_t sModifierFlagMap[][2] = {
-      {nsIWidget::CAPS_LOCK, NSEventModifierFlagCapsLock},
-      {nsIWidget::SHIFT_L, NSEventModifierFlagShift | 0x0002},
-      {nsIWidget::SHIFT_R, NSEventModifierFlagShift | 0x0004},
-      {nsIWidget::CTRL_L, NSEventModifierFlagControl | 0x0001},
-      {nsIWidget::CTRL_R, NSEventModifierFlagControl | 0x2000},
-      {nsIWidget::ALT_L, NSEventModifierFlagOption | 0x0020},
-      {nsIWidget::ALT_R, NSEventModifierFlagOption | 0x0040},
-      {nsIWidget::COMMAND_L, NSEventModifierFlagCommand | 0x0008},
-      {nsIWidget::COMMAND_R, NSEventModifierFlagCommand | 0x0010},
-      {nsIWidget::NUMERIC_KEY_PAD, NSEventModifierFlagNumericPad},
-      {nsIWidget::HELP, NSEventModifierFlagHelp},
-      {nsIWidget::FUNCTION, NSEventModifierFlagFunction}};
-
-  uint32_t modifierFlags = 0;
-  for (uint32_t i = 0; i < ArrayLength(sModifierFlagMap); ++i) {
-    if (aModifierFlags & sModifierFlagMap[i][0]) {
-      modifierFlags |= sModifierFlagMap[i][1];
-    }
-  }
-
+  uint32_t modifierFlags = nsCocoaUtils::ConvertWidgetModifiersToMacModifierFlags(
+      static_cast<nsIWidget::Modifiers>(aModifierFlags));
   NSInteger windowNumber = [[mView window] windowNumber];
   bool sendFlagsChangedEvent = IsModifierKey(aNativeKeyCode);
   NSEventType eventType = sendFlagsChangedEvent ? NSEventTypeFlagsChanged : NSEventTypeKeyDown;

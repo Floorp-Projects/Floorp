@@ -131,13 +131,13 @@ class HeadlessWidget : public nsBaseWidget {
   virtual nsresult DispatchEvent(WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) override;
 
-  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                              uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
-                                              nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseEvent(
+      LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+      nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) override;
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override {
-    return SynthesizeNativeMouseEvent(aPoint, MOZ_HEADLESS_MOUSE_MOVE, 0,
+    return SynthesizeNativeMouseEvent(aPoint, MOZ_HEADLESS_MOUSE_MOVE,
+                                      nsIWidget::Modifiers::NO_MODIFIERS,
                                       aObserver);
   };
 

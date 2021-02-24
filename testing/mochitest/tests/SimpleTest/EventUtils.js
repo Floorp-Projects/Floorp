@@ -1061,6 +1061,7 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
     atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
     screenX, // X offset in screen, offsetX/Y nor atCenter must not be set if this is set
     screenY, // Y offset in screen, offsetX/Y nor atCenter must not be set if this is set
+    modifiers = {}, // Active modifiers, see `_parseNativeModifiers`
     win = window, // The window to use its utils
   } = aParams;
   if (atCenter) {
@@ -1117,6 +1118,7 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
       scale
     );
   })();
+  const modifierFlags = _parseNativeModifiers(modifiers);
 
   const observer = {
     observe: (subject, topic, data) => {
@@ -1129,14 +1131,14 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
     x,
     y,
     _EU_nativeMouseDownEventMsg(),
-    0,
+    modifierFlags,
     null,
     function() {
       utils.sendNativeMouseEvent(
         x,
         y,
         _EU_nativeMouseUpEventMsg(),
-        0,
+        modifierFlags,
         null,
         observer
       );
@@ -1349,55 +1351,66 @@ function synthesizeAndWaitKey(
 }
 
 function _parseNativeModifiers(aModifiers, aWindow = window) {
-  var modifiers;
+  let modifiers = 0;
   if (aModifiers.capsLockKey) {
-    modifiers |= 0x00000001;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CAPS_LOCK;
   }
   if (aModifiers.numLockKey) {
-    modifiers |= 0x00000002;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_NUM_LOCK;
   }
   if (aModifiers.shiftKey) {
-    modifiers |= 0x00000100;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_SHIFT_LEFT;
   }
   if (aModifiers.shiftRightKey) {
-    modifiers |= 0x00000200;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_SHIFT_RIGHT;
   }
   if (aModifiers.ctrlKey) {
-    modifiers |= 0x00000400;
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_LEFT;
   }
   if (aModifiers.ctrlRightKey) {
-    modifiers |= 0x00000800;
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_RIGHT;
   }
   if (aModifiers.altKey) {
-    modifiers |= 0x00001000;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_LEFT;
   }
   if (aModifiers.altRightKey) {
-    modifiers |= 0x00002000;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_RIGHT;
   }
   if (aModifiers.metaKey) {
-    modifiers |= 0x00004000;
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_LEFT;
   }
   if (aModifiers.metaRightKey) {
-    modifiers |= 0x00008000;
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_RIGHT;
   }
   if (aModifiers.helpKey) {
-    modifiers |= 0x00010000;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_HELP;
   }
   if (aModifiers.fnKey) {
-    modifiers |= 0x00100000;
+    modifiers |= SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_FUNCTION;
   }
   if (aModifiers.numericKeyPadKey) {
-    modifiers |= 0x01000000;
+    modifiers |=
+      SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_NUMERIC_KEY_PAD;
   }
 
   if (aModifiers.accelKey) {
-    modifiers |= _EU_isMac(aWindow) ? 0x00004000 : 0x00000400;
+    modifiers |= _EU_isMac(aWindow)
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_LEFT
+      : SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_LEFT;
   }
   if (aModifiers.accelRightKey) {
-    modifiers |= _EU_isMac(aWindow) ? 0x00008000 : 0x00000800;
+    modifiers |= _EU_isMac(aWindow)
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_COMMAND_RIGHT
+      : SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_CONTROL_RIGHT;
   }
   if (aModifiers.altGrKey) {
-    modifiers |= _EU_isWin(aWindow) ? 0x00020000 : 0x00001000;
+    modifiers |= _EU_isMac(aWindow)
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_LEFT
+      : SpecialPowers.Ci.nsIDOMWindowUtils.NATIVE_MODIFIER_ALT_GRAPH;
   }
   return modifiers;
 }
