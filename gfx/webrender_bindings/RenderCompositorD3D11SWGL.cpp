@@ -38,7 +38,7 @@ RenderCompositorD3D11SWGL::GetUploadMode() {
 
 UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
-  if (!StaticPrefs::gfx_webrender_software_d3d11_AtStartup() ||
+  if (!aWidget->GetCompositorOptions().AllowSoftwareWebRenderD3D11() ||
       !gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING)) {
     return nullptr;
   }
