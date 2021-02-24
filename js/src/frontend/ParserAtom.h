@@ -579,6 +579,14 @@ class ParserAtomsTable {
 
   void fixupAlloc(LifoAlloc& alloc) { alloc_ = &alloc; }
 
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return entryMap_.shallowSizeOfExcludingThis(mallocSizeOf) +
+           entries_.sizeOfExcludingThis(mallocSizeOf);
+  }
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+  }
+
  private:
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.

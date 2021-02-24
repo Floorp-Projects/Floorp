@@ -752,6 +752,11 @@ struct ExtensibleCompilationStencil {
 
   [[nodiscard]] bool finish(JSContext* cx, CompilationStencil& stencil);
 
+  inline size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+  }
+
 #ifdef DEBUG
   void assertNoExternalDependency() const;
 #endif
@@ -859,6 +864,25 @@ inline size_t CompilationStencil::sizeOfExcludingThis(
   return alloc.sizeOfExcludingThis(mallocSizeOf) + moduleMetadataSize +
          asmJSSize + delazificationSetSize +
          BaseCompilationStencil::sizeOfExcludingThis(mallocSizeOf);
+}
+
+inline size_t ExtensibleCompilationStencil::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  size_t moduleMetadataSize =
+      moduleMetadata ? moduleMetadata->sizeOfIncludingThis(mallocSizeOf) : 0;
+  size_t asmJSSize = asmJS ? asmJS->sizeOfIncludingThis(mallocSizeOf) : 0;
+
+  return alloc.sizeOfExcludingThis(mallocSizeOf) +
+         scriptData.sizeOfExcludingThis(mallocSizeOf) +
+         scriptExtra.sizeOfExcludingThis(mallocSizeOf) +
+         gcThingData.sizeOfExcludingThis(mallocSizeOf) +
+         scopeData.sizeOfExcludingThis(mallocSizeOf) +
+         scopeNames.sizeOfExcludingThis(mallocSizeOf) +
+         regExpData.sizeOfExcludingThis(mallocSizeOf) +
+         bigIntData.sizeOfExcludingThis(mallocSizeOf) +
+         objLiteralData.sizeOfExcludingThis(mallocSizeOf) + moduleMetadataSize +
+         asmJSSize + sharedData.sizeOfExcludingThis(mallocSizeOf) +
+         parserAtoms.sizeOfExcludingThis(mallocSizeOf);
 }
 
 // The output of GC allocation from stencil.
