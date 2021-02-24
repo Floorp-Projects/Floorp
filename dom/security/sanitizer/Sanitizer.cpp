@@ -47,7 +47,7 @@ already_AddRefed<Sanitizer> Sanitizer::Constructor(
 
 /* static */
 already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
-    const Optional<mozilla::dom::StringOrDocumentFragmentOrDocument>& aInput,
+    const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
     ErrorResult& aRv) {
   // turns an StringOrDocumentFragmentOrDocument into a DocumentFragment for
   // internal use with nsTreeSanitizer
@@ -58,29 +58,21 @@ already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  if (!aInput.WasPassed()) {
-    AutoTArray<nsString, 1> params = {};
-    LogLocalizedString("SanitizerRcvdNoInput", params,
-                       nsIScriptError::warningFlag);
 
-    RefPtr<DocumentFragment> emptyFragment =
-        window->GetDoc()->CreateDocumentFragment();
-    return emptyFragment.forget();
-  }
   // We need to create a new docfragment based on the input
   // and can't use a live document (possibly with mutation observershandlers)
   nsAutoString innerHTML;
-  if (aInput.Value().IsDocumentFragment()) {
-    RefPtr<DocumentFragment> inFragment =
-        &aInput.Value().GetAsDocumentFragment();
+  if (aInput.IsDocumentFragment()) {
+    RefPtr<DocumentFragment> inFragment = &aInput.GetAsDocumentFragment();
     inFragment->GetInnerHTML(innerHTML);
-  } else if (aInput.Value().IsString()) {
-    innerHTML.Assign(aInput.Value().GetAsString());
-  } else if (aInput.Value().IsDocument()) {
-    RefPtr<Document> doc = &aInput.Value().GetAsDocument();
+  } else if (aInput.IsString()) {
+    innerHTML.Assign(aInput.GetAsString());
+  } else if (aInput.IsDocument()) {
+    RefPtr<Document> doc = &aInput.GetAsDocument();
     nsCOMPtr<Element> docElement = doc->GetDocumentElement();
-
-    docElement->GetInnerHTML(innerHTML, IgnoreErrors());
+    if (docElement) {
+      docElement->GetInnerHTML(innerHTML, IgnoreErrors());
+    }
   }
   if (innerHTML.IsEmpty()) {
     AutoTArray<nsString, 1> params = {};
@@ -108,20 +100,12 @@ already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
 }
 
 already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
-    const Optional<mozilla::dom::StringOrDocumentFragmentOrDocument>& aInput,
+    const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
     ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
   if (!window || !window->GetDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
-  }
-  if (!aInput.WasPassed()) {
-    AutoTArray<nsString, 1> params = {};
-    LogLocalizedString("SanitizerRcvdNoInput", params,
-                       nsIScriptError::warningFlag);
-    RefPtr<DocumentFragment> fragment =
-        window->GetDoc()->CreateDocumentFragment();
-    return fragment.forget();
   }
   ErrorResult error;
   RefPtr<DocumentFragment> fragment =
@@ -136,15 +120,9 @@ already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
 }
 
 void Sanitizer::SanitizeToString(
-    const Optional<StringOrDocumentFragmentOrDocument>& aInput,
-    nsAString& outSanitized, ErrorResult& aRv) {
+    const StringOrDocumentFragmentOrDocument& aInput, nsAString& outSanitized,
+    ErrorResult& aRv) {
   outSanitized.Truncate();
-  if (!aInput.WasPassed()) {
-    AutoTArray<nsString, 1> params = {};
-    LogLocalizedString("SanitizerRcvdNoInput", params,
-                       nsIScriptError::warningFlag);
-    return;
-  }
   ErrorResult error;
   RefPtr<DocumentFragment> fragment =
       Sanitizer::InputToNewFragment(aInput, error);
