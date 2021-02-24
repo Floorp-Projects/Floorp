@@ -40,6 +40,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MarionettePrefs: "chrome://marionette/content/prefs.js",
   modal: "chrome://marionette/content/modal.js",
   navigate: "chrome://marionette/content/navigate.js",
+  permissions: "chrome://marionette/content/permissions.js",
   PollPromise: "chrome://marionette/content/sync.js",
   pprint: "chrome://marionette/content/format.js",
   print: "chrome://marionette/content/print.js",
@@ -3148,6 +3149,18 @@ GeckoDriver.prototype.print = async function(cmd) {
   };
 };
 
+GeckoDriver.prototype.setPermission = async function(cmd) {
+  const { descriptor, state, oneRealm = false } = cmd.parameters;
+
+  assert.boolean(oneRealm);
+  assert.that(
+    state => ["granted", "denied", "prompt"].includes(state),
+    `state is ${state}, expected "granted", "denied", or "prompt"`
+  )(state);
+
+  permissions.set(descriptor, state, oneRealm);
+};
+
 GeckoDriver.prototype.commands = {
   // Marionette service
   "Marionette:AcceptConnections": GeckoDriver.prototype.acceptConnections,
@@ -3229,6 +3242,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:Refresh": GeckoDriver.prototype.refresh,
   "WebDriver:ReleaseActions": GeckoDriver.prototype.releaseActions,
   "WebDriver:SendAlertText": GeckoDriver.prototype.sendKeysToDialog,
+  "WebDriver:SetPermission": GeckoDriver.prototype.setPermission,
   "WebDriver:SetTimeouts": GeckoDriver.prototype.setTimeouts,
   "WebDriver:SetWindowRect": GeckoDriver.prototype.setWindowRect,
   "WebDriver:SwitchToFrame": GeckoDriver.prototype.switchToFrame,
