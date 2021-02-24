@@ -1384,6 +1384,12 @@ var PanelView = class extends AssociatedToNode {
         // the label that's a direct child of the header.
         header.querySelector(".panel-header > h1 > span").textContent = value;
       } else {
+        if (
+          gProtonAppMenuEnabled &&
+          header.nextSibling.tagName == "toolbarseparator"
+        ) {
+          header.nextSibling.remove();
+        }
         header.remove();
       }
       return;
@@ -1420,7 +1426,10 @@ var PanelView = class extends AssociatedToNode {
     header.append(backButton, h1);
     this.node.prepend(header);
 
-    if (gProtonAppMenuEnabled) {
+    if (
+      gProtonAppMenuEnabled &&
+      header.nextSibling.tagName != "toolbarseparator"
+    ) {
       let separator = this.document.createXULElement("toolbarseparator");
       this.node.insertBefore(separator, header.nextSibling);
     }
