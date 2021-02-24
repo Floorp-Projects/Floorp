@@ -5427,24 +5427,24 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
 }
 
 template <typename Unit>
-static bool DumpStencil(JSContext* cx,
-                        const JS::ReadOnlyCompileOptions& options,
-                        const Unit* units, size_t length,
-                        js::frontend::ParseGoal goal) {
+[[nodiscard]] static bool DumpStencil(JSContext* cx,
+                                      const JS::ReadOnlyCompileOptions& options,
+                                      const Unit* units, size_t length,
+                                      js::frontend::ParseGoal goal) {
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  UniquePtr<frontend::CompilationStencil> stencil;
 
   JS::SourceText<Unit> srcBuf;
   if (!srcBuf.init(cx, units, length, JS::SourceOwnership::Borrowed)) {
     return false;
   }
 
+  UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (goal == frontend::ParseGoal::Script) {
-    stencil = frontend::CompileGlobalScriptToStencil(cx, input.get(), srcBuf,
-                                                     ScopeKind::Global);
+    stencil = frontend::CompileGlobalScriptToExtensibleStencil(
+        cx, input.get(), srcBuf, ScopeKind::Global);
   } else {
-    stencil = frontend::ParseModuleToStencil(cx, input.get(), srcBuf);
+    stencil = frontend::ParseModuleToExtensibleStencil(cx, input.get(), srcBuf);
   }
 
   if (!stencil) {
@@ -5452,7 +5452,10 @@ static bool DumpStencil(JSContext* cx,
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  stencil->dump();
+  {
+    frontend::BorrowingCompilationStencil borrowingStencil(*stencil);
+    borrowingStencil.dump();
+  }
 #endif
 
   return true;
