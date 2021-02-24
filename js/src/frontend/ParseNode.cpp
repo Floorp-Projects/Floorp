@@ -392,10 +392,10 @@ TaggedParserAtomIndex NumericLiteral::toAtom(
   return NumberToParserAtom(cx, parserAtoms, value());
 }
 
-RegExpObject* RegExpLiteral::create(JSContext* cx,
-                                    ParserAtomsTable& parserAtoms,
-                                    CompilationAtomCache& atomCache,
-                                    BaseCompilationStencil& stencil) const {
+RegExpObject* RegExpLiteral::create(
+    JSContext* cx, ParserAtomsTable& parserAtoms,
+    CompilationAtomCache& atomCache,
+    ExtensibleCompilationStencil& stencil) const {
   return stencil.regExpData[index_].createRegExpAndEnsureAtom(cx, parserAtoms,
                                                               atomCache);
 }

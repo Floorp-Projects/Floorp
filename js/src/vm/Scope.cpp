@@ -2002,8 +2002,7 @@ template <typename... Args>
 
 /* static */
 bool ScopeStencil::createForFunctionScope(
-    JSContext* cx, LifoAlloc& alloc,
-    frontend::CompilationState& compilationState,
+    JSContext* cx, frontend::CompilationState& compilationState,
     FunctionScope::ParserData* data, bool hasParameterExprs,
     bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
@@ -2014,7 +2013,7 @@ bool ScopeStencil::createForFunctionScope(
   if (data) {
     MarkParserScopeData<ScopeType>(cx, data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(cx, alloc);
+    data = NewEmptyParserScopeData<ScopeType>(cx, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -2038,8 +2037,7 @@ bool ScopeStencil::createForFunctionScope(
 
 /* static */
 bool ScopeStencil::createForLexicalScope(
-    JSContext* cx, LifoAlloc& alloc,
-    frontend::CompilationState& compilationState, ScopeKind kind,
+    JSContext* cx, frontend::CompilationState& compilationState, ScopeKind kind,
     LexicalScope::ParserData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = LexicalScope;
@@ -2048,7 +2046,7 @@ bool ScopeStencil::createForLexicalScope(
   if (data) {
     MarkParserScopeData<ScopeType>(cx, data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(cx, alloc);
+    data = NewEmptyParserScopeData<ScopeType>(cx, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -2065,8 +2063,7 @@ bool ScopeStencil::createForLexicalScope(
 }
 
 bool ScopeStencil::createForVarScope(
-    JSContext* cx, LifoAlloc& alloc,
-    frontend::CompilationState& compilationState, ScopeKind kind,
+    JSContext* cx, frontend::CompilationState& compilationState, ScopeKind kind,
     VarScope::ParserData* data, uint32_t firstFrameSlot, bool needsEnvironment,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = VarScope;
@@ -2075,7 +2072,7 @@ bool ScopeStencil::createForVarScope(
   if (data) {
     MarkParserScopeData<ScopeType>(cx, data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(cx, alloc);
+    data = NewEmptyParserScopeData<ScopeType>(cx, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -2093,8 +2090,7 @@ bool ScopeStencil::createForVarScope(
 
 /* static */
 bool ScopeStencil::createForGlobalScope(
-    JSContext* cx, LifoAlloc& alloc,
-    frontend::CompilationState& compilationState, ScopeKind kind,
+    JSContext* cx, frontend::CompilationState& compilationState, ScopeKind kind,
     GlobalScope::ParserData* data, ScopeIndex* index) {
   using ScopeType = GlobalScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
@@ -2102,7 +2098,7 @@ bool ScopeStencil::createForGlobalScope(
   if (data) {
     MarkParserScopeData<ScopeType>(cx, data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(cx, alloc);
+    data = NewEmptyParserScopeData<ScopeType>(cx, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -2123,8 +2119,7 @@ bool ScopeStencil::createForGlobalScope(
 
 /* static */
 bool ScopeStencil::createForEvalScope(
-    JSContext* cx, LifoAlloc& alloc,
-    frontend::CompilationState& compilationState, ScopeKind kind,
+    JSContext* cx, frontend::CompilationState& compilationState, ScopeKind kind,
     EvalScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
     ScopeIndex* index) {
   using ScopeType = EvalScope;
@@ -2133,7 +2128,7 @@ bool ScopeStencil::createForEvalScope(
   if (data) {
     MarkParserScopeData<ScopeType>(cx, data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(cx, alloc);
+    data = NewEmptyParserScopeData<ScopeType>(cx, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -2152,9 +2147,9 @@ bool ScopeStencil::createForEvalScope(
 
 /* static */
 bool ScopeStencil::createForModuleScope(
-    JSContext* cx, LifoAlloc& alloc,
-    frontend::CompilationState& compilationState, ModuleScope::ParserData* data,
-    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
+    JSContext* cx, frontend::CompilationState& compilationState,
+    ModuleScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
   auto kind = ScopeKind::Module;
   using ScopeType = ModuleScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
@@ -2162,7 +2157,7 @@ bool ScopeStencil::createForModuleScope(
   if (data) {
     MarkParserScopeData<ScopeType>(cx, data, compilationState);
   } else {
-    data = NewEmptyParserScopeData<ScopeType>(cx, alloc);
+    data = NewEmptyParserScopeData<ScopeType>(cx, compilationState.alloc);
     if (!data) {
       return false;
     }
@@ -2210,7 +2205,7 @@ bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
 }
 
 /* static */
-bool ScopeStencil::createForWithScope(JSContext* cx, LifoAlloc& alloc,
+bool ScopeStencil::createForWithScope(JSContext* cx,
                                       CompilationState& compilationState,
                                       mozilla::Maybe<ScopeIndex> enclosing,
                                       ScopeIndex* index) {

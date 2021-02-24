@@ -149,11 +149,6 @@ class EitherParser : public BCEParserHandle {
     return parser.match(std::move(matcher));
   }
 
-  CompilationStencil& getCompilationStencil() {
-    ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
-    return base.getCompilationStencil();
-  }
-
   CompilationState& getCompilationState() {
     ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
     return base.getCompilationState();

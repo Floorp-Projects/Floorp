@@ -136,7 +136,6 @@ static bool ShouldSuppressBreakpointsAndSourceNotes(
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
-                                 CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
@@ -144,7 +143,6 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       parent(parent),
       bytecodeSection_(cx, sc->extent().lineno, sc->extent().column),
       perScriptData_(cx, compilationState),
-      stencil(stencil),
       compilationState(compilationState),
       suppressBreakpointsAndSourceNotes(
           ShouldSuppressBreakpointsAndSourceNotes(sc, emitterMode)),
@@ -152,20 +150,18 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
-                                 CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, stencil, compilationState, emitterMode) {
+    : BytecodeEmitter(parent, sc, compilationState, emitterMode) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  const EitherParser& parser, SharedContext* sc,
-                                 CompilationStencil& stencil,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, stencil, compilationState, emitterMode) {
+    : BytecodeEmitter(parent, sc, compilationState, emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
   instrumentationKinds = this->parser->options().instrumentationKinds;
@@ -178,7 +174,7 @@ void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
 
 bool BytecodeEmitter::init() {
   if (!parent) {
-    if (!stencil.prepareStorageFor(cx, compilationState)) {
+    if (!compilationState.prepareSharedDataStorage(cx)) {
       return false;
     }
   }
@@ -1690,7 +1686,7 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
   }
 
   size_t len = writer.getCode().size();
-  auto* code = stencil.alloc.newArrayUninitialized<uint8_t>(len);
+  auto* code = compilationState.alloc.newArrayUninitialized<uint8_t>(len);
   if (!code) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -5878,8 +5874,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, stencil, compilationState,
-                         emitterMode);
+    BytecodeEmitter bce2(this, parser, funbox, compilationState, emitterMode);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -9454,8 +9449,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializer(
     return false;
   }
 
-  BytecodeEmitter bce2(this, parser, funbox, stencil, compilationState,
-                       emitterMode);
+  BytecodeEmitter bce2(this, parser, funbox, compilationState, emitterMode);
   if (!bce2.init(funNode->pn_pos)) {
     return false;
   }
@@ -11351,7 +11345,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   }
 
   // De-duplicate the bytecode within the runtime.
-  if (!stencil.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
+  if (!compilationState.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
     return false;
   }
 

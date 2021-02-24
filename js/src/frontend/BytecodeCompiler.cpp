@@ -80,8 +80,7 @@ class MOZ_RAII AutoAssertReportedException {
 #endif
 };
 
-static bool EmplaceEmitter(CompilationStencil& stencil,
-                           CompilationState& compilationState,
+static bool EmplaceEmitter(CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter,
                            const EitherParser& parser, SharedContext* sc);
 
@@ -100,10 +99,8 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
  protected:
   explicit SourceAwareCompiler(JSContext* cx, LifoAllocScope& allocScope,
                                CompilationInput& input,
-                               CompilationStencil& stencil,
                                SourceText<Unit>& sourceBuffer)
-      : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, allocScope, input, stencil.alloc) {
+      : sourceBuffer_(sourceBuffer), compilationState_(cx, allocScope, input) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
@@ -113,22 +110,18 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   }
 
   // Call this before calling compile{Global,Eval}Script.
-  [[nodiscard]] bool createSourceAndParser(JSContext* cx,
-                                           CompilationStencil& stencil);
+  [[nodiscard]] bool createSourceAndParser(JSContext* cx);
 
-  void assertSourceAndParserCreated(CompilationStencil& stencil) const {
-    MOZ_ASSERT(stencil.source != nullptr);
+  void assertSourceAndParserCreated() const {
+    MOZ_ASSERT(compilationState_.source != nullptr);
     MOZ_ASSERT(parser.isSome());
   }
 
-  void assertSourceParserAndScriptCreated(CompilationStencil& stencil) {
-    assertSourceAndParserCreated(stencil);
-  }
+  void assertSourceParserAndScriptCreated() { assertSourceAndParserCreated(); }
 
-  [[nodiscard]] bool emplaceEmitter(CompilationStencil& stencil,
-                                    Maybe<BytecodeEmitter>& emitter,
+  [[nodiscard]] bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                     SharedContext* sharedContext) {
-    return EmplaceEmitter(stencil, compilationState_, emitter,
+    return EmplaceEmitter(compilationState_, emitter,
                           EitherParser(parser.ptr()), sharedContext);
   }
 
@@ -161,9 +154,9 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
 
  public:
   explicit ScriptCompiler(JSContext* cx, LifoAllocScope& allocScope,
-                          CompilationInput& input, CompilationStencil& stencil,
+                          CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, allocScope, input, stencil, sourceBuffer) {}
+      : Base(cx, allocScope, input, sourceBuffer) {}
 
   using Base::createSourceAndParser;
   using Base::init;
@@ -244,13 +237,12 @@ static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::ScriptCompiler<Unit> compiler(cx, allocScope, input, *stencil,
-                                          srcBuf);
+  frontend::ScriptCompiler<Unit> compiler(cx, allocScope, input, srcBuf);
   if (!compiler.init(cx)) {
     return nullptr;
   }
 
-  if (!compiler.createSourceAndParser(cx, *stencil)) {
+  if (!compiler.createSourceAndParser(cx)) {
     return nullptr;
   }
 
@@ -367,13 +359,12 @@ static JSScript* CompileEvalScriptImpl(
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
-  frontend::ScriptCompiler<Unit> compiler(cx, allocScope, input.get(), stencil,
-                                          srcBuf);
+  frontend::ScriptCompiler<Unit> compiler(cx, allocScope, input.get(), srcBuf);
   if (!compiler.init(cx, InheritThis::Yes, enclosingEnv)) {
     return nullptr;
   }
 
-  if (!compiler.createSourceAndParser(cx, stencil)) {
+  if (!compiler.createSourceAndParser(cx)) {
     return nullptr;
   }
 
@@ -417,9 +408,9 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
 
  public:
   explicit ModuleCompiler(JSContext* cx, LifoAllocScope& allocScope,
-                          CompilationInput& input, CompilationStencil& stencil,
+                          CompilationInput& input,
                           SourceText<Unit>& sourceBuffer)
-      : Base(cx, allocScope, input, stencil, sourceBuffer) {}
+      : Base(cx, allocScope, input, sourceBuffer) {}
 
   bool compile(JSContext* cx, CompilationStencil& stencil);
 };
@@ -442,15 +433,13 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
  public:
   explicit StandaloneFunctionCompiler(JSContext* cx, LifoAllocScope& allocScope,
                                       CompilationInput& input,
-                                      CompilationStencil& stencil,
                                       SourceText<Unit>& sourceBuffer)
-      : Base(cx, allocScope, input, stencil, sourceBuffer) {}
+      : Base(cx, allocScope, input, sourceBuffer) {}
 
   using Base::createSourceAndParser;
   using Base::init;
 
-  FunctionNode* parse(JSContext* cx, CompilationStencil& stencil,
-                      FunctionSyntaxKind syntaxKind,
+  FunctionNode* parse(JSContext* cx, FunctionSyntaxKind syntaxKind,
                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                       const Maybe<uint32_t>& parameterListEnd);
 
@@ -529,38 +518,36 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 #endif
 
 template <typename Unit>
-bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
-    JSContext* cx, CompilationStencil& stencil) {
+bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx) {
   const auto& options = compilationState_.input.options;
 
-  if (!stencil.source->assignSource(cx, options, sourceBuffer_)) {
+  if (!compilationState_.source->assignSource(cx, options, sourceBuffer_)) {
     return false;
   }
 
   if (CanLazilyParse(options)) {
-    syntaxParser.emplace(
-        cx, options, sourceBuffer_.units(), sourceBuffer_.length(),
-        /* foldConstants = */ false, stencil, compilationState_,
-        /* syntaxParser = */ nullptr);
+    syntaxParser.emplace(cx, options, sourceBuffer_.units(),
+                         sourceBuffer_.length(),
+                         /* foldConstants = */ false, compilationState_,
+                         /* syntaxParser = */ nullptr);
     if (!syntaxParser->checkOptions()) {
       return false;
     }
   }
 
   parser.emplace(cx, options, sourceBuffer_.units(), sourceBuffer_.length(),
-                 /* foldConstants = */ true, stencil, compilationState_,
+                 /* foldConstants = */ true, compilationState_,
                  syntaxParser.ptrOr(nullptr));
-  parser->ss = stencil.source.get();
+  parser->ss = compilationState_.source.get();
   return parser->checkOptions();
 }
 
-static bool EmplaceEmitter(CompilationStencil& stencil,
-                           CompilationState& compilationState,
+static bool EmplaceEmitter(CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter,
                            const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
-  emitter.emplace(/* parent = */ nullptr, parser, sc, stencil, compilationState,
+  emitter.emplace(/* parent = */ nullptr, parser, sc, compilationState,
                   emitterMode);
   return emitter->init();
 }
@@ -599,7 +586,7 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 template <typename Unit>
 bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
     JSContext* cx, CompilationStencil& stencil, SharedContext* sc) {
-  assertSourceParserAndScriptCreated(stencil);
+  assertSourceParserAndScriptCreated();
 
   TokenStreamPosition startPosition(parser->tokenStream);
 
@@ -641,7 +628,7 @@ bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
     Maybe<BytecodeEmitter> emitter;
-    if (!emplaceEmitter(stencil, emitter, sc)) {
+    if (!emplaceEmitter(emitter, sc)) {
       return false;
     }
 
@@ -666,7 +653,7 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
     return false;
   }
 
-  if (!createSourceAndParser(cx, stencil)) {
+  if (!createSourceAndParser(cx)) {
     return false;
   }
 
@@ -697,7 +684,7 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   }
 
   Maybe<BytecodeEmitter> emitter;
-  if (!emplaceEmitter(stencil, emitter, &modulesc)) {
+  if (!emplaceEmitter(emitter, &modulesc)) {
     return false;
   }
 
@@ -722,10 +709,9 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
 // constructor.
 template <typename Unit>
 FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
-    JSContext* cx, CompilationStencil& stencil, FunctionSyntaxKind syntaxKind,
-    GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-    const Maybe<uint32_t>& parameterListEnd) {
-  assertSourceAndParserCreated(stencil);
+    JSContext* cx, FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
+    FunctionAsyncKind asyncKind, const Maybe<uint32_t>& parameterListEnd) {
+  assertSourceAndParserCreated();
 
   TokenStreamPosition startPosition(parser->tokenStream);
   CompilationState::RewindToken startObj = compilationState_.getRewindToken();
@@ -765,7 +751,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 
   if (funbox->isInterpreted()) {
     Maybe<BytecodeEmitter> emitter;
-    if (!emplaceEmitter(stencil, emitter, funbox)) {
+    if (!emplaceEmitter(emitter, funbox)) {
       return false;
     }
 
@@ -840,7 +826,7 @@ static UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, allocScope, input, *stencil, srcBuf);
+  ModuleCompiler<Unit> compiler(cx, allocScope, input, srcBuf);
   if (!compiler.compile(cx, *stencil)) {
     return nullptr;
   }
@@ -917,7 +903,6 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
                                              CompilationStencil& stencil,
                                              const Unit* units, size_t length) {
   MOZ_ASSERT(cx->compartment() == input.lazy->compartment());
-  MOZ_ASSERT(!stencil.isInitialStencil());
 
   // We can only compile functions whose parents have previously been
   // compiled, because compilation requires full information about the
@@ -931,14 +916,15 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   InheritThis inheritThis = fun->isArrow() ? InheritThis::Yes : InheritThis::No;
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, input,
-                                              stencil.alloc);
+  frontend::CompilationState compilationState(cx, allocScope, input);
+  compilationState.setFunctionKey(input.lazy);
+  MOZ_ASSERT(!compilationState.isInitialStencil());
   if (!compilationState.init(cx, inheritThis)) {
     return false;
   }
 
   Parser<FullParseHandler, Unit> parser(cx, input.options, units, length,
-                                        /* foldConstants = */ true, stencil,
+                                        /* foldConstants = */ true,
                                         compilationState,
                                         /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
@@ -955,7 +941,7 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
     return false;
   }
 
-  BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), stencil,
+  BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(),
                       compilationState, BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
@@ -1043,17 +1029,17 @@ static JSFunction* CompileStandaloneFunction(
                                 ? InheritThis::Yes
                                 : InheritThis::No;
   StandaloneFunctionCompiler<char16_t> compiler(cx, allocScope, input.get(),
-                                                stencil, srcBuf);
+                                                srcBuf);
   if (!compiler.init(cx, inheritThis)) {
     return nullptr;
   }
 
-  if (!compiler.createSourceAndParser(cx, stencil)) {
+  if (!compiler.createSourceAndParser(cx)) {
     return nullptr;
   }
 
-  FunctionNode* parsedFunction = compiler.parse(
-      cx, stencil, syntaxKind, generatorKind, asyncKind, parameterListEnd);
+  FunctionNode* parsedFunction = compiler.parse(cx, syntaxKind, generatorKind,
+                                                asyncKind, parameterListEnd);
   if (!parsedFunction) {
     return nullptr;
   }

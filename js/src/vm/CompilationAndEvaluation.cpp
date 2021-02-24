@@ -199,18 +199,16 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   if (!input.get().initForGlobal(cx)) {
     return false;
   }
-  frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, input.get(),
-                                              stencil.alloc);
+  frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx)) {
     return false;
   }
 
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(cx, options, chars.get(), length,
-                                            /* foldConstants = */ true, stencil,
+                                            /* foldConstants = */ true,
                                             compilationState,
                                             /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
