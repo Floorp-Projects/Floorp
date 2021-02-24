@@ -2551,11 +2551,18 @@ StorageActors.createActor(
      * cannot be asynchronous.
      */
     async preListStores() {
-      this.hostVsStores = new Map();
-
-      for (const host of await this.getHosts()) {
-        await this.populateStoresForHost(host);
+      if (this._pendingPreListStores) {
+        return this._pendingPreListStores;
       }
+
+      this.hostVsStores = new Map();
+      this._pendingPreListStores = (async () => {
+        for (const host of await this.getHosts()) {
+          await this.populateStoresForHost(host);
+        }
+        this._pendingPreListStores = null;
+      })();
+      return this._pendingPreListStores;
     },
 
     async populateStoresForHost(host) {
