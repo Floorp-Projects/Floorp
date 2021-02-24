@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include "gc/GC.h"
+#include "gc/Memory.h"
 #include "gc/Nursery.h"
 #include "gc/PublicIterators.h"
 #include "jit/BaselineJIT.h"
@@ -638,8 +639,10 @@ static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
   rtStats->gcHeapUnusedChunks =
       size_t(JS_GetGCParameter(cx, JSGC_UNUSED_CHUNKS)) * gc::ChunkSize;
 
-  IterateChunks(cx, &rtStats->gcHeapDecommittedArenas,
-                DecommittedArenasChunkCallback);
+  if (js::gc::DecommitEnabled()) {
+    IterateChunks(cx, &rtStats->gcHeapDecommittedArenas,
+                  DecommittedArenasChunkCallback);
+  }
 
   // Take the per-compartment measurements.
   StatsClosure closure(rtStats, opv, anonymize);
