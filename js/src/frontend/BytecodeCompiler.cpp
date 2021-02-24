@@ -210,28 +210,45 @@ static bool TrySmoosh(JSContext* cx, CompilationInput& input,
 }
 #endif  // JS_ENABLE_SMOOSH
 
+// Compile global script, and return it as either CompilationStencil
+// (without instantiation) or CompilationGCOutput (with instantiation).
 template <typename Unit>
-static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
+[[nodiscard]] static bool CompileGlobalScriptToStencilAndMaybeInstantiate(
     JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
-    ScopeKind scopeKind) {
-  UniquePtr<CompilationStencil> stencil;
+    ScopeKind scopeKind, UniquePtr<CompilationStencil>* stencilOut,
+    CompilationGCOutput* gcOutputOut) {
+  // Only one of them can be non-null.
+  MOZ_ASSERT_IF(stencilOut, !gcOutputOut);
+  MOZ_ASSERT_IF(!stencilOut, gcOutputOut);
 
 #ifdef JS_ENABLE_SMOOSH
-  if (!TrySmoosh(cx, input, srcBuf, stencil)) {
-    return nullptr;
-  }
-  if (stencil) {
-    return stencil;
+  {
+    UniquePtr<CompilationStencil> stencil;
+    if (!TrySmoosh(cx, input, srcBuf, stencil)) {
+      return false;
+    }
+    if (stencil) {
+      if (stencilOut) {
+        *stencilOut = std::move(stencil);
+      }
+      {
+        MOZ_ASSERT(gcOutputOut);
+        if (!InstantiateStencils(cx, input, *stencil, *gcOutputOut)) {
+          return false;
+        }
+      }
+      return true;
+    }
   }
 #endif  // JS_ENABLE_SMOOSH
 
   if (input.options.selfHostingMode) {
     if (!input.initForSelfHostingGlobal(cx)) {
-      return nullptr;
+      return false;
     }
   } else {
     if (!input.initForGlobal(cx)) {
-      return nullptr;
+      return false;
     }
   }
 
@@ -240,7 +257,7 @@ static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ScriptCompiler<Unit> compiler(cx, allocScope, input, srcBuf);
   if (!compiler.init(cx)) {
-    return nullptr;
+    return false;
   }
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(
@@ -250,25 +267,45 @@ static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
                                compiler.compilationState().directives, extent);
 
   if (!compiler.compile(cx, &globalsc)) {
-    return nullptr;
+    return false;
   }
 
-  stencil = cx->make_unique<CompilationStencil>(input);
-  if (!stencil) {
-    return nullptr;
-  }
-
-  {
+  if (stencilOut) {
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
+    auto stencil = cx->make_unique<CompilationStencil>(input);
+    if (!stencil) {
+      return false;
+    }
+
     if (!compiler.stencil().finish(cx, *stencil)) {
-      return nullptr;
+      return false;
+    }
+
+    *stencilOut = std::move(stencil);
+  } else {
+    MOZ_ASSERT(gcOutputOut);
+
+    BorrowingCompilationStencil borrowingStencil(compiler.stencil());
+    if (!InstantiateStencils(cx, input, borrowingStencil, *gcOutputOut)) {
+      return false;
     }
   }
 
   assertException.reset();
+  return true;
+}
 
+template <typename Unit>
+static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
+    JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
+    ScopeKind scopeKind) {
+  UniquePtr<CompilationStencil> stencil;
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
+          cx, input, srcBuf, scopeKind, &stencil, nullptr)) {
+    return nullptr;
+  }
   return stencil;
 }
 
@@ -287,7 +324,7 @@ UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
 bool frontend::InstantiateStencils(
     JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
-    CompilationGCOutput* gcOutputForDelazification) {
+    CompilationGCOutput* gcOutputForDelazification /* = nullptr */) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
@@ -328,17 +365,11 @@ static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  UniquePtr<CompilationStencil> stencil =
-      CompileGlobalScriptToStencil(cx, input.get(), srcBuf, scopeKind);
-  if (!stencil) {
-    return nullptr;
-  }
-
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
+          cx, input.get(), srcBuf, scopeKind, nullptr, gcOutput.address())) {
     return nullptr;
   }
-
   return gcOutput.get().script;
 }
 
