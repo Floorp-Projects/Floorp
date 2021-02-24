@@ -47,3 +47,6 @@ text-action-select-all =
 
 text-action-select-all-shortcut =
     .key = A
+
+text-action-spell-no-suggestions =
+    .label = No Spelling Suggestions
