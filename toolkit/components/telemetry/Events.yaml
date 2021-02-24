@@ -2649,6 +2649,7 @@ zero_byte_load:
         Collection of zero_byte_load events as part of the Yellow Screen of Death analysis.
         When a file is loaded synchronously, this event gets recorded in nsJARChannel::Open if the content length is zero.
         For asynchronous loads, this event gets recorded in onStopRequest.
+        Note that when the load has been cancelled, the consumer could already receive some data, so this event also captures non-zero-byte loads.
     products:
       - "firefox"
     record_in_processes: ["main", "content"]
@@ -2665,11 +2666,17 @@ zero_byte_load:
       - "js"
       - "xml"
       - "xhtml"
+      - "css"
+      - "json"
+      - "html"
+      - "png"
+      - "svg"
       - "others"
     extra_keys:
       sync: Was the load synchronous
       file_name: The name of the file being loaded.
       status: The channel status code.
+      cancelled: Whether this load has been cancelled.
 
 avif:
   dav1d_get_picture:
