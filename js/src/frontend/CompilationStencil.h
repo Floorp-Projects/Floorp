@@ -347,6 +347,7 @@ struct SharedDataContainer {
     SingleTag = 0,
     VectorTag = 1,
     MapTag = 2,
+    BorrowTag = 3,
 
     TagMask = 3,
   };
@@ -379,11 +380,19 @@ struct SharedDataContainer {
   bool isSingle() const { return (data_ & TagMask) == SingleTag; }
   bool isVector() const { return (data_ & TagMask) == VectorTag; }
   bool isMap() const { return (data_ & TagMask) == MapTag; }
+  bool isBorrow() const { return (data_ & TagMask) == BorrowTag; }
 
   void setSingle(already_AddRefed<SharedImmutableScriptData>&& data) {
     MOZ_ASSERT(isEmpty());
     data_ = reinterpret_cast<uintptr_t>(data.take());
     MOZ_ASSERT(isSingle());
+    MOZ_ASSERT(!isEmpty());
+  }
+
+  void setBorrow(SharedDataContainer* sharedData) {
+    MOZ_ASSERT(isEmpty());
+    data_ = reinterpret_cast<uintptr_t>(sharedData) | BorrowTag;
+    MOZ_ASSERT(isBorrow());
   }
 
   SingleSharedDataPtr asSingle() const {
@@ -399,6 +408,10 @@ struct SharedDataContainer {
   SharedDataMapPtr asMap() const {
     MOZ_ASSERT(isMap());
     return reinterpret_cast<SharedDataMapPtr>(data_ & ~TagMask);
+  }
+  SharedDataContainer* asBorrow() const {
+    MOZ_ASSERT(isBorrow());
+    return reinterpret_cast<SharedDataContainer*>(data_ & ~TagMask);
   }
 
   bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
@@ -420,7 +433,7 @@ struct SharedDataContainer {
     if (isMap()) {
       return asMap()->shallowSizeOfIncludingThis(mallocSizeOf);
     }
-    MOZ_ASSERT(isSingle());
+    MOZ_ASSERT(isSingle() || isBorrow());
     return 0;
   }
 
