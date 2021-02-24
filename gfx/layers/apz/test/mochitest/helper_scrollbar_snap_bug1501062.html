@@ -46,11 +46,26 @@ async function test() {
   dump("Starting drag at " + mouseX + ", " + mouseY + " from top-left of #" + scrollableDiv.id + "\n");
 
   // Move the mouse to the scrollbar thumb and drag it down
-  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg());
-  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseDownEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousedown",
+  });
   // drag down by 100 pixels
   mouseY += 100;
-  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
 
   // wait here until the scroll event listener is triggered.
   await scrollPromise;
@@ -68,7 +83,12 @@ async function test() {
   });
   // Add 2 to snapMultipler just to make sure we get far enough away from the scrollbar
   var snapBackDistance = (snapMultiplier + 2) * verticalScrollbarWidth;
-  await promiseNativeMouseEvent(scrollableDiv, mouseX + snapBackDistance, mouseY + 10, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX + snapBackDistance,
+    offsetY: mouseY + 10,
+    type: "mousemove",
+  });
 
   // wait here until the scroll happens
   await scrollPromise;
@@ -83,14 +103,24 @@ async function test() {
   scrollPromise = new Promise(resolve => {
     scrollableDiv.addEventListener("scroll", resolve, {once: true});
   });
-  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
 
   // wait here until the scroll happens
   await scrollPromise;
   ok(scrollableDiv.scrollTop == savedScrollPos, "Scroll position was restored to " + scrollableDiv.scrollTop);
 
   // Release mouse and ensure the scroll position stuck
-  await promiseNativeMouseEvent(scrollableDiv, mouseX, mouseY, nativeMouseUpEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: scrollableDiv,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mouseup",
+  });
   // Flush everything just to be safe
   await promiseApzRepaintsFlushed();
 

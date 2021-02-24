@@ -15,13 +15,38 @@ async function test() {
   });
 
   // Ensure the pointer is inside the window
-  await promiseNativeMouseEvent(document.getElementById("b"), 5, 5, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: document.getElementById("b"),
+    offsetX: 5,
+    offsetY: 5,
+    type: "mousemove",
+  });
   // mouse down, move it around, and release it near where it went down. this
   // should generate a click at the release point
-  await promiseNativeMouseEvent(document.getElementById("b"), 5, 5, nativeMouseDownEventMsg());
-  await promiseNativeMouseEvent(document.getElementById("b"), 100, 100, nativeMouseMoveEventMsg());
-  await promiseNativeMouseEvent(document.getElementById("b"), 10, 10, nativeMouseMoveEventMsg());
-  await promiseNativeMouseEvent(document.getElementById("b"), 8, 8, nativeMouseUpEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: document.getElementById("b"),
+    offsetX: 5,
+    offsetY: 5,
+    type: "mousedown",
+  });
+  await promiseNativeMouseEventWithAPZ({
+    target: document.getElementById("b"),
+    offsetX: 100,
+    offsetY: 100,
+    type: "mousemove",
+  });
+  await promiseNativeMouseEventWithAPZ({
+    target: document.getElementById("b"),
+    offsetX: 10,
+    offsetY: 10,
+    type: "mousemove",
+  });
+  await promiseNativeMouseEventWithAPZ({
+    target: document.getElementById("b"),
+    offsetX: 8,
+    offsetY: 8,
+    type: "mouseup",
+  });
   dump("Finished synthesizing click with a drag in the middle\n");
 
   let e = await clickPromise;

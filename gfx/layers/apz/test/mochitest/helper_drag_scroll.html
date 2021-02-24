@@ -49,7 +49,12 @@ async function downMouseAndHandleEvent(x, y) {
       resolve();
     }, {capture: true, once: true});
   });
-  synthesizeNativeMouseEvent(bar, x, y, nativeMouseDownEventMsg());
+  synthesizeNativeMouseEventWithAPZ({
+    target: bar,
+    offsetX: x,
+    offsetY: y,
+    type: "mousedown",
+  });
   await mouseDownHandledPromise;
 }
 
@@ -86,7 +91,12 @@ async function moveMouseAndHandleEvent(x, y) {
     bar.addEventListener("mousemove", mouseOnTarget, true);
     window.addEventListener("mousemove", mouseOffTarget);
   });
-  synthesizeNativeMouseEvent(bar, x, y, nativeMouseMoveEventMsg());
+  synthesizeNativeMouseEventWithAPZ({
+    target: bar,
+    offsetX: x,
+    offsetY: y,
+    type: "mousemove",
+  });
   await mouseMoveHandledPromise;
 }
 
@@ -101,7 +111,12 @@ async function test() {
   }, true);
 
   // Move the mouse to the "scrollbar" (the div upon which dragging changes scroll position)
-  await promiseNativeMouseEvent(bar, 10, 10, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: bar,
+    offsetX: 10,
+    offsetY: 10,
+    type: "mousemove",
+   });
 
   // mouse down
   await downMouseAndHandleEvent(10, 10);
@@ -116,7 +131,12 @@ async function test() {
   await moveMouseAndHandleEvent(10, 360);
   await moveMouseAndHandleEvent(10, 410);
   // and release
-  await promiseNativeMouseEvent(bar, 10, 410, nativeMouseUpEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: bar,
+    offsetX: 10,
+    offsetY: 410,
+    type: "mouseup",
+   });
 }
 
 waitUntilApzStable()
