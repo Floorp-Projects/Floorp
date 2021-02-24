@@ -2258,7 +2258,6 @@ NS_INTERFACE_TABLE_HEAD(Document)
     NS_INTERFACE_TABLE_ENTRY(Document, EventTarget)
     NS_INTERFACE_TABLE_ENTRY(Document, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(Document, nsIRadioGroupContainer)
-    NS_INTERFACE_TABLE_ENTRY(Document, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(Document, nsIApplicationCacheContainer)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(Document)
@@ -2598,15 +2597,6 @@ nsresult Document::Init() {
   }
 
   // Force initialization.
-  nsINode::nsSlots* slots = Slots();
-
-  // Prepend self as mutation-observer whether we need it or not (some
-  // subclasses currently do, other don't). This is because the code in
-  // MutationObservers always notifies the first observer first, expecting the
-  // first observer to be the document.
-  slots->mMutationObservers.PrependElementUnlessExists(
-      static_cast<nsIMutationObserver*>(this));
-
   mOnloadBlocker = new OnloadBlocker();
   mStyleImageLoader = new css::ImageLoader(this);
 
