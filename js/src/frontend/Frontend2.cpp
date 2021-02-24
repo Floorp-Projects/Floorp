@@ -114,9 +114,8 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
 // into a list of ScopeStencil.
 bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
                          Vector<TaggedParserAtomIndex>& allAtoms,
-                         CompilationStencil& stencil,
                          CompilationState& compilationState) {
-  LifoAlloc& alloc = stencil.alloc;
+  LifoAlloc& alloc = compilationState.alloc;
 
   if (result.scopes.len > TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
@@ -146,8 +145,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         data->slotInfo.length = numBindings;
 
         if (!ScopeStencil::createForGlobalScope(
-                cx, stencil.alloc, compilationState, ScopeKind::Global, data,
-                &index)) {
+                cx, compilationState, ScopeKind::Global, data, &index)) {
           return false;
         }
         break;
@@ -174,8 +172,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         uint32_t firstFrameSlot = var.first_frame_slot;
         ScopeIndex enclosingIndex(var.enclosing);
         if (!ScopeStencil::createForVarScope(
-                cx, stencil.alloc, compilationState, ScopeKind::FunctionBodyVar,
-                data, firstFrameSlot, var.function_has_extensible_scope,
+                cx, compilationState, ScopeKind::FunctionBodyVar, data,
+                firstFrameSlot, var.function_has_extensible_scope,
                 mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
@@ -203,8 +201,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         uint32_t firstFrameSlot = lexical.first_frame_slot;
         ScopeIndex enclosingIndex(lexical.enclosing);
         if (!ScopeStencil::createForLexicalScope(
-                cx, stencil.alloc, compilationState, ScopeKind::Lexical, data,
-                firstFrameSlot, mozilla::Some(enclosingIndex), &index)) {
+                cx, compilationState, ScopeKind::Lexical, data, firstFrameSlot,
+                mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
         break;
@@ -240,9 +238,9 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         ScopeIndex enclosingIndex(function.enclosing);
         if (!ScopeStencil::createForFunctionScope(
-                cx, stencil.alloc, compilationState, data, hasParameterExprs,
-                needsEnvironment, functionIndex, isArrow,
-                mozilla::Some(enclosingIndex), &index)) {
+                cx, compilationState, data, hasParameterExprs, needsEnvironment,
+                functionIndex, isArrow, mozilla::Some(enclosingIndex),
+                &index)) {
           return false;
         }
         break;
@@ -259,7 +257,6 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 // Given the result of SmooshMonkey's parser, convert a list of RegExp data
 // into a list of RegExpStencil.
 bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
-                       CompilationStencil& stencil,
                        CompilationState& compilationState) {
   auto len = result.regexps.len;
   if (len == 0) {
@@ -368,7 +365,6 @@ UniquePtr<ImmutableScriptData> ConvertImmutableScriptData(
 // used by a script into ScriptThingsVector.
 bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
                      const SmooshScriptStencil& smooshScript,
-                     CompilationStencil& stencil,
                      CompilationState& compilationState,
                      Vector<TaggedParserAtomIndex>& allAtoms,
                      ScriptIndex scriptIndex) {
@@ -426,7 +422,6 @@ bool ConvertGCThings(JSContext* cx, const SmooshResult& result,
 bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           const SmooshScriptStencil& smooshScript,
                           Vector<TaggedParserAtomIndex>& allAtoms,
-                          CompilationStencil& stencil,
                           CompilationState& compilationState,
                           ScriptIndex scriptIndex) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
@@ -470,7 +465,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
       return false;
     }
 
-    if (!stencil.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
+    if (!compilationState.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
       return false;
     }
 
@@ -499,8 +494,8 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
     }
   }
 
-  if (!ConvertGCThings(cx, result, smooshScript, stencil, compilationState,
-                       allAtoms, scriptIndex)) {
+  if (!ConvertGCThings(cx, result, smooshScript, compilationState, allAtoms,
+                       scriptIndex)) {
     return false;
   }
 
@@ -596,16 +591,16 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
   Vector<TaggedParserAtomIndex> allAtoms(cx);
-  CompilationState compilationState(cx, allocScope, input, stencil->alloc);
+  CompilationState compilationState(cx, allocScope, input);
   if (!ConvertAtoms(cx, result, compilationState, allAtoms)) {
     return false;
   }
 
-  if (!ConvertScopeStencil(cx, result, allAtoms, *stencil, compilationState)) {
+  if (!ConvertScopeStencil(cx, result, allAtoms, compilationState)) {
     return false;
   }
 
-  if (!ConvertRegExpData(cx, result, *stencil, compilationState)) {
+  if (!ConvertRegExpData(cx, result, compilationState)) {
     return false;
   }
 
@@ -642,13 +637,13 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
     }
   }
 
-  if (!stencil->prepareStorageFor(cx, compilationState)) {
+  if (!compilationState.prepareSharedDataStorage(cx)) {
     return false;
   }
 
   for (size_t i = 0; i < len; i++) {
     if (!ConvertScriptStencil(cx, result, result.scripts.data[i], allAtoms,
-                              *stencil, compilationState, ScriptIndex(i))) {
+                              compilationState, ScriptIndex(i))) {
       return false;
     }
   }

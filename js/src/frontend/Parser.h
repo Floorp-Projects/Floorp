@@ -177,7 +177,7 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationStencil.h"
+#include "frontend/CompilationStencil.h"  // CompilationState
 #include "frontend/ErrorReporter.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
@@ -246,17 +246,14 @@ class MOZ_STACK_CLASS ParserSharedBase {
  public:
   enum class Kind { Parser };
 
-  ParserSharedBase(JSContext* cx, CompilationStencil& stencil,
-                   CompilationState& compilationState, Kind kind);
+  ParserSharedBase(JSContext* cx, CompilationState& compilationState,
+                   Kind kind);
   ~ParserSharedBase();
 
  public:
   JSContext* const cx_;
 
   LifoAlloc& alloc_;
-
-  // Information for parsing with a lifetime longer than the parser itself.
-  CompilationStencil& stencil_;
 
   CompilationState& compilationState_;
 
@@ -267,7 +264,6 @@ class MOZ_STACK_CLASS ParserSharedBase {
   UsedNameTracker& usedNames_;
 
  public:
-  CompilationStencil& getCompilationStencil() { return stencil_; }
   CompilationState& getCompilationState() { return compilationState_; }
 
   ParserAtomsTable& parserAtoms() { return compilationState_.parserAtoms; }
@@ -275,7 +271,7 @@ class MOZ_STACK_CLASS ParserSharedBase {
     return compilationState_.parserAtoms;
   }
 
-  LifoAlloc& stencilAlloc() { return stencil_.alloc; }
+  LifoAlloc& stencilAlloc() { return compilationState_.alloc; }
 
   JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
     return parserAtoms().toJSAtom(cx_, index,
@@ -329,8 +325,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   friend class AutoInParametersOfAsyncFunction;
 
   ParserBase(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-             bool foldConstants, CompilationStencil& stencil,
-             CompilationState& compilationState);
+             bool foldConstants, CompilationState& compilationState);
   ~ParserBase();
 
   bool checkOptions();
@@ -476,17 +471,15 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, CompilationStencil& stencil,
-                   CompilationState& compilationState,
+                   bool foldConstants, CompilationState& compilationState,
                    void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, CompilationStencil& stencil,
-                   CompilationState& compilationState,
+                   bool foldConstants, CompilationState& compilationState,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser)
-      : PerHandlerParser(cx, options, foldConstants, stencil, compilationState,
+      : PerHandlerParser(cx, options, foldConstants, compilationState,
                          static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
@@ -917,8 +910,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
  public:
   GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                 const Unit* units, size_t length, bool foldConstants,
-                CompilationStencil& stencil, CompilationState& compilationState,
-                SyntaxParser* syntaxParser);
+                CompilationState& compilationState, SyntaxParser* syntaxParser);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);
   inline void setInParametersOfAsyncFunction(bool inParameters);

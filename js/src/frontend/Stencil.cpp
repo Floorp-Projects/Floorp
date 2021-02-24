@@ -700,15 +700,10 @@ Scope* ScopeStencil::createScope(JSContext* cx, CompilationAtomCache& atomCache,
   MOZ_CRASH();
 }
 
-bool BaseCompilationStencil::prepareStorageFor(
-    JSContext* cx, CompilationState& compilationState) {
-  // NOTE: At this point CompilationState shouldn't be finished, and
-  // AbstractBaseCompilationStencil.scriptData field should be empty.
-  // Use CompilationState.scriptData as data source.
-  MOZ_ASSERT(scriptData.empty());
-  size_t allScriptCount = compilationState.scriptData.length();
-  size_t nonLazyScriptCount = compilationState.nonLazyFunctionCount;
-  if (!compilationState.scriptData[0].isFunction()) {
+bool CompilationState::prepareSharedDataStorage(JSContext* cx) {
+  size_t allScriptCount = scriptData.length();
+  size_t nonLazyScriptCount = nonLazyFunctionCount;
+  if (!scriptData[0].isFunction()) {
     nonLazyScriptCount++;
   }
   return sharedData.prepareStorageFor(cx, nonLazyScriptCount, allScriptCount);
@@ -1546,14 +1541,15 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
 }
 
 ExtensibleCompilationStencil::ExtensibleCompilationStencil(
-    JSContext* cx, LifoAlloc& stencilAlloc)
-    : parserAtoms(cx->runtime(), stencilAlloc) {}
+    JSContext* cx, CompilationInput& input)
+    : alloc(CompilationStencil::LifoAllocChunkSize),
+      source(input.source),
+      parserAtoms(cx->runtime(), alloc) {}
 
 CompilationState::CompilationState(JSContext* cx,
                                    LifoAllocScope& frontendAllocScope,
-                                   CompilationInput& input,
-                                   LifoAlloc& stencilAlloc)
-    : ExtensibleCompilationStencil(cx, stencilAlloc),
+                                   CompilationInput& input)
+    : ExtensibleCompilationStencil(cx, input),
       directives(input.options.forceStrictMode()),
       usedNames(cx),
       allocScope(frontendAllocScope),
@@ -1702,6 +1698,11 @@ bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
 }
 
 bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
+  MOZ_ASSERT(stencil.alloc.isEmpty());
+  stencil.alloc.steal(&alloc);
+
+  stencil.functionKey = functionKey;
+
   if (!CopyVectorToSpan(cx, stencil.alloc, stencil.regExpData, regExpData)) {
     return false;
   }
@@ -1744,6 +1745,10 @@ bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
   if (!asmJS.empty()) {
     std::swap(asmJS, stencil.asmJS);
   }
+
+  stencil.moduleMetadata = std::move(moduleMetadata);
+
+  stencil.sharedData = std::move(sharedData);
 
   return true;
 }
