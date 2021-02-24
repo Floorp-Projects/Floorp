@@ -15,7 +15,7 @@ use crate::render_task_graph::RenderTaskAllocation;
 use crate::resource_cache::ResourceCache;
 use crate::texture_pack::GuillotineAllocator;
 use crate::prim_store::DeferredResolve;
-use crate::image_source::resolve_image;
+use crate::image_source::{resolve_image, resolve_cached_render_task};
 use crate::util::VecHelper;
 use smallvec::SmallVec;
 use std::mem;
@@ -549,23 +549,38 @@ impl FrameGraphBuilder {
         // considered to be immutable for the rest of the frame building process.
 
         for task in &mut graph.tasks {
-            if let RenderTaskKind::Image(request) = task.kind {
-                let cache_item = resolve_image(
-                    request,
+            // First check whether the render task texture and uv rects are managed
+            // externally. This is the case for image tasks and cached tasks. In both
+            // cases it results in a finding the information in the texture cache.
+            let cache_item = if let Some(ref cache_handle) = task.cache_handle {
+                Some(resolve_cached_render_task(
+                    cache_handle,
+                    resource_cache,
+                ))
+            } else if let RenderTaskKind::Image(request) = &task.kind {
+                Some(resolve_image(
+                    *request,
                     resource_cache,
                     gpu_cache,
                     deferred_resolves,
-                );
+                ))
+            } else {
+                // General case (non-cached non-image tasks).
+                None
+            };
 
-                task.uv_rect_handle = Some(cache_item.uv_rect_handle);
+            if let Some(cache_item) = cache_item {
+                // Update the render task even if the item is invalid.
+                // We'll handle it later and it's easier to not have to
+                // deal with unexpected location variants like
+                // RenderTaskLocation::CacheRequest when we do.
+                let source = cache_item.texture_id;
+                task.uv_rect_handle = cache_item.uv_rect_handle;
                 task.location = RenderTaskLocation::Static {
-                    surface: StaticRenderTaskSurface::ReadOnly {
-                        source: cache_item.texture_id,
-                    },
+                    surface: StaticRenderTaskSurface::ReadOnly { source },
                     rect: cache_item.uv_rect,
                 };
             }
-
             // Give the render task an opportunity to add any
             // information to the GPU cache, if appropriate.
             let (target_rect, target_index) = task.get_target_rect();

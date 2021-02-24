@@ -148,7 +148,7 @@ impl InternablePrimitive for LineDecoration {
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::LineDecoration {
             data_handle,
-            cache_handle: None,
+            render_task: None,
         }
     }
 }

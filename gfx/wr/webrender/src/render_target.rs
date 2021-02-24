@@ -399,6 +399,7 @@ impl RenderTarget for ColorRenderTarget {
                 )
             }
             RenderTaskKind::Image(..) |
+            RenderTaskKind::Cached(..) |
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
@@ -490,6 +491,7 @@ impl RenderTarget for AlphaRenderTarget {
 
         match task.kind {
             RenderTaskKind::Image(..) |
+            RenderTaskKind::Cached(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
@@ -526,6 +528,7 @@ impl RenderTarget for AlphaRenderTarget {
                 self.clip_batcher.add(
                     task_info.clip_node_range,
                     task_info.root_spatial_node_index,
+                    render_tasks,
                     ctx.resource_cache,
                     gpu_cache,
                     clip_store,
@@ -697,6 +700,7 @@ impl TextureCacheRenderTarget {
                 });
             }
             RenderTaskKind::Image(..) |
+            RenderTaskKind::Cached(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::ClipRegion(..) |

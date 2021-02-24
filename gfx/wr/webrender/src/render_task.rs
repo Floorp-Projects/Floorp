@@ -24,7 +24,7 @@ use crate::render_target::{RenderTargetIndex, RenderTargetKind};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 #[cfg(feature = "debugger")]
 use crate::render_task_graph::RenderTaskGraph;
-use crate::render_task_cache::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
+use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
 use crate::visibility::PrimitiveVisibilityMask;
 use smallvec::SmallVec;
 
@@ -87,11 +87,22 @@ pub enum StaticRenderTaskSurface {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskLocation {
+    // Towards the beginning of the frame, most task locations are typically not
+    // known yet, in which case they are set to one of the following variants:
+
     /// A dynamic task that has not yet been allocated a texture and rect.
     Unallocated {
         /// Requested size of this render task
         size: DeviceIntSize,
     },
+    /// Will be replaced by a Static location after the texture cache update.
+    CacheRequest {
+        size: DeviceIntSize,
+    },
+
+    // Before batching begins, we expect that locations have been resolved to
+    // one of the following variants:
+
     /// The `RenderTask` should be drawn to a target provided by the atlas
     /// allocator. This is the most common case.
     Dynamic {
@@ -107,10 +118,6 @@ pub enum RenderTaskLocation {
         /// Rectangle in the texture this task occupies
         rect: DeviceIntRect,
     },
-    /// Will be replaced by a Static location after the texture cache update.
-    CacheRequest {
-        size: DeviceIntSize,
-    }
 }
 
 impl RenderTaskLocation {
@@ -149,6 +156,13 @@ impl RenderTaskLocation {
             }
         }
     }
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct CachedTask {
+    pub target_kind: RenderTargetKind,
 }
 
 #[derive(Debug)]
@@ -312,6 +326,7 @@ pub struct RenderTaskData {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskKind {
     Image(ImageRequest),
+    Cached(CachedTask),
     Picture(PictureTask),
     CacheMask(CacheMaskTask),
     ClipRegion(ClipRegionTask),
@@ -332,6 +347,7 @@ impl RenderTaskKind {
     pub fn is_a_rendering_operation(&self) -> bool {
         match self {
             &RenderTaskKind::Image(..) => false,
+            &RenderTaskKind::Cached(..) => false,
             _ => true,
         }
     }
@@ -339,6 +355,7 @@ impl RenderTaskKind {
     pub fn as_str(&self) -> &'static str {
         match *self {
             RenderTaskKind::Image(..) => "Image",
+            RenderTaskKind::Cached(..) => "Cached",
             RenderTaskKind::Picture(..) => "Picture",
             RenderTaskKind::CacheMask(..) => "CacheMask",
             RenderTaskKind::ClipRegion(..) => "ClipRegion",
@@ -380,6 +397,10 @@ impl RenderTaskKind {
             }
 
             RenderTaskKind::Scaling(ref task_info) => {
+                task_info.target_kind
+            }
+
+            RenderTaskKind::Cached(ref task_info) => {
                 task_info.target_kind
             }
 
@@ -531,7 +552,7 @@ impl RenderTaskKind {
 
                     // Request a cacheable render task with a blurred, minimal
                     // sized box-shadow rect.
-                    source.cache_handle = Some(resource_cache.request_render_task(
+                    source.render_task = Some(resource_cache.request_render_task(
                         RenderTaskCacheKey {
                             size: cache_size,
                             kind: RenderTaskCacheKeyKind::BoxShadow(cache_key),
@@ -646,6 +667,7 @@ impl RenderTaskKind {
                 ]
             }
             RenderTaskKind::Image(..) |
+            RenderTaskKind::Cached(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
@@ -773,7 +795,8 @@ pub struct RenderTask {
     ///
     /// Will be set to None if the render task is cached, in which case the texture cache
     /// manages the handle.
-    pub uv_rect_handle: Option<GpuCacheHandle>,
+    pub uv_rect_handle: GpuCacheHandle,
+    pub cache_handle: Option<RenderTaskCacheEntryHandle>,
     uv_rect_kind: UvRectKind,
 }
 
@@ -790,8 +813,9 @@ impl RenderTask {
             kind,
             free_after: PassId::MAX,
             render_on: PassId::MIN,
-            uv_rect_handle: Some(GpuCacheHandle::new()),
+            uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
+            cache_handle: None,
         }
     }
 
@@ -828,8 +852,9 @@ impl RenderTask {
             kind: RenderTaskKind::Image(request),
             free_after: PassId::MAX,
             render_on: PassId::MIN,
-            uv_rect_handle: Some(GpuCacheHandle::new()),
+            uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
+            cache_handle: None,
         }
     }
 
@@ -845,8 +870,9 @@ impl RenderTask {
             kind: RenderTaskKind::Test(target),
             free_after: PassId::MAX,
             render_on: PassId::MIN,
-            uv_rect_handle: None,
+            uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
+            cache_handle: None,
         }
     }
 
@@ -1354,13 +1380,7 @@ impl RenderTask {
     }
 
     pub fn get_texture_address(&self, gpu_cache: &GpuCache) -> GpuCacheAddress {
-        if let Some(handle) = self.uv_rect_handle {
-            gpu_cache.get_address(&handle)
-        } else {
-            // The task is cached, so the uv_rect_handle is managed by the
-            // texture cache.
-            panic!("texture handle not supported for this task kind");
-        }
+        gpu_cache.get_address(&self.uv_rect_handle)
     }
 
     pub fn get_dynamic_size(&self) -> DeviceIntSize {
@@ -1456,6 +1476,9 @@ impl RenderTask {
             RenderTaskKind::Image(ref task) => {
                 pt.new_level(format!("Image {:?}", task.key));
             }
+            RenderTaskKind::Cached(..) => {
+                pt.new_level("Cached".to_owned());
+            }
             RenderTaskKind::Picture(ref task) => {
                 pt.new_level(format!("Picture of {:?}", task.pic_index));
             }
@@ -1526,14 +1549,13 @@ impl RenderTask {
 
         self.kind.write_gpu_blocks(gpu_cache);
 
-        // We already earlied out above in all non-cached render-tasks.
-        let cache_handle = if let Some(handle) = &mut self.uv_rect_handle {
-            handle
-        } else {
+        if self.cache_handle.is_some() {
+            // The uv rect handle of cached render tasks is requested and set by the
+            // render task cache.
             return;
-        };
+        }
 
-        if let Some(mut request) = gpu_cache.request(cache_handle) {
+        if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
             let p0 = target_rect.min().to_f32();
             let p1 = target_rect.max().to_f32();
             let image_source = ImageSource {
@@ -1551,7 +1573,7 @@ impl RenderTask {
     ///
     /// Tells the render task that it is cached (which means its gpu cache
     /// handle is managed by the texture cache).
-    pub fn mark_cached(&mut self) {
-        self.uv_rect_handle = None;
+    pub fn mark_cached(&mut self, handle: RenderTaskCacheEntryHandle) {
+        self.cache_handle = Some(handle);
     }
 }

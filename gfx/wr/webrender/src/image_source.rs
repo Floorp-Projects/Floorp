@@ -16,7 +16,6 @@ use crate::prim_store::DeferredResolve;
 use crate::renderer::BLOCKS_PER_UV_RECT;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task_cache::RenderTaskCacheEntryHandle;
-use crate::render_target::RenderTargetContext;
 use crate::resource_cache::{ResourceCache, ImageRequest, CacheItem};
 use crate::internal_types::{TextureSource, DeferredResolveIndex};
 
@@ -25,16 +24,14 @@ use crate::internal_types::{TextureSource, DeferredResolveIndex};
 /// This information is eventually turned into a texture source the uv rect's
 /// gpu cache handle.
 ///
-/// TODO: Ideally we'd have a more universal way to refer to a source image without
-/// enumerating the details of how it was produced. Hopefully we can get there
-/// incrementally).
+/// TODO: ImageSourceHandle is now basically an Option<RenderTaskId>. The next patch
+/// will remove it in favor of manipulating render task ids directly instead.
 #[derive(Debug)]
 #[derive(MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ImageSourceHandle {
     RenderTask(RenderTaskId),
-    CachedRenderTask(RenderTaskCacheEntryHandle),
     None,
 }
 
@@ -45,7 +42,6 @@ impl ImageSourceHandle {
     pub fn resolve(
         &self,
         render_tasks: &RenderTaskGraph,
-        ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
     ) -> Option<(GpuCacheAddress, TextureSource)> {
         return match self {
@@ -53,30 +49,8 @@ impl ImageSourceHandle {
                 None
             }
             ImageSourceHandle::RenderTask(task_id) => {
-                let task = &render_tasks[*task_id];
-                let uv_address = task.get_texture_address(gpu_cache);
-                let texture_source = task.get_texture_source();
-
-                if let TextureSource::Invalid = texture_source {
-                    return None;
-                }
-
-                Some((uv_address, texture_source))
+                resolve_render_task(*task_id, render_tasks, gpu_cache)
             },
-            ImageSourceHandle::CachedRenderTask(handle) => {
-                let rt_cache_entry = ctx.resource_cache
-                    .get_cached_render_task(&handle);
-                let cache_item = ctx.resource_cache
-                    .get_texture_cache_item(&rt_cache_entry.handle);
-
-                if cache_item.texture_id == TextureSource::Invalid {
-                    return None;
-                }
-
-                let uv_address = gpu_cache.get_address(&cache_item.uv_rect_handle);
-
-                Some((uv_address, cache_item.texture_id))
-            }
         }
     }
 }
@@ -145,4 +119,31 @@ pub fn resolve_image(
             CacheItem::invalid()
         }
     }
+}
+
+pub fn resolve_cached_render_task(
+    handle: &RenderTaskCacheEntryHandle,
+    resource_cache: &ResourceCache,
+) -> CacheItem {
+    let rt_cache_entry = resource_cache
+        .get_cached_render_task(&handle);
+
+    resource_cache.get_texture_cache_item(&rt_cache_entry.handle)
+}
+
+pub fn resolve_render_task(
+    task_id: RenderTaskId,
+    render_tasks: &RenderTaskGraph,
+    gpu_cache: &GpuCache,
+) -> Option<(GpuCacheAddress, TextureSource)> {
+    let task = &render_tasks[task_id];
+    let texture_source = task.get_texture_source();
+
+    if let TextureSource::Invalid = texture_source {
+        return None;
+    }
+
+    let uv_address = task.get_texture_address(gpu_cache);
+
+    Some((uv_address, texture_source))
 }

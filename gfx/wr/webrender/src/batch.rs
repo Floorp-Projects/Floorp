@@ -35,6 +35,7 @@ use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, MaxRect, TransformedRectKind};
 use crate::segment::EdgeAaSegmentMask;
+use crate::image_source::resolve_render_task;
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -1066,28 +1067,26 @@ impl BatchBuilder {
                     prim_vis_mask,
                 );
             }
-            PrimitiveInstanceKind::NormalBorder { data_handle, ref cache_handles, .. } => {
+            PrimitiveInstanceKind::NormalBorder { data_handle, ref render_task_ids, .. } => {
                 let prim_data = &ctx.data_stores.normal_border[data_handle];
                 let common_data = &prim_data.common;
                 let prim_cache_address = gpu_cache.get_address(&common_data.gpu_cache_handle);
-                let cache_handles = &ctx.scratch.border_cache_handles[*cache_handles];
+                let task_ids = &ctx.scratch.border_cache_handles[*render_task_ids];
                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
                 let mut segment_data: SmallVec<[SegmentInstanceData; 8]> = SmallVec::new();
 
                 // Collect the segment instance data from each render
                 // task for each valid edge / corner of the border.
 
-                for handle in cache_handles {
-                    let rt_cache_entry = ctx.resource_cache
-                        .get_cached_render_task(handle);
-                    let cache_item = ctx.resource_cache
-                        .get_texture_cache_item(&rt_cache_entry.handle);
-                    segment_data.push(
-                        SegmentInstanceData {
-                            textures: TextureSet::prim_textured(cache_item.texture_id),
-                            specific_resource_address: cache_item.uv_rect_handle.as_int(gpu_cache),
-                        }
-                    );
+                for task_id in task_ids {
+                    if let Some((uv_rect_address, texture)) = resolve_render_task(*task_id, render_tasks, gpu_cache) {
+                        segment_data.push(
+                            SegmentInstanceData {
+                                textures: TextureSet::prim_textured(texture),
+                                specific_resource_address: uv_rect_address.as_int(),
+                            }
+                        );
+                    }
                 }
 
                 // TODO: it would be less error-prone to get this info from the texture cache.
@@ -1379,7 +1378,7 @@ impl BatchBuilder {
                     },
                 );
             }
-            PrimitiveInstanceKind::LineDecoration { data_handle, ref cache_handle, .. } => {
+            PrimitiveInstanceKind::LineDecoration { data_handle, ref render_task, .. } => {
                 // The GPU cache data is stored in the template and reused across
                 // frames and display lists.
                 let common_data = &ctx.data_stores.line_decoration[data_handle].common;
@@ -1390,20 +1389,15 @@ impl BatchBuilder {
                     render_tasks,
                 ).unwrap();
 
-                let (batch_kind, textures, prim_user_data, specific_resource_address) = match cache_handle {
-                    Some(cache_handle) => {
-                        let rt_cache_entry = ctx
-                            .resource_cache
-                            .get_cached_render_task(cache_handle);
-                        let cache_item = ctx
-                            .resource_cache
-                            .get_texture_cache_item(&rt_cache_entry.handle);
+                let (batch_kind, textures, prim_user_data, specific_resource_address) = match render_task {
+                    Some(task_id) => {
+                        let (uv_rect_address, texture) = resolve_render_task(*task_id, render_tasks, gpu_cache).unwrap();
                         let textures = BatchTextures::prim_textured(
-                            cache_item.texture_id,
+                            texture,
                             clip_mask_texture_id,
                         );
                         (
-                            BrushBatchKind::Image(cache_item.texture_id.image_buffer_kind()),
+                            BrushBatchKind::Image(texture.image_buffer_kind()),
                             textures,
                             ImageBrushData {
                                 color_mode: ShaderColorMode::Image,
@@ -1411,7 +1405,7 @@ impl BatchBuilder {
                                 raster_space: RasterizationSpace::Local,
                                 opacity: 1.0,
                             }.encode(),
-                            cache_item.uv_rect_handle.as_int(gpu_cache),
+                            uv_rect_address.as_int(),
                         )
                     }
                     None => {
@@ -2197,7 +2191,7 @@ impl BatchBuilder {
                 let common_data = &prim_data.common;
                 let border_data = &prim_data.kind;
 
-                let (uv_rect_address, texture) = match border_data.src_color.resolve(render_tasks, ctx, gpu_cache) {
+                let (uv_rect_address, texture) = match border_data.src_color.resolve(render_tasks, gpu_cache) {
                     Some(src) => src,
                     None => {
                         return;
@@ -2342,7 +2336,7 @@ impl BatchBuilder {
                 debug_assert!(channel_count <= 3);
                 for channel in 0 .. channel_count {
 
-                    let src_channel = yuv_image_data.src_yuv[channel].resolve(render_tasks, ctx, gpu_cache);
+                    let src_channel = yuv_image_data.src_yuv[channel].resolve(render_tasks, gpu_cache);
 
                     let (uv_rect_address, texture_source) = match src_channel {
                         Some(src) => src,
@@ -2473,7 +2467,7 @@ impl BatchBuilder {
                         }
                     }
 
-                    let src_color = image_instance.src_color.resolve(render_tasks, ctx, gpu_cache);
+                    let src_color = image_instance.src_color.resolve(render_tasks, gpu_cache);
 
                     let (uv_rect_address, texture_source) = match src_color {
                         Some(src) => src,
@@ -2569,7 +2563,7 @@ impl BatchBuilder {
                         let prim_header_index = prim_headers.push(&prim_header, z_id, prim_user_data);
 
                         for (i, tile) in chunk.iter().enumerate() {
-                            let (uv_rect_address, texture) = match tile.src_color.resolve(render_tasks, ctx, gpu_cache) {
+                            let (uv_rect_address, texture) = match tile.src_color.resolve(render_tasks, gpu_cache) {
                                 Some(result) => result,
                                 None => {
                                     return;
@@ -2628,15 +2622,16 @@ impl BatchBuilder {
                 if !gradient.cache_segments.is_empty() {
 
                     for segment in &gradient.cache_segments {
-                        let ref cache_handle = segment.handle;
-                        let rt_cache_entry = ctx.resource_cache
-                            .get_cached_render_task(cache_handle);
-                        let cache_item = ctx.resource_cache
-                            .get_texture_cache_item(&rt_cache_entry.handle);
-
-                        if cache_item.texture_id == TextureSource::Invalid {
-                            return;
-                        }
+                        let (uv_rect_address, texture) = match resolve_render_task(
+                            segment.render_task,
+                            render_tasks,
+                            gpu_cache
+                        ) {
+                            Some(resolved) => resolved,
+                            None => {
+                                return;
+                            }
+                        };
 
                         let (clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
                             prim_info.clip_task_index,
@@ -2644,11 +2639,11 @@ impl BatchBuilder {
                         ).unwrap();
 
                         let textures = BatchTextures::prim_textured(
-                            cache_item.texture_id,
+                            texture,
                             clip_mask_texture_id,
                         );
                         let batch_kind = BrushBatchKind::Image(
-                            cache_item.texture_id.image_buffer_kind()
+                            texture.image_buffer_kind()
                         );
                         let prim_user_data = ImageBrushData {
                             color_mode: ShaderColorMode::Image,
@@ -2657,7 +2652,7 @@ impl BatchBuilder {
                             opacity: 1.0,
                         }.encode();
 
-                        let specific_resource_address = cache_item.uv_rect_handle.as_int(gpu_cache);
+                        let specific_resource_address = uv_rect_address.as_int();
                         prim_header.specific_prim_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
                         let segment_local_clip_rect = match prim_header.local_clip_rect.intersection(&segment.local_rect) {
@@ -3486,6 +3481,7 @@ impl ClipBatcher {
         &mut self,
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
+        render_tasks: &RenderTaskGraph,
         resource_cache: &ResourceCache,
         gpu_cache: &GpuCache,
         clip_store: &ClipStore,
@@ -3605,23 +3601,18 @@ impl ClipBatcher {
                     true
                 }
                 ClipItemKind::BoxShadow { ref source }  => {
-                    let rt_handle = source
-                        .cache_handle
-                        .as_ref()
+                    let task_id = source
+                        .render_task
                         .expect("bug: render task handle not allocated");
-                    let rt_cache_entry = resource_cache
-                        .get_cached_render_task(rt_handle);
-                    let cache_item = resource_cache
-                        .get_texture_cache_item(&rt_cache_entry.handle);
-                    debug_assert_ne!(cache_item.texture_id, TextureSource::Invalid);
+                    let (uv_rect_address, texture) = resolve_render_task(task_id, render_tasks, gpu_cache).unwrap();
 
                     self.get_batch_list(is_first_clip)
                         .box_shadows
-                        .entry(cache_item.texture_id)
+                        .entry(texture)
                         .or_insert_with(Vec::new)
                         .push(ClipMaskInstanceBoxShadow {
                             common,
-                            resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+                            resource_address: uv_rect_address,
                             shadow_data: BoxShadowData {
                                 src_rect_size: source.original_alloc_size,
                                 clip_mode: source.clip_mode as i32,
