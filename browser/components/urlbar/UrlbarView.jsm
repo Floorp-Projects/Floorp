@@ -433,9 +433,17 @@ class UrlbarView {
    * Closes the view, cancelling the query if necessary.
    * @param {boolean} [elementPicked]
    *   True if the view is being closed because a result was picked.
+   * @param {boolean} [showFocusBorder]
+   *   True if the Urlbar focus border should be shown after the view is closed.
    */
-  close(elementPicked = false) {
+  close({ elementPicked = false, showFocusBorder = true } = {}) {
     this.controller.cancelQuery();
+    // We do not show the focus border when an element is picked because we'd
+    // flash it just before the input is blurred. The focus border is removed
+    // in UrlbarInput._on_blur.
+    if (!elementPicked && showFocusBorder) {
+      this.input.removeAttribute("suppress-focus-border");
+    }
 
     if (!this.isOpen) {
       return;
@@ -477,28 +485,32 @@ class UrlbarView {
    * If the user abandoned a search (there is a search string) the view is
    * reopened, and we try to use cached results to reduce flickering, then a new
    * query is started to refresh results.
-   * @param {Event} queryOptions Options to use when starting a new query. The
-   *        event property is mandatory for proper telemetry tracking.
+   * @param {Event} event The event associated with the call to autoOpen.
+   * @param {boolean} [suppressFocusBorder] If true, we hide the focus border
+   *        when the panel is opened. This is true by default to avoid flashing
+   *        the border when the unfocused address bar is clicked.
    * @returns {boolean} Whether the view was opened.
    */
-  autoOpen(queryOptions = {}) {
-    if (this._pickSearchTipIfPresent(queryOptions.event)) {
+  autoOpen({ event, suppressFocusBorder = true }) {
+    if (this._pickSearchTipIfPresent(event)) {
       return false;
     }
 
-    if (!queryOptions.event) {
+    if (!event) {
       return false;
     }
+
+    let queryOptions = { event };
 
     if (
       !this.input.value ||
       this.input.getAttribute("pageproxystate") == "valid"
     ) {
-      if (
-        !this.isOpen &&
-        ["mousedown", "command"].includes(queryOptions.event.type)
-      ) {
+      if (!this.isOpen && ["mousedown", "command"].includes(event.type)) {
         this.input.startQuery(queryOptions);
+        if (suppressFocusBorder) {
+          this.input.toggleAttribute("suppress-focus-border", true);
+        }
         return true;
       }
       return false;
@@ -511,7 +523,7 @@ class UrlbarView {
 
     // Tab switch is the only case where we requery if the view is open, because
     // switching tabs doesn't necessarily close the view.
-    if (this.isOpen && queryOptions.event.type != "tabswitch") {
+    if (this.isOpen && event.type != "tabswitch") {
       return false;
     }
 
@@ -545,6 +557,9 @@ class UrlbarView {
     // If we had cached results, this will just refresh them, avoiding results
     // flicker, otherwise there may be some noise.
     this.input.startQuery(queryOptions);
+    if (suppressFocusBorder) {
+      this.input.toggleAttribute("suppress-focus-border", true);
+    }
     return true;
   }
 
@@ -855,6 +870,7 @@ class UrlbarView {
 
     this.input.inputField.setAttribute("aria-expanded", "true");
 
+    this.input.toggleAttribute("suppress-focus-border", true);
     this.input.setAttribute("open", "true");
     this.input.startLayoutExtend();
 

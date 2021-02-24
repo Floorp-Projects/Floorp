@@ -708,7 +708,7 @@ class UrlbarInput {
 
     let selIndex = result.rowIndex;
     if (!result.payload.providesSearchMode) {
-      this.view.close(/* elementPicked */ true);
+      this.view.close({ elementPicked: true });
     }
 
     this.controller.recordSelectedResult(event, result);
@@ -1373,7 +1373,9 @@ class UrlbarInput {
     this._hideFocus = false;
     if (this.focused) {
       this.setAttribute("focused", "true");
-      this.startLayoutExtend();
+      if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+        this.startLayoutExtend();
+      }
     }
   }
 
@@ -1607,7 +1609,9 @@ class UrlbarInput {
       return;
     }
     await this._updateLayoutBreakoutDimensions();
-    this.startLayoutExtend();
+    if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+      this.startLayoutExtend();
+    }
   }
 
   startLayoutExtend() {
@@ -1617,6 +1621,9 @@ class UrlbarInput {
       !this.hasAttribute("breakout") ||
       this.hasAttribute("breakout-extend")
     ) {
+      return;
+    }
+    if (UrlbarPrefs.get("browser.proton.urlbar.enabled") && !this.view.isOpen) {
       return;
     }
     // The Urlbar is unfocused or reduce motion is on and the view is closed.
@@ -1660,15 +1667,19 @@ class UrlbarInput {
     // If reduce motion is enabled, we want to collapse the Urlbar here so the
     // user sees only sees two states: not expanded, and expanded with the view
     // open.
+    if (!this.hasAttribute("breakout-extend") || this.view.isOpen) {
+      return;
+    }
+
     if (
-      !this.hasAttribute("breakout-extend") ||
-      this.view.isOpen ||
-      (this.getAttribute("focused") == "true" &&
-        (!this.window.gReduceMotion ||
-          !this.window.matchMedia("(prefers-reduced-motion: reduce)").matches))
+      !UrlbarPrefs.get("browser.proton.urlbar.enabled") &&
+      this.getAttribute("focused") == "true" &&
+      (!this.window.gReduceMotion ||
+        !this.window.matchMedia("(prefers-reduced-motion: reduce)").matches)
     ) {
       return;
     }
+
     this.removeAttribute("breakout-extend");
     this._toolbar.removeAttribute("urlbar-exceeds-toolbar-bounds");
   }
@@ -2393,7 +2404,9 @@ class UrlbarInput {
       }
     }
 
-    this.view.close();
+    // If we show the focus border after closing the view, it would appear to
+    // flash since this._on_blur would remove it immediately after.
+    this.view.close({ showFocusBorder: false });
   }
 
   /**
@@ -2678,7 +2691,9 @@ class UrlbarInput {
     });
 
     this.removeAttribute("focused");
-    this.endLayoutExtend();
+    if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+      this.endLayoutExtend();
+    }
 
     if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {
       // If we were autofilling, remove the autofilled portion, by restoring
@@ -2788,7 +2803,9 @@ class UrlbarInput {
       }
     }
 
-    this.startLayoutExtend();
+    if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+      this.startLayoutExtend();
+    }
 
     if (this.focusedViaMousedown) {
       this.view.autoOpen({ event });
@@ -2855,7 +2872,13 @@ class UrlbarInput {
           this._preventClickSelectsAll = true;
           this.search(UrlbarTokenizer.RESTRICT.SEARCH);
         } else {
-          this.view.autoOpen({ event });
+          // Do not suppress the focus border if we are already focused. If we
+          // did, we'd hide the focus border briefly then show it again if the
+          // user has Top Sites disabled, creating a flashing effect.
+          this.view.autoOpen({
+            event,
+            suppressFocusBorder: !this.hasAttribute("focused"),
+          });
         }
         break;
       case this.window:
