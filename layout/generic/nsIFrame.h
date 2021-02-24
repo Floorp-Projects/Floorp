@@ -1400,6 +1400,9 @@ class nsIFrame : public nsQueryFrame {
 
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(OffsetPathCache, mozilla::gfx::Path)
 
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayItemDataProperty,
+                                      DisplayItemDataArray)
+
   mozilla::FrameBidiData GetBidiData() const {
     bool exists;
     mozilla::FrameBidiData bidiData = GetProperty(BidiDataProperty(), &exists);
@@ -4793,9 +4796,8 @@ class nsIFrame : public nsQueryFrame {
                              aSize.AsExtremumLength(), aFlags);
   }
 
-  DisplayItemDataArray& DisplayItemData() { return mDisplayItemData; }
-  const DisplayItemDataArray& DisplayItemData() const {
-    return mDisplayItemData;
+  DisplayItemDataArray* DisplayItemData() const {
+    return GetProperty(nsIFrame::DisplayItemDataProperty());
   }
 
   DisplayItemArray& DisplayItems() { return mDisplayItems; }
@@ -4983,7 +4985,6 @@ class nsIFrame : public nsQueryFrame {
   nsIFrame* mNextSibling;  // doubly-linked list of frames
   nsIFrame* mPrevSibling;  // Do not touch outside SetNextSibling!
 
-  DisplayItemDataArray mDisplayItemData;
   DisplayItemArray mDisplayItems;
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder);

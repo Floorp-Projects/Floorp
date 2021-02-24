@@ -157,7 +157,12 @@ bool ShouldBuildItemForEvents(const DisplayItemType aType) {
 }
 
 void UpdateDisplayItemData(nsPaintedDisplayItem* aItem) {
-  for (mozilla::DisplayItemData* did : aItem->Frame()->DisplayItemData()) {
+  auto* array = aItem->Frame()->DisplayItemData();
+  if (!array) {
+    return;
+  }
+
+  for (auto* did : *array) {
     if (did->GetDisplayItemKey() == aItem->GetPerFrameKey() &&
         did->GetLayer()->AsPaintedLayer()) {
       if (!did->HasMergedFrames()) {
