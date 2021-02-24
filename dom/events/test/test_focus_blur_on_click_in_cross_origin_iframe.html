@@ -14,18 +14,6 @@ let state = "start";
 
 const utils = SpecialPowers.DOMWindowUtils;
 
-function synthesizeNativeMouseClick(aElement, aScreenX, aScreenY) {
-  return new Promise(resolve => {
-    utils.sendNativeMouseEvent(aScreenX, aScreenY,
-                               nativeMouseDownEventMsg(), 0, aElement, () => {
-      utils.sendNativeMouseEvent(aScreenX, aScreenY,
-                                 nativeMouseUpEventMsg(),
-                                 0,
-                                 aElement, resolve);
-    });
-  });
-}
-
 function getScreenPosition(aElement, aOffsetX, aOffsetY) {
   const rect = aElement.getBoundingClientRect();
   const x = aOffsetX + window.mozInnerScreenX + rect.left;
@@ -90,7 +78,11 @@ add_task(async () => {
     });
   });
 
-  await synthesizeNativeMouseClick(iframe, expectedScreenX, expectedScreenY);
+  await promiseNativeMouseClick({
+    target: iframe,
+    screenX: expectedScreenX,
+    screenY: expectedScreenY,
+  });
 
   await firstClickPromise;
 
@@ -112,7 +104,11 @@ add_task(async () => {
     });
   });
 
-  await synthesizeNativeMouseClick(iframe, expectedScreenX, expectedScreenY);
+  await promiseNativeMouseClick({
+    target: iframe,
+    screenX: expectedScreenX,
+    screenY: expectedScreenY,
+  });
 
   await secondClickPromise;
 });
