@@ -599,12 +599,12 @@ struct CompilationStencil : public BaseCompilationStencil {
       const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool prepareForInstantiate(
-      JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+      JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
       CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 
   [[nodiscard]] static bool instantiateStencils(
-      JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+      JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
       CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 

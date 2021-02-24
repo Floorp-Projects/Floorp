@@ -62,12 +62,12 @@ extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
 // PrepareForInstantiate is GC-free operation that can be performed
 // off-main-thread without parse global.
 extern bool PrepareForInstantiate(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification = nullptr);
 
 extern bool InstantiateStencils(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification = nullptr);
 
@@ -100,7 +100,7 @@ extern void FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
 
 extern bool InstantiateStencilsForDelazify(JSContext* cx,
                                            CompilationInput& input,
-                                           CompilationStencil& stencil);
+                                           const CompilationStencil& stencil);
 
 // Certain compile options will disable the syntax parser entirely.
 inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
