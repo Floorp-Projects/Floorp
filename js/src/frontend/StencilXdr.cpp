@@ -360,6 +360,12 @@ namespace js {
 template <XDRMode mode>
 XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
                                  SharedDataContainer& sharedData) {
+  if (mode == XDR_ENCODE) {
+    if (sharedData.isBorrow()) {
+      return XDRSharedDataContainer(xdr, *sharedData.asBorrow());
+    }
+  }
+
   enum class Kind : uint8_t {
     Single,
     Vector,

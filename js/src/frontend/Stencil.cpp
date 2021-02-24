@@ -1562,13 +1562,17 @@ SharedDataContainer::~SharedDataContainer() {
     asSingle()->Release();
   } else if (isVector()) {
     js_delete(asVector());
-  } else {
-    MOZ_ASSERT(isMap());
+  } else if (isMap()) {
     js_delete(asMap());
+  } else {
+    MOZ_ASSERT(isBorrow());
+    // Nothing to do.
   }
 }
 
 bool SharedDataContainer::initVector(JSContext* cx) {
+  MOZ_ASSERT(isEmpty());
+
   auto* vec = js_new<SharedDataVector>();
   if (!vec) {
     ReportOutOfMemory(cx);
@@ -1579,6 +1583,8 @@ bool SharedDataContainer::initVector(JSContext* cx) {
 }
 
 bool SharedDataContainer::initMap(JSContext* cx) {
+  MOZ_ASSERT(isEmpty());
+
   auto* map = js_new<SharedDataMap>();
   if (!map) {
     ReportOutOfMemory(cx);
@@ -1591,6 +1597,8 @@ bool SharedDataContainer::initMap(JSContext* cx) {
 bool SharedDataContainer::prepareStorageFor(JSContext* cx,
                                             size_t nonLazyScriptCount,
                                             size_t allScriptCount) {
+  MOZ_ASSERT(isEmpty());
+
   if (nonLazyScriptCount <= 1) {
     MOZ_ASSERT(isSingle());
     return true;
@@ -1642,17 +1650,23 @@ js::SharedImmutableScriptData* SharedDataContainer::get(
     return nullptr;
   }
 
-  MOZ_ASSERT(isMap());
-  auto& map = *asMap();
-  auto p = map.lookup(index);
-  if (p) {
-    return p->value();
+  if (isMap()) {
+    auto& map = *asMap();
+    auto p = map.lookup(index);
+    if (p) {
+      return p->value();
+    }
+    return nullptr;
   }
-  return nullptr;
+
+  MOZ_ASSERT(isBorrow());
+  return asBorrow()->get(index);
 }
 
 bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
                                       js::SharedImmutableScriptData* data) {
+  MOZ_ASSERT(!isBorrow());
+
   if (isSingle()) {
     MOZ_ASSERT(index == CompilationStencil::TopLevelIndex);
     RefPtr<SharedImmutableScriptData> ref(data);
@@ -1702,6 +1716,8 @@ void CompilationStencil::assertNoExternalDependency() const {
     MOZ_ASSERT_IF(data, alloc.contains(data));
   }
 
+  MOZ_ASSERT(!sharedData.isBorrow());
+
   MOZ_ASSERT_IF(!parserAtomData.empty(), alloc.contains(parserAtomData.data()));
   for (const auto* data : parserAtomData) {
     MOZ_ASSERT_IF(data, alloc.contains(data));
@@ -1725,6 +1741,8 @@ void ExtensibleCompilationStencil::assertNoExternalDependency() const {
   for (const auto* data : scopeNames) {
     MOZ_ASSERT_IF(data, alloc.contains(data));
   }
+
+  MOZ_ASSERT(!sharedData.isBorrow());
 
   for (const auto* data : parserAtoms.entries()) {
     MOZ_ASSERT_IF(data, alloc.contains(data));
@@ -2641,15 +2659,20 @@ void SharedDataContainer::dumpFields(js::JSONPrinter& json) const {
     return;
   }
 
-  MOZ_ASSERT(isMap());
-  auto& map = *asMap();
+  if (isMap()) {
+    auto& map = *asMap();
 
-  char index[64];
-  for (auto iter = map.iter(); !iter.done(); iter.next()) {
-    SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
-    json.formatProperty(index, "u8[%zu]",
-                        iter.get().value()->immutableDataLength());
+    char index[64];
+    for (auto iter = map.iter(); !iter.done(); iter.next()) {
+      SprintfLiteral(index, "ScriptIndex(%u)", iter.get().key().index);
+      json.formatProperty(index, "u8[%zu]",
+                          iter.get().value()->immutableDataLength());
+    }
+    return;
   }
+
+  MOZ_ASSERT(isBorrow());
+  asBorrow()->dumpFields(json);
 }
 
 void BaseCompilationStencil::dump() const {
