@@ -788,7 +788,7 @@ static bool proxy_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
   }
 
   if (found) {
-    propp.setNonNativeProperty();
+    propp.setProxyProperty();
     objp.set(obj);
   } else {
     propp.setNotFound();

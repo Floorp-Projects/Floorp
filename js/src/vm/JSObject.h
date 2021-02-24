@@ -849,8 +849,7 @@ bool LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id, JSObject** objp,
                         PropertyResult* propp);
 
 bool LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
-                           PropertyResult* propp,
-                           bool* isTypedArrayOutOfRange = nullptr);
+                           PropertyResult* propp);
 
 bool GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp);
 
