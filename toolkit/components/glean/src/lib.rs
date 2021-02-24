@@ -49,14 +49,18 @@ use crate::viaduct_uploader::ViaductUploader;
 /// This assembles client information and the Glean configuration and then initializes the global
 /// Glean instance.
 #[no_mangle]
-pub unsafe extern "C" fn fog_init() -> nsresult {
+pub unsafe extern "C" fn fog_init(data_path_override: &nsACString) -> nsresult {
     fog::metrics::fog::initialization.start();
 
     log::debug!("Initializing FOG.");
 
-    let data_path = match get_data_path() {
-        Ok(dp) => dp,
-        Err(e) => return e,
+    let data_path = if data_path_override.is_empty() {
+        match get_data_path() {
+            Ok(dp) => dp,
+            Err(e) => return e,
+        }
+    } else {
+        data_path_override.to_utf8().to_string()
     };
 
     let (app_build, app_display_version, channel) = match get_app_info() {
