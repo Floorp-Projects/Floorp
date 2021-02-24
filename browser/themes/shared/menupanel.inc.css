@@ -183,7 +183,7 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 @supports -moz-bool-pref("browser.proton.appmenu.enabled") {
 /**
  * These are placeholder icons until we get the proper Proton
- * assets for zoom/fullscreen.
+ * assets for zoom/fullscreen/sync.
  */
 #appMenu-zoomEnlarge-button2 {
   list-style-image: url(chrome://browser/skin/zoom-in.svg);
@@ -199,5 +199,9 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 
 #appMenu-fullscreen-button2[checked] {
   list-style-image: url(chrome://browser/skin/fullscreen-exit.svg);
+}
+
+#PanelUI-appMenu-fxa-image-last-synced {
+  list-style-image: url("chrome://browser/skin/sync.svg");
 }
 } /** END Proton **/
