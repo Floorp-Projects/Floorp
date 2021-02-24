@@ -12,18 +12,6 @@ let state = "start";
 
 const utils = SpecialPowers.DOMWindowUtils;
 
-function synthesizeNativeMouseClick(aElement, aScreenX, aScreenY) {
-  return new Promise(resolve => {
-    utils.sendNativeMouseEvent(aScreenX, aScreenY,
-                               nativeMouseDownEventMsg(), 0, aElement, () => {
-      utils.sendNativeMouseEvent(aScreenX, aScreenY,
-                                 nativeMouseUpEventMsg(),
-                                 0,
-                                 aElement, resolve);
-    });
-  });
-}
-
 function getScreenPosition(aElement, aOffsetX, aOffsetY) {
   const rect = aElement.getBoundingClientRect();
   const x = aOffsetX + window.mozInnerScreenX + rect.left;
@@ -64,7 +52,7 @@ add_task(async () => {
   await promiseApzFlushedRepaints();
 
   // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
-  // so we use synthesizeNativeMouseClick instead.
+  // so we use promiseNativeMouseClick instead.
   const [expectedScreenX, expectedScreenY] =
     getScreenPosition(iframe, 10, 10);
 
@@ -97,7 +85,11 @@ add_task(async () => {
     });
   });
 
-  await synthesizeNativeMouseClick(iframe, expectedScreenX, expectedScreenY + 110);
+  await promiseNativeMouseClick({
+    target: iframe,
+    screenX: expectedScreenX,
+    screenY: expectedScreenY + 110,
+  });
 
   await firstClickPromise;
 
@@ -139,7 +131,11 @@ add_task(async () => {
     });
   });
 
-  await synthesizeNativeMouseClick(iframe, expectedScreenX, expectedScreenY);
+  await promiseNativeMouseClick({
+    target: iframe,
+    screenX: expectedScreenX,
+    screenY: expectedScreenY,
+  });
 
   await secondClickPromise;
 });
