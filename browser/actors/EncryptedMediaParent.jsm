@@ -183,7 +183,7 @@ class EncryptedMediaParent extends JSWindowActorParent {
       notificationMessage,
       notificationId,
       iconURL,
-      notificationBox.PRIORITY_WARNING_MEDIUM,
+      notificationBox.PRIORITY_INFO_HIGH,
       buttons
     );
   }
