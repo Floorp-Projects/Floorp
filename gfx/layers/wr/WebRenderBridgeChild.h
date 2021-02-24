@@ -182,7 +182,8 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   void DeallocResourceShmem(RefCountedShmem& aShm);
 
   void Capture();
-  void ToggleCaptureSequence();
+  void StartCaptureSequence(const nsCString& path, uint32_t aFlags);
+  void StopCaptureSequence();
 
  private:
   friend class CompositorBridgeChild;

@@ -7,6 +7,7 @@
 #ifndef MOZILLA_LAYERS_WEBRENDERAPI_H
 #define MOZILLA_LAYERS_WEBRENDERAPI_H
 
+#include <stdint.h>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -22,6 +23,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "nsString.h"
 #include "GLTypes.h"
 #include "Units.h"
 
@@ -286,7 +288,8 @@ class WebRenderAPI final {
 
   void Capture();
 
-  void ToggleCaptureSequence();
+  void StartCaptureSequence(const nsCString& aPath, uint32_t aFlags);
+  void StopCaptureSequence();
 
   void BeginRecording(const TimeStamp& aRecordingStart,
                       wr::PipelineId aRootPipelineId);

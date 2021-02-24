@@ -144,7 +144,9 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   mozilla::ipc::IPCResult RecvInvalidateRenderedFrame() override;
   mozilla::ipc::IPCResult RecvScheduleComposite() override;
   mozilla::ipc::IPCResult RecvCapture() override;
-  mozilla::ipc::IPCResult RecvToggleCaptureSequence() override;
+  mozilla::ipc::IPCResult RecvStartCaptureSequence(
+      const nsCString& path, const uint32_t& aFlags) override;
+  mozilla::ipc::IPCResult RecvStopCaptureSequence() override;
   mozilla::ipc::IPCResult RecvSyncWithCompositor() override;
 
   mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(
