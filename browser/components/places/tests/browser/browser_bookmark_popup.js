@@ -101,7 +101,7 @@ async function test_bookmarks_popup({
         "Page is starred"
       );
       Assert.equal(
-        bookmarkPanelTitle.textContent,
+        bookmarkPanelTitle.value,
         isNewBookmark
           ? gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle")
           : gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
