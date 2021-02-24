@@ -35,7 +35,6 @@ use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, MaxRect, TransformedRectKind};
 use crate::segment::EdgeAaSegmentMask;
-use crate::image_source::resolve_render_task;
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -1079,7 +1078,7 @@ impl BatchBuilder {
                 // task for each valid edge / corner of the border.
 
                 for task_id in task_ids {
-                    if let Some((uv_rect_address, texture)) = resolve_render_task(*task_id, render_tasks, gpu_cache) {
+                    if let Some((uv_rect_address, texture)) = render_tasks.resolve_location(*task_id, gpu_cache) {
                         segment_data.push(
                             SegmentInstanceData {
                                 textures: TextureSet::prim_textured(texture),
@@ -1391,7 +1390,7 @@ impl BatchBuilder {
 
                 let (batch_kind, textures, prim_user_data, specific_resource_address) = match render_task {
                     Some(task_id) => {
-                        let (uv_rect_address, texture) = resolve_render_task(*task_id, render_tasks, gpu_cache).unwrap();
+                        let (uv_rect_address, texture) = render_tasks.resolve_location(*task_id, gpu_cache).unwrap();
                         let textures = BatchTextures::prim_textured(
                             texture,
                             clip_mask_texture_id,
@@ -2191,7 +2190,7 @@ impl BatchBuilder {
                 let common_data = &prim_data.common;
                 let border_data = &prim_data.kind;
 
-                let (uv_rect_address, texture) = match border_data.src_color.resolve(render_tasks, gpu_cache) {
+                let (uv_rect_address, texture) = match render_tasks.resolve_location(border_data.src_color, gpu_cache) {
                     Some(src) => src,
                     None => {
                         return;
@@ -2336,7 +2335,7 @@ impl BatchBuilder {
                 debug_assert!(channel_count <= 3);
                 for channel in 0 .. channel_count {
 
-                    let src_channel = yuv_image_data.src_yuv[channel].resolve(render_tasks, gpu_cache);
+                    let src_channel = render_tasks.resolve_location(yuv_image_data.src_yuv[channel], gpu_cache);
 
                     let (uv_rect_address, texture_source) = match src_channel {
                         Some(src) => src,
@@ -2467,7 +2466,7 @@ impl BatchBuilder {
                         }
                     }
 
-                    let src_color = image_instance.src_color.resolve(render_tasks, gpu_cache);
+                    let src_color = render_tasks.resolve_location(image_instance.src_color, gpu_cache);
 
                     let (uv_rect_address, texture_source) = match src_color {
                         Some(src) => src,
@@ -2563,7 +2562,7 @@ impl BatchBuilder {
                         let prim_header_index = prim_headers.push(&prim_header, z_id, prim_user_data);
 
                         for (i, tile) in chunk.iter().enumerate() {
-                            let (uv_rect_address, texture) = match tile.src_color.resolve(render_tasks, gpu_cache) {
+                            let (uv_rect_address, texture) = match render_tasks.resolve_location(tile.src_color, gpu_cache) {
                                 Some(result) => result,
                                 None => {
                                     return;
@@ -2622,9 +2621,8 @@ impl BatchBuilder {
                 if !gradient.cache_segments.is_empty() {
 
                     for segment in &gradient.cache_segments {
-                        let (uv_rect_address, texture) = match resolve_render_task(
+                        let (uv_rect_address, texture) = match render_tasks.resolve_location(
                             segment.render_task,
-                            render_tasks,
                             gpu_cache
                         ) {
                             Some(resolved) => resolved,
@@ -3604,7 +3602,7 @@ impl ClipBatcher {
                     let task_id = source
                         .render_task
                         .expect("bug: render task handle not allocated");
-                    let (uv_rect_address, texture) = resolve_render_task(task_id, render_tasks, gpu_cache).unwrap();
+                    let (uv_rect_address, texture) = render_tasks.resolve_location(task_id, gpu_cache).unwrap();
 
                     self.get_batch_list(is_first_clip)
                         .box_shadows
