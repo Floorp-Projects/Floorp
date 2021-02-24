@@ -386,14 +386,8 @@ void DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
   mLayerState = aState;
   mUsed = true;
 
-  if (aLayer->AsPaintedLayer()) {
-    if (aItem != mItem) {
-      aItem->SetDisplayItemData(this, aLayer->Manager());
-    } else {
-      MOZ_ASSERT(aItem->GetDisplayItemData() == this);
-    }
-    mReusedItem = aIsReused;
-  }
+  mItem = aItem;
+  mReusedItem = aIsReused;
 
   if (!aItem) {
     return;
@@ -435,11 +429,6 @@ void DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
 static const nsIFrame* sDestroyedFrame = nullptr;
 DisplayItemData::~DisplayItemData() {
   MOZ_COUNT_DTOR(DisplayItemData);
-
-  if (mItem) {
-    MOZ_ASSERT(mItem->GetDisplayItemData() == this);
-    mItem->SetDisplayItemData(nullptr, nullptr);
-  }
 
   for (nsIFrame* frame : mFrameList) {
     if (frame == sDestroyedFrame) {
@@ -3905,12 +3894,8 @@ void PaintedLayerData::Accumulate(ContainerState* aState, nsDisplayItem* aItem,
   bool clipMatches =
       (oldClip == mItemClip) || (oldClip && *oldClip == *mItemClip);
 
-  DisplayItemData* currentData =
-      isMerged ? nullptr : item->GetDisplayItemData();
-
   DisplayItemData* oldData = aState->mLayerBuilder->GetOldLayerForFrame(
-      item->Frame(), item->GetPerFrameKey(), currentData,
-      item->GetDisplayItemDataLayerManager());
+      item->Frame(), item->GetPerFrameKey());
 
   mAssignedDisplayItems.emplace_back(item, aLayerState, oldData, aContentRect,
                                      aType, hasOpacity, aTransform, isMerged);
@@ -5411,12 +5396,6 @@ void FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       data->BeginUpdate(layer, aItem.mLayerState, aItem.mItem, aItem.mReused,
                         aItem.mMerged);
     } else {
-      if (data && data->mUsed) {
-        // If the DID has already been used (by a previously merged frame,
-        // which is not merged this paint) we must create a new DID for the
-        // item.
-        aItem.mItem->SetDisplayItemData(nullptr, nullptr);
-      }
       data = StoreDataForFrame(aItem.mItem, layer, aItem.mLayerState, nullptr);
     }
     data->mInactiveManager = aItem.mInactiveLayerData
