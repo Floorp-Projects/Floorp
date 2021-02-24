@@ -210,9 +210,7 @@ def moz_fetches_dir(value):
 
 option(
     "--enable-bootstrap",
-    nargs="?",
-    choices=("install", "update"),
-    help="Automatically update/bootstrap some toolchains when they are present but out of date",
+    help="Automatically bootstrap or update some toolchains",
 )
 
 
@@ -254,19 +252,9 @@ def original_path():
     return environ["PATH"].split(os.pathsep)
 
 
-@depends("--enable-bootstrap")
-def bootstrap(value):
-    if value:
-        # value here is either an empty tuple, or a tuple containing either
-        # 'install' or 'update'. All values but 'install' mean 'update'.
-        if len(value) and value[0] == "install":
-            return "install"
-        return True
-
-
 @template
 def bootstrap_toolchain_tasks(host_or_target):
-    @depends(host_or_target, when=bootstrap)
+    @depends(host_or_target, when="--enable-bootstrap")
     @imports("os")
     @imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
     @imports(_from="__builtin__", _import="Exception")
@@ -308,7 +296,7 @@ def bootstrap_path(path, **kwargs):
     }[context]
 
     @depends(
-        bootstrap,
+        "--enable-bootstrap",
         toolchains_base_dir,
         bootstrap_toolchain_tasks,
         shell,
@@ -371,10 +359,9 @@ def bootstrap_path(path, **kwargs):
             return True
 
         path = os.path.join(toolchains_base_dir, *path_parts)
-        exists = os.path.exists(path)
-        if bootstrap and (exists or bootstrap == "install"):
+        if bootstrap:
             try:
-                if not try_bootstrap(exists):
+                if not try_bootstrap(os.path.exists(path)):
                     # If there aren't toolchain artifacts to use for this build,
                     # don't return a path.
                     return None
