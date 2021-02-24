@@ -339,6 +339,7 @@ void PerformanceObserver::Disconnect() {
   if (mConnected) {
     MOZ_ASSERT(mPerformance);
     mPerformance->RemoveObserver(this);
+    mOptions.Clear();
     mConnected = false;
   }
 }
