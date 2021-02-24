@@ -53,10 +53,10 @@ function starttest() {
       sendMouseEvent({type:'click'}, "testMouseEvent");
       is(check, true, 'sendMouseEvent should dispatch click event');
 
-      await (async function testSynthesizeNativeMouseClick() {
+      await (async function testSynthesizeNativeMouseEvent() {
         if (navigator.appVersion.includes("Android")) {
           todo(false,
-            `testSynthesizeNativeMouseClick: does nothing on Android because its nsIWidget::SynthesizeNativeMouseEvent won't fire "mouseup"`);
+            `testSynthesizeNativeMouseEvent: does nothing on Android because its nsIWidget::SynthesizeNativeMouseEvent won't fire "mouseup"`);
           return;
         }
         let events = [];
@@ -145,7 +145,7 @@ function starttest() {
             continue;
           }
           events = [];
-          info(`testSynthesizeNativeMouseClick: sending native mouse click (${test.description})`);
+          info(`testSynthesizeNativeMouseEvent: sending native mouse click (${test.description})`);
           await promiseNativeMouseEventAndWaitForEvent({
             type: "click",
             target: $("testMouseEvent"),
@@ -154,11 +154,11 @@ function starttest() {
             eventTypeToWait: "mouseup",
           });
           is(events.length, 2,
-            `testSynthesizeNativeMouseClick: a pair of "mousedown" and "mouseup" events should be fired (${test.description})`);
+            `testSynthesizeNativeMouseEvent: a pair of "mousedown" and "mouseup" events should be fired (${test.description})`);
           is(events[0]?.type, "mousedown",
-            `testSynthesizeNativeMouseClick: "mousedown" should be fired (${test.description})`);
+            `testSynthesizeNativeMouseEvent: "mousedown" should be fired (${test.description})`);
           is(events[1]?.type, "mouseup",
-            `testSynthesizeNativeMouseClick: "mouseup" should be fired (${test.description})`);
+            `testSynthesizeNativeMouseEvent: "mouseup" should be fired (${test.description})`);
           if (events.length !== 2) {
             continue;
           }
@@ -183,10 +183,41 @@ function starttest() {
               // In Headless mode, modifiers are not supported by this kind of APIs.
               kIsHeadless) ? todo_is : is;
             checkFn(events[0]?.getModifierState(mod.keyName), activeExpected,
-              `testSynthesizeNativeMouseCheck: "mousedown".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
+              `testSynthesizeNativeMouseEvent: "mousedown".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
             checkFn(events[1]?.getModifierState(mod.keyName), activeExpected,
-              `testSynthesizeNativeMouseCheck: "mouseup".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
+              `testSynthesizeNativeMouseEvent: "mouseup".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
           }
+        }
+        const supportsX1AndX2Buttons =
+          // On Windows, it triggers APP_COMMAND.  Therefore, this test is unloaded.
+          !navigator.platform.includes("Win") &&
+          // On macOS, it seems that no API to specify X1 and X2 button at creating an NSEvent.
+          !navigator.platform.includes("Mac") &&
+          // On Linux, it seems that X1 button and X2 button events are not synthesized correctly.
+          !navigator.platform.includes("Linux");
+        for (let i = 0; i < (supportsX1AndX2Buttons ? 5 : 3); i++) {
+          events = [];
+          info(`testSynthesizeNativeMouseEvent: sending native mouse click (button=${i})`);
+          await promiseNativeMouseEventAndWaitForEvent({
+            type: "click",
+            target: $("testMouseEvent"),
+            atCenter: true,
+            button: i,
+            eventTypeToWait: "mouseup",
+          });
+          is(events.length, 2,
+            `testSynthesizeNativeMouseEvent: a pair of "mousedown" and "mouseup" events should be fired (button=${i})`);
+          is(events[0]?.type, "mousedown",
+            `testSynthesizeNativeMouseEvent: "mousedown" should be fired (button=${i})`);
+          is(events[1]?.type, "mouseup",
+            `testSynthesizeNativeMouseEvent: "mouseup" should be fired (button=${i})`);
+          if (events.length !== 2) {
+            continue;
+          }
+          is(events[0].button, i,
+            `testSynthesizeNativeMouseEvent: button of "mousedown" event should be ${i}`);
+          is(events[1].button, i,
+            `testSynthesizeNativeMouseEvent: button of "mouseup" event should be ${i}`);
         }
         $("testMouseEvent").removeEventListener("mousedown", listener);
         $("testMouseEvent").removeEventListener("mouseup", listener);
