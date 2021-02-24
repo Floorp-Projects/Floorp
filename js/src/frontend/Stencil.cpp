@@ -1253,7 +1253,7 @@ static void FunctionsFromExistingLazy(CompilationInput& input,
 
 /* static */
 bool CompilationStencil::instantiateStencils(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   if (!prepareForInstantiate(cx, input, stencil, gcOutput,
@@ -1452,7 +1452,7 @@ bool StencilDelazificationSet::buildDelazificationIndices(
 
 /* static */
 bool CompilationStencil::prepareForInstantiate(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   size_t maxParserAtomDataLength = stencil.parserAtomData.size();

@@ -1026,7 +1026,7 @@ class ScriptSource {
   // gets created).
   bool xdrEncodeInitialStencil(
       JSContext* cx, frontend::CompilationInput& input,
-      frontend::CompilationStencil& stencil,
+      const frontend::CompilationStencil& stencil,
       UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
 
   // Create a new XDR encoder, and encode the stencils.
@@ -1035,21 +1035,21 @@ class ScriptSource {
   // instantiating stencil (so, corresponding canonical ScriptSourceObject
   // gets created).
   bool xdrEncodeStencils(JSContext* cx, frontend::CompilationInput& input,
-                         frontend::CompilationStencil& stencil,
+                         const frontend::CompilationStencil& stencil,
                          UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
 
   void setIncrementalEncoder(XDRIncrementalStencilEncoder* xdrEncoder);
 
   // Encode a delazified function's stencil.  In case of errors, the XDR
   // encoder is freed.
-  bool xdrEncodeFunctionStencil(JSContext* cx,
-                                frontend::BaseCompilationStencil& stencil);
+  bool xdrEncodeFunctionStencil(
+      JSContext* cx, const frontend::BaseCompilationStencil& stencil);
 
  private:
   // Encode a delazified function's stencil.  In case of errors, the passed
   // XDR encoder is freed.
   bool xdrEncodeFunctionStencilWith(
-      JSContext* cx, frontend::BaseCompilationStencil& stencil,
+      JSContext* cx, const frontend::BaseCompilationStencil& stencil,
       UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
 
  public:
