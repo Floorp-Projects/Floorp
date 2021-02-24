@@ -552,19 +552,6 @@ var gPermissionPanel = {
         !permission.sharingState.includes("Paused"))
     ) {
       img.classList.add("in-use");
-
-      // Synchronize permission panel and identity block blinking animations.
-      window
-        .promiseDocumentFlushed(() => {
-          let sharingIconBlink = this._webRTCSharingIcon.getAnimations()[0];
-          let imgBlink = img.getAnimations()[0];
-          return [sharingIconBlink, imgBlink];
-        })
-        .then(([sharingIconBlink, imgBlink]) => {
-          if (sharingIconBlink && imgBlink) {
-            imgBlink.startTime = sharingIconBlink.startTime;
-          }
-        });
     }
 
     let nameLabel = document.createXULElement("label");
