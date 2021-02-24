@@ -275,7 +275,7 @@ UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
 }
 
 bool frontend::InstantiateStencils(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   {
@@ -303,7 +303,7 @@ bool frontend::InstantiateStencils(
   return true;
 }
 bool frontend::PrepareForInstantiate(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
@@ -980,9 +980,8 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   return CompileLazyFunctionToStencilImpl(cx, input, stencil, units, length);
 }
 
-bool frontend::InstantiateStencilsForDelazify(JSContext* cx,
-                                              CompilationInput& input,
-                                              CompilationStencil& stencil) {
+bool frontend::InstantiateStencilsForDelazify(
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil) {
   AutoAssertReportedException assertException(cx);
 
   mozilla::DebugOnly<uint32_t> lazyFlags =
