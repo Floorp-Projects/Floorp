@@ -982,12 +982,6 @@ inline bool js::Nursery::isNearlyFull() const {
   return belowBytesThreshold && belowFractionThreshold;
 }
 
-// If the nursery is above its minimum size, collect it at least this often if
-// we have idle time. This allows the nursery to shrink when it's not being
-// used. There are other heuristics we could use for this, but this is the
-// simplest.
-static const TimeDuration UnderuseTimeout = TimeDuration::FromSeconds(2.0);
-
 inline bool js::Nursery::isUnderused() const {
   if (js::SupportDifferentialTesting() || !previousGC.endTime) {
     return false;
@@ -997,8 +991,12 @@ inline bool js::Nursery::isUnderused() const {
     return false;
   }
 
+  // If the nursery is above its minimum size, collect it every so often if we
+  // have idle time. This allows the nursery to shrink when it's not being
+  // used. There are other heuristics we could use for this, but this is the
+  // simplest.
   TimeDuration timeSinceLastCollection = ReallyNow() - previousGC.endTime;
-  return timeSinceLastCollection > UnderuseTimeout;
+  return timeSinceLastCollection > tunables().nurseryTimeoutForIdleCollection();
 }
 
 // typeReason is the gcReason for specified type, for example,
@@ -1593,7 +1591,8 @@ size_t js::Nursery::targetSize(JSGCInvocationKind kind, JS::GCReason reason) {
 
   // If the nursery is completely unused then minimise it.
   if (hasRecentGrowthData && previousGC.nurseryUsedBytes == 0 &&
-      now - lastCollectionEndTime() > UnderuseTimeout &&
+      now - lastCollectionEndTime() >
+          tunables().nurseryTimeoutForIdleCollection() &&
       !js::SupportDifferentialTesting()) {
     clearRecentGrowthData();
     return 0;

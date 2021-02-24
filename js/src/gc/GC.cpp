@@ -1611,6 +1611,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
       return uint32_t(tunables.nurseryFreeThresholdForIdleCollectionFraction() *
                       100.0f);
+    case JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS:
+      return tunables.nurseryTimeoutForIdleCollection().ToMilliseconds();
     case JSGC_PRETENURE_THRESHOLD:
       return uint32_t(tunables.pretenureThreshold() * 100);
     case JSGC_PRETENURE_GROUP_THRESHOLD:
