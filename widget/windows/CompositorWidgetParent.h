@@ -29,7 +29,7 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   bool PreRender(WidgetRenderingContext*) override;
   void PostRender(WidgetRenderingContext*) override;
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
-      LayoutDeviceIntRegion& aInvalidRegion,
+      const LayoutDeviceIntRegion& aInvalidRegion,
       layers::BufferMode* aBufferMode) override;
   void EndRemoteDrawingInRegion(
       gfx::DrawTarget* aDrawTarget,

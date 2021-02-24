@@ -22,7 +22,7 @@ class InProcessCompositorWidget : public CompositorWidget {
   virtual RefPtr<layers::NativeLayerRoot> GetNativeLayerRoot() override;
   virtual already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   virtual already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
-      LayoutDeviceIntRegion& aInvalidRegion,
+      const LayoutDeviceIntRegion& aInvalidRegion,
       layers::BufferMode* aBufferMode) override;
   virtual void EndRemoteDrawing() override;
   virtual void EndRemoteDrawingInRegion(
