@@ -261,10 +261,6 @@ already_AddRefed<SourceBuffer> MediaSource::AddSourceBuffer(
     return nullptr;
   }
   RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, *containerType);
-  if (!sourceBuffer) {
-    aRv.Throw(NS_ERROR_FAILURE);  // XXX need a better error here
-    return nullptr;
-  }
   mSourceBuffers->Append(sourceBuffer);
   DDLINKCHILD("sourcebuffer[]", sourceBuffer.get());
   MSE_DEBUG("sourceBuffer=%p", sourceBuffer.get());
