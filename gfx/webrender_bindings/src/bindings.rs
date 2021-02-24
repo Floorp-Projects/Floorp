@@ -1238,7 +1238,10 @@ extern "C" {
     fn wr_compositor_end_frame(compositor: *mut c_void);
     fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
     fn wr_compositor_deinit(compositor: *mut c_void);
-    fn wr_compositor_get_capabilities(compositor: *mut c_void) -> CompositorCapabilities;
+    fn wr_compositor_get_capabilities(
+        compositor: *mut c_void,
+        caps: *mut CompositorCapabilities,
+    );
     fn wr_compositor_map_tile(
         compositor: *mut c_void,
         id: NativeTileId,
@@ -1376,7 +1379,11 @@ impl Compositor for WrCompositor {
     }
 
     fn get_capabilities(&self) -> CompositorCapabilities {
-        unsafe { wr_compositor_get_capabilities(self.0) }
+        unsafe {
+            let mut caps: CompositorCapabilities = Default::default();
+            wr_compositor_get_capabilities(self.0, &mut caps);
+            caps
+        }
     }
 }
 
