@@ -100,10 +100,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           div.addEventListener("mousemove", moveLocked);
           divRect = div.getBoundingClientRect();
           // Bug 1295815
-          // Retrigger synthesizeNativeMouseMove until it actually happens.
+          // Retrigger synthesizeNativeMouseEvent until it actually happens.
           mouseMoveIntervalID = setInterval(() => {
-            synthesizeNativeMouseMove(div, (divRect.width / 4) * 3,
-                                      (divRect.height / 4) * 3);
+            synthesizeNativeMouseEvent({
+              type: "mousemove",
+              target: div,
+              offsetX: (divRect.width / 4) * 3,
+              offsetY: (divRect.height / 4) * 3,
+            });
           }, 100);
         } else {
           info("Got pointerlockchange for exiting");
@@ -113,17 +117,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       function start() {
         div = document.getElementById("div");
         info("Requesting fullscreen on parent");
-        addFullscreenChangeContinuation("enter", function() {
+        addFullscreenChangeContinuation("enter", async () => {
           info("Got fullscreenchange for entering");
-          synthesizeNativeMouseMove(div, 0, 0, () => {
-            div.addEventListener("mousemove", moveUnlocked);
-            divRect = div.getBoundingClientRect();
-            // Bug 1295815
-            // Retrigger synthesizeNativeMouseMove until it actually happens.
-            mouseMoveIntervalID = setInterval(() => {
-              synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
-            }, 100);
+          await promiseNativeMouseEvent({
+            type: "mousemove",
+            target: div,
+            offsetX: 0,
+            offsetY: 0,
           });
+          div.addEventListener("mousemove", moveUnlocked);
+          // Bug 1295815
+          // Retrigger synthesizeNativeMouseEvent until it actually happens.
+          mouseMoveIntervalID = setInterval(() => {
+            synthesizeNativeMouseEvent({
+              type: "mousemove",
+              target: div,
+              atCenter: true,
+            });
+          }, 100);
         });
         div.requestFullscreen();
       }

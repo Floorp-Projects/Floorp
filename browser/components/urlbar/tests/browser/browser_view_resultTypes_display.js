@@ -56,7 +56,12 @@ add_task(async function setup() {
 
   // Move the mouse away from the results panel, because hovering a result may
   // change its aspect (e.g. by showing a " - search with Engine" suffix).
-  await EventUtils.synthesizeNativeMouseMove(gURLBar.inputField);
+  await EventUtils.promiseNativeMouseEvent({
+    type: "mousemove",
+    target: gURLBar.inputField,
+    offsetX: 0,
+    offsetY: 0,
+  });
 });
 
 add_task(async function test_tab_switch_result() {

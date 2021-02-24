@@ -225,11 +225,11 @@ async function promiseClosePopup(popup) {
   await promise;
 
   // Move the cursor out of the panel area to avoid messing with other tests.
-  await EventUtils.synthesizeNativeMouseMove(
-    popup,
-    undefined,
-    undefined,
-    undefined,
-    popup.ownerGlobal
-  );
+  EventUtils.synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: popup,
+    offsetX: 0,
+    offsetY: 0,
+    win: popup.ownerGlobal,
+  });
 }
