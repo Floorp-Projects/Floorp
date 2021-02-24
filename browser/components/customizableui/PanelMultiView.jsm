@@ -1382,9 +1382,7 @@ var PanelView = class extends AssociatedToNode {
       if (value) {
         // The back button has a label in it - we want to select
         // the label that's a direct child of the header.
-        header.querySelector(
-          ".panel-header > label > span"
-        ).textContent = value;
+        header.querySelector(".panel-header > h1 > span").textContent = value;
       } else {
         header.remove();
       }
@@ -1414,12 +1412,12 @@ var PanelView = class extends AssociatedToNode {
       backButton.blur();
     });
 
-    let label = this.document.createXULElement("label");
+    let h1 = this.document.createElement("h1");
     let span = this.document.createElement("span");
     span.textContent = value;
-    label.appendChild(span);
+    h1.appendChild(span);
 
-    header.append(backButton, label);
+    header.append(backButton, h1);
     this.node.prepend(header);
 
     if (gProtonAppMenuEnabled) {
