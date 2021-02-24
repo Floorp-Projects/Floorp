@@ -205,7 +205,7 @@ void GamepadManager::AddGamepad(GamepadHandle aHandle, const nsAString& aId,
 
   // We store the gamepad related to its index given by the parent process,
   // and no duplicate index is allowed.
-  MOZ_ASSERT(!mGamepads.Get(aHandle, nullptr));
+  MOZ_ASSERT(!mGamepads.Contains(aHandle, nullptr));
   mGamepads.Put(aHandle, std::move(newGamepad));
   NewConnectionEvent(aHandle, true);
 }
