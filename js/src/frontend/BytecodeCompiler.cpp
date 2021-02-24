@@ -1022,10 +1022,10 @@ void frontend::FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
 }
 
 template <typename Unit>
-static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
-                                             CompilationInput& input,
-                                             CompilationStencil& stencil,
-                                             const Unit* units, size_t length) {
+static bool CompileLazyFunctionImpl(JSContext* cx, CompilationInput& input,
+                                    const Unit* units, size_t length) {
+  MOZ_ASSERT(input.source);
+
   MOZ_ASSERT(cx->compartment() == input.lazy->compartment());
 
   // We can only compile functions whose parents have previously been
@@ -1084,35 +1084,12 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
         .setAllowRelazify();
   }
 
-  if (!compilationState.finish(cx, stencil)) {
-    return false;
-  }
-
-  assertException.reset();
-  return true;
-}
-
-[[nodiscard]] bool frontend::CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
-    const char16_t* units, size_t length) {
-  return CompileLazyFunctionToStencilImpl(cx, input, stencil, units, length);
-}
-
-[[nodiscard]] bool frontend::CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
-    const mozilla::Utf8Unit* units, size_t length) {
-  return CompileLazyFunctionToStencilImpl(cx, input, stencil, units, length);
-}
-
-bool frontend::InstantiateStencilsForDelazify(
-    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil) {
-  AutoAssertReportedException assertException(cx);
-
   mozilla::DebugOnly<uint32_t> lazyFlags =
       static_cast<uint32_t>(input.lazy->immutableFlags());
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!CompilationStencil::instantiateStencils(cx, input, stencil,
+  BorrowingCompilationStencil borrowingStencil(compilationState);
+  if (!CompilationStencil::instantiateStencils(cx, input, borrowingStencil,
                                                gcOutput.get())) {
     return false;
   }
@@ -1123,8 +1100,26 @@ bool frontend::InstantiateStencilsForDelazify(
              gcOutput.get().script->immutableFlags().hasFlag(
                  JSScript::ImmutableFlags::HasNonSyntacticScope));
 
+  if (input.source->hasEncoder()) {
+    MOZ_ASSERT(!js::UseOffThreadParseGlobal());
+    if (!input.source->xdrEncodeFunctionStencil(cx, borrowingStencil)) {
+      return false;
+    }
+  }
+
   assertException.reset();
   return true;
+}
+
+bool frontend::CompileLazyFunction(JSContext* cx, CompilationInput& input,
+                                   const char16_t* units, size_t length) {
+  return CompileLazyFunctionImpl(cx, input, units, length);
+}
+
+bool frontend::CompileLazyFunction(JSContext* cx, CompilationInput& input,
+                                   const mozilla::Utf8Unit* units,
+                                   size_t length) {
+  return CompileLazyFunctionImpl(cx, input, units, length);
 }
 
 static JSFunction* CompileStandaloneFunction(

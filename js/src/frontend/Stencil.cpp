@@ -1290,7 +1290,7 @@ bool CompilationStencil::instantiateStencils(
 
       Rooted<CompilationInput> delazificationInput(
           cx, CompilationInput(input.options));
-      delazificationInput.get().initFromLazy(lazy);
+      delazificationInput.get().initFromLazy(lazy, input.source);
 
       delazificationInput.get().atomCache.stealBuffer(reusableAtomCache);
 
