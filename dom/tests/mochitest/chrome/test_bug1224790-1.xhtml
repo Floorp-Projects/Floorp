@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
     synthesizeMouseAtCenter(button, { type: 'mousemove' }, window);
     function click() {
       // The bug is not reproducible with synthesizeMouseAtCenter.
-      synthesizeNativeMouseClickAtCenter(button);
+      synthesizeNativeMouseClick({ target: button, atCenter: true });
     }
     click();
     // On debug build, it's possible that the click event handler is not

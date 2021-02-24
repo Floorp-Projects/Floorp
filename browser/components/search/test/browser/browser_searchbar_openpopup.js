@@ -4,20 +4,6 @@
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const kValues = ["long text", "long text 2", "long text 3"];
 
-function synthesizeNativeMouseClickAtCenterAsync(aElement) {
-  // Wait for the mouseup event to occur before continuing.
-  return new Promise((resolve, reject) => {
-    function eventOccurred(e) {
-      aElement.removeEventListener("mouseup", eventOccurred, true);
-      resolve();
-    }
-
-    aElement.addEventListener("mouseup", eventOccurred, true);
-
-    EventUtils.synthesizeNativeMouseClickAtCenter(aElement);
-  });
-}
-
 async function endCustomizing(aWindow = window) {
   if (aWindow.document.documentElement.getAttribute("customizing") != "true") {
     return true;
@@ -149,7 +135,11 @@ add_task(async function open_empty() {
   promise = promiseEvent(searchPopup, "popuphidden");
 
   info("Hiding popup");
-  await synthesizeNativeMouseClickAtCenterAsync(searchIcon);
+  await EventUtils.promiseNativeMouseClickAndWaitForEvent({
+    target: searchIcon,
+    atCenter: true,
+    eventTypeToWait: "mouseup",
+  });
   await promise;
 
   is(
@@ -239,7 +229,11 @@ add_task(async function open_empty_hiddenOneOffs() {
   promise = promiseEvent(searchPopup, "popuphidden");
 
   info("Hiding popup");
-  await synthesizeNativeMouseClickAtCenterAsync(searchIcon);
+  await EventUtils.promiseNativeMouseClickAndWaitForEvent({
+    target: searchIcon,
+    atCenter: true,
+    eventTypeToWait: "mouseup",
+  });
   await promise;
 
   await SpecialPowers.popPrefEnv();
@@ -578,7 +572,11 @@ add_task(async function dont_consume_clicks() {
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  await synthesizeNativeMouseClickAtCenterAsync(gURLBar.inputField);
+  await EventUtils.promiseNativeMouseClickAndWaitForEvent({
+    target: gURLBar.inputField,
+    atCenter: true,
+    eventTypeToWait: "mouseup",
+  });
   await promise;
 
   is(
