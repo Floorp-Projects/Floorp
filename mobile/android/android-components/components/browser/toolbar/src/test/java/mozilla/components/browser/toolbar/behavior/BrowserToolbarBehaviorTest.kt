@@ -303,31 +303,67 @@ class BrowserToolbarBehaviorTest {
     }
 
     @Test
-    fun `Behaviour shouldScroll if EngineView handled the MotionEvent`() {
+    fun `Behaviour shouldScroll if EngineView handled the MotionEvent and scrolling is enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
         val engineView: EngineView = mock()
         `when`(engineView.getInputResult()).thenReturn(EngineView.InputResult.INPUT_RESULT_HANDLED)
         behavior.engineView = engineView
+        behavior.isScrollEnabled = true
 
         assertTrue(behavior.shouldScroll)
     }
 
     @Test
-    fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent`() {
+    fun `Behaviour !shouldScroll if EngineView handled the MotionEvent and scrolling is !enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
         val engineView: EngineView = mock()
-        `when`(engineView.getInputResult()).thenReturn(EngineView.InputResult.INPUT_RESULT_UNHANDLED)
+        `when`(engineView.getInputResult()).thenReturn(EngineView.InputResult.INPUT_RESULT_HANDLED)
         behavior.engineView = engineView
+        behavior.isScrollEnabled = false
 
         assertFalse(behavior.shouldScroll)
     }
 
     @Test
-    fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent but the website`() {
+    fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent and scrolling is enabled`() {
+        val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
+        val engineView: EngineView = mock()
+        `when`(engineView.getInputResult()).thenReturn(EngineView.InputResult.INPUT_RESULT_UNHANDLED)
+        behavior.engineView = engineView
+        behavior.isScrollEnabled = true
+
+        assertFalse(behavior.shouldScroll)
+    }
+
+    @Test
+    fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent and scrolling is !enabled`() {
+        val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
+        val engineView: EngineView = mock()
+        `when`(engineView.getInputResult()).thenReturn(EngineView.InputResult.INPUT_RESULT_UNHANDLED)
+        behavior.engineView = engineView
+        behavior.isScrollEnabled = false
+
+        assertFalse(behavior.shouldScroll)
+    }
+
+    @Test
+    fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent but the website and scrolling is enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
         val engineView: EngineView = mock()
         `when`(engineView.getInputResult()).thenReturn(EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT)
         behavior.engineView = engineView
+        behavior.isScrollEnabled = true
+
+        assertFalse(behavior.shouldScroll)
+    }
+
+    @Test
+    fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent but the website and scrolling is !enabled`() {
+        val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
+        val engineView: EngineView = mock()
+        `when`(engineView.getInputResult()).thenReturn(EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT)
+        behavior.engineView = engineView
+        behavior.isScrollEnabled = false
 
         assertFalse(behavior.shouldScroll)
     }
@@ -477,6 +513,27 @@ class BrowserToolbarBehaviorTest {
 
         assertEquals(toolbarView, behavior.browserToolbar)
         assertEquals(engineView, behavior.engineView)
+    }
+
+    @Test
+    fun `enableScrolling sets isScrollEnabled to true`() {
+        val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
+
+        assertFalse(behavior.isScrollEnabled)
+        behavior.enableScrolling()
+
+        assertTrue(behavior.isScrollEnabled)
+    }
+
+    @Test
+    fun `disableScrolling sets isScrollEnabled to false`() {
+        val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
+        behavior.isScrollEnabled = true
+
+        assertTrue(behavior.isScrollEnabled)
+        behavior.disableScrolling()
+
+        assertFalse(behavior.isScrollEnabled)
     }
 
     private fun createDummyEngineView(context: Context): EngineView = DummyEngineView(context)

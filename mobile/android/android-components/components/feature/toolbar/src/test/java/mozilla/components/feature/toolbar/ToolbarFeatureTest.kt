@@ -20,4 +20,81 @@ class ToolbarFeatureTest {
 
         verify(toolbar).onStop()
     }
+
+    @Test
+    fun `GIVEN ToolbarFeature, WHEN start() is called THEN it should call controller#start()`() {
+        val mockedController: ToolbarBehaviorController = mock()
+        val feature = ToolbarFeature(mock(), mock(), mock()).apply {
+            controller = mockedController
+            // mock other dependencies to limit real code running and error-ing.
+            presenter = mock()
+            interactor = mock()
+        }
+
+        feature.start()
+
+        verify(mockedController).start()
+    }
+
+    @Test
+    fun `GIVEN ToolbarFeature, WHEN start() is called THEN it should call presenter#start()`() {
+        val mockedPresenter: ToolbarPresenter = mock()
+        val feature = ToolbarFeature(mock(), mock(), mock()).apply {
+            controller = mock()
+            presenter = mockedPresenter
+            interactor = mock()
+        }
+
+        feature.start()
+
+        verify(mockedPresenter).start()
+    }
+
+    @Test
+    fun `GIVEN ToolbarFeature, WHEN start() is called THEN it should call interactor#start()`() {
+        val mockedInteractor: ToolbarInteractor = mock()
+        val feature = ToolbarFeature(mock(), mock(), mock()).apply {
+            controller = mock()
+            presenter = mock()
+            interactor = mockedInteractor
+        }
+
+        feature.start()
+
+        verify(mockedInteractor).start()
+    }
+
+    @Test
+    fun `GIVEN ToolbarFeature, WHEN stop() is called THEN it should call controller#stop()`() {
+        val mockedController: ToolbarBehaviorController = mock()
+        val feature = ToolbarFeature(mock(), mock(), mock()).apply {
+            controller = mockedController
+        }
+
+        feature.stop()
+
+        verify(mockedController).stop()
+    }
+
+    @Test
+    fun `GIVEN ToolbarFeature, WHEN stop() is called THEN it should call presenter#stop()`() {
+        val mockedPresenter: ToolbarPresenter = mock()
+        val feature = ToolbarFeature(mock(), mock(), mock()).apply {
+            presenter = mockedPresenter
+        }
+
+        feature.stop()
+
+        verify(mockedPresenter).stop()
+    }
+
+    @Test
+    fun `GIVEN ToolbarFeature, WHEN onBackPressed() is called THEN it should call toolbar#onBackPressed()`() {
+        val toolbar: Toolbar = mock()
+        val feature = ToolbarFeature(toolbar, store = mock(), loadUrlUseCase = mock())
+
+        feature.onBackPressed()
+
+        verify(toolbar).onBackPressed()
+    }
 }

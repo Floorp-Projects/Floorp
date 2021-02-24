@@ -53,6 +53,9 @@ class BrowserToolbarBehavior(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var startedScroll = false
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var isScrollEnabled = false
+
     /**
      * Reference to [EngineView] used to check user's [android.view.MotionEvent]s.
      */
@@ -77,7 +80,7 @@ class BrowserToolbarBehavior(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val shouldScroll: Boolean
-        get() = engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED
+        get() = engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED && isScrollEnabled
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var gesturesDetector: BrowserGestureDetector = createGestureDetector()
@@ -155,6 +158,24 @@ class BrowserToolbarBehavior(
      */
     fun forceCollapse(toolbar: BrowserToolbar) {
         yTranslator.collapseWithAnimation(toolbar)
+    }
+
+    /**
+     * Allow this toolbar can be animated.
+     *
+     * @see disableScrolling
+     */
+    fun enableScrolling() {
+        isScrollEnabled = true
+    }
+
+    /**
+     * Disable scrolling this toolbar irrespective of the intrinsic checks.
+     *
+     * @see enableScrolling
+     */
+    fun disableScrolling() {
+        isScrollEnabled = false
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

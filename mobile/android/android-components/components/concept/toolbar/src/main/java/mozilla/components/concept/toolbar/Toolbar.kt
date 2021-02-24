@@ -173,6 +173,19 @@ interface Toolbar {
     fun dismissMenu()
 
     /**
+     * Enable scrolling of the dynamic toolbar. Restore this functionality after [disableScrolling] stopped it.
+     *
+     * The toolbar may have other intrinsic checks depending on which the toolbar will be animated or not.
+     */
+    fun enableScrolling()
+
+    /**
+     * Completely disable scrolling of the dynamic toolbar.
+     * Use [enableScrolling] to restore the functionality.
+     */
+    fun disableScrolling()
+
+    /**
      * Listener to be invoked when the user edits the URL.
      */
     interface OnEditListener {

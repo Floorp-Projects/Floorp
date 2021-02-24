@@ -96,6 +96,14 @@ class ToolbarInteractorTest {
         override fun dismissMenu() {
             fail()
         }
+
+        override fun enableScrolling() {
+            fail()
+        }
+
+        override fun disableScrolling() {
+            fail()
+        }
     }
 
     @Test

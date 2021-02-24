@@ -5,12 +5,13 @@
 package mozilla.components.feature.toolbar
 
 import androidx.annotation.ColorInt
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
-import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 
 /**
  * A function representing the search use case, accepting
@@ -29,8 +30,12 @@ class ToolbarFeature(
     customTabId: String? = null,
     urlRenderConfiguration: UrlRenderConfiguration? = null
 ) : LifecycleAwareFeature, UserInteractionHandler {
-    private val presenter = ToolbarPresenter(toolbar, store, customTabId, urlRenderConfiguration)
-    private val interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
+    @VisibleForTesting
+    internal var presenter = ToolbarPresenter(toolbar, store, customTabId, urlRenderConfiguration)
+    @VisibleForTesting
+    internal var interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
+    @VisibleForTesting
+    internal var controller = ToolbarBehaviorController(toolbar, store, customTabId)
 
     /**
      * Start feature: App is in the foreground.
@@ -38,6 +43,7 @@ class ToolbarFeature(
     override fun start() {
         interactor.start()
         presenter.start()
+        controller.start()
     }
 
     /**
@@ -52,6 +58,7 @@ class ToolbarFeature(
      */
     override fun stop() {
         presenter.stop()
+        controller.stop()
         toolbar.onStop()
     }
 
