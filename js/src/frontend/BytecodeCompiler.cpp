@@ -871,13 +871,18 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
   return true;
 }
 
+// Compile module, and return it as one of:
+//   * ExtensibleCompilationStencil (without instantiation)
+//   * CompilationStencil (without instantiation, has no external dependency)
+//   * CompilationGCOutput (with instantiation).
 template <typename Unit>
-static UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
-    JSContext* cx, CompilationInput& input, SourceText<Unit>& srcBuf) {
+[[nodiscard]] static bool ParseModuleToStencilAndMaybeInstantiate(
+    JSContext* cx, CompilationInput& input, SourceText<Unit>& srcBuf,
+    BytecodeCompilerOutput& output) {
   MOZ_ASSERT(srcBuf.get());
 
   if (!input.initForModule(cx)) {
-    return nullptr;
+    return false;
   }
 
   AutoAssertReportedException assertException(cx);
@@ -885,25 +890,55 @@ static UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ModuleCompiler<Unit> compiler(cx, allocScope, input, srcBuf);
   if (!compiler.init(cx)) {
-    return nullptr;
+    return false;
   }
 
   if (!compiler.compile(cx)) {
-    return nullptr;
+    return false;
   }
 
-  UniquePtr<CompilationStencil> stencil(cx->new_<CompilationStencil>(input));
-  if (!stencil) {
-    return nullptr;
-  }
+  if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
+    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
+        std::move(compiler.stencil()));
+    if (!stencil) {
+      return false;
+    }
+    output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
+  } else if (output.is<UniquePtr<CompilationStencil>>()) {
+    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
+                                       JS::ProfilingCategoryPair::JS_Parsing);
 
-  if (!compiler.stencil().finish(cx, *stencil)) {
-    return nullptr;
+    auto stencil = cx->make_unique<CompilationStencil>(input);
+    if (!stencil) {
+      return false;
+    }
+
+    if (!compiler.stencil().finish(cx, *stencil)) {
+      return false;
+    }
+
+    output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
+  } else {
+    BorrowingCompilationStencil borrowingStencil(compiler.stencil());
+    if (!InstantiateStencils(cx, input, borrowingStencil,
+                             *(output.as<CompilationGCOutput*>()))) {
+      return false;
+    }
   }
 
   assertException.reset();
+  return true;
+}
 
-  return stencil;
+template <typename Unit>
+UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
+    JSContext* cx, CompilationInput& input, SourceText<Unit>& srcBuf) {
+  using OutputType = UniquePtr<CompilationStencil>;
+  BytecodeCompilerOutput output((OutputType()));
+  if (!ParseModuleToStencilAndMaybeInstantiate(cx, input, srcBuf, output)) {
+    return nullptr;
+  }
+  return std::move(output.as<OutputType>());
 }
 
 UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
@@ -914,6 +949,29 @@ UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
 UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
     JSContext* cx, CompilationInput& input, SourceText<Utf8Unit>& srcBuf) {
   return ParseModuleToStencilImpl(cx, input, srcBuf);
+}
+
+template <typename Unit>
+UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencilImpl(
+    JSContext* cx, CompilationInput& input, SourceText<Unit>& srcBuf) {
+  using OutputType = UniquePtr<ExtensibleCompilationStencil>;
+  BytecodeCompilerOutput output((OutputType()));
+  if (!ParseModuleToStencilAndMaybeInstantiate(cx, input, srcBuf, output)) {
+    return nullptr;
+  }
+  return std::move(output.as<OutputType>());
+}
+
+UniquePtr<ExtensibleCompilationStencil>
+frontend::ParseModuleToExtensibleStencil(JSContext* cx, CompilationInput& input,
+                                         SourceText<char16_t>& srcBuf) {
+  return ParseModuleToExtensibleStencilImpl(cx, input, srcBuf);
+}
+
+UniquePtr<ExtensibleCompilationStencil>
+frontend::ParseModuleToExtensibleStencil(JSContext* cx, CompilationInput& input,
+                                         SourceText<Utf8Unit>& srcBuf) {
+  return ParseModuleToExtensibleStencilImpl(cx, input, srcBuf);
 }
 
 template <typename Unit>
@@ -930,14 +988,10 @@ static ModuleObject* CompileModuleImpl(
   options.setModule();
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  UniquePtr<CompilationStencil> stencil =
-      ParseModuleToStencil(cx, input.get(), srcBuf);
-  if (!stencil) {
-    return nullptr;
-  }
-
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
+  BytecodeCompilerOutput output(gcOutput.address());
+  if (!ParseModuleToStencilAndMaybeInstantiate(cx, input.get(), srcBuf,
+                                               output)) {
     return nullptr;
   }
 
