@@ -309,12 +309,12 @@ class ScopeStencil {
 
  public:
   static bool createForFunctionScope(
-      JSContext* cx, CompilationStencil& stencil,
-      CompilationState& compilationState, FunctionScope::ParserData* dataArg,
-      bool hasParameterExprs, bool needsEnvironment, ScriptIndex functionIndex,
-      bool isArrow, mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+      JSContext* cx, LifoAlloc& alloc, CompilationState& compilationState,
+      FunctionScope::ParserData* dataArg, bool hasParameterExprs,
+      bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
+      mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
-  static bool createForLexicalScope(JSContext* cx, CompilationStencil& stencil,
+  static bool createForLexicalScope(JSContext* cx, LifoAlloc& alloc,
                                     CompilationState& compilationState,
                                     ScopeKind kind,
                                     LexicalScope::ParserData* dataArg,
@@ -322,32 +322,32 @@ class ScopeStencil {
                                     mozilla::Maybe<ScopeIndex> enclosing,
                                     ScopeIndex* index);
 
-  static bool createForVarScope(JSContext* cx, CompilationStencil& stencil,
+  static bool createForVarScope(JSContext* cx, LifoAlloc& alloc,
                                 CompilationState& compilationState,
                                 ScopeKind kind, VarScope::ParserData* dataArg,
                                 uint32_t firstFrameSlot, bool needsEnvironment,
                                 mozilla::Maybe<ScopeIndex> enclosing,
                                 ScopeIndex* index);
 
-  static bool createForGlobalScope(JSContext* cx, CompilationStencil& stencil,
+  static bool createForGlobalScope(JSContext* cx, LifoAlloc& alloc,
                                    CompilationState& compilationState,
                                    ScopeKind kind,
                                    GlobalScope::ParserData* dataArg,
                                    ScopeIndex* index);
 
-  static bool createForEvalScope(JSContext* cx, CompilationStencil& stencil,
+  static bool createForEvalScope(JSContext* cx, LifoAlloc& alloc,
                                  CompilationState& compilationState,
                                  ScopeKind kind, EvalScope::ParserData* dataArg,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
-  static bool createForModuleScope(JSContext* cx, CompilationStencil& stencil,
+  static bool createForModuleScope(JSContext* cx, LifoAlloc& alloc,
                                    CompilationState& compilationState,
                                    ModuleScope::ParserData* dataArg,
                                    mozilla::Maybe<ScopeIndex> enclosing,
                                    ScopeIndex* index);
 
-  static bool createForWithScope(JSContext* cx, CompilationStencil& stencil,
+  static bool createForWithScope(JSContext* cx, LifoAlloc& alloc,
                                  CompilationState& compilationState,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
