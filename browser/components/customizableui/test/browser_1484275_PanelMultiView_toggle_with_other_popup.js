@@ -36,7 +36,8 @@ add_task(async function test_PanelMultiView_toggle_with_other_popup() {
       // 3. Click the button to which the main menu is anchored. We need a native
       // mouse event to simulate the exact platform behavior with popups.
       let clickFn = () =>
-        EventUtils.promiseNativeMouseClickAndWaitForEvent({
+        EventUtils.promiseNativeMouseEventAndWaitForEvent({
+          type: "click",
           target: document.getElementById("PanelUI-button"),
           atCenter: true,
           eventTypeToWait: "mouseup",

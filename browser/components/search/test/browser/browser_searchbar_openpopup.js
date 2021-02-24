@@ -135,7 +135,8 @@ add_task(async function open_empty() {
   promise = promiseEvent(searchPopup, "popuphidden");
 
   info("Hiding popup");
-  await EventUtils.promiseNativeMouseClickAndWaitForEvent({
+  await EventUtils.promiseNativeMouseEventAndWaitForEvent({
+    type: "click",
     target: searchIcon,
     atCenter: true,
     eventTypeToWait: "mouseup",
@@ -229,7 +230,8 @@ add_task(async function open_empty_hiddenOneOffs() {
   promise = promiseEvent(searchPopup, "popuphidden");
 
   info("Hiding popup");
-  await EventUtils.promiseNativeMouseClickAndWaitForEvent({
+  await EventUtils.promiseNativeMouseEventAndWaitForEvent({
+    type: "click",
     target: searchIcon,
     atCenter: true,
     eventTypeToWait: "mouseup",
@@ -572,7 +574,8 @@ add_task(async function dont_consume_clicks() {
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  await EventUtils.promiseNativeMouseClickAndWaitForEvent({
+  await EventUtils.promiseNativeMouseEventAndWaitForEvent({
+    type: "click",
     target: gURLBar.inputField,
     atCenter: true,
     eventTypeToWait: "mouseup",

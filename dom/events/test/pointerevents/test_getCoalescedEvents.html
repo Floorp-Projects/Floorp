@@ -74,7 +74,7 @@ function runTests() {
       synthesizeNativeMouseMove(target0, 10, 10, () => {
         synthesizeNativeMouseMove(target0, 15, 15, () => {
           synthesizeNativeMouseMove(target0, 20, 20, () => {
-            synthesizeNativeMouseClick({ target: target0, offsetX: 20, offsetY: 20 });
+            synthesizeNativeMouseEvent({ type: "click", target: target0, offsetX: 20, offsetY: 20 });
           });
         });
       });

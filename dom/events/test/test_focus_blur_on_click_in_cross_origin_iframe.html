@@ -47,7 +47,7 @@ add_task(async () => {
   await promiseApzFlushedRepaints();
 
   // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
-  // so we use synthesizeNativeMouseClick instead.
+  // so we use promiseNativeMouseEventWithAPZ instead.
   const [expectedScreenX, expectedScreenY] =
     getScreenPosition(iframe, 10, 10);
 
@@ -78,7 +78,8 @@ add_task(async () => {
     });
   });
 
-  await promiseNativeMouseClick({
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
     target: iframe,
     screenX: expectedScreenX,
     screenY: expectedScreenY,
@@ -104,7 +105,8 @@ add_task(async () => {
     });
   });
 
-  await promiseNativeMouseClick({
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
     target: iframe,
     screenX: expectedScreenX,
     screenY: expectedScreenY,
