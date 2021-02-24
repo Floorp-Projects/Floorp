@@ -295,7 +295,7 @@
              tabspecific="true"
              aria-labelledby="editBookmarkPanelTitle">
         <box class="panel-header">
-          <html:h1 id="editBookmarkPanelTitle"/>
+          <label id="editBookmarkPanelTitle"/>
           <toolbarbutton tabindex="0" id="editBookmarkPanelInfoButton" class="panel-info-button" oncommand="StarUI.toggleRecommendation();" >
             <image/>
           </toolbarbutton>
@@ -975,7 +975,7 @@
                         closemenu="none"
                         oncommand="gSync.toggleAccountPanel(this, event)"/>
         </toolbaritem>
-        <toolbarseparator class="proton-zap"/>
+        <toolbarseparator/>
         <toolbarbutton id="appMenu-new-tab-button2"
                        class="subviewbutton"
                        label="&tabCmd.label;"
@@ -1111,14 +1111,13 @@
                        class="subviewbutton subviewbutton-iconic"
                        command="Tools:Sanitize"/>
         <toolbarseparator/>
-        <html:h2 id="panelMenu_recentHistory" class="subview-subheader">&appMenuHistory.recentHistory.label;</html:h2>
+        <label value="&appMenuHistory.recentHistory.label;"
+               class="subview-subheader"/>
         <toolbaritem id="appMenu_historyMenu"
                      orient="vertical"
                      smoothscroll="false"
                      flatList="true"
-                     tooltip="bhTooltip"
-                     role="group"
-                     aria-labelledby="panelMenu_recentHistory">
+                     tooltip="bhTooltip">
           <!-- history menu items will go here -->
         </toolbaritem>
       </vbox>
@@ -1160,16 +1159,14 @@
                        data-l10n-args='{ "isVisible": false }'
                        oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmark-tools');"/>
         <toolbarseparator/>
-        <html:h2 id="panelMenu_recentBookmarks"
-            data-l10n-id="bookmarks-recent-bookmarks-panel-subheader"
-            class="subview-subheader"/>
+        <label id="panelMenu_recentBookmarks"
+               data-l10n-id="bookmarks-recent-bookmarks-panel"
+               class="subview-subheader"/>
         <toolbaritem id="panelMenu_bookmarksMenu"
                      orient="vertical"
                      smoothscroll="false"
                      flatList="true"
-                     tooltip="bhTooltip"
-                     role="group"
-                     aria-labelledby="panelMenu_recentBookmarks">
+                     tooltip="bhTooltip">
           <!-- bookmarks menu items will go here -->
         </toolbaritem>
       </vbox>
@@ -1341,13 +1338,10 @@
                        data-l10n-id="appmenu-customizetoolbar"
                        command="cmd_CustomizeToolbars"/>
         <toolbarseparator/>
-        <html:h2 id="appmenu-developer-tools"
-            data-l10n-id="appmenu-developer-tools-subheader"
-            class="subview-subheader"/>
-        <vbox id="appmenu-developer-tools-view"
-              class="panel-subview-body"
-              role="group"
-              aria-labelledby="appmenu-developer-tools">
+        <label id="appmenu-developer-tools"
+               data-l10n-id="appmenu-developer-tools-subheader"
+               class="subview-subheader"/>
+        <vbox id="appmenu-developer-tools-view" class="panel-subview-body">
           <!-- Developer Tools menu items are inserted here -->
         </vbox>
       </vbox>
