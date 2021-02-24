@@ -40,9 +40,11 @@ add_task(async function task() {
 
   const xhrUrl = TEST_PATH + "test-data.json";
   const messageNode = await waitFor(() => findMessage(hud, xhrUrl));
-  const statusCodeNode = messageNode.querySelector(".status-code");
-  info("Network message found.");
+  ok(!!messageNode, "Network message found.");
 
+  const statusCodeNode = await waitFor(() =>
+    messageNode.querySelector(".status-code")
+  );
   is(
     statusCodeNode.title,
     l10n.getStr("webConsoleMoreInfoLabel"),
