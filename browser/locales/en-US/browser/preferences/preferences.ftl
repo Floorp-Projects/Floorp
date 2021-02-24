@@ -1352,10 +1352,6 @@ space-alert-over-5gb-message =
        *[other] { -brand-short-name } is running out of disk space. Website contents may not display properly. You can clear stored data in Preferences > Privacy & Security > Cookies and Site Data.
     }
 
-space-alert-under-5gb-ok-button =
-    .label = OK, Got it
-    .accesskey = K
-
 space-alert-under-5gb-message = { -brand-short-name } is running out of disk space. Website contents may not display properly. Visit “Learn More” to optimize your disk usage for better browsing experience.
 
 ## Privacy Section - HTTPS-Only

@@ -5,5 +5,5 @@
 # The question portion of the following message should have the <strong> and </strong> tags surrounding it.
 default-browser-notification-message = <strong>Set { -brand-short-name } as your default browser?</strong> Get fast, safe, and private browsing whenever you use the web.
 default-browser-notification-button =
-    .label = Set as Default
+    .label = Set as default
     .accesskey = S
