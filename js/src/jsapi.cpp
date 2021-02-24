@@ -5784,7 +5784,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  frontend::CompilationStencil stencil(input.get());
+  frontend::CompilationStencil stencil(nullptr);
 
   JS::TranscodeResult res =
       DecodeStencil(cx, buffer, input.get(), stencil, cursorIndex);
@@ -5830,7 +5830,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
 
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  frontend::CompilationStencil stencil(input.get());
+  frontend::CompilationStencil stencil(nullptr);
 
   JS::TranscodeResult res =
       DecodeStencil(cx, buffer, input.get(), stencil, cursorIndex);

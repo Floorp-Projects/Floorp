@@ -3044,7 +3044,8 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   if (!input.get().initForGlobal(cx)) {
     return TranscodeResult::Throw;
   }
-  UniquePtr<JS::Stencil> stencil(MakeUnique<CompilationStencil>(input.get()));
+  UniquePtr<JS::Stencil> stencil(
+      MakeUnique<CompilationStencil>(input.get().source));
   if (!stencil) {
     return TranscodeResult::Throw;
   }

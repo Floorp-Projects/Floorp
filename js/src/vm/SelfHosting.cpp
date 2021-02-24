@@ -2844,7 +2844,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
       return false;
     }
 
-    frontend::CompilationStencil stencil(input.get());
+    frontend::CompilationStencil stencil(input.get().source);
     if (!stencil.deserializeStencils(cx, input.get(), selfHostedXDR,
                                      &decodeOk)) {
       return false;
