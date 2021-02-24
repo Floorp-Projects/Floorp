@@ -339,7 +339,8 @@
         this.style.MozUserFocus = "ignore";
       } else if (
         event.target.classList.contains("tab-close-button") ||
-        this._isEventForTabSoundIcon(event) ||
+        (this._isEventForTabSoundIcon(event) &&
+          !event.target.className.includes("tab-icon-sound-pip-label")) ||
         event.target.classList.contains("tab-icon-overlay")
       ) {
         eventMaySelectTab = false;
