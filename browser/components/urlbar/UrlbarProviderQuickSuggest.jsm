@@ -45,7 +45,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * The type of the provider.
    */
   get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+    return UrlbarUtils.PROVIDER_TYPE.NETWORK;
   }
 
   /**
@@ -109,7 +109,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     let result = new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
       payload
     );
     result.suggestedIndex = UrlbarPrefs.get("quicksuggest.suggestedIndex");
