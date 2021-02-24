@@ -145,9 +145,9 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         data->slotInfo.constStart = global.const_start;
         data->slotInfo.length = numBindings;
 
-        if (!ScopeStencil::createForGlobalScope(cx, stencil, compilationState,
-                                                ScopeKind::Global, data,
-                                                &index)) {
+        if (!ScopeStencil::createForGlobalScope(
+                cx, stencil.alloc, compilationState, ScopeKind::Global, data,
+                &index)) {
           return false;
         }
         break;
@@ -174,8 +174,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         uint32_t firstFrameSlot = var.first_frame_slot;
         ScopeIndex enclosingIndex(var.enclosing);
         if (!ScopeStencil::createForVarScope(
-                cx, stencil, compilationState, ScopeKind::FunctionBodyVar, data,
-                firstFrameSlot, var.function_has_extensible_scope,
+                cx, stencil.alloc, compilationState, ScopeKind::FunctionBodyVar,
+                data, firstFrameSlot, var.function_has_extensible_scope,
                 mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
@@ -203,7 +203,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         uint32_t firstFrameSlot = lexical.first_frame_slot;
         ScopeIndex enclosingIndex(lexical.enclosing);
         if (!ScopeStencil::createForLexicalScope(
-                cx, stencil, compilationState, ScopeKind::Lexical, data,
+                cx, stencil.alloc, compilationState, ScopeKind::Lexical, data,
                 firstFrameSlot, mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
@@ -240,7 +240,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         ScopeIndex enclosingIndex(function.enclosing);
         if (!ScopeStencil::createForFunctionScope(
-                cx, stencil, compilationState, data, hasParameterExprs,
+                cx, stencil.alloc, compilationState, data, hasParameterExprs,
                 needsEnvironment, functionIndex, isArrow,
                 mozilla::Some(enclosingIndex), &index)) {
           return false;
