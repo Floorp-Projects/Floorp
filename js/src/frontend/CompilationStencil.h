@@ -597,9 +597,32 @@ inline const CompilationStencil& BaseCompilationStencil::asCompilationStencil()
   return *static_cast<const CompilationStencil*>(this);
 }
 
-struct MOZ_RAII CompilationState {
-  // Until we have dealt with Atoms in the front end, we need to hold
-  // onto them.
+// Temporary space to accumulate stencil data.
+// Copied to BaseCompilationStencil by `CompilationState::finish` method.
+//
+// See BaseCompilationStencil for each field's description.
+struct ExtensibleCompilationStencil {
+  Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
+  Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
+
+  Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
+
+  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
+  Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
+
+  Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
+  Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
+  Vector<ObjLiteralStencil, 0, js::SystemAllocPolicy> objLiteralData;
+
+  StencilAsmJSContainer asmJS;
+
+  // Table of parser atoms for this compilation.
+  ParserAtomsTable parserAtoms;
+
+  ExtensibleCompilationStencil(JSContext* cx, LifoAlloc& stencilAlloc);
+};
+
+struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
   Directives directives;
 
   ScopeContext scopeContext;
@@ -608,26 +631,6 @@ struct MOZ_RAII CompilationState {
   LifoAllocScope& allocScope;
 
   CompilationInput& input;
-
-  // Temporary space to accumulate stencil data.
-  // Copied to BaseCompilationStencil by `finish` method.
-  //
-  // See corresponding BaseCompilationStencil fields for desription.
-  Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
-  Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;
-  Vector<ObjLiteralStencil, 0, js::SystemAllocPolicy> objLiteralData;
-  Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
-  Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
-  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
-  Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
-  Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
-
-  // Accumulate asmJS modules here and then transfer to the stencil during the
-  // `finish` method.
-  StencilAsmJSContainer asmJS;
-
-  // Table of parser atoms for this compilation.
-  ParserAtomsTable parserAtoms;
 
   // The number of functions that *will* have bytecode.
   // This doesn't count top-level non-function script.
