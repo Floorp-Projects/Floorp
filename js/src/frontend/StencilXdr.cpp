@@ -624,6 +624,10 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
     return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
   }
 
+  if (mode == XDR_DECODE) {
+    stencil.hasExternalDependency = true;
+  }
+
   MOZ_TRY(XDRBaseCompilationStencil(xdr, stencil));
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra));

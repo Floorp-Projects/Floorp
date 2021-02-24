@@ -507,6 +507,10 @@ struct CompilationStencil : public BaseCompilationStencil {
 
   static constexpr size_t LifoAllocChunkSize = 512;
 
+  // Set to true if any pointer/span contains external data instead of
+  // LifoAlloc or owned memory.
+  bool hasExternalDependency = false;
+
   // The lifetime of this CompilationStencil may be managed by stack allocation,
   // UniquePtr<T>, or RefPtr<T>. If a RefPtr is used, this ref-count will track
   // the lifetime, otherwise it is ignored.
