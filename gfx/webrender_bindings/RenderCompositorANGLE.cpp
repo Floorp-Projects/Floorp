@@ -940,9 +940,12 @@ void RenderCompositorANGLE::AddSurface(
   mDCLayerTree->AddSurface(aId, aTransform, aClipRect, aImageRendering);
 }
 
-void RenderCompositorANGLE::GetCompositorCapabilities(
-    CompositorCapabilities* aCaps) {
-  aCaps->virtual_surface_size = VIRTUAL_SURFACE_SIZE;
+CompositorCapabilities RenderCompositorANGLE::GetCompositorCapabilities() {
+  CompositorCapabilities caps;
+
+  caps.virtual_surface_size = VIRTUAL_SURFACE_SIZE;
+
+  return caps;
 }
 
 void RenderCompositorANGLE::EnableNativeCompositor(bool aEnable) {
