@@ -105,13 +105,11 @@ if (typeof Mozilla == "undefined") {
    * - appMenu
    * - backForward
    * - bookmarks
-   * - customize
    * - devtools
    * - forget
    * - help
    * - home
    * - library
-   * - pageActionButton
    * - pageAction-bookmark
    * - pageAction-copyURL
    * - pageAction-emailLink
