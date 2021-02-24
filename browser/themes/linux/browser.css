@@ -18,7 +18,7 @@
   --toolbarbutton-icon-fill-opacity: .85;
 
   --panel-separator-color: ThreeDShadow;
-  --arrowpanel-dimmed: hsla(0,0%,80%,.35);
+  --arrowpanel-dimmed: hsla(0,0%,80%,.3);
   --arrowpanel-dimmed-further: hsla(0,0%,80%,.5);
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
@@ -204,9 +204,11 @@ menuitem.bookmark-item {
 
 %include ../shared/urlbarView.inc.css
 
-:root {
+:root:not(:-moz-lwtheme) {
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
   --urlbar-popup-action-color: -moz-nativehyperlinktext;
+  --autocomplete-popup-highlight-background: Highlight;
+  --autocomplete-popup-highlight-color: HighlightText;
 }
 
 /* Translation infobar */
