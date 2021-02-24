@@ -64,17 +64,11 @@ assert_command("TAR", tar)
 rsync = os.environ.get("RSYNC", find_command(["rsync"]))
 assert_command("RSYNC", rsync)
 
-autoconf = os.environ.get(
-    "AUTOCONF",
-    find_command(
-        [
-            "autoconf-2.13",
-            "autoconf2.13",
-            "autoconf213",
-        ]
-    ),
-)
-assert_command("AUTOCONF", autoconf)
+m4 = os.environ.get("M4", find_command(["m4"]))
+assert_command("M4", m4)
+
+awk = os.environ.get("AWK", find_command(["awk"]))
+assert_command("AWK", awk)
 
 src_dir = Path(os.environ.get("SRC_DIR", Path(__file__).parent.absolute()))
 mozjs_name = os.environ.get("MOZJS_NAME", "mozjs")
@@ -104,7 +98,8 @@ tar_opts = ["-Jcf"]
 print("Environment:")
 print("    TAR = {}".format(tar))
 print("    RSYNC = {}".format(rsync))
-print("    AUTOCONF = {}".format(autoconf))
+print("    M4 = {}".format(m4))
+print("    AWK = {}".format(awk))
 print("    STAGING = {}".format(staging_dir))
 print("    DIST = {}".format(dist_dir))
 print("    SRC_DIR = {}".format(src_dir))
@@ -345,15 +340,22 @@ def generate_configure():
 
     js_src_dir = topsrc_dir / "js" / "src"
 
+    env = os.environ.copy()
+    env["M4"] = m4
+    env["AWK"] = awk
+    env["AC_MACRODIR"] = topsrc_dir / "build" / "autoconf"
+
     with dest_old_configure_file.open("w") as f:
         subprocess.run(
             [
-                str(autoconf),
+                "sh",
+                str(topsrc_dir / "build" / "autoconf" / "autoconf.sh"),
                 "--localdir={}".format(js_src_dir),
                 str(src_old_configure_in_file),
             ],
             stdout=f,
             check=True,
+            env=env,
         )
 
 
