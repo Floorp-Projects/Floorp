@@ -67,6 +67,7 @@ add_task(async () => {
     target: iframes[0],
     screenX: expectedScreenXInSameOrigin,
     screenY: expectedScreenYInSameOrigin,
+    scale: "inScreenPixels",
   });
 
   const eventInSameOrigin = await promiseForSameOrigin;
@@ -82,6 +83,7 @@ add_task(async () => {
     target: iframes[0],
     screenX: expectedScreenXInCrossOrigin,
     screenY: expectedScreenYInCrossOrigin,
+    scale: "inScreenPixels",
   });
 
   const promiseForCrossOrigin = new Promise(resolve => {

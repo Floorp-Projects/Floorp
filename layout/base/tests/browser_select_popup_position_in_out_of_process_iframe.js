@@ -27,7 +27,6 @@ function openSelectPopup(selectPopup, x, y, win) {
     target: win.document.documentElement,
     screenX: x,
     screenY: y,
-    scale: "screenPixelsPerCSSPixel",
   });
 
   return popupShownPromise;
