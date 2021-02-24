@@ -31,7 +31,9 @@ already_AddRefed<FOG> FOG::GetSingleton() {
 void FOG::Shutdown() { glean::impl::fog_shutdown(); }
 
 NS_IMETHODIMP
-FOG::InitializeFOG() { return glean::impl::fog_init(); }
+FOG::InitializeFOG(const nsACString& aDataPathOverride) {
+  return glean::impl::fog_init(&aDataPathOverride);
+}
 
 NS_IMETHODIMP
 FOG::SetLogPings(bool aEnableLogPings) {

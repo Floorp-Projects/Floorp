@@ -34,7 +34,8 @@ void GTest_FOG_ExpectFailure(const char* aMessage) {
 TEST(FOG, FogInitDoesntCrash)
 {
   Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
-  ASSERT_EQ(NS_OK, fog_init());
+  const nsCString empty;
+  ASSERT_EQ(NS_OK, fog_init(&empty));
 }
 
 extern "C" void Rust_MeasureInitializeTime();
