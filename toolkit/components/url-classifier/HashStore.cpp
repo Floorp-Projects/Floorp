@@ -153,7 +153,7 @@ nsresult TableUpdateV2::NewMissPrefix(const Prefix& aPrefix) {
 void TableUpdateV4::NewPrefixes(int32_t aSize, const nsACString& aPrefixes) {
   NS_ENSURE_TRUE_VOID(aSize >= 4 && aSize <= COMPLETE_SIZE);
   NS_ENSURE_TRUE_VOID(aPrefixes.Length() % aSize == 0);
-  NS_ENSURE_TRUE_VOID(!mPrefixesMap.Get(aSize));
+  NS_ENSURE_TRUE_VOID(!mPrefixesMap.Contains(aSize));
 
   int numOfPrefixes = aPrefixes.Length() / aSize;
 
