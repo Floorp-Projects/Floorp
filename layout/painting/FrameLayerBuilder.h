@@ -107,8 +107,6 @@ class DisplayItemData final {
   const DisplayItemClip& GetClip() const { return mClip; }
   void Invalidate() { mIsInvalid = true; }
   void NotifyRemoved();
-  void SetItem(nsPaintedDisplayItem* aItem) { mItem = aItem; }
-  nsPaintedDisplayItem* GetItem() const { return mItem; }
   nsIFrame* FirstFrame() const { return mFrameList[0]; }
   layers::BasicLayerManager* InactiveManager() const {
     return mInactiveManager;

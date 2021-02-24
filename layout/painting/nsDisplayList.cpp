@@ -156,24 +156,6 @@ bool ShouldBuildItemForEvents(const DisplayItemType aType) {
          (GetDisplayItemFlagsForType(aType) & TYPE_IS_CONTAINER);
 }
 
-void UpdateDisplayItemData(nsPaintedDisplayItem* aItem) {
-  auto* array = aItem->Frame()->DisplayItemData();
-  if (!array) {
-    return;
-  }
-
-  for (auto* did : *array) {
-    if (did->GetDisplayItemKey() == aItem->GetPerFrameKey() &&
-        did->GetLayer()->AsPaintedLayer()) {
-      if (!did->HasMergedFrames()) {
-        aItem->SetDisplayItemData(did, did->GetLayer()->Manager());
-      }
-
-      return;
-    }
-  }
-}
-
 static bool ItemTypeSupportsHitTesting(const DisplayItemType aType) {
   switch (aType) {
     case DisplayItemType::TYPE_BACKGROUND:
