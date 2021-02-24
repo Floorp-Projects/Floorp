@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835044
         onload="startTest()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <panel id="thepanel" level="parent"
        onpopupshown="sendMouseEvent();"
@@ -32,39 +33,35 @@ let panel = document.getElementById('thepanel');
 let rect;
 
 function startTest() {
-    // This first event is to ensure that the next event will have different
-    // coordinates to the previous mouse position, and so actually generates
-    // mouse events.  The mouse is not moved off the window, as that might
-    // move focus to another application.
-    utils.sendNativeMouseEvent(
-      window.mozInnerScreenX,
-      window.mozInnerScreenY,
-      utils.NATIVE_MOUSE_MESSAGE_MOVE,
-      0,
-      0,
-      window.documentElement
-    );
+  // This first event is to ensure that the next event will have different
+  // coordinates to the previous mouse position, and so actually generates
+  // mouse events.  The mouse is not moved off the window, as that might
+  // move focus to another application.
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    screenX: window.mozInnerScreenX,
+    screenY: window.mozInnerScreenY,
+    scale: "screenPixelsPerCSSPixelNoOverride",
+    elementOnWidget: window.documentElement,
+  });
 
-    panel.openPopup(document.getElementById("anchor"), "after_start");
+  panel.openPopup(document.getElementById("anchor"), "after_start");
 }
 
 function sendMouseEvent() {
-    rect = panel.getBoundingClientRect();
-    let x = window.mozInnerScreenX + rect.left + 1;
-    let y = window.mozInnerScreenY + rect.top + 2;
-    utils.sendNativeMouseEvent(
-      x,
-      y,
-      utils.NATIVE_MOUSE_MESSAGE_MOVE,
-      0,
-      0,
-      window.documentElement);
+  rect = panel.getBoundingClientRect();
+  synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: panel,
+    offsetX: 1,
+    offsetY: 2,
+  });
 }
 
 function checkCoords(event) {
-    is(event.clientX, rect.left + 1, "Motion x coordinate");
-    is(event.clientY, rect.top + 2, "Motion y coordinate");
-    done();
+  isfuzzy(event.clientX, rect.left + 1, window.windowUtils.screenPixelsPerCSSPixel, "Motion x coordinate");
+  isfuzzy(event.clientY, rect.top + 2, window.windowUtils.screenPixelsPerCSSPixel, "Motion y coordinate");
+  done();
 }
 
 function done() {

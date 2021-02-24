@@ -153,6 +153,9 @@ for (const mvcontent of META_VIEWPORT_CONTENTS) {
               }
 
               // This function takes screen coordinates in css pixels.
+              // TODO: This should stop using nsIDOMWindowUtils.sendNativeMouseEvent
+              //       directly, and use `EventUtils.synthesizeNativeMouseEvent` in
+              //       a message listener in the chrome.
               function synthesizeNativeMouseClick(win, screenX, screenY) {
                 const utils = win.windowUtils;
                 const scale = utils.screenPixelsPerCSSPixelNoOverride;
