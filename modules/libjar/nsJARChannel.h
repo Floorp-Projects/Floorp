@@ -69,7 +69,7 @@ class nsJARChannel final : public nsIJARChannel,
   nsCString mSpec;
 
   bool mOpened;
-  bool mCanceled;
+  Atomic<bool, ReleaseAcquire> mCanceled;
   bool mOnDataCalled = false;
 
   RefPtr<nsJARProtocolHandler> mJarHandler;
@@ -86,7 +86,7 @@ class nsJARChannel final : public nsIJARChannel,
   nsCString mContentCharset;
   int64_t mContentLength;
   uint32_t mLoadFlags;
-  nsresult mStatus;
+  Atomic<nsresult, ReleaseAcquire> mStatus;
   bool mIsPending;  // the AsyncOpen is in progress.
 
   bool mEnableOMT;
