@@ -9,7 +9,7 @@
 const LINUX = AppConstants.platform == "linux";
 const WIN = AppConstants.platform == "win";
 const MAC = AppConstants.platform == "macosx";
-const WEBRENDER = window.windowUtils.layerManagerType == "WebRender";
+const WEBRENDER = window.windowUtils.layerManagerType.startsWith("WebRender");
 const SKELETONUI = Services.prefs.getBoolPref(
   "browser.startup.preXulSkeletonUI",
   false

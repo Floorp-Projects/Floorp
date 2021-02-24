@@ -15,7 +15,7 @@ SimpleTest.waitForExplicitFinish();
 // https://searchfox.org/mozilla-central/rev/b7f3977978922d44c7d92ae01c0d4cc2baca7bc2/layout/style/ImageLoader.cpp#553
 //
 // So our assertions and polling need to be a bit weaker on WR.
-const kUsingWebRender = SpecialPowers.DOMWindowUtils.layerManagerType === "WebRender";
+const kUsingWebRender = SpecialPowers.DOMWindowUtils.layerManagerType.startsWith("WebRender");
 
 let iframe = document.getElementById("iframe");
 let blankSnapshot;

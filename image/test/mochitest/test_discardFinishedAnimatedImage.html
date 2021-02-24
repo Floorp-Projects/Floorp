@@ -22,7 +22,7 @@ let discardCallback = undefined;
 let frameUpdateCallback = undefined;
 
 async function runTest() {
-  const kUsingWebRender = SpecialPowers.DOMWindowUtils.layerManagerType === "WebRender";
+  const kUsingWebRender = SpecialPowers.DOMWindowUtils.layerManagerType.startsWith("WebRender");
 
   let img = document.getElementById("finitepng");
 

@@ -70,7 +70,7 @@ function isWebRenderOnAndroidDevice() {
   // more correct detection of this case.
   return xr.OS == "Android" &&
       g.browserIsRemote &&
-      g.windowUtils.layerManagerType == "WebRender";
+      g.windowUtils.layerManagerType.startsWith("WebRender");
 }
 
 function FlushTestBuffer()
