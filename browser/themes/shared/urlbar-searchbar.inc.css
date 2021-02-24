@@ -75,15 +75,14 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 #urlbar-background,
 #searchbar {
   border-color: transparent;
 }
 
-#urlbar:not([open]) > #urlbar-background,
-#searchbar {
+#urlbar:not([focused="true"]) > #urlbar-background,
+#searchbar:not(:focus-within) {
   background-color: var(--toolbar-field-non-lwt-bgcolor, Field);
 }
 } /*** END proton ***/
