@@ -67,6 +67,7 @@ const kPrefAutoHideDownloadsButton = "browser.download.autohideButton";
 const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
 const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";
 const kPrefLibraryButtonUsed = "browser.engagement.library-button.has-used";
+const kPrefSidebarButtonUsed = "browser.engagement.sidebar-button.has-used";
 
 const kExpectedWindowURL = AppConstants.BROWSER_CHROME_URL;
 
@@ -263,7 +264,7 @@ var CustomizableUIInternal = {
       "downloads-button",
       gProtonToolbarEnabled ? null : "library-button",
       AppConstants.MOZ_DEV_EDITION ? "developer-button" : null,
-      "sidebar-button",
+      gProtonToolbarEnabled ? null : "sidebar-button",
       "fxa-toolbar-menu-button",
     ].filter(name => name);
 
@@ -602,7 +603,7 @@ var CustomizableUIInternal = {
   },
 
   _updateForNewProtonVersion() {
-    const VERSION = 2;
+    const VERSION = 3;
     let currentVersion = Services.prefs.getIntPref(
       kPrefProtonToolbarVersion,
       0
@@ -639,6 +640,16 @@ var CustomizableUIInternal = {
         !Services.prefs.getBoolPref(kPrefLibraryButtonUsed)
       ) {
         placements.splice(placements.indexOf("library-button"), 1);
+      }
+    }
+
+    // Remove the library button if it hasn't been used
+    if (currentVersion < 3) {
+      if (
+        placements.includes("sidebar-button") &&
+        !Services.prefs.getBoolPref(kPrefSidebarButtonUsed)
+      ) {
+        placements.splice(placements.indexOf("sidebar-button"), 1);
       }
     }
 
