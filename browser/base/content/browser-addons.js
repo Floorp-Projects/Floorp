@@ -966,6 +966,7 @@ var gExtensionsNotifications = {
 
   _createAddonButton(text, icon, callback) {
     let button = document.createXULElement("toolbarbutton");
+    button.setAttribute("wrap", "true");
     button.setAttribute("label", text);
     button.setAttribute("tooltiptext", text);
     const DEFAULT_EXTENSION_ICON =
