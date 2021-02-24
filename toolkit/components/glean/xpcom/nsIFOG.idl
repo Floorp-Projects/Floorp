@@ -14,8 +14,11 @@ interface nsIFOG : nsISupports
    *
    * To be scheduled at some opportune time after the bulk of Firefox startup
    * has completed.
+   *
+   * @param aDataPathOverride - The path of a custom Glean data path to use
+   *        instead of the profile dir.
    */
-  void initializeFOG();
+  void initializeFOG([optional] in AUTF8String aDataPathOverride);
 
   /**
    * Enable or Disable the logging of pings in the Glean SDK.
