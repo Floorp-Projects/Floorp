@@ -11,6 +11,7 @@
  *  synthesizeMouse
  *  synthesizeMouseAtCenter
  *  synthesizeNativeMouseMove
+ *  synthesizeNativeMouseEvent
  *  synthesizeNativeMouseClick
  *  synthesizeWheel
  *  synthesizeWheelAtPoint
@@ -169,6 +170,22 @@ function _EU_nativeMouseDownEventMsg() {
   }
   throw new Error(
     "Native mouse-down events not supported on platform " + _EU_getPlatform()
+  );
+}
+
+function _EU_nativeMouseMoveEventMsg() {
+  switch (_EU_getPlatform()) {
+    case "windows":
+      return 1; // MOUSEEVENTF_MOVE
+    case "mac":
+      return 5; // NSEventTypeMouseMoved
+    case "linux":
+      return 3; // GDK_MOTION_NOTIFY
+    case "android":
+      return 7; // ACTION_HOVER_MOVE
+  }
+  throw new Error(
+    "Native mouse-move events not supported on platform " + _EU_getPlatform()
   );
 }
 
@@ -1053,8 +1070,9 @@ function synthesizeNativeMouseMove(
   utils.sendNativeMouseMove(x * scale, y * scale, null, observer);
 }
 
-function synthesizeNativeMouseClick(aParams, aCallback = null) {
+function synthesizeNativeMouseEvent(aParams, aCallback = null) {
   const {
+    type, // "click", "mousedown", "mouseup" or "mousemove"
     target, // Origin of offsetX and offsetY, must be an element
     offsetX, // X offset in `target`
     offsetY, // Y offset in `target`
@@ -1127,27 +1145,59 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
       }
     },
   };
+  if (type === "click") {
+    utils.sendNativeMouseEvent(
+      x,
+      y,
+      _EU_nativeMouseDownEventMsg(),
+      modifierFlags,
+      null,
+      function() {
+        utils.sendNativeMouseEvent(
+          x,
+          y,
+          _EU_nativeMouseUpEventMsg(),
+          modifierFlags,
+          null,
+          observer
+        );
+      }
+    );
+    return;
+  }
   utils.sendNativeMouseEvent(
     x,
     y,
-    _EU_nativeMouseDownEventMsg(),
+    (() => {
+      switch (type) {
+        case "mousedown":
+          return _EU_nativeMouseDownEventMsg();
+        case "mouseup":
+          return _EU_nativeMouseUpEventMsg();
+        case "mousemove":
+          return _EU_nativeMouseMoveEventMsg();
+        default:
+          throw Error(`Invalid type is specified: ${type}`);
+      }
+    })(),
     modifierFlags,
     null,
-    function() {
-      utils.sendNativeMouseEvent(
-        x,
-        y,
-        _EU_nativeMouseUpEventMsg(),
-        modifierFlags,
-        null,
-        observer
-      );
-    }
+    observer
   );
 }
 
+function promiseNativeMouseEvent(aParams) {
+  return new Promise(resolve => synthesizeNativeMouseEvent(aParams, resolve));
+}
+
+function synthesizeNativeMouseClick(aParams, aObserver = null) {
+  aParams.type = "click";
+  return synthesizeNativeMouseEvent(aParams, aObserver);
+}
+
 function promiseNativeMouseClick(aParams) {
-  return new Promise(resolve => synthesizeNativeMouseClick(aParams, resolve));
+  aParams.type = "click";
+  return promiseNativeMouseEvent(aParams);
 }
 
 function synthesizeNativeMouseClickAndWaitForEvent(aParams, aCallback) {
