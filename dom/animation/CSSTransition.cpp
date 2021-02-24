@@ -315,22 +315,12 @@ void CSSTransition::UpdateStartValueFromReplacedTransition() {
   mReplacedTransition.reset();
 }
 
-void CSSTransition::SetEffectFromStyle(dom::AnimationEffect* aEffect) {
-  Animation::SetEffectNoUpdate(aEffect);
+void CSSTransition::SetEffectFromStyle(KeyframeEffect* aEffect) {
+  MOZ_ASSERT(aEffect->IsValidTransition());
 
-  // Initialize transition property and to value.
-  //
-  // Typically this should only be called with a KeyframeEffect representing
-  // a simple transition, but just to be sure we check the effect has the
-  // expected shape first.
-  const KeyframeEffect* keyframeEffect = aEffect->AsKeyframeEffect();
-  if (MOZ_LIKELY(keyframeEffect && keyframeEffect->Properties().Length() == 1 &&
-                 keyframeEffect->Properties()[0].mSegments.Length() == 1)) {
-    mTransitionProperty = keyframeEffect->Properties()[0].mProperty;
-    mTransitionToValue = keyframeEffect->Properties()[0].mSegments[0].mToValue;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Transition effect has unexpected shape");
-  }
+  Animation::SetEffectNoUpdate(aEffect);
+  mTransitionProperty = aEffect->Properties()[0].mProperty;
+  mTransitionToValue = aEffect->Properties()[0].mSegments[0].mToValue;
 }
 
 }  // namespace mozilla::dom
