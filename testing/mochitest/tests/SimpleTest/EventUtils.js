@@ -1002,9 +1002,17 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
     screenX, // X offset in screen, offsetX/Y nor atCenter must not be set if this is set
     screenY, // Y offset in screen, offsetX/Y nor atCenter must not be set if this is set
+    // If scale is not specified, screenPixelsPerCSSPixel is used for clientX/Y and
+    // 1.0 is used for screenX/Y.
+    // If scale is "screenPixelsPerCSSPixel", it'll be used.
+    // If scale is "screenPixelsPerCSSPixelNoOverride", it'll be used.
+    scale,
     button = 0, // if "click", "mousedown", "mouseup", set same value as DOM MouseEvent.button
     modifiers = {}, // Active modifiers, see `_parseNativeModifiers`
     win = window, // The window to use its utils
+    // If element under the point is in another widget from target's widget,
+    //  e.g., when it's in a XUL <panel>, specify this.
+    elementOnWidget = target,
   } = aParams;
   if (atCenter) {
     if (offsetX != undefined || offsetY != undefined) {
@@ -1017,10 +1025,18 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
         `atCenter is specified, but screenX (${screenX}) and/or screenY (${screenY}) are also specified`
       );
     }
+    if (!target) {
+      throw Error("atCenter is specified, but target is not specified");
+    }
   } else if (offsetX != undefined && offsetY != undefined) {
     if (screenX != undefined || screenY != undefined) {
       throw Error(
         `offsetX/Y are specified, but screenX (${screenX}) and/or screenY (${screenY}) are also specified`
+      );
+    }
+    if (!target) {
+      throw Error(
+        "offsetX and offsetY are specified, but target is not specified"
       );
     }
   } else if (screenX != undefined && screenY != undefined) {
@@ -1035,29 +1051,40 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     return;
   }
 
-  const rect = target.getBoundingClientRect();
-  const scale = utils.screenPixelsPerCSSPixel;
+  const rect = target?.getBoundingClientRect();
+  const scaleValue = (() => {
+    if (!scale) {
+      // TODO: Apply same scale by default to screenX/Y as offsetX/Y later.
+      return screenX != undefined ? 1.0 : utils.screenPixelsPerCSSPixel;
+    }
+    if (scale === "screenPixelsPerCSSPixel") {
+      return utils.screenPixelsPerCSSPixel;
+    }
+    if (scale === "screenPixelsPerCSSPixelNoOverride") {
+      return utils.screenPixelsPerCSSPixelNoOverride;
+    }
+    throw Error(`invalid scale value (${scale}) is specified`);
+  })();
   const x = (() => {
     if (screenX != undefined) {
-      // TODO: Apply same scale by default to screenX/Y as offsetX/Y later.
-      return screenX;
+      return screenX * scaleValue;
     }
     return (
       ((atCenter ? rect.width / 2 : offsetX) +
         win.mozInnerScreenX +
         rect.left) *
-      scale
+      scaleValue
     );
   })();
   const y = (() => {
     if (screenY != undefined) {
-      return screenY;
+      return screenY * scaleValue;
     }
     return (
       ((atCenter ? rect.height / 2 : offsetY) +
         win.mozInnerScreenY +
         rect.top) *
-      scale
+      scaleValue
     );
   })();
   const modifierFlags = _parseNativeModifiers(modifiers);
@@ -1076,7 +1103,7 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
       utils.NATIVE_MOUSE_MESSAGE_BUTTON_DOWN,
       button,
       modifierFlags,
-      null,
+      elementOnWidget,
       function() {
         utils.sendNativeMouseEvent(
           x,
@@ -1084,7 +1111,7 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
           utils.NATIVE_MOUSE_MESSAGE_BUTTON_UP,
           button,
           modifierFlags,
-          null,
+          elementOnWidget,
           observer
         );
       }
@@ -1108,7 +1135,7 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     })(),
     button,
     modifierFlags,
-    null,
+    elementOnWidget,
     observer
   );
 }
