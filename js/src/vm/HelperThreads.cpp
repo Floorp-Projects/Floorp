@@ -774,13 +774,15 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
 
   if (stencilInput_) {
-    stencil_ = frontend::ParseModuleToStencil(cx, *stencilInput_, data);
+    extensibleStencil_ =
+        frontend::ParseModuleToExtensibleStencil(cx, *stencilInput_, data);
   }
 
-  if (stencil_) {
-    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
+  if (extensibleStencil_) {
+    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
                                          gcOutput_)) {
-      stencil_ = nullptr;
+      extensibleStencil_ = nullptr;
     }
   }
 
