@@ -41,7 +41,9 @@ def push(id, filename):
         print('Pushing {} to device.'.format(filename))
         run(['adb', 'push', config.name, os.path.join(PATH_PREFIX, filename)])
         run(['adb', 'shell', 'am', 'set-debug-app', '--persistent', id])
-        print('Startup profiling enabled on all future start ups, possibly even after reinstall. Call script with `deactivate` to disable it.')
+        print('\nStartup profiling enabled on all future start ups, possibly even after reinstall.')
+        print('Call script with `deactivate` to disable it.')
+        print('DON\'T FORGET TO ENABLE \'Remote debugging via USB\' IN THE APP SETTINGS!')
     finally:
         os.remove(config.name)
 
