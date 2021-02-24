@@ -34,6 +34,8 @@ const kStrictKeyPressEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
 const kStrictKeyDownKeyUpEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.dispatch_during_composition");
+const kIsHeadless =
+  SpecialPowers.Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).isHeadless;
 
 info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
@@ -50,6 +52,145 @@ function starttest() {
       $("testMouseEvent").addEventListener("click", doCheck, {once: true});
       sendMouseEvent({type:'click'}, "testMouseEvent");
       is(check, true, 'sendMouseEvent should dispatch click event');
+
+      await (async function testSynthesizeNativeMouseClick() {
+        if (navigator.appVersion.includes("Android")) {
+          todo(false,
+            `testSynthesizeNativeMouseClick: does nothing on Android because its nsIWidget::SynthesizeNativeMouseEvent won't fire "mouseup"`);
+          return;
+        }
+        let events = [];
+        let listener = event => events.push(event);
+        let preventDefault = event => event.preventDefault();
+        $("testMouseEvent").addEventListener("mousedown", listener);
+        $("testMouseEvent").addEventListener("mouseup", listener);
+        // Clicking with modifiers may open context menu so that we should prevent to open it.
+        window.addEventListener("contextmenu", preventDefault, { capture: true });
+        for (const test of [
+            {
+              description: "ShiftLeft",
+              modifiers: { shiftKey: true },
+            },
+            {
+              description: "ShiftRight",
+              modifiers: { shiftRightKey: true },
+            },
+            {
+              description: "CtrlLeft",
+              modifiers: { ctrlKey: true },
+            },
+            {
+              description: "CtrlRight",
+              modifiers: { ctrlRightKey: true },
+            },
+            {
+              description: "AltLeft",
+              modifiers: { altKey: true },
+            },
+            {
+              description: "AltRight",
+              modifiers: { altRightKey: true },
+            },
+            {
+              description: "MetaLeft",
+              modifiers: { metaKey: true },
+              skip: () => {
+                // We've not supported "Meta" as Windows logo key or Super/Hyper keys.
+                return navigator.platform.includes("Win") || navigator.platform.includes("Linux");
+              },
+            },
+            {
+              description: "MetaRight",
+              modifiers: { metaRightKey: true },
+              skip: () => {
+                // We've not supported "Meta" as Windows logo key or Super/Hyper keys.
+                return navigator.platform.includes("Win") || navigator.platform.includes("Linux");
+              },
+            },
+            {
+              description: "CapsLock",
+              modifiers: { capsLockKey: true },
+            },
+            {
+              description: "NumLock",
+              modifiers: { numLockKey: true },
+              skip: () => {
+                // macOS does not have `NumLock` key nor state.
+                return navigator.platform.includes("Mac");
+              },
+            },
+            {
+              description: "Ctrl+Shift",
+              modifiers: { ctrlKey: true, shiftKey: true },
+              skip: () => {
+                // We forcibly open context menu on macOS so the following test
+                // will fail to receive mouse events.
+                return navigator.platform.includes("Mac");
+              },
+            },
+            {
+              description: "Alt+Shift",
+              modifiers: { altKey: true, shiftKey: true },
+            },
+            {
+              description: "Meta+Shift",
+              modifiers: { metaKey: true, shiftKey: true },
+              skip: () => {
+                // We've not supported "Meta" as Windows logo key or Super/Hyper keys.
+                return navigator.platform.includes("Win") || navigator.platform.includes("Linux");
+              },
+            },
+          ]) {
+          if (test.skip && test.skip()) {
+            continue;
+          }
+          events = [];
+          info(`testSynthesizeNativeMouseClick: sending native mouse click (${test.description})`);
+          await promiseNativeMouseClickAndWaitForEvent({
+            target: $("testMouseEvent"),
+            atCenter: true,
+            modifiers: test.modifiers,
+            eventTypeToWait: "mouseup",
+          });
+          is(events.length, 2,
+            `testSynthesizeNativeMouseClick: a pair of "mousedown" and "mouseup" events should be fired (${test.description})`);
+          is(events[0]?.type, "mousedown",
+            `testSynthesizeNativeMouseClick: "mousedown" should be fired (${test.description})`);
+          is(events[1]?.type, "mouseup",
+            `testSynthesizeNativeMouseClick: "mouseup" should be fired (${test.description})`);
+          if (events.length !== 2) {
+            continue;
+          }
+          for (const mod of [{ keyName: "Alt",      propNames: [ "altKey", "altRightKey" ]},
+                             { keyName: "Control",  propNames: [ "ctrlKey", "ctrlRightKey" ]},
+                             { keyName: "Shift",    propNames: [ "shiftKey", "shiftRightKey" ]},
+                             { keyName: "Meta",     propNames: [ "metaKey", "metaRightKey" ]},
+                             { keyName: "CapsLock", propNames: [ "capsLockKey" ]},
+                             { keyName: "NumLock",  propNames: [ "numLockKey" ]},
+                            ]) {
+            const activeExpected =
+              (test.modifiers.hasOwnProperty(mod.propNames[0]) &&
+               test.modifiers[mod.propNames[0]]) ||
+                (mod.propNames.length !== 1 &&
+                 test.modifiers.hasOwnProperty(mod.propNames[1]) &&
+                 test.modifiers[mod.propNames[1]]);
+            const checkFn = activeExpected && (
+              // Bug 1693240: We don't support setting modifiers while posting a mouse event on Windows.
+              navigator.platform.includes("Win") ||
+              // Bug 1693237: We don't support setting modifiers on Android.
+              navigator.appVersion.includes("Android") ||
+              // In Headless mode, modifiers are not supported by this kind of APIs.
+              kIsHeadless) ? todo_is : is;
+            checkFn(events[0]?.getModifierState(mod.keyName), activeExpected,
+              `testSynthesizeNativeMouseCheck: "mousedown".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
+            checkFn(events[1]?.getModifierState(mod.keyName), activeExpected,
+              `testSynthesizeNativeMouseCheck: "mouseup".getModifierState("${mod.keyName}") should return ${activeExpected} (${test.description}`);
+          }
+        }
+        $("testMouseEvent").removeEventListener("mousedown", listener);
+        $("testMouseEvent").removeEventListener("mouseup", listener);
+        window.removeEventListener("contextmenu", preventDefault, { capture: true });
+      })();
 
       check = false;
       $("testKeyEvent").addEventListener("keypress", doCheck, {once: true});

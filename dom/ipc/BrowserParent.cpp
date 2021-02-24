@@ -1784,8 +1784,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeMouseEvent(
   AutoSynthesizedEventResponder responder(this, aObserverId, "mouseevent");
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
-    widget->SynthesizeNativeMouseEvent(aPoint, aNativeMessage, aModifierFlags,
-                                       responder.GetObserver());
+    widget->SynthesizeNativeMouseEvent(
+        aPoint, aNativeMessage,
+        static_cast<nsIWidget::Modifiers>(aModifierFlags),
+        responder.GetObserver());
   }
   return IPC_OK();
 }

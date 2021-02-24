@@ -305,7 +305,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SetDrawsInTitlebar(bool aState) override;
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
   virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
+                                              nsIWidget::Modifiers aModifierFlags,
                                               nsIObserver* aObserver) override;
   virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
                                                     uint32_t aNativeMessage, double aDeltaX,

@@ -341,14 +341,15 @@ class nsWindow final : public nsBaseWidget {
 
   virtual void ReparentNativeWidget(nsIWidget* aNewParent) override;
 
-  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                              uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
-                                              nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseEvent(
+      LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+      nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) override;
 
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override {
-    return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY, 0, aObserver);
+    return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY,
+                                      nsIWidget::Modifiers::NO_MODIFIERS,
+                                      aObserver);
   }
 
   virtual nsresult SynthesizeNativeMouseScrollEvent(
