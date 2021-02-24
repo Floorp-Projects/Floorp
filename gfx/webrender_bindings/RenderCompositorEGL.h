@@ -36,8 +36,6 @@ class RenderCompositorEGL : public RenderCompositor {
 
   LayoutDeviceIntSize GetBufferSize() override;
 
-  CompositorCapabilities GetCompositorCapabilities() override;
-
   // Interface for partial present
   bool UsePartialPresent() override;
   bool RequestFullRender() override;
