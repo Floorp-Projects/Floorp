@@ -25,8 +25,7 @@ add_task(async function() {
 
   const onResponsePanelReady = waitForDOM(
     document,
-    "#response-panel .accordion-item",
-    2
+    "#response-panel .data-header"
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
@@ -40,18 +39,13 @@ add_task(async function() {
   );
 
   const header = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
+    "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
   clickElement(header, monitor);
 
   await codeMirrorReady;
 
   const tabpanel = document.querySelector("#response-panel");
-  is(
-    tabpanel.querySelectorAll(".accordion-item").length,
-    2,
-    "There should be 2 accordion items displayed in this tabpanel."
-  );
   is(
     tabpanel.querySelectorAll(".empty-notice").length,
     0,
@@ -74,8 +68,7 @@ add_task(async function() {
     "The response image box doesn't have the intended visibility."
   );
 
-  const jsonView =
-    tabpanel.querySelector(".accordion-item .accordion-header-label") || {};
+  const jsonView = tabpanel.querySelector(".data-label") || {};
   is(
     jsonView.textContent === L10N.getStr("jsonScopeName"),
     true,

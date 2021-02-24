@@ -28,6 +28,8 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  height: 100%;
+  overflow: auto;
 }
 
 .network-monitor .properties-view .searchbox-section {
@@ -185,7 +187,7 @@
 /* If there is a source editor shows up in the last row of TreeView,
  * it should occupy the available vertical space.
  */
-.network-monitor .accordion .editor-row-container,
+.network-monitor .editor-row-container,
 .network-monitor .tree-container .treeTable tr:last-child td[colspan="2"] {
   display: block;
   height: 100%;
@@ -193,7 +195,7 @@
   overflow-x: auto;
 }
 
-.network-monitor .accordion .responseTextContainer {
+.network-monitor .responseTextContainer {
   overflow-x: auto;
   width: 100%;
   height: 100%;
@@ -233,6 +235,8 @@
 .theme-dark .network-monitor .response-error-header {
   background-color: var(--red-70);
 }
+
+/* Response tabpanel */
 
 .network-monitor .response-image-box {
   display: flex;
@@ -279,6 +283,59 @@
 .network-monitor .contains-html-preview .editor-row-container {
   flex: 1;
   min-height: 0;
+}
+
+/* Request and response data */
+
+.network-monitor #response-panel .panel-container {
+  overflow-y: hidden;
+}
+
+.network-monitor .data-header {
+  background: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  color: var(--theme-toolbar-color);
+  font-size: inherit;
+  font-weight: normal;
+  line-height: 16px;
+  margin: 0;
+  padding: 2px 4px;
+  width: 100%;
+  align-items: center;
+  display: flex;
+  user-select: none;
+}
+
+.network-monitor .data-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: inherit;
+  line-height: 20px;
+  color: var(--theme-toolbar-color);
+}
+
+.network-monitor .raw-data-toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 50%;
+  margin-inline-start: auto;
+  padding-inline-start: 4px;
+}
+
+.network-monitor .raw-data-toggle-label {
+  white-space: nowrap;
+  color: var(--theme-toolbar-color);
+}
+
+.network-monitor .raw-data-toggle-input > input {
+  display: inline-block;
+  width: 2em;
+  vertical-align: bottom;
+  font-size: 12px;
 }
 
 /* Timings tabpanel */

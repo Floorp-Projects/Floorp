@@ -174,8 +174,7 @@ add_task(async function() {
         true,
         "The response error header doesn't display"
       );
-      const jsonView =
-        tabpanel.querySelector(".accordion-item .accordion-header-label") || {};
+      const jsonView = tabpanel.querySelector(".data-label") || {};
       is(
         jsonView.textContent !== L10N.getStr("jsonScopeName"),
         box != "json",
@@ -234,9 +233,9 @@ add_task(async function() {
         checkVisibility("json");
 
         is(
-          tabpanel.querySelectorAll(".accordion-item").length,
-          2,
-          "There should be 2 accordion items displayed in this tabpanel."
+          tabpanel.querySelectorAll(".raw-data-toggle").length,
+          1,
+          "The response payload toggle should be displayed in this tabpanel."
         );
         is(
           tabpanel.querySelectorAll(".empty-notice").length,
@@ -245,8 +244,7 @@ add_task(async function() {
         );
 
         is(
-          tabpanel.querySelector(".accordion-item .accordion-header-label")
-            .textContent,
+          tabpanel.querySelector(".data-label").textContent,
           L10N.getStr("jsonScopeName"),
           "The json view section doesn't have the correct title."
         );

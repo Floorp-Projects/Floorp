@@ -35,7 +35,7 @@ add_task(async function() {
   is(requests.length, 1, "There should be one request");
 
   // Wait for all sent/received messages to be displayed in DevTools
-  const wait = waitForDOM(
+  let wait = waitForDOM(
     document,
     "#messages-view .message-list-table .message-list-item",
     2
@@ -58,20 +58,20 @@ add_task(async function() {
 
   // Wait for next tick to do async stuff (The MessagePayload component uses the async function getMessagePayload)
   await waitForTick();
-  const waitForData = waitForDOM(document, "#message-formattedData");
+  const waitForData = waitForDOM(document, "#messages-view .properties-view");
   const [requestFrame] = frames;
   EventUtils.sendMouseEvent({ type: "mousedown" }, requestFrame);
 
   await waitForData;
 
   is(
-    document.querySelector("#message-formattedData-header").innerText,
+    document.querySelector("#messages-view .data-label").innerText,
     "JSON",
     "The JSON payload panel should be displayed"
   );
 
   ok(
-    document.querySelector("#message-formattedData .treeTable"),
+    document.querySelector("#messages-view .treeTable"),
     "A tree table should be used to display the formatted payload"
   );
 
@@ -83,6 +83,26 @@ add_task(async function() {
   ok(
     document.getElementById("/bar/y"),
     "The 'y' property in the `bar` object should be displayed"
+  );
+
+  // Toggle raw data display
+  wait = waitForDOM(document, "#messages-view .message-rawData-payload");
+  const rawDataToggle = document.querySelector(
+    "#messages-view .devtools-checkbox-toggle"
+  );
+  clickElement(rawDataToggle, monitor);
+  await wait;
+
+  is(
+    document.querySelector("#messages-view .data-label").innerText,
+    "Raw Data (42 B)",
+    "The raw data payload info should be displayed"
+  );
+
+  is(
+    document.querySelector("#messages-view .message-rawData-payload").value,
+    `{\"foo\":{\"x\":1,\"y\":2}, \"bar\":{\"x\":1,\"y\":2}}`,
+    "The raw data must be shown correctly"
   );
 
   // Close WS connection
