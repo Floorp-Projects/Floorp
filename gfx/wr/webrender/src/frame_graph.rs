@@ -780,8 +780,16 @@ impl FrameGraphBuilder {
         total_surface_count: usize,
         unique_surfaces: &[(i32, i32, ImageFormat)],
     ) {
+        use crate::render_backend::FrameStamp;
+        use api::{DocumentId, IdNamespace};
+
         let mut rc = ResourceCache::new_for_testing();
         let mut gc =  GpuCache::new();
+
+        let mut frame_stamp = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
+        frame_stamp.advance();
+        gc.prepare_for_frames();
+        gc.begin_frame(frame_stamp);
 
         let g = self.end_frame(&mut rc, &mut gc, &mut Vec::new());
         g.print();
