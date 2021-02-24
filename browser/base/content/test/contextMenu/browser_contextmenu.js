@@ -1127,7 +1127,6 @@ add_task(async function test_undo_add_to_dictionary() {
      "context-copy",        true,
      "context-paste",       null, // ignore clipboard state
      "context-delete",      false,
-     "---",                 null,
      "context-selectall",   true,
      "---",                 null,
      "spell-check-enabled", true,
@@ -1161,7 +1160,6 @@ add_task(async function test_contenteditable() {
      "context-copy",        true,
      "context-paste",       null, // ignore clipboard state
      "context-delete",      false,
-     "---",                 null,
      "context-selectall",   true,
      "---",                 null,
      "spell-check-enabled", true,
@@ -1625,7 +1623,6 @@ add_task(async function test_select_input_text() {
      "context-copy",                 true,
      "context-paste",                null, // ignore clipboard state
      "context-delete",               true,
-     "---",                          null,
      "context-selectall",            true,
      "context-searchselect",         true,
      "context-searchselect-private", true,
@@ -1658,7 +1655,6 @@ add_task(async function test_select_input_text_password() {
      "context-copy",        true,
      "context-paste",       null, // ignore clipboard state
      "context-delete",      true,
-     "---",                 null,
      "context-selectall",   true,
      "---",                 null,
      "spell-check-enabled", true,
@@ -1781,7 +1777,6 @@ add_task(async function test_input_spell_false() {
      "context-copy",        true,
      "context-paste",       null, // ignore clipboard state
      "context-delete",      false,
-     "---",                 null,
      "context-selectall",   true,
     ]
   );
