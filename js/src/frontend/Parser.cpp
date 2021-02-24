@@ -147,12 +147,11 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
   return true;
 }
 
-ParserSharedBase::ParserSharedBase(JSContext* cx, CompilationStencil& stencil,
+ParserSharedBase::ParserSharedBase(JSContext* cx,
                                    CompilationState& compilationState,
                                    Kind kind)
     : cx_(cx),
       alloc_(compilationState.allocScope.alloc()),
-      stencil_(stencil),
       compilationState_(compilationState),
       pc_(nullptr),
       usedNames_(compilationState.usedNames) {
@@ -170,10 +169,8 @@ void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
 #endif
 
 ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       bool foldConstants, CompilationStencil& stencil,
-                       CompilationState& compilationState)
-    : ParserSharedBase(cx, stencil, compilationState,
-                       ParserSharedBase::Kind::Parser),
+                       bool foldConstants, CompilationState& compilationState)
+    : ParserSharedBase(cx, compilationState, ParserSharedBase::Kind::Parser),
       anyChars(cx, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
@@ -198,21 +195,21 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
-    CompilationStencil& stencil, CompilationState& compilationState,
-    void* internalSyntaxParser)
-    : ParserBase(cx, options, foldConstants, stencil, compilationState),
+    CompilationState& compilationState, void* internalSyntaxParser)
+    : ParserBase(cx, options, foldConstants, compilationState),
       handler_(cx, compilationState.allocScope.alloc(),
                compilationState.input.lazy),
       internalSyntaxParser_(internalSyntaxParser) {
-  MOZ_ASSERT(stencil.isInitialStencil() == !compilationState.input.lazy);
+  MOZ_ASSERT(compilationState.isInitialStencil() ==
+             !compilationState.input.lazy);
 }
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, const Unit* units,
-    size_t length, bool foldConstants, CompilationStencil& stencil,
-    CompilationState& compilationState, SyntaxParser* syntaxParser)
-    : Base(cx, options, foldConstants, stencil, compilationState, syntaxParser),
+    size_t length, bool foldConstants, CompilationState& compilationState,
+    SyntaxParser* syntaxParser)
+    : Base(cx, options, foldConstants, compilationState, syntaxParser),
       tokenStream(cx, &compilationState.parserAtoms, options, units, length) {}
 
 template <typename Unit>
@@ -274,7 +271,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  bool isInitialStencil = this->stencil_.isInitialStencil();
+  bool isInitialStencil = this->compilationState_.isInitialStencil();
 
   if (isInitialStencil) {
     if (!compilationState_.scriptExtra.emplaceBack()) {
@@ -1483,7 +1480,7 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
 template <class ParseHandler>
 bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     EvalSharedContext* evalSc) {
-  if (!this->stencil_.isInitialStencil()) {
+  if (!this->compilationState_.isInitialStencil()) {
     // We're delazifying -- so we already checked private names during first
     // parse.
     return true;
@@ -1696,8 +1693,8 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  this->stencil_.moduleMetadata = MakeUnique<StencilModuleMetadata>();
-  if (!this->stencil_.moduleMetadata) {
+  this->compilationState_.moduleMetadata = MakeUnique<StencilModuleMetadata>();
+  if (!this->compilationState_.moduleMetadata) {
     js::ReportOutOfMemory(cx_);
     return null();
   }
@@ -1749,16 +1746,17 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // Set the module to async if an await keyword was found at the top level.
   if (pc_->isAsync()) {
     pc_->sc()->asModuleContext()->builder.noteAsync(
-        *this->stencil_.moduleMetadata);
+        *this->compilationState_.moduleMetadata);
   }
 
-  // Generate the Import/Export tables and store in CompilationStencil.
-  if (!modulesc->builder.buildTables(*this->stencil_.moduleMetadata)) {
+  // Generate the Import/Export tables and store in CompilationState.
+  if (!modulesc->builder.buildTables(*this->compilationState_.moduleMetadata)) {
     return null();
   }
 
   // Check exported local bindings exist and mark them as closed over.
-  StencilModuleMetadata& moduleMetadata = *this->stencil_.moduleMetadata;
+  StencilModuleMetadata& moduleMetadata =
+      *this->compilationState_.moduleMetadata;
   for (auto entry : moduleMetadata.localExportEntries) {
     DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(entry.localName);
     if (!p) {
@@ -1947,7 +1945,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   funbox->finishScriptFlags();
   funbox->copyFunctionFields(script);
 
-  if (this->stencil_.isInitialStencil()) {
+  if (this->compilationState_.isInitialStencil()) {
     ScriptStencilExtra& scriptExtra = funbox->functionExtraStencil();
     funbox->copyFunctionExtraFields(scriptExtra);
     funbox->copyScriptExtraFields(scriptExtra);
@@ -9321,7 +9319,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   if (isArrow) {
     // Rewind to reparse as an arrow function.
     //
-    // Note: We do not call CompilationStencil::rewind here because parsing
+    // Note: We do not call CompilationState::rewind here because parsing
     // during delazification will see the same rewind and need the same sequence
     // of inner functions to skip over.
     tokenStream.rewind(start);
@@ -10615,7 +10613,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   bool isZero = this->compilationState_.bigIntData[index].isZero();
 
   // Should the operations below fail, the buffer held by data will
-  // be cleaned up by the CompilationStencil destructor.
+  // be cleaned up by the CompilationState destructor.
   return handler_.newBigInt(index, isZero, pos());
 }
 

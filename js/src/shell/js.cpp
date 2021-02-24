@@ -5375,13 +5375,12 @@ enum class DumpType {
 template <typename Unit>
 static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                     const Unit* units, size_t length,
-                    js::frontend::CompilationStencil& stencil,
                     js::frontend::CompilationState& compilationState,
                     js::frontend::ParseGoal goal) {
   using namespace js::frontend;
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
-                                        /* foldConstants = */ false, stencil,
+                                        /* foldConstants = */ false,
                                         compilationState,
                                         /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
@@ -5668,11 +5667,9 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
       return false;
     }
   }
-  frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, input.get(),
-                                              stencil.alloc);
+  frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx)) {
     return false;
   }
@@ -5680,15 +5677,15 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   if (isAscii) {
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
     auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
-    if (!DumpAST<mozilla::Utf8Unit>(cx, options, utf8, length, stencil,
-                                    compilationState, goal)) {
+    if (!DumpAST<mozilla::Utf8Unit>(cx, options, utf8, length, compilationState,
+                                    goal)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    if (!DumpAST<char16_t>(cx, options, chars, length, stencil,
-                           compilationState, goal)) {
+    if (!DumpAST<char16_t>(cx, options, chars, length, compilationState,
+                           goal)) {
       return false;
     }
   }
@@ -5745,18 +5742,16 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   if (!input.get().initForGlobal(cx)) {
     return false;
   }
-  frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, input.get(),
-                                              stencil.alloc);
+  frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx)) {
     return false;
   }
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
       cx, options, chars, length,
-      /* foldConstants = */ false, stencil, compilationState,
+      /* foldConstants = */ false, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;

@@ -60,7 +60,7 @@ namespace frontend {
 class ParserBase;
 class ParseContext;
 class ParserAtomsTable;
-struct BaseCompilationStencil;
+struct ExtensibleCompilationStencil;
 class ParserSharedBase;
 class FullParseHandler;
 
@@ -1900,7 +1900,7 @@ class RegExpLiteral : public ParseNode {
   // Create a RegExp object of this RegExp literal.
   RegExpObject* create(JSContext* cx, ParserAtomsTable& parserAtoms,
                        CompilationAtomCache& atomCache,
-                       BaseCompilationStencil& stencil) const;
+                       ExtensibleCompilationStencil& stencil) const;
 
 #ifdef DEBUG
   void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);

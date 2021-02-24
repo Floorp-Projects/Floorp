@@ -1546,7 +1546,6 @@ bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
     Rooted<frontend::CompilationInput> input(
         cx, frontend::CompilationInput(options));
     frontend::CompilationStencil stencil(input.get());
-    stencil.setFunctionKey(lazy);
     input.get().initFromLazy(lazy);
 
     if (!frontend::CompileLazyFunctionToStencil(cx, input.get(), stencil,

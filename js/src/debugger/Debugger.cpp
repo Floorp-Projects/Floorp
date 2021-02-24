@@ -6036,11 +6036,9 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   if (!input.get().initForGlobal(cx)) {
     return false;
   }
-  frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, input.get(),
-                                              stencil.alloc);
+  frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx)) {
     return false;
   }
@@ -6048,7 +6046,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
       cx, options, chars.twoByteChars(), length,
-      /* foldConstants = */ true, stencil, compilationState,
+      /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of memory we report
