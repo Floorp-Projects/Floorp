@@ -15,8 +15,8 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
-#include "frontend/ParseContext.h"        // js::frontend::UsedNameTracker
+#include "frontend/CompilationStencil.h"  // CompilationStencil, ExtensibleCompilationStencil, CompilationGCOutput
+#include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{,Mutable}Handle, JS::Rooted
@@ -53,6 +53,16 @@ extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
     ScopeKind scopeKind);
 
 extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
+    JSContext* cx, CompilationInput& input,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
+
+extern UniquePtr<ExtensibleCompilationStencil>
+CompileGlobalScriptToExtensibleStencil(JSContext* cx, CompilationInput& input,
+                                       JS::SourceText<char16_t>& srcBuf,
+                                       ScopeKind scopeKind);
+
+extern UniquePtr<ExtensibleCompilationStencil>
+CompileGlobalScriptToExtensibleStencil(
     JSContext* cx, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 

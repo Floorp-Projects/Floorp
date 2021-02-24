@@ -545,10 +545,10 @@ void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
 }
 
 /* static */
-bool Smoosh::tryCompileGlobalScriptToStencil(
+bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     JSContext* cx, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    UniquePtr<CompilationStencil>& stencilOut) {
+    UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   // FIXME: check info members and return with *unimplemented = true
   //        if any field doesn't match to smoosh_run.
 
@@ -579,12 +579,6 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
   }
 
   if (!input.initForGlobal(cx)) {
-    return false;
-  }
-
-  UniquePtr<frontend::CompilationStencil> stencil(
-      cx->new_<frontend::CompilationStencil>(input));
-  if (!stencil) {
     return false;
   }
 
@@ -648,11 +642,12 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
     }
   }
 
-  if (!compilationState.finish(cx, *stencil)) {
+  auto stencil = cx->make_unique<frontend::ExtensibleCompilationStencil>(
+      std::move(compilationState));
+  if (!stencil) {
     return false;
   }
 
-  // Success!
   stencilOut = std::move(stencil);
   return true;
 }

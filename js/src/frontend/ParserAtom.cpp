@@ -250,7 +250,7 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
 #endif
 
 ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
-    : wellKnownTable_(*rt->commonParserNames), alloc_(alloc) {}
+    : wellKnownTable_(*rt->commonParserNames), alloc_(&alloc) {}
 
 TaggedParserAtomIndex ParserAtomsTable::addEntry(JSContext* cx,
                                                  EntryMap::AddPtr& addPtr,
@@ -280,7 +280,7 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16Seq(
   MOZ_ASSERT(!addPtr);
 
   ParserAtom* entry =
-      ParserAtom::allocate<AtomCharT>(cx, alloc_, seq, length, hash);
+      ParserAtom::allocate<AtomCharT>(cx, *alloc_, seq, length, hash);
   if (!entry) {
     return TaggedParserAtomIndex::null();
   }

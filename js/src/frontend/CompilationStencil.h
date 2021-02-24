@@ -610,7 +610,7 @@ struct CompilationStencil : public BaseCompilationStencil {
 
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
                                        JS::TranscodeBuffer& buf,
-                                       bool* succeededOut = nullptr);
+                                       bool* succeededOut = nullptr) const;
   [[nodiscard]] bool deserializeStencils(JSContext* cx, CompilationInput& input,
                                          const JS::TranscodeRange& range,
                                          bool* succeededOut = nullptr);
@@ -696,6 +696,51 @@ struct ExtensibleCompilationStencil {
   FunctionKey functionKey = BaseCompilationStencil::NullFunctionKey;
 
   ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
+
+  ExtensibleCompilationStencil(ExtensibleCompilationStencil&& other) noexcept
+      : alloc(CompilationStencil::LifoAllocChunkSize),
+        source(std::move(other.source)),
+        scriptData(std::move(other.scriptData)),
+        scriptExtra(std::move(other.scriptExtra)),
+        gcThingData(std::move(other.gcThingData)),
+        scopeData(std::move(other.scopeData)),
+        scopeNames(std::move(other.scopeNames)),
+        regExpData(std::move(other.regExpData)),
+        bigIntData(std::move(other.bigIntData)),
+        objLiteralData(std::move(other.objLiteralData)),
+        moduleMetadata(std::move(other.moduleMetadata)),
+        asmJS(std::move(other.asmJS)),
+        sharedData(std::move(other.sharedData)),
+        parserAtoms(std::move(other.parserAtoms)),
+        functionKey(other.functionKey) {
+    alloc.steal(&other.alloc);
+    parserAtoms.fixupAlloc(alloc);
+  }
+
+  ExtensibleCompilationStencil& operator=(
+      ExtensibleCompilationStencil&& other) noexcept {
+    MOZ_ASSERT(alloc.isEmpty());
+
+    source = std::move(other.source);
+    scriptData = std::move(other.scriptData);
+    scriptExtra = std::move(other.scriptExtra);
+    gcThingData = std::move(other.gcThingData);
+    scopeData = std::move(other.scopeData);
+    scopeNames = std::move(other.scopeNames);
+    regExpData = std::move(other.regExpData);
+    bigIntData = std::move(other.bigIntData);
+    objLiteralData = std::move(other.objLiteralData);
+    moduleMetadata = std::move(other.moduleMetadata);
+    asmJS = std::move(other.asmJS);
+    sharedData = std::move(other.sharedData);
+    parserAtoms = std::move(other.parserAtoms);
+    functionKey = other.functionKey;
+
+    alloc.steal(&other.alloc);
+    parserAtoms.fixupAlloc(alloc);
+
+    return *this;
+  }
 
   void setFunctionKey(BaseScript* lazy) {
     functionKey = BaseCompilationStencil::toFunctionKey(lazy->extent());
