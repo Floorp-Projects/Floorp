@@ -121,10 +121,8 @@ void PerformanceObserver::Notify() {
 
 void PerformanceObserver::QueueEntry(PerformanceEntry* aEntry) {
   MOZ_ASSERT(aEntry);
+  MOZ_ASSERT(ObservesTypeOfEntry(aEntry));
 
-  if (!ObservesTypeOfEntry(aEntry)) {
-    return;
-  }
   mQueuedEntries.AppendElement(aEntry);
 }
 
