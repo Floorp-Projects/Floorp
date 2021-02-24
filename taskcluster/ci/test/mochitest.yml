@@ -13,6 +13,7 @@ job-defaults:
     variants:
         by-test-platform:
             linux.*64/debug: ['fission']
+            linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     run-on-projects:
         by-test-platform:
@@ -66,6 +67,7 @@ mochitest-plain:
         by-test-platform:
             linux1804-64/opt: ['fission-xorigin']
             linux1804-64/debug: ['fission-xorigin']
+            linux1804-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     chunks:
         by-test-platform:
@@ -118,6 +120,7 @@ mochitest-browser-chrome:
     variants:
         by-test-platform:
             linux.*64(-shippable)?/opt: ['fission', 'a11y-checks']
+            linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     fission-run-on-projects:
         by-test-platform:
@@ -238,6 +241,7 @@ mochitest-devtools-chrome:
     variants:
         by-test-platform:
             linux.*64(-shippable)?/opt: ['fission', 'a11y-checks']
+            linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     fission-run-on-projects:
         by-test-platform:
@@ -361,6 +365,7 @@ mochitest-media:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: ['socketprocess']
+            linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size:
@@ -466,6 +471,7 @@ mochitest-webgl1-core:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
+            linux.*64-qr/debug: ['webrender-sw', 'webgl-ipc']
             default: ['webgl-ipc']
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -497,6 +503,7 @@ mochitest-webgl1-ext:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
+            linux.*64-qr/debug: ['webrender-sw', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
@@ -530,6 +537,7 @@ mochitest-webgl2-core:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
+            linux.*64-qr/debug: ['webrender-sw', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks:
         by-test-platform:
@@ -561,6 +569,7 @@ mochitest-webgl2-ext:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
+            linux.*64-qr/debug: ['webrender-sw', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks: 4
     e10s: true
@@ -586,6 +595,7 @@ mochitest-webgl2-deqp:
         by-test-platform:
             .*-ccov.*/.*: []
             android.*: []
+            linux.*64-qr/debug: ['webrender-sw', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks: 4
     e10s: true
