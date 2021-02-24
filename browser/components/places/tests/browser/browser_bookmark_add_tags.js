@@ -59,7 +59,7 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
     // Click the bookmark star to bookmark the page.
     await clickBookmarkStar();
     Assert.equal(
-      bookmarkPanelTitle.value,
+      bookmarkPanelTitle.textContent,
       gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle"),
       "Bookmark title is correct"
     );
@@ -73,7 +73,7 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
   // Click the bookmark star again to add tags.
   await clickBookmarkStar();
   Assert.equal(
-    bookmarkPanelTitle.value,
+    bookmarkPanelTitle.textContent,
     gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
     "Bookmark title is correct"
   );
