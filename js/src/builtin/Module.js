@@ -594,7 +594,7 @@ function ModuleEvaluate()
     if (isTopLevelAwaitEnabled) {
       // Top-level Await Step 4
       if (module.status === MODULE_STATUS_EVALUATED) {
-        module = GetCycleRoot(module);
+        module = GetAsyncCycleRoot(module);
       }
 
       // Top-level Await Step 5
@@ -713,11 +713,11 @@ function InnerModuleEvaluation(module, stack, index)
                                                requiredModule.dfsAncestorIndex));
         } else {
           if (isTopLevelAwaitEnabled) {
-            requiredModule = GetCycleRoot(requiredModule);
-            assert(requiredModule.status >= MODULE_STATUS_EVALUATED,
+            requiredModule = GetAsyncCycleRoot(requiredModule);
+            assert(requiredModule.status === MODULE_STATUS_EVALUATED,
                   `Bad module status in InnerModuleEvaluation: ${requiredModule.status}`);
             if (requiredModule.evaluationError) {
-              throw GetModuleEvaluationError(requiredModule);
+              throw GetModuleEvaluationError(module);
             }
           }
         }
@@ -757,12 +757,10 @@ function InnerModuleEvaluation(module, stack, index)
 
     // Step 14
     if (module.dfsAncestorIndex === module.dfsIndex) {
-        let cycleRoot = module;
         let requiredModule;
         do {
             requiredModule = callFunction(std_Array_pop, stack);
             ModuleSetStatus(requiredModule, MODULE_STATUS_EVALUATED);
-            SetCycleRoot(requiredModule, cycleRoot);
         } while (requiredModule !== module);
     }
 
