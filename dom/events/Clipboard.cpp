@@ -177,14 +177,19 @@ class BlobTextHandler final : public PromiseNativeHandler {
 
   RefPtr<NativeEntryPromise> Promise() { return mHolder.Ensure(__func__); }
 
+  void Reject() {
+    CopyableErrorResult rv;
+    rv.ThrowUnknownError("Unable to read blob for '"_ns +
+                         NS_ConvertUTF16toUTF8(mType) + "' as text."_ns);
+    mHolder.Reject(rv, __func__);
+  }
+
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     AssertIsOnMainThread();
 
     nsString text;
     if (!ConvertJSValueToUSVString(aCx, aValue, "ClipboardItem text", text)) {
-      CopyableErrorResult rv;
-      rv.ThrowUnknownError("Unable to read blob as text");
-      mHolder.Reject(rv, __func__);
+      Reject();
       return;
     }
 
@@ -196,9 +201,7 @@ class BlobTextHandler final : public PromiseNativeHandler {
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    CopyableErrorResult rv;
-    rv.ThrowUnknownError("Unable to read blob as text");
-    mHolder.Reject(rv, __func__);
+    Reject();
   }
 
  private:
@@ -224,7 +227,8 @@ RefPtr<NativeEntryPromise> GetStringNativeEntry(
   RefPtr<Promise> promise = entry.mData.GetAsBlob()->Text(ignored);
   if (ignored.Failed()) {
     CopyableErrorResult rv;
-    rv.ThrowUnknownError("Unable to read blob as text");
+    rv.ThrowUnknownError("Unable to read blob for '"_ns +
+                         NS_ConvertUTF16toUTF8(entry.mType) + "' as text."_ns);
     return NativeEntryPromise::CreateAndReject(rv, __func__);
   }
   promise->AppendNativeHandler(handler);
@@ -234,14 +238,18 @@ RefPtr<NativeEntryPromise> GetStringNativeEntry(
 class ImageDecodeCallback final : public imgIContainerCallback {
  public:
   NS_DECL_ISUPPORTS
-  ImageDecodeCallback() = default;
+
+  explicit ImageDecodeCallback(const nsAString& aType) : mType(aType) {}
 
   RefPtr<NativeEntryPromise> Promise() { return mHolder.Ensure(__func__); }
 
   NS_IMETHOD OnImageReady(imgIContainer* aImage, nsresult aStatus) override {
-    if (NS_FAILED(aStatus)) {
+    // Request the image's width to force decoding the image header.
+    int32_t ignored;
+    if (NS_FAILED(aStatus) || NS_FAILED(aImage->GetWidth(&ignored))) {
       CopyableErrorResult rv;
-      rv.ThrowUnknownError("Unable to read blob as image");
+      rv.ThrowDataError("Unable to decode blob for '"_ns +
+                        NS_ConvertUTF16toUTF8(mType) + "' as image."_ns);
       mHolder.Reject(rv, __func__);
       return NS_OK;
     }
@@ -259,6 +267,7 @@ class ImageDecodeCallback final : public imgIContainerCallback {
  private:
   ~ImageDecodeCallback() = default;
 
+  nsString mType;
   MozPromiseHolder<NativeEntryPromise> mHolder;
 };
 
@@ -268,7 +277,9 @@ RefPtr<NativeEntryPromise> GetImageNativeEntry(
     const ClipboardItem::ItemEntry& entry) {
   if (entry.mData.IsString()) {
     CopyableErrorResult rv;
-    rv.ThrowTypeError("Can not use string for image data");
+    rv.ThrowTypeError("DOMString not supported for '"_ns +
+                      NS_ConvertUTF16toUTF8(entry.mType) +
+                      "' as image data."_ns);
     return NativeEntryPromise::CreateAndReject(rv, __func__);
   }
 
@@ -277,11 +288,12 @@ RefPtr<NativeEntryPromise> GetImageNativeEntry(
   entry.mData.GetAsBlob()->CreateInputStream(getter_AddRefs(stream), ignored);
   if (ignored.Failed()) {
     CopyableErrorResult rv;
-    rv.ThrowUnknownError("Unable to read blob as image");
+    rv.ThrowUnknownError("Unable to read blob for '"_ns +
+                         NS_ConvertUTF16toUTF8(entry.mType) + "' as image."_ns);
     return NativeEntryPromise::CreateAndReject(rv, __func__);
   }
 
-  RefPtr<ImageDecodeCallback> callback = new ImageDecodeCallback();
+  RefPtr<ImageDecodeCallback> callback = new ImageDecodeCallback(entry.mType);
   nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
   imgtool->DecodeImageAsync(stream, NS_ConvertUTF16toUTF8(entry.mType),
                             callback, GetMainThreadSerialEventTarget());
