@@ -77,7 +77,7 @@ struct nsHostKey {
 class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
                      public nsHostKey,
                      public nsISupports {
-  typedef mozilla::net::TRRSkippedReason TRRSkippedReason;
+  using TRRSkippedReason = mozilla::net::TRRSkippedReason;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -185,7 +185,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   }
 
 class AddrHostRecord final : public nsHostRecord {
-  typedef mozilla::Mutex Mutex;
+  using Mutex = mozilla::Mutex;
 
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(ADDRHOSTRECORD_IID)

@@ -221,34 +221,34 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookup(
 
     LOG(("CompleteLookup: waiting for all responses!\n"));
     return LOOKUP_OK;
-  } else {
-    // no more outstanding TRRs
-    // If mFirstTRR is set, merge those addresses into current set!
-    if (mFirstTRR) {
-      if (NS_SUCCEEDED(status)) {
-        LOG(("Merging responses"));
-        newRRSet = merge_rrset(newRRSet, mFirstTRR);
-      } else {
-        LOG(("Will use previous response"));
-        newRRSet.swap(mFirstTRR);  // transfers
-        // We must use the status of the first response, otherwise we'll
-        // pass an error result to the consumers.
-        status = mFirstTRRresult;
-      }
-      mFirstTRR = nullptr;
-    } else {
-      if (NS_FAILED(status) && status != NS_ERROR_DEFINITIVE_UNKNOWN_HOST &&
-          mFirstTRRresult == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
-        status = NS_ERROR_DEFINITIVE_UNKNOWN_HOST;
-      }
-    }
+  }
 
-    if (mTRRSuccess && mHostResolver->GetNCS() &&
-        (mHostResolver->GetNCS()->GetNAT64() ==
-         nsINetworkConnectivityService::OK) &&
-        newRRSet) {
-      newRRSet = mHostResolver->GetNCS()->MapNAT64IPs(newRRSet);
+  // no more outstanding TRRs
+  // If mFirstTRR is set, merge those addresses into current set!
+  if (mFirstTRR) {
+    if (NS_SUCCEEDED(status)) {
+      LOG(("Merging responses"));
+      newRRSet = merge_rrset(newRRSet, mFirstTRR);
+    } else {
+      LOG(("Will use previous response"));
+      newRRSet.swap(mFirstTRR);  // transfers
+      // We must use the status of the first response, otherwise we'll
+      // pass an error result to the consumers.
+      status = mFirstTRRresult;
     }
+    mFirstTRR = nullptr;
+  } else {
+    if (NS_FAILED(status) && status != NS_ERROR_DEFINITIVE_UNKNOWN_HOST &&
+        mFirstTRRresult == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+      status = NS_ERROR_DEFINITIVE_UNKNOWN_HOST;
+    }
+  }
+
+  if (mTRRSuccess && mHostResolver->GetNCS() &&
+      (mHostResolver->GetNCS()->GetNAT64() ==
+       nsINetworkConnectivityService::OK) &&
+      newRRSet) {
+    newRRSet = mHostResolver->GetNCS()->MapNAT64IPs(newRRSet);
   }
 
   if (resolverType == DNSResolverType::TRR) {

@@ -162,7 +162,7 @@ nsDNSServiceInfo::GetAttributes(nsIPropertyBag2** aAttributes) {
 NS_IMETHODIMP
 nsDNSServiceInfo::SetAttributes(nsIPropertyBag2* aAttributes) {
   mAttributes = aAttributes;
-  mIsAttributesSet = aAttributes ? true : false;
+  mIsAttributesSet = aAttributes != nullptr;
   return NS_OK;
 }
 
