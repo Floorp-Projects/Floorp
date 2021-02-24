@@ -80,6 +80,7 @@
 
   --panel-banner-item-update-supported-bgcolor: rgb(0,135,135);
   --panel-separator-margin: 4px 8px;
+  --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
   --panel-shortcut-color: rgb(91,91,102);
   --panel-subview-body-padding: 8px 0;
   --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px rgb(0,97,224);
@@ -669,7 +670,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 @supports -moz-bool-pref("browser.proton.appmenu.enabled") {
 .addon-banner-item,
 .panel-banner-item {
-  margin: 8px;
+  margin: 0 8px 4px;
   padding: 8px;
   min-height: unset;
   border-radius: 4px;
@@ -720,11 +721,14 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   to { transform: rotate(360deg); }
 }
 
+@media (prefers-reduced-motion: no-preference) {
 #PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-appMenu-fxa-image-last-synced[syncstatus="active"] {
   animation: syncRotate 0.8s linear infinite;
+  -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill-attention);
+}
 }
 
 #PanelUI-appMenu-fxa-image-last-synced {
@@ -748,10 +752,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   list-style-image: var(--avatar-image-url);
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-#PanelUI-fxa-menu-account-signout-button {
-  list-style-image: url(chrome://browser/skin/sign-out.svg);
 }
 
 /* Handle different UI states. */
@@ -800,6 +800,49 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 :root[fxastatus="unverified"] .fxa-menu-header:hover:active {
   background-color: @appmenuWarningBackgroundColorActive@;
 }
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+  #appMenu-fxa-status2[fxastatus] {
+    margin: 0;
+    padding: 0;
+  }
+
+  #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2,
+  #appMenu-fxa-text {
+    font-weight: 600;
+  }
+
+  #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 {
+    padding-block: 16px;
+    -moz-box-flex: 1;
+  }
+
+  #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2 {
+    padding: 6px 12px;
+    background-color: rgb(240,240,244); /** Named color: Theme Buttons / Secondary **/
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2:hover {
+    background-color: rgb(224,224,230); /** Named color: Theme Buttons / Secondary Hover **/
+  }
+
+  #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2:active {
+    background-color: rgb(207,207,216); /** Named color: Light Theme Buttons / Secondary Pressed **/
+  }
+
+  #fxa-manage-account-button > vbox > label,
+  #PanelUI-fxa-menu-syncnow-button > vbox > label,
+  #PanelUI-fxa-menu-syncnow-button > vbox > hbox > label {
+    margin-inline-start: 0;
+  }
+
+  #PanelUI-appMenu-fxa-image-last-synced {
+    height: 8px;
+    width: 8px;
+  }
+} /** END Proton **/
 
 /* Tracking Protection Button & Toggle */
 
@@ -994,9 +1037,15 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
-#PanelUI-fxa-menu-sendtab-button {
-  list-style-image: url("chrome://browser/skin/send-to-device.svg");
-}
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+  #PanelUI-fxa-menu-account-signout-button {
+    list-style-image: url(chrome://browser/skin/sign-out.svg);
+  }
+
+  #PanelUI-fxa-menu-sendtab-button {
+    list-style-image: url("chrome://browser/skin/send-to-device.svg");
+  }
+} /** END not Proton **/
 
 #PanelUI-fxa-menu-sendtab-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
@@ -1630,6 +1679,12 @@ menuitem.panel-subview-footer@menuStateActive@,
   border-bottom: none;
   margin: var(--panel-separator-margin);
   padding: 0;
+}
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+.PanelUI-subView toolbarseparator.proton-zap {
+  border-image: var(--panel-separator-zap-gradient) 1;
+}
 }
 
 .PanelUI-subView toolbarseparator.small-separator {
