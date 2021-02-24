@@ -10,7 +10,7 @@ use crate::render_target::{RenderTargetList, ColorRenderTarget};
 use crate::render_target::{PictureCacheTarget, TextureCacheRenderTarget, AlphaRenderTarget};
 use crate::render_task::RenderTask;
 use crate::util::Allocation;
-use std::{usize, f32, u32};
+use std::{usize, f32};
 
 // TODO(gw): To reduce the size of the initial inegration patch, typedef the
 //           old task graph and builder to the new frame graph / builder, which
@@ -32,7 +32,7 @@ impl<'l> RenderTaskAllocation<'l> {
     #[inline(always)]
     pub fn init(self, value: RenderTask) -> RenderTaskId {
         RenderTaskId {
-            index: self.alloc.init(value) as u32,
+            index: self.alloc.init(value) as u16,
         }
     }
 }
@@ -42,12 +42,12 @@ impl<'l> RenderTaskAllocation<'l> {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskId {
-    pub index: u32,
+    pub index: u16,
 }
 
 impl RenderTaskId {
     pub const INVALID: RenderTaskId = RenderTaskId {
-        index: u32::MAX,
+        index: u16::MAX,
     };
 }
 
