@@ -67,11 +67,10 @@ class Components(private val context: Context) {
             core.topSitesStorage
         )
     }
-    @Suppress("Deprecation")
+
     val intentProcessors by lazyMonitored {
         IntentProcessors(
             context,
-            core.sessionManager,
             core.store,
             useCases.sessionUseCases,
             useCases.tabsUseCases,

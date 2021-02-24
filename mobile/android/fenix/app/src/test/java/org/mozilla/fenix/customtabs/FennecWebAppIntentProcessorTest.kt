@@ -5,9 +5,8 @@
 package org.mozilla.fenix.customtabs
 
 import io.mockk.mockk
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.pwa.ManifestStorage
-import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -60,13 +59,11 @@ class FennecWebAppIntentProcessorTest {
 }
 
 private fun createFennecWebAppIntentProcessor(): FennecWebAppIntentProcessor {
-    val sessionManager = SessionManager(engine = mockk(relaxed = true))
-    val useCase: SessionUseCases.DefaultLoadUrlUseCase = mockk(relaxed = true)
+    val useCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
     val storage: ManifestStorage = mockk(relaxed = true)
 
     return FennecWebAppIntentProcessor(
         testContext,
-        sessionManager,
         useCase,
         storage
     )

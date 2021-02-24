@@ -7,13 +7,11 @@ package org.mozilla.fenix.home.intent
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.intent.ext.putSessionId
 import mozilla.components.feature.intent.processing.IntentProcessor
-import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.utils.toSafeIntent
 
 /**
@@ -21,8 +19,7 @@ import mozilla.components.support.utils.toSafeIntent
  * https://developer.android.com/guide/topics/ui/shortcuts/creating-shortcuts#pinned
  */
 class FennecBookmarkShortcutsIntentProcessor(
-    private val sessionManager: SessionManager,
-    private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
+    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase
 ) : IntentProcessor {
 
     /**
@@ -41,13 +38,15 @@ class FennecBookmarkShortcutsIntentProcessor(
         val url = safeIntent.dataString
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
-            val session = Session(url, private = false, source = SessionState.Source.HOME_SCREEN)
-
-            sessionManager.add(session, selected = true)
-            loadUrlUseCase(url, session.id, EngineSession.LoadUrlFlags.external())
+            val sessionId = addNewTabUseCase(
+                url = url,
+                flags = EngineSession.LoadUrlFlags.external(),
+                source = SessionState.Source.HOME_SCREEN,
+                selectTab = true,
+                startLoading = true
+            )
             intent.action = ACTION_VIEW
-            intent.putSessionId(session.id)
-
+            intent.putSessionId(sessionId)
             true
         } else {
             false

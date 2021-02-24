@@ -9,8 +9,6 @@ import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
@@ -22,7 +20,7 @@ import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.toCustomTabConfig
-import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
@@ -38,8 +36,7 @@ import java.io.IOException
  */
 class FennecWebAppIntentProcessor(
     private val context: Context,
-    private val sessionManager: SessionManager,
-    private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
+    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase,
     private val storage: ManifestStorage
 ) : IntentProcessor {
     val logger = Logger("FennecWebAppIntentProcessor")
@@ -62,16 +59,14 @@ class FennecWebAppIntentProcessor(
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val webAppManifest = runBlockingIncrement { loadManifest(safeIntent, url) }
-
-            val session = Session(url, private = false, source = SessionState.Source.HOME_SCREEN)
-            session.webAppManifest = webAppManifest
-            session.customTabConfig =
-                webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
-
-            sessionManager.add(session)
-            loadUrlUseCase(url, session.id, EngineSession.LoadUrlFlags.external())
-
-            intent.putSessionId(session.id)
+            val sessionId = addNewTabUseCase(
+                url = url,
+                source = SessionState.Source.HOME_SCREEN,
+                flags = EngineSession.LoadUrlFlags.external(),
+                webAppManifest = webAppManifest,
+                customTabConfig = webAppManifest?.toCustomTabConfig() ?: createFallbackCustomTabConfig()
+            )
+            intent.putSessionId(sessionId)
 
             if (webAppManifest != null) {
                 intent.flags = FLAG_ACTIVITY_NEW_DOCUMENT
