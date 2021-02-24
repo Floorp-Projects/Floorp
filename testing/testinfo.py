@@ -13,17 +13,12 @@ import re
 import requests
 import six.moves.urllib_parse as urlparse
 import subprocess
-import threading
-import traceback
 import mozpack.path as mozpath
 from moztest.resolve import TestResolver, TestManifestLoader
 from mozfile import which
 
 from mozbuild.base import MozbuildObject, MachCommandConditions as conditions
 
-ACTIVEDATA_RECORD_LIMIT = 10000
-MAX_ACTIVEDATA_CONCURRENCY = 5
-MAX_ACTIVEDATA_RETRIES = 5
 REFERER = "https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Test-Info"
 
 
@@ -36,59 +31,10 @@ class TestInfo(object):
         self.verbose = verbose
         here = os.path.abspath(os.path.dirname(__file__))
         self.build_obj = MozbuildObject.from_environment(cwd=here)
-        self.total_activedata_seconds = 0
 
     def log_verbose(self, what):
         if self.verbose:
             print(what)
-
-    def activedata_query(self, query):
-        start_time = datetime.datetime.now()
-        self.log_verbose(start_time)
-        self.log_verbose(json.dumps(query))
-        response = requests.post(
-            "http://activedata.allizom.org/query",
-            data=json.dumps(query),
-            headers={"referer": REFERER},
-            stream=True,
-        )
-        end_time = datetime.datetime.now()
-        self.total_activedata_seconds += (end_time - start_time).total_seconds()
-        self.log_verbose(end_time)
-        self.log_verbose(response)
-        response.raise_for_status()
-        data = response.json()["data"]
-        self.log_verbose("response length: %d" % len(data))
-        return data
-
-
-class ActiveDataThread(threading.Thread):
-    """
-    A thread to query ActiveData and wait for its response.
-    """
-
-    def __init__(self, name, ti, query, context):
-        threading.Thread.__init__(self, name=name)
-        self.ti = ti
-        self.query = query
-        self.context = context
-        self.response = None
-
-    def run(self):
-        attempt = 1
-        while attempt < MAX_ACTIVEDATA_RETRIES and not self.response:
-            try:
-                self.response = self.ti.activedata_query(self.query)
-                if not self.response:
-                    self.ti.log_verbose("%s: no data received for query" % self.name)
-                    self.response = []
-                    break
-            except Exception:
-                self.ti.log_verbose(
-                    "%s: Exception on attempt #%d:" % (self.name, attempt)
-                )
-                traceback.print_exc()
-                attempt += 1
 
 
 class TestInfoTests(TestInfo):
@@ -132,9 +78,6 @@ class TestInfoTests(TestInfo):
         #     a short file name, rather than the full path;
         #   - Bugs may be filed in bugzilla against a simple, short test
         #     name or the full path to the test;
-        #   - In ActiveData, the full path is usually used, but sometimes
-        #     also includes additional path components outside of the
-        #     mercurial repo (common for reftests).
         # This function attempts to find appropriate names for different
         # queries based on the specified test name.
 
@@ -191,57 +134,6 @@ class TestInfoTests(TestInfo):
         if self.short_name and self.short_name == self.test_name:
             self.short_name = None
 
-        if not (self.show_results or self.show_durations or self.show_tasks):
-            # no need to determine ActiveData name if not querying
-            return
-
-    def set_activedata_test_name(self):
-        # activedata_test_name is name in ActiveData
-        self.activedata_test_name = None
-        simple_names = [self.full_test_name, self.test_name, self.short_name]
-        simple_names = [x for x in simple_names if x]
-        searches = [
-            {"in": {"result.test": simple_names}},
-        ]
-        regex_names = [".*%s.*" % re.escape(x) for x in simple_names if x]
-        for r in regex_names:
-            searches.append({"regexp": {"result.test": r}})
-        query = {
-            "from": "unittest",
-            "format": "list",
-            "limit": 10,
-            "groupby": ["result.test"],
-            "where": {
-                "and": [
-                    {"or": searches},
-                    {"in": {"build.branch": self.branches.split(",")}},
-                    {"gt": {"run.timestamp": {"date": self.start}}},
-                    {"lt": {"run.timestamp": {"date": self.end}}},
-                ]
-            },
-        }
-        print("Querying ActiveData...")  # Following query can take a long time
-        data = self.activedata_query(query)
-        if data and len(data) > 0:
-            self.activedata_test_name = [
-                d["result"]["test"]
-                for p in simple_names + regex_names
-                for d in data
-                if re.match(p + "$", d["result"]["test"])
-            ][
-                0
-            ]  # first match is best match
-        if self.activedata_test_name:
-            print(
-                "Found records matching '%s' in ActiveData." % self.activedata_test_name
-            )
-        else:
-            print(
-                "Unable to find matching records in ActiveData; using %s!"
-                % self.test_name
-            )
-            self.activedata_test_name = self.test_name
-
     def get_platform(self, record):
         if "platform" in record["build"]:
             platform = record["build"]["platform"]
@@ -279,175 +171,6 @@ class TestInfoTests(TestInfo):
             types_label += run_type
         return "%s/%s:" % (platform, types_label)
 
-    def report_test_results(self):
-        # Report test pass/fail summary from ActiveData
-        query = {
-            "from": "unittest",
-            "format": "list",
-            "limit": 100,
-            "groupby": ["build.platform", "build.type"],
-            "select": [
-                {"aggregate": "count"},
-                {
-                    "name": "failures",
-                    "value": {
-                        "case": [{"when": {"eq": {"result.ok": "F"}}, "then": 1}]
-                    },
-                    "aggregate": "sum",
-                    "default": 0,
-                },
-                {
-                    "name": "skips",
-                    "value": {
-                        "case": [{"when": {"eq": {"result.status": "SKIP"}}, "then": 1}]
-                    },
-                    "aggregate": "sum",
-                    "default": 0,
-                },
-                {"value": "run.type", "aggregate": "union"},
-            ],
-            "where": {
-                "and": [
-                    {"eq": {"result.test": self.activedata_test_name}},
-                    {"in": {"build.branch": self.branches.split(",")}},
-                    {"gt": {"run.timestamp": {"date": self.start}}},
-                    {"lt": {"run.timestamp": {"date": self.end}}},
-                ]
-            },
-        }
-        print(
-            "\nTest results for %s on %s between %s and %s"
-            % (self.activedata_test_name, self.branches, self.start, self.end)
-        )
-        data = self.activedata_query(query)
-        if data and len(data) > 0:
-            data.sort(key=self.get_platform)
-            worst_rate = 0.0
-            worst_platform = None
-            total_runs = 0
-            total_failures = 0
-            for record in data:
-                platform = self.get_platform(record)
-                if platform.startswith("-"):
-                    continue
-                runs = record["count"]
-                total_runs = total_runs + runs
-                failures = record.get("failures", 0)
-                skips = record.get("skips", 0)
-                total_failures = total_failures + failures
-                rate = (float)(failures) / runs
-                if rate >= worst_rate:
-                    worst_rate = rate
-                    worst_platform = platform
-                    worst_failures = failures
-                    worst_runs = runs
-                print(
-                    "%-40s %6d failures (%6d skipped) in %6d runs"
-                    % (platform, failures, skips, runs)
-                )
-            print(
-                "\nTotal: %d failures in %d runs or %.3f failures/run"
-                % (total_failures, total_runs, (float)(total_failures) / total_runs)
-            )
-            if worst_failures > 0:
-                print(
-                    "Worst rate on %s %d failures in %d runs or %.3f failures/run"
-                    % (worst_platform, worst_failures, worst_runs, worst_rate)
-                )
-        else:
-            print("No test result data found.")
-
-    def report_test_durations(self):
-        # Report test durations summary from ActiveData
-        query = {
-            "from": "unittest",
-            "format": "list",
-            "limit": 100,
-            "groupby": ["build.platform", "build.type"],
-            "select": [
-                {"value": "result.duration", "aggregate": "average", "name": "average"},
-                {"value": "result.duration", "aggregate": "min", "name": "min"},
-                {"value": "result.duration", "aggregate": "max", "name": "max"},
-                {"aggregate": "count"},
-                {"value": "run.type", "aggregate": "union"},
-            ],
-            "where": {
-                "and": [
-                    {"eq": {"result.ok": "T"}},
-                    {"eq": {"result.test": self.activedata_test_name}},
-                    {"in": {"build.branch": self.branches.split(",")}},
-                    {"gt": {"run.timestamp": {"date": self.start}}},
-                    {"lt": {"run.timestamp": {"date": self.end}}},
-                ]
-            },
-        }
-        data = self.activedata_query(query)
-        print(
-            "\nTest durations for %s on %s between %s and %s"
-            % (self.activedata_test_name, self.branches, self.start, self.end)
-        )
-        if data and len(data) > 0:
-            data.sort(key=self.get_platform)
-            for record in data:
-                platform = self.get_platform(record)
-                if platform.startswith("-"):
-                    continue
-                print(
-                    "%-40s %6.2f s (%.2f s - %.2f s over %d runs)"
-                    % (
-                        platform,
-                        record["average"],
-                        record["min"],
-                        record["max"],
-                        record["count"],
-                    )
-                )
-        else:
-            print("No test durations found.")
-
-    def report_test_tasks(self):
-        # Report test tasks summary from ActiveData
-        query = {
-            "from": "unittest",
-            "format": "list",
-            "limit": 1000,
-            "select": ["build.platform", "build.type", "run.type", "run.name"],
-            "where": {
-                "and": [
-                    {"eq": {"result.test": self.activedata_test_name}},
-                    {"in": {"build.branch": self.branches.split(",")}},
-                    {"gt": {"run.timestamp": {"date": self.start}}},
-                    {"lt": {"run.timestamp": {"date": self.end}}},
-                ]
-            },
-        }
-        data = self.activedata_query(query)
-        print(
-            "\nTest tasks for %s on %s between %s and %s"
-            % (self.activedata_test_name, self.branches, self.start, self.end)
-        )
-        if data and len(data) > 0:
-            data.sort(key=self.get_platform)
-            consolidated = {}
-            for record in data:
-                platform = self.get_platform(record)
-                if platform not in consolidated:
-                    consolidated[platform] = {}
-                if record["run"]["name"] in consolidated[platform]:
-                    consolidated[platform][record["run"]["name"]] += 1
-                else:
-                    consolidated[platform][record["run"]["name"]] = 1
-            for key in sorted(consolidated.keys()):
-                tasks = ""
-                for task in consolidated[key].keys():
-                    if tasks:
-                        tasks += "\n%-40s " % ""
-                    tasks += task
-                    tasks += " in %d runs" % consolidated[key][task]
-                print("%-40s %s" % (key, tasks))
-        else:
-            print("No test tasks found.")
-
     def report_bugs(self):
         # Report open bugs matching test name
         search = self.full_test_name
@@ -469,35 +192,18 @@ class TestInfoTests(TestInfo):
     def report(
         self,
         test_names,
-        branches,
         start,
         end,
         show_info,
-        show_results,
-        show_durations,
-        show_tasks,
         show_bugs,
     ):
-        self.branches = branches
         self.start = start
         self.end = end
         self.show_info = show_info
-        self.show_results = show_results
-        self.show_durations = show_durations
-        self.show_tasks = show_tasks
 
-        if (
-            not self.show_info
-            and not self.show_results
-            and not self.show_durations
-            and not self.show_tasks
-            and not show_bugs
-        ):
+        if not self.show_info and not show_bugs:
             # by default, show everything
             self.show_info = True
-            self.show_results = True
-            self.show_durations = True
-            self.show_tasks = True
             show_bugs = True
 
         for test_name in test_names:
@@ -509,101 +215,6 @@ class TestInfoTests(TestInfo):
             self.set_test_name()
             if show_bugs:
                 self.report_bugs()
-            self.set_activedata_test_name()
-            if self.show_results:
-                self.report_test_results()
-            if self.show_durations:
-                self.report_test_durations()
-            if self.show_tasks:
-                self.report_test_tasks()
-
-
-class TestInfoLongRunningTasks(TestInfo):
-    """
-    Support 'mach test-info long-tasks': Summary of tasks approaching their max-run-time.
-    """
-
-    def __init__(self, verbose):
-        TestInfo.__init__(self, verbose)
-
-    def report(self, branches, start, end, threshold_pct, filter_threshold_pct):
-        def get_long_running_ratio(record):
-            count = record["count"]
-            tasks_gt_pct = record["tasks_gt_pct"]
-            # pylint --py3k W1619
-            return count / tasks_gt_pct
-
-        # Search test durations in ActiveData for long-running tests
-        query = {
-            "from": "task",
-            "format": "list",
-            "groupby": ["run.name"],
-            "limit": 1000,
-            "select": [
-                {
-                    "value": "task.maxRunTime",
-                    "aggregate": "median",
-                    "name": "max_run_time",
-                },
-                {"aggregate": "count"},
-                {
-                    "value": {
-                        "when": {
-                            "gt": [
-                                {"div": ["action.duration", "task.maxRunTime"]},
-                                threshold_pct / 100.0,
-                            ]
-                        },
-                        "then": 1,
-                    },
-                    "aggregate": "sum",
-                    "name": "tasks_gt_pct",
-                },
-            ],
-            "where": {
-                "and": [
-                    {"in": {"build.branch": branches.split(",")}},
-                    {"gt": {"task.run.start_time": {"date": start}}},
-                    {"lte": {"task.run.start_time": {"date": end}}},
-                    {"eq": {"task.state": "completed"}},
-                ]
-            },
-        }
-        data = self.activedata_query(query)
-        print(
-            "\nTasks nearing their max-run-time on %s between %s and %s"
-            % (branches, start, end)
-        )
-        if data and len(data) > 0:
-            filtered = []
-            for record in data:
-                if "tasks_gt_pct" in record:
-                    count = record["count"]
-                    tasks_gt_pct = record["tasks_gt_pct"]
-                    if float(tasks_gt_pct) / count > filter_threshold_pct / 100.0:
-                        filtered.append(record)
-            filtered.sort(key=get_long_running_ratio)
-            if not filtered:
-                print("No long running tasks found.")
-            for record in filtered:
-                name = record["run"]["name"]
-                count = record["count"]
-                max_run_time = record["max_run_time"]
-                tasks_gt_pct = record["tasks_gt_pct"]
-                # pylint --py3k W1619
-                print(
-                    "%-55s: %d of %d runs (%.1f%%) exceeded %d%% of max-run-time (%d s)"
-                    % (
-                        name,
-                        tasks_gt_pct,
-                        count,
-                        tasks_gt_pct * 100 / count,
-                        threshold_pct,
-                        max_run_time,
-                    )
-                )
-        else:
-            print("No tasks found.")
 
 
 class TestInfoReport(TestInfo):
@@ -614,53 +225,7 @@ class TestInfoReport(TestInfo):
 
     def __init__(self, verbose):
         TestInfo.__init__(self, verbose)
-        self.total_activedata_matches = 0
         self.threads = []
-
-    def add_activedata_for_suite(
-        self, label, branches, days, suite_clause, tests_clause, path_mod
-    ):
-        dates_clause = {"date": "today-%dday" % days}
-        where_conditions = [
-            suite_clause,
-            {"in": {"repo.branch.name": branches.split(",")}},
-            {"gt": {"run.timestamp": dates_clause}},
-        ]
-        if tests_clause:
-            where_conditions.append(tests_clause)
-        ad_query = {
-            "from": "unittest",
-            "limit": ACTIVEDATA_RECORD_LIMIT,
-            "format": "list",
-            "groupby": ["result.test"],
-            "select": [
-                {"name": "result.count", "aggregate": "count"},
-                {
-                    "name": "result.duration",
-                    "value": "result.duration",
-                    "aggregate": "sum",
-                },
-                {
-                    "name": "result.failures",
-                    "value": {
-                        "case": [{"when": {"eq": {"result.ok": "F"}}, "then": 1}]
-                    },
-                    "aggregate": "sum",
-                    "default": 0,
-                },
-                {
-                    "name": "result.skips",
-                    "value": {
-                        "case": [{"when": {"eq": {"result.status": "SKIP"}}, "then": 1}]
-                    },
-                    "aggregate": "sum",
-                    "default": 0,
-                },
-            ],
-            "where": {"and": where_conditions},
-        }
-        t = ActiveDataThread(label, self, ad_query, path_mod)
-        self.threads.append(t)
 
     def update_report(self, by_component, result, path_mod):
         def update_item(item, label, value):
@@ -688,51 +253,6 @@ class TestInfoReport(TestInfo):
                         update_item(item, "failed runs", result.get("failures", 0))
                         return True
         return False
-
-    def collect_activedata_results(self, by_component):
-        # Start the first MAX_ACTIVEDATA_CONCURRENCY threads. If too many
-        # concurrent requests are made to ActiveData, the requests frequently
-        # fail (504 is the typical response).
-        for i in range(min(MAX_ACTIVEDATA_CONCURRENCY, len(self.threads))):
-            t = self.threads[i]
-            t.start()
-        # Wait for running threads (first N threads in self.threads) to complete.
-        # When a thread completes, start the next thread, process the results
-        # from the completed thread, and remove the completed thread from
-        # the thread list.
-        while len(self.threads):
-            running_threads = min(MAX_ACTIVEDATA_CONCURRENCY, len(self.threads))
-            for i in range(running_threads):
-                t = self.threads[i]
-                t.join(1)
-                if not t.isAlive():
-                    ad_response = t.response
-                    path_mod = t.context
-                    name = t.name
-                    del self.threads[i]
-                    if len(self.threads) >= MAX_ACTIVEDATA_CONCURRENCY:
-                        running_threads = min(
-                            MAX_ACTIVEDATA_CONCURRENCY, len(self.threads)
-                        )
-                        self.threads[running_threads - 1].start()
-                    if ad_response:
-                        if len(ad_response) >= ACTIVEDATA_RECORD_LIMIT:
-                            print(
-                                "%s: ActiveData query limit reached; data may be missing"
-                                % name
-                            )
-                        matches = 0
-                        for record in ad_response:
-                            if "result" in record:
-                                result = record["result"]
-                                if self.update_report(by_component, result, path_mod):
-                                    matches += 1
-                        self.log_verbose(
-                            "%s: %d results; %d matches"
-                            % (name, len(ad_response), matches)
-                        )
-                        self.total_activedata_matches += matches
-                    break
 
     def path_mod_reftest(self, path):
         # "<path1> == <path2>" -> "<path1>"
@@ -776,81 +296,6 @@ class TestInfoReport(TestInfo):
         path = path.split(".ini:")[-1]
         return path
 
-    def add_activedata(self, branches, days, by_component):
-        suites = {
-            # List of known suites requiring special path handling and/or
-            # suites typically containing thousands of test paths.
-            # regexes have been selected by trial and error to partition data
-            # into queries returning less than ACTIVEDATA_RECORD_LIMIT records.
-            "reftest": (
-                self.path_mod_reftest,
-                [
-                    {"regex": {"result.test": "layout/reftests/[a-k].*"}},
-                    {"regex": {"result.test": "layout/reftests/[^a-k].*"}},
-                    {"not": {"regex": {"result.test": "layout/reftests/.*"}}},
-                ],
-            ),
-            "web-platform-tests": (
-                self.path_mod_wpt,
-                [
-                    {"regex": {"result.test": "/[a-g].*"}},
-                    {"regex": {"result.test": "/[h-p].*"}},
-                    {"not": {"regex": {"result.test": "/[a-p].*"}}},
-                ],
-            ),
-            "web-platform-tests-reftest": (
-                self.path_mod_wpt,
-                [
-                    {"regex": {"result.test": "/css/css-.*"}},
-                    {"not": {"regex": {"result.test": "/css/css-.*"}}},
-                ],
-            ),
-            "crashtest": (
-                None,
-                [
-                    {"regex": {"result.test": "[a-g].*"}},
-                    {"not": {"regex": {"result.test": "[a-g].*"}}},
-                ],
-            ),
-            "web-platform-tests-wdspec": (self.path_mod_wpt, [None]),
-            "web-platform-tests-crashtest": (self.path_mod_wpt, [None]),
-            "web-platform-tests-print-reftest": (self.path_mod_wpt, [None]),
-            "xpcshell": (self.path_mod_xpcshell, [None]),
-            "mochitest-plain": (None, [None]),
-            "mochitest-browser-chrome": (None, [None]),
-            "mochitest-media": (None, [None]),
-            "mochitest-devtools-chrome": (None, [None]),
-            "marionette": (self.path_mod_marionette, [None]),
-            "mochitest-chrome": (None, [None]),
-        }
-        unsupported_suites = [
-            # Usually these suites are excluded because currently the test resolver
-            # does not provide test paths for them.
-            "jsreftest",
-            "jittest",
-            "geckoview-junit",
-            "cppunittest",
-        ]
-        for suite in suites:
-            suite_clause = {"eq": {"run.suite.name": suite}}
-            path_mod = suites[suite][0]
-            test_clauses = suites[suite][1]
-            suite_count = 1
-            for test_clause in test_clauses:
-                label = "%s-%d" % (suite, suite_count)
-                suite_count += 1
-                self.add_activedata_for_suite(
-                    label, branches, days, suite_clause, test_clause, path_mod
-                )
-        # Remainder: All supported suites not handled above.
-        suite_clause = {
-            "not": {"in": {"run.suite.name": unsupported_suites + list(suites)}}
-        }
-        self.add_activedata_for_suite(
-            "remainder", branches, days, suite_clause, None, None
-        )
-        self.collect_activedata_results(by_component)
-
     def description(
         self,
         components,
@@ -861,11 +306,8 @@ class TestInfoReport(TestInfo):
         show_tests,
         show_summary,
         show_annotations,
-        show_activedata,
         filter_values,
         filter_keys,
-        branches,
-        days,
     ):
         # provide a natural language description of the report options
         what = []
@@ -897,11 +339,6 @@ class TestInfoReport(TestInfo):
                 d += " in manifest keys '%s'" % filter_keys
             else:
                 d += " in any part of manifest entry"
-        if show_activedata:
-            d += ", including historical run-time data for the last %d days on %s" % (
-                days,
-                branches,
-            )
         d += " as of %s." % datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         return d
 
@@ -915,13 +352,10 @@ class TestInfoReport(TestInfo):
         show_tests,
         show_summary,
         show_annotations,
-        show_activedata,
         filter_values,
         filter_keys,
         show_components,
         output_file,
-        branches,
-        days,
     ):
         def matches_filters(test):
             """
@@ -1121,20 +555,6 @@ class TestInfoReport(TestInfo):
                 for key in by_component["tests"]:
                     by_component["tests"][key].sort(key=lambda k: k["test"])
 
-        if show_activedata:
-            try:
-                self.add_activedata(branches, days, by_component)
-            except Exception:
-                print("Failed to retrieve some ActiveData data.")
-                traceback.print_exc()
-            self.log_verbose(
-                "%d tests updated with matching ActiveData data"
-                % self.total_activedata_matches
-            )
-            self.log_verbose(
-                "%d seconds waiting for ActiveData" % self.total_activedata_seconds
-            )
-
         by_component["description"] = self.description(
             components,
             flavor,
@@ -1144,11 +564,8 @@ class TestInfoReport(TestInfo):
             show_tests,
             show_summary,
             show_annotations,
-            show_activedata,
             filter_values,
             filter_keys,
-            branches,
-            days,
         )
 
         if show_summary:
