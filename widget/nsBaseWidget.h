@@ -442,7 +442,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   }
   virtual already_AddRefed<DrawTarget> StartRemoteDrawing();
   virtual already_AddRefed<DrawTarget> StartRemoteDrawingInRegion(
-      LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode) {
+      const LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode) {
     return StartRemoteDrawing();
   }
   virtual void EndRemoteDrawing() {}
