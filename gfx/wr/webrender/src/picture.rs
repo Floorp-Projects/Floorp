@@ -261,13 +261,6 @@ impl<Src, Dst> From<CoordinateSpaceMapping<Src, Dst>> for TransformKey {
     }
 }
 
-/// Information about a picture that is pushed / popped on the
-/// PictureUpdateState during picture traversal pass.
-struct PictureInfo {
-    /// The spatial node for this picture.
-    _spatial_node_index: SpatialNodeIndex,
-}
-
 /// Unit for tile coordinates.
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct TileCoordinate;
@@ -3879,7 +3872,6 @@ impl TileCacheInstance {
 
 pub struct PictureScratchBuffer {
     surface_stack: Vec<SurfaceIndex>,
-    picture_stack: Vec<PictureInfo>,
     clip_chain_ids: Vec<ClipChainId>,
 }
 
@@ -3887,7 +3879,6 @@ impl Default for PictureScratchBuffer {
     fn default() -> Self {
         PictureScratchBuffer {
             surface_stack: Vec::new(),
-            picture_stack: Vec::new(),
             clip_chain_ids: Vec::new(),
         }
     }
@@ -3896,13 +3887,11 @@ impl Default for PictureScratchBuffer {
 impl PictureScratchBuffer {
     pub fn begin_frame(&mut self) {
         self.surface_stack.clear();
-        self.picture_stack.clear();
         self.clip_chain_ids.clear();
     }
 
     pub fn recycle(&mut self, recycler: &mut Recycler) {
         recycler.recycle_vec(&mut self.surface_stack);
-        recycler.recycle_vec(&mut self.picture_stack);
     }
  }
 
@@ -3911,7 +3900,6 @@ impl PictureScratchBuffer {
 pub struct PictureUpdateState<'a> {
     surfaces: &'a mut Vec<SurfaceInfo>,
     surface_stack: Vec<SurfaceIndex>,
-    picture_stack: Vec<PictureInfo>,
 }
 
 impl<'a> PictureUpdateState<'a> {
@@ -3931,7 +3919,6 @@ impl<'a> PictureUpdateState<'a> {
         let mut state = PictureUpdateState {
             surfaces,
             surface_stack: buffers.surface_stack.take().cleared(),
-            picture_stack: buffers.picture_stack.take().cleared(),
         };
 
         state.surface_stack.push(SurfaceIndex(0));
@@ -3946,7 +3933,6 @@ impl<'a> PictureUpdateState<'a> {
         );
 
         buffers.surface_stack = state.surface_stack.take();
-        buffers.picture_stack = state.picture_stack.take();
     }
 
     /// Return the current surface
@@ -3973,21 +3959,6 @@ impl<'a> PictureUpdateState<'a> {
     /// Pop a surface on the way up the picture traversal
     fn pop_surface(&mut self) -> SurfaceIndex{
         self.surface_stack.pop().unwrap()
-    }
-
-    /// Push information about a picture on the update stack
-    fn push_picture(
-        &mut self,
-        info: PictureInfo,
-    ) {
-        self.picture_stack.push(info);
-    }
-
-    /// Pop the picture info off, on the way up the picture traversal
-    fn pop_picture(
-        &mut self,
-    ) -> PictureInfo {
-        self.picture_stack.pop().unwrap()
     }
 
     /// Update a picture, determining surface configuration,
@@ -6047,11 +6018,6 @@ impl PicturePrimitive {
             }
         }
 
-        // Push information about this pic on stack for children to read.
-        state.push_picture(PictureInfo {
-            _spatial_node_index: self.spatial_node_index,
-        });
-
         // See if this picture actually needs a surface for compositing.
         // TODO(gw): FPC: Remove the actual / requested composite mode distinction.
         let actual_composite_mode = self.requested_composite_mode.clone();
@@ -6168,9 +6134,6 @@ impl PicturePrimitive {
     ) {
         // Restore the pictures list used during recursion.
         self.prim_list = prim_list;
-
-        // Pop the state information about this picture.
-        state.pop_picture();
 
         let surface = state.current_surface_mut();
 
