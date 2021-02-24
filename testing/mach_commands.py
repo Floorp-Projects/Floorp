@@ -775,11 +775,6 @@ class TestInfoCommand(MachCommandBase):
         "test_names", nargs=argparse.REMAINDER, help="Test(s) of interest."
     )
     @CommandArgument(
-        "--branches",
-        default="mozilla-central,autoland",
-        help="Report for named branches " "(default: mozilla-central,autoland)",
-    )
-    @CommandArgument(
         "--start",
         default=(date.today() - timedelta(7)).strftime("%Y-%m-%d"),
         help="Start date (YYYY-MM-DD)",
@@ -793,21 +788,6 @@ class TestInfoCommand(MachCommandBase):
         help="Retrieve and display general test information.",
     )
     @CommandArgument(
-        "--show-results",
-        action="store_true",
-        help="Retrieve and display ActiveData test result summary.",
-    )
-    @CommandArgument(
-        "--show-durations",
-        action="store_true",
-        help="Retrieve and display ActiveData test duration summary.",
-    )
-    @CommandArgument(
-        "--show-tasks",
-        action="store_true",
-        help="Retrieve and display ActiveData test task names.",
-    )
-    @CommandArgument(
         "--show-bugs",
         action="store_true",
         help="Retrieve and display related Bugzilla bugs.",
@@ -816,13 +796,9 @@ class TestInfoCommand(MachCommandBase):
     def test_info_tests(
         self,
         test_names,
-        branches,
         start,
         end,
         show_info,
-        show_results,
-        show_durations,
-        show_tasks,
         show_bugs,
         verbose,
     ):
@@ -831,55 +807,11 @@ class TestInfoCommand(MachCommandBase):
         ti = testinfo.TestInfoTests(verbose)
         ti.report(
             test_names,
-            branches,
             start,
             end,
             show_info,
-            show_results,
-            show_durations,
-            show_tasks,
             show_bugs,
         )
-
-    @SubCommand(
-        "test-info",
-        "long-tasks",
-        description="Find tasks approaching their taskcluster max-run-time.",
-    )
-    @CommandArgument(
-        "--branches",
-        default="mozilla-central,autoland",
-        help="Report for named branches " "(default: mozilla-central,autoland)",
-    )
-    @CommandArgument(
-        "--start",
-        default=(date.today() - timedelta(7)).strftime("%Y-%m-%d"),
-        help="Start date (YYYY-MM-DD)",
-    )
-    @CommandArgument(
-        "--end", default=date.today().strftime("%Y-%m-%d"), help="End date (YYYY-MM-DD)"
-    )
-    @CommandArgument(
-        "--max-threshold-pct",
-        default=90.0,
-        help="Count tasks exceeding this percentage of max-run-time.",
-    )
-    @CommandArgument(
-        "--filter-threshold-pct",
-        default=0.5,
-        help="Report tasks exceeding this percentage of long tasks.",
-    )
-    @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
-    def report_long_running_tasks(
-        self, branches, start, end, max_threshold_pct, filter_threshold_pct, verbose
-    ):
-        import testinfo
-
-        max_threshold_pct = float(max_threshold_pct)
-        filter_threshold_pct = float(filter_threshold_pct)
-
-        ti = testinfo.TestInfoLongRunningTasks(verbose)
-        ti.report(branches, start, end, max_threshold_pct, filter_threshold_pct)
 
     @SubCommand(
         "test-info",
@@ -922,11 +854,6 @@ class TestInfoCommand(MachCommandBase):
         help="Include list of manifest annotation conditions in report.",
     )
     @CommandArgument(
-        "--show-activedata",
-        action="store_true",
-        help="Include additional data from ActiveData, like run times and counts.",
-    )
-    @CommandArgument(
         "--filter-values",
         help="Comma-separated list of value regular expressions to filter on; "
         "displayed tests contain all specified values.",
@@ -945,18 +872,6 @@ class TestInfoCommand(MachCommandBase):
         help="Do not categorize by bugzilla component.",
     )
     @CommandArgument("--output-file", help="Path to report file.")
-    @CommandArgument(
-        "--branches",
-        default="mozilla-central,autoland",
-        help="Query ActiveData for named branches "
-        "(default: mozilla-central,autoland)",
-    )
-    @CommandArgument(
-        "--days",
-        type=int,
-        default=7,
-        help="Query ActiveData for specified number of days",
-    )
     @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
     def test_report(
         self,
@@ -968,13 +883,10 @@ class TestInfoCommand(MachCommandBase):
         show_tests,
         show_summary,
         show_annotations,
-        show_activedata,
         filter_values,
         filter_keys,
         show_components,
         output_file,
-        branches,
-        days,
         verbose,
     ):
         import testinfo
@@ -997,13 +909,10 @@ class TestInfoCommand(MachCommandBase):
             show_tests,
             show_summary,
             show_annotations,
-            show_activedata,
             filter_values,
             filter_keys,
             show_components,
             output_file,
-            branches,
-            days,
         )
 
     @SubCommand(
