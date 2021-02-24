@@ -215,8 +215,9 @@ void WebRenderTextureHost::PushDisplayItems(
                                         aImageKeys, aFlags);
 }
 
-bool WebRenderTextureHost::SupportsExternalCompositing() {
-  return mWrappedTextureHost->SupportsExternalCompositing();
+bool WebRenderTextureHost::SupportsExternalCompositing(
+    WebRenderBackend aBackend) {
+  return mWrappedTextureHost->SupportsExternalCompositing(aBackend);
 }
 
 bool WebRenderTextureHost::NeedsYFlip() const {

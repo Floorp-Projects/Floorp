@@ -198,5 +198,76 @@ void RenderExternalTextureHost::UpdateTextures(wr::ImageRendering aRendering) {
   mTextureUpdateNeeded = false;
 }
 
+size_t RenderExternalTextureHost::GetPlaneCount() const { return PlaneCount(); }
+
+gfx::SurfaceFormat RenderExternalTextureHost::GetFormat() const {
+  return mFormat;
+}
+
+gfx::ColorDepth RenderExternalTextureHost::GetColorDepth() const {
+  switch (mDescriptor.type()) {
+    case layers::BufferDescriptor::TYCbCrDescriptor:
+      return mDescriptor.get_YCbCrDescriptor().colorDepth();
+    default:
+      return gfx::ColorDepth::COLOR_8;
+  }
+}
+
+gfx::YUVColorSpace RenderExternalTextureHost::GetYUVColorSpace() const {
+  switch (mDescriptor.type()) {
+    case layers::BufferDescriptor::TYCbCrDescriptor:
+      return mDescriptor.get_YCbCrDescriptor().yUVColorSpace();
+    default:
+      return gfx::YUVColorSpace::UNKNOWN;
+  }
+}
+
+bool RenderExternalTextureHost::MapPlane(RenderCompositor* aCompositor,
+                                         uint8_t aChannelIndex,
+                                         PlaneInfo& aPlaneInfo) {
+  if (!mBuffer) {
+    // We hit some problems to get the shmem.
+    gfxCriticalNote << "GetBuffer Failed";
+    return false;
+  }
+
+  switch (mDescriptor.type()) {
+    case layers::BufferDescriptor::TYCbCrDescriptor: {
+      const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+      switch (aChannelIndex) {
+        case 0:
+          aPlaneInfo.mData =
+              layers::ImageDataSerializer::GetYChannel(mBuffer, desc);
+          aPlaneInfo.mStride = desc.yStride();
+          aPlaneInfo.mSize = desc.ySize();
+          break;
+        case 1:
+          aPlaneInfo.mData =
+              layers::ImageDataSerializer::GetCbChannel(mBuffer, desc);
+          aPlaneInfo.mStride = desc.cbCrStride();
+          aPlaneInfo.mSize = desc.cbCrSize();
+          break;
+        case 2:
+          aPlaneInfo.mData =
+              layers::ImageDataSerializer::GetCrChannel(mBuffer, desc);
+          aPlaneInfo.mStride = desc.cbCrStride();
+          aPlaneInfo.mSize = desc.cbCrSize();
+          break;
+      }
+      break;
+    }
+    default: {
+      const layers::RGBDescriptor& desc = mDescriptor.get_RGBDescriptor();
+      aPlaneInfo.mData = mBuffer;
+      aPlaneInfo.mStride = layers::ImageDataSerializer::GetRGBStride(desc);
+      aPlaneInfo.mSize = desc.size();
+      break;
+    }
+  }
+  return true;
+}
+
+void RenderExternalTextureHost::UnmapPlanes() {}
+
 }  // namespace wr
 }  // namespace mozilla
