@@ -4029,6 +4029,7 @@ nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
       SCROLLABLE_XUL_FCDATA(NS_NewButtonBoxFrame);
   return &sXULButtonData;
 }
+
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULLabelOrDescriptionData(const Element& aElement,
