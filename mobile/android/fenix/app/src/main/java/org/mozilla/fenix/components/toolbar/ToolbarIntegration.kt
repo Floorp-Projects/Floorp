@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
+import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -53,6 +54,8 @@ abstract class ToolbarIntegration(
     private val menuPresenter =
         MenuPresenter(toolbar, context.components.core.store, sessionId)
 
+    private val toolbarController = ToolbarBehaviorController(toolbar, store, sessionId)
+
     init {
         toolbar.display.menuBuilder = toolbarMenu.menuBuilder
         toolbar.private = isPrivate
@@ -61,11 +64,13 @@ abstract class ToolbarIntegration(
     override fun start() {
         menuPresenter.start()
         toolbarPresenter.start()
+        toolbarController.start()
     }
 
     override fun stop() {
         menuPresenter.stop()
         toolbarPresenter.stop()
+        toolbarController.stop()
     }
 
     fun invalidateMenu() {
