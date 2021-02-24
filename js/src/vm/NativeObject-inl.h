@@ -683,16 +683,16 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
   // so that integer properties on the prototype are ignored even for out
   // of bounds accesses.
   if (obj->template is<TypedArrayObject>()) {
-    JS::Result<mozilla::Maybe<uint64_t>> index = IsTypedArrayIndex(cx, id);
-    if (index.isErr()) {
+    mozilla::Maybe<uint64_t> index;
+    if (!ToTypedArrayIndex(cx, id, &index)) {
       if (!allowGC) {
         cx->recoverFromOutOfMemory();
       }
       return false;
     }
 
-    if (index.inspect()) {
-      uint64_t idx = index.inspect().value();
+    if (index.isSome()) {
+      uint64_t idx = index.value();
       if (idx < obj->template as<TypedArrayObject>().length().get()) {
         propp.setTypedArrayElement(idx);
       } else {
@@ -761,9 +761,10 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
   // Check for a typed array element.
   if (obj->is<TypedArrayObject>()) {
     mozilla::Maybe<uint64_t> index;
-    JS_TRY_VAR_OR_RETURN_FALSE(cx, index, IsTypedArrayIndex(cx, id));
-
-    if (index) {
+    if (!ToTypedArrayIndex(cx, id, &index)) {
+      return false;
+    }
+    if (index.isSome()) {
       if (index.value() < obj->as<TypedArrayObject>().length().get()) {
         result.setTypedArrayElement(index.value());
       } else {
