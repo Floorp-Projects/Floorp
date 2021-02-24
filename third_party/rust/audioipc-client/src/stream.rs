@@ -8,7 +8,7 @@ use crate::{assert_not_in_callback, run_in_callback};
 use audioipc::frame::{framed, Framed};
 use audioipc::messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage};
 use audioipc::rpc;
-use audioipc::shm::SharedMem;
+use audioipc::shm::{SharedMemMutSlice, SharedMemSlice};
 use audioipc::{codec::LengthDelimitedCodec, messages::StreamCreateParams};
 use cubeb_backend::{ffi, DeviceRef, Error, Result, Stream, StreamOps};
 use futures::Future;
@@ -51,8 +51,8 @@ pub struct ClientStream<'ctx> {
 }
 
 struct CallbackServer {
-    input_shm: Option<SharedMem>,
-    output_shm: Option<SharedMem>,
+    input_shm: Option<SharedMemSlice>,
+    output_shm: Option<SharedMemMutSlice>,
     data_cb: ffi::cubeb_data_callback,
     state_cb: ffi::cubeb_state_callback,
     user_ptr: usize,
@@ -85,32 +85,31 @@ impl rpc::Server for CallbackServer {
 
                 // Clone values that need to be moved into the cpu pool thread.
                 let input_shm = match self.input_shm {
-                    Some(ref shm) => unsafe { Some(shm.unsafe_view()) },
+                    Some(ref shm) => unsafe { Some(shm.unsafe_clone()) },
                     None => None,
                 };
-                let output_shm = match self.output_shm {
-                    Some(ref shm) => unsafe { Some(shm.unsafe_view()) },
+                let mut output_shm = match self.output_shm {
+                    Some(ref shm) => unsafe { Some(shm.unsafe_clone()) },
                     None => None,
                 };
                 let user_ptr = self.user_ptr;
                 let cb = self.data_cb.unwrap();
 
                 self.cpu_pool.spawn_fn(move || {
-                    let input_ptr = match input_shm {
-                        Some(shm) => unsafe {
-                            shm.get_slice(nframes as usize * input_frame_size)
-                                .unwrap()
-                                .as_ptr()
-                        },
+                    // TODO: This is proof-of-concept. Make it better.
+                    let input_ptr: *const u8 = match input_shm {
+                        Some(shm) => shm
+                            .get_slice(nframes as usize * input_frame_size)
+                            .unwrap()
+                            .as_ptr(),
                         None => ptr::null(),
                     };
-                    let output_ptr = match output_shm {
-                        Some(mut shm) => unsafe {
-                            shm.get_mut_slice(nframes as usize * output_frame_size)
-                                .unwrap()
-                                .as_mut_ptr()
-                        },
-                        None => ptr::null(),
+                    let output_ptr: *mut u8 = match output_shm {
+                        Some(ref mut shm) => shm
+                            .get_mut_slice(nframes as usize * output_frame_size)
+                            .unwrap()
+                            .as_mut_ptr(),
+                        None => ptr::null_mut(),
                     };
 
                     run_in_callback(|| {
@@ -190,8 +189,9 @@ impl<'ctx> ClientStream<'ctx> {
         let stream =
             unsafe { audioipc::MessageStream::from_raw_fd(data.platform_handles[0].into_raw()) };
 
+        let input_file = unsafe { data.platform_handles[1].into_file() };
         let input_shm = if has_input {
-            match unsafe { SharedMem::from(&data.platform_handles[1], audioipc::SHM_AREA_SIZE) } {
+            match SharedMemSlice::from(&input_file, audioipc::SHM_AREA_SIZE) {
                 Ok(shm) => Some(shm),
                 Err(e) => {
                     debug!("Client failed to set up input shmem: {}", e);
@@ -202,8 +202,9 @@ impl<'ctx> ClientStream<'ctx> {
             None
         };
 
+        let output_file = unsafe { data.platform_handles[2].into_file() };
         let output_shm = if has_output {
-            match unsafe { SharedMem::from(&data.platform_handles[2], audioipc::SHM_AREA_SIZE) } {
+            match SharedMemMutSlice::from(&output_file, audioipc::SHM_AREA_SIZE) {
                 Ok(shm) => Some(shm),
                 Err(e) => {
                     debug!("Client failed to set up output shmem: {}", e);
