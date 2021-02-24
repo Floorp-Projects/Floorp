@@ -1907,9 +1907,17 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvCapture() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WebRenderBridgeParent::RecvToggleCaptureSequence() {
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvStartCaptureSequence(
+    const nsCString& aPath, const uint32_t& aFlags) {
   if (!mDestroyed) {
-    mApi->ToggleCaptureSequence();
+    mApi->StartCaptureSequence(aPath, aFlags);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvStopCaptureSequence() {
+  if (!mDestroyed) {
+    mApi->StopCaptureSequence();
   }
   return IPC_OK();
 }

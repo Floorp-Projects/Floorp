@@ -4465,9 +4465,18 @@ nsDOMWindowUtils::WrCapture() {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::WrToggleCaptureSequence() {
+nsDOMWindowUtils::WrStartCaptureSequence(const nsACString& aPath,
+                                         uint32_t aFlags) {
   if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
-    wrbc->ToggleCaptureSequence();
+    wrbc->StartCaptureSequence(nsCString(aPath), aFlags);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::WrStopCaptureSequence() {
+  if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
+    wrbc->StopCaptureSequence();
   }
   return NS_OK;
 }

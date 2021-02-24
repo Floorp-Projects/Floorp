@@ -607,8 +607,14 @@ void WebRenderBridgeChild::DeallocResourceShmem(RefCountedShmem& aShm) {
 }
 
 void WebRenderBridgeChild::Capture() { this->SendCapture(); }
-void WebRenderBridgeChild::ToggleCaptureSequence() {
-  this->SendToggleCaptureSequence();
+
+void WebRenderBridgeChild::StartCaptureSequence(const nsCString& aPath,
+                                                uint32_t aFlags) {
+  this->SendStartCaptureSequence(aPath, aFlags);
+}
+
+void WebRenderBridgeChild::StopCaptureSequence() {
+  this->SendStopCaptureSequence();
 }
 
 }  // namespace layers

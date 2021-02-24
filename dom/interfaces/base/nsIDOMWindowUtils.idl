@@ -2036,12 +2036,38 @@ interface nsIDOMWindowUtils : nsISupports {
   void wrCapture();
 
   /**
-   * Start capturing the contents of the current WebRender frame and
-   * save them to a folder relative to the current working directory,
-   * as well as any frames generated from this point onward. If called
-   * again, it will stop capturing.
+   * Flag bits for use in |wrStartCaptureSequence|'s |aFlags| argument.
    */
-  void wrToggleCaptureSequence();
+  const uint32_t WR_CAPTURE_SCENE = 0x1;
+  const uint32_t WR_CAPTURE_FRAME = 0x2;
+  const uint32_t WR_CAPTURE_TILE_CACHE = 0x4;
+  const uint32_t WR_CAPTURE_EXTERNAL_RESOURCES = 0x8;
+
+  /**
+   * Start capturing each WebRender frame to disk.
+   *
+   * |aPath| is the name of a new directory to be created to hold the captures.
+   * it is relative to:
+   * - the |PUBLIC_STORAGE| environment variable, if set, else
+   * - the |MOZ_UPLOAD_DIR| environment variable, if set, else
+   * - the user's home directory, if known, else
+   * the current directory.
+   *
+   * If there is already a directory with the given name, a numeric suffix is
+   * added to ensure a fresh directory is created. This means that you can't
+   * be sure your capture directory is actually named |aPath|.
+   *
+   * |aFlags| is a set of flags from |webrender::render_api::CaptureBits|.
+   *
+   * If there is already a sequence capture in progress, stop it and start a new
+   * one, with the new path and flags.
+   */
+  void wrStartCaptureSequence(in ACString aPath, in uint32_t aFlags);
+
+  /**
+   * Stop a capture begun with |wrStartCaptureSequence|.
+   */
+  void wrStopCaptureSequence();
 
   /**
    * Toggle recording of composition on and off.
