@@ -175,17 +175,16 @@ where
             }
         }
 
-        // Take handle ownership here.
-        let handles = item.platform_handles();
-        if let Some((handles, target_pid)) = handles {
-            // TODO: This could leak target handles if a duplicate fails - make this more robust.
+        let mut got_handles = false;
+        if let Some((handles, target_pid)) = item.platform_handles() {
+            got_handles = true;
             let remote_handles = unsafe {
                 // Attempt to duplicate all 3 handles before checking
                 // result, since we rely on duplicate_platformhandle closing
                 // our source handles.
-                let r1 = duplicate_platformhandle(handles[0], Some(target_pid), true);
-                let r2 = duplicate_platformhandle(handles[1], Some(target_pid), true);
-                let r3 = duplicate_platformhandle(handles[2], Some(target_pid), true);
+                let r1 = duplicate_platformhandle(handles[0], target_pid);
+                let r2 = duplicate_platformhandle(handles[1], target_pid);
+                let r3 = duplicate_platformhandle(handles[2], target_pid);
                 [r1?, r2?, r3?]
             };
             trace!(
@@ -198,7 +197,7 @@ where
 
         self.codec.encode(item, &mut self.write_buf)?;
 
-        if handles.is_some() {
+        if got_handles {
             // Enforce splitting sends on messages that contain file
             // descriptors.
             self.set_frame();
@@ -242,30 +241,23 @@ use super::PlatformHandleType;
 use winapi::shared::minwindef::{DWORD, FALSE};
 use winapi::um::{handleapi, processthreadsapi, winnt};
 
-pub(crate) unsafe fn duplicate_platformhandle(
+// source_handle is effectively taken ownership of (consumed) and
+// closed when duplicate_platformhandle is called.
+// TODO: Make this transfer more explicit via the type system.
+unsafe fn duplicate_platformhandle(
     source_handle: PlatformHandleType,
-    target_pid: Option<DWORD>,
-    close_source: bool,
+    target_pid: DWORD,
 ) -> Result<PlatformHandleType, std::io::Error> {
     let source = processthreadsapi::GetCurrentProcess();
-    let target = if let Some(pid) = target_pid {
-        let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, pid);
-        if !super::valid_handle(target) {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "invalid target process",
-            ));
-        }
-        target
-    } else {
-        source
-    };
+    let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, target_pid);
+    if !super::valid_handle(target) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "invalid target process",
+        ));
+    }
 
     let mut target_handle = std::ptr::null_mut();
-    let mut options = winnt::DUPLICATE_SAME_ACCESS;
-    if close_source {
-        options |= winnt::DUPLICATE_CLOSE_SOURCE;
-    }
     let ok = handleapi::DuplicateHandle(
         source,
         source_handle,
@@ -273,7 +265,7 @@ pub(crate) unsafe fn duplicate_platformhandle(
         &mut target_handle,
         0,
         FALSE,
-        options,
+        winnt::DUPLICATE_CLOSE_SOURCE | winnt::DUPLICATE_SAME_ACCESS,
     );
     handleapi::CloseHandle(target);
     if ok == FALSE {
