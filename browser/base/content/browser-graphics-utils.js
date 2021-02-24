@@ -11,6 +11,7 @@
 var gGfxUtils = {
   _isRecording: false,
   _isTransactionLogging: false,
+  _isCapturingFrames: false,
 
   init() {
     if (Services.prefs.getBoolPref("gfx.webrender.enable-capture")) {
@@ -34,11 +35,25 @@ var gGfxUtils = {
   webrenderCapture() {
     window.windowUtils.wrCapture();
   },
+
+  captureSequencePath: "wr-capture-sequence",
+  captureSequenceFlags:
+    window.windowUtils.WR_CAPTURE_SCENE |
+    window.windowUtils.WR_CAPTURE_EXTERNALS,
+
   /**
    * Trigger a WebRender capture of the current state and future state
    * into a local folder. If called again, it will stop capturing.
    */
   toggleWebrenderCaptureSequence() {
-    window.windowUtils.wrToggleCaptureSequence();
+    this._isCapturingFrames = !this._isCapturingFrames;
+    if (this._isCapturingFrames) {
+      window.windowUtils.wrStartCaptureSequence(
+        this.captureSequencePath,
+        this.captureSequenceFlags
+      );
+    } else {
+      window.windowUtils.wrStopCaptureSequence();
+    }
   },
 };

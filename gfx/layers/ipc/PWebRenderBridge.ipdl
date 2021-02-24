@@ -73,8 +73,14 @@ parent:
   async ScheduleComposite();
   // Save the frame capture to disk
   async Capture();
-  // Start capturing each frame and save to disk, and if already started, stop.
-  async ToggleCaptureSequence();
+
+  // Start capturing each frame to disk. See
+  // nsIDOMWindowUtils::wrStartCaptureSequence for documentation.
+  async StartCaptureSequence(nsCString aPath, uint32_t aFlags);
+
+  // Stop the captures started by StartCaptureSequence. See
+  // nsIDOMWindowUtils::wrStopCaptureSequence for documentation.
+  async StopCaptureSequence();
 
   // Replacement for PCompositorBridge::SyncWithCompositor, but for WR. We need
   // it on PWebRenderBridge because it associated with a particular top-level

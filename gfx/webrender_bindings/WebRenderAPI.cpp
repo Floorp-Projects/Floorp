@@ -673,15 +673,24 @@ void WebRenderAPI::Capture() {
   wr_api_capture(mDocHandle, path, bits);
 }
 
-void WebRenderAPI::ToggleCaptureSequence() {
-  mCaptureSequence = !mCaptureSequence;
+void WebRenderAPI::StartCaptureSequence(const nsCString& aPath,
+                                        uint32_t aFlags) {
   if (mCaptureSequence) {
-    uint8_t bits = 9;                          // TODO: get from JavaScript
-    const char* path = "wr-capture-sequence";  // TODO: get from JavaScript
-    wr_api_start_capture_sequence(mDocHandle, path, bits);
-  } else {
     wr_api_stop_capture_sequence(mDocHandle);
   }
+
+  wr_api_start_capture_sequence(mDocHandle, PromiseFlatCString(aPath).get(),
+                                aFlags);
+
+  mCaptureSequence = true;
+}
+
+void WebRenderAPI::StopCaptureSequence() {
+  if (mCaptureSequence) {
+    wr_api_stop_capture_sequence(mDocHandle);
+  }
+
+  mCaptureSequence = false;
 }
 
 void WebRenderAPI::BeginRecording(const TimeStamp& aRecordingStart,
