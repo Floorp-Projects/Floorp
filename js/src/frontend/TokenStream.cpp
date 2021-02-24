@@ -2956,11 +2956,15 @@ template <typename Unit, class AnyCharsAccess>
           return badToken();
         }
       } else if (IsAsciiDigit(unit)) {
-        // Octal integer literals are not permitted in strict mode code.
-        if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
+        // Reject octal literals that appear in strict mode code.
+        if (!strictModeError(JSMSG_DEPRECATED_OCTAL_LITERAL)) {
           return badToken();
         }
-        anyCharsAccess().flags.sawDeprecatedOctal = true;
+
+        // The above test doesn't catch a few edge cases; see
+        // |GeneralParser::maybeParseDirective|.  Record the violation so that
+        // that function can handle them.
+        anyCharsAccess().setSawDeprecatedOctalLiteral();
 
         radix = 8;
         // one past the '0'
@@ -3617,6 +3621,38 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
 
         default: {
           if (!IsAsciiOctal(unit)) {
+            // \8 or \9 in an untagged template literal is a syntax error,
+            // reported in GeneralParser::noSubstitutionUntaggedTemplate.
+            //
+            // Tagged template literals, however, may contain \8 and \9.  The
+            // "cooked" representation of such a part will be |undefined|, and
+            // the "raw" representation will contain the literal characters.
+            //
+            //   function f(parts) {
+            //     assertEq(parts[0], undefined);
+            //     assertEq(parts.raw[0], "\\8");
+            //     return "composed";
+            //   }
+            //   assertEq(f`\8`, "composed");
+            if (unit == '8' || unit == '9') {
+              TokenStreamAnyChars& anyChars = anyCharsAccess();
+              if (parsingTemplate) {
+                anyChars.setInvalidTemplateEscape(
+                    this->sourceUnits.offset() - 2,
+                    InvalidEscapeType::EightOrNine);
+                continue;
+              }
+
+              // \8 and \9 are forbidden in string literals in strict mode code.
+              if (!strictModeError(JSMSG_DEPRECATED_EIGHT_OR_NINE_ESCAPE)) {
+                return false;
+              }
+
+              // The above test doesn't catch a few edge cases; see
+              // |GeneralParser::maybeParseDirective|.  Record the violation so
+              // that that function can handle them.
+              anyChars.setSawDeprecatedEightOrNineEscape();
+            }
             break;
           }
 
@@ -3629,7 +3665,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
             return false;
           }
 
-          // Strict mode code allows only \0, then a non-digit.
+          // Strict mode code allows only \0 followed by a non-digit.
           if (val != 0 || IsAsciiDigit(unit)) {
             TokenStreamAnyChars& anyChars = anyCharsAccess();
             if (parsingTemplate) {
@@ -3637,10 +3673,15 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
                                                 InvalidEscapeType::Octal);
               continue;
             }
-            if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
+
+            if (!strictModeError(JSMSG_DEPRECATED_OCTAL_ESCAPE)) {
               return false;
             }
-            anyChars.flags.sawDeprecatedOctal = true;
+
+            // The above test doesn't catch a few edge cases; see
+            // |GeneralParser::maybeParseDirective|.  Record the violation so
+            // that that function can handle them.
+            anyChars.setSawDeprecatedOctalEscape();
           }
 
           if (IsAsciiOctal(unit)) {

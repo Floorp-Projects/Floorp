@@ -248,21 +248,33 @@ extern const char* ReservedWordToCharZ(TaggedParserAtomIndex name);
 // nullptr otherwise.
 extern const char* ReservedWordToCharZ(TokenKind tt);
 
+enum class DeprecatedContent : uint8_t {
+  // No deprecated content was present.
+  None = 0,
+  // Octal literal not prefixed by "0o" but rather by just "0", e.g. 0755.
+  OctalLiteral,
+  // Octal character escape, e.g. "hell\157 world".
+  OctalEscape,
+  // NonOctalDecimalEscape, i.e. "\8" or "\9".
+  EightOrNineEscape,
+};
+
 struct TokenStreamFlags {
   // Hit end of file.
   bool isEOF : 1;
   // Non-whitespace since start of line.
   bool isDirtyLine : 1;
-  // Saw an octal character escape or a 0-prefixed octal literal.
-  bool sawDeprecatedOctal : 1;
   // Hit a syntax error, at start or during a token.
   bool hadError : 1;
+
+  // The nature of any deprecated content seen since last reset.
+  DeprecatedContent sawDeprecatedContent : 2;
 
   TokenStreamFlags()
       : isEOF(false),
         isDirtyLine(false),
-        sawDeprecatedOctal(false),
-        hadError(false) {}
+        hadError(false),
+        sawDeprecatedContent(DeprecatedContent::None) {}
 };
 
 template <typename Unit>
@@ -543,7 +555,9 @@ enum class InvalidEscapeType {
   // codepoint > 10FFFF.
   UnicodeOverflow,
   // An octal escape in a template token.
-  Octal
+  Octal,
+  // NonOctalDecimalEscape - \8 or \9.
+  EightOrNine
 };
 
 class TokenStreamAnyChars : public TokenStreamShared {
@@ -767,9 +781,24 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   // Flag methods.
   bool isEOF() const { return flags.isEOF; }
-  bool sawDeprecatedOctal() const { return flags.sawDeprecatedOctal; }
   bool hadError() const { return flags.hadError; }
-  void clearSawDeprecatedOctal() { flags.sawDeprecatedOctal = false; }
+
+  DeprecatedContent sawDeprecatedContent() const {
+    return flags.sawDeprecatedContent;
+  }
+  void clearSawDeprecatedContent() {
+    flags.sawDeprecatedContent = DeprecatedContent::None;
+  }
+
+  void setSawDeprecatedOctalLiteral() {
+    flags.sawDeprecatedContent = DeprecatedContent::OctalLiteral;
+  }
+  void setSawDeprecatedOctalEscape() {
+    flags.sawDeprecatedContent = DeprecatedContent::OctalEscape;
+  }
+  void setSawDeprecatedEightOrNineEscape() {
+    flags.sawDeprecatedContent = DeprecatedContent::EightOrNineEscape;
+  }
 
   bool hasInvalidTemplateEscape() const {
     return invalidTemplateEscapeType != InvalidEscapeType::None;
@@ -2582,7 +2611,10 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         errorAt(offset, JSMSG_UNICODE_OVERFLOW, "escape sequence");
         return;
       case InvalidEscapeType::Octal:
-        errorAt(offset, JSMSG_DEPRECATED_OCTAL);
+        errorAt(offset, JSMSG_DEPRECATED_OCTAL_ESCAPE);
+        return;
+      case InvalidEscapeType::EightOrNine:
+        errorAt(offset, JSMSG_DEPRECATED_EIGHT_OR_NINE_ESCAPE);
         return;
     }
   }
