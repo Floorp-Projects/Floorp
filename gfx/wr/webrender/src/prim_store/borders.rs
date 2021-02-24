@@ -171,7 +171,7 @@ impl InternablePrimitive for NormalBorderPrim {
     ) -> PrimitiveInstanceKind {
         PrimitiveInstanceKind::NormalBorder {
             data_handle,
-            cache_handles: storage::Range::empty(),
+            render_task_ids: storage::Range::empty(),
         }
     }
 }

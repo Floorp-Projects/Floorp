@@ -1584,7 +1584,7 @@ fn compute_box_shadow_parameters(
         clip_mode,
         stretch_mode_x,
         stretch_mode_y,
-        cache_handle: None,
+        render_task: None,
         cache_key: None,
         minimal_shadow_rect,
     }

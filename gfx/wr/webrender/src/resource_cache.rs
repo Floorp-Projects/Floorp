@@ -93,6 +93,10 @@ impl CacheItem {
             user_data: [0.0, 0.0, 0.0],
         }
     }
+
+    pub fn is_valid(&self) -> bool {
+        self.texture_id != TextureSource::Invalid
+    }
 }
 
 /// Represents the backing store of an image in the cache.
@@ -585,7 +589,7 @@ impl ResourceCache {
         parent: RenderTaskParent,
         surfaces: &[SurfaceInfo],
         f: F,
-    ) -> RenderTaskCacheEntryHandle
+    ) -> RenderTaskId
     where
         F: FnOnce(&mut RenderTaskGraphBuilder) -> RenderTaskId,
     {

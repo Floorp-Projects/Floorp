@@ -29,7 +29,8 @@ use crate::prim_store::gradient::LinearGradientPrimitive;
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
 use crate::render_backend::DataStores;
-use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheEntryHandle};
+use crate::render_task_graph::RenderTaskId;
+use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{RenderTaskKind, RenderTask};
 use crate::segment::SegmentBuilder;
@@ -315,7 +316,7 @@ fn prepare_interned_prim_for_render(
     let mut is_opaque = false;
 
     match &mut prim_instance.kind {
-        PrimitiveInstanceKind::LineDecoration { data_handle, ref mut cache_handle, .. } => {
+        PrimitiveInstanceKind::LineDecoration { data_handle, ref mut render_task, .. } => {
             profile_scope!("LineDecoration");
             let prim_data = &mut data_stores.line_decoration[*data_handle];
             let common_data = &mut prim_data.common;
@@ -350,7 +351,7 @@ fn prepare_interned_prim_for_render(
                 //           once the prepare_prims and batching are unified. When that
                 //           happens, we can use the cache handle immediately, and not need
                 //           to temporarily store it in the primitive instance.
-                *cache_handle = Some(frame_state.resource_cache.request_render_task(
+                *render_task = Some(frame_state.resource_cache.request_render_task(
                     RenderTaskCacheKey {
                         size: task_size,
                         kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
@@ -430,7 +431,7 @@ fn prepare_interned_prim_for_render(
             // cache with any shared template data.
             prim_data.update(frame_state, frame_context.scene_properties);
         }
-        PrimitiveInstanceKind::NormalBorder { data_handle, ref mut cache_handles, .. } => {
+        PrimitiveInstanceKind::NormalBorder { data_handle, ref mut render_task_ids, .. } => {
             profile_scope!("NormalBorder");
             let prim_data = &mut data_stores.normal_border[*data_handle];
             let common_data = &mut prim_data.common;
@@ -475,7 +476,7 @@ fn prepare_interned_prim_for_render(
             // For each edge and corner, request the render task by content key
             // from the render task cache. This ensures that the render task for
             // this segment will be available for batching later in the frame.
-            let mut handles: SmallVec<[RenderTaskCacheEntryHandle; 8]> = SmallVec::new();
+            let mut handles: SmallVec<[RenderTaskId; 8]> = SmallVec::new();
 
             for segment in &border_data.border_segments {
                 // Update the cache key device size based on requested scale.
@@ -509,7 +510,7 @@ fn prepare_interned_prim_for_render(
                 ));
             }
 
-            *cache_handles = scratch
+            *render_task_ids = scratch
                 .border_cache_handles
                 .extend(handles);
         }
@@ -818,7 +819,7 @@ fn prepare_interned_prim_for_render(
                             // Request the render task each frame.
                             gradient.cache_segments.push(
                                 CachedGradientSegment {
-                                    handle: frame_state.resource_cache.request_render_task(
+                                    render_task: frame_state.resource_cache.request_render_task(
                                         RenderTaskCacheKey {
                                             size: task_size,
                                             kind: RenderTaskCacheKeyKind::Gradient(cache_key),
