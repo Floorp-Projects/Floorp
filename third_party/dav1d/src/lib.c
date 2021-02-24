@@ -65,6 +65,7 @@ COLD const char *dav1d_version(void) {
 COLD void dav1d_default_settings(Dav1dSettings *const s) {
     s->n_frame_threads = 1;
     s->n_tile_threads = 1;
+    s->n_postfilter_threads = 1;
     s->apply_grain = 1;
     s->allocator.cookie = NULL;
     s->allocator.alloc_picture_callback = dav1d_default_picture_alloc;
@@ -100,6 +101,8 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
 
     validate_input_or_ret(c_out != NULL, DAV1D_ERR(EINVAL));
     validate_input_or_ret(s != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(s->n_postfilter_threads >= 1 &&
+                          s->n_postfilter_threads <= DAV1D_MAX_POSTFILTER_THREADS, DAV1D_ERR(EINVAL));
     validate_input_or_ret(s->n_tile_threads >= 1 &&
                           s->n_tile_threads <= DAV1D_MAX_TILE_THREADS, DAV1D_ERR(EINVAL));
     validate_input_or_ret(s->n_frame_threads >= 1 &&
@@ -136,9 +139,17 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     {
         goto error;
     }
-    if (c->allocator.alloc_picture_callback == dav1d_default_picture_alloc) {
+
+    if (c->allocator.alloc_picture_callback   == dav1d_default_picture_alloc &&
+        c->allocator.release_picture_callback == dav1d_default_picture_release)
+    {
+        if (c->allocator.cookie) goto error;
         if (dav1d_mem_pool_init(&c->picture_pool)) goto error;
         c->allocator.cookie = c->picture_pool;
+    } else if (c->allocator.alloc_picture_callback   == dav1d_default_picture_alloc ||
+               c->allocator.release_picture_callback == dav1d_default_picture_release)
+    {
+        goto error;
     }
 
     /* On 32-bit systems extremely large frame sizes can cause overflows in
@@ -152,12 +163,49 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
                       s->frame_size_limit, c->frame_size_limit);
     }
 
-    c->frame_thread.flush = &c->frame_thread.flush_mem;
-    atomic_init(c->frame_thread.flush, 0);
+    c->flush = &c->flush_mem;
+    atomic_init(c->flush, 0);
+
+    c->n_pfc = s->n_postfilter_threads;
     c->n_fc = s->n_frame_threads;
     c->fc = dav1d_alloc_aligned(sizeof(*c->fc) * s->n_frame_threads, 32);
     if (!c->fc) goto error;
     memset(c->fc, 0, sizeof(*c->fc) * s->n_frame_threads);
+
+    if (c->n_pfc > 1) {
+        c->pfc = dav1d_alloc_aligned(sizeof(*c->pfc) * s->n_postfilter_threads, 32);
+        if (!c->pfc) goto error;
+        memset(c->pfc, 0, sizeof(*c->pfc) * s->n_postfilter_threads);
+        if (pthread_mutex_init(&c->postfilter_thread.lock, NULL)) goto error;
+        if (pthread_cond_init(&c->postfilter_thread.cond, NULL)) {
+            pthread_mutex_destroy(&c->postfilter_thread.lock);
+            goto error;
+        }
+        c->postfilter_thread.inited = 1;
+        for (int n = 0; n < s->n_frame_threads; n++) {
+            Dav1dFrameContext *const f = &c->fc[n];
+            if (pthread_cond_init(&f->lf.thread.cond, NULL)) goto error;
+            f->lf.thread.pftd = &c->postfilter_thread;
+            f->lf.thread.done = 1;
+            f->lf.thread.inited = 1;
+        }
+        for (int n = 0; n < s->n_postfilter_threads; ++n) {
+            Dav1dPostFilterContext *const pf = &c->pfc[n];
+            pf->c = c;
+            if (pthread_mutex_init(&pf->td.lock, NULL)) goto error;
+            if (pthread_cond_init(&pf->td.cond, NULL)) {
+                pthread_mutex_destroy(&pf->td.lock);
+                goto error;
+            }
+            if (pthread_create(&pf->td.thread, &thread_attr, dav1d_postfilter_task, pf)) {
+                pthread_cond_destroy(&c->postfilter_thread.cond);
+                pthread_mutex_destroy(&c->postfilter_thread.lock);
+                goto error;
+            }
+            pf->td.inited = 1;
+        }
+    }
+
     if (c->n_fc > 1) {
         c->frame_thread.out_delayed =
             calloc(c->n_fc, sizeof(*c->frame_thread.out_delayed));
@@ -459,11 +507,17 @@ void dav1d_flush(Dav1dContext *const c) {
     dav1d_ref_dec(&c->content_light_ref);
     dav1d_ref_dec(&c->itut_t35_ref);
 
-    if (c->n_fc == 1) return;
+    if (c->n_fc == 1 && c->n_pfc == 1) return;
 
-    // mark each currently-running frame as flushing, so that we
-    // exit out as quickly as the running thread checks this flag
-    atomic_store(c->frame_thread.flush, 1);
+    // wait for threads to complete flushing
+    if (c->n_pfc > 1)
+        pthread_mutex_lock(&c->postfilter_thread.lock);
+    atomic_store(c->flush, 1);
+    if (c->n_pfc > 1) {
+        pthread_cond_broadcast(&c->postfilter_thread.cond);
+        pthread_mutex_unlock(&c->postfilter_thread.lock);
+    }
+    if (c->n_fc == 1) goto skip_ft_flush;
     for (unsigned n = 0, next = c->frame_thread.next; n < c->n_fc; n++, next++) {
         if (next == c->n_fc) next = 0;
         Dav1dFrameContext *const f = &c->fc[next];
@@ -475,13 +529,31 @@ void dav1d_flush(Dav1dContext *const c) {
             assert(!f->cur.data[0]);
         }
         pthread_mutex_unlock(&f->frame_thread.td.lock);
-        Dav1dThreadPicture *const out_delayed = &c->frame_thread.out_delayed[next];
+        Dav1dThreadPicture *const out_delayed =
+            &c->frame_thread.out_delayed[next];
         if (out_delayed->p.data[0])
             dav1d_thread_picture_unref(out_delayed);
     }
-    atomic_store(c->frame_thread.flush, 0);
-
     c->frame_thread.next = 0;
+skip_ft_flush:
+    if (c->n_pfc > 1) {
+        for (unsigned i = 0; i < c->n_pfc; ++i) {
+            Dav1dPostFilterContext *const pf = &c->pfc[i];
+            pthread_mutex_lock(&pf->td.lock);
+            if (!pf->flushed)
+                pthread_cond_wait(&pf->td.cond, &pf->td.lock);
+            pf->flushed = 0;
+            pthread_mutex_unlock(&pf->td.lock);
+        }
+        pthread_mutex_lock(&c->postfilter_thread.lock);
+        c->postfilter_thread.tasks = NULL;
+        pthread_mutex_unlock(&c->postfilter_thread.lock);
+        for (unsigned i = 0; i < c->n_fc; ++i) {
+            freep(&c->fc[i].lf.thread.tasks);
+            c->fc[i].lf.thread.num_tasks = 0;
+        }
+    }
+    atomic_store(c->flush, 0);
 }
 
 COLD void dav1d_close(Dav1dContext **const c_out) {
@@ -494,6 +566,25 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
     if (!c) return;
 
     if (flush) dav1d_flush(c);
+
+    if (c->pfc) {
+        struct PostFilterThreadData *pftd = &c->postfilter_thread;
+        if (pftd->inited) {
+            pthread_mutex_lock(&pftd->lock);
+            for (unsigned n = 0; n < c->n_pfc && c->pfc[n].td.inited; n++)
+                c->pfc[n].die = 1;
+            pthread_cond_broadcast(&pftd->cond);
+            pthread_mutex_unlock(&pftd->lock);
+            for (unsigned n = 0; n < c->n_pfc && c->pfc[n].td.inited; n++) {
+                pthread_join(c->pfc[n].td.thread, NULL);
+                pthread_cond_destroy(&c->pfc[n].td.cond);
+                pthread_mutex_destroy(&c->pfc[n].td.lock);
+            }
+            pthread_cond_destroy(&pftd->cond);
+            pthread_mutex_destroy(&pftd->lock);
+        }
+        dav1d_free_aligned(c->pfc);
+    }
 
     for (unsigned n = 0; c->fc && n < c->n_fc; n++) {
         Dav1dFrameContext *const f = &c->fc[n];
@@ -545,6 +636,10 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
             Dav1dTileState *const ts = &f->ts[m];
             pthread_cond_destroy(&ts->tile_thread.cond);
             pthread_mutex_destroy(&ts->tile_thread.lock);
+        }
+        if (f->lf.thread.inited) {
+            freep(&f->lf.thread.tasks);
+            pthread_cond_destroy(&f->lf.thread.cond);
         }
         dav1d_free_aligned(f->ts);
         dav1d_free_aligned(f->tc);

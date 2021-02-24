@@ -141,13 +141,12 @@ function lpf_4_wd\wd\()_neon
         vmov.i16        d6,  #3
         vbic            d0,  d1,  d0  // (fm && wd >= 4 && !hev)
         vmul.i16        d2,  d2,  d6
-        vmov.i16        d6,  #4
+        vmov.i16        d7,  #4
         vadd.i16        d2,  d2,  d4
         vmin.s16        d2,  d2,  d3  // f = iclip_diff()
-        vmov.i16        d7,  #3
         vmax.s16        d2,  d2,  d9  // f = iclip_diff()
-        vqadd.s16       d4,  d6,  d2  // f + 4
-        vqadd.s16       d5,  d7,  d2  // f + 3
+        vqadd.s16       d4,  d7,  d2  // f + 4
+        vqadd.s16       d5,  d6,  d2  // f + 3
         vmin.s16        d4,  d4,  d3  // imin(f + 4, 128 << bitdepth_min_8 - 1)
         vmin.s16        d5,  d5,  d3  // imin(f + 3, 128 << bitdepth_min_8 - 1)
         vshr.s16        d4,  d4,  #3  // f1

@@ -59,33 +59,65 @@
 #endif
 .endm
 
-.macro transpose_8x8b r0, r1, r2, r3, r4, r5, r6, r7, t8, t9
-        trn1            \t8\().8b,  \r0\().8b,  \r1\().8b
-        trn2            \t9\().8b,  \r0\().8b,  \r1\().8b
-        trn1            \r1\().8b,  \r2\().8b,  \r3\().8b
-        trn2            \r3\().8b,  \r2\().8b,  \r3\().8b
-        trn1            \r0\().8b,  \r4\().8b,  \r5\().8b
-        trn2            \r5\().8b,  \r4\().8b,  \r5\().8b
-        trn1            \r2\().8b,  \r6\().8b,  \r7\().8b
-        trn2            \r7\().8b,  \r6\().8b,  \r7\().8b
+.macro sub_sp space
+#ifdef _WIN32
+.if \space > 8192
+        // Here, we'd need to touch two (or more) pages while decrementing
+        // the stack pointer.
+        .error          "sub_sp_align doesn't support values over 8K at the moment"
+.elseif \space > 4096
+        sub             x16, sp,  #4096
+        ldr             xzr, [x16]
+        sub             sp,  x16, #(\space - 4096)
+.else
+        sub             sp,  sp,  #\space
+.endif
+#else
+.if \space >= 4096
+        sub             sp,  sp,  #(\space)/4096*4096
+.endif
+.if (\space % 4096) != 0
+        sub             sp,  sp,  #(\space)%4096
+.endif
+#endif
+.endm
 
-        trn1            \r4\().4h,  \r0\().4h,  \r2\().4h
-        trn2            \r2\().4h,  \r0\().4h,  \r2\().4h
-        trn1            \r6\().4h,  \r5\().4h,  \r7\().4h
-        trn2            \r7\().4h,  \r5\().4h,  \r7\().4h
-        trn1            \r5\().4h,  \t9\().4h,  \r3\().4h
-        trn2            \t9\().4h,  \t9\().4h,  \r3\().4h
-        trn1            \r3\().4h,  \t8\().4h,  \r1\().4h
-        trn2            \t8\().4h,  \t8\().4h,  \r1\().4h
+.macro transpose_8x8b_xtl r0, r1, r2, r3, r4, r5, r6, r7, xtl
+        // a0 b0 a1 b1 a2 b2 a3 b3 a4 b4 a5 b5 a6 b6 a7 b7
+        zip1            \r0\().16b, \r0\().16b, \r1\().16b
+        // c0 d0 c1 d1 c2 d2 d3 d3 c4 d4 c5 d5 c6 d6 d7 d7
+        zip1            \r2\().16b, \r2\().16b, \r3\().16b
+        // e0 f0 e1 f1 e2 f2 e3 f3 e4 f4 e5 f5 e6 f6 e7 f7
+        zip1            \r4\().16b, \r4\().16b, \r5\().16b
+        // g0 h0 g1 h1 g2 h2 h3 h3 g4 h4 g5 h5 g6 h6 h7 h7
+        zip1            \r6\().16b, \r6\().16b, \r7\().16b
 
-        trn1            \r0\().2s,  \r3\().2s,  \r4\().2s
-        trn2            \r4\().2s,  \r3\().2s,  \r4\().2s
-        trn1            \r1\().2s,  \r5\().2s,  \r6\().2s
-        trn2            \r5\().2s,  \r5\().2s,  \r6\().2s
-        trn2            \r6\().2s,  \t8\().2s,  \r2\().2s
-        trn1            \r2\().2s,  \t8\().2s,  \r2\().2s
-        trn1            \r3\().2s,  \t9\().2s,  \r7\().2s
-        trn2            \r7\().2s,  \t9\().2s,  \r7\().2s
+        // a0 b0 c0 d0 a2 b2 c2 d2 a4 b4 c4 d4 a6 b6 c6 d6
+        trn1            \r1\().8h,  \r0\().8h,  \r2\().8h
+        // a1 b1 c1 d1 a3 b3 c3 d3 a5 b5 c5 d5 a7 b7 c7 d7
+        trn2            \r3\().8h,  \r0\().8h,  \r2\().8h
+        // e0 f0 g0 h0 e2 f2 g2 h2 e4 f4 g4 h4 e6 f6 g6 h6
+        trn1            \r5\().8h,  \r4\().8h,  \r6\().8h
+        // e1 f1 g1 h1 e3 f3 g3 h3 e5 f5 g5 h5 e7 f7 g7 h7
+        trn2            \r7\().8h,  \r4\().8h,  \r6\().8h
+
+        // a0 b0 c0 d0 e0 f0 g0 h0 a4 b4 c4 d4 e4 f4 g4 h4
+        trn1            \r0\().4s,  \r1\().4s,  \r5\().4s
+        // a2 b2 c2 d2 e2 f2 g2 h2 a6 b6 c6 d6 e6 f6 g6 h6
+        trn2            \r2\().4s,  \r1\().4s,  \r5\().4s
+        // a1 b1 c1 d1 e1 f1 g1 h1 a5 b5 c5 d5 e5 f5 g5 h5
+        trn1            \r1\().4s,  \r3\().4s,  \r7\().4s
+        // a3 b3 c3 d3 e3 f3 g3 h3 a7 b7 c7 d7 e7 f7 g7 h7
+        trn2            \r3\().4s,  \r3\().4s,  \r7\().4s
+
+        \xtl\()2        \r4\().8h,  \r0\().16b
+        \xtl            \r0\().8h,  \r0\().8b
+        \xtl\()2        \r6\().8h,  \r2\().16b
+        \xtl            \r2\().8h,  \r2\().8b
+        \xtl\()2        \r5\().8h,  \r1\().16b
+        \xtl            \r1\().8h,  \r1\().8b
+        \xtl\()2        \r7\().8h,  \r3\().16b
+        \xtl            \r3\().8h,  \r3\().8b
 .endm
 
 .macro transpose_8x8h r0, r1, r2, r3, r4, r5, r6, r7, t8, t9

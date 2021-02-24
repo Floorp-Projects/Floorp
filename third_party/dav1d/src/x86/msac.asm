@@ -153,6 +153,7 @@ cglobal msac_decode_symbol_adapt4, 0, 6, 6
 .renorm4:
     bsr           ecx, t2d
     xor           ecx, 15  ; d
+.renorm5:
     shl           t2d, cl
     shl            t4, cl
     mov [t7+msac.rng], t2d
@@ -413,13 +414,20 @@ cglobal msac_decode_bool_equi, 0, 6, 0
     sub           t2d, t1d          ; r - v
     sub            t4, rax          ; dif - vw
     cmovb         t2d, t1d
+    mov           t1d, [t0+msac.cnt]
     cmovb          t4, t3
+    movifnidn      t7, t0
+    mov           ecx, 0xbfff
     setb           al ; the upper 32 bits contains garbage but that's OK
+    sub           ecx, t2d
     not            t4
+    ; In this case of this function, (d =) 16 - clz(v) = 2 - (v >> 14)
+    ;   i.e. (0 <= d <= 2) and v < (3 << 14)
+    shr           ecx, 14           ; d
 %if ARCH_X86_64 == 0
     movzx         eax, al
 %endif
-    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm3
+    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm5
 
 cglobal msac_decode_bool, 0, 6, 0
     movifnidn      t0, r0mp

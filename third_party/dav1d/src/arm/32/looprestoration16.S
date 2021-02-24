@@ -28,6 +28,18 @@
 #include "src/arm/asm.S"
 #include "util.S"
 
+const right_ext_mask_buf
+        .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+right_ext_mask:
+        .byte 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        .byte 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        .byte 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        .byte 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+endconst
+
 // void dav1d_wiener_filter_h_16bpc_neon(int16_t *dst, const pixel (*left)[4],
 //                                       const pixel *src, ptrdiff_t stride,
 //                                       const int16_t fh[7], const intptr_t w,
@@ -55,27 +67,19 @@ function wiener_filter_h_16bpc_neon, export=1
         bic             r10, r10, #7
         lsl             r10, r10, #1
 
-        // Clear the last unused element of q0, to allow filtering a single
-        // pixel with one plain vmul+vpadd.
-        mov             r12, #0
-        vmov.16         d1[3], r12
-
         // Set up pointers for reading/writing alternate rows
         add             r12, r0,  r10
         lsl             r10, r10, #1
         add             lr,  r2,  r3
         lsl             r3,  r3,  #1
 
-        // Subtract the width from mid_stride
-        sub             r10, r10, r5, lsl #1
-
-        // For w >= 8, we read (w+5)&~7+8 pixels, for w < 8 we read 16 pixels.
-        cmp             r5,  #8
-        add             r11, r5,  #13
+        // Subtract the aligned width from mid_stride
+        add             r11, r5,  #7
         bic             r11, r11, #7
-        bge             1f
-        mov             r11, #16
-1:
+        sub             r10, r10, r11, lsl #1
+
+        // Subtract the number of pixels read from the source stride
+        add             r11, r11, #8
         sub             r3,  r3,  r11, lsl #1
 
         // Set up the src pointers to include the left edge, for LR_HAVE_LEFT, left == NULL
@@ -143,54 +147,62 @@ function wiener_filter_h_16bpc_neon, export=1
         vdup.16         q11, r11
         vdup.16         q12, r9
 3:      // !LR_HAVE_RIGHT
-        // If we'll have to pad the right edge we need to quit early here.
+
+        // Check whether we need to pad the right edge
         cmp             r5,  #11
         bge             4f   // If w >= 11, all used input pixels are valid
-        cmp             r5,  #7
-        bge             5f   // If w >= 7, we can filter 4 pixels
-        b               6f
+
+        // 1 <= w < 11, w+3 pixels valid in q2-q3. For w=9 or w=10,
+        // this ends up called again; it's not strictly needed in those
+        // cases (we pad enough here), but keeping the code as simple as possible.
+
+        // Insert padding in q2/3.h[w+3] onwards; fuse the +3 (*2) into the
+        // buffer pointer.
+        movrel_local    r4,  right_ext_mask, -6
+        sub             r4,  r4,  r5,  lsl #1
+        vld1.8          {q9, q10}, [r4]
+
+        vbit            q2,  q11, q9
+        vbit            q3,  q11, q10
+        vbit            q4,  q12, q9
+        vbit            q5,  q12, q10
 
 4:      // Loop horizontally
-        vext.8          q8,  q2,  q3,  #2
-        vext.8          q9,  q2,  q3,  #4
-        vext.8          q10, q2,  q3,  #6
-        vmull.s16       q6,  d4,  d0[0]
-        vmlal.s16       q6,  d16, d0[1]
-        vmlal.s16       q6,  d18, d0[2]
-        vmlal.s16       q6,  d20, d0[3]
-        vmull.s16       q7,  d5,  d0[0]
-        vmlal.s16       q7,  d17, d0[1]
-        vmlal.s16       q7,  d19, d0[2]
-        vmlal.s16       q7,  d21, d0[3]
+        vext.8          q7,  q2,  q3,  #4
         vext.8          q8,  q2,  q3,  #8
+        vext.8          q6,  q2,  q3,  #2
         vext.8          q9,  q2,  q3,  #10
-        vext.8          q10, q2,  q3,  #12
+        vadd.i16        q8,  q8,  q7
+        vadd.i16        q9,  q9,  q6
+        vext.8          q6,  q2,  q3,  #12
+        vext.8          q7,  q2,  q3,  #6
+        vadd.i16        q2,  q2,  q6
+        vmull.s16       q6,  d14, d0[3]
         vmlal.s16       q6,  d16, d1[0]
         vmlal.s16       q6,  d18, d1[1]
-        vmlal.s16       q6,  d20, d1[2]
+        vmlal.s16       q6,  d4,  d1[2]
+        vmull.s16       q7,  d15, d0[3]
         vmlal.s16       q7,  d17, d1[0]
         vmlal.s16       q7,  d19, d1[1]
-        vmlal.s16       q7,  d21, d1[2]
-        vext.8          q2,  q4,  q5,  #2
-        vext.8          q10, q4,  q5,  #6
-        vmull.s16       q8,  d8,  d0[0]
-        vmlal.s16       q8,  d4,  d0[1]
-        vmlal.s16       q8,  d20, d0[3]
-        vmull.s16       q9,  d9,  d0[0]
-        vmlal.s16       q9,  d5,  d0[1]
-        vmlal.s16       q9,  d21, d0[3]
-        vext.8          q2,  q4,  q5,  #4
+        vmlal.s16       q7,  d5,  d1[2]
+
+        vext.8          q8,  q4,  q5,  #4
         vext.8          q10, q4,  q5,  #8
-        vmlal.s16       q8,  d4,  d0[2]
-        vmlal.s16       q8,  d20, d1[0]
-        vmlal.s16       q9,  d5,  d0[2]
-        vmlal.s16       q9,  d21, d1[0]
+        vext.8          q9,  q4,  q5,  #2
         vext.8          q2,  q4,  q5,  #10
-        vext.8          q10, q4,  q5,  #12
+        vadd.i16        q10, q10, q8
+        vadd.i16        q2,  q2,  q9
+        vext.8          q8,  q4,  q5,  #12
+        vext.8          q9,  q4,  q5,  #6
+        vadd.i16        q4,  q4,  q8
+        vmull.s16       q8,  d18, d0[3]
+        vmlal.s16       q8,  d20, d1[0]
         vmlal.s16       q8,  d4,  d1[1]
-        vmlal.s16       q8,  d20, d1[2]
+        vmlal.s16       q8,  d8,  d1[2]
+        vmull.s16       q9,  d19, d0[3]
+        vmlal.s16       q9,  d21, d1[0]
         vmlal.s16       q9,  d5,  d1[1]
-        vmlal.s16       q9,  d21, d1[2]
+        vmlal.s16       q9,  d9,  d1[2]
 
         vmvn.i16        q10, #0x8000 // 0x7fff = (1 << 15) - 1
         vadd.i32        q6,  q6,  q14
@@ -209,10 +221,10 @@ function wiener_filter_h_16bpc_neon, export=1
         vmin.u16        q7,  q7,  q10
         vsub.i16        q6,  q6,  q15
         vsub.i16        q7,  q7,  q15
+        subs            r5,  r5,  #8
         vst1.16         {q6}, [r0,  :128]!
         vst1.16         {q7}, [r12, :128]!
 
-        subs            r5,  r5,  #8
         ble             9f
         tst             r7,  #2 // LR_HAVE_RIGHT
         vmov            q2,  q3
@@ -221,148 +233,6 @@ function wiener_filter_h_16bpc_neon, export=1
         vld1.16         {q5}, [lr]!
         bne             4b // If we don't need to pad, just keep filtering.
         b               3b // If we need to pad, check how many pixels we have left.
-
-5:      // Filter 4 pixels, 7 <= w < 11
-.macro filter_4
-        vext.8          d18, d4,  d5,  #6
-        vext.8          d16, d4,  d5,  #2
-        vext.8          d17, d4,  d5,  #4
-        vext.8          d19, d5,  d6,  #2
-        vext.8          d20, d5,  d6,  #4
-        vmull.s16       q6,  d4,  d0[0]
-        vmlal.s16       q6,  d16, d0[1]
-        vmlal.s16       q6,  d17, d0[2]
-        vmlal.s16       q6,  d18, d0[3]
-        vmlal.s16       q6,  d5,  d1[0]
-        vmlal.s16       q6,  d19, d1[1]
-        vmlal.s16       q6,  d20, d1[2]
-
-        vext.8          d18, d8,  d9,  #6
-        vext.8          d16, d8,  d9,  #2
-        vext.8          d17, d8,  d9,  #4
-        vext.8          d19, d9,  d10, #2
-        vext.8          d20, d9,  d10, #4
-        vmull.s16       q7,  d8,  d0[0]
-        vmlal.s16       q7,  d16, d0[1]
-        vmlal.s16       q7,  d17, d0[2]
-        vmlal.s16       q7,  d18, d0[3]
-        vmlal.s16       q7,  d9,  d1[0]
-        vmlal.s16       q7,  d19, d1[1]
-        vmlal.s16       q7,  d20, d1[2]
-
-        vmvn.i16        q10, #0x8000 // 0x7fff = (1 << 15) - 1
-        vadd.i32        q6,  q6,  q14
-        vadd.i32        q7,  q7,  q14
-        vrshl.s32       q6,  q6,  q13
-        vrshl.s32       q7,  q7,  q13
-        vqmovun.s32     d12, q6
-        vqmovun.s32     d13, q7
-        vmin.u16        q6,  q6,  q10
-        vsub.i16        q6,  q6,  q15
-.endm
-        filter_4
-        vst1.16         {d12}, [r0,  :64]!
-        vst1.16         {d13}, [r12, :64]!
-
-        subs            r5,  r5,  #4 // 3 <= w < 7
-        vext.8          q2,  q2,  q3,  #8
-        vext.8          q3,  q3,  q3,  #8
-        vext.8          q4,  q4,  q5,  #8
-        vext.8          q5,  q5,  q5,  #8
-
-6:      // Pad the right edge and filter the last few pixels.
-        // w < 7, w+3 pixels valid in q2-q3
-        cmp             r5,  #5
-        blt             7f
-        bgt             8f
-        // w == 5, 8 pixels valid in q2, q3 invalid
-        vmov            q3,  q11
-        vmov            q5,  q12
-        b               88f
-
-7:      // 1 <= w < 5, 4-7 pixels valid in q2
-        sub             r9,  r5,  #1
-        // r9 = (pixels valid - 4)
-        adr             r11, L(variable_shift_tbl)
-        ldr             r9,  [r11, r9, lsl #2]
-        add             r11, r11, r9
-        vmov            q3,  q11
-        vmov            q5,  q12
-        bx              r11
-
-        .align 2
-L(variable_shift_tbl):
-        .word 44f - L(variable_shift_tbl) + CONFIG_THUMB
-        .word 55f - L(variable_shift_tbl) + CONFIG_THUMB
-        .word 66f - L(variable_shift_tbl) + CONFIG_THUMB
-        .word 77f - L(variable_shift_tbl) + CONFIG_THUMB
-
-44:     // 4 pixels valid in q2/q4, fill the high half with padding.
-        vmov            d5,  d6
-        vmov            d9,  d10
-        b               88f
-        // Shift q2 right, shifting out invalid pixels,
-        // shift q2 left to the original offset, shifting in padding pixels.
-55:     // 5 pixels valid
-        vext.8          q2,  q2,  q2,  #10
-        vext.8          q2,  q2,  q3,  #6
-        vext.8          q4,  q4,  q4,  #10
-        vext.8          q4,  q4,  q5,  #6
-        b               88f
-66:     // 6 pixels valid
-        vext.8          q2,  q2,  q2,  #12
-        vext.8          q2,  q2,  q3,  #4
-        vext.8          q4,  q4,  q4,  #12
-        vext.8          q4,  q4,  q5,  #4
-        b               88f
-77:     // 7 pixels valid
-        vext.8          q2,  q2,  q2,  #14
-        vext.8          q2,  q2,  q3,  #2
-        vext.8          q4,  q4,  q4,  #14
-        vext.8          q4,  q4,  q5,  #2
-        b               88f
-
-8:      // w > 5, w == 6, 9 pixels valid in q2-q3, 1 pixel valid in q3
-        vext.8          q3,  q3,  q3,  #2
-        vext.8          q3,  q3,  q11, #14
-        vext.8          q5,  q5,  q5,  #2
-        vext.8          q5,  q5,  q12, #14
-
-88:
-        // w < 7, q2-q3 padded properly
-        cmp             r5,  #4
-        blt             888f
-
-        // w >= 4, filter 4 pixels
-        filter_4
-        vst1.16         {d12}, [r0,  :64]!
-        vst1.16         {d13}, [r12, :64]!
-        subs            r5,  r5,  #4 // 0 <= w < 4
-        vext.8          q2,  q2,  q3,  #8
-        vext.8          q4,  q4,  q5,  #8
-        beq             9f
-888:    // 1 <= w < 4, filter 1 pixel at a time
-        vmull.s16       q6,  d4,  d0
-        vmull.s16       q7,  d5,  d1
-        vmull.s16       q8,  d8,  d0
-        vmull.s16       q9,  d9,  d1
-        vadd.i32        q6,  q7
-        vadd.i32        q8,  q9
-        vpadd.i32       d12, d12, d13
-        vpadd.i32       d13, d16, d17
-        vpadd.i32       d12, d12, d13
-        vadd.i32        d12, d12, d28
-        vmvn.i16        d20, #0x8000 // 0x7fff = (1 << 15) - 1
-        vrshl.s32       d12, d12, d26
-        vqmovun.s32     d12, q6
-        vmin.u16        d12, d12, d20
-        vsub.i16        d12, d12, d30
-        vst1.16         {d12[0]}, [r0,  :16]!
-        vst1.16         {d12[1]}, [r12, :16]!
-        subs            r5,  r5,  #1
-        vext.8          q2,  q2,  q3,  #2
-        vext.8          q4,  q4,  q5,  #2
-        bgt             888b
 
 9:
         subs            r6,  r6,  #2
@@ -377,7 +247,6 @@ L(variable_shift_tbl):
 0:
         vpop            {q4-q7}
         pop             {r4-r11,pc}
-.purgem filter_4
 endfunc
 
 // void dav1d_wiener_filter_v_16bpc_neon(pixel *dst, ptrdiff_t stride,
@@ -457,7 +326,7 @@ function wiener_filter_v_16bpc_neon, export=1
         vqmovun.s32     d4,  q2
         vqmovun.s32     d5,  q3
         vmin.u16        q2,  q2,  q5    // bitdepth_max
-        vst1.16         {q2}, [r0], r1
+        vst1.16         {q2}, [r0, :128], r1
 .if \compare
         cmp             r4,  #4
 .else
@@ -567,143 +436,6 @@ function wiener_filter_v_16bpc_neon, export=1
 .purgem filter
 endfunc
 
-// void dav1d_copy_narrow_16bpc_neon(pixel *dst, ptrdiff_t stride,
-//                                   const pixel *src, int w, int h);
-function copy_narrow_16bpc_neon, export=1
-        push            {r4,lr}
-        ldr             r4,  [sp, #8]
-        adr             r12, L(copy_narrow_tbl)
-        ldr             r3,  [r12, r3, lsl #2]
-        add             r12, r12, r3
-        bx              r12
-
-        .align 2
-L(copy_narrow_tbl):
-        .word 0
-        .word 10f - L(copy_narrow_tbl) + CONFIG_THUMB
-        .word 20f - L(copy_narrow_tbl) + CONFIG_THUMB
-        .word 30f - L(copy_narrow_tbl) + CONFIG_THUMB
-        .word 40f - L(copy_narrow_tbl) + CONFIG_THUMB
-        .word 50f - L(copy_narrow_tbl) + CONFIG_THUMB
-        .word 60f - L(copy_narrow_tbl) + CONFIG_THUMB
-        .word 70f - L(copy_narrow_tbl) + CONFIG_THUMB
-
-10:
-        add             r3,  r0,  r1
-        lsl             r1,  r1,  #1
-18:
-        subs            r4,  r4,  #8
-        blt             110f
-        vld1.16         {q0}, [r2, :128]!
-        vst1.16         {d0[0]}, [r0, :16], r1
-        vst1.16         {d0[1]}, [r3, :16], r1
-        vst1.16         {d0[2]}, [r0, :16], r1
-        vst1.16         {d0[3]}, [r3, :16], r1
-        vst1.16         {d1[0]}, [r0, :16], r1
-        vst1.16         {d1[1]}, [r3, :16], r1
-        vst1.16         {d1[2]}, [r0, :16], r1
-        vst1.16         {d1[3]}, [r3, :16], r1
-        ble             0f
-        b               18b
-110:
-        add             r4,  r4,  #8
-        asr             r1,  r1,  #1
-11:
-        subs            r4,  r4,  #1
-        vld1.16         {d0[]},  [r2]!
-        vst1.16         {d0[0]}, [r0], r1
-        bgt             11b
-0:
-        pop             {r4,pc}
-
-20:
-        add             r3,  r0,  r1
-        lsl             r1,  r1,  #1
-24:
-        subs            r4,  r4,  #4
-        blt             210f
-        vld1.32         {q0}, [r2, :128]!
-        vst1.32         {d0[0]}, [r0, :32], r1
-        vst1.32         {d0[1]}, [r3, :32], r1
-        vst1.32         {d1[0]}, [r0, :32], r1
-        vst1.32         {d1[1]}, [r3, :32], r1
-        ble             0f
-        b               24b
-210:
-        add             r4,  r4,  #4
-        asr             r1,  r1,  #1
-22:
-        subs            r4,  r4,  #1
-        vld1.32         {d0[]},  [r2, :32]!
-        vst1.32         {d0[0]}, [r0, :32], r1
-        bgt             22b
-0:
-        pop             {r4,pc}
-
-30:
-        ldr             r3,  [r2]
-        ldrh            r12, [r2, #4]
-        add             r2,  r2,  #6
-        subs            r4,  r4,  #1
-        str             r3,  [r0]
-        strh            r12, [r0, #4]
-        add             r0,  r0,  r1
-        bgt             30b
-        pop             {r4,pc}
-
-40:
-        add             r3,  r0,  r1
-        lsl             r1,  r1,  #1
-42:
-        subs            r4,  r4,  #2
-        blt             41f
-        vld1.16         {q0}, [r2, :128]!
-        vst1.16         {d0}, [r0, :64], r1
-        vst1.16         {d1}, [r3, :64], r1
-        ble             0f
-        b               42b
-41:
-        vld1.16         {d0}, [r2, :64]
-        vst1.16         {d0}, [r0, :64]
-0:
-        pop             {r4,pc}
-
-50:
-        vld1.16         {d0}, [r2]
-        ldrh            r12, [r2, #8]
-        add             r2,  r2,  #10
-        subs            r4,  r4,  #1
-        vst1.16         {d0}, [r0]
-        strh            r12, [r0, #8]
-        add             r0,  r0,  r1
-        bgt             50b
-        pop             {r4,pc}
-
-60:
-        vld1.16         {d0}, [r2]
-        ldr             r12, [r2, #8]
-        add             r2,  r2,  #12
-        subs            r4,  r4,  #1
-        vst1.16         {d0}, [r0]
-        str             r12, [r0, #8]
-        add             r0,  r0,  r1
-        bgt             60b
-        pop             {r4,pc}
-
-70:
-        vld1.16         {d0}, [r2]
-        ldr             r12, [r2, #8]
-        ldrh            lr,  [r2, #12]
-        add             r2,  r2,  #14
-        subs            r4,  r4,  #1
-        vst1.16         {d0}, [r0]
-        str             r12, [r0, #8]
-        strh            lr,  [r0, #12]
-        add             r0,  r0,  r1
-        bgt             70b
-        pop             {r4,pc}
-endfunc
-
 #define SUM_STRIDE (384+16)
 
 #include "looprestoration_tmpl.S"
@@ -728,25 +460,15 @@ function sgr_box3_h_16bpc_neon, export=1
         mov             r9,       #(2*2*SUM_STRIDE) // double sum stride
 
         // Subtract the aligned width from the output stride.
-        // With LR_HAVE_RIGHT, align to 8, without it, align to 4.
-        tst             r7,  #2 // LR_HAVE_RIGHT
-        bne             0f
-        // !LR_HAVE_RIGHT
-        add             lr,  r5,  #3
-        bic             lr,  lr,  #3
-        b               1f
-0:
         add             lr,  r5,  #7
         bic             lr,  lr,  #7
-1:
         sub             r9,  r9,  lr, lsl #1
 
         // Store the width for the vertical loop
         mov             r8,  r5
 
         // Subtract the number of pixels read from the input from the stride
-        add             lr,  r5,  #14
-        bic             lr,  lr,  #7
+        add             lr,  lr,  #8
         sub             r4,  r4,  lr, lsl #1
 
         // Set up the src pointers to include the left edge, for LR_HAVE_LEFT, left == NULL
@@ -815,16 +537,26 @@ function sgr_box3_h_16bpc_neon, export=1
         // Restore r11 after using it for a temporary value
         add             r11, r1,  #(2*SUM_STRIDE)
 3:      // !LR_HAVE_RIGHT
-        // If we'll have to pad the right edge we need to quit early here.
+
+        // Check whether we need to pad the right edge
         cmp             r5,  #10
         bge             4f   // If w >= 10, all used input pixels are valid
-        cmp             r5,  #6
-        bge             5f   // If w >= 6, we can filter 4 pixels
-        b               6f
+
+        // 1 <= w < 10, w pixels valid in q0-q1. For w=9, this ends up called
+        // again; it's not strictly needed in those cases (we pad enough here),
+        // but keeping the code as simple as possible.
+
+        // Insert padding in q0/1.h[w] onwards
+        movrel_local    lr,  right_ext_mask
+        sub             lr,  lr,  r5,  lsl #1
+        vld1.8          {q12, q13}, [lr]
+
+        vbit            q0,  q14, q12
+        vbit            q1,  q14, q13
+        vbit            q4,  q15, q12
+        vbit            q5,  q15, q13
 
 4:      // Loop horizontally
-.macro add3 w
-.if \w > 4
         vext.8          q8,  q0,  q1,  #2
         vext.8          q10, q4,  q5,  #2
         vext.8          q9,  q0,  q1,  #4
@@ -833,16 +565,6 @@ function sgr_box3_h_16bpc_neon, export=1
         vadd.i16        q3,  q4,  q10
         vadd.i16        q2,  q2,  q9
         vadd.i16        q3,  q3,  q11
-.else
-        vext.8          d16, d0,  d1,  #2
-        vext.8          d20, d8,  d9,  #2
-        vext.8          d18, d0,  d1,  #4
-        vext.8          d22, d8,  d9,  #4
-        vadd.i16        d4,  d0,  d16
-        vadd.i16        d6,  d8,  d20
-        vadd.i16        d4,  d4,  d18
-        vadd.i16        d6,  d6,  d22
-.endif
 
         vmull.u16       q6,  d0,  d0
         vmlal.u16       q6,  d16, d16
@@ -850,22 +572,18 @@ function sgr_box3_h_16bpc_neon, export=1
         vmull.u16       q12, d8,  d8
         vmlal.u16       q12, d20, d20
         vmlal.u16       q12, d22, d22
-.if \w > 4
         vmull.u16       q7,  d1,  d1
         vmlal.u16       q7,  d17, d17
         vmlal.u16       q7,  d19, d19
         vmull.u16       q13, d9,  d9
         vmlal.u16       q13, d21, d21
         vmlal.u16       q13, d23, d23
-.endif
-.endm
-        add3            8
+        subs            r5,  r5,  #8
         vst1.16         {q2},       [r1,  :128]!
         vst1.16         {q3},       [r11, :128]!
         vst1.32         {q6,  q7},  [r0,  :128]!
         vst1.32         {q12, q13}, [r10, :128]!
 
-        subs            r5,  r5,  #8
         ble             9f
         tst             r7,  #2 // LR_HAVE_RIGHT
         vmov            q0,  q1
@@ -875,78 +593,6 @@ function sgr_box3_h_16bpc_neon, export=1
 
         bne             4b // If we don't need to pad, just keep summing.
         b               3b // If we need to pad, check how many pixels we have left.
-
-5:      // Produce 4 pixels, 6 <= w < 10
-        add3            4
-        vst1.16         {d4},  [r1,  :64]!
-        vst1.16         {d6},  [r11, :64]!
-        vst1.32         {q6},  [r0,  :128]!
-        vst1.32         {q12}, [r10, :128]!
-
-        subs            r5,  r5,  #4 // 2 <= w < 6
-        vext.8          q0,  q0,  q1,  #8
-        vext.8          q4,  q4,  q5,  #8
-
-6:      // Pad the right edge and produce the last few pixels.
-        // 2 <= w < 6, 2-5 pixels valid in q0
-        sub             lr,  r5,  #2
-        // lr = (pixels valid - 2)
-        adr             r11, L(box3_variable_shift_tbl)
-        ldr             lr,  [r11, lr, lsl #2]
-        add             r11, r11, lr
-        bx              r11
-
-        .align 2
-L(box3_variable_shift_tbl):
-        .word 22f - L(box3_variable_shift_tbl) + CONFIG_THUMB
-        .word 33f - L(box3_variable_shift_tbl) + CONFIG_THUMB
-        .word 44f - L(box3_variable_shift_tbl) + CONFIG_THUMB
-        .word 55f - L(box3_variable_shift_tbl) + CONFIG_THUMB
-
-        // Shift q0 right, shifting out invalid pixels,
-        // shift q0 left to the original offset, shifting in padding pixels.
-22:     // 2 pixels valid
-        vext.8          q0,  q0,  q0,  #4
-        vext.8          q4,  q4,  q4,  #4
-        vext.8          q0,  q0,  q14, #12
-        vext.8          q4,  q4,  q15, #12
-        b               88f
-33:     // 3 pixels valid
-        vext.8          q0,  q0,  q0,  #6
-        vext.8          q4,  q4,  q4,  #6
-        vext.8          q0,  q0,  q14, #10
-        vext.8          q4,  q4,  q15, #10
-        b               88f
-44:     // 4 pixels valid
-        vmov            d1,  d28
-        vmov            d9,  d30
-        b               88f
-55:     // 5 pixels valid
-        vext.8          q0,  q0,  q0,  #10
-        vext.8          q4,  q4,  q4,  #10
-        vext.8          q0,  q0,  q14, #6
-        vext.8          q4,  q4,  q15, #6
-
-88:
-        // Restore r11 after using it for a temporary value above
-        add             r11, r1,  #(2*SUM_STRIDE)
-
-        add3            4
-        subs            r5,  r5,  #4
-        vst1.16         {d4},  [r1,  :64]!
-        vst1.16         {d6},  [r11, :64]!
-        vst1.32         {q6},  [r0,  :128]!
-        vst1.32         {q12}, [r10, :128]!
-        ble             9f
-        vext.8          q0,  q0,  q0,  #8
-        vext.8          q4,  q4,  q4,  #8
-        // Only one needed pixel left, but do a normal 4 pixel
-        // addition anyway
-        add3            4
-        vst1.16         {d4},  [r1,  :64]!
-        vst1.16         {d6},  [r11, :64]!
-        vst1.32         {q6},  [r0,  :128]!
-        vst1.32         {q12}, [r10, :128]!
 
 9:
         subs            r6,  r6,  #2
@@ -963,7 +609,6 @@ L(box3_variable_shift_tbl):
 0:
         vpop            {q4-q7}
         pop             {r4-r11,pc}
-.purgem add3
 endfunc
 
 // void dav1d_sgr_box5_h_16bpc_neon(int32_t *sumsq, int16_t *sum,
@@ -986,23 +631,11 @@ function sgr_box5_h_16bpc_neon, export=1
         mov             r9,       #(2*2*SUM_STRIDE) // double sum stride
 
         // Subtract the aligned width from the output stride.
-        // With LR_HAVE_RIGHT, align to 8, without it, align to 4.
-        // Subtract the number of pixels read from the input from the stride.
-        tst             r7,  #2 // LR_HAVE_RIGHT
-        bne             0f
-        // !LR_HAVE_RIGHT
-        add             lr,  r5,  #3
-        bic             lr,  lr,  #3
-        add             r8,  r5,  #13
-        b               1f
-0:
         add             lr,  r5,  #7
         bic             lr,  lr,  #7
-        add             r8,  r5,  #15
-1:
         sub             r9,  r9,  lr, lsl #1
-        bic             r8,  r8,  #7
-        sub             r4,  r4,  r8, lsl #1
+        add             lr,  lr,  #8
+        sub             r4,  r4,  lr, lsl #1
 
         // Store the width for the vertical loop
         mov             r8,  r5
@@ -1072,16 +705,27 @@ function sgr_box5_h_16bpc_neon, export=1
         // Restore r11 after using it for a temporary value
         add             r11, r1,  #(2*SUM_STRIDE)
 3:      // !LR_HAVE_RIGHT
-        // If we'll have to pad the right edge we need to quit early here.
+
+        // Check whether we need to pad the right edge
         cmp             r5,  #11
         bge             4f   // If w >= 11, all used input pixels are valid
-        cmp             r5,  #7
-        bge             5f   // If w >= 7, we can produce 4 pixels
-        b               6f
+
+        // 1 <= w < 11, w+1 pixels valid in q0-q1. For w=9 or w=10,
+        // this ends up called again; it's not strictly needed in those
+        // cases (we pad enough here), but keeping the code as simple as possible.
+
+        // Insert padding in q0/1.h[w+1] onwards; fuse the +1 into the
+        // buffer pointer.
+        movrel_local    lr,  right_ext_mask, -2
+        sub             lr,  lr,  r5,  lsl #1
+        vld1.8          {q12, q13}, [lr]
+
+        vbit            q0,  q14, q12
+        vbit            q1,  q14, q13
+        vbit            q4,  q15, q12
+        vbit            q5,  q15, q13
 
 4:      // Loop horizontally
-.macro add5 w
-.if \w > 4
         vext.8          q8,  q0,  q1,  #2
         vext.8          q10, q4,  q5,  #2
         vext.8          q9,  q0,  q1,  #4
@@ -1090,16 +734,6 @@ function sgr_box5_h_16bpc_neon, export=1
         vadd.i16        q3,  q4,  q10
         vadd.i16        q2,  q2,  q9
         vadd.i16        q3,  q3,  q11
-.else
-        vext.8          d16, d0,  d1,  #2
-        vext.8          d20, d8,  d9,  #2
-        vext.8          d18, d0,  d1,  #4
-        vext.8          d22, d8,  d9,  #4
-        vadd.i16        d4,  d0,  d16
-        vadd.i16        d6,  d8,  d20
-        vadd.i16        d4,  d4,  d18
-        vadd.i16        d6,  d6,  d22
-.endif
 
         vmull.u16       q6,  d0,  d0
         vmlal.u16       q6,  d16, d16
@@ -1107,16 +741,13 @@ function sgr_box5_h_16bpc_neon, export=1
         vmull.u16       q12, d8,  d8
         vmlal.u16       q12, d20, d20
         vmlal.u16       q12, d22, d22
-.if \w > 4
         vmull.u16       q7,  d1,  d1
         vmlal.u16       q7,  d17, d17
         vmlal.u16       q7,  d19, d19
         vmull.u16       q13, d9,  d9
         vmlal.u16       q13, d21, d21
         vmlal.u16       q13, d23, d23
-.endif
 
-.if \w > 4
         vext.8          q8,  q0,  q1,  #6
         vext.8          q10, q4,  q5,  #6
         vext.8          q9,  q0,  q1,  #8
@@ -1125,35 +756,22 @@ function sgr_box5_h_16bpc_neon, export=1
         vadd.i16        q3,  q3,  q10
         vadd.i16        q2,  q2,  q9
         vadd.i16        q3,  q3,  q11
-.else
-        vext.8          d16, d0,  d1,  #6
-        // d18 would be equal to d1; using d1 instead
-        vext.8          d20, d8,  d9,  #6
-        // d22 would be equal to d9; using d9 instead
-        vadd.i16        d4,  d4,  d16
-        vadd.i16        d6,  d6,  d20
-        vadd.i16        d4,  d4,  d1
-        vadd.i16        d6,  d6,  d9
-.endif
 
         vmlal.u16       q6,  d16, d16
         vmlal.u16       q6,  d1,  d1
         vmlal.u16       q12, d20, d20
         vmlal.u16       q12, d9,  d9
-.if \w > 4
         vmlal.u16       q7,  d17, d17
         vmlal.u16       q7,  d19, d19
         vmlal.u16       q13, d21, d21
         vmlal.u16       q13, d23, d23
-.endif
-.endm
-        add5            8
+
+        subs            r5,  r5,  #8
         vst1.16         {q2},       [r1,  :128]!
         vst1.16         {q3},       [r11, :128]!
         vst1.32         {q6,  q7},  [r0,  :128]!
         vst1.32         {q12, q13}, [r10, :128]!
 
-        subs            r5,  r5,  #8
         ble             9f
         tst             r7,  #2 // LR_HAVE_RIGHT
         vmov            q0,  q1
@@ -1162,92 +780,6 @@ function sgr_box5_h_16bpc_neon, export=1
         vld1.16         {q5}, [r12]!
         bne             4b // If we don't need to pad, just keep summing.
         b               3b // If we need to pad, check how many pixels we have left.
-
-5:      // Produce 4 pixels, 7 <= w < 11
-        add5            4
-        vst1.16         {d4},  [r1,  :64]!
-        vst1.16         {d6},  [r11, :64]!
-        vst1.32         {q6},  [r0,  :128]!
-        vst1.32         {q12}, [r10, :128]!
-
-        subs            r5,  r5,  #4 // 3 <= w < 7
-        vext.8          q0,  q0,  q1,  #8
-        vext.8          q4,  q4,  q5,  #8
-
-6:      // Pad the right edge and produce the last few pixels.
-        // w < 7, w+1 pixels valid in q0/q4
-        sub             lr,  r5,  #1
-        // lr = pixels valid - 2
-        adr             r11, L(box5_variable_shift_tbl)
-        ldr             lr,  [r11, lr, lsl #2]
-        vmov            q1,  q14
-        vmov            q5,  q15
-        add             r11, r11, lr
-        bx              r11
-
-        .align 2
-L(box5_variable_shift_tbl):
-        .word 22f - L(box5_variable_shift_tbl) + CONFIG_THUMB
-        .word 33f - L(box5_variable_shift_tbl) + CONFIG_THUMB
-        .word 44f - L(box5_variable_shift_tbl) + CONFIG_THUMB
-        .word 55f - L(box5_variable_shift_tbl) + CONFIG_THUMB
-        .word 66f - L(box5_variable_shift_tbl) + CONFIG_THUMB
-        .word 77f - L(box5_variable_shift_tbl) + CONFIG_THUMB
-
-        // Shift q0 right, shifting out invalid pixels,
-        // shift q0 left to the original offset, shifting in padding pixels.
-22:     // 2 pixels valid
-        vext.8          q0,  q0,  q0,  #4
-        vext.8          q4,  q4,  q4,  #4
-        vext.8          q0,  q0,  q14, #12
-        vext.8          q4,  q4,  q15, #12
-        b               88f
-33:     // 3 pixels valid
-        vext.8          q0,  q0,  q0,  #6
-        vext.8          q4,  q4,  q4,  #6
-        vext.8          q0,  q0,  q14, #10
-        vext.8          q4,  q4,  q15, #10
-        b               88f
-44:     // 4 pixels valid
-        vmov            d1,  d28
-        vmov            d9,  d30
-        b               88f
-55:     // 5 pixels valid
-        vext.8          q0,  q0,  q0,  #10
-        vext.8          q4,  q4,  q4,  #10
-        vext.8          q0,  q0,  q14, #6
-        vext.8          q4,  q4,  q15, #6
-        b               88f
-66:     // 6 pixels valid
-        vext.8          q0,  q0,  q0,  #12
-        vext.8          q4,  q4,  q4,  #12
-        vext.8          q0,  q0,  q14, #4
-        vext.8          q4,  q4,  q15, #4
-        b               88f
-77:     // 7 pixels valid
-        vext.8          q0,  q0,  q0,  #14
-        vext.8          q4,  q4,  q4,  #14
-        vext.8          q0,  q0,  q14, #2
-        vext.8          q4,  q4,  q15, #2
-
-88:
-        // Restore r11 after using it for a temporary value above
-        add             r11, r1,  #(2*SUM_STRIDE)
-
-        add5            4
-        subs            r5,  r5,  #4
-        vst1.16         {d4},  [r1,  :64]!
-        vst1.16         {d6},  [r11, :64]!
-        vst1.32         {q6},  [r0,  :128]!
-        vst1.32         {q12}, [r10, :128]!
-        ble             9f
-        vext.8          q0,  q0,  q1,  #8
-        vext.8          q4,  q4,  q5,  #8
-        add5            4
-        vst1.16         {d4},  [r1,  :64]!
-        vst1.16         {d6},  [r11, :64]!
-        vst1.32         {q6},  [r0,  :128]!
-        vst1.32         {q12}, [r10, :128]!
 
 9:
         subs            r6,  r6,  #2
@@ -1264,7 +796,6 @@ L(box5_variable_shift_tbl):
 0:
         vpop            {q4-q7}
         pop             {r4-r11,pc}
-.purgem add5
 endfunc
 
 sgr_funcs 16

@@ -3825,9 +3825,8 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     pblendw              m6, m7, 0xaa   ; 67 89
     pmulhrsw             m6, m12
     paddd                m4, m5
-    vpblendd             m0, m1, m6, 0x0f
+    vperm2i128           m0, m1, m6, 0x21 ; 45 67
     mova                 m1, m6
-    vpermq               m0, m0, q1032  ; 45 67
     pmaddwd              m6, m0, m10
     pmaddwd              m7, m1, m11
     paddd                m4, m13

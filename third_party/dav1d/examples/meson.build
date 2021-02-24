@@ -43,10 +43,10 @@ dav1dplay_sources = files(
 sdl2_dependency = dependency('sdl2', version: '>= 2.0.1', required: true)
 
 if sdl2_dependency.found()
-    dav1dplay_deps = [sdl2_dependency]
+    dav1dplay_deps = [sdl2_dependency, libm_dependency]
     dav1dplay_cflags = []
 
-    placebo_dependency = dependency('libplacebo', version: '>= 1.18.0', required: false)
+    placebo_dependency = dependency('libplacebo', version: '>= 3.110.0', required: false)
 
     if placebo_dependency.found()
         dav1dplay_deps += placebo_dependency

@@ -191,5 +191,6 @@ const Demuxer annexb_demuxer = {
     .probe_sz = PROBE_SIZE,
     .open = annexb_open,
     .read = annexb_read,
+    .seek = NULL,
     .close = annexb_close,
 };

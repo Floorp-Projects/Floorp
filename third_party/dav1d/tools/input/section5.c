@@ -181,5 +181,6 @@ const Demuxer section5_demuxer = {
     .probe_sz = PROBE_SIZE,
     .open = section5_open,
     .read = section5_read,
+    .seek = NULL,
     .close = section5_close,
 };

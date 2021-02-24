@@ -87,8 +87,14 @@ prep_c(int16_t *tmp, const pixel *src, const ptrdiff_t src_stride,
 #define DAV1D_FILTER_8TAP_RND(src, x, F, stride, sh) \
     ((FILTER_8TAP(src, x, F, stride) + ((1 << (sh)) >> 1)) >> (sh))
 
+#define DAV1D_FILTER_8TAP_RND2(src, x, F, stride, rnd, sh) \
+    ((FILTER_8TAP(src, x, F, stride) + (rnd)) >> (sh))
+
 #define DAV1D_FILTER_8TAP_CLIP(src, x, F, stride, sh) \
     iclip_pixel(DAV1D_FILTER_8TAP_RND(src, x, F, stride, sh))
+
+#define DAV1D_FILTER_8TAP_CLIP2(src, x, F, stride, rnd, sh) \
+    iclip_pixel(DAV1D_FILTER_8TAP_RND2(src, x, F, stride, rnd, sh))
 
 #define GET_H_FILTER(mx) \
     const int8_t *const fh = !(mx) ? NULL : w > 4 ? \
@@ -111,7 +117,7 @@ put_8tap_c(pixel *dst, ptrdiff_t dst_stride,
            const int filter_type HIGHBD_DECL_SUFFIX)
 {
     const int intermediate_bits = get_intermediate_bits(bitdepth_max);
-    const int intermediate_rnd = (1 << intermediate_bits) >> 1;
+    const int intermediate_rnd = 32 + ((1 << (6 - intermediate_bits)) >> 1);
 
     GET_FILTERS();
     dst_stride = PXSTRIDE(dst_stride);
@@ -144,9 +150,8 @@ put_8tap_c(pixel *dst, ptrdiff_t dst_stride,
         } else {
             do {
                 for (int x = 0; x < w; x++) {
-                    const int px = DAV1D_FILTER_8TAP_RND(src, x, fh, 1,
-                                                         6 - intermediate_bits);
-                    dst[x] = iclip_pixel((px + intermediate_rnd) >> intermediate_bits);
+                    dst[x] = DAV1D_FILTER_8TAP_CLIP2(src, x, fh, 1,
+                                                     intermediate_rnd, 6);
                 }
 
                 dst += dst_stride;

@@ -1,4 +1,4 @@
-# Copyright © 2018-2020, VideoLAN and dav1d authors
+# Copyright © 2018-2021, VideoLAN and dav1d authors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,14 +23,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '0.8.1',
+    version: '0.8.2',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
                       'b_ndebug=if-release'],
     meson_version: '>= 0.49.0')
 
-dav1d_soname_version       = '5.0.0'
+dav1d_soname_version       = '5.0.1'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -128,7 +128,7 @@ if host_machine.system() == 'windows'
     rc_data.set('API_VERSION_MAJOR', dav1d_api_version_major)
     rc_data.set('API_VERSION_MINOR', dav1d_api_version_minor)
     rc_data.set('API_VERSION_REVISION', dav1d_api_version_revision)
-    rc_data.set('COPYRIGHT_YEARS', '2020')
+    rc_data.set('COPYRIGHT_YEARS', '2021')
 else
     thread_dependency = dependency('threads')
     thread_compat_dep = []
@@ -167,6 +167,8 @@ if host_machine.system() == 'linux'
         cdata.set('HAVE_DLSYM', 1)
     endif
 endif
+
+libm_dependency = cc.find_library('m', required: false)
 
 
 # Header checks
@@ -257,6 +259,7 @@ if cc.get_argument_syntax() != 'msvc'
 else
     optional_arguments += [
       '-wd4028', # parameter different from declaration
+      '-wd4090', # broken with arrays of pointers
       '-wd4996'  # use of POSIX functions
     ]
 endif

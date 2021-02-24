@@ -389,8 +389,8 @@ function sgr_weighted1_\bpc\()bpc_neon, export=1
         vrshrn.i32      d21, q11, #11
         vqmovun.s16     d4,  q2
         vqmovun.s16     d20, q10
-        vst1.8          {d4},  [r0]!
-        vst1.8          {d20}, [r9]!
+        vst1.8          {d4},  [r0, :64]!
+        vst1.8          {d20}, [r9, :64]!
 .else
         vqrshrun.s32    d4,  q2,  #11
         vqrshrun.s32    d5,  q3,  #11
@@ -398,8 +398,8 @@ function sgr_weighted1_\bpc\()bpc_neon, export=1
         vqrshrun.s32    d21, q11, #11
         vmin.u16        q2,  q2,  q14
         vmin.u16        q10, q10, q14
-        vst1.16         {q2},  [r0]!
-        vst1.16         {q10}, [r9]!
+        vst1.16         {q2},  [r0, :128]!
+        vst1.16         {q10}, [r9, :128]!
 .endif
         bgt             1b
 
@@ -438,12 +438,12 @@ function sgr_weighted1_\bpc\()bpc_neon, export=1
         vrshrn.i32      d4,  q2,  #11
         vrshrn.i32      d5,  q3,  #11
         vqmovun.s16     d2,  q2
-        vst1.8          {d2}, [r0]!
+        vst1.8          {d2}, [r0, :64]!
 .else
         vqrshrun.s32    d4,  q2,  #11
         vqrshrun.s32    d5,  q3,  #11
         vmin.u16        q2,  q2,  q14
-        vst1.16         {q2}, [r0]!
+        vst1.16         {q2}, [r0, :128]!
 .endif
         bgt             2b
 0:
@@ -531,8 +531,8 @@ function sgr_weighted2_\bpc\()bpc_neon, export=1
         vrshrn.i32      d23, q8,  #11
         vqmovun.s16     d6,  q3
         vqmovun.s16     d22, q11
-        vst1.8          {d6},  [r0]!
-        vst1.8          {d22}, [r10]!
+        vst1.8          {d6},  [r0,  :64]!
+        vst1.8          {d22}, [r10, :64]!
 .else
         vqrshrun.s32    d6,  q3,  #11
         vqrshrun.s32    d7,  q0,  #11
@@ -540,8 +540,8 @@ function sgr_weighted2_\bpc\()bpc_neon, export=1
         vqrshrun.s32    d23, q8,  #11
         vmin.u16        q3,  q3,  q14
         vmin.u16        q11, q11, q14
-        vst1.16         {q3},  [r0]!
-        vst1.16         {q11}, [r10]!
+        vst1.16         {q3},  [r0,  :128]!
+        vst1.16         {q11}, [r10, :128]!
 .endif
         bgt             1b
 
@@ -586,12 +586,12 @@ function sgr_weighted2_\bpc\()bpc_neon, export=1
         vrshrn.i32      d6,  q3,  #11
         vrshrn.i32      d7,  q0,  #11
         vqmovun.s16     d6,  q3
-        vst1.8          {d6}, [r0]!
+        vst1.8          {d6}, [r0, :64]!
 .else
         vqrshrun.s32    d6,  q3,  #11
         vqrshrun.s32    d7,  q0,  #11
         vmin.u16        q3,  q3,  q14
-        vst1.16         {q3}, [r0]!
+        vst1.16         {q3}, [r0, :128]!
 .endif
         bgt             1b
 0:

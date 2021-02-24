@@ -117,7 +117,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
 
     for (int bit = 0, by = by_start; by < by_end; by += 2, edges |= CDEF_HAVE_TOP) {
         const int tf = f->lf.top_pre_cdef_toggle;
-        const int by_idx = by & 30;
+        const int by_idx = (by & 30) >> 1;
         if (by + 2 >= f->bh) edges &= ~CDEF_HAVE_BOTTOM;
 
         if (edges & CDEF_HAVE_BOTTOM) // backup pre-filter data for next iteration
@@ -139,6 +139,11 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 last_skip = 1;
                 goto next_sb;
             }
+
+            // Create a complete 32-bit mask for the sb row ahead of time.
+            const uint16_t (*noskip_row)[2] = &lflvl[sb128x].noskip_mask[by_idx];
+            const unsigned noskip_mask = (unsigned) noskip_row[0][1] << 16 |
+                                                    noskip_row[0][0];
 
             const int y_lvl = f->frame_hdr->cdef.y_strength[cdef_idx];
             const int uv_lvl = f->frame_hdr->cdef.uv_strength[cdef_idx];
@@ -162,11 +167,8 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
 
                 // check if this 8x8 block had any coded coefficients; if not,
                 // go to the next block
-                const unsigned bx_mask = 3U << (bx & 14);
-                const int bx_idx = (bx & 16) >> 4;
-                if (!((lflvl[sb128x].noskip_mask[by_idx + 0][bx_idx] |
-                       lflvl[sb128x].noskip_mask[by_idx + 1][bx_idx]) & bx_mask))
-                {
+                const uint32_t bx_mask = 3U << (bx & 30);
+                if (!(noskip_mask & bx_mask)) {
                     last_skip = 1;
                     goto next_b;
                 }

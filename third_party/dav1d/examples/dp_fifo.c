@@ -37,6 +37,8 @@ struct dp_fifo
     size_t capacity;
     size_t count;
     void **entries;
+    int push_wait;
+    int flush;
 };
 
 
@@ -54,6 +56,8 @@ Dav1dPlayPtrFifo *dp_fifo_create(size_t capacity)
 
     fifo->capacity = capacity;
     fifo->count = 0;
+    fifo->push_wait = 0;
+    fifo->flush = 0;
 
     fifo->lock = SDL_CreateMutex();
     if (fifo->lock == NULL) {
@@ -90,8 +94,16 @@ void dp_fifo_destroy(Dav1dPlayPtrFifo *fifo)
 void dp_fifo_push(Dav1dPlayPtrFifo *fifo, void *element)
 {
     SDL_LockMutex(fifo->lock);
-    while (fifo->count == fifo->capacity)
+    while (fifo->count == fifo->capacity) {
+        fifo->push_wait = 1;
         SDL_CondWait(fifo->cond_change, fifo->lock);
+        fifo->push_wait = 0;
+        if (fifo->flush) {
+            SDL_CondSignal(fifo->cond_change);
+            SDL_UnlockMutex(fifo->lock);
+            return;
+        }
+    }
     fifo->entries[fifo->count++] = element;
     if (fifo->count == 1)
         SDL_CondSignal(fifo->cond_change);
@@ -120,4 +132,16 @@ void *dp_fifo_shift(Dav1dPlayPtrFifo *fifo)
     return res;
 }
 
-
+void dp_fifo_flush(Dav1dPlayPtrFifo *fifo, void (*destroy_elem)(void *))
+{
+    SDL_LockMutex(fifo->lock);
+    fifo->flush = 1;
+    if (fifo->push_wait) {
+        SDL_CondSignal(fifo->cond_change);
+        SDL_CondWait(fifo->cond_change, fifo->lock);
+    }
+    while (fifo->count)
+        destroy_elem(fifo->entries[--fifo->count]);
+    fifo->flush = 0;
+    SDL_UnlockMutex(fifo->lock);
+}

@@ -65,6 +65,14 @@ decl_recon_b_inter_fn(dav1d_recon_b_inter_16bpc);
 
 decl_filter_sbrow_fn(dav1d_filter_sbrow_8bpc);
 decl_filter_sbrow_fn(dav1d_filter_sbrow_16bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_deblock_8bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_deblock_16bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_cdef_8bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_cdef_16bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_resize_8bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_resize_16bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_lr_8bpc);
+decl_filter_sbrow_fn(dav1d_filter_sbrow_lr_16bpc);
 
 decl_backup_ipred_edge_fn(dav1d_backup_ipred_edge_8bpc);
 decl_backup_ipred_edge_fn(dav1d_backup_ipred_edge_16bpc);

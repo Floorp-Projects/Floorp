@@ -502,9 +502,9 @@ L(ipred_dc_h4):
         ld1             {v0.s}[0],  [x2], #4
         ins             v0.s[1], wzr
         uaddlv          h0,      v0.8b
+        add             x2,  x2,  #1
         br              x3
 L(ipred_dc_w4):
-        add             x2,  x2,  #1
         ld1             {v1.s}[0],  [x2]
         ins             v1.s[1], wzr
         add             v0.4h,   v0.4h,   v16.4h
@@ -534,9 +534,9 @@ L(ipred_dc_w4):
 L(ipred_dc_h8):
         ld1             {v0.8b},  [x2], #8
         uaddlv          h0,      v0.8b
+        add             x2,  x2,  #1
         br              x3
 L(ipred_dc_w8):
-        add             x2,  x2,  #1
         ld1             {v1.8b},  [x2]
         add             v0.4h,   v0.4h,   v16.4h
         uaddlv          h1,      v1.8b
@@ -565,9 +565,9 @@ L(ipred_dc_w8):
 L(ipred_dc_h16):
         ld1             {v0.16b}, [x2], #16
         uaddlv          h0,      v0.16b
+        add             x2,  x2,  #1
         br              x3
 L(ipred_dc_w16):
-        add             x2,  x2,  #1
         ld1             {v1.16b}, [x2]
         add             v0.4h,   v0.4h,   v16.4h
         uaddlv          h1,      v1.16b
@@ -597,10 +597,10 @@ L(ipred_dc_h32):
         ld1             {v0.16b, v1.16b}, [x2], #32
         uaddlv          h0,      v0.16b
         uaddlv          h1,      v1.16b
+        add             x2,  x2,  #1
         add             v0.4h,   v0.4h,   v1.4h
         br              x3
 L(ipred_dc_w32):
-        add             x2,  x2,  #1
         ld1             {v1.16b, v2.16b}, [x2]
         add             v0.4h,   v0.4h,   v16.4h
         uaddlv          h1,      v1.16b
@@ -637,10 +637,10 @@ L(ipred_dc_h64):
         uaddlv          h3,      v3.16b
         add             v0.4h,   v0.4h,   v1.4h
         add             v2.4h,   v2.4h,   v3.4h
+        add             x2,  x2,  #1
         add             v0.4h,   v0.4h,   v2.4h
         br              x3
 L(ipred_dc_w64):
-        add             x2,  x2,  #1
         ld1             {v1.16b, v2.16b, v3.16b, v4.16b}, [x2]
         add             v0.4h,   v0.4h,   v16.4h
         uaddlv          h1,      v1.16b
@@ -1834,10 +1834,10 @@ function ipred_cfl_8bpc_neon, export=1
 L(ipred_cfl_h4):
         ld1             {v0.s}[0],  [x2], #4
         ins             v0.s[1], wzr
+        add             x2,  x2,  #1
         uaddlv          h0,      v0.8b
         br              x9
 L(ipred_cfl_w4):
-        add             x2,  x2,  #1
         ld1             {v2.s}[0],  [x2]
         ins             v2.s[1], wzr
         add             v0.4h,   v0.4h,   v16.4h
@@ -1860,9 +1860,9 @@ L(ipred_cfl_w4):
 L(ipred_cfl_h8):
         ld1             {v0.8b},  [x2], #8
         uaddlv          h0,      v0.8b
+        add             x2,  x2,  #1
         br              x9
 L(ipred_cfl_w8):
-        add             x2,  x2,  #1
         ld1             {v2.8b},  [x2]
         add             v0.4h,   v0.4h,   v16.4h
         uaddlv          h2,      v2.8b
@@ -1884,9 +1884,9 @@ L(ipred_cfl_w8):
 L(ipred_cfl_h16):
         ld1             {v0.16b}, [x2], #16
         uaddlv          h0,      v0.16b
+        add             x2,  x2,  #1
         br              x9
 L(ipred_cfl_w16):
-        add             x2,  x2,  #1
         ld1             {v2.16b}, [x2]
         add             v0.4h,   v0.4h,   v16.4h
         uaddlv          h2,      v2.16b
@@ -1909,10 +1909,10 @@ L(ipred_cfl_h32):
         ld1             {v2.16b, v3.16b}, [x2], #32
         uaddlv          h2,      v2.16b
         uaddlv          h3,      v3.16b
+        add             x2,  x2,  #1
         add             v0.4h,   v2.4h,   v3.4h
         br              x9
 L(ipred_cfl_w32):
-        add             x2,  x2,  #1
         ld1             {v2.16b, v3.16b}, [x2]
         add             v0.4h,   v0.4h,   v16.4h
         uaddlv          h2,      v2.16b
