@@ -1485,13 +1485,14 @@ bool CompilationStencil::prepareForInstantiate(
 bool CompilationStencil::serializeStencils(JSContext* cx,
                                            CompilationInput& input,
                                            JS::TranscodeBuffer& buf,
-                                           bool* succeededOut) {
+                                           bool* succeededOut) const {
   if (succeededOut) {
     *succeededOut = false;
   }
   XDRIncrementalStencilEncoder encoder(cx);
 
-  XDRResult res = encoder.codeStencil(input, *this);
+  XDRResult res =
+      encoder.codeStencil(input, const_cast<CompilationStencil&>(*this));
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       buf.clear();

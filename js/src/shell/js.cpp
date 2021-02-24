@@ -5611,9 +5611,9 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
 
           Rooted<frontend::CompilationInput> input(
               cx, frontend::CompilationInput(options));
-          UniquePtr<frontend::CompilationStencil> stencil;
-          if (!Smoosh::tryCompileGlobalScriptToStencil(cx, input.get(), srcBuf,
-                                                       stencil)) {
+          UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
+          if (!Smoosh::tryCompileGlobalScriptToExtensibleStencil(
+                  cx, input.get(), srcBuf, stencil)) {
             return false;
           }
           if (!stencil) {
@@ -5622,7 +5622,10 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
           }
 
 #  ifdef DEBUG
-          stencil->dump();
+          {
+            frontend::BorrowingCompilationStencil borrowingStencil(*stencil);
+            borrowingStencil.dump();
+          }
 #  endif
         } else {
           JS_ReportErrorASCII(cx,
