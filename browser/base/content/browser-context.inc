@@ -283,7 +283,6 @@
       <menuitem id="context-delete"
                 data-l10n-id="text-action-delete"
                 command="cmd_delete"/>
-      <menuseparator id="context-sep-paste"/>
       <menuitem id="context-selectall"
                 data-l10n-id="text-action-select-all"
                 command="cmd_selectAll"/>

@@ -797,7 +797,6 @@ class nsContextMenu {
     this.showItem("context-copy", this.isContentSelected || this.onTextInput);
     this.showItem("context-paste", this.onTextInput);
     this.showItem("context-delete", this.onTextInput);
-    this.showItem("context-sep-paste", this.onTextInput);
     this.showItem(
       "context-selectall",
       !(

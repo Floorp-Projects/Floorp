@@ -34,8 +34,6 @@ add_task(async function test_text_input() {
     null, // ignore clipboard state
     "context-delete",
     false,
-    "---",
-    null,
     "context-selectall",
     false,
     "---",
@@ -61,8 +59,6 @@ add_task(async function test_text_input_disabled() {
       null, // ignore clipboard state
       "context-delete",
       false,
-      "---",
-      null,
       "context-selectall",
       false,
       "---",
@@ -111,8 +107,6 @@ add_task(async function test_password_input() {
       null, // ignore clipboard state
       "context-delete",
       false,
-      "---",
-      null,
       "context-selectall",
       null,
     ],
@@ -178,8 +172,6 @@ add_task(async function test_tel_email_url_number_input() {
         null, // ignore clipboard state
         "context-delete",
         false,
-        "---",
-        null,
         "context-selectall",
         null,
       ],
@@ -272,8 +264,6 @@ add_task(async function test_search_input() {
       null, // ignore clipboard state
       "context-delete",
       false,
-      "---",
-      null,
       "context-selectall",
       null,
       "---",
@@ -310,8 +300,6 @@ add_task(async function test_text_input_readonly() {
       null, // ignore clipboard state
       "context-delete",
       false,
-      "---",
-      null,
       "context-selectall",
       null,
     ],
