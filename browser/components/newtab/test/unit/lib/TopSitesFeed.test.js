@@ -1005,7 +1005,7 @@ describe("Top Sites Feed", () => {
     it("should call refresh without a target if we remove a Topsite from history", () => {
       sandbox.stub(feed, "refresh");
 
-      feed.onAction({ type: at.PLACES_LINK_DELETED });
+      feed.onAction({ type: at.PLACES_LINKS_DELETED });
 
       assert.calledOnce(feed.refresh);
       assert.calledWithExactly(feed.refresh, { broadcast: true });

@@ -1125,7 +1125,7 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
       // All these actions mean we need new top sites
       case at.PLACES_HISTORY_CLEARED:
-      case at.PLACES_LINK_DELETED:
+      case at.PLACES_LINKS_DELETED:
         this.frecentCache.expire();
         this.refresh({ broadcast: true });
         break;
