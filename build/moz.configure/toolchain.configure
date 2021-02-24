@@ -616,10 +616,10 @@ def vc_toolchain_search_path(vc_compiler_path, original_path):
     return result
 
 
-clang_search_path = bootstrap_search_path("clang", "bin")
+clang_search_path = bootstrap_search_path("clang/bin")
 
 
-@depends(bootstrap_search_path("rustc", "bin", when="MOZ_AUTOMATION"), original_path)
+@depends(bootstrap_search_path("rustc/bin", when="MOZ_AUTOMATION"), original_path)
 @imports("os")
 @imports(_from="os", _import="environ")
 def rust_search_path(rust_path, original_path):
