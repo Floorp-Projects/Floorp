@@ -10,6 +10,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.state.state.createTab
@@ -18,13 +19,16 @@ import mozilla.components.browser.state.state.recover.toRecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -394,5 +398,70 @@ class TabsUseCasesTest {
         assertEquals(4, store.state.tabs.size)
         assertEquals("https://youtube.com", store.state.tabs.last().content.url)
         assertEquals("https://youtube.com", store.state.selectedTab!!.content.url)
+    }
+
+    @Test
+    fun `duplicateTab creates a duplicate of the given tab`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val useCases = TabsUseCases(store, sessionManager)
+
+        sessionManager.add(Session("https://www.mozilla.org", id = "mozilla"))
+
+        val engineSessionState: EngineSessionState = mock()
+        store.dispatch(
+            EngineAction.UpdateEngineSessionStateAction("mozilla", engineSessionState)
+        ).joinBlocking()
+
+        val tab = store.state.findTab("mozilla")!!
+        useCases.duplicateTab.invoke(tab)
+
+        assertEquals(2, store.state.tabs.size)
+
+        assertEquals("mozilla", store.state.tabs[0].id)
+        assertNotEquals("mozilla", store.state.tabs[1].id)
+        assertFalse(store.state.tabs[0].content.private)
+        assertFalse(store.state.tabs[1].content.private)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("https://www.mozilla.org", store.state.tabs[1].content.url)
+        assertEquals(engineSessionState, store.state.tabs[0].engineState.engineSessionState)
+        assertEquals(engineSessionState, store.state.tabs[1].engineState.engineSessionState)
+        assertNull(store.state.tabs[0].parentId)
+        assertEquals("mozilla", store.state.tabs[1].parentId)
+    }
+
+    @Test
+    fun `duplicateTab creates duplicates of private tabs`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val useCases = TabsUseCases(store, sessionManager)
+
+        sessionManager.add(Session("https://www.mozilla.org", id = "mozilla", private = true))
+
+        val tab = store.state.findTab("mozilla")!!
+        useCases.duplicateTab.invoke(tab)
+
+        assertEquals(2, store.state.tabs.size)
+        assertTrue(store.state.tabs[0].content.private)
+        assertTrue(store.state.tabs[1].content.private)
+    }
+
+    @Test
+    fun `duplicateTab keeps contextId`() {
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val useCases = TabsUseCases(store, sessionManager)
+
+        sessionManager.add(Session("https://www.mozilla.org", id = "mozilla", contextId = "work"))
+
+        val tab = store.state.findTab("mozilla")!!
+        useCases.duplicateTab.invoke(tab)
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals("work", store.state.tabs[0].contextId)
+        assertEquals("work", store.state.tabs[1].contextId)
     }
 }

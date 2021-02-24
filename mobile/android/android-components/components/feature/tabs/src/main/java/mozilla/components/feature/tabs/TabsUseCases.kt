@@ -16,6 +16,7 @@ import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState.Source
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -399,6 +400,36 @@ class TabsUseCases(
         }
     }
 
+    /**
+     * Use case for duplicating a tab.
+     */
+    class DuplicateTabUseCase(
+        private val sessionManager: SessionManager
+    ) {
+        /**
+         * Creates a duplicate of [tab] (including history) and selects it if [selectNewTab] is true.
+         */
+        operator fun invoke(
+            tab: TabSessionState,
+            selectNewTab: Boolean = true
+        ) {
+            val duplicate = Session(
+                initialUrl = tab.content.url,
+                private = tab.content.private,
+                contextId = tab.contextId
+            )
+
+            val parent = sessionManager.findSessionById(tab.id)
+
+            sessionManager.add(
+                session = duplicate,
+                engineSessionState = tab.engineState.engineSessionState,
+                selected = selectNewTab,
+                parent = parent
+            )
+        }
+    }
+
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(sessionManager) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(sessionManager) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store, sessionManager) }
@@ -410,4 +441,5 @@ class TabsUseCases(
     val undo by lazy { UndoTabRemovalUseCase(store) }
     val restore: RestoreUseCase by lazy { RestoreUseCase(store, sessionManager, selectTab) }
     val selectOrAddTab: SelectOrAddUseCase by lazy { SelectOrAddUseCase(store, sessionManager) }
+    val duplicateTab: DuplicateTabUseCase by lazy { DuplicateTabUseCase(sessionManager) }
 }

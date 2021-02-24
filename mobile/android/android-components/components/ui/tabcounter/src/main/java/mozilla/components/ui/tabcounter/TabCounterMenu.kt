@@ -13,11 +13,11 @@ import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.menu.candidate.TextStyle
 
 /**
- * The menu that is shown when clicking on the [TabCounterToolbarButton]
+ * The menu that is shown when clicking on the [TabCounter]
  *
- * @property context the context.
- * @property onItemTapped behavior for when an item in the menu is tapped.
- * @property iconColor optional color to specify tint of menu icons
+ * @param context the context.
+ * @param onItemTapped behavior for when an item in the menu is tapped.
+ * @param iconColor optional color to specify tint of menu icons
  */
 open class TabCounterMenu(
     context: Context,
@@ -31,17 +31,20 @@ open class TabCounterMenu(
      * [CloseTab] menu item for closing a tab.
      * [NewTab] menu item for opening a new tab.
      * [NewPrivateTab] menu item for opening a new private tab.
+     * [DuplicateTab] menu item for duplicating the current tab.
      */
     @Suppress("UndocumentedPublicClass")
     open class Item {
         object CloseTab : Item()
         object NewTab : Item()
         object NewPrivateTab : Item()
+        object DuplicateTab : Item()
     }
 
     var newTabItem: TextMenuCandidate
     var newPrivateTabItem: TextMenuCandidate
     var closeTabItem: TextMenuCandidate
+    var duplicateTabItem: TextMenuCandidate
 
     val menuController: MenuController by lazy { BrowserMenuController() }
 
@@ -80,6 +83,18 @@ open class TabCounterMenu(
             textStyle = TextStyle()
         ) {
             onItemTapped(Item.CloseTab)
+        }
+
+        duplicateTabItem = TextMenuCandidate(
+            text = context.getString(R.string.mozac_ui_tabcounter_duplicate_tab),
+            start = DrawableMenuIcon(
+                context,
+                R.drawable.mozac_ic_tab,
+                tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text)
+            ),
+            textStyle = TextStyle()
+        ) {
+            onItemTapped(Item.DuplicateTab)
         }
     }
 }
