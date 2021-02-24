@@ -783,8 +783,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     // The asm.js module was created by parser. Instantiation below will
     // allocate the JSFunction that wraps it.
     MOZ_ASSERT(funbox->isAsmJSModule());
-    MOZ_ASSERT(stencil.asmJS.has(funbox->index()));
-    MOZ_ASSERT(compilationState_.scriptData[CompilationStencil::TopLevelIndex]
+    MOZ_ASSERT(stencil.asmJS->moduleMap.has(funbox->index()));
+    MOZ_ASSERT(stencil.scriptData[CompilationStencil::TopLevelIndex]
                    .functionFlags.isAsmJSNative());
   }
 

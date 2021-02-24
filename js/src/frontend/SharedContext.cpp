@@ -273,7 +273,14 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   flags_.setIsExtended();
   flags_.setKind(FunctionFlags::AsmJS);
 
-  if (!compilationState_.asmJS.putNew(index(), module)) {
+  if (!compilationState_.asmJS) {
+    compilationState_.asmJS = cx_->new_<StencilAsmJSContainer>();
+    if (!compilationState_.asmJS) {
+      return false;
+    }
+  }
+
+  if (!compilationState_.asmJS->moduleMap.putNew(index(), module)) {
     js::ReportOutOfMemory(cx_);
     return false;
   }
