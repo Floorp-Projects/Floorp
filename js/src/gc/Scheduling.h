@@ -414,7 +414,7 @@ static const double NurseryFreeThresholdForIdleCollectionFraction = 0.25;
 
 /* JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS */
 static const TimeDuration NurseryTimeoutForIdleCollection =
-    TimeDuration::FromSeconds(2.0);
+    TimeDuration::FromSeconds(5.0);
 
 /* JSGC_PRETENURE_THRESHOLD */
 static const double PretenureThreshold = 0.6;
