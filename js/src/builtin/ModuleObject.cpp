@@ -2089,7 +2089,8 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
 void js::AsyncModuleExecutionRejected(JSContext* cx, HandleModuleObject module,
                                       HandleValue error) {
   // Step 1.
-  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED);
+  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED ||
+             module->status() == MODULE_STATUS_EVALUATED_ERROR);
 
   // Step 2.
   if (!module->isAsyncEvaluating()) {
