@@ -2176,16 +2176,15 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     }
 
     if (obj->is<TypedArrayObject>()) {
-      JS::Result<mozilla::Maybe<uint64_t>> index = IsTypedArrayIndex(cx, id);
-      if (index.isErr()) {
+      mozilla::Maybe<uint64_t> index;
+      if (!ToTypedArrayIndex(cx, id, &index)) {
         cx->recoverFromOutOfMemory();
         return false;
       }
 
-      if (index.inspect()) {
-        if (index.inspect().value() <
-            obj->as<TypedArrayObject>().length().get()) {
-          propp->setTypedArrayElement(index.inspect().value());
+      if (index.isSome()) {
+        if (index.value() < obj->as<TypedArrayObject>().length().get()) {
+          propp->setTypedArrayElement(index.value());
         } else {
           propp->setNotFound();
           if (isTypedArrayOutOfRange) {

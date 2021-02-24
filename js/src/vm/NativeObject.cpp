@@ -1537,7 +1537,9 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
     Rooted<TypedArrayObject*> tobj(cx, &obj->as<TypedArrayObject>());
     mozilla::Maybe<uint64_t> index;
-    JS_TRY_VAR_OR_RETURN_FALSE(cx, index, IsTypedArrayIndex(cx, id));
+    if (!ToTypedArrayIndex(cx, id, &index)) {
+      return false;
+    }
 
     if (index) {
       MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -1857,7 +1859,9 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
   } else if (obj->is<TypedArrayObject>()) {
     // 9.4.5.5 step 2. Indexed properties of typed arrays are special.
     mozilla::Maybe<uint64_t> index;
-    JS_TRY_VAR_OR_RETURN_FALSE(cx, index, IsTypedArrayIndex(cx, id));
+    if (!ToTypedArrayIndex(cx, id, &index)) {
+      return false;
+    }
 
     if (index) {
       // This method is only called for non-existent properties, which
