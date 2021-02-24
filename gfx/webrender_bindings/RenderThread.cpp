@@ -454,6 +454,7 @@ void RenderThread::UpdateAndRender(
     const Maybe<wr::ImageFormat>& aReadbackFormat,
     const Maybe<Range<uint8_t>>& aReadbackBuffer, bool* aNeedsYFlip) {
   AUTO_PROFILER_TRACING_MARKER("Paint", "Composite", GRAPHICS);
+  AUTO_PROFILER_LABEL("RenderThread::UpdateAndRender", GRAPHICS);
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(aRender || aReadbackBuffer.isNothing());
 
