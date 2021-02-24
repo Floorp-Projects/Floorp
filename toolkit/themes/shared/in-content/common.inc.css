@@ -61,7 +61,7 @@
   --in-content-button-horizontal-padding: 15px;
   --in-content-button-vertical-padding: 7px;
 
-  --in-content-table-background: #ebebeb;
+  --in-content-table-background: #f8f8fa;
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
   --in-content-dialog-header-background: #f1f1f1;
@@ -135,6 +135,8 @@
   --in-content-button-vertical-padding: 0;
 
   --in-content-button-box-shadow: var(--in-content-border-active-shadow);
+
+  --in-content-table-background: #ebebeb;
 }
 }
 
