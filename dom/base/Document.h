@@ -91,7 +91,6 @@
 #include "nsPropertyTable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
-#include "nsStubMutationObserver.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsTLiteralString.h"
@@ -545,7 +544,6 @@ class Document : public nsINode,
                  public nsIRadioGroupContainer,
                  public nsIScriptObjectPrincipal,
                  public nsIApplicationCacheContainer,
-                 public nsStubMutationObserver,
                  public DispatcherTrait,
                  public SupportsWeakPtr {
   friend class DocumentOrShadowRoot;
