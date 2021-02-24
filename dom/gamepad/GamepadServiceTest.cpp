@@ -125,7 +125,7 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
 
   uint32_t id = ++mEventNumber;
 
-  MOZ_ASSERT(!mPromiseList.Get(id, nullptr));
+  MOZ_ASSERT(!mPromiseList.Contains(id, nullptr));
   mPromiseList.Put(id, RefPtr{p});
 
   mChild->SendGamepadTestEvent(id, e);
