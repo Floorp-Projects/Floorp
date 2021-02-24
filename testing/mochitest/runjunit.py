@@ -51,14 +51,18 @@ class JUnitTestRunner(MochitestDesktop):
 
     def __init__(self, log, options):
         self.log = log
-        verbose = False
-        if options.log_tbpl_level == "debug" or options.log_mach_level == "debug":
-            verbose = True
+        self.verbose = False
+        if (
+            options.log_tbpl_level == "debug"
+            or options.log_mach_level == "debug"
+            or options.verbose
+        ):
+            self.verbose = True
         self.device = ADBDeviceFactory(
             adb=options.adbPath or "adb",
             device=options.deviceSerial,
             test_root=options.remoteTestRoot,
-            verbose=verbose,
+            verbose=self.verbose,
             run_as_package=options.app,
         )
         self.options = options
@@ -88,6 +92,21 @@ class JUnitTestRunner(MochitestDesktop):
         self.build_profile()
         self.startServers(self.options, debuggerInfo=None, public=True)
         self.log.debug("Servers started")
+
+    def collectLogcatForCurrentTest(self):
+        # These are unique start and end markers logged by GeckoSessionTestRule.java
+        START_MARKER = "1f0befec-3ff2-40ff-89cf-b127eb38b1ec"
+        END_MARKER = "c5ee677f-bc83-49bd-9e28-2d35f3d0f059"
+        logcat = self.device.get_logcat()
+        test_logcat = ""
+        started = False
+        for l in logcat:
+            if START_MARKER in l and self.test_name in l:
+                started = True
+            if started:
+                test_logcat += l + "\n"
+            if started and END_MARKER in l:
+                return test_logcat
 
     def needsWebsocketProcessBridge(self, options):
         """
@@ -307,6 +326,9 @@ class JUnitTestRunner(MochitestDesktop):
                         status = "PASS"
                         expected = "PASS"
                         self.pass_count += 1
+                        if self.verbose:
+                            self.log.info("Printing logcat for test:")
+                            print(self.collectLogcatForCurrentTest())
                     elif status == "-3":  # ignored (skipped)
                         message = ""
                         status = "SKIP"
@@ -325,6 +347,8 @@ class JUnitTestRunner(MochitestDesktop):
                         status = "FAIL"
                         expected = "PASS"
                         self.fail_count += 1
+                        self.log.info("Printing logcat for test:")
+                        print(self.collectLogcatForCurrentTest())
                     self.log.test_end(full_name, status, expected, message)
                     self.test_started = False
                 else:
@@ -505,6 +529,14 @@ class JunitArgumentParser(argparse.ArgumentParser):
             dest="thisChunk",
             default=None,
             help="If running tests by chunks, the chunk number to run.",
+        )
+        self.add_argument(
+            "--verbose",
+            "-v",
+            action="store_true",
+            dest="verbose",
+            default=False,
+            help="Verbose output - enable debug log messages",
         )
         self.add_argument(
             "--enable-coverage",
