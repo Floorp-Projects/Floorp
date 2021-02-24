@@ -660,8 +660,7 @@ inline const CompilationStencil& BaseCompilationStencil::asCompilationStencil()
 }
 
 // Temporary space to accumulate stencil data.
-// Copied to BaseCompilationStencil/CompilationStencil by
-// `CompilationState::finish` method.
+// Copied to BaseCompilationStencil/CompilationStencil by `finish` method.
 //
 // See BaseCompilationStencil/CompilationStencil for each field's description.
 struct ExtensibleCompilationStencil {
@@ -705,6 +704,8 @@ struct ExtensibleCompilationStencil {
   bool isInitialStencil() const {
     return functionKey == BaseCompilationStencil::NullFunctionKey;
   }
+
+  [[nodiscard]] bool finish(JSContext* cx, CompilationStencil& stencil);
 
 #ifdef DEBUG
   void assertNoExternalDependency() const;
@@ -753,8 +754,6 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   RewindToken getRewindToken();
   void rewind(const RewindToken& pos);
-
-  bool finish(JSContext* cx, CompilationStencil& stencil);
 
   // Allocate space for `length` gcthings, and return the address of the
   // first element to `cursor` to initialize on the caller.
