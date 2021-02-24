@@ -79,5 +79,10 @@ add_task(async function telemetry() {
   BrowserTestUtils.removeTab(tab);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
-  await EventUtils.synthesizeNativeMouseMove(searchbar);
+  await EventUtils.promiseNativeMouseEvent({
+    type: "mousemove",
+    target: searchbar,
+    offsetX: 0,
+    offsetY: 0,
+  });
 });

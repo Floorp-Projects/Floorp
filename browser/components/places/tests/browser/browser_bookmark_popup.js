@@ -510,13 +510,11 @@ add_task(async function mouse_hovering_panel_should_prevent_autoclose() {
   await test_bookmarks_popup({
     isNewBookmark: true,
     async popupShowFn() {
-      await new Promise(resolve => {
-        EventUtils.synthesizeNativeMouseMove(
-          document.documentElement,
-          editBookmarkPanelRemoveButtonRect.left,
-          editBookmarkPanelRemoveButtonRect.top,
-          resolve
-        );
+      await EventUtils.promiseNativeMouseEvent({
+        type: "mousemove",
+        target: document.documentElement,
+        offsetX: editBookmarkPanelRemoveButtonRect.left,
+        offsetY: editBookmarkPanelRemoveButtonRect.top,
       });
       EventUtils.synthesizeKey("D", { accelKey: true }, window);
     },
