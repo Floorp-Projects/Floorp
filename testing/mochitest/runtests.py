@@ -2845,6 +2845,7 @@ toolbar#nav-bar {
                 "socketprocess_networking": self.extraPrefs.get(
                     "network.http.network_access_on_socket_process.enabled", False
                 ),
+                "swgl": self.extraPrefs.get("gfx.webrender.software", False),
                 "verify": options.verify,
                 "verify_fission": options.verify_fission,
                 "webrender": options.enable_webrender,
