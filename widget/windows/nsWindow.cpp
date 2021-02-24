@@ -148,6 +148,7 @@
 #include "ScreenHelperWin.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 #include "nsIGfxInfo.h"
@@ -4081,7 +4082,7 @@ LayerManager* nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
         reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
         mTransparencyMode, mSizeMode);
     // If we're not using the compositor, the options don't actually matter.
-    CompositorOptions options(false, false);
+    CompositorOptions options(false, false, false);
     mBasicLayersSurface =
         new InProcessWinCompositorWidget(initData, options, this);
     mCompositorWidgetDelegate = mBasicLayersSurface;
@@ -8526,6 +8527,12 @@ void nsWindow::PickerClosed() {
   if (!mPickerDisplayCount && mDestroyCalled) {
     Destroy();
   }
+}
+
+bool nsWindow::WidgetTypePrefersSoftwareWebRender() const {
+  return (StaticPrefs::gfx_webrender_software_unaccelerated_widget_allow() &&
+          mTransparencyMode == eTransparencyTransparent) ||
+         nsBaseWidget::WidgetTypePrefersSoftwareWebRender();
 }
 
 bool nsWindow::WidgetTypeSupportsAcceleration() {

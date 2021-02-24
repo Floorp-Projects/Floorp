@@ -294,6 +294,7 @@ class nsWindow final : public nsWindowBase {
    * Misc.
    */
   virtual bool AutoErase(HDC dc);
+  bool WidgetTypePrefersSoftwareWebRender() const override;
   bool WidgetTypeSupportsAcceleration() override;
 
   void ForcePresent();
