@@ -7,7 +7,7 @@
 #ifndef MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOST_H
 #define MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOST_H
 
-#include "RenderTextureHost.h"
+#include "RenderTextureHostSWGL.h"
 
 namespace mozilla {
 namespace gfx {
@@ -21,15 +21,28 @@ namespace wr {
  * into the render texture cache by wrapping an existing surface wrapper. These
  * surfaces are backed by BGRA/X shared memory buffers.
  */
-class RenderSharedSurfaceTextureHost final : public RenderTextureHost {
+class RenderSharedSurfaceTextureHost final : public RenderTextureHostSWGL {
  public:
   explicit RenderSharedSurfaceTextureHost(
       gfx::SourceSurfaceSharedDataWrapper* aSurface);
 
+  // RenderTextureHost
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
   size_t Bytes() override;
+
+  // RenderTextureHostSWGL
+  size_t GetPlaneCount() const override;
+
+  gfx::SurfaceFormat GetFormat() const override;
+
+  gfx::ColorDepth GetColorDepth() const override;
+
+  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
+                PlaneInfo& aPlaneInfo) override;
+
+  void UnmapPlanes() override;
 
  private:
   virtual ~RenderSharedSurfaceTextureHost();

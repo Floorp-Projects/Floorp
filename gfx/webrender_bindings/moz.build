@@ -9,7 +9,6 @@ with Files("**"):
 
 EXPORTS.mozilla.webrender += [
     "RenderBufferTextureHost.h",
-    "RenderBufferTextureHostSWGL.h",
     "RenderCompositor.h",
     "RenderCompositorEGL.h",
     "RenderCompositorLayersSWGL.h",
@@ -20,7 +19,6 @@ EXPORTS.mozilla.webrender += [
     "RendererScreenshotGrabber.h",
     "RenderExternalTextureHost.h",
     "RenderSharedSurfaceTextureHost.h",
-    "RenderSharedSurfaceTextureHostSWGL.h",
     "RenderTextureHost.h",
     "RenderTextureHostSWGL.h",
     "RenderTextureHostWrapper.h",
@@ -33,7 +31,6 @@ EXPORTS.mozilla.webrender += [
 UNIFIED_SOURCES += [
     "Moz2DImageRenderer.cpp",
     "RenderBufferTextureHost.cpp",
-    "RenderBufferTextureHostSWGL.cpp",
     "RenderCompositor.cpp",
     "RenderCompositorEGL.cpp",
     "RenderCompositorLayersSWGL.cpp",
@@ -44,7 +41,6 @@ UNIFIED_SOURCES += [
     "RendererScreenshotGrabber.cpp",
     "RenderExternalTextureHost.cpp",
     "RenderSharedSurfaceTextureHost.cpp",
-    "RenderSharedSurfaceTextureHostSWGL.cpp",
     "RenderTextureHost.cpp",
     "RenderTextureHostSWGL.cpp",
     "RenderTextureHostWrapper.cpp",

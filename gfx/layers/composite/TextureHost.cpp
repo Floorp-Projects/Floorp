@@ -31,7 +31,6 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderBufferTextureHost.h"
-#include "mozilla/webrender/RenderBufferTextureHostSWGL.h"
 #include "mozilla/webrender/RenderExternalTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -677,10 +676,7 @@ void BufferTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture;
 
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
-    texture =
-        new wr::RenderBufferTextureHostSWGL(GetBuffer(), GetBufferDescriptor());
-  } else if (UseExternalTextures()) {
+  if (UseExternalTextures()) {
     texture =
         new wr::RenderExternalTextureHost(GetBuffer(), GetBufferDescriptor());
   } else {
@@ -707,7 +703,12 @@ void BufferTextureHost::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
 
-  auto imageType = UseExternalTextures() || gfx::gfxVars::UseSoftwareWebRender()
+  // Even if we cannot use external textures, if the backend is Software
+  // WebRender, we need to ensure that we use external texture style updates.
+  // This is because we always represent mapped buffers as external "native"
+  // textures for that backend.
+  auto imageType = UseExternalTextures() || aResources.GetBackendType() ==
+                                                WebRenderBackend::SOFTWARE
                        ? wr::ExternalImageType::TextureHandle(
                              wr::ImageBufferKind::TextureRect)
                        : wr::ExternalImageType::Buffer();
