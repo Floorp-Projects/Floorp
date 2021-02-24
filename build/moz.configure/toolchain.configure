@@ -922,7 +922,7 @@ def provided_program(env_var, when=None):
 # on automation.
 @depends(
     bootstrap_path("sysroot", context=target, when=target_is_linux),
-    bootstrap,
+    "--enable-bootstrap",
     "MOZ_AUTOMATION",
 )
 def sysroot_path(path, bootstrap, automation):
