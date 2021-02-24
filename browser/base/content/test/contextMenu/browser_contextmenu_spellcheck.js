@@ -40,8 +40,6 @@ add_task(async function test_text_input_spellcheck() {
       null, // ignore clipboard state
       "context-delete",
       null,
-      "---",
-      null,
       "context-selectall",
       null,
       "---",
@@ -100,8 +98,6 @@ add_task(async function test_text_input_spellcheckwrong() {
       null, // ignore clipboard state
       "context-delete",
       null,
-      "---",
-      null,
       "context-selectall",
       null,
       "---",
@@ -136,8 +132,6 @@ const kCorrectItems = [
   "context-paste",
   null, // ignore clipboard state
   "context-delete",
-  null,
-  "---",
   null,
   "context-selectall",
   null,

@@ -821,7 +821,6 @@
         <menuitem data-l10n-id="text-action-paste" cmd="cmd_paste"/>
         <menuitem class="searchbar-paste-and-search"/>
         <menuitem data-l10n-id="text-action-delete" cmd="cmd_delete"/>
-        <menuseparator/>
         <menuitem data-l10n-id="text-action-select-all" cmd="cmd_selectAll"/>
         <menuseparator/>
         <menuitem class="searchbar-clear-history"/>
