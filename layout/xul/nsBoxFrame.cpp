@@ -48,7 +48,6 @@
 #include "gfxUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Touch.h"
