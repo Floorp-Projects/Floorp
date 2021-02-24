@@ -193,9 +193,6 @@ already_AddRefed<ChannelMediaDecoder> ChannelMediaDecoder::Clone(
     return nullptr;
   }
   RefPtr<ChannelMediaDecoder> decoder = new ChannelMediaDecoder(aInit);
-  if (!decoder) {
-    return nullptr;
-  }
   nsresult rv = decoder->Load(mResource);
   if (NS_FAILED(rv)) {
     decoder->Shutdown();
