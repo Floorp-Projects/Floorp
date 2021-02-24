@@ -165,7 +165,8 @@ fn test_stream_tester() {
                  \t'd': destroy a stream\n\
                  \t's': start the created stream\n\
                  \t't': stop the created stream\n\
-                 \t'r': register a device changed callback"
+                 \t'r': register a device changed callback\n\
+                 \t'v': set volume"
             );
 
             let mut command = String::new();
@@ -183,6 +184,7 @@ fn test_stream_tester() {
                 "s" => start_stream(stream_ptr),
                 "t" => stop_stream(stream_ptr),
                 "r" => register_device_change_callback(stream_ptr),
+                "v" => set_volume(stream_ptr),
                 x => println!("Unknown command: {}", x),
             }
         }
@@ -210,6 +212,19 @@ fn test_stream_tester() {
             ffi::CUBEB_OK
         );
         println!("Stream {:p} stopped.", stream_ptr);
+    }
+
+    fn set_volume(stream_ptr: *mut ffi::cubeb_stream) {
+        if stream_ptr.is_null() {
+            println!("No stream can set volume.");
+            return;
+        }
+        const VOL: f32 = 0.5;
+        assert_eq!(
+            unsafe { OPS.stream_set_volume.unwrap()(stream_ptr, VOL) },
+            ffi::CUBEB_OK
+        );
+        println!("Set stream {:p} volume to {}", stream_ptr, VOL);
     }
 
     fn register_device_change_callback(stream_ptr: *mut ffi::cubeb_stream) {

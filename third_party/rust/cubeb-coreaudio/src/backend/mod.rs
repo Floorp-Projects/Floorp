@@ -3556,7 +3556,24 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         }
     }
     fn set_volume(&mut self, volume: f32) -> Result<()> {
-        set_volume(self.core_stream_data.output_unit, volume)
+        // Execute set_volume in serial queue to avoid racing with destroy or reinit.
+        let mut result = Err(Error::error());
+        let set = &mut result;
+        let stream = &self;
+        self.queue.run_sync(move || {
+            *set = set_volume(stream.core_stream_data.output_unit, volume);
+        });
+
+        if result.is_err() {
+            return result;
+        }
+
+        cubeb_log!(
+            "Cubeb stream ({:p}) set volume to {}.",
+            self as *const AudioUnitStream,
+            volume
+        );
+        Ok(())
     }
     fn set_name(&mut self, _: &CStr) -> Result<()> {
         Err(Error::not_supported())
