@@ -1802,7 +1802,8 @@ bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
   return true;
 }
 
-bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
+bool ExtensibleCompilationStencil::finish(JSContext* cx,
+                                          CompilationStencil& stencil) {
 #ifdef DEBUG
   assertNoExternalDependency();
 #endif
