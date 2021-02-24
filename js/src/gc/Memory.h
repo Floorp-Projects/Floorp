@@ -37,6 +37,10 @@ bool UsingScattershotAllocator();
 void* MapAlignedPages(size_t length, size_t alignment);
 void UnmapPages(void* region, size_t length);
 
+// We can only decommit unused pages if the page size is less than or equal to
+// the hardcoded Arena size for the running process.
+bool DecommitEnabled();
+
 // Tell the OS that the given pages are not in use, so they should not be
 // written to a paging file. This may be a no-op on some platforms.
 bool MarkPagesUnusedSoft(void* region, size_t length);

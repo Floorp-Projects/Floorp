@@ -743,7 +743,9 @@ Arena* TenuredChunk::fetchNextDecommittedArena() {
   decommittedArenas[offset] = false;
 
   Arena* arena = &arenas[offset];
-  MarkPagesInUseSoft(arena, ArenaSize);
+  if (DecommitEnabled()) {
+    MarkPagesInUseSoft(arena, ArenaSize);
+  }
   arena->setAsNotAllocated();
 
   return arena;
@@ -881,7 +883,9 @@ void TenuredChunk::init(GCRuntime* gc) {
 
 void TenuredChunk::decommitAllArenas() {
   decommittedArenas.SetAll();
-  MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
+  if (DecommitEnabled()) {
+    MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
+  }
 
   info.freeArenasHead = nullptr;
   info.lastDecommittedArenaOffset = 0;

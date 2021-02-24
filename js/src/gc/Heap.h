@@ -12,6 +12,7 @@
 #include "ds/BitArray.h"
 #include "gc/AllocKind.h"
 #include "gc/GCEnum.h"
+#include "gc/Memory.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "util/Poison.h"
