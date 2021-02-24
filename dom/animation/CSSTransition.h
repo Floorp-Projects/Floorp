@@ -20,7 +20,7 @@ namespace dom {
 class CSSTransition final : public Animation {
  public:
   explicit CSSTransition(nsIGlobalObject* aGlobal)
-      : dom::Animation(aGlobal),
+      : Animation(aGlobal),
         mPreviousTransitionPhase(TransitionPhase::Idle),
         mNeedsNewAnimationIndexWhenRun(false),
         mTransitionProperty(eCSSProperty_UNKNOWN) {}
@@ -68,7 +68,7 @@ class CSSTransition final : public Animation {
     mOwningElement = OwningElementRef();
   }
 
-  void SetEffectFromStyle(AnimationEffect* aEffect);
+  void SetEffectFromStyle(KeyframeEffect*);
 
   void Tick() override;
 
