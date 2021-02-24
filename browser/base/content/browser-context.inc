@@ -45,7 +45,7 @@
       <menuseparator id="context-sep-viewsource-commands"/>
       <menuitem id="spell-no-suggestions"
                 disabled="true"
-                label="&spellNoSuggestions.label;"/>
+                data-l10n-id="text-action-spell-no-suggestions"/>
       <menuitem id="spell-add-to-dictionary"
                 label="&spellAddToDictionary.label;"
                 accesskey="&spellAddToDictionary.accesskey;"
@@ -68,7 +68,7 @@
                 oncommand="gContextMenu.openLinkInTab(event);"/>
 
       <menu id="context-openlinkinusercontext-menu"
-            data-l10n-id="main-context-menu-open-link-container-tab"
+            data-l10n-id="main-context-menu-open-link-container"
             hidden="true">
         <menupopup oncommand="gContextMenu.openLinkInTab(event);"
                    onpopupshowing="return gContextMenu.createContainerMenu(event);" />
@@ -82,7 +82,7 @@
                 oncommand="gContextMenu.openLinkInPrivateWindow();"/>
       <menuseparator id="context-sep-open"/>
       <menuitem id="context-bookmarklink"
-                data-l10n-id="main-context-menu-bookmark-this-link"
+                data-l10n-id="main-context-menu-bookmark-link"
                 oncommand="gContextMenu.bookmarkLink();"/>
       <menuitem id="context-savelink"
                 data-l10n-id="main-context-menu-save-link"
@@ -94,7 +94,7 @@
                 data-l10n-id="main-context-menu-copy-email"
                 oncommand="gContextMenu.copyEmail();"/>
       <menuitem id="context-copylink"
-                data-l10n-id="main-context-menu-copy-link"
+                data-l10n-id="main-context-menu-copy-link-simple"
                 oncommand="gContextMenu.copyLink();"/>
       <menuseparator id="context-sep-copylink"/>
       <menuitem id="context-media-play"
@@ -189,13 +189,13 @@
                 oncommand="goDoCommand('cmd_copyImage');"/>
 #endif
       <menuitem id="context-copyimage"
-                data-l10n-id="main-context-menu-image-copy-location"
+                data-l10n-id="main-context-menu-image-copy-link"
                 oncommand="gContextMenu.copyMediaLocation();"/>
       <menuitem id="context-copyvideourl"
-                data-l10n-id="main-context-menu-video-copy-location"
+                data-l10n-id="main-context-menu-video-copy-link"
                 oncommand="gContextMenu.copyMediaLocation();"/>
       <menuitem id="context-copyaudiourl"
-                data-l10n-id="main-context-menu-audio-copy-location"
+                data-l10n-id="main-context-menu-audio-copy-link"
                 oncommand="gContextMenu.copyMediaLocation();"/>
       <menuitem id="context-sendimage"
                 data-l10n-id="main-context-menu-image-email"
@@ -212,7 +212,7 @@
                 onclick="checkForMiddleClick(this, event);"/>
       <menuseparator id="context-sep-setbackground"/>
       <menuitem id="context-setDesktopBackground"
-                data-l10n-id="main-context-menu-image-set-as-background"
+                data-l10n-id="main-context-menu-image-set-image-as-background"
                 oncommand="gContextMenu.setDesktopBackground();"/>
       <menuitem id="context-ctp-play"
                 data-l10n-id="main-context-menu-plugin-play"
@@ -389,7 +389,7 @@
                 oncommand="gContextMenu.inspectA11Y();"/>
       <menuitem id="context-inspect"
                 hidden="true"
-                data-l10n-id="main-context-menu-inspect-element"
+                data-l10n-id="main-context-menu-inspect"
                 oncommand="gContextMenu.inspectNode();"/>
       <menuseparator id="context-media-eme-separator" hidden="true"/>
       <menuitem id="context-media-eme-learnmore"

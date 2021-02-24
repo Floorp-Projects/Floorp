@@ -101,21 +101,21 @@ main-context-menu-open-link-new-tab =
     .label = Open Link in New Tab
     .accesskey = T
 
-main-context-menu-open-link-container-tab =
-    .label = Open Link in New Container Tab
-    .accesskey = b
+main-context-menu-open-link-container =
+    .label = Open Link in New Container
+    .accesskey = w
 
 main-context-menu-open-link-new-window =
     .label = Open Link in New Window
-    .accesskey = W
+    .accesskey = d
 
 main-context-menu-open-link-new-private-window =
     .label = Open Link in New Private Window
     .accesskey = P
 
-main-context-menu-bookmark-this-link =
-    .label = Bookmark This Link
-    .accesskey = L
+main-context-menu-bookmark-link =
+    .label = Bookmark Link
+    .accesskey = B
 
 main-context-menu-save-link =
     .label = Save Link As…
@@ -125,17 +125,17 @@ main-context-menu-save-link-to-pocket =
     .label = Save Link to { -pocket-brand-name }
     .accesskey = o
 
-## The access keys for "Copy Link Location" and "Copy Email Address"
+## The access keys for "Copy Link" and "Copy Email Address"
 ## should be the same if possible; the two context menu items
 ## are mutually exclusive.
 
 main-context-menu-copy-email =
     .label = Copy Email Address
-    .accesskey = A
+    .accesskey = l
 
-main-context-menu-copy-link =
-    .label = Copy Link Location
-    .accesskey = a
+main-context-menu-copy-link-simple =
+    .label = Copy Link
+    .accesskey = L
 
 ## Media (video/audio) controls
 ##
@@ -234,16 +234,16 @@ main-context-menu-image-copy =
     .label = Copy Image
     .accesskey = y
 
-main-context-menu-image-copy-location =
-    .label = Copy Image Location
+main-context-menu-image-copy-link =
+    .label = Copy Image Link
     .accesskey = o
 
-main-context-menu-video-copy-location =
-    .label = Copy Video Location
+main-context-menu-video-copy-link =
+    .label = Copy Video Link
     .accesskey = o
 
-main-context-menu-audio-copy-location =
-    .label = Copy Audio Location
+main-context-menu-audio-copy-link =
+    .label = Copy Audio Link
     .accesskey = o
 
 main-context-menu-image-save-as =
@@ -254,8 +254,8 @@ main-context-menu-image-email =
     .label = Email Image…
     .accesskey = g
 
-main-context-menu-image-set-as-background =
-    .label = Set As Desktop Background…
+main-context-menu-image-set-image-as-background =
+    .label = Set Image as Desktop Background…
     .accesskey = S
 
 main-context-menu-image-desc =
@@ -374,8 +374,8 @@ main-context-menu-bidi-switch-page =
     .label = Switch Page Direction
     .accesskey = D
 
-main-context-menu-inspect-element =
-    .label = Inspect Element
+main-context-menu-inspect =
+    .label = Inspect
     .accesskey = Q
 
 main-context-menu-inspect-a11y-properties =
