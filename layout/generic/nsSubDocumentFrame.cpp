@@ -1121,20 +1121,15 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
 }
 
 void nsSubDocumentFrame::ClearDisplayItems() {
-  DisplayItemArray* items = GetProperty(DisplayItems());
-  if (!items) {
-    return;
-  }
-
-  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
-  MOZ_ASSERT(displayRoot);
-
-  RetainedDisplayListBuilder* retainedBuilder =
-      displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
-  MOZ_ASSERT(retainedBuilder);
-
-  for (nsDisplayItemBase* i : *items) {
+  for (nsDisplayItemBase* i : DisplayItems()) {
     if (i->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
+      nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
+      MOZ_ASSERT(displayRoot);
+
+      RetainedDisplayListBuilder* retainedBuilder =
+          displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
+      MOZ_ASSERT(retainedBuilder);
+
       auto* item = static_cast<nsDisplaySubDocument*>(i);
       item->GetChildren()->DeleteAll(retainedBuilder->Builder());
       item->Disown();

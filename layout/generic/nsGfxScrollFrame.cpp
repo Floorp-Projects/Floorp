@@ -4112,18 +4112,15 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       int32_t zIndex = MaxZIndexInListOfItemsContainedInFrame(
           scrolledContent.PositionedDescendants(), mOuter);
       if (aBuilder->IsPartialUpdate()) {
-        if (auto* items =
-                mScrolledFrame->GetProperty(nsIFrame::DisplayItems())) {
-          for (nsDisplayItemBase* item : *items) {
-            if (item->GetType() ==
-                DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-              auto* hitTestItem =
-                  static_cast<nsDisplayCompositorHitTestInfo*>(item);
-              if (hitTestItem->GetHitTestInfo().Info().contains(
-                      CompositorHitTestFlags::eInactiveScrollframe)) {
-                zIndex = std::max(zIndex, hitTestItem->ZIndex());
-                item->SetCantBeReused();
-              }
+        for (nsDisplayItemBase* item : mScrolledFrame->DisplayItems()) {
+          if (item->GetType() ==
+              DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+            auto* hitTestItem =
+                static_cast<nsDisplayCompositorHitTestInfo*>(item);
+            if (hitTestItem->GetHitTestInfo().Info().contains(
+                    CompositorHitTestFlags::eInactiveScrollframe)) {
+              zIndex = std::max(zIndex, hitTestItem->ZIndex());
+              item->SetCantBeReused();
             }
           }
         }
