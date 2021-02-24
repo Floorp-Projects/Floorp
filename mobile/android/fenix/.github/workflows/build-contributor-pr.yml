@@ -3,7 +3,7 @@ on: [pull_request]
 jobs:
   run-build:
     runs-on: ubuntu-20.04
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -21,7 +21,8 @@ jobs:
 
   run-testDebugUnitTest:
     runs-on: ubuntu-20.04
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -39,7 +40,8 @@ jobs:
 
   run-detekt:
     runs-on: ubuntu-20.04
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -62,7 +64,8 @@ jobs:
 
   run-ktlint:
     runs-on: ubuntu-20.04
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -80,7 +83,8 @@ jobs:
 
   run-lintDebug:
     runs-on: ubuntu-20.04
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
