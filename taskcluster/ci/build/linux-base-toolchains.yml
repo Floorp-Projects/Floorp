@@ -17,7 +17,6 @@ linux64-base-toolchains/opt:
     run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian8-amd64-build-base}
         max-run-time: 7200
         env:
             MOZ_LOW_PARALLELISM_BUILD: '1'
@@ -57,7 +56,6 @@ linux64-base-toolchains/debug:
         skip-unless-expanded: null
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian8-amd64-build-base}
         max-run-time: 7200
         env:
             MOZ_LOW_PARALLELISM_BUILD: '1'
@@ -98,7 +96,6 @@ linux64-base-toolchains-clang/opt:
     run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian8-amd64-build-base}
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains-clang
@@ -135,7 +132,6 @@ linux64-base-toolchains-clang/debug:
         skip-unless-expanded: null
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian8-amd64-build-base}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains-clang
