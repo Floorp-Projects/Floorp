@@ -915,11 +915,7 @@ var gSync = {
       );
     } else if (state.status === UIState.STATUS_SIGNED_IN) {
       stateValue = "signedin";
-      if (
-        state.avatarURL &&
-        !state.avatarIsDefault &&
-        !PanelUI.protonAppMenuEnabled
-      ) {
+      if (state.avatarURL && !state.avatarIsDefault) {
         // The user has specified a custom avatar, attempt to load the image on all the menu buttons.
         const bgImage = `url("${state.avatarURL}")`;
         let img = new Image();
