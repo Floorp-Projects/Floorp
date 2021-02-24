@@ -35,6 +35,7 @@ marionette.jar:
   content/modal.js (modal.js)
   content/navigate.js (navigate.js)
   content/packets.js (packets.js)
+  content/permissions.js (permissions.js)
   content/prefs.js (prefs.js)
   content/print.js (print.js)
   content/reftest.js (reftest.js)
