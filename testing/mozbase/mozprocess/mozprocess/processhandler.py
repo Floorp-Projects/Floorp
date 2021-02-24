@@ -2,6 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# mozprocess is typically used as an alternative to the python subprocess module.
+# It has been used in many Mozilla test harnesses with some success -- but also
+# with on-going concerns, especially regarding reliability and exception handling.
+#
+# New code should try to use the standard subprocess module, and only use
+# mozprocess if absolutely necessary.
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import codecs
