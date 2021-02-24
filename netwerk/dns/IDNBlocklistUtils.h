@@ -14,7 +14,7 @@ namespace net {
 
 // A blocklist range is defined as all of the characters between:
 // { firstCharacterInRange, lastCharacterInRange }
-typedef std::pair<char16_t, char16_t> BlocklistRange;
+using BlocklistRange = std::pair<char16_t, char16_t>;
 
 // Used to perform a binary search of the needle in the sorted array of pairs
 class BlocklistPairToCharComparator {

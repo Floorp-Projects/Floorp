@@ -31,8 +31,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_network.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 static StaticRefPtr<NativeDNSResolverOverride> gOverrideService;
 
@@ -462,5 +461,4 @@ NS_IMETHODIMP NativeDNSResolverOverride::ClearOverrides() {
   return NS_OK;
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

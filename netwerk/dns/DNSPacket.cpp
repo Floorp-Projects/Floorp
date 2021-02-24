@@ -1031,7 +1031,7 @@ static bool CreateConfigId(ObliviousDoHConfig& aConfig) {
 
   UniquePK11SymKey configKey(PK11_ImportDataKey(slot.get(), CKM_HKDF_DATA,
                                                 PK11_OriginUnwrap, CKA_DERIVE,
-                                                rawConfig.get(), NULL));
+                                                rawConfig.get(), nullptr));
   if (!configKey) {
     return false;
   }
@@ -1382,7 +1382,7 @@ static SECStatus HKDFExtract(SECItem* aSalt, PK11SymKey* aIkm,
   params.bExpand = CK_FALSE;
   params.prfHashMechanism = CKM_SHA256;
   params.ulSaltType = aSalt ? CKF_HKDF_SALT_DATA : CKF_HKDF_SALT_NULL;
-  params.pSalt = aSalt ? (CK_BYTE_PTR)aSalt->data : NULL;
+  params.pSalt = aSalt ? (CK_BYTE_PTR)aSalt->data : nullptr;
   params.ulSaltLen = aSalt ? aSalt->len : 0;
 
   UniquePK11SymKey prk(PK11_Derive(aIkm, CKM_HKDF_DERIVE, &paramsItem,
