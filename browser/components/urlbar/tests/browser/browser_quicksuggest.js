@@ -41,15 +41,17 @@ function sleep(ms) {
  * @param {number} [index]
  *   The expected index of the Quick Suggest result.  Pass -1 to use the index
  *   of the last result.
+ * @param {object} [win]
+ *   The window in which to read the results from.
  * @returns {result}
  *   The result at the given index.
  */
-async function assertIsQuickSuggest(index = -1) {
+async function assertIsQuickSuggest(index = -1, win = window) {
   if (index < 0) {
-    index = UrlbarTestUtils.getResultCount(window) - 1;
+    index = UrlbarTestUtils.getResultCount(win) - 1;
     Assert.greater(index, -1, "Sanity check: Result count should be > 0");
   }
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(win, index);
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
   Assert.equal(result.url, `${TEST_URL}?q=frabbits`);
 
@@ -152,9 +154,6 @@ add_task(async function test_suggestions_disabled_private() {
   let window = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let browser = window.gBrowser.selectedTab.linkedBrowser;
-  BrowserTestUtils.loadURI(browser, ABOUT_BLANK);
-  await BrowserTestUtils.browserLoaded(browser, false, ABOUT_BLANK);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "frab",
@@ -165,6 +164,24 @@ add_task(async function test_suggestions_disabled_private() {
     "There are no additional suggestions"
   );
   await BrowserTestUtils.closeWindow(window);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_suggestions_enabled_private() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [SUGGESTIONS_PREF, true],
+      [PRIVATE_SUGGESTIONS_PREF, true],
+    ],
+  });
+
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    value: "frab",
+  });
+  await assertIsQuickSuggest(-1, win);
+  await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
 });
 
