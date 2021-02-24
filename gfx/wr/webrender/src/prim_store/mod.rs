@@ -23,7 +23,6 @@ use crate::picture::PicturePrimitive;
 #[cfg(debug_assertions)]
 use crate::render_backend::{FrameId};
 use crate::render_task_graph::RenderTaskId;
-use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use crate::resource_cache::ImageProperties;
 use crate::scene::SceneProperties;
 use std::{hash, ops, u32, usize};
@@ -638,7 +637,7 @@ pub struct VisibleGradientTile {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct CachedGradientSegment {
-    pub handle: RenderTaskCacheEntryHandle,
+    pub render_task: RenderTaskId,
     pub local_rect: LayoutRect,
 }
 
@@ -957,12 +956,12 @@ pub enum PrimitiveInstanceKind {
         //           the things we store here in the instance, and
         //           use them directly. This will remove cache_handle,
         //           but also the opacity, clip_task_id etc below.
-        cache_handle: Option<RenderTaskCacheEntryHandle>,
+        render_task: Option<RenderTaskId>,
     },
     NormalBorder {
         /// Handle to the common interned data for this primitive.
         data_handle: NormalBorderDataHandle,
-        cache_handles: storage::Range<RenderTaskCacheEntryHandle>,
+        render_task_ids: storage::Range<RenderTaskId>,
     },
     ImageBorder {
         /// Handle to the common interned data for this primitive.
@@ -1133,7 +1132,7 @@ pub type TextRunIndex = storage::Index<TextRunPrimitive>;
 pub type TextRunStorage = storage::Storage<TextRunPrimitive>;
 pub type ColorBindingIndex = storage::Index<PropertyBinding<ColorU>>;
 pub type ColorBindingStorage = storage::Storage<PropertyBinding<ColorU>>;
-pub type BorderHandleStorage = storage::Storage<RenderTaskCacheEntryHandle>;
+pub type BorderHandleStorage = storage::Storage<RenderTaskId>;
 pub type SegmentStorage = storage::Storage<BrushSegment>;
 pub type SegmentsRange = storage::Range<BrushSegment>;
 pub type SegmentInstanceStorage = storage::Storage<SegmentedInstance>;

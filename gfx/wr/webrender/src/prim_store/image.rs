@@ -248,7 +248,7 @@ impl ImageData {
                         }
                     );
 
-                    image_instance.src_color = ImageSourceHandle::CachedRenderTask(cached_task_handle);
+                    image_instance.src_color = ImageSourceHandle::RenderTask(cached_task_handle);
                 }
             }
             // Tiled image path.
