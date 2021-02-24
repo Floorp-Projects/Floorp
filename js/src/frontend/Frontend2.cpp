@@ -596,7 +596,7 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
   Vector<TaggedParserAtomIndex> allAtoms(cx);
-  CompilationState compilationState(cx, allocScope, input, *stencil);
+  CompilationState compilationState(cx, allocScope, input, stencil->alloc);
   if (!ConvertAtoms(cx, result, compilationState, allAtoms)) {
     return false;
   }
