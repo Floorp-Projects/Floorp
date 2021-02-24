@@ -1943,7 +1943,7 @@ nasm = check_prog(
     "NASM",
     ["nasm"],
     allow_missing=True,
-    paths=bootstrap_search_path("nasm", when=need_nasm),
+    bootstrap="nasm",
     when=need_nasm,
 )
 
@@ -2083,7 +2083,7 @@ set_config("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 set_define("MOZ_USING_WASM_SANDBOXING", requires_wasm_sandboxing)
 
 with only_when(requires_wasm_sandboxing & compile_environment):
-    lucetc = check_prog("LUCETC", ["lucetc"], paths=bootstrap_search_path("lucetc"))
+    lucetc = check_prog("LUCETC", ["lucetc"], bootstrap="lucetc")
 
     option(
         "--with-wasi-sysroot",
@@ -2333,7 +2333,7 @@ check_prog(
     "DUMP_SYMS",
     ["dump_syms"],
     allow_missing=True,
-    paths=bootstrap_search_path("dump_syms", when=compile_environment),
+    bootstrap="dump_syms",
     when=compile_environment,
 )
 
@@ -2342,7 +2342,7 @@ check_prog(
     "PDBSTR",
     ["pdbstr.exe"],
     allow_missing=True,
-    paths=bootstrap_search_path("pdbstr", when=compile_environment & target_is_windows),
+    bootstrap="pdbstr",
     when=compile_environment & target_is_windows,
 )
 
@@ -2358,9 +2358,7 @@ def allow_missing_winchecksec(automation, c_compiler):
 check_prog(
     "WINCHECKSEC",
     ["winchecksec.exe", "winchecksec"],
-    paths=bootstrap_search_path(
-        "winchecksec", when=compile_environment & target_is_windows
-    ),
+    bootstrap="winchecksec",
     allow_missing=allow_missing_winchecksec,
     when=compile_environment & target_is_windows,
 )

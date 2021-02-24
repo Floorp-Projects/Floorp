@@ -47,9 +47,16 @@ def check_cbindgen_version(cbindgen, fatal=False):
     )
 
 
+# Similar behavior to what check_prog does.
+has_cbindgen_input = depends("CBINDGEN", when=cbindgen_is_needed)(lambda x: x)
+bootstrap_cbindgen = depends(cbindgen_is_needed, has_cbindgen_input)(
+    lambda n, i: n and not i
+)
+
+
 @depends_if(
     "CBINDGEN",
-    bootstrap_search_path("cbindgen"),
+    bootstrap_search_path("cbindgen", when=bootstrap_cbindgen),
     rust_search_path,
     when=cbindgen_is_needed,
 )

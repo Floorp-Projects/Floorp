@@ -8,7 +8,11 @@ option("--disable-nodejs", help="Require Node.js to build")
 option(env="NODEJS", nargs=1, help="Path to nodejs")
 
 
-@depends("--enable-nodejs", "NODEJS", bootstrap_search_path("node"))
+@depends(
+    "--enable-nodejs",
+    "NODEJS",
+    bootstrap_search_path("node", when=depends("NODEJS")(lambda x: not x)),
+)
 @checking(
     "for nodejs", callback=lambda x: "%s (%s)" % (x.path, x.str_version) if x else "no"
 )
