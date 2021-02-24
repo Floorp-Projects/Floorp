@@ -401,7 +401,7 @@ typedef enum JSGCParamKey {
    * JS::RunIdleTimeGCTask will collect the nursery if it hasn't been collected
    * in this many milliseconds.
    *
-   * Default: 2000
+   * Default: 5000
    * Pref: None
    */
   JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS = 46,
