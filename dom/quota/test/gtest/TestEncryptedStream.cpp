@@ -22,6 +22,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SafeRefPtr.h"
@@ -30,6 +31,7 @@
 #include "mozilla/dom/quota/EncryptedBlock.h"
 #include "mozilla/dom/quota/EncryptingOutputStream_impl.h"
 #include "mozilla/dom/quota/MemoryOutputStream.h"
+#include "mozilla/dom/quota/NSSCipherStrategy.h"
 #include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -44,6 +46,7 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nscore.h"
+#include "nss.h"
 
 namespace mozilla::dom::quota {
 
@@ -221,11 +224,32 @@ NS_IMETHODIMP ArrayBufferInputStream::Clone(nsIInputStream** _retval) {
 }
 }  // namespace mozilla::dom::quota
 
+namespace mozilla {
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedNSSContext, NSSInitContext,
+                                          NSS_ShutdownContext);
+
+}  // namespace mozilla
+
 using namespace mozilla;
 using namespace mozilla::dom::quota;
 
 class DOM_Quota_EncryptedStream : public ::testing::Test {
  public:
+  static void SetUpTestCase() {
+    // Do this only once, do not tear it down per test case.
+    if (!sNssContext) {
+      sNssContext =
+          NSS_InitContext("", "", "", "", nullptr,
+                          NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
+                              NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
+                              NSS_INIT_OPTIMIZESPACE | NSS_INIT_NOROOTINIT);
+    }
+  }
+
+  static void TearDownTestCase() { sNssContext = nullptr; }
+
+ private:
+  inline static ScopedNSSContext sNssContext = ScopedNSSContext{};
 };
 
 enum struct FlushMode { AfterEachChunk, Never };
@@ -420,6 +444,19 @@ static RefPtr<dom::quota::MemoryOutputStream> DoRoundtripTest(
       aReadChunkSize, aBlockSize, aKey, aExtraChecks);
 
   return baseOutputStream;
+}
+
+TEST_P(ParametrizedCryptTest, NSSCipherStrategy) {
+  using CipherStrategy = NSSCipherStrategy;
+  const TestParams& testParams = GetParam();
+
+  auto keyOrErr = CipherStrategy::GenerateKey();
+  ASSERT_FALSE(keyOrErr.isErr());
+
+  DoRoundtripTest<CipherStrategy>(
+      testParams.DataSize(), testParams.EffectiveWriteChunkSize(),
+      testParams.EffectiveReadChunkSize(), testParams.BlockSize(),
+      keyOrErr.unwrap(), testParams.FlushMode());
 }
 
 TEST_P(ParametrizedCryptTest, DummyCipherStrategy_CheckOutput) {
