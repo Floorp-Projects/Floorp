@@ -358,6 +358,61 @@ Event Extra
 
     .. _URLBar provider experiments: experiments.html#developing-address-bar-extensions
 
+
+Custom pings for Contextual Services
+------------------------------------
+
+Contextual Services currently has two features running within the Urlbar: TopSites
+and QuickSuggest. We send various pings as the `custom pings`_ to record the impressions
+and clicks of these two features.
+
+    .. _custom pings: https://docs.telemetry.mozilla.org/cookbooks/new_ping.html#sending-a-custom-ping
+
+TopSites Impression
+  This records an impression when a sponsored TopSite is shown.
+
+  - ``context_id``
+    A UUID representing this user. Note that it's not client_id, nor can it be used to link to a client_id.
+  - ``tile_id``
+    A unique identifier for the sponsored TopSite.
+  - ``source``
+    The browser location where the impression was displayed.
+  - ``position``
+    The placement of the TopSite (1-based).
+  - ``advertiser``
+    The Name of the advertiser.
+  - ``reporting_url``
+    The reporting URL of the sponsored TopSite, normally pointing to the ad partner's reporting endpoint.
+  - ``version``
+    Firefox version.
+  - ``release_channel``
+    Firefox release channel.
+  - ``locale``
+    User's current locale.
+
+TopSites Click
+  This records a click ping when a sponsored TopSite is clicked by the user.
+
+  - ``context_id``
+    A UUID representing this user. Note that it's not client_id, nor can it be used to link to a client_id.
+  - ``tile_id``
+    A unique identifier for the sponsored TopSite.
+  - ``source``
+    The browser location where the click was tirggered.
+  - ``position``
+    The placement of the TopSite (1-based).
+  - ``advertiser``
+    The Name of the advertiser.
+  - ``reporting_url``
+    The reporting URL of the sponsored TopSite, normally pointing to the ad partner's reporting endpoint.
+  - ``version``
+    Firefox version.
+  - ``release_channel``
+    Firefox release channel.
+  - ``locale``
+    User's current locale.
+
+
 Search probes relevant to the Address Bar
 -----------------------------------------
 
@@ -420,6 +475,14 @@ browser.engagement.navigation.*
     - ``search_suggestion``
       For ``urlbar`` or ``searchbar``, indicates the user confirmed a search
       suggestion.
+
+contextual.services.topsites.*
+  These keyed scalars instrument the impressions and clicks for sponsored TopSites
+  in the urlbar.
+  The key is a combination of the source and the placement of the TopSites link
+  (1-based) such as 'urlbar_1'. For each key, it records the counter of the
+  impression or click.
+  Note that these scalars are shared with the TopSites on the newtab page.
 
 Obsolete probes
 ---------------
