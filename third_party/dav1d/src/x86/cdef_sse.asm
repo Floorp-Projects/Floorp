@@ -249,13 +249,13 @@ SECTION .text
 
 %macro CDEF_FILTER 2 ; w, h
  %if ARCH_X86_64
-cglobal cdef_filter_%1x%2, 4, 9, 16, 3 * 16 + (%2+4)*32, \
-                           dst, stride, left, top, pri, sec, edge, stride3, dst4
+cglobal cdef_filter_%1x%2_8bpc, 4, 9, 16, 3 * 16 + (%2+4)*32, \
+                                dst, stride, left, top, pri, sec, edge, stride3, dst4
   %define px rsp+3*16+2*32
   %define base 0
  %else
-cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
-                           dst, stride, left, edge, stride3
+cglobal cdef_filter_%1x%2_8bpc, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
+                                dst, stride, left, edge, stride3
     %define       topq  r2
     %define      dst4q  r2
     LEA             r5, tap_table
@@ -758,7 +758,7 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
 
 %macro CDEF_DIR 0
  %if ARCH_X86_64
-cglobal cdef_dir, 3, 5, 16, 32, src, stride, var, stride3
+cglobal cdef_dir_8bpc, 3, 5, 16, 32, src, stride, var, stride3
     lea       stride3q, [strideq*3]
     movq            m1, [srcq+strideq*0]
     movhps          m1, [srcq+strideq*1]
@@ -1030,7 +1030,7 @@ cglobal cdef_dir, 3, 5, 16, 32, src, stride, var, stride3
     shr            r1d, 10
     mov         [varq], r1d
  %else
-cglobal cdef_dir, 2, 4, 8, 96, src, stride, var, stride3
+cglobal cdef_dir_8bpc, 2, 4, 8, 96, src, stride, var, stride3
 %define base r2-shufw_6543210x
     LEA             r2, shufw_6543210x
     pxor            m0, m0

@@ -2966,8 +2966,8 @@ filter_fn prep, r0, r7, r1, r2, r3, r4, r5, r6, r8, r9, 6
 .endm
 
 .macro load_filter_coef dst, src, inc
-        vld1.8          {\dst}, [r12, :64]
         add             \src, \src, \inc
+        vld1.8          {\dst}, [r12, :64]
 .endm
 
 .macro load_filter_row dst, src, inc
@@ -2978,71 +2978,56 @@ filter_fn prep, r0, r7, r1, r2, r3, r4, r5, r6, r8, r9, 6
 function warp_filter_horz_neon
         load_filter_ptr r5                  // filter 0
         vld1.16         {q7}, [r2], r3
+        vmov.i8         q6,  #128
 
         load_filter_coef d0, r5,  r7        // filter 0
-        vmovl.u8        q6,  d14            // original pixels
-        load_filter_row d2,  r5,  r7        // filter 1
-        vmovl.u8        q7,  d15            // original pixels
-        load_filter_row d4,  r5,  r7        // filter 2
-        vmovl.s8        q0,  d0             // filter 0
-        vext.8          q3,  q6,  q7,  #2*1 // filter 1 pixels
+        load_filter_row d1,  r5,  r7        // filter 1
+        load_filter_row d2,  r5,  r7        // filter 2
         load_filter_ptr r5                  // filter 3
-        vmovl.s8        q1,  d2             // filter 1
-        vmul.i16        q5,  q6,  q0        // filter 0 output
-        load_filter_coef d0, r5,  r7        // filter 3
-        vmovl.s8        q2,  d4             // filter 2
+        veor            q7,  q7,  q6        // subtract by 128 to allow using vmull
+        load_filter_coef d3, r5,  r7        // filter 3
+        vext.8          d12, d14, d15, #1   // filter 1 pixels
+        vext.8          d13, d14, d15, #2   // filter 2 pixels
         load_filter_ptr r5                  // filter 4
-        vext.8          q4,  q6,  q7,  #2*2 // filter 2 pixels
-        vmul.i16        q3,  q3,  q1        // filter 1 output
-        load_filter_coef d2, r5,  r7        // filter 4
-        vmul.i16        q4,  q4,  q2        // filter 2 output
-        vext.8          q2,  q6,  q7,  #2*3 // filter 3 pixels
-        vmovl.s8        q0,  d0             // filter 3
-        vpaddl.s16      q5,  q5             // pixel 0 (4x32)
-        vpaddl.s16      q3,  q3             // pixel 1 (4x32)
-        vmul.i16        q0,  q2,  q0        // filter 3 output
+        vmull.s8        q2,  d14, d0        // filter 0 output
+        vmull.s8        q3,  d12, d1        // filter 1 output
+        load_filter_coef d0, r5,  r7        // filter 4
         load_filter_ptr r5                  // filter 5
-        vext.8          q2,  q6,  q7,  #2*4 // filter 4 pixels
-        vmovl.s8        q1,  d2             // filter 4
-        vpaddl.s16      q4,  q4             // pixel 2 (4x32)
-        vpadd.s32       d10, d10, d11       // pixel 0 (2x32)
-        vpadd.s32       d11, d6,  d7        // pixel 1 (2x32)
-        load_filter_coef d6, r5,  r7        // filter 5
-        vmul.i16        q1,  q2,  q1        // filter 4 output
-        vpadd.s32       d8,  d8,  d9        // pixel 2 (2x32)
+        vext.8          d12, d14, d15, #3   // filter 3 pixels
+        vmull.s8        q4,  d13, d2        // filter 2 output
+        vext.8          d13, d14, d15, #4   // filter 4 pixels
+        vpadd.i16       d4,  d4,  d5        // pixel 0 (4x16)
+        vpadd.i16       d5,  d6,  d7        // pixel 1 (4x16)
+        load_filter_coef d1, r5,  r7        // filter 5
         load_filter_ptr r5                  // filter 6
-        vpaddl.s16      q0,  q0             // pixel 3 (4x32)
-        vpadd.s32       d10, d10, d11       // pixel 0,1
-        vext.8          q2,  q6,  q7,  #2*5 // filter 5 pixels
-        vmovl.s8        q3,  d6             // filter 5
-        vpaddl.s16      q1,  q1             // pixel 4 (4x32)
-        vpadd.s32       d9,  d0,  d1        // pixel 3 (2x32)
+        vmull.s8        q5,  d12, d3        // filter 3 output
+        vext.8          d12, d14, d15, #5   // filter 5 pixels
+        vmull.s8        q3,  d13, d0        // filter 4 output
         load_filter_coef d0, r5,  r7        // filter 6
-        vmul.i16        q2,  q2,  q3        // filter 5 output
-        vpadd.s32       d11, d8,  d9        // pixel 2,3
+        vext.8          d13, d14, d15, #6   // filter 6 pixels
         load_filter_ptr r5                  // filter 7
-        vpaddl.s16      q2,  q2             // pixel 5 (4x32)
-        vpadd.s32       d8,  d2,  d3        // pixel 4 (2x32)
-        vext.8          q3,  q6,  q7,  #2*6 // filter 6 pixels
-        vmovl.s8        q0,  d0             // filter 6
-        vpadd.s32       d9,  d4,  d5        // pixel 5 (2x32)
-        load_filter_coef d4, r5,  r7        // filter 7
-        vpadd.s32       d8,  d8,  d9        // pixel 4,5
-        vext.8          q1,  q6,  q7,  #2*7 // filter 7 pixels
-        vmovl.s8        q2,  d4             // filter 7
-        vmul.i16        q3,  q3,  q0        // filter 6 output
-        vmul.i16        q1,  q1,  q2        // filter 7 output
+        vpadd.i16       d8,  d8,  d9        // pixel 2 (4x16)
+        vpadd.i16       d9,  d10, d11       // pixel 3 (4x16)
+        vmull.s8        q5,  d12, d1        // filter 5 output
+        load_filter_coef d1, r5,  r7        // filter 7
+        vext.8          d14, d14, d15, #7   // filter 7 pixels
+        vpadd.i16       d6,  d6,  d7        // pixel 4 (4x16)
+        vpadd.i16       d10, d10, d11       // pixel 5 (4x16)
+        vmull.s8        q6,  d13, d0        // filter 6 output
+        vmull.s8        q7,  d14, d1        // filter 7 output
+
         sub             r5,  r5,  r7, lsl #3
-        vpaddl.s16      q3,  q3             // pixel 6 (4x32)
-        vpaddl.s16      q1,  q1             // pixel 7 (4x32)
-        vpadd.s32       d6,  d6,  d7        // pixel 6 (2x32)
-        vpadd.s32       d2,  d2,  d3        // pixel 7 (2x32)
-        vpadd.s32       d9,  d6,  d2        // pixel 6,7
+
+        vpadd.i16       d4,  d4,  d5        // pixel 0,1 (2x16)
+        vpadd.i16       d5,  d8,  d9        // pixel 2,3 (2x16)
+        vpadd.i16       d12, d12, d13       // pixel 6 (4x16)
+        vpadd.i16       d14, d14, d15       // pixel 7 (4x16)
+        vpadd.i16       d6,  d6,  d10       // pixel 4,5 (2x16)
+        vpadd.i16       d10, d12, d14       // pixel 6,7 (2x16)
+        vpadd.i16       d4,  d4,  d5        // pixel 0-3
+        vpadd.i16       d5,  d6,  d10       // pixel 4-7
 
         add             r5,  r5,  r8
-
-        vrshrn.s32      d10, q5,  #3
-        vrshrn.s32      d11, q4,  #3
 
         bx              lr
 endfunc
@@ -3074,23 +3059,23 @@ function warp_affine_8x8\t\()_8bpc_neon, export=1
         add             r6,  r6,  #512
 
         bl              warp_filter_horz_neon
-        vmov            q8,  q5
+        vrshr.s16       q8,  q2,  #3
         bl              warp_filter_horz_neon
-        vmov            q9,  q5
+        vrshr.s16       q9,  q2,  #3
         bl              warp_filter_horz_neon
-        vmov            q10, q5
+        vrshr.s16       q10, q2,  #3
         bl              warp_filter_horz_neon
-        vmov            q11, q5
+        vrshr.s16       q11, q2,  #3
         bl              warp_filter_horz_neon
-        vmov            q12, q5
+        vrshr.s16       q12, q2,  #3
         bl              warp_filter_horz_neon
-        vmov            q13, q5
+        vrshr.s16       q13, q2,  #3
         bl              warp_filter_horz_neon
-        vmov            q14, q5
+        vrshr.s16       q14, q2,  #3
 
 1:
         bl              warp_filter_horz_neon
-        vmov            q15, q5
+        vrshr.s16       q15, q2,  #3
 
         load_filter_row d8,  r6,  r9
         load_filter_row d9,  r6,  r9
@@ -3133,12 +3118,19 @@ function warp_affine_8x8\t\()_8bpc_neon, export=1
         vmlal.s16       q1,  d29,  d5
         vmlal.s16       q1,  d31,  d7
 
+.ifb \t
+        vmov.i16        q7,  #128
+.else
+        vmov.i16        q7,  #0x800
+.endif
+
         vmov            q8,  q9
         vmov            q9,  q10
         vqrshrn.s32     d0,  q0,  #\shift
         vmov            q10, q11
         vqrshrn.s32     d1,  q1,  #\shift
         vmov            q11, q12
+        vadd.i16        q0,  q0,  q7
         vmov            q12, q13
 .ifb \t
         vqmovun.s16     d0,  q0

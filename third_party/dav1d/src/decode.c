@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -35,6 +35,7 @@
 
 #include "dav1d/data.h"
 
+#include "common/frame.h"
 #include "common/intops.h"
 
 #include "src/ctx.h"
@@ -727,7 +728,7 @@ static int decode_b(Dav1dTileContext *const t,
             case_set(bh4, l., 1, by4);
             case_set(bw4, a->, 0, bx4);
 #undef set_ctx
-            if (f->frame_hdr->frame_type & 1) {
+            if (IS_INTER_OR_SWITCH(f->frame_hdr)) {
                 refmvs_block *const r = &t->rt.r[(t->by & 31) + 5 + bh4 - 1][t->bx];
                 for (int x = 0; x < bw4; x++) {
                     r[x].ref.ref[0] = 0;
@@ -748,7 +749,7 @@ static int decode_b(Dav1dTileContext *const t,
 #undef set_ctx
             }
         } else {
-            if (f->frame_hdr->frame_type & 1 /* not intrabc */ &&
+            if (IS_INTER_OR_SWITCH(f->frame_hdr) /* not intrabc */ &&
                 b->comp_type == COMP_INTER_NONE && b->motion_mode == MM_WARP)
             {
                 if (b->matrix[0] == SHRT_MIN) {
@@ -791,7 +792,7 @@ static int decode_b(Dav1dTileContext *const t,
             case_set(bw4, a->, 0, bx4);
 #undef set_ctx
 
-            if (f->frame_hdr->frame_type & 1) {
+            if (IS_INTER_OR_SWITCH(f->frame_hdr)) {
                 refmvs_block *const r = &t->rt.r[(t->by & 31) + 5 + bh4 - 1][t->bx];
                 for (int x = 0; x < bw4; x++) {
                     r[x].ref.ref[0] = b->ref[0] + 1;
@@ -1043,7 +1044,7 @@ static int decode_b(Dav1dTileContext *const t,
 
     if (b->skip_mode) {
         b->intra = 0;
-    } else if (f->frame_hdr->frame_type & 1) {
+    } else if (IS_INTER_OR_SWITCH(f->frame_hdr)) {
         if (seg && (seg->ref >= 0 || seg->globalmv)) {
             b->intra = !seg->ref;
         } else {
@@ -1064,7 +1065,7 @@ static int decode_b(Dav1dTileContext *const t,
 
     // intra/inter-specific stuff
     if (b->intra) {
-        uint16_t *const ymode_cdf = f->frame_hdr->frame_type & 1 ?
+        uint16_t *const ymode_cdf = IS_INTER_OR_SWITCH(f->frame_hdr) ?
             ts->cdf.m.y_mode[dav1d_ymode_size_context[bs]] :
             ts->cdf.kfym[dav1d_intra_mode_context[t->a->mode[bx4]]]
                         [dav1d_intra_mode_context[t->l.mode[by4]]];
@@ -1252,7 +1253,7 @@ static int decode_b(Dav1dTileContext *const t,
         rep_macro(type, t->dir skip, off, mul * b->skip); \
         /* see aomedia bug 2183 for why we use luma coordinates here */ \
         rep_macro(type, t->pal_sz_uv[diridx], off, mul * (has_chroma ? b->pal_sz[1] : 0)); \
-        if (f->frame_hdr->frame_type & 1) { \
+        if (IS_INTER_OR_SWITCH(f->frame_hdr)) { \
             rep_macro(type, t->dir comp_type, off, mul * COMP_INTER_NONE); \
             rep_macro(type, t->dir ref[0], off, mul * ((uint8_t) -1)); \
             rep_macro(type, t->dir ref[1], off, mul * ((uint8_t) -1)); \
@@ -1293,10 +1294,10 @@ static int decode_b(Dav1dTileContext *const t,
                 }
             }
         }
-        if ((f->frame_hdr->frame_type & 1) || f->frame_hdr->allow_intrabc) {
+        if (IS_INTER_OR_SWITCH(f->frame_hdr) || f->frame_hdr->allow_intrabc) {
             splat_intraref(&t->rt, t->by, t->bx, bs);
         }
-    } else if (!(f->frame_hdr->frame_type & 1)) {
+    } else if (IS_KEY_OR_INTRA(f->frame_hdr)) {
         // intra block copy
         refmvs_candidate mvstack[8];
         int n_mvs, ctx;
@@ -1984,10 +1985,10 @@ static int decode_b(Dav1dTileContext *const t,
 #undef set_ctx
     }
     if (!b->skip) {
-        uint16_t (*noskip_mask)[2] = &t->lf_mask->noskip_mask[by4];
+        uint16_t (*noskip_mask)[2] = &t->lf_mask->noskip_mask[by4 >> 1];
         const unsigned mask = (~0U >> (32 - bw4)) << (bx4 & 15);
         const int bx_idx = (bx4 & 16) >> 4;
-        for (int y = 0; y < bh4; y++, noskip_mask++) {
+        for (int y = 0; y < bh4; y += 2, noskip_mask++) {
             (*noskip_mask)[bx_idx] |= mask;
             if (bw4 == 32) // this should be mask >> 16, but it's 0xffffffff anyway
                 (*noskip_mask)[1] |= mask;
@@ -2484,15 +2485,12 @@ static void read_restoration_info(Dav1dTileContext *const t,
                    lr->filter_h[1], lr->filter_h[2], ts->msac.rng);
     } else if (lr->type == DAV1D_RESTORATION_SGRPROJ) {
         const unsigned idx = dav1d_msac_decode_bools(&ts->msac, 4);
+        const uint16_t *const sgr_params = dav1d_sgr_params[idx];
         lr->sgr_idx = idx;
-        lr->sgr_weights[0] = dav1d_sgr_params[idx][0] ?
-            dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->sgr_weights[0] + 96, 128, 4) - 96 :
-            0;
-        lr->sgr_weights[1] = dav1d_sgr_params[idx][1] ?
-            dav1d_msac_decode_subexp(&ts->msac,
-                ts->lr_ref[p]->sgr_weights[1] + 32, 128, 4) - 32 :
-            95;
+        lr->sgr_weights[0] = sgr_params[0] ? dav1d_msac_decode_subexp(&ts->msac,
+            ts->lr_ref[p]->sgr_weights[0] + 96, 128, 4) - 96 : 0;
+        lr->sgr_weights[1] = sgr_params[1] ? dav1d_msac_decode_subexp(&ts->msac,
+            ts->lr_ref[p]->sgr_weights[1] + 32, 128, 4) - 32 : 95;
         memcpy(lr->filter_v, ts->lr_ref[p]->filter_v, sizeof(lr->filter_v));
         memcpy(lr->filter_h, ts->lr_ref[p]->filter_h, sizeof(lr->filter_h));
         ts->lr_ref[p] = lr;
@@ -2513,20 +2511,20 @@ int dav1d_decode_tile_sbrow(Dav1dTileContext *const t) {
     const int col_sb_start = f->frame_hdr->tiling.col_start_sb[tile_col];
     const int col_sb128_start = col_sb_start >> !f->seq_hdr->sb128;
 
-    if ((f->frame_hdr->frame_type & 1) || f->frame_hdr->allow_intrabc) {
+    if (IS_INTER_OR_SWITCH(f->frame_hdr) || f->frame_hdr->allow_intrabc) {
         dav1d_refmvs_tile_sbrow_init(&t->rt, &f->rf, ts->tiling.col_start,
                                      ts->tiling.col_end, ts->tiling.row_start,
                                      ts->tiling.row_end, t->by >> f->sb_shift,
                                      ts->tiling.row);
     }
 
-    reset_context(&t->l, !(f->frame_hdr->frame_type & 1), f->frame_thread.pass);
+    reset_context(&t->l, IS_KEY_OR_INTRA(f->frame_hdr), f->frame_thread.pass);
     if (f->frame_thread.pass == 2) {
         for (t->bx = ts->tiling.col_start,
              t->a = f->a + col_sb128_start + tile_row * f->sb128w;
              t->bx < ts->tiling.col_end; t->bx += sb_step)
         {
-            if (atomic_load_explicit(c->frame_thread.flush, memory_order_acquire))
+            if (atomic_load_explicit(c->flush, memory_order_acquire))
                 return 1;
             if (decode_sb(t, root_bl, c->intra_edge.root[root_bl]))
                 return 1;
@@ -2557,7 +2555,7 @@ int dav1d_decode_tile_sbrow(Dav1dTileContext *const t) {
          t->lf_mask = f->lf.mask + sb128y * f->sb128w + col_sb128_start;
          t->bx < ts->tiling.col_end; t->bx += sb_step)
     {
-        if (atomic_load_explicit(c->frame_thread.flush, memory_order_acquire))
+        if (atomic_load_explicit(c->flush, memory_order_acquire))
             return 1;
         if (root_bl == BL_128X128) {
             t->cur_sb_cdef_idx_ptr = t->lf_mask->cdef_idx;
@@ -2631,7 +2629,7 @@ int dav1d_decode_tile_sbrow(Dav1dTileContext *const t) {
         }
     }
 
-    if (f->n_tc > 1 && f->frame_hdr->frame_type & 1) {
+    if (f->n_tc > 1 && IS_INTER_OR_SWITCH(f->frame_hdr)) {
         dav1d_refmvs_save_tmvs(&t->rt,
                                ts->tiling.col_start >> 1, ts->tiling.col_end >> 1,
                                t->by >> 1, (t->by + sb_step) >> 1);
@@ -2859,7 +2857,9 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
     const int lr_line_sz = ((f->sr_cur.p.p.w + 31) & ~31) << hbd;
     if (lr_line_sz != f->lf.lr_line_sz) {
         dav1d_freep_aligned(&f->lf.lr_lpf_line[0]);
-        uint8_t *lr_ptr = dav1d_alloc_aligned(lr_line_sz * 3 * 12, 32);
+        const int num_lines = c->n_pfc > 1 ? f->sbh * (4 << f->seq_hdr->sb128) : 12;
+        // lr simd may overread the input, so slightly over-allocate the lpf buffer
+        uint8_t *lr_ptr = dav1d_alloc_aligned(lr_line_sz * num_lines * 3 + 64, 32);
         if (!lr_ptr) {
             f->lf.lr_line_sz = 0;
             goto error;
@@ -2867,7 +2867,7 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
 
         for (int pl = 0; pl <= 2; pl++) {
             f->lf.lr_lpf_line[pl] = lr_ptr;
-            lr_ptr += lr_line_sz * 12;
+            lr_ptr += lr_line_sz * num_lines;
         }
 
         f->lf.lr_line_sz = lr_line_sz;
@@ -2949,26 +2949,30 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
     }
 
     // init ref mvs
-    if ((f->frame_hdr->frame_type & 1) || f->frame_hdr->allow_intrabc) {
+    if (IS_INTER_OR_SWITCH(f->frame_hdr) || f->frame_hdr->allow_intrabc) {
         const int ret =
             dav1d_refmvs_init_frame(&f->rf, f->seq_hdr, f->frame_hdr,
                                     f->refpoc, f->mvs, f->refrefpoc, f->ref_mvs, f->n_tc);
         if (ret < 0) goto error;
     }
+
+    // create post-filtering tasks
+    if (c->n_pfc > 1)
+        if (dav1d_task_create_filter_sbrow(f))
+            goto error;
+
     retval = DAV1D_ERR(EINVAL);
 
     // setup dequant tables
     init_quant_tables(f->seq_hdr, f->frame_hdr, f->frame_hdr->quant.yac, f->dq);
     if (f->frame_hdr->quant.qm)
-        for (int j = 0; j < N_RECT_TX_SIZES; j++) {
-            f->qm[0][j][0] = dav1d_qm_tbl[f->frame_hdr->quant.qm_y][0][j];
-            f->qm[0][j][1] = dav1d_qm_tbl[f->frame_hdr->quant.qm_u][1][j];
-            f->qm[0][j][2] = dav1d_qm_tbl[f->frame_hdr->quant.qm_v][1][j];
+        for (int i = 0; i < N_RECT_TX_SIZES; i++) {
+            f->qm[i][0] = dav1d_qm_tbl[f->frame_hdr->quant.qm_y][0][i];
+            f->qm[i][1] = dav1d_qm_tbl[f->frame_hdr->quant.qm_u][1][i];
+            f->qm[i][2] = dav1d_qm_tbl[f->frame_hdr->quant.qm_v][1][i];
         }
-    for (int i = f->frame_hdr->quant.qm; i < 2; i++)
-        for (int tx = 0; tx < N_RECT_TX_SIZES; tx++)
-            for (int pl = 0; pl < 3; pl++)
-                f->qm[i][tx][pl] = dav1d_qm_tbl[15][!!pl][tx];
+    else
+        memset(f->qm, 0, sizeof(f->qm));
 
     // setup jnt_comp weights
     if (f->frame_hdr->switchable_comp_refs) {
@@ -3079,9 +3083,9 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
             f->frame_thread.pass == 1 ? PLANE_TYPE_BLOCK : PLANE_TYPE_Y;
 
         for (int n = 0; n < f->sb128w * f->frame_hdr->tiling.rows; n++)
-            reset_context(&f->a[n], !(f->frame_hdr->frame_type & 1), f->frame_thread.pass);
+            reset_context(&f->a[n], IS_KEY_OR_INTRA(f->frame_hdr), f->frame_thread.pass);
 
-        if (f->n_tc == 1) {
+        if (f->n_tc == 1 || (c->n_pfc > 1 && f->frame_hdr->tiling.cols * f->frame_hdr->tiling.rows == 1)) {
             Dav1dTileContext *const t = f->tc;
 
             // no tile threading - we explicitly interleave tile/sbrow decoding
@@ -3108,18 +3112,31 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
                     }
                     for (int tile_col = 0; tile_col < f->frame_hdr->tiling.cols; tile_col++) {
                         t->ts = &f->ts[tile_row * f->frame_hdr->tiling.cols + tile_col];
-
                         if (dav1d_decode_tile_sbrow(t)) goto error;
                     }
-                    if (f->frame_thread.pass <= 1 && f->frame_hdr->frame_type & 1) {
+                    if (f->frame_thread.pass <= 1 && IS_INTER_OR_SWITCH(f->frame_hdr)) {
                         dav1d_refmvs_save_tmvs(&t->rt, 0, f->bw >> 1, t->by >> 1, by_end);
                     }
 
                     // loopfilter + cdef + restoration
-                    if (f->frame_thread.pass != 1)
-                        f->bd_fn.filter_sbrow(f, sby);
-                    dav1d_thread_picture_signal(&f->sr_cur, (sby + 1) * f->sb_step * 4,
-                                                progress_plane_type);
+                    if (f->frame_thread.pass != 1) {
+                        if (c->n_pfc == 1)
+                            f->bd_fn.filter_sbrow(f, sby);
+                        else {
+                            pthread_mutex_lock(&f->lf.thread.pftd->lock);
+                            if (f->lf.thread.npf != 0 && !f->lf.thread.done) {
+                                Dav1dTask *const t = &f->lf.thread.tasks[sby * f->lf.thread.npf];
+                                t->start = 1;
+                                if (t->status == DAV1D_TASK_READY)
+                                    dav1d_task_schedule(f->lf.thread.pftd, t);
+                            }
+                            pthread_mutex_unlock(&f->lf.thread.pftd->lock);
+                        }
+                    }
+                    if (c->n_pfc == 1 || f->frame_thread.pass == 1 || f->lf.thread.npf == 0)
+                        dav1d_thread_picture_signal(&f->sr_cur,
+                                                    (sby + 1) * f->sb_step * 4,
+                                                    progress_plane_type);
                 }
             }
         } else {
@@ -3142,7 +3159,6 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
             pthread_cond_broadcast(&f->tile_thread.cond);
             pthread_mutex_unlock(&f->tile_thread.lock);
 
-            // loopfilter + cdef + restoration
             for (int tile_row = 0; tile_row < f->frame_hdr->tiling.rows; tile_row++) {
                 for (int sby = f->frame_hdr->tiling.row_start_sb[tile_row];
                      sby < f->frame_hdr->tiling.row_start_sb[tile_row + 1]; sby++)
@@ -3174,10 +3190,24 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
                     }
 
                     // loopfilter + cdef + restoration
-                    if (f->frame_thread.pass != 1)
-                        f->bd_fn.filter_sbrow(f, sby);
-                    dav1d_thread_picture_signal(&f->sr_cur, (sby + 1) * f->sb_step * 4,
-                                                progress_plane_type);
+                    if (f->frame_thread.pass != 1) {
+                        if (c->n_pfc == 1)
+                            f->bd_fn.filter_sbrow(f, sby);
+                        else {
+                            pthread_mutex_lock(&f->lf.thread.pftd->lock);
+                            if (f->lf.thread.npf != 0 && !f->lf.thread.done) {
+                                Dav1dTask *const t = &f->lf.thread.tasks[sby * f->lf.thread.npf];
+                                t->start = 1;
+                                if (t->status == DAV1D_TASK_READY)
+                                    dav1d_task_schedule(f->lf.thread.pftd, t);
+                            }
+                            pthread_mutex_unlock(&f->lf.thread.pftd->lock);
+                        }
+                    }
+                    if (c->n_pfc == 1 || f->frame_thread.pass == 1 || f->lf.thread.npf == 0)
+                        dav1d_thread_picture_signal(&f->sr_cur,
+                                                    (sby + 1) * f->sb_step * 4,
+                                                    progress_plane_type);
                 }
             }
 
@@ -3222,6 +3252,17 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
 
     retval = 0;
 error:
+    if (c->n_pfc > 1) {
+        pthread_mutex_lock(&f->lf.thread.pftd->lock);
+        if (!f->lf.thread.done) {
+            if (retval != 0) {
+                f->lf.thread.done = -1;
+                pthread_cond_signal(&f->lf.thread.pftd->cond);
+            }
+            pthread_cond_wait(&f->lf.thread.cond, &f->lf.thread.pftd->lock);
+        }
+        pthread_mutex_unlock(&f->lf.thread.pftd->lock);
+    }
     dav1d_thread_picture_signal(&f->sr_cur, retval == 0 ? UINT_MAX : FRAME_ERROR,
                                 PLANE_TYPE_ALL);
     for (int i = 0; i < 7; i++) {
@@ -3329,6 +3370,10 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         f->bd_fn.recon_b_inter = dav1d_recon_b_inter_##bd##bpc; \
         f->bd_fn.recon_b_intra = dav1d_recon_b_intra_##bd##bpc; \
         f->bd_fn.filter_sbrow = dav1d_filter_sbrow_##bd##bpc; \
+        f->bd_fn.filter_sbrow_deblock = dav1d_filter_sbrow_deblock_##bd##bpc; \
+        f->bd_fn.filter_sbrow_cdef = dav1d_filter_sbrow_cdef_##bd##bpc; \
+        f->bd_fn.filter_sbrow_resize = dav1d_filter_sbrow_resize_##bd##bpc; \
+        f->bd_fn.filter_sbrow_lr = dav1d_filter_sbrow_lr_##bd##bpc; \
         f->bd_fn.backup_ipred_edge = dav1d_backup_ipred_edge_##bd##bpc; \
         f->bd_fn.read_coef_blocks = dav1d_read_coef_blocks_##bd##bpc
     if (!f->seq_hdr->hbd) {
@@ -3343,7 +3388,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
 #undef assign_bitdepth_case
 
     int ref_coded_width[7];
-    if (f->frame_hdr->frame_type & 1) {
+    if (IS_INTER_OR_SWITCH(f->frame_hdr)) {
         if (f->frame_hdr->primary_ref_frame != DAV1D_PRIMARY_REF_NONE) {
             const int pri_ref = f->frame_hdr->refidx[f->frame_hdr->primary_ref_frame];
             if (!c->refs[pri_ref].p.p.data[0]) {
@@ -3461,7 +3506,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
     f->bitdepth_max = (1 << f->cur.p.bpc) - 1;
 
     // ref_mvs
-    if ((f->frame_hdr->frame_type & 1) || f->frame_hdr->allow_intrabc) {
+    if (IS_INTER_OR_SWITCH(f->frame_hdr) || f->frame_hdr->allow_intrabc) {
         f->mvs_ref = dav1d_ref_create_using_pool(c->refmvs_pool,
             sizeof(*f->mvs) * f->sb128h * 16 * (f->b4_stride >> 1));
         if (!f->mvs_ref) {

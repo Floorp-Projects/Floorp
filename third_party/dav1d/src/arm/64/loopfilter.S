@@ -132,12 +132,11 @@ function lpf_16_wd\wd\()_neon
 .endif
         b.eq            1f                        // skip wd == 4 case
 .endif
-
-        usubl           v2.8h,   v22.8b,  v25.8b  // p1 - q1
-        usubl2          v3.8h,   v22.16b, v25.16b
+        movi            v3.16b,  #128
+        eor             v2.16b,  v22.16b, v3.16b  // p1 - 128
+        eor             v3.16b,  v25.16b, v3.16b  // q1 - 128
         cmhi            v0.16b,  v0.16b,  v12.16b // hev
-        sqxtn           v2.8b,   v2.8h            // iclip_diff(p1 - q1)
-        sqxtn2          v2.16b,  v3.8h
+        sqsub           v2.16b,  v2.16b,  v3.16b  // iclip_diff(p1 - q1)
         and             v4.16b,  v2.16b,  v0.16b  // if (hev) iclip_diff(p1 - q1)
         bic             v0.16b,  v1.16b,  v0.16b  // (fm && wd >= 4 && !hev)
         usubl           v2.8h,   v24.8b,  v23.8b
@@ -155,35 +154,23 @@ function lpf_16_wd\wd\()_neon
         sqadd           v5.16b,  v7.16b,  v2.16b  // imin(f + 3, 127)
         sshr            v4.16b,  v4.16b,  #3      // f1
         sshr            v5.16b,  v5.16b,  #3      // f2
-        uxtl            v2.8h,   v23.8b           // p0
-        uxtl2           v3.8h,   v23.16b
-        uxtl            v6.8h,   v24.8b           // q0
-        uxtl2           v7.8h,   v24.16b
-        saddw           v2.8h,   v2.8h,   v5.8b
-        saddw2          v3.8h,   v3.8h,   v5.16b
-        ssubw           v6.8h,   v6.8h,   v4.8b
-        ssubw2          v7.8h,   v7.8h,   v4.16b
+        mov             v2.16b,  v23.16b          // p0
+        mov             v3.16b,  v24.16b          // q0
+        neg             v6.16b,  v4.16b           // -f1
         srshr           v4.16b,  v4.16b,  #1      // (f1 + 1) >> 1
-        sqxtun          v2.8b,   v2.8h            // out p0
-        sqxtun2         v2.16b,  v3.8h
-        sqxtun          v6.8b,   v6.8h            // out q0
-        sqxtun2         v6.16b,  v7.8h
+        // p0 + f2, q0 - f1
+        usqadd          v2.16b,  v5.16b           // out p0
+        usqadd          v3.16b,  v6.16b           // out q0
+        neg             v6.16b,  v4.16b           // -((f1 + 1) >> 1)
         bit             v23.16b, v2.16b,  v1.16b  // if (fm && wd >= 4)
-        uxtl            v2.8h,   v22.8b           // p1
-        uxtl2           v3.8h,   v22.16b
-        bit             v24.16b, v6.16b,  v1.16b  // if (fm && wd >= 4)
-        uxtl            v6.8h,   v25.8b           // q1
-        uxtl2           v7.8h,   v25.16b
-        saddw           v2.8h,   v2.8h,   v4.8b
-        saddw2          v3.8h,   v3.8h,   v4.16b
-        ssubw           v6.8h,   v6.8h,   v4.8b
-        ssubw2          v7.8h,   v7.8h,   v4.16b
-        sqxtun          v2.8b,   v2.8h            // out p1
-        sqxtun2         v2.16b,  v3.8h
-        sqxtun          v6.8b,   v6.8h            // out q1
-        sqxtun2         v6.16b,  v7.8h
+        bit             v24.16b, v3.16b,  v1.16b  // if (fm && wd >= 4)
+        mov             v2.16b,  v22.16b          // p1
+        mov             v3.16b,  v25.16b          // q1
+        // p1 + ((f1 + 1) >> 1), q1 - ((f1 + 1) >> 1)
+        usqadd          v2.16b,  v4.16b           // out p1
+        usqadd          v3.16b,  v6.16b           // out q1
         bit             v22.16b, v2.16b,  v0.16b  // if (fm && wd >= 4 && !hev)
-        bit             v25.16b, v6.16b,  v0.16b  // if (fm && wd >= 4 && !hev)
+        bit             v25.16b, v3.16b,  v0.16b  // if (fm && wd >= 4 && !hev)
 1:
 
 .if \wd == 6

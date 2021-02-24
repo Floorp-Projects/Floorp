@@ -33,11 +33,6 @@
 void dav1d_data_ref(Dav1dData *dst, const Dav1dData *src);
 
 /**
- * Move a data reference.
- */
-void dav1d_data_move_ref(Dav1dData *dst, Dav1dData *src);
-
-/**
  * Copy the source properties to the destitionatin and increase the
  * user_data's reference count (if it's not NULL).
  */

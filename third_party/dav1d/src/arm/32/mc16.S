@@ -3154,8 +3154,8 @@ filter_fn prep, r0, r8, r1, r2, r3, r4, r5, r6, r7, r9, r10
 .endm
 
 .macro load_filter_coef dst, src, inc
-        vld1.8          {\dst}, [r12, :64]
         add             \src, \src, \inc
+        vld1.8          {\dst}, [r12, :64]
 .endm
 
 .macro load_filter_row dst, src, inc

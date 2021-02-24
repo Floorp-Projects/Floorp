@@ -29,6 +29,7 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -38,6 +39,10 @@
 
 typedef struct DemuxerPriv {
     FILE *f;
+    int broken;
+    double timebase;
+    uint64_t last_ts;
+    uint64_t step;
 } IvfInputContext;
 
 static const uint8_t probe_data[] = {
@@ -87,11 +92,17 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
     timebase[1] = rl32(&hdr[20]);
     const unsigned duration = rl32(&hdr[24]);
 
-    uint8_t data[4];
+    uint8_t data[8];
+    c->broken = 0;
     for (*num_frames = 0;; (*num_frames)++) {
-        if ((res = fread(data, 4, 1, c->f)) != 1)
-            break; // EOF
-        fseeko(c->f, rl32(data) + 8, SEEK_CUR);
+        if ((res = fread(data, 4, 1, c->f)) != 1) break; // EOF
+        size_t sz = rl32(data);
+        if ((res = fread(data, 8, 1, c->f)) != 1) break; // EOF
+        const uint64_t ts = rl64(data);
+        if (*num_frames && ts <= c->last_ts)
+            c->broken = 1;
+        c->last_ts = ts;
+        fseeko(c->f, sz, SEEK_CUR);
     }
 
     uint64_t fps_num = (uint64_t) timebase[0] * *num_frames;
@@ -113,34 +124,68 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
     } else {
         fps[0] = fps[1] = 0;
     }
+    c->timebase = (double)timebase[0] / timebase[1];
+    c->step = duration / *num_frames;
 
     fseeko(c->f, 32, SEEK_SET);
+    c->last_ts = 0;
 
     return 0;
 }
 
-static int ivf_read(IvfInputContext *const c, Dav1dData *const buf) {
+static inline int ivf_read_header(IvfInputContext *const c, ptrdiff_t *const sz,
+                                  int64_t *const off_, uint64_t *const ts)
+{
     uint8_t data[8];
-    uint8_t *ptr;
-    size_t res;
+    int64_t const off = ftello(c->f);
+    if (off_) *off_ = off;
+    if (fread(data, 4, 1, c->f) != 1) return -1; // EOF
+    *sz = rl32(data);
+    if (!c->broken) {
+        if (fread(data, 8, 1, c->f) != 1) return -1;
+        *ts = rl64(data);
+    } else {
+        if (fseeko(c->f, 8, SEEK_CUR)) return -1;
+        *ts = off > 32 ? c->last_ts + c->step : 0;
+    }
+    return 0;
+}
 
-    const int64_t off = ftello(c->f);
-    if ((res = fread(data, 4, 1, c->f)) != 1)
-        return -1; // EOF
-    const ptrdiff_t sz = rl32(data);
-    if ((res = fread(data, 8, 1, c->f)) != 1)
-        return -1; // EOF
-    ptr = dav1d_data_create(buf, sz);
-    if (!ptr) return -1;
-    buf->m.offset = off;
-    buf->m.timestamp = rl64(data);
-    if ((res = fread(ptr, sz, 1, c->f)) != 1) {
+static int ivf_read(IvfInputContext *const c, Dav1dData *const buf) {
+    uint8_t *ptr;
+    ptrdiff_t sz;
+    int64_t off;
+    uint64_t ts;
+    if (ivf_read_header(c, &sz, &off, &ts)) return -1;
+    if (!(ptr = dav1d_data_create(buf, sz))) return -1;
+    if (fread(ptr, sz, 1, c->f) != 1) {
         fprintf(stderr, "Failed to read frame data: %s\n", strerror(errno));
         dav1d_data_unref(buf);
         return -1;
     }
-
+    buf->m.offset = off;
+    buf->m.timestamp = ts;
+    c->last_ts = ts;
     return 0;
+}
+
+static int ivf_seek(IvfInputContext *const c, const uint64_t pts) {
+    uint64_t cur;
+    const uint64_t ts = llround((pts * c->timebase) / 1000000000.0);
+    if (ts <= c->last_ts)
+        if (fseeko(c->f, 32, SEEK_SET)) goto error;
+    while (1) {
+        ptrdiff_t sz;
+        if (ivf_read_header(c, &sz, NULL, &cur)) goto error;
+        if (cur >= ts) break;
+        if (fseeko(c->f, sz, SEEK_CUR)) goto error;
+        c->last_ts = cur;
+    }
+    if (fseeko(c->f, -12, SEEK_CUR)) goto error;
+    return 0;
+error:
+    fprintf(stderr, "Failed to seek: %s\n", strerror(errno));
+    return -1;
 }
 
 static void ivf_close(IvfInputContext *const c) {
@@ -154,5 +199,6 @@ const Demuxer ivf_demuxer = {
     .probe_sz = sizeof(probe_data),
     .open = ivf_open,
     .read = ivf_read,
+    .seek = ivf_seek,
     .close = ivf_close,
 };

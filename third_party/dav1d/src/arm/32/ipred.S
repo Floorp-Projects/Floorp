@@ -40,8 +40,7 @@ function ipred_dc_128_8bpc_neon, export=1
         adr             r2,  L(ipred_dc_128_tbl)
         sub             r3,  r3,  #25
         ldr             r3,  [r2,  r3,  lsl #2]
-        mov             lr,  #128
-        vdup.8          q0,  lr
+        vmov.i8         q0,  #128
         add             r2,  r2,  r3
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
@@ -79,7 +78,7 @@ L(ipred_dc_128_tbl):
         bgt             16b
         pop             {r4, pc}
 320:
-        vdup.8          q1,  lr
+        vmov.i8         q1,  #128
 32:
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
@@ -89,20 +88,18 @@ L(ipred_dc_128_tbl):
         bgt             32b
         pop             {r4, pc}
 640:
-        vdup.8          q1,  lr
-        vdup.8          q2,  lr
-        vdup.8          q3,  lr
+        vmov.i8         q1,  #128
         sub             r1,  r1,  #32
 64:
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         subs            r4,  r4,  #4
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         bgt             64b
         pop             {r4, pc}
 endfunc
@@ -401,19 +398,17 @@ L(ipred_dc_top_tbl):
         vrshrn.u16      d18, q0,  #6
         vdup.8          q0,  d18[0]
         vdup.8          q1,  d18[0]
-        vdup.8          q2,  d18[0]
-        vdup.8          q3,  d18[0]
         sub             r1,  r1,  #32
 64:
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         subs            r4,  r4,  #4
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         bgt             64b
         pop             {r4-r5, pc}
 endfunc
@@ -538,20 +533,18 @@ L(ipred_dc_left_h64):
         vdup.8          q0,  d0[0]
         bx              r3
 L(ipred_dc_left_w64):
-        sub             r1,  r1,  #32
         vmov.8          q1,  q0
-        vmov.8          q2,  q0
-        vmov.8          q3,  q0
+        sub             r1,  r1,  #32
 1:
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         subs            r4,  r4, #4
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         bgt             1b
         pop             {r4-r5, pc}
 endfunc
@@ -600,10 +593,10 @@ L(ipred_dc_tbl):
 L(ipred_dc_h4):
         vld1.32         {d0[]},  [r2, :32]!
         vpaddl.u8       d0,  d0
+        add             r2,  r2,  #1
         vpadd.u16       d0,  d0
         bx              r3
 L(ipred_dc_w4):
-        add             r2,  r2,  #1
         vld1.32         {d1[]},  [r2]
         vadd.s16        d0,  d0,  d30
         vpaddl.u8       d1,  d1
@@ -635,10 +628,10 @@ L(ipred_dc_h8):
         vld1.8          {d0},  [r2, :64]!
         vpaddl.u8       d0,  d0
         vpadd.u16       d0,  d0
+        add             r2,  r2,  #1
         vpadd.u16       d0,  d0
         bx              r3
 L(ipred_dc_w8):
-        add             r2,  r2,  #1
         vld1.8          {d2},  [r2]
         vadd.s16        d0,  d0,  d30
         vpaddl.u8       d2,  d2
@@ -672,10 +665,10 @@ L(ipred_dc_h16):
         vaddl.u8        q0,  d0,  d1
         vadd.u16        d0,  d0,  d1
         vpadd.u16       d0,  d0
+        add             r2,  r2,  #1
         vpadd.u16       d0,  d0
         bx              r3
 L(ipred_dc_w16):
-        add             r2,  r2,  #1
         vld1.8          {d2,  d3},  [r2]
         vadd.s16        d0,  d0,  d30
         vaddl.u8        q1,  d2,  d3
@@ -712,10 +705,10 @@ L(ipred_dc_h32):
         vadd.u16        q0,  q0,  q1
         vadd.u16        d0,  d0,  d1
         vpadd.u16       d0,  d0
+        add             r2,  r2,  #1
         vpadd.u16       d0,  d0
         bx              r3
 L(ipred_dc_w32):
-        add             r2,  r2,  #1
         vld1.8          {d2,  d3,  d4,  d5},  [r2]
         vadd.s16        d0,  d0,  d30
         vaddl.u8        q1,  d2,  d3
@@ -760,10 +753,10 @@ L(ipred_dc_h64):
         vadd.u16        q0,  q0,  q1
         vadd.u16        d0,  d0,  d1
         vpadd.u16       d0,  d0
+        add             r2,  r2,  #1
         vpadd.u16       d0,  d0
         bx              r3
 L(ipred_dc_w64):
-        add             r2,  r2,  #1
         vld1.8          {d2,  d3,  d4,  d5},  [r2]!
         vadd.s16        d0,  d0,  d30
         vaddl.u8        q2,  d4,  d5
@@ -789,11 +782,11 @@ L(ipred_dc_w64):
         vadd.s16        d0,  d0,  d2
         vadd.s16        d0,  d0,  d3
         vshl.u16        d18, d0,  d28
-        beq             1f                  // h = 16/32
+        beq             1f
+        // h = 16/32
         movw            lr,  #(0x5556/2)
         movt            lr,  #(0x3334/2)
-        mov             r5,  r4
-        and             r5,  r5,  #31
+        and             r5,  r4,  #31
         lsr             lr,  lr,  r5
         vdup.16         d30, lr
         vqdmulh.s16     d18, d18, d30
@@ -801,18 +794,16 @@ L(ipred_dc_w64):
         sub             r1,  r1,  #32
         vdup.8          q0,  d18[0]
         vdup.8          q1,  d18[0]
-        vdup.8          q2,  d18[0]
-        vdup.8          q3,  d18[0]
 2:
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         subs            r4,  r4,  #4
         vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128]!
         vst1.8          {d0,  d1,  d2,  d3},  [r12, :128]!
-        vst1.8          {d4,  d5,  d6,  d7},  [r0,  :128], r1
-        vst1.8          {d4,  d5,  d6,  d7},  [r12, :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r0,  :128], r1
+        vst1.8          {d0,  d1,  d2,  d3},  [r12, :128], r1
         bgt             2b
         pop             {r4-r6, pc}
 endfunc
@@ -1444,6 +1435,8 @@ function ipred_filter_8bpc_neon, export=1
         vmovl.s8        q13, d28
         vmovl.s8        q14, d29
         add             r8,  r2,  #1
+        sub             r2,  r2,  #2
+        mov             r7,  #-2
         bx              r5
 
         .align 2
@@ -1455,8 +1448,6 @@ L(ipred_filter_tbl):
 
 40:
         vld1.32         {d0[]}, [r8]     // top (0-3)
-        sub             r2,  r2,  #2
-        mov             r7,  #-2
         vmovl.u8        q0,  d0          // top (0-3)
 4:
         vld1.32         {d2[]}, [r2], r7 // left (0-1) + topleft (2)
@@ -1473,13 +1464,11 @@ L(ipred_filter_tbl):
         vst1.32         {d4[0]}, [r0, :32], r1
         vmovl.u8        q0,  d4
         vst1.32         {d4[1]}, [r6, :32], r1
-        vext.8          q0,  q0,  q0,  #8 // move top from [4-7] to [0-3]
+        vmov            d0,  d1          // move top from [4-7] to [0-3]
         bgt             4b
         pop             {r4-r8, pc}
 80:
         vld1.8          {d0},  [r8]      // top (0-7)
-        sub             r2,  r2,  #2
-        mov             r7,  #-2
         vmovl.u8        q0,  d0          // top (0-7)
 8:
         vld1.32         {d2[]}, [r2], r7 // left (0-1) + topleft (2)
@@ -1503,16 +1492,14 @@ L(ipred_filter_tbl):
         vqrshrun.s16    d5,  q3,  #4
         vzip.32         d4,  d5
         subs            r4,  r4,  #2
-        vst1.64         {d4}, [r0, :64], r1
+        vst1.8          {d4}, [r0, :64], r1
         vmovl.u8        q0,  d5
-        vst1.64         {d5}, [r6, :64], r1
+        vst1.8          {d5}, [r6, :64], r1
         bgt             8b
         pop             {r4-r8, pc}
 160:
 320:
         vpush           {q4-q5}
-        sub             r2,  r2,  #2
-        mov             r7,  #-2
         sub             r1,  r1,  r3
         mov             lr,  r3
 
@@ -2003,10 +1990,10 @@ L(ipred_cfl_tbl):
 L(ipred_cfl_h4):
         vld1.32         {d0[]}, [r2, :32]!
         vpaddl.u8       d0,  d0
+        add             r2,  r2,  #1
         vpadd.i16       d0,  d0
         bx              r12
 L(ipred_cfl_w4):
-        add             r2,  r2,  #1
         vld1.32         {d1[]},  [r2]
         vadd.i16        d0,  d0,  d16
         vpaddl.u8       d1,  d1
@@ -2031,10 +2018,10 @@ L(ipred_cfl_h8):
         vld1.8          {d0}, [r2, :64]!
         vpaddl.u8       d0,  d0
         vpadd.i16       d0,  d0
+        add             r2,  r2,  #1
         vpadd.i16       d0,  d0
         bx              r12
 L(ipred_cfl_w8):
-        add             r2,  r2,  #1
         vld1.8          {d1}, [r2]
         vadd.i16        d0,  d0,  d16
         vpaddl.u8       d1,  d1
@@ -2061,10 +2048,10 @@ L(ipred_cfl_h16):
         vaddl.u8        q0,  d0,  d1
         vadd.i16        d0,  d0,  d1
         vpadd.i16       d0,  d0
+        add             r2,  r2,  #1
         vpadd.i16       d0,  d0
         bx              r12
 L(ipred_cfl_w16):
-        add             r2,  r2,  #1
         vld1.8          {q2}, [r2]
         vadd.i16        d0,  d0,  d16
         vaddl.u8        q2,  d4,  d5
@@ -2094,10 +2081,10 @@ L(ipred_cfl_h32):
         vadd.i16        q0,  q2,  q3
         vadd.i16        d0,  d0,  d1
         vpadd.i16       d0,  d0
+        add             r2,  r2,  #1
         vpadd.i16       d0,  d0
         bx              r12
 L(ipred_cfl_w32):
-        add             r2,  r2,  #1
         vld1.8          {q2, q3},  [r2]
         vadd.i16        d0,  d0,  d16
         vaddl.u8        q2,  d4,  d5

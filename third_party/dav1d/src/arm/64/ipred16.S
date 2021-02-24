@@ -562,9 +562,9 @@ function ipred_dc_16bpc_neon, export=1
 L(ipred_dc_h4):
         ld1             {v0.4h},  [x2], #8
         uaddlv          s0,      v0.4h
+        add             x2,  x2,  #2
         br              x3
 L(ipred_dc_w4):
-        add             x2,  x2,  #2
         ld1             {v1.4h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s1,      v1.4h
@@ -594,9 +594,9 @@ L(ipred_dc_w4):
 L(ipred_dc_h8):
         ld1             {v0.8h},  [x2], #16
         uaddlv          s0,      v0.8h
+        add             x2,  x2,  #2
         br              x3
 L(ipred_dc_w8):
-        add             x2,  x2,  #2
         ld1             {v1.8h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s1,      v1.8h
@@ -626,10 +626,10 @@ L(ipred_dc_w8):
 L(ipred_dc_h16):
         ld1             {v0.8h, v1.8h}, [x2], #32
         addp            v0.8h,   v0.8h,   v1.8h
+        add             x2,  x2,  #2
         uaddlv          s0,      v0.8h
         br              x3
 L(ipred_dc_w16):
-        add             x2,  x2,  #2
         ld1             {v1.8h, v2.8h}, [x2]
         add             v0.2s,   v0.2s,   v16.2s
         addp            v1.8h,   v1.8h,   v2.8h
@@ -663,10 +663,10 @@ L(ipred_dc_h32):
         addp            v0.8h,   v0.8h,   v1.8h
         addp            v2.8h,   v2.8h,   v3.8h
         addp            v0.8h,   v0.8h,   v2.8h
+        add             x2,  x2,  #2
         uaddlv          s0,      v0.8h
         br              x3
 L(ipred_dc_w32):
-        add             x2,  x2,  #2
         ld1             {v1.8h, v2.8h, v3.8h, v4.8h}, [x2]
         add             v0.2s,   v0.2s,   v16.2s
         addp            v1.8h,   v1.8h,   v2.8h
@@ -709,10 +709,10 @@ L(ipred_dc_h64):
         addp            v0.8h,   v0.8h,   v2.8h
         addp            v4.8h,   v4.8h,   v6.8h
         addp            v0.8h,   v0.8h,   v4.8h
+        add             x2,  x2,  #2
         uaddlv          s0,      v0.8h
         br              x3
 L(ipred_dc_w64):
-        add             x2,  x2,  #2
         ld1             {v1.8h, v2.8h, v3.8h, v4.8h}, [x2], #64
         add             v0.2s,   v0.2s,   v16.2s
         addp            v1.8h,   v1.8h,   v2.8h
@@ -1382,7 +1382,9 @@ function ipred_filter_\bpc\()bpc_neon
         sxtl            v21.8h,  v21.8b
         sxtl            v22.8h,  v22.8b
         dup             v31.8h,  w8
+.if \bpc == 10
         movi            v30.8h,  #0
+.endif
         br              x5
 40:
         ldur            d0,  [x2, #2]             // top (0-3)
@@ -1421,7 +1423,6 @@ function ipred_filter_\bpc\()bpc_neon
         smin            v2.8h,   v2.8h,   v31.8h
         subs            w4,  w4,  #2
         st1             {v2.d}[0], [x0], x1
-        uxtl            v0.8h,   v2.8b
         ext             v0.16b,  v2.16b,  v2.16b, #8 // move top from [4-7] to [0-3]
         st1             {v2.d}[1], [x6], x1
         b.gt            4b
@@ -2143,9 +2144,9 @@ function ipred_cfl_16bpc_neon, export=1
 L(ipred_cfl_h4):
         ld1             {v0.4h},  [x2], #8
         uaddlv          s0,      v0.4h
+        add             x2,  x2,  #2
         br              x9
 L(ipred_cfl_w4):
-        add             x2,  x2,  #2
         ld1             {v2.4h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s2,      v2.4h
@@ -2168,9 +2169,9 @@ L(ipred_cfl_w4):
 L(ipred_cfl_h8):
         ld1             {v0.8h},  [x2], #16
         uaddlv          s0,      v0.8h
+        add             x2,  x2,  #2
         br              x9
 L(ipred_cfl_w8):
-        add             x2,  x2,  #2
         ld1             {v2.8h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s2,      v2.8h
@@ -2193,10 +2194,10 @@ L(ipred_cfl_w8):
 L(ipred_cfl_h16):
         ld1             {v2.8h, v3.8h}, [x2], #32
         addp            v0.8h,   v2.8h,   v3.8h
+        add             x2,  x2,  #2
         uaddlv          s0,      v0.8h
         br              x9
 L(ipred_cfl_w16):
-        add             x2,  x2,  #2
         ld1             {v2.8h, v3.8h}, [x2]
         add             v0.2s,   v0.2s,   v16.2s
         addp            v2.8h,   v2.8h,   v3.8h
@@ -2222,10 +2223,10 @@ L(ipred_cfl_h32):
         addp            v2.8h,   v2.8h,   v3.8h
         addp            v4.8h,   v4.8h,   v5.8h
         addp            v0.8h,   v2.8h,   v4.8h
+        add             x2,  x2,  #2
         uaddlv          s0,      v0.8h
         br              x9
 L(ipred_cfl_w32):
-        add             x2,  x2,  #2
         ld1             {v2.8h, v3.8h, v4.8h, v5.8h}, [x2]
         add             v0.4s,   v0.4s,   v16.4s
         addp            v2.8h,   v2.8h,   v3.8h

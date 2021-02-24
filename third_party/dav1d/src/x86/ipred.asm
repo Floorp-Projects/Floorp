@@ -1170,7 +1170,7 @@ ALIGN function_align
     mova                 m9, [base+ipred_v_shuf]
     vbroadcasti128       m6, [base+smooth_weights+16*2]
     vbroadcasti128       m7, [base+smooth_weights+16*3]
-    vpermq               m8, m9, q1032
+    vperm2i128           m8, m9, m9, 0x01
     paddw                m0, m10, m3
     paddw                m3, m11
     paddw               m12, m0
@@ -4197,7 +4197,7 @@ ALIGN function_align
     pmaddubsw           m%3, m5
     paddw               m%1, m%3
     psraw               m%1, 4
-    vpermq              m%3, m%1, q1032
+    vperm2i128          m%3, m%1, m%1, 0x01
     packuswb            m%1, m%3
 %endmacro
 

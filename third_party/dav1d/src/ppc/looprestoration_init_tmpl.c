@@ -299,7 +299,6 @@ static inline void padding(uint8_t *dst, const uint8_t *p,
     }
 }
 
-
 // FIXME Could split into luma and chroma specific functions,
 // (since first and last tops are always 0 for chroma)
 // FIXME Could implement a version that requires less temporary memory
@@ -309,9 +308,11 @@ static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t p_stride,
                               const uint8_t *lpf,
                               const ptrdiff_t lpf_stride,
                               const int w, const int h,
-                              const int16_t filter[2][8],
+                              const LooprestorationParams *const params,
                               const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
+    const int16_t (*const filter)[8] = params->filter;
+
     // Wiener filtering is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
     ALIGN_STK_16(uint8_t, tmp, 70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE,);
@@ -320,7 +321,6 @@ static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t p_stride,
 
     wiener_filter_h_vsx(hor, tmp, filter[0], w, h);
     wiener_filter_v_vsx(p, p_stride, hor, filter[1], w, h);
-
 }
 #endif
 

@@ -26,6 +26,7 @@
  */
 
 #include "config.h"
+#include "cli_config.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -44,11 +45,15 @@ struct MuxerContext {
 
 extern const Muxer null_muxer;
 extern const Muxer md5_muxer;
+extern const Muxer xxh3_muxer;
 extern const Muxer yuv_muxer;
 extern const Muxer y4m2_muxer;
 static const Muxer *muxers[] = {
     &null_muxer,
     &md5_muxer,
+#if HAVE_XXHASH_H
+    &xxh3_muxer,
+#endif
     &yuv_muxer,
     &y4m2_muxer,
     NULL

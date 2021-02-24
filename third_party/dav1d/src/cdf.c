@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -28,6 +28,8 @@
 #include "config.h"
 
 #include <string.h>
+
+#include "common/frame.h"
 
 #include "src/internal.h"
 #include "src/tables.h"
@@ -4012,7 +4014,7 @@ void dav1d_cdf_thread_update(const Dav1dFrameHeader *const hdr,
     update_cdf_1d(11, m.txtp_inter2);
     update_bit_1d(4, m.txtp_inter3);
 
-    if (!(hdr->frame_type & 1)) {
+    if (IS_KEY_OR_INTRA(hdr)) {
         update_bit_0d(m.intrabc);
 
         update_cdf_1d(N_MV_JOINTS - 1, dmv.joint);

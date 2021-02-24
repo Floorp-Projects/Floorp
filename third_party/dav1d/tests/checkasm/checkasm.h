@@ -115,7 +115,7 @@ int float_near_abs_eps_array_ulp(const float *a, const float *b, float eps,
 
 #if HAVE_ASM
 #if ARCH_X86
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #define readtime() (_mm_lfence(), __rdtsc())
 #else

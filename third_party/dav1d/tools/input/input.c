@@ -128,6 +128,10 @@ int input_read(DemuxerContext *const ctx, Dav1dData *const data) {
     return ctx->impl->read(ctx->data, data);
 }
 
+int input_seek(DemuxerContext *const ctx, const uint64_t pts) {
+    return ctx->impl->seek ? ctx->impl->seek(ctx->data, pts) : -1;
+}
+
 void input_close(DemuxerContext *const ctx) {
     ctx->impl->close(ctx->data);
     free(ctx);

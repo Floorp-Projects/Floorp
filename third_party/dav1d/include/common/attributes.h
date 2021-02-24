@@ -116,8 +116,8 @@
 #    define dav1d_uninit(x) x
 #endif
 
- #ifdef _MSC_VER
- #include <intrin.h>
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
 
 static inline int ctz(const unsigned int mask) {
     unsigned long idx;
