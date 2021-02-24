@@ -286,9 +286,10 @@ struct CompilationInput {
     return true;
   }
 
-  void initFromLazy(BaseScript* lazyScript) {
+  void initFromLazy(BaseScript* lazyScript, ScriptSource* ss) {
     target = CompilationTarget::Delazification;
     lazy = lazyScript;
+    source = ss;
     enclosingScope = lazy->function()->enclosingScope();
   }
 

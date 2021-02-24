@@ -100,17 +100,11 @@ extern JSScript* CompileEvalScript(JSContext* cx,
 extern void FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
                                               Handle<BaseScript*> lazy);
 
-[[nodiscard]] extern bool CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
-    const char16_t* units, size_t length);
+extern bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
+                                const char16_t* units, size_t length);
 
-[[nodiscard]] extern bool CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
-    const mozilla::Utf8Unit* units, size_t length);
-
-extern bool InstantiateStencilsForDelazify(JSContext* cx,
-                                           CompilationInput& input,
-                                           const CompilationStencil& stencil);
+extern bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
+                                const mozilla::Utf8Unit* units, size_t length);
 
 // Certain compile options will disable the syntax parser entirely.
 inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
