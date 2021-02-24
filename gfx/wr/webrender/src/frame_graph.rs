@@ -224,7 +224,7 @@ impl FrameGraphBuilder {
     pub fn add(&mut self) -> RenderTaskAllocation {
         // Assume every task is a root to start with
         self.roots.insert(
-            RenderTaskId { index: self.tasks.len() as u32 }
+            RenderTaskId { index: self.tasks.len() as u16 }
         );
 
         RenderTaskAllocation {
@@ -345,7 +345,7 @@ impl FrameGraphBuilder {
         // Determine which pass each task can be freed on, which depends on which is
         // the last task that has this as an input.
         for i in 0 .. graph.tasks.len() {
-            let task_id = RenderTaskId { index: i as u32 };
+            let task_id = RenderTaskId { index: i as u16 };
             assign_free_pass(
                 task_id,
                 &mut self.child_task_buffer,
@@ -365,7 +365,7 @@ impl FrameGraphBuilder {
         // Assign tasks to each pass based on their `render_on` attribute
         for (index, task) in graph.tasks.iter().enumerate() {
             if task.kind.is_a_rendering_operation() {
-                let id = RenderTaskId { index: index as u32 };
+                let id = RenderTaskId { index: index as u16 };
                 graph.passes[task.render_on.0].task_ids.push(id);
             }
         }
