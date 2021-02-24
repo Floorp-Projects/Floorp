@@ -26,7 +26,12 @@ async function test() {
   let waitForScroll = waitForScrollEvent(scroller);
 
   info("Synthesizing click at (" + mouseX + ", " + mouseY);
-  await promiseNativeClick(scroller, mouseX, mouseY);
+  await promiseNativeMouseEventWithAPZ({
+    type: "click",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
 
   await waitForScroll;
 
@@ -38,19 +43,19 @@ async function test() {
   info("scroller.scrollTop " + scroller.scrollTop);
 
   // mouse move over the scrollbar button
-  await promiseNativeMouseEvent(
-    scroller,
-    mouseX,
-    mouseY,
-    nativeMouseMoveEventMsg()
-  );
+  await promiseNativeMouseEventWithAPZ({
+    type: "mousemove",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
   // mouse down
-  await promiseNativeMouseEvent(
-    scroller,
-    mouseX,
-    mouseY,
-    nativeMouseDownEventMsg()
-  );
+  await promiseNativeMouseEventWithAPZ({
+    type: "mousedown",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
 
   info("sent mouse down");
 
@@ -66,12 +71,12 @@ async function test() {
     info("loop scroller.scrollTop " + scroller.scrollTop);
   }
 
-  await promiseNativeMouseEvent(
-    scroller,
-    mouseX,
-    mouseY,
-    nativeMouseUpEventMsg()
-  );
+  await promiseNativeMouseEventWithAPZ({
+    type: "mouseup",
+    target: scroller,
+    offsetX: mouseX,
+    offsetY: mouseY,
+  });
 
   ok(true, "got enough scroll");
 }
