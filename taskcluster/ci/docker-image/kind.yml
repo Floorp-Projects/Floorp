@@ -82,12 +82,6 @@ jobs:
     custom-v8:
         symbol: I(custom-v8)
         parent: debian10-base
-    debian8-amd64-build-base:
-        symbol: I(deb8-bb)
-        parent: debian8-base
-        definition: debian-build
-        args:
-            ARCH: amd64
     debian8-amd64-build:
         symbol: I(deb8)
         parent: debian8-base
