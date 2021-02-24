@@ -700,6 +700,20 @@ Scope* ScopeStencil::createScope(JSContext* cx, CompilationAtomCache& atomCache,
   MOZ_CRASH();
 }
 
+bool BaseCompilationStencil::prepareStorageFor(
+    JSContext* cx, CompilationState& compilationState) {
+  // NOTE: At this point CompilationState shouldn't be finished, and
+  // AbstractBaseCompilationStencil.scriptData field should be empty.
+  // Use CompilationState.scriptData as data source.
+  MOZ_ASSERT(scriptData.empty());
+  size_t allScriptCount = compilationState.scriptData.length();
+  size_t nonLazyScriptCount = compilationState.nonLazyFunctionCount;
+  if (!compilationState.scriptData[0].isFunction()) {
+    nonLazyScriptCount++;
+  }
+  return sharedData.prepareStorageFor(cx, nonLazyScriptCount, allScriptCount);
+}
+
 static bool CreateLazyScript(JSContext* cx, const CompilationInput& input,
                              const BaseCompilationStencil& stencil,
                              CompilationGCOutput& gcOutput,
