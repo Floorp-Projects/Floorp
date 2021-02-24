@@ -187,9 +187,6 @@ class nsBoxFrame : public nsContainerFrame {
   bool GetEventPoint(mozilla::WidgetGUIEvent* aEvent,
                      mozilla::LayoutDeviceIntPoint& aPoint);
 
- protected:
-  void RegUnregAccessKey(bool aDoReg);
-
  private:
   void CacheAttributes();
 

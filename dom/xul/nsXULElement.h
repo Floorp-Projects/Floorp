@@ -558,7 +558,8 @@ class nsXULElement : public nsStyledElement {
     return slots ? slots->mControllers.get() : nullptr;
   }
 
-  void UnregisterAccessKey(const nsAString& aOldValue);
+  bool SupportsAccessKey() const;
+  void RegUnRegAccessKey(bool aDoReg);
   bool BoolAttrIsTrue(nsAtom* aName) const;
 
   friend nsXULElement* NS_NewBasicXULElement(
