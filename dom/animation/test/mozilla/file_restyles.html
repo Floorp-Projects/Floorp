@@ -1943,7 +1943,7 @@ waitForAllPaints(() => {
 
     const FLUSH_LAYOUT = SpecialPowers.DOMWindowUtils.FLUSH_LAYOUT;
     const isWebRender =
-      SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
+      SpecialPowers.DOMWindowUtils.layerManagerType.startsWith('WebRender');
     ok(SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
        'Flush layout is needed for the appended div');
     await waitForAnimationReadyToRestyle(animation);
