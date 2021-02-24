@@ -26,10 +26,12 @@ import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.settings.counterPreference
+import org.mozilla.fenix.components.settings.featureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -317,6 +319,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var closeTabsAfterOneMonth by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_close_tabs_after_one_month),
         default = false
+    )
+
+    var tabsTrayRewrite by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_new_tabs_tray),
+        default = false,
+        featureFlag = FeatureFlags.tabsTrayRewrite
     )
 
     fun getTabTimeout(): Long = when {
