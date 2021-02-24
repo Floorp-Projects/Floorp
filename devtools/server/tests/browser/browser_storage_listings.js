@@ -686,6 +686,17 @@ add_task(async function() {
   const data = await front.listStores();
   await testStores(data);
 
+  info("Check that listStores can handle multiple concurrent calls");
+  const listStoresCalls = [];
+  for (let i = 0; i < 5; i++) {
+    listStoresCalls.push(front.listStores());
+  }
+  const onAllListStoresCallsResolved = Promise.all(listStoresCalls);
+  const timeoutResValue = "TIMED_OUT";
+  const onTimeout = wait(5000).then(() => timeoutResValue);
+  const res = await Promise.race([onTimeout, onAllListStoresCallsResolved]);
+  isnot(res, timeoutResValue, "listStores handled concurrent calls");
+
   await clearStorage();
 
   // Forcing GC/CC to get rid of docshells and windows created by this test.
