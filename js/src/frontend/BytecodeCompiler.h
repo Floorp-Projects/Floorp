@@ -106,6 +106,7 @@ class ScriptSourceObject;
 namespace frontend {
 
 struct CompilationStencil;
+struct ExtensibleCompilationStencil;
 struct CompilationGCOutput;
 class ErrorReporter;
 class FunctionBox;
@@ -124,6 +125,12 @@ ModuleObject* CompileModule(JSContext* cx,
 UniquePtr<CompilationStencil> ParseModuleToStencil(
     JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf);
 UniquePtr<CompilationStencil> ParseModuleToStencil(
+    JSContext* cx, CompilationInput& input,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf);
+
+UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
+    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf);
+UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
     JSContext* cx, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
