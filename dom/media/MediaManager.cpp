@@ -435,6 +435,13 @@ class SourceListener : public SupportsWeakPtr {
 
   PrincipalHandle GetPrincipalHandle() const;
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    size_t amount = aMallocSizeOf(this);
+    // Assume mPrincipalHandle refers to a principal owned elsewhere.
+    // DeviceState does not have support for memory accounting.
+    return amount;
+  }
+
  private:
   virtual ~SourceListener() { MOZ_ASSERT(!mWindowListener); }
 
@@ -735,6 +742,20 @@ class GetUserMediaWindowListener {
   uint64_t WindowID() const { return mWindowID; }
 
   PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    size_t amount = aMallocSizeOf(this);
+    // Assume mPrincipalHandle refers to a principal owned elsewhere.
+    amount += mInactiveListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (const RefPtr<SourceListener>& listener : mInactiveListeners) {
+      amount += listener->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    amount += mActiveListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (const RefPtr<SourceListener>& listener : mActiveListeners) {
+      amount += listener->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    return amount;
+  }
 
  private:
   ~GetUserMediaWindowListener() {
@@ -1467,6 +1488,18 @@ class GetUserMediaTask final {
 
   uint64_t GetWindowID() { return mWindowID; }
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    size_t amount = aMallocSizeOf(this);
+    // Assume mWindowListener is owned by MediaManager.
+    // Assume mSourceListener is owned by mWindowListener.
+    // Assume PrincipalInfo string buffers are shared.
+    // Member types without support for accounting of pointees:
+    //   MozPromiseHolder, RefPtr<MediaDevice>.
+    // We don't have a good way to account for lambda captures for MozPromise
+    // callbacks.
+    return amount;
+  }
+
  private:
   void PrepareDOMStream();
 
@@ -1968,7 +2001,8 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
       mPrefs.mDelayAgnostic ? "on" : "off", mPrefs.mChannels);
 }
 
-NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIObserver)
+NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIMemoryReporter,
+                  nsIObserver)
 
 /* static */
 StaticRefPtr<MediaManager> MediaManager::sSingleton;
@@ -2045,6 +2079,7 @@ MediaManager* MediaManager::Get() {
       prefs->AddObserver("media.getusermedia.channels", sSingleton, false);
 #endif
     }
+    RegisterStrongMemoryReporter(sSingleton);
 
     // Prepare async shutdown
 
@@ -3740,6 +3775,44 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     OnCameraMute(!strcmp(aTopic, "application-background"));
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaManager::CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData, bool aAnonymize) {
+  size_t amount = 0;
+  amount += mActiveWindows.ShallowSizeOfExcludingThis(MallocSizeOf);
+  for (auto iter = mActiveWindows.ConstIter(); !iter.Done(); iter.Next()) {
+    const GetUserMediaWindowListener* listener = iter.UserData();
+    amount += listener->SizeOfIncludingThis(MallocSizeOf);
+  }
+  amount += mActiveCallbacks.ShallowSizeOfExcludingThis(MallocSizeOf);
+  for (auto iter = mActiveCallbacks.ConstIter(); !iter.Done(); iter.Next()) {
+    // Assume nsString buffers for keys are accounted in mCallIds.
+    const GetUserMediaTask* task = iter.UserData();
+    amount += task->SizeOfIncludingThis(MallocSizeOf);
+  }
+  amount += mCallIds.ShallowSizeOfExcludingThis(MallocSizeOf);
+  for (auto iter = mCallIds.ConstIter(); !iter.Done(); iter.Next()) {
+    const nsTArray<nsString>* array = iter.UserData();
+    amount += array->ShallowSizeOfExcludingThis(MallocSizeOf);
+    for (const nsString& callID : *array) {
+      amount += callID.SizeOfExcludingThisEvenIfShared(MallocSizeOf);
+    }
+  }
+  amount += mPendingGUMRequest.ShallowSizeOfExcludingThis(MallocSizeOf);
+  // GetUserMediaRequest pointees of mPendingGUMRequest do not have support
+  // for memory accounting.  mPendingGUMRequest logic should probably be moved
+  // to the front end (bug 1691625).
+  amount += mDeviceIDs.shallowSizeOfExcludingThis(MallocSizeOf);
+  for (auto iter = mDeviceIDs.iter(); !iter.done(); iter.next()) {
+    const nsString deviceID = iter.get();
+    amount += deviceID.SizeOfExcludingThisEvenIfShared(MallocSizeOf);
+  }
+  MOZ_COLLECT_REPORT("explicit/media/media-manager-aggregates", KIND_HEAP,
+                     UNITS_BYTES, amount,
+                     "Memory used by MediaManager variable length members.");
   return NS_OK;
 }
 
