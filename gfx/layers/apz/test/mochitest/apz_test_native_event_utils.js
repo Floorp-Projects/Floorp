@@ -707,11 +707,11 @@ function synthesizeNativeMouseEventWithAPZ(aParams, aObserver = null) {
   const {
     type, // "click", "mousedown", "mouseup" or "mousemove"
     target, // Origin of offsetX and offsetY, must be an element
-    offsetX, // X offset in `target`
-    offsetY, // Y offset in `target`
+    offsetX, // X offset in `target` in CSS Pixels
+    offsetY, // Y offset in `target` in CSS pixels
     atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
-    screenX, // X offset in screen, offsetX/Y nor atCenter must not be set if this is set
-    screenY, // Y offset in screen, offsetX/Y nor atCenter must not be set if this is set
+    screenX, // X offset in screen in device pixels, offsetX/Y nor atCenter must not be set if this is set
+    screenY, // Y offset in screen in device pixels, offsetX/Y nor atCenter must not be set if this is set
     button = 0, // if "click", "mousedown", "mouseup", set same value as DOM MouseEvent.button
     modifiers = {}, // Active modifiers, see `parseNativeModifiers`
   } = aParams;
