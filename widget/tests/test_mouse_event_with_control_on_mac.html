@@ -75,7 +75,8 @@ add_task(async function TestMouseClickWithControl() {
                                                  ["contextmenu", 0, true],
                                                  ["mouseup", 0, true],
                                                  ["click", 0, true]]);
-  synthesizeNativeMouseClick({
+  synthesizeNativeMouseEvent({
+    type: "click",
     target,
     offsetX: 10,
     offsetY: 10,
@@ -94,7 +95,8 @@ add_task(async function TestOldBehavior() {
                                                  ["contextmenu", 2, true],
                                                  ["mouseup", 2, true],
                                                  ["auxclick", 2, true]]);
-  synthesizeNativeMouseClick({
+  synthesizeNativeMouseEvent({
+    type: "click",
     target,
     offsetX: 10,
     offsetY: 10,

@@ -23,7 +23,11 @@ add_task(async function() {
       // Must have at least one test.
       Assert.ok(!!elt, "Found a valid element: " + (elt.id || elt.localName));
       await UrlbarTestUtils.promisePopupClose(window, () =>
-        EventUtils.synthesizeNativeMouseClick({ target: elt, atCenter: true })
+        EventUtils.synthesizeNativeMouseEvent({
+          type: "click",
+          target: elt,
+          atCenter: true,
+        })
       );
     }
   });

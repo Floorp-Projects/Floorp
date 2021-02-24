@@ -12,7 +12,6 @@
  *  synthesizeMouseAtCenter
  *  synthesizeNativeMouseMove
  *  synthesizeNativeMouseEvent
- *  synthesizeNativeMouseClick
  *  synthesizeWheel
  *  synthesizeWheelAtPoint
  *  synthesizeKey
@@ -1190,29 +1189,19 @@ function promiseNativeMouseEvent(aParams) {
   return new Promise(resolve => synthesizeNativeMouseEvent(aParams, resolve));
 }
 
-function synthesizeNativeMouseClick(aParams, aObserver = null) {
-  aParams.type = "click";
-  return synthesizeNativeMouseEvent(aParams, aObserver);
-}
-
-function promiseNativeMouseClick(aParams) {
-  aParams.type = "click";
-  return promiseNativeMouseEvent(aParams);
-}
-
-function synthesizeNativeMouseClickAndWaitForEvent(aParams, aCallback) {
+function synthesizeNativeMouseEventAndWaitForEvent(aParams, aCallback) {
   const listener = aParams.eventTargetToListen || aParams.target;
-  const eventType = aParams.eventTypeToWait || "click";
+  const eventType = aParams.eventTypeToWait || aParams.type;
   listener.addEventListener(eventType, aCallback, {
     capture: true,
     once: true,
   });
-  synthesizeNativeMouseClick(aParams);
+  synthesizeNativeMouseEvent(aParams);
 }
 
-function promiseNativeMouseClickAndWaitForEvent(aParams) {
+function promiseNativeMouseEventAndWaitForEvent(aParams) {
   return new Promise(resolve =>
-    synthesizeNativeMouseClickAndWaitForEvent(aParams, resolve)
+    synthesizeNativeMouseEventAndWaitForEvent(aParams, resolve)
   );
 }
 

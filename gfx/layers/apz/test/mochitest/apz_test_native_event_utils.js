@@ -885,36 +885,26 @@ function promiseNativeMouseEventWithAPZ(aParams) {
   );
 }
 
-function synthesizeNativeMouseClickWithAPZ(aParams, aObserver = null) {
-  aParams.type = "click";
-  return synthesizeNativeMouseEventWithAPZ(aParams, aObserver);
-}
-
-function promiseNativeMouseClickWithAPZ(aParams) {
-  aParams.type = "click";
-  return promiseNativeMouseEventWithAPZ(aParams);
-}
-
-// See synthesizeNativeMouseClickWithAPZ for the detail of aParams.
-function synthesizeNativeMouseClickWithAPZAndWaitForClickEvent(
+// See synthesizeNativeMouseEventWithAPZ for the detail of aParams.
+function synthesizeNativeMouseEventWithAPZAndWaitForWaitForEvent(
   aParams,
   aCallback = null
 ) {
   const targetWindow = windowForTarget(aParams.target);
+  const eventType = aParams.eventTypeToWait || aParams.type;
   targetWindow.addEventListener(
-    "click",
+    eventType,
     function(e) {
       setTimeout(aCallback, 0);
     },
     { capture: true, once: true }
   );
-  return synthesizeNativeMouseClickWithAPZ(aParams);
+  return synthesizeNativeMouseEventWithAPZ(aParams);
 }
 
-// Promise-returning variant of synthesizeNativeMouseClickWithAPZAndWaitForClickEvent
-function promiseNativeMouseClickWithAPZAndClickEvent(aParams) {
+function promiseNativeMouseEventWithAPZAndWaitForEvent(aParams) {
   return new Promise(resolve => {
-    synthesizeNativeMouseClickWithAPZAndWaitForClickEvent(aParams, resolve);
+    synthesizeNativeMouseEventWithAPZAndWaitForWaitForEvent(aParams, resolve);
   });
 }
 
