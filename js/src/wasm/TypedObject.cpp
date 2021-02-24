@@ -341,7 +341,7 @@ bool TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
                                      HandleId id, MutableHandleObject objp,
                                      MutableHandle<PropertyResult> propp) {
   if (obj->as<TypedObject>().typeDescr().hasProperty(cx, id)) {
-    propp.setNonNativeProperty();
+    propp.setTypedObjectProperty();
     objp.set(obj);
     return true;
   }

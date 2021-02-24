@@ -2132,9 +2132,8 @@ bool js::HasOwnProperty(JSContext* cx, HandleObject obj, HandleId id,
 
 bool js::LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
                             JSObject** objp, PropertyResult* propp) {
-  bool isTypedArrayOutOfRange = false;
   do {
-    if (!LookupOwnPropertyPure(cx, obj, id, propp, &isTypedArrayOutOfRange)) {
+    if (!LookupOwnPropertyPure(cx, obj, id, propp)) {
       return false;
     }
 
@@ -2143,7 +2142,7 @@ bool js::LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
       return true;
     }
 
-    if (isTypedArrayOutOfRange) {
+    if (propp->shouldIgnoreProtoChain()) {
       *objp = nullptr;
       return true;
     }
@@ -2157,12 +2156,8 @@ bool js::LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
 }
 
 bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
-                               PropertyResult* propp,
-                               bool* isTypedArrayOutOfRange /* = nullptr */) {
+                               PropertyResult* propp) {
   JS::AutoCheckCannotGC nogc;
-  if (isTypedArrayOutOfRange) {
-    *isTypedArrayOutOfRange = false;
-  }
 
   if (obj->is<NativeObject>()) {
     // Search for a native dense element, typed array element, or property.
@@ -2186,10 +2181,7 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
         if (index.value() < obj->as<TypedArrayObject>().length().get()) {
           propp->setTypedArrayElement(index.value());
         } else {
-          propp->setNotFound();
-          if (isTypedArrayOutOfRange) {
-            *isTypedArrayOutOfRange = true;
-          }
+          propp->setTypedArrayOutOfRange();
         }
         return true;
       }
@@ -2207,7 +2199,7 @@ bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     }
   } else if (obj->is<TypedObject>()) {
     if (obj->as<TypedObject>().typeDescr().hasProperty(cx, id)) {
-      propp->setNonNativeProperty();
+      propp->setTypedObjectProperty();
       return true;
     }
   } else {
