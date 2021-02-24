@@ -27,6 +27,12 @@
   --chrome-content-separator-color: ThreeDShadow;
 }
 
+@supports -moz-bool-pref("browser.proton.enabled") {
+:root:not(:-moz-lwtheme) {
+  --focus-outline-color: -moz-accent-color;
+}
+} /*** END proton ***/
+
 #navigator-toolbox {
   --tabs-border-color: rgba(0,0,0,.3);
 }
