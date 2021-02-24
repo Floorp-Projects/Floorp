@@ -17,9 +17,8 @@ hash -r
 pip install virtualenv==15.2.0
 
 pip3 install -r /setup/zstandard_requirements.txt
-
-pip install psutil==5.7.0
-pip3 install psutil==5.7.0
+pip3 install -r /setup/psutil_requirements.txt
+pip install -r /setup/psutil_requirements.txt
 
 # Cleanup
 cd /

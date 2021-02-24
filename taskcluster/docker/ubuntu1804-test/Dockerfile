@@ -48,6 +48,8 @@ ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-co
 
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/worker/scripts/tooltool.py
 
+# %include build/psutil_requirements.txt
+ADD topsrcdir/build/psutil_requirements.txt /setup/psutil_requirements.txt
 # %include build/zstandard_requirements.txt
 ADD topsrcdir/build/zstandard_requirements.txt /setup/zstandard_requirements.txt
 # %include taskcluster/docker/recipes/ubuntu1804-test-system-setup.sh
