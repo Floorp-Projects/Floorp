@@ -129,6 +129,13 @@ LayoutDeviceIntSize RenderCompositorLayersSWGL::GetBufferSize() {
   return mWidget->GetClientSize();
 }
 
+CompositorCapabilities RenderCompositorLayersSWGL::GetCompositorCapabilities() {
+  CompositorCapabilities caps;
+
+  caps.virtual_surface_size = 0;
+  return caps;
+}
+
 void RenderCompositorLayersSWGL::Bind(wr::NativeTileId aId,
                                       wr::DeviceIntPoint* aOffset,
                                       uint32_t* aFboId,

@@ -48,6 +48,9 @@ class RenderCompositorLayersSWGL : public RenderCompositor {
     return layers::WebRenderBackend::SOFTWARE;
   }
 
+  // Interface for wr::Compositor
+  CompositorCapabilities GetCompositorCapabilities() override;
+
   bool ShouldUseNativeCompositor() override { return true; }
 
   void CompositorBeginFrame() override {}

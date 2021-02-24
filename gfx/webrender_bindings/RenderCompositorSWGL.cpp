@@ -235,10 +235,13 @@ LayoutDeviceIntSize RenderCompositorSWGL::GetBufferSize() {
   return mWidget->GetClientSize();
 }
 
-void RenderCompositorSWGL::GetCompositorCapabilities(
-    CompositorCapabilities* aCaps) {
-  // When the window contents may be damaged, we need to force a full redraw.
-  aCaps->redraw_on_invalidation = true;
+CompositorCapabilities RenderCompositorSWGL::GetCompositorCapabilities() {
+  CompositorCapabilities caps;
+
+  // don't use virtual surfaces
+  caps.virtual_surface_size = 0;
+
+  return caps;
 }
 
 }  // namespace wr
