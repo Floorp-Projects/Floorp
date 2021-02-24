@@ -99,7 +99,8 @@ UniquePtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
 
 already_AddRefed<gfx::DrawTarget>
 WindowSurfaceProvider::StartRemoteDrawingInRegion(
-    LayoutDeviceIntRegion& aInvalidRegion, layers::BufferMode* aBufferMode) {
+    const LayoutDeviceIntRegion& aInvalidRegion,
+    layers::BufferMode* aBufferMode) {
   if (aInvalidRegion.IsEmpty()) return nullptr;
 
   if (!mWindowSurface) {

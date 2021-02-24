@@ -27,7 +27,7 @@ class AndroidCompositorWidget final : public InProcessCompositorWidget {
                           nsBaseWidget* aWidget);
 
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
-      LayoutDeviceIntRegion& aInvalidRegion,
+      const LayoutDeviceIntRegion& aInvalidRegion,
       layers::BufferMode* aBufferMode) override;
   void EndRemoteDrawingInRegion(
       gfx::DrawTarget* aDrawTarget,

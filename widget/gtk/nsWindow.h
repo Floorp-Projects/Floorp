@@ -229,7 +229,7 @@ class nsWindow final : public nsBaseWidget {
   void UpdateTopLevelOpaqueRegion();
 
   virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(
-      LayoutDeviceIntRegion& aInvalidRegion,
+      const LayoutDeviceIntRegion& aInvalidRegion,
       mozilla::layers::BufferMode* aBufferMode) override;
   virtual void EndRemoteDrawingInRegion(
       mozilla::gfx::DrawTarget* aDrawTarget,
