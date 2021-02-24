@@ -357,9 +357,13 @@ class ResourceWatcher {
     );
 
     if (isTargetSwitching) {
-      for (const resourceType of resources) {
-        await this._startListening(resourceType, { bypassListenerCount: true });
-      }
+      await Promise.all(
+        resources.map(resourceType =>
+          this._startListening(resourceType, {
+            bypassListenerCount: true,
+          })
+        )
+      );
     }
   }
 
