@@ -1027,6 +1027,41 @@ uint32_t KeymapWrapper::ComputeKeyModifiers(guint aModifierState) {
 }
 
 /* static */
+guint KeymapWrapper::ConvertWidgetModifierToGdkState(
+    nsIWidget::Modifiers aNativeModifiers) {
+  if (!aNativeModifiers) {
+    return 0;
+  }
+  struct ModifierMapEntry {
+    nsIWidget::Modifiers mWidgetModifier;
+    Modifier mModifier;
+  };
+  // TODO: Currently, we don't treat L/R of each modifier on Linux.
+  // TODO: No proper native modifier for Level5.
+  static constexpr ModifierMapEntry sModifierMap[] = {
+      {nsIWidget::CAPS_LOCK, Modifier::CAPS_LOCK},
+      {nsIWidget::NUM_LOCK, Modifier::NUM_LOCK},
+      {nsIWidget::SHIFT_L, Modifier::SHIFT},
+      {nsIWidget::SHIFT_R, Modifier::SHIFT},
+      {nsIWidget::CTRL_L, Modifier::CTRL},
+      {nsIWidget::CTRL_R, Modifier::CTRL},
+      {nsIWidget::ALT_L, Modifier::ALT},
+      {nsIWidget::ALT_R, Modifier::ALT},
+      {nsIWidget::ALTGRAPH, Modifier::LEVEL3},
+      {nsIWidget::COMMAND_L, Modifier::SUPER},
+      {nsIWidget::COMMAND_R, Modifier::SUPER}};
+
+  guint state = 0;
+  KeymapWrapper* instance = GetInstance();
+  for (const ModifierMapEntry& entry : sModifierMap) {
+    if (aNativeModifiers & entry.mWidgetModifier) {
+      state |= instance->GetModifierMask(entry.mModifier);
+    }
+  }
+  return state;
+}
+
+/* static */
 void KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
                                    guint aModifierState) {
   KeymapWrapper* keymapWrapper = GetInstance();

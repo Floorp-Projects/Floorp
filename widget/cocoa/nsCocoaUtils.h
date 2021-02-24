@@ -20,6 +20,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIWidget.h"
 
 // Declare the backingScaleFactor method that we want to call
 // on NSView/Window/Screen objects, if they recognize it.
@@ -381,6 +382,13 @@ class nsCocoaUtils {
    * Unicode character.
    */
   static uint32_t ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode);
+
+  /**
+   * Converts Gecko native modifier flags for `nsIWidget::SynthesizeNative*()`
+   * to native modifier flags of macOS.
+   */
+  static NSEventModifierFlags ConvertWidgetModifiersToMacModifierFlags(
+      nsIWidget::Modifiers aNativeModifiers);
 
   /**
    * Convert string with font attribute to NSMutableAttributedString

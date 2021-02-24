@@ -222,14 +222,15 @@ class nsWindow final : public nsWindowBase {
       int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
       uint32_t aModifierFlags, const nsAString& aCharacters,
       const nsAString& aUnmodifiedCharacters, nsIObserver* aObserver) override;
-  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                              uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
-                                              nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseEvent(
+      LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+      nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) override;
 
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override {
-    return SynthesizeNativeMouseEvent(aPoint, MOUSEEVENTF_MOVE, 0, aObserver);
+    return SynthesizeNativeMouseEvent(aPoint, MOUSEEVENTF_MOVE,
+                                      nsIWidget::Modifiers::NO_MODIFIERS,
+                                      aObserver);
   }
 
   virtual nsresult SynthesizeNativeMouseScrollEvent(

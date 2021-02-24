@@ -868,7 +868,8 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
 }
 
 nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                                 uint32_t aNativeMessage, uint32_t aModifierFlags,
+                                                 uint32_t aNativeMessage,
+                                                 nsIWidget::Modifiers aModifierFlags,
                                                  nsIObserver* aObserver) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -884,10 +885,12 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   // expects a point in a coordinate system that has its origin on the bottom left.
   NSPoint screenPoint = NSMakePoint(pt.x, nsCocoaUtils::FlippedScreenY(pt.y));
   NSPoint windowPoint = nsCocoaUtils::ConvertPointFromScreen([mView window], screenPoint);
+  NSEventModifierFlags modifierFlags =
+      nsCocoaUtils::ConvertWidgetModifiersToMacModifierFlags(aModifierFlags);
 
   NSEvent* event = [NSEvent mouseEventWithType:(NSEventType)aNativeMessage
                                       location:windowPoint
-                                 modifierFlags:aModifierFlags
+                                 modifierFlags:modifierFlags
                                      timestamp:[[NSProcessInfo processInfo] systemUptime]
                                   windowNumber:[[mView window] windowNumber]
                                        context:nil

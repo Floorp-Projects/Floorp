@@ -2438,10 +2438,9 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   return NS_OK;
 }
 
-nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                              uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
-                                              nsIObserver* aObserver) {
+nsresult nsWindow::SynthesizeNativeMouseEvent(
+    LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+    nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) {
   mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
 
   MOZ_ASSERT(mNPZCSupport.IsAttached());
@@ -2453,6 +2452,7 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   aPoint.x -= bounds.x;
   aPoint.y -= bounds.y;
 
+  // TODO (bug 1693237): Handle aModifierFlags.
   DispatchToUiThread(
       "nsWindow::SynthesizeNativeMouseEvent",
       [npzc = java::PanZoomController::NativeProvider::GlobalRef(npzc),

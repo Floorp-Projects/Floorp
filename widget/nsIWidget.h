@@ -1515,7 +1515,10 @@ class nsIWidget : public nsISupports {
       mozilla::WidgetGUIEvent* aEvent, int32_t aHorizontal,
       int32_t aVertical) = 0;
 
-  enum Modifiers {
+  // TODO: Make this an enum class with MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS or
+  //       EnumSet class.
+  enum Modifiers : uint32_t {
+    NO_MODIFIERS = 0x00000000,
     CAPS_LOCK = 0x00000001,  // when CapsLock is active
     NUM_LOCK = 0x00000002,   // when NumLock is active
     SHIFT_L = 0x00000100,
@@ -1576,15 +1579,15 @@ class nsIWidget : public nsISupports {
    * @param aNativeMessage *platform-specific* event type (e.g. on Mac,
    * NSEventTypeMouseMoved; on Windows, MOUSEEVENTF_MOVE, MOUSEEVENTF_LEFTDOWN
    * etc)
-   * @param aModifierFlags *platform-specific* modifier flags (ignored
-   * on Windows)
+   * @param aModifierFlags Some values of nsIWidget::Modifiers.
+   *                       FYI: On Windows, Android and Headless widget on all
+   *                       platroms, this hasn't been handled yet.
    * @param aObserver the observer that will get notified once the events
    * have been dispatched.
    */
-  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                              uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
-                                              nsIObserver* aObserver) = 0;
+  virtual nsresult SynthesizeNativeMouseEvent(
+      LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+      nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) = 0;
 
   /**
    * A shortcut to SynthesizeNativeMouseEvent, abstracting away the native

@@ -7868,10 +7868,9 @@ LayoutDeviceIntRect nsWindow::GdkRectToDevicePixels(GdkRectangle rect) {
                              rect.height * scale);
 }
 
-nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                              uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
-                                              nsIObserver* aObserver) {
+nsresult nsWindow::SynthesizeNativeMouseEvent(
+    LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+    nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "mouseevent");
 
   if (!mGdkWindow) {
@@ -7891,6 +7890,8 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     memset(&event, 0, sizeof(GdkEvent));
     event.type = (GdkEventType)aNativeMessage;
     event.button.button = 1;
+    event.button.state =
+        KeymapWrapper::ConvertWidgetModifierToGdkState(aModifierFlags);
     event.button.window = mGdkWindow;
     event.button.time = GDK_CURRENT_TIME;
 
@@ -7910,6 +7911,7 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     // We don't support specific events other than button-press/release. In all
     // other cases we'll synthesize a motion event that will be emitted by
     // gdk_display_warp_pointer().
+    // XXX How to activate native modifier for the other events?
     GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
     GdkPoint point = DevicePixelsToGdkPointRoundDown(aPoint);
     gdk_display_warp_pointer(display, screen, point.x, point.y);

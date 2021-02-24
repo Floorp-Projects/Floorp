@@ -6604,10 +6604,9 @@ nsresult nsWindow::SynthesizeNativeKeyEvent(
       aUnmodifiedCharacters);
 }
 
-nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                                              uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags,
-                                              nsIObserver* aObserver) {
+nsresult nsWindow::SynthesizeNativeMouseEvent(
+    LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+    nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "mouseevent");
 
   if (aNativeMessage == MOUSEEVENTF_MOVE) {
@@ -6620,6 +6619,13 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
 
   INPUT input;
   memset(&input, 0, sizeof(input));
+
+  // TODO (bug 1693240):
+  // Now, we synthesize native mouse events asynchronously since we want to
+  // synthesize the event on the front window at the point. However, Windows
+  // does not provide a way to set modifier only while a mouse message is
+  // being handled, and MOUSEEVENTF_MOVE may be coalesced by Windows.  So, we
+  // need a trick for handling it.
 
   input.type = INPUT_MOUSE;
   input.mi.dwFlags = aNativeMessage;
