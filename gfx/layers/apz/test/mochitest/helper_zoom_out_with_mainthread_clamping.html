@@ -52,7 +52,11 @@
       // visual viewport.
       for (let entry of zoom_out) {
         for (let i = 0; i < entry.length; i++) {
-          entry[i] = coordinatesRelativeToScreen(entry[i].x, entry[i].y, document.body);
+          entry[i] = coordinatesRelativeToScreen({
+            offsetX: entry[i].x,
+            offsetY: entry[i].y,
+            target: document.body,
+          });
         }
       }
       // Dispatch the touch events, waiting for paints after each row in

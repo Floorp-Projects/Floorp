@@ -12,7 +12,6 @@
  *  synthesizeMouseAtCenter
  *  synthesizeNativeMouseMove
  *  synthesizeNativeMouseClick
- *  synthesizeNativeMouseClickAtCenter
  *  synthesizeWheel
  *  synthesizeWheelAtPoint
  *  synthesizeKey
@@ -1059,16 +1058,30 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
     target, // Origin of offsetX and offsetY, must be an element
     offsetX, // X offset in `target`
     offsetY, // Y offset in `target`
+    atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
     win = window, // The window to use its utils
   } = aParams;
+  if (atCenter) {
+    if (offsetX != undefined || offsetY != undefined) {
+      throw Error(
+        `atCenter is specified, but offsetX (${offsetX}) and/or offsetY (${offsetY}) are also specified`
+      );
+    }
+  } else if (offsetX == undefined || offsetY == undefined) {
+    throw Error(
+      `offsetX and offsetY must be specified when atCenter is not true`
+    );
+  }
   const utils = _getDOMWindowUtils(win);
   if (!utils) {
     return;
   }
 
   const rect = target.getBoundingClientRect();
-  const x = offsetX + win.mozInnerScreenX + rect.left;
-  const y = offsetY + win.mozInnerScreenY + rect.top;
+  const x =
+    (atCenter ? rect.width / 2 : offsetX) + win.mozInnerScreenX + rect.left;
+  const y =
+    (atCenter ? rect.height / 2 : offsetY) + win.mozInnerScreenY + rect.top;
   const scale = utils.screenPixelsPerCSSPixel;
 
   const observer = {
@@ -1101,20 +1114,19 @@ function promiseNativeMouseClick(aParams) {
   return new Promise(resolve => synthesizeNativeMouseClick(aParams, resolve));
 }
 
-function synthesizeNativeMouseClickAtCenter(
-  aTarget,
-  aCallback,
-  aWindow = window
-) {
-  let rect = aTarget.getBoundingClientRect();
-  return synthesizeNativeMouseClick(
-    {
-      target: aTarget,
-      offsetX: rect.width / 2,
-      offsetY: rect.height / 2,
-      win: aWindow,
-    },
-    aCallback
+function synthesizeNativeMouseClickAndWaitForEvent(aParams, aCallback) {
+  const listener = aParams.eventTargetToListen || aParams.target;
+  const eventType = aParams.eventTypeToWait || "click";
+  listener.addEventListener(eventType, aCallback, {
+    capture: true,
+    once: true,
+  });
+  synthesizeNativeMouseClick(aParams);
+}
+
+function promiseNativeMouseClickAndWaitForEvent(aParams) {
+  return new Promise(resolve =>
+    synthesizeNativeMouseClickAndWaitForEvent(aParams, resolve)
   );
 }
 

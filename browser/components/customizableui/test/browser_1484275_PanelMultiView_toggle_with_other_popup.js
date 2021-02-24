@@ -5,20 +5,6 @@
 
 const TEST_URL = "data:text/html,<html><body></body></html>";
 
-function synthesizeNativeMouseClickAtCenterAsync(aElement) {
-  // Wait for the mouseup event to occur before continuing.
-  return new Promise((resolve, reject) => {
-    function eventOccurred(e) {
-      aElement.removeEventListener("mouseup", eventOccurred, true);
-      resolve();
-    }
-
-    aElement.addEventListener("mouseup", eventOccurred, true);
-
-    EventUtils.synthesizeNativeMouseClickAtCenter(aElement, resolve);
-  });
-}
-
 /**
  * Test steps that may lead to the panel being stuck on Windows (bug 1484275).
  */
@@ -50,9 +36,11 @@ add_task(async function test_PanelMultiView_toggle_with_other_popup() {
       // 3. Click the button to which the main menu is anchored. We need a native
       // mouse event to simulate the exact platform behavior with popups.
       let clickFn = () =>
-        synthesizeNativeMouseClickAtCenterAsync(
-          document.getElementById("PanelUI-button")
-        );
+        EventUtils.promiseNativeMouseClickAndWaitForEvent({
+          target: document.getElementById("PanelUI-button"),
+          atCenter: true,
+          eventTypeToWait: "mouseup",
+        });
 
       if (AppConstants.platform == "win") {
         // On Windows, the operation will close both popups.
