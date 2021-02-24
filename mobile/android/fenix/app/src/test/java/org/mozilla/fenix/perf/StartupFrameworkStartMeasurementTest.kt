@@ -11,7 +11,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.service.glean.private.BooleanMetricType
-import mozilla.components.service.glean.private.CounterMetricType
+import mozilla.components.service.glean.private.QuantityMetricType
 import mozilla.components.service.glean.private.TimespanMetricType
 import org.junit.Before
 import org.junit.Test
@@ -31,7 +31,7 @@ class StartupFrameworkStartMeasurementTest {
     @MockK(relaxed = true) private lateinit var frameworkPrimary: TimespanMetricType
     @MockK(relaxed = true) private lateinit var frameworkSecondary: TimespanMetricType
     @MockK(relaxed = true) private lateinit var frameworkStartError: BooleanMetricType
-    @MockK(relaxed = true) private lateinit var clockTicksPerSecond: CounterMetricType
+    @MockK(relaxed = true) private lateinit var clockTicksPerSecondV2: QuantityMetricType
 
     private var clockTicksPerSecondValue = -1L
 
@@ -57,7 +57,7 @@ class StartupFrameworkStartMeasurementTest {
         every { telemetry.frameworkPrimary } returns frameworkPrimary
         every { telemetry.frameworkSecondary } returns frameworkSecondary
         every { telemetry.frameworkStartError } returns frameworkStartError
-        every { telemetry.clockTicksPerSecond } returns clockTicksPerSecond
+        every { telemetry.clockTicksPerSecondV2 } returns clockTicksPerSecondV2
 
         metrics = StartupFrameworkStartMeasurement(stat, telemetry, getElapsedRealtimeNanos)
     }
@@ -131,7 +131,7 @@ class StartupFrameworkStartMeasurementTest {
         val (setMetric, unsetMetric) = getSetAndUnsetMetric(isPrimary)
         verify(exactly = 1) { setMetric.setRawNanos(any()) }
         verify { unsetMetric wasNot Called }
-        verify(exactly = 1) { clockTicksPerSecond.add(any()) }
+        verify(exactly = 1) { clockTicksPerSecondV2.set(any()) }
         verify { frameworkStartError wasNot Called }
     }
 
@@ -150,7 +150,7 @@ class StartupFrameworkStartMeasurementTest {
         verify { unsetMetric wasNot Called }
 
         val expectedClockTicksPerSecond = getExpectedClockTicksPerSecond(isPrimary)
-        verify { clockTicksPerSecond.add(expectedClockTicksPerSecond.toInt()) }
+        verify { clockTicksPerSecondV2.set(expectedClockTicksPerSecond) }
         verify { frameworkStartError wasNot Called }
     }
 
@@ -158,7 +158,7 @@ class StartupFrameworkStartMeasurementTest {
         verify { frameworkStartError.set(true) }
         verify { frameworkPrimary wasNot Called }
         verify { frameworkSecondary wasNot Called }
-        verify { clockTicksPerSecond wasNot Called }
+        verify { clockTicksPerSecondV2 wasNot Called }
     }
 
     private fun getSetAndUnsetMetric(isPrimary: Boolean): Pair<TimespanMetricType, TimespanMetricType> {

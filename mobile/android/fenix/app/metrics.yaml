@@ -3885,12 +3885,13 @@ startup.timeline:
     time_unit: millisecond
     description: |
       The duration the Android framework takes to start before letting us run
-      code in `*Application.init` when this device has `clock_ticks_per_second`
-      equal to 100: if it's not equal to 100, then this value is captured in
-      `framework_secondary`. We split this into two metrics to make it easier
-      to analyze in GLAM. We split on 100 because when we did our initial brief
-      analysis - https://sql.telemetry.mozilla.org/queries/75591 - the results
-      for clocks ticks were overwhelmingly 100.
+      code in `*Application.init` when this device has
+      `clock_ticks_per_second_v2` equal to 100: if it's not equal to 100, then
+      this value is captured in `framework_secondary`. We split this into two
+      metrics to make it easier to analyze in GLAM. We split on 100 because
+      when we did our initial brief analysis -
+      https://sql.telemetry.mozilla.org/queries/75591 - the results for clocks
+      ticks were overwhelmingly 100.
 
       The duration is calculated from `appInitTimestamp -
       processStartTimestamp`. `processStartTimestamp` is derived from the clock
@@ -3898,8 +3899,8 @@ startup.timeline:
       Therefore, we convert and round our timestamps to clock ticks before
       computing the difference and convert back to nanoseconds to report.
 
-      For debugging purposes, `clock_ticks_per_second`, which may vary between
-      devices, is also reported as a metric
+      For debugging purposes, `clock_ticks_per_second_v2`, which may vary
+      between devices, is also reported as a metric
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
       - https://github.com/mozilla-mobile/fenix/issues/17972
@@ -3920,8 +3921,9 @@ startup.timeline:
     time_unit: millisecond
     description: |
       The duration the Android framework takes to start before letting us run
-      code in `*Application.init` when this device has `clock_ticks_per_second`
-      not equal to 100. For more details on this metric, see `framework_primary`
+      code in `*Application.init` when this device has
+      `clock_ticks_per_second_v2` not equal to 100. For more details on this
+      metric, see `framework_primary`
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/17972
     data_reviews:
@@ -3970,19 +3972,22 @@ startup.timeline:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-08-01"
-  clock_ticks_per_second:
+  clock_ticks_per_second_v2:
     send_in_pings:
       - startup-timeline
-    type: counter
+    type: quantity
+    unit: clock ticks per second
     description: |
       The number of clock tick time units that occur in one second on this
       particular device. This value is expected to be used in conjunction with
-      the `framework_start` metric.
+      the `framework_primary/secondary` metrics.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
+      - https://github.com/mozilla-mobile/fenix/issues/18157
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
+      - https://github.com/mozilla-mobile/fenix/pull/18158#issue-579593943
     data_sensitivity:
       - technical
     notification_emails:

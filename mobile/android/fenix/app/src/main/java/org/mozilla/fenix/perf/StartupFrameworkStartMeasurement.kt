@@ -57,7 +57,7 @@ internal class StartupFrameworkStartMeasurement(
             val clockTicksPerSecond = stat.clockTicksPerSecond.also {
                 // framework* is derived from the number of clock ticks per second. To ensure this
                 // value does not throw off our result, we capture it too.
-                telemetry.clockTicksPerSecond.add(it.toInt())
+                telemetry.clockTicksPerSecondV2.set(it)
             }
 
             // In our brief analysis, clock ticks per second was overwhelmingly equal to 100. To make
