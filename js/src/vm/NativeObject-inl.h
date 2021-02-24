@@ -730,7 +730,7 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
         return true;
       }
 
-      if (propp) {
+      if (propp.isFound()) {
         *donep = true;
         return true;
       }
@@ -798,7 +798,7 @@ static MOZ_ALWAYS_INLINE bool LookupPropertyInline(
       return false;
     }
     if (done) {
-      if (propp) {
+      if (propp.isFound()) {
         objp.set(current);
       } else {
         objp.set(nullptr);
