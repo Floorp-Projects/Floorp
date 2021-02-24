@@ -27,9 +27,8 @@ class TRRQuery : public AHostResolver {
   TRRState mTrrAUsed = INIT;
   TRRState mTrrAAAAUsed = INIT;
 
-  AddrHostRecord::TRRSkippedReason mTRRAFailReason = AddrHostRecord::TRR_UNSET;
-  AddrHostRecord::TRRSkippedReason mTRRAAAAFailReason =
-      AddrHostRecord::TRR_UNSET;
+  TRRSkippedReason mTRRAFailReason = TRRSkippedReason::TRR_UNSET;
+  TRRSkippedReason mTRRAAAAFailReason = TRRSkippedReason::TRR_UNSET;
 
   virtual LookupStatus CompleteLookup(nsHostRecord*, nsresult,
                                       mozilla::net::AddrInfo*, bool pb,
