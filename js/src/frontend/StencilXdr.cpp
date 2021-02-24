@@ -643,9 +643,9 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
 
   if (stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
     if (mode == XDR_DECODE) {
-      stencil.moduleMetadata = MakeUnique<StencilModuleMetadata>();
+      stencil.moduleMetadata =
+          xdr->cx()->template new_<StencilModuleMetadata>();
       if (!stencil.moduleMetadata) {
-        js::ReportOutOfMemory(xdr->cx());
         return xdr->fail(JS::TranscodeResult::Throw);
       }
     }

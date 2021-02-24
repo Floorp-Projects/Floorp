@@ -1693,9 +1693,9 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  this->compilationState_.moduleMetadata = MakeUnique<StencilModuleMetadata>();
+  this->compilationState_.moduleMetadata =
+      cx_->template new_<StencilModuleMetadata>();
   if (!this->compilationState_.moduleMetadata) {
-    js::ReportOutOfMemory(cx_);
     return null();
   }
 
