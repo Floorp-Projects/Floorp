@@ -93,6 +93,11 @@ def checking(what, callback=None):
 #   that will cause the given path(s) to be searched rather than $PATH. Input
 #   paths may either be individual paths or delimited by os.pathsep, to allow
 #   passing $PATH (for example) as an element.
+# - `bootstrap` is a path relative to the bootstrap root path (e.g ~/.mozbuild)
+#   where to find the program if it's bootstrapped.
+#
+# - `bootstrap_search_path` is not an argument that users of the template are
+#   supposed to pass. See the override of check_prog in top-level moz.configure.
 #
 # The simplest form is:
 #   check_prog('PROG', ('a', 'b'))
@@ -108,7 +113,9 @@ def check_prog(
     input=None,
     allow_missing=False,
     paths=None,
+    bootstrap=None,
     when=None,
+    bootstrap_search_path=None,
 ):
     if input is not None:
         # Wrap input with type checking and normalization.
@@ -139,6 +146,20 @@ def check_prog(
     progs = dependable(progs)
     paths = dependable(paths)
     allow_missing = dependable(allow_missing)
+
+    if bootstrap:
+        if input is var:
+            # A when is needed when depending on an option, so normalize
+            # to a function that can used without.
+            has_input = depends(input, when=when)(lambda x: x)
+        else:
+            has_input = input
+        # We don't want to bootstrap when an explicit value was given as input.
+        if when:
+            bootstrap_when = depends(when, has_input)(lambda w, i: w and not i)
+        else:
+            bootstrap_when = depends(has_input)(lambda i: not i)
+        paths = bootstrap_search_path(bootstrap, paths, when=bootstrap_when)
 
     # Avoid displaying the "Checking for" message when the inputs are such
     # that we don't actually want anything to be checked. It is a bit
