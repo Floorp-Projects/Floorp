@@ -56,7 +56,7 @@ class RenderCompositorSWGL : public RenderCompositor {
   bool SupportsExternalBufferTextures() const override { return true; }
 
   // Interface for wr::Compositor
-  void GetCompositorCapabilities(CompositorCapabilities* aCaps) override;
+  CompositorCapabilities GetCompositorCapabilities() override;
 
  private:
   void* mContext = nullptr;
