@@ -971,6 +971,11 @@ class WorkerPrivate : public RelativeTimeline {
 
   void SetCCCollectedAnything(bool collectedAnything);
 
+  uint32_t GetCurrentTimerNestingLevel() const {
+    auto data = mWorkerThreadAccessible.Access();
+    return data->mCurrentTimerNestingLevel;
+  }
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
