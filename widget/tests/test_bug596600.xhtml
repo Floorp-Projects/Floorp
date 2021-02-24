@@ -33,6 +33,7 @@ function moveMouseTo(x, y, andThen) {
     type: "mousemove",
     screenX: x,
     screenY: y,
+    scale: "inScreenPixels",
     elementOnWidget: gLeftWindow.documentElement,
   });
   SimpleTest.executeSoon(andThen);

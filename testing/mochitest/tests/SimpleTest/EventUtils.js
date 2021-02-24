@@ -997,16 +997,15 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
   const {
     type, // "click", "mousedown", "mouseup" or "mousemove"
     target, // Origin of offsetX and offsetY, must be an element
-    offsetX, // X offset in `target`
-    offsetY, // Y offset in `target`
+    offsetX, // X offset in `target` (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*")
+    offsetY, // Y offset in `target` (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*")
     atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
-    screenX, // X offset in screen, offsetX/Y nor atCenter must not be set if this is set
-    screenY, // Y offset in screen, offsetX/Y nor atCenter must not be set if this is set
-    // If scale is not specified, screenPixelsPerCSSPixel is used for clientX/Y and
-    // 1.0 is used for screenX/Y.
+    screenX, // X offset in screen (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*"), offsetX/Y nor atCenter must not be set if this is set
+    screenY, // Y offset in screen (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*"), offsetX/Y nor atCenter must not be set if this is set
     // If scale is "screenPixelsPerCSSPixel", it'll be used.
     // If scale is "screenPixelsPerCSSPixelNoOverride", it'll be used.
-    scale,
+    // If scale is "inScreenPixels", clientX/Y nor scaleX/Y are not adjusted with screenPixelsPerCSSPixel*.
+    scale = "screenPixelsPerCSSPixel",
     button = 0, // if "click", "mousedown", "mouseup", set same value as DOM MouseEvent.button
     modifiers = {}, // Active modifiers, see `_parseNativeModifiers`
     win = window, // The window to use its utils
@@ -1053,9 +1052,8 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
 
   const rect = target?.getBoundingClientRect();
   const scaleValue = (() => {
-    if (!scale) {
-      // TODO: Apply same scale by default to screenX/Y as offsetX/Y later.
-      return screenX != undefined ? 1.0 : utils.screenPixelsPerCSSPixel;
+    if (scale === "inScreenPixels") {
+      return 1.0;
     }
     if (scale === "screenPixelsPerCSSPixel") {
       return utils.screenPixelsPerCSSPixel;
