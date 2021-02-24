@@ -842,6 +842,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
     height: 8px;
     width: 8px;
   }
+
+  .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
+    font-size: 11px;
+  }
 } /** END Proton **/
 
 /* Tracking Protection Button & Toggle */
