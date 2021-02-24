@@ -53,6 +53,7 @@
 
 #include "harfbuzz/hb.h"
 
+#include "AppleUtils.h"
 #include "MainThreadUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1429,19 +1430,51 @@ gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(const nsACString& aFontNam
   nsAutoreleasePool localPool;
 
   NSString* faceName = GetNSStringForString(NS_ConvertUTF8toUTF16(aFontName));
-  MacOSFontEntry* newFontEntry;
 
   // lookup face based on postscript or full name
-  CGFontRef fontRef = ::CGFontCreateWithFontName(CFStringRef(faceName));
+  AutoCFRelease<CGFontRef> fontRef = CGFontCreateWithFontName(CFStringRef(faceName));
   if (!fontRef) {
     return nullptr;
   }
 
-  newFontEntry = new MacOSFontEntry(aFontName, fontRef, aWeightForEntry, aStretchForEntry,
-                                    aStyleForEntry, false, true);
-  ::CFRelease(fontRef);
+  // It's possible for CGFontCreateWithFontName to return a font that has been
+  // deactivated/uninstalled, or a font that is excluded from the font list due
+  // to CSS font-visibility restriction. So we need to check whether this font is
+  // allowed to be used.
 
-  return newFontEntry;
+  // CGFontRef doesn't offer a family-name API, so we go via a CTFontRef.
+  AutoCFRelease<CTFontRef> ctFont = CTFontCreateWithGraphicsFont(fontRef, 0.0, nullptr, nullptr);
+  if (!ctFont) {
+    return nullptr;
+  }
+  AutoCFRelease<CFStringRef> name = CTFontCopyFamilyName(ctFont);
+
+  // Convert the family name to a key suitable for font-list lookup (8-bit, lowercased).
+  nsAutoCString key;
+  // CFStringGetLength is in UTF-16 code units. The maximum this count can expand
+  // when converted to UTF-8 is 3x. We add 1 to ensure there will also be space for
+  // null-termination of the resulting C string.
+  key.SetLength((CFStringGetLength(name) + 1) * 3);
+  if (!CFStringGetCString(name, key.BeginWriting(), key.Length(), kCFStringEncodingUTF8)) {
+    // This shouldn't ever happen, but if it does we just bail.
+    NS_WARNING("Failed to get family name?");
+    key.Truncate(0);
+  }
+  if (key.IsEmpty()) {
+    return nullptr;
+  }
+  // Reset our string length to match the actual C string we got, which will usually
+  // be much shorter than the maximal buffer we allocated.
+  key.Truncate(strlen(key.get()));
+  ToLowerCase(key);
+  // If the family can't be looked up, this font is not available for use.
+  FontFamily family = FindFamily(key);
+  if (family.IsNull()) {
+    return nullptr;
+  }
+
+  return new MacOSFontEntry(aFontName, fontRef, aWeightForEntry, aStretchForEntry, aStyleForEntry,
+                            false, true);
 }
 
 static void ReleaseData(void* info, const void* data, size_t size) { free((void*)data); }
