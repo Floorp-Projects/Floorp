@@ -15,12 +15,15 @@
 }
 
 :root:-moz-lwtheme-darktext {
-  --lwt-toolbar-field-background-color: #F0F0F4 !important;
+  --lwt-toolbar-field-background-color: #f0f0f4 !important;
+  --autocomplete-popup-highlight-background: #e0e0e6 !important;
+  --autocomplete-popup-highlight-color: black !important;
 }
 
-/* TODO: Bug 1692046: Add brighttext --lwt-toolbar-field-background-color
-    override. */
-}
+/* TODO: Bug 1692046: Add brighttext --lwt-toolbar-field-background-color,
+   --autocomplete-popup-highlight-background, and
+   --autocomplete-popup-highlight-color overrides. */
+} /*** END proton ***/
 
 :root:-moz-lwtheme-brighttext {
   /* !important to override LightweightThemeConsumer.jsm */

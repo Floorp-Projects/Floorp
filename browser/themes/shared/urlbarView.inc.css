@@ -19,6 +19,9 @@
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
 
+  --urlbar-popup-url-color: hsl(210, 77%, 47%);
+  --urlbar-popup-action-color: hsl(178, 100%, 28%);
+
   /* Colors copied from in-content button styling */
   --urlbarView-button-background: rgba(12, 12, 13, 0.1);
   --urlbarView-button-background-hover: rgba(12, 12, 13, 0.2);
@@ -30,11 +33,6 @@
   --urlbarView-action-slide-in-distance: 200px;
 }
 
-:root:-moz-lwtheme {
-  --urlbar-popup-url-color: hsl(210, 77%, 47%);
-  --urlbar-popup-action-color: hsl(178, 100%, 28%);
-}
-
 :root:-moz-lwtheme[lwt-toolbar-field-focus-brighttext] {
   --urlbar-popup-url-color: @lwtPopupBrighttextLinkColor@;
   --urlbar-popup-action-color: #30e60b;
@@ -44,6 +42,32 @@
   --urlbarView-button-background-hover: rgba(249, 249, 250, 0.15);
   --urlbarView-button-background-active: rgba(249, 249, 250, 0.2);
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root {
+  --urlbar-popup-action-color: #005e5e;
+}
+
+@media not (prefers-contrast) {
+  :root {
+    --autocomplete-popup-highlight-background: #e0e0e6;
+    --autocomplete-popup-highlight-color: black;
+    /* TODO: Bug 1692046: Add override for --autocomplete-popup-highlight-background
+    and --autocomplete-popup-highlight-color in
+    :root[lwt-default-theme-in-dark-mode]. */
+  }
+}
+
+/* Fallback colours for when theme authors don't define
+    popup_highlight/popup_highlight_text. */
+:root:-moz-lwtheme {
+  --autocomplete-popup-highlight-background: rgb(0, 99, 255);
+  --autocomplete-popup-highlight-color: white;
+}
+:root[lwt-toolbar-field-brighttext] {
+  --autocomplete-popup-highlight-background: rgb(0, 99, 225);
+}
+} /*** END proton ***/
 
 :root:-moz-locale-dir(rtl) {
   --urlbarView-action-slide-in-distance: -200px;
@@ -107,6 +131,12 @@
   padding-inline-start: @urlbarViewItemInlinePadding@;
   padding-block: 6px;
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+.urlbarView-row-inner {
+  border-radius: var(--toolbarbutton-border-radius);
+}
+} /*** END proton ***/
 
 :root[uidensity=touch] .urlbarView-row:not([type=tip], [type=dynamic]) {
   padding-block: 11px;
@@ -335,6 +365,12 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+.urlbarView-help  {
+  border-radius: var(--toolbarbutton-border-radius);
+}
+} /*** END proton ***/
+
 .urlbarView-help[selected] {
   box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
 }
@@ -397,6 +433,12 @@
   flex-basis: initial;
   flex-shrink: 0;
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+.urlbarView-tip-button {
+  border-radius: var(--toolbarbutton-border-radius);
+}
+} /*** END proton ***/
 
 .urlbarView-tip-button:hover {
   background-color: var(--urlbarView-button-background-hover);
@@ -570,6 +612,12 @@
   flex-wrap: wrap;
 }
 
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar .search-one-offs:not([hidden]) {
+  padding-block: 12px;
+}
+}
+
 .urlbarView[noresults] > .search-one-offs {
   border-top: none;
 }
@@ -598,6 +646,12 @@
   height: 32px;
   margin-inline-end: 8px;
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar .searchbar-engine-one-off-item {
+  border-radius: var(--toolbarbutton-border-radius);
+}
+} /*** END proton ***/
 
 #urlbar .searchbar-engine-one-off-item:last-child {
   /* This applies to both the last one-off and the compact settings button */

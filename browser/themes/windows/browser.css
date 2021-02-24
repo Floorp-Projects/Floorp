@@ -18,7 +18,7 @@
   --toolbarbutton-icon-fill-opacity: 1;
 
   --panel-separator-color: ThreeDLightShadow;
-  --arrowpanel-dimmed: hsla(0,0%,80%,.35);
+  --arrowpanel-dimmed: hsla(0,0%,80%,.3);
   --arrowpanel-dimmed-further: hsla(0,0%,80%,.5);
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
@@ -556,11 +556,6 @@ menuitem.bookmark-item {
 /* Address bar results view */
 
 %include ../shared/urlbarView.inc.css
-
-:root {
-  --urlbar-popup-url-color: hsl(210, 77%, 47%);
-  --urlbar-popup-action-color: hsl(178, 100%, 28%);
-}
 
 @media (-moz-windows-default-theme: 0) {
   :root:not(:-moz-lwtheme) {
