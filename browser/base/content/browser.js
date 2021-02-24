@@ -1411,18 +1411,6 @@ var gKeywordURIFixup = {
               openTrustedLinkIn(fixedURI.spec, "current");
             },
           },
-          {
-            label: gNavigatorBundle.getString("keywordURIFixup.dismiss"),
-            accessKey: gNavigatorBundle.getString(
-              "keywordURIFixup.dismiss.accesskey"
-            ),
-            callback() {
-              let notification = notificationBox.getNotificationWithValue(
-                "keyword-uri-fixup"
-              );
-              notificationBox.removeNotification(notification, true);
-            },
-          },
         ];
         let notification = notificationBox.appendNotification(
           message,
