@@ -2,155 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-template <typename V>
-static ALWAYS_INLINE WideRGBA8 pack_span(uint32_t*, const V& v,
-                                         float scale = 255.0f) {
-  return pack_pixels_RGBA8(v, scale);
-}
-
-static ALWAYS_INLINE WideRGBA8 pack_span(uint32_t*) {
-  return pack_pixels_RGBA8();
-}
-
-template <typename C>
-static ALWAYS_INLINE WideR8 pack_span(uint8_t*, C c, float scale = 255.0f) {
-  return pack_pixels_R8(c, scale);
-}
-
-static ALWAYS_INLINE WideR8 pack_span(uint8_t*) { return pack_pixels_R8(); }
-
-// Helper functions to apply a color modulus when available.
-struct NoColor {};
-
-template <typename P>
-static ALWAYS_INLINE P applyColor(P src, NoColor) {
-  return src;
-}
-
-template <typename P>
-static ALWAYS_INLINE P applyColor(P src, P color) {
-  return muldiv256(src, color);
-}
-
-static ALWAYS_INLINE WideRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
-  return muldiv256(unpack(src), color);
-}
-
-static ALWAYS_INLINE WideR8 applyColor(PackedR8 src, WideR8 color) {
-  return muldiv256(unpack(src), color);
-}
-
-// Packs a color on a scale of 0..256 rather than 0..255 to allow faster scale
-// math with muldiv256. Note that this can cause a slight rounding difference in
-// the result versus the 255 scale. To alleviate this we scale by 256.49, so
-// that the color rounds slightly up and in turn causes the the value it scales
-// to round slightly up as well.
-template <typename P, typename C>
-static ALWAYS_INLINE auto packColor(P* buf, C color) {
-  return pack_span(buf, color, 256.49f);
-}
-
-template <typename P>
-static ALWAYS_INLINE NoColor packColor(UNUSED P* buf, NoColor noColor) {
-  return noColor;
-}
-
-// Single argument variation that takes an explicit destination buffer type.
-template <typename P, typename C>
-static ALWAYS_INLINE auto packColor(C color) {
-  // Just pass in a typed null pointer, as the pack routines never use the
-  // pointer's value, just its type.
-  return packColor((P*)0, color);
-}
-
-static ALWAYS_INLINE void commit_span(uint32_t* buf, WideRGBA8 r) {
-  unaligned_store(buf, pack(r));
-}
-
-static ALWAYS_INLINE void commit_span(uint32_t* buf, WideRGBA8 r, int len) {
-  partial_store_span(buf, pack(r), len);
-}
-
-static ALWAYS_INLINE WideRGBA8 blend_span(uint32_t* buf, WideRGBA8 r) {
-  return blend_pixels(buf, unaligned_load<PackedRGBA8>(buf), r);
-}
-
-static ALWAYS_INLINE WideRGBA8 blend_span(uint32_t* buf, WideRGBA8 r, int len) {
-  return blend_pixels(buf, partial_load_span<PackedRGBA8>(buf, len), r, len);
-}
-
-static ALWAYS_INLINE void commit_span(uint32_t* buf, PackedRGBA8 r) {
-  unaligned_store(buf, r);
-}
-
-static ALWAYS_INLINE void commit_span(uint32_t* buf, PackedRGBA8 r, int len) {
-  partial_store_span(buf, r, len);
-}
-
-static ALWAYS_INLINE PackedRGBA8 blend_span(uint32_t* buf, PackedRGBA8 r) {
-  return pack(blend_span(buf, unpack(r)));
-}
-
-static ALWAYS_INLINE PackedRGBA8 blend_span(uint32_t* buf, PackedRGBA8 r,
-                                            int len) {
-  return pack(blend_span(buf, unpack(r), len));
-}
-
-static ALWAYS_INLINE void commit_span(uint8_t* buf, WideR8 r) {
-  unaligned_store(buf, pack(r));
-}
-
-static ALWAYS_INLINE void commit_span(uint8_t* buf, WideR8 r, int len) {
-  partial_store_span(buf, pack(r), len);
-}
-
-static ALWAYS_INLINE WideR8 blend_span(uint8_t* buf, WideR8 r) {
-  return blend_pixels(buf, unpack(unaligned_load<PackedR8>(buf)), r);
-}
-
-static ALWAYS_INLINE WideR8 blend_span(uint8_t* buf, WideR8 r, int len) {
-  return blend_pixels(buf, unpack(partial_load_span<PackedR8>(buf, len)), r,
-                      len);
-}
-
-template <typename P, typename R>
-static ALWAYS_INLINE void commit_blend_solid_span(P* buf, R r, int len) {
-  for (P* end = &buf[len & ~3]; buf < end; buf += 4) {
-    commit_span(buf, blend_span(buf, r));
-  }
-  len &= 3;
-  if (len > 0) {
-    partial_store_span(buf, pack(blend_span(buf, r, len)), len);
-  }
-}
-
-template <bool BLEND>
-static void commit_solid_span(uint32_t* buf, WideRGBA8 r, int len) {
-  commit_blend_solid_span(buf, r, len);
-}
-
-template <>
-ALWAYS_INLINE void commit_solid_span<false>(uint32_t* buf, WideRGBA8 r,
-                                            int len) {
-  fill_n(buf, len, bit_cast<U32>(pack(r)).x);
-}
-
-template <bool BLEND>
-static void commit_solid_span(uint8_t* buf, WideR8 r, int len) {
-  commit_blend_solid_span(buf, r, len);
-}
-
-template <>
-ALWAYS_INLINE void commit_solid_span<false>(uint8_t* buf, WideR8 r, int len) {
-  PackedR8 p = pack(r);
-  fill_n((uint32_t*)buf, len / 4, bit_cast<uint32_t>(p));
-  buf += len & ~3;
-  len &= 3;
-  if (len > 0) {
-    partial_store_span(buf, p, len);
-  }
-}
-
 // When using a solid color with clip masking, the cost of loading the clip mask
 // in the blend stage exceeds the cost of processing the color. Here we handle
 // the entire span of clip mask texture before the blend stage to more
@@ -190,24 +41,6 @@ static ALWAYS_INLINE void commit_aa_solid_span(P* buf, R r, int len) {
   }
   if (len > 0) {
     commit_solid_span<true>(buf, r, len);
-  }
-}
-
-template <bool BLEND, typename P, typename R>
-static ALWAYS_INLINE void commit_blend_span(P* buf, R r) {
-  if (BLEND) {
-    commit_span(buf, blend_span(buf, r));
-  } else {
-    commit_span(buf, r);
-  }
-}
-
-template <bool BLEND, typename P, typename R>
-static ALWAYS_INLINE void commit_blend_span(P* buf, R r, int len) {
-  if (BLEND) {
-    commit_span(buf, blend_span(buf, r, len), len);
-  } else {
-    commit_span(buf, r, len);
   }
 }
 
@@ -994,7 +827,7 @@ static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, int layer0,
 
 template <bool BLEND, typename S0, typename P, typename C = NoColor>
 static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
-                    const vec4_scalar uv_rect0, float z0, int colorSpace,
+                    const vec4_scalar& uv_rect0, float z0, int colorSpace,
                     int rescaleFactor, C color = C()) {
   if (!swgl_isTextureLinear(sampler0)) {
     return 0;
@@ -1039,9 +872,9 @@ static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, int layer0,
 template <bool BLEND, typename S0, typename S1, typename P,
           typename C = NoColor>
 static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
-                    const vec4_scalar uv_rect0, float z0, S1 sampler1, vec2 uv1,
-                    const vec4_scalar uv_rect1, float z1, int colorSpace,
-                    int rescaleFactor, C color = C()) {
+                    const vec4_scalar& uv_rect0, float z0, S1 sampler1,
+                    vec2 uv1, const vec4_scalar& uv_rect1, float z1,
+                    int colorSpace, int rescaleFactor, C color = C()) {
   if (!swgl_isTextureLinear(sampler0) || !swgl_isTextureLinear(sampler1)) {
     return 0;
   }
@@ -1097,13 +930,39 @@ static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, int layer0,
   }
 }
 
+// Fallback helper for when we can't specifically accelerate YUV with
+// composition.
+template <bool BLEND, typename S0, typename S1, typename S2, typename P,
+          typename C>
+static void blendYUVFallback(P* buf, int span, S0 sampler0, vec2 uv0,
+                             vec2_scalar uv_step0, vec2_scalar min_uv0,
+                             vec2_scalar max_uv0, int layer0, S1 sampler1,
+                             vec2 uv1, vec2_scalar uv_step1,
+                             vec2_scalar min_uv1, vec2_scalar max_uv1,
+                             int layer1, S2 sampler2, vec2 uv2,
+                             vec2_scalar uv_step2, vec2_scalar min_uv2,
+                             vec2_scalar max_uv2, int layer2, int colorSpace,
+                             int rescaleFactor, C color) {
+  for (auto* end = buf + span; buf < end; buf += swgl_StepSize, uv0 += uv_step0,
+             uv1 += uv_step1, uv2 += uv_step2) {
+    commit_blend_span<BLEND>(
+        buf, applyColor(sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)),
+                                  layer0, sampler1,
+                                  ivec2(clamp(uv1, min_uv1, max_uv1)), layer1,
+                                  sampler2, ivec2(clamp(uv2, min_uv2, max_uv2)),
+                                  layer2, colorSpace, rescaleFactor),
+                        color));
+  }
+}
+
 template <bool BLEND, typename S0, typename S1, typename S2, typename P,
           typename C = NoColor>
 static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
-                    const vec4_scalar uv_rect0, float z0, S1 sampler1, vec2 uv1,
-                    const vec4_scalar uv_rect1, float z1, S2 sampler2, vec2 uv2,
-                    const vec4_scalar uv_rect2, float z2, int colorSpace,
-                    int rescaleFactor, C color = C()) {
+                    const vec4_scalar& uv_rect0, float z0, S1 sampler1,
+                    vec2 uv1, const vec4_scalar& uv_rect1, float z1,
+                    S2 sampler2, vec2 uv2, const vec4_scalar& uv_rect2,
+                    float z2, int colorSpace, int rescaleFactor,
+                    C color = C()) {
   if (!swgl_isTextureLinear(sampler0) || !swgl_isTextureLinear(sampler1) ||
       !swgl_isTextureLinear(sampler2)) {
     return 0;
@@ -1115,17 +974,10 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
   LINEAR_QUANTIZE_UV(sampler2, uv2, uv_step2, uv_rect2, min_uv2, max_uv2, z2,
                      layer2);
   auto c = packColor(buf, color);
-  auto* end = buf + span;
-  for (; buf < end; buf += swgl_StepSize, uv0 += uv_step0, uv1 += uv_step1,
-                    uv2 += uv_step2) {
-    commit_blend_span<BLEND>(
-        buf, applyColor(sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)),
-                                  layer0, sampler1,
-                                  ivec2(clamp(uv1, min_uv1, max_uv1)), layer1,
-                                  sampler2, ivec2(clamp(uv2, min_uv2, max_uv2)),
-                                  layer2, colorSpace, rescaleFactor),
-                        c));
-  }
+  blendYUVFallback<BLEND>(buf, span, sampler0, uv0, uv_step0, min_uv0, max_uv0,
+                          layer0, sampler1, uv1, uv_step1, min_uv1, max_uv1,
+                          layer1, sampler2, uv2, uv_step2, min_uv2, max_uv2,
+                          layer2, colorSpace, rescaleFactor, c);
   return span;
 }
 
@@ -1135,15 +987,14 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
 // At a minimum, we need to ensure no blending is used, that we are outputting
 // to a BGRA8 framebuffer, and that no color scaling is applied, which we can
 // accomplish via template specialization.
-template <>
-int blendYUV<false, sampler2DRect, sampler2DRect, sampler2DRect, uint32_t,
-             NoColor>(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
-                      const vec4_scalar uv_rect0, float z0,
-                      sampler2DRect sampler1, vec2 uv1,
-                      const vec4_scalar uv_rect1, float z1,
-                      sampler2DRect sampler2, vec2 uv2,
-                      const vec4_scalar uv_rect2, float z2, int colorSpace,
-                      int rescaleFactor, UNUSED NoColor noColor) {
+template <bool BLEND>
+static int blendYUV(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
+                    const vec4_scalar& uv_rect0, float z0,
+                    sampler2DRect sampler1, vec2 uv1,
+                    const vec4_scalar& uv_rect1, float z1,
+                    sampler2DRect sampler2, vec2 uv2,
+                    const vec4_scalar& uv_rect2, float z2, int colorSpace,
+                    int rescaleFactor, NoColor noColor = NoColor()) {
   if (!swgl_isTextureLinear(sampler0) || !swgl_isTextureLinear(sampler1) ||
       !swgl_isTextureLinear(sampler2)) {
     return 0;
@@ -1167,14 +1018,19 @@ int blendYUV<false, sampler2DRect, sampler2DRect, sampler2DRect, uint32_t,
       uv_step1 == uv_step2 && uv1.x.x == uv2.x.x && uv1.y.x == uv2.y.x) {
     // CompositeYUV does not support a clamp rect, so we must take care to
     // advance till we're inside the bounds of the clamp rect.
-    for (; (uv0.x.x < min_uv0.x || uv1.x.x < min_uv1.x) && buf < end;
-         buf += swgl_StepSize, uv0 += uv_step0, uv1 += uv_step1,
-         uv2 += uv_step2) {
-      commit_span(
-          buf, sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)), layer0,
-                         sampler1, ivec2(clamp(uv1, min_uv1, max_uv1)), layer1,
-                         sampler2, ivec2(clamp(uv2, min_uv2, max_uv2)), layer2,
-                         colorSpace, rescaleFactor));
+    int outside = min(int(ceil(max((min_uv0.x - uv0.x.x) / uv_step0.x,
+                                   (min_uv1.x - uv1.x.x) / uv_step1.x))),
+                      (end - buf) / swgl_StepSize);
+    if (outside > 0) {
+      blendYUVFallback<BLEND>(buf, outside * swgl_StepSize, sampler0, uv0,
+                              uv_step0, min_uv0, max_uv0, layer0, sampler1, uv1,
+                              uv_step1, min_uv1, max_uv1, layer1, sampler2, uv2,
+                              uv_step2, min_uv2, max_uv2, layer2, colorSpace,
+                              rescaleFactor, noColor);
+      buf += outside * swgl_StepSize;
+      uv0.x += outside * uv_step0.x;
+      uv1.x += outside * uv_step1.x;
+      uv2.x += outside * uv_step2.x;
     }
     // Find the amount of chunks inside the clamp rect before we hit the
     // maximum. If there are any chunks inside, we can finally dispatch to
@@ -1188,10 +1044,10 @@ int blendYUV<false, sampler2DRect, sampler2DRect, sampler2DRect, uint32_t,
       int colorDepth =
           (sampler0->format == TextureFormat::R16 ? 16 : 8) - rescaleFactor;
       // Finally, call the inner loop of CompositeYUV.
-      linear_row_yuv(buf, inside * swgl_StepSize, sampler0, force_scalar(uv0),
-                     uv_step0.x / swgl_StepSize, sampler1, sampler2,
-                     force_scalar(uv1), uv_step1.x / swgl_StepSize, colorDepth,
-                     yuvMatrix[colorSpace]);
+      linear_row_yuv<BLEND>(
+          buf, inside * swgl_StepSize, sampler0, force_scalar(uv0),
+          uv_step0.x / swgl_StepSize, sampler1, sampler2, force_scalar(uv1),
+          uv_step1.x / swgl_StepSize, colorDepth, yuvMatrix[colorSpace]);
       // Now that we're done, advance past the processed inside portion.
       buf += inside * swgl_StepSize;
       uv0.x += inside * uv_step0.x;
@@ -1202,14 +1058,10 @@ int blendYUV<false, sampler2DRect, sampler2DRect, sampler2DRect, uint32_t,
   // We either got here because we have some samples outside the clamp rect, or
   // because some of the preconditions were not satisfied. Process whatever is
   // left of the span.
-  for (; buf < end; buf += swgl_StepSize, uv0 += uv_step0, uv1 += uv_step1,
-                    uv2 += uv_step2) {
-    commit_span(buf,
-                sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)), layer0,
-                          sampler1, ivec2(clamp(uv1, min_uv1, max_uv1)), layer1,
-                          sampler2, ivec2(clamp(uv2, min_uv2, max_uv2)), layer2,
-                          colorSpace, rescaleFactor));
-  }
+  blendYUVFallback<BLEND>(buf, end - buf, sampler0, uv0, uv_step0, min_uv0,
+                          max_uv0, layer0, sampler1, uv1, uv_step1, min_uv1,
+                          max_uv1, layer1, sampler2, uv2, uv_step2, min_uv2,
+                          max_uv2, layer2, colorSpace, rescaleFactor, noColor);
   return span;
 }
 
