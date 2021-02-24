@@ -391,20 +391,33 @@ def bootstrap_path(path, **kwargs):
 
 
 @template
-def bootstrap_search_path(path, **kwargs):
+def bootstrap_search_path(path, paths=original_path, **kwargs):
     @depends(
         bootstrap_path(path, **kwargs),
         bootstrap_search_path_order,
+        paths,
         original_path,
     )
-    def bootstrap_search_path(path, order, original_path):
+    def bootstrap_search_path(path, order, paths, original_path):
+        if paths is None:
+            paths = original_path
         if not path:
-            return original_path
+            return paths
         if order == "prepend":
-            return [path] + original_path
-        return original_path + [path]
+            return [path] + paths
+        return paths + [path]
 
     return bootstrap_search_path
+
+
+# The execution model of the configure sandbox doesn't allow for
+# check_prog to use bootstrap_search_path directly because check_prog
+# comes first, so we use a trick to allow it. No use of check_prog
+# happening before here won't allow bootstrap.
+@template
+def check_prog(*args, **kwargs):
+    kwargs["bootstrap_search_path"] = bootstrap_search_path
+    return check_prog(*args, **kwargs)
 
 
 @depends(target, host)
@@ -417,7 +430,7 @@ wine = check_prog(
     ["wine64", "wine"],
     allow_missing=True,
     when=want_wine,
-    paths=bootstrap_search_path("wine/bin", when=want_wine),
+    bootstrap="wine/bin",
 )
 check_prog("WGET", ("wget",), allow_missing=True)
 
