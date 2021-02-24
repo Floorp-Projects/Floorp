@@ -1059,6 +1059,8 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
     offsetX, // X offset in `target`
     offsetY, // Y offset in `target`
     atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
+    screenX, // X offset in screen, offsetX/Y nor atCenter must not be set if this is set
+    screenY, // Y offset in screen, offsetX/Y nor atCenter must not be set if this is set
     win = window, // The window to use its utils
   } = aParams;
   if (atCenter) {
@@ -1067,10 +1069,23 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
         `atCenter is specified, but offsetX (${offsetX}) and/or offsetY (${offsetY}) are also specified`
       );
     }
-  } else if (offsetX == undefined || offsetY == undefined) {
-    throw Error(
-      `offsetX and offsetY must be specified when atCenter is not true`
-    );
+    if (screenX != undefined || screenY != undefined) {
+      throw Error(
+        `atCenter is specified, but screenX (${screenX}) and/or screenY (${screenY}) are also specified`
+      );
+    }
+  } else if (offsetX != undefined && offsetY != undefined) {
+    if (screenX != undefined || screenY != undefined) {
+      throw Error(
+        `offsetX/Y are specified, but screenX (${screenX}) and/or screenY (${screenY}) are also specified`
+      );
+    }
+  } else if (screenX != undefined && screenY != undefined) {
+    if (offsetX != undefined || offsetY != undefined) {
+      throw Error(
+        `screenX/Y are specified, but offsetX (${offsetX}) and/or offsetY (${offsetY}) are also specified`
+      );
+    }
   }
   const utils = _getDOMWindowUtils(win);
   if (!utils) {
@@ -1078,11 +1093,30 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
   }
 
   const rect = target.getBoundingClientRect();
-  const x =
-    (atCenter ? rect.width / 2 : offsetX) + win.mozInnerScreenX + rect.left;
-  const y =
-    (atCenter ? rect.height / 2 : offsetY) + win.mozInnerScreenY + rect.top;
   const scale = utils.screenPixelsPerCSSPixel;
+  const x = (() => {
+    if (screenX != undefined) {
+      // TODO: Apply same scale by default to screenX/Y as offsetX/Y later.
+      return screenX;
+    }
+    return (
+      ((atCenter ? rect.width / 2 : offsetX) +
+        win.mozInnerScreenX +
+        rect.left) *
+      scale
+    );
+  })();
+  const y = (() => {
+    if (screenY != undefined) {
+      return screenY;
+    }
+    return (
+      ((atCenter ? rect.height / 2 : offsetY) +
+        win.mozInnerScreenY +
+        rect.top) *
+      scale
+    );
+  })();
 
   const observer = {
     observe: (subject, topic, data) => {
@@ -1092,15 +1126,15 @@ function synthesizeNativeMouseClick(aParams, aCallback = null) {
     },
   };
   utils.sendNativeMouseEvent(
-    x * scale,
-    y * scale,
+    x,
+    y,
     _EU_nativeMouseDownEventMsg(),
     0,
     null,
     function() {
       utils.sendNativeMouseEvent(
-        x * scale,
-        y * scale,
+        x,
+        y,
         _EU_nativeMouseUpEventMsg(),
         0,
         null,
