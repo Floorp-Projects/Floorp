@@ -334,25 +334,6 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
   void RemoveMediaDevicesCallback(uint64_t aWindowID);
   void DeviceListChanged();
 
-  // ONLY access from MainThread so we don't need to lock
-  WindowTable mActiveWindows;
-  nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
-  nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
-  nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
-  RefPtr<MediaTimer> mDeviceChangeTimer;
-  bool mCamerasMuted = false;
-  bool mMicrophonesMuted = false;
-
-  // Always exists
-  const RefPtr<TaskQueue> mMediaThread;
-  nsCOMPtr<nsIAsyncShutdownBlocker> mShutdownBlocker;
-
-  // ONLY accessed from MediaManagerThread
-  RefPtr<MediaEngine> mBackend;
-
-  static StaticRefPtr<MediaManager> sSingleton;
-  static StaticMutex sSingletonMutex;
-
   struct nsStringHasher {
     using Key = nsString;
     using Lookup = nsString;
@@ -366,8 +347,26 @@ class MediaManager final : public nsIMediaManagerService, public nsIObserver {
     }
   };
 
+  // ONLY access from MainThread so we don't need to lock
+  WindowTable mActiveWindows;
+  nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
+  nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
+  nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
   using DeviceIdSet = HashSet<nsString, nsStringHasher, InfallibleAllocPolicy>;
   DeviceIdSet mDeviceIDs;
+  RefPtr<MediaTimer> mDeviceChangeTimer;
+  bool mCamerasMuted = false;
+  bool mMicrophonesMuted = false;
+
+  // Always exists
+  const RefPtr<TaskQueue> mMediaThread;
+  nsCOMPtr<nsIAsyncShutdownBlocker> mShutdownBlocker;
+
+  // ONLY accessed from MediaManagerThread
+  RefPtr<MediaEngine> mBackend;
+
+  static StaticRefPtr<MediaManager> sSingleton;
+  static StaticMutex sSingletonMutex;
 
   // Connect/Disconnect on media thread only
   MediaEventListener mDeviceListChangeListener;
