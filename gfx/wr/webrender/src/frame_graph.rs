@@ -4,8 +4,8 @@
 
 use api::units::*;
 use api::ImageFormat;
-use crate::gpu_cache::GpuCache;
-use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet};
+use crate::gpu_cache::{GpuCache, GpuCacheAddress};
+use crate::internal_types::{TextureSource, CacheTextureId, FastHashMap, FastHashSet};
 use crate::render_backend::FrameId;
 use crate::render_task_graph::{RenderTaskId};
 use crate::render_task::{StaticRenderTaskSurface, RenderTaskLocation, RenderTask};
@@ -635,6 +635,32 @@ impl FrameGraph {
             }
         }
     }
+
+    pub fn resolve_location(
+        &self,
+        task_id: impl Into<Option<RenderTaskId>>,
+        gpu_cache: &GpuCache,
+    ) -> Option<(GpuCacheAddress, TextureSource)> {
+        self.resolve_impl(task_id.into()?, gpu_cache)
+    }
+
+    fn resolve_impl(
+        &self,
+        task_id: RenderTaskId,
+        gpu_cache: &GpuCache,
+    ) -> Option<(GpuCacheAddress, TextureSource)> {
+        let task = &self[task_id];
+        let texture_source = task.get_texture_source();
+
+        if let TextureSource::Invalid = texture_source {
+            return None;
+        }
+
+        let uv_address = task.get_texture_address(gpu_cache);
+
+        Some((uv_address, texture_source))
+    }
+
 
     /// Return the surface and texture counts, used for testing
     #[cfg(test)]

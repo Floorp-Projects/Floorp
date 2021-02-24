@@ -21,13 +21,13 @@ use crate::prim_store::{
     SizeKey, InternablePrimitive,
 };
 use crate::render_target::RenderTargetKind;
+use crate::render_task_graph::RenderTaskId;
 use crate::render_task::RenderTask;
 use crate::render_task_cache::{
     RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent
 };
 use crate::resource_cache::{ImageRequest, ImageProperties, ResourceCache};
 use crate::util::pack_as_float;
-use crate::image_source::ImageSourceHandle;
 use crate::visibility::{PrimitiveVisibility, compute_conservative_visible_rect};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::image_tiling;
@@ -36,7 +36,7 @@ use crate::image_tiling;
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct VisibleImageTile {
-    pub src_color: ImageSourceHandle,
+    pub src_color: RenderTaskId,
     pub edge_flags: EdgeAaSegmentMask,
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
@@ -70,7 +70,7 @@ pub struct ImageInstance {
     pub segment_instance_index: SegmentInstanceIndex,
     pub tight_local_clip_rect: LayoutRect,
     pub visible_tiles: Vec<VisibleImageTile>,
-    pub src_color: ImageSourceHandle,
+    pub src_color: Option<RenderTaskId>,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -187,7 +187,7 @@ impl ImageData {
                 // evicted from the texture cache.
                 if self.tile_spacing == LayoutSize::zero() {
                     // Most common case.
-                    image_instance.src_color = ImageSourceHandle::RenderTask(task_id);
+                    image_instance.src_color = Some(task_id);
                 } else {
                     let padding = DeviceIntSideOffsets::new(
                         0,
@@ -248,13 +248,13 @@ impl ImageData {
                         }
                     );
 
-                    image_instance.src_color = ImageSourceHandle::RenderTask(cached_task_handle);
+                    image_instance.src_color = Some(cached_task_handle);
                 }
             }
             // Tiled image path.
             Some(ImageProperties { tiling: Some(tile_size), visible_rect, .. }) => {
                 // we'll  have a source handle per visible tile instead.
-                image_instance.src_color = ImageSourceHandle::None;
+                image_instance.src_color = None;
 
                 image_instance.visible_tiles.clear();
                 // TODO: rename the blob's visible_rect into something that doesn't conflict
@@ -318,7 +318,7 @@ impl ImageData {
                         );
 
                         image_instance.visible_tiles.push(VisibleImageTile {
-                            src_color: ImageSourceHandle::RenderTask(task_id),
+                            src_color: task_id,
                             edge_flags: tile.edge_flags & edge_flags,
                             local_rect: tile.rect,
                             local_clip_rect: tight_clip_rect,
@@ -332,7 +332,7 @@ impl ImageData {
                 }
             }
             None => {
-                image_instance.src_color = ImageSourceHandle::None;
+                image_instance.src_color = None;
             }
         }
 
@@ -411,7 +411,7 @@ impl InternablePrimitive for Image {
             segment_instance_index: SegmentInstanceIndex::INVALID,
             tight_local_clip_rect: LayoutRect::zero(),
             visible_tiles: Vec::new(),
-            src_color: ImageSourceHandle::None,
+            src_color: None,
         });
 
         PrimitiveInstanceKind::Image {
@@ -482,7 +482,7 @@ impl InternDebug for YuvImageKey {}
 pub struct YuvImageData {
     pub color_depth: ColorDepth,
     pub yuv_key: [ApiImageKey; 3],
-    pub src_yuv: [ImageSourceHandle; 3],
+    pub src_yuv: [Option<RenderTaskId>; 3],
     pub format: YuvFormat,
     pub color_space: YuvColorSpace,
     pub color_range: ColorRange,
@@ -494,11 +494,7 @@ impl From<YuvImage> for YuvImageData {
         YuvImageData {
             color_depth: image.color_depth,
             yuv_key: image.yuv_key,
-            src_yuv: [
-                ImageSourceHandle::None,
-                ImageSourceHandle::None,
-                ImageSourceHandle::None,
-            ],
+            src_yuv: [None, None, None],
             format: image.format,
             color_space: image.color_space,
             color_range: image.color_range,
@@ -518,11 +514,7 @@ impl YuvImageData {
         frame_state: &mut FrameBuildingState,
     ) {
 
-        self.src_yuv = [
-            ImageSourceHandle::None,
-            ImageSourceHandle::None,
-            ImageSourceHandle::None,
-        ];
+        self.src_yuv = [ None, None, None ];
 
         let channel_num = self.format.get_plane_num();
         debug_assert!(channel_num <= 3);
@@ -542,7 +534,7 @@ impl YuvImageData {
                 RenderTask::new_image(size, request)
             );
 
-            self.src_yuv[channel] = ImageSourceHandle::RenderTask(task_id);
+            self.src_yuv[channel] = Some(task_id);
         }
 
         if let Some(mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {

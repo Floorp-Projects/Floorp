@@ -18,8 +18,8 @@ use crate::prim_store::{
     PrimitiveStore, InternablePrimitive,
 };
 use crate::resource_cache::ImageRequest;
-use crate::image_source::ImageSourceHandle;
 use crate::render_task::RenderTask;
+use crate::render_task_graph::RenderTaskId;
 use crate::render_backend::FrameId;
 
 use super::storage;
@@ -232,7 +232,7 @@ pub struct ImageBorderData {
     #[ignore_malloc_size_of = "Arc"]
     pub request: ImageRequest,
     pub brush_segments: Vec<BrushSegment>,
-    pub src_color: ImageSourceHandle,
+    pub src_color: Option<RenderTaskId>,
     pub frame_id: FrameId,
     pub is_opaque: bool,
 }
@@ -265,7 +265,7 @@ impl ImageBorderData {
                 RenderTask::new_image(size, self.request)
             );
 
-            self.src_color = ImageSourceHandle::RenderTask(task_id);
+            self.src_color = Some(task_id);
 
             let image_properties = frame_state
                 .resource_cache
@@ -323,7 +323,7 @@ impl From<ImageBorderKey> for ImageBorderTemplate {
             kind: ImageBorderData {
                 request: key.kind.request,
                 brush_segments,
-                src_color: ImageSourceHandle::None,
+                src_color: None,
                 frame_id: FrameId::INVALID,
                 is_opaque: false,
             }

@@ -11,49 +11,12 @@
 
 use crate::api::ExternalImageType;
 use crate::api::units::*;
-use crate::gpu_cache::{GpuCache, GpuCacheAddress};
+use crate::gpu_cache::GpuCache;
 use crate::prim_store::DeferredResolve;
 use crate::renderer::BLOCKS_PER_UV_RECT;
-use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use crate::resource_cache::{ResourceCache, ImageRequest, CacheItem};
 use crate::internal_types::{TextureSource, DeferredResolveIndex};
-
-/// The different ways a primitive can refer to a source image, if any.
-///
-/// This information is eventually turned into a texture source the uv rect's
-/// gpu cache handle.
-///
-/// TODO: ImageSourceHandle is now basically an Option<RenderTaskId>. The next patch
-/// will remove it in favor of manipulating render task ids directly instead.
-#[derive(Debug)]
-#[derive(MallocSizeOf)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum ImageSourceHandle {
-    RenderTask(RenderTaskId),
-    None,
-}
-
-impl ImageSourceHandle {
-    /// Resolve this handle into a TextureSource and the uv rect's gpu cache address (if any).
-    ///
-    /// Called during batching.
-    pub fn resolve(
-        &self,
-        render_tasks: &RenderTaskGraph,
-        gpu_cache: &mut GpuCache,
-    ) -> Option<(GpuCacheAddress, TextureSource)> {
-        return match self {
-            ImageSourceHandle::None => {
-                None
-            }
-            ImageSourceHandle::RenderTask(task_id) => {
-                resolve_render_task(*task_id, render_tasks, gpu_cache)
-            },
-        }
-    }
-}
 
 /// Resolve a resource cache's imagre request into a texture cache item.
 pub fn resolve_image(
@@ -129,21 +92,4 @@ pub fn resolve_cached_render_task(
         .get_cached_render_task(&handle);
 
     resource_cache.get_texture_cache_item(&rt_cache_entry.handle)
-}
-
-pub fn resolve_render_task(
-    task_id: RenderTaskId,
-    render_tasks: &RenderTaskGraph,
-    gpu_cache: &GpuCache,
-) -> Option<(GpuCacheAddress, TextureSource)> {
-    let task = &render_tasks[task_id];
-    let texture_source = task.get_texture_source();
-
-    if let TextureSource::Invalid = texture_source {
-        return None;
-    }
-
-    let uv_address = task.get_texture_address(gpu_cache);
-
-    Some((uv_address, texture_source))
 }
