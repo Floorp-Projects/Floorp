@@ -63,10 +63,12 @@
   border-inline: 1px solid transparent;
 }
 
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 /* If the view is open, offset the toolbar overlap so the view's top border
    aligns with the toolbar. */
 #urlbar[open] > .urlbarView {
   margin-block-start: -@urlbarBreakoutExtend@;
+}
 }
 
 .urlbarView-body-inner {
