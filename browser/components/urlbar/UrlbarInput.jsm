@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
+  CONTEXTUAL_SERVICES_PING_TYPES:
+    "resource:///modules/PartnerLinkAttribution.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -43,6 +45,9 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
 const SEARCH_BUTTON_ID = "urlbar-search-button";
+
+// The scalar category of TopSites click for Contextual Services
+const SCALAR_CATEGORY_TOPSITES = "contextual.services.topsites.click";
 
 let getBoundsWithoutFlushing = element =>
   element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
@@ -967,6 +972,25 @@ class UrlbarInput {
           "browser.partnerlink.campaign.topsites"
         ),
       });
+      if (!this.isPrivate && result.providerName === "UrlbarProviderTopSites") {
+        // The position is 1-based for telemetry
+        const position = selIndex + 1;
+        Services.telemetry.keyedScalarAdd(
+          SCALAR_CATEGORY_TOPSITES,
+          `urlbar_${position}`,
+          1
+        );
+        PartnerLinkAttribution.sendContextualServicesPing(
+          {
+            position,
+            source: "urlbar",
+            tile_id: result.payload.sponsoredTileId || -1,
+            reporting_url: result.payload.sponsoredClickUrl,
+            advertiser: result.payload.title.toLocaleLowerCase(),
+          },
+          CONTEXTUAL_SERVICES_PING_TYPES.TOPSITES_SELECTION
+        );
+      }
     }
 
     this._loadURL(

@@ -1198,6 +1198,12 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       sendAttributionRequest: {
         type: "boolean",
       },
+      sponsoredClickUrl: {
+        type: "string",
+      },
+      sponsoredTileId: {
+        type: "number",
+      },
       tags: {
         type: "array",
         items: {
