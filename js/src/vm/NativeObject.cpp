@@ -1599,7 +1599,7 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
   Rooted<PropertyDescriptor> desc(cx, desc_);
 
   // Step 2.
-  if (!prop) {
+  if (prop.isNotFound()) {
     // Note: We are sharing the property definition machinery with private
     //       fields. Private fields may be added to non-extensible objects.
     if (!obj->isExtensible() && !id.isPrivateName()) {
@@ -1905,7 +1905,7 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
   if (!NativeLookupOwnPropertyNoResolve(cx, obj, id, &prop)) {
     return false;
   }
-  MOZ_ASSERT(!prop, "didn't expect to find an existing property");
+  MOZ_ASSERT(prop.isNotFound(), "didn't expect to find an existing property");
 #endif
 
   // 9.1.6.3, ValidateAndApplyPropertyDescriptor.
@@ -1993,7 +1993,7 @@ bool js::NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     }
 
     // Step 4.
-    if (prop) {
+    if (prop.isFound()) {
       *foundp = true;
       return true;
     }
@@ -2038,7 +2038,7 @@ bool js::NativeGetOwnPropertyDescriptor(
   if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &prop)) {
     return false;
   }
-  if (!prop) {
+  if (prop.isNotFound()) {
     desc.object().set(nullptr);
     return true;
   }
@@ -2266,7 +2266,7 @@ static MOZ_ALWAYS_INLINE bool NativeGetPropertyInline(
       return false;
     }
 
-    if (prop) {
+    if (prop.isFound()) {
       // Steps 5-8. Special case for dense elements because
       // GetExistingProperty doesn't support those.
       if (prop.isDenseElement()) {
@@ -2658,7 +2658,7 @@ bool js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
       return false;
     }
 
-    if (prop) {
+    if (prop.isFound()) {
       // Steps 5-6.
       return SetExistingProperty(cx, id, v, receiver, pobj, prop, result);
     }
@@ -2739,7 +2739,7 @@ bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
   }
 
   // Step 4.
-  if (!prop) {
+  if (prop.isNotFound()) {
     // If no property call the class's delProperty hook, passing succeeded
     // as the result parameter. This always succeeds when there is no hook.
     return CallJSDeletePropertyOp(cx, obj->getClass()->getDelProperty(), obj,

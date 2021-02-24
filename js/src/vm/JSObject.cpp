@@ -1983,7 +1983,7 @@ bool js::LookupName(JSContext* cx, HandlePropertyName name,
     if (!LookupProperty(cx, env, id, pobjp, propp)) {
       return false;
     }
-    if (propp) {
+    if (propp.isFound()) {
       objp.set(env);
       return true;
     }
@@ -2000,7 +2000,7 @@ bool js::LookupNameNoGC(JSContext* cx, PropertyName* name, JSObject* envChain,
                         PropertyResult* propp) {
   AutoAssertNoPendingException nogc(cx);
 
-  MOZ_ASSERT(!*objp && !*pobjp && !*propp);
+  MOZ_ASSERT(!*objp && !*pobjp && propp->isNotFound());
 
   for (JSObject* env = envChain; env; env = env->enclosingEnvironment()) {
     if (env->getOpsLookupProperty()) {
@@ -2010,7 +2010,7 @@ bool js::LookupNameNoGC(JSContext* cx, PropertyName* name, JSObject* envChain,
                                     NameToId(name), pobjp, propp)) {
       return false;
     }
-    if (*propp) {
+    if (propp->isFound()) {
       *objp = env;
       return true;
     }
@@ -2032,7 +2032,7 @@ bool js::LookupNameWithGlobalDefault(JSContext* cx, HandlePropertyName name,
     if (!LookupProperty(cx, env, id, &pobj, &prop)) {
       return false;
     }
-    if (prop) {
+    if (prop.isFound()) {
       break;
     }
   }
@@ -2054,7 +2054,7 @@ bool js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name,
     if (!LookupProperty(cx, env, id, &pobj, &prop)) {
       return false;
     }
-    if (prop) {
+    if (prop.isFound()) {
       break;
     }
   }
@@ -2062,7 +2062,7 @@ bool js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name,
   // See note above RuntimeLexicalErrorObject.
   if (pobj == env) {
     bool isTDZ = false;
-    if (prop && name != cx->names().dotThis) {
+    if (prop.isFound() && name != cx->names().dotThis) {
       // Treat Debugger environments specially for TDZ checks, as they
       // look like non-native environments but in fact wrap native
       // environments.
@@ -2138,7 +2138,7 @@ bool js::LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
       return false;
     }
 
-    if (*propp) {
+    if (propp->isFound()) {
       *objp = obj;
       return true;
     }
@@ -2248,7 +2248,7 @@ bool js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp) {
     return false;
   }
 
-  if (!prop) {
+  if (prop.isNotFound()) {
     vp->setUndefined();
     return true;
   }
@@ -2264,7 +2264,7 @@ bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
     return false;
   }
 
-  if (!prop) {
+  if (prop.isNotFound()) {
     *found = false;
     vp->setUndefined();
     return true;
@@ -2300,7 +2300,7 @@ bool js::GetGetterPure(JSContext* cx, JSObject* obj, jsid id, JSFunction** fp) {
     return false;
   }
 
-  if (!prop) {
+  if (prop.isNotFound()) {
     *fp = nullptr;
     return true;
   }
@@ -2316,7 +2316,7 @@ bool js::GetOwnGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  if (!prop) {
+  if (prop.isNotFound()) {
     *fp = nullptr;
     return true;
   }
@@ -2333,7 +2333,7 @@ bool js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  if (!prop || !prop.isNativeProperty() || !prop.shape()->hasGetterObject()) {
+  if (!prop.isNativeProperty() || !prop.shape()->hasGetterObject()) {
     return true;
   }
 
@@ -2358,7 +2358,7 @@ bool js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  *result = prop && prop.isNativeProperty() && prop.shape()->isDataProperty();
+  *result = prop.isNativeProperty() && prop.shape()->isDataProperty();
   return true;
 }
 

@@ -222,8 +222,7 @@ class PropertyResult {
  public:
   PropertyResult() = default;
 
-  explicit operator bool() const { return isFound(); }
-
+  bool isNotFound() const { return kind_ == Kind::NotFound; }
   bool isFound() const { return kind_ != Kind::NotFound; }
   bool isNonNativeProperty() const { return kind_ == Kind::NonNativeProperty; }
   bool isDenseElement() const { return kind_ == Kind::DenseElement; }
@@ -278,8 +277,8 @@ class WrappedPtrOperations<JS::PropertyResult, Wrapper> {
   }
 
  public:
+  bool isNotFound() const { return value().isNotFound(); }
   bool isFound() const { return value().isFound(); }
-  explicit operator bool() const { return bool(value()); }
   js::Shape* shape() const { return value().shape(); }
   uint32_t denseElementIndex() const { return value().denseElementIndex(); }
   size_t typedArrayElementIndex() const {

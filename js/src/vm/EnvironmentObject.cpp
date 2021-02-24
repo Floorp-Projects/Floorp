@@ -747,7 +747,7 @@ static bool with_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
     return false;
   }
 
-  if (propp) {
+  if (propp.isFound()) {
     bool scopable;
     if (!CheckUnscopables(cx, actual, id, &scopable)) {
       return false;
@@ -3601,7 +3601,8 @@ static bool InitGlobalOrEvalDeclarations(
           return false;
         }
 
-        if (!prop || (obj2 != varObj && varObj->is<GlobalObject>())) {
+        if (prop.isNotFound() ||
+            (obj2 != varObj && varObj->is<GlobalObject>())) {
           if (!DefineDataProperty(cx, varObj, name, UndefinedHandleValue,
                                   attrs)) {
             return false;
@@ -3681,7 +3682,7 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
     unsigned attrs = script->isForEval() ? JSPROP_ENUMERATE
                                          : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
-    if (!prop || pobj != varObj) {
+    if (prop.isNotFound() || pobj != varObj) {
       if (!DefineDataProperty(cx, varObj, name, rval, attrs)) {
         return false;
       }

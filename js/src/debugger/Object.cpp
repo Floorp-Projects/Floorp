@@ -2399,7 +2399,7 @@ bool DebuggerObject::forceLexicalInitializationByName(
   }
 
   result = false;
-  if (prop) {
+  if (prop.isFound()) {
     MOZ_ASSERT(prop.isNativeProperty());
     Shape* shape = prop.shape();
     Value v = globalLexical->as<NativeObject>().getSlot(shape->slot());

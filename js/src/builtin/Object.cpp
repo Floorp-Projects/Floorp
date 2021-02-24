@@ -100,7 +100,7 @@ bool js::obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp) {
         NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id,
                                       &prop)) {
       /* Step 4. */
-      if (!prop) {
+      if (prop.isNotFound()) {
         args.rval().setBoolean(false);
         return true;
       }
@@ -778,7 +778,7 @@ static bool PropertyIsEnumerable(JSContext* cx, HandleObject obj, HandleId id,
   PropertyResult prop;
   if (obj->is<NativeObject>() &&
       NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop)) {
-    if (!prop) {
+    if (prop.isNotFound()) {
       *enumerable = false;
       return true;
     }
