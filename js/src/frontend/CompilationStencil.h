@@ -369,7 +369,7 @@ struct MOZ_RAII CompilationState {
   // End of fields.
 
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
-                   CompilationInput& input, CompilationStencil& stencil);
+                   CompilationInput& input, LifoAlloc& stencilAlloc);
 
   bool init(JSContext* cx, InheritThis inheritThis = InheritThis::No,
             JSObject* enclosingEnv = nullptr) {

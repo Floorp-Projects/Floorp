@@ -103,7 +103,7 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                CompilationStencil& stencil,
                                SourceText<Unit>& sourceBuffer)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, allocScope, input, stencil) {
+        compilationState_(cx, allocScope, input, stencil.alloc) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
@@ -931,7 +931,8 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   InheritThis inheritThis = fun->isArrow() ? InheritThis::Yes : InheritThis::No;
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, input, stencil);
+  frontend::CompilationState compilationState(cx, allocScope, input,
+                                              stencil.alloc);
   if (!compilationState.init(cx, inheritThis)) {
     return false;
   }
