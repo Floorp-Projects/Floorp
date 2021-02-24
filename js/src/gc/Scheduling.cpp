@@ -61,6 +61,8 @@ GCSchedulingTunables::GCSchedulingTunables()
           TuningDefaults::NurseryFreeThresholdForIdleCollection),
       nurseryFreeThresholdForIdleCollectionFraction_(
           TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction),
+      nurseryTimeoutForIdleCollection_(
+          TuningDefaults::NurseryTimeoutForIdleCollection),
       pretenureThreshold_(TuningDefaults::PretenureThreshold),
       pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold),
       pretenureStringThreshold_(TuningDefaults::PretenureStringThreshold),
@@ -180,6 +182,9 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
         return false;
       }
       nurseryFreeThresholdForIdleCollectionFraction_ = value / 100.0;
+      break;
+    case JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS:
+      nurseryTimeoutForIdleCollection_ = TimeDuration::FromMilliseconds(value);
       break;
     case JSGC_PRETENURE_THRESHOLD: {
       // 100 disables pretenuring
@@ -342,6 +347,10 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
       nurseryFreeThresholdForIdleCollectionFraction_ =
           TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction;
+      break;
+    case JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS:
+      nurseryTimeoutForIdleCollection_ =
+          TuningDefaults::NurseryTimeoutForIdleCollection;
       break;
     case JSGC_PRETENURE_THRESHOLD:
       pretenureThreshold_ = TuningDefaults::PretenureThreshold;

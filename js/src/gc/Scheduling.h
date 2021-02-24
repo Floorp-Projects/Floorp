@@ -340,6 +340,8 @@ struct Cell;
  */
 namespace TuningDefaults {
 
+using mozilla::TimeDuration;
+
 /* JSGC_ALLOCATION_THRESHOLD */
 static const size_t GCZoneAllocThresholdBase = 27 * 1024 * 1024;
 
@@ -409,6 +411,10 @@ static const uint32_t NurseryFreeThresholdForIdleCollection = ChunkSize / 4;
 
 /* JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT */
 static const double NurseryFreeThresholdForIdleCollectionFraction = 0.25;
+
+/* JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS */
+static const TimeDuration NurseryTimeoutForIdleCollection =
+    TimeDuration::FromSeconds(2.0);
 
 /* JSGC_PRETENURE_THRESHOLD */
 static const double PretenureThreshold = 0.6;
@@ -541,6 +547,9 @@ class GCSchedulingTunables {
   UnprotectedData<uint32_t> nurseryFreeThresholdForIdleCollection_;
   UnprotectedData<double> nurseryFreeThresholdForIdleCollectionFraction_;
 
+  /* See JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS. */
+  MainThreadData<mozilla::TimeDuration> nurseryTimeoutForIdleCollection_;
+
   /*
    * JSGC_PRETENURE_THRESHOLD
    *
@@ -633,6 +642,9 @@ class GCSchedulingTunables {
   }
   double nurseryFreeThresholdForIdleCollectionFraction() const {
     return nurseryFreeThresholdForIdleCollectionFraction_;
+  }
+  mozilla::TimeDuration nurseryTimeoutForIdleCollection() const {
+    return nurseryTimeoutForIdleCollection_;
   }
 
   bool attemptPretenuring() const { return pretenureThreshold_ < 1.0; }
