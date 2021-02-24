@@ -1002,6 +1002,7 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
     screenX, // X offset in screen, offsetX/Y nor atCenter must not be set if this is set
     screenY, // Y offset in screen, offsetX/Y nor atCenter must not be set if this is set
+    button = 0, // if "click", "mousedown", "mouseup", set same value as DOM MouseEvent.button
     modifiers = {}, // Active modifiers, see `_parseNativeModifiers`
     win = window, // The window to use its utils
   } = aParams;
@@ -1073,7 +1074,7 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
       x,
       y,
       utils.NATIVE_MOUSE_MESSAGE_BUTTON_DOWN,
-      0,
+      button,
       modifierFlags,
       null,
       function() {
@@ -1081,7 +1082,7 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
           x,
           y,
           utils.NATIVE_MOUSE_MESSAGE_BUTTON_UP,
-          0,
+          button,
           modifierFlags,
           null,
           observer
@@ -1105,7 +1106,7 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
           throw Error(`Invalid type is specified: ${type}`);
       }
     })(),
-    0,
+    button,
     modifierFlags,
     null,
     observer
