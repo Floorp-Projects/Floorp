@@ -58,7 +58,7 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   void Init();
 
   bool CanAllocate();
-  void AllocateAfterDelay(bool aStartup = false);
+  void AllocateAfterDelay();
   void AllocateOnIdle();
   void AllocateNow();
 
@@ -204,7 +204,7 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
 
     // We took a preallocated process. Let's try to start up a new one
     // soon.
-    AllocateAfterDelay();
+    AllocateOnIdle();
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Use prealloc process %p", process.get()));
   }
@@ -224,14 +224,12 @@ void PreallocatedProcessManagerImpl::Erase(ContentParent* aParent) {
 
 void PreallocatedProcessManagerImpl::Enable(uint32_t aProcesses) {
   mNumberPreallocs = aProcesses;
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Enabling preallocation: %u", aProcesses));
   if (mEnabled) {
     return;
   }
 
   mEnabled = true;
-  AllocateAfterDelay(/* aStartup */ true);
+  AllocateAfterDelay();
 }
 
 void PreallocatedProcessManagerImpl::AddBlocker(ContentParent* aParent) {
@@ -269,18 +267,15 @@ bool PreallocatedProcessManagerImpl::CanAllocate() {
           !ContentParent::IsMaxProcessCountReached(DEFAULT_REMOTE_TYPE));
 }
 
-void PreallocatedProcessManagerImpl::AllocateAfterDelay(bool aStartup) {
+void PreallocatedProcessManagerImpl::AllocateAfterDelay() {
   if (!mEnabled) {
     return;
   }
-  long delay = aStartup ? StaticPrefs::dom_ipc_processPrelaunch_startupDelayMs()
-                        : StaticPrefs::dom_ipc_processPrelaunch_delayMs();
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Starting delayed process start, delay=%ld", delay));
+
   NS_DelayedDispatchToCurrentThread(
       NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateOnIdle", this,
                         &PreallocatedProcessManagerImpl::AllocateOnIdle),
-      delay);
+      StaticPrefs::dom_ipc_processPrelaunch_delayMs());
 }
 
 void PreallocatedProcessManagerImpl::AllocateOnIdle() {
@@ -288,8 +283,6 @@ void PreallocatedProcessManagerImpl::AllocateOnIdle() {
     return;
   }
 
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Starting process allocate on idle"));
   NS_DispatchToCurrentThreadQueue(
       NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateNow", this,
                         &PreallocatedProcessManagerImpl::AllocateNow),
@@ -297,8 +290,6 @@ void PreallocatedProcessManagerImpl::AllocateOnIdle() {
 }
 
 void PreallocatedProcessManagerImpl::AllocateNow() {
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Trying to start process now"));
   if (!CanAllocate()) {
     if (mEnabled && !sShutdown && IsEmpty() && sNumBlockers > 0) {
       // If it's too early to allocate a process let's retry later.
