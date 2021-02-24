@@ -55,6 +55,10 @@ h1 {
   border-top-left-radius: 4px;
 }
 
+.certificate-tab:focus-visible {
+  z-index: 1;
+}
+
 .tab:hover {
   border-bottom-color: var(--in-content-border-active-shadow);
 }
