@@ -433,28 +433,30 @@ nsresult HeadlessWidget::DispatchEvent(WidgetGUIEvent* aEvent,
 }
 
 nsresult HeadlessWidget::SynthesizeNativeMouseEvent(
-    LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-    nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) {
+    LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
+    MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+    nsIObserver* aObserver) {
   AutoObserverNotifier notifier(aObserver, "mouseevent");
   EventMessage msg;
   switch (aNativeMessage) {
-    case MOZ_HEADLESS_MOUSE_MOVE:
+    case NativeMouseMessage::Move:
       msg = eMouseMove;
       break;
-    case MOZ_HEADLESS_MOUSE_DOWN:
+    case NativeMouseMessage::ButtonDown:
       msg = eMouseDown;
       break;
-    case MOZ_HEADLESS_MOUSE_UP:
+    case NativeMouseMessage::ButtonUp:
       msg = eMouseUp;
       break;
-    default:
+    case NativeMouseMessage::EnterWindow:
+    case NativeMouseMessage::LeaveWindow:
       MOZ_ASSERT_UNREACHABLE("Unsupported synthesized mouse event");
       return NS_ERROR_UNEXPECTED;
   }
   WidgetMouseEvent event(true, msg, this, WidgetMouseEvent::eReal);
   event.mRefPoint = aPoint - WidgetToScreenOffset();
   if (msg == eMouseDown || msg == eMouseUp) {
-    event.mButton = MouseButton::ePrimary;
+    event.mButton = aButton;
   }
   if (msg == eMouseDown) {
     event.mClickCount = 1;

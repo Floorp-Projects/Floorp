@@ -20,14 +20,20 @@
 <![CDATA[
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const NSEventTypeMouseMoved = 5;
 
 var gLeftWindow, gRightWindow, gBrowserElement;
 var gExpectedEvents = [];
 
 function moveMouseTo(x, y, andThen) {
   var utils = gLeftWindow.windowUtils;
-  utils.sendNativeMouseEvent(x, y, NSEventTypeMouseMoved, 0, gLeftWindow.documentElement);
+  utils.sendNativeMouseEvent(
+    x,
+    y,
+    utils.NATIVE_MOUSE_MESSAGE_MOVE,
+    0,
+    0,
+    gLeftWindow.documentElement
+  );
   SimpleTest.executeSoon(andThen);
 }
 

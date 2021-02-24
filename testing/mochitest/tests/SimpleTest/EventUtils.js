@@ -155,54 +155,6 @@ function _EU_getPlatform() {
   return "unknown";
 }
 
-function _EU_nativeMouseDownEventMsg() {
-  switch (_EU_getPlatform()) {
-    case "windows":
-      return 2; // MOUSEEVENTF_LEFTDOWN
-    case "mac":
-      return 1; // NSEventTypeLeftMouseDown
-    case "linux":
-      return 4; // GDK_BUTTON_PRESS
-    case "android":
-      return 5; // ACTION_POINTER_DOWN
-  }
-  throw new Error(
-    "Native mouse-down events not supported on platform " + _EU_getPlatform()
-  );
-}
-
-function _EU_nativeMouseMoveEventMsg() {
-  switch (_EU_getPlatform()) {
-    case "windows":
-      return 1; // MOUSEEVENTF_MOVE
-    case "mac":
-      return 5; // NSEventTypeMouseMoved
-    case "linux":
-      return 3; // GDK_MOTION_NOTIFY
-    case "android":
-      return 7; // ACTION_HOVER_MOVE
-  }
-  throw new Error(
-    "Native mouse-move events not supported on platform " + _EU_getPlatform()
-  );
-}
-
-function _EU_nativeMouseUpEventMsg() {
-  switch (_EU_getPlatform()) {
-    case "windows":
-      return 4; // MOUSEEVENTF_LEFTUP
-    case "mac":
-      return 2; // NSEventTypeLeftMouseUp
-    case "linux":
-      return 7; // GDK_BUTTON_RELEASE
-    case "android":
-      return 6; // ACTION_POINTER_UP
-  }
-  throw new Error(
-    "Native mouse-up events not supported on platform " + _EU_getPlatform()
-  );
-}
-
 /**
  * Send a mouse event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
@@ -1120,14 +1072,16 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     utils.sendNativeMouseEvent(
       x,
       y,
-      _EU_nativeMouseDownEventMsg(),
+      utils.NATIVE_MOUSE_MESSAGE_BUTTON_DOWN,
+      0,
       modifierFlags,
       null,
       function() {
         utils.sendNativeMouseEvent(
           x,
           y,
-          _EU_nativeMouseUpEventMsg(),
+          utils.NATIVE_MOUSE_MESSAGE_BUTTON_UP,
+          0,
           modifierFlags,
           null,
           observer
@@ -1142,15 +1096,16 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     (() => {
       switch (type) {
         case "mousedown":
-          return _EU_nativeMouseDownEventMsg();
+          return utils.NATIVE_MOUSE_MESSAGE_BUTTON_DOWN;
         case "mouseup":
-          return _EU_nativeMouseUpEventMsg();
+          return utils.NATIVE_MOUSE_MESSAGE_BUTTON_UP;
         case "mousemove":
-          return _EU_nativeMouseMoveEventMsg();
+          return utils.NATIVE_MOUSE_MESSAGE_MOVE;
         default:
           throw Error(`Invalid type is specified: ${type}`);
       }
     })(),
+    0,
     modifierFlags,
     null,
     observer

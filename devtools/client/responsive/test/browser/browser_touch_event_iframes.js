@@ -152,60 +152,6 @@ for (const mvcontent of META_VIEWPORT_CONTENTS) {
                 }
               }
 
-              // Lift a set of functions out of apz_test_native_event_utils.js
-              // to use for sending native mouse events. Bug 1126772 would instead
-              // allow us to use a method in EventUtils.
-              function getPlatform() {
-                if (content.navigator.platform.indexOf("Win") == 0) {
-                  return "windows";
-                }
-                if (content.navigator.platform.indexOf("Mac") == 0) {
-                  return "mac";
-                }
-                // Check for Android before Linux
-                if (content.navigator.appVersion.includes("Android")) {
-                  return "android";
-                }
-                if (content.navigator.platform.indexOf("Linux") == 0) {
-                  return "linux";
-                }
-                return "unknown";
-              }
-
-              function nativeMouseDownEventMsg() {
-                switch (getPlatform()) {
-                  case "windows":
-                    return 2; // MOUSEEVENTF_LEFTDOWN
-                  case "mac":
-                    return 1; // NSEventTypeLeftMouseDown
-                  case "linux":
-                    return 4; // GDK_BUTTON_PRESS
-                  case "android":
-                    return 5; // ACTION_POINTER_DOWN
-                }
-                throw new Error(
-                  "Native mouse-down events not supported on platform " +
-                    getPlatform()
-                );
-              }
-
-              function nativeMouseUpEventMsg() {
-                switch (getPlatform()) {
-                  case "windows":
-                    return 4; // MOUSEEVENTF_LEFTUP
-                  case "mac":
-                    return 2; // NSEventTypeLeftMouseUp
-                  case "linux":
-                    return 7; // GDK_BUTTON_RELEASE
-                  case "android":
-                    return 6; // ACTION_POINTER_UP
-                }
-                throw new Error(
-                  "Native mouse-up events not supported on platform " +
-                    getPlatform()
-                );
-              }
-
               // This function takes screen coordinates in css pixels.
               function synthesizeNativeMouseClick(win, screenX, screenY) {
                 const utils = win.windowUtils;
@@ -215,14 +161,16 @@ for (const mvcontent of META_VIEWPORT_CONTENTS) {
                   utils.sendNativeMouseEvent(
                     screenX * scale,
                     screenY * scale,
-                    nativeMouseDownEventMsg(),
+                    utils.NATIVE_MOUSE_MESSAGE_BUTTON_DOWN,
+                    0,
                     0,
                     win.document.documentElement,
                     () => {
                       utils.sendNativeMouseEvent(
                         screenX * scale,
                         screenY * scale,
-                        nativeMouseUpEventMsg(),
+                        utils.NATIVE_MOUSE_MESSAGE_BUTTON_UP,
+                        0,
                         0,
                         win.document.documentElement,
                         resolve

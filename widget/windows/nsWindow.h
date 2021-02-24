@@ -223,14 +223,15 @@ class nsWindow final : public nsWindowBase {
       uint32_t aModifierFlags, const nsAString& aCharacters,
       const nsAString& aUnmodifiedCharacters, nsIObserver* aObserver) override;
   virtual nsresult SynthesizeNativeMouseEvent(
-      LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-      nsIWidget::Modifiers aModifierFlags, nsIObserver* aObserver) override;
+      LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
+      mozilla::MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+      nsIObserver* aObserver) override;
 
   virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override {
-    return SynthesizeNativeMouseEvent(aPoint, MOUSEEVENTF_MOVE,
-                                      nsIWidget::Modifiers::NO_MODIFIERS,
-                                      aObserver);
+    return SynthesizeNativeMouseEvent(
+        aPoint, NativeMouseMessage::Move, mozilla::MouseButton::eNotPressed,
+        nsIWidget::Modifiers::NO_MODIFIERS, aObserver);
   }
 
   virtual nsresult SynthesizeNativeMouseScrollEvent(
