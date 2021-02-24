@@ -504,10 +504,15 @@ var View = {
     // to avoid flicker when resizing.
     await document.l10n.translateFragment(this._fragment);
 
+    // Pause the DOMLocalization mutation observer, or the already translated
+    // content will be translated a second time at the next tick.
+    document.l10n.pauseObserving();
     while (tbody.firstChild) {
       tbody.firstChild.remove();
     }
     tbody.appendChild(this._fragment);
+    document.l10n.resumeObserving();
+
     this._fragment = document.createDocumentFragment();
   },
   insertAfterRow(row) {
