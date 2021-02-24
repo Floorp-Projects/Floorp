@@ -150,7 +150,7 @@ void wr_partial_present_compositor_set_buffer_damage_region(
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
+  if (aWidget->GetCompositorOptions().UseSoftwareWebRender()) {
 #ifdef XP_MACOSX
     // Mac uses NativeLayerCA
     if (!gfxPlatform::IsHeadless()) {
