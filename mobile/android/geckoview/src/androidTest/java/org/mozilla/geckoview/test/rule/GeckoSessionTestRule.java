@@ -1279,6 +1279,10 @@ public class GeckoSessionTestRule implements TestRule {
         RuntimeCreator.setTelemetryDelegate(null);
     }
 
+    // These markers are used by runjunit.py to capture the logcat of a test
+    private static final String TEST_START_MARKER = "test_start 1f0befec-3ff2-40ff-89cf-b127eb38b1ec";
+    private static final String TEST_END_MARKER = "test_end c5ee677f-bc83-49bd-9e28-2d35f3d0f059";
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
@@ -1291,7 +1295,7 @@ public class GeckoSessionTestRule implements TestRule {
                     RuntimeCreator.setPortDelegate(mPortDelegate);
                     getRuntime();
 
-                    Log.e(LOGTAG, "====");
+                    Log.e(LOGTAG, TEST_START_MARKER + " " + description);
                     Log.e(LOGTAG, "before prepareStatement " + description);
                     prepareStatement(description);
                     Log.e(LOGTAG, "after prepareStatement");
@@ -1314,9 +1318,8 @@ public class GeckoSessionTestRule implements TestRule {
                         Log.e(LOGTAG, "after evaluate");
                         performTestEndCheck();
                         Log.e(LOGTAG, "after performTestEndCheck");
-                        Log.e(LOGTAG, "====");
                     } catch (Throwable t) {
-                        Log.e(LOGTAG, "====", t);
+                        Log.e(LOGTAG, "Error", t);
                         exceptionRef.set(t);
                     } finally {
                         try {
@@ -1325,6 +1328,7 @@ public class GeckoSessionTestRule implements TestRule {
                         } catch (Throwable t) {
                             exceptionRef.compareAndSet(null, t);
                         }
+                        Log.e(LOGTAG, TEST_END_MARKER + " " + description);
                     }
                 });
 
