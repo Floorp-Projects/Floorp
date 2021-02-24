@@ -49,7 +49,7 @@ class TRRService : public TRRServiceBase,
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
                               bool pb, const nsACString& aOriginSuffix,
-                              nsHostRecord::TRRSkippedReason aReason,
+                              TRRSkippedReason aReason,
                               TRR* aTrrRequest) override;
   LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
                                     mozilla::net::TypeRecordResultType&,
