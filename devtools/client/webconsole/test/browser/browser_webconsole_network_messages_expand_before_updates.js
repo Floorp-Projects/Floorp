@@ -223,7 +223,7 @@ async function testResponse(messageNode) {
   responseTab.click();
   const responsePanel = messageNode.querySelector("#response-panel");
   const responsePayloadHeader = await waitFor(() =>
-    responsePanel.querySelector("#responsePayload-header")
+    responsePanel.querySelector(".data-header")
   );
   // Expand the header if it wasn't yet.
   if (responsePayloadHeader.getAttribute("aria-expanded") === "false") {

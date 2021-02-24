@@ -54,14 +54,14 @@ add_task(async function() {
     }
   );
 
-  wait = waitForDOM(document, "#response-panel .accordion-item", 2);
+  wait = waitForDOM(document, "#response-panel .data-header");
   store.dispatch(Actions.toggleNetworkDetails());
   clickOnSidebarTab(document, "response");
   await wait;
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   const payloadHeader = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
+    "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
   clickElement(payloadHeader, monitor);
   await wait;

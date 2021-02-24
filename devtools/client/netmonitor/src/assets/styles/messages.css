@@ -64,15 +64,18 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Styles related to the Accordion items in the MessagePayload component */
+/* Styles related to the data items in the MessagePayload component */
 
 #messages-view .message-payload {
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 #messages-view .message-rawData-payload {
   display: block;
   width: 100%;
+  height: 100%;
   overflow: auto;
   white-space: pre;
   padding: 4px 8px;
