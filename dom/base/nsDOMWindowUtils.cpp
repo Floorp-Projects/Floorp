@@ -190,10 +190,14 @@ class OldWindowSize : public LinkedListElement<OldWindowSize> {
 template <class T>
 T* mozilla::FrameLayerBuilder::GetDebugSingleOldLayerForFrame(
     nsIFrame* aFrame) {
-  SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
+  SmallPointerArray<DisplayItemData>* array = aFrame->DisplayItemData();
+
+  if (!array) {
+    return nullptr;
+  }
 
   Layer* layer = nullptr;
-  for (DisplayItemData* data : array) {
+  for (DisplayItemData* data : *array) {
     DisplayItemData::AssertDisplayItemData(data);
     if (data->mLayer->GetType() != T::Type()) {
       continue;
@@ -203,10 +207,6 @@ T* mozilla::FrameLayerBuilder::GetDebugSingleOldLayerForFrame(
       return nullptr;
     }
     layer = data->mLayer;
-  }
-
-  if (!layer) {
-    return nullptr;
   }
 
   return static_cast<T*>(layer);

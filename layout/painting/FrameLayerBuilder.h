@@ -553,10 +553,8 @@ class FrameLayerBuilder : public layers::LayerUserData {
    * Returns true if the given display item was rendered during the previous
    * paint. Returns false otherwise.
    */
-  static bool HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
-
-  typedef void (*DisplayItemDataCallback)(nsIFrame* aFrame,
-                                          DisplayItemData* aItem);
+  static bool HasRetainedDataFor(const nsIFrame* aFrame,
+                                 uint32_t aDisplayItemKey);
 
   /**
    * Return the resolution at which we expect to render aFrame's contents,
@@ -567,8 +565,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
    */
   static gfxSize GetPaintedLayerScaleForFrame(nsIFrame* aFrame);
 
-  static void RemoveFrameFromLayerManager(
-      const nsIFrame* aFrame, SmallPointerArray<DisplayItemData>& aArray);
+  static void RemoveFrameFromLayerManager(nsIFrame* aFrame);
 
   /**
    * Given a frame and a display item key that uniquely identifies a

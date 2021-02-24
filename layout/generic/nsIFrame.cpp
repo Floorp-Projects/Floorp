@@ -1048,8 +1048,7 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
     delete userDataTable;
   }
 
-  FrameLayerBuilder::RemoveFrameFromLayerManager(this, DisplayItemData());
-  DisplayItemData().Clear();
+  FrameLayerBuilder::RemoveFrameFromLayerManager(this);
 
   for (nsDisplayItemBase* i : DisplayItems()) {
     if (i->GetDependentFrame() == this && !i->HasDeletedFrame()) {
