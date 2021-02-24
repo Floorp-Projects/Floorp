@@ -582,7 +582,10 @@ class MarionetteSetPermissionProtocolPart(SetPermissionProtocolPart):
         }
         if one_realm is not None:
             body["oneRealm"] = one_realm
-        self.marionette._send_message("WebDriver:SetPermission", body)
+        try:
+            self.marionette._send_message("WebDriver:SetPermission", body)
+        except errors.UnsupportedOperationException:
+            raise NotImplementedError("set_permission not yet implemented")
 
 
 class MarionettePrintProtocolPart(PrintProtocolPart):
