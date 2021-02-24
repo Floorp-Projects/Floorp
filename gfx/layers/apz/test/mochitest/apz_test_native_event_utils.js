@@ -783,32 +783,14 @@ function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
   return true;
 }
 
-function synthesizeNativeMouseEvent(aTarget, aX, aY, aType, aObserver = null) {
-  var pt = coordinatesRelativeToScreen({
-    offsetX: aX,
-    offsetY: aY,
-    target: aTarget,
-  });
-  var utils = utilsForTarget(aTarget);
-  var element = elementForTarget(aTarget);
-  utils.sendNativeMouseEvent(pt.x, pt.y, aType, 0, element, aObserver);
-  return true;
-}
-
-// Promise-returning variant of synthesizeNativeMouseEvent
-function promiseNativeMouseEvent(aTarget, aX, aY, aType) {
-  return new Promise(resolve => {
-    synthesizeNativeMouseEvent(aTarget, aX, aY, aType, resolve);
-  });
-}
-
-function synthesizeNativeMouseClickWithAPZ(aParams, aObserver = null) {
+function synthesizeNativeMouseEventWithAPZ(aParams, aObserver = null) {
   if (aParams.win !== undefined) {
     throw Error(
       "Are you trying to use EventUtils' API? `win` won't be used with synthesizeNativeMouseClickWithAPZ."
     );
   }
   const {
+    type, // "click", "mousedown", "mouseup" or "mousemove"
     target, // Origin of offsetX and offsetY, must be an element
     offsetX, // X offset in `target`
     offsetY, // Y offset in `target`
@@ -852,35 +834,65 @@ function synthesizeNativeMouseClickWithAPZ(aParams, aObserver = null) {
       target,
     });
   })();
-  const utils = SpecialPowers.getDOMWindowUtils(
-    target.ownerDocument.defaultView
-  );
+  const utils = utilsForTarget(target);
+  const element = elementForTarget(target);
   const modifierFlags = parseNativeModifiers(modifiers);
+  if (type === "click") {
+    utils.sendNativeMouseEvent(
+      pt.x,
+      pt.y,
+      nativeMouseDownEventMsg(),
+      modifierFlags,
+      element,
+      function() {
+        utils.sendNativeMouseEvent(
+          pt.x,
+          pt.y,
+          nativeMouseUpEventMsg(),
+          modifierFlags,
+          element,
+          aObserver
+        );
+      }
+    );
+    return;
+  }
+
   utils.sendNativeMouseEvent(
     pt.x,
     pt.y,
-    nativeMouseDownEventMsg(),
+    (() => {
+      switch (type) {
+        case "mousedown":
+          return nativeMouseDownEventMsg();
+        case "mouseup":
+          return nativeMouseUpEventMsg();
+        case "mousemove":
+          return nativeMouseMoveEventMsg();
+        default:
+          throw Error(`Invalid type is specified: ${type}`);
+      }
+    })(),
     modifierFlags,
-    target,
-    function() {
-      utils.sendNativeMouseEvent(
-        pt.x,
-        pt.y,
-        nativeMouseUpEventMsg(),
-        modifierFlags,
-        target,
-        aObserver
-      );
-    }
+    element,
+    aObserver
   );
-  return true;
 }
 
-// Promise-returning variant of synthesizeNativeMouseClickWithAPZ.
+function promiseNativeMouseEventWithAPZ(aParams) {
+  return new Promise(resolve =>
+    synthesizeNativeMouseEventWithAPZ(aParams, resolve)
+  );
+}
+
+function synthesizeNativeMouseClickWithAPZ(aParams, aObserver = null) {
+  aParams.type = "click";
+  return synthesizeNativeMouseEventWithAPZ(aParams, aObserver);
+}
+
 function promiseNativeMouseClickWithAPZ(aParams) {
-  return new Promise(resolve => {
-    synthesizeNativeMouseClickWithAPZ(aParams, resolve);
-  });
+  aParams.type = "click";
+  return promiseNativeMouseEventWithAPZ(aParams);
 }
 
 // See synthesizeNativeMouseClickWithAPZ for the detail of aParams.
@@ -1001,44 +1013,44 @@ async function promiseVerticalScrollbarDrag(
   );
 
   // Move the mouse to the scrollbar thumb and drag it down
-  await promiseNativeMouseEvent(
+  await promiseNativeMouseEventWithAPZ({
     target,
-    mouseX,
-    mouseY,
-    nativeMouseMoveEventMsg()
-  );
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
   // mouse down
-  await promiseNativeMouseEvent(
+  await promiseNativeMouseEventWithAPZ({
     target,
-    mouseX,
-    mouseY,
-    nativeMouseDownEventMsg()
-  );
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousedown",
+  });
   // drag vertically by |increment| until we reach the specified distance
   for (var y = increment; y < distance; y += increment) {
-    await promiseNativeMouseEvent(
+    await promiseNativeMouseEventWithAPZ({
       target,
-      mouseX,
-      mouseY + y,
-      nativeMouseMoveEventMsg()
-    );
+      offsetX: mouseX,
+      offsetY: mouseY + y,
+      type: "mousemove",
+    });
   }
-  await promiseNativeMouseEvent(
+  await promiseNativeMouseEventWithAPZ({
     target,
-    mouseX,
-    mouseY + distance,
-    nativeMouseMoveEventMsg()
-  );
+    offsetX: mouseX,
+    offsetY: mouseY + distance,
+    type: "mousemove",
+  });
 
   // and return an async function to call afterwards to finish up the drag
   return async function() {
     dump("Finishing drag of #" + targetElement.id + "\n");
-    await promiseNativeMouseEvent(
+    await promiseNativeMouseEventWithAPZ({
       target,
-      mouseX,
-      mouseY + distance,
-      nativeMouseUpEventMsg()
-    );
+      offsetX: mouseX,
+      offsetY: mouseY + distance,
+      type: "mouseup",
+    });
   };
 }
 
@@ -1074,40 +1086,40 @@ async function promiseNativeMouseDrag(
   );
 
   // Move the mouse to the target position
-  await promiseNativeMouseEvent(
+  await promiseNativeMouseEventWithAPZ({
     target,
-    mouseX,
-    mouseY,
-    nativeMouseMoveEventMsg()
-  );
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
   // mouse down
-  await promiseNativeMouseEvent(
+  await promiseNativeMouseEventWithAPZ({
     target,
-    mouseX,
-    mouseY,
-    nativeMouseDownEventMsg()
-  );
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousedown",
+  });
   // drag vertically by |increment| until we reach the specified distance
   for (var s = 1; s <= steps; s++) {
     let dx = distanceX * (s / steps);
     let dy = distanceY * (s / steps);
     dump(`Dragging to ${mouseX + dx}, ${mouseY + dy} from target\n`);
-    await promiseNativeMouseEvent(
+    await promiseNativeMouseEventWithAPZ({
       target,
-      mouseX + dx,
-      mouseY + dy,
-      nativeMouseMoveEventMsg()
-    );
+      offsetX: mouseX + dx,
+      offsetY: mouseY + dy,
+      type: "mousemove",
+    });
   }
 
   // and return a function-wrapped promise to call afterwards to finish the drag
   return function() {
-    return promiseNativeMouseEvent(
+    return promiseNativeMouseEventWithAPZ({
       target,
-      mouseX + distanceX,
-      mouseY + distanceY,
-      nativeMouseUpEventMsg()
-    );
+      offsetX: mouseX + distanceX,
+      offsetY: mouseY + distanceY,
+      type: "mouseup",
+    });
   };
 }
 

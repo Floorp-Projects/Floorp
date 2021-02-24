@@ -44,15 +44,35 @@ async function test() {
 
   var scrollbarX = (window.innerWidth + root.clientWidth) / 2;
   // Move the mouse to the scrollbar
-  await promiseNativeMouseEvent(root, scrollbarX, 100, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 100,
+    type: "mousemove",
+  });
   // mouse down
-  await promiseNativeMouseEvent(root, scrollbarX, 100, nativeMouseDownEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 100,
+    type: "mousedown",
+  });
   // drag vertically
-  await promiseNativeMouseEvent(root, scrollbarX, 150, nativeMouseMoveEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 150,
+    type: "mousemove",
+  });
   // wait for the scroll listener to fire
   await scrollPromise;
   // and release
-  await promiseNativeMouseEvent(root, scrollbarX, 150, nativeMouseUpEventMsg());
+  await promiseNativeMouseEventWithAPZ({
+    target: root,
+    offsetX: scrollbarX,
+    offsetY: 150,
+    type: "mouseup",
+  });
 }
 
 waitUntilApzStable()
