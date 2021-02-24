@@ -38,13 +38,10 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::AutoJSContext;
 
-#define NOTIFY_PRESSHELL_IF(condition_, forEach_)              \
-  if (condition_) {                                            \
-    if (PresShell* presShell = doc->GetObservingPresShell()) { \
-      forEach_(presShell);                                     \
-    }                                                          \
+#define NOTIFY_PRESSHELL(notify_)                \
+  if (PresShell* presShell = doc->GetObservingPresShell()) { \
+    notify_(presShell);                                      \
   }
 
 #define DEFINE_NOTIFIERS(func_, params_)                      \
@@ -55,8 +52,9 @@ using mozilla::AutoJSContext;
     aObserver->func_ params_;                                 \
   };
 
-static inline nsINode* ForEachAncestorObserver(
-    nsINode* aNode, FunctionRef<void(nsIMutationObserver*)> aFunc) {
+template <typename NotifyObserver>
+static inline nsINode* ForEachAncestorObserver(nsINode* aNode,
+                                               NotifyObserver& aFunc) {
   nsINode* last;
   nsINode* node = aNode;
   do {
@@ -77,33 +75,34 @@ static inline nsINode* ForEachAncestorObserver(
   return last;
 }
 
-static inline void NotifyRemovalImpl(
-    nsINode* aNode, FunctionRef<void(PresShell*)> aNotifyPresShell,
-    FunctionRef<void(nsIMutationObserver*)> aNotifyObserver) {
-  Document* doc = aNode->OwnerDoc();
-  nsDOMMutationEnterLeave enterLeave(doc);
-  NOTIFY_PRESSHELL_IF(aNode->GetComposedDoc(), aNotifyPresShell);
-  DebugOnly<nsINode*> last = ForEachAncestorObserver(aNode, aNotifyObserver);
-  MOZ_ASSERT((last == doc) == !!aNode->GetComposedDoc());
-}
+enum class IsRemoval { No, Yes };
+enum class ShouldAssert { No, Yes };
 
-static inline void NotifyRemovalImplNoAssert(
-    nsINode* aNode, FunctionRef<void(PresShell*)> aNotifyPresShell,
-    FunctionRef<void(nsIMutationObserver*)> aNotifyObserver) {
+template <IsRemoval aIsRemoval = IsRemoval::No,
+          ShouldAssert aShouldAssert = ShouldAssert::Yes,
+          typename NotifyPresShell, typename NotifyObserver>
+static inline void Notify(nsINode* aNode, NotifyPresShell& aNotifyPresShell,
+                          NotifyObserver& aNotifyObserver) {
   Document* doc = aNode->OwnerDoc();
   nsDOMMutationEnterLeave enterLeave(doc);
-  NOTIFY_PRESSHELL_IF(aNode->GetComposedDoc(), aNotifyPresShell);
-  ForEachAncestorObserver(aNode, aNotifyObserver);
-}
 
-static inline void NotifyNonRemovalImpl(
-    nsINode* aNode, FunctionRef<void(PresShell*)> aNotifyPresShell,
-    FunctionRef<void(nsIMutationObserver*)> aNotifyObserver) {
-  Document* doc = aNode->OwnerDoc();
-  nsDOMMutationEnterLeave enterLeave(doc);
+  const bool wasConnected = aNode->IsInComposedDoc();
+  // For removals, the pres shell gets notified first, since it needs to operate
+  // on the "old" DOM shape.
+  if (aIsRemoval == IsRemoval::Yes && wasConnected) {
+    NOTIFY_PRESSHELL(aNotifyPresShell);
+  }
   nsINode* last = ForEachAncestorObserver(aNode, aNotifyObserver);
-  NOTIFY_PRESSHELL_IF(last == doc, aNotifyPresShell);
-  MOZ_ASSERT((last == doc) == !!aNode->GetComposedDoc());
+  // For non-removals, the pres shell gets notified last, since it needs to
+  // operate on the "final" DOM shape.
+  if (aIsRemoval == IsRemoval::No && last == doc) {
+    NOTIFY_PRESSHELL(aNotifyPresShell);
+  }
+  if (aShouldAssert == ShouldAssert::Yes) {
+    MOZ_ASSERT((last == doc) == wasConnected,
+               "If we were connected we should notify all ancestors all the "
+               "way to the document");
+  }
 }
 
 #define IMPL_ANIMATION_NOTIFICATION(func_, content_, params_)                \
@@ -121,14 +120,14 @@ namespace mozilla {
 void MutationObservers::NotifyCharacterDataWillChange(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
   DEFINE_NOTIFIERS(CharacterDataWillChange, (aContent, aInfo));
-  NotifyNonRemovalImpl(aContent, notifyPresShell, notifyObserver);
+  Notify(aContent, notifyPresShell, notifyObserver);
 }
 
 void MutationObservers::NotifyCharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
   aContent->OwnerDoc()->Changed();
   DEFINE_NOTIFIERS(CharacterDataChanged, (aContent, aInfo));
-  NotifyNonRemovalImpl(aContent, notifyPresShell, notifyObserver);
+  Notify(aContent, notifyPresShell, notifyObserver);
 }
 
 void MutationObservers::NotifyAttributeWillChange(Element* aElement,
@@ -137,7 +136,7 @@ void MutationObservers::NotifyAttributeWillChange(Element* aElement,
                                                   int32_t aModType) {
   DEFINE_NOTIFIERS(AttributeWillChange,
                    (aElement, aNameSpaceID, aAttribute, aModType));
-  NotifyNonRemovalImpl(aElement, notifyPresShell, notifyObserver);
+  Notify(aElement, notifyPresShell, notifyObserver);
 }
 
 void MutationObservers::NotifyAttributeChanged(Element* aElement,
@@ -148,7 +147,7 @@ void MutationObservers::NotifyAttributeChanged(Element* aElement,
   aElement->OwnerDoc()->Changed();
   DEFINE_NOTIFIERS(AttributeChanged,
                    (aElement, aNameSpaceID, aAttribute, aModType, aOldValue));
-  NotifyNonRemovalImpl(aElement, notifyPresShell, notifyObserver);
+  Notify(aElement, notifyPresShell, notifyObserver);
 }
 
 void MutationObservers::NotifyAttributeSetToCurrentValue(Element* aElement,
@@ -156,24 +155,26 @@ void MutationObservers::NotifyAttributeSetToCurrentValue(Element* aElement,
                                                          nsAtom* aAttribute) {
   DEFINE_NOTIFIERS(AttributeSetToCurrentValue,
                    (aElement, aNameSpaceID, aAttribute));
-  NotifyNonRemovalImpl(aElement, notifyPresShell, notifyObserver);
+  Notify(aElement, notifyPresShell, notifyObserver);
 }
 
 void MutationObservers::NotifyContentAppended(nsIContent* aContainer,
                                               nsIContent* aFirstNewContent) {
   aContainer->OwnerDoc()->Changed();
   DEFINE_NOTIFIERS(ContentAppended, (aFirstNewContent));
-  NotifyNonRemovalImpl(aContainer, notifyPresShell, notifyObserver);
+  Notify(aContainer, notifyPresShell, notifyObserver);
 }
 
 void MutationObservers::NotifyNativeAnonymousChildListChange(
     nsIContent* aContent, bool aIsRemove) {
   DEFINE_NOTIFIERS(NativeAnonymousChildListChange, (aContent, aIsRemove));
   if (aIsRemove) {
-    // It doesn't reach the document since it runs from UnbindFromTree
-    NotifyRemovalImplNoAssert(aContent, notifyPresShell, notifyObserver);
+    // We can't actually assert that we reach the document if we're connected,
+    // since this notification runs from UnbindFromTree.
+    Notify<IsRemoval::Yes, ShouldAssert::No>(aContent, notifyPresShell,
+                                             notifyObserver);
   } else {
-    NotifyNonRemovalImpl(aContent, notifyPresShell, notifyObserver);
+    Notify(aContent, notifyPresShell, notifyObserver);
   }
 }
 
@@ -183,7 +184,7 @@ void MutationObservers::NotifyContentInserted(nsINode* aContainer,
              "container must be an nsIContent or an Document");
   aContainer->OwnerDoc()->Changed();
   DEFINE_NOTIFIERS(ContentInserted, (aChild));
-  NotifyNonRemovalImpl(aContainer, notifyPresShell, notifyObserver);
+  Notify(aContainer, notifyPresShell, notifyObserver);
 }
 
 void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
@@ -195,8 +196,9 @@ void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
   MOZ_ASSERT(aChild->GetParentNode() == aContainer,
              "We expect the parent link to be still around at this point");
   DEFINE_NOTIFIERS(ContentRemoved, (aChild, aPreviousSibling));
-  NotifyRemovalImpl(aContainer, notifyPresShell, notifyObserver);
+  Notify<IsRemoval::Yes>(aContainer, notifyPresShell, notifyObserver);
 }
+
 }  // namespace mozilla
 
 void MutationObservers::NotifyAnimationMutated(
