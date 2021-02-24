@@ -337,7 +337,7 @@ Event Extra
     ``history``, ``keyword``, ``searchengine``, ``searchsuggestion``,
     ``switchtab``, ``remotetab``, ``extension``, ``oneoff``, ``keywordoffer``,
     ``canonized``, ``tip``, ``tiphelp``, ``formhistory``, ``tabtosearch``,
-    ``help``, ``unknown``
+    ``unknown``
     In practice, ``tabtosearch`` should not appear in real event telemetry.
     Opening a tab-to-search result enters search mode and entering search mode
     does not currently mark the end of an engagement. It is noted here for
@@ -413,8 +413,8 @@ TopSites Click
     User's current locale.
 
 
-Other telemetry relevant to the Address Bar
--------------------------------------------
+Search probes relevant to the Address Bar
+-----------------------------------------
 
 SEARCH_COUNTS
   This histogram tracks search engines and Search Access Points. It is augmented
@@ -483,47 +483,6 @@ contextual.services.topsites.*
   (1-based) such as 'urlbar_1'. For each key, it records the counter of the
   impression or click.
   Note that these scalars are shared with the TopSites on the newtab page.
-
-contextual.services.quicksuggest.*
-  These keyed scalars record impressions and clicks on Quick Suggest results,
-  also called Firefox Suggests results, in the address bar. The keys for each
-  scalar are the 1-based indexes of the Quick Suggest results, and the values
-  are the number of impressions or clicks for the corresponding indexes. For
-  example, for a Quick Suggest impression at 0-based index 9, the value for key
-  `10` will be incremented in the `contextual.services.quicksuggest.impression`
-  scalar.
-
-  The keyed scalars are:
-
-    - ``contextual.services.quicksuggest.impression``
-      Incremented when a Quick Suggest result is shown in an address bar
-      engagement where the user picks any result. The particular picked result
-      doesn't matter, and it doesn't need to be the Quick Suggest result.
-    - ``contextual.services.quicksuggest.click``
-      Incremented when the user picks a Quick Suggest result (not including the
-      help button).
-    - ``contextual.services.quicksuggest.help``
-      Incremented when the user picks the onboarding help button in a Quick
-      Suggest result.
-
-contextservices.quicksuggest
-  This is event telemetry under the ``contextservices.quicksuggest`` category.
-  It's enabled only when the ``browser.urlbar.quicksuggest.enabled`` pref is
-  true. An event is recorded when the user toggles the
-  ``browser.urlbar.suggest.quicksuggest`` pref, which corresponds to the
-  checkbox in about:preferences#search labeled "Show suggested and sponsored
-  results in the address bar". If the user never toggles the pref, then this
-  event is never recorded.
-
-  The full spec for this event is:
-
-    - Category: ``contextservices.quicksuggest``
-    - Method: ``enable_toggled``
-    - Objects: ``enabled``, ``disabled`` -- ``enabled`` is recorded when the
-      pref is flipped from false to true, and ``disabled`` is recorded when the
-      pref is flipped from true to false.
-    - Value: Not used
-    - Extra: Not used
 
 Obsolete probes
 ---------------
