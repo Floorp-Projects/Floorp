@@ -470,10 +470,8 @@ void RTCRtpReceiver::GetContributingSources(
     nsTArray<RTCRtpContributingSource>& aSources) {
   // Duplicate code...
   if (mPipeline && mPipeline->mConduit) {
-    RefPtr<AudioSessionConduit> conduit(
-        *mPipeline->mConduit->AsAudioSessionConduit());
     nsTArray<dom::RTCRtpSourceEntry> sources;
-    conduit->GetRtpSources(sources);
+    mPipeline->mConduit->GetRtpSources(sources);
     sources.RemoveElementsBy([](const dom::RTCRtpSourceEntry& aEntry) {
       return aEntry.mSourceType != dom::RTCRtpSourceEntryType::Contributing;
     });
@@ -486,10 +484,8 @@ void RTCRtpReceiver::GetSynchronizationSources(
     nsTArray<dom::RTCRtpSynchronizationSource>& aSources) {
   // Duplicate code...
   if (mPipeline && mPipeline->mConduit) {
-    RefPtr<AudioSessionConduit> conduit(
-        *mPipeline->mConduit->AsAudioSessionConduit());
     nsTArray<dom::RTCRtpSourceEntry> sources;
-    conduit->GetRtpSources(sources);
+    mPipeline->mConduit->GetRtpSources(sources);
     sources.RemoveElementsBy([](const dom::RTCRtpSourceEntry& aEntry) {
       return aEntry.mSourceType != dom::RTCRtpSourceEntryType::Synchronization;
     });
