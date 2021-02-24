@@ -5672,7 +5672,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, input.get(),
-                                              stencil);
+                                              stencil.alloc);
   if (!compilationState.init(cx)) {
     return false;
   }
@@ -5749,7 +5749,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, input.get(),
-                                              stencil);
+                                              stencil.alloc);
   if (!compilationState.init(cx)) {
     return false;
   }

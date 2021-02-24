@@ -203,7 +203,7 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, input.get(),
-                                              stencil);
+                                              stencil.alloc);
   if (!compilationState.init(cx)) {
     return false;
   }
