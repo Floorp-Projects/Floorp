@@ -44,7 +44,7 @@ mozilla::ipc::IPCResult GamepadEventChannelChild::RecvGamepadUpdate(
 
 void GamepadEventChannelChild::AddPromise(const uint32_t& aID,
                                           dom::Promise* aPromise) {
-  MOZ_ASSERT(!mPromiseList.Contains(aID, nullptr));
+  MOZ_ASSERT(!mPromiseList.Contains(aID));
   mPromiseList.Put(aID, RefPtr{aPromise});
 }
 
