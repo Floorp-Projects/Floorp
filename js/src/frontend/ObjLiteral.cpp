@@ -230,6 +230,12 @@ JSObject* ObjLiteralStencil::create(
   return InterpretObjLiteral(cx, atomCache, code_, flags_, propertyCount_);
 }
 
+#ifdef DEBUG
+bool ObjLiteralStencil::isContainedIn(const LifoAlloc& alloc) const {
+  return alloc.contains(code_.data());
+}
+#endif
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,

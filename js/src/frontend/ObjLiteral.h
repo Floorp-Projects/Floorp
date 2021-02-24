@@ -106,6 +106,7 @@
 
 namespace js {
 
+class LifoAlloc;
 class JSONPrinter;
 
 namespace frontend {
@@ -606,6 +607,10 @@ class ObjLiteralStencil {
 
   JSObject* create(JSContext* cx,
                    const frontend::CompilationAtomCache& atomCache) const;
+
+#ifdef DEBUG
+  bool isContainedIn(const LifoAlloc& alloc) const;
+#endif
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;

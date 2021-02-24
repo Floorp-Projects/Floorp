@@ -41,6 +41,7 @@
 
 namespace js {
 
+class LifoAlloc;
 class JSONPrinter;
 class RegExpObject;
 
@@ -232,6 +233,10 @@ class BigIntStencil {
     mozilla::Range<const char16_t> source(source_.data(), source_.size());
     return js::BigIntLiteralIsZero(source);
   }
+
+#ifdef DEBUG
+  bool isContainedIn(const LifoAlloc& alloc) const;
+#endif
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;

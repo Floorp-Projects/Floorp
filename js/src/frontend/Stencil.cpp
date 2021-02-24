@@ -1679,6 +1679,59 @@ bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
   return SharedImmutableScriptData::shareScriptData(cx, p->value());
 }
 
+#ifdef DEBUG
+void CompilationStencil::assertNoExternalDependency() const {
+  MOZ_ASSERT_IF(!regExpData.empty(), alloc.contains(regExpData.data()));
+
+  MOZ_ASSERT_IF(!bigIntData.empty(), alloc.contains(bigIntData.data()));
+  for (const auto& data : bigIntData) {
+    MOZ_ASSERT(data.isContainedIn(alloc));
+  }
+
+  MOZ_ASSERT_IF(!objLiteralData.empty(), alloc.contains(objLiteralData.data()));
+  for (const auto& data : objLiteralData) {
+    MOZ_ASSERT(data.isContainedIn(alloc));
+  }
+
+  MOZ_ASSERT_IF(!scriptData.empty(), alloc.contains(scriptData.data()));
+  MOZ_ASSERT_IF(!scriptExtra.empty(), alloc.contains(scriptExtra.data()));
+
+  MOZ_ASSERT_IF(!scopeData.empty(), alloc.contains(scopeData.data()));
+  MOZ_ASSERT_IF(!scopeNames.empty(), alloc.contains(scopeNames.data()));
+  for (const auto* data : scopeNames) {
+    MOZ_ASSERT_IF(data, alloc.contains(data));
+  }
+
+  MOZ_ASSERT_IF(!parserAtomData.empty(), alloc.contains(parserAtomData.data()));
+  for (const auto* data : parserAtomData) {
+    MOZ_ASSERT_IF(data, alloc.contains(data));
+  }
+
+  // NOTE: We don't recursively check delazificationSet, but just prohibit
+  //       having them to be no-external-dependency.
+  //       Will be fixed by bug 1687095 that removes delazificationSet field.
+  MOZ_ASSERT(!delazificationSet);
+}
+
+void ExtensibleCompilationStencil::assertNoExternalDependency() const {
+  for (const auto& data : bigIntData) {
+    MOZ_ASSERT(data.isContainedIn(alloc));
+  }
+
+  for (const auto& data : objLiteralData) {
+    MOZ_ASSERT(data.isContainedIn(alloc));
+  }
+
+  for (const auto* data : scopeNames) {
+    MOZ_ASSERT_IF(data, alloc.contains(data));
+  }
+
+  for (const auto* data : parserAtoms.entries()) {
+    MOZ_ASSERT_IF(data, alloc.contains(data));
+  }
+}
+#endif  // DEBUG
+
 template <typename T, typename VectorT>
 bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
                       VectorT& vec) {
@@ -1698,6 +1751,10 @@ bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
 }
 
 bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
+#ifdef DEBUG
+  assertNoExternalDependency();
+#endif
+
   MOZ_ASSERT(stencil.alloc.isEmpty());
   stencil.alloc.steal(&alloc);
 
@@ -1750,6 +1807,10 @@ bool CompilationState::finish(JSContext* cx, CompilationStencil& stencil) {
 
   stencil.sharedData = std::move(sharedData);
 
+#ifdef DEBUG
+  stencil.assertNoExternalDependency();
+#endif
+
   return true;
 }
 
@@ -1777,6 +1838,12 @@ mozilla::Span<TaggedScriptThingIndex> ScriptStencil::gcthings(
   source_ = mozilla::Span(p, length);
   return true;
 }
+
+#ifdef DEBUG
+bool BigIntStencil::isContainedIn(const LifoAlloc& alloc) const {
+  return alloc.contains(source_.data());
+}
+#endif
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
