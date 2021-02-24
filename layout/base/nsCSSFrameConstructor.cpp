@@ -211,7 +211,6 @@ static FrameCtorDebugFlags gFlags[] = {
 #  include "nsMenuFrame.h"
 #  include "nsPopupSetFrame.h"
 #  include "nsTreeColFrame.h"
-#  include "nsXULLabelFrame.h"
 
 //------------------------------------------------------------------
 
@@ -3969,9 +3968,10 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
       SIMPLE_XUL_CREATE(treecol, NS_NewTreeColFrame),
       SIMPLE_TAG_CHAIN(button, nsCSSFrameConstructor::FindXULButtonData),
       SIMPLE_TAG_CHAIN(toolbarbutton, nsCSSFrameConstructor::FindXULButtonData),
-      SIMPLE_TAG_CHAIN(label, nsCSSFrameConstructor::FindXULLabelData),
+      SIMPLE_TAG_CHAIN(label,
+                       nsCSSFrameConstructor::FindXULLabelOrDescriptionData),
       SIMPLE_TAG_CHAIN(description,
-                       nsCSSFrameConstructor::FindXULDescriptionData),
+                       nsCSSFrameConstructor::FindXULLabelOrDescriptionData),
       SIMPLE_XUL_CREATE(menu, NS_NewMenuFrame),
       SIMPLE_XUL_CREATE(menulist, NS_NewMenuFrame),
       SIMPLE_XUL_CREATE(menuitem, NS_NewMenuItemFrame),
@@ -4008,11 +4008,6 @@ nsCSSFrameConstructor::FindPopupGroupData(const Element& aElement,
 }
 
 /* static */
-const nsCSSFrameConstructor::FrameConstructionData
-    nsCSSFrameConstructor::sXULTextBoxData =
-        SIMPLE_XUL_FCDATA(NS_NewTextBoxFrame);
-
-/* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
                                          ComputedStyle&) {
@@ -4034,38 +4029,18 @@ nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
       SCROLLABLE_XUL_FCDATA(NS_NewButtonBoxFrame);
   return &sXULButtonData;
 }
-
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULLabelData(const Element& aElement,
-                                        ComputedStyle&) {
-  if (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
-    return &sXULTextBoxData;
+nsCSSFrameConstructor::FindXULLabelOrDescriptionData(const Element& aElement,
+                                                     ComputedStyle&) {
+  // Follow CSS display value if no value attribute
+  if (!aElement.HasAttr(nsGkAtoms::value)) {
+    return nullptr;
   }
 
-  static const FrameConstructionData sLabelData =
-      SIMPLE_XUL_FCDATA(NS_NewXULLabelFrame);
-  return &sLabelData;
-}
-
-static nsIFrame* NS_NewXULDescriptionFrame(PresShell* aPresShell,
-                                           ComputedStyle* aContext) {
-  // XXXbz do we really need to set up the block formatting context root? If the
-  // parent is not a block we'll get it anyway, and if it is, do we want it?
-  return NS_NewBlockFormattingContext(aPresShell, aContext);
-}
-
-/* static */
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULDescriptionData(const Element& aElement,
-                                              ComputedStyle&) {
-  if (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
-    return &sXULTextBoxData;
-  }
-
-  static const FrameConstructionData sDescriptionData =
-      SIMPLE_XUL_FCDATA(NS_NewXULDescriptionFrame);
-  return &sDescriptionData;
+  static const FrameConstructionData sXULTextBoxData =
+      SIMPLE_XUL_FCDATA(NS_NewTextBoxFrame);
+  return &sXULTextBoxData;
 }
 
 #  ifdef XP_MACOSX
@@ -7863,11 +7838,6 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
                "no support for fragmenting table captions yet");
     newFrame = NS_NewBlockFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
-#ifdef MOZ_XUL
-  } else if (LayoutFrameType::XULLabel == frameType) {
-    newFrame = NS_NewXULLabelFrame(mPresShell, computedStyle);
-    newFrame->Init(content, aParentFrame, aFrame);
-#endif
   } else if (LayoutFrameType::ColumnSetWrapper == frameType) {
     newFrame =
         NS_NewColumnSetWrapperFrame(mPresShell, computedStyle, nsFrameState(0));

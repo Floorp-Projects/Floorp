@@ -474,9 +474,6 @@ void ReflowInput::InitCBReflowInput() {
 static bool IsQuirkContainingBlockHeight(const ReflowInput* rs,
                                          LayoutFrameType aFrameType) {
   if (LayoutFrameType::Block == aFrameType ||
-#ifdef MOZ_XUL
-      LayoutFrameType::XULLabel == aFrameType ||
-#endif
       LayoutFrameType::Scroll == aFrameType) {
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
@@ -1904,11 +1901,7 @@ static nscoord CalcQuirkContainingBlockHeight(
     // if the ancestor is auto height then skip it and continue up if it
     // is the first block frame and possibly the body/html
     if (LayoutFrameType::Block == frameType ||
-#ifdef MOZ_XUL
-        LayoutFrameType::XULLabel == frameType ||
-#endif
         LayoutFrameType::Scroll == frameType) {
-
       secondAncestorRI = firstAncestorRI;
       firstAncestorRI = ri;
 
