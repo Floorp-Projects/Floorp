@@ -456,6 +456,10 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
                              std::move(endValue)),
       &aNewStyle);
 
+  if (NS_WARN_IF(MOZ_UNLIKELY(!keyframeEffect->IsValidTransition()))) {
+    return false;
+  }
+
   RefPtr<CSSTransition> animation =
       new CSSTransition(mPresContext->Document()->GetScopeObject());
   animation->SetOwningElement(OwningElementRef(*aElement, aPseudoType));

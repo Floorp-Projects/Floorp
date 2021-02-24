@@ -123,6 +123,11 @@ class KeyframeEffect : public AnimationEffect {
 
   KeyframeEffect* AsKeyframeEffect() override { return this; }
 
+  bool IsValidTransition() const {
+    return Properties().Length() == 1 &&
+           Properties()[0].mSegments.Length() == 1;
+  }
+
   // KeyframeEffect interface
   static already_AddRefed<KeyframeEffect> Constructor(
       const GlobalObject& aGlobal, Element* aTarget,
