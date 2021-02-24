@@ -112,6 +112,7 @@ class OpenSearchEngine extends SearchEngine {
 
     var listener = new SearchUtils.LoadListener(
       chan,
+      /(^text\/|xml$)/,
       this._onLoad.bind(this, callback)
     );
     chan.notificationCallbacks = listener;
