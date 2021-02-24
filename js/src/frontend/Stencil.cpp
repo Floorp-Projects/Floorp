@@ -15,7 +15,7 @@
 #include "frontend/AbstractScopePtr.h"     // ScopeIndex
 #include "frontend/BytecodeCompilation.h"  // CanLazilyParse
 #include "frontend/BytecodeSection.h"      // EmitScriptThingsVector
-#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
+#include "frontend/CompilationStencil.h"  // CompilationStencil, ExtensibleCompilationStencil, CompilationGCOutput
 #include "frontend/SharedContext.h"
 #include "gc/AllocKind.h"               // gc::AllocKind
 #include "gc/Rooting.h"                 // RootedAtom
@@ -1545,15 +1545,19 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
   return true;
 }
 
+ExtensibleCompilationStencil::ExtensibleCompilationStencil(
+    JSContext* cx, LifoAlloc& stencilAlloc)
+    : parserAtoms(cx->runtime(), stencilAlloc) {}
+
 CompilationState::CompilationState(JSContext* cx,
                                    LifoAllocScope& frontendAllocScope,
                                    CompilationInput& input,
                                    LifoAlloc& stencilAlloc)
-    : directives(input.options.forceStrictMode()),
+    : ExtensibleCompilationStencil(cx, stencilAlloc),
+      directives(input.options.forceStrictMode()),
       usedNames(cx),
       allocScope(frontendAllocScope),
-      input(input),
-      parserAtoms(cx->runtime(), stencilAlloc) {}
+      input(input) {}
 
 SharedDataContainer::~SharedDataContainer() {
   if (isEmpty()) {

@@ -164,7 +164,7 @@ using RegExpIndex = TypedIndex<RegExpStencil>;
 using BigIntIndex = TypedIndex<BigIntStencil>;
 using ObjLiteralIndex = TypedIndex<ObjLiteralStencil>;
 
-// Index into {CompilationState,BaseCompilationStencil}.gcThingData.
+// Index into {ExtensibleCompilationStencil,BaseCompilationStencil}.gcThingData.
 class CompilationGCThingType {};
 using CompilationGCThingIndex = TypedIndex<CompilationGCThingType>;
 
@@ -757,8 +757,8 @@ class ScriptStencil {
   //   * lazy Function (cannot be asm.js module)
 
   // GCThings are stored into
-  // {CompilationState,BaseCompilationStencil}.gcThingData, in [gcThingsOffset,
-  // gcThingsOffset + gcThingsLength) range.
+  // {ExtensibleCompilationStencil,BaseCompilationStencil}.gcThingData,
+  // in [gcThingsOffset, gcThingsOffset + gcThingsLength) range.
   CompilationGCThingIndex gcThingsOffset;
   uint32_t gcThingsLength = 0;
 
