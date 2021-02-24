@@ -236,7 +236,8 @@ template <typename Unit>
         output.as<UniquePtr<ExtensibleCompilationStencil>>() =
             std::move(extensibleStencil);
       } else if (output.is<UniquePtr<CompilationStencil>>()) {
-        auto stencil = cx->make_unique<frontend::CompilationStencil>(input);
+        auto stencil =
+            cx->make_unique<frontend::CompilationStencil>(input.source);
         if (!stencil) {
           return false;
         }
@@ -297,7 +298,7 @@ template <typename Unit>
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    auto stencil = cx->make_unique<CompilationStencil>(input);
+    auto stencil = cx->make_unique<CompilationStencil>(input.source);
     if (!stencil) {
       return false;
     }
@@ -908,7 +909,7 @@ template <typename Unit>
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    auto stencil = cx->make_unique<CompilationStencil>(input);
+    auto stencil = cx->make_unique<CompilationStencil>(input.source);
     if (!stencil) {
       return false;
     }

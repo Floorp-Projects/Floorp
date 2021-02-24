@@ -587,11 +587,6 @@ struct CompilationStencil : public BaseCompilationStencil {
   // End of fields.
 
   // Construct a CompilationStencil
-  //
-  // TODO: Use ScriptSource* variant in all consumer.
-  explicit CompilationStencil(CompilationInput& input)
-      : alloc(LifoAllocChunkSize), source(input.source) {}
-
   explicit CompilationStencil(ScriptSource* source)
       : alloc(LifoAllocChunkSize), source(source) {}
 
