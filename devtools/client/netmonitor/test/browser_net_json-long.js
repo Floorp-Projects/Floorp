@@ -55,7 +55,7 @@ add_task(async function() {
     }
   );
 
-  let wait = waitForDOM(document, "#response-panel .accordion-item", 2);
+  let wait = waitForDOM(document, "#response-panel .data-header");
   const waitForPropsView = waitForDOM(
     document,
     "#response-panel .properties-view",
@@ -74,20 +74,20 @@ add_task(async function() {
   );
   lastItem.scrollIntoView();
 
-  testJsonAccordionInResposeTab();
+  testJsonInResposeTab();
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
-  const payloadHeader = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
+  const rawResponseToggle = document.querySelector(
+    "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
-  clickElement(payloadHeader, monitor);
+  clickElement(rawResponseToggle, monitor);
   await wait;
 
   testResponseTab();
 
   await teardown(monitor);
 
-  function testJsonAccordionInResposeTab() {
+  function testJsonInResposeTab() {
     const tabpanel = document.querySelector("#response-panel");
     is(
       tabpanel.querySelectorAll(".treeRow").length,
@@ -132,8 +132,7 @@ add_task(async function() {
       true,
       "The response error header doesn't have the intended visibility."
     );
-    const jsonView =
-      tabpanel.querySelector(".accordion-item .accordion-header-label") || {};
+    const jsonView = tabpanel.querySelector(".data-label") || {};
     is(
       jsonView.textContent === L10N.getStr("jsonScopeName"),
       true,
@@ -154,12 +153,6 @@ add_task(async function() {
       true,
       "The response image box doesn't have the intended visibility."
     );
-
-    is(
-      tabpanel.querySelectorAll(".accordion-item").length,
-      2,
-      "There should be 2 accordion items displayed in this tabpanel."
-    );
     is(
       tabpanel.querySelectorAll(".empty-notice").length,
       0,
@@ -167,8 +160,7 @@ add_task(async function() {
     );
 
     is(
-      tabpanel.querySelector(".accordion-item .accordion-header-label")
-        .textContent,
+      tabpanel.querySelector(".data-label").textContent,
       L10N.getStr("jsonScopeName"),
       "The json view section doesn't have the correct title."
     );

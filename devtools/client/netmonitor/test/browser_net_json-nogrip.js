@@ -23,8 +23,7 @@ add_task(async function() {
 
   const onResponsePanelReady = waitForDOM(
     document,
-    "#response-panel .accordion-item",
-    2
+    "#response-panel .data-header"
   );
 
   const onPropsViewReady = waitForDOM(

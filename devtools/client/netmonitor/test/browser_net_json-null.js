@@ -24,8 +24,7 @@ add_task(async function() {
 
   const onResponsePanelReady = waitForDOM(
     document,
-    "#response-panel .accordion-item",
-    2
+    "#response-panel .data-header"
   );
 
   const onPropsViewReady = waitForDOM(
@@ -39,9 +38,9 @@ add_task(async function() {
 
   const tabpanel = document.querySelector("#response-panel");
   is(
-    tabpanel.querySelectorAll(".accordion-item").length,
-    2,
-    "There should be 2 accordion items displayed in this tabpanel."
+    tabpanel.querySelectorAll(".raw-data-toggle").length,
+    1,
+    "There should be 1 raw response toggle."
   );
   is(
     tabpanel.querySelectorAll(".treeRow").length,
@@ -73,10 +72,10 @@ add_task(async function() {
     "#response-panel .CodeMirror-code"
   );
 
-  const payloadHeader = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
+  const rawResponseToggle = document.querySelector(
+    "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
-  clickElement(payloadHeader, monitor);
+  clickElement(rawResponseToggle, monitor);
 
   await onCodeMirrorReady;
 
@@ -95,8 +94,7 @@ add_task(async function() {
       true,
       "The response error header doesn't have the intended visibility."
     );
-    const jsonView =
-      panel.querySelector(".accordion-item .accordion-header-label") || {};
+    const jsonView = panel.querySelector(".data-label") || {};
     is(
       jsonView.textContent === L10N.getStr("jsonScopeName"),
       true,

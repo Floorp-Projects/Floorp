@@ -22,7 +22,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  let wait = waitForDOM(document, "#response-panel .accordion-item", 2);
+  let wait = waitForDOM(document, "#response-panel .data-header");
   const waitForPropsView = waitForDOM(
     document,
     "#response-panel .properties-view",
@@ -59,7 +59,7 @@ add_task(async function() {
   // Open the response payload section, it should hide the json section
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   const header = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
+    "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
   clickElement(header, monitor);
   await wait;
@@ -69,12 +69,17 @@ add_task(async function() {
     true,
     "The response error header doesn't have the intended visibility."
   );
-  const jsonView =
-    tabpanel.querySelector(".accordion-item .accordion-header-label") || {};
+  const jsonView = tabpanel.querySelector(".data-label") || {};
   is(
     jsonView.textContent === L10N.getStr("jsonScopeName"),
     true,
     "The response json view has the intended visibility."
+  );
+  is(
+    tabpanel.querySelector(".raw-data-toggle-input .devtools-checkbox-toggle")
+      .checked,
+    true,
+    "The raw response toggle should be on."
   );
   is(
     tabpanel.querySelector(".CodeMirror-code") === null,
@@ -85,12 +90,6 @@ add_task(async function() {
     tabpanel.querySelector(".response-image-box") === null,
     true,
     "The response image box doesn't have the intended visibility."
-  );
-
-  is(
-    tabpanel.querySelectorAll(".accordion-item").length,
-    2,
-    "There should be 2 tree sections displayed in this tabpanel."
   );
   is(
     tabpanel.querySelectorAll(".empty-notice").length,

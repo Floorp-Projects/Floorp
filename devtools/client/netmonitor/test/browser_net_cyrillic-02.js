@@ -52,13 +52,13 @@ add_task(async function() {
   );
   await wait;
 
-  wait = waitForDOM(document, "#response-panel .accordion-item", 2);
+  wait = waitForDOM(document, "#response-panel .data-header");
   clickOnSidebarTab(document, "response");
   await wait;
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   const header = document.querySelector(
-    "#response-panel .accordion-item:last-child .accordion-header"
+    "#response-panel .raw-data-toggle-input .devtools-checkbox-toggle"
   );
   clickElement(header, monitor);
   await wait;
