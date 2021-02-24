@@ -139,12 +139,7 @@ static bool SpammyLayoutWarningsEnabled() {
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void AssertUniqueItem(nsDisplayItem* aItem) {
-  nsIFrame::DisplayItemArray* items =
-      aItem->Frame()->GetProperty(nsIFrame::DisplayItems());
-  if (!items) {
-    return;
-  }
-  for (nsDisplayItemBase* i : *items) {
+  for (nsDisplayItemBase* i : aItem->Frame()->DisplayItems()) {
     if (i != aItem && !i->HasDeletedFrame() && i->Frame() == aItem->Frame() &&
         i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
       if (i->IsPreProcessedItem()) {

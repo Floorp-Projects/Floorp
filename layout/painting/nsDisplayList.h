@@ -2249,7 +2249,6 @@ class nsDisplayItemBase : public nsDisplayItemLink {
     MOZ_ASSERT(aFrame);
 
     if (mFrame && aFrame == mFrame) {
-      MOZ_ASSERT(!mFrame->HasDisplayItem(this));
       mFrame = nullptr;
       SetDeletedFrame();
     }
