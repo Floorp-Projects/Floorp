@@ -36,9 +36,6 @@ class nsTextBoxFrame final : public nsLeafBoxFrame {
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* asPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
-
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
@@ -93,8 +90,6 @@ class nsTextBoxFrame final : public nsLeafBoxFrame {
 
   void GetTextSize(gfxContext& aRenderingContext, const nsString& aString,
                    nsSize& aSize, nscoord& aAscent);
-
-  nsresult RegUnregAccessKey(bool aDoReg);
 
  private:
   bool AlwaysAppendAccessKey();

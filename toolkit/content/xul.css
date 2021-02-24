@@ -111,6 +111,15 @@ vbox {
 }
 
 /********** label **********/
+
+label {
+  display: inline-block;
+}
+
+description {
+  display: flow-root;
+}
+
 label.text-link, label[onclick] {
   -moz-user-focus: normal;
 }
@@ -588,7 +597,7 @@ findbar {
 }
 
 /* Some elements that in HTML blocks should be inline-level by default */
-label, button, image {
+button, image {
   display: -moz-inline-box;
 }
 

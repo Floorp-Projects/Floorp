@@ -1451,14 +1451,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 #ifdef MOZ_XUL
   static const FrameConstructionData* FindPopupGroupData(const Element&,
                                                          ComputedStyle&);
-  // sXULTextBoxData used for both labels and descriptions
-  static const FrameConstructionData sXULTextBoxData;
   static const FrameConstructionData* FindXULButtonData(const Element&,
                                                         ComputedStyle&);
-  static const FrameConstructionData* FindXULLabelData(const Element&,
-                                                       ComputedStyle&);
-  static const FrameConstructionData* FindXULDescriptionData(const Element&,
-                                                             ComputedStyle&);
+  static const FrameConstructionData* FindXULLabelOrDescriptionData(
+      const Element&, ComputedStyle&);
 #  ifdef XP_MACOSX
   static const FrameConstructionData* FindXULMenubarData(const Element&,
                                                          ComputedStyle&);

@@ -53,7 +53,6 @@ if CONFIG["MOZ_XUL"]:
         "nsSplitterFrame.cpp",
         "nsTextBoxFrame.cpp",
         "nsTitleBarFrame.cpp",
-        "nsXULLabelFrame.cpp",
         "nsXULPopupManager.cpp",
     ]
 
