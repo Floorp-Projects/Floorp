@@ -763,7 +763,7 @@
 
 - name: browser.cache.offline.enable
   type: bool
-  value: true
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: browser.cache.offline.storage.enable
