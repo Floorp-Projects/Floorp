@@ -1228,7 +1228,7 @@ static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
 // and looking for consecutive stops that can be merged into a single larger
 // gradient, then interpolating between those larger gradients within the span.
 template <bool BLEND>
-static void commitLinearGradient(sampler2D sampler, int address, float size,
+static bool commitLinearGradient(sampler2D sampler, int address, float size,
                                  bool repeat, Float offset, uint32_t* buf,
                                  int span) {
   assert(sampler->format == TextureFormat::RGBA32F);
@@ -1238,6 +1238,9 @@ static void commitLinearGradient(sampler2D sampler, int address, float size,
   // how far within the gradient table we advance for every step in output,
   // normalized to gradient table size.
   float delta = (offset.y - offset.x) * 4.0f;
+  if (!isfinite(delta)) {
+    return false;
+  }
   for (; span > 0;) {
     // If repeat is desired, we need to limit the offset to a fractional value.
     if (repeat) {
@@ -1261,16 +1264,7 @@ static void commitLinearGradient(sampler2D sampler, int address, float size,
       if (delta > 0) {
         chunks = min(chunks, -offset.x / delta);
       }
-    } else if (offset.x >= 1) {
-      // If we're above the gradient table, use the last color stop. We can
-      // only intercept the table if walking backward.
-      startEntry = 1.0f + size;
-      minIndex = int(startEntry);
-      maxIndex = minIndex;
-      if (delta < 0) {
-        chunks = min(chunks, (1 - offset.x) / delta);
-      }
-    } else {
+    } else if (offset.x < 1) {
       // Otherwise, we're inside the gradient table. Depending on the direction
       // we're walking the the table, we may intersect either the 0 or 1 offset.
       // Compute the start entry based on our initial offset, and compute the
@@ -1305,12 +1299,21 @@ static void commitLinearGradient(sampler2D sampler, int address, float size,
         }
         chunks = min(chunks, (minIndex - startEntry) / (delta * size));
       }
+    } else {
+      // If we're above the gradient table, use the last color stop. We can
+      // only intercept the table if walking backward.
+      startEntry = 1.0f + size;
+      minIndex = int(startEntry);
+      maxIndex = minIndex;
+      if (delta < 0) {
+        chunks = min(chunks, (1 - offset.x) / delta);
+      }
     }
     // If there are any amount of whole chunks of a merged gradient found,
     // then we want to process that as a single gradient span with the start
     // and end colors from the min and max entries.
-    int inside = int(chunks);
-    if (inside > 0) {
+    if (chunks >= 1.0f) {
+      int inside = int(chunks);
       // Sample the start color from the min entry and the end color from the
       // max entry of the merged gradient. These are scaled to a range of
       // 0..0xFF00, as that is the largest shifted value that can fit in a U16.
@@ -1372,6 +1375,7 @@ static void commitLinearGradient(sampler2D sampler, int address, float size,
     buf += 4;
     offset += delta;
   }
+  return true;
 }
 
 // Commits an entire span of a linear gradient, given the address of a table
@@ -1382,15 +1386,20 @@ static void commitLinearGradient(sampler2D sampler, int address, float size,
 // and how to step through the gradient table.
 #define swgl_commitLinearGradientRGBA8(sampler, address, size, repeat, offset) \
   do {                                                                         \
+    bool drawn = false;                                                        \
     if (blend_key) {                                                           \
-      commitLinearGradient<true>(sampler, address, size, repeat, offset,       \
-                                 swgl_OutRGBA8, swgl_SpanLength);              \
+      drawn =                                                                  \
+          commitLinearGradient<true>(sampler, address, size, repeat, offset,   \
+                                     swgl_OutRGBA8, swgl_SpanLength);          \
     } else {                                                                   \
-      commitLinearGradient<false>(sampler, address, size, repeat, offset,      \
-                                  swgl_OutRGBA8, swgl_SpanLength);             \
+      drawn =                                                                  \
+          commitLinearGradient<false>(sampler, address, size, repeat, offset,  \
+                                      swgl_OutRGBA8, swgl_SpanLength);         \
     }                                                                          \
-    swgl_OutRGBA8 += swgl_SpanLength;                                          \
-    swgl_SpanLength = 0;                                                       \
+    if (drawn) {                                                               \
+      swgl_OutRGBA8 += swgl_SpanLength;                                        \
+      swgl_SpanLength = 0;                                                     \
+    }                                                                          \
   } while (0)
 
 template <bool CLAMP, typename V>
@@ -1413,7 +1422,7 @@ static ALWAYS_INLINE auto fastLength(V v) {
 // gradient, then interpolating between those larger gradients within the span
 // based on the computed position relative to a radius.
 template <bool BLEND>
-static void commitRadialGradient(sampler2D sampler, int address, float size,
+static bool commitRadialGradient(sampler2D sampler, int address, float size,
                                  bool repeat, vec2 pos, float radius,
                                  uint32_t* buf, int span) {
   assert(sampler->format == TextureFormat::RGBA32F);
@@ -1442,6 +1451,9 @@ static void commitRadialGradient(sampler2D sampler, int address, float size,
   vec2_scalar pos0 = {pos.x.x, pos.y.x};
   vec2_scalar delta = {pos.x.y - pos.x.x, pos.y.y - pos.y.x};
   float deltaDelta = dot(delta, delta);
+  if (!isfinite(deltaDelta) || !isfinite(radius)) {
+    return false;
+  }
   float invDelta, middleT, middleB;
   if (deltaDelta > 0) {
     invDelta = 1.0f / deltaDelta;
@@ -1503,16 +1515,7 @@ static void commitRadialGradient(sampler2D sampler, int address, float size,
       if (t >= middleT) {
         intercept = radius;
       }
-    } else if (offset.x >= 1) {
-      // If outside the outer radius of the gradient table, then use the last
-      // stop. Set the intercept to advance toward the valid part of the
-      // gradient table if going in, or just run to the end of the span if going
-      // away from the gradient.
-      minIndex = maxIndex;
-      if (t < middleT) {
-        intercept = radius + 1;
-      }
-    } else {
+    } else if (offset.x < 1) {
       // Otherwise, we're inside the valid part of the gradient table.
       minIndex = int(1.0f + offset.x * size);
       maxIndex = minIndex;
@@ -1543,6 +1546,15 @@ static void commitRadialGradient(sampler2D sampler, int address, float size,
       // Convert from a table index into units of radius from the center of the
       // gradient.
       intercept = clamp((intercept - 1.0f) / size, 0.0f, 1.0f) + startRadius;
+    } else {
+      // If outside the outer radius of the gradient table, then use the last
+      // stop. Set the intercept to advance toward the valid part of the
+      // gradient table if going in, or just run to the end of the span if going
+      // away from the gradient.
+      minIndex = maxIndex;
+      if (t < middleT) {
+        intercept = radius + 1;
+      }
     }
     // Solve the quadratic for t to find where the merged gradient ends. If no
     // intercept is found, just go to the middle or end of the span.
@@ -1555,8 +1567,8 @@ static void commitRadialGradient(sampler2D sampler, int address, float size,
       }
     }
     // Figure out how many chunks are actually inside the merged gradient.
-    int inside = int(endT - t) & ~3;
-    if (inside > 0) {
+    if (t + 4.0f <= endT) {
+      int inside = int(endT - t) & ~3;
       // Convert start and end colors to BGRA and scale to 0..255 range later.
       auto minColorF = stops[minIndex].startColor.zyxw * 255.0f;
       auto maxColorF = stops[maxIndex].end_color().zyxw * 255.0f;
@@ -1609,6 +1621,7 @@ static void commitRadialGradient(sampler2D sampler, int address, float size,
     dotPos += dotPosDelta;
     dotPosDelta += deltaDelta2;
   }
+  return true;
 }
 
 // Commits an entire span of a radial gradient similar to
@@ -1618,15 +1631,20 @@ static void commitRadialGradient(sampler2D sampler, int address, float size,
 #define swgl_commitRadialGradientRGBA8(sampler, address, size, repeat, pos,    \
                                        radius)                                 \
   do {                                                                         \
+    bool drawn = false;                                                        \
     if (blend_key) {                                                           \
-      commitRadialGradient<true>(sampler, address, size, repeat, pos, radius,  \
-                                 swgl_OutRGBA8, swgl_SpanLength);              \
+      drawn =                                                                  \
+          commitRadialGradient<true>(sampler, address, size, repeat, pos,      \
+                                     radius, swgl_OutRGBA8, swgl_SpanLength);  \
     } else {                                                                   \
-      commitRadialGradient<false>(sampler, address, size, repeat, pos, radius, \
-                                  swgl_OutRGBA8, swgl_SpanLength);             \
+      drawn =                                                                  \
+          commitRadialGradient<false>(sampler, address, size, repeat, pos,     \
+                                      radius, swgl_OutRGBA8, swgl_SpanLength); \
     }                                                                          \
-    swgl_OutRGBA8 += swgl_SpanLength;                                          \
-    swgl_SpanLength = 0;                                                       \
+    if (drawn) {                                                               \
+      swgl_OutRGBA8 += swgl_SpanLength;                                        \
+      swgl_SpanLength = 0;                                                     \
+    }                                                                          \
   } while (0)
 
 // Extension to set a clip mask image to be sampled during blending. The offset
