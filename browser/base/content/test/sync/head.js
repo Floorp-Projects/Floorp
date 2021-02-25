@@ -18,7 +18,7 @@ function setupSendTabMocks({
     status: state,
     syncEnabled: true,
   });
-  sandbox.stub(gSync, "isSendableURI").returns(isSendableURI);
+  sandbox.stub(BrowserUtils, "isShareableURL").returns(isSendableURI);
   sandbox.stub(fxAccounts.device, "refreshDeviceList").resolves(true);
   return sandbox;
 }
