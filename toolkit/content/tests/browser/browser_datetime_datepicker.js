@@ -224,19 +224,18 @@ add_task(async function test_datepicker_focus_change() {
   let browser = helper.tab.linkedBrowser;
   await verifyPickerPosition(browser, "date");
 
-  isnot(helper.panel.hidden, "Panel should be visible");
+  is(helper.panel.state, "open", "Panel should be visible");
+
+  let closed = helper.promisePickerClosed();
 
   await SpecialPowers.spawn(browser, [], () => {
     content.document.querySelector("#other").focus();
   });
 
-  // NOTE: Would be cool to be able to use promisePickerClosed(), but
-  // popuphidden isn't really triggered for this code path it seems, so oh
-  // well.
-  await BrowserTestUtils.waitForCondition(
-    () => helper.panel.hidden,
-    "waiting for close"
-  );
+  await closed;
+
+  ok(true, "Should be closed now");
+
   await helper.tearDown();
 });
 

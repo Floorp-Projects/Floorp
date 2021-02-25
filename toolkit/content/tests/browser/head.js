@@ -301,7 +301,7 @@ class DateTimeTestHelper {
    * Close the panel and the tab
    */
   async tearDown() {
-    if (!this.panel.hidden) {
+    if (this.panel.state != "closed") {
       let pickerClosePromise = this.promisePickerClosed();
       this.panel.hidePopup();
       await pickerClosePromise;

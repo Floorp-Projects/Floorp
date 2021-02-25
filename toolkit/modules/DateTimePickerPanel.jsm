@@ -57,7 +57,6 @@ var DateTimePickerPanel = class {
         break;
       }
     }
-    this.element.hidden = false;
     this.element.openPopupAtScreenRect(
       "after_start",
       rect.left,
@@ -79,7 +78,7 @@ var DateTimePickerPanel = class {
       this
     );
     this.dateTimePopupFrame.setAttribute("src", "");
-    this.element.hidden = true;
+    this.element.hidePopup();
   }
 
   setPopupValue(data) {
@@ -323,7 +322,6 @@ var DateTimePickerPanel = class {
         break;
       }
       case "ClosePopup": {
-        this.element.hidePopup();
         this.closePicker();
         break;
       }
