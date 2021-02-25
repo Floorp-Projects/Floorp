@@ -76,6 +76,7 @@ pub use self::position::AspectRatio;
 pub use self::position::{
     GridAutoFlow, GridTemplateAreas, MasonryAutoFlow, Position, PositionOrAuto, ZIndex,
 };
+pub use self::ratio::Ratio;
 pub use self::rect::NonNegativeLengthOrNumberRect;
 pub use self::resolution::Resolution;
 pub use self::svg::MozContextProperties;
@@ -121,6 +122,7 @@ pub mod outline;
 pub mod page;
 pub mod percentage;
 pub mod position;
+pub mod ratio;
 pub mod rect;
 pub mod resolution;
 pub mod svg;
