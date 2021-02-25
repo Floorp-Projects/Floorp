@@ -404,18 +404,6 @@ var gSync = {
     return targets.sort((a, b) => a.name.localeCompare(b.name));
   },
 
-  _generateNodeGetters() {
-    for (let k of ["Status", "Avatar", "Label"]) {
-      let prop = "appMenu" + k;
-      let suffix = k.toLowerCase();
-      delete this[prop];
-      this.__defineGetter__(prop, function() {
-        delete this[prop];
-        return (this[prop] = document.getElementById("appMenu-fxa-" + suffix));
-      });
-    }
-  },
-
   _definePrefGetters() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -449,8 +437,6 @@ var gSync = {
     }
 
     MozXULElement.insertFTLIfNeeded("browser/sync.ftl");
-
-    this._generateNodeGetters();
 
     // Label for the sync buttons.
     const appMenuLabel = PanelMultiView.getViewNode(
@@ -756,10 +742,12 @@ var gSync = {
       return;
     }
 
-    if (
-      PanelUI.protonAppMenuEnabled &&
-      UIState.get().status === UIState.STATUS_NOT_CONFIGURED
-    ) {
+    // We read the state that's been set on the root node, since that makes
+    // it easier to test the various front-end states without having to actually
+    // have UIState know about it.
+    let fxaStatus = document.documentElement.getAttribute("fxastatus");
+
+    if (PanelUI.protonAppMenuEnabled && fxaStatus == "not_configured") {
       this.openFxAEmailFirstPageFromFxaMenu(
         PanelMultiView.getViewNode(document, "PanelUI-fxa")
       );
@@ -779,7 +767,7 @@ var gSync = {
       "PanelUI-sign-out-separator"
     );
     fxaSignOutButtonEl.hidden = fxaSignOutSeparator.hidden =
-      UIState.get().status != UIState.STATUS_SIGNED_IN;
+      fxaStatus != "signedin";
 
     this.enableSendTabIfValidTab();
 
