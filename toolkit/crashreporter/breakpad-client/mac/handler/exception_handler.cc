@@ -511,6 +511,8 @@ kern_return_t ForwardException(mach_port_t task, mach_port_t failed_thread,
 
 // static
 void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
+  pthread_setname_np("Breakpad ExceptionHandler");
+
   ExceptionHandler* self =
     reinterpret_cast<ExceptionHandler*>(exception_handler_class);
   ExceptionMessage receive;

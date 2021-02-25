@@ -91,6 +91,8 @@ bool CrashGenerationServer::Stop() {
 
 // static
 void *CrashGenerationServer::WaitForMessages(void *server) {
+  pthread_setname_np("Breakpad CrashGenerationServer");
+
   CrashGenerationServer *self =
       reinterpret_cast<CrashGenerationServer*>(server);
   while (self->WaitForOneMessage()) {}
