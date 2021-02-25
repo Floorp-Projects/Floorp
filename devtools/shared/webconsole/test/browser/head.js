@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 );
 
 async function getTargetForTab(tab) {
-  const target = await TargetFactory.forTab(tab);
+  const target = await TabTargetFactory.forTab(tab);
   info("Attaching to the active tab.");
   await target.attach();
   return target;
