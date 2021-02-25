@@ -204,18 +204,18 @@ partial interface HTMLMediaElement {
   Promise<void> seekToNextFrame();
 };
 
-/* Internal testing only API */
+/*
+ * These APIs are testing only, they are used to simulate visibility changes to help debug and write
+ * tests about suspend-video-decoding.
+ *
+ * - SetVisible() is for simulating visibility changes.
+ * - HasSuspendTaint() is for querying that the element's decoder cannot suspend
+ *   video decoding because it has been tainted by an operation, such as
+ *   drawImage().
+ * - isVisible is a boolean value which indicate whether media element is visible.
+ * - isVideoDecodingSuspended() is used to know whether video decoding has suspended.
+ */
 partial interface HTMLMediaElement {
-  // These APIs are used to simulate visibility changes to help debug and write
-  // tests about suspend-video-decoding.
-  // - SetVisible() is for simulating visibility changes.
-  // - HasSuspendTaint() is for querying that the element's decoder cannot suspend
-  //   video decoding because it has been tainted by an operation, such as
-  //   drawImage().
-  // - isInViewPort is a boolean value which indicate whether media element is
-  //   in view port.
-  // - isVideoDecodingSuspended() is used to know whether video decoding has
-  //   suspended.
   [Pref="media.test.video-suspend"]
   void setVisible(boolean aVisible);
 
@@ -236,16 +236,6 @@ partial interface HTMLMediaElement {
 
   [ChromeOnly]
   readonly attribute double videoDecodeSuspendedTime;
-
-  // These APIs are used for decoder doctor tests.
-  [ChromeOnly]
-  void setFormatDiagnosticsReportForMimeType(DOMString mimeType, DecoderDoctorReportType error);
-
-  [Throws, ChromeOnly]
-  void setDecodeError(DOMString error);
-
-  [ChromeOnly]
-  void setAudioSinkFailedStartup();
 };
 
 /* Audio Output Devices API */

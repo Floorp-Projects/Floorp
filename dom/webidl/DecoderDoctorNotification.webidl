@@ -14,18 +14,6 @@ enum DecoderDoctorNotificationType {
   "decode-warning",
 };
 
-enum DecoderDoctorReportType {
-  "mediawidevinenowmf",
-  "mediawmfneeded",
-  "mediaplatformdecodernotfound",
-  "mediacannotplaynodecoders",
-  "medianodecoders",
-  "mediacannotinitializepulseaudio",
-  "mediaunsupportedlibavcodec",
-  "mediadecodeerror",
-  "mediadecodewarning",
-};
-
 [GenerateToJSON]
 dictionary DecoderDoctorNotification {
   required DecoderDoctorNotificationType type;

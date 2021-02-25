@@ -6,13 +6,11 @@
 
 #include "DecoderDoctorDiagnostics.h"
 
-#include <string.h>
-
 #include "VideoUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/StaticPrefs_media.h"
+#include "mozilla/dom/DecoderDoctorNotificationBinding.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
@@ -256,7 +254,7 @@ static const NotificationAndReportStringId sMediaWMFNeeded = {
     dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
     "MediaWMFNeeded",
     {ReportParam::Formats}};
-static const NotificationAndReportStringId sMediaFFMpegNotFound = {
+static const NotificationAndReportStringId sMediaPlatformDecoderNotFound = {
     dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
     "MediaPlatformDecoderNotFound",
     {ReportParam::Formats}};
@@ -286,12 +284,15 @@ static const NotificationAndReportStringId sMediaDecodeWarning = {
     {ReportParam::ResourceURL, ReportParam::DecodeIssue}};
 
 static const NotificationAndReportStringId* const
-    sAllNotificationsAndReportStringIds[] = {
-        &sMediaWidevineNoWMF,    &sMediaWMFNeeded,
-        &sMediaFFMpegNotFound,   &sMediaCannotPlayNoDecoders,
-        &sMediaNoDecoders,       &sCannotInitializePulseAudio,
-        &sUnsupportedLibavcodec, &sMediaDecodeError,
-        &sMediaDecodeWarning};
+    sAllNotificationsAndReportStringIds[] = {&sMediaWidevineNoWMF,
+                                             &sMediaWMFNeeded,
+                                             &sMediaPlatformDecoderNotFound,
+                                             &sMediaCannotPlayNoDecoders,
+                                             &sMediaNoDecoders,
+                                             &sCannotInitializePulseAudio,
+                                             &sUnsupportedLibavcodec,
+                                             &sMediaDecodeError,
+                                             &sMediaDecodeWarning};
 
 // Create a webcompat-friendly description of a MediaResult.
 static nsString MediaResultDescription(const MediaResult& aResult,
@@ -303,55 +304,6 @@ static nsString MediaResultDescription(const MediaResult& aResult,
       name.get(), static_cast<uint32_t>(aResult.Code()),
       aResult.Message().IsEmpty() ? "" : "\nDetails: ",
       aResult.Message().get()));
-}
-
-static bool IsNotificationAllowedOnPlatform(
-    const NotificationAndReportStringId& aNotification) {
-  // Allow all notifications during testing.
-  if (StaticPrefs::media_decoder_doctor_testing()) {
-    return true;
-  }
-  // These notifications are platform independent.
-  if (aNotification.mNotificationType ==
-          dom::DecoderDoctorNotificationType::Cannot_play ||
-      aNotification.mNotificationType ==
-          dom::DecoderDoctorNotificationType::
-              Can_play_but_some_missing_decoders ||
-      aNotification.mNotificationType ==
-          dom::DecoderDoctorNotificationType::Decode_error ||
-      aNotification.mNotificationType ==
-          dom::DecoderDoctorNotificationType::Decode_warning) {
-    return true;
-  }
-#if defined(XP_WIN)
-  if (aNotification.mNotificationType ==
-      dom::DecoderDoctorNotificationType::Platform_decoder_not_found) {
-    return strcmp(sMediaWMFNeeded.mReportStringId,
-                  aNotification.mReportStringId) == 0 ||
-           strcmp(sMediaWidevineNoWMF.mReportStringId,
-                  aNotification.mReportStringId) == 0;
-  }
-#endif
-#if defined(MOZ_FFMPEG)
-  if (aNotification.mNotificationType ==
-      dom::DecoderDoctorNotificationType::Platform_decoder_not_found) {
-    return strcmp(sMediaFFMpegNotFound.mReportStringId,
-                  aNotification.mReportStringId) == 0;
-  }
-  if (aNotification.mNotificationType ==
-      dom::DecoderDoctorNotificationType::Unsupported_libavcodec) {
-    return strcmp(sUnsupportedLibavcodec.mReportStringId,
-                  aNotification.mReportStringId) == 0;
-  }
-#endif
-#ifdef MOZ_PULSEAUDIO
-  if (aNotification.mNotificationType ==
-      dom::DecoderDoctorNotificationType::Cannot_initialize_pulseaudio) {
-    return strcmp(sCannotInitializePulseAudio.mReportStringId,
-                  aNotification.mReportStringId) == 0;
-  }
-#endif
-  return false;
 }
 
 static void DispatchNotification(
@@ -413,11 +365,6 @@ static void ReportToConsole(dom::Document* aDocument,
           ? ""
           : NS_ConvertUTF16toUTF8(aParams[0]).get(),
       aParams.Length() < 2 ? "" : ", ...");
-  if (StaticPrefs::media_decoder_doctor_testing()) {
-    Unused << nsContentUtils::DispatchTrustedEvent(
-        aDocument, ToSupports(aDocument), u"mozreportmediaerror"_ns,
-        CanBubble::eNo, Cancelable::eNo);
-  }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Media"_ns,
                                   aDocument, nsContentUtils::eDOM_PROPERTIES,
                                   aConsoleStringId, aParams);
@@ -477,13 +424,6 @@ static void ReportAnalysis(dom::Document* aDocument,
     return;
   }
 
-  // Some errors should only appear on the specific platform. Eg. WMF related
-  // error only happens on Windows.
-  if (!IsNotificationAllowedOnPlatform(aNotification)) {
-    DD_WARN("Platform doesn't support '%s'!", aNotification.mReportStringId);
-    return;
-  }
-
   nsString decodeIssueDescription;
   if (aDecodeIssue != NS_OK) {
     decodeIssueDescription.Assign(
@@ -519,15 +459,8 @@ static void ReportAnalysis(dom::Document* aDocument,
     ReportToConsole(aDocument, aNotification.mReportStringId, params);
   }
 
-  const bool allowNotification = AllowNotification(aNotification);
-  const bool allowDecodeIssue =
-      AllowDecodeIssue(aDecodeIssue, aDecodeIssueIsError);
-  DD_INFO(
-      "ReportAnalysis for %s (decodeResult=%s) [AllowNotification=%d, "
-      "AllowDecodeIssue=%d]",
-      aNotification.mReportStringId, aDecodeIssue.ErrorName().get(),
-      allowNotification, allowDecodeIssue);
-  if (allowNotification && allowDecodeIssue) {
+  if (AllowNotification(aNotification) &&
+      AllowDecodeIssue(aDecodeIssue, aDecodeIssueIsError)) {
     DispatchNotification(aDocument->GetInnerWindow(), aNotification, aIsSolved,
                          aFormats, decodeIssueDescription, aDocURL,
                          aResourceURL);
@@ -556,31 +489,18 @@ static bool FormatsListContains(const nsAString& aList,
   return StringListContains(aList, CleanItemForFormatsList(aItem));
 }
 
-static const char* GetLinkStatusLibraryName() {
-#if defined(MOZ_FFMPEG)
-  return FFmpegRuntimeLinker::LinkStatusLibraryName();
-#else
-  return "no library (ffmpeg disabled during build)";
-#endif
-}
-
-static const char* GetLinkStatusString() {
-#if defined(MOZ_FFMPEG)
-  return FFmpegRuntimeLinker::LinkStatusString();
-#else
-  return "no link (ffmpeg disabled during build)";
-#endif
-}
-
 void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoString playableFormats;
   nsAutoString unplayableFormats;
   // Subsets of unplayableFormats that require a specific platform decoder:
+#if defined(XP_WIN)
   nsAutoString formatsRequiringWMF;
+#endif
+#if defined(MOZ_FFMPEG)
   nsAutoString formatsRequiringFFMpeg;
-  nsAutoString formatsLibAVCodecUnsupported;
+#endif
   nsAutoString supportedKeySystems;
   nsAutoString unsupportedKeySystems;
   DecoderDoctorDiagnostics::KeySystemIssue lastKeySystemIssue =
@@ -601,16 +521,18 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
         } else {
           AppendToFormatsList(unplayableFormats,
                               diag.mDecoderDoctorDiagnostics.Format());
+#if defined(XP_WIN)
           if (diag.mDecoderDoctorDiagnostics.DidWMFFailToLoad()) {
             AppendToFormatsList(formatsRequiringWMF,
                                 diag.mDecoderDoctorDiagnostics.Format());
-          } else if (diag.mDecoderDoctorDiagnostics.DidFFmpegNotFound()) {
+          }
+#endif
+#if defined(MOZ_FFMPEG)
+          if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
             AppendToFormatsList(formatsRequiringFFMpeg,
                                 diag.mDecoderDoctorDiagnostics.Format());
-          } else if (diag.mDecoderDoctorDiagnostics.IsLibAVCodecUnsupported()) {
-            AppendToFormatsList(formatsLibAVCodecUnsupported,
-                                diag.mDecoderDoctorDiagnostics.Format());
           }
+#endif
         }
         break;
       case DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest:
@@ -733,6 +655,7 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
     if (playableFormats.IsEmpty()) {
       // No requested formats can be played. See if we can help the user, by
       // going through expected decoders from most to least desirable.
+#if defined(XP_WIN)
       if (!formatsRequiringWMF.IsEmpty()) {
         DD_INFO(
             "DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - "
@@ -742,32 +665,46 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
         ReportAnalysis(mDocument, sMediaWMFNeeded, false, formatsRequiringWMF);
         return;
       }
+#endif
+#if defined(MOZ_FFMPEG)
       if (!formatsRequiringFFMpeg.IsEmpty()) {
-        MOZ_DIAGNOSTIC_ASSERT(formatsLibAVCodecUnsupported.IsEmpty());
-        DD_INFO(
-            "DecoderDoctorDocumentWatcher[%p, "
-            "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
-            "Cannot play media because ffmpeg was not found (Reason: %s)",
-            this, mDocument,
-            NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
-            GetLinkStatusString());
-        ReportAnalysis(mDocument, sMediaFFMpegNotFound, false,
-                       formatsRequiringFFMpeg);
-        return;
+        switch (FFmpegRuntimeLinker::LinkStatusCode()) {
+          case FFmpegRuntimeLinker::LinkStatus_INVALID_FFMPEG_CANDIDATE:
+          case FFmpegRuntimeLinker::LinkStatus_UNUSABLE_LIBAV57:
+          case FFmpegRuntimeLinker::LinkStatus_INVALID_LIBAV_CANDIDATE:
+          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_FFMPEG:
+          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_LIBAV:
+          case FFmpegRuntimeLinker::LinkStatus_INVALID_CANDIDATE:
+            DD_INFO(
+                "DecoderDoctorDocumentWatcher[%p, "
+                "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
+                "Cannot play media because of unsupported %s (Reason: %s)",
+                this, mDocument,
+                NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
+                FFmpegRuntimeLinker::LinkStatusLibraryName(),
+                FFmpegRuntimeLinker::LinkStatusString());
+            ReportAnalysis(mDocument, sUnsupportedLibavcodec, false,
+                           formatsRequiringFFMpeg);
+            return;
+          case FFmpegRuntimeLinker::LinkStatus_INIT:
+            MOZ_FALLTHROUGH_ASSERT("Unexpected LinkStatus_INIT");
+          case FFmpegRuntimeLinker::LinkStatus_SUCCEEDED:
+            MOZ_FALLTHROUGH_ASSERT("Unexpected LinkStatus_SUCCEEDED");
+          case FFmpegRuntimeLinker::LinkStatus_NOT_FOUND:
+            DD_INFO(
+                "DecoderDoctorDocumentWatcher[%p, "
+                "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
+                "Cannot play media because platform decoder was not found "
+                "(Reason: %s)",
+                this, mDocument,
+                NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
+                FFmpegRuntimeLinker::LinkStatusString());
+            ReportAnalysis(mDocument, sMediaPlatformDecoderNotFound, false,
+                           formatsRequiringFFMpeg);
+            return;
+        }
       }
-      if (!formatsLibAVCodecUnsupported.IsEmpty()) {
-        MOZ_DIAGNOSTIC_ASSERT(formatsRequiringFFMpeg.IsEmpty());
-        DD_INFO(
-            "DecoderDoctorDocumentWatcher[%p, "
-            "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
-            "Cannot play media because of unsupported %s (Reason: %s)",
-            this, mDocument,
-            NS_ConvertUTF16toUTF8(formatsLibAVCodecUnsupported).get(),
-            GetLinkStatusLibraryName(), GetLinkStatusString());
-        ReportAnalysis(mDocument, sUnsupportedLibavcodec, false,
-                       formatsLibAVCodecUnsupported);
-        return;
-      }
+#endif
       DD_INFO(
           "DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - "
           "Cannot play media, unplayable formats: %s",
@@ -1030,6 +967,7 @@ void DecoderDoctorDiagnostics::StoreEvent(dom::Document* aDocument,
   }
 
   // Don't keep events for later processing, just handle them now.
+#ifdef MOZ_PULSEAUDIO
   switch (aEvent.mDomain) {
     case DecoderDoctorEvent::eAudioSinkStartup:
       if (aEvent.mResult == NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR) {
@@ -1047,6 +985,7 @@ void DecoderDoctorDiagnostics::StoreEvent(dom::Document* aDocument,
       }
       break;
   }
+#endif  // MOZ_PULSEAUDIO
 }
 
 void DecoderDoctorDiagnostics::StoreDecodeError(dom::Document* aDocument,
@@ -1176,8 +1115,8 @@ nsCString DecoderDoctorDiagnostics::GetDescription() const {
       if (mFlags.contains(Flags::WMFFailedToLoad)) {
         s += ", Windows platform decoder failed to load";
       }
-      if (mFlags.contains(Flags::FFmpegNotFound)) {
-        s += ", Linux platform decoder not found";
+      if (mFlags.contains(Flags::FFmpegFailedToLoad)) {
+        s += ", Linux platform decoder failed to load";
       }
       if (mFlags.contains(Flags::GMPPDMFailedToStartup)) {
         s += ", GMP PDM failed to startup";
@@ -1224,58 +1163,6 @@ nsCString DecoderDoctorDiagnostics::GetDescription() const {
       break;
   }
   return s;
-}
-
-static const char* ToDecoderDoctorReportTypeStr(
-    const dom::DecoderDoctorReportType& aType) {
-  switch (aType) {
-    case dom::DecoderDoctorReportType::Mediawidevinenowmf:
-      return sMediaWidevineNoWMF.mReportStringId;
-    case dom::DecoderDoctorReportType::Mediawmfneeded:
-      return sMediaWMFNeeded.mReportStringId;
-    case dom::DecoderDoctorReportType::Mediaplatformdecodernotfound:
-      return sMediaFFMpegNotFound.mReportStringId;
-    case dom::DecoderDoctorReportType::Mediacannotplaynodecoders:
-      return sMediaCannotPlayNoDecoders.mReportStringId;
-    case dom::DecoderDoctorReportType::Medianodecoders:
-      return sMediaNoDecoders.mReportStringId;
-    case dom::DecoderDoctorReportType::Mediacannotinitializepulseaudio:
-      return sCannotInitializePulseAudio.mReportStringId;
-    case dom::DecoderDoctorReportType::Mediaunsupportedlibavcodec:
-      return sUnsupportedLibavcodec.mReportStringId;
-    case dom::DecoderDoctorReportType::Mediadecodeerror:
-      return sMediaDecodeError.mReportStringId;
-    case dom::DecoderDoctorReportType::Mediadecodewarning:
-      return sMediaDecodeWarning.mReportStringId;
-    default:
-      DD_DEBUG("Invalid report type to str");
-      return "invalid-report-type";
-  }
-}
-
-void DecoderDoctorDiagnostics::SetDecoderDoctorReportType(
-    const dom::DecoderDoctorReportType& aType) {
-  DD_INFO("Set report type %s", ToDecoderDoctorReportTypeStr(aType));
-  switch (aType) {
-    case dom::DecoderDoctorReportType::Mediawmfneeded:
-      SetWMFFailedToLoad();
-      return;
-    case dom::DecoderDoctorReportType::Mediaplatformdecodernotfound:
-      SetFFmpegNotFound();
-      return;
-    case dom::DecoderDoctorReportType::Mediaunsupportedlibavcodec:
-      SetLibAVCodecUnsupported();
-      return;
-    case dom::DecoderDoctorReportType::Mediacannotplaynodecoders:
-    case dom::DecoderDoctorReportType::Medianodecoders:
-      // Do nothing, because these type are related with can-play, which would
-      // be handled in `StoreFormatDiagnostics()` when sending `false` in the
-      // parameter for the canplay.
-      return;
-    default:
-      DD_DEBUG("Not supported type");
-      return;
-  }
 }
 
 }  // namespace mozilla
