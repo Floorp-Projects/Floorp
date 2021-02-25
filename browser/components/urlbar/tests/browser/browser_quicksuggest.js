@@ -20,6 +20,9 @@ const TEST_DATA = [
     url: `${TEST_URL}?q=frabbits`,
     title: "frabbits",
     keywords: ["frab"],
+    click_url: "http://click.reporting.test.com/",
+    impression_url: "http://impression.reporting.test.com/",
+    advertiser: "TestAdvertiser",
   },
 ];
 

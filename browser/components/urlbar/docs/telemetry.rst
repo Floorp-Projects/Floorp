@@ -412,6 +412,47 @@ TopSites Click
   - ``locale``
     User's current locale.
 
+QuickSuggest Impression
+  This records an impression when the following two conditions hold:
+    - A user needs to complete the search action by picking a result from the Urlbar
+    - There must be a QuickSuggest link shown at the end of that search action.
+      No impression will be recorded for any QuickSuggest links that are shown
+      during the user typing, only the last one (if any) counts
+
+  Payload:
+
+  - ``context_id``
+    A UUID representing this user. Note that it's not client_id, nor can it be used to link to a client_id.
+  - ``search_query``
+    The exact search query typed in by the user.
+  - ``matched_keywords``
+    The matched keywords that leads to the QuickSuggest link.
+  - ``is_clicked``
+    Whether or not the use has clicked on the QuickSuggest link.
+  - ``block_id``
+    A unique identifier for a QuickSuggest link (a.k.a a keywords block).
+  - ``position``
+    The placement of the QuickSuggest link in the Urlbar (1-based).
+  - ``advertiser``
+    The Name of the advertiser.
+  - ``reporting_url``
+    The reporting URL of the QuickSuggest link, normally pointing to the ad partner's reporting endpoint.
+
+QuickSuggest Click
+  This records a click ping when a QuickSuggest link is clicked by the user.
+
+  - ``context_id``
+    A UUID representing this user. Note that it's not client_id, nor can it be
+    used to link to a client_id.
+  - ``advertiser``
+    The Name of the advertiser.
+  - ``block_id``
+    A unique identifier for a QuickSuggest link (a.k.a a keywords block).
+  - ``position``
+    The placement of the QuickSuggest link in the Urlbar (1-based).
+  - ``reporting_url``
+    The reporting URL of the QuickSuggest link, normally pointing to the ad partner's reporting endpoint.
+
 
 Other telemetry relevant to the Address Bar
 -------------------------------------------

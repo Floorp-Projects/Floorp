@@ -8,6 +8,9 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CONTEXTUAL_SERVICES_PING_TYPES:
+    "resource:///modules/PartnerLinkAttribution.jsm",
+  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
@@ -21,6 +24,9 @@ const TEST_DATA = [
     url: TEST_URL,
     title: "frabbits",
     keywords: [TEST_SEARCH_STRING],
+    click_url: "http://click.reporting.test.com/",
+    impression_url: "http://impression.reporting.test.com/",
+    advertiser: "Test-Advertiser",
   },
 ];
 
@@ -38,7 +44,16 @@ const EXPERIMENT_PREF = "browser.urlbar.quicksuggest.enabled";
 const SUGGEST_PREF = "suggest.quicksuggest";
 const ONBOARDING_COUNT_PREF = "quicksuggest.onboardingCount";
 
+// Spy for the custom impression/click sender
+let spy;
+
 add_task(async function init() {
+  sandbox = sinon.createSandbox();
+  spy = sandbox.spy(
+    PartnerLinkAttribution._pingCentre,
+    "sendStructuredIngestionPing"
+  );
+
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
@@ -67,13 +82,14 @@ add_task(async function init() {
   Services.telemetry.clearScalars();
 
   registerCleanupFunction(async () => {
+    sandbox.restore();
     Services.search.setDefault(oldDefaultEngine);
     await Services.search.removeEngine(engine);
     Services.telemetry.canRecordExtended = oldCanRecord;
   });
 });
 
-// Tests the impression scalar.
+// Tests the impression scalar and the custom impression ping.
 add_task(async function impression() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -87,13 +103,15 @@ add_task(async function impression() {
       EventUtils.synthesizeKey("KEY_Enter");
     });
     assertScalars({ [TELEMETRY_SCALARS.IMPRESSION]: index + 1 });
+    assertCustomImpression(index);
   });
 });
 
-// Makes sure the impression scalar is not incremented when the urlbar
-// engagement is abandoned.
+// Makes sure the impression scalar and the custom impression are not incremented
+// when the urlbar engagement is abandoned.
 add_task(async function noImpression_abandonment() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
+    spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_SEARCH_STRING,
@@ -104,13 +122,15 @@ add_task(async function noImpression_abandonment() {
       gURLBar.blur();
     });
     assertScalars({});
+    assertNoCustomImpression();
   });
 });
 
-// Makes sure the impression scalar is not incremented when a Quick Suggest
-// result is not present.
+// Makes sure the impression scalar and the custom impression are not incremented
+// when a Quick Suggest result is not present.
 add_task(async function noImpression_noQuickSuggestResult() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
+    spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "noImpression_noQuickSuggestResult",
@@ -121,12 +141,15 @@ add_task(async function noImpression_noQuickSuggestResult() {
       EventUtils.synthesizeKey("KEY_Enter");
     });
     assertScalars({});
+    assertNoCustomImpression();
   });
 });
 
-// Tests the click scalar by picking a Quick Suggest result with the keyboard.
+// Tests the click scalar and the custom click ping by picking a Quick Suggest
+// result with the keyboard.
 add_task(async function click_keyboard() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
+    spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_SEARCH_STRING,
@@ -142,12 +165,15 @@ add_task(async function click_keyboard() {
       [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
       [TELEMETRY_SCALARS.CLICK]: index + 1,
     });
+    assertCustomClick(index);
   });
 });
 
-// Tests the click scalar by picking a Quick Suggest result with the mouse.
+// Tests the click scalar and the custom click ping by picking a Quick Suggest
+// result with the mouse.
 add_task(async function click_mouse() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
+    spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_SEARCH_STRING,
@@ -162,6 +188,7 @@ add_task(async function click_mouse() {
       [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
       [TELEMETRY_SCALARS.CLICK]: index + 1,
     });
+    assertCustomClick(index);
   });
 });
 
@@ -170,6 +197,7 @@ add_task(async function click_mouse() {
 add_task(async function help_keyboard() {
   UrlbarPrefs.clear(ONBOARDING_COUNT_PREF);
   await BrowserTestUtils.withNewTab("about:blank", async () => {
+    spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_SEARCH_STRING,
@@ -192,6 +220,7 @@ add_task(async function help_keyboard() {
       [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
       [TELEMETRY_SCALARS.HELP]: index + 1,
     });
+    assertNoCustomClick();
   });
 });
 
@@ -200,6 +229,7 @@ add_task(async function help_keyboard() {
 add_task(async function help_mouse() {
   UrlbarPrefs.clear(ONBOARDING_COUNT_PREF);
   await BrowserTestUtils.withNewTab("about:blank", async () => {
+    spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_SEARCH_STRING,
@@ -221,6 +251,7 @@ add_task(async function help_mouse() {
       [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
       [TELEMETRY_SCALARS.HELP]: index + 1,
     });
+    assertNoCustomClick();
   });
 });
 
@@ -317,4 +348,88 @@ async function assertNoQuickSuggestResults() {
       `Result at index ${i} should not be a QuickSuggest result`
     );
   }
+}
+
+/**
+ * Asserts that a custom impression ping is sent with the expected payload.
+ *
+ * @param {number} [index]
+ *   The expected index of the Quick Suggest result.
+ */
+function assertCustomImpression(index) {
+  Assert.ok(spy.calledOnce, "Should send a custom impression ping");
+  // Validate the impression ping
+  let [payload, endpoint] = spy.firstCall.args;
+  Assert.ok(
+    endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION),
+    "Should set the endpoint for QuickSuggest impression"
+  );
+  Assert.ok(!!payload.context_id, "Should set the context_id");
+  Assert.equal(
+    payload.advertiser,
+    "test-advertiser",
+    "Should set the advertiser"
+  );
+  Assert.equal(
+    payload.reporting_url,
+    "http://impression.reporting.test.com/",
+    "Should set the impression reporting URL"
+  );
+  Assert.equal(payload.block_id, 1, "Should set the block_id");
+  Assert.equal(payload.position, index + 1, "Should set the position");
+  Assert.equal(
+    payload.search_query,
+    TEST_SEARCH_STRING,
+    "Should set the search_query"
+  );
+  Assert.equal(
+    payload.matched_keywords,
+    TEST_SEARCH_STRING,
+    "Should set the matched_keywords"
+  );
+}
+
+/**
+ * Asserts no custom impression ping is sent.
+ */
+function assertNoCustomImpression() {
+  Assert.ok(spy.notCalled, "Should not send a custom impression");
+}
+
+/**
+ * Asserts that a custom click ping is sent with the expected payload.
+ *
+ * @param {number} [index]
+ *   The expected index of the Quick Suggest result.
+ */
+function assertCustomClick(index) {
+  // Impression is sent first, followed by the click
+  Assert.ok(spy.calledTwice, "Should send a custom impression ping");
+  // Validate the impression ping
+  let [payload, endpoint] = spy.secondCall.args;
+  Assert.ok(
+    endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION),
+    "Should set the endpoint for QuickSuggest click"
+  );
+  Assert.ok(!!payload.context_id, "Should set the context_id");
+  Assert.equal(
+    payload.advertiser,
+    "test-advertiser",
+    "Should set the advertiser"
+  );
+  Assert.equal(
+    payload.reporting_url,
+    "http://click.reporting.test.com/",
+    "Should set the click reporting URL"
+  );
+  Assert.equal(payload.block_id, 1, "Should set the block_id");
+  Assert.equal(payload.position, index + 1, "Should set the position");
+}
+
+/**
+ * Asserts no custom click ping is sent.
+ */
+function assertNoCustomClick() {
+  // Only called once for the impression
+  Assert.ok(spy.calledOnce, "Should not send a custom impression");
 }
