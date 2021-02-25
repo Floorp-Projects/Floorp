@@ -398,8 +398,20 @@ bool ExceptionHandler::RequestUpload(DWORD crash_id) {
   return crash_generation_client_->RequestUpload(crash_id);
 }
 
+// The SetThreadDescription API was brought in version 1607 of Windows 10.
+typedef HRESULT(WINAPI* SetThreadDescriptionPtr)(HANDLE hThread,
+                                                 PCWSTR lpThreadDescription);
+
 // static
 DWORD ExceptionHandler::ExceptionHandlerThreadMain(void* lpParameter) {
+  static auto SetThreadDescriptionFunc =
+      reinterpret_cast<SetThreadDescriptionPtr>(::GetProcAddress(
+          ::GetModuleHandle(L"Kernel32.dll"), "SetThreadDescription"));
+  if (SetThreadDescriptionFunc) {
+    SetThreadDescriptionFunc(::GetCurrentThread(),
+                             L"Breakpad ExceptionHandler");
+  }
+
   ExceptionHandler* self = reinterpret_cast<ExceptionHandler *>(lpParameter);
   assert(self);
   assert(self->handler_start_semaphore_ != NULL);
