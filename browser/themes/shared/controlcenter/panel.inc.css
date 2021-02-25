@@ -78,7 +78,7 @@
 #identity-popup[httpsonlystatus=failed-sub] [when-httpsonlystatus~=failed-sub],
 /* Show 'disable MCB' button always when there is mixed active content blocked. */
 #identity-popup-securityView-body[mixedcontent~=active-blocked] > button[when-mixedcontent=active-blocked] {
-  display: inherit;
+  display: revert;
 }
 
 /* Hide 'not secure' message in subview when weak cipher or mixed content messages are shown. */
