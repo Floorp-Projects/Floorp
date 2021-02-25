@@ -892,6 +892,36 @@ function haveEventsButNoMore(target, name, count, cancel) {
   );
 }
 
+/*
+ * Resolves the returned promise with an object with usage and reportCount
+ * properties.  `usage` is in the same units as reported by the reporter for
+ * `path`.
+ */
+const collectMemoryUsage = async path => {
+  const MemoryReporterManager = Cc[
+    "@mozilla.org/memory-reporter-manager;1"
+  ].getService(Ci.nsIMemoryReporterManager);
+
+  let usage = 0;
+  let reportCount = 0;
+  await new Promise(resolve =>
+    MemoryReporterManager.getReports(
+      (aProcess, aPath, aKind, aUnits, aAmount, aDesc) => {
+        if (aPath != path) {
+          return;
+        }
+        ++reportCount;
+        usage += aAmount;
+      },
+      null,
+      resolve,
+      null,
+      /* anonymized = */ false
+    )
+  );
+  return { usage, reportCount };
+};
+
 /**
  * This class executes a series of functions in a continuous sequence.
  * Promise-bearing functions are executed after the previous promise completes.
