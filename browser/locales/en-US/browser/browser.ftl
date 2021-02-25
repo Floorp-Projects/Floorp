@@ -538,8 +538,9 @@ pointerlock-warning-no-domain = This document has control of your pointer. Press
 ## Subframe crash notification
 
 crashed-subframe-message = <strong>Part of this page crashed.</strong> To let { -brand-product-name } know about this issue and get it fixed faster, please submit a report.
-crashed-subframe-learnmore-link =
-  .value = Learn More
+crashed-subframe-learnmore =
+  .label = Learn More
+  .accesskey = L
 crashed-subframe-submit =
   .label = Submit report
   .accesskey = S

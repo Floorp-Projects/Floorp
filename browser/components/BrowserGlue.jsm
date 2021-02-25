@@ -3053,9 +3053,29 @@ BrowserGlue.prototype = {
     var text = placesBundle.formatStringFromName("lockPrompt.text", [
       applicationName,
     ]);
+    var buttonText = placesBundle.GetStringFromName(
+      "lockPromptInfoButton.label"
+    );
+    var accessKey = placesBundle.GetStringFromName(
+      "lockPromptInfoButton.accessKey"
+    );
+
+    var helpTopic = "places-locked";
+    var url = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    url += helpTopic;
 
     var win = BrowserWindowTracker.getTopWindow();
-    var buttons = [{ supportPage: "places-locked" }];
+
+    var buttons = [
+      {
+        label: buttonText,
+        accessKey,
+        popup: null,
+        callback(aNotificationBar, aButton) {
+          win.openTrustedLinkIn(url, "tab");
+        },
+      },
+    ];
 
     var notifyBox = win.gBrowser.getNotificationBox();
     var notification = notifyBox.appendNotification(
@@ -4007,12 +4027,15 @@ BrowserGlue.prototype = {
         accessKey: win.gNavigatorBundle.getString(
           "flashHang.helpButton.accesskey"
         ),
-        link:
-          "https://support.mozilla.org/kb/flash-protected-mode-autodisabled",
+        callback() {
+          win.openTrustedLinkIn(
+            "https://support.mozilla.org/kb/flash-protected-mode-autodisabled",
+            "tab"
+          );
+        },
       },
     ];
 
-    // XXXndeakin is this notification still relevant?
     win.gNotificationBox.appendNotification(
       message,
       "flash-hang",

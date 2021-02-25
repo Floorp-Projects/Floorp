@@ -107,13 +107,6 @@
      *             2. This button object definition.
      *             3. The <button> element.
      *             4. The "command" event.
-     *            If the callback returns false, the notification is closed.
-     *          link:
-     *             A url to open when the button is clicked. The button is
-     *             rendered like a link. The callback is called as well.
-     *          supportPage:
-     *            Used for a support page link. If no other properties are specified,
-     *            defaults to a link with a 'Learn more' label.
      *          popup:
      *            If specified, the button will open the popup element with this
      *            ID, anchored to the button. This is alternative to "callback".
@@ -160,8 +153,6 @@
         insertPos = notifications[n];
       }
 
-      MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
-
       // Create the Custom Element and connect it to the document immediately.
       var newitem = document.createXULElement(
         "notification",
@@ -191,52 +182,27 @@
 
       if (aButtons) {
         for (var b = 0; b < aButtons.length; b++) {
-          let button = aButtons[b];
-          let buttonElem;
+          var button = aButtons[b];
+          var buttonElem = document.createXULElement(
+            "button",
+            button.is ? { is: button.is } : {}
+          );
 
-          let link = button.link;
-          let localeId = button["l10n-id"];
-          if (!link && button.supportPage) {
-            link =
-              Services.urlFormatter.formatURLPref("app.support.baseURL") +
-              button.supportPage;
-            if (!button.label && !localeId) {
-              localeId = "notification-learnmore-default-label";
-            }
-          }
-
-          if (link) {
-            buttonElem = document.createXULElement("label", {
-              is: "text-link",
-            });
-            buttonElem.setAttribute("href", link);
-            buttonElem.classList.add("notification-link");
+          if (button["l10n-id"]) {
+            buttonElem.setAttribute("data-l10n-id", button["l10n-id"]);
           } else {
-            buttonElem = document.createXULElement(
-              "button",
-              button.is ? { is: button.is } : {}
-            );
-            buttonElem.classList.add("notification-button");
-
-            if (button.primary) {
-              buttonElem.classList.add("primary");
-            }
-          }
-
-          if (localeId) {
-            buttonElem.setAttribute("data-l10n-id", localeId);
-          } else {
-            buttonElem.setAttribute(link ? "value" : "label", button.label);
+            buttonElem.setAttribute("label", button.label);
             if (typeof button.accessKey == "string") {
               buttonElem.setAttribute("accesskey", button.accessKey);
             }
           }
 
-          if (link) {
-            newitem.messageText.appendChild(buttonElem);
-          } else {
-            newitem.messageDetails.appendChild(buttonElem);
+          buttonElem.classList.add("notification-button");
+          if (button.primary) {
+            buttonElem.classList.add("primary");
           }
+
+          newitem.messageDetails.appendChild(buttonElem);
           buttonElem.buttonInfo = button;
         }
       }
