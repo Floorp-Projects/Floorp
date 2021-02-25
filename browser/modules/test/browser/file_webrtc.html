@@ -1,0 +1,11 @@
+<html>
+<body onload="start()">
+<script>
+let stream;
+async function start()
+{
+  stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+}
+</script>
+</body>
+</html>
