@@ -618,17 +618,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         private var beforeChangedTextNonAutocomplete: String = ""
 
         /**
-         * The start index of the characters about to be replaced.
-         * When using keyboards that have their own text correction enabled this value
-         * will be 0 if no text has been selected beforehand.
-         * This is because text correction from keyboards usually works by replacing the
-         * whole text when the user is typing.
-         * (e.g.: a text of 5 chars is replaced by a text of 6 when inputting a character
-         * or by a text of 4 when backspacing.)
-         * */
-        private var beforeTextChangedIndex: Int = 0
-
-        /**
          * The number of characters that have been changed in [onTextChanged].
          * When using keyboards that do not have their own text correction enabled
          * and the user is pressing backspace this value will be 0.
@@ -638,7 +627,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
             if (!isEnabled || settingAutoComplete) return
             beforeChangedTextNonAutocomplete = getNonAutocompleteText(text)
-            beforeTextChangedIndex = start
         }
 
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
@@ -657,7 +645,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
             // Covers both keyboards with text correction activated and those without.
             val hasBackspaceBeenPressed =
-                    (textChangedCount == 0) || (hasTextShortenedByOne && beforeTextChangedIndex == 0)
+                    textChangedCount == 0 || hasTextShortenedByOne
 
             // No autocompleting when typing a search query
             val afterTextIsSearch = afterNonAutocompleteText.contains(" ")
