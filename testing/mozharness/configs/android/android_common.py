@@ -257,7 +257,7 @@ config = {
                 "--no-slow",
                 "--no-progress",
                 "--format=automation",
-                "--jitflags=all",
+                "--jitflags=%(jittest_flags)s",
                 "--deviceSerial=%(device_serial)s",
             ],
         },

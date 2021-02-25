@@ -120,6 +120,15 @@ class AndroidHardwareTest(
                 "help": "Extra user prefs.",
             },
         ],
+        [
+            ["--jittest-flags"],
+            {
+                "action": "store",
+                "dest": "jittest_flags",
+                "default": "debug",
+                "help": "Flags to run with jittest (all, debug, etc.).",
+            },
+        ],
     ] + copy.deepcopy(testing_config_options)
 
     def __init__(self, require_config_file=False):
@@ -160,6 +169,7 @@ class AndroidHardwareTest(
         self.enable_webrender = c.get("enable_webrender")
         self.enable_fission = c.get("enable_fission")
         self.extra_prefs = c.get("extra_prefs")
+        self.jittest_flags = c.get("jittest_flags")
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -235,6 +245,7 @@ class AndroidHardwareTest(
             "log_raw_level": self.log_raw_level,
             "error_summary_file": error_summary_file,
             "xpcshell_extra": c.get("xpcshell_extra", ""),
+            "jittest_flags": self.jittest_flags,
         }
 
         user_paths = json.loads(os.environ.get("MOZHARNESS_TEST_PATHS", '""'))
