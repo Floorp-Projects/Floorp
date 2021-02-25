@@ -25,8 +25,6 @@ async function setup(pageUrl) {
 
   const target = await addTabTarget(pageUrl);
 
-  await target.attach();
-
   const { client } = target;
   const webConsoleFront = await target.getFront("console");
   const inspectedWindowFront = await target.getFront(

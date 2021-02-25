@@ -516,6 +516,23 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
 }
 
 /**
+ * Create a Target for the provided tab and attach to it before resolving.
+ * This should only be used for tests which don't involve the frontend or a
+ * toolbox. Typically, retrieving the target and attaching to it should be
+ * handled at framework level when a Toolbox is used.
+ *
+ * @param {XULTab} tab
+ *        The tab for which a target should be created.
+ * @return {BrowsingContextTargetFront} The attached target front.
+ */
+async function createAndAttachTargetForTab(tab) {
+  info("Creating and attaching to a local tab target");
+  const target = await TabTargetFactory.forTab(tab);
+  await target.attach();
+  return target;
+}
+
+/**
  * Return a function, specific for each panel, in order
  * to wait for any update which may happen when reloading a page.
  */
