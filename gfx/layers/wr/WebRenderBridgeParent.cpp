@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
@@ -493,6 +494,10 @@ bool WebRenderBridgeParent::UpdateResources(
     wr::TransactionBuilder& aUpdates) {
   wr::ShmSegmentsReader reader(aSmallShmems, aLargeShmems);
   UniquePtr<ScheduleSharedSurfaceRelease> scheduleRelease;
+
+  if (!aResourceUpdates.IsEmpty()) {
+    GPUParent::MaybeFlushMemory();
+  }
 
   for (const auto& cmd : aResourceUpdates) {
     switch (cmd.type()) {

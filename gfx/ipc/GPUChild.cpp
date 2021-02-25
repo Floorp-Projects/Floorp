@@ -216,6 +216,14 @@ mozilla::ipc::IPCResult GPUChild::RecvNotifyDeviceReset(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUChild::RecvFlushMemory(const nsString& aReason) {
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(nullptr, "memory-pressure", aReason.get());
+  }
+  return IPC_OK();
+}
+
 bool GPUChild::SendRequestMemoryReport(const uint32_t& aGeneration,
                                        const bool& aAnonymize,
                                        const bool& aMinimizeMemoryUsage,
