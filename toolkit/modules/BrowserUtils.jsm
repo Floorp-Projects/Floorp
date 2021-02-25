@@ -155,6 +155,28 @@ var BrowserUtils = {
       Services.obs.addObserver(observer, topic);
     });
   },
+
+  isShareableURL(url) {
+    if (!url) {
+      return false;
+    }
+
+    // Disallow sharing URLs with more than 65535 characters.
+    if (url.spec.length > 65535) {
+      return false;
+    }
+
+    let scheme = url.scheme;
+
+    return !(
+      "about" == scheme ||
+      "resource" == scheme ||
+      "chrome" == scheme ||
+      "wyciwyg" == scheme ||
+      "blob" == scheme ||
+      "moz-extension" == scheme
+    );
+  },
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
