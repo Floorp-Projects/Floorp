@@ -72,7 +72,7 @@ jittest:
     run-on-projects:
         by-test-platform:
             android-hw-.*-aarch64/debug: ['mozilla-central', 'release']
-            android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
+            android-hw-.*-api-16/debug: ['mozilla-central', 'release']
             default: built-projects
     chunks:
         by-test-platform:
@@ -94,6 +94,32 @@ jittest:
                 windows.*: false
                 macosx.*: false
                 default: true
+    target:
+        by-test-platform:
+            android-.*: geckoview-androidTest.apk
+            default: null
+    tier:
+        by-test-platform:
+            android-hw.*: 2
+            default: default
+
+jittest-all:
+    description: "JIT Test run with all flags for android arm7 opt"
+    suite: jittest
+    treeherder-symbol: Jit
+    run-on-projects:
+        by-test-platform:
+            android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
+            default: []
+    chunks: 10
+    max-run-time: 3600
+    mozharness:
+        chunked: true
+        extra-options:
+            by-test-platform:
+                android.*:
+                    - --jittest-flags=all
+                default: None
     target:
         by-test-platform:
             android-.*: geckoview-androidTest.apk
