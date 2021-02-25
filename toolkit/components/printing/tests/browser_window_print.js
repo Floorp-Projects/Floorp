@@ -169,7 +169,12 @@ add_task(async function test_focused_browsing_context() {
   let menuButton = document.getElementById("PanelUI-menu-button");
   menuButton.click();
   await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
-  document.getElementById("appMenu-print-button").click();
+
+  let printButtonID = PanelUI.protonAppMenuEnabled
+    ? "appMenu-print-button2"
+    : "appMenu-print-button";
+
+  document.getElementById(printButtonID).click();
 
   let dialog = await TestUtils.waitForCondition(
     () =>
