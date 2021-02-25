@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* exported openToolboxForTab, closeToolboxForTab, getToolboxTargetForTab,
+/* exported openToolboxForTab, closeToolboxForTab,
             registerBlankToolboxPanel, TOOLBOX_BLANK_PANEL_ID, assertDevToolsExtensionEnabled */
 
 ChromeUtils.defineModuleGetter(
@@ -13,10 +13,6 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyGetter(this, "gDevTools", () => {
   const { gDevTools } = loader.require("devtools/client/framework/devtools");
   return gDevTools;
-});
-XPCOMUtils.defineLazyGetter(this, "TargetFactory", () => {
-  const { TargetFactory } = loader.require("devtools/client/framework/target");
-  return TargetFactory;
 });
 
 ChromeUtils.defineModuleGetter(
@@ -56,10 +52,6 @@ async function registerBlankToolboxPanel() {
   gDevTools.registerTool(testBlankPanel);
 }
 
-function getToolboxTargetForTab(tab) {
-  return TargetFactory.forTab(tab);
-}
-
 async function openToolboxForTab(tab, panelId = TOOLBOX_BLANK_PANEL_ID) {
   if (
     panelId == TOOLBOX_BLANK_PANEL_ID &&
@@ -69,22 +61,24 @@ async function openToolboxForTab(tab, panelId = TOOLBOX_BLANK_PANEL_ID) {
     registerBlankToolboxPanel();
   }
 
-  const target = await getToolboxTargetForTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, panelId);
-  const { url, outerWindowID } = target.form;
+  const toolbox = await gDevTools.showToolboxForTab(tab, { toolId: panelId });
+  const { url, outerWindowID } = toolbox.target.form;
   info(
     `Developer toolbox opened on panel "${panelId}" for target ${JSON.stringify(
       { url, outerWindowID }
     )}`
   );
-  return { toolbox, target };
+  return { toolbox, target: toolbox.target };
 }
 
 async function closeToolboxForTab(tab) {
-  const target = await getToolboxTargetForTab(tab);
+  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const target = toolbox.target;
   const { url, outerWindowID } = target.form;
-  await gDevTools.closeToolbox(target);
+
+  await gDevTools.closeToolboxForTab(tab);
   await target.destroy();
+
   info(
     `Developer toolbox closed for target ${JSON.stringify({
       url,
