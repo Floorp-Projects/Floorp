@@ -1023,8 +1023,8 @@ add_task(async function test_title_change_notifies() {
 });
 
 add_task(async function test_visit_notifies() {
-  // There are two observers we need to see for each visit.  One is an
-  // nsINavHistoryObserver and the other is the uri-visit-saved observer topic.
+  // There are two observers we need to see for each visit. One is an
+  // PlacesObservers and the other is the uri-visit-saved observer topic.
   let place = {
     guid: "abcdefghijkl",
     uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_notifies"),

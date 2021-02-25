@@ -56,10 +56,6 @@ class BookmarksObserver extends Observer {
   }
 
   // Empty functions to make xpconnect happy
-  onBeginUpdateBatch() {}
-
-  onEndUpdateBatch() {}
-
   onItemMoved() {}
 
   // Disabled due to performance cost, see Issue 3203 /

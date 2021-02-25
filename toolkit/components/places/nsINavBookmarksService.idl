@@ -22,21 +22,6 @@ interface nsINavBookmarkObserver : nsISupports
   readonly attribute boolean skipTags;
 
   /**
-   * Notifies that a batch transaction has started.
-   * Other notifications will be sent during the batch, but the observer is
-   * guaranteed that onEndUpdateBatch() will be called at its completion.
-   * During a batch the observer should do its best to reduce the work done to
-   * handle notifications, since multiple changes are going to happen in a short
-   * timeframe.
-   */
-  void onBeginUpdateBatch();
-
-  /**
-   * Notifies that a batch transaction has ended.
-   */
-  void onEndUpdateBatch();
-
-  /**
    * Notifies that an item's information has changed.  This will be called
    * whenever any attributes like "title" are changed.
    *

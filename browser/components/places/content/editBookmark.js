@@ -1294,9 +1294,6 @@ var gEditItemOverlay = {
       );
     });
   },
-
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
 };
 
 XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
