@@ -546,13 +546,6 @@ var ProcessHangMonitor = {
    * Show the notification for a hang.
    */
   showNotification(win, report) {
-    let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
-      "process-hang"
-    );
-    if (notification) {
-      return;
-    }
-
     let bundle = win.gNavigatorBundle;
 
     let buttons = [
@@ -570,7 +563,9 @@ var ProcessHangMonitor = {
     let brandShortName = doc
       .getElementById("bundle_brand")
       .getString("brandShortName");
+    let notificationTag;
     if (report.addonId) {
+      notificationTag = report.addonId;
       let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(
         Ci.nsIAddonPolicyService
       );
@@ -609,22 +604,44 @@ var ProcessHangMonitor = {
       });
     } else {
       let scriptBrowser = report.scriptBrowser;
-      let tab = scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(
-        scriptBrowser
-      );
-      if (!tab) {
-        message = bundle.getFormattedString(
-          "processHang.nonspecific_tab.label",
-          [brandShortName]
-        );
-      } else {
-        let title = tab.getAttribute("label");
-        title = elideMiddleOfString(title, 60);
-        message = bundle.getFormattedString("processHang.specific_tab.label", [
-          title,
+      if (scriptBrowser == win.gBrowser?.selectedBrowser) {
+        notificationTag = "selected-tab";
+        message = bundle.getFormattedString("processHang.selected_tab.label", [
           brandShortName,
         ]);
+      } else {
+        let tab = scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(
+          scriptBrowser
+        );
+        if (!tab) {
+          notificationTag = "nonspecific_tab";
+          message = bundle.getFormattedString(
+            "processHang.nonspecific_tab.label",
+            [brandShortName]
+          );
+        } else {
+          notificationTag = scriptBrowser.browserId.toString();
+          let title = tab.getAttribute("label");
+          title = elideMiddleOfString(title, 60);
+          message = bundle.getFormattedString(
+            "processHang.specific_tab.label",
+            [title, brandShortName]
+          );
+        }
       }
+    }
+
+    let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+      "process-hang"
+    );
+    if (notificationTag == notification?.getAttribute("notification-tag")) {
+      return;
+    }
+
+    if (notification) {
+      notification.label = message;
+      notification.setAttribute("notification-tag", notificationTag);
+      return;
     }
 
     if (AppConstants.MOZ_DEV_EDITION && report.hangType == report.SLOW_SCRIPT) {
@@ -637,18 +654,20 @@ var ProcessHangMonitor = {
       });
     }
 
-    win.gHighPriorityNotificationBox.appendNotification(
-      message,
-      "process-hang",
-      "chrome://browser/content/aboutRobots-icon.png",
-      win.gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH,
-      buttons,
-      event => {
-        if (event == "dismissed") {
-          ProcessHangMonitor.waitLonger(win);
+    win.gHighPriorityNotificationBox
+      .appendNotification(
+        message,
+        "process-hang",
+        "chrome://browser/content/aboutRobots-icon.png",
+        win.gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH,
+        buttons,
+        event => {
+          if (event == "dismissed") {
+            ProcessHangMonitor.waitLonger(win);
+          }
         }
-      }
-    );
+      )
+      .setAttribute("notification-tag", notificationTag);
   },
 
   /**
