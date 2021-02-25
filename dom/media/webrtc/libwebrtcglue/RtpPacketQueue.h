@@ -22,17 +22,14 @@ class RtpPacketQueue {
   void DequeueAll(MediaSessionConduit* conduit) {
     // SSRC is set; insert queued packets
     for (auto& packet : mQueuedPackets) {
-      if (conduit->DeliverPacket(packet->mData, packet->mLen) !=
-          kMediaConduitNoError) {
-        // Keep delivering and then clear the queue
-      }
+      conduit->DeliverPacket(std::move(packet),
+                             MediaSessionConduit::PacketType::RTP);
     }
     mQueuedPackets.Clear();
     mQueueActive = false;
   }
 
-  void Enqueue(const void* data, int len) {
-    UniquePtr<QueuedPacket> packet(new QueuedPacket(data, len));
+  void Enqueue(rtc::CopyOnWriteBuffer packet) {
     mQueuedPackets.AppendElement(std::move(packet));
     mQueueActive = true;
   }
@@ -41,18 +38,7 @@ class RtpPacketQueue {
 
  private:
   bool mQueueActive = false;
-  struct QueuedPacket {
-    const int mLen;
-    uint8_t* mData;
-
-    QueuedPacket(const void* aData, size_t aLen) : mLen(aLen) {
-      mData = new uint8_t[mLen];
-      memcpy(mData, aData, mLen);
-    }
-
-    ~QueuedPacket() { delete (mData); }
-  };
-  nsTArray<UniquePtr<QueuedPacket>> mQueuedPackets;
+  nsTArray<rtc::CopyOnWriteBuffer> mQueuedPackets;
 };
 
 }  // namespace mozilla

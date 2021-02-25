@@ -557,8 +557,7 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Rtp, false, packet.data(),
                       packet.len());
 
-  (void)mConduit->ReceivedRTPPacket(packet.data(), packet.len(),
-                                    header);  // Ignore error codes
+  mConduit->ReceivedRTPPacket(packet.data(), packet.len(), header);
 }
 
 void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {
@@ -604,8 +603,7 @@ void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {
     return;
   }
 
-  (void)mConduit->ReceivedRTCPPacket(packet.data(),
-                                     packet.len());  // Ignore error codes
+  mConduit->ReceivedRTCPPacket(packet.data(), packet.len());
 }
 
 void MediaPipeline::PacketReceived(const std::string& aTransportId,
