@@ -4252,9 +4252,10 @@ static bool GetAbsoluteCoord(const LengthPercentageLike& aStyle,
   return true;
 }
 
-static nscoord GetBSizeTakenByBoxSizing(StyleBoxSizing aBoxSizing,
-                                        nsIFrame* aFrame, bool aHorizontalAxis,
-                                        bool aIgnorePadding);
+static nscoord GetBSizePercentBasisAdjustment(StyleBoxSizing aBoxSizing,
+                                              nsIFrame* aFrame,
+                                              bool aHorizontalAxis,
+                                              bool aResolvesAgainstPaddingBox);
 
 static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
                             bool aHorizontalAxis, nscoord& aResult);
@@ -4348,19 +4349,18 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
                  "unknown min block-size unit");
   }
 
-  // Ignore padding if we're an abspos box, as percentages in that case resolve
-  // against the padding box.
+  // If we're an abspos box, percentages in that case resolve against the
+  // padding box.
   //
   // TODO: This could conceivably cause some problems with fieldsets (which are
   // the other place that wants to ignore padding), but solving that here
   // without hardcoding a check for f being a fieldset-content frame is a bit of
   // a pain.
-  const bool ignorePadding = aFrame->IsAbsolutelyPositioned();
-  nscoord bSizeTakenByBoxSizing = GetBSizeTakenByBoxSizing(
-      pos->mBoxSizing, f, aHorizontalAxis, ignorePadding);
-  h = std::max(0, h - bSizeTakenByBoxSizing);
+  const bool resolvesAgainstPaddingBox = aFrame->IsAbsolutelyPositioned();
+  h += GetBSizePercentBasisAdjustment(pos->mBoxSizing, f, aHorizontalAxis,
+                                      resolvesAgainstPaddingBox);
 
-  aResult = std::max(aStyle.Resolve(h), 0);
+  aResult = std::max(aStyle.Resolve(std::max(h, 0)), 0);
   return true;
 }
 
@@ -4403,48 +4403,47 @@ static bool GetDefiniteSize(const SizeOrMaxSize& aStyle, nsIFrame* aFrame,
                          aPercentageBasis, aResult);
 }
 
-//
 // NOTE: this function will be replaced by GetDefiniteSizeTakenByBoxSizing (bug
 // 1363918). Please do not add new uses of this function.
 //
-// Get the amount of vertical space taken out of aFrame's content area due to
-// its borders and paddings given the box-sizing value in aBoxSizing.  We don't
-// get aBoxSizing from the frame because some callers want to compute this for
-// specific box-sizing values.  aHorizontalAxis is true if our inline direction
-// is horisontal and our block direction is vertical.  aIgnorePadding is true if
-// padding should be ignored.
-static nscoord GetBSizeTakenByBoxSizing(StyleBoxSizing aBoxSizing,
-                                        nsIFrame* aFrame, bool aHorizontalAxis,
-                                        bool aIgnorePadding) {
-  nscoord bSizeTakenByBoxSizing = 0;
+// Get the amount of space to add or subtract out of aFrame's 'block-size' or
+// property value due its borders and paddings, given the box-sizing value in
+// aBoxSizing.
+//
+// aHorizontalAxis is true if our inline direction is horizontal and our block
+// direction is vertical. aResolvesAgainstPaddingBox is true if padding should
+// be added or not removed.
+static nscoord GetBSizePercentBasisAdjustment(StyleBoxSizing aBoxSizing,
+                                              nsIFrame* aFrame,
+                                              bool aHorizontalAxis,
+                                              bool aResolvesAgainstPaddingBox) {
+  nscoord adjustment = 0;
   if (aBoxSizing == StyleBoxSizing::Border) {
-    const nsStyleBorder* styleBorder = aFrame->StyleBorder();
-    bSizeTakenByBoxSizing += aHorizontalAxis
-                                 ? styleBorder->GetComputedBorder().TopBottom()
-                                 : styleBorder->GetComputedBorder().LeftRight();
-    if (!aIgnorePadding) {
-      const auto& stylePadding = aFrame->StylePadding()->mPadding;
-      const LengthPercentage& paddingStart =
-          stylePadding.Get(aHorizontalAxis ? eSideTop : eSideLeft);
-      const LengthPercentage& paddingEnd =
-          stylePadding.Get(aHorizontalAxis ? eSideBottom : eSideRight);
-      nscoord pad;
-      // XXXbz Calling GetPercentBSize on padding values looks bogus, since
-      // percent padding is always a percentage of the inline-size of the
-      // containing block.  We should perhaps just treat non-absolute paddings
-      // here as 0 instead, except that in some cases the width may in fact be
-      // known.  See bug 1231059.
-      if (GetAbsoluteCoord(paddingStart, pad) ||
-          GetPercentBSize(paddingStart, aFrame, aHorizontalAxis, pad)) {
-        bSizeTakenByBoxSizing += pad;
-      }
-      if (GetAbsoluteCoord(paddingEnd, pad) ||
-          GetPercentBSize(paddingEnd, aFrame, aHorizontalAxis, pad)) {
-        bSizeTakenByBoxSizing += pad;
-      }
+    const auto& border = aFrame->StyleBorder()->GetComputedBorder();
+    adjustment -= aHorizontalAxis ? border.TopBottom() : border.LeftRight();
+  }
+  if ((aBoxSizing == StyleBoxSizing::Border) == !aResolvesAgainstPaddingBox) {
+    const auto& stylePadding = aFrame->StylePadding()->mPadding;
+    const LengthPercentage& paddingStart =
+        stylePadding.Get(aHorizontalAxis ? eSideTop : eSideLeft);
+    const LengthPercentage& paddingEnd =
+        stylePadding.Get(aHorizontalAxis ? eSideBottom : eSideRight);
+    nscoord pad;
+    // XXXbz Calling GetPercentBSize on padding values looks bogus, since
+    // percent padding is always a percentage of the inline-size of the
+    // containing block.  We should perhaps just treat non-absolute paddings
+    // here as 0 instead, except that in some cases the width may in fact be
+    // known.  See bug 1231059.
+    if (GetAbsoluteCoord(paddingStart, pad) ||
+        GetPercentBSize(paddingStart, aFrame, aHorizontalAxis, pad)) {
+      adjustment += aResolvesAgainstPaddingBox ? pad : -pad;
+    }
+    if (GetAbsoluteCoord(paddingEnd, pad) ||
+        GetPercentBSize(paddingEnd, aFrame, aHorizontalAxis, pad)) {
+      adjustment += aResolvesAgainstPaddingBox ? pad : -pad;
     }
   }
-  return bSizeTakenByBoxSizing;
+  return adjustment;
 }
 
 // Get the amount of space taken out of aFrame's content area due to its
