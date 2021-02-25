@@ -22,7 +22,9 @@ SimpleTest.requestCompleteLog();
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
-const { TargetFactory } = require("devtools/client/framework/target");
+const {
+  TabTargetFactory,
+} = require("devtools/client/framework/tab-target-factory");
 
 async function doGC() {
   // In order to get stable results, we really have to do 3 GC attempts
@@ -46,7 +48,7 @@ async function addTab(url) {
 }
 
 async function testScript(tab) {
-  const target = await TargetFactory.forTab(tab);
+  const target = await TabTargetFactory.forTab(tab);
   await target.attach();
 
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
