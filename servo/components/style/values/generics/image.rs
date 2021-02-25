@@ -59,10 +59,10 @@ pub enum GenericImage<G, MozImageRect, ImageUrl, Color, Percentage, Resolution> 
 pub use self::GenericImage as Image;
 
 /// <https://drafts.csswg.org/css-images-4/#cross-fade-function>
-#[css(comma, function = "cross-fade")]
 #[derive(
     Clone, Debug, MallocSizeOf, PartialEq, ToResolvedValue, ToShmem, ToCss, ToComputedValue,
 )]
+#[css(comma, function = "cross-fade")]
 #[repr(C)]
 pub struct GenericCrossFade<Image, Color, Percentage> {
     /// All of the image percent pairings passed as arguments to
@@ -117,10 +117,10 @@ pub use self::GenericCrossFadeElement as CrossFadeElement;
 pub use self::GenericCrossFadeImage as CrossFadeImage;
 
 /// https://drafts.csswg.org/css-images-4/#image-set-notation
-#[css(comma, function = "image-set")]
 #[derive(
     Clone, Debug, MallocSizeOf, PartialEq, ToResolvedValue, ToShmem, ToCss,
 )]
+#[css(comma, function = "image-set")]
 #[repr(C)]
 pub struct GenericImageSet<Image, Resolution> {
     /// The index of the selected candidate. Zero for specified values.
@@ -365,7 +365,6 @@ impl ToCss for PaintWorklet {
 ///
 /// `-moz-image-rect(<uri>, top, right, bottom, left);`
 #[allow(missing_docs)]
-#[css(comma, function = "-moz-image-rect")]
 #[derive(
     Clone,
     Debug,
@@ -377,6 +376,7 @@ impl ToCss for PaintWorklet {
     ToResolvedValue,
     ToShmem,
 )]
+#[css(comma, function = "-moz-image-rect")]
 #[repr(C)]
 pub struct GenericMozImageRect<NumberOrPercentage, MozImageRectUrl> {
     pub url: MozImageRectUrl,
