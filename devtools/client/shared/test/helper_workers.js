@@ -170,8 +170,7 @@ function executeAndWaitForMessage(
 
 async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   const tab = await addTab(TAB_URL);
-  const target = await TabTargetFactory.forTab(tab);
-  await target.attach();
+  const target = await createAndAttachTargetForTab(tab);
   const { client } = target;
 
   await createWorkerInTab(tab, WORKER_URL);

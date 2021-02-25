@@ -9,8 +9,7 @@ const TEST_URL = `data:text/html;charset=utf-8,<div id="test"></div>`;
 
 add_task(async function() {
   const tab = await addTab(TEST_URL);
-  const target = await TabTargetFactory.forTab(tab);
-  await target.attach();
+  const target = await createAndAttachTargetForTab(tab);
 
   const inspectorFront = await target.getFront("inspector");
   const walker = inspectorFront.walker;

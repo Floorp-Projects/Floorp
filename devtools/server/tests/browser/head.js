@@ -55,14 +55,7 @@ async function addTabTarget(url) {
   const tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   info(`Tab added a URL ${url} loaded`);
-  return getTargetForTab(tab);
-}
-
-async function getTargetForTab(tab) {
-  const target = await TabTargetFactory.forTab(tab);
-  info("Attaching to the active tab.");
-  await target.attach();
-  return target;
+  return createAndAttachTargetForTab(tab);
 }
 
 async function initAnimationsFrontForUrl(url) {
