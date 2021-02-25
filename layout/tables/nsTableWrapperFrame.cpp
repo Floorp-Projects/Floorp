@@ -297,7 +297,7 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return maxISize;
 }
 
-nscoord nsTableWrapperFrame::InnerTableShrinkWrapISize(
+LogicalSize nsTableWrapperFrame::InnerTableShrinkWrapSize(
     gfxContext* aRenderingContext, nsTableFrame* aTableFrame, WritingMode aWM,
     const LogicalSize& aCBSize, nscoord aAvailableISize,
     const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) const {
@@ -330,12 +330,18 @@ nscoord nsTableWrapperFrame::InnerTableShrinkWrapISize(
   StyleSizeOverrides innerOverrides = ComputeSizeOverridesForInnerTable(
       aTableFrame, aSizeOverrides, bpSize, areaOccupiedByCaption);
   auto size =
-      aTableFrame->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
-                               marginSize, bpSize, innerOverrides, aFlags);
-  return size.mLogicalSize.ISize(aWM) + bpSize.ISize(aWM);
+      aTableFrame
+          ->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
+                        marginSize, bpSize, innerOverrides, aFlags)
+          .mLogicalSize;
+  size.ISize(aWM) += bpSize.ISize(aWM);
+  if (size.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
+    size.BSize(aWM) += bpSize.BSize(aWM);
+  }
+  return size;
 }
 
-nscoord nsTableWrapperFrame::CaptionShrinkWrapISize(
+LogicalSize nsTableWrapperFrame::CaptionShrinkWrapSize(
     gfxContext* aRenderingContext, nsIFrame* aCaptionFrame, WritingMode aWM,
     const LogicalSize& aCBSize, nscoord aAvailableISize,
     ComputeSizeFlags aFlags) const {
@@ -348,11 +354,15 @@ nscoord nsTableWrapperFrame::CaptionShrinkWrapISize(
   LogicalSize marginSize = input.ComputedLogicalMargin(aWM).Size(aWM);
   LogicalSize bpSize = input.ComputedLogicalBorderPadding(aWM).Size(aWM);
 
-  auto size = aCaptionFrame->ComputeSize(aRenderingContext, aWM, aCBSize,
-                                         aAvailableISize, marginSize, bpSize,
-                                         {}, aFlags);
-  return size.mLogicalSize.ISize(aWM) + marginSize.ISize(aWM) +
-         bpSize.ISize(aWM);
+  auto size = aCaptionFrame
+                  ->ComputeSize(aRenderingContext, aWM, aCBSize,
+                                aAvailableISize, marginSize, bpSize, {}, aFlags)
+                  .mLogicalSize;
+  size.ISize(aWM) += (marginSize.ISize(aWM) + bpSize.ISize(aWM));
+  if (size.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
+    size.BSize(aWM) += (marginSize.BSize(aWM) + bpSize.BSize(aWM));
+  }
+  return size;
 }
 
 StyleSize nsTableWrapperFrame::ReduceStyleSizeBy(
@@ -471,47 +481,63 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
 
   // Match the availableISize logic in Reflow.
   Maybe<StyleCaptionSide> captionSide = GetCaptionSide();
-  nscoord inlineSize;
+
+  // The result.ISize() is unconditionally set to a meaningful value in the
+  // logic that follows, but the unconstrained BSize() value might be used for
+  // cases where either BSize is indeed unconstrained).
+  LogicalSize result(aWM, 0, NS_UNCONSTRAINEDSIZE);
   if (!captionSide) {
-    inlineSize = InnerTableShrinkWrapISize(aRenderingContext, InnerTableFrame(),
-                                           aWM, aCBSize, kidAvailableISize,
-                                           aSizeOverrides, flags);
+    result = InnerTableShrinkWrapSize(aRenderingContext, InnerTableFrame(), aWM,
+                                      aCBSize, kidAvailableISize,
+                                      aSizeOverrides, flags);
   } else if (*captionSide == StyleCaptionSide::Left ||
              *captionSide == StyleCaptionSide::Right) {
-    nscoord capISize =
-        CaptionShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                               aWM, aCBSize, kidAvailableISize, flags);
-    inlineSize =
-        capISize + InnerTableShrinkWrapISize(
-                       aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                       kidAvailableISize - capISize, aSizeOverrides, flags);
+    const LogicalSize captionSize =
+        CaptionShrinkWrapSize(aRenderingContext, mCaptionFrames.FirstChild(),
+                              aWM, aCBSize, kidAvailableISize, flags);
+    const LogicalSize innerTableSize = InnerTableShrinkWrapSize(
+        aRenderingContext, InnerTableFrame(), aWM, aCBSize,
+        kidAvailableISize - captionSize.ISize(aWM), aSizeOverrides, flags);
+
+    result.ISize(aWM) = captionSize.ISize(aWM) + innerTableSize.ISize(aWM);
+    if (captionSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE &&
+        innerTableSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
+      result.BSize(aWM) =
+          std::max(captionSize.BSize(aWM), innerTableSize.BSize(aWM));
+    }
   } else if (*captionSide == StyleCaptionSide::Top ||
              *captionSide == StyleCaptionSide::Bottom) {
-    inlineSize = InnerTableShrinkWrapISize(aRenderingContext, InnerTableFrame(),
-                                           aWM, aCBSize, kidAvailableISize,
-                                           aSizeOverrides, flags);
-    nscoord capISize =
-        CaptionShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                               aWM, aCBSize, inlineSize, flags);
-    if (capISize > inlineSize) {
-      inlineSize = capISize;
+    const LogicalSize innerTableSize = InnerTableShrinkWrapSize(
+        aRenderingContext, InnerTableFrame(), aWM, aCBSize, kidAvailableISize,
+        aSizeOverrides, flags);
+    const LogicalSize captionSize =
+        CaptionShrinkWrapSize(aRenderingContext, mCaptionFrames.FirstChild(),
+                              aWM, aCBSize, innerTableSize.ISize(aWM), flags);
+    result.ISize(aWM) =
+        std::max(innerTableSize.ISize(aWM), captionSize.ISize(aWM));
+    if (innerTableSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE &&
+        captionSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
+      result.BSize(aWM) = innerTableSize.BSize(aWM) + captionSize.BSize(aWM);
     }
   } else {
     MOZ_ASSERT(*captionSide == StyleCaptionSide::TopOutside ||
                    *captionSide == StyleCaptionSide::BottomOutside,
                "unexpected caption-side");
-    inlineSize = InnerTableShrinkWrapISize(aRenderingContext, InnerTableFrame(),
-                                           aWM, aCBSize, kidAvailableISize,
-                                           aSizeOverrides, flags);
-    nscoord capISize =
-        CaptionShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                               aWM, aCBSize, kidAvailableISize, flags);
-    if (capISize > inlineSize) {
-      inlineSize = capISize;
+    const LogicalSize innerTableSize = InnerTableShrinkWrapSize(
+        aRenderingContext, InnerTableFrame(), aWM, aCBSize, kidAvailableISize,
+        aSizeOverrides, flags);
+    const LogicalSize captionSize =
+        CaptionShrinkWrapSize(aRenderingContext, mCaptionFrames.FirstChild(),
+                              aWM, aCBSize, kidAvailableISize, flags);
+    result.ISize(aWM) =
+        std::max(innerTableSize.ISize(aWM), captionSize.ISize(aWM));
+    if (innerTableSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE &&
+        captionSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
+      result.BSize(aWM) = innerTableSize.BSize(aWM) + captionSize.BSize(aWM);
     }
   }
 
-  return LogicalSize(aWM, inlineSize, NS_UNCONSTRAINEDSIZE);
+  return result;
 }
 
 Maybe<StyleCaptionSide> nsTableWrapperFrame::GetCaptionSide() const {
