@@ -7,15 +7,14 @@
 var EXPORTED_SYMBOLS = ["DevTools"];
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { TargetFactory } = require("devtools/client/framework/target");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-async function getTargetForSelectedTab() {
-  let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  let target = await TargetFactory.forTab(browserWindow.gBrowser.selectedTab);
-  return target;
+async function showToolboxForSelectedTab(toolId, hostType) {
+  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+  const tab = browserWindow.gBrowser.selectedTab;
+  return gDevTools.showToolboxForTab(tab, { toolId, hostType });
 }
 
 function selectToolbox(toolbox) {
@@ -37,8 +36,7 @@ var DevTools = {
       this.configurations[panel] = {};
       this.configurations[panel].applyConfig = async function() {
         Services.prefs.setIntPref("devtools.toolbox.footer.height", 800);
-        let target = await getTargetForSelectedTab();
-        let toolbox = await gDevTools.showToolbox(target, panel, "bottom");
+        let toolbox = await showToolboxForSelectedTab(panel, "bottom");
         this.selectors = [selectToolbox.bind(null, toolbox)];
         await new Promise(resolve => setTimeout(resolve, 500));
       };
@@ -49,20 +47,14 @@ var DevTools = {
     bottomToolbox: {
       async applyConfig() {
         Services.prefs.clearUserPref("devtools.toolbox.footer.height");
-        let target = await getTargetForSelectedTab();
-        let toolbox = await gDevTools.showToolbox(
-          target,
-          "inspector",
-          "bottom"
-        );
+        let toolbox = await showToolboxForSelectedTab("inspector", "bottom");
         this.selectors = [selectToolbox.bind(null, toolbox)];
         await new Promise(resolve => setTimeout(resolve, 1000));
       },
     },
     sideToolbox: {
       async applyConfig() {
-        let target = await getTargetForSelectedTab();
-        let toolbox = await gDevTools.showToolbox(target, "inspector", "right");
+        let toolbox = await showToolboxForSelectedTab("inspector", "right");
         this.selectors = [selectToolbox.bind(null, toolbox)];
         await new Promise(resolve => setTimeout(resolve, 1000));
       },
@@ -73,12 +65,7 @@ var DevTools = {
     undockedToolbox: {
       windowType: "devtools:toolbox",
       async applyConfig() {
-        let target = await getTargetForSelectedTab();
-        let toolbox = await gDevTools.showToolbox(
-          target,
-          "inspector",
-          "window"
-        );
+        let toolbox = await showToolboxForSelectedTab("inspector", "window");
         this.selectors = [selectToolbox.bind(null, toolbox)];
         await new Promise(resolve => setTimeout(resolve, 1000));
       },
