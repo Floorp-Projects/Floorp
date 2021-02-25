@@ -717,7 +717,7 @@ function InnerModuleEvaluation(module, stack, index)
             assert(requiredModule.status >= MODULE_STATUS_EVALUATED,
                   `Bad module status in InnerModuleEvaluation: ${requiredModule.status}`);
             if (requiredModule.evaluationError) {
-              throw GetModuleEvaluationError(module);
+              throw GetModuleEvaluationError(requiredModule);
             }
           }
         }
