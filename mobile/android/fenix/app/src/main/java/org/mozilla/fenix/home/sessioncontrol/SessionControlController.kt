@@ -325,7 +325,11 @@ class DefaultSessionControlController(
                 setPositiveButton(R.string.top_sites_rename_dialog_ok) { dialog, _ ->
                     viewLifecycleScope.launch(Dispatchers.IO) {
                         with(activity.components.useCases.topSitesUseCase) {
-                            renameTopSites(topSite, topSiteLabelEditText.text.toString())
+                            updateTopSites(
+                                topSite,
+                                topSiteLabelEditText.text.toString(),
+                                topSite.url
+                            )
                         }
                     }
                     dialog.dismiss()
