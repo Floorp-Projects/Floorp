@@ -14,7 +14,7 @@ use audioipc::messages::{
 };
 use audioipc::platformhandle_passing::FramedWithPlatformHandles;
 use audioipc::rpc;
-use audioipc::shm::{SharedMemReader, SharedMemWriter};
+use audioipc::shm::SharedMem;
 use audioipc::{MessageStream, PlatformHandle};
 use cubeb_core as cubeb;
 use cubeb_core::ffi;
@@ -231,9 +231,9 @@ struct ServerStreamCallbacks {
     /// Size of output frame in bytes
     output_frame_size: u16,
     /// Shared memory buffer for sending input data to client
-    input_shm: SharedMemWriter,
+    input_shm: Option<SharedMem>,
     /// Shared memory buffer for receiving output data from client
-    output_shm: SharedMemReader,
+    output_shm: Option<SharedMem>,
     /// RPC interface to callback server running in client
     rpc: rpc::ClientProxy<CallbackReq, CallbackResp>,
 }
@@ -247,7 +247,13 @@ impl ServerStreamCallbacks {
             output.len()
         );
 
-        self.input_shm.write(input).unwrap();
+        unsafe {
+            if let Some(shm) = &mut self.input_shm {
+                shm.get_mut_slice(input.len())
+                    .unwrap()
+                    .copy_from_slice(input);
+            }
+        }
 
         let r = self
             .rpc
@@ -263,7 +269,11 @@ impl ServerStreamCallbacks {
                 if frames >= 0 {
                     let nbytes = frames as usize * self.output_frame_size as usize;
                     trace!("Reslice output to {}", nbytes);
-                    self.output_shm.read(&mut output[..nbytes]).unwrap();
+                    unsafe {
+                        if let Some(shm) = &self.output_shm {
+                            &mut output[..nbytes].copy_from_slice(shm.get_slice(nbytes).unwrap());
+                        }
+                    }
                 }
                 frames
             }
@@ -677,9 +687,9 @@ impl CubebServer {
         debug!("Created callback pair: {:?}-{:?}", ipc_server, ipc_client);
         let shm_id = get_shm_id();
         let (input_shm, input_file) =
-            SharedMemWriter::new(&format!("{}-input", shm_id), audioipc::SHM_AREA_SIZE)?;
+            SharedMem::new(&format!("{}-input", shm_id), audioipc::SHM_AREA_SIZE)?;
         let (output_shm, output_file) =
-            SharedMemReader::new(&format!("{}-output", shm_id), audioipc::SHM_AREA_SIZE)?;
+            SharedMem::new(&format!("{}-output", shm_id), audioipc::SHM_AREA_SIZE)?;
 
         // This code is currently running on the Client/Server RPC
         // handling thread.  We need to move the registration of the
@@ -702,6 +712,11 @@ impl CubebServer {
             Err(_) => bail!("Failed to create callback rpc."),
         };
 
+        // TODO: The lowest comms layer expects exactly 3 PlatformHandles, so we always configure both sides of the shm.
+        // ServerStreamCallbacks only needs the active shm, so drop any unused shm now.
+        let input_shm = params.input_stream_params.and(Some(input_shm));
+        let output_shm = params.output_stream_params.and(Some(output_shm));
+
         let cbs = Box::new(ServerStreamCallbacks {
             input_frame_size,
             output_frame_size,
@@ -718,11 +733,7 @@ impl CubebServer {
 
         Ok(ClientMessage::StreamCreated(StreamCreate {
             token: key,
-            platform_handles: [
-                PlatformHandle::from(ipc_client),
-                PlatformHandle::from(input_file),
-                PlatformHandle::from(output_file),
-            ],
+            platform_handles: [PlatformHandle::from(ipc_client), input_file, output_file],
             target_pid: self.remote_pid.unwrap(),
         }))
     }
@@ -772,7 +783,11 @@ impl CubebServer {
             );
             match stream {
                 Ok(stream) => stream,
-                Err(e) => return Err(e.into()), // XXX full teardown of ServerStream?
+                Err(e) => {
+                    debug!("Unregistering stream {:?} (stream error {:?})", stm_tok, e);
+                    self.streams.remove(stm_tok);
+                    return Err(e.into());
+                }
             }
         };
 
