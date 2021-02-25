@@ -1815,15 +1815,6 @@ impl<'a> SceneBuilder<'a> {
             blit_reason |= BlitReason::ISOLATE;
         }
 
-        // If backface visibility is explicitly set, force this stacking
-        // context to be an off-screen surface. If part of a 3d context
-        // (common case) it will already be an off-screen surface. If
-        // the backface-vis is used while outside a 3d rendering context,
-        // this is an edge case.
-        if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
-            blit_reason |= BlitReason::ISOLATE;
-        }
-
         // If this stacking context has any complex clips, we need to draw it
         // to an off-screen surface.
         if let Some(clip_id) = clip_id {
@@ -1838,6 +1829,7 @@ impl<'a> SceneBuilder<'a> {
             &composite_ops,
             blit_reason,
             self.sc_stack.last(),
+            prim_flags,
         );
 
         // If stacking context is a scrollbar, force a new slice for the primitives
@@ -3631,6 +3623,7 @@ impl FlattenedStackingContext {
         composite_ops: &CompositeOps,
         blit_reason: BlitReason,
         parent: Option<&FlattenedStackingContext>,
+        prim_flags: PrimitiveFlags,
     ) -> bool {
         // If this is a backdrop or blend container, it's needed
         if sc_flags.intersects(StackingContextFlags::IS_BACKDROP_ROOT | StackingContextFlags::IS_BLEND_CONTAINER) {
@@ -3655,6 +3648,11 @@ impl FlattenedStackingContext {
                     return false;
                 }
             }
+        }
+
+        // If backface visibility is explicitly set.
+        if !prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
+            return false;
         }
 
         // If need to isolate in surface due to clipping / mix-blend-mode
