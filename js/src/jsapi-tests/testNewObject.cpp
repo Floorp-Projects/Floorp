@@ -58,16 +58,14 @@ BEGIN_TEST(testNewObject_1) {
   JS::RootedValueVector argv(cx);
   CHECK(argv.resize(N));
 
-  JS::RootedValue v(cx);
-  EVAL("Array", &v);
-  JS::RootedObject Array(cx, v.toObjectOrNull());
+  JS::RootedValue Array(cx);
+  EVAL("Array", &Array);
 
   bool isArray;
 
   // With no arguments.
-  JS::RootedObject obj(cx, JS_New(cx, Array, JS::HandleValueArray::empty()));
-  CHECK(obj);
-  JS::RootedValue rt(cx, JS::ObjectValue(*obj));
+  JS::RootedObject obj(cx);
+  CHECK(JS::Construct(cx, Array, JS::HandleValueArray::empty(), &obj));
   CHECK(JS::IsArrayObject(cx, obj, &isArray));
   CHECK(isArray);
   uint32_t len;
@@ -76,9 +74,8 @@ BEGIN_TEST(testNewObject_1) {
 
   // With one argument.
   argv[0].setInt32(4);
-  obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, 1));
-  CHECK(obj);
-  rt = JS::ObjectValue(*obj);
+  CHECK(JS::Construct(cx, Array, JS::HandleValueArray::subarray(argv, 0, 1),
+                      &obj));
   CHECK(JS::IsArrayObject(cx, obj, &isArray));
   CHECK(isArray);
   CHECK(JS::GetArrayLength(cx, obj, &len));
@@ -88,13 +85,13 @@ BEGIN_TEST(testNewObject_1) {
   for (size_t i = 0; i < N; i++) {
     argv[i].setInt32(i);
   }
-  obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, N));
-  CHECK(obj);
-  rt = JS::ObjectValue(*obj);
+  CHECK(JS::Construct(cx, Array, JS::HandleValueArray::subarray(argv, 0, N),
+                      &obj));
   CHECK(JS::IsArrayObject(cx, obj, &isArray));
   CHECK(isArray);
   CHECK(JS::GetArrayLength(cx, obj, &len));
   CHECK_EQUAL(len, N);
+  JS::RootedValue v(cx);
   CHECK(JS_GetElement(cx, obj, N - 1, &v));
   CHECK(v.isInt32(N - 1));
 
@@ -115,9 +112,9 @@ BEGIN_TEST(testNewObject_1) {
   static const JSClass cls = {"testNewObject_1", 0, &clsOps};
   JS::RootedObject ctor(cx, JS_NewObject(cx, &cls));
   CHECK(ctor);
-  JS::RootedValue rt2(cx, JS::ObjectValue(*ctor));
-  obj = JS_New(cx, ctor, JS::HandleValueArray::subarray(argv, 0, 3));
-  CHECK(obj);
+  JS::RootedValue ctorVal(cx, JS::ObjectValue(*ctor));
+  CHECK(JS::Construct(cx, ctorVal, JS::HandleValueArray::subarray(argv, 0, 3),
+                      &obj));
   CHECK(JS_GetElement(cx, ctor, 0, &v));
   CHECK(v.isInt32(0));
 
@@ -130,12 +127,11 @@ BEGIN_TEST(testNewObject_IsMapObject) {
 
   JS::RootedValue vMap(cx);
   EVAL("Map", &vMap);
-  JS::RootedObject Map(cx, vMap.toObjectOrNull());
 
   bool isMap = false;
   bool isSet = false;
-  JS::RootedObject mapObj(cx, JS_New(cx, Map, JS::HandleValueArray::empty()));
-  CHECK(mapObj);
+  JS::RootedObject mapObj(cx);
+  CHECK(JS::Construct(cx, vMap, JS::HandleValueArray::empty(), &mapObj));
   CHECK(JS::IsMapObject(cx, mapObj, &isMap));
   CHECK(isMap);
   CHECK(JS::IsSetObject(cx, mapObj, &isSet));
@@ -143,10 +139,9 @@ BEGIN_TEST(testNewObject_IsMapObject) {
 
   JS::RootedValue vSet(cx);
   EVAL("Set", &vSet);
-  JS::RootedObject Set(cx, vSet.toObjectOrNull());
 
-  JS::RootedObject setObj(cx, JS_New(cx, Set, JS::HandleValueArray::empty()));
-  CHECK(setObj);
+  JS::RootedObject setObj(cx);
+  CHECK(JS::Construct(cx, vSet, JS::HandleValueArray::empty(), &setObj));
   CHECK(JS::IsMapObject(cx, setObj, &isMap));
   CHECK(!isMap);
   CHECK(JS::IsSetObject(cx, setObj, &isSet));

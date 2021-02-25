@@ -1502,13 +1502,6 @@ extern JS_PUBLIC_API bool Construct(JSContext* cx, JS::HandleValue fun,
 
 } /* namespace JS */
 
-/**
- * Invoke a constructor, like the JS expression `new ctor(...args)`. Returns
- * the new object, or null on error.
- */
-extern JS_PUBLIC_API JSObject* JS_New(JSContext* cx, JS::HandleObject ctor,
-                                      const JS::HandleValueArray& args);
-
 /*** Other property-defining functions **************************************/
 
 extern JS_PUBLIC_API JSObject* JS_DefineObject(JSContext* cx,
