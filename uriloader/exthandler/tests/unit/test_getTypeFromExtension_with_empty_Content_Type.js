@@ -153,6 +153,24 @@ function registerMockWindowsRegKeyFactory() {
   // Preserve the original CID.
   let originalWindowsRegKeyCID = Cc[kWindowsRegKeyContractID].number;
 
+  // See bug 1694345 - nsNotifyAddrListener::CheckAdaptersAddresses might
+  // attempt to use the registry off the main thread, so we disable that
+  // feature while the mock registry is active.
+  let oldSuffixListPref = Services.prefs.getBoolPref(
+    "network.notify.dnsSuffixList"
+  );
+  Services.prefs.setBoolPref("network.notify.dnsSuffixList", false);
+
+  let oldCheckForProxiesPref = Services.prefs.getBoolPref(
+    "network.notify.checkForProxies"
+  );
+  Services.prefs.setBoolPref("network.notify.checkForProxies", false);
+
+  let oldCheckForNRPTPref = Services.prefs.getBoolPref(
+    "network.notify.checkForNRPT"
+  );
+  Services.prefs.setBoolPref("network.notify.checkForNRPT", false);
+
   info("Create a mock RegKey factory");
   let originalRegKey = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
     Ci.nsIWindowsRegKey
@@ -185,6 +203,19 @@ function registerMockWindowsRegKeyFactory() {
       "",
       kWindowsRegKeyContractID,
       null
+    );
+
+    Services.prefs.setBoolPref(
+      "network.notify.dnsSuffixList",
+      oldSuffixListPref
+    );
+    Services.prefs.setBoolPref(
+      "network.notify.checkForProxies",
+      oldCheckForProxiesPref
+    );
+    Services.prefs.setBoolPref(
+      "network.notify.checkForNRPT",
+      oldCheckForNRPTPref
     );
   });
 }
