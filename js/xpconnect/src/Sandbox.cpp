@@ -177,10 +177,11 @@ static bool SandboxDump(JSContext* cx, unsigned argc, Value* vp) {
     c++;
   }
 #endif
+  MOZ_LOG(nsContentUtils::DOMDumpLog(), mozilla::LogLevel::Debug,
+          ("[Sandbox.Dump] %s", cstr));
 #ifdef ANDROID
   __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
 #endif
-
   fputs(cstr, stdout);
   fflush(stdout);
   args.rval().setBoolean(true);
