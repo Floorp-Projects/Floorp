@@ -19,8 +19,8 @@ import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
-import org.mozilla.appservices.autofill.UpdatableAddressFields
-import org.mozilla.appservices.autofill.UpdatableCreditCardFields
+import mozilla.appservices.autofill.UpdatableAddressFields
+import mozilla.appservices.autofill.UpdatableCreditCardFields
 
 // We have type definitions at the concept level, and "external" types defined within
 // Autofill and Places. In practice these two types are largely the same, and this file
@@ -143,7 +143,7 @@ internal fun mozilla.components.concept.storage.UpdatableCreditCardFields.into()
 /**
  * Conversion from a "native" autofill [Address] into its generic comrade.
  */
-internal fun org.mozilla.appservices.autofill.Address.into(): Address {
+internal fun mozilla.appservices.autofill.Address.into(): Address {
     return Address(
         guid = this.guid,
         givenName = this.givenName,
@@ -168,7 +168,7 @@ internal fun org.mozilla.appservices.autofill.Address.into(): Address {
 /**
  * Conversion from a "native" autofill [CreditCard] into its generic comrade.
  */
-internal fun org.mozilla.appservices.autofill.CreditCard.into(): CreditCard {
+internal fun mozilla.appservices.autofill.CreditCard.into(): CreditCard {
     return CreditCard(
         guid = this.guid,
         billingName = this.ccName,

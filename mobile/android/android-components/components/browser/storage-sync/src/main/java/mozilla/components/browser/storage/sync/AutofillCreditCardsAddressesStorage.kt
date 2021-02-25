@@ -15,7 +15,7 @@ import mozilla.components.concept.storage.CreditCardsAddressesStorage
 import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import java.io.Closeable
-import org.mozilla.appservices.autofill.Store as RustAutofillStorage
+import mozilla.appservices.autofill.Store as RustAutofillStorage
 
 const val AUTOFILL_DB_NAME = "autofill.sqlite"
 
