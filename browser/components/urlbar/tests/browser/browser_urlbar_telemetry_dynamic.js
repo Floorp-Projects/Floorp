@@ -52,8 +52,6 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
 }
 
 add_task(async function test() {
-  UrlbarTestUtils.init(this);
-
   // Add a dynamic result type.
   UrlbarResult.addDynamicResultType(DYNAMIC_TYPE_NAME);
   UrlbarView.addDynamicViewTemplate(DYNAMIC_TYPE_NAME, {
