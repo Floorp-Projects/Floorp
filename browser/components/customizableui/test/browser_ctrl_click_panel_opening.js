@@ -13,7 +13,10 @@ add_task(async function test_appMenu_mainView() {
     return;
   }
 
-  const mainView = document.getElementById("appMenu-mainView");
+  let mainViewID = PanelUI.protonAppMenuEnabled
+    ? "appMenu-protonMainView"
+    : "appMenu-mainView";
+  const mainView = document.getElementById(mainViewID);
 
   let shownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
   // Should still open the panel when Ctrl key is pressed.
@@ -34,6 +37,14 @@ add_task(async function test_appMenu_libraryView() {
   // anything on macOS:
   if (AppConstants.platform == "macosx") {
     ok(true, "The test is ignored on Mac");
+    return;
+  }
+
+  if (PanelUI.protonAppMenuEnabled) {
+    ok(
+      true,
+      "Skipping test since this item does not exist in the Proton AppMenu"
+    );
     return;
   }
 

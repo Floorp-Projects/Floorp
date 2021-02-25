@@ -12,6 +12,14 @@ const { ASRouter } = ChromeUtils.import(
 );
 
 add_task(async function test_with_rs_messages() {
+  if (PanelUI.protonAppMenuEnabled) {
+    Assert.ok(
+      true,
+      "Skipping test since What's New doesn't exist in the Proton AppMenu"
+    );
+    return;
+  }
+
   // Force the WNPanel provider cache to 0 by modifying updateCycleInMs
   await SpecialPowers.pushPrefEnv({
     set: [
