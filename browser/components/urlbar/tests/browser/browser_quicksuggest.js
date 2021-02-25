@@ -54,11 +54,7 @@ async function assertIsQuickSuggest(index = -1, win = window) {
   let result = await UrlbarTestUtils.getDetailsOfResultAt(win, index);
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
   Assert.equal(result.url, `${TEST_URL}?q=frabbits`);
-
-  if (result.url != `${TEST_URL}?q=frabbits`) {
-    await new Promise(r => {});
-  }
-
+  Assert.ok(result.isSponsored, "Result isSponsored");
   return result;
 }
 
@@ -69,7 +65,9 @@ async function assertNoQuickSuggestResults() {
   for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
     let r = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
     Assert.ok(
-      r.type != UrlbarUtils.RESULT_TYPE.URL || !r.url.includes(TEST_URL),
+      r.type != UrlbarUtils.RESULT_TYPE.URL ||
+        !r.url.includes(TEST_URL) ||
+        !r.isSponsored,
       `Result at index ${i} should not be a QuickSuggest result`
     );
   }
