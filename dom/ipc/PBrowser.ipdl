@@ -793,14 +793,6 @@ child:
                                              uint64_t aInputBlockId);
 
     [Priority=input]
-    async RealMouseEnterExitWidgetEvent(WidgetMouseEvent event,
-                                                    ScrollableLayerGuid aGuid,
-                                                    uint64_t aInputBlockId);
-    async NormalPriorityRealMouseEnterExitWidgetEvent(WidgetMouseEvent event,
-                                                      ScrollableLayerGuid aGuid,
-                                                      uint64_t aInputBlockId);
-
-    [Priority=input]
     async RealKeyEvent(WidgetKeyboardEvent event);
     async NormalPriorityRealKeyEvent(WidgetKeyboardEvent event);
 
