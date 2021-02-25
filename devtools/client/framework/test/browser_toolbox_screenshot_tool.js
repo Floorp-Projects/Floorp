@@ -27,10 +27,9 @@ add_task(async function() {
   await pushPref("devtools.command-button-screenshot.enabled", true);
 
   await addTab(TEST_URL);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
 
   info("Open the toolbox");
-  const toolbox = await gDevTools.showToolbox(target, "console");
+  const toolbox = await gDevTools.showToolboxForTab(gBrowser.selectedTab);
 
   const onScreenshotDownloaded = waitUntilScreenshot();
   toolbox.doc.querySelector("#command-button-screenshot").click();

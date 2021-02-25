@@ -11,8 +11,7 @@ const TEST_URI =
 add_task(async function() {
   await pushPref("devtools.webconsole.filter.css", true);
   const hud = await openNewTabAndConsole(TEST_URI);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  const toolbox = gDevTools.getToolbox(target);
+  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
   await testViewSource(hud, toolbox, "\u2018font-weight\u2019");
 

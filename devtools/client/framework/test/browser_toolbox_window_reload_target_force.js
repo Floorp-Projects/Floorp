@@ -13,10 +13,12 @@ const L10N = new LocalizationHelper(
 // header value: no-cache.
 add_task(async function() {
   await addTab(TEST_URL);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const tab = gBrowser.selectedTab;
 
   info("Open the toolbox with the inspector selected");
-  const toolbox = await gDevTools.showToolbox(target, "inspector");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "inspector",
+  });
 
   await testReload("toolbox.reload.key", toolbox, "max-age=0");
   await testReload("toolbox.reload2.key", toolbox, "max-age=0");

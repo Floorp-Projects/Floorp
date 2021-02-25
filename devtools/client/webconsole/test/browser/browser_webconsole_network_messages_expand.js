@@ -28,12 +28,11 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const currentTab = gBrowser.selectedTab;
-  const target = await TargetFactory.forTab(currentTab);
 
   // Execute XHR and expand it after all network
   // update events are received. Consequently,
   // check out content of all (HTTP details) tabs.
-  const toolbox = gDevTools.getToolbox(target);
+  const toolbox = await gDevTools.getToolboxForTab(currentTab);
 
   const xhrUrl = TEST_PATH + "sjs_slow-response-test-server.sjs";
   const onMessage = waitForMessage(hud, xhrUrl);

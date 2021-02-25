@@ -786,25 +786,26 @@ async function openDebugger(options = {}) {
     options.tab = gBrowser.selectedTab;
   }
 
-  const target = await TargetFactory.forTab(options.tab);
-  let toolbox = gDevTools.getToolbox(target);
+  let toolbox = await gDevTools.getToolboxForTab(options.tab);
   const dbgPanelAlreadyOpen = toolbox && toolbox.getPanel("jsdebugger");
   if (dbgPanelAlreadyOpen) {
     await toolbox.selectTool("jsdebugger");
 
     return {
-      target,
+      target: toolbox.target,
       toolbox,
       panel: toolbox.getCurrentPanel(),
     };
   }
 
-  toolbox = await gDevTools.showToolbox(target, "jsdebugger");
+  toolbox = await gDevTools.showToolboxForTab(options.tab, {
+    toolId: "jsdebugger",
+  });
   const panel = toolbox.getCurrentPanel();
 
   await toolbox.threadFront.getSources();
 
-  return { target, toolbox, panel };
+  return { target: toolbox.target, toolbox, panel };
 }
 
 async function openInspector(options = {}) {
@@ -812,8 +813,9 @@ async function openInspector(options = {}) {
     options.tab = gBrowser.selectedTab;
   }
 
-  const target = await TargetFactory.forTab(options.tab);
-  const toolbox = await gDevTools.showToolbox(target, "inspector");
+  const toolbox = await gDevTools.showToolboxForTab(options.tab, {
+    toolId: "inspector",
+  });
 
   return toolbox.getCurrentPanel();
 }
@@ -828,10 +830,10 @@ async function openInspector(options = {}) {
  *         A promise that is resolved with the netmonitor panel once the netmonitor is open.
  */
 async function openNetMonitor(tab) {
-  const target = await TargetFactory.forTab(tab || gBrowser.selectedTab);
-  let toolbox = await gDevTools.getToolbox(target);
+  tab = tab || gBrowser.selectedTab;
+  let toolbox = await gDevTools.getToolboxForTab(tab);
   if (!toolbox) {
-    toolbox = await gDevTools.showToolbox(target);
+    toolbox = await gDevTools.showToolboxForTab(tab);
   }
   await toolbox.selectTool("netmonitor");
   return toolbox.getCurrentPanel();
@@ -847,8 +849,10 @@ async function openNetMonitor(tab) {
  *         A promise that is resolved with the console hud once the web console is open.
  */
 async function openConsole(tab) {
-  const target = await TargetFactory.forTab(tab || gBrowser.selectedTab);
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  tab = tab || gBrowser.selectedTab;
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "webconsole",
+  });
   return toolbox.getCurrentPanel().hud;
 }
 
@@ -862,8 +866,7 @@ async function openConsole(tab) {
  *         A promise that is resolved once the web console is closed.
  */
 async function closeConsole(tab = gBrowser.selectedTab) {
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = gDevTools.getToolbox(target);
+  const toolbox = await gDevTools.getToolboxForTab(tab);
   if (toolbox) {
     await toolbox.destroy();
   }
