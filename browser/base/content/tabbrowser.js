@@ -85,7 +85,13 @@
 
     ownerDocument: document,
 
-    closingTabsEnum: { ALL: 0, OTHER: 1, TO_END: 2, MULTI_SELECTED: 3 },
+    closingTabsEnum: {
+      ALL: 0,
+      OTHER: 1,
+      TO_START: 2,
+      TO_END: 3,
+      MULTI_SELECTED: 4,
+    },
 
     _visibleTabs: null,
 
@@ -3203,12 +3209,37 @@
       tab.dispatchEvent(evt);
     },
 
+    getTabsToTheStartFrom(aTab) {
+      let tabsToStart = [];
+      let tabs = this.visibleTabs;
+      for (let i = 0; i < tabs.length; ++i) {
+        if (tabs[i] == aTab) {
+          break;
+        }
+        // Ignore pinned tabs.
+        if (tabs[i].pinned) {
+          continue;
+        }
+        // In a multi-select context, select all unselected tabs
+        // starting from the context tab.
+        if (aTab.multiselected && tabs[i].multiselected) {
+          continue;
+        }
+        tabsToStart.push(tabs[i]);
+      }
+      return tabsToStart;
+    },
+
     getTabsToTheEndFrom(aTab) {
       let tabsToEnd = [];
       let tabs = this.visibleTabs;
       for (let i = tabs.length - 1; i >= 0; --i) {
-        if (tabs[i] == aTab || tabs[i].pinned) {
+        if (tabs[i] == aTab) {
           break;
+        }
+        // Ignore pinned tabs.
+        if (tabs[i].pinned) {
+          continue;
         }
         // In a multi-select context, select all unselected tabs
         // starting from the context tab.
@@ -3218,6 +3249,21 @@
         tabsToEnd.push(tabs[i]);
       }
       return tabsToEnd;
+    },
+
+    /**
+     * In a multi-select context, the tabs (except pinned tabs) that are located to the
+     * left of the leftmost selected tab will be removed.
+     */
+    removeTabsToTheStartFrom(aTab) {
+      let tabs = this.getTabsToTheStartFrom(aTab);
+      if (
+        !this.warnAboutClosingTabs(tabs.length, this.closingTabsEnum.TO_START)
+      ) {
+        return;
+      }
+
+      this.removeTabs(tabs);
     },
 
     /**
@@ -6658,8 +6704,11 @@ var TabContextMenu = {
       "context_duplicateTabs"
     ).hidden = !multiselectionContext;
 
-    // Disable "Close Tabs to the Right" if there are no tabs
-    // following it.
+    // Disable "Close Tabs to the Left/Right" if there are no tabs
+    // preceding/following it.
+    document.getElementById(
+      "context_closeTabsToTheStart"
+    ).disabled = !gBrowser.getTabsToTheStartFrom(this.contextTab).length;
     document.getElementById(
       "context_closeTabsToTheEnd"
     ).disabled = !gBrowser.getTabsToTheEndFrom(this.contextTab).length;
