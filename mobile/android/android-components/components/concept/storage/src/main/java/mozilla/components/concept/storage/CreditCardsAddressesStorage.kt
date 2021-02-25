@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.storage
 
+import kotlinx.coroutines.Deferred
+
 /**
  * An interface which defines read/write methods for credit card and address data.
  */
@@ -218,3 +220,32 @@ data class UpdatableAddressFields(
     val tel: String,
     val email: String
 )
+
+/**
+ * Used to handle [Address] and [CreditCard] storage so that the underlying engine doesn't have to.
+ * An instance of this should be attached to the Gecko runtime in order to be used.
+ */
+interface CreditCardsAddressesStorageDelegate {
+
+    /**
+     * Returns all stored addresses. This is called when the engine believes an address field
+     * should be autofilled.
+     */
+    fun onAddressesFetch(): Deferred<List<Address>>
+
+    /**
+     * Saves the given address to storage.
+     */
+    fun onAddressSave(address: Address)
+
+    /**
+     * Returns all stored credit cards. This is called when the engine believes a credit card
+     * field should be autofilled.
+     */
+    fun onCreditCardsFetch(): Deferred<List<CreditCard>>
+
+    /**
+     * Saves the given credit card to storage.
+     */
+    fun onCreditCardSave(creditCard: CreditCard)
+}

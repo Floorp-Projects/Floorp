@@ -47,6 +47,7 @@ dependencies {
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_coroutines
 
     testImplementation Dependencies.mozilla_places
     testImplementation Dependencies.mozilla_remote_tabs
