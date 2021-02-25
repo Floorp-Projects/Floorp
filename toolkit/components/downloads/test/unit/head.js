@@ -257,7 +257,7 @@ function promiseTimeout(aTime) {
  *        String containing the URI that will be visited.
  *
  * @return {Promise}
- * @resolves Array [aTime, aTransitionType] from nsINavHistoryObserver.onVisit.
+ * @resolves Array [aTime, aTransitionType] from page-visited places event.
  * @rejects Never.
  */
 function promiseWaitForVisit(aUrl) {

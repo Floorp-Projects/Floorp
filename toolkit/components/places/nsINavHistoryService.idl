@@ -557,16 +557,7 @@ interface nsINavHistoryResult : nsISupports
    * are done with a result, since that will avoid unwanted performance hits.
    */
   readonly attribute nsINavHistoryContainerResultNode root;
-};
 
-
-/**
- * DANGER! If you are in the middle of a batch transaction, there may be a
- * database transaction active. You can still access the DB, but be careful.
- */
-[scriptable, uuid(0f0f45b0-13a1-44ae-a0ab-c6046ec6d4da)]
-interface nsINavHistoryObserver : nsISupports
-{
   /**
    * Notifies you that a bunch of things are about to change, don't do any
    * heavy-duty processing until onEndUpdateBatch is called.
@@ -1102,25 +1093,6 @@ interface nsINavHistoryService : nsISupports
    */
   AUTF8String queryToQueryString(in nsINavHistoryQuery aQuery,
                                  in nsINavHistoryQueryOptions options);
-
-  /**
-   * Adds a history observer. If ownsWeak is false, the history service will
-   * keep an owning reference to the observer.  If ownsWeak is true, then
-   * aObserver must implement nsISupportsWeakReference, and the history service
-   * will keep a weak reference to the observer.
-   */
-  void addObserver(in nsINavHistoryObserver observer,
-                   [optional] in boolean ownsWeak);
-
-  /**
-   * Removes a history observer.
-   */
-  void removeObserver(in nsINavHistoryObserver observer);
-
-  /**
-   * Gets an array of registered nsINavHistoryObserver objects.
-   */
-  Array<nsINavHistoryObserver> getObservers();
 
   /**
    * True if history is disabled. currently,

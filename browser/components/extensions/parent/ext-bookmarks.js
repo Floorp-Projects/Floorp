@@ -126,9 +126,6 @@ let observer = new (class extends EventEmitter {
     this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
   }
 
-  onBeginUpdateBatch() {}
-  onEndUpdateBatch() {}
-
   handlePlacesEvents(events) {
     for (let event of events) {
       switch (event.type) {

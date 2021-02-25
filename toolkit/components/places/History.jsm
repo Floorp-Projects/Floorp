@@ -62,10 +62,10 @@
  *
  *
  *
- * Each successful operation notifies through the nsINavHistoryObserver
- * interface. To listen to such notifications you must register using
- * nsINavHistoryService `addObserver` and `removeObserver` methods.
- * @see nsINavHistoryObserver
+ * Each successful operation notifies through the PlacesObservers. To listen to such
+ * notifications you must register using
+ * PlacesObservers `addListener` and `removeListener` methods.
+ * @see PlacesObservers
  */
 
 var EXPORTED_SYMBOLS = ["History"];
@@ -222,7 +222,7 @@ var History = Object.freeze({
   /**
    * Adds a number of visits for a single page.
    *
-   * Any change may be observed through nsINavHistoryObserver
+   * Any change may be observed through PlacesObservers.
    *
    * @param pageInfo: (PageInfo)
    *      Information on a page. This `PageInfo` MUST contain
@@ -269,7 +269,7 @@ var History = Object.freeze({
   /**
    * Adds a number of visits for a number of pages.
    *
-   * Any change may be observed through nsINavHistoryObserver
+   * Any change may be observed through PlacesObservers.
    *
    * @param pageInfos: (Array<PageInfo>)
    *      Information on a page. This `PageInfo` MUST contain
@@ -339,7 +339,7 @@ var History = Object.freeze({
   /**
    * Remove pages from the database.
    *
-   * Any change may be observed through nsINavHistoryObserver
+   * Any change may be observed through PlacesObservers.
    *
    *
    * @param page: (URL or nsIURI)
@@ -422,7 +422,7 @@ var History = Object.freeze({
   /**
    * Remove visits matching specific characteristics.
    *
-   * Any change may be observed through nsINavHistoryObserver.
+   * Any change may be observed through PlacesObservers.
    *
    * @param filter: (object)
    *      The `object` may contain some of the following
@@ -516,7 +516,7 @@ var History = Object.freeze({
   /**
    * Remove pages from the database based on a filter.
    *
-   * Any change may be observed through nsINavHistoryObserver
+   * Any change may be observed through PlacesObservers
    *
    *
    * @param filter: An object containing a non empty subset of the following

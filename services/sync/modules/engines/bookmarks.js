@@ -795,8 +795,6 @@ BookmarksStore.prototype = {
 // to bump the score, so that changed bookmarks are synced immediately.
 function BookmarksTracker(name, engine) {
   Tracker.call(this, name, engine);
-  this._batchDepth = 0;
-  this._batchSawScoreIncrement = false;
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -862,14 +860,9 @@ BookmarksTracker.prototype = {
     "nsISupportsWeakReference",
   ]),
 
-  /* Every add/remove/change will trigger a sync for MULTI_DEVICE (except in
-     a batch operation, where we do it at the end of the batch) */
+  /* Every add/remove/change will trigger a sync for MULTI_DEVICE */
   _upScore: function BMT__upScore() {
-    if (this._batchDepth == 0) {
-      this.score += SCORE_INCREMENT_XLARGE;
-    } else {
-      this._batchSawScoreIncrement = true;
-    }
+    this.score += SCORE_INCREMENT_XLARGE;
   },
 
   handlePlacesEvents(events) {
@@ -951,16 +944,6 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onItemMoved: " + itemId);
     this._upScore();
-  },
-
-  onBeginUpdateBatch() {
-    ++this._batchDepth;
-  },
-  onEndUpdateBatch() {
-    if (--this._batchDepth === 0 && this._batchSawScoreIncrement) {
-      this.score += SCORE_INCREMENT_XLARGE;
-      this._batchSawScoreIncrement = false;
-    }
   },
 };
 
