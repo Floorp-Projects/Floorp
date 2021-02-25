@@ -186,6 +186,19 @@ var webrtcUI = {
   },
 
   /**
+   * Returns true if aBrowser has an active WebRTC stream.
+   */
+  browserHasStreams(aBrowser) {
+    for (let stream of this._streams) {
+      if (stream.topBrowsingContext.embedderElement == aBrowser) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  /**
    * Determine the combined state of all the active streams associated with
    * the specified top-level browsing context.
    */

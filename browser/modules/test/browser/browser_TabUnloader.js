@@ -5,7 +5,7 @@ const { TabUnloader } = ChromeUtils.import(
   "resource:///modules/TabUnloader.jsm"
 );
 
-const BASE_URL = "http://example.com/browser/browser/modules/test/browser/";
+const BASE_URL = "https://example.com/browser/browser/modules/test/browser/";
 
 async function play(tab) {
   let browser = tab.linkedBrowser;
@@ -15,17 +15,17 @@ async function play(tab) {
   });
 }
 
-async function addTab() {
+async function addTab(win = window) {
   return BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
+    gBrowser: win.gBrowser,
     url: BASE_URL + "dummy_page.html",
     waitForLoad: true,
   });
 }
 
-async function addAudioTab() {
+async function addAudioTab(win = window) {
   let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
+    gBrowser: win.gBrowser,
     url: BASE_URL + "file_mediaPlayback.html",
     waitForLoad: true,
     waitForStateStop: true,
@@ -35,7 +35,74 @@ async function addAudioTab() {
   return tab;
 }
 
+async function addWebRTCTab(win = window) {
+  let popupPromise = new Promise(resolve => {
+    win.PopupNotifications.panel.addEventListener(
+      "popupshown",
+      function() {
+        executeSoon(resolve);
+      },
+      { once: true }
+    );
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: win.gBrowser,
+    url: BASE_URL + "file_webrtc.html",
+    waitForLoad: true,
+    waitForStateStop: true,
+  });
+
+  await popupPromise;
+
+  let recordingPromise = BrowserTestUtils.contentTopicObserved(
+    tab.linkedBrowser.browsingContext,
+    "recording-device-events"
+  );
+  win.PopupNotifications.panel.firstElementChild.button.click();
+  await recordingPromise;
+
+  return tab;
+}
+
+async function pressure(tab, observerData = "low-memory") {
+  let tabDiscarded = BrowserTestUtils.waitForEvent(
+    document,
+    "TabBrowserDiscarded",
+    true
+  );
+  TabUnloader.observe(null, "memory-pressure", observerData);
+  return tabDiscarded;
+}
+
+async function compareTabOrder(expectedOrder) {
+  let tabInfo = await TabUnloader.getSortedTabs();
+
+  is(
+    tabInfo.length,
+    expectedOrder.length,
+    "right number of tabs in discard sort list"
+  );
+  for (let idx = 0; idx < expectedOrder.length; idx++) {
+    is(tabInfo[idx].tab, expectedOrder[idx], "index " + idx + " is correct");
+  }
+}
+
+const PREF_PERMISSION_FAKE = "media.navigator.permission.fake";
+const PREF_AUDIO_LOOPBACK = "media.audio_loopback_dev";
+const PREF_VIDEO_LOOPBACK = "media.video_loopback_dev";
+const PREF_FAKE_STREAMS = "media.navigator.streams.fake";
+
 add_task(async function test() {
+  // Set some WebRTC simulation preferences.
+  let prefs = [
+    [PREF_PERMISSION_FAKE, true],
+    [PREF_AUDIO_LOOPBACK, ""],
+    [PREF_VIDEO_LOOPBACK, ""],
+    [PREF_FAKE_STREAMS, true],
+  ];
+  await SpecialPowers.pushPrefEnv({ set: prefs });
+
   // Set up 6 tabs, three normal ones, one pinned, one playing sound and one
   // pinned playing sound
   let tab0 = gBrowser.tabs[0];
@@ -63,6 +130,15 @@ add_task(async function test() {
     "tab is pinned and playing sound"
   );
 
+  await compareTabOrder([
+    tab1,
+    tab2,
+    pinnedTab,
+    soundTab,
+    pinnedSoundTab,
+    tab0,
+  ]);
+
   // Check that the tabs are present
   ok(
     tab1.linkedPanel &&
@@ -84,36 +160,111 @@ add_task(async function test() {
     "heap-minimize memory-pressure notification did not unload a tab"
   );
 
+  await compareTabOrder([
+    tab1,
+    tab2,
+    pinnedTab,
+    soundTab,
+    pinnedSoundTab,
+    tab0,
+  ]);
+
   // Check that low-memory memory-pressure events unload tabs
-  TabUnloader.observe(null, "memory-pressure", "low-memory");
+  await pressure(tab1);
   ok(
     !tab1.linkedPanel,
     "low-memory memory-pressure notification unloaded the LRU tab"
   );
 
+  await compareTabOrder([tab2, pinnedTab, soundTab, pinnedSoundTab, tab0]);
+
   // If no normal tab is available unload pinned tabs
-  TabUnloader.observe(null, "memory-pressure", "low-memory");
+  await pressure(tab2);
   ok(!tab2.linkedPanel, "unloaded a second tab in LRU order");
-  TabUnloader.observe(null, "memory-pressure", "low-memory");
+  await compareTabOrder([pinnedTab, soundTab, pinnedSoundTab, tab0]);
+
+  ok(soundTab.soundPlaying, "tab is no longer playing sound");
+
+  await pressure(pinnedTab);
   ok(!pinnedTab.linkedPanel, "unloaded a pinned tab");
+  await compareTabOrder([soundTab, pinnedSoundTab, tab0]);
+
+  ok(pinnedSoundTab.soundPlaying, "tab is no longer playing sound");
 
   // If no pinned tab is available unload tabs playing sound
-  TabUnloader.observe(null, "memory-pressure", "low-memory");
+  await pressure(soundTab);
   ok(!soundTab.linkedPanel, "unloaded a tab playing sound");
+  await compareTabOrder([pinnedSoundTab, tab0]);
 
   // If no pinned tab or tab playing sound is available unload tabs that are
   // both pinned and playing sound
-  TabUnloader.observe(null, "memory-pressure", "low-memory");
+  await pressure(pinnedSoundTab);
   ok(!pinnedSoundTab.linkedPanel, "unloaded a pinned tab playing sound");
+  await compareTabOrder([]); // note that no tabs are returned when there are no discardable tabs.
 
   // Check low-memory-ongoing events
   await BrowserTestUtils.switchTab(gBrowser, tab1);
   await BrowserTestUtils.switchTab(gBrowser, tab0);
-  TabUnloader.observe(null, "memory-pressure", "low-memory-ongoing");
+
+  await compareTabOrder([tab1, tab0]);
+
+  await pressure(tab1, "low-memory-ongoing");
   ok(
     !tab1.linkedPanel,
-    "low-memory memory-pressure notification unloaded the LRU tab"
+    "low-memory-ongoing memory-pressure notification unloaded the LRU tab"
   );
+  await compareTabOrder([]);
+
+  // Add a WebRTC tab and another sound tab.
+  let webrtcTab = await addWebRTCTab();
+  let anotherSoundTab = await addAudioTab();
+
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+  await BrowserTestUtils.switchTab(gBrowser, soundTab);
+  await BrowserTestUtils.switchTab(gBrowser, pinnedTab);
+  await BrowserTestUtils.switchTab(gBrowser, tab0);
+
+  // Audio from the first sound tab was stopped when the tab was discarded earlier,
+  // so it should be treated as if it isn't playing sound and should appear earlier
+  // in the list.
+  await compareTabOrder([
+    tab1,
+    soundTab,
+    pinnedTab,
+    webrtcTab,
+    anotherSoundTab,
+    tab0,
+  ]);
+
+  let window2 = await BrowserTestUtils.openNewBrowserWindow();
+  let win2tab1 = window2.gBrowser.selectedTab;
+  let win2tab2 = await addTab(window2);
+  let win2winrtcTab = await addWebRTCTab(window2);
+  let win2tab3 = await addTab(window2);
+
+  await compareTabOrder([
+    tab1,
+    soundTab,
+    win2tab1,
+    win2tab2,
+    pinnedTab,
+    webrtcTab,
+    anotherSoundTab,
+    win2winrtcTab,
+    tab0,
+    win2tab3,
+  ]);
+
+  await BrowserTestUtils.closeWindow(window2);
+
+  await compareTabOrder([
+    tab1,
+    soundTab,
+    pinnedTab,
+    webrtcTab,
+    anotherSoundTab,
+    tab0,
+  ]);
 
   // Cleanup
   BrowserTestUtils.removeTab(tab1);
@@ -121,4 +272,32 @@ add_task(async function test() {
   BrowserTestUtils.removeTab(pinnedTab);
   BrowserTestUtils.removeTab(soundTab);
   BrowserTestUtils.removeTab(pinnedSoundTab);
+  BrowserTestUtils.removeTab(webrtcTab);
+  BrowserTestUtils.removeTab(anotherSoundTab);
+
+  await awaitWebRTCClose();
 });
+
+// Wait for the WebRTC indicator window to close.
+function awaitWebRTCClose() {
+  if (
+    Services.prefs.getBoolPref("privacy.webrtc.legacyGlobalIndicator", false) ||
+    AppConstants.platform == "macosx"
+  ) {
+    return null;
+  }
+
+  let win = Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
+  if (!win) {
+    return null;
+  }
+
+  return new Promise(resolve => {
+    win.addEventListener("unload", function listener(e) {
+      if (e.target == win.document) {
+        win.removeEventListener("unload", listener);
+        executeSoon(resolve);
+      }
+    });
+  });
+}
