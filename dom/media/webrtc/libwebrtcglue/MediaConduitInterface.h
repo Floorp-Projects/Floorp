@@ -129,6 +129,7 @@ class MediaSessionConduit {
 
  public:
   enum Type { AUDIO, VIDEO };
+  enum class PacketType { RTP, RTCP };
 
   static std::string LocalDirectionToString(
       const MediaSessionConduitLocalDirection aDirection) {
@@ -146,8 +147,8 @@ class MediaSessionConduit {
    * Obtained packets are passed to the Media-Engine for further
    * processing , say, decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTPPacket(
-      const void* data, int len, webrtc::RTPHeader& header) = 0;
+  virtual void ReceivedRTPPacket(const uint8_t* data, int len,
+                                 webrtc::RTPHeader& header) = 0;
 
   /**
    * Function triggered on Incoming RTCP packet from the remote
@@ -157,8 +158,7 @@ class MediaSessionConduit {
    * Obtained packets are passed to the Media-Engine for further
    * processing , say, decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void* data,
-                                                   int len) = 0;
+  virtual void ReceivedRTCPPacket(const uint8_t* data, int len) = 0;
 
   virtual Maybe<DOMHighResTimeStamp> LastRtcpReceived() const = 0;
   virtual DOMHighResTimeStamp GetNow() const = 0;
@@ -228,7 +228,8 @@ class MediaSessionConduit {
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) = 0;
 
-  virtual MediaConduitErrorCode DeliverPacket(const void* data, int len) = 0;
+  virtual void DeliverPacket(rtc::CopyOnWriteBuffer packet,
+                             PacketType type) = 0;
 
   virtual void DeleteStreams() = 0;
 

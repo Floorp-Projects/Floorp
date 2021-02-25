@@ -1409,45 +1409,34 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
 
 // Transport Layer Callbacks
 
-MediaConduitErrorCode WebrtcVideoConduit::DeliverPacket(const void* data,
-                                                        int len) {
+void WebrtcVideoConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
+                                       PacketType type) {
   ASSERT_ON_THREAD(mStsThread);
 
-  using PacketPromise =
-      MozPromise<webrtc::PacketReceiver::DeliveryStatus, bool, true>;
-
-  auto syncPromise =
-      InvokeAsync(GetMainThreadSerialEventTarget(), __func__, [&] {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [this, self = RefPtr<WebrtcVideoConduit>(this),
+                 packet = std::move(packet), type] {
         auto current = TaskQueueWrapper::MainAsCurrent();
+
         if (!mCall->Call()) {
-          return PacketPromise::CreateAndResolve(
-              webrtc::PacketReceiver::DELIVERY_PACKET_ERROR, __func__);
+          return;
         }
-        // Bug 1499796 - we need to get passed the time the
-        // packet was received
+
+        // Bug 1499796 - we need to get passed the time the packet was received
         webrtc::PacketReceiver::DeliveryStatus status =
-            mCall->Call()->Receiver()->DeliverPacket(
-                webrtc::MediaType::VIDEO,
-                rtc::CopyOnWriteBuffer(static_cast<const uint8_t*>(data), len),
-                -1);
-        return PacketPromise::CreateAndResolve(status, __func__);
-      });
+            mCall->Call()->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO,
+                                                     std::move(packet), -1);
 
-  webrtc::PacketReceiver::DeliveryStatus status =
-      media::Await(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
-                   syncPromise)
-          .ResolveValue();
-
-  if (status != webrtc::PacketReceiver::DELIVERY_OK) {
-    CSFLogError(LOGTAG, "%s DeliverPacket Failed, %d", __FUNCTION__, status);
-    return kMediaConduitRTPProcessingFailed;
-  }
-
-  return kMediaConduitNoError;
+        if (status != webrtc::PacketReceiver::DELIVERY_OK) {
+          CSFLogError(LOGTAG, "%s DeliverPacket Failed for %s packet, %d",
+                      __FUNCTION__, type == PacketType::RTP ? "RTP" : "RTCP",
+                      status);
+        }
+      }));
 }
 
-MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(
-    const void* data, int len, webrtc::RTPHeader& header) {
+void WebrtcVideoConduit::ReceivedRTPPacket(const uint8_t* data, int len,
+                                           webrtc::RTPHeader& header) {
   ASSERT_ON_THREAD(mStsThread);
 
   if (mAllowSsrcChange || mWaitingForInitialSsrc) {
@@ -1456,8 +1445,8 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(
     // We also don't want to drop the packet, nor stall this thread, so we hold
     // the packet (and any following) for inserting once the SSRC is set.
     if (mRtpPacketQueue.IsQueueActive()) {
-      mRtpPacketQueue.Enqueue(data, len);
-      return kMediaConduitNoError;
+      mRtpPacketQueue.Enqueue(rtc::CopyOnWriteBuffer(data, len));
+      return;
     }
 
     bool switchRequired = mRecvSSRC != header.ssrc;
@@ -1479,7 +1468,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(
       // any queued packets are from a previous switch that hasn't completed
       // yet; drop them and only process the latest SSRC
       mRtpPacketQueue.Clear();
-      mRtpPacketQueue.Enqueue(data, len);
+      mRtpPacketQueue.Enqueue(rtc::CopyOnWriteBuffer(data, len));
 
       CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
                   static_cast<uint32_t>(mRecvSSRC), header.ssrc);
@@ -1507,7 +1496,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(
                    }
                    mRtpPacketQueue.DequeueAll(this);
                  });
-      return kMediaConduitNoError;
+      return;
     }
   }
 
@@ -1516,28 +1505,19 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(
                 (uint32_t)ntohl(((uint32_t*)data)[2]),
                 (uint32_t)ntohl(((uint32_t*)data)[2]));
 
-  if (DeliverPacket(data, len) != kMediaConduitNoError) {
-    CSFLogError(LOGTAG, "%s RTP Processing Failed", __FUNCTION__);
-    return kMediaConduitRTPProcessingFailed;
-  }
-  return kMediaConduitNoError;
+  DeliverPacket(rtc::CopyOnWriteBuffer(data, len), PacketType::RTP);
 }
 
-MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTCPPacket(const void* data,
-                                                             int len) {
+void WebrtcVideoConduit::ReceivedRTCPPacket(const uint8_t* data, int len) {
   ASSERT_ON_THREAD(mStsThread);
 
   CSFLogVerbose(LOGTAG, " %s Len %d ", __FUNCTION__, len);
 
-  if (DeliverPacket(data, len) != kMediaConduitNoError) {
-    CSFLogError(LOGTAG, "%s RTCP Processing Failed", __FUNCTION__);
-    return kMediaConduitRTPProcessingFailed;
-  }
+  DeliverPacket(rtc::CopyOnWriteBuffer(data, len), PacketType::RTCP);
 
   // TODO(bug 1496533): We will need to keep separate timestamps for each SSRC,
   // and for each SSRC we will need to keep a timestamp for SR and RR.
   mLastRtcpReceived = Some(GetNow());
-  return kMediaConduitNoError;
 }
 
 // TODO(bug 1496533): We will need to add a type (ie; SR or RR) param here, or
