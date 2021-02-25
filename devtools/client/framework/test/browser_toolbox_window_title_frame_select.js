@@ -21,12 +21,10 @@ add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   await addTab(URL);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = await gDevTools.showToolbox(
-    target,
-    null,
-    Toolbox.HostType.BOTTOM
-  );
+  const tab = gBrowser.selectedTab;
+  let toolbox = await gDevTools.showToolboxForTab(tab, {
+    hostType: Toolbox.HostType.BOTTOM,
+  });
 
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
   // Wait for title change event *after* switch host, in order to listen

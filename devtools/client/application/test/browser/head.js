@@ -95,10 +95,12 @@ function getWorkerContainers(doc) {
 
 async function openNewTabAndApplicationPanel(url) {
   const tab = await addTab(url);
-  const target = await TargetFactory.forTab(tab);
 
-  const toolbox = await gDevTools.showToolbox(target, "application");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "application",
+  });
   const panel = toolbox.getCurrentPanel();
+  const target = toolbox.target;
   return { panel, tab, target, toolbox };
 }
 

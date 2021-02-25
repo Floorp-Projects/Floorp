@@ -19,8 +19,7 @@ const expectedText = `
   `;
 
 async function closeAndReopenToolbox() {
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.closeToolbox(target);
+  await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
   const { ui: newui } = await openStyleEditor();
   return newui;
 }

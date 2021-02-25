@@ -8,8 +8,7 @@ var toolbox;
 
 function test() {
   addTab(TEST_URL).then(async tab => {
-    const target = await TargetFactory.forTab(tab);
-    gDevTools.showToolbox(target).then(testRegister);
+    gDevTools.showToolboxForTab(tab).then(testRegister);
   });
 }
 

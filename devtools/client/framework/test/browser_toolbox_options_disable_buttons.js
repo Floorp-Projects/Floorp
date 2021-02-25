@@ -22,8 +22,7 @@ registerCleanupFunction(() => {
 
 add_task(async function test() {
   const tab = await addTab(TEST_URL);
-  const target = await TargetFactory.forTab(tab);
-  let toolbox = await gDevTools.showToolbox(target);
+  let toolbox = await gDevTools.showToolboxForTab(tab);
   const optionsPanelWin = await selectOptionsPanel(toolbox);
   await testToggleToolboxButtons(toolbox, optionsPanelWin);
   toolbox = await testPrefsAreRespectedWhenReopeningToolbox();
@@ -51,7 +50,7 @@ async function testToggleToolboxButtons(toolbox, optionsPanelWin) {
 
   // Filter out all the buttons which are not supported on the current target.
   // (DevTools Fission Preferences etc...)
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = toolbox.target;
   const toolbarButtons = toolbox.toolbarButtons.filter(tool =>
     tool.isTargetSupported(target)
   );
@@ -142,12 +141,10 @@ async function testToggleToolboxButtons(toolbox, optionsPanelWin) {
 }
 
 async function testPrefsAreRespectedWhenReopeningToolbox() {
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   info("Closing toolbox to test after reopening");
-  await gDevTools.closeToolbox(target);
+  await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
 
-  const tabTarget = await TargetFactory.forTab(gBrowser.selectedTab);
-  const toolbox = await gDevTools.showToolbox(tabTarget);
+  const toolbox = await gDevTools.showToolboxForTab(gBrowser.selectedTab);
   const optionsPanelWin = await selectOptionsPanel(toolbox);
 
   info("Toolbox has been reopened.  Checking UI state.");
