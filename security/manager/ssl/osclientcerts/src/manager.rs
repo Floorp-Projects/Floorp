@@ -583,7 +583,7 @@ impl Manager {
     }
 
     pub fn get_signature_length(
-        &self,
+        &mut self,
         session: CK_SESSION_HANDLE,
         data: &[u8],
     ) -> Result<usize, ()> {
@@ -591,7 +591,7 @@ impl Manager {
             Some((key_handle, params)) => (key_handle, params),
             None => return Err(()),
         };
-        let key = match self.objects.get(&key_handle) {
+        let key = match self.objects.get_mut(&key_handle) {
             Some(Object::Key(key)) => key,
             _ => return Err(()),
         };
@@ -605,7 +605,7 @@ impl Manager {
             Some((key_handle, params)) => (key_handle, params),
             None => return Err(()),
         };
-        let key = match self.objects.get(&key_handle) {
+        let key = match self.objects.get_mut(&key_handle) {
             Some(Object::Key(key)) => key,
             _ => return Err(()),
         };
