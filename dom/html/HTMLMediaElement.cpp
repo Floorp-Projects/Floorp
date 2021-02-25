@@ -2079,6 +2079,14 @@ double HTMLMediaElement::VideoDecodeSuspendedTime() const {
   return mDecoder ? mDecoder->GetVideoDecodeSuspendedTimeInSeconds() : -1.0;
 }
 
+void HTMLMediaElement::SetFormatDiagnosticsReportForMimeType(
+    const nsAString& aMimeType, DecoderDoctorReportType aType) {
+  DecoderDoctorDiagnostics diagnostics;
+  diagnostics.SetDecoderDoctorReportType(aType);
+  diagnostics.StoreFormatDiagnostics(OwnerDoc(), aMimeType, false /* can play*/,
+                                     __func__);
+}
+
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
   MarkAsTainted();
 
