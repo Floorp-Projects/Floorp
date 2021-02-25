@@ -1330,6 +1330,10 @@ certs-devices =
     .label = Security Devices…
     .accesskey = D
 
+space-alert-learn-more-button =
+    .label = Learn More
+    .accesskey = L
+
 space-alert-over-5gb-pref-button =
     .label =
         { PLATFORM() ->
