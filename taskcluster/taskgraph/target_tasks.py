@@ -881,11 +881,10 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     if "speedometer" in try_name:
                         return True
             else:
-                # Run tests on all chrome variants
-                if (
-                    "linux" in platform or "macos" in platform or "windows" in platform
-                ) and "tp6" in try_name:
+                # Don't run tp6 raptor tests
+                if "tp6" in try_name:
                     return False
+                # Run raptor-webext benchmark tests on chrome/chromium
                 if "-chrome" in try_name:
                     return True
                 if "-chromium" in try_name:
