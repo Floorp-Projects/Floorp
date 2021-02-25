@@ -2496,6 +2496,37 @@ BrowserGlue.prototype = {
         },
       },
 
+      // Report the type of shortcut used to launch
+      {
+        condition: AppConstants.platform == "win",
+        task: () => {
+          let classification;
+          let shortcut;
+          try {
+            shortcut = Services.appinfo.processStartupShortcut;
+            let shellService = Cc[
+              "@mozilla.org/browser/shell-service;1"
+            ].getService(Ci.nsIWindowsShellService);
+            classification = shellService.classifyShortcut(shortcut);
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+
+          if (!classification) {
+            if (shortcut) {
+              classification = "OtherShortcut";
+            } else {
+              classification = "Other";
+            }
+          }
+
+          Services.telemetry.scalarSet(
+            "os.environment.launch_method",
+            classification
+          );
+        },
+      },
+
       {
         condition: AppConstants.platform == "win",
         task: () => {
