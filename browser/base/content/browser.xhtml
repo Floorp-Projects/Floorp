@@ -615,7 +615,16 @@
 
 #include ../../components/places/content/bookmarksHistoryTooltip.inc.xhtml
 
-    <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
+    <tooltip id="tabbrowser-tab-tooltip"
+             class="places-tooltip"
+             position="after_start"
+             anchortoclosest="tab"
+             onpopupshowing="gBrowser.createTooltip(event);">
+      <vbox class="places-tooltip-box" flex="1">
+        <description crop="center" class="tooltip-label places-tooltip-title"/>
+        <description crop="center" class="tooltip-label places-tooltip-uri uri-element"/>
+      </vbox>
+    </tooltip>
 
     <tooltip id="back-button-tooltip">
       <description id="back-button-tooltip-description" class="tooltip-label"/>
