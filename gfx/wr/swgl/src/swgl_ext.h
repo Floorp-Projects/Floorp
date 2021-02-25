@@ -346,6 +346,53 @@ static void blendTextureLinearFast(S sampler, vec2 uv, int span,
   }
 }
 
+// Implements a faster linear filter that works with axis-aligned constant Y but
+// downscaling the texture by half. In this case we can optimize for the
+// constant X/Y fractions and reduction factor while minimizing shuffling.
+template <bool BLEND, typename S, typename C, typename P>
+static NO_INLINE void blendTextureLinearDownscale(S sampler, vec2 uv, int span,
+                                                  vec2_scalar min_uv,
+                                                  vec2_scalar max_uv, C color,
+                                                  P* buf, int zoffset) {
+  typedef VectorType<uint8_t, 4 * sizeof(P)> packed_type;
+  typedef VectorType<uint16_t, 4 * sizeof(P)> unpacked_type;
+  typedef VectorType<int16_t, 4 * sizeof(P)> signed_unpacked_type;
+
+  ivec2 i(clamp(uv, min_uv, max_uv));
+  ivec2 frac = i;
+  i >>= 7;
+  P* row0 = (P*)sampler->buf + computeRow(sampler, force_scalar(i), zoffset);
+  P* row1 = row0 + computeNextRowOffset(sampler, force_scalar(i));
+  int16_t fracx = computeFracX(sampler, i, frac).x;
+  int16_t fracy = computeFracY(frac).x;
+
+  for (P* end = buf + span; buf < end; buf += 4) {
+    auto src0 =
+        CONVERT(unaligned_load<packed_type>(row0), signed_unpacked_type);
+    auto src1 =
+        CONVERT(unaligned_load<packed_type>(row1), signed_unpacked_type);
+    auto src = castForShuffle(src0 + (((src1 - src0) * fracy) >> 7));
+    row0 += 4;
+    row1 += 4;
+    auto src0n =
+        CONVERT(unaligned_load<packed_type>(row0), signed_unpacked_type);
+    auto src1n =
+        CONVERT(unaligned_load<packed_type>(row1), signed_unpacked_type);
+    auto srcn = castForShuffle(src0n + (((src1n - src0n) * fracy) >> 7));
+    row0 += 4;
+    row1 += 4;
+
+    auto interp =
+        bit_cast<signed_unpacked_type>(SHUFFLE(src, srcn, 0, 2, 4, 6));
+    auto interpn =
+        bit_cast<signed_unpacked_type>(SHUFFLE(src, srcn, 1, 3, 5, 7));
+    interp += ((interpn - interp) * fracx) >> 7;
+
+    commit_blend_span<BLEND>(
+        buf, applyColor(bit_cast<unpacked_type>(interp), color));
+  }
+}
+
 enum LinearFilter {
   // No linear filter is needed.
   LINEAR_FILTER_NEAREST = 0,
@@ -354,7 +401,9 @@ enum LinearFilter {
   // A linear filter optimized for axis-aligned upscaling.
   LINEAR_FILTER_UPSCALE,
   // A linear filter with no scaling but with subpixel offset.
-  LINEAR_FILTER_FAST
+  LINEAR_FILTER_FAST,
+  // A linear filter optimized for 2x axis-aligned downscaling.
+  LINEAR_FILTER_DOWNSCALE
 };
 
 // Dispatches to an appropriate linear filter depending on the selected filter.
@@ -392,6 +441,9 @@ static int blendTextureLinear(S sampler, vec2 uv, int span,
       if (filter == LINEAR_FILTER_FAST) {
         blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
                                       color, buf, zoffset);
+      } else if (filter == LINEAR_FILTER_DOWNSCALE) {
+        blendTextureLinearDownscale<BLEND>(sampler, uv, inside, min_uv, max_uv,
+                                           color, buf, zoffset);
       } else {
         blendTextureLinearUpscale<BLEND>(sampler, uv, inside, uv_step, min_uv,
                                          max_uv, color, buf, zoffset);
@@ -477,14 +529,16 @@ static int blendTextureNearestFast(S sampler, vec2 uv, int span,
   return span;
 }
 
-// We need to verify that the pixel step reasonably approximates stepping
-// by a single texel for every pixel we need to reproduce. Try to ensure
-// that the margin of error is no more than approximately 2^-7.
+// We need to verify that the pixel step reasonably approximates stepping by a
+// single texel for every pixel we need to reproduce. Try to ensure that the
+// margin of error is no more than approximately 2^-7. Also, we check here if
+// the scaling can be quantized for acceleration.
 template <typename T>
-static ALWAYS_INLINE bool spanNeedsScale(int span, T P) {
+static ALWAYS_INLINE int spanNeedsScale(int span, T P) {
   span &= ~(128 - 1);
   span += 128;
-  return round((P.x.y - P.x.x) * span) != span;
+  int scaled = round((P.x.y - P.x.x) * span);
+  return scaled != span ? (scaled == span * 2 ? 2 : 1) : 0;
 }
 
 // Helper function to decide whether we can safely apply 1:1 nearest filtering
@@ -496,11 +550,13 @@ static inline LinearFilter needsTextureLinear(S sampler, T P, int span) {
     return LINEAR_FILTER_FALLBACK;
   }
   P = samplerScale(sampler, P);
-  if (spanNeedsScale(span, P)) {
+  if (int scale = spanNeedsScale(span, P)) {
     // If the source region is not flipped and smaller than the destination,
     // then we can use the upscaling filter since row Y is constant.
-    return P.x.x <= P.x.y && P.x.y - P.x.x <= 1 ? LINEAR_FILTER_UPSCALE
-                                                : LINEAR_FILTER_FALLBACK;
+    return P.x.x <= P.x.y && P.x.y - P.x.x <= 1
+               ? LINEAR_FILTER_UPSCALE
+               : (scale == 2 ? LINEAR_FILTER_DOWNSCALE
+                             : LINEAR_FILTER_FALLBACK);
   }
   // Also verify that we're reasonably close to the center of a texel
   // so that it doesn't look that much different than if a linear filter
@@ -984,9 +1040,11 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
 // A variant of the blendYUV that attempts to reuse the inner loops from the
 // CompositeYUV infrastructure. CompositeYUV imposes stricter requirements on
 // the source data, which in turn allows it to be much faster than blendYUV.
-// At a minimum, we need to ensure no blending is used, that we are outputting
-// to a BGRA8 framebuffer, and that no color scaling is applied, which we can
-// accomplish via template specialization.
+// At a minimum, we need to ensure that we are outputting to a BGRA8 framebuffer
+// and that no color scaling is applied, which we can accomplish via template
+// specialization. We need to further validate inside that texture formats
+// and dimensions are sane for video and that the video is axis-aligned before
+// acceleration can proceed.
 template <bool BLEND>
 static int blendYUV(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
                     const vec4_scalar& uv_rect0, float z0,
