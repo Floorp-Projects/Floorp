@@ -624,6 +624,7 @@ pub struct Key {
     modulus: Option<Vec<u8>>,
     ec_params: Option<Vec<u8>>,
     key_type_enum: KeyType,
+    key_handle: Option<SecKey>,
 }
 
 impl Key {
@@ -680,6 +681,7 @@ impl Key {
             modulus,
             ec_params,
             key_type_enum,
+            key_handle: None,
         })
     }
 
@@ -762,7 +764,7 @@ impl Key {
     }
 
     pub fn get_signature_length(
-        &self,
+        &mut self,
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<usize, ()> {
@@ -774,11 +776,26 @@ impl Key {
 
     // The input data is a hash. What algorithm we use depends on the size of the hash.
     pub fn sign(
-        &self,
+        &mut self,
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<Vec<u8>, ()> {
-        let key = sec_identity_copy_private_key(&self.identity)?;
+        // If this key hasn't been used for signing yet, there won't be a cached key handle. Obtain
+        // and cache it if this is the case. Doing so can cause the underlying implementation to
+        // show an authentication or pin prompt to the user. Caching the handle can avoid causing
+        // multiple prompts to be displayed in some cases.
+        if self.key_handle.is_none() {
+            let _ = self
+                .key_handle
+                .replace(sec_identity_copy_private_key(&self.identity)?);
+        }
+        let key = match &self.key_handle {
+            Some(key) => key,
+            None => {
+                error!("key_handle not set when it should have just been set?");
+                return Err(());
+            }
+        };
         let sign_params = SignParams::new(self.key_type_enum, data.len(), params)?;
         let signing_algorithm = sign_params.get_algorithm();
         let data = CFData::from_buffer(data);
