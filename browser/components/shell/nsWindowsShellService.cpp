@@ -43,6 +43,7 @@ PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
 
 #include <objbase.h>
 #include <shlobj.h>
+#include <knownfolders.h>
 #include "WinUtils.h"
 #include "mozilla/widget/WinTaskbar.h"
 
@@ -971,6 +972,58 @@ nsWindowsShellService::IsCurrentAppPinnedToTaskbar(/* out */ bool* aIsPinned) {
 
   FindClose(hFindFile);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::ClassifyShortcut(const nsAString& aPath,
+                                        nsAString& aResult) {
+  aResult.Truncate();
+
+  nsAutoString shortcutPath(PromiseFlatString(aPath));
+
+  // NOTE: On Windows 7, Start Menu pin shortcuts are stored under
+  // "<FOLDERID_User Pinned>\StartMenu", but on Windows 10 they are just normal
+  // Start Menu shortcuts. These both map to "StartMenu" for consistency,
+  // rather than having a separate "StartMenuPins" which would only apply on
+  // Win7.
+  struct {
+    KNOWNFOLDERID folderId;
+    const char16_t* postfix;
+    const char16_t* classification;
+  } folders[] = {{FOLDERID_CommonStartMenu, u"\\", u"StartMenu"},
+                 {FOLDERID_StartMenu, u"\\", u"StartMenu"},
+                 {FOLDERID_PublicDesktop, u"\\", u"Desktop"},
+                 {FOLDERID_Desktop, u"\\", u"Desktop"},
+                 {FOLDERID_UserPinned, u"\\TaskBar\\", u"Taskbar"},
+                 {FOLDERID_UserPinned, u"\\StartMenu\\", u"StartMenu"}};
+
+  for (int i = 0; i < ArrayLength(folders); ++i) {
+    nsAutoString knownPath;
+
+    // These flags are chosen to avoid I/O, see bug 1363398.
+    DWORD flags =
+        KF_FLAG_SIMPLE_IDLIST | KF_FLAG_DONT_VERIFY | KF_FLAG_NO_ALIAS;
+    PWSTR rawPath = nullptr;
+
+    if (FAILED(SHGetKnownFolderPath(folders[i].folderId, flags, nullptr,
+                                    &rawPath))) {
+      continue;
+    }
+
+    knownPath = nsDependentString(rawPath);
+    CoTaskMemFree(rawPath);
+
+    knownPath.Append(folders[i].postfix);
+    // Check if the shortcut path starts with the shell folder path.
+    if (wcsnicmp(shortcutPath.get(), knownPath.get(), knownPath.Length()) ==
+        0) {
+      aResult.Assign(folders[i].classification);
+      return NS_OK;
+    }
+  }
+
+  // Nothing found, aResult is already "".
   return NS_OK;
 }
 
