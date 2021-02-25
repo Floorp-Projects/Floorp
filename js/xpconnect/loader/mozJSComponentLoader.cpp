@@ -121,6 +121,8 @@ static bool Dump(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  MOZ_LOG(nsContentUtils::DOMDumpLog(), mozilla::LogLevel::Debug,
+          ("[Backstage.Dump] %s", utf8str.get()));
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
 #endif

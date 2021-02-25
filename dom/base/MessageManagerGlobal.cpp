@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/MessageManagerGlobal.h"
 #include "mozilla/IntentionalCrash.h"
+#include "mozilla/Logging.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 
@@ -23,16 +24,18 @@ void MessageManagerGlobal::Dump(const nsAString& aStr) {
     return;
   }
 
+  NS_ConvertUTF16toUTF8 cStr(aStr);
+  MOZ_LOG(nsContentUtils::DOMDumpLog(), mozilla::LogLevel::Debug,
+          ("[MessageManager.Dump] %s", cStr.get()));
 #ifdef ANDROID
-  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s",
-                      NS_ConvertUTF16toUTF8(aStr).get());
+  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", cStr.get());
 #endif
 #ifdef XP_WIN
   if (IsDebuggerPresent()) {
     OutputDebugStringW(PromiseFlatString(aStr).get());
   }
 #endif
-  fputs(NS_ConvertUTF16toUTF8(aStr).get(), stdout);
+  fputs(cStr.get(), stdout);
   fflush(stdout);
 }
 
