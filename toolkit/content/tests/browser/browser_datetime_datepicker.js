@@ -224,7 +224,7 @@ add_task(async function test_datepicker_focus_change() {
   let browser = helper.tab.linkedBrowser;
   await verifyPickerPosition(browser, "date");
 
-  is(helper.panel.state, "open", "Panel should be visible");
+  isnot(helper.panel.state, "closed", "Panel should be visible");
 
   let closed = helper.promisePickerClosed();
 
@@ -234,7 +234,7 @@ add_task(async function test_datepicker_focus_change() {
 
   await closed;
 
-  ok(true, "Should be closed now");
+  ok(true, "Panel should be closed now");
 
   await helper.tearDown();
 });
