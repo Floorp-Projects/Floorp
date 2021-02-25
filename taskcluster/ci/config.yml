@@ -122,6 +122,7 @@ treeherder:
         'W': 'Web platform tests'
         'W-1proc': 'Web platform tests without e10s'
         'W-fis': 'Web platform tests with fission enabled'
+        'W-swr': 'Web platform tests with software webrender enabled'
         'W-b': 'Web platform tests (backlog)'
         'W-b-fis': 'Web platform tests (backlog) with fission enabled'
         'X': 'Xpcshell tests'
