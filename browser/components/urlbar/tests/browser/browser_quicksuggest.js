@@ -123,6 +123,15 @@ add_task(async function basic_test() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+add_task(async function test_case_insensitive() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: " Frab",
+  });
+  await assertIsQuickSuggest(1);
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
 add_task(async function test_suggestions_disabled() {
   await SpecialPowers.pushPrefEnv({ set: [[SUGGESTIONS_PREF, false]] });
   await BrowserTestUtils.openNewForegroundTab(gBrowser, ABOUT_BLANK);
