@@ -180,9 +180,7 @@ class DecoderDoctorParent extends JSWindowActorParent {
       if (sumo) {
         buttons.push({
           label: gNavigatorBundle.GetStringFromName("decoder.noCodecs.button"),
-          accessKey: gNavigatorBundle.GetStringFromName(
-            "decoder.noCodecs.accesskey"
-          ),
+          supportPage: sumo,
           callback() {
             let clickedInPref = Services.prefs.getBoolPref(
               buttonClickedPref,
@@ -191,11 +189,6 @@ class DecoderDoctorParent extends JSWindowActorParent {
             if (!clickedInPref) {
               Services.prefs.setBoolPref(buttonClickedPref, true);
             }
-
-            let baseURL = Services.urlFormatter.formatURLPref(
-              "app.support.baseURL"
-            );
-            window.openTrustedLinkIn(baseURL + sumo, "tab");
           },
         });
       }
