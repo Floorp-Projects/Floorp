@@ -279,12 +279,18 @@
   100% {}
 }
 
-.CodeMirror-cursor {
+.CodeMirror-focused .CodeMirror-cursor {
   /*
    * We're using the --caret-blink-time custom property for the animation duration.
    * It is set in editor.js when we setup the CodeMirror instance, and will map either
    * to the value of the ui.caretBlinkTime preference, or to CodeMirror's default for
    * cursorBlinkRate. (See Bug 1609567 for more information on why this is needed).
+   */
+  /*
+   * The animation should only be set when the editor is focused, otherwise the
+   * animation will continue even when devtools is in a background tab.
+   * This happens because the cursor is hidden using visiblity: hidden rather than
+   * display: none in codemirror.css. See bug 1661054 for details.
    */
   animation: cursor-blink calc(var(--caret-blink-time, 0.53s) * 2) steps(1) infinite;
 }
