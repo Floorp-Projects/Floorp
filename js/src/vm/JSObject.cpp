@@ -2157,57 +2157,12 @@ bool js::LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
 
 bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
                                PropertyResult* propp) {
-  JS::AutoCheckCannotGC nogc;
-
-  if (obj->is<NativeObject>()) {
-    // Search for a native dense element, typed array element, or property.
-
-    if (JSID_IS_INT(id)) {
-      uint32_t index = JSID_TO_INT(id);
-      if (obj->as<NativeObject>().containsDenseElement(index)) {
-        propp->setDenseElement(index);
-        return true;
-      }
-    }
-
-    if (obj->is<TypedArrayObject>()) {
-      mozilla::Maybe<uint64_t> index;
-      if (!ToTypedArrayIndex(cx, id, &index)) {
-        cx->recoverFromOutOfMemory();
-        return false;
-      }
-
-      if (index.isSome()) {
-        if (index.value() < obj->as<TypedArrayObject>().length().get()) {
-          propp->setTypedArrayElement(index.value());
-        } else {
-          propp->setTypedArrayOutOfRange();
-        }
-        return true;
-      }
-    }
-
-    if (Shape* shape = obj->as<NativeObject>().lookupPure(id)) {
-      propp->setNativeProperty(shape);
-      return true;
-    }
-
-    // Fail if there's a resolve hook, unless the mayResolve hook tells
-    // us the resolve hook won't define a property with this id.
-    if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
-      return false;
-    }
-  } else if (obj->is<TypedObject>()) {
-    if (obj->as<TypedObject>().typeDescr().hasProperty(cx, id)) {
-      propp->setTypedObjectProperty();
-      return true;
-    }
-  } else {
+  if (obj->getOpsLookupProperty()) {
     return false;
   }
-
-  propp->setNotFound();
-  return true;
+  return NativeLookupOwnPropertyInline<NoGC,
+                                       LookupResolveMode::CheckMayResolve>(
+      cx, &obj->as<NativeObject>(), id, propp);
 }
 
 static inline bool NativeGetPureInline(NativeObject* pobj, jsid id,
