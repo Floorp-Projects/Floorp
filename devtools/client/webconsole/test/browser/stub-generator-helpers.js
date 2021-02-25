@@ -15,8 +15,10 @@ const STUBS_FOLDER = "devtools/client/webconsole/test/node/fixtures/stubs/";
 const STUBS_UPDATE_ENV = "WEBCONSOLE_STUBS_UPDATE";
 
 async function createResourceWatcherForTab(tab) {
-  const { TargetFactory } = require("devtools/client/framework/target");
-  const target = await TargetFactory.forTab(tab);
+  const {
+    TabTargetFactory,
+  } = require("devtools/client/framework/tab-target-factory");
+  const target = await TabTargetFactory.forTab(tab);
   const resourceWatcher = await createResourceWatcherForDescriptor(
     target.descriptorFront
   );

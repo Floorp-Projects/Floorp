@@ -23,7 +23,7 @@ add_task(async function() {
   });
 
   const tab = gBrowser.getTabForBrowser(browser);
-  const target = await TargetFactory.forTab(tab);
+  const target = await TabTargetFactory.forTab(tab);
   await target.attach();
   const { client } = target;
   const form = target.targetForm;

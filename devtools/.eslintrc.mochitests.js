@@ -13,7 +13,6 @@ module.exports = {
     gDevTools: true,
     once: true,
     synthesizeKeyFromKeyTag: true,
-    TargetFactory: true,
     waitForTick: true,
     waitUntilState: true,
   },

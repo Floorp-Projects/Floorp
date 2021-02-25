@@ -13,8 +13,8 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "TargetFactory",
-  "devtools/client/framework/target",
+  "TabTargetFactory",
+  "devtools/client/framework/tab-target-factory",
   true
 );
 loader.lazyRequireGetter(
@@ -560,7 +560,7 @@ DevTools.prototype = {
     tab,
     { toolId, hostType, startTime, raise, reason, hostOptions } = {}
   ) {
-    const target = await TargetFactory.forTab(tab);
+    const target = await TabTargetFactory.forTab(tab);
     return this.showToolbox(
       target,
       toolId,
@@ -699,12 +699,12 @@ DevTools.prototype = {
    * Returns null otherwise.
    */
   async getToolboxForTab(tab) {
-    const target = await TargetFactory.forTab(tab);
+    const target = await TabTargetFactory.forTab(tab);
     return this._toolboxes.get(target);
   },
 
   async closeToolboxForTab(tab) {
-    const target = await TargetFactory.forTab(tab);
+    const target = await TabTargetFactory.forTab(tab);
     return this.closeToolbox(target);
   },
 
@@ -716,7 +716,7 @@ DevTools.prototype = {
    * cached instances managed by DevTools target factory.
    */
   createDescriptorForTab: function(tab) {
-    return TargetFactory.createDescriptorForTab(tab);
+    return TabTargetFactory.createDescriptorForTab(tab);
   },
 
   /**

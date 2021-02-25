@@ -45,7 +45,6 @@ const { DevToolsServer: WorkerDevToolsServer } = worker.require(
 const { DevToolsClient } = require("devtools/client/devtools-client");
 const { ObjectFront } = require("devtools/client/fronts/object");
 const { LongStringFront } = require("devtools/client/fronts/string");
-const { TargetFactory } = require("devtools/client/framework/target");
 
 const { addDebuggerToGlobal } = ChromeUtils.import(
   "resource://gre/modules/jsdebugger.jsm"

@@ -196,7 +196,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
         // When the toolbox is in a Window Host, it won't be removed from the
         // DOM when the tab is closed.
         const toolbox = gDevTools.getToolbox(this._targetFront);
-        // A few tests are using TargetFactory.forTab, but aren't spawning any
+        // A few tests are using TabTargetFactory.forTab, but aren't spawning any
         // toolbox. In this case, the toobox won't destroy the target, so we
         // do it from here. But ultimately, the target should destroy itself
         // from the actor side anyway.
