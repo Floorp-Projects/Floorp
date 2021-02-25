@@ -728,5 +728,19 @@ bool PDMFactory::SupportsMimeType(const nsACString& aMimeType,
   return false;
 }
 
+/* static */
+bool PDMFactory::AllDecodersAreRemote() {
+  return StaticPrefs::media_rdd_process_enabled() &&
+         StaticPrefs::media_rdd_ffvpx_enabled() &&
+         StaticPrefs::media_rdd_opus_enabled() &&
+         StaticPrefs::media_rdd_theora_enabled() &&
+         StaticPrefs::media_rdd_vorbis_enabled() &&
+         StaticPrefs::media_rdd_vpx_enabled() &&
+#if defined(MOZ_WMF)
+         StaticPrefs::media_rdd_wmf_enabled() &&
+#endif
+         StaticPrefs::media_rdd_wav_enabled();
+}
+
 #undef PDM_INIT_LOG
 }  // namespace mozilla
