@@ -24,6 +24,7 @@
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     sync::Arc,
+    convert::TryInto,
 };
 
 use crate::{double_to_s15Fixed16Number, transform::{set_rgb_colorants, PrecacheOuput}};
@@ -151,8 +152,6 @@ struct Tag {
 /* It might be worth having a unified limit on content controlled
  * allocation per profile. This would remove the need for many
  * of the arbitrary limits that we used */
-pub type be32 = u32;
-pub type be16 = u16;
 
 type TagIndex = [Tag];
 
@@ -174,49 +173,37 @@ fn uInt16Number_to_float(a: uInt16Number) -> f32 {
     a as f32 / 65535.0
 }
 
-fn cpu_to_be32(v: u32) -> be32 {
-    v.to_be()
-}
-fn cpu_to_be16(v: u16) -> be16 {
-    v.to_be()
-}
-fn be32_to_cpu(v: be32) -> u32 {
-    u32::from_be(v)
-}
-fn be16_to_cpu(v: be16) -> u16 {
-    u16::from_be(v)
-}
 fn invalid_source(mut mem: &mut MemSource, reason: &'static str) {
     mem.valid = false;
     mem.invalid_reason = Some(reason);
 }
 fn read_u32(mem: &mut MemSource, offset: usize) -> u32 {
-    /* Subtract from mem->size instead of the more intuitive adding to offset.
-     * This avoids overflowing offset. The subtraction is safe because
-     * mem->size is guaranteed to be > 4 */
-    if offset > mem.buf.len() - 4 {
+    let val = mem.buf.get(offset..offset+4);
+    if let Some(val) = val {
+        let val = val.try_into().unwrap();
+        u32::from_be_bytes(val)
+    } else {
         invalid_source(mem, "Invalid offset");
         0
-    } else {
-        let k = unsafe { std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be32) };
-        be32_to_cpu(k)
     }
 }
 fn read_u16(mem: &mut MemSource, offset: usize) -> u16 {
-    if offset > mem.buf.len() - 2 {
-        invalid_source(mem, "Invalid offset");
-        0u16
+    let val = mem.buf.get(offset..offset+2);
+    if let Some(val) = val {
+        let val = val.try_into().unwrap();
+        u16::from_be_bytes(val)
     } else {
-        let k = unsafe { std::ptr::read_unaligned(mem.buf.as_ptr().add(offset) as *const be16) };
-        be16_to_cpu(k)
+        invalid_source(mem, "Invalid offset");
+        0
     }
 }
 fn read_u8(mem: &mut MemSource, offset: usize) -> u8 {
-    if offset > mem.buf.len() - 1 {
-        invalid_source(mem, "Invalid offset");
-        0u8
+    let val = mem.buf.get(offset);
+    if let Some(val) = val {
+        *val
     } else {
-        unsafe { *(mem.buf.as_ptr().add(offset) as *mut u8) }
+        invalid_source(mem, "Invalid offset");
+        0
     }
 }
 fn read_s15Fixed16Number(mem: &mut MemSource, offset: usize) -> s15Fixed16Number {
