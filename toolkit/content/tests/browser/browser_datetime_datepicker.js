@@ -242,8 +242,6 @@ add_task(async function test_datepicker_focus_change() {
 /**
  * Ensure picker opens and closes with key bindings appropriately.
  */
-/*
-disabled for bug 1676078
 add_task(async function test_datepicker_keyboard_open() {
   const inputValue = "2016-12-15";
   const prevMonth = "2016-11-01";
@@ -253,19 +251,17 @@ add_task(async function test_datepicker_keyboard_open() {
   let browser = helper.tab.linkedBrowser;
   await verifyPickerPosition(browser, "date");
 
-  BrowserTestUtils.synthesizeKey(" ", {}, browser);
-
-  await BrowserTestUtils.waitForCondition(
-    () => helper.panel.hidden,
-    "waiting for close"
-  );
+  let closed = helper.promisePickerClosed();
 
   BrowserTestUtils.synthesizeKey(" ", {}, browser);
 
-  await BrowserTestUtils.waitForCondition(
-    () => !helper.panel.hidden,
-    "waiting for open"
-  );
+  await closed;
+
+  let ready = helper.waitForPickerReady();
+
+  BrowserTestUtils.synthesizeKey(" ", {}, browser);
+
+  await ready;
 
   // NOTE: After the click, the first input field (the month one) is focused,
   // so down arrow will change the selected month.
@@ -285,7 +281,6 @@ add_task(async function test_datepicker_keyboard_open() {
 
   await helper.tearDown();
 });
-*/
 
 /**
  * When the prev month button is clicked, calendar should display the dates for
