@@ -142,6 +142,12 @@ static void RemoveTRRBlocklistFile() {
   Preferences::SetBool("network.trr.blocklist_cleanup_done", true);
 }
 
+static void EventTelemetryPrefChanged(const char* aPref, void* aData) {
+  Telemetry::SetEventRecordingEnabled(
+      "network.dns"_ns,
+      StaticPrefs::network_trr_confirmation_telemetry_enabled());
+}
+
 nsresult TRRService::Init() {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mInitialized) {
@@ -201,7 +207,9 @@ nsresult TRRService::Init() {
     return NS_ERROR_FAILURE;
   }
 
-  Telemetry::SetEventRecordingEnabled("network.dns"_ns, true);
+  Preferences::RegisterCallbackAndCall(
+      EventTelemetryPrefChanged,
+      "network.trr.confirmation_telemetry_enabled"_ns);
 
   LOG(("Initialized TRRService\n"));
   return NS_OK;
