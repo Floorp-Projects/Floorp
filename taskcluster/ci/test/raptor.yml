@@ -21,23 +21,7 @@ job-defaults:
         by-app:
             firefox:
                 by-test-name:
-                    raptor-tp6-firefox:
-                        by-pageload:
-                            warm:
-                                by-test-platform:
-                                    windows7-32.*/opt: []
-                                    (linux|windows10|macos)(?!.*shippable).*: []
-                                    linux.*shippable.*: []
-                                    macos.*shippable.*: []
-                                    default: ["mozilla-central"]
-                            cold:
-                                by-test-platform:
-                                    windows7-32.*/opt: []
-                                    macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                                    (linux|windows10|macos)(?!.*shippable).*: []
-                                    linux.*shippable.*: []
-                                    macos.*shippable.*: []
-                                    default: ["trunk", "mozilla-beta"]
+                    raptor-tp6-firefox: []
                     default:
                         by-test-platform:
                             windows7-32.*/opt: []
@@ -134,37 +118,15 @@ job-defaults:
 raptor-tp6:
     description: "Raptor (webextension) tp6"
     apps: ["firefox", "chrome", "chromium"]
-    variants:
-        # Used for defining webrender and fission build variant tests,
-        by-app:
-            firefox:
-                by-subtest:
-                    yahoo-mail: []
-                    wikipedia: []
-                    default: ["fission"]
-            chrome: []
-            chromium: []
-            default: []
+    variants: []
     pageload:
         by-app:
             firefox: "both"
             chrome: "both"
             chromium: "both"
             default: "cold"
-    limit-platforms:
-        by-app:
-            chrome:
-                # Run on non-QR shippable, but test-platforms.yml doesn't have
-                # any more non-QR macosx shippable things. So for macosx we want
-                # to run it on shippable-qr, otherwise there's nothing running
-                # this on macosx at all.
-                - .*shippable[^-qr].*
-                - macosx1014-64-shippable-qr/opt
-            chromium:
-                # Ditto as for chrome
-                - .*shippable[^-qr].*
-                - macosx1014-64-shippable-qr/opt
-            default: []
+    run-on-projects: []
+    limit-platforms: []
     treeherder-symbol: Rap(tp6)
     max-run-time: 4000
     raptor-test: tp6
