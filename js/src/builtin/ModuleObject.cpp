@@ -994,7 +994,9 @@ uint32_t ModuleObject::dfsAncestorIndex() const {
 }
 
 JSObject* ModuleObject::topLevelCapability() const {
-  return &getReservedSlot(TopLevelCapabilitySlot).toObject();
+  Value capability = getReservedSlot(TopLevelCapabilitySlot);
+  MOZ_RELEASE_ASSERT(capability.isObject());
+  return &capability.toObject();
 }
 
 PromiseObject* ModuleObject::createTopLevelCapability(
@@ -1029,6 +1031,16 @@ uint32_t ModuleObject::pendingAsyncDependencies() const {
 
 void ModuleObject::setPendingAsyncDependencies(uint32_t newValue) {
   return setReservedSlot(PendingAsyncDependenciesSlot, NumberValue(newValue));
+}
+
+void ModuleObject::setCycleRoot(ModuleObject* cycleRoot) {
+  return setReservedSlot(CycleRootSlot, ObjectValue(*cycleRoot));
+}
+
+ModuleObject* ModuleObject::getCycleRoot() const {
+  Value cycleRoot = getReservedSlot(CycleRootSlot);
+  MOZ_RELEASE_ASSERT(cycleRoot.isObject());
+  return &cycleRoot.toObject().as<ModuleObject>();
 }
 
 bool ModuleObject::hasTopLevelCapability() const {
@@ -1960,36 +1972,6 @@ JSObject* js::CallModuleResolveHook(JSContext* cx,
   return result;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-getasynccycleroot
-ModuleObject* js::GetAsyncCycleRoot(ModuleObject* module) {
-  // Step 1.
-  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED);
-
-  // Step 2.
-  if (module->asyncParentModules()->empty()) {
-    return module;
-  }
-
-  // Step 3.
-  ModuleObject* currentModule = module;
-  while (currentModule->dfsIndex() > currentModule->dfsAncestorIndex()) {
-    MOZ_ASSERT(!currentModule->asyncParentModules()->empty());
-    ModuleObject* nextCycleModule = &currentModule->asyncParentModules()
-                                         ->get(0)
-                                         .toObject()
-                                         .as<ModuleObject>();
-    MOZ_ASSERT(nextCycleModule->dfsAncestorIndex() <=
-               currentModule->dfsAncestorIndex());
-    currentModule = nextCycleModule;
-  }
-
-  // Step 4.
-  MOZ_ASSERT(currentModule->dfsIndex() == currentModule->dfsAncestorIndex());
-
-  // Step 5.
-  return currentModule;
-}
-
 bool js::AsyncModuleExecutionFulfilledHandler(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2044,16 +2026,12 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
   for (uint32_t i = 0; i < length; i++) {
     m = &module->asyncParentModules()->get(i).toObject().as<ModuleObject>();
 
-    if (module->dfsIndex() != module->dfsAncestorIndex()) {
-      MOZ_ASSERT(m->dfsAncestorIndex() <= module->dfsAncestorIndex());
-    }
-
     m->setPendingAsyncDependencies(m->pendingAsyncDependencies() - 1);
 
     if (m->pendingAsyncDependencies() == 0 && !m->hadEvaluationError()) {
       MOZ_ASSERT(m->isAsyncEvaluating());
 
-      cycleRoot = GetAsyncCycleRoot(m);
+      cycleRoot = m->getCycleRoot();
 
       if (cycleRoot->hadEvaluationError()) {
         return;
@@ -2078,7 +2056,7 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
 
   // Step 6.
   if (module->hasTopLevelCapability()) {
-    MOZ_ASSERT(module->dfsIndex() == module->dfsAncestorIndex());
+    MOZ_ASSERT(module->getCycleRoot() == module);
     ModuleObject::topLevelCapabilityResolve(cx, module);
   }
 
@@ -2113,15 +2091,12 @@ void js::AsyncModuleExecutionRejected(JSContext* cx, HandleModuleObject module,
   for (uint32_t i = 0; i < length; i++) {
     parent =
         &module->asyncParentModules()->get(i).toObject().as<ModuleObject>();
-    if (module->dfsIndex() != module->dfsAncestorIndex()) {
-      MOZ_ASSERT(parent->dfsAncestorIndex() == module->dfsAncestorIndex());
-    }
     AsyncModuleExecutionRejected(cx, parent, error);
   }
 
   // Step 7.
   if (module->hasTopLevelCapability()) {
-    MOZ_ASSERT(module->dfsIndex() == module->dfsAncestorIndex());
+    MOZ_ASSERT(module->getCycleRoot() == module);
     ModuleObject::topLevelCapabilityReject(cx, module, error);
   }
 
@@ -2259,8 +2234,10 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  MOZ_ASSERT(module->topLevelCapability()->as<PromiseObject>().state() ==
-             JS::PromiseState::Fulfilled);
+  MOZ_ASSERT(module->getCycleRoot()
+                 ->topLevelCapability()
+                 ->as<PromiseObject>()
+                 .state() == JS::PromiseState::Fulfilled);
 
   RootedObject ns(cx, ModuleObject::GetOrCreateModuleNamespace(cx, module));
   if (!ns) {
