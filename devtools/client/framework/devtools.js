@@ -765,16 +765,11 @@ DevTools.prototype = {
    *         markup view.
    */
   async inspectNode(tab, domReference, startTime) {
-    const target = await TargetFactory.forTab(tab);
-
-    const toolbox = await gDevTools.showToolbox(
-      target,
-      "inspector",
-      null,
-      null,
+    const toolbox = await gDevTools.showToolboxForTab(tab, {
+      toolId: "inspector",
       startTime,
-      "inspect_dom"
-    );
+      reason: "inspect_dom",
+    });
     const inspector = toolbox.getCurrentPanel();
 
     const nodeFront = await inspector.inspectorFront.getNodeActorFromContentDomReference(
@@ -813,15 +808,10 @@ DevTools.prototype = {
    *         selected in the accessibility inspector.
    */
   async inspectA11Y(tab, domReference, startTime) {
-    const target = await TargetFactory.forTab(tab);
-
-    const toolbox = await gDevTools.showToolbox(
-      target,
-      "accessibility",
-      null,
-      null,
-      startTime
-    );
+    const toolbox = await gDevTools.showToolboxForTab(tab, {
+      toolId: "accessibility",
+      startTime,
+    });
     const inspectorFront = await toolbox.target.getFront("inspector");
     const nodeFront = await inspectorFront.getNodeActorFromContentDomReference(
       domReference
