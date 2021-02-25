@@ -3815,62 +3815,13 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
     // had "use strict";
     pc_->sc()->setExplicitUseStrict();
     if (!pc_->sc()->strict()) {
-      // Some strict mode violations can appear before a Use Strict Directive
-      // is applied.  (See the |DeprecatedContent| enum initializers.)  These
-      // violations can manifest in two ways.
-      //
-      // First, the violation can appear *before* the Use Strict Directive.
-      // Numeric literals (and therefore octal literals) can only precede a
-      // Use Strict Directive if this function's parameter list is not simple,
-      // but we reported an error for non-simple parameter lists above, so
-      // octal literals present no issue.  But octal escapes and \8 and \9 can
-      // appear in the directive prologue before a Use Strict Directive:
-      //
-      //   function f()
-      //   {
-      //     "hell\157 world";  // octal escape
-      //     "\8"; "\9";        // NonOctalDecimalEscape
-      //     "use strict";      // retroactively makes all the above errors
-      //   }
-      //
-      // Second, the violation can appear *after* the Use Strict Directive but
-      // *before* the directive is recognized as terminated.  This only
-      // happens when a directive is terminated by ASI, and the next token
-      // contains a violation:
-      //
-      //   function a()
-      //   {
-      //     "use strict"  // ASI
-      //     0755;
-      //   }
-      //   function b()
-      //   {
-      //     "use strict"  // ASI
-      //     "hell\157 world";
-      //   }
-      //   function c()
-      //   {
-      //     "use strict"  // ASI
-      //     "\8";
-      //   }
-      //
-      // We note such violations when tokenizing.  Then, if a violation has
-      // been observed at the time a "use strict" is applied, we report the
-      // error.
-      switch (anyChars.sawDeprecatedContent()) {
-        case DeprecatedContent::None:
-          break;
-        case DeprecatedContent::OctalLiteral:
-          error(JSMSG_DEPRECATED_OCTAL_LITERAL);
-          return false;
-        case DeprecatedContent::OctalEscape:
-          error(JSMSG_DEPRECATED_OCTAL_ESCAPE);
-          return false;
-        case DeprecatedContent::EightOrNineEscape:
-          error(JSMSG_DEPRECATED_EIGHT_OR_NINE_ESCAPE);
-          return false;
+      // We keep track of the possible strict violations that could occur in
+      // the directive prologue -- deprecated octal syntax -- and
+      // complain now.
+      if (anyChars.sawDeprecatedOctal()) {
+        error(JSMSG_DEPRECATED_OCTAL);
+        return false;
       }
-
       pc_->sc()->setStrictScript();
     }
   } else if (IsUseAsmDirective(directivePos, directive)) {
@@ -3896,9 +3847,7 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
 
   bool canHaveDirectives = pc_->atBodyLevel();
   if (canHaveDirectives) {
-    // Clear flags for deprecated content that might have been seen in an
-    // enclosing context.
-    anyChars.clearSawDeprecatedContent();
+    anyChars.clearSawDeprecatedOctal();
   }
 
   bool canHaveHashbangComment = pc_->atTopLevel();
