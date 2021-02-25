@@ -3477,9 +3477,17 @@ nsNavHistoryResult::nsNavHistoryResult(
   MOZ_ASSERT(mRootNode->mIndentLevel == -1,
              "Root node's indent level initialized wrong");
   mRootNode->FillStats();
+
+  AutoTArray<PlacesEventType, 1> events;
+  events.AppendElement(PlacesEventType::Purge_caches);
+  PlacesObservers::AddListener(events, this);
 }
 
 nsNavHistoryResult::~nsNavHistoryResult() {
+  AutoTArray<PlacesEventType, 1> events;
+  events.AppendElement(PlacesEventType::Purge_caches);
+  PlacesObservers::RemoveListener(events, this);
+
   // Delete all heap-allocated bookmark folder observer arrays.
   for (auto it = mBookmarkFolderObservers.Iter(); !it.Done(); it.Next()) {
     delete it.Data();
@@ -4225,6 +4233,10 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
                                   removeEvent->mTransitionType));
         }
 
+        break;
+      }
+      case PlacesEventType::Purge_caches: {
+        mRootNode->Refresh();
         break;
       }
       default: {
