@@ -144,8 +144,7 @@ class ResponsiveUIManager {
     const isKnownTab = TargetFactory.isKnownTab(tab);
     let toolbox;
     if (isKnownTab) {
-      const target = await TargetFactory.forTab(tab);
-      toolbox = gDevTools.getToolbox(target);
+      toolbox = await gDevTools.getToolboxForTab(tab);
     }
     const hostType = toolbox ? toolbox.hostType : "none";
     const hasToolbox = !!toolbox;
@@ -215,8 +214,7 @@ class ResponsiveUIManager {
     const isKnownTab = TargetFactory.isKnownTab(tab);
     let toolbox;
     if (isKnownTab) {
-      const target = await TargetFactory.forTab(tab);
-      toolbox = gDevTools.getToolbox(target);
+      toolbox = await gDevTools.getToolboxForTab(tab);
     }
 
     const hostType = toolbox ? toolbox.hostType : "none";
