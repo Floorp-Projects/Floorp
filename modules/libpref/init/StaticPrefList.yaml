@@ -4855,7 +4855,7 @@
 
 - name: gfx.webrender.software.d3d11.upload-mode
   type: RelaxedAtomicInt32
-  value: 2
+  value: 4 
   mirror: always
 
 # Whether to allow widgets that don't support acceleration to use WebRender
