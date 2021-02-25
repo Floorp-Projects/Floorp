@@ -417,6 +417,41 @@ add_task(async function test_login_long_username_scrollLeft_reset() {
   is(usernameInput.scrollLeft, 0, "username input should be scrolled horizontally to the beginning");
 });
 
+add_task(async function test_copy_button_state() {
+  gLoginItem.setLogin(TEST_LOGIN_1);
+  await asyncElementRendered();
+
+  let copyUsernameButton = gLoginItem.shadowRoot.querySelector(".copy-username-button");
+  ok(!copyUsernameButton.disabled, "The copy-username-button should be enabled");
+
+  let copyPasswordButton = gLoginItem.shadowRoot.querySelector(".copy-password-button");
+  ok(!copyPasswordButton.disabled, "The copy-passwoed-button should be enabled");
+
+  copyUsernameButton.click();
+  ok(copyUsernameButton.disabled, "The copy-username-button should be disabled when it is clicked");
+  ok(!copyPasswordButton.disabled, "The copy-passwoed-button should be enabled when the copy-username-button is clicked");
+
+  copyPasswordButton.click();
+  await SimpleTest.promiseWaitForCondition(() => copyPasswordButton.disabled,
+  "waiting for copy-password-button to become disabled after checking for master password");
+
+  ok(copyPasswordButton.disabled, "The copy-passwoed-button should be disabled when it is clicked");
+  ok(!copyUsernameButton.disabled, "The copy-username-button should be enabled when the copy-password-button is clicked");
+
+  let loginNoUsername = Object.assign({}, TEST_LOGIN_2, {username: ""});
+  gLoginItem.setLogin(loginNoUsername);
+
+  ok(copyUsernameButton.disabled, "The copy-username-button should be disabled when the username is empty");
+  ok(!copyPasswordButton.disabled, "The copy-passwoed-button should be enabled");
+
+  copyPasswordButton.click();
+  await SimpleTest.promiseWaitForCondition(() => copyPasswordButton.disabled,
+  "waiting for copy-password-button to become disabled after checking for master password");
+
+  ok(copyPasswordButton.disabled, "The copy-passwoed-button should be disabled when it is clicked");
+  ok(copyUsernameButton.disabled, "The copy-username-button should still be disabled after clicking the password button when the username is empty");
+});
+
 </script>
 
 </body>
