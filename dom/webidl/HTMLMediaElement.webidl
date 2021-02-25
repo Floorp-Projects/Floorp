@@ -243,6 +243,9 @@ partial interface HTMLMediaElement {
 
   [Throws, ChromeOnly]
   void setDecodeError(DOMString error);
+
+  [ChromeOnly]
+  void setAudioSinkFailedStartup();
 };
 
 /* Audio Output Devices API */
