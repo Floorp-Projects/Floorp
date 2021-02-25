@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const { gDevTools } = require("devtools/client/framework/devtools");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   formDataURI,
@@ -433,7 +432,7 @@ class RequestListContextMenu {
    * Opens selected item in the debugger
    */
   openInDebugger(url) {
-    const toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    const toolbox = this.props.connector.getToolbox();
     toolbox.viewGeneratedSourceInDebugger(url);
   }
 
@@ -441,7 +440,7 @@ class RequestListContextMenu {
    * Opens selected item in the style editor
    */
   openInStyleEditor(url) {
-    const toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    const toolbox = this.props.connector.getToolbox();
     toolbox.viewGeneratedSourceInStyleEditor(url);
   }
 
@@ -626,7 +625,7 @@ class RequestListContextMenu {
       requestHeaders,
       requestPostData
     );
-    const toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    const toolbox = this.props.connector.getToolbox();
     await toolbox.openSplitConsole();
     const { hud } = await toolbox.getPanel("webconsole");
     hud.setInputValue(fetchString);
