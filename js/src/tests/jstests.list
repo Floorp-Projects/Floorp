@@ -136,15 +136,6 @@ skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 # Test262 tests skipped due to SpiderMonkey bugs #
 ##################################################
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1670124
-skip script test262/language/expressions/template-literal/invalid-legacy-octal-escape-sequence-8.js
-skip script test262/language/literals/string/legacy-non-octal-escape-sequence-8-strict-strict.js
-skip script test262/language/expressions/template-literal/invalid-legacy-octal-escape-sequence-9.js
-skip script test262/language/literals/string/legacy-non-octal-escape-sequence-9-strict-strict.js
-skip script test262/language/expressions/tagged-template/invalid-escape-sequences.js
-skip script test262/language/literals/string/legacy-non-octal-escape-sequence-8-strict-explicit-pragma.js
-skip script test262/language/literals/string/legacy-non-octal-escape-sequence-9-strict-explicit-pragma.js
-
 # Lazily resolved "name" and "length" properties on functions violate property key order.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1629803
 skip script test262/built-ins/Object/keys/order-after-define-property.js
