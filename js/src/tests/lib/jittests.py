@@ -8,12 +8,10 @@
 
 from __future__ import print_function
 import os
-import posixpath
 import re
 import sys
 import traceback
 from collections import namedtuple
-from datetime import datetime
 
 if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
     from .tasks_unix import run_all_tests
@@ -21,10 +19,8 @@ else:
     from .tasks_win import run_all_tests
 
 from .progressbar import ProgressBar, NullProgressBar
-from .remote import init_remote_dir, init_device
-from .results import TestOutput, escape_cmdline
+from .results import escape_cmdline
 from .structuredlog import TestLogger
-from .adaptor import xdr_annotate
 from .tempfile import TemporaryDirectory
 
 TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -33,7 +29,6 @@ TOP_SRC_DIR = os.path.dirname(os.path.dirname(JS_DIR))
 TEST_DIR = os.path.join(JS_DIR, "jit-test", "tests")
 LIB_DIR = os.path.join(JS_DIR, "jit-test", "lib") + os.path.sep
 MODULE_DIR = os.path.join(JS_DIR, "jit-test", "modules") + os.path.sep
-JS_TESTS_DIR = posixpath.join(JS_DIR, "tests")
 SHELL_XDR = "shell.xdr"
 
 # Backported from Python 3.1 posixpath.py
@@ -455,55 +450,6 @@ def find_tests(substring=None):
     return ans
 
 
-def run_test_remote(test, device, prefix, tempdir, options):
-    from mozdevice import ADBDevice, ADBProcessError
-
-    if options.test_reflect_stringify:
-        raise ValueError("can't run Reflect.stringify tests remotely")
-    cmd = test.command(
-        prefix,
-        posixpath.join(options.remote_test_root, "lib/"),
-        posixpath.join(options.remote_test_root, "modules/"),
-        tempdir,
-        posixpath.join(options.remote_test_root, "tests"),
-    )
-    if options.show_cmd:
-        print(escape_cmdline(cmd))
-
-    env = {"LD_LIBRARY_PATH": os.path.dirname(prefix[0])}
-
-    if test.tz_pacific:
-        env["TZ"] = "PST8PDT"
-
-    # replace with shlex.join when move to Python 3.8+
-    cmd = ADBDevice._escape_command_line(cmd)
-    start = datetime.now()
-    try:
-        # Allow ADBError or ADBTimeoutError to terminate the test run,
-        # but handle ADBProcessError in order to support the use of
-        # non-zero exit codes in the JavaScript shell tests.
-        out = device.shell_output(
-            cmd, env=env, cwd=options.remote_test_root, timeout=int(options.timeout)
-        )
-        returncode = 0
-    except ADBProcessError as e:
-        # Treat ignorable intermittent adb communication errors as
-        # skipped tests.
-        out = str(e.adb_process.stdout)
-        returncode = e.adb_process.exitcode
-        re_ignore = re.compile(r"error: (closed|device .* not found)")
-        if returncode == 1 and re_ignore.search(out):
-            print("Skipping {} due to ignorable adb error {}".format(test.path, out))
-            test.skip_if_cond = "true"
-            returncode = test.SKIPPED_EXIT_STATUS
-
-    elapsed = (datetime.now() - start).total_seconds()
-
-    # We can't distinguish between stdout and stderr so we pass
-    # the same buffer to both.
-    return TestOutput(test, cmd, out, out, returncode, elapsed, False)
-
-
 def check_output(out, err, rc, timed_out, test, options):
     # Allow skipping to compose with other expected results
     if test.skip_if_cond:
@@ -564,9 +510,10 @@ def check_output(out, err, rc, timed_out, test, options):
         if rc == 1 and ("Hit MOZ_CRASH" in err or "Assertion failure:" in err):
             return True
 
-        # When running jittests on Android, SEGV results in a return code
-        # of 128+11=139.
-        if rc == 139:
+        # When running jittests on Android, SEGV results in a return code of
+        # 128 + 11 = 139. Due to a bug in tinybox, we have to check for 138 as
+        # well.
+        if rc == 139 or rc == 138:
             return True
 
     if rc != test.expect_status:
@@ -860,48 +807,15 @@ def run_tests_local(tests, num_tests, prefix, options, slog):
     return ok
 
 
-def get_remote_results(tests, device, prefix, tempdir, options):
-    try:
-        if options.use_xdr:
-            tests = xdr_annotate(tests, options)
-        tests = list(tests)
-        for test in tests:
-            yield run_test_remote(test, device, prefix, tempdir, options)
-    except Exception as e:
-        # After a device error, the device is typically in a
-        # state where all further tests will fail so there is no point in
-        # continuing here.
-        sys.stderr.write("Error running remote tests: {}".format(repr(e)))
-
-
 def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Setup device with everything needed to run our tests.
+    from .tasks_adb_remote import get_remote_results
     from mozdevice import ADBError, ADBTimeoutError
-
-    try:
-        device = init_device(options)
-
-        prefix[0] = posixpath.join(options.remote_test_root, "bin", "js")
-        tempdir = posixpath.join(options.remote_test_root, "tmp")
-        # Update the test root to point to our test directory.
-        jit_tests_dir = posixpath.join(options.remote_test_root, "tests")
-        options.remote_test_root = posixpath.join(jit_tests_dir, "tests")
-        jtd_tests = posixpath.join(options.remote_test_root)
-
-        init_remote_dir(device, jit_tests_dir)
-        device.push(JS_TESTS_DIR, jtd_tests, timeout=600)
-        device.chmod(jtd_tests, recursive=True)
-
-        device.push(os.path.dirname(TEST_DIR), options.remote_test_root, timeout=600)
-        device.chmod(options.remote_test_root, recursive=True)
-    except (ADBError, ADBTimeoutError):
-        print("TEST-UNEXPECTED-FAIL | jit_test.py" + " : Device initialization failed")
-        raise
 
     # Run all tests.
     pb = create_progressbar(num_tests, options)
     try:
-        gen = get_remote_results(tests, device, prefix, tempdir, options)
+        gen = get_remote_results(tests, prefix, pb, options)
         ok = process_test_results(gen, num_tests, pb, options, slog)
     except (ADBError, ADBTimeoutError):
         print("TEST-UNEXPECTED-FAIL | jit_test.py" + " : Device error during test")
