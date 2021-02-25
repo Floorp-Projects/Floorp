@@ -13,7 +13,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/dom/DecoderDoctorNotificationBinding.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
@@ -414,6 +413,11 @@ static void ReportToConsole(dom::Document* aDocument,
           ? ""
           : NS_ConvertUTF16toUTF8(aParams[0]).get(),
       aParams.Length() < 2 ? "" : ", ...");
+  if (StaticPrefs::media_decoder_doctor_testing()) {
+    Unused << nsContentUtils::DispatchTrustedEvent(
+        aDocument, ToSupports(aDocument), u"mozreportmediaerror"_ns,
+        CanBubble::eNo, Cancelable::eNo);
+  }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Media"_ns,
                                   aDocument, nsContentUtils::eDOM_PROPERTIES,
                                   aConsoleStringId, aParams);
@@ -515,8 +519,15 @@ static void ReportAnalysis(dom::Document* aDocument,
     ReportToConsole(aDocument, aNotification.mReportStringId, params);
   }
 
-  if (AllowNotification(aNotification) &&
-      AllowDecodeIssue(aDecodeIssue, aDecodeIssueIsError)) {
+  const bool allowNotification = AllowNotification(aNotification);
+  const bool allowDecodeIssue =
+      AllowDecodeIssue(aDecodeIssue, aDecodeIssueIsError);
+  DD_INFO(
+      "ReportAnalysis for %s (decodeResult=%s) [AllowNotification=%d, "
+      "AllowDecodeIssue=%d]",
+      aNotification.mReportStringId, aDecodeIssue.ErrorName().get(),
+      allowNotification, allowDecodeIssue);
+  if (allowNotification && allowDecodeIssue) {
     DispatchNotification(aDocument->GetInnerWindow(), aNotification, aIsSolved,
                          aFormats, decodeIssueDescription, aDocURL,
                          aResourceURL);
@@ -1213,6 +1224,58 @@ nsCString DecoderDoctorDiagnostics::GetDescription() const {
       break;
   }
   return s;
+}
+
+static const char* ToDecoderDoctorReportTypeStr(
+    const dom::DecoderDoctorReportType& aType) {
+  switch (aType) {
+    case dom::DecoderDoctorReportType::Mediawidevinenowmf:
+      return sMediaWidevineNoWMF.mReportStringId;
+    case dom::DecoderDoctorReportType::Mediawmfneeded:
+      return sMediaWMFNeeded.mReportStringId;
+    case dom::DecoderDoctorReportType::Mediaplatformdecodernotfound:
+      return sMediaFFMpegNotFound.mReportStringId;
+    case dom::DecoderDoctorReportType::Mediacannotplaynodecoders:
+      return sMediaCannotPlayNoDecoders.mReportStringId;
+    case dom::DecoderDoctorReportType::Medianodecoders:
+      return sMediaNoDecoders.mReportStringId;
+    case dom::DecoderDoctorReportType::Mediacannotinitializepulseaudio:
+      return sCannotInitializePulseAudio.mReportStringId;
+    case dom::DecoderDoctorReportType::Mediaunsupportedlibavcodec:
+      return sUnsupportedLibavcodec.mReportStringId;
+    case dom::DecoderDoctorReportType::Mediadecodeerror:
+      return sMediaDecodeError.mReportStringId;
+    case dom::DecoderDoctorReportType::Mediadecodewarning:
+      return sMediaDecodeWarning.mReportStringId;
+    default:
+      DD_DEBUG("Invalid report type to str");
+      return "invalid-report-type";
+  }
+}
+
+void DecoderDoctorDiagnostics::SetDecoderDoctorReportType(
+    const dom::DecoderDoctorReportType& aType) {
+  DD_INFO("Set report type %s", ToDecoderDoctorReportTypeStr(aType));
+  switch (aType) {
+    case dom::DecoderDoctorReportType::Mediawmfneeded:
+      SetWMFFailedToLoad();
+      return;
+    case dom::DecoderDoctorReportType::Mediaplatformdecodernotfound:
+      SetFFmpegNotFound();
+      return;
+    case dom::DecoderDoctorReportType::Mediaunsupportedlibavcodec:
+      SetLibAVCodecUnsupported();
+      return;
+    case dom::DecoderDoctorReportType::Mediacannotplaynodecoders:
+    case dom::DecoderDoctorReportType::Medianodecoders:
+      // Do nothing, because these type are related with can-play, which would
+      // be handled in `StoreFormatDiagnostics()` when sending `false` in the
+      // parameter for the canplay.
+      return;
+    default:
+      DD_DEBUG("Not supported type");
+      return;
+  }
 }
 
 }  // namespace mozilla
