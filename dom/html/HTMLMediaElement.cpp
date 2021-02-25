@@ -2128,6 +2128,14 @@ void HTMLMediaElement::SetDecodeError(const nsAString& aError,
   return;
 }
 
+void HTMLMediaElement::SetAudioSinkFailedStartup() {
+  DecoderDoctorDiagnostics diagnostics;
+  diagnostics.StoreEvent(OwnerDoc(),
+                         {DecoderDoctorEvent::eAudioSinkStartup,
+                          NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR},
+                         __func__);
+}
+
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
   MarkAsTainted();
 
