@@ -541,6 +541,38 @@ DevTools.prototype = {
   },
 
   /**
+   * Show the toolbox for a given tab. If a toolbox already exists for this tab
+   * the existing toolbox will be raised. Otherwise a new toolbox is created.
+   *
+   * Relies on `showToolbox`, see its jsDoc for additional information and
+   * arguments description.
+   *
+   * Also used by 3rd party tools (eg wptrunner) and exposed by
+   * DevToolsShim.jsm.
+   *
+   * @param {XULTab} tab
+   *        The tab the toolbox will debug
+   * @param {Object} options
+   *        Various options that will be forwarded to `showToolbox`. See the
+   *        JSDoc on this method.
+   */
+  async showToolboxForTab(
+    tab,
+    { toolId, hostType, startTime, raise, reason, hostOptions } = {}
+  ) {
+    const target = await TargetFactory.forTab(tab);
+    return this.showToolbox(
+      target,
+      toolId,
+      hostType,
+      hostOptions,
+      startTime,
+      reason,
+      raise
+    );
+  },
+
+  /**
    * Log telemetry related to toolbox opening.
    * Two distinct probes are logged. One for cold startup, when we open the very first
    * toolbox. This one includes devtools framework loading. And a second one for all
