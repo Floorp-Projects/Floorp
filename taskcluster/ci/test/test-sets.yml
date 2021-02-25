@@ -485,7 +485,7 @@ android-hw-aarch64-opt-unittests:
     - jittest
 
 android-hw-arm7-pgo-unittests:
-    - jittest
+    - jittest-all
     - jsreftest
 
 android-hw-aarch64-pgo-unittests:
