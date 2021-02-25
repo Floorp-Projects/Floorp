@@ -229,7 +229,7 @@ fn read_uInt16Number(mem: &mut MemSource, offset: usize) -> uInt16Number {
     read_u16(mem, offset)
 }
 pub fn write_u32(mem: &mut [u8], offset: usize, value: u32) {
-    if offset <= mem.len() - std::mem::size_of_val(&value) {
+    if offset > mem.len() - std::mem::size_of_val(&value) {
         panic!("OOB");
     }
     let mem = mem.as_mut_ptr();
@@ -238,7 +238,7 @@ pub fn write_u32(mem: &mut [u8], offset: usize, value: u32) {
     }
 }
 pub fn write_u16(mem: &mut [u8], offset: usize, value: u16) {
-    if offset <= mem.len() - std::mem::size_of_val(&value) {
+    if offset > mem.len() - std::mem::size_of_val(&value) {
         panic!("OOB");
     }
     let mem = mem.as_mut_ptr();
