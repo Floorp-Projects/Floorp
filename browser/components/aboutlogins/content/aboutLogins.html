@@ -87,7 +87,7 @@
       <generic-dialog>
         <span slot="dialog-title" data-l10n-id="about-logins-import-dialog-title"></span>
         <img slot="dialog-icon" part="dialog-icon" src="chrome://browser/skin/import.svg"/>
-        <div slot="content">
+        <div slot="content" class="content">
           <div class="import-summary">
             <div class="import-items-added import-items-row" data-l10n-id="about-logins-import-dialog-items-added" data-l10n-args='{"count": 0}'>
               <span data-l10n-name="count" class="result-count"></span>
@@ -104,6 +104,7 @@
               <span data-l10n-name="meta" class="result-meta"></span>
             </div>
           </div>
+          <a class="open-detailed-report" href="about:loginsimportreport" target="_blank" data-l10n-id="about-logins-alert-import-message"></a>
         </div>
         <div slot="buttons">
           <button class="dismiss-button primary" data-l10n-id="about-logins-import-dialog-done"></button>

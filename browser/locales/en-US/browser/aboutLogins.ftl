@@ -201,7 +201,7 @@ about-logins-confirm-export-dialog-message = Your passwords will be saved as rea
 about-logins-confirm-export-dialog-confirm-button = Export…
 
 about-logins-alert-import-title = Import Complete
-about-logins-alert-import-message = View detailed import summary
+about-logins-alert-import-message = View detailed Import Summary
 
 confirm-discard-changes-dialog-title = Discard unsaved changes?
 confirm-discard-changes-dialog-message = All unsaved changes will be lost.
@@ -311,6 +311,46 @@ about-logins-import-dialog-error-no-logins-imported = No logins have been import
 about-logins-import-dialog-error-learn-more = Learn more
 about-logins-import-dialog-error-try-again = Try Again…
 about-logins-import-dialog-error-cancel = Cancel
+
+about-logins-import-report-title = Import Summary
+about-logins-import-report-description = Logins and passwords imported to { -brand-short-name }.
+
+#
+# Variables:
+#  $number (number) - The number of the row
+about-logins-import-report-row-index = Row { $number }
+about-logins-import-report-row-description-no-change = Duplicate: Exact match of existing login
+about-logins-import-report-row-description-modified = Existing login updated
+about-logins-import-report-row-description-added = New login added
+about-logins-import-report-row-description-error = Error: Missing field
+
+##
+## Variables:
+##  $field (String) - The name of the field from the CSV file for example url, username or password
+
+about-logins-import-report-row-description-error-multiple-values = Error: Multiple values for { $field }
+about-logins-import-report-row-description-error-missing-field = Error: Missing { $field }
+
+##
+## Variables:
+##  $count (number) - The number of affected elements
+
+about-logins-import-report-added =
+  { $count ->
+      *[other] <div data-l10n-name="count">{ $count }</div> <div data-l10n-name="details">New logins added</div>
+  }
+about-logins-import-report-modified =
+  { $count ->
+      *[other] <div data-l10n-name="count">{ $count }</div> <div data-l10n-name="details">Existing logins updated</div>
+  }
+about-logins-import-report-no-change =
+  { $count ->
+      *[other] <div data-l10n-name="count">{ $count }</div> <div data-l10n-name="details">Duplicate logins</div> <div data-l10n-name="not-imported">(not imported)</div>
+  }
+about-logins-import-report-error =
+  { $count ->
+      *[other] <div data-l10n-name="count">{ $count }</div> <div data-l10n-name="details">Errors</div> <div data-l10n-name="not-imported">(not imported)</div>
+  }
 
 ## Logins import report page
 
