@@ -230,6 +230,11 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static bool UseWebRender();
 
+  static bool UseRemoteCanvas();
+
+  static bool IsBackendAccelerated(
+      const mozilla::gfx::BackendType aBackendType);
+
   static bool CanMigrateMacGPUs();
 
   /**
