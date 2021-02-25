@@ -86,6 +86,8 @@ class PDMFactory final {
   static bool SupportsMimeType(const nsACString& aMimeType,
                                const MediaCodecsSupported& aSupported);
 
+  static bool AllDecodersAreRemote();
+
  private:
   virtual ~PDMFactory();
 
