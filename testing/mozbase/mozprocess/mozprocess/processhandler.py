@@ -1277,15 +1277,24 @@ class ProcessReader(object):
         # process remaining lines to read
         while not queue.empty():
             line, callback = queue.get(False)
-            callback(line.rstrip())
+            try:
+                callback(line.rstrip())
+            except Exception:
+                traceback.print_exc()
         if timed_out:
-            self.timeout_callback()
+            try:
+                self.timeout_callback()
+            except Exception:
+                traceback.print_exc()
         if stdout_reader:
             stdout_reader.join()
         if stderr_reader:
             stderr_reader.join()
         if not timed_out:
-            self.finished_callback()
+            try:
+                self.finished_callback()
+            except Exception:
+                traceback.print_exc()
         self.debug("_read exited")
 
     def is_alive(self):
