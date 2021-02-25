@@ -714,7 +714,7 @@ function InnerModuleEvaluation(module, stack, index)
         } else {
           if (isTopLevelAwaitEnabled) {
             requiredModule = GetAsyncCycleRoot(requiredModule);
-            assert(requiredModule.status === MODULE_STATUS_EVALUATED,
+            assert(requiredModule.status >= MODULE_STATUS_EVALUATED,
                   `Bad module status in InnerModuleEvaluation: ${requiredModule.status}`);
             if (requiredModule.evaluationError) {
               throw GetModuleEvaluationError(module);
