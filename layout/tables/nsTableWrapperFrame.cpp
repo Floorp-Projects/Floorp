@@ -315,17 +315,19 @@ LogicalSize nsTableWrapperFrame::InnerTableShrinkWrapSize(
   LogicalSize marginSize(aWM);  // Inner table doesn't have any margin
   LogicalSize bpSize = input.ComputedLogicalBorderPadding(aWM).Size(aWM);
 
-  // We are computing inline-size, and as long as we've got a
-  // standards-compliant 'caption-side' value [1], the caption can only occupy
-  // area in the block-axis, so pass an empty caption area.
+  // Note that we pass an empty caption-area here (rather than the caption's
+  // actual size). This is fine because:
   //
-  // [1] We're unsupporting our non-standards-compliant caption-side values via
-  // the preference layout.css.caption-side-non-standard.enabled.
+  // 1) nsTableWrapperFrame::ComputeSize() only uses the size returned by this
+  //    method (indirectly via calling nsTableWrapperFrame::ComputeAutoSize())
+  //    if it get a aSizeOverrides arg containing any size overrides with
+  //    mApplyOverridesVerbatim=true. The aSizeOverrides arg is passed to this
+  //    method without any modifications.
   //
-  // TODO: If we were to extend this function to return the shrink-wrap
-  // block-size as well, our caller needs to pass the area occupied by captions
-  // so that the block-size override can subtract the caption's block-size
-  // (Bug 1692116).
+  // 2) With 1), that means the aSizeOverrides passing into this method should
+  //    be applied to the inner table directly, so we don't need to subtract
+  //    caption-area when preparing innerOverrides for
+  //    nsTableFrame::ComputeSize().
   const LogicalSize areaOccupiedByCaption(aWM);
   StyleSizeOverrides innerOverrides = ComputeSizeOverridesForInnerTable(
       aTableFrame, aSizeOverrides, bpSize, areaOccupiedByCaption);
@@ -437,14 +439,7 @@ nsIFrame::SizeComputationResult nsTableWrapperFrame::ComputeSize(
     auto size =
         ComputeAutoSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
                         aMargin, aBorderPadding, aSizeOverrides, aFlags);
-    result.mLogicalSize.ISize(aWM) = size.ISize(aWM);
-
-    // FIXME: ComputeAutoSize() always returns unconstrained block-size. For
-    // now, we trust nsContainerSize::ComputeSize() to have given us the
-    // table-wrapper's block size. This value might come from aSizeOverrides,
-    // which makes it wrong if there's any caption in the block-axis or if the
-    // inner table has any non-zero border & padding with 'box-sizing:
-    // content-box'. (Bug 1692116)
+    result.mLogicalSize = size;
   }
 
   return result;
