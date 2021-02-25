@@ -6,6 +6,12 @@
 
 loader.lazyRequireGetter(
   this,
+  "TargetFactory",
+  "devtools/client/framework/target",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "gDevTools",
   "devtools/client/framework/devtools",
   true
@@ -38,7 +44,8 @@ async function showNotification(
   // toolbox for the tab.  If one exists, use the toolbox's notification box so that the
   // message is placed closer to the action taken by the user.
   if (toolboxButton) {
-    const toolbox = gDevTools.getToolboxForTab(tab);
+    const target = await TargetFactory.forTab(tab);
+    const toolbox = gDevTools.getToolbox(target);
     if (toolbox) {
       nbox = toolbox.notificationBox;
     }

@@ -62,9 +62,10 @@ addRDMTask(
     ok(!snapshot.parent, "No events have been logged for the main process");
 
     const tab = await addTab(URL);
+    const target = await TargetFactory.forTab(tab);
 
     await openCloseRDM(tab);
-    await gDevTools.showToolboxForTab(tab, { toolId: "inspector" });
+    await gDevTools.showToolbox(target, "inspector");
     await openCloseRDM(tab);
     await checkResults();
   },

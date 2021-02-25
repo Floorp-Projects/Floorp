@@ -3,9 +3,7 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const {
-  TabTargetFactory,
-} = require("devtools/client/framework/tab-target-factory");
+const { TargetFactory } = require("devtools/client/framework/target");
 
 const Services = require("Services");
 
@@ -38,7 +36,7 @@ if (!DevToolsServer.initialized) {
  */
 async function attachURL(url) {
   const tab = await addTab(url);
-  const target = await TabTargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
   await target.attach();
   const webConsoleFront = await target.getFront("console");
   return {

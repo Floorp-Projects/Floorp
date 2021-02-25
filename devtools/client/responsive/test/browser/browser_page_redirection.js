@@ -59,9 +59,8 @@ addRDMTask(
 );
 
 async function openNetworkMonitor(tab) {
-  const toolbox = await gDevTools.showToolboxForTab(tab, {
-    toolId: "netmonitor",
-  });
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "netmonitor");
   const monitor = toolbox.getCurrentPanel();
   return monitor;
 }

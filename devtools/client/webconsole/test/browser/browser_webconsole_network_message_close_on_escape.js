@@ -21,7 +21,8 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const currentTab = gBrowser.selectedTab;
-  const toolbox = await gDevTools.getToolboxForTab(currentTab);
+  const target = await TargetFactory.forTab(currentTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   const xhrUrl = TEST_PATH + "test-data.json";
   const onMessage = waitForMessage(hud, xhrUrl);

@@ -7,11 +7,14 @@ add_task(async function() {
   const { Toolbox } = require("devtools/client/framework/toolbox");
 
   const tab = await addTab(TEST_URL);
+  const target = await TargetFactory.forTab(tab);
   const options = { doc: document };
-  const toolbox = await gDevTools.showToolboxForTab(tab, {
-    hostType: Toolbox.HostType.BROWSERTOOLBOX,
-    hostOptions: options,
-  });
+  const toolbox = await gDevTools.showToolbox(
+    target,
+    null,
+    Toolbox.HostType.BROWSERTOOLBOX,
+    options
+  );
 
   is(toolbox.topWindow, window, "Toolbox is included in browser.xhtml");
   const iframe = document.querySelector(

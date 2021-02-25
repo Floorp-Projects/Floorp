@@ -23,7 +23,7 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 
 /**
  * Initialize and connect a DevToolsServer and DevToolsClient. Note: This test
- * does not use TabTargetFactory, so it has to set up the DevToolsServer and
+ * does not use TargetFactory, so it has to set up the DevToolsServer and
  * DevToolsClient on its own.
  * @return {Promise} Resolves with an instance of the DevToolsClient class
  */
@@ -54,10 +54,7 @@ async function setupExtensionDebuggingToolbox(id, options = {}) {
   let toolbox;
   let storage;
   if (openToolbox) {
-    const res = await openStoragePanel({
-      target,
-      hostType: Toolbox.HostType.WINDOW,
-    });
+    const res = await openStoragePanel(null, target, Toolbox.HostType.WINDOW);
     ({ toolbox, storage } = res);
   }
 
@@ -193,12 +190,9 @@ add_task(
     await extension.awaitMessage("storage-local-onChanged");
 
     info("Open the addon toolbox storage panel");
-    const { target, toolbox } = await setupExtensionDebuggingToolbox(
-      extension.id,
-      {
-        openToolbox: true,
-      }
-    );
+    const { target } = await setupExtensionDebuggingToolbox(extension.id, {
+      openToolbox: true,
+    });
 
     await selectTreeItem(["extensionStorage", host]);
 
@@ -244,7 +238,7 @@ add_task(
     }
 
     info("Shut down the test");
-    await toolbox.destroy();
+    await gDevTools.closeToolbox(target);
     await extension.unload();
     await target.destroy();
   }

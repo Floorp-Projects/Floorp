@@ -13,7 +13,8 @@ var toolbox;
 
 add_task(async function themeRegistration() {
   const tab = await addTab("data:text/html,test");
-  toolbox = await gDevTools.showToolboxForTab(tab, { toolId: "options" });
+  const target = await TargetFactory.forTab(tab);
+  toolbox = await gDevTools.showToolbox(target, "options");
 
   const themeId = await new Promise(resolve => {
     gDevTools.once("theme-registered", registeredThemeId => {

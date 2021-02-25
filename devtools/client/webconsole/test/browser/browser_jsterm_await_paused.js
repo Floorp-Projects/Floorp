@@ -24,7 +24,8 @@ add_task(async function() {
   execute(hud, pauseExpression);
 
   // wait for the debugger to be opened and paused.
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   await waitFor(() => toolbox.getPanel("jsdebugger"));
   const dbg = createDebuggerContext(toolbox);

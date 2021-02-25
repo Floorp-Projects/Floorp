@@ -4,9 +4,7 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Services = require("Services");
-const {
-  TabTargetFactory,
-} = require("devtools/client/framework/tab-target-factory");
+const { TargetFactory } = require("devtools/client/framework/target");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -24,9 +22,7 @@ SimpleTest.registerCleanupFunction(function() {
 
 async function getTargetForSelectedTab() {
   const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const target = await TabTargetFactory.forTab(
-    browserWindow.gBrowser.selectedTab
-  );
+  const target = await TargetFactory.forTab(browserWindow.gBrowser.selectedTab);
   return target;
 }
 

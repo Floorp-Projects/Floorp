@@ -5,7 +5,7 @@
 
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { LEFT, RIGHT, BOTTOM, WINDOW } = Toolbox.HostType;
-var toolbox;
+var toolbox, target;
 
 const URL =
   "data:text/html;charset=utf8,test for opening toolbox in different hosts";
@@ -13,12 +13,13 @@ const URL =
 add_task(async function runTest() {
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
-  toolbox = await gDevTools.showToolboxForTab(tab, { toolId: "webconsole" });
+  target = await TargetFactory.forTab(tab);
+  toolbox = await gDevTools.showToolbox(target, "webconsole");
 
   await runHostTests(gBrowser);
   await toolbox.destroy();
 
-  toolbox = null;
+  toolbox = target = null;
   gBrowser.removeCurrentTab();
 });
 
@@ -46,12 +47,13 @@ async function runHostTestsFromSeparateWindow(options) {
   browser.selectedTab = BrowserTestUtils.addTab(browser, URL);
 
   const tab = browser.selectedTab;
-  toolbox = await gDevTools.showToolboxForTab(tab, { toolId: "webconsole" });
+  target = await TargetFactory.forTab(tab);
+  toolbox = await gDevTools.showToolbox(target, "webconsole");
 
   await runHostTests(browser);
   await toolbox.destroy();
 
-  toolbox = null;
+  toolbox = target = null;
   await BrowserTestUtils.closeWindow(win);
 }
 
@@ -129,7 +131,8 @@ async function testToolSelect() {
 
 async function testDestroy(browser) {
   await toolbox.destroy();
-  toolbox = await gDevTools.showToolboxForTab(browser.selectedTab);
+  target = await TargetFactory.forTab(browser.selectedTab);
+  toolbox = await gDevTools.showToolbox(target);
 }
 
 function testRememberHost() {
