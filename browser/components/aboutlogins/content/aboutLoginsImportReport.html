@@ -25,7 +25,37 @@
     </header>
 
     <section id="report-body">
-
+      <div class="summary">
+        <h2 data-l10n-id="about-logins-import-report-title"></h2>
+        <div data-l10n-id="about-logins-import-report-description"></div>
+        <a href="https://support.mozilla.org/kb/import-login-data-file" class="about-logins-import-report-learn-more"
+          data-l10n-id="about-logins-import-dialog-error-learn-more" target="_blank" rel="noreferrer"></a>
+      </div>
+      <div class="new-logins" data-l10n-id="about-logins-import-report-added" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+      </div>
+      <div class="exiting-logins" data-l10n-id="about-logins-import-report-modified" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+      </div>
+      <div class="duplicate-logins" data-l10n-id="about-logins-import-report-no-change" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+        <div data-l10n-name="not-imported" class="count-details not-imported"></div>
+      </div>
+      <div class="errors-logins" data-l10n-id="about-logins-import-report-error" data-l10n-args='{"count": 0}'>
+        <div data-l10n-name="count" class="result-count"></div>
+        <div data-l10n-name="details" class="count-details"></div>
+        <div data-l10n-name="not-imported" class="count-details not-imported error"></div>
+      </div>
+      <div class="logins-list"></div>
     </section>
+
+    <template id="import-details-row-template">
+      <span class="row-count" data-l10n-id="about-logins-import-report-row-index" data-l10n-args='{"number": 0}'></span>
+      <span class="row-details"></span>
+    </template>
+
   </body>
 </html>
