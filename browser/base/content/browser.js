@@ -1745,9 +1745,11 @@ var gBrowserInit = {
       }
     });
 
-    this._setInitialFocus();
-
     updateFxaToolbarMenu(gFxaToolbarEnabled, true);
+
+    // Setting the focus will cause a style flush, it's preferable to call anything
+    // that will modify the DOM from within this function before this call.
+    this._setInitialFocus();
 
     this.domContentLoaded = true;
   },
