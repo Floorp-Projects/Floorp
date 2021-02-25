@@ -10,6 +10,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -34,6 +36,8 @@ class Suggestions {
   _rs = null;
   // Let tests wait for init to complete.
   _initPromise = null;
+  // Resolver function stored to call when init is complete.
+  _initResolve = null;
   // A tree that maps keywords to a result.
   _tree = new KeywordTree();
   // A map of the result data.
@@ -46,8 +50,10 @@ class Suggestions {
     this._initPromise = Promise.resolve();
     this._rs = RemoteSettings(RS_COLLECTION);
     if (UrlbarPrefs.get(RS_PREF)) {
-      this._setupRemoteSettings();
-      this._initPromise = this._ensureAttachmentsDownloaded();
+      this._initPromise = new Promise(resolve => (this._initResolve = resolve));
+      Services.tm.idleDispatchToMainThread(
+        this._setupRemoteSettings.bind(this)
+      );
     } else {
       UrlbarPrefs.addObserver(this);
     }
@@ -81,7 +87,6 @@ class Suggestions {
   onPrefChanged(changedPref) {
     if (changedPref == RS_PREF && UrlbarPrefs.get(RS_PREF)) {
       this._setupRemoteSettings();
-      this._ensureAttachmentsDownloaded();
     }
   }
 
@@ -90,6 +95,11 @@ class Suggestions {
    */
   async _setupRemoteSettings() {
     this._rs.on("sync", this._onSettingsSync.bind(this));
+    await this._ensureAttachmentsDownloaded();
+    if (this._initResolve) {
+      this._initResolve();
+      this._initResolve = null;
+    }
   }
 
   /*
