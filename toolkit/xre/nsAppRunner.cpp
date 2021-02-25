@@ -302,6 +302,10 @@ bool gIsGtest = false;
 
 nsString gAbsoluteArgv0Path;
 
+#if defined(XP_WIN)
+nsString gProcessStartupShortcut;
+#endif
+
 #if defined(MOZ_WIDGET_GTK)
 #  include <glib.h>
 #  if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
@@ -1305,6 +1309,17 @@ NS_IMETHODIMP
 nsXULAppInfo::GetRestartedByOS(bool* aResult) {
   *aResult = gRestartedByOS;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetProcessStartupShortcut(nsAString& aShortcut) {
+#if defined(XP_WIN)
+  if (XRE_IsParentProcess()) {
+    aShortcut.Assign(gProcessStartupShortcut);
+    return NS_OK;
+  }
+#endif
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 #if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
@@ -4248,6 +4263,20 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     mDesktopStartupID.Assign(desktopStartupIDEnv);
   }
 #endif
+
+#if defined(XP_WIN)
+  {
+    // Save the shortcut path before lpTitle is replaced by an AUMID,
+    // such as by WinTaskbar
+    STARTUPINFOW si;
+    GetStartupInfoW(&si);
+    if (si.dwFlags & STARTF_TITLEISAPPID) {
+      NS_WARNING("AUMID was already set, shortcut may have been lost.");
+    } else if ((si.dwFlags & STARTF_TITLEISLINKNAME) && si.lpTitle) {
+      gProcessStartupShortcut.Assign(si.lpTitle);
+    }
+  }
+#endif /* XP_WIN */
 
 #if defined(MOZ_WIDGET_GTK)
   // setup for private colormap.  Ideally we'd like to do this
