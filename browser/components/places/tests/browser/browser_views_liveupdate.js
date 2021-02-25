@@ -209,6 +209,9 @@ var bookmarksObserver = {
     ]);
   },
 
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
+
   onItemChanged(
     itemId,
     property,

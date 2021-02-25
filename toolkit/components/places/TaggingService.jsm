@@ -452,6 +452,9 @@ TaggingService.prototype = {
     }
   },
 
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
+
   // nsISupports
 
   classID: Components.ID("{bbc23860-2553-479d-8b78-94d9038334f7}"),

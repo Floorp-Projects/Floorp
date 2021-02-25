@@ -934,6 +934,7 @@ nsPlacesExpiration.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([
     "nsIObserver",
+    "nsINavHistoryObserver",
     "nsITimerCallback",
     "nsISupportsWeakReference",
   ]),

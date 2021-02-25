@@ -57,6 +57,12 @@ var gBookmarksObserver = {
   },
 
   // nsINavBookmarkObserver
+  onBeginUpdateBatch() {
+    return this.validate("onBeginUpdateBatch", arguments);
+  },
+  onEndUpdateBatch() {
+    return this.validate("onEndUpdateBatch", arguments);
+  },
   onItemChanged() {
     return this.validate("onItemChanged", arguments);
   },
@@ -103,6 +109,12 @@ var gBookmarkSkipObserver = {
   },
 
   // nsINavBookmarkObserver
+  onBeginUpdateBatch() {
+    return this.validate("onBeginUpdateBatch", arguments);
+  },
+  onEndUpdateBatch() {
+    return this.validate("onEndUpdateBatch", arguments);
+  },
   onItemChanged() {
     return this.validate("onItemChanged", arguments);
   },
