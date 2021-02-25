@@ -307,7 +307,7 @@ TEST_VARIANTS = {
         },
     },
     "webgl-ipc": {
-        # TODO: After 2021-02-01, verify this variant is still needed.
+        # TODO: After 2021-05-01, verify this variant is still needed.
         "description": "{description} with WebGL IPC process enabled",
         "suffix": "gli",
         "replace": {
@@ -329,7 +329,7 @@ TEST_VARIANTS = {
         },
     },
     "webgl-ipc-profiling": {
-        # TODO: After 2021-02-01, verify this variant is still needed.
+        # TODO: After 2021-05-01, verify this variant is still needed.
         "description": "{description} with WebGL IPC process enabled",
         "suffix": "gli",
         "merge": {
