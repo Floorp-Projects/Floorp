@@ -1201,8 +1201,8 @@ BrowserPageActions.sendToDevice = {
   onLocationChange() {
     let action = PageActions.actionForID("sendToDevice");
     let browser = gBrowser.selectedBrowser;
-    let url = browser.currentURI.spec;
-    action.setDisabled(!gSync.isSendableURI(url), window);
+    let url = browser.currentURI;
+    action.setDisabled(!BrowserUtils.isShareableURL(url), window);
   },
 
   onShowingSubview(panelViewNode) {
