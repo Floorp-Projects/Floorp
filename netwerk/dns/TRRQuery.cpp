@@ -84,7 +84,10 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
       rectype = pushedTRR->Type();
     }
     bool sendAgain;
-
+    // Need to dispatch TRR requests after |mTrrA| and |mTrrAAAA| are set
+    // properly so as to avoid the race when CompleteLookup() is called at the
+    // same time.
+    nsTArray<RefPtr<TRR>> requestsToSend;
     do {
       sendAgain = false;
       if ((TRRTYPE_AAAA == rectype) && gTRRService &&
@@ -103,7 +106,7 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
         trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
       }
 
-      if (pushedTRR || NS_SUCCEEDED(gTRRService->DispatchTRRRequest(trr))) {
+      {
         MutexAutoLock trrlock(mTrrLock);
         if (rectype == TRRTYPE_A) {
           MOZ_ASSERT(!mTrrA);
@@ -117,14 +120,35 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
           LOG(("TrrLookup called with bad type set: %d\n", rectype));
           MOZ_ASSERT(0);
         }
-        madeQuery = true;
-        if (!pushedTRR && (mRecord->af == AF_UNSPEC) &&
-            (rectype == TRRTYPE_A)) {
-          rectype = TRRTYPE_AAAA;
-          sendAgain = true;
+
+        if (!pushedTRR) {
+          requestsToSend.AppendElement(trr);
+          if ((mRecord->af == AF_UNSPEC) && (rectype == TRRTYPE_A)) {
+            rectype = TRRTYPE_AAAA;
+            sendAgain = true;
+          }
+        } else {
+          madeQuery = true;
         }
       }
     } while (sendAgain);
+
+    for (const auto& request : requestsToSend) {
+      if (NS_SUCCEEDED(gTRRService->DispatchTRRRequest(request))) {
+        madeQuery = true;
+      } else {
+        MutexAutoLock trrlock(mTrrLock);
+        if (request == mTrrA) {
+          mTrrA = nullptr;
+          mTrrAUsed = INIT;
+        }
+        if (request == mTrrAAAA) {
+          mTrrAAAA = nullptr;
+          mTrrAAAAUsed = INIT;
+        }
+      }
+    }
+    requestsToSend.Clear();
   } else {
     typeRec->mStart = TimeStamp::Now();
     enum TrrType rectype;
