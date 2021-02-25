@@ -6035,6 +6035,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   const auto& styleBSize = aSizeOverrides.mStyleBSize
                                ? *aSizeOverrides.mStyleBSize
                                : stylePos->BSize(aWM);
+  const auto& aspectRatio = aSizeOverrides.mAspectRatio
+                                ? *aSizeOverrides.mAspectRatio
+                                : GetAspectRatio();
 
   auto parentFrame = GetParent();
   auto alignCB = parentFrame;
@@ -6067,7 +6070,6 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
                        : eLogicalAxisBlock;
   }
 
-  const auto aspectRatio = GetAspectRatio();
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
   const bool isAutoISize = styleISize.IsAuto();
   // Compute inline-axis size

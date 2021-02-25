@@ -42,6 +42,7 @@ enum class LayoutFrameType : uint8_t;
 struct StyleSizeOverrides {
   Maybe<StyleSize> mStyleISize;
   Maybe<StyleSize> mStyleBSize;
+  Maybe<AspectRatio> mAspectRatio;
 
   bool HasAnyOverrides() const { return mStyleISize || mStyleBSize; }
   bool HasAnyLengthOverrides() const {
