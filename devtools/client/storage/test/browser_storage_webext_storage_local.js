@@ -23,7 +23,7 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 
 /**
  * Initialize and connect a DevToolsServer and DevToolsClient. Note: This test
- * does not use TargetFactory, so it has to set up the DevToolsServer and
+ * does not use TabTargetFactory, so it has to set up the DevToolsServer and
  * DevToolsClient on its own.
  * @return {Promise} Resolves with an instance of the DevToolsClient class
  */

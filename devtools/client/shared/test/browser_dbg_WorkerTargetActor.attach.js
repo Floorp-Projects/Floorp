@@ -25,7 +25,7 @@ add_task(async function() {
   SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
 
   const tab = await addTab(TAB1_URL);
-  const target = await TargetFactory.forTab(tab);
+  const target = await TabTargetFactory.forTab(tab);
   await target.attach();
   await listWorkers(target);
 

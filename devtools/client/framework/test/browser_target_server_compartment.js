@@ -36,7 +36,7 @@ async function testChromeTab() {
     Services.obs.addObserver(observe, "devtools-thread-ready");
   });
 
-  const target = await TargetFactory.forTab(tab);
+  const target = await TabTargetFactory.forTab(tab);
   await target.attach();
 
   const threadFront = await target.attachThread();
