@@ -2132,27 +2132,11 @@ bool js::HasOwnProperty(JSContext* cx, HandleObject obj, HandleId id,
 
 bool js::LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
                             JSObject** objp, PropertyResult* propp) {
-  do {
-    if (!LookupOwnPropertyPure(cx, obj, id, propp)) {
-      return false;
-    }
-
-    if (propp->isFound()) {
-      *objp = obj;
-      return true;
-    }
-
-    if (propp->shouldIgnoreProtoChain()) {
-      *objp = nullptr;
-      return true;
-    }
-
-    obj = obj->staticPrototype();
-  } while (obj);
-
-  *objp = nullptr;
-  propp->setNotFound();
-  return true;
+  if (obj->getOpsLookupProperty()) {
+    return false;
+  }
+  return NativeLookupPropertyInline<NoGC, LookupResolveMode::CheckMayResolve>(
+      cx, &obj->as<NativeObject>(), id, objp, propp);
 }
 
 bool js::LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
