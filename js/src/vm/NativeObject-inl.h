@@ -780,35 +780,38 @@ static MOZ_ALWAYS_INLINE bool NativeLookupPropertyInline(
                                                              propp)) {
       return false;
     }
+
     if (propp.isFound()) {
       objp.set(current);
       return true;
     }
+
     if (propp.shouldIgnoreProtoChain()) {
-      objp.set(nullptr);
-      return true;
+      break;
     }
 
-    typename MaybeRooted<JSObject*, allowGC>::RootType proto(
-        cx, current->staticPrototype());
-
+    JSObject* proto = current->staticPrototype();
     if (!proto) {
       break;
     }
-    if (!proto->template is<NativeObject>()) {
-      MOZ_ASSERT(!cx->isHelperThreadContext());
-      if constexpr (!allowGC) {
-        return false;
+
+    // If a `lookupProperty` hook exists, recurse into LookupProperty, otherwise
+    // we can simply loop within this call frame.
+    if (proto->getOpsLookupProperty()) {
+      if constexpr (allowGC) {
+        MOZ_ASSERT(!cx->isHelperThreadContext());
+        RootedObject protoRoot(cx, proto);
+        return LookupProperty(cx, protoRoot, id, objp, propp);
       } else {
-        return LookupProperty(cx, proto, id, objp, propp);
+        return false;
       }
     }
 
-    current = &proto->template as<NativeObject>();
+    current = &proto->as<NativeObject>();
   }
 
+  MOZ_ASSERT(propp.isNotFound());
   objp.set(nullptr);
-  propp.setNotFound();
   return true;
 }
 
