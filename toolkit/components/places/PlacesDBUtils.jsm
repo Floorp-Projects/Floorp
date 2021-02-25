@@ -103,15 +103,7 @@ var PlacesDBUtils = {
    * @returns {Array} An empty array.
    */
   async _refreshUI() {
-    // Send batch update notifications to update the UI.
-    let observers = [
-      ...PlacesUtils.history.getObservers(),
-      ...PlacesUtils.bookmarks.getObservers(),
-    ];
-    for (let observer of observers) {
-      observer.onBeginUpdateBatch();
-      observer.onEndUpdateBatch();
-    }
+    PlacesObservers.notifyListeners([new PlacesPurgeCaches()]);
     return [];
   },
 
