@@ -386,13 +386,12 @@ pub(crate) fn set_rgb_colorants(
     true
 }
 pub(crate) fn get_rgb_colorants(
-    colorants: &mut Matrix,
     white_point: qcms_CIE_xyY,
     primaries: qcms_CIE_xyYTRIPLE,
-) -> bool {
-    *colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
-    *colorants = adapt_matrix_to_D50(*colorants, white_point);
-    colorants.invalid
+) -> Matrix {
+    let colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
+    let colorants = adapt_matrix_to_D50(colorants, white_point);
+    colorants
 }
 /* Alpha is not corrected.
    A rationale for this is found in Alvy Ray's "Should Alpha Be Nonlinear If

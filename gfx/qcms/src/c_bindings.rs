@@ -5,7 +5,6 @@ use libc::{fclose, fopen, fread, free, malloc, memset, FILE};
 use crate::{
     double_to_s15Fixed16Number,
     iccread::*,
-    matrix::Matrix,
     transform::get_rgb_colorants,
     transform::DataType,
     transform::{qcms_transform, transform_create},
@@ -246,10 +245,7 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     let mut tag_table_offset: usize;
     let mut tag_data_offset: usize;
     let data: *mut libc::c_void;
-    let mut colorants: Matrix = Matrix {
-        m: [[0.; 3]; 3],
-        invalid: false,
-    };
+
     let TAG_XYZ: [u32; 3] = [TAG_rXYZ, TAG_gXYZ, TAG_bXYZ];
     let TAG_TRC: [u32; 3] = [TAG_rTRC, TAG_gTRC, TAG_bTRC];
     if mem.is_null() || size.is_null() {
@@ -273,7 +269,8 @@ pub unsafe extern "C" fn qcms_data_create_rgb_with_gamma(
     }
     memset(data, 0, length as usize);
     // Part1 : write rXYZ, gXYZ and bXYZ
-    if !get_rgb_colorants(&mut colorants, white_point, primaries) {
+    let colorants = get_rgb_colorants(white_point, primaries);
+    if colorants.invalid {
         free(data);
         return;
     }
