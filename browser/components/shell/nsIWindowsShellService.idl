@@ -69,4 +69,19 @@ interface nsIWindowsShellService : nsISupports
    * These cases should be rare.
    */
   boolean isCurrentAppPinnedToTaskbar();
+
+  /*
+   * Determine where a given shortcut likely appears in the shell.
+   *
+   * Returns one of:
+   * - "StartMenu", Current User or All Users Start Menu, including pins
+   * - "Desktop", Current User or All Users Desktop
+   * - "Taskbar", Taskbar Pins
+   * - "" otherwise
+   *
+   * NOTE: This tries to avoid I/O, so paths are compared directly as
+   * strings, which may not be accurate in all cases. It is intended
+   * for noncritical telemetry use.
+   */
+  AString classifyShortcut(in AString aPath);
 };
