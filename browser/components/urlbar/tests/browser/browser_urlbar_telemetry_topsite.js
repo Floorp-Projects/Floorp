@@ -102,8 +102,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test() {
-  UrlbarTestUtils.init(this);
-
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     let sites = AboutNewTab.getTopSites();
     Assert.equal(
