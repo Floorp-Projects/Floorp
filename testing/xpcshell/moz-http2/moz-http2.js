@@ -243,6 +243,165 @@ function handleRequest(req, res) {
   // PushService tests.
   var pushPushServer1, pushPushServer2, pushPushServer3, pushPushServer4;
 
+  function responseType(packet, responseIP) {
+    if (
+      packet.questions.length > 0 &&
+      packet.questions[0].name == "confirm.example.com" &&
+      packet.questions[0].type == "NS"
+    ) {
+      return "NS";
+    }
+
+    return ip.isV4Format(responseIP) ? "A" : "AAAA";
+  }
+
+  function handleAuth() {
+    // There's a Set-Cookie: header in the response for "/dns" , which this
+    // request subsequently would include if the http channel wasn't
+    // anonymous. Thus, if there's a cookie in this request, we know Firefox
+    // mishaved. If there's not, we're fine.
+    if (req.headers.cookie) {
+      res.writeHead(403);
+      res.end("cookie for me, not for you");
+      return false;
+    }
+    if (req.headers.authorization != "user:password") {
+      res.writeHead(401);
+      res.end("bad boy!");
+      return false;
+    }
+
+    return true;
+  }
+
+  function createDNSAnswer(response, packet, responseIP) {
+    // This shuts down the connection so we can test if the client reconnects
+    if (
+      packet.questions.length > 0 &&
+      packet.questions[0].name == "closeme.com"
+    ) {
+      response.stream.connection.close("INTERNAL_ERROR", response.stream.id);
+      return null;
+    }
+
+    function responseData() {
+      if (
+        packet.questions.length > 0 &&
+        packet.questions[0].name == "confirm.example.com" &&
+        packet.questions[0].type == "NS"
+      ) {
+        return "ns.example.com";
+      }
+
+      return responseIP;
+    }
+
+    let answers = [];
+    if (
+      responseIP != "none" &&
+      responseType(packet, responseIP) == packet.questions[0].type
+    ) {
+      answers.push({
+        name: u.query.hostname ? u.query.hostname : packet.questions[0].name,
+        ttl: 55,
+        type: responseType(packet, responseIP),
+        flush: false,
+        data: responseData(),
+      });
+    }
+
+    // for use with test_dns_by_type_resolve.js
+    if (packet.questions[0].type == "TXT") {
+      answers.push({
+        name: packet.questions[0].name,
+        type: packet.questions[0].type,
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: Buffer.from(
+          "62586B67646D39705932556761584D6762586B676347467A63336476636D513D",
+          "hex"
+        ),
+      });
+    }
+
+    if (u.query.cnameloop) {
+      answers.push({
+        name: "cname.example.com",
+        type: "CNAME",
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: "pointing-elsewhere.example.com",
+      });
+    }
+
+    if (req.headers["accept-language"] || req.headers["user-agent"]) {
+      // If we get this header, don't send back any response. This should
+      // cause the tests to fail. This is easier then actually sending back
+      // the header value into test_trr.js
+      answers = [];
+    }
+
+    let buf = dnsPacket.encode({
+      type: "response",
+      id: packet.id,
+      flags: dnsPacket.RECURSION_DESIRED,
+      questions: packet.questions,
+      answers,
+    });
+
+    return buf;
+  }
+
+  function getDelayFromPacket(packet, type) {
+    let delay = 0;
+    if (packet.questions[0].type == "A") {
+      delay = parseInt(u.query.delayIPv4);
+    } else if (packet.questions[0].type == "AAAA") {
+      delay = parseInt(u.query.delayIPv6);
+    }
+
+    if (u.query.slowConfirm && type == "NS") {
+      delay += 1000;
+    }
+
+    return delay;
+  }
+
+  function writeDNSResponse(response, buf, delay, contentType) {
+    function writeResponse(resp, buffer) {
+      resp.setHeader("Set-Cookie", "trackyou=yes; path=/; max-age=100000;");
+      resp.setHeader("Content-Type", contentType);
+      if (req.headers["accept-encoding"].includes("gzip")) {
+        zlib.gzip(buffer, function(err, result) {
+          resp.setHeader("Content-Encoding", "gzip");
+          resp.setHeader("Content-Length", result.length);
+          resp.writeHead(200);
+          res.end(result);
+        });
+      } else {
+        resp.setHeader("Content-Length", buffer.length);
+        resp.writeHead(200);
+        resp.write(buffer);
+        resp.end("");
+      }
+    }
+
+    if (delay) {
+      setTimeout(
+        arg => {
+          writeResponse(arg[0], arg[1]);
+        },
+        delay,
+        [response, buf]
+      );
+      return;
+    }
+
+    writeResponse(response, buf);
+  }
+
   if (req.httpVersionMajor === 2) {
     res.setHeader("X-Connection-Http2", "yes");
     res.setHeader("X-Http2-StreamId", "" + req.stream.id);
@@ -621,18 +780,7 @@ function handleRequest(req, res) {
     }
 
     if (u.query.auth) {
-      // There's a Set-Cookie: header in the response for "/dns" , which this
-      // request subsequently would include if the http channel wasn't
-      // anonymous. Thus, if there's a cookie in this request, we know Firefox
-      // mishaved. If there's not, we're fine.
-      if (req.headers.cookie) {
-        res.writeHead(403);
-        res.end("cookie for me, not for you");
-        return;
-      }
-      if (req.headers.authorization != "user:password") {
-        res.writeHead(401);
-        res.end("bad boy!");
+      if (!handleAuth()) {
         return;
       }
     }
@@ -678,133 +826,16 @@ function handleRequest(req, res) {
 
     function emitResponse(response, requestPayload) {
       let packet = dnsPacket.decode(requestPayload);
-
-      // This shuts down the connection so we can test if the client reconnects
-      if (
-        packet.questions.length > 0 &&
-        packet.questions[0].name == "closeme.com"
-      ) {
-        response.stream.connection.close("INTERNAL_ERROR", response.stream.id);
+      let answer = createDNSAnswer(response, packet, responseIP);
+      if (!answer) {
         return;
       }
-
-      function responseType() {
-        if (
-          packet.questions.length > 0 &&
-          packet.questions[0].name == "confirm.example.com" &&
-          packet.questions[0].type == "NS"
-        ) {
-          return "NS";
-        }
-
-        return ip.isV4Format(responseIP) ? "A" : "AAAA";
-      }
-
-      function responseData() {
-        if (
-          packet.questions.length > 0 &&
-          packet.questions[0].name == "confirm.example.com" &&
-          packet.questions[0].type == "NS"
-        ) {
-          return "ns.example.com";
-        }
-
-        return responseIP;
-      }
-
-      let answers = [];
-      if (responseIP != "none" && responseType() == packet.questions[0].type) {
-        answers.push({
-          name: u.query.hostname ? u.query.hostname : packet.questions[0].name,
-          ttl: 55,
-          type: responseType(),
-          flush: false,
-          data: responseData(),
-        });
-      }
-
-      // for use with test_dns_by_type_resolve.js
-      if (packet.questions[0].type == "TXT") {
-        answers.push({
-          name: packet.questions[0].name,
-          type: packet.questions[0].type,
-          ttl: 55,
-          class: "IN",
-          flush: false,
-          data: Buffer.from(
-            "62586B67646D39705932556761584D6762586B676347467A63336476636D513D",
-            "hex"
-          ),
-        });
-      }
-
-      if (u.query.cnameloop) {
-        answers.push({
-          name: "cname.example.com",
-          type: "CNAME",
-          ttl: 55,
-          class: "IN",
-          flush: false,
-          data: "pointing-elsewhere.example.com",
-        });
-      }
-
-      if (req.headers["accept-language"] || req.headers["user-agent"]) {
-        // If we get this header, don't send back any response. This should
-        // cause the tests to fail. This is easier then actually sending back
-        // the header value into test_trr.js
-        answers = [];
-      }
-
-      let buf = dnsPacket.encode({
-        type: "response",
-        id: packet.id,
-        flags: dnsPacket.RECURSION_DESIRED,
-        questions: packet.questions,
-        answers,
-      });
-
-      function writeResponse(resp, buffer) {
-        resp.setHeader("Set-Cookie", "trackyou=yes; path=/; max-age=100000;");
-        resp.setHeader("Content-Type", "application/dns-message");
-        if (req.headers["accept-encoding"].includes("gzip")) {
-          zlib.gzip(buffer, function(err, result) {
-            resp.setHeader("Content-Encoding", "gzip");
-            resp.setHeader("Content-Length", result.length);
-            resp.writeHead(200);
-            res.end(result);
-          });
-        } else {
-          resp.setHeader("Content-Length", buffer.length);
-          resp.writeHead(200);
-          resp.write(buffer);
-          resp.end("");
-        }
-      }
-
-      let delay = 0;
-      if (packet.questions[0].type == "A") {
-        delay = parseInt(u.query.delayIPv4);
-      } else if (packet.questions[0].type == "AAAA") {
-        delay = parseInt(u.query.delayIPv6);
-      }
-
-      if (u.query.slowConfirm && responseType() == "NS") {
-        delay += 1000;
-      }
-
-      if (delay) {
-        setTimeout(
-          arg => {
-            writeResponse(arg[0], arg[1]);
-          },
-          delay,
-          [response, buf]
-        );
-        return;
-      }
-
-      writeResponse(response, buf);
+      writeDNSResponse(
+        response,
+        answer,
+        getDelayFromPacket(packet, responseType(packet, responseIP)),
+        "application/dns-message"
+      );
     }
 
     if (u.query.dns) {
@@ -945,55 +976,29 @@ function handleRequest(req, res) {
       responseIP = "5.5.5.5";
     }
 
+    if (u.query.auth) {
+      if (!handleAuth()) {
+        return;
+      }
+    }
+
     let payload = Buffer.from("");
 
     function emitResponse(response, requestPayload) {
       let decryptedQuery = odoh.decrypt_query(requestPayload);
       let packet = dnsPacket.decode(Buffer.from(decryptedQuery.buffer));
-
-      function responseType() {
-        if (
-          packet.questions.length > 0 &&
-          packet.questions[0].name == "confirm.example.com" &&
-          packet.questions[0].type == "NS"
-        ) {
-          return "NS";
-        }
-
-        return ip.isV4Format(responseIP) ? "A" : "AAAA";
+      let answer = createDNSAnswer(response, packet, responseIP);
+      if (!answer) {
+        return;
       }
 
-      let answers = [];
-      if (responseIP != "none" && responseType() == packet.questions[0].type) {
-        answers.push({
-          name: u.query.hostname ? u.query.hostname : packet.questions[0].name,
-          ttl: 55,
-          type: responseType(),
-          flush: false,
-          data: responseIP,
-        });
-      }
-
-      let buf = dnsPacket.encode({
-        type: "response",
-        id: packet.id,
-        flags: dnsPacket.RECURSION_DESIRED,
-        questions: packet.questions,
-        answers,
-      });
-
-      let encryptedResponse = odoh.create_response(buf);
-
-      function writeResponse(resp, buffer) {
-        resp.setHeader("Set-Cookie", "trackyou=yes; path=/; max-age=100000;");
-        resp.setHeader("Content-Type", "application/oblivious-dns-message");
-        resp.setHeader("Content-Length", buffer.length);
-        resp.writeHead(200);
-        resp.write(buffer);
-        resp.end("");
-      }
-
-      writeResponse(response, encryptedResponse);
+      let encryptedResponse = odoh.create_response(answer);
+      writeDNSResponse(
+        response,
+        encryptedResponse,
+        getDelayFromPacket(packet, responseType(packet, responseIP)),
+        "application/oblivious-dns-message"
+      );
     }
 
     if (u.query.dns) {
