@@ -240,6 +240,9 @@ partial interface HTMLMediaElement {
   // These APIs are used for decoder doctor tests.
   [ChromeOnly]
   void setFormatDiagnosticsReportForMimeType(DOMString mimeType, DecoderDoctorReportType error);
+
+  [Throws, ChromeOnly]
+  void setDecodeError(DOMString error);
 };
 
 /* Audio Output Devices API */
