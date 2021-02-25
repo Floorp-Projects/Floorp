@@ -720,8 +720,6 @@ function do_compare_arrays(a1, a2, sorted) {
 function NavBookmarkObserver() {}
 
 NavBookmarkObserver.prototype = {
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
   onItemRemoved() {},
   onItemChanged() {},
   onItemMoved() {},

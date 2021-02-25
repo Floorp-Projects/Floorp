@@ -27,8 +27,6 @@ var observer = {
     this.itemsRemoved = new Map();
     this.itemsChanged = new Map();
     this.itemsMoved = new Map();
-    this.beginUpdateBatch = false;
-    this.endUpdateBatch = false;
   },
 
   handlePlacesEvents(events) {
@@ -62,14 +60,6 @@ var observer = {
           });
       }
     }
-  },
-
-  onBeginUpdateBatch() {
-    this.beginUpdateBatch = true;
-  },
-
-  onEndUpdateBatch() {
-    this.endUpdateBatch = true;
   },
 
   onItemChanged(
