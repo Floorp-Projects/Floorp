@@ -17,7 +17,6 @@ from taskpool import TaskPool, get_cpu_count
 
 def _relpath(path, start=None):
     # Backported from Python 3.1 posixpath.py
-
     """Return a relative version of a path"""
 
     if not path:
