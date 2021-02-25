@@ -483,10 +483,6 @@ struct ReflowInput : public SizeComputationInput {
     // overflow columns.
     bool mColumnSetWrapperHasNoBSizeLeft : 1;
 
-    // nsFlexContainerFrame is reflowing this child to measure its intrinsic
-    // BSize.
-    bool mIsFlexContainerMeasuringBSize : 1;
-
     // If this flag is set, the BSize of this frame should be considered
     // indefinite for the purposes of percent resolution on child frames (we
     // should behave as if ComputedBSize() were NS_UNCONSTRAINEDSIZE when doing

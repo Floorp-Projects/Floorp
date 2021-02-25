@@ -201,7 +201,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = false;
   mFlags.mIsColumnBalancing = false;
   mFlags.mColumnSetWrapperHasNoBSizeLeft = false;
-  mFlags.mIsFlexContainerMeasuringBSize = false;
   mFlags.mTreatBSizeAsIndefinite = false;
   mFlags.mDummyParentReflowInput = false;
   mFlags.mStaticPosIsCBOrigin = aFlags.contains(InitFlag::StaticPosIsCBOrigin);
@@ -2316,16 +2315,6 @@ void ReflowInput::InitConstraints(
 
         if (alignCB->IsFlexContainerFrame()) {
           mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
-
-          // If we're inside of a flex container that needs to measure our
-          // auto BSize, pass that information along to ComputeSize().
-          if (mFlags.mIsFlexContainerMeasuringBSize) {
-            mComputeSizeFlags += ComputeSizeFlag::UseAutoBSize;
-          }
-        } else {
-          MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringBSize,
-                     "We're not in a flex container, so the flag "
-                     "'mIsFlexContainerMeasuringBSize' shouldn't be set");
         }
       }
 
@@ -2862,15 +2851,10 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
   // depends on the content height. Treat them like the initial value.
   // Likewise, check for calc() with percentages on internal table elements;
   // that's treated as the initial value too.
-  // Likewise, if we're a child of a flex container who's measuring our
-  // intrinsic height, then we want to disregard our min-height/max-height.
   const bool isInternalTableFrame = IsInternalTableFrame();
   const nscoord& bPercentageBasis = aCBSize.BSize(wm);
   auto BSizeBehavesAsInitialValue = [&](const auto& aBSize) {
     if (nsLayoutUtils::IsAutoBSize(aBSize, bPercentageBasis)) {
-      return true;
-    }
-    if (mFlags.mIsFlexContainerMeasuringBSize) {
       return true;
     }
     if (isInternalTableFrame) {
