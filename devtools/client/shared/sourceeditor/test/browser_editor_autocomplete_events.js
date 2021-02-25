@@ -13,7 +13,7 @@ add_task(async function() {
 });
 
 async function runTests() {
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TabTargetFactory.forTab(gBrowser.selectedTab);
   await target.attach();
   const inspector = await target.getFront("inspector");
   const walker = inspector.walker;

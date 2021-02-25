@@ -6,7 +6,9 @@
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { TargetFactory } = require("devtools/client/framework/target");
+const {
+  TabTargetFactory,
+} = require("devtools/client/framework/tab-target-factory");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   BrowserTestUtils,
@@ -53,7 +55,7 @@ SimpleTest.registerCleanupFunction(function() {
 async function getTargetForSelectedTab(gBrowser) {
   const selectedTab = gBrowser.selectedTab;
   await BrowserTestUtils.browserLoaded(selectedTab.linkedBrowser);
-  return TargetFactory.forTab(selectedTab);
+  return TabTargetFactory.forTab(selectedTab);
 }
 
 /**

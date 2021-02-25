@@ -19,7 +19,7 @@ add_task(async function() {
     type: { target: true },
   });
 
-  const target = await TargetFactory.forTab(tab);
+  const target = await TabTargetFactory.forTab(tab);
   await target.attach();
   const { client } = target;
   const form = target.targetForm;
