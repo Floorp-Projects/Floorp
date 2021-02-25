@@ -19,7 +19,8 @@ add_task(async function() {
   // On enumerating cache storages, CacheStorage::Keys would throw a
   // DOM security exception. We'd like to verify storage panel still work in
   // this case.
-  await openStoragePanel({ tab: win.gBrowser.selectedTab });
+  const target = await TargetFactory.forTab(win.gBrowser.selectedTab);
+  await openStoragePanel(null, target);
 
   const cacheItemId = ["Cache", "http://test2.example.org"];
 

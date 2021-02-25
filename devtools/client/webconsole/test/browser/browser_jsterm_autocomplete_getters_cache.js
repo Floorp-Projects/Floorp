@@ -36,7 +36,8 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   let tooltip = await setInputValueForGetterConfirmDialog(
     toolbox,

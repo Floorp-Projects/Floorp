@@ -18,7 +18,8 @@ add_task(async function() {
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
 
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   const jstermComplete = value => setInputValueForAutocompletion(hud, value);
 

@@ -118,7 +118,8 @@ function onMessage({ data }) {
 }
 
 async function connectAndAttachTab(tab) {
-  const target = await createAndAttachTargetForTab(tab);
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
   const actorID = target.actorID;
   target.on("tabNavigated", function(packet) {
     assertEvent("tabNavigated", packet);

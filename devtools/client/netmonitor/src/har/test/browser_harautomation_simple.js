@@ -18,9 +18,8 @@ add_task(async function() {
   await pushPref("devtools.netmonitor.har.defaultFileName", "test_filename");
 
   const tab = await addTab(SIMPLE_URL);
-  const toolbox = await gDevTools.showToolboxForTab(tab, {
-    toolId: "inspector",
-  });
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
 
   tab.linkedBrowser.reload();
 

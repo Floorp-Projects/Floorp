@@ -15,7 +15,8 @@ add_task(async function() {
   await runTests();
 
   info("Close Toolbox");
-  await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  await gDevTools.closeToolbox(target);
 });
 
 async function runTests() {

@@ -51,9 +51,8 @@ add_task(async function task() {
   info("Network message found.");
 
   // Test that the request appears in the network panel.
-  const toolbox = await gDevTools.showToolboxForTab(currentTab, {
-    toolId: "netmonitor",
-  });
+  const target = await TargetFactory.forTab(currentTab);
+  const toolbox = await gDevTools.showToolbox(target, "netmonitor");
   info("Network panel is open.");
 
   await testNetmonitor(toolbox);

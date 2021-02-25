@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { gDevTools } = require("devtools/client/framework/devtools");
+
 const {
   TOGGLE_REQUEST_FILTER_TYPE,
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
@@ -27,7 +29,7 @@ function eventTelemetryMiddleware(connector, telemetry) {
   return store => next => action => {
     const oldState = store.getState();
     const res = next(action);
-    const toolbox = connector.getToolbox();
+    const toolbox = gDevTools.getToolbox(connector.getTabTarget());
     if (!toolbox) {
       return res;
     }

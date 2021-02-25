@@ -17,10 +17,12 @@ add_task(async function() {
   // This test assume that zoom value will be default value. i.e. x1.0.
   Services.prefs.setCharPref("devtools.toolbox.zoomValue", "1.0");
   await addTab("about:blank");
-  const toolbox = await gDevTools.showToolboxForTab(gBrowser.selectedTab, {
-    toolId: "styleeditor",
-    hostType: Toolbox.HostType.BOTTOM,
-  });
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(
+    target,
+    "styleeditor",
+    Toolbox.HostType.BOTTOM
+  );
 
   info("testing zoom keys");
 

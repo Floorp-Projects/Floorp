@@ -73,6 +73,7 @@ add_task(async function() {
     );
   }
 
-  await gDevTools.closeToolboxForTab(tab);
+  const target = await TargetFactory.forTab(tab);
+  await gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });

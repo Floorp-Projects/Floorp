@@ -5,6 +5,7 @@
 /* globals dump */
 
 const { gDevTools } = require("devtools/client/framework/devtools");
+const { TargetFactory } = require("devtools/client/framework/target");
 const {
   addTab,
   removeTab,
@@ -27,11 +28,12 @@ exports.initPanelInNewTab = async function({ tool, url, win }, options = {}) {
 exports.initPanelInTab = async function({ tool, tab }) {
   dump(`Initializing a ${tool} panel.\n`);
 
+  const target = await TargetFactory.forTab(tab);
+
   // Open a toolbox and wait for the connection to the performance actors
   // to be opened. This is necessary because of the WebConsole's
   // `profile` and `profileEnd` methods.
-  const toolbox = await gDevTools.showToolboxForTab(tab, { toolId: tool });
-  const target = toolbox.target;
+  const toolbox = await gDevTools.showToolbox(target, tool);
   // ensure that the performance front is ready
   await target.getFront("performance");
 

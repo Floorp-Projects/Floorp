@@ -22,7 +22,8 @@ var WORKER2_URL = "code_listworkers-worker2.js";
 
 add_task(async function test() {
   const tab = await addTab(TAB_URL);
-  const target = await createAndAttachTargetForTab(tab);
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
 
   let { workers } = await listWorkers(target);
   is(workers.length, 0);
