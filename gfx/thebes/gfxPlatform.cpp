@@ -1203,6 +1203,18 @@ bool gfxPlatform::IsHeadless() {
 bool gfxPlatform::UseWebRender() { return gfx::gfxVars::UseWebRender(); }
 
 /* static */
+bool gfxPlatform::UseRemoteCanvas() {
+  return XRE_IsContentProcess() && gfx::gfxVars::RemoteCanvasEnabled();
+}
+
+/* static */
+bool gfxPlatform::IsBackendAccelerated(
+    const mozilla::gfx::BackendType aBackendType) {
+  return aBackendType == BackendType::DIRECT2D ||
+         aBackendType == BackendType::DIRECT2D1_1;
+}
+
+/* static */
 bool gfxPlatform::CanMigrateMacGPUs() {
   int32_t pMigration = StaticPrefs::gfx_compositor_gpu_migration();
 
@@ -1670,10 +1682,17 @@ already_AddRefed<DrawTarget> gfxPlatform::CreateDrawTargetForBackend(
 already_AddRefed<DrawTarget> gfxPlatform::CreateOffscreenCanvasDrawTarget(
     const IntSize& aSize, SurfaceFormat aFormat) {
   NS_ASSERTION(mPreferredCanvasBackend != BackendType::NONE, "No backend.");
-  RefPtr<DrawTarget> target =
-      CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
-  if (target || mFallbackCanvasBackend == BackendType::NONE) {
-    return target.forget();
+
+  // If we are using remote canvas we don't want to use acceleration in
+  // canvas DrawTargets we are not remoting, so we always use the fallback
+  // software one.
+  if (!gfxPlatform::UseRemoteCanvas() ||
+      !gfxPlatform::IsBackendAccelerated(mPreferredCanvasBackend)) {
+    RefPtr<DrawTarget> target =
+        CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
+    if (target || mFallbackCanvasBackend == BackendType::NONE) {
+      return target.forget();
+    }
   }
 
 #ifdef XP_WIN
