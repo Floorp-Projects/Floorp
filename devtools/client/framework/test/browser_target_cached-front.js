@@ -5,7 +5,7 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TabTargetFactory.forTab(gBrowser.selectedTab);
   await target.attach();
 
   info("Cached front when getFront has not been called");

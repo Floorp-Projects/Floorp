@@ -15,7 +15,7 @@ const WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function() {
   const tab = await addTab(TAB_URL);
-  const target = await TargetFactory.forTab(tab);
+  const target = await TabTargetFactory.forTab(tab);
   await target.attach();
 
   await listWorkers(target);
