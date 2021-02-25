@@ -602,7 +602,7 @@ const tests = [
   },
 
   async function(win) {
-    info("Paste & Go something.");
+    info("Paste and Go something.");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await SimpleTest.promiseClipboardChange("www.example.com", () => {
       clipboardHelper.copyString("www.example.com");
