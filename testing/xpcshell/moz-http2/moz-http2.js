@@ -243,6 +243,62 @@ function handleRequest(req, res) {
   // PushService tests.
   var pushPushServer1, pushPushServer2, pushPushServer3, pushPushServer4;
 
+  function createCNameContent() {
+    let rContent;
+    if (0 == cname_confirm) {
+      // ... this sends a CNAME back to pointing-elsewhere.example.com
+      rContent = Buffer.from(
+        "00000100000100010000000005636E616D65076578616D706C6503636F6D0000050001C00C0005000100000037002012706F696E74696E672D656C73657768657265076578616D706C6503636F6D00",
+        "hex"
+      );
+      cname_confirm++;
+    } else {
+      // ... this sends an A 99.88.77.66 entry back for pointing-elsewhere.example.com
+      rContent = Buffer.from(
+        "00000100000100010000000012706F696E74696E672D656C73657768657265076578616D706C6503636F6D0000010001C00C0001000100000037000463584D42",
+        "hex"
+      );
+    }
+    return rContent;
+  }
+
+  function createCNameARecord() {
+    // test23 asks for cname-a.example.com
+    // this responds with a CNAME to here.example.com *and* an A record
+    // for here.example.com
+    let rContent;
+
+    rContent = Buffer.from(
+      "0000" +
+      "0100" +
+      "0001" + // QDCOUNT
+      "0002" + // ANCOUNT
+      "00000000" + // NSCOUNT + ARCOUNT
+      "07636E616D652d61" + // cname-a
+      "076578616D706C6503636F6D00" + // .example.com
+      "00010001" + // question type (A) + question class (IN)
+      // answer record 1
+      "C00C" + // name pointer to cname-a.example.com
+      "0005" + // type (CNAME)
+      "0001" + // class
+      "00000037" + // TTL
+      "0012" + // RDLENGTH
+      "0468657265" + // here
+      "076578616D706C6503636F6D00" + // .example.com
+      // answer record 2, the A entry for the CNAME above
+      "0468657265" + // here
+      "076578616D706C6503636F6D00" + // .example.com
+      "0001" + // type (A)
+      "0001" + // class
+      "00000037" + // TTL
+      "0004" + // RDLENGTH
+        "09080706", // IPv4 address
+      "hex"
+    );
+
+    return rContent;
+  }
+
   function responseType(packet, responseIP) {
     if (
       packet.questions.length > 0 &&
@@ -726,21 +782,8 @@ function handleRequest(req, res) {
   // for use with test_trr.js
   else if (u.pathname === "/dns-cname") {
     // asking for cname.example.com
-    let rContent;
-    if (0 == cname_confirm) {
-      // ... this sends a CNAME back to pointing-elsewhere.example.com
-      rContent = Buffer.from(
-        "00000100000100010000000005636E616D65076578616D706C6503636F6D0000050001C00C0005000100000037002012706F696E74696E672D656C73657768657265076578616D706C6503636F6D00",
-        "hex"
-      );
-      cname_confirm++;
-    } else {
-      // ... this sends an A 99.88.77.66 entry back for pointing-elsewhere.example.com
-      rContent = Buffer.from(
-        "00000100000100010000000012706F696E74696E672D656C73657768657265076578616D706C6503636F6D0000010001C00C0001000100000037000463584D42",
-        "hex"
-      );
-    }
+    let rContent = createCNameContent();
+
     res.setHeader("Content-Type", "application/dns-message");
     res.setHeader("Content-Length", rContent.length);
     res.writeHead(200);
@@ -982,6 +1025,10 @@ function handleRequest(req, res) {
       }
     }
 
+    if (u.query.noResponse) {
+      return;
+    }
+
     let payload = Buffer.from("");
 
     function emitResponse(response, requestPayload) {
@@ -1011,6 +1058,28 @@ function handleRequest(req, res) {
       payload = Buffer.concat([payload, chunk]);
     });
     req.on("end", function finishedData() {
+      if (u.query.httpError) {
+        res.writeHead(404);
+        res.end("Not Found");
+        return;
+      }
+
+      if (u.query.cname) {
+        odoh.decrypt_query(payload);
+        let rContent;
+        if (u.query.cname === "ARecord") {
+          rContent = createCNameARecord();
+        } else {
+          rContent = createCNameContent();
+        }
+        let encryptedResponse = odoh.create_response(rContent);
+        res.setHeader("Content-Type", "application/oblivious-dns-message");
+        res.setHeader("Content-Length", encryptedResponse.length);
+        res.writeHead(200);
+        res.write(encryptedResponse);
+        res.end("");
+        return;
+      }
       // parload is empty when we send redirect response.
       if (payload.length) {
         emitResponse(res, payload);
@@ -1114,38 +1183,7 @@ function handleRequest(req, res) {
     });
     return;
   } else if (u.pathname === "/dns-cname-a") {
-    // test23 asks for cname-a.example.com
-    // this responds with a CNAME to here.example.com *and* an A record
-    // for here.example.com
-    let rContent;
-
-    rContent = Buffer.from(
-      "0000" +
-      "0100" +
-      "0001" + // QDCOUNT
-      "0002" + // ANCOUNT
-      "00000000" + // NSCOUNT + ARCOUNT
-      "07636E616D652d61" + // cname-a
-      "076578616D706C6503636F6D00" + // .example.com
-      "00010001" + // question type (A) + question class (IN)
-      // answer record 1
-      "C00C" + // name pointer to cname-a.example.com
-      "0005" + // type (CNAME)
-      "0001" + // class
-      "00000037" + // TTL
-      "0012" + // RDLENGTH
-      "0468657265" + // here
-      "076578616D706C6503636F6D00" + // .example.com
-      // answer record 2, the A entry for the CNAME above
-      "0468657265" + // here
-      "076578616D706C6503636F6D00" + // .example.com
-      "0001" + // type (A)
-      "0001" + // class
-      "00000037" + // TTL
-      "0004" + // RDLENGTH
-        "09080706", // IPv4 address
-      "hex"
-    );
+    let rContent = createCNameARecord();
     res.setHeader("Content-Type", "application/dns-message");
     res.setHeader("Content-Length", rContent.length);
     res.writeHead(200);
