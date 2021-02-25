@@ -658,6 +658,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Test methods for decoder doctor.
   void SetFormatDiagnosticsReportForMimeType(const nsAString& aMimeType,
                                              DecoderDoctorReportType aType);
+  void SetDecodeError(const nsAString& aError, ErrorResult& aRv);
 
   // Synchronously, return the next video frame and mark the element unable to
   // participate in decode suspending.
