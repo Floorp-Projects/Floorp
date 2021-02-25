@@ -30,7 +30,7 @@ export default class ImportSummaryDialog extends HTMLElement {
       error: 0,
     };
     for (let loginRow of logins) {
-      if (loginRow.result.includes("error")) {
+      if (loginRow.result.indexOf("error") > -1) {
         report.error++;
       } else {
         report[loginRow.result]++;
