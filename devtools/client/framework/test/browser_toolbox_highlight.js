@@ -15,12 +15,10 @@ function test() {
     const TOOL_ID_2 = "webconsole";
     await addTab(URL);
 
-    const target = await TargetFactory.forTab(gBrowser.selectedTab);
-    toolbox = await gDevTools.showToolbox(
-      target,
-      TOOL_ID_1,
-      Toolbox.HostType.BOTTOM
-    );
+    toolbox = await gDevTools.showToolboxForTab(gBrowser.selectedTab, {
+      toolId: TOOL_ID_1,
+      hostType: Toolbox.HostType.BOTTOM,
+    });
 
     // select tool 2
     await toolbox.selectTool(TOOL_ID_2);

@@ -16,21 +16,22 @@ add_task(async function() {
   await pushPref("devtools.debugger.features.inline-preview", false);
 
   const hud = await openNewTabAndConsole(TEST_URI);
+  const tab = gBrowser.selectedTab;
 
   info("Switch to the debugger");
   await openDebugger();
 
   info("Switch to the inspector");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.showToolbox(target, "inspector");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "inspector",
+  });
 
   info("Call firstCall() and wait for the debugger statement to be reached.");
-  const toolbox = gDevTools.getToolbox(target);
   const dbg = createDebuggerContext(toolbox);
   await pauseDebugger(dbg);
 
   info("Switch back to the console");
-  await gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolboxForTab(tab, { toolId: "webconsole" });
 
   info("Test logging and inspecting objects while on a breakpoint.");
   const message = await executeAndWaitForMessage(

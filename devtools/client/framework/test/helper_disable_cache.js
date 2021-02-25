@@ -36,10 +36,11 @@ var tabs = [
 
 async function initTab(tabX, startToolbox) {
   tabX.tab = await addTab(TEST_URI);
-  tabX.target = await TargetFactory.forTab(tabX.tab);
 
   if (startToolbox) {
-    tabX.toolbox = await gDevTools.showToolbox(tabX.target, "options");
+    tabX.toolbox = await gDevTools.showToolboxForTab(tabX.tab, {
+      toolId: "options",
+    });
   }
 }
 
@@ -119,7 +120,7 @@ function reloadTab(tabX) {
 }
 
 async function destroyTab(tabX) {
-  const toolbox = gDevTools.getToolbox(tabX.target);
+  const toolbox = await gDevTools.getToolboxForTab(tabX.tab);
 
   let onceDestroyed = promise.resolve();
   if (toolbox) {

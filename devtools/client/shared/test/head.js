@@ -134,8 +134,9 @@ const createHost = async function(
 async function openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
   for (let i = 0; i < nbOfTimes; i++) {
     info("Opening toolbox " + (i + 1));
-    const target = await TargetFactory.forTab(gBrowser.selectedTab);
-    const toolbox = await gDevTools.showToolbox(target, toolId);
+
+    const tab = gBrowser.selectedTab;
+    const toolbox = await gDevTools.showToolboxForTab(tab, { toolId });
 
     // We use a timeout to check the toolbox's active time
     await new Promise(resolve => setTimeout(resolve, usageTime));

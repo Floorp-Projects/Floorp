@@ -60,15 +60,16 @@ const DOCUMENT_SRC =
 const TEST_URI = "data:text/html;charset=utf-8," + DOCUMENT_SRC;
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox, testActor, tab } = await openInspectorForURL(
+    TEST_URI
+  );
 
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.showToolbox(target, "jsdebugger");
+  await gDevTools.showToolboxForTab(tab, { toolId: "jsdebugger" });
   const dbg = await createDebuggerContext(toolbox);
 
   await waitForPaused(dbg);
 
-  await gDevTools.showToolbox(target, "inspector");
+  await gDevTools.showToolboxForTab(tab, { toolId: "inspector" });
 
   // Needed to get this test to pass consistently :(
   await waitForTime(1000);

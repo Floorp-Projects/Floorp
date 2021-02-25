@@ -22,8 +22,9 @@ add_task(async function() {
 });
 
 async function checkConflictWithContentPageMenu(tab) {
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "inspector");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "inspector",
+  });
 
   info("Check that the content page context menu works as expected");
   const contextMenu = document.getElementById("contentAreaContextMenu");

@@ -17,10 +17,9 @@ add_task(async function() {
   await pushPref(FRAME_BUTTON_PREF, false);
 
   const tab = await addTab(TEST_URL);
-  const target = await TargetFactory.forTab(tab);
 
   info("Open the toolbox on the Options panel");
-  const toolbox = await gDevTools.showToolbox(target, "options");
+  const toolbox = await gDevTools.showToolboxForTab(tab, { toolId: "options" });
   const doc = toolbox.doc;
 
   const optionsPanel = toolbox.getCurrentPanel();

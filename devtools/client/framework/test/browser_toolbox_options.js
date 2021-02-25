@@ -22,8 +22,7 @@ add_task(async function() {
     "and unregistering tools";
   registerNewTool();
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
-  toolbox = await gDevTools.showToolbox(target);
+  toolbox = await gDevTools.showToolboxForTab(tab);
 
   doc = toolbox.doc;
   await registerNewPerToolboxTool();

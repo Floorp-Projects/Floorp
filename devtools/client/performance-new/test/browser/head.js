@@ -467,14 +467,14 @@ async function withDevToolsPanel(callback) {
   });
 
   const { gDevTools } = require("devtools/client/framework/devtools");
-  const { TargetFactory } = require("devtools/client/framework/target");
 
   info("Create a new about:blank tab.");
   const tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   info("Begin to open the DevTools and the performance-new panel.");
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "performance");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "performance",
+  });
 
   const { document } = toolbox.getCurrentPanel().panelWin;
 
