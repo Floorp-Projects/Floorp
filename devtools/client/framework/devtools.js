@@ -695,28 +695,16 @@ DevTools.prototype = {
   },
 
   /**
-   * Wrapper on TargetFactory.forTab, constructs a Target for the provided tab.
-   *
-   * @param  {XULTab} tab
-   *         The tab to use in creating a new target.
-   *
-   * @return {Target} A target object
-   */
-  getTargetForTab: function(tab) {
-    return TargetFactory.forTab(tab);
-  },
-
-  /**
    * Retrieve an existing toolbox for the provided tab if it was created before.
    * Returns null otherwise.
    */
   async getToolboxForTab(tab) {
-    const target = await this.getTargetForTab(tab);
+    const target = await TargetFactory.forTab(tab);
     return this._toolboxes.get(target);
   },
 
   async closeToolboxForTab(tab) {
-    const target = await this.getTargetForTab(tab);
+    const target = await TargetFactory.forTab(tab);
     return this.closeToolbox(target);
   },
 
