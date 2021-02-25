@@ -486,6 +486,22 @@ static bool FormatsListContains(const nsAString& aList,
   return StringListContains(aList, CleanItemForFormatsList(aItem));
 }
 
+static const char* GetLinkStatusLibraryName() {
+#if defined(MOZ_FFMPEG)
+  return FFmpegRuntimeLinker::LinkStatusLibraryName();
+#else
+  return "no library (ffmpeg disabled during build)";
+#endif
+}
+
+static const char* GetLinkStatusString() {
+#if defined(MOZ_FFMPEG)
+  return FFmpegRuntimeLinker::LinkStatusString();
+#else
+  return "no link (ffmpeg disabled during build)";
+#endif
+}
+
 void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -497,6 +513,7 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
 #endif
 #if defined(MOZ_FFMPEG)
   nsAutoString formatsRequiringFFMpeg;
+  nsAutoString formatsLibAVCodecUnsupported;
 #endif
   nsAutoString supportedKeySystems;
   nsAutoString unsupportedKeySystems;
@@ -525,8 +542,11 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
           }
 #endif
 #if defined(MOZ_FFMPEG)
-          if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
+          if (diag.mDecoderDoctorDiagnostics.DidFFmpegNotFound()) {
             AppendToFormatsList(formatsRequiringFFMpeg,
+                                diag.mDecoderDoctorDiagnostics.Format());
+          } else if (diag.mDecoderDoctorDiagnostics.IsLibAVCodecUnsupported()) {
+            AppendToFormatsList(formatsLibAVCodecUnsupported,
                                 diag.mDecoderDoctorDiagnostics.Format());
           }
 #endif
@@ -665,40 +685,30 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
 #endif
 #if defined(MOZ_FFMPEG)
       if (!formatsRequiringFFMpeg.IsEmpty()) {
-        switch (FFmpegRuntimeLinker::LinkStatusCode()) {
-          case FFmpegRuntimeLinker::LinkStatus_INVALID_FFMPEG_CANDIDATE:
-          case FFmpegRuntimeLinker::LinkStatus_UNUSABLE_LIBAV57:
-          case FFmpegRuntimeLinker::LinkStatus_INVALID_LIBAV_CANDIDATE:
-          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_FFMPEG:
-          case FFmpegRuntimeLinker::LinkStatus_OBSOLETE_LIBAV:
-          case FFmpegRuntimeLinker::LinkStatus_INVALID_CANDIDATE:
-            DD_INFO(
-                "DecoderDoctorDocumentWatcher[%p, "
-                "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
-                "Cannot play media because of unsupported %s (Reason: %s)",
-                this, mDocument,
-                NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
-                FFmpegRuntimeLinker::LinkStatusLibraryName(),
-                FFmpegRuntimeLinker::LinkStatusString());
-            ReportAnalysis(mDocument, sUnsupportedLibavcodec, false,
-                           formatsRequiringFFMpeg);
-            return;
-          case FFmpegRuntimeLinker::LinkStatus_INIT:
-            MOZ_FALLTHROUGH_ASSERT("Unexpected LinkStatus_INIT");
-          case FFmpegRuntimeLinker::LinkStatus_SUCCEEDED:
-            MOZ_FALLTHROUGH_ASSERT("Unexpected LinkStatus_SUCCEEDED");
-          case FFmpegRuntimeLinker::LinkStatus_NOT_FOUND:
-            DD_INFO(
-                "DecoderDoctorDocumentWatcher[%p, "
-                "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
-                "Cannot play media because ffmpeg was not found (Reason: %s)",
-                this, mDocument,
-                NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
-                FFmpegRuntimeLinker::LinkStatusString());
-            ReportAnalysis(mDocument, sMediaFFMpegNotFound, false,
-                           formatsRequiringFFMpeg);
-            return;
-        }
+        MOZ_DIAGNOSTIC_ASSERT(formatsLibAVCodecUnsupported.IsEmpty());
+        DD_INFO(
+            "DecoderDoctorDocumentWatcher[%p, "
+            "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
+            "Cannot play media because ffmpeg was not found (Reason: %s)",
+            this, mDocument,
+            NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
+            GetLinkStatusString());
+        ReportAnalysis(mDocument, sMediaFFMpegNotFound, false,
+                       formatsRequiringFFMpeg);
+        return;
+      }
+      if (!formatsLibAVCodecUnsupported.IsEmpty()) {
+        MOZ_DIAGNOSTIC_ASSERT(formatsRequiringFFMpeg.IsEmpty());
+        DD_INFO(
+            "DecoderDoctorDocumentWatcher[%p, "
+            "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
+            "Cannot play media because of unsupported %s (Reason: %s)",
+            this, mDocument,
+            NS_ConvertUTF16toUTF8(formatsLibAVCodecUnsupported).get(),
+            GetLinkStatusLibraryName(), GetLinkStatusString());
+        ReportAnalysis(mDocument, sUnsupportedLibavcodec, false,
+                       formatsLibAVCodecUnsupported);
+        return;
       }
 #endif
       DD_INFO(
@@ -1111,8 +1121,8 @@ nsCString DecoderDoctorDiagnostics::GetDescription() const {
       if (mFlags.contains(Flags::WMFFailedToLoad)) {
         s += ", Windows platform decoder failed to load";
       }
-      if (mFlags.contains(Flags::FFmpegFailedToLoad)) {
-        s += ", Linux platform decoder failed to load";
+      if (mFlags.contains(Flags::FFmpegNotFound)) {
+        s += ", Linux platform decoder not found";
       }
       if (mFlags.contains(Flags::GMPPDMFailedToStartup)) {
         s += ", GMP PDM failed to startup";
