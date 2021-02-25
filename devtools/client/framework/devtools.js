@@ -707,6 +707,20 @@ DevTools.prototype = {
   },
 
   /**
+   * Retrieve an existing toolbox for the provided tab if it was created before.
+   * Returns null otherwise.
+   */
+  async getToolboxForTab(tab) {
+    const target = await this.getTargetForTab(tab);
+    return this._toolboxes.get(target);
+  },
+
+  async closeToolboxForTab(tab) {
+    const target = await this.getTargetForTab(tab);
+    return this.closeToolbox(target);
+  },
+
+  /**
    * Compatibility layer for web-extensions. Used by DevToolsShim for
    * browser/components/extensions/ext-devtools.js
    *
