@@ -54,6 +54,7 @@ const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 const TOGGLE_TESTING_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.testing";
+
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
 const TOGGLE_HIDING_TIMEOUT_MS = 2000;
 
@@ -441,7 +442,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     // and run our callbacks as soon as possible during the next idle
     // period.
     if (!oldVisibleVideosCount && state.visibleVideosCount) {
-      if (this.toggleTesting) {
+      if (this.toggleTesting || !this.contentWindow) {
         this.beginTrackingMouseOverVideos();
       } else {
         this.contentWindow.requestIdleCallback(() => {
@@ -449,7 +450,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         });
       }
     } else if (oldVisibleVideosCount && !state.visibleVideosCount) {
-      if (this.toggleTesting) {
+      if (this.toggleTesting || !this.contentWindow) {
         this.stopTrackingMouseOverVideos();
       } else {
         this.contentWindow.requestIdleCallback(() => {
@@ -491,7 +492,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
   removeMouseButtonListeners() {
     // This can be null when closing the tab, but the event
     // listeners should be removed in that case already.
-    if (!this.contentWindow.windowRoot) {
+    if (!this.contentWindow || !this.contentWindow.windowRoot) {
       return;
     }
 
@@ -568,12 +569,14 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       mozSystemGroup: true,
       capture: true,
     });
-    this.contentWindow.removeEventListener("pageshow", this, {
-      mozSystemGroup: true,
-    });
-    this.contentWindow.removeEventListener("pagehide", this, {
-      mozSystemGroup: true,
-    });
+    if (this.contentWindow) {
+      this.contentWindow.removeEventListener("pageshow", this, {
+        mozSystemGroup: true,
+      });
+      this.contentWindow.removeEventListener("pagehide", this, {
+        mozSystemGroup: true,
+      });
+    }
     this.removeMouseButtonListeners();
     let oldOverVideo = this.getWeakOverVideo();
     if (oldOverVideo) {
