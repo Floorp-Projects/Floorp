@@ -221,6 +221,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">了解更多</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">搜尋 %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">從網址列直接搜尋</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">開新 Firefox 分頁</string>

@@ -218,6 +218,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Daha fazla bilgi al</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s ile ara</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Doğrudan adres çubuğundan arama yapın</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Yeni Firefox sekmesi aç</string>
