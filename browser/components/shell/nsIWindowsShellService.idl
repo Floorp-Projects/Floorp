@@ -57,18 +57,23 @@ interface nsIWindowsShellService : nsISupports
   void checkPinCurrentAppToTaskbar();
 
   /*
-   * Search for the current executable among taskbar pins, return true if found
+   * Search for the current executable among taskbar pins
    *
-   * NOTE: This method probably shouldn't be used on the main thread, it
-   * performs blocking disk I/O.
+   * NOTE: Can only be run on the main thread, but the actual work occurs on a
+   * background thread.
    *
    * NOTE: It is possible for the check to fail even when a taskbar pin refers
    * to this executable, if the paths differ due to e.g. symlinks.
    * It is also possible for the check to succeed with a shortcut that doesn't
    * actually appear on the taskbar.
    * These cases should be rare.
+   *
+   * @return Promise that always resolves, true if pinned, false otherwise
+   * @throws NS_ERROR_NOT_SAME_THREAD if not run on the main thread
+   *
    */
-  boolean isCurrentAppPinnedToTaskbar();
+  [implicit_jscontext]
+  Promise isCurrentAppPinnedToTaskbarAsync();
 
   /*
    * Determine where a given shortcut likely appears in the shell.
