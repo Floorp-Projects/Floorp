@@ -458,8 +458,27 @@ void nsXULTooltipListener::LaunchTooltip() {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
     nsCOMPtr<nsIContent> target = do_QueryReferent(mTargetNode);
-    pm->ShowTooltipAtScreen(currentTooltip, target, mMouseScreenX,
-                            mMouseScreenY);
+    nsAutoString position;
+    if (!target->AsElement()->Closest("treechildren"_ns, IgnoreErrors()) &&
+        !target->AsElement()->Closest("tree"_ns, IgnoreErrors())) {
+      nsAutoString closest;
+      currentTooltip->GetAttr(nsGkAtoms::anchortoclosest, closest);
+      if (!closest.IsEmpty()) {
+        target = target->AsElement()->Closest(NS_ConvertUTF16toUTF8(closest),
+                                              IgnoreErrors());
+        if (!target) {
+          target = do_QueryReferent(mTargetNode);
+        }
+      }
+      currentTooltip->GetAttr(nsGkAtoms::position, position);
+    }
+
+    if (position.IsEmpty()) {
+      pm->ShowTooltipAtScreen(currentTooltip, target, mMouseScreenX,
+                              mMouseScreenY);
+    } else {
+      pm->ShowTooltipAtPosition(currentTooltip, target, position);
+    }
 
     // Clear the current tooltip if the popup was not opened successfully.
     if (!pm->IsPopupOpen(currentTooltip)) mCurrentTooltip = nullptr;

@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* This stylesheet is not loaded by the sidebars since it relies
+   on extra theming and proton variables that would need to be
+   injected into the sidebar. */
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+.places-tooltip {
+  appearance: none;
+  background: transparent;
+  border: none;
+  /* The tooltip has internal padding to allow for the
+     box-shadow to not get clipped. The negative margin
+     here keeps the tooltip aligned horizontally with the
+     anchor, and should match the padding-inline-start of
+     the tooltip. */
+  padding: var(--proton-shadow-blur-radius);
+  margin-inline-start: calc(-1 * var(--proton-shadow-blur-radius));
+  margin-block-start: calc(-1 * var(--proton-shadow-blur-radius));
+}
+
+.places-tooltip-box {
+  padding: 3px 5px;
+  background: var(--arrowpanel-background);
+  color: var(--arrowpanel-color);
+  border: 1px solid transparent;
+  border-radius: var(--proton-tab-radius);
+  box-shadow: 0 2px var(--proton-shadow-blur-radius) rgba(58,57,68,.2);
+}
+
+.places-tooltip-title {
+  font-weight: 600;
+  font-size: 1.1em;
+}
+
+.places-tooltip-uri {
+  color: var(--panel-description-color);
+}
+} /*** END proton ***/

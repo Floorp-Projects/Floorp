@@ -12,11 +12,14 @@
 tooltip {
   appearance: auto;
   -moz-default-appearance: tooltip;
-  margin-top: 21px;
   border: 1px solid InfoText;
   padding: 2px 3px;
   max-width: 40em;
   background-color: InfoBackground;
   color: InfoText;
   font: message-box;
+}
+
+tooltip:not([position]) {
+  margin-top: 21px;
 }

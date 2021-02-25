@@ -460,6 +460,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                              bool aAttributesOverride,
                              mozilla::dom::Event* aTriggerEvent);
 
+  void ShowTooltipAtPosition(nsIContent* aPopup, nsIContent* aTriggerContent,
+                             const nsAString& aPosition);
+
   /**
    * Open a tooltip at a specific screen position specified by aXPos and aYPos,
    * measured in CSS pixels.
