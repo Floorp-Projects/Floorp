@@ -3539,20 +3539,15 @@
   value: @IS_ANDROID@
   mirror: always
 
-# The following four prefs control the maximum script run time before slow
+# The following three prefs control the maximum script run time before slow
 # script warning.
+
+# Controls the time that a content script can run before showing a
+# notification, *assuming* the user is trying to interact with a tab which is
+# being hung by the running script.
 - name: dom.max_script_run_time
   type: int32_t
   value: 10
-  mirror: always
-
-- name: dom.max_script_run_time_without_important_user_input
-  type: int32_t
-#ifdef NIGHTLY_BUILD
-  value: 20
-#else
-  value: 10
-#endif
   mirror: always
 
 - name: dom.max_chrome_script_run_time
