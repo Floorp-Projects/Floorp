@@ -661,7 +661,7 @@ static MOZ_ALWAYS_INLINE bool CallResolveOp(
 }
 
 template <AllowGC allowGC>
-static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
+static MOZ_ALWAYS_INLINE bool NativeLookupOwnPropertyInline(
     JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
     typename MaybeRooted<jsid, allowGC>::HandleType id,
     typename MaybeRooted<PropertyResult, allowGC>::MutableHandleType propp) {
@@ -721,8 +721,8 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
 }
 
 /*
- * Simplified version of LookupOwnPropertyInline that doesn't call resolve
- * hooks.
+ * Simplified version of NativeLookupOwnPropertyInline that doesn't call
+ * resolve hooks.
  */
 [[nodiscard]] static inline bool NativeLookupOwnPropertyNoResolve(
     JSContext* cx, NativeObject* obj, jsid id, PropertyResult* result) {
@@ -761,7 +761,7 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
 }
 
 template <AllowGC allowGC>
-static MOZ_ALWAYS_INLINE bool LookupPropertyInline(
+static MOZ_ALWAYS_INLINE bool NativeLookupPropertyInline(
     JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
     typename MaybeRooted<jsid, allowGC>::HandleType id,
     typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
@@ -770,7 +770,7 @@ static MOZ_ALWAYS_INLINE bool LookupPropertyInline(
   typename MaybeRooted<NativeObject*, allowGC>::RootType current(cx, obj);
 
   while (true) {
-    if (!LookupOwnPropertyInline<allowGC>(cx, current, id, propp)) {
+    if (!NativeLookupOwnPropertyInline<allowGC>(cx, current, id, propp)) {
       return false;
     }
     if (propp.isFound()) {

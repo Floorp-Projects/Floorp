@@ -1156,7 +1156,7 @@ bool js::NativeLookupOwnProperty(
     JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
     typename MaybeRooted<jsid, allowGC>::HandleType id,
     typename MaybeRooted<PropertyResult, allowGC>::MutableHandleType propp) {
-  return LookupOwnPropertyInline<allowGC>(cx, obj, id, propp);
+  return NativeLookupOwnPropertyInline<allowGC>(cx, obj, id, propp);
 }
 
 template bool js::NativeLookupOwnProperty<CanGC>(
@@ -1986,7 +1986,7 @@ bool js::NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
   // 7.a. below.
   for (;;) {
     // Steps 2-3.
-    if (!LookupOwnPropertyInline<CanGC>(cx, pobj, id, &prop)) {
+    if (!NativeLookupOwnPropertyInline<CanGC>(cx, pobj, id, &prop)) {
       return false;
     }
 
@@ -2000,8 +2000,8 @@ bool js::NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     JSObject* proto = pobj->staticPrototype();
 
     // Step 8.
-    // As a side-effect of LookupOwnPropertyInline, we may determine that a
-    // property is not found and the proto chain should not be searched. This
+    // As a side-effect of NativeLookupOwnPropertyInline, we may determine that
+    // a property is not found and the proto chain should not be searched. This
     // can occur for:
     //  - Out-of-range numeric properties of a TypedArrayObject
     //  - Recursive resolve hooks (which is expected when they try to set the
@@ -2257,7 +2257,7 @@ static MOZ_ALWAYS_INLINE bool NativeGetPropertyInline(
   // 4.d below.
   for (;;) {
     // Steps 2-3.
-    if (!LookupOwnPropertyInline<allowGC>(cx, pobj, id, &prop)) {
+    if (!NativeLookupOwnPropertyInline<allowGC>(cx, pobj, id, &prop)) {
       return false;
     }
 
@@ -2641,7 +2641,7 @@ bool js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
   // also reported at <https://github.com/tc39/ecma262/issues/1541>.
   for (;;) {
     // Steps 2-3.
-    if (!LookupOwnPropertyInline<CanGC>(cx, pobj, id, &prop)) {
+    if (!NativeLookupOwnPropertyInline<CanGC>(cx, pobj, id, &prop)) {
       return false;
     }
 
@@ -2651,8 +2651,8 @@ bool js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     }
 
     // Steps 4.a-b.
-    // As a side-effect of LookupOwnPropertyInline, we may determine that a
-    // property is not found and the proto chain should not be searched. This
+    // As a side-effect of NativeLookupOwnPropertyInline, we may determine that
+    // a property is not found and the proto chain should not be searched. This
     // can occur for:
     //  - Out-of-range numeric properties of a TypedArrayObject
     //  - Recursive resolve hooks (which is expected when they try to set the

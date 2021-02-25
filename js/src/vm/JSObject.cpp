@@ -1969,8 +1969,8 @@ bool js::LookupProperty(JSContext* cx, HandleObject obj, js::HandleId id,
   if (LookupPropertyOp op = obj->getOpsLookupProperty()) {
     return op(cx, obj, id, objp, propp);
   }
-  return LookupPropertyInline<CanGC>(cx, obj.as<NativeObject>(), id, objp,
-                                     propp);
+  return NativeLookupPropertyInline<CanGC>(cx, obj.as<NativeObject>(), id, objp,
+                                           propp);
 }
 
 bool js::LookupName(JSContext* cx, HandlePropertyName name,
@@ -2006,8 +2006,8 @@ bool js::LookupNameNoGC(JSContext* cx, PropertyName* name, JSObject* envChain,
     if (env->getOpsLookupProperty()) {
       return false;
     }
-    if (!LookupPropertyInline<NoGC>(cx, &env->as<NativeObject>(),
-                                    NameToId(name), pobjp, propp)) {
+    if (!NativeLookupPropertyInline<NoGC>(cx, &env->as<NativeObject>(),
+                                          NameToId(name), pobjp, propp)) {
       return false;
     }
     if (propp->isFound()) {
