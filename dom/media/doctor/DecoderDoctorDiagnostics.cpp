@@ -254,7 +254,7 @@ static const NotificationAndReportStringId sMediaWMFNeeded = {
     dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
     "MediaWMFNeeded",
     {ReportParam::Formats}};
-static const NotificationAndReportStringId sMediaPlatformDecoderNotFound = {
+static const NotificationAndReportStringId sMediaFFMpegNotFound = {
     dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
     "MediaPlatformDecoderNotFound",
     {ReportParam::Formats}};
@@ -284,15 +284,12 @@ static const NotificationAndReportStringId sMediaDecodeWarning = {
     {ReportParam::ResourceURL, ReportParam::DecodeIssue}};
 
 static const NotificationAndReportStringId* const
-    sAllNotificationsAndReportStringIds[] = {&sMediaWidevineNoWMF,
-                                             &sMediaWMFNeeded,
-                                             &sMediaPlatformDecoderNotFound,
-                                             &sMediaCannotPlayNoDecoders,
-                                             &sMediaNoDecoders,
-                                             &sCannotInitializePulseAudio,
-                                             &sUnsupportedLibavcodec,
-                                             &sMediaDecodeError,
-                                             &sMediaDecodeWarning};
+    sAllNotificationsAndReportStringIds[] = {
+        &sMediaWidevineNoWMF,    &sMediaWMFNeeded,
+        &sMediaFFMpegNotFound,   &sMediaCannotPlayNoDecoders,
+        &sMediaNoDecoders,       &sCannotInitializePulseAudio,
+        &sUnsupportedLibavcodec, &sMediaDecodeError,
+        &sMediaDecodeWarning};
 
 // Create a webcompat-friendly description of a MediaResult.
 static nsString MediaResultDescription(const MediaResult& aResult,
@@ -694,12 +691,11 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
             DD_INFO(
                 "DecoderDoctorDocumentWatcher[%p, "
                 "doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> "
-                "Cannot play media because platform decoder was not found "
-                "(Reason: %s)",
+                "Cannot play media because ffmpeg was not found (Reason: %s)",
                 this, mDocument,
                 NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get(),
                 FFmpegRuntimeLinker::LinkStatusString());
-            ReportAnalysis(mDocument, sMediaPlatformDecoderNotFound, false,
+            ReportAnalysis(mDocument, sMediaFFMpegNotFound, false,
                            formatsRequiringFFMpeg);
             return;
         }
