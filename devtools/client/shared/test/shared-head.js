@@ -48,9 +48,7 @@ const { loader, require } = ChromeUtils.import(
 );
 
 const { gDevTools } = require("devtools/client/framework/devtools");
-const {
-  TabTargetFactory,
-} = require("devtools/client/framework/tab-target-factory");
+const { TargetFactory } = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // This is overridden in files that load shared-head via loadSubScript.
@@ -457,8 +455,8 @@ var refreshTab = async function(tab = gBrowser.selectedTab) {
  * @return a promise that resolves when the page has fully loaded.
  */
 async function navigateTo(uri, { isErrorPage = false } = {}) {
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
-  const target = toolbox.target;
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
 
   // If we're switching origins, we need to wait for the 'switched-target'
   // event to make sure everything is ready.
@@ -516,23 +514,6 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
 }
 
 /**
- * Create a Target for the provided tab and attach to it before resolving.
- * This should only be used for tests which don't involve the frontend or a
- * toolbox. Typically, retrieving the target and attaching to it should be
- * handled at framework level when a Toolbox is used.
- *
- * @param {XULTab} tab
- *        The tab for which a target should be created.
- * @return {BrowsingContextTargetFront} The attached target front.
- */
-async function createAndAttachTargetForTab(tab) {
-  info("Creating and attaching to a local tab target");
-  const target = await TabTargetFactory.forTab(tab);
-  await target.attach();
-  return target;
-}
-
-/**
  * Return a function, specific for each panel, in order
  * to wait for any update which may happen when reloading a page.
  */
@@ -586,8 +567,8 @@ var openInspectorForURL = async function(url, hostType) {
 };
 
 async function getActiveInspector() {
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
-  return toolbox.getPanel("inspector");
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  return gDevTools.getToolbox(target).getPanel("inspector");
 }
 
 /**
@@ -829,9 +810,10 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
   info("Opening the toolbox");
 
   let toolbox;
+  const target = await TargetFactory.forTab(tab);
 
   // Check if the toolbox is already loaded.
-  toolbox = await gDevTools.getToolboxForTab(tab);
+  toolbox = gDevTools.getToolbox(target);
   if (toolbox) {
     if (!toolId || (toolId && toolbox.getPanel(toolId))) {
       info("Toolbox is already opened");
@@ -840,7 +822,7 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
   }
 
   // If not, load it now.
-  toolbox = await gDevTools.showToolboxForTab(tab, { toolId, hostType });
+  toolbox = await gDevTools.showToolbox(target, toolId, hostType);
 
   // Make sure that the toolbox frame is focused.
   await new Promise(resolve => waitForFocus(resolve, toolbox.win));
@@ -870,8 +852,11 @@ var openNewTabAndToolbox = async function(url, toolId, hostType) {
  * closed.
  */
 var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
-  if (TabTargetFactory.isKnownTab(tab)) {
-    await gDevTools.closeToolboxForTab(tab);
+  if (TargetFactory.isKnownTab(tab)) {
+    const target = await TargetFactory.forTab(tab);
+    if (target) {
+      await gDevTools.closeToolbox(target);
+    }
   }
 
   await removeTab(tab);
@@ -889,38 +874,6 @@ var closeToolboxAndTab = async function(toolbox) {
   await toolbox.destroy();
   await removeTab(gBrowser.selectedTab);
 };
-
-/**
- * Retrieve all tool ids compatible with a target created for the provided tab.
- *
- * @param {XULTab} tab
- *        The tab for which we want to get the list of supported toolIds
- * @return {Array<String>} array of tool ids
- */
-async function getSupportedToolIds(tab) {
-  info("Getting the entire list of tools supported in this tab");
-
-  let shouldDestroyToolbox = false;
-
-  // Get the toolbox for this tab, or create one if needed.
-  let toolbox = await gDevTools.getToolboxForTab(tab);
-  if (!toolbox) {
-    toolbox = await gDevTools.showToolboxForTab(tab);
-    shouldDestroyToolbox = true;
-  }
-
-  const toolIds = gDevTools
-    .getToolDefinitionArray()
-    .filter(def => def.isTargetSupported(toolbox.target))
-    .map(def => def.id);
-
-  if (shouldDestroyToolbox) {
-    // Only close the toolbox if it was explicitly created here.
-    await toolbox.destroy();
-  }
-
-  return toolIds;
-}
 
 /**
  * Waits until a predicate returns true.
@@ -1050,7 +1003,8 @@ function lookupPath(obj, path) {
 }
 
 var closeToolbox = async function() {
-  await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  await gDevTools.closeToolbox(target);
 };
 
 /**

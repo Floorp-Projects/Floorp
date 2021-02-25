@@ -20,9 +20,9 @@ loader.lazyRequireGetter(
 const targets = new WeakMap();
 
 /**
- * Functions for creating (local) Tab Targets
+ * Functions for creating Targets
  */
-exports.TabTargetFactory = {
+exports.TargetFactory = {
   /**
    * Construct a Target. The target will be cached for each Tab so that we create only
    * one per tab.

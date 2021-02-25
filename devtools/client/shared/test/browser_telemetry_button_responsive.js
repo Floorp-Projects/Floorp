@@ -43,10 +43,8 @@ add_task(async function() {
   await addTab(TEST_URI);
   startTelemetry();
 
-  const tab = gBrowser.selectedTab;
-  const toolbox = await gDevTools.showToolboxForTab(tab, {
-    toolId: "inspector",
-  });
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   info("testing the responsivedesign button");

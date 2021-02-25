@@ -536,14 +536,6 @@ class Connector {
   }
 
   /**
-   * Getter that returns the current toolbox instance.
-   * @return {Toolbox} toolbox instance
-   */
-  getToolbox() {
-    return this.toolbox;
-  }
-
-  /**
    * Open a given source in Debugger
    * @param {string} sourceURL source url
    * @param {number} sourceLine source line number

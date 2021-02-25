@@ -47,7 +47,8 @@ const openAnimationInspector = async function() {
  * @return {Promise} that resolves when the toolbox has closed.
  */
 const closeAnimationInspector = async function() {
-  return gDevTools.closeToolboxForTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  return gDevTools.closeToolbox(target);
 };
 
 /**

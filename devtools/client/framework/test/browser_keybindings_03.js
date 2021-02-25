@@ -18,7 +18,8 @@ const L10N = new LocalizationHelper(
 add_task(async function() {
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
-  const toolbox = await gDevTools.showToolboxForTab(tab, "webconsole");
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "webconsole");
 
   const shortcut = L10N.getStr("toolbox.toggleHost.key");
 

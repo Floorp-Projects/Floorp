@@ -8,7 +8,9 @@ const TEST_URI = URL_ROOT + "doc_markup_view-original-source.html";
 // Test that event handler links go to the right debugger source when the
 // event handler is source mapped.
 add_task(async function() {
-  const { inspector, tab, toolbox } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
+
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
 
   const nodeFront = await getNodeFront("#foo", inspector);
   const container = getContainerForNodeFront(nodeFront, inspector);
@@ -33,7 +35,7 @@ add_task(async function() {
   );
   EventUtils.synthesizeMouse(debuggerIcon, 2, 2, {}, debuggerIcon.ownerGlobal);
 
-  await gDevTools.showToolboxForTab(tab, { toolId: "jsdebugger" });
+  await gDevTools.showToolbox(target, "jsdebugger");
   const dbg = toolbox.getPanel("jsdebugger");
 
   let source;

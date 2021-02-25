@@ -10,8 +10,9 @@ var toolbox, tab1, tab2;
 function test() {
   addTab(TEST_URL).then(async tab => {
     tab2 = BrowserTestUtils.addTab(gBrowser);
+    const target = await TargetFactory.forTab(tab);
     gDevTools
-      .showToolboxForTab(tab)
+      .showToolbox(target)
       .then(testBottomHost, console.error)
       .catch(console.error);
   });

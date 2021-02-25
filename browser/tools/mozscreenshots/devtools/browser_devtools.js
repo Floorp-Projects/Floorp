@@ -7,6 +7,7 @@
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { TargetFactory } = require("devtools/client/framework/target");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
 add_task(async function capture() {
@@ -17,5 +18,6 @@ add_task(async function capture() {
 
   await TestRunner.start(sets, "devtools");
 
-  await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
+  let target = await TargetFactory.forTab(gBrowser.selectedTab);
+  await gDevTools.closeToolbox(target);
 });

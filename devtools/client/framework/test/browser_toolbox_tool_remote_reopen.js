@@ -34,16 +34,19 @@ requestLongerTimeout(2);
  * which leads to the tools failing if they don't destroy their fronts.
  */
 
-function runTools(tab) {
+function runTools(target) {
   return (async function() {
+    const toolIds = gDevTools
+      .getToolDefinitionArray()
+      .filter(def => def.isTargetSupported(target))
+      .map(def => def.id);
+
     let toolbox;
-    const toolIds = await getSupportedToolIds(tab);
-    for (const toolId of toolIds) {
-      info("About to open " + toolId);
-      toolbox = await gDevTools.showToolboxForTab(tab, {
-        toolId,
-        hostType: "window",
-      });
+    for (let index = 0; index < toolIds.length; index++) {
+      const toolId = toolIds[index];
+
+      info("About to open " + index + "/" + toolId);
+      toolbox = await gDevTools.showToolbox(target, toolId, "window");
       ok(toolbox, "toolbox exists for " + toolId);
       is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
@@ -51,11 +54,7 @@ function runTools(tab) {
       ok(panel.isReady, toolId + " panel should be ready");
     }
 
-    const client = toolbox.target.client;
     await toolbox.destroy();
-
-    // We need to check the client after the toolbox destruction.
-    return client;
   })();
 }
 
@@ -64,7 +63,9 @@ function test() {
     toggleAllTools(true);
     const tab = await addTab("about:blank");
 
-    const client = await runTools(tab);
+    const target = await TargetFactory.forTab(tab);
+    const { client } = target;
+    await runTools(target);
 
     const rootFronts = [...client.mainRoot.fronts.values()];
 

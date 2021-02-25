@@ -8,9 +8,8 @@
 
 add_task(async function() {
   let tab = await addTab(URL_ROOT + "doc_viewsource.html");
-  let toolbox = await gDevTools.showToolboxForTab(tab, {
-    toolId: "styleeditor",
-  });
+  let target = await TargetFactory.forTab(tab);
+  let toolbox = await gDevTools.showToolbox(target, "styleeditor");
   let panel = toolbox.getPanel("styleeditor");
 
   is(panel.UI.editors.length, 1, "correct number of editors opened");
@@ -25,6 +24,6 @@ add_task(async function() {
   );
 
   await toolbox.destroy();
-  tab = toolbox = panel = null;
+  tab = target = toolbox = panel = null;
   gBrowser.removeCurrentTab();
 });

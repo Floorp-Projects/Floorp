@@ -15,15 +15,14 @@ const TEST_URI = `
 `;
 
 add_task(async function() {
-  const tab = await addTab(
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
-  );
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   info("Check that the flexbox highlighter can be displayed.");
   await checkFlexboxHighlighter();
 
   info("Close the toolbox before reloading the tab.");
-  await gDevTools.closeToolboxForTab(tab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  await gDevTools.closeToolbox(target);
 
   await refreshTab();
 

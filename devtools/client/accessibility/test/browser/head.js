@@ -148,9 +148,8 @@ async function addTestTab(url) {
  * @return a promise that is resolved once the panel is open.
  */
 async function initAccessibilityPanel(tab = gBrowser.selectedTab) {
-  const toolbox = await gDevTools.showToolboxForTab(tab, {
-    toolId: "accessibility",
-  });
+  const target = await TargetFactory.forTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "accessibility");
   return toolbox.getCurrentPanel();
 }
 
@@ -802,8 +801,11 @@ function addA11yPanelTestsTask(tests, uri, msg, options) {
  *         Resolves when the toolbox and tab have been destroyed and closed.
  */
 async function closeTabToolboxAccessibility(tab = gBrowser.selectedTab) {
-  if (TabTargetFactory.isKnownTab(tab)) {
-    await gDevTools.closeToolboxForTab(tab);
+  if (TargetFactory.isKnownTab(tab)) {
+    const target = await TargetFactory.forTab(tab);
+    if (target) {
+      await gDevTools.closeToolbox(target);
+    }
   }
 
   await shutdownAccessibility(gBrowser.getBrowserForTab(tab));

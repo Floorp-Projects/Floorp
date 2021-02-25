@@ -59,8 +59,7 @@ add_task(async function automaticallyBindTexbox() {
     },
   });
 
-  const tab = await addTab(URL);
-  const toolbox = await openToolboxForTab(tab, "inspector");
+  const toolbox = await openNewTabAndToolbox(URL, "inspector");
   const onLazyToolReady = toolbox.once(lazyToolId + "-ready");
   toolbox.selectTool(lazyToolId);
 
@@ -68,7 +67,7 @@ add_task(async function automaticallyBindTexbox() {
   await waitUntil(() => toolbox.currentToolId == lazyToolId);
 
   ok(!isPanelReady(toolbox, lazyToolId), "lazyTool should not be ready yet");
-  await gDevTools.showToolboxForTab(tab, { toolId: lazyToolId });
+  await gDevTools.showToolbox(toolbox.target, lazyToolId);
   ok(
     isPanelReady(toolbox, lazyToolId),
     "lazyTool should not ready after showToolbox"

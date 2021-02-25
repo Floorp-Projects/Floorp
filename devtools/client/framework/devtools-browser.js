@@ -16,7 +16,13 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
-// Load toolbox lazily as it needs gDevTools to be fully initialized
+// Load target and toolbox lazily as they need gDevTools to be fully initialized
+loader.lazyRequireGetter(
+  this,
+  "TargetFactory",
+  "devtools/client/framework/target",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "Toolbox",
@@ -98,16 +104,17 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
    */
   // used by browser-sets.inc, command
   async toggleToolboxCommand(gBrowser, startTime) {
-    const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+    const target = await TargetFactory.forTab(gBrowser.selectedTab);
+    const toolbox = gDevTools.getToolbox(target);
 
     // If a toolbox exists, using toggle from the Main window :
     // - should close a docked toolbox
     // - should focus a windowed toolbox
     const isDocked = toolbox && toolbox.hostType != Toolbox.HostType.WINDOW;
     if (isDocked) {
-      gDevTools.closeToolboxForTab(gBrowser.selectedTab);
+      gDevTools.closeToolbox(target);
     } else {
-      gDevTools.showToolboxForTab(gBrowser.selectedTab, { startTime });
+      gDevTools.showToolbox(target, null, null, null, startTime);
     }
   },
 
@@ -228,8 +235,8 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       return;
     }
 
-    const tab = win.gBrowser.selectedTab;
-    const toolbox = await gDevTools.getToolboxForTab(tab);
+    const target = await TargetFactory.forTab(win.gBrowser.selectedTab);
+    const toolbox = gDevTools.getToolbox(target);
     const toolDefinition = gDevTools.getToolDefinition(toolId);
 
     if (
@@ -252,11 +259,15 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       gDevTools.emit("select-tool-command", toolId);
     } else {
       gDevTools
-        .showToolboxForTab(tab, {
-          raise: !toolDefinition.preventRaisingOnKey,
-          startTime,
+        .showToolbox(
+          target,
           toolId,
-        })
+          null,
+          null,
+          startTime,
+          undefined,
+          !toolDefinition.preventRaisingOnKey
+        )
         .then(newToolbox => {
           newToolbox.fireCustomKey(toolId);
           gDevTools.emit("select-tool-command", toolId);
@@ -457,42 +468,42 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     );
 
     async function slowScriptDebugHandler(tab, callback) {
-      gDevTools
-        .showToolboxForTab(tab, { toolId: "jsdebugger" })
-        .then(toolbox => {
-          const threadFront = toolbox.threadFront;
+      const target = await TargetFactory.forTab(tab);
 
-          // Break in place, which means resuming the debuggee thread and pausing
-          // right before the next step happens.
-          switch (threadFront.state) {
-            case "paused":
-              // When the debugger is already paused.
+      gDevTools.showToolbox(target, "jsdebugger").then(toolbox => {
+        const threadFront = toolbox.threadFront;
+
+        // Break in place, which means resuming the debuggee thread and pausing
+        // right before the next step happens.
+        switch (threadFront.state) {
+          case "paused":
+            // When the debugger is already paused.
+            threadFront.resumeThenPause();
+            callback();
+            break;
+          case "attached":
+            // When the debugger is already open.
+            threadFront.interrupt().then(() => {
               threadFront.resumeThenPause();
               callback();
-              break;
-            case "attached":
-              // When the debugger is already open.
+            });
+            break;
+          case "resuming":
+            // The debugger is newly opened.
+            threadFront.once("resumed", () => {
               threadFront.interrupt().then(() => {
                 threadFront.resumeThenPause();
                 callback();
               });
-              break;
-            case "resuming":
-              // The debugger is newly opened.
-              threadFront.once("resumed", () => {
-                threadFront.interrupt().then(() => {
-                  threadFront.resumeThenPause();
-                  callback();
-                });
-              });
-              break;
-            default:
-              throw Error(
-                "invalid thread front state in slow script debug handler: " +
-                  threadFront.state
-              );
-          }
-        });
+            });
+            break;
+          default:
+            throw Error(
+              "invalid thread front state in slow script debug handler: " +
+                threadFront.state
+            );
+        }
+      });
     }
 
     debugService.activationHandler = function(window) {

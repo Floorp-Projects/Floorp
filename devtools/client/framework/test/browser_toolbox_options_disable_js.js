@@ -7,10 +7,11 @@ const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_js.html";
 
 add_task(async function() {
   const tab = await addTab(TEST_URI);
+  const target = await TargetFactory.forTab(tab);
 
   // Start on the options panel from where we will toggle the disabling javascript
   // option.
-  const toolbox = await gDevTools.showToolboxForTab(tab, { toolId: "options" });
+  const toolbox = await gDevTools.showToolbox(target, "options");
 
   await testJSEnabled();
   await testJSEnabledIframe();

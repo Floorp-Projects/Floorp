@@ -32,7 +32,8 @@ add_task(async function() {
 
 async function testToggle(key, modifiers) {
   const tab = await addTab(URL + " ; key : '" + key + "'");
-  await gDevTools.showToolboxForTab(tab);
+  const target = await TargetFactory.forTab(tab);
+  await gDevTools.showToolbox(target);
 
   await testToggleDockedToolbox(tab, key, modifiers);
   await testToggleDetachedToolbox(tab, key, modifiers);
@@ -41,7 +42,7 @@ async function testToggle(key, modifiers) {
 }
 
 async function testToggleDockedToolbox(tab, key, modifiers) {
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = await getToolboxForTab(tab);
 
   isnot(
     toolbox.hostType,
@@ -63,7 +64,7 @@ async function testToggleDockedToolbox(tab, key, modifiers) {
 }
 
 async function testToggleDetachedToolbox(tab, key, modifiers) {
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = await getToolboxForTab(tab);
 
   info("change the toolbox hostType to WINDOW");
 
@@ -103,6 +104,11 @@ async function testToggleDetachedToolbox(tab, key, modifiers) {
   EventUtils.synthesizeKey(key, modifiers, toolboxWindow);
   await onToolboxDestroyed;
   ok(true, "Toolbox destroyed");
+}
+
+async function getToolboxForTab(tab) {
+  const target = await TargetFactory.forTab(tab);
+  return gDevTools.getToolbox(target);
 }
 
 function cleanup() {
