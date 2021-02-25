@@ -48,27 +48,22 @@ pref(browser.display.document_color_use,2) == background-transparent-form-contro
 
 # prefers-contrast media query:
 
-# a prefers-contrast value of forced or high should evaluate to true
-== prefers-contrast-001.html prefers-contrast-black-ref.html
+# Forced colors doesn't affect prefers-contrast.
+!= prefers-contrast-001.html prefers-contrast-black-ref.html
+# high should match when an accessibility theme is used
 test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(ui.useAccessibilityTheme,1) == prefers-contrast-001.html prefers-contrast-black-ref.html
 
 # high should match when an accessibility theme is being used
 test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(ui.useAccessibilityTheme,1) == prefers-contrast-002.html prefers-contrast-black-ref.html
 
-# If RFP is on the media query stops evaluating contrast preferences
-# and defaults to no-preference. The media query will still evaluate
-# to forced though when RFP is on. The idea being that there are other
-# ways to detect if forced colors are enabled so might as well not lie
-# about it.
-test-pref(privacy.resistFingerprinting,true) == prefers-contrast-003.html prefers-contrast-black-ref.html
+# If RFP is on the media query stops evaluating contrast preferences and
+# defaults to no-preference.
+test-pref(privacy.resistFingerprinting,true) != prefers-contrast-001.html prefers-contrast-black-ref.html
 # high should not match when RFP is enabled.
 test-pref(ui.windowForeground,"black") test-pref(ui.windowBackground,"white") test-pref(privacy.resistFingerprinting,true) test-pref(ui.useAccessibilityTheme,1) != prefers-contrast-002.html prefers-contrast-black-ref.html
 
 # Should only be enabled behind preference.
 test-pref(layout.css.prefers-contrast.enabled,false) != prefers-contrast-001.html prefers-contrast-black-ref.html
-
-# prefers-contrast forced matching forced
-== prefers-contrast-003.html prefers-contrast-black-ref.html
 
 # a prefers-contrast value of no-preference should evaluate to false
 # in the boolean context

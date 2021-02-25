@@ -59,7 +59,6 @@ for (let query of CHROME_ONLY_QUERIES) {
 // These might be exposed to content by pref, we just want to make sure they're
 // always exposed to chrome.
 expectParseable("(prefers-contrast: more)")
-expectParseable("(prefers-contrast: forced)")
 expectParseable("(prefers-contrast: no-preference)")
 expectParseable("(prefers-contrast: less)");
 expectParseable("(prefers-contrast)")
