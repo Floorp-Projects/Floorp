@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<title>Worker: Timer Nesting Level</title>
+<Script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+'use strict'
+
+/**
+ *  This test includes following four test stages.
+ *  1. CheckInitialValue: Checking the initial value of worker's current timer
+ *     nesting level after the worker's top level script is loaded. The result
+ *     is expected as 0.
+ *  2. TestSetInterval: Checking the worker's current timer nesting level with
+ *     setInterval with following steps
+ *     1. call setInterval(callback, 0) to create a repeating timer.
+ *     2. checking the current timer nesting level in the callback. The value
+ *        should increase every time executing the callback until it reaches the
+ *        maximun nesting level(5).
+ *     3. Checking the worker's current timer nesting level with immediately
+ *        resolved promise.
+ *     4. Checking the the time duration between two callback launching.
+ *  3. TestSetTimeout: Checking the worker's current timer nesting level with
+ *     setTimeout. This stage has similar test steps with TestSetInterval.
+ *     The difference is this stage using the recursive setTimeout to accumulate
+ *     the timer nesting level.
+ *  4. CheckNoTimer: Checking the situation which the worker has no pending
+ *     timer. The result is expected as 0.
+ */
+
+let testStages = ["CheckInitialValue",
+                  "TestSetInterval",
+                  "TestSetTimeout",
+                  "CheckNoTimer"];
+
+promise_test(async function(t) {
+  let result = await new Promise( (resolve, reject) => {
+    let worker = new Worker("resources/worker.js");
+    worker.onmessage = (e) => {
+      if (e.data.status === "FAIL") {
+        resolve(e.data);
+        return;
+      }
+      if (testStages.length !== 0) {
+        worker.postMessage(testStages.shift());
+      } else {
+        resolve({status: "PASS", msg: "Timer nesting level for workers"});
+      }
+    };
+  });
+  assert_true(result.status === "PASS", result.msg);
+}, 'Worker timer nesting level ');
+</script>
