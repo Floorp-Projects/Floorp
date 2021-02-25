@@ -248,21 +248,35 @@ extern const char* ReservedWordToCharZ(TaggedParserAtomIndex name);
 // nullptr otherwise.
 extern const char* ReservedWordToCharZ(TokenKind tt);
 
+enum class DeprecatedContent : uint8_t {
+  // No deprecated content was present.
+  None = 0,
+  // Octal literal not prefixed by "0o" but rather by just "0", e.g. 0755.
+  OctalLiteral,
+  // Octal character escape, e.g. "hell\157 world".
+  OctalEscape,
+  // NonOctalDecimalEscape, i.e. "\8" or "\9".
+  EightOrNineEscape,
+};
+
 struct TokenStreamFlags {
   // Hit end of file.
   bool isEOF : 1;
   // Non-whitespace since start of line.
   bool isDirtyLine : 1;
-  // Saw an octal character escape or a 0-prefixed octal literal.
-  bool sawDeprecatedOctal : 1;
   // Hit a syntax error, at start or during a token.
   bool hadError : 1;
+
+  // The nature of any deprecated content seen since last reset.
+  // We have to uint8_t instead DeprecatedContent to work around a GCC 7 bug.
+  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61414
+  uint8_t sawDeprecatedContent : 2;
 
   TokenStreamFlags()
       : isEOF(false),
         isDirtyLine(false),
-        sawDeprecatedOctal(false),
-        hadError(false) {}
+        hadError(false),
+        sawDeprecatedContent(uint8_t(DeprecatedContent::None)) {}
 };
 
 template <typename Unit>
@@ -543,7 +557,9 @@ enum class InvalidEscapeType {
   // codepoint > 10FFFF.
   UnicodeOverflow,
   // An octal escape in a template token.
-  Octal
+  Octal,
+  // NonOctalDecimalEscape - \8 or \9.
+  EightOrNine
 };
 
 class TokenStreamAnyChars : public TokenStreamShared {
@@ -767,9 +783,31 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   // Flag methods.
   bool isEOF() const { return flags.isEOF; }
-  bool sawDeprecatedOctal() const { return flags.sawDeprecatedOctal; }
   bool hadError() const { return flags.hadError; }
-  void clearSawDeprecatedOctal() { flags.sawDeprecatedOctal = false; }
+
+  DeprecatedContent sawDeprecatedContent() const {
+    return static_cast<DeprecatedContent>(flags.sawDeprecatedContent);
+  }
+
+ private:
+  // Workaround GCC 7 sadness.
+  void setSawDeprecatedContent(DeprecatedContent content) {
+    flags.sawDeprecatedContent = static_cast<uint8_t>(content);
+  }
+
+ public:
+  void clearSawDeprecatedContent() {
+    setSawDeprecatedContent(DeprecatedContent::None);
+  }
+  void setSawDeprecatedOctalLiteral() {
+    setSawDeprecatedContent(DeprecatedContent::OctalLiteral);
+  }
+  void setSawDeprecatedOctalEscape() {
+    setSawDeprecatedContent(DeprecatedContent::OctalEscape);
+  }
+  void setSawDeprecatedEightOrNineEscape() {
+    setSawDeprecatedContent(DeprecatedContent::EightOrNineEscape);
+  }
 
   bool hasInvalidTemplateEscape() const {
     return invalidTemplateEscapeType != InvalidEscapeType::None;
@@ -2582,7 +2620,10 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         errorAt(offset, JSMSG_UNICODE_OVERFLOW, "escape sequence");
         return;
       case InvalidEscapeType::Octal:
-        errorAt(offset, JSMSG_DEPRECATED_OCTAL);
+        errorAt(offset, JSMSG_DEPRECATED_OCTAL_ESCAPE);
+        return;
+      case InvalidEscapeType::EightOrNine:
+        errorAt(offset, JSMSG_DEPRECATED_EIGHT_OR_NINE_ESCAPE);
         return;
     }
   }
