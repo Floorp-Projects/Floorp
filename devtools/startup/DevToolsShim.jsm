@@ -316,7 +316,16 @@ const webExtensionsMethods = [
   "openBrowserConsole",
 ];
 
-for (const method of webExtensionsMethods) {
+/**
+ * Compatibility layer for other third parties.
+ */
+const otherToolMethods = [
+  // gDevTools.showToolboxForTab is used by wptrunner to start devtools
+  // https://github.com/web-platform-tests/wpt
+  "showToolboxForTab",
+];
+
+for (const method of [...webExtensionsMethods, ...otherToolMethods]) {
   DevToolsShim[method] = function() {
     if (!this.isEnabled()) {
       throw new Error(
