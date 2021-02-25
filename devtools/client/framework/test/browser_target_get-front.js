@@ -3,12 +3,10 @@
 
 add_task(async function() {
   const tab = await addTab("about:blank");
-  const target = await TabTargetFactory.forTab(tab);
-  await target.attach();
+  const target = await createAndAttachTargetForTab(tab);
 
   const tab2 = await addTab("about:blank");
-  const target2 = await TabTargetFactory.forTab(tab2);
-  await target2.attach();
+  const target2 = await createAndAttachTargetForTab(tab2);
 
   info("Test the targetFront attribute for the root");
   const { client } = target;
@@ -94,8 +92,7 @@ add_task(async function() {
 async function testDestroy() {
   // initialize a clean target
   const tab = await addTab("about:blank");
-  const target = await TabTargetFactory.forTab(tab);
-  await target.attach();
+  const target = await createAndAttachTargetForTab(tab);
 
   // do not wait for the front to finish loading
   target.getFront("performance");

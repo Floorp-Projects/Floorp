@@ -7,7 +7,7 @@
 
 add_task(async function() {
   const tab = await addTab("data:text/html,<div id=quack></div>");
-  const target = await getTargetForTab(tab);
+  const target = await createAndAttachTargetForTab(tab);
 
   const webConsoleFront = await target.getFront("console");
 
