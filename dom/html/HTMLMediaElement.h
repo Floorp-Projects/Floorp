@@ -22,7 +22,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/StateWatching.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/dom/DecoderDoctorNotificationBinding.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/MediaDebugInfoBinding.h"
 #include "mozilla/dom/MediaKeys.h"
@@ -654,12 +653,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   double TotalPlayTime() const;
   double InvisiblePlayTime() const;
   double VideoDecodeSuspendedTime() const;
-
-  // Test methods for decoder doctor.
-  void SetFormatDiagnosticsReportForMimeType(const nsAString& aMimeType,
-                                             DecoderDoctorReportType aType);
-  void SetDecodeError(const nsAString& aError, ErrorResult& aRv);
-  void SetAudioSinkFailedStartup();
 
   // Synchronously, return the next video frame and mark the element unable to
   // participate in decode suspending.

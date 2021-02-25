@@ -7516,11 +7516,6 @@
 
 #endif  # MOZ_WMF
 
-- name: media.decoder-doctor.testing
-  type: bool
-  value: false
-  mirror: always
-
 - name: media.hardware-video-decoding.force-enabled
   type: bool
   value: false
