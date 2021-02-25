@@ -738,11 +738,12 @@ static bool doInvoke(NPObject* npobj, NPIdentifier method,
   bool ok = false;
 
   if (ctorCall) {
-    JSObject* newObj = ::JS_New(cx, jsobj, jsargs);
+    JS::Rooted<JS::Value> objVal(cx, JS::ObjectValue(*jsobj));
+    JS::Rooted<JSObject*> result(cx);
+    ok = JS::Construct(cx, objVal, jsargs, &result);
 
-    if (newObj) {
-      v.setObject(*newObj);
-      ok = true;
+    if (ok) {
+      v.setObject(*result);
     }
   } else {
     ok = ::JS_CallFunctionValue(cx, jsobj, fv, jsargs, &v);
