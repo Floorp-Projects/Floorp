@@ -768,6 +768,8 @@ nsresult DNSPacket::DecodeInternal(
             auto& results = aTypeResult.as<TypeRecordHTTPSSVC>();
             results.AppendElement(parsed);
           }
+
+          aTTL = TTL;
           break;
         }
         default:

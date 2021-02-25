@@ -7,6 +7,7 @@
 
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsIDNSService.h"
 #include "nsIDNSByTypeRecord.h"
@@ -29,7 +30,7 @@ extern mozilla::LazyLogModule gHostResolverLog;
 #define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS(ODoHService, nsIDNSListener, nsIObserver,
-                  nsISupportsWeakReference)
+                  nsISupportsWeakReference, nsITimerCallback)
 
 ODoHService::ODoHService()
     : mLock("net::ODoHService"), mQueryODoHConfigInProgress(false) {
@@ -52,6 +53,12 @@ bool ODoHService::Init() {
 
   ReadPrefs(nullptr);
 
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(this, "xpcom-shutdown-threads", true);
+  }
+
   return true;
 }
 
@@ -65,6 +72,11 @@ ODoHService::Observe(nsISupports* aSubject, const char* aTopic,
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     ReadPrefs(NS_ConvertUTF16toUTF8(aData).get());
+  } else if (!strcmp(aTopic, "xpcom-shutdown-threads")) {
+    if (mTTLTimer) {
+      mTTLTimer->Cancel();
+      mTTLTimer = nullptr;
+    }
   }
 
   return NS_OK;
@@ -192,7 +204,10 @@ nsresult ODoHService::UpdateODoHConfig() {
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
   nsCOMPtr<nsIEventTarget> target = gTRRService->MainThreadOrTRRThread();
-  uint32_t flags = nsIDNSService::RESOLVE_DISABLE_ODOH;
+  // We'd like to bypass the DNS cache, since ODoHConfigs will be updated
+  // manually by ODoHService.
+  uint32_t flags =
+      nsIDNSService::RESOLVE_DISABLE_ODOH | nsIDNSService::RESOLVE_BYPASS_CACHE;
   rv = dns->AsyncResolveNative(hostStr, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
                                flags, nullptr, this, target, OriginAttributes(),
                                getter_AddRefs(tmpOutstanding));
@@ -205,6 +220,23 @@ nsresult ODoHService::UpdateODoHConfig() {
   return rv;
 }
 
+void ODoHService::StartTTLTimer(uint32_t aTTL) {
+  if (mTTLTimer) {
+    mTTLTimer->Cancel();
+    mTTLTimer = nullptr;
+  }
+  LOG(("ODoHService::StartTTLTimer ttl=%d(s)", aTTL));
+  NS_NewTimerWithCallback(getter_AddRefs(mTTLTimer), this, aTTL * 1000,
+                          nsITimer::TYPE_ONE_SHOT);
+}
+
+NS_IMETHODIMP
+ODoHService::Notify(nsITimer* aTimer) {
+  MOZ_ASSERT(aTimer == mTTLTimer);
+  UpdateODoHConfig();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 ODoHService::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
                               nsresult aStatus) {
@@ -212,7 +244,55 @@ ODoHService::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
                 NS_IsMainThread() || gTRRService->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
+  nsCOMPtr<nsIDNSHTTPSSVCRecord> httpsRecord;
+  auto notifyActivation = MakeScopeExit([&]() {
+    // Let observers know whether ODoHService is activated or not.
+    bool hasODoHConfigs = mODoHConfigs && !mODoHConfigs->IsEmpty();
+    uint32_t ttl = 0;
+    if (httpsRecord) {
+      Unused << httpsRecord->GetTtl(&ttl);
+      if (ttl < StaticPrefs::network_trr_odoh_min_ttl()) {
+        ttl = StaticPrefs::network_trr_odoh_min_ttl();
+      }
+    }
+    auto task = [hasODoHConfigs, ttl]() {
+      MOZ_ASSERT(NS_IsMainThread());
+      if (XRE_IsSocketProcess()) {
+        SocketProcessChild::GetSingleton()->SendODoHServiceActivated(
+            hasODoHConfigs);
+      }
+
+      nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+
+      if (observerService) {
+        observerService->NotifyObservers(nullptr, "odoh-service-activated",
+                                         hasODoHConfigs ? u"true" : u"false");
+      }
+
+      if (ttl) {
+        gODoHService->StartTTLTimer(ttl);
+      }
+    };
+
+    if (NS_IsMainThread()) {
+      task();
+    } else {
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction("ODoHService::Activated", std::move(task)));
+    }
+
+    if (!mPendingRequests.IsEmpty()) {
+      nsTArray<RefPtr<ODoH>> requests = std::move(mPendingRequests);
+      nsCOMPtr<nsIEventTarget> target = gTRRService->MainThreadOrTRRThread();
+      for (auto& query : requests) {
+        target->Dispatch(query.forget());
+      }
+    }
+  });
+
   mQueryODoHConfigInProgress = false;
+  mODoHConfigs.reset();
 
   LOG(("ODoHService::OnLookupComplete [aStatus=%" PRIx32 "]",
        static_cast<uint32_t>(aStatus)));
@@ -220,7 +300,7 @@ ODoHService::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDNSHTTPSSVCRecord> httpsRecord = do_QueryInterface(aRec);
+  httpsRecord = do_QueryInterface(aRec);
   if (!httpsRecord) {
     return NS_OK;
   }
@@ -240,41 +320,7 @@ ODoHService::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
     return NS_OK;
   }
 
-  mODoHConfigs.reset();
   mODoHConfigs.emplace(std::move(configs));
-
-  // Let observers know whether ODoHService is activated or not.
-  bool hasODoHConfigs = !mODoHConfigs->IsEmpty();
-  auto task = [hasODoHConfigs]() {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (XRE_IsSocketProcess()) {
-      SocketProcessChild::GetSingleton()->SendODoHServiceActivated(
-          hasODoHConfigs);
-    }
-
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-
-    if (observerService) {
-      observerService->NotifyObservers(nullptr, "odoh-service-activated",
-                                       hasODoHConfigs ? u"true" : u"false");
-    }
-  };
-
-  if (NS_IsMainThread()) {
-    task();
-  } else {
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("ODoHService::Activated", std::move(task)));
-  }
-
-  if (!mPendingRequests.IsEmpty()) {
-    nsTArray<RefPtr<ODoH>> requests = std::move(mPendingRequests);
-    nsCOMPtr<nsIEventTarget> target = gTRRService->MainThreadOrTRRThread();
-    for (auto& query : requests) {
-      target->Dispatch(query.forget());
-    }
-  }
   return NS_OK;
 }
 

@@ -326,6 +326,11 @@ ChildDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ChildDNSByTypeRecord::GetTtl(uint32_t* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //-----------------------------------------------------------------------------
 // DNSRequestSender
 //-----------------------------------------------------------------------------

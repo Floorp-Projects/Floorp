@@ -12,6 +12,7 @@
 #include "nsString.h"
 #include "nsIDNSListener.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
 #include "nsWeakReference.h"
 
 namespace mozilla {
@@ -21,11 +22,13 @@ class ODoH;
 
 class ODoHService : public nsIDNSListener,
                     public nsIObserver,
-                    public nsSupportsWeakReference {
+                    public nsSupportsWeakReference,
+                    public nsITimerCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   ODoHService();
   bool Init();
@@ -43,6 +46,7 @@ class ODoHService : public nsIDNSListener,
   nsresult ReadPrefs(const char* aName);
   void OnODoHPrefsChange(bool aInit);
   void BuildODoHRequestURI();
+  void StartTTLTimer(uint32_t aTTL);
 
   Mutex mLock;
   Atomic<bool, Relaxed> mQueryODoHConfigInProgress;
@@ -52,6 +56,8 @@ class ODoHService : public nsIDNSListener,
   nsCString mODoHRequestURI;
   Maybe<nsTArray<ObliviousDoHConfig>> mODoHConfigs;
   nsTArray<RefPtr<ODoH>> mPendingRequests;
+  // This timer is always touched on main thread to avoid race conditions.
+  nsCOMPtr<nsITimer> mTTLTimer;
 };
 
 extern ODoHService* gODoHService;

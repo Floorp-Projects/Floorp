@@ -119,6 +119,11 @@ interface nsIDNSHTTPSSVCRecord : nsISupports
    */
   readonly attribute boolean allRecordsExcluded;
 
+  /**
+   * Returns the ttl of this record.
+   */
+  readonly attribute uint32_t ttl;
+
   Array<nsISVCBRecord> GetAllRecordsWithEchConfig(in boolean aNoHttp2,
                                                   in boolean aNoHttp3,
                                                   out boolean aAllRecordsHaveEchConfig,
