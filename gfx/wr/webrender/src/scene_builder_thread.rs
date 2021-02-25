@@ -114,8 +114,6 @@ pub enum SceneBuilderRequest {
 // Message from scene builder to render backend.
 pub enum SceneBuilderResult {
     Transactions(Vec<Box<BuiltTransaction>>, Option<Sender<SceneSwapResult>>),
-    #[cfg(feature = "capture")]
-    CapturedTransactions(Vec<Box<BuiltTransaction>>, CaptureConfig, Option<Sender<SceneSwapResult>>),
     ExternalEvent(ExternalEvent),
     FlushComplete(Sender<()>),
     DeleteDocument(DocumentId),
@@ -123,7 +121,18 @@ pub enum SceneBuilderResult {
     GetGlyphDimensions(GlyphDimensionRequest),
     GetGlyphIndices(GlyphIndexRequest),
     ShutDown(Option<Sender<()>>),
-    DocumentsForDebugger(String)
+    DocumentsForDebugger(String),
+
+    #[cfg(feature = "capture")]
+    /// The same as `Transactions`, but also supplies a `CaptureConfig` that the
+    /// render backend should use for sequence capture, until the next
+    /// `CapturedTransactions` or `StopCaptureSequence` result.
+    CapturedTransactions(Vec<Box<BuiltTransaction>>, CaptureConfig, Option<Sender<SceneSwapResult>>),
+
+    #[cfg(feature = "capture")]
+    /// The scene builder has stopped sequence capture, so the render backend
+    /// should do the same.
+    StopCaptureSequence,
 }
 
 // Message from render backend to scene builder to indicate the
@@ -367,6 +376,7 @@ impl SceneBuilderThread {
                     // FIXME(aosmond): clear config for frames and resource cache without scene
                     // rebuild?
                     self.capture_config = None;
+                    self.send(SceneBuilderResult::StopCaptureSequence);
                 }
                 Ok(SceneBuilderRequest::DocumentsForDebugger) => {
                     let json = self.get_docs_for_debugger();
