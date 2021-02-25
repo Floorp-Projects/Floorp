@@ -5159,7 +5159,15 @@
         label = this.getTabTooltip(tab);
       }
 
-      event.target.setAttribute("label", label);
+      if (!gProton) {
+        event.target.setAttribute("label", label);
+        return;
+      }
+
+      let title = event.target.querySelector(".places-tooltip-title");
+      title.value = label;
+      let url = event.target.querySelector(".places-tooltip-uri");
+      url.value = tab.linkedBrowser?.currentURI?.spec;
     },
 
     handleEvent(aEvent) {

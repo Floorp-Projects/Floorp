@@ -8,7 +8,7 @@ tree[is="places-tree"] > treechildren::-moz-tree-cell {
   unicode-bidi: plaintext;
 }
 
-#bhtTitleText {
+.places-tooltip-title {
   /* ensure we use the direction of the website title instead of the
    * browser locale */
   unicode-bidi: plaintext;

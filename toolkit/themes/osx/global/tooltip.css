@@ -13,10 +13,13 @@ tooltip {
   appearance: auto;
   -moz-default-appearance: tooltip;
   -moz-font-smoothing-background-color: -moz-mac-tooltip;
-  margin-top: 18px;
   padding: 2px 3px;
   max-width: 40em;
   color: InfoText;
   font: message-box;
   cursor: default;
+}
+
+tooltip:not([position]) {
+  margin-top: 18px;
 }

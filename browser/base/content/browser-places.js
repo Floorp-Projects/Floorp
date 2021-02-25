@@ -969,13 +969,14 @@ var BookmarksEventHandler = {
       return false;
     }
 
-    var tooltipTitle = aDocument.getElementById("bhtTitleText");
+    let tooltipTitle = aEvent.target.querySelector(".places-tooltip-title");
     tooltipTitle.hidden = !title || title == url;
     if (!tooltipTitle.hidden) {
-      tooltipTitle.textContent = title;
+      // Use `value` instead of `textContent` so cropping will apply
+      tooltipTitle.value = title;
     }
 
-    var tooltipUrl = aDocument.getElementById("bhtUrlText");
+    let tooltipUrl = aEvent.target.querySelector(".places-tooltip-uri");
     tooltipUrl.hidden = !url;
     if (!tooltipUrl.hidden) {
       tooltipUrl.value = url;
