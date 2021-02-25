@@ -6,13 +6,14 @@
  * methods.
  * - StoreFormatDiagnostics() [for checking if type is supported]
  * - StoreDecodeError() [when decode error occurs]
+ * - StoreEvent() [for reporting audio sink error]
  */
 
 // Only types being listed here would be allowed to display on a
 // notification banner. Otherwise, the error would only be showed on the
 // web console.
 var gAllowedNotificationTypes =
-  "MediaWMFNeeded,MediaFFMpegNotFound,MediaUnsupportedLibavcodec,MediaDecodeError";
+  "MediaWMFNeeded,MediaFFMpegNotFound,MediaUnsupportedLibavcodec,MediaDecodeError,MediaCannotInitializePulseAudio,";
 
 // Used to check if the mime type in the notification is equal to what we set
 // before. This mime type doesn't reflect the real world siutation, i.e. not
@@ -130,6 +131,17 @@ add_task(async function testDecodeError() {
   }
 });
 
+add_task(async function testAudioSinkFailedStartup() {
+  const tab = await createTab("about:blank");
+  await setAudioSinkFailedStartup(tab, {
+    type: "cannot-initialize-pulseaudio",
+    decoderDoctorReportId: "mediacannotinitializepulseaudio",
+    // This error comes with `*`, see `DecoderDoctorDiagnostics::StoreEvent`
+    formats: "*",
+  });
+  BrowserTestUtils.removeTab(tab);
+});
+
 /**
  * Following are helper functions
  */
@@ -231,4 +243,23 @@ async function setDecodeError(tab, params) {
     }
   );
   ok(true, `finished check for ${params.error}`);
+}
+
+async function setAudioSinkFailedStartup(tab, params) {
+  const shouldReportNotification = gAllowedNotificationTypes.includes(
+    params.decoderDoctorReportId
+  );
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [params, shouldReportNotification],
+    async (params, shouldReportNotification) => {
+      const video = content.document.createElement("video");
+      const waitPromise = content._waitForReport(
+        params,
+        shouldReportNotification
+      );
+      SpecialPowers.wrap(video).setAudioSinkFailedStartup();
+      await waitPromise;
+    }
+  );
 }
