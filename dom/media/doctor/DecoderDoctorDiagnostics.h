@@ -83,7 +83,7 @@ class DecoderDoctorDiagnostics {
   // Methods to record diagnostic information:
 
   MOZ_DEFINE_ENUM_CLASS_AT_CLASS_SCOPE(
-      Flags, (CanPlay, WMFFailedToLoad, FFmpegFailedToLoad,
+      Flags, (CanPlay, WMFFailedToLoad, FFmpegNotFound, LibAVCodecUnsupported,
               GMPPDMFailedToStartup, VideoNotSupported, AudioNotSupported));
   using FlagsSet = mozilla::EnumSet<Flags>;
 
@@ -96,9 +96,14 @@ class DecoderDoctorDiagnostics {
     return mFlags.contains(Flags::WMFFailedToLoad);
   }
 
-  void SetFFmpegFailedToLoad() { mFlags += Flags::FFmpegFailedToLoad; }
-  bool DidFFmpegFailToLoad() const {
-    return mFlags.contains(Flags::FFmpegFailedToLoad);
+  void SetFFmpegNotFound() { mFlags += Flags::FFmpegNotFound; }
+  bool DidFFmpegNotFound() const {
+    return mFlags.contains(Flags::FFmpegNotFound);
+  }
+
+  void SetLibAVCodecUnsupported() { mFlags += Flags::LibAVCodecUnsupported; }
+  bool IsLibAVCodecUnsupported() const {
+    return mFlags.contains(Flags::LibAVCodecUnsupported);
   }
 
   void SetGMPPDMFailedToStartup() { mFlags += Flags::GMPPDMFailedToStartup; }
