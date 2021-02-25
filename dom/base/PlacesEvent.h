@@ -50,6 +50,9 @@ class PlacesEvent : public nsWrapperCache {
   virtual const PlacesVisitRemoved* AsPlacesVisitRemoved() const {
     return nullptr;
   }
+  virtual const PlacesPurgeCaches* AsPlacesPurgeCaches() const {
+    return nullptr;
+  }
 
  protected:
   virtual ~PlacesEvent() = default;
