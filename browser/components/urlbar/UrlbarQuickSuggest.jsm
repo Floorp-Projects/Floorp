@@ -65,6 +65,7 @@ class Suggestions {
    */
   async query(phrase) {
     log.info("Handling query for", phrase);
+    phrase = phrase.toLowerCase();
     let index = this._tree.get(phrase);
     if (!index || !this._results.has(index)) {
       return null;
