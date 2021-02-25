@@ -725,13 +725,12 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
  * hooks.
  */
 [[nodiscard]] static inline bool NativeLookupOwnPropertyNoResolve(
-    JSContext* cx, HandleNativeObject obj, HandleId id,
-    MutableHandle<PropertyResult> result) {
+    JSContext* cx, NativeObject* obj, jsid id, PropertyResult* result) {
   // Check for a native dense element.
   if (JSID_IS_INT(id)) {
     uint32_t index = JSID_TO_INT(id);
     if (obj->containsDenseElement(index)) {
-      result.setDenseElement(index);
+      result->setDenseElement(index);
       return true;
     }
   }
@@ -744,9 +743,9 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
     }
     if (index.isSome()) {
       if (index.value() < obj->as<TypedArrayObject>().length().get()) {
-        result.setTypedArrayElement(index.value());
+        result->setTypedArrayElement(index.value());
       } else {
-        result.setTypedArrayOutOfRange();
+        result->setTypedArrayOutOfRange();
       }
       return true;
     }
@@ -754,9 +753,9 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
 
   // Check for a native property.
   if (Shape* shape = obj->lookup(cx, id)) {
-    result.setNativeProperty(shape);
+    result->setNativeProperty(shape);
   } else {
-    result.setNotFound();
+    result->setNotFound();
   }
   return true;
 }
