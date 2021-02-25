@@ -1992,11 +1992,9 @@ nsNavHistoryQueryResultNode::GetSkipTags(bool* aSkipTags) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnBeginUpdateBatch() { return NS_OK; }
+nsresult nsNavHistoryQueryResultNode::OnBeginUpdateBatch() { return NS_OK; }
 
-NS_IMETHODIMP
-nsNavHistoryQueryResultNode::OnEndUpdateBatch() {
+nsresult nsNavHistoryQueryResultNode::OnEndUpdateBatch() {
   // If the query has no children it's possible it's not yet listening to
   // bookmarks changes, in such a case it's safer to force a refresh to gather
   // eventual new nodes matching query options.
@@ -2990,11 +2988,9 @@ nsNavHistoryFolderResultNode::GetSkipTags(bool* aSkipTags) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnBeginUpdateBatch() { return NS_OK; }
+nsresult nsNavHistoryFolderResultNode::OnBeginUpdateBatch() { return NS_OK; }
 
-NS_IMETHODIMP
-nsNavHistoryFolderResultNode::OnEndUpdateBatch() { return NS_OK; }
+nsresult nsNavHistoryFolderResultNode::OnEndUpdateBatch() { return NS_OK; }
 
 nsresult nsNavHistoryFolderResultNode::OnItemAdded(
     int64_t aItemId, int64_t aParentFolder, int32_t aIndex, uint16_t aItemType,
@@ -3451,7 +3447,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResult)
   NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsNavHistoryResult)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryResult)
   NS_INTERFACE_MAP_ENTRY(nsINavBookmarkObserver)
-  NS_INTERFACE_MAP_ENTRY(nsINavHistoryObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -3513,10 +3508,6 @@ void nsNavHistoryResult::StopObserving() {
     mIsMobilePrefObserver = false;
   }
   if (mIsHistoryObserver) {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    if (history) {
-      history->RemoveObserver(this);
-    }
     mIsHistoryObserver = false;
     events.AppendElement(PlacesEventType::History_cleared);
     events.AppendElement(PlacesEventType::Page_removed);
@@ -3548,9 +3539,6 @@ bool nsNavHistoryResult::CanSkipHistoryDetailsNotifications() const {
 void nsNavHistoryResult::AddHistoryObserver(
     nsNavHistoryQueryResultNode* aNode) {
   if (!mIsHistoryObserver) {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ASSERTION(history, "Can't create history service");
-    history->AddObserver(this, true);
     mIsHistoryObserver = true;
 
     AutoTArray<PlacesEventType, 3> events;

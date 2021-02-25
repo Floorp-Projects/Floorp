@@ -24,8 +24,6 @@ const TEST_URI = NetUtil.newURI("http://foo.com");
 function promiseOnItemChanged() {
   return new Promise(resolve => {
     PlacesUtils.bookmarks.addObserver({
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
       onItemRemoved() {},
       onItemMoved() {},
 
