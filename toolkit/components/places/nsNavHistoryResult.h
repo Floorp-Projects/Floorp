@@ -77,6 +77,7 @@ class nsNavHistoryResult final
     : public nsSupportsWeakReference,
       public nsINavHistoryResult,
       public nsINavBookmarkObserver,
+      public nsINavHistoryObserver,
       public mozilla::places::INativePlacesEventCallback {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
@@ -695,9 +696,6 @@ class nsNavHistoryQueryResultNode final
 
   virtual void OnRemoving() override;
 
-  nsresult OnBeginUpdateBatch();
-  nsresult OnEndUpdateBatch();
-
  public:
   RefPtr<nsNavHistoryQuery> mQuery;
   uint32_t mLiveUpdate;  // one of QUERYUPDATE_* in nsNavHistory.h
@@ -798,9 +796,6 @@ class nsNavHistoryFolderResultNode final
   void ReindexRange(int32_t aStartIndex, int32_t aEndIndex, int32_t aDelta);
 
   nsNavHistoryResultNode* FindChildById(int64_t aItemId, uint32_t* aNodeIndex);
-
-  nsresult OnBeginUpdateBatch();
-  nsresult OnEndUpdateBatch();
 
  protected:
   virtual ~nsNavHistoryFolderResultNode();
