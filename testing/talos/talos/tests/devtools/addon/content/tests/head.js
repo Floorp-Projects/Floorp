@@ -10,7 +10,6 @@
 
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { TargetFactory } = require("devtools/client/framework/target");
 
 // With Bug 1588203, the talos server supports a dynamic proxy that will
 // redirect any http:// call to the talos server. This means we can use
@@ -79,8 +78,7 @@ exports.getActiveTab = getActiveTab;
 
 exports.getToolbox = async function() {
   let tab = getActiveTab();
-  let target = await TargetFactory.forTab(tab);
-  return gDevTools.getToolbox(target);
+  return gDevTools.getToolboxForTab(tab);
 };
 
 /**
@@ -100,12 +98,9 @@ const openToolbox = async function(tool = "webconsole", onLoad) {
   dump(`Open toolbox on '${tool}'\n`);
   let tab = getActiveTab();
 
-  dump(`Open toolbox - Wait for tab target\n`);
-  let target = await TargetFactory.forTab(tab);
-
-  dump(`Open toolbox - Call showToolbox\n`);
+  dump(`Open toolbox - Call showToolboxForTab\n`);
   let onToolboxCreated = gDevTools.once("toolbox-created");
-  let showPromise = gDevTools.showToolbox(target, tool);
+  let showPromise = gDevTools.showToolboxForTab(tab, { toolId: tool });
 
   dump(`Open toolbox - Wait for "toolbox-created"\n`);
   let toolbox = await onToolboxCreated;
@@ -125,9 +120,9 @@ exports.openToolbox = openToolbox;
 
 exports.closeToolbox = async function() {
   let tab = getActiveTab();
-  let target = await TargetFactory.forTab(tab);
-  await target.client.waitForRequestsToSettle();
-  await gDevTools.closeToolbox(target);
+  let toolbox = await gDevTools.getToolboxForTab(tab);
+  await toolbox.target.client.waitForRequestsToSettle();
+  await gDevTools.closeToolboxForTab(tab);
 };
 
 // Settle test isn't recorded, it only prints the pending duration

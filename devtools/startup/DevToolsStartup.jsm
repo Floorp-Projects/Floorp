@@ -1033,9 +1033,7 @@ DevToolsStartup.prototype = {
   handleDevToolsFlag: async function(window) {
     const require = this.initDevTools("CommandLine");
     const { gDevTools } = require("devtools/client/framework/devtools");
-    const { TargetFactory } = require("devtools/client/framework/target");
-    const target = await TargetFactory.forTab(window.gBrowser.selectedTab);
-    gDevTools.showToolbox(target);
+    await gDevTools.showToolboxForTab(window.gBrowser.selectedTab);
   },
 
   _isRemoteDebuggingEnabled() {
