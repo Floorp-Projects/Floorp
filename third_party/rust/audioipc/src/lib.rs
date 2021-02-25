@@ -50,9 +50,9 @@ pub use crate::messages::{ClientMessage, ServerMessage};
 pub const SHM_AREA_SIZE: usize = 2 * 1024 * 1024;
 
 #[cfg(unix)]
-use std::os::unix::io::{FromRawFd, IntoRawFd};
+use std::os::unix::io::IntoRawFd;
 #[cfg(windows)]
-use std::os::windows::io::{FromRawHandle, IntoRawHandle};
+use std::os::windows::io::IntoRawHandle;
 
 use std::cell::RefCell;
 
@@ -146,21 +146,21 @@ impl PlatformHandle {
         PlatformHandle::new(from.into_raw_fd(), true)
     }
 
-    #[cfg(windows)]
-    pub unsafe fn into_file(&self) -> std::fs::File {
-        std::fs::File::from_raw_handle(self.into_raw())
-    }
-
-    #[cfg(unix)]
-    pub unsafe fn into_file(&self) -> std::fs::File {
-        std::fs::File::from_raw_fd(self.into_raw())
-    }
-
     pub unsafe fn into_raw(&self) -> PlatformHandleType {
         let mut h = self.0.borrow_mut();
         assert!(h.owned);
         h.owned = false;
         h.handle
+    }
+
+    pub unsafe fn as_raw(&self) -> PlatformHandleType {
+        self.0.borrow().handle
+    }
+
+    #[cfg(windows)]
+    pub fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle, std::io::Error> {
+        let dup = unsafe { platformhandle_passing::duplicate_platformhandle(h, None, false) }?;
+        Ok(PlatformHandle::new(dup, true))
     }
 }
 

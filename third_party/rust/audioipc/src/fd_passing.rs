@@ -236,8 +236,11 @@ where
             }
         }
 
+        // Need to take fd ownership here for `set_frame` to keep fds alive until `do_write`,
+        // otherwise fds are closed too early (when `item` is dropped).
         let fds = item.platform_handles();
         self.codec.encode(item, &mut self.write_buf)?;
+
         let fds = fds.and_then(|fds| {
             cmsg::builder(&mut self.outgoing_fds)
                 .rights(&fds.0[..])
