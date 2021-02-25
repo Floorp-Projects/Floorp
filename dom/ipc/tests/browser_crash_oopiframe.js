@@ -160,14 +160,8 @@ async function testFrameCrash(numTabs) {
     let buttons = notification.querySelectorAll(".notification-button");
     is(
       buttons.length,
-      1,
-      "Notification " + count + " should have only one button."
-    );
-    let links = notification.querySelectorAll(".text-link");
-    is(
-      links.length,
-      1,
-      "Notification " + count + " should have only one link."
+      2,
+      "Notification " + count + " should have only two buttons."
     );
   }
 

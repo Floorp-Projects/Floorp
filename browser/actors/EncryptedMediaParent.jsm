@@ -12,6 +12,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "BrowserUIUtils",
+  "resource:///modules/BrowserUIUtils.jsm"
+);
+
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
@@ -55,6 +61,21 @@ class EncryptedMediaParent extends JSWindowActorParent {
     return true;
   }
 
+  getEMEDisabledFragment(aBrowser) {
+    let mainMessage = gNavigatorBundle.GetStringFromName(
+      "emeNotifications.drmContentDisabled.message"
+    );
+    let text = gNavigatorBundle.GetStringFromName(
+      "emeNotifications.drmContentDisabled.learnMoreLabel"
+    );
+    let document = aBrowser.ownerDocument;
+    let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    let link = document.createXULElement("label", { is: "text-link" });
+    link.setAttribute("href", baseURL + "drm-content");
+    link.textContent = text;
+    return BrowserUIUtils.getLocalizedFragment(document, mainMessage, link);
+  }
+
   getMessageWithBrandName(aNotificationId) {
     let msgId = "emeNotifications." + aNotificationId + ".message";
     return gNavigatorBundle.formatStringFromName(msgId, [
@@ -96,7 +117,6 @@ class EncryptedMediaParent extends JSWindowActorParent {
 
     let notificationId;
     let buttonCallback;
-    let supportPage;
     // Notification message can be either a string or a DOM fragment.
     let notificationMessage;
     switch (status) {
@@ -115,10 +135,7 @@ class EncryptedMediaParent extends JSWindowActorParent {
         buttonCallback = () => {
           this.ensureEMEEnabled(browser, keySystem);
         };
-        notificationMessage = gNavigatorBundle.GetStringFromName(
-          "emeNotifications.drmContentDisabled.message2"
-        );
-        supportPage = "drm-content";
+        notificationMessage = this.getEMEDisabledFragment(browser);
         break;
 
       case "cdm-not-installed":
@@ -150,9 +167,6 @@ class EncryptedMediaParent extends JSWindowActorParent {
     }
 
     let buttons = [];
-    if (supportPage) {
-      buttons.push({ supportPage });
-    }
     if (buttonCallback) {
       let msgPrefix = "emeNotifications." + notificationId + ".";
       let btnLabelId = msgPrefix + "button.label";

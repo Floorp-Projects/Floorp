@@ -84,13 +84,9 @@ notification[type="critical"] > .close-icon:hover:active {
 }
 
 .messageText > .text-link {
-  text-decoration: underline;
-  margin-block: 0;
-}
-
-.messageText > .text-link:not(.notification-link) {
   color: inherit !important;
-  margin-inline: 0;
+  text-decoration: underline;
+  margin: 0;
 }
 
 .messageImage {
