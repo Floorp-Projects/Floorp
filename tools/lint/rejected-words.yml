@@ -252,6 +252,7 @@ avoid-blacklist-and-whitelist:
         - netwerk/test/unit/test_dns_by_type_resolve.js
         - netwerk/test/unit/test_idn_blacklist.js
         - netwerk/test/unit/test_idn_urls.js
+        - netwerk/test/unit/test_odoh.js
         - netwerk/test/unit/test_trr_httpssvc.js
         - netwerk/test/unit/test_trr.js
         - netwerk/test/unit/test_use_httpssvc.js
