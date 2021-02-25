@@ -70,8 +70,9 @@ add_task(async function() {
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "inspector");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "inspector",
+  });
 
   await toolbox.openSplitConsole();
   await toolbox.closeSplitConsole();

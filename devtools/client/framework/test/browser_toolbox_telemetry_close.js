@@ -48,8 +48,7 @@ add_task(async function() {
 
 async function openAndCloseToolbox(toolId, host) {
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, toolId);
+  const toolbox = await gDevTools.showToolboxForTab(tab, { toolId });
 
   await toolbox.switchHost(host);
   await toolbox.destroy();

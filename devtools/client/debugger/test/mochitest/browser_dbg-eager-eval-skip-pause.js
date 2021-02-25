@@ -10,8 +10,7 @@ add_task(async function() {
   const dbg = await initDebugger("doc-strict.html");
   const { hud } = await getDebuggerSplitConsole(dbg);
 
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  const toolbox = gDevTools.getToolbox(target);
+  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
   await addBreakpoint(dbg, "doc-strict.html", 15);
   setInputValue(hud, "strict()");

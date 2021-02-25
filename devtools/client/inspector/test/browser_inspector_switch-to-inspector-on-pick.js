@@ -73,8 +73,7 @@ add_task(async function() {
 
 async function openToolbox(tab) {
   info("Opening webconsole.");
-  const target = await TargetFactory.forTab(tab);
-  return gDevTools.showToolbox(target, "webconsole");
+  return gDevTools.showToolboxForTab(tab, { toolId: "webconsole" });
 }
 
 async function startPickerAndAssertSwitchToInspector(toolbox) {

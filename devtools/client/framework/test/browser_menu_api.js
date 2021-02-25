@@ -12,8 +12,9 @@ const MenuItem = require("devtools/client/framework/menu-item");
 add_task(async function() {
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "webconsole",
+  });
 
   // This test will involve localized strings, make sure the necessary FTL file is
   // available in the toolbox top window.

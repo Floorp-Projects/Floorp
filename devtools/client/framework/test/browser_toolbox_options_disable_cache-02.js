@@ -29,16 +29,19 @@ add_task(async function() {
   await setDisableCacheCheckboxChecked(tabs[0], true);
 
   // Open toolbox in tab 2 and ensure the cache is then disabled.
-  tabs[2].toolbox = await gDevTools.showToolbox(tabs[2].target, "options");
+  tabs[2].toolbox = await gDevTools.showToolboxForTab(tabs[2].tab, {
+    toolId: "options",
+  });
   await checkCacheEnabled(tabs[2], false);
 
   // Close toolbox in tab 2 and ensure the cache is enabled again
   await tabs[2].toolbox.destroy();
-  tabs[2].target = await TargetFactory.forTab(tabs[2].tab);
   await checkCacheEnabled(tabs[2], true);
 
   // Open toolbox in tab 2 and ensure the cache is then disabled.
-  tabs[2].toolbox = await gDevTools.showToolbox(tabs[2].target, "options");
+  tabs[2].toolbox = await gDevTools.showToolboxForTab(tabs[2].tab, {
+    toolId: "options",
+  });
   await checkCacheEnabled(tabs[2], false);
 
   // Check the checkbox in tab 2 and ensure cache is enabled for all tabs.

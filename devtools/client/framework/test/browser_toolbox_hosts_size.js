@@ -17,8 +17,7 @@ add_task(async function() {
   const tab = await addTab(URL);
   const panel = gBrowser.getPanel();
   const { clientHeight: panelHeight, clientWidth: panelWidth } = panel;
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target);
+  const toolbox = await gDevTools.showToolboxForTab(tab);
 
   is(
     panel.clientHeight,
@@ -69,8 +68,7 @@ add_task(async function() {
   const tab = await addTab(URL);
   const panel = gBrowser.getPanel();
   const { clientHeight: panelHeight, clientWidth: panelWidth } = panel;
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target);
+  const toolbox = await gDevTools.showToolboxForTab(tab);
 
   is(
     panel.clientHeight,

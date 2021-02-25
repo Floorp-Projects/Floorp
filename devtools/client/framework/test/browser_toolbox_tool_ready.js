@@ -5,36 +5,27 @@
 
 requestLongerTimeout(5);
 
-function performChecks(target) {
-  return (async function() {
-    const toolIds = gDevTools
-      .getToolDefinitionArray()
-      .filter(def => def.isTargetSupported(target))
-      .map(def => def.id);
+async function performChecks(tab) {
+  let toolbox;
+  const toolIds = await getSupportedToolIds(tab);
+  for (const toolId of toolIds) {
+    info("About to open " + toolId);
+    toolbox = await gDevTools.showToolboxForTab(tab, { toolId });
+    ok(toolbox, "toolbox exists for " + toolId);
+    is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
-    let toolbox;
-    for (let index = 0; index < toolIds.length; index++) {
-      const toolId = toolIds[index];
+    const panel = toolbox.getCurrentPanel();
+    ok(panel.isReady, toolId + " panel should be ready");
+  }
 
-      info("About to open " + index + "/" + toolId);
-      toolbox = await gDevTools.showToolbox(target, toolId);
-      ok(toolbox, "toolbox exists for " + toolId);
-      is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
-
-      const panel = toolbox.getCurrentPanel();
-      ok(panel.isReady, toolId + " panel should be ready");
-    }
-
-    await toolbox.destroy();
-  })();
+  await toolbox.destroy();
 }
 
 function test() {
   (async function() {
     toggleAllTools(true);
     const tab = await addTab("about:blank");
-    const target = await TargetFactory.forTab(tab);
-    await performChecks(target);
+    await performChecks(tab);
     gBrowser.removeCurrentTab();
     toggleAllTools(false);
     finish();
