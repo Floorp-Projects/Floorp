@@ -312,7 +312,7 @@ Event Object
   - ``drop_go``
     The user dropped text on the input field.
   - ``paste_go``
-    The user used Paste & Go feature. It is not the same as paste and Enter.
+    The user used Paste and Go feature. It is not the same as paste and Enter.
   - ``blur``
     The user unfocused the urlbar. This is only valid for ``abandonment``.
 
