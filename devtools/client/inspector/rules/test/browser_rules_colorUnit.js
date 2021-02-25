@@ -32,8 +32,7 @@ add_task(async function() {
     await selectNode("#testid", inspector);
     await basicTest(view, name, result);
 
-    const target = await TargetFactory.forTab(tab);
-    await gDevTools.closeToolbox(target);
+    await gDevTools.closeToolboxForTab(tab);
     gBrowser.removeCurrentTab();
   }
 });

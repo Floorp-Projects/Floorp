@@ -344,8 +344,8 @@ add_task(async function() {
   }
 
   async function openPanel(toolId) {
-    const target = await TargetFactory.forTab(gBrowser.selectedTab);
-    toolbox = await gDevTools.showToolbox(target, toolId);
+    const tab = gBrowser.selectedTab;
+    toolbox = await gDevTools.showToolboxForTab(tab, { toolId });
   }
 
   async function openAndCheckPanel(toolId) {

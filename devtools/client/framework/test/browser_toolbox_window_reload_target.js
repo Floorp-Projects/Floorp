@@ -32,22 +32,16 @@ var reloadsSent = 0;
 
 add_task(async function() {
   await addTab(TEST_URL);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-
-  info("Getting the entire list of tools supported in this tab");
-  const toolIDs = gDevTools
-    .getToolDefinitionArray()
-    .filter(def => def.isTargetSupported(target))
-    .map(def => def.id);
+  const tab = gBrowser.selectedTab;
+  const toolIDs = await getSupportedToolIds(tab);
 
   info(
     "Display the toolbox, docked at the bottom, with the first tool selected"
   );
-  const toolbox = await gDevTools.showToolbox(
-    target,
-    toolIDs[0],
-    Toolbox.HostType.BOTTOM
-  );
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: toolIDs[0],
+    hostType: Toolbox.HostType.BOTTOM,
+  });
 
   info(
     "Listen to page reloads to check that they are indeed sent by the toolbox"

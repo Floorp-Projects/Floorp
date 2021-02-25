@@ -18,8 +18,9 @@ add_task(async function() {
   //   in the tab, we might have pending updates in the netmonitor which won't be
   //   awaited for by showToolbox)
   const tab = await addTab(EMPTY_TEST_URL);
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "netmonitor");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "netmonitor",
+  });
   const monitor = toolbox.getPanel("netmonitor");
   const { store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

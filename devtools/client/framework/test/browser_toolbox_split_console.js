@@ -14,8 +14,7 @@ const URL = "data:text/html;charset=utf8,test split console key delegation";
 
 add_task(async function() {
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
-  gToolbox = await gDevTools.showToolbox(target, "jsdebugger");
+  gToolbox = await gDevTools.showToolboxForTab(tab, { toolId: "jsdebugger" });
   panelWin = gToolbox.getPanel("jsdebugger").panelWin;
 
   await gToolbox.openSplitConsole();

@@ -21,8 +21,7 @@ function getZoomValue() {
 add_task(async function() {
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  const toolbox = await gDevTools.showToolboxForTab(tab, "webconsole");
 
   const { RIGHT, BOTTOM } = Toolbox.HostType;
   for (const type of [RIGHT, BOTTOM, RIGHT]) {
