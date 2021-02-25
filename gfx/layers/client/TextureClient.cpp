@@ -343,11 +343,7 @@ TextureType PreferredCanvasTextureType(KnowsCompositor* aKnowsCompositor) {
 
 static bool ShouldRemoteTextureType(TextureType aTextureType,
                                     BackendSelector aSelector) {
-  if (!XRE_IsContentProcess()) {
-    return false;
-  }
-
-  if (aSelector != BackendSelector::Canvas || !gfxVars::RemoteCanvasEnabled()) {
+  if (aSelector != BackendSelector::Canvas || !gfxPlatform::UseRemoteCanvas()) {
     return false;
   }
 
