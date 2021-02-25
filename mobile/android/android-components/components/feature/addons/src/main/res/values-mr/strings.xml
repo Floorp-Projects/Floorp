@@ -4,6 +4,8 @@
     <string name="mozac_feature_addons_permissions_privacy_description">गोपनीयता सेटिंग वाचा व बदला</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">सर्व संकेतस्थळांची आपली माहिती पहा</string>
+    <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_one_site_description">%1$s साठी आपली माहिती पहा</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">ब्राउझरचे टॅब पहा</string>
     <!-- Description for unlimited_storage permission. -->
@@ -102,12 +104,12 @@
     <string name="mozac_feature_addons_install_addon_content_description">ॲड-ऑन प्रतिष्ठापीत करा</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">रद्द करा</string>
-    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
-    <string name="mozac_feature_addons_user_rating_count">वापरकर्ते: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">ॲड-ऑन</string>
+    <!-- Label for add-ons sub menu item for add-ons manager-->
+    <string name="mozac_feature_addons_addons_manager">अ‍ॅड-ऑन व्यवस्थापक</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">परवानगी द्या</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
