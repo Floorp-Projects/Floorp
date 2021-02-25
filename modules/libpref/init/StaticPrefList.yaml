@@ -3539,19 +3539,28 @@
   value: @IS_ANDROID@
   mirror: always
 
-# The following four prefs control the maximum script run time before slow
+# The following three prefs control the maximum script run time before slow
 # script warning.
+
+# Controls the time that a content script can run before showing a
+# notification.
 - name: dom.max_script_run_time
   type: int32_t
   value: 10
   mirror: always
 
-- name: dom.max_script_run_time_without_important_user_input
-  type: int32_t
-#ifdef NIGHTLY_BUILD
-  value: 20
+# Controls whether we want to wait for user input before surfacing notifying
+# the parent process about a long-running script.
+- name: dom.max_script_run_time.require_critical_input
+  type: bool
+# On desktop, we don't want to annoy the user with a notification if they're
+# not interacting with the browser. On Android however, we automatically
+# terminate long-running scripts, so we want to make sure we don't get in the
+# way of that by waiting for input.
+#if defined(MOZ_WIDGET_ANDROID)
+  value: false
 #else
-  value: 10
+  value: true
 #endif
   mirror: always
 

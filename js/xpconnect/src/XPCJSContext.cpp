@@ -661,12 +661,10 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     return true;
   }
 
-  int32_t limitWithoutImportantUserInput =
-      StaticPrefs::dom_max_script_run_time_without_important_user_input();
-  if (runningContentJS && XRE_IsContentProcess() && limit &&
-      limitWithoutImportantUserInput > limit &&
-      limitWithoutImportantUserInput >
-          self->mSlowScriptActualWait.ToSeconds()) {
+  // For content scripts, we only want to show the slow script dialogue if the
+  // user is actually trying to perform an important interaction.
+  if (runningContentJS && XRE_IsContentProcess() &&
+      StaticPrefs::dom_max_script_run_time_require_critical_input()) {
     // Call possibly slow PeekMessages after the other common early returns in
     // this method.
     ContentChild* contentChild = ContentChild::GetSingleton();

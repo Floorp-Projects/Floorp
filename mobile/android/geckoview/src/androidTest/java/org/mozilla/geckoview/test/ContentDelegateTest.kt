@@ -350,7 +350,6 @@ class ContentDelegateTest : BaseSessionTest() {
     private fun setHangReportTestPrefs(timeout: Int = 20000) {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.max_script_run_time" to 1,
-                "dom.max_script_run_time_without_important_user_input" to 1,
                 "dom.max_chrome_script_run_time" to 1,
                 "dom.max_ext_content_script_run_time" to 1,
                 "dom.ipc.cpow.timeout" to 100,
