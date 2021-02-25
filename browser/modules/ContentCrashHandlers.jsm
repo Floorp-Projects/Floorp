@@ -409,11 +409,9 @@ var TabCrashHandler = {
 
     let buttons = [
       {
-        "l10n-id": "crashed-subframe-learnmore",
+        "l10n-id": "crashed-subframe-learnmore-link",
         popup: null,
-        callback: async () => {
-          doc.defaultView.openTrustedLinkIn(SUBFRAMECRASH_LEARNMORE_URI, "tab");
-        },
+        link: SUBFRAMECRASH_LEARNMORE_URI,
       },
       {
         "l10n-id": "crashed-subframe-submit",

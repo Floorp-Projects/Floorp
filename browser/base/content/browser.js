@@ -968,18 +968,8 @@ const gStoragePressureObserver = {
         "browser.storageManager.pressureNotification.usageThresholdGB"
       );
     let msg = "";
-    let buttons = [];
+    let buttons = [{ supportPage: "storage-permissions" }];
     let usage = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    buttons.push({
-      "l10n-id": "space-alert-learn-more-button",
-      callback(notificationBar, button) {
-        let learnMoreURL =
-          Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          "storage-permissions";
-        // This is a content URL, loaded from trusted UX.
-        openTrustedLinkIn(learnMoreURL, "tab");
-      },
-    });
     if (usage < USAGE_THRESHOLD_BYTES) {
       // The firefox-used space < 5GB, then warn user to free some disk space.
       // This is because this usage is small and not the main cause for space issue.
