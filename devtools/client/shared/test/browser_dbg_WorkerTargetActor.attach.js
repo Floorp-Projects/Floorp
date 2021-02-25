@@ -25,8 +25,7 @@ add_task(async function() {
   SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
 
   const tab = await addTab(TAB1_URL);
-  const target = await TabTargetFactory.forTab(tab);
-  await target.attach();
+  const target = await createAndAttachTargetForTab(tab);
   await listWorkers(target);
 
   // If a page still has pending network requests, it will not be moved into
