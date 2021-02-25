@@ -336,6 +336,10 @@ pref("browser.urlbar.suggest.quicksuggest",         true);
 // Whether the QuickSuggest experiment is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);
 
+// The URL for clicks on QuickSuggest help buttons and learn-more links.
+// TODO (bug 1693671): Replace this URL with the final URL of the blog post.
+pref("browser.urlbar.quicksuggest.helpURL", "https://www.mozilla.org/");
+
 // How many times to show the QuickSuggest onboarding help button.
 pref("browser.urlbar.quicksuggest.onboardingCount", 0);
 pref("browser.urlbar.quicksuggest.onboardingMaxCount", 5);
