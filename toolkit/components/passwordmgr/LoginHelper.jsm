@@ -31,6 +31,7 @@ class ImportRowProcessor {
   uniqueLoginIdentifiers = new Set();
   originToRows = new Map();
   summary = [];
+  mandatoryFields = ["origin", "username", "password"];
 
   /**
    * Validates if the login data contains a GUID that was already found in a previous row in the current import.
@@ -59,13 +60,15 @@ class ImportRowProcessor {
    */
   checkMissingMandatoryFieldsError(loginData) {
     loginData.origin = LoginHelper.getLoginOrigin(loginData.origin);
-    if (!loginData.origin) {
-      this.addLoginToSummary({ ...loginData }, "error_invalid_origin");
-      return true;
-    }
-    if (!loginData.password) {
-      this.addLoginToSummary({ ...loginData }, "error_invalid_password");
-      return true;
+    for (let mandatoryField of this.mandatoryFields) {
+      if (!loginData[mandatoryField]) {
+        const missingFieldRow = this.addLoginToSummary(
+          { ...loginData },
+          "error_missing_field"
+        );
+        missingFieldRow.field_name = mandatoryField;
+        return true;
+      }
     }
     return false;
   }
@@ -263,9 +266,11 @@ class ImportRowProcessor {
    *        An vanilla object for the login without any methods.
    */
   cleanupActionAndRealmFields(loginData) {
+    const cleanOrigin = loginData.formActionOrigin
+      ? LoginHelper.getLoginOrigin(loginData.formActionOrigin, true)
+      : "";
     loginData.formActionOrigin =
-      LoginHelper.getLoginOrigin(loginData.formActionOrigin, true) ||
-      (typeof loginData.httpRealm == "string" ? null : "");
+      cleanOrigin || (typeof loginData.httpRealm == "string" ? null : "");
 
     loginData.httpRealm =
       typeof loginData.httpRealm == "string" ? loginData.httpRealm : null;
@@ -279,6 +284,7 @@ class ImportRowProcessor {
    *        The result type. One of "added", "modified", "error", "error_invalid_origin", "error_invalid_password" or "no_change".
    * @param {object} propBag
    *        An optional parameter with the properties bag.
+   * @returns {object} The row that was added.
    */
   addLoginToSummary(login, result, propBag) {
     let rows = this.originToRows.get(login.origin) || [];
@@ -288,6 +294,7 @@ class ImportRowProcessor {
     const newSummaryRow = { result, login, propBag };
     rows.push(newSummaryRow);
     this.summary.push(newSummaryRow);
+    return newSummaryRow;
   }
 
   /**

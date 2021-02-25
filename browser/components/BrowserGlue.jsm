@@ -193,6 +193,7 @@ let JSWINDOWACTORS = {
         AboutLoginsImportFromBrowser: { wantUntrusted: true },
         AboutLoginsImportFromFile: { wantUntrusted: true },
         AboutLoginsImportReportInit: { wantUntrusted: true },
+        AboutLoginsImportReportReady: { wantUntrusted: true },
         AboutLoginsInit: { wantUntrusted: true },
         AboutLoginsGetHelp: { wantUntrusted: true },
         AboutLoginsOpenPreferences: { wantUntrusted: true },

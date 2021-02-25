@@ -11,6 +11,7 @@ browser.jar:
   content/browser/aboutlogins/components/import-summary-dialog.js        (content/components/import-summary-dialog.js)
   content/browser/aboutlogins/components/import-error-dialog.css         (content/components/import-error-dialog.css)
   content/browser/aboutlogins/components/import-error-dialog.js          (content/components/import-error-dialog.js)
+  content/browser/aboutlogins/components/import-details-row.js           (content/components/import-details-row.js)
   content/browser/aboutlogins/components/generic-dialog.css              (content/components/generic-dialog.css)
   content/browser/aboutlogins/components/generic-dialog.js               (content/components/generic-dialog.js)
   content/browser/aboutlogins/components/fxaccounts-button.css           (content/components/fxaccounts-button.css)
