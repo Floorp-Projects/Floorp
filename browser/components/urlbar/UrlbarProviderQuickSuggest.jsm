@@ -11,6 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CONTEXTUAL_SERVICES_PING_TYPES:
+    "resource:///modules/PartnerLinkAttribution.jsm",
+  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
@@ -112,6 +115,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
       title: suggestion.title,
       url: suggestion.url,
       icon: suggestion.icon,
+      sponsoredImpressionUrl: suggestion.impression_url,
+      sponsoredClickUrl: suggestion.click_url,
+      sponsoredBlockId: suggestion.block_id,
+      sponsoredAdvertiser: suggestion.advertiser,
       isSponsored: true,
     };
 
@@ -197,6 +204,43 @@ class ProviderQuickSuggest extends UrlbarProvider {
         telemetryResultIndex,
         1
       );
+    }
+
+    // Send the custom impression and click pings
+    if (!isPrivate) {
+      let isQuickSuggestLinkClicked =
+        details.selIndex == resultIndex && details.selType !== "help";
+      let {
+        sponsoredAdvertiser,
+        sponsoredImpressionUrl,
+        sponsoredClickUrl,
+        sponsoredBlockId,
+      } = lastResult.payload;
+      // impression
+      PartnerLinkAttribution.sendContextualServicesPing(
+        {
+          search_query: details.searchString,
+          matched_keywords: details.searchString,
+          advertiser: sponsoredAdvertiser,
+          block_id: sponsoredBlockId,
+          position: telemetryResultIndex,
+          reporting_url: sponsoredImpressionUrl,
+          is_clicked: isQuickSuggestLinkClicked,
+        },
+        CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
+      );
+      // click
+      if (isQuickSuggestLinkClicked) {
+        PartnerLinkAttribution.sendContextualServicesPing(
+          {
+            advertiser: sponsoredAdvertiser,
+            block_id: sponsoredBlockId,
+            position: telemetryResultIndex,
+            reporting_url: sponsoredClickUrl,
+          },
+          CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
+        );
+      }
     }
   }
 
