@@ -430,6 +430,9 @@ nsDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSByTypeRecord::GetTtl(uint32_t* aTtl) { return mHostRecord->GetTtl(aTtl); }
+
 //-----------------------------------------------------------------------------
 
 class nsDNSAsyncRequest final : public nsResolveHostCallback,
