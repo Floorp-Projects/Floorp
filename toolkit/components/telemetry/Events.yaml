@@ -2720,3 +2720,18 @@ installation:
       - agashlin@mozilla.com
       - rtestard@mozilla.com
     expiry_version: "94"
+
+contextservices.quicksuggest:
+  enable_toggled:
+    objects: ["enabled", "disabled"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded when the `browser.urlbar.suggest.quicksuggest` boolean
+      pref is toggled.
+    bug_numbers: [1693126]
+    notification_emails:
+      - fx-search@mozilla.com
+    expiry_version: never

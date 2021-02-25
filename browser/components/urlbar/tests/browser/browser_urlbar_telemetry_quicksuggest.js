@@ -32,6 +32,10 @@ const TELEMETRY_SCALARS = {
   HELP: "contextual.services.quicksuggest.help",
 };
 
+const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
+
+const EXPERIMENT_PREF = "browser.urlbar.quicksuggest.enabled";
+const SUGGEST_PREF = "suggest.quicksuggest";
 const ONBOARDING_COUNT_PREF = "quicksuggest.onboardingCount";
 
 add_task(async function init() {
@@ -39,7 +43,7 @@ add_task(async function init() {
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.quicksuggest.enabled", true],
+      [EXPERIMENT_PREF, true],
       ["browser.urlbar.quicksuggest.helpURL", TEST_HELP_URL],
       ["browser.urlbar.suggest.searches", true],
     ],
@@ -218,6 +222,38 @@ add_task(async function help_mouse() {
       [TELEMETRY_SCALARS.HELP]: index + 1,
     });
   });
+});
+
+// Tests the contextservices.quicksuggest enable_toggled event telemetry by
+// toggling the suggest.quicksuggest pref.
+add_task(async function enableToggled() {
+  Services.telemetry.clearEvents();
+
+  // Toggle the suggest.quicksuggest pref twice.  We should get two events.
+  let enabled = UrlbarPrefs.get(SUGGEST_PREF);
+  for (let i = 0; i < 2; i++) {
+    enabled = !enabled;
+    UrlbarPrefs.set(SUGGEST_PREF, enabled);
+    TelemetryTestUtils.assertEvents([
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "enable_toggled",
+        object: enabled ? "enabled" : "disabled",
+      },
+    ]);
+  }
+
+  // Set the main quicksuggest.enabled pref to false and toggle the
+  // suggest.quicksuggest pref again.  We shouldn't get any events.
+  await SpecialPowers.pushPrefEnv({
+    set: [[EXPERIMENT_PREF, false]],
+  });
+  enabled = !enabled;
+  UrlbarPrefs.set(SUGGEST_PREF, enabled);
+  TelemetryTestUtils.assertEvents([], { category: TELEMETRY_EVENT_CATEGORY });
+  await SpecialPowers.popPrefEnv();
+
+  UrlbarPrefs.clear(SUGGEST_PREF);
 });
 
 /**
