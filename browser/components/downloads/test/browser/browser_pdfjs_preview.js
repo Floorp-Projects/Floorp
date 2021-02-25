@@ -3,6 +3,10 @@
 
 let gDownloadDir;
 
+// The test is long, and it's not worth splitting it since all the tests share
+// the same boilerplate code.
+requestLongerTimeout(4);
+
 SimpleTest.requestFlakyTimeout(
   "Giving a chance for possible last-pb-context-exited to occur (Bug 1329912)"
 );
