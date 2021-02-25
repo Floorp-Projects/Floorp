@@ -473,8 +473,6 @@ void PDMFactory::CreateRddPDMs() {
       StaticPrefs::media_rdd_ffmpeg_enabled() &&
       !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
     mFailureFlags += DecoderDoctorDiagnostics::Flags::FFmpegFailedToLoad;
-  } else {
-    mFailureFlags -= DecoderDoctorDiagnostics::Flags::FFmpegFailedToLoad;
   }
 #endif
   CreateAndStartupPDM<AgnosticDecoderModule>();
