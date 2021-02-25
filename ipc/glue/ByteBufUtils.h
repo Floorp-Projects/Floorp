@@ -12,6 +12,7 @@
 #define mozilla_ipc_ByteBufUtils_h
 
 #include "mozilla/ipc/ByteBuf.h"
+#include "mozilla/mozalloc_oom.h"
 #include "ipc/IPCMessageUtils.h"
 
 namespace IPC {
@@ -38,8 +39,12 @@ struct ParamTraits<mozilla::ipc::ByteBuf> {
     // is an option, alternatively if the users don't need to take ownership of
     // the data they can use the removed FlattenBytes (bug 1297981)
     size_t length;
-    return ReadParam(aMsg, aIter, &length) && aResult->Allocate(length) &&
-           aMsg->ReadBytesInto(aIter, aResult->mData, length);
+    if (!ReadParam(aMsg, aIter, &length)) return false;
+    if (!aResult->Allocate(length)) {
+      mozalloc_handle_oom(length);
+      return false;
+    }
+    return aMsg->ReadBytesInto(aIter, aResult->mData, length);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
