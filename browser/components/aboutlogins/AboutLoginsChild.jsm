@@ -115,6 +115,7 @@ class AboutLoginsChild extends JSWindowActorChild {
         this.sendAsyncMessage("AboutLogins:ImportReportInit");
         break;
       }
+
       case "AboutLoginsCopyLoginDetail": {
         ClipboardHelper.copyString(event.detail);
         break;

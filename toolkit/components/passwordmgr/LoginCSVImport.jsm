@@ -131,7 +131,6 @@ class LoginCSVImport {
    * Existing logins may be updated in the process.
    *
    * @param {string} filePath
-   * @returns {Object[]} An array of rows where each is mapped to a row in the CSV and it's import information.
    */
   static async importFromCSV(filePath) {
     TelemetryStopwatch.startKeyed(
@@ -140,7 +139,6 @@ class LoginCSVImport {
     );
     let responsivenessMonitor = new ResponsivenessMonitor();
     let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
-    let csvFieldToColumnMap = new Map();
     let csvString;
     try {
       csvString = await OS.File.read(filePath, { encoding: "utf-8" });
@@ -164,14 +162,15 @@ class LoginCSVImport {
       parsedLines = d3.tsv.parse(csvString);
     }
 
+    let fieldsInFile = new Set();
     if (parsedLines && headerLine) {
       for (const columnName of headerLine) {
         const fieldName = csvColumnToFieldMap.get(
           columnName.toLocaleLowerCase()
         );
         if (fieldName) {
-          if (!csvFieldToColumnMap.has(fieldName)) {
-            csvFieldToColumnMap.set(fieldName, columnName);
+          if (!fieldsInFile.has(fieldName)) {
+            fieldsInFile.add(fieldName);
           } else {
             TelemetryStopwatch.cancelKeyed(
               "FX_MIGRATION_LOGINS_IMPORT_MS",
@@ -184,7 +183,7 @@ class LoginCSVImport {
         }
       }
     }
-    if (csvFieldToColumnMap.size === 0) {
+    if (fieldsInFile.size === 0) {
       TelemetryStopwatch.cancelKeyed(
         "FX_MIGRATION_LOGINS_IMPORT_MS",
         LoginCSVImport.MIGRATION_HISTOGRAM_KEY
@@ -193,9 +192,9 @@ class LoginCSVImport {
     }
     if (
       parsedLines[0] &&
-      (!csvFieldToColumnMap.has("origin") ||
-        !csvFieldToColumnMap.has("username") ||
-        !csvFieldToColumnMap.has("password"))
+      (!fieldsInFile.has("origin") ||
+        !fieldsInFile.has("username") ||
+        !fieldsInFile.has("password"))
     ) {
       // The username *value* can be empty but we require a username column to
       // ensure that we don't import logins without their usernames due to the
@@ -214,19 +213,13 @@ class LoginCSVImport {
       );
     });
 
-    let report = await LoginHelper.maybeImportLogins(loginsToImport);
-
-    for (const reportRow of report) {
-      if (reportRow.result === "error_missing_field") {
-        reportRow.field_name = csvFieldToColumnMap.get(reportRow.field_name);
-      }
-    }
+    let summary = await LoginHelper.maybeImportLogins(loginsToImport);
 
     // Record quantity, jank, and duration telemetry.
     try {
       Services.telemetry
         .getKeyedHistogramById("FX_MIGRATION_LOGINS_QUANTITY")
-        .add(LoginCSVImport.MIGRATION_HISTOGRAM_KEY, report.length);
+        .add(LoginCSVImport.MIGRATION_HISTOGRAM_KEY, summary.length);
       let accumulatedDelay = responsivenessMonitor.finish();
       Services.telemetry
         .getKeyedHistogramById("FX_MIGRATION_LOGINS_JANK_MS")
@@ -238,7 +231,6 @@ class LoginCSVImport {
     } catch (ex) {
       Cu.reportError(ex);
     }
-    LoginCSVImport.lastImportReport = report;
-    return report;
+    return summary;
   }
 }
