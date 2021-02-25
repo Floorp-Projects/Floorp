@@ -979,13 +979,40 @@ function handleRequest(req, res) {
     req.on("end", function finishedData() {
       let packet = dnsPacket.decode(payload);
       let answers = [];
-      let odohconfig = odoh.get_odoh_config();
+      let odohconfig;
+      if (u.query.invalid) {
+        if (u.query.invalid === "empty") {
+          odohconfig = Buffer.from("");
+        } else if (u.query.invalid === "version") {
+          odohconfig = Buffer.from(
+            "002cff030028002000010001002021c8c16355091b28d521cb196627297955c1b607a3dcf1f136534578460d077d",
+            "hex"
+          );
+        } else if (u.query.invalid === "configLength") {
+          odohconfig = Buffer.from(
+            "002cff040028002000010001002021c8c16355091b28d521cb196627297955c1b607a3dcf1f136534578460d07",
+            "hex"
+          );
+        } else if (u.query.invalid === "totalLength") {
+          odohconfig = Buffer.from(
+            "012cff030028002000010001002021c8c16355091b28d521cb196627297955c1b607a3dcf1f136534578460d077d",
+            "hex"
+          );
+        } else if (u.query.invalid === "kemId") {
+          odohconfig = Buffer.from(
+            "002cff040028002100010001002021c8c16355091b28d521cb196627297955c1b607a3dcf1f136534578460d077d",
+            "hex"
+          );
+        }
+      } else {
+        odohconfig = odoh.get_odoh_config();
+      }
       var b64encoded = Buffer.from(odohconfig).toString("base64");
       if (packet.questions[0].type == "HTTPS") {
         answers.push({
           name: packet.questions[0].name,
           type: packet.questions[0].type,
-          ttl: 55,
+          ttl: u.query.ttl ? u.query.ttl : 55,
           class: "IN",
           flush: false,
           data: {

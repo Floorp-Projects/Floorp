@@ -152,6 +152,8 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // but a request to refresh it will be made.
   mozilla::TimeStamp mGraceStart;
 
+  uint32_t mTtl = 0;
+
   // The computed TRR mode that is actually used by the request.
   // It is set in nsHostResolver::NameLookup and is based on the mode of the
   // default resolver and the TRRMode encoded in the flags.

@@ -248,6 +248,22 @@ class DNSListener {
   }
 }
 
+function observerPromise(topic) {
+  return new Promise(resolve => {
+    let observer = {
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+      observe(aSubject, aTopic, aData) {
+        dump(`observe: ${aSubject}, ${aTopic}, ${aData} \n`);
+        if (aTopic == topic) {
+          Services.obs.removeObserver(observer, topic);
+          resolve(aData);
+        }
+      },
+    };
+    Services.obs.addObserver(observer, topic);
+  });
+}
+
 add_task(async function testODoHConfig() {
   // use the h2 server as DOH provider
   prefs.setCharPref(
@@ -271,15 +287,80 @@ add_task(async function testODoHConfig() {
   Assert.equal(odohconfig.length, 46);
 });
 
+let testIndex = 0;
+
+async function ODoHConfigTest(query, ODoHHost, expectedResult = false) {
+  prefs.setCharPref(
+    "network.trr.uri",
+    "https://foo.example.com:" + h2Port + "/odohconfig?" + query
+  );
+
+  // Setting the pref "network.trr.odoh.target_host" will trigger the reload of
+  // the ODoHConfigs.
+  if (ODoHHost != undefined) {
+    prefs.setCharPref("network.trr.odoh.target_host", ODoHHost);
+  } else {
+    prefs.setCharPref(
+      "network.trr.odoh.target_host",
+      `https://odoh_host_${testIndex++}.com`
+    );
+  }
+
+  await observerPromise("odoh-service-activated");
+  Assert.equal(dns.ODoHActivated, expectedResult);
+}
+
+add_task(async function testODoHConfig1() {
+  await ODoHConfigTest("invalid=empty");
+});
+
+add_task(async function testODoHConfig2() {
+  await ODoHConfigTest("invalid=version");
+});
+
+add_task(async function testODoHConfig3() {
+  await ODoHConfigTest("invalid=configLength");
+});
+
+add_task(async function testODoHConfig4() {
+  await ODoHConfigTest("invalid=totalLength");
+});
+
+add_task(async function testODoHConfig5() {
+  await ODoHConfigTest("invalid=kemId");
+});
+
+add_task(async function testODoHConfig6() {
+  // Use a very short TTL.
+  prefs.setIntPref("network.trr.odoh.min_ttl", 1);
+  await ODoHConfigTest("invalid=kemId&ttl=1");
+
+  // This is triggered by the expiration of the TTL.
+  await observerPromise("odoh-service-activated");
+  Assert.ok(!dns.ODoHActivated);
+  prefs.clearUserPref("network.trr.odoh.min_ttl");
+});
+
+add_task(async function testODoHConfig7() {
+  dns.clearCache(true);
+  prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  prefs.setBoolPref("network.trr.odoh.enabled", true);
+  // At this point, we've queried the ODoHConfig, but there is no usable config
+  // (kemId is not supported). So, we should see the DNS result is from the
+  // native resolver.
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
+
 // verify basic A record
 add_task(async function test1() {
   dns.clearCache(true);
   prefs.setIntPref("network.trr.mode", 2); // TRR-first
   prefs.setBoolPref("network.trr.odoh.enabled", true);
-  prefs.setCharPref(
-    "network.trr.odoh.target_host",
-    `https://odoh_host.example.com:${h2Port}`
-  );
+
+  // Make sure we have an usable ODoHConfig to use.
+  await ODoHConfigTest("", `https://odoh_host.example.com:${h2Port}`, true);
+
+  // Make sure we can connect to ODOH target successfully.
   prefs.setCharPref("network.dns.localDomains", "odoh_host.example.com");
 
   const expectedIP = "8.8.8.8";

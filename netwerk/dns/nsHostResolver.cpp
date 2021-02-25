@@ -240,6 +240,7 @@ void nsHostRecord::SetExpiration(const mozilla::TimeStamp& now,
   }
   mGraceStart = now + TimeDuration::FromSeconds(valid);
   mValidEnd = now + TimeDuration::FromSeconds(valid + grace);
+  mTtl = valid;
 }
 
 void nsHostRecord::CopyExpirationTimesAndFlagsFrom(
@@ -647,6 +648,13 @@ TypeHostRecord::GetAllRecordsExcluded(bool* aResult) {
   }
 
   *aResult = mAllRecordsExcluded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TypeHostRecord::GetTtl(uint32_t* aResult) {
+  NS_ENSURE_ARG(aResult);
+  *aResult = mTtl;
   return NS_OK;
 }
 
