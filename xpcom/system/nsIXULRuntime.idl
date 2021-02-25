@@ -307,6 +307,19 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean restartedByOS;
 
   /**
+   * The path of the shortcut used to start the current process, or "" if none.
+   *
+   * Windows Main process only, otherwise throws NS_ERROR_NOT_AVAILABLE
+   *
+   * May be mising in some cases where the user did launch from a shortcut:
+   * - If the updater ran on startup
+   * - If the AUMID was set before the shortcut could be saved
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE if not available.
+   */
+  readonly attribute AString processStartupShortcut;
+
+  /**
    * Returns a value corresponding to one of the
    * |mozilla::LauncherRegistryInfo::EnabledState| values.
    */
