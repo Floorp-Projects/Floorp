@@ -35,10 +35,13 @@ async function test() {
         }
       }
     }
-    const target = await TargetFactory.forTab(gBrowser.selectedTab);
+    const tab = gBrowser.selectedTab;
     idIndex = 0;
     gDevTools
-      .showToolbox(target, toolIDs[0], Toolbox.HostType.WINDOW)
+      .showToolboxForTab(tab, {
+        toolId: toolIDs[0],
+        hostType: Toolbox.HostType.WINDOW,
+      })
       .then(testShortcuts);
   });
 }

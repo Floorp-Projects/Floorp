@@ -33,10 +33,10 @@ add_task(async function() {
 });
 
 async function testToolboxInitialization(testActor, tab) {
-  const target = await TargetFactory.forTab(tab);
-
   info("Opening inspector with gDevTools.");
-  const toolbox = await gDevTools.showToolbox(target, "inspector");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "inspector",
+  });
   const inspector = toolbox.getCurrentPanel();
 
   ok(true, "Inspector started, and notification received.");
@@ -58,7 +58,8 @@ async function testToolboxInitialization(testActor, tab) {
   await toolbox.destroy();
 
   ok(true, "'destroyed' notification received.");
-  ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");
+  const toolboxForTab = await gDevTools.getToolboxForTab(tab);
+  ok(!toolboxForTab, "Toolbox destroyed.");
 }
 
 async function testContextMenuInitialization(testActor) {

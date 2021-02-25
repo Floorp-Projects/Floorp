@@ -15,8 +15,7 @@ add_task(async function() {
   await runTests();
 
   info("Close Toolbox");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.closeToolbox(target);
+  await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
 
   info("Set a toolbox height of 1000px");
   await pushPref("devtools.toolbox.footer.height", 1000);

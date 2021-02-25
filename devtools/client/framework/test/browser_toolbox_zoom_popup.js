@@ -20,12 +20,11 @@ add_task(async function() {
 
   info("Load iframe page for checking the frame menu with x1.4 zoom.");
   await addTab(TEST_URL);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  const toolbox = await gDevTools.showToolbox(
-    target,
-    "inspector",
-    Toolbox.HostType.WINDOW
-  );
+  const tab = gBrowser.selectedTab;
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "inspector",
+    hostType: Toolbox.HostType.WINDOW,
+  });
   const inspector = toolbox.getCurrentPanel();
   const hostWindow = toolbox.win.parent;
   const originWidth = hostWindow.outerWidth;

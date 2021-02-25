@@ -15,8 +15,9 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8,test inspector destroy");
 
   info("Open the toolbox on the debugger panel");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  const toolbox = await gDevTools.showToolbox(target, "jsdebugger");
+  const toolbox = await gDevTools.showToolboxForTab(gBrowser.selectedTab, {
+    toolId: "jsdebugger",
+  });
 
   info("Switch to the inspector panel and immediately end the test");
   const onInspectorSelected = toolbox.once("inspector-selected");

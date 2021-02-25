@@ -142,17 +142,16 @@ async function openTabAndSetupStorage(url, options = {}) {
 /**
  * Open the toolbox, with the storage tool visible.
  *
- * @param cb {Function} Optional callback, if you don't want to use the returned
- *                      promise
+ * @param tab {XULTab} Optional, the tab for the toolbox; defaults to selected tab
  * @param target {Object} Optional, the target for the toolbox; defaults to a tab target
  * @param hostType {Toolbox.HostType} Optional, type of host that will host the toolbox
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-var openStoragePanel = async function(cb, target, hostType) {
+var openStoragePanel = async function({ tab, target, hostType } = {}) {
   info("Opening the storage inspector");
   if (!target) {
-    target = await TargetFactory.forTab(gBrowser.selectedTab);
+    target = await TargetFactory.forTab(tab || gBrowser.selectedTab);
   }
 
   let storage, toolbox;
@@ -168,9 +167,6 @@ var openStoragePanel = async function(cb, target, hostType) {
       gUI = storage.UI;
       gToolbox = toolbox;
       info("Toolbox and storage already open");
-      if (cb) {
-        return cb(storage, toolbox);
-      }
 
       return {
         toolbox: toolbox,
@@ -191,10 +187,6 @@ var openStoragePanel = async function(cb, target, hostType) {
   gUI.animationsEnabled = false;
 
   await waitForToolboxFrameFocus(toolbox);
-
-  if (cb) {
-    return cb(storage, toolbox);
-  }
 
   return {
     toolbox: toolbox,

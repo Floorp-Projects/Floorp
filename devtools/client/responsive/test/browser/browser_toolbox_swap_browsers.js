@@ -27,8 +27,8 @@ const checkServerConnectionCount = async function(browser, expected, msg) {
 };
 
 const checkToolbox = async function(tab, location) {
-  const target = await TargetFactory.forTab(tab);
-  ok(!!gDevTools.getToolbox(target), `Toolbox exists ${location}`);
+  const toolbox = await gDevTools.getToolboxForTab(tab);
+  ok(!!toolbox, `Toolbox exists ${location}`);
 };
 
 addRDMTask(

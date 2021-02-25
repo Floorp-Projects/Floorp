@@ -32,40 +32,41 @@ async function runTests(aTab) {
 
   const collectedEvents = [];
 
-  const target = await TargetFactory.forTab(aTab);
-  gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
-    const panel = toolbox.getPanel(toolDefinition.id);
-    ok(panel, "Tool open");
+  gDevTools
+    .showToolboxForTab(aTab, { toolId: toolDefinition.id })
+    .then(function(toolbox) {
+      const panel = toolbox.getPanel(toolDefinition.id);
+      ok(panel, "Tool open");
 
-    gDevTools.once("toolbox-destroy", (toolbox, iframe) => {
-      collectedEvents.push("toolbox-destroy");
-    });
+      gDevTools.once("toolbox-destroy", (toolbox, iframe) => {
+        collectedEvents.push("toolbox-destroy");
+      });
 
-    gDevTools.once(toolDefinition.id + "-destroy", (toolbox, iframe) => {
-      collectedEvents.push("gDevTools-" + toolDefinition.id + "-destroy");
-    });
+      gDevTools.once(toolDefinition.id + "-destroy", (toolbox, iframe) => {
+        collectedEvents.push("gDevTools-" + toolDefinition.id + "-destroy");
+      });
 
-    toolbox.once("destroy", () => {
-      collectedEvents.push("destroy");
-    });
+      toolbox.once("destroy", () => {
+        collectedEvents.push("destroy");
+      });
 
-    toolbox.once(toolDefinition.id + "-destroy", () => {
-      collectedEvents.push("toolbox-" + toolDefinition.id + "-destroy");
-    });
+      toolbox.once(toolDefinition.id + "-destroy", () => {
+        collectedEvents.push("toolbox-" + toolDefinition.id + "-destroy");
+      });
 
-    toolbox.destroy().then(function() {
-      is(
-        collectedEvents.join(":"),
-        "toolbox-destroy:destroy:gDevTools-testTool-destroy:toolbox-testTool-destroy",
-        "Found the right amount of collected events."
-      );
+      toolbox.destroy().then(function() {
+        is(
+          collectedEvents.join(":"),
+          "toolbox-destroy:destroy:gDevTools-testTool-destroy:toolbox-testTool-destroy",
+          "Found the right amount of collected events."
+        );
 
-      gDevTools.unregisterTool(toolDefinition.id);
-      gBrowser.removeCurrentTab();
+        gDevTools.unregisterTool(toolDefinition.id);
+        gBrowser.removeCurrentTab();
 
-      executeSoon(function() {
-        finish();
+        executeSoon(function() {
+          finish();
+        });
       });
     });
-  });
 }

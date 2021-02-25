@@ -31,8 +31,7 @@ Services.prefs.setBoolPref("devtools.memory.enabled", true);
  */
 this.openMemoryPanel = async function(tab) {
   info("Opening memory panel.");
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "memory");
+  const toolbox = await gDevTools.showToolboxForTab(tab, { toolId: "memory" });
   info("Memory panel shown successfully.");
   const panel = toolbox.getCurrentPanel();
   return { tab, panel };
@@ -43,8 +42,7 @@ this.openMemoryPanel = async function(tab) {
  */
 this.closeMemoryPanel = async function(tab) {
   info("Closing memory panel.");
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = gDevTools.getToolbox(target);
+  const toolbox = await gDevTools.getToolboxForTab(tab);
   await toolbox.destroy();
   info("Closed memory panel successfully.");
 };

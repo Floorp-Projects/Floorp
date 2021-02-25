@@ -322,9 +322,9 @@ function initNetMonitor(
     const tab = await addTab(url);
     info("Net tab added successfully: " + url);
 
-    const target = await TargetFactory.forTab(tab);
-
-    const toolbox = await gDevTools.showToolbox(target, "netmonitor");
+    const toolbox = await gDevTools.showToolboxForTab(tab, {
+      toolId: "netmonitor",
+    });
     info("Network monitor pane shown successfully.");
 
     const monitor = toolbox.getCurrentPanel();

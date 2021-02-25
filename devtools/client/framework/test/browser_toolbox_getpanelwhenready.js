@@ -10,8 +10,7 @@ const URL = "data:text/html;charset=utf8,test for getPanelWhenReady";
 
 add_task(async function() {
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
-  toolbox = await gDevTools.showToolbox(target);
+  toolbox = await gDevTools.showToolboxForTab(tab);
 
   const debuggerPanelPromise = toolbox.getPanelWhenReady("jsdebugger");
   await toolbox.selectTool("jsdebugger");

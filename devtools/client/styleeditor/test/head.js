@@ -71,8 +71,9 @@ var openStyleEditor = async function(tab) {
   if (!tab) {
     tab = gBrowser.selectedTab;
   }
-  const target = await TargetFactory.forTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "styleeditor");
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
+    toolId: "styleeditor",
+  });
   const panel = toolbox.getPanel("styleeditor");
   const ui = panel.UI;
 

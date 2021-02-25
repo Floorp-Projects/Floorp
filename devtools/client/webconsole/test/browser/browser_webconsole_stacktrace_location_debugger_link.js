@@ -18,8 +18,7 @@ const TEST_URI =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  const toolbox = gDevTools.getToolbox(target);
+  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
   await testOpenInDebugger(hud, toolbox, "console.trace()");
   await testOpenInDebugger(hud, toolbox, "myErrorObject");

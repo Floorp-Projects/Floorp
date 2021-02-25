@@ -3,24 +3,25 @@
 
 // Tests devtools API
 
-var toolbox, target;
+var toolbox;
 
 function test() {
-  addTab("about:blank").then(async function(aTab) {
-    target = await TargetFactory.forTab(gBrowser.selectedTab);
-    loadWebConsole(aTab).then(function() {
+  addTab("about:blank").then(async function() {
+    loadWebConsole().then(function() {
       console.log("loaded");
     });
   });
 }
 
-function loadWebConsole(aTab) {
+function loadWebConsole() {
   ok(gDevTools, "gDevTools exists");
-
-  return gDevTools.showToolbox(target, "webconsole").then(function(aToolbox) {
-    toolbox = aToolbox;
-    checkToolLoading();
-  });
+  const tab = gBrowser.selectedTab;
+  return gDevTools
+    .showToolboxForTab(tab, { toolId: "webconsole" })
+    .then(function(aToolbox) {
+      toolbox = aToolbox;
+      checkToolLoading();
+    });
 }
 
 function checkToolLoading() {
@@ -53,12 +54,17 @@ function selectAndCheckById(id) {
 function testToggle() {
   toolbox.once("destroyed", async () => {
     // Cannot reuse a target after it's destroyed.
-    target = await TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target, "styleeditor").then(function(aToolbox) {
-      toolbox = aToolbox;
-      is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
-      finishUp();
-    });
+    gDevTools
+      .showToolboxForTab(gBrowser.selectedTab, { toolId: "styleeditor" })
+      .then(function(aToolbox) {
+        toolbox = aToolbox;
+        is(
+          toolbox.currentToolId,
+          "styleeditor",
+          "The style editor is selected"
+        );
+        finishUp();
+      });
   });
 
   toolbox.destroy();
@@ -67,7 +73,6 @@ function testToggle() {
 function finishUp() {
   toolbox.destroy().then(function() {
     toolbox = null;
-    target = null;
     gBrowser.removeCurrentTab();
     finish();
   });

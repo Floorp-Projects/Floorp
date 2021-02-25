@@ -26,8 +26,7 @@ add_task(async function() {
   await checkGridHighlighter();
 
   info("Close the toolbox before reloading the tab");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.closeToolbox(target);
+  await gDevTools.closeToolboxForTab(gBrowser.selectedTab);
 
   await refreshTab();
 
