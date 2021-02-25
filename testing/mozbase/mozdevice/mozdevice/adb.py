@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import io
 import os
+import sys
 import pipes
 import posixpath
 import re
@@ -16,6 +17,7 @@ import subprocess
 import tempfile
 import time
 import traceback
+from threading import Thread
 
 from distutils import dir_util
 import six
@@ -30,12 +32,22 @@ _TEST_ROOT = None
 class ADBProcess(object):
     """ADBProcess encapsulates the data related to executing the adb process."""
 
-    def __init__(self, args):
+    def __init__(self, args, use_stdout_pipe=False, timeout=None):
         #: command argument list.
         self.args = args
+        Popen_args = {}
 
         #: Temporary file handle to be used for stdout.
-        self.stdout_file = tempfile.NamedTemporaryFile(mode="w+b")
+        if use_stdout_pipe:
+            self.stdout_file = subprocess.PIPE
+            # Reading utf-8 from the stdout pipe
+            if sys.version_info >= (3, 6):
+                Popen_args["encoding"] = "utf-8"
+            else:
+                Popen_args["universal_newlines"] = True
+        else:
+            self.stdout_file = tempfile.NamedTemporaryFile(mode="w+b")
+        Popen_args["stdout"] = self.stdout_file
 
         #: boolean indicating if the command timed out.
         self.timedout = None
@@ -44,13 +56,33 @@ class ADBProcess(object):
         self.exitcode = None
 
         #: subprocess Process object used to execute the command.
-        self.proc = subprocess.Popen(
-            args, stdout=self.stdout_file, stderr=subprocess.STDOUT
-        )
+        Popen_args["stderr"] = subprocess.STDOUT
+        self.proc = subprocess.Popen(args, **Popen_args)
+
+        # If a timeout is set, then create a thread responsible for killing the
+        # process, as well as updating the exitcode and timedout status.
+        def timeout_thread(adb_process, timeout):
+            start_time = time.time()
+            polling_interval = 0.001
+            adb_process.exitcode = adb_process.proc.poll()
+            while (time.time() - start_time) <= float(
+                timeout
+            ) and adb_process.exitcode is None:
+                time.sleep(polling_interval)
+                adb_process.exitcode = adb_process.proc.poll()
+
+            if adb_process.exitcode is None:
+                adb_process.proc.kill()
+                adb_process.timedout = True
+                adb_process.exitcode = adb_process.proc.poll()
+
+        if timeout:
+            Thread(target=timeout_thread, args=(self, timeout), daemon=True).start()
 
     @property
     def stdout(self):
         """Return the contents of stdout."""
+        assert not self.stdout_file == subprocess.PIPE
         if not self.stdout_file or self.stdout_file.closed:
             content = ""
         else:
@@ -68,6 +100,20 @@ class ADBProcess(object):
             self.exitcode,
             self.stdout,
         )
+
+    def __iter__(self):
+        assert self.stdout_file == subprocess.PIPE
+        return self
+
+    def __next__(self):
+        assert self.stdout_file == subprocess.PIPE
+        try:
+            return next(self.proc.stdout)
+        except StopIteration:
+            # Wait until the process ends.
+            while self.exitcode is None or self.timedout:
+                time.sleep(0.001)
+            raise StopIteration
 
 
 # ADBError and ADBTimeoutError are treated differently in order that
@@ -222,7 +268,6 @@ class ADBCommand(object):
         level = "DEBUG" if verbose else "INFO"
         try:
             import mozlog
-            import sys
 
             logger = mozlog.get_default_logger(logger_name)
             if not logger:
@@ -1891,6 +1936,7 @@ class ADBDevice(ADBCommand):
         cwd=None,
         timeout=None,
         stdout_callback=None,
+        yield_stdout=None,
         enable_run_as=False,
     ):
         """Executes a shell command on the device.
@@ -1905,6 +1951,9 @@ class ADBDevice(ADBCommand):
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBDevice constructor is used.
         :param function stdout_callback: Function called for each line of output.
+        :param bool yield_stdout: Flag used to make the returned process
+            iteratable. The return process can be used in a loop to get the output
+            and the loop would exit as the process ends.
         :param bool enable_run_as: Flag used to temporarily enable use
             of run-as to execute the command.
         :return: :class:`ADBProcess`
@@ -1942,6 +1991,11 @@ class ADBDevice(ADBCommand):
 
         It is the caller's responsibilty to clean up by closing
         the stdout temporary files.
+
+        If the yield_stdout flag is set, then the returned ADBProcess
+        can be iterated over to get the output as it is produced by
+        adb command. The iterator ends when the process timed out or
+        if it exited. This flag is incompatible with stdout_callback.
 
         """
 
@@ -2015,10 +2069,17 @@ class ADBDevice(ADBCommand):
         if self._device_serial:
             args.extend(["-s", self._device_serial])
         args.extend(["wait-for-device", "shell", cmd])
-        adb_process = ADBProcess(args)
 
         if timeout is None:
             timeout = self._timeout
+
+        if yield_stdout:
+            # When using yield_stdout, rely on the timeout implemented in
+            # ADBProcess instead of relying on our own here.
+            assert not stdout_callback
+            return ADBProcess(args, use_stdout_pipe=yield_stdout, timeout=timeout)
+        else:
+            adb_process = ADBProcess(args)
 
         start_time = time.time()
         exitcode = adb_process.proc.poll()
