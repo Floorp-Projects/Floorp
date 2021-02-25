@@ -28,11 +28,6 @@ const screenshotContentSpec = generateActorSpec({
         value: RetVal("json"),
       },
     },
-
-    captureDone: {
-      request: {},
-      oneway: true,
-    },
   },
 });
 

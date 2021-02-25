@@ -112,11 +112,6 @@ async function captureScreenshot(targetFront, args) {
   const parentProcessScreenshotFront = await rootFront.getFront("screenshot");
   const captureResponse = await parentProcessScreenshotFront.capture(args);
 
-  // Reset the page to the state it was in before taking the screenshot (e.g. set the
-  // scroll position as it was before). This is a oneway method so there's nothing to
-  // wait for.
-  screenshotContentFront.captureDone();
-
   return {
     ...captureResponse,
     messages: (messages || []).concat(captureResponse.messages || []),
