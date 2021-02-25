@@ -5,8 +5,7 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  const target = await TabTargetFactory.forTab(gBrowser.selectedTab);
-  await target.attach();
+  const target = await createAndAttachTargetForTab(gBrowser.selectedTab);
 
   info("Test applying watchFronts to a front that will be created");
   const promise = new Promise(resolve => {

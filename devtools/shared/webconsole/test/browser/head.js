@@ -11,13 +11,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-async function getTargetForTab(tab) {
-  const target = await TabTargetFactory.forTab(tab);
-  info("Attaching to the active tab.");
-  await target.attach();
-  return target;
-}
-
 function checkObject(object, expected) {
   for (const name of Object.keys(expected)) {
     const expectedValue = expected[name];
