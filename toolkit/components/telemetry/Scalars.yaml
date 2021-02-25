@@ -1901,6 +1901,24 @@ os.environment:
     operating_systems:
       - windows
 
+  is_taskbar_pinned:
+    bug_numbers:
+      - 1685213
+    description: Whether this app was pinned to taskbar on startup
+    expires: "94"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - agashlin@mozilla.com
+      - shong@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
 pictureinpicture:
   opened_method:
     bug_numbers:
