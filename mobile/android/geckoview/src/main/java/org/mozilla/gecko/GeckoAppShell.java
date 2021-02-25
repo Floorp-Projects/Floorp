@@ -1197,7 +1197,16 @@ public class GeckoAppShell {
             return LINK_TYPE_UNKNOWN;
         }
 
-        switch (tm.getNetworkType()) {
+        final int networkType;
+
+        try {
+            // Bug 1694179 workaround, on Android 11 this throws
+            networkType = tm.getNetworkType();
+        } catch (final Exception ex) {
+            return LINK_TYPE_4G;
+        }
+
+        switch (networkType) {
             case TelephonyManager.NETWORK_TYPE_IDEN:
             case TelephonyManager.NETWORK_TYPE_CDMA:
             case TelephonyManager.NETWORK_TYPE_GPRS:
