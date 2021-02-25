@@ -192,17 +192,22 @@ add_task(async function appMenu() {
       elem("appMenu-popup"),
       "popuphidden"
     );
-    click("appMenu-find-button");
+
+    let findButtonID = PanelUI.protonAppMenuEnabled
+      ? "appMenu-find-button2"
+      : "appMenu-find-button";
+    click(findButtonID);
     await hidden;
 
-    assertInteractionScalars({
+    let expectedScalars = {
       nav_bar: {
         "PanelUI-menu-button": 1,
       },
-      app_menu: {
-        "appMenu-find-button": 1,
-      },
-    });
+      app_menu: {},
+    };
+    expectedScalars.app_menu[findButtonID] = 1;
+
+    assertInteractionScalars(expectedScalars);
   });
 });
 
@@ -217,38 +222,75 @@ add_task(async function devtools() {
     click("PanelUI-menu-button");
     await shown;
 
-    click("appMenu-developer-button");
-    shown = BrowserTestUtils.waitForEvent(
-      elem("PanelUI-developer"),
-      "ViewShown"
-    );
-    await shown;
+    // With the Proton AppMenu enabled, the View Source item is under
+    // the "More Tools" menu, along with the rest of the Developer Tools.
+    if (PanelUI.protonAppMenuEnabled) {
+      click("appMenu-more-button2");
+      shown = BrowserTestUtils.waitForEvent(
+        elem("appmenu-moreTools"),
+        "ViewShown"
+      );
+      await shown;
 
-    let tabOpen = BrowserTestUtils.waitForNewTab(gBrowser);
-    let hidden = BrowserTestUtils.waitForEvent(
-      elem("appMenu-popup"),
-      "popuphidden"
-    );
-    click(
-      document.querySelector(
-        "#PanelUI-developer toolbarbutton[key='key_viewSource']"
-      )
-    );
-    await hidden;
+      let tabOpen = BrowserTestUtils.waitForNewTab(gBrowser);
+      let hidden = BrowserTestUtils.waitForEvent(
+        elem("appMenu-popup"),
+        "popuphidden"
+      );
+      click(
+        document.querySelector(
+          "#appmenu-moreTools toolbarbutton[key='key_viewSource']"
+        )
+      );
+      await hidden;
 
-    let tab = await tabOpen;
-    BrowserTestUtils.removeTab(tab);
+      let tab = await tabOpen;
+      BrowserTestUtils.removeTab(tab);
 
-    // Note that item ID's have '_' converted to '-'.
-    assertInteractionScalars({
-      nav_bar: {
-        "PanelUI-menu-button": 1,
-      },
-      app_menu: {
-        "appMenu-developer-button": 1,
-        "key-viewSource": 1,
-      },
-    });
+      // Note that item ID's have '_' converted to '-'.
+      assertInteractionScalars({
+        nav_bar: {
+          "PanelUI-menu-button": 1,
+        },
+        app_menu: {
+          "appMenu-more-button2": 1,
+          "key-viewSource": 1,
+        },
+      });
+    } else {
+      click("appMenu-developer-button");
+      shown = BrowserTestUtils.waitForEvent(
+        elem("PanelUI-developer"),
+        "ViewShown"
+      );
+      await shown;
+
+      let tabOpen = BrowserTestUtils.waitForNewTab(gBrowser);
+      let hidden = BrowserTestUtils.waitForEvent(
+        elem("appMenu-popup"),
+        "popuphidden"
+      );
+      click(
+        document.querySelector(
+          "#PanelUI-developer toolbarbutton[key='key_viewSource']"
+        )
+      );
+      await hidden;
+
+      let tab = await tabOpen;
+      BrowserTestUtils.removeTab(tab);
+
+      // Note that item ID's have '_' converted to '-'.
+      assertInteractionScalars({
+        nav_bar: {
+          "PanelUI-menu-button": 1,
+        },
+        app_menu: {
+          "appMenu-developer-button": 1,
+          "key-viewSource": 1,
+        },
+      });
+    }
   });
 });
 

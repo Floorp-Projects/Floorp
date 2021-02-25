@@ -32,7 +32,11 @@ add_task(async function mainMenu_entryPoint() {
   info("mainMenu_entryPoint, main menu popup is shown");
   is(mainMenu.state, "open", `Menu panel (${mainMenu.id}) is open.`);
 
-  let item = document.getElementById("appMenu-logins-button");
+  let loginsButtonID = PanelUI.protonAppMenuEnabled
+    ? "appMenu-passwords-button"
+    : "appMenu-logins-button";
+
+  let item = document.getElementById(loginsButtonID);
   await TestUtils.waitForCondition(
     () => BrowserTestUtils.is_visible(item),
     "Logins and passwords button is visible."

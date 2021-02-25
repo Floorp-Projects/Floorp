@@ -8,6 +8,13 @@
  * also while the view is displayed in the main menu.
  */
 add_task(async function test_library_after_appMenu() {
+  if (PanelUI.protonAppMenuEnabled) {
+    Assert.ok(
+      true,
+      "Skipping test because the Library is no longer in the Proton AppMenu."
+    );
+    return;
+  }
   await gCUITestUtils.openMainMenu();
 
   // Show the Library view as a subview of the main menu.

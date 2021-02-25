@@ -1856,6 +1856,11 @@ var gBrowserInit = {
     if (BrowserUIUtils.quitShortcutDisabled) {
       document.getElementById("key_quitApplication").remove();
       document.getElementById("menu_FileQuitItem").removeAttribute("key");
+
+      PanelMultiView.getViewNode(
+        document,
+        "appMenu-quit-button2"
+      )?.removeAttribute("key");
       PanelMultiView.getViewNode(
         document,
         "appMenu-quit-button"
