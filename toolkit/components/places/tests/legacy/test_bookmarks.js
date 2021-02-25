@@ -42,6 +42,13 @@ var bookmarksObserver = {
     }
   },
 
+  onBeginUpdateBatch() {
+    this._beginUpdateBatch = true;
+  },
+  onEndUpdateBatch() {
+    this._endUpdateBatch = true;
+  },
+
   onItemChanged(
     id,
     property,

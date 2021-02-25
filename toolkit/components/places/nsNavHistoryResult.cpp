@@ -1992,9 +1992,11 @@ nsNavHistoryQueryResultNode::GetSkipTags(bool* aSkipTags) {
   return NS_OK;
 }
 
-nsresult nsNavHistoryQueryResultNode::OnBeginUpdateBatch() { return NS_OK; }
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnBeginUpdateBatch() { return NS_OK; }
 
-nsresult nsNavHistoryQueryResultNode::OnEndUpdateBatch() {
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnEndUpdateBatch() {
   // If the query has no children it's possible it's not yet listening to
   // bookmarks changes, in such a case it's safer to force a refresh to gather
   // eventual new nodes matching query options.
@@ -2988,9 +2990,11 @@ nsNavHistoryFolderResultNode::GetSkipTags(bool* aSkipTags) {
   return NS_OK;
 }
 
-nsresult nsNavHistoryFolderResultNode::OnBeginUpdateBatch() { return NS_OK; }
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::OnBeginUpdateBatch() { return NS_OK; }
 
-nsresult nsNavHistoryFolderResultNode::OnEndUpdateBatch() { return NS_OK; }
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::OnEndUpdateBatch() { return NS_OK; }
 
 nsresult nsNavHistoryFolderResultNode::OnItemAdded(
     int64_t aItemId, int64_t aParentFolder, int32_t aIndex, uint16_t aItemType,
@@ -3447,6 +3451,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResult)
   NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsNavHistoryResult)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryResult)
   NS_INTERFACE_MAP_ENTRY(nsINavBookmarkObserver)
+  NS_INTERFACE_MAP_ENTRY(nsINavHistoryObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -3472,17 +3477,9 @@ nsNavHistoryResult::nsNavHistoryResult(
   MOZ_ASSERT(mRootNode->mIndentLevel == -1,
              "Root node's indent level initialized wrong");
   mRootNode->FillStats();
-
-  AutoTArray<PlacesEventType, 1> events;
-  events.AppendElement(PlacesEventType::Purge_caches);
-  PlacesObservers::AddListener(events, this);
 }
 
 nsNavHistoryResult::~nsNavHistoryResult() {
-  AutoTArray<PlacesEventType, 1> events;
-  events.AppendElement(PlacesEventType::Purge_caches);
-  PlacesObservers::RemoveListener(events, this);
-
   // Delete all heap-allocated bookmark folder observer arrays.
   for (auto it = mBookmarkFolderObservers.Iter(); !it.Done(); it.Next()) {
     delete it.Data();
@@ -3508,6 +3505,10 @@ void nsNavHistoryResult::StopObserving() {
     mIsMobilePrefObserver = false;
   }
   if (mIsHistoryObserver) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    if (history) {
+      history->RemoveObserver(this);
+    }
     mIsHistoryObserver = false;
     events.AppendElement(PlacesEventType::History_cleared);
     events.AppendElement(PlacesEventType::Page_removed);
@@ -3539,6 +3540,9 @@ bool nsNavHistoryResult::CanSkipHistoryDetailsNotifications() const {
 void nsNavHistoryResult::AddHistoryObserver(
     nsNavHistoryQueryResultNode* aNode) {
   if (!mIsHistoryObserver) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ASSERTION(history, "Can't create history service");
+    history->AddObserver(this, true);
     mIsHistoryObserver = true;
 
     AutoTArray<PlacesEventType, 3> events;
@@ -4221,10 +4225,6 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
                                   removeEvent->mTransitionType));
         }
 
-        break;
-      }
-      case PlacesEventType::Purge_caches: {
-        mRootNode->Refresh();
         break;
       }
       default: {

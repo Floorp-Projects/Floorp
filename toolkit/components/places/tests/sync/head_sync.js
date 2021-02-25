@@ -347,6 +347,8 @@ BookmarkObserver.prototype = {
       }
     }
   },
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
   onItemChanged(
     itemId,
     property,

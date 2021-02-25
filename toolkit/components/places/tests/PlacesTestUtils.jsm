@@ -431,13 +431,17 @@ var PlacesTestUtils = Object.freeze({
       });
     }
 
+    let iface =
+      type == "bookmarks"
+        ? Ci.nsINavBookmarkObserver
+        : Ci.nsINavHistoryObserver;
     return new Promise(resolve => {
       let proxifiedObserver = new Proxy(
         {},
         {
           get: (target, name) => {
             if (name == "QueryInterface") {
-              return ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]);
+              return ChromeUtils.generateQI([iface]);
             }
             if (name == notification) {
               return (...args) => {

@@ -988,6 +988,8 @@ var PlacesUIUtils = {
       return;
     }
 
+    resultNode = resultNode.QueryInterface(Ci.nsINavBookmarkObserver);
+
     if (itemsBeingChanged > ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD) {
       resultNode.onBeginUpdateBatch();
     }
@@ -1181,6 +1183,8 @@ var PlacesUIUtils = {
 
     // This listener is for tracking bookmark moves
     let placesUtilsBookmarksObserver = {
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
       onItemChanged() {},
       onItemMoved(
         aItemId,
