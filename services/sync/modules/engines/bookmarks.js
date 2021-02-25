@@ -891,6 +891,10 @@ BookmarksTracker.prototype = {
           this._log.trace("'bookmark-removed': " + event.id);
           this._upScore();
           break;
+        case "purge-caches":
+          this._log.trace("purge-caches");
+          this._upScore();
+          break;
       }
     }
   },

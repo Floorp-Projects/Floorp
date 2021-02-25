@@ -39,6 +39,12 @@ enum PlacesEventType {
    * bookmarked.
    */
   "page-removed",
+  /**
+   * data: PlacesPurgeCaches. Fired whenever changes happened that could not be observed
+   * through other notifications, for example a database fixup. When received, observers,
+   * especially data views, should drop any caches and reload from scratch.
+   */
+  "purge-caches",
 };
 
 [ChromeOnly, Exposed=Window]
@@ -328,4 +334,9 @@ interface PlacesVisitRemoved : PlacesEvent {
    * This will be true if remains at least one visit to the page.
    */
   readonly attribute boolean isPartialVisistsRemoval;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesPurgeCaches : PlacesEvent {
+  constructor();
 };
