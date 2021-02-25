@@ -22,7 +22,6 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
   initialize: function(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
     this.targetActor = targetActor;
-    this._lastScrollPosition = null;
   },
 
   _getRectForNode(node) {
@@ -53,8 +52,6 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
    *            `drawSnapshot` API.
    */
   prepareCapture({ fullpage, selector, nodeActorID }) {
-    this._lastScrollPosition = null;
-
     const { window } = this.targetActor;
     const windowDpr = window.devicePixelRatio;
     const windowZoom = getCurrentZoom(window);
@@ -95,11 +92,6 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
         window.scrollMaxY -
         window.scrollMinY -
         scrollbarHeight.value;
-
-      // Bug 961832: Screenshot shows fixed position element in wrong
-      // position if we don't scroll to top. We should be able to remove this when Bug 1688813 lands.
-      this._lastScrollPosition = [window.scrollX, window.scrollY];
-      window.scrollTo(0, 0);
     } else if (selector) {
       const node = window.document.querySelector(selector);
 
@@ -139,18 +131,5 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
       rect: { left, top, width, height },
       messages,
     };
-  },
-
-  /**
-   * Function called once the screenshot was taken, in order to reset the page to the
-   * state it was in before taking the screenshot.
-   *
-   * We should be able to remove this when Bug 1688813 lands.
-   */
-  captureDone() {
-    if (this._lastScrollPosition) {
-      this.targetActor.window.scrollTo(...this._lastScrollPosition);
-      this._lastScrollPosition = null;
-    }
   },
 });
