@@ -4670,10 +4670,27 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
                           // they won't be accessed after initialization.
                         }
 
-                        QM_TRY(InitializeOrigin(
-                            aPersistenceType, metadata.mOriginMetadata,
-                            metadata.mTimestamp, metadata.mPersisted,
-                            childDirectory));
+                        QM_TRY(
+                            ToResult(InitializeOrigin(aPersistenceType,
+                                                      metadata.mOriginMetadata,
+                                                      metadata.mTimestamp,
+                                                      metadata.mPersisted,
+                                                      childDirectory))
+                                .orElse([&childDirectory](const nsresult rv)
+                                            -> Result<Ok, nsresult> {
+                                  if (IsDatabaseCorruptionError(rv)) {
+                                    // If the origin can't be initialized due to
+                                    // corruption, this is a permanent
+                                    // condition, and we need to remove all data
+                                    // for the origin on disk.
+
+                                    QM_TRY(childDirectory->Remove(true));
+
+                                    return Ok{};
+                                  }
+
+                                  return Err(rv);
+                                }));
 
                         break;
                       }
