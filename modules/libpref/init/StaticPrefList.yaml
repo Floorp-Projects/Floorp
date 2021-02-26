@@ -243,6 +243,11 @@
 # The apz prefs are explained in AsyncPanZoomController.cpp
 #---------------------------------------------------------------------------
 
+- name: apz.scrollbarbuttonrepeat.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: apz.wr.activate_all_scroll_frames
   type: RelaxedAtomicBool
   value: false

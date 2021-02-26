@@ -3897,6 +3897,13 @@ void nsTreeBodyFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
   ScrollByLines(aDirection);
 }
 
+void nsTreeBodyFrame::ScrollByUnit(nsScrollbarFrame* aScrollbar,
+                                   ScrollMode aMode, int32_t aDirection,
+                                   ScrollUnit aUnit,
+                                   ScrollSnapMode aSnap /* = DISABLE_SNAP */) {
+  MOZ_ASSERT_UNREACHABLE("Can't get here, we pass false to MoveToNewPosition");
+}
+
 void nsTreeBodyFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar) {
   ScrollParts parts = GetScrollParts();
   int32_t increment = aScrollbar->GetIncrement();
@@ -3910,7 +3917,8 @@ void nsTreeBodyFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar) {
 
   AutoWeakFrame weakFrame(this);
   if (isHorizontal) {
-    int32_t curpos = aScrollbar->MoveToNewPosition();
+    int32_t curpos = aScrollbar->MoveToNewPosition(
+        nsScrollbarFrame::ImplementsScrollByUnit::No);
     if (weakFrame.IsAlive()) {
       ScrollHorzInternal(parts, curpos);
     }
