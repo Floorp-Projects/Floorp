@@ -59,8 +59,7 @@ pub struct ModularTransform {
     transform_module_fn: TransformModuleFn,
     next_transform: Option<Box<ModularTransform>>,
 }
-pub type TransformModuleFn =
-    Option<fn(_: &ModularTransform, _: &[f32], _: &mut [f32]) -> ()>;
+pub type TransformModuleFn = Option<fn(_: &ModularTransform, _: &[f32], _: &mut [f32]) -> ()>;
 
 #[inline]
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
@@ -455,11 +454,7 @@ fn transform_module_gamma_lut(transform: &ModularTransform, src: &[f32], dest: &
         dest[2] = clamp_float(out_b);
     }
 }
-fn transform_module_matrix_translate(
-    transform: &ModularTransform,
-    src: &[f32],
-    dest: &mut [f32],
-) {
+fn transform_module_matrix_translate(transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     let mut mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -907,10 +902,7 @@ remove_next:
     return transform;
 }
 */
-fn modular_transform_create(
-    input: &Profile,
-    output: &Profile,
-) -> Option<Box<ModularTransform>> {
+fn modular_transform_create(input: &Profile, output: &Profile) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if input.color_space == RGB_SIGNATURE {
