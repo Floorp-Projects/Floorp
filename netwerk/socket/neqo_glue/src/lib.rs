@@ -203,14 +203,9 @@ pub extern "C" fn neqo_http3conn_new(
  * packet holds packet data.
  */
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_process_input(
-    conn: &mut NeqoHttp3Conn,
-    packet: *const u8,
-    len: u32,
-) {
-    let array = unsafe { slice::from_raw_parts(packet, len as usize) };
+pub extern "C" fn neqo_http3conn_process_input(conn: &mut NeqoHttp3Conn, packet: *const ThinVec<u8>) {
     conn.conn.process_input(
-        Datagram::new(conn.remote_addr, conn.local_addr, array.to_vec()),
+        Datagram::new(conn.remote_addr, conn.local_addr, unsafe { (*packet).to_vec() }),
         Instant::now(),
     );
 }

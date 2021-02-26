@@ -36,8 +36,8 @@ class NeqoHttp3Conn final {
     neqo_http3conn_authenticated(this, aError);
   }
 
-  void ProcessInput(uint8_t* aPacket, uint32_t aLen) {
-    neqo_http3conn_process_input(this, aPacket, aLen);
+  void ProcessInput(const nsTArray<uint8_t>& aPacket) {
+    neqo_http3conn_process_input(this, &aPacket);
   }
 
   uint64_t ProcessOutput() { return neqo_http3conn_process_output(this); }

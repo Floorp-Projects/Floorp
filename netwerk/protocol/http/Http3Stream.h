@@ -135,9 +135,6 @@ class Http3Stream final : public nsAHttpSegmentReader,
   nsTArray<uint8_t> mFlatResponseHeaders;
   uint32_t mRequestBodyLenRemaining;
 
-  // The underlying socket transport object is needed to propogate some events
-  RefPtr<nsISocketTransport> mSocketTransport;
-
   // For Progress Events
   uint64_t mTotalSent;
   uint64_t mTotalRead;
