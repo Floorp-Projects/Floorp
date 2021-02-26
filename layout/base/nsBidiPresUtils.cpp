@@ -414,9 +414,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   }
 
   int32_t GetLastFrameForContent(nsIContent* aContent) {
-    int32_t index = 0;
-    mContentToFrameIndex.Get(aContent, &index);
-    return index;
+    return mContentToFrameIndex.Get(aContent);
   }
 
   int32_t FrameCount() { return mLogicalFrames.Length(); }

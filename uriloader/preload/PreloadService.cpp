@@ -39,9 +39,7 @@ void PreloadService::DeregisterPreload(const PreloadHashKey& aKey) {
 void PreloadService::ClearAllPreloads() { mPreloads.Clear(); }
 
 bool PreloadService::PreloadExists(const PreloadHashKey& aKey) {
-  bool found;
-  mPreloads.GetWeak(aKey, &found);
-  return found;
+  return mPreloads.Contains(aKey);
 }
 
 already_AddRefed<PreloaderBase> PreloadService::LookupPreload(

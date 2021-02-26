@@ -7,6 +7,7 @@
 #ifndef DOM_SVG_SVGATTRTEAROFFTABLE_H_
 #define DOM_SVG_SVGATTRTEAROFFTABLE_H_
 
+#include "mozilla/DebugOnly.h"
 #include "nsDataHashtable.h"
 #include "nsDebug.h"
 #include "nsHashKeys.h"
@@ -50,10 +51,7 @@ TearoffType* SVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(
 
   TearoffType* tearoff = nullptr;
 
-#ifdef DEBUG
-  bool found =
-#endif
-      mTable->Get(aSimple, &tearoff);
+  DebugOnly<bool> found = mTable->Get(aSimple, &tearoff);
   MOZ_ASSERT(!found || tearoff,
              "null pointer stored in attribute tear-off map");
 

@@ -477,8 +477,7 @@ nsSynthVoiceRegistry::GetVoiceName(const nsAString& aUri, nsAString& aRetval) {
 nsresult nsSynthVoiceRegistry::AddVoiceImpl(
     nsISpeechService* aService, const nsAString& aUri, const nsAString& aName,
     const nsAString& aLang, bool aLocalService, bool aQueuesUtterances) {
-  bool found = false;
-  mUriVoiceMap.GetWeak(aUri, &found);
+  const bool found = mUriVoiceMap.Contains(aUri);
   if (NS_WARN_IF(found)) {
     return NS_ERROR_INVALID_ARG;
   }
