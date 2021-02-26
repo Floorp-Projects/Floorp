@@ -6,10 +6,14 @@ const { ExperimentAPI } = ChromeUtils.import(
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
   "browser.aboutwelcome.overrideContent";
+const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 
 const TEST_MULTISTAGE_CONTENT = {
   id: "multi-stage-welcome",
@@ -199,6 +203,17 @@ async function onButtonClick(browser, elementId) {
     }
   );
 }
+
+add_task(async function setup() {
+  const sandbox = sinon.createSandbox();
+  // This needs to happen before any about:welcome page opens
+  sandbox.stub(FxAccounts.config, "promiseMetricsFlowURI").resolves("");
+  await setAboutWelcomeMultiStage("");
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+});
 
 /**
  * Test the zero onboarding using ExperimentAPI
@@ -788,3 +803,49 @@ add_task(async function test_AWMultistage_Import() {
     "Got call to handle Telemetry event"
   );
 });
+
+// Test events from AboutWelcomeUtils
+async function test_set_message() {
+  Services.prefs.setBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false);
+  await openAboutWelcome();
+  Assert.equal(
+    Services.prefs.getBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false),
+    true,
+    "Pref was set"
+  );
+}
+
+add_task(async function test_onContentMessage() {
+  await setAboutWelcomePref(true);
+  await openAboutWelcome();
+
+  //case "SET_WELCOME_MESSAGE_SEEN"
+  await test_set_message();
+});
+
+// Test Fxaccounts MetricsFlowURI
+test_newtab(
+  {
+    async before({ pushPrefs }) {
+      await pushPrefs(["browser.aboutwelcome.enabled", true]);
+    },
+    test: async function test_startBrowsing() {
+      await ContentTaskUtils.waitForCondition(
+        () => content.document.querySelector(".indicator.current"),
+        "Wait for about:welcome to load"
+      );
+    },
+    after() {
+      Assert.ok(
+        FxAccounts.config.promiseMetricsFlowURI.called,
+        "Stub was called"
+      );
+      Assert.equal(
+        FxAccounts.config.promiseMetricsFlowURI.firstCall.args[0],
+        "aboutwelcome",
+        "Called by AboutWelcomeParent"
+      );
+    },
+  },
+  "about:welcome"
+);
