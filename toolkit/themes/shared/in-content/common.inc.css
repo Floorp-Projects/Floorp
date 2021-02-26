@@ -1097,8 +1097,6 @@ input[type="text"][warning]:enabled:not(:focus) {
   box-shadow: 0 0 0 1px var(--yellow-60), 0 0 0 4px var(--yellow-60-a30);
 }
 
-/* Cards */
-
 .card {
   background: var(--in-content-box-background);
   /* Needed for high-contrast where the border will appear. */
@@ -1125,8 +1123,6 @@ input[type="text"][warning]:enabled:not(:focus) {
   transform: scaleX(-1);
 }
 
-/* Sidebar footer links */
-
 .sidebar-footer-list {
   list-style-type: none;
   margin-block: 0 36px;
@@ -1134,32 +1130,61 @@ input[type="text"][warning]:enabled:not(:focus) {
   padding: 0;
 }
 
-.sidebar-footer-link {
+.sidebar-footer-link,
+.sidebar-footer-button > .text-link {
+  -moz-box-flex: 1;
+  margin-inline: 34px 0;
+  text-decoration: none;
+  color: currentColor;
+  width: 36px;
   height: 36px;
   cursor: default;
-  border-radius: 2px;
+}
+
+.sidebar-footer-link {
   display: flex;
   align-items: center;
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position-x: 13px;
+  background-position-y: 10px;
+  cursor: default;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  padding-inline-start: 43px;
 
-  /* Override link style for :hover and :hover:active states */
-  text-decoration: none !important;
-  color: inherit !important;
+  /* These override the common styles. */
+  margin: 0;
+  font-size: .9em;
+  width: auto;
 }
 
-xul|*.sidebar-footer-link {
-  display: -moz-box;
-  -moz-box-align: center;
+.sidebar-footer-link:dir(rtl) {
+  background-position-x: right 13px;
 }
 
-.sidebar-footer-link:hover {
+.sidebar-footer-link,
+.sidebar-footer-link:hover,
+.sidebar-footer-link:hover:active,
+.sidebar-footer-link:visited {
+  text-decoration: none;
+  color: currentColor;
+}
+
+.sidebar-footer-link:hover,
+.sidebar-footer-button > .text-link:hover {
   background-color: var(--in-content-category-background-hover);
+  border-radius: 2px;
 }
 
-.sidebar-footer-link:hover:active:not([disabled]) {
+.sidebar-footer-link:hover:active:not([disabled]),
+.sidebar-footer-button > .text-link:hover:active:not([disabled]) {
   background-color: var(--in-content-category-background-active);
+  color: currentColor;
 }
 
-.sidebar-footer-link:-moz-focusring {
+.sidebar-footer-link:-moz-focusring,
+.sidebar-footer-button > .text-link:-moz-focusring {
   outline: var(--in-content-category-outline-focus);
   outline-offset: -1px;
 }
@@ -1171,18 +1196,61 @@ xul|*.sidebar-footer-link {
   height: 16px;
   margin: 10px;
   margin-inline-start: 13px;
+  vertical-align: middle;
+}
+
+.sidebar-footer-icon:hover {
+  fill: currentColor !important;
+}
+
+.sidebar-footer-button:last-of-type {
+  margin-bottom: 36px;
+}
+
+xul|*.help-icon {
+  list-style-image: url("chrome://global/skin/icons/help.svg");
+}
+
+html|*.help-icon {
+  background-image: url("chrome://global/skin/icons/help.svg");
+}
+
+.preferences-icon {
+  background-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+.addons-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+  /* The add-ons icon doesn't have much (any?) margin, so make it a bit smaller. */
+  width: 14px;
+  height: 14px;
+  margin-inline-start: 15px;
 }
 
 .sidebar-footer-label {
-  font-size: .9em;
   margin: 0 4px;
+  font-size: .9em;
   user-select: none;
 }
 
 @media (max-width: 830px) {
+  .sidebar-footer-button > .text-link {
+    -moz-box-flex: 0;
+    width: 36px;
+    height: 36px;
+    margin-inline-start: 0;
+  }
+
+  .sidebar-footer-icon {
+    margin: 10px;
+  }
+
+  .sidebar-footer-label {
+    display: none;
+  }
+
   .sidebar-footer-list {
     margin-inline-start: 40px;
-    -moz-box-align: start;
   }
 
   .sidebar-footer-link {
@@ -1192,29 +1260,16 @@ xul|*.sidebar-footer-link {
     margin-inline-start: 1px;
   }
 
-  .sidebar-footer-icon {
-    margin-inline-start: 10px;
+  .sidebar-footer-link,
+  /* We need to override the full-width RTL rule, so explicitly specify RTL. */
+  .sidebar-footer-link:dir(rtl) {
+    background-position: center;
   }
 
-  .sidebar-footer-label {
+  .sidebar-footer-link-text {
     display: none;
   }
 }
-
-/* Icon helper classes */
-
-xul|*.help-icon {
-  list-style-image: url("chrome://global/skin/icons/help.svg");
-}
-
-xul|*.addons-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
-  /* The add-ons icon doesn't have much (any?) margin, so make it a bit smaller. */
-  scale: 87.5%;
-  translate: 6.25%;
-}
-
-/* Back button */
 
 .back-button {
   -moz-context-properties: fill;
