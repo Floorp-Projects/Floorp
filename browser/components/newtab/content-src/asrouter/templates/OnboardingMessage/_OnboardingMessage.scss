@@ -1,0 +1,131 @@
+@import '../../../styles/OnboardingImages';
+
+.onboardingMessage {
+  height: 340px;
+  text-align: center;
+  padding: 13px;
+  font-weight: 200;
+
+  // at 850px, img floats left, content floats right next to it
+  @media(max-width: 850px) {
+    height: 170px;
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid $grey-30;
+    display: flex;
+    margin-bottom: 11px;
+
+    &:last-child {
+      border: 0;
+    }
+
+    .onboardingContent {
+      padding-left: 10px;
+      height: 100%;
+
+      > span > h3 {
+        margin-top: 0;
+        margin-bottom: 4px;
+        font-weight: 400;
+      }
+
+      > span > p {
+        margin-top: 0;
+        line-height: 22px;
+        font-size: 15px;
+      }
+    }
+  }
+
+  @media(max-width: 650px) {
+    height: 250px;
+  }
+
+  .onboardingContent {
+    height: 175px;
+
+    > span > h3 {
+      color: $grey-90;
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+
+    > span > p {
+      color: $grey-60;
+      margin-top: 0;
+      height: 180px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      line-height: 22px;
+
+      @media(max-width: 650px) {
+        margin-bottom: 0;
+        height: 160px;
+      }
+    }
+  }
+
+  .onboardingButton {
+    background-color: $grey-90-10;
+    border: 0;
+    width: 150px;
+    height: 30px;
+    margin-bottom: 23px;
+    padding: 4px 0 6px;
+    font-size: 15px;
+
+    // at 850px, the button shimmies down and to the right
+    @media(max-width: 850px) {
+      float: right;
+      margin-top: -105px;
+      margin-inline-end: -10px;
+    }
+
+    @media(max-width: 650px) {
+      float: none;
+    }
+
+    &:focus,
+    &.active,
+    &:hover {
+      box-shadow: 0 0 0 5px $grey-30;
+      transition: box-shadow 150ms;
+    }
+  }
+
+
+  &::before {
+    content: '';
+    height: 230px;
+    width: 1px;
+    position: absolute;
+    background-color: $grey-30;
+    margin-top: 40px;
+    margin-inline-start: 215px;
+
+    // at 850px, the line goes from vertical to horizontal
+    @media(max-width: 850px) {
+      content: none;
+    }
+  }
+
+  &:last-child::before {
+    content: none;
+  }
+}
+
+.onboardingMessageImage {
+  height: 112px;
+  width: 180px;
+  background-size: auto 140px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: inline-block;
+
+  // Cards will wrap into the next line after this breakpoint
+  @media(max-width: 865px) {
+    height: 75px;
+    min-width: 80px;
+    background-size: 140px;
+  }
+}
