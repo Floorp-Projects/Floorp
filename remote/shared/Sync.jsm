@@ -6,7 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["EventPromise", "executeSoon", "PollPromise"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 const { TYPE_REPEATING_SLACK } = Ci.nsITimer;
 

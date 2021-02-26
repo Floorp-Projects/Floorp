@@ -10,38 +10,22 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 XPCOMUtils.defineLazyModuleGetters(this, {
+  clearInterval: "resource://gre/modules/Timer.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  setInterval: "resource://gre/modules/Timer.jsm",
+
+  DialogHandler:
+    "chrome://remote/content/cdp/domains/parent/page/DialogHandler.jsm",
+  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
+  PollPromise: "chrome://remote/content/shared/Sync.jsm",
+  streamRegistry: "chrome://remote/content/cdp/domains/parent/IO.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
+  UnsupportedError: "chrome://remote/content/cdp/Error.jsm",
+  WindowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
-
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { clearInterval, setInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
-
-const { DialogHandler } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/parent/page/DialogHandler.jsm"
-);
-const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/Domain.jsm"
-);
-const { UnsupportedError } = ChromeUtils.import(
-  "chrome://remote/content/cdp/Error.jsm"
-);
-const { streamRegistry } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/parent/IO.jsm"
-);
-const { PollPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
-const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/TabManager.jsm"
-);
-const { WindowManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/WindowManager.jsm"
-);
 
 const MAX_CANVAS_DIMENSION = 32767;
 const MAX_CANVAS_AREA = 472907776;

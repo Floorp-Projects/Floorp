@@ -6,16 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["Session"];
 
-const { ParentProcessDomains } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/ParentProcessDomains.jsm"
-);
-const { DomainCache } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/DomainCache.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { NetworkObserver } = ChromeUtils.import(
-  "chrome://remote/content/cdp/observers/NetworkObserver.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  DomainCache: "chrome://remote/content/cdp/domains/DomainCache.jsm",
+  NetworkObserver: "chrome://remote/content/cdp/observers/NetworkObserver.jsm",
+  ParentProcessDomains:
+    "chrome://remote/content/cdp/domains/ParentProcessDomains.jsm",
+});
 
 /**
  * A session represents exactly one client WebSocket connection.

@@ -4,44 +4,48 @@
 
 "use strict";
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
-const { ChannelEventSinkFactory } = ChromeUtils.import(
-  "chrome://remote/content/cdp/observers/ChannelEventSink.jsm"
-);
 
-const CC = Components.Constructor;
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CommonUtils: "resource://services-common/utils.js",
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 
-const BinaryInputStream = CC(
-  "@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream",
-  "setInputStream"
-);
-const BinaryOutputStream = CC(
-  "@mozilla.org/binaryoutputstream;1",
-  "nsIBinaryOutputStream",
-  "setOutputStream"
-);
-const StorageStream = CC(
-  "@mozilla.org/storagestream;1",
-  "nsIStorageStream",
-  "init"
-);
+  ChannelEventSinkFactory:
+    "chrome://remote/content/cdp/observers/ChannelEventSink.jsm",
+});
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gActivityDistributor",
   "@mozilla.org/network/http-activity-distributor;1",
   "nsIHttpActivityDistributor"
 );
+
+const CC = Components.Constructor;
+
+XPCOMUtils.defineLazyGetter(this, "BinaryInputStream", () => {
+  return CC(
+    "@mozilla.org/binaryinputstream;1",
+    "nsIBinaryInputStream",
+    "setInputStream"
+  );
+});
+
+XPCOMUtils.defineLazyGetter(this, "BinaryOutputStream", () => {
+  return CC(
+    "@mozilla.org/binaryoutputstream;1",
+    "nsIBinaryOutputStream",
+    "setOutputStream"
+  );
+});
+
+XPCOMUtils.defineLazyGetter(this, "StorageStream", () => {
+  return CC("@mozilla.org/storagestream;1", "nsIStorageStream", "init");
+});
 
 // Cap response storage with 100Mb per tracked tab.
 const MAX_RESPONSE_STORAGE_SIZE = 100 * 1024 * 1024;

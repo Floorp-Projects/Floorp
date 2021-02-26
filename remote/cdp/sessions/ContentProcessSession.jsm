@@ -6,18 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["ContentProcessSession"];
 
-const { ContentProcessDomains } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/ContentProcessDomains.jsm"
-);
-const { DomainCache } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/DomainCache.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContextObserver",
-  "chrome://remote/content/cdp/observers/ContextObserver.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ContentProcessDomains:
+    "chrome://remote/content/cdp/domains/ContentProcessDomains.jsm",
+  ContextObserver: "chrome://remote/content/cdp/observers/ContextObserver.jsm",
+  DomainCache: "chrome://remote/content/cdp/domains/DomainCache.jsm",
+});
 
 class ContentProcessSession {
   constructor(messageManager, browsingContext, content, docShell) {

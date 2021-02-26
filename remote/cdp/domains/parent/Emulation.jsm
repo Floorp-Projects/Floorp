@@ -6,11 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["Emulation"];
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
-const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/Domain.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+
+  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
+});
 
 const MAX_WINDOW_SIZE = 10000000;
 
