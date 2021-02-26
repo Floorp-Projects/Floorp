@@ -296,38 +296,39 @@ enum class MutableScriptFlagsEnum : uint32_t {
   BaselineDisabled = 1 << 17,
   IonDisabled = 1 << 18,
 
-  // Script has had hoisted bounds checks fail.
-  FailedBoundsCheck = 1 << 19,
-
-  // Script has had hoisted shape guard fail.
-  FailedShapeGuard = 1 << 20,
-
-  // Script has had instruction hoisted by LICM fail.
-  HadLICMInvalidation = 1 << 21,
-
-  // An overflow happened where Range Analysis hoped it would not. The next
-  // compile should be more conservative.
-  HadEagerTruncationBailout = 1 << 22,
-
   // This script should not be inlined into others. This happens after inlining
   // has failed.
-  Uninlineable = 1 << 23,
-
-  // An idempotent IC has triggered invalidation and should be deoptimized.
-  InvalidatedIdempotentCache = 1 << 24,
-
-  // Lexical check did fail and bail out.
-  FailedLexicalCheck = 1 << 25,
-
-  // A guard inserted by phi specialization failed.
-  HadSpeculativePhiBailout = 1 << 26,
-
-  // An unbox folded with a load failed.
-  HadUnboxFoldingBailout = 1 << 27,
+  Uninlineable = 1 << 19,
 
   // Large self-hosted methods that should be inlined anyway by the JIT for
   // performance reasons can be marked with this flag.
-  IsInlinableLargeFunction = 1 << 28,
+  IsInlinableLargeFunction = 1 << 20,
+
+  // *****************************************************************
+  // The flags below are set when we bail out and invalidate a script.
+  // When we recompile, we will be more conservative.
+  // *****************************************************************
+
+  // A hoisted bounds check bailed out.
+  FailedBoundsCheck = 1 << 21,
+
+  // An instruction hoisted by LICM bailed out.
+  HadLICMInvalidation = 1 << 22,
+
+  // An instruction hoisted by InstructionReordering bailed out.
+  HadReorderingBailout = 1 << 23,
+
+  // An instruction inserted or truncated by Range Analysis bailed out.
+  HadEagerTruncationBailout = 1 << 24,
+
+  // A lexical check bailed out.
+  FailedLexicalCheck = 1 << 25,
+
+  // A guard inserted by phi specialization bailed out.
+  HadSpeculativePhiBailout = 1 << 26,
+
+  // An unbox folded with a load bailed out.
+  HadUnboxFoldingBailout = 1 << 27,
 };
 
 }  // namespace js
