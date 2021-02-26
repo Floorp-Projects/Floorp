@@ -209,80 +209,21 @@ add_task(async function test_push() {
 
 add_task(async function test_AAAA_records() {
   info("Verifying AAAA record");
-  Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", true);
 
   dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv4=100");
 
   await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
-  setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv4=100");
-
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv6=100");
 
   await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
-  setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv6=100");
-
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2020");
 
   await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
-  setModeAndURI(3, "doh?responseIP=2020:2020::2030");
-
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
-
-  Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", false);
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", true);
-  setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv4=100");
-
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", false);
-  setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv4=100");
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", true);
-  setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv6=100");
-
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", false);
-  setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv6=100");
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", true);
-  setModeAndURI(3, "doh?responseIP=2020:2020::2020");
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
-
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.early-AAAA", false);
-  setModeAndURI(3, "doh?responseIP=2020:2020::2030");
-  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
-
-  Services.prefs.clearUserPref("network.trr.early-AAAA");
-  Services.prefs.clearUserPref("network.trr.wait-for-A-and-AAAA");
 });
 
 add_task(async function test_RFC1918() {
