@@ -1045,13 +1045,13 @@ AbsoluteFrameList* nsFrameConstructorState::GetOutOfFlowFrameList(
     return &mPopupList;
   }
 #endif  // MOZ_XUL
-  if (aCanBeFloated && aNewFrame->IsFloating()) {
+  const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
+  if (aCanBeFloated && disp->IsFloatingStyle()) {
     *aPlaceholderType = PLACEHOLDER_FOR_FLOAT;
     return &mFloatedList;
   }
 
   if (aCanBePositioned) {
-    const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
     if (disp->mTopLayer != StyleTopLayer::None) {
       *aPlaceholderType = PLACEHOLDER_FOR_TOPLAYER;
       if (disp->mPosition == StylePositionProperty::Fixed) {
