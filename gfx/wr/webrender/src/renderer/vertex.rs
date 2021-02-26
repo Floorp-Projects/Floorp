@@ -615,11 +615,6 @@ pub mod desc {
                 count: 4,
                 kind: VertexAttributeKind::F32,
             },
-            VertexAttribute {
-                name: "aTextureLayers",
-                count: 3,
-                kind: VertexAttributeKind::F32,
-            },
         ],
     };
 
