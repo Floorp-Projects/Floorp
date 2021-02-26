@@ -9,6 +9,7 @@
 #include "AsyncPanZoomController.h"
 #include "InputData.h"                      // for MouseInput, etc
 #include "InputBlockState.h"                // for InputBlockState
+#include "OverscrollHandoffState.h"         // for OverscrollHandoffState
 #include "mozilla/dom/WheelEventBinding.h"  // for WheelEvent constants
 #include "mozilla/EventStateManager.h"      // for EventStateManager
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
@@ -50,6 +51,43 @@ APZEventResult::APZEventResult(
     return Nothing();
   }();
   aInitialTarget->GetGuid(&mTargetGuid);
+}
+
+void APZEventResult::SetStatusAsConsumeDoDefault(
+    const InputBlockState& aBlock) {
+  SetStatusAsConsumeDoDefault(aBlock.GetTargetApzc());
+}
+
+void APZEventResult::SetStatusAsConsumeDoDefault(
+    const RefPtr<AsyncPanZoomController>& aTarget) {
+  mStatus = nsEventStatus_eConsumeDoDefault;
+  mHandledResult =
+      Some(aTarget->IsRootContent() ? APZHandledResult::HandledByRoot
+                                    : APZHandledResult::HandledByContent);
+}
+
+void APZEventResult::SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
+    const InputBlockState& aBlock, TargetConfirmationFlags aFlags) {
+  mStatus = nsEventStatus_eConsumeDoDefault;
+
+  const RefPtr<AsyncPanZoomController>& target = aBlock.GetTargetApzc();
+  if (!target->IsRootContent() &&
+      aBlock.GetOverscrollHandoffChain()->ScrollingDownWillMoveDynamicToolbar(
+          target)) {
+    // The event is actually consumed by a non-root APZC but scroll
+    // positions in all relevant APZCs are at the bottom edge, so if there's
+    // still contents covered by the dynamic toolbar we need to move the
+    // dynamic toolbar to make the covered contents visible, thus we need
+    // to tell it to GeckoView so we handle it as if it's consumed in the
+    // root APZC.
+    // IMPORTANT NOTE: If the incoming TargetConfirmationFlags has
+    // mDispatchToContent, we need to change it to Nothing() so that
+    // GeckoView can properly wait for results from the content on the
+    // main-thread.
+    mHandledResult = aFlags.mDispatchToContent
+                         ? Nothing()
+                         : Some(APZHandledResult::HandledByRoot);
+  }
 }
 
 static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
@@ -187,7 +225,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
       UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
       ProcessUnhandledEvent(&aEvent.mRefPoint, &result.mTargetGuid,
                             &aEvent.mFocusSequenceNumber, &aEvent.mLayersId);
-      MOZ_ASSERT(result.mStatus == nsEventStatus_eIgnore);
+      MOZ_ASSERT(result.GetStatus() == nsEventStatus_eIgnore);
       return result;
     }
     case eKeyboardEventClass: {
@@ -210,7 +248,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
   }
 
   MOZ_ASSERT_UNREACHABLE("Invalid WidgetInputEvent type.");
-  result.mStatus = nsEventStatus_eConsumeNoDefault;
+  result.SetStatusAsConsumeNoDefault();
   return result;
 }
 

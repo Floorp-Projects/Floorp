@@ -419,11 +419,11 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
 
     APZEventResult result =
         TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
-    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.mStatus);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
     uint64_t blockId = result.mInputBlockId;
 
     if (StaticPrefs::layout_css_touch_action_enabled() &&
-        result.mStatus != nsEventStatus_eConsumeNoDefault) {
+        result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
       allowedTouchBehaviors.AppendElement(aBehavior);
@@ -468,9 +468,9 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
     // Finally, simulate lifting the finger. Since the long-press wasn't
     // prevent-defaulted, we should get a long-tap-up event.
     check.Call("preHandleLongTapUp");
-    result.mStatus = TouchUp(apzc, ScreenIntPoint(10, 10), mcc->Time());
+    result = TouchUp(apzc, ScreenIntPoint(10, 10), mcc->Time());
     mcc->RunThroughDelayedTasks();
-    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.mStatus);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
     check.Call("postHandleLongTapUp");
 
     apzc->AssertStateIsReset();
@@ -485,11 +485,11 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
 
     APZEventResult result =
         TouchDown(apzc, ScreenIntPoint(touchX, touchStartY), mcc->Time());
-    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.mStatus);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
     uint64_t blockId = result.mInputBlockId;
 
     if (StaticPrefs::layout_css_touch_action_enabled() &&
-        result.mStatus != nsEventStatus_eConsumeNoDefault) {
+        result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
       allowedTouchBehaviors.AppendElement(aBehavior);
@@ -530,15 +530,14 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
     mti.mTouches.AppendElement(SingleTouchData(
         0, ParentLayerPoint(touchX, touchEndY), ScreenSize(0, 0), 0, 0));
     result = apzc->ReceiveInputEvent(mti);
-    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.mStatus);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
 
     EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap,
                                 LayoutDevicePoint(touchX, touchEndY), 0,
                                 apzc->GetGuid(), _))
         .Times(0);
-    result.mStatus =
-        TouchUp(apzc, ScreenIntPoint(touchX, touchEndY), mcc->Time());
-    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.mStatus);
+    result = TouchUp(apzc, ScreenIntPoint(touchX, touchEndY), mcc->Time());
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
 
     ParentLayerPoint pointOut;
     AsyncTransform viewTransformOut;
@@ -736,7 +735,7 @@ TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
   APZEventResult result = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
   uint64_t touchBlockId = result.mInputBlockId;
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.mStatus != nsEventStatus_eConsumeNoDefault) {
+      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(apzc, touchBlockId);
   }
   mcc->AdvanceByMillis(10);

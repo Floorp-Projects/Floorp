@@ -349,7 +349,7 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
   // in other ways.
   APZEventResult result = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.mStatus != nsEventStatus_eConsumeNoDefault) {
+      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(apzc, result.mInputBlockId);
   }
   TouchUp(apzc, ScreenIntPoint(10, 10), mcc->Time());

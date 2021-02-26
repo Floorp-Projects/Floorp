@@ -1935,8 +1935,8 @@ nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
     result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
   }
 
-  if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-    return result.mStatus;
+  if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
+    return result.GetStatus();
   }
 
   if (aEvent.mInputType == PINCHGESTURE_INPUT) {
@@ -1945,7 +1945,7 @@ nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
     ProcessUntransformedAPZEvent(&wheelEvent, result);
   }
 
-  return result.mStatus;
+  return result.GetStatus();
 }
 
 void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe) {
@@ -1967,7 +1967,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
     switch (aEvent.mInputType) {
       case PANGESTURE_INPUT: {
         result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
-        if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+        if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
           return;
         }
 
@@ -1978,7 +1978,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
           SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
           event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
           if (swipeInfo.wantsSwipe) {
-            if (result.mStatus == nsEventStatus_eIgnore) {
+            if (result.GetStatus() == nsEventStatus_eIgnore) {
               // APZ has determined and that scrolling horizontally in the
               // requested direction is impossible, so it didn't do any
               // scrolling for the event.
@@ -2011,7 +2011,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
         // go straight to the APZCTreeManager subclass.
         event = aEvent.AsScrollWheelInput().ToWidgetEvent(this);
         result = mAPZC->InputBridge()->ReceiveInputEvent(event);
-        if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+        if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
           return;
         }
         break;

@@ -588,18 +588,28 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
   typedef mozilla::layers::APZEventResult paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mStatus);
+    WriteParam(aMsg, aParam.GetStatus());
+    WriteParam(aMsg, aParam.GetHandledResult());
     WriteParam(aMsg, aParam.mTargetGuid);
     WriteParam(aMsg, aParam.mInputBlockId);
-    WriteParam(aMsg, aParam.mHandledResult);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mStatus) &&
-            ReadParam(aMsg, aIter, &aResult->mTargetGuid) &&
-            ReadParam(aMsg, aIter, &aResult->mInputBlockId) &&
-            ReadParam(aMsg, aIter, &aResult->mHandledResult));
+    nsEventStatus status;
+    if (!ReadParam(aMsg, aIter, &status)) {
+      return false;
+    }
+    aResult->UpdateStatus(status);
+
+    mozilla::Maybe<mozilla::layers::APZHandledResult> handledResult;
+    if (!ReadParam(aMsg, aIter, &handledResult)) {
+      return false;
+    }
+    aResult->UpdateHandledResult(handledResult);
+
+    return (ReadParam(aMsg, aIter, &aResult->mTargetGuid) &&
+            ReadParam(aMsg, aIter, &aResult->mInputBlockId));
   }
 };
 
