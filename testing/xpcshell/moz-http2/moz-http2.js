@@ -1113,6 +1113,13 @@ function handleRequest(req, res) {
       }
     });
     return;
+  } else if (u.pathname === "/reset_cname_confirm") {
+    cname_confirm = 0;
+    res.setHeader("Content-Length", 4);
+    res.writeHead(200);
+    res.write("done");
+    res.end();
+    return;
   } else if (u.pathname === "/httpssvc_as_altsvc") {
     let payload = Buffer.from("");
     req.on("data", function receiveData(chunk) {

@@ -740,6 +740,13 @@ add_task(async function test17() {
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
   await new DNSListener("cname.example.com", "99.88.77.66");
+
+  // Reset |cname_confirm| counter in moz-http2.js.
+  let chan = makeChan(
+    `https://foo.example.com:${h2Port}/reset_cname_confirm`,
+    Ci.nsIRequest.TRR_DISABLED_MODE
+  );
+  await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
 });
 
 // TRR-only and a CNAME loop
