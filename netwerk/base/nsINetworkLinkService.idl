@@ -19,10 +19,7 @@ interface nsINetworkLinkService : nsISupports
   const unsigned long LINK_TYPE_USB = 2;
   const unsigned long LINK_TYPE_WIFI = 3;
   const unsigned long LINK_TYPE_WIMAX = 4;
-  const unsigned long LINK_TYPE_2G = 5;
-  const unsigned long LINK_TYPE_3G = 6;
-  const unsigned long LINK_TYPE_4G = 7;
-  const unsigned long LINK_TYPE_5G = 8;
+  const unsigned long LINK_TYPE_MOBILE = 9;
 
   /**
    * This is set to true when the system is believed to have a usable
@@ -130,15 +127,6 @@ interface nsINetworkLinkService : nsISupports
 /** A connection via WiMax (IEEE802.16) */
 #define NS_NETWORK_LINK_TYPE_WIMAX "wimax"
 
-/** A '2G' mobile connection (e.g. GSM, GPRS, EDGE) */
-#define NS_NETWORK_LINK_TYPE_2G "2g"
-
-/** A '3G' mobile connection (e.g. UMTS, CDMA) */
-#define NS_NETWORK_LINK_TYPE_3G "3g"
-
-/** A '4G' mobile connection (e.g. LTE, UMB) */
-#define NS_NETWORK_LINK_TYPE_4G "4g"
-
-/** A '5G' mobile connection */
-#define NS_NETWORK_LINK_TYPE_5G "5g"
+/** A mobile connection (e.g. 2G, 3G, etc) */
+#define NS_NETWORK_LINK_TYPE_MOBILE "mobile"
 %}
