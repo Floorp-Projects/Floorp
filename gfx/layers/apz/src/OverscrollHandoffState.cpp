@@ -163,7 +163,7 @@ bool OverscrollHandoffChain::ScrollingDownWillMoveDynamicToolbar(
 
   for (uint32_t i = IndexOf(aApzc); i < Length(); i++) {
     if (mChain[i]->IsRootContent()) {
-      return mChain[i]->CanScrollDownwardsWithDynamicToolbar();
+      return mChain[i]->CanVerticalScrollWithDynamicToolbar();
     }
 
     if (mChain[i]->CanScrollDownwards()) {

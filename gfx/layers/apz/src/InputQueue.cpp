@@ -879,7 +879,7 @@ static APZHandledResult GetHandledResultFor(
   }
 
   if (aApzc && aApzc->IsRootContent()) {
-    return aApzc->CanScrollDownwardsWithDynamicToolbar()
+    return aApzc->CanVerticalScrollWithDynamicToolbar()
                ? APZHandledResult::HandledByRoot
                : APZHandledResult::Unhandled;
   }
