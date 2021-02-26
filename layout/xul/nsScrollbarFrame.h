@@ -34,8 +34,10 @@ class nsScrollbarFrame final : public nsBoxFrame,
  public:
   explicit nsScrollbarFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsBoxFrame(aStyle, aPresContext, kClassID),
-        mIncrement(0),
         mSmoothScroll(false),
+        mScrollUnit(mozilla::ScrollUnit::DEVICE_PIXELS),
+        mDirection(0),
+        mIncrement(0),
         mScrollbarMediator(nullptr),
         mUpTopButton(nullptr),
         mDownTopButton(nullptr),
@@ -109,12 +111,18 @@ class nsScrollbarFrame final : public nsBoxFrame,
   void SetIncrementToPage(int32_t aDirection);
   void SetIncrementToWhole(int32_t aDirection);
   /**
-   * MoveToNewPosition() adds mIncrement to the current position and
-   * updates the curpos attribute.
+   * If aImplementsScrollByUnit is Yes then this uses mSmoothScroll,
+   * mScrollUnit, and mDirection and calls ScrollByUnit on the
+   * nsIScrollbarMediator. The return value is 0. This is better because it is
+   * more modern and the scroll frame can perform the scroll via apz for
+   * example. The old way below is still supported for xul trees. If
+   * aImplementsScrollByUnit is No this adds mIncrement to the current
+   * position and updates the curpos attribute obeying mSmoothScroll.
    * @returns The new position after clamping, in CSS Pixels
    * @note This method might destroy the frame, pres shell, and other objects.
    */
-  int32_t MoveToNewPosition();
+  enum class ImplementsScrollByUnit { Yes, No };
+  int32_t MoveToNewPosition(ImplementsScrollByUnit aImplementsScrollByUnit);
   int32_t GetIncrement() { return mIncrement; }
 
   // nsIAnonymousContentCreator
@@ -126,8 +134,15 @@ class nsScrollbarFrame final : public nsBoxFrame,
   void UpdateChildrenAttributeValue(nsAtom* aAttribute, bool aNotify);
 
  protected:
-  int32_t mIncrement;  // Amount to scroll, in CSSPixels
   bool mSmoothScroll;
+  mozilla::ScrollUnit mScrollUnit;
+  // Direction and multiple to scroll
+  int32_t mDirection;
+
+  // Amount to scroll, in CSSPixels
+  // Ignored in favour of mScrollUnit/mDirection for regular scroll frames.
+  // Trees use this though.
+  int32_t mIncrement;
 
  private:
   nsCOMPtr<nsIContent> mScrollbarMediator;
