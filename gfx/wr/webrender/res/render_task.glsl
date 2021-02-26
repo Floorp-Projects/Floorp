@@ -10,8 +10,7 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 
 struct RenderTaskData {
     RectWithSize task_rect;
-    // TODO: this can become either a vec4 or be removed. 
-    vec3 user_data;
+    vec4 user_data;
 };
 
 RenderTaskData fetch_render_task_data(int index) {
@@ -27,7 +26,7 @@ RenderTaskData fetch_render_task_data(int index) {
 
     RenderTaskData data = RenderTaskData(
         task_rect,
-        texel1.yzw
+        texel1
     );
 
     return data;
