@@ -3303,7 +3303,7 @@ void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
     // just use that like an inefficient use counter. Can't we just change
     // DirectoryLockTable to a nsDataHashtable<nsCStringHashKey, uint32_t>?
     directoryLockTable
-        .GetOrInsertWith(
+        .LookupOrInsertWith(
             aLock.Origin(),
             [this, &aLock] {
               if (!IsShuttingDown()) {
@@ -4368,7 +4368,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     // pointer directly since QuotaObject::AddRef would try to acquire the same
     // mutex.
     const NotNull<QuotaObject*> quotaObject =
-        originInfo->mQuotaObjects.GetOrInsertWith(path, [&] {
+        originInfo->mQuotaObjects.LookupOrInsertWith(path, [&] {
           // Create a new QuotaObject. The hashtable is not responsible to
           // delete the QuotaObject.
           return WrapNotNullUnchecked(
@@ -6048,7 +6048,7 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
   }();
 
   if (auto& info =
-          mOriginInitializationInfos.GetOrInsert(aOriginMetadata.mOrigin);
+          mOriginInitializationInfos.LookupOrInsert(aOriginMetadata.mOrigin);
       !info.mPersistentOriginAttempted) {
     Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
                           kPersistentOriginTelemetryKey,
@@ -6099,7 +6099,8 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
     return std::pair(std::move(directory), created);
   }();
 
-  auto& info = mOriginInitializationInfos.GetOrInsert(aOriginMetadata.mOrigin);
+  auto& info =
+      mOriginInitializationInfos.LookupOrInsert(aOriginMetadata.mOrigin);
   if (!info.mTemporaryOriginAttempted) {
     Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
                           kTemporaryOriginTelemetryKey,
@@ -6674,7 +6675,8 @@ already_AddRefed<GroupInfo> QuotaManager::LockedGetOrCreateGroupInfo(
 
   GroupInfoPair* const pair =
       mGroupInfoPairs
-          .GetOrInsertWith(aGroup, [] { return MakeUnique<GroupInfoPair>(); })
+          .LookupOrInsertWith(aGroup,
+                              [] { return MakeUnique<GroupInfoPair>(); })
           .get();
 
   RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
@@ -6939,15 +6941,16 @@ bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
   AssertIsOnIOThread();
 
   // Do not parse this sanitized origin string, if we already parsed it.
-  return mValidOrigins.GetOrInsertWith(aSanitizedOrigin, [&aSanitizedOrigin] {
-    nsCString spec;
-    OriginAttributes attrs;
-    nsCString originalSuffix;
-    const auto result = OriginParser::ParseOrigin(aSanitizedOrigin, spec,
-                                                  &attrs, originalSuffix);
+  return mValidOrigins.LookupOrInsertWith(
+      aSanitizedOrigin, [&aSanitizedOrigin] {
+        nsCString spec;
+        OriginAttributes attrs;
+        nsCString originalSuffix;
+        const auto result = OriginParser::ParseOrigin(aSanitizedOrigin, spec,
+                                                      &attrs, originalSuffix);
 
-    return result == OriginParser::ValidOrigin;
-  });
+        return result == OriginParser::ValidOrigin;
+      });
 }
 
 int64_t QuotaManager::GenerateDirectoryLockId() {

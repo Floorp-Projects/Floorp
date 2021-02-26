@@ -218,7 +218,7 @@ void DocumentOrShadowRoot::CloneAdoptedSheetsFrom(
   MOZ_ASSERT(clonedSheetMap);
 
   for (const StyleSheet* sheet : aSource.mAdoptedStyleSheets) {
-    RefPtr<StyleSheet> clone = clonedSheetMap->GetOrInsertWith(
+    RefPtr<StyleSheet> clone = clonedSheetMap->LookupOrInsertWith(
         sheet, [&] { return sheet->CloneAdoptedSheet(ownerDoc); });
     MOZ_ASSERT(clone);
     MOZ_DIAGNOSTIC_ASSERT(clone->ConstructorDocumentMatches(ownerDoc));
@@ -753,7 +753,8 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetRadioGroup(
 nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
     const nsAString& aName) {
   return mRadioGroups
-      .GetOrInsertWith(aName, [] { return MakeUnique<nsRadioGroupStruct>(); })
+      .LookupOrInsertWith(aName,
+                          [] { return MakeUnique<nsRadioGroupStruct>(); })
       .get();
 }
 

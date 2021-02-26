@@ -644,7 +644,7 @@ const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
     return *metrics;
   }
 
-  GlyphMetrics& metrics = mGlyphMetrics->GetOrInsert(aGID);
+  GlyphMetrics& metrics = mGlyphMetrics->LookupOrInsert(aGID);
   IntRect bounds;
   if (GetFTGlyphExtents(aGID, &metrics.mAdvance, &bounds)) {
     metrics.SetBounds(bounds);

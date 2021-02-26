@@ -1356,7 +1356,8 @@ bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
   } else {
     auto* const start =
         mStartTable
-            .GetOrInsertWith(delay, [] { return MakeUnique<ImageStartData>(); })
+            .LookupOrInsertWith(delay,
+                                [] { return MakeUnique<ImageStartData>(); })
             .get();
     start->mEntries.PutEntry(aRequest);
   }

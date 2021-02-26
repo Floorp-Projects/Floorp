@@ -192,11 +192,11 @@ class nsBaseHashtable
    * value.  If aKey is not already in the table then the a default-constructed
    * or the provided value aData is used.
    *
-   * If the arguments are non-trivial to provide, consider using GetOrInsertWith
-   * instead.
+   * If the arguments are non-trivial to provide, consider using
+   * LookupOrInsertWith instead.
    */
   template <typename... Args>
-  DataType& GetOrInsert(const KeyType& aKey, Args&&... aArgs) {
+  DataType& LookupOrInsert(const KeyType& aKey, Args&&... aArgs) {
     return WithEntryHandle(aKey, [&](auto entryHandle) -> DataType& {
       return entryHandle.OrInsert(std::forward<Args>(aArgs)...);
     });
@@ -208,7 +208,7 @@ class nsBaseHashtable
    * constructed using the given factory.
    */
   template <typename F>
-  DataType& GetOrInsertWith(const KeyType& aKey, F&& aFunc) {
+  DataType& LookupOrInsertWith(const KeyType& aKey, F&& aFunc) {
     return WithEntryHandle(aKey, [&aFunc](auto entryHandle) -> DataType& {
       return entryHandle.OrInsertWith(std::forward<F>(aFunc));
     });

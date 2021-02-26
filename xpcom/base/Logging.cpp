@@ -534,11 +534,11 @@ class LogModuleManager {
   LogModule* CreateOrGetModule(const char* aName) {
     OffTheBooksMutexAutoLock guard(mModulesLock);
     return mModules
-        .GetOrInsertWith(aName,
-                         [&] {
-                           return UniquePtr<LogModule>(
-                               new LogModule{aName, LogLevel::Disabled});
-                         })
+        .LookupOrInsertWith(aName,
+                            [&] {
+                              return UniquePtr<LogModule>(
+                                  new LogModule{aName, LogLevel::Disabled});
+                            })
         .get();
   }
 

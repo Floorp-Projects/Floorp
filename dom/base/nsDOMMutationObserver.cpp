@@ -322,7 +322,7 @@ void nsMutationReceiver::ContentRemoved(nsIContent* aChild,
       auto* const transientReceivers =
           Observer()
               ->mTransientReceivers
-              .GetOrInsertWith(
+              .LookupOrInsertWith(
                   aChild,
                   [&isNewEntry] {
                     isNewEntry = true;
@@ -1040,7 +1040,7 @@ void nsAutoMutationBatch::Done() {
       if (allObservers.Length()) {
         auto* const transientReceivers =
             ob->mTransientReceivers
-                .GetOrInsertWith(
+                .LookupOrInsertWith(
                     removed,
                     [] { return MakeUnique<nsCOMArray<nsMutationReceiver>>(); })
                 .get();

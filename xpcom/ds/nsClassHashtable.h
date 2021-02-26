@@ -95,11 +95,11 @@ template <typename... Args>
 T* nsClassHashtable<KeyClass, T>::GetOrInsertNew(KeyType aKey,
                                                  Args&&... aConstructionArgs) {
   return this
-      ->GetOrInsertWith(std::move(aKey),
-                        [&] {
-                          return mozilla::MakeUnique<T>(
-                              std::forward<Args>(aConstructionArgs)...);
-                        })
+      ->LookupOrInsertWith(std::move(aKey),
+                           [&] {
+                             return mozilla::MakeUnique<T>(
+                                 std::forward<Args>(aConstructionArgs)...);
+                           })
       .get();
 }
 

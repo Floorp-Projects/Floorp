@@ -58,7 +58,7 @@ void PendingTransactionQueue::InsertTransactionNormal(
   uint64_t windowId = TabIdForQueuing(info->Transaction());
   nsTArray<RefPtr<PendingTransactionInfo>>* const infoArray =
       mPendingTransactionTable
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               windowId,
               [] {
                 return MakeUnique<nsTArray<RefPtr<PendingTransactionInfo>>>();

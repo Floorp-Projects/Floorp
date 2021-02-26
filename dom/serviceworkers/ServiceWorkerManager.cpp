@@ -1594,7 +1594,7 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
             .get();
   }
 
-  RefPtr queue = data->mJobQueues.GetOrInsertWith(
+  RefPtr queue = data->mJobQueues.LookupOrInsertWith(
       aScope, [] { return new ServiceWorkerJobQueue(); });
   return queue.forget();
 }
@@ -1908,7 +1908,7 @@ void ServiceWorkerManager::AddScopeAndRegistration(
 
   auto* const data =
       swm->mRegistrationInfos
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               scopeKey,
               [] { return MakeUnique<RegistrationDataPerPrincipal>(); })
           .get();

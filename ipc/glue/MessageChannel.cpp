@@ -532,13 +532,13 @@ class ChannelCountReporter final : public nsIMemoryReporter {
     if (!sChannelCounts) {
       sChannelCounts = new CountTable;
     }
-    sChannelCounts->GetOrInsert(aName).Inc();
+    sChannelCounts->LookupOrInsert(aName).Inc();
   }
 
   static void Decrement(const char* aName) {
     StaticMutexAutoLock countLock(sChannelCountMutex);
     MOZ_ASSERT(sChannelCounts);
-    sChannelCounts->GetOrInsert(aName).Dec();
+    sChannelCounts->LookupOrInsert(aName).Dec();
   }
 };
 

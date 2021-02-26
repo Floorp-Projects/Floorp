@@ -484,7 +484,7 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
 
   WakeLockTopic* const topicLock =
       mTopics
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               topic,
               [&] { return MakeUnique<WakeLockTopic>(topic, mConnection); })
           .get();

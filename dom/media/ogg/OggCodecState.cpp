@@ -1712,7 +1712,7 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
 
           if ((i == 0 && IsAscii(strMsg)) || (i != 0 && IsUtf8(strMsg))) {
             EMsgHeaderType eHeaderType = kFieldTypeMaps[i].mMsgHeaderType;
-            Unused << field->mValuesStore.GetOrInsertWith(
+            Unused << field->mValuesStore.LookupOrInsertWith(
                 eHeaderType, [i, msgHead, msgProbe]() {
                   uint32_t nameLen =
                       strlen(kFieldTypeMaps[i].mPatternToRecognize);

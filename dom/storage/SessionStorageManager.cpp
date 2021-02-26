@@ -633,8 +633,8 @@ BackgroundSessionStorageManager* BackgroundSessionStorageManager::GetOrCreate(
   }
 
   return sManagers
-      ->GetOrInsertWith(aTopContextId,
-                        [] { return new BackgroundSessionStorageManager(); })
+      ->LookupOrInsertWith(aTopContextId,
+                           [] { return new BackgroundSessionStorageManager(); })
       .get();
 }
 

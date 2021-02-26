@@ -1565,7 +1565,7 @@ nsresult CacheStorageService::AddStorageEntry(
     // Ensure storage table
     CacheEntryTable* const entries =
         sGlobalEntryTables
-            ->GetOrInsertWith(
+            ->LookupOrInsertWith(
                 aContextKey,
                 [&aContextKey] {
                   LOG(("  new storage entries table for context '%s'",

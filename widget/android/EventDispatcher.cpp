@@ -870,7 +870,8 @@ nsresult EventDispatcher::RegisterEventLocked(
     const nsAString& aEvent, nsIAndroidEventListener* aListener) {
   ListenersList* list =
       mListenersMap
-          .GetOrInsertWith(aEvent, [] { return MakeUnique<ListenersList>(); })
+          .LookupOrInsertWith(aEvent,
+                              [] { return MakeUnique<ListenersList>(); })
           .get();
 
 #ifdef DEBUG

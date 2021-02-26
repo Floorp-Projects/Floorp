@@ -309,7 +309,8 @@ bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
 nsCounterList* nsCounterManager::CounterListFor(nsAtom* aCounterName) {
   MOZ_ASSERT(aCounterName);
   return mNames
-      .GetOrInsertWith(aCounterName, [] { return MakeUnique<nsCounterList>(); })
+      .LookupOrInsertWith(aCounterName,
+                          [] { return MakeUnique<nsCounterList>(); })
       .get();
 }
 

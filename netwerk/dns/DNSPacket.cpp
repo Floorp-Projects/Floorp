@@ -860,7 +860,7 @@ nsresult DNSPacket::DecodeInternal(
 
     auto parseRecord = [&]() {
       LOG(("Parsing additional record type: %u", type));
-      auto& entry = aAdditionalRecords.GetOrInsertWith(
+      auto& entry = aAdditionalRecords.LookupOrInsertWith(
           qname, [] { return MakeUnique<DOHresp>(); });
 
       switch (type) {
