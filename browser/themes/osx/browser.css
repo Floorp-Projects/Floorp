@@ -5,6 +5,7 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../shared/browser.inc.css
+%include ../shared/browser-custom-colors.inc.css
 
 :root {
   --toolbar-non-lwt-bgcolor: #f9f9fa;

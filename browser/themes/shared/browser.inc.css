@@ -18,6 +18,11 @@
   --tabs-navbar-shadow-size: 1px;
   --short-notification-background: #0250BB;
   --short-notification-gradient: #9059FF;
+
+  --buttons-secondary-bgcolor: hsla(0,0%,80%,.3);
+  --buttons-secondary-hover-bgcolor: hsla(0,0%,80%,.5);
+  --buttons-secondary-active-bgcolor: hsla(0,0%,80%,.8);
+  --buttons-secondary-color: currentColor;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {

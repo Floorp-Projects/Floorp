@@ -1,0 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@media not (prefers-contrast) {
+  :root:not(:-moz-lwtheme) {
+    --buttons-secondary-bgcolor: rgb(240,240,244);
+    --buttons-secondary-hover-bgcolor: rgb(224,224,230);
+    --buttons-secondary-active-bgcolor: rgb(207,207,216);
+    --buttons-secondary-color: rgb(91,91,102);
+  }
+}
+} /** END Proton **/
