@@ -131,7 +131,6 @@ void main(void) {
         vYuvColorMatrix,
         vYuvOffsetVector,
         vYuvCoefficient,
-        vec3(0.0),
         vUV_y,
         vUV_u,
         vUV_v,

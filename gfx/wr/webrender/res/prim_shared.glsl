@@ -24,8 +24,7 @@ vec2 clamp_rect(vec2 pt, RectWithSize rect) {
 #ifndef SWGL_CLIP_MASK
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
-// XY and W are homogeneous coordinates, Z is the layer index
-varying vec4 vClipMaskUv;
+varying vec2 vClipMaskUv;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -250,7 +249,7 @@ void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
         area.task_rect.p0,
         area.task_rect.p0 + area.task_rect.size
     );
-    vClipMaskUv = vec4(uv, 0.0, world_pos.w);
+    vClipMaskUv = uv;
 #endif
 }
 
@@ -286,7 +285,7 @@ float do_clip() {
     }
     // anything outside of the mask is considered transparent
     //Note: we assume gl_FragCoord.w == interpolated(1 / vClipMaskUv.w)
-    vec2 mask_uv = vClipMaskUv.xy * gl_FragCoord.w;
+    vec2 mask_uv = vClipMaskUv * gl_FragCoord.w;
     bvec2 left = lessThanEqual(vClipMaskUvBounds.xy, mask_uv); // inclusive
     bvec2 right = greaterThan(vClipMaskUvBounds.zw, mask_uv); // non-inclusive
     // bail out if the pixel is outside the valid bounds
