@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
@@ -24,6 +25,9 @@ const kDefaultHomePage = "about:home";
 const kExtensionControllerPref =
   "browser.startup.homepage_override.extensionControlled";
 const kHomePageIgnoreListId = "homepage-urls";
+const kWidgetId = "home-button";
+const kWidgetRemovedPref = "browser.engagement.home-button.has-removed";
+const kProtonToolbarEnabledPref = "browser.proton.toolbar.enabled";
 
 function getHomepagePref(useDefault) {
   let homePage;
@@ -88,6 +92,8 @@ let HomePage = {
     this._initializationPromise = IgnoreLists.getAndSubscribe(
       this._ignoreListListener
     );
+
+    this._addCustomizableUiListener();
 
     const current = await this._initializationPromise;
 
@@ -196,6 +202,7 @@ let HomePage = {
       return false;
     }
     Services.prefs.setStringPref(kPrefName, value);
+    this._maybeAddHomeButtonToToolbar(value);
     return true;
   },
 
@@ -302,6 +309,55 @@ let HomePage = {
           "saved_reset"
         );
       }
+    }
+  },
+
+  onWidgetRemoved(widgetId, area) {
+    if (widgetId == kWidgetId) {
+      Services.prefs.setBoolPref(kWidgetRemovedPref, true);
+      CustomizableUI.removeListener(this);
+    }
+  },
+
+  /**
+   * Add the home button to the toolbar if the user just set a custom homepage.
+   *
+   * This should only be done once, so we check HOME_BUTTON_REMOVED_PREF which
+   * gets set to true when the home button is removed from the toolbar.
+   *
+   * If the home button is already on the toolbar it won't be moved.
+   */
+  _maybeAddHomeButtonToToolbar(homePage) {
+    if (
+      homePage !== "about:home" &&
+      homePage !== "about:blank" &&
+      Services.prefs.getBoolPref(kProtonToolbarEnabledPref, false) &&
+      !Services.prefs.getBoolPref(kExtensionControllerPref, false) &&
+      !Services.prefs.getBoolPref(kWidgetRemovedPref, false) &&
+      !CustomizableUI.getWidget(kWidgetId).areaType
+    ) {
+      // Find a spot for the home button, ideally it will be in its default
+      // position beside the stop/refresh button.
+      // Work backwards from the URL bar since it can't be removed and put
+      // the button after the first non-spring we find.
+      let navbarPlacements = CustomizableUI.getWidgetIdsInArea("nav-bar");
+      let position = navbarPlacements.indexOf("urlbar-container");
+      for (let i = position - 1; i >= 0; i--) {
+        if (!navbarPlacements[i].startsWith("customizableui-special-spring")) {
+          position = i + 1;
+          break;
+        }
+      }
+      CustomizableUI.addWidgetToArea(kWidgetId, "nav-bar", position);
+    }
+  },
+
+  _addCustomizableUiListener() {
+    if (
+      Services.prefs.getBoolPref(kProtonToolbarEnabledPref, false) &&
+      !Services.prefs.getBoolPref(kWidgetRemovedPref, false)
+    ) {
+      CustomizableUI.addListener(this);
     }
   },
 };
