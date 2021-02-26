@@ -5867,7 +5867,7 @@ impl Renderer {
             for (id, texture) in renderer.textures {
                 info!("\t{}", texture.data);
                 let target = if texture.is_array {
-                    ImageBufferKind::Texture2DArray
+                    panic!("Texture arrays aren't supported");
                 } else {
                     ImageBufferKind::Texture2D
                 };

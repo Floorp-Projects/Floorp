@@ -154,7 +154,6 @@ fn depth_target_size_in_bytes(dimensions: &DeviceIntSize) -> usize {
 pub fn get_gl_target(target: ImageBufferKind) -> gl::GLuint {
     match target {
         ImageBufferKind::Texture2D => gl::TEXTURE_2D,
-        ImageBufferKind::Texture2DArray => gl::TEXTURE_2D_ARRAY,
         ImageBufferKind::TextureRect => gl::TEXTURE_RECTANGLE,
         ImageBufferKind::TextureExternal => gl::TEXTURE_EXTERNAL_OES,
     }
