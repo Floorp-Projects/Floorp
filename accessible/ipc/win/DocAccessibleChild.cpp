@@ -22,7 +22,7 @@ DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
   MOZ_COUNT_CTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
   if (!sPlatformChild) {
     sPlatformChild = new PlatformChild();
-    ClearOnShutdown(&sPlatformChild, ShutdownPhase::Shutdown);
+    ClearOnShutdown(&sPlatformChild, ShutdownPhase::XPCOMShutdown);
   }
 
   SetManager(aManager);

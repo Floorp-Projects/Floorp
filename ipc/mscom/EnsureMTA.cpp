@@ -126,7 +126,7 @@ nsCOMPtr<nsIThread> EnsureMTA::GetMTAThread() {
         BackgroundMTAData* bgData = new BackgroundMTAData();
 
         auto setClearOnShutdown = [ptr = &sMTAData]() -> void {
-          ClearOnShutdown(ptr, ShutdownPhase::ShutdownThreads);
+          ClearOnShutdown(ptr, ShutdownPhase::XPCOMShutdownThreads);
         };
 
         if (NS_IsMainThread()) {

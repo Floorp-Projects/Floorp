@@ -28,7 +28,7 @@ async function fake_profile_change() {
     }, "cookie-db-closed");
     Services.cookies
       .QueryInterface(Ci.nsIObserver)
-      .observe(null, "profile-before-change", "shutdown-persist");
+      .observe(null, "profile-before-change", null);
   });
   await new Promise(resolve => {
     Services.obs.addObserver(function waitForDBOpen() {

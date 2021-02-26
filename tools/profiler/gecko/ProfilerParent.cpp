@@ -400,7 +400,7 @@ void ProfilerParentTracker::EnsureInstance() {
   // The tracker should get destroyed before threads are shutdown, because its
   // destruction closes extant channels, which could trigger promise rejections
   // that need to be dispatched to other threads.
-  ClearOnShutdown(&sInstance, ShutdownPhase::ShutdownThreads);
+  ClearOnShutdown(&sInstance, ShutdownPhase::XPCOMShutdownThreads);
 }
 
 /* static */
