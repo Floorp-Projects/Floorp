@@ -210,7 +210,7 @@
 }
 
 .urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
-.urlbarView-row[has-help] > .urlbarView-row-inner:hover {
+.urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover {
   background: var(--arrowpanel-dimmed);
 }
 
