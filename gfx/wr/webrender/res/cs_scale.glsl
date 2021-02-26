@@ -38,7 +38,7 @@ void main(void) {
 
 void main(void) {
     vec2 st = clamp(vUv, vUvRect.xy, vUvRect.zw);
-    oFragColor = TEX_SAMPLE(sColor0, vec3(st, 0.0));
+    oFragColor = TEX_SAMPLE(sColor0, st);
 }
 
 #ifdef SWGL_DRAW_SPAN
