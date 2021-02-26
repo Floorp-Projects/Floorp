@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-load(libdir + "../../tests/non262/shell.js");
+load(libdir + "non262.js");
 
 if (typeof assertWarning === 'undefined') {
     var assertWarning = function assertWarning(f, pattern) {
