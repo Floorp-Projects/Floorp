@@ -14,7 +14,6 @@ varying vec2 v_uv;
 // sampling artifacts.
 flat varying vec4 v_uv_sample_bounds;
 
-// Layer index to sample.
 // Flag to allow perspective interpolation of UV.
 flat varying float v_perspective;
 

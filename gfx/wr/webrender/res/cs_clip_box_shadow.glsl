@@ -7,7 +7,6 @@
 varying vec4 vLocalPos;
 varying vec2 vUv;
 flat varying vec4 vUvBounds;
-flat varying float vLayer;
 flat varying vec4 vEdge;
 flat varying vec4 vUvBounds_NoClamp;
 flat varying float vClipMode;
@@ -74,7 +73,6 @@ void main(void) {
         cmi.base.screen_origin,
         cmi.base.device_pixel_scale
     );
-    vLayer = res.layer;
     vClipMode = float(bs_data.clip_mode);
 
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
@@ -129,7 +127,7 @@ void main(void) {
 
     float in_shadow_rect = init_transform_rough_fs(vLocalPos.xy / vLocalPos.w);
 
-    float texel = TEX_SAMPLE(sColor0, vec3(uv, vLayer)).r;
+    float texel = TEX_SAMPLE(sColor0, vec3(uv, 0.0)).r;
 
     float alpha = mix(texel, 1.0 - texel, vClipMode);
     float result = vLocalPos.w > 0.0 ? mix(vClipMode, alpha, in_shadow_rect) : 0.0;
