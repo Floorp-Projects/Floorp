@@ -145,12 +145,12 @@ class EMEDecryptor : public MediaDataDecoder,
       return;
     }
 
-    const auto& decrypt = mDecrypts.InsertOrUpdate(
-        aSample, MakeUnique<DecryptPromiseRequestHolder>());
+    mDecrypts.InsertOrUpdate(aSample,
+                             MakeUnique<DecryptPromiseRequestHolder>());
     mProxy->Decrypt(aSample)
         ->Then(mThread, __func__, this, &EMEDecryptor::Decrypted,
                &EMEDecryptor::Decrypted)
-        ->Track(*decrypt);
+        ->Track(*mDecrypts.Get(aSample));
   }
 
   void Decrypted(const DecryptResult& aDecrypted) {
