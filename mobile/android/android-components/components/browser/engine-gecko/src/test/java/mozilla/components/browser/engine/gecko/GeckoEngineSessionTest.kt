@@ -1127,85 +1127,125 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun enableTrackingProtection() {
+    fun `WHEN updating tracking protection with a recommended policy THEN etpEnabled should be enabled`() {
         whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
-        val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
-        val privSession = GeckoEngineSession(
-            runtime,
-            geckoSessionProvider = geckoSessionProvider,
-            privateMode = true
-        )
 
+        val session = spy(GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider))
         var trackerBlockingObserved = false
+
         session.register(object : EngineSession.Observer {
             override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
                 trackerBlockingObserved = enabled
             }
         })
-        var privateTrackerBlockingObserved = false
-        privSession.register(object : EngineSession.Observer {
-            override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
-                privateTrackerBlockingObserved = enabled
-            }
-        })
 
-        val allPolicy = TrackingProtectionPolicy.select(
-            trackingCategories = arrayOf(TrackingCategory.AD)
-        )
-        val regularOnlyPolicy = TrackingProtectionPolicy.select(
-            trackingCategories = arrayOf(TrackingCategory.AD)
-        ).forRegularSessionsOnly()
-        val privateOnlyPolicy = TrackingProtectionPolicy.select(
-            trackingCategories = arrayOf(TrackingCategory.AD)
-        ).forPrivateSessionsOnly()
+        val policy = TrackingProtectionPolicy.recommended()
+        session.updateTrackingProtection(policy)
 
-        session.enableTrackingProtection(allPolicy)
+        verify(session).updateContentBlocking(policy)
+        assertTrue(session.etpEnabled!!)
         assertTrue(trackerBlockingObserved)
-
-        session.enableTrackingProtection(privateOnlyPolicy)
-        assertFalse(trackerBlockingObserved)
-        assertEquals(
-            GeckoCookieBehavior.ACCEPT_ALL,
-            runtime.settings.contentBlocking.cookieBehavior
-        )
-
-        assertEquals(
-            ContentBlocking.AntiTracking.NONE,
-            runtime.settings.contentBlocking.antiTrackingCategories
-        )
-
-        assertFalse(session.geckoSession.settings.useTrackingProtection)
-
-        session.enableTrackingProtection(regularOnlyPolicy)
-        assertTrue(trackerBlockingObserved)
-
-        privSession.enableTrackingProtection(allPolicy)
-        assertTrue(privateTrackerBlockingObserved)
-
-        privSession.enableTrackingProtection(regularOnlyPolicy)
-        assertFalse(privateTrackerBlockingObserved)
-
-        privSession.enableTrackingProtection(privateOnlyPolicy)
-        assertTrue(privateTrackerBlockingObserved)
     }
 
     @Test
-    fun disableTrackingProtection() {
+    fun `WHEN updating tracking protection with a none policy THEN etpEnabled should be enabled`() {
+        whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
 
-        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        val session = spy(GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider))
+        var trackerBlockingObserved = false
 
-        var trackerBlockingDisabledObserved = false
-        engineSession.register(object : EngineSession.Observer {
+        session.register(object : EngineSession.Observer {
             override fun onTrackerBlockingEnabledChange(enabled: Boolean) {
-                trackerBlockingDisabledObserved = !enabled
+                trackerBlockingObserved = enabled
             }
         })
 
-        engineSession.disableTrackingProtection()
-        assertTrue(trackerBlockingDisabledObserved)
-        assertFalse(engineSession.geckoSession.settings.useTrackingProtection)
+        val policy = TrackingProtectionPolicy.none()
+        session.updateTrackingProtection(policy)
+
+        verify(session).updateContentBlocking(policy)
+        assertFalse(session.etpEnabled!!)
+        assertFalse(trackerBlockingObserved)
+    }
+
+    @Test
+    fun `WHEN updating content blocking with a policy SCRIPTS_AND_SUB_RESOURCES useForPrivateSessions being in privateMode THEN useTrackingProtection should be true`() {
+        val geckoSetting = mock<GeckoSessionSettings>()
+        val geckoSession = mock<GeckoSession>()
+
+        val session = spy(GeckoEngineSession(
+            runtime = runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            privateMode = true
+        ))
+
+        whenever(geckoSession.settings).thenReturn(geckoSetting)
+
+        session.geckoSession = geckoSession
+
+        val policy = TrackingProtectionPolicy.select(trackingCategories = arrayOf(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)).forPrivateSessionsOnly()
+
+        session.updateContentBlocking(policy)
+
+        verify(geckoSetting).useTrackingProtection = true
+    }
+
+    @Test
+    fun `WHEN calling updateContentBlocking with a policy SCRIPTS_AND_SUB_RESOURCES useForRegularSessions being in privateMode THEN useTrackingProtection should be true`() {
+        val geckoSetting = mock<GeckoSessionSettings>()
+        val geckoSession = mock<GeckoSession>()
+
+        val session = spy(GeckoEngineSession(
+            runtime = runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            privateMode = false
+        ))
+
+        whenever(geckoSession.settings).thenReturn(geckoSetting)
+
+        session.geckoSession = geckoSession
+
+        val policy = TrackingProtectionPolicy.select(trackingCategories = arrayOf(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)).forRegularSessionsOnly()
+
+        session.updateContentBlocking(policy)
+
+        verify(geckoSetting).useTrackingProtection = true
+    }
+
+    @Test
+    fun `WHEN updating content blocking without a policy SCRIPTS_AND_SUB_RESOURCES for any browsing mode THEN useTrackingProtection should be false`() {
+        val geckoSetting = mock<GeckoSessionSettings>()
+        val geckoSession = mock<GeckoSession>()
+
+        var session = spy(GeckoEngineSession(
+            runtime = runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            privateMode = false
+        ))
+
+        whenever(geckoSession.settings).thenReturn(geckoSetting)
+        session.geckoSession = geckoSession
+
+        val policy = TrackingProtectionPolicy.none()
+
+        session.updateContentBlocking(policy)
+
+        verify(geckoSetting).useTrackingProtection = false
+
+        session = spy(GeckoEngineSession(
+            runtime = runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            privateMode = true
+        ))
+
+        whenever(geckoSession.settings).thenReturn(geckoSetting)
+        session.geckoSession = geckoSession
+
+        session.updateContentBlocking(policy)
+
+        verify(geckoSetting, times(2)).useTrackingProtection = false
     }
 
     @Test
@@ -1220,7 +1260,7 @@ class GeckoEngineSessionTest {
             observers.add(spy(object : EngineSession.Observer {}))
         }
 
-        session.enableTrackingProtection(policy)
+        session.updateTrackingProtection(policy)
 
         observers.forEach { session.register(it) }
 
@@ -1230,7 +1270,7 @@ class GeckoEngineSessionTest {
 
         observers.forEach { session.unregister(it) }
 
-        session.enableTrackingProtection(policy.forPrivateSessionsOnly())
+        session.updateTrackingProtection(TrackingProtectionPolicy.none())
 
         observers.forEach { session.register(it) }
 

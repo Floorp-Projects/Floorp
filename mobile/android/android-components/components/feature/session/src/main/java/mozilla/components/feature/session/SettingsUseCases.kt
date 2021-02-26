@@ -37,7 +37,7 @@ class SettingsUseCases(
             engine.settings.trackingProtectionPolicy = policy
 
             store.state.forEachEngineSession { engineSession ->
-                engineSession.enableTrackingProtection(policy)
+                engineSession.updateTrackingProtection(policy)
             }
 
             engine.clearSpeculativeSession()

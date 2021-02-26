@@ -250,7 +250,7 @@ class SystemEngineSessionTest {
         })
 
         assertNull(engineSession.trackingProtectionPolicy)
-        runBlocking { engineSession.enableTrackingProtection() }
+        runBlocking { engineSession.updateTrackingProtection() }
         assertEquals(
             EngineSession.TrackingProtectionPolicy.strict(),
             engineSession.trackingProtectionPolicy
@@ -366,7 +366,7 @@ class SystemEngineSessionTest {
         assertNull(engineSession.settings.trackingProtectionPolicy)
         engineSession.settings.trackingProtectionPolicy =
             EngineSession.TrackingProtectionPolicy.strict()
-        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.strict())
+        verify(engineSession).updateTrackingProtection(EngineSession.TrackingProtectionPolicy.strict())
 
         engineSession.settings.trackingProtectionPolicy = null
         verify(engineSession).disableTrackingProtection()
@@ -413,7 +413,7 @@ class SystemEngineSessionTest {
         verify(webViewSettings).loadWithOverviewMode = true
         verify(webViewSettings).useWideViewPort = true
         verify(webViewSettings).setSupportMultipleWindows(true)
-        verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.strict())
+        verify(engineSession).updateTrackingProtection(EngineSession.TrackingProtectionPolicy.strict())
         assertFalse(engineSession.webFontsEnabled)
     }
 

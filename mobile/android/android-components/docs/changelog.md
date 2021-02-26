@@ -19,6 +19,9 @@ permalink: /changelog/
   * 🚒 Bug fixed [issue #9757](https://github.com/mozilla-mobile/android-components/issues/9757) - Remove downloads notification when private tabs are closed.
   * 🚒 Bug fixed [issue #9789](https://github.com/mozilla-mobile/android-components/issues/9789) - Canceled first PDF download prevents following attempts from downloading.
 
+* **concept-engine**,**browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**, **browser-engine-system**
+  * ⚠️ **This is a breaking change**: `EngineSession`.`enableTrackingProtection()` and `EngineSession`.`disableTrackingProtection()` have been removed, please use `EngineSession`.`updateTrackingProtection()` instead , for more details see [issue #9787](https://github.com/mozilla-mobile/android-components/issues/9787).
+
 * **feature-push**
   * ⚠️ **This is a breaking change**: Removed `databasePath` from `RustPushConnection` constructor and added `context`. The file path is now queries lazily.
 

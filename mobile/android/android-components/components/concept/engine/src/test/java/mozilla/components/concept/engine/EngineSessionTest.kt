@@ -698,9 +698,12 @@ class EngineSessionTest {
 
     @Test
     fun `tracking protection policies have correct categories`() {
+        val recommendedPolicy = TrackingProtectionPolicy.recommended()
 
-        assertEquals(TrackingProtectionPolicy.RECOMMENDED, TrackingProtectionPolicy.recommended())
-
+        assertEquals(
+            recommendedPolicy.trackingCategories.sumBy { it.id },
+            TrackingCategory.RECOMMENDED.id
+        )
         val strictPolicy = TrackingProtectionPolicy.strict()
 
         assertEquals(
@@ -952,9 +955,7 @@ open class DummyEngineSession : EngineSession() {
 
     override fun goToHistoryIndex(index: Int) {}
 
-    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
-
-    override fun disableTrackingProtection() {}
+    override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {}
 
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
 

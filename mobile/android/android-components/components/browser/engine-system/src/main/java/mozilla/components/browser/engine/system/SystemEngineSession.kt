@@ -144,9 +144,9 @@ class SystemEngineSession(
     }
 
     /**
-     * See [EngineSession.enableTrackingProtection]
+     * See [EngineSession.updateTrackingProtection]
      */
-    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
+    override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {
         // Make sure Url matcher is preloaded now that tracking protection is enabled
         CoroutineScope(Dispatchers.IO).launch {
             SystemEngineView.getOrCreateUrlMatcher(resources, policy)
@@ -159,10 +159,8 @@ class SystemEngineSession(
         notifyObservers { onTrackerBlockingEnabledChange(true) }
     }
 
-    /**
-     * See [EngineSession.disableTrackingProtection]
-     */
-    override fun disableTrackingProtection() {
+    @VisibleForTesting
+    internal fun disableTrackingProtection() {
         trackingProtectionPolicy = null
         notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
@@ -331,7 +329,7 @@ class SystemEngineSession(
 
             override var trackingProtectionPolicy: TrackingProtectionPolicy?
                 get() = this@SystemEngineSession.trackingProtectionPolicy
-                set(value) = value?.let { enableTrackingProtection(it) } ?: disableTrackingProtection()
+                set(value) = value?.let { updateTrackingProtection(it) } ?: disableTrackingProtection()
 
             override var historyTrackingDelegate: HistoryTrackingDelegate?
                 get() = this@SystemEngineSession.historyTrackingDelegate

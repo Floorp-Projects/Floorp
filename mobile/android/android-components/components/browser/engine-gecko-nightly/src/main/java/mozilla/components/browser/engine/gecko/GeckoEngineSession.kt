@@ -245,14 +245,19 @@ class GeckoEngineSession(
     }
 
     /**
-     * See [EngineSession.enableTrackingProtection]
+     * See [EngineSession.updateTrackingProtection]
      */
-    override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
-        val enabled = if (privateMode) {
-            policy.useForPrivateSessions
-        } else {
-            policy.useForRegularSessions
+    override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {
+        updateContentBlocking(policy)
+        val enabled = policy != TrackingProtectionPolicy.none()
+        etpEnabled = enabled
+        notifyObservers {
+            onTrackerBlockingEnabledChange(this, enabled)
         }
+    }
+
+    @VisibleForTesting
+    internal fun updateContentBlocking(policy: TrackingProtectionPolicy) {
         /**
          * As described on https://bugzilla.mozilla.org/show_bug.cgi?id=1579264,useTrackingProtection
          * is a misleading setting. When is set to true is blocking content (scripts/sub-resources).
@@ -263,17 +268,18 @@ class GeckoEngineSession(
         val shouldBlockContent =
             policy.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
 
-        geckoSession.settings.useTrackingProtection = shouldBlockContent && enabled
-        etpEnabled = enabled
-        notifyObservers {
-            onTrackerBlockingEnabledChange(this, enabled)
+        val enabledInBrowsingMode = if (privateMode) {
+            policy.useForPrivateSessions
+        } else {
+            policy.useForRegularSessions
         }
+        geckoSession.settings.useTrackingProtection = enabledInBrowsingMode && shouldBlockContent
     }
 
     // This is a temporary solution to address
     // https://github.com/mozilla-mobile/android-components/issues/8431
     // until we eventually delete [EngineObserver] then this will not be needed.
-    private var etpEnabled: Boolean? = null
+    @VisibleForTesting internal var etpEnabled: Boolean? = null
 
     override fun register(observer: Observer) {
         super.register(observer)
@@ -290,14 +296,6 @@ class GeckoEngineSession(
         MainScope().launch {
             observer.onTrackerBlockingEnabledChange(enabled)
         }
-    }
-
-    /**
-     * See [EngineSession.disableTrackingProtection]
-     */
-    override fun disableTrackingProtection() {
-        geckoSession.settings.useTrackingProtection = false
-        notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
     /**
@@ -1052,7 +1050,7 @@ class GeckoEngineSession(
     private fun createGeckoSession(shouldOpen: Boolean = true) {
         this.geckoSession = geckoSessionProvider()
 
-        defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
+        defaultSettings?.trackingProtectionPolicy?.let { updateTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
         defaultSettings?.testingModeEnabled?.let { geckoSession.settings.fullAccessibilityTree = it }

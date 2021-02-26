@@ -7,7 +7,6 @@ package mozilla.components.concept.engine
 import android.content.Intent
 import android.graphics.Bitmap
 import androidx.annotation.CallSuper
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.Companion.RECOMMENDED
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -375,9 +374,6 @@ abstract class EngineSession(
         }
 
         companion object {
-
-            internal val RECOMMENDED = TrackingProtectionPolicy()
-
             fun none() = TrackingProtectionPolicy(
                 trackingCategories = arrayOf(TrackingCategory.NONE),
                 cookiePolicy = ACCEPT_ALL
@@ -438,6 +434,8 @@ abstract class EngineSession(
             if (hashCode() != other.hashCode()) return false
             if (useForPrivateSessions != other.useForPrivateSessions) return false
             if (useForRegularSessions != other.useForRegularSessions) return false
+            if (cookiePurging != other.cookiePurging) return false
+            if (strictSocialTrackingProtection != other.strictSocialTrackingProtection) return false
             return true
         }
 
@@ -606,16 +604,12 @@ abstract class EngineSession(
     abstract fun restoreState(state: EngineSessionState): Boolean
 
     /**
-     * Enables tracking protection for this engine session.
+     * Updates the tracking protection [policy] for this engine session.
+     * If you want to disable tracking protection use [TrackingProtectionPolicy.none].
      *
      * @param policy the tracking protection policy to use, defaults to blocking all trackers.
      */
-    abstract fun enableTrackingProtection(policy: TrackingProtectionPolicy = TrackingProtectionPolicy.strict())
-
-    /**
-     * Disables tracking protection for this engine session.
-     */
-    abstract fun disableTrackingProtection()
+    abstract fun updateTrackingProtection(policy: TrackingProtectionPolicy = TrackingProtectionPolicy.strict())
 
     /**
      * Enables/disables Desktop Mode with an optional ability to reload the session right after.

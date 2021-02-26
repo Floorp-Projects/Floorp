@@ -67,8 +67,7 @@ class EngineObserverTest {
             override fun reload(flags: LoadUrlFlags) {}
             override fun stopLoading() {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
-            override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
-            override fun disableTrackingProtection() {}
+            override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
                 notifyObservers { onDesktopModeChange(enable) }
             }
@@ -119,8 +118,7 @@ class EngineObserverTest {
             override fun stopLoading() {}
             override fun reload(flags: LoadUrlFlags) {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
-            override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
-            override fun disableTrackingProtection() {}
+            override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
@@ -163,12 +161,7 @@ class EngineObserverTest {
             override fun stopLoading() {}
             override fun reload(flags: LoadUrlFlags) {}
             override fun restoreState(state: EngineSessionState): Boolean { return false }
-            override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
-                notifyObservers { onTrackerBlockingEnabledChange(true) }
-            }
-            override fun disableTrackingProtection() {
-                notifyObservers { onTrackerBlockingEnabledChange(false) }
-            }
+            override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun loadUrl(
                 url: String,
@@ -185,12 +178,6 @@ class EngineObserverTest {
         }
         val observer = EngineObserver(session, mock())
         engineSession.register(observer)
-
-        engineSession.enableTrackingProtection()
-        assertTrue(session.trackerBlockingEnabled)
-
-        engineSession.disableTrackingProtection()
-        assertFalse(session.trackerBlockingEnabled)
 
         val tracker1 = Tracker("tracker1", emptyList())
         val tracker2 = Tracker("tracker2", emptyList())
@@ -1111,5 +1098,46 @@ class EngineObserverTest {
                 currentIndex = 1
             )
         )
+    }
+
+    @Test
+    fun `equality between tracking protection policies`() {
+        val strict = EngineSession.TrackingProtectionPolicy.strict()
+        val recommended = EngineSession.TrackingProtectionPolicy.recommended()
+        val none = EngineSession.TrackingProtectionPolicy.none()
+        val custom = EngineSession.TrackingProtectionPolicy.select(
+            trackingCategories = emptyArray(),
+            cookiePolicy = EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
+            cookiePurging = true,
+            strictSocialTrackingProtection = true
+        )
+        val custom2 = EngineSession.TrackingProtectionPolicy.select(
+            trackingCategories = emptyArray(),
+            cookiePolicy = EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
+            cookiePurging = true,
+            strictSocialTrackingProtection = true
+        )
+
+        val customNone = EngineSession.TrackingProtectionPolicy.select(
+            trackingCategories = none.trackingCategories,
+            cookiePolicy = none.cookiePolicy,
+            cookiePurging = none.cookiePurging,
+            strictSocialTrackingProtection = false
+        )
+
+        assertTrue(strict == EngineSession.TrackingProtectionPolicy.strict())
+        assertTrue(recommended == EngineSession.TrackingProtectionPolicy.recommended())
+        assertTrue(none == EngineSession.TrackingProtectionPolicy.none())
+        assertTrue(custom == custom2)
+
+        assertFalse(strict == EngineSession.TrackingProtectionPolicy.strict().forPrivateSessionsOnly())
+        assertFalse(recommended == EngineSession.TrackingProtectionPolicy.recommended().forPrivateSessionsOnly())
+        assertFalse(custom == custom2.forPrivateSessionsOnly())
+
+        assertFalse(strict == EngineSession.TrackingProtectionPolicy.strict().forRegularSessionsOnly())
+        assertFalse(recommended == EngineSession.TrackingProtectionPolicy.recommended().forRegularSessionsOnly())
+        assertFalse(custom == custom2.forRegularSessionsOnly())
+
+        assertFalse(none == customNone)
     }
 }
