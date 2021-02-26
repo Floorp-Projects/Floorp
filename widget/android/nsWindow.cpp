@@ -33,6 +33,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/RenderTrace.h"
 #include "mozilla/widget/AndroidVsync.h"
 #include <algorithm>
@@ -457,8 +458,8 @@ class NPZCSupport final
     return result;
   }
 
-  static int32_t ConvertAPZHandledResult(APZHandledResult aHandledResult) {
-    switch (aHandledResult.mPlace) {
+  static int32_t ConvertAPZHandledPlace(APZHandledPlace aHandledPlace) {
+    switch (aHandledPlace) {
       case APZHandledPlace::Unhandled:
         return INPUT_RESULT_UNHANDLED;
       case APZHandledPlace::HandledByRoot:
@@ -471,6 +472,43 @@ class NPZCSupport final
     }
     MOZ_ASSERT_UNREACHABLE("Unknown handled result");
     return INPUT_RESULT_UNHANDLED;
+  }
+
+  static int32_t ConvertSideBits(SideBits aSideBits) {
+    int32_t ret = java::PanZoomController::SCROLLABLE_FLAG_NONE;
+    if (aSideBits & SideBits::eTop) {
+      ret |= java::PanZoomController::SCROLLABLE_FLAG_TOP;
+    }
+    if (aSideBits & SideBits::eRight) {
+      ret |= java::PanZoomController::SCROLLABLE_FLAG_RIGHT;
+    }
+    if (aSideBits & SideBits::eBottom) {
+      ret |= java::PanZoomController::SCROLLABLE_FLAG_BOTTOM;
+    }
+    if (aSideBits & SideBits::eLeft) {
+      ret |= java::PanZoomController::SCROLLABLE_FLAG_LEFT;
+    }
+    return ret;
+  }
+
+  static int32_t ConvertScrollDirections(
+      layers::ScrollDirections aScrollDirections) {
+    int32_t ret = java::PanZoomController::OVERSCROLL_FLAG_NONE;
+    if (aScrollDirections.contains(layers::HorizontalScrollDirection)) {
+      ret |= java::PanZoomController::OVERSCROLL_FLAG_HORIZONTAL;
+    }
+    if (aScrollDirections.contains(layers::VerticalScrollDirection)) {
+      ret |= java::PanZoomController::OVERSCROLL_FLAG_VERTICAL;
+    }
+    return ret;
+  }
+
+  static java::PanZoomController::InputResultDetail::LocalRef
+  ConvertAPZHandledResult(const APZHandledResult& aHandledResult) {
+    return java::PanZoomController::InputResultDetail::New(
+        ConvertAPZHandledPlace(aHandledResult.mPlace),
+        ConvertSideBits(aHandledResult.mScrollableDirections),
+        ConvertScrollDirections(aHandledResult.mOverscrollDirections));
   }
 
  public:
@@ -783,8 +821,10 @@ class NPZCSupport final
 
     if (!controller) {
       if (aReturnResult) {
-        aReturnResult->Complete(
-            java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+        aReturnResult->Complete(java::PanZoomController::InputResultDetail::New(
+            INPUT_RESULT_UNHANDLED,
+            java::PanZoomController::SCROLLABLE_FLAG_NONE,
+            java::PanZoomController::OVERSCROLL_FLAG_NONE));
       }
       return;
     }
@@ -793,8 +833,9 @@ class NPZCSupport final
         controller->InputBridge()->ReceiveInputEvent(aInput);
     if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
       if (aReturnResult) {
-        aReturnResult->Complete(
-            java::sdk::Integer::ValueOf(INPUT_RESULT_IGNORED));
+        aReturnResult->Complete(java::PanZoomController::InputResultDetail::New(
+            INPUT_RESULT_IGNORED, java::PanZoomController::SCROLLABLE_FLAG_NONE,
+            java::PanZoomController::OVERSCROLL_FLAG_NONE));
       }
       return;
     }
@@ -817,16 +858,22 @@ class NPZCSupport final
       switch (result.GetStatus()) {
         case nsEventStatus_eIgnore:
           aReturnResult->Complete(
-              java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+              java::PanZoomController::InputResultDetail::New(
+                  INPUT_RESULT_UNHANDLED,
+                  java::PanZoomController::SCROLLABLE_FLAG_NONE,
+                  java::PanZoomController::OVERSCROLL_FLAG_NONE));
           break;
         case nsEventStatus_eConsumeDoDefault:
-          aReturnResult->Complete(java::sdk::Integer::ValueOf(
-              ConvertAPZHandledResult(result.GetHandledResult().value())));
+          aReturnResult->Complete(
+              ConvertAPZHandledResult(result.GetHandledResult().value()));
           break;
         default:
           MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
           aReturnResult->Complete(
-              java::sdk::Integer::ValueOf(INPUT_RESULT_UNHANDLED));
+              java::PanZoomController::InputResultDetail::New(
+                  INPUT_RESULT_UNHANDLED,
+                  java::PanZoomController::SCROLLABLE_FLAG_NONE,
+                  java::PanZoomController::OVERSCROLL_FLAG_NONE));
           break;
       }
       return;
@@ -836,9 +883,8 @@ class NPZCSupport final
     controller->AddInputBlockCallback(
         result.mInputBlockId,
         [aReturnResult = java::GeckoResult::GlobalRef(aReturnResult)](
-            uint64_t aInputBlockId, APZHandledResult aHandledResult) {
-          aReturnResult->Complete(java::sdk::Integer::ValueOf(
-              ConvertAPZHandledResult(aHandledResult)));
+            uint64_t aInputBlockId, const APZHandledResult& aHandledResult) {
+          aReturnResult->Complete(ConvertAPZHandledResult(aHandledResult));
         });
   }
 };
