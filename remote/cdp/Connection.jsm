@@ -10,15 +10,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { truncate } = ChromeUtils.import(
-  "chrome://remote/content/shared/Format.jsm"
-);
-const { Log } = ChromeUtils.import("chrome://remote/content/shared/Log.jsm");
-const { UnknownMethodError } = ChromeUtils.import(
-  "chrome://remote/content/cdp/Error.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "chrome://remote/content/shared/Log.jsm",
+  truncate: "chrome://remote/content/shared/Format.jsm",
+  UnknownMethodError: "chrome://remote/content/cdp/Error.jsm",
+});
 
-XPCOMUtils.defineLazyGetter(this, "log", Log.get);
+XPCOMUtils.defineLazyGetter(this, "log", () => Log.get());
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "UUIDGen",
