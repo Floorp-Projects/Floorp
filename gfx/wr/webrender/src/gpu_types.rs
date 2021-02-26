@@ -252,9 +252,6 @@ pub struct CompositeInstance {
 
     // UV rectangles (pixel space) for color / yuv texture planes
     uv_rects: [TexelRect; 3],
-
-    // Texture array layers for color / yuv texture planes
-    texture_layers: [f32; 3],
 }
 
 impl CompositeInstance {
@@ -262,7 +259,6 @@ impl CompositeInstance {
         rect: DeviceRect,
         clip_rect: DeviceRect,
         color: PremultipliedColorF,
-        layer: f32,
         z_id: ZBufferId,
     ) -> Self {
         let uv = TexelRect::new(0.0, 0.0, 1.0, 1.0);
@@ -274,7 +270,6 @@ impl CompositeInstance {
             color_space_or_uv_type: pack_as_float(0u32),
             yuv_format: 0.0,
             yuv_rescale: 0.0,
-            texture_layers: [layer, 0.0, 0.0],
             uv_rects: [uv, uv, uv],
         }
     }
@@ -283,7 +278,6 @@ impl CompositeInstance {
         rect: DeviceRect,
         clip_rect: DeviceRect,
         color: PremultipliedColorF,
-        layer: f32,
         z_id: ZBufferId,
         uv_rect: TexelRect,
     ) -> Self {
@@ -295,7 +289,6 @@ impl CompositeInstance {
             color_space_or_uv_type: pack_as_float(1u32),
             yuv_format: 0.0,
             yuv_rescale: 0.0,
-            texture_layers: [layer, 0.0, 0.0],
             uv_rects: [uv_rect, uv_rect, uv_rect],
         }
     }
@@ -307,7 +300,6 @@ impl CompositeInstance {
         yuv_color_space: YuvColorSpace,
         yuv_format: YuvFormat,
         yuv_rescale: f32,
-        texture_layers: [f32; 3],
         uv_rects: [TexelRect; 3],
     ) -> Self {
         CompositeInstance {
@@ -318,7 +310,6 @@ impl CompositeInstance {
             color_space_or_uv_type: pack_as_float(yuv_color_space as u32),
             yuv_format: pack_as_float(yuv_format as u32),
             yuv_rescale,
-            texture_layers,
             uv_rects,
         }
     }
