@@ -401,7 +401,7 @@ RenderCompositorD3D11SWGL::DoCreateTile(Surface* aSurface) {
   MOZ_ASSERT(SUCCEEDED(hr));
   if (!texture) {
     gfxCriticalNote << "Failed to allocate Texture2D: " << aSurface->TileSize();
-    MakeUnique<TileD3D11>(nullptr, nullptr, nullptr, aSurface, this);
+    return MakeUnique<TileD3D11>(nullptr, nullptr, nullptr, aSurface, this);
   }
 
   RefPtr<DataTextureSourceD3D11> source = new DataTextureSourceD3D11(
