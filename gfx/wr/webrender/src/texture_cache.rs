@@ -113,7 +113,7 @@ struct CacheEntry {
     /// Details specific to standalone or shared items.
     details: EntryDetails,
     /// Arbitrary user data associated with this item.
-    user_data: [f32; 3],
+    user_data: [f32; 4],
     /// The last frame this item was requested for rendering.
     // TODO(gw): This stamp is only used for picture cache tiles, and some checks
     //           in the glyph cache eviction code. We could probably remove it
@@ -177,7 +177,6 @@ impl CacheEntry {
             let image_source = ImageSource {
                 p0: origin.to_f32(),
                 p1: (origin + self.size).to_f32(),
-                unused: 0.0,
                 user_data: self.user_data,
                 uv_rect_kind: self.uv_rect_kind,
             };
@@ -606,7 +605,7 @@ impl PictureTextures {
 
         CacheEntry {
             size: tile_size,
-            user_data: [0.0; 3],
+            user_data: [0.0; 4],
             last_access: now,
             details: EntryDetails::Picture {
                 size: tile_size,
@@ -704,7 +703,7 @@ impl PictureTextures {
 struct CacheAllocParams {
     descriptor: ImageDescriptor,
     filter: TextureFilter,
-    user_data: [f32; 3],
+    user_data: [f32; 4],
     uv_rect_kind: UvRectKind,
     shader: TargetShader,
 }
@@ -1060,7 +1059,7 @@ impl TextureCache {
         descriptor: ImageDescriptor,
         filter: TextureFilter,
         data: Option<CachedImageData>,
-        user_data: [f32; 3],
+        user_data: [f32; 4],
         mut dirty_rect: ImageDirtyRect,
         gpu_cache: &mut GpuCache,
         eviction_notice: Option<&EvictionNotice>,
@@ -1181,7 +1180,7 @@ impl TextureCache {
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (CacheTextureId, DeviceIntRect, Swizzle, GpuCacheHandle, [f32; 3]) {
+    ) -> (CacheTextureId, DeviceIntRect, Swizzle, GpuCacheHandle, [f32; 4]) {
         let entry = self
             .get_entry_opt(handle)
             .expect("BUG: was dropped from cache or not updated!");
@@ -1887,7 +1886,7 @@ mod test_texture_cache {
                 },
                 TextureFilter::Linear,
                 None,
-                [0.0; 3],
+                [0.0; 4],
                 DirtyRect::All,
                 &mut gpu_cache,
                 None,

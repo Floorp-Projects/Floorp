@@ -39,7 +39,7 @@ void main(void) {
     ClipMaskInstanceImage cmi = fetch_clip_item();
     Transform clip_transform = fetch_transform(cmi.base.clip_transform_id);
     Transform prim_transform = fetch_transform(cmi.base.prim_transform_id);
-    ImageResource res = fetch_image_resource_direct(cmi.resource_address);
+    ImageSource res = fetch_image_source_direct(cmi.resource_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(
         cmi.local_rect,

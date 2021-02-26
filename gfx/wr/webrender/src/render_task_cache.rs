@@ -60,7 +60,7 @@ pub struct RenderTaskCacheKey {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskCacheEntry {
-    user_data: Option<[f32; 3]>,
+    user_data: Option<[f32; 4]>,
     target_kind: RenderTargetKind,
     is_opaque: bool,
     pub handle: TextureCacheHandle,
@@ -176,7 +176,7 @@ impl RenderTaskCache {
             descriptor,
             TextureFilter::Linear,
             None,
-            entry.user_data.unwrap_or([0.0; 3]),
+            entry.user_data.unwrap_or([0.0; 4]),
             DirtyRect::All,
             gpu_cache,
             None,
@@ -208,7 +208,7 @@ impl RenderTaskCache {
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
         rg_builder: &mut RenderTaskGraphBuilder,
-        user_data: Option<[f32; 3]>,
+        user_data: Option<[f32; 4]>,
         is_opaque: bool,
         parent: RenderTaskParent,
         surfaces: &[SurfaceInfo],

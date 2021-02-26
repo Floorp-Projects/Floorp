@@ -64,7 +64,7 @@ void main(void) {
     PrimitiveHeader ph = fetch_prim_header(ci.prim_header_index);
     PictureTask dest_task = fetch_picture_task(ci.render_task_index);
     Transform transform = fetch_transform(ph.transform_id);
-    ImageResource res = fetch_image_resource(ph.user_data.x);
+    ImageSource res = fetch_image_source(ph.user_data.x);
     ClipArea clip_area = fetch_clip_area(ph.user_data.w);
 
     vec2 dest_origin = dest_task.task_rect.p0 -

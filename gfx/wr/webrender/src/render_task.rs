@@ -1521,8 +1521,7 @@ impl RenderTask {
             let image_source = ImageSource {
                 p0,
                 p1,
-                unused: 0.0,
-                user_data: [0.0; 3],
+                user_data: [0.0; 4],
                 uv_rect_kind: self.uv_rect_kind,
             };
             image_source.write_gpu_blocks(&mut request);
