@@ -5,20 +5,15 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { MultiStageAboutWelcome } from "./components/MultiStageAboutWelcome";
-import { SimpleAboutWelcome } from "./components/SimpleAboutWelcome";
 import { ReturnToAMO } from "./components/ReturnToAMO";
 
-import {
-  AboutWelcomeUtils,
-  DEFAULT_WELCOME_CONTENT,
-} from "../lib/aboutwelcome-utils";
+import { DEFAULT_WELCOME_CONTENT } from "../lib/aboutwelcome-utils";
 
 class AboutWelcome extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = { metricsFlowUri: null };
     this.fetchFxAFlowUri = this.fetchFxAFlowUri.bind(this);
-    this.handleStartBtnClick = this.handleStartBtnClick.bind(this);
   }
 
   async fetchFxAFlowUri() {
@@ -62,36 +57,9 @@ class AboutWelcome extends React.PureComponent {
     window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.props.messageId);
   }
 
-  handleStartBtnClick() {
-    AboutWelcomeUtils.handleUserAction(this.props.startButton.action);
-    const ping = {
-      event: "CLICK_BUTTON",
-      event_context: {
-        source: this.props.startButton.message_id,
-        page: "about:welcome",
-      },
-      message_id: this.props.messageId,
-      id: "ABOUT_WELCOME",
-    };
-    window.AWSendEventTelemetry(ping);
-  }
-
   render() {
     const { props } = this;
-    if (props.template === "simplified") {
-      return (
-        <SimpleAboutWelcome
-          metricsFlowUri={this.state.metricsFlowUri}
-          message_id={props.messageId}
-          utm_term={props.UTMTerm}
-          title={props.title}
-          subtitle={props.subtitle}
-          cards={props.cards}
-          startButton={props.startButton}
-          handleStartBtnClick={this.handleStartBtnClick}
-        />
-      );
-    } else if (props.template === "return_to_amo") {
+    if (props.template === "return_to_amo") {
       return (
         <ReturnToAMO
           message_id={props.messageId}
