@@ -14,10 +14,10 @@ fuzzy-if(Android,0-255,0-154) == image-seam-2.html  image-seam-2-ref.html  # Bug
 # Tests for "object-fit" & "object-position"
 == image-object-fit-dyn-1.html image-object-fit-dyn-1-ref.html
 == image-object-fit-with-background-1.html image-object-fit-with-background-1-ref.html
-== image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
+fuzzy-if(swgl&&cocoaWidget,0-1,0-2) == image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
 == image-object-position-dyn-1.html image-object-position-dyn-1-ref.html
 == image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
-fuzzy-if(winWidget,0-117,0-374) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
+fuzzy-if(winWidget,0-117,0-374) fuzzy-if(cocoaWidget&&swgl,0-1,0-3) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
 
 # Tests for image-orientation used with 'from-image' (note that all
 # image-orientation tests are fuzzy because the JPEG images do not perfectly
