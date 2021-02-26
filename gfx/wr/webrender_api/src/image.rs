@@ -118,10 +118,6 @@ pub enum ImageBufferKind {
     /// understand, particularly YUV. See
     /// https://www.khronos.org/registry/OpenGL/extensions/OES/OES_EGL_image_external.txt
     TextureExternal = 2,
-    /// Array texture. This maps to GL_TEXTURE_2D_ARRAY in OpenGL. See
-    /// https://www.khronos.org/opengl/wiki/Array_Texture for background
-    /// on Array textures.
-    Texture2DArray = 3,
 }
 
 /// Storage format identifier for externally-managed images.

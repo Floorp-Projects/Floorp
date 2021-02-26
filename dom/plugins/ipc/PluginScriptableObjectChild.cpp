@@ -41,19 +41,13 @@ PluginScriptableObjectChild::IdentifierTable
 
 /* static */ PluginScriptableObjectChild::StoredIdentifier*
 PluginScriptableObjectChild::HashIdentifier(const nsCString& aIdentifier) {
-  StoredIdentifier* stored = sIdentifiers.Get(aIdentifier).get();
-  if (stored) {
-    return stored;
-  }
-
-  stored = new StoredIdentifier(aIdentifier);
-  sIdentifiers.InsertOrUpdate(aIdentifier, stored);
-  return stored;
+  return sIdentifiers.LookupOrInsertWith(
+      aIdentifier, [&] { return MakeRefPtr<StoredIdentifier>(aIdentifier); });
 }
 
 /* static */
 void PluginScriptableObjectChild::UnhashIdentifier(StoredIdentifier* aStored) {
-  MOZ_ASSERT(sIdentifiers.Get(aStored->mIdentifier));
+  MOZ_ASSERT(sIdentifiers.Contains(aStored->mIdentifier));
   sIdentifiers.Remove(aStored->mIdentifier);
 }
 

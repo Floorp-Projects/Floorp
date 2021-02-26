@@ -812,22 +812,27 @@ Document* ExternalResourceMap::RequestResource(
     return resource->mDocument;
   }
 
-  RefPtr<PendingLoad>& loadEntry = mPendingLoads.LookupOrInsert(clone);
-  if (loadEntry) {
-    RefPtr<PendingLoad> load(loadEntry);
-    load.forget(aPendingLoad);
-    return nullptr;
-  }
+  bool loadStartSucceeded =
+      mPendingLoads.WithEntryHandle(clone, [&](auto&& loadEntry) {
+        if (!loadEntry) {
+          loadEntry.Insert(MakeRefPtr<PendingLoad>(aDisplayDocument));
 
-  RefPtr<PendingLoad> load(new PendingLoad(aDisplayDocument));
-  loadEntry = load;
+          if (NS_FAILED(loadEntry.Data()->StartLoad(clone, aReferrerInfo,
+                                                    aRequestingNode))) {
+            return false;
+          }
+        }
 
-  if (NS_FAILED(load->StartLoad(clone, aReferrerInfo, aRequestingNode))) {
+        RefPtr<PendingLoad> load(loadEntry.Data());
+        load.forget(aPendingLoad);
+        return true;
+      });
+  if (!loadStartSucceeded) {
     // Make sure we don't thrash things by trying this load again, since
     // chances are it failed for good reasons (security check, etc).
+    // This must be done outside the WithEntryHandle functor, as it accesses
+    // mPendingLoads.
     AddExternalResource(clone, nullptr, nullptr, aDisplayDocument);
-  } else {
-    load.forget(aPendingLoad);
   }
 
   return nullptr;

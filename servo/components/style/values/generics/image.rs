@@ -117,9 +117,7 @@ pub use self::GenericCrossFadeElement as CrossFadeElement;
 pub use self::GenericCrossFadeImage as CrossFadeImage;
 
 /// https://drafts.csswg.org/css-images-4/#image-set-notation
-#[derive(
-    Clone, Debug, MallocSizeOf, PartialEq, ToResolvedValue, ToShmem, ToCss,
-)]
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue, ToShmem)]
 #[css(comma, function = "image-set")]
 #[repr(C)]
 pub struct GenericImageSet<Image, Resolution> {
@@ -203,7 +201,9 @@ pub enum GenericGradient<
 
 pub use self::GenericGradient as Gradient;
 
-#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone, Copy, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem,
+)]
 #[repr(u8)]
 /// Whether we used the modern notation or the compatibility `-webkit`, `-moz` prefixes.
 pub enum GradientCompatMode {
@@ -230,7 +230,9 @@ pub enum GenericEndingShape<NonNegativeLength, NonNegativeLengthPercentage> {
 pub use self::GenericEndingShape as EndingShape;
 
 /// A circle shape.
-#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone, Copy, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem,
+)]
 #[repr(C, u8)]
 pub enum GenericCircle<NonNegativeLength> {
     /// A circle radius.

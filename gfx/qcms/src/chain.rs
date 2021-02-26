@@ -59,8 +59,7 @@ pub struct ModularTransform {
     transform_module_fn: TransformModuleFn,
     next_transform: Option<Box<ModularTransform>>,
 }
-pub type TransformModuleFn =
-    Option<fn(_: &ModularTransform, _: &[f32], _: &mut [f32]) -> ()>;
+pub type TransformModuleFn = Option<fn(_: &ModularTransform, _: &[f32], _: &mut [f32]) -> ()>;
 
 #[inline]
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
@@ -455,11 +454,7 @@ fn transform_module_gamma_lut(transform: &ModularTransform, src: &[f32], dest: &
         dest[2] = clamp_float(out_b);
     }
 }
-fn transform_module_matrix_translate(
-    transform: &ModularTransform,
-    src: &[f32],
-    dest: &mut [f32],
-) {
+fn transform_module_matrix_translate(transform: &ModularTransform, src: &[f32], dest: &mut [f32]) {
     let mut mat: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
@@ -519,8 +514,8 @@ fn transform_module_matrix(transform: &ModularTransform, src: &[f32], dest: &mut
         dest[2] = clamp_float(out_b);
     }
 }
-fn modular_transform_alloc() -> Option<Box<ModularTransform>> {
-    Some(Box::new(Default::default()))
+fn modular_transform_alloc() -> Box<ModularTransform> {
+    Box::new(Default::default())
 }
 fn modular_transform_release(mut t: Option<Box<ModularTransform>>) {
     // destroy a list of transforms non-recursively
@@ -568,15 +563,11 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
 
         // Prepare A curve.
         transform = modular_transform_alloc();
-        transform.as_ref()?;
-        transform.as_mut().unwrap().input_clut_table_r =
-            build_input_gamma_table(lut.a_curves[0].as_deref());
-        transform.as_mut().unwrap().input_clut_table_g =
-            build_input_gamma_table(lut.a_curves[1].as_deref());
-        transform.as_mut().unwrap().input_clut_table_b =
-            build_input_gamma_table(lut.a_curves[2].as_deref());
-        transform.as_mut().unwrap().transform_module_fn = Some(transform_module_gamma_table);
-        next_transform = append_transform(transform, next_transform);
+        transform.input_clut_table_r = build_input_gamma_table(lut.a_curves[0].as_deref());
+        transform.input_clut_table_g = build_input_gamma_table(lut.a_curves[1].as_deref());
+        transform.input_clut_table_b = build_input_gamma_table(lut.a_curves[2].as_deref());
+        transform.transform_module_fn = Some(transform_module_gamma_table);
+        next_transform = append_transform(Some(transform), next_transform);
 
         if lut.num_grid_points[0] as i32 != lut.num_grid_points[1] as i32
             || lut.num_grid_points[1] as i32 != lut.num_grid_points[2] as i32
@@ -587,14 +578,13 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
 
         // Prepare CLUT
         transform = modular_transform_alloc();
-        transform.as_ref()?;
 
         clut_length = (lut.num_grid_points[0] as usize).pow(3) * 3;
         assert_eq!(clut_length, lut.clut_table.as_ref().unwrap().len());
-        transform.as_mut().unwrap().clut = lut.clut_table.clone();
-        transform.as_mut().unwrap().grid_size = lut.num_grid_points[0] as u16;
-        transform.as_mut().unwrap().transform_module_fn = Some(transform_module_clut_only);
-        next_transform = append_transform(transform, next_transform);
+        transform.clut = lut.clut_table.clone();
+        transform.grid_size = lut.num_grid_points[0] as u16;
+        transform.transform_module_fn = Some(transform_module_clut_only);
+        next_transform = append_transform(Some(transform), next_transform);
     }
 
     if lut.m_curves[0].is_some() {
@@ -602,42 +592,33 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
 
         // Prepare M curve
         transform = modular_transform_alloc();
-        transform.as_ref()?;
-        transform.as_mut().unwrap().input_clut_table_r =
-            build_input_gamma_table(lut.m_curves[0].as_deref());
-        transform.as_mut().unwrap().input_clut_table_g =
-            build_input_gamma_table(lut.m_curves[1].as_deref());
-        transform.as_mut().unwrap().input_clut_table_b =
-            build_input_gamma_table(lut.m_curves[2].as_deref());
-        transform.as_mut().unwrap().transform_module_fn = Some(transform_module_gamma_table);
-        next_transform = append_transform(transform, next_transform);
+        transform.input_clut_table_r = build_input_gamma_table(lut.m_curves[0].as_deref());
+        transform.input_clut_table_g = build_input_gamma_table(lut.m_curves[1].as_deref());
+        transform.input_clut_table_b = build_input_gamma_table(lut.m_curves[2].as_deref());
+        transform.transform_module_fn = Some(transform_module_gamma_table);
+        next_transform = append_transform(Some(transform), next_transform);
 
         // Prepare Matrix
         transform = modular_transform_alloc();
-        transform.as_ref()?;
-        transform.as_mut().unwrap().matrix = build_mAB_matrix(lut);
-        if transform.as_mut().unwrap().matrix.invalid {
+        transform.matrix = build_mAB_matrix(lut);
+        if transform.matrix.invalid {
             return None;
         }
-        transform.as_mut().unwrap().tx = s15Fixed16Number_to_float(lut.e03);
-        transform.as_mut().unwrap().ty = s15Fixed16Number_to_float(lut.e13);
-        transform.as_mut().unwrap().tz = s15Fixed16Number_to_float(lut.e23);
-        transform.as_mut().unwrap().transform_module_fn = Some(transform_module_matrix_translate);
-        next_transform = append_transform(transform, next_transform);
+        transform.tx = s15Fixed16Number_to_float(lut.e03);
+        transform.ty = s15Fixed16Number_to_float(lut.e13);
+        transform.tz = s15Fixed16Number_to_float(lut.e23);
+        transform.transform_module_fn = Some(transform_module_matrix_translate);
+        next_transform = append_transform(Some(transform), next_transform);
     }
 
     if lut.b_curves[0].is_some() {
         // Prepare B curve
         transform = modular_transform_alloc();
-        transform.as_ref()?;
-        transform.as_mut().unwrap().input_clut_table_r =
-            build_input_gamma_table(lut.b_curves[0].as_deref());
-        transform.as_mut().unwrap().input_clut_table_g =
-            build_input_gamma_table(lut.b_curves[1].as_deref());
-        transform.as_mut().unwrap().input_clut_table_b =
-            build_input_gamma_table(lut.b_curves[2].as_deref());
-        transform.as_mut().unwrap().transform_module_fn = Some(transform_module_gamma_table);
-        append_transform(transform, next_transform);
+        transform.input_clut_table_r = build_input_gamma_table(lut.b_curves[0].as_deref());
+        transform.input_clut_table_g = build_input_gamma_table(lut.b_curves[1].as_deref());
+        transform.input_clut_table_b = build_input_gamma_table(lut.b_curves[2].as_deref());
+        transform.transform_module_fn = Some(transform_module_gamma_table);
+        append_transform(Some(transform), next_transform);
     } else {
         // B curve is mandatory
         return None;
@@ -661,52 +642,49 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> 
     let _in_curves: *mut f32;
     let _out_curves: *mut f32;
     let mut transform = modular_transform_alloc();
-    if transform.is_some() {
-        transform.as_mut().unwrap().matrix = build_lut_matrix(Some(lut));
-        if !transform.as_mut().unwrap().matrix.invalid {
-            transform.as_mut().unwrap().transform_module_fn = Some(transform_module_matrix);
-            next_transform = append_transform(transform, next_transform);
-            // Prepare input curves
-            transform = modular_transform_alloc();
-            if transform.is_some() {
-                transform.as_mut().unwrap().input_clut_table_r =
-                    Some(lut.input_table[0..lut.num_input_table_entries as usize].to_vec());
-                transform.as_mut().unwrap().input_clut_table_g = Some(
-                    lut.input_table[lut.num_input_table_entries as usize
-                        ..lut.num_input_table_entries as usize * 2]
-                        .to_vec(),
-                );
-                transform.as_mut().unwrap().input_clut_table_b = Some(
-                    lut.input_table[lut.num_input_table_entries as usize * 2
-                        ..lut.num_input_table_entries as usize * 3]
-                        .to_vec(),
-                );
-                transform.as_mut().unwrap().input_clut_table_length = lut.num_input_table_entries;
-                // Prepare table
-                clut_length = (lut.num_clut_grid_points as usize).pow(3) * 3;
-                assert_eq!(clut_length, lut.clut_table.len());
-                transform.as_mut().unwrap().clut = Some(lut.clut_table.clone());
 
-                transform.as_mut().unwrap().grid_size = lut.num_clut_grid_points as u16;
-                // Prepare output curves
-                transform.as_mut().unwrap().output_clut_table_r =
-                    Some(lut.output_table[0..lut.num_output_table_entries as usize].to_vec());
-                transform.as_mut().unwrap().output_clut_table_g = Some(
-                    lut.output_table[lut.num_output_table_entries as usize
-                        ..lut.num_output_table_entries as usize * 2]
-                        .to_vec(),
-                );
-                transform.as_mut().unwrap().output_clut_table_b = Some(
-                    lut.output_table[lut.num_output_table_entries as usize * 2
-                        ..lut.num_output_table_entries as usize * 3]
-                        .to_vec(),
-                );
-                transform.as_mut().unwrap().output_clut_table_length = lut.num_output_table_entries;
-                transform.as_mut().unwrap().transform_module_fn = Some(transform_module_clut);
-                append_transform(transform, next_transform);
-                return first_transform;
-            }
-        }
+    transform.matrix = build_lut_matrix(Some(lut));
+    if !transform.matrix.invalid {
+        transform.transform_module_fn = Some(transform_module_matrix);
+        next_transform = append_transform(Some(transform), next_transform);
+        // Prepare input curves
+        transform = modular_transform_alloc();
+        transform.input_clut_table_r =
+            Some(lut.input_table[0..lut.num_input_table_entries as usize].to_vec());
+        transform.input_clut_table_g = Some(
+            lut.input_table
+                [lut.num_input_table_entries as usize..lut.num_input_table_entries as usize * 2]
+                .to_vec(),
+        );
+        transform.input_clut_table_b = Some(
+            lut.input_table[lut.num_input_table_entries as usize * 2
+                ..lut.num_input_table_entries as usize * 3]
+                .to_vec(),
+        );
+        transform.input_clut_table_length = lut.num_input_table_entries;
+        // Prepare table
+        clut_length = (lut.num_clut_grid_points as usize).pow(3) * 3;
+        assert_eq!(clut_length, lut.clut_table.len());
+        transform.clut = Some(lut.clut_table.clone());
+
+        transform.grid_size = lut.num_clut_grid_points as u16;
+        // Prepare output curves
+        transform.output_clut_table_r =
+            Some(lut.output_table[0..lut.num_output_table_entries as usize].to_vec());
+        transform.output_clut_table_g = Some(
+            lut.output_table
+                [lut.num_output_table_entries as usize..lut.num_output_table_entries as usize * 2]
+                .to_vec(),
+        );
+        transform.output_clut_table_b = Some(
+            lut.output_table[lut.num_output_table_entries as usize * 2
+                ..lut.num_output_table_entries as usize * 3]
+                .to_vec(),
+        );
+        transform.output_clut_table_length = lut.num_output_table_entries;
+        transform.transform_module_fn = Some(transform_module_clut);
+        append_transform(Some(transform), next_transform);
+        return first_transform;
     }
     modular_transform_release(first_transform);
     None
@@ -734,51 +712,37 @@ fn modular_transform_create_input(input: &Profile) -> Option<Box<ModularTransfor
         }
     } else {
         let mut transform = modular_transform_alloc();
-        if transform.is_none() {
+        transform.input_clut_table_r = build_input_gamma_table(input.redTRC.as_deref());
+        transform.input_clut_table_g = build_input_gamma_table(input.greenTRC.as_deref());
+        transform.input_clut_table_b = build_input_gamma_table(input.blueTRC.as_deref());
+        transform.transform_module_fn = Some(transform_module_gamma_table);
+        if transform.input_clut_table_r.is_none()
+            || transform.input_clut_table_g.is_none()
+            || transform.input_clut_table_b.is_none()
+        {
+            append_transform(Some(transform), next_transform);
             return None;
         } else {
-            transform.as_mut().unwrap().input_clut_table_r =
-                build_input_gamma_table(input.redTRC.as_deref());
-            transform.as_mut().unwrap().input_clut_table_g =
-                build_input_gamma_table(input.greenTRC.as_deref());
-            transform.as_mut().unwrap().input_clut_table_b =
-                build_input_gamma_table(input.blueTRC.as_deref());
-            transform.as_mut().unwrap().transform_module_fn = Some(transform_module_gamma_table);
-            if transform.as_mut().unwrap().input_clut_table_r.is_none()
-                || transform.as_mut().unwrap().input_clut_table_g.is_none()
-                || transform.as_mut().unwrap().input_clut_table_b.is_none()
-            {
-                append_transform(transform, next_transform);
-                return None;
-            } else {
-                next_transform = append_transform(transform, next_transform);
-                transform = modular_transform_alloc();
-                if transform.is_none() {
-                    return None;
-                } else {
-                    transform.as_mut().unwrap().matrix.m[0][0] = 1. / 1.999_969_5;
-                    transform.as_mut().unwrap().matrix.m[0][1] = 0.0;
-                    transform.as_mut().unwrap().matrix.m[0][2] = 0.0;
-                    transform.as_mut().unwrap().matrix.m[1][0] = 0.0;
-                    transform.as_mut().unwrap().matrix.m[1][1] = 1. / 1.999_969_5;
-                    transform.as_mut().unwrap().matrix.m[1][2] = 0.0;
-                    transform.as_mut().unwrap().matrix.m[2][0] = 0.0;
-                    transform.as_mut().unwrap().matrix.m[2][1] = 0.0;
-                    transform.as_mut().unwrap().matrix.m[2][2] = 1. / 1.999_969_5;
-                    transform.as_mut().unwrap().matrix.invalid = false;
-                    transform.as_mut().unwrap().transform_module_fn = Some(transform_module_matrix);
-                    next_transform = append_transform(transform, next_transform);
-                    transform = modular_transform_alloc();
-                    if transform.is_none() {
-                        return None;
-                    } else {
-                        transform.as_mut().unwrap().matrix = build_colorant_matrix(input);
-                        transform.as_mut().unwrap().transform_module_fn =
-                            Some(transform_module_matrix);
-                        append_transform(transform, next_transform);
-                    }
-                }
-            }
+            next_transform = append_transform(Some(transform), next_transform);
+            transform = modular_transform_alloc();
+
+            transform.matrix.m[0][0] = 1. / 1.999_969_5;
+            transform.matrix.m[0][1] = 0.0;
+            transform.matrix.m[0][2] = 0.0;
+            transform.matrix.m[1][0] = 0.0;
+            transform.matrix.m[1][1] = 1. / 1.999_969_5;
+            transform.matrix.m[1][2] = 0.0;
+            transform.matrix.m[2][0] = 0.0;
+            transform.matrix.m[2][1] = 0.0;
+            transform.matrix.m[2][2] = 1. / 1.999_969_5;
+            transform.matrix.invalid = false;
+            transform.transform_module_fn = Some(transform_module_matrix);
+            next_transform = append_transform(Some(transform), next_transform);
+
+            transform = modular_transform_alloc();
+            transform.matrix = build_colorant_matrix(input);
+            transform.transform_module_fn = Some(transform_module_matrix);
+            append_transform(Some(transform), next_transform);
         }
     }
     first_transform
@@ -805,50 +769,38 @@ fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform
         }
     } else if out.redTRC.is_some() && out.greenTRC.is_some() && out.blueTRC.is_some() {
         let mut transform = modular_transform_alloc();
-        if transform.is_none() {
+
+        transform.matrix = build_colorant_matrix(out).invert();
+        transform.transform_module_fn = Some(transform_module_matrix);
+        next_transform = append_transform(Some(transform), next_transform);
+        transform = modular_transform_alloc();
+
+        transform.matrix.m[0][0] = 1.999_969_5;
+        transform.matrix.m[0][1] = 0.0;
+        transform.matrix.m[0][2] = 0.0;
+        transform.matrix.m[1][0] = 0.0;
+        transform.matrix.m[1][1] = 1.999_969_5;
+        transform.matrix.m[1][2] = 0.0;
+        transform.matrix.m[2][0] = 0.0;
+        transform.matrix.m[2][1] = 0.0;
+        transform.matrix.m[2][2] = 1.999_969_5;
+        transform.matrix.invalid = false;
+        transform.transform_module_fn = Some(transform_module_matrix);
+        next_transform = append_transform(Some(transform), next_transform);
+
+        transform = modular_transform_alloc();
+
+        transform.output_gamma_lut_r = Some(build_output_lut(out.redTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_g = Some(build_output_lut(out.greenTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_b = Some(build_output_lut(out.blueTRC.as_deref().unwrap()));
+        transform.transform_module_fn = Some(transform_module_gamma_lut);
+        if transform.output_gamma_lut_r.is_none()
+            || transform.output_gamma_lut_g.is_none()
+            || transform.output_gamma_lut_b.is_none()
+        {
             return None;
         } else {
-            transform.as_mut().unwrap().matrix = build_colorant_matrix(out).invert();
-            transform.as_mut().unwrap().transform_module_fn = Some(transform_module_matrix);
-            next_transform = append_transform(transform, next_transform);
-            transform = modular_transform_alloc();
-            if transform.is_none() {
-                return None;
-            } else {
-                transform.as_mut().unwrap().matrix.m[0][0] = 1.999_969_5;
-                transform.as_mut().unwrap().matrix.m[0][1] = 0.0;
-                transform.as_mut().unwrap().matrix.m[0][2] = 0.0;
-                transform.as_mut().unwrap().matrix.m[1][0] = 0.0;
-                transform.as_mut().unwrap().matrix.m[1][1] = 1.999_969_5;
-                transform.as_mut().unwrap().matrix.m[1][2] = 0.0;
-                transform.as_mut().unwrap().matrix.m[2][0] = 0.0;
-                transform.as_mut().unwrap().matrix.m[2][1] = 0.0;
-                transform.as_mut().unwrap().matrix.m[2][2] = 1.999_969_5;
-                transform.as_mut().unwrap().matrix.invalid = false;
-                transform.as_mut().unwrap().transform_module_fn = Some(transform_module_matrix);
-                next_transform = append_transform(transform, next_transform);
-                transform = modular_transform_alloc();
-                if transform.is_none() {
-                    return None;
-                } else {
-                    transform.as_mut().unwrap().output_gamma_lut_r =
-                        Some(build_output_lut(out.redTRC.as_deref().unwrap()));
-                    transform.as_mut().unwrap().output_gamma_lut_g =
-                        Some(build_output_lut(out.greenTRC.as_deref().unwrap()));
-                    transform.as_mut().unwrap().output_gamma_lut_b =
-                        Some(build_output_lut(out.blueTRC.as_deref().unwrap()));
-                    transform.as_mut().unwrap().transform_module_fn =
-                        Some(transform_module_gamma_lut);
-                    if transform.as_mut().unwrap().output_gamma_lut_r.is_none()
-                        || transform.as_mut().unwrap().output_gamma_lut_g.is_none()
-                        || transform.as_mut().unwrap().output_gamma_lut_b.is_none()
-                    {
-                        return None;
-                    } else {
-                        append_transform(transform, next_transform);
-                    }
-                }
-            }
+            append_transform(Some(transform), next_transform);
         }
     } else {
         debug_assert!(false, "Unsupported output profile workflow.");
@@ -907,10 +859,7 @@ remove_next:
     return transform;
 }
 */
-fn modular_transform_create(
-    input: &Profile,
-    output: &Profile,
-) -> Option<Box<ModularTransform>> {
+fn modular_transform_create(input: &Profile, output: &Profile) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
     if input.color_space == RGB_SIGNATURE {
@@ -924,9 +873,8 @@ fn modular_transform_create(
 
     if input.pcs == LAB_SIGNATURE && output.pcs == XYZ_SIGNATURE {
         let mut lab_to_pcs = modular_transform_alloc();
-        lab_to_pcs.as_ref()?;
-        lab_to_pcs.as_mut().unwrap().transform_module_fn = Some(transform_module_LAB_to_XYZ);
-        next_transform = append_transform(lab_to_pcs, next_transform);
+        lab_to_pcs.transform_module_fn = Some(transform_module_LAB_to_XYZ);
+        next_transform = append_transform(Some(lab_to_pcs), next_transform);
     }
 
     // This does not improve accuracy in practice, something is wrong here.
@@ -942,9 +890,8 @@ fn modular_transform_create(
 
     if input.pcs == XYZ_SIGNATURE && output.pcs == LAB_SIGNATURE {
         let mut pcs_to_lab = modular_transform_alloc();
-        pcs_to_lab.as_ref()?;
-        pcs_to_lab.as_mut().unwrap().transform_module_fn = Some(transform_module_XYZ_to_LAB);
-        next_transform = append_transform(pcs_to_lab, next_transform);
+        pcs_to_lab.transform_module_fn = Some(transform_module_XYZ_to_LAB);
+        next_transform = append_transform(Some(pcs_to_lab), next_transform);
     }
 
     if output.color_space == RGB_SIGNATURE {

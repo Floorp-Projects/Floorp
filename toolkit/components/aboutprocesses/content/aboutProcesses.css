@@ -22,7 +22,6 @@ body {
   inset-inline-start: 0;
   width: 100%;
   height: 100%;
-  min-width: 40em;
 }
 
 /* Avoid scrolling the header */
@@ -35,38 +34,20 @@ body {
   z-index: 1;
   height: 2em;
   border-bottom: 1px solid var(--in-content-border-color);
-  min-width: 40em;
+  width: 100%;
   background-color: var(--in-content-box-background);
 }
 tr {
-  display: table;
-  table-layout: fixed;
+  display: grid;
+  /* Flexible width for the name column, 15% width for the memory and CPU column,
+   * then fixed width (16px icon + 2*10px margin) for the actions column. */
+  grid-template-columns: 1fr 15% 15% 36px;
+  grid-auto-rows: 2em;
   width: 100%;
 }
 
-/* At least one column needs to have a flexible width,
-   so no width specified for td:nth-child(1) aka column-name*/
-
-/* column-memory-resident */
-td:nth-child(2) {
-  width: 15%;
-}
-#process-tbody td:nth-child(2) {
+.cpu, .memory {
   text-align: end;
-}
-
-/* column-cpu-total */
-td:nth-child(3) {
-  width: 15%;
-}
-#process-tbody td:nth-child(3) {
-  text-align: end;
-}
-
-/* column-action-icon */
-td:nth-child(4) {
-  width: 16px;
-  text-align: center;
 }
 
 #process-thead > tr {
@@ -80,14 +61,12 @@ td:nth-child(4) {
 #process-thead > tr > td:not(:first-child) {
   border-inline-start: 1px solid;
   border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
-  border-bottom: 1px solid var(--in-content-border-color);
 }
 td {
   padding: 5px 10px;
   min-height: 16px;
-  max-height: 16px;
+  max-height: 2em;
   color: var(--in-content-text-color);
-  max-width: 70vw;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -141,6 +120,17 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 }
 #process-tbody > tr:hover {
   background-color: var(--in-content-item-hover);
+}
+
+/* Tab names and thread summary text can extend into memory and CPU columns. */
+.window > :first-child,
+.thread-summary > :first-child {
+  grid-column: 1 / 4;
+}
+
+/* Thread names can extend into the memory column. */
+.thread > :first-child{
+  grid-column: 1 / 3;
 }
 
 .clickable {

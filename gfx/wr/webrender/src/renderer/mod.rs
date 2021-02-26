@@ -74,7 +74,7 @@ use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
 use crate::internal_types::{TextureSource, ResourceCacheError};
-use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
+use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureUpdateList};
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
 use crate::picture::{self, ResolvedSurfaceTexture};
@@ -2375,7 +2375,7 @@ impl Renderer {
                             // This needs to be a render target because some render
                             // tasks get rendered into the texture cache.
                             Some(RenderTargetInfo { has_depth: info.has_depth }),
-                            info.layer_count,
+                            1,
                         );
 
                         if info.is_shared_cache {
@@ -2551,8 +2551,8 @@ impl Renderer {
         // Before submitting the composite batch, do the
         // framebuffer readbacks that are needed for each
         // composite operation in this batch.
-        let (readback_rect, readback_layer) = readback.get_target_rect();
-        let (backdrop_rect, _) = backdrop.get_target_rect();
+        let readback_rect = readback.get_target_rect();
+        let backdrop_rect = backdrop.get_target_rect();
         let (backdrop_screen_origin, _) = match backdrop.kind {
             RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
             _ => panic!("bug: composite on non-picture?"),
@@ -2564,7 +2564,7 @@ impl Renderer {
         // target is already bound.
         let cache_draw_target = DrawTarget::from_texture(
             cache_texture,
-            readback_layer.0 as usize,
+            0,
             false,
         );
 
@@ -2643,15 +2643,15 @@ impl Renderer {
         // TODO(gw): For now, we don't bother batching these by source texture.
         //           If if ever shows up as an issue, we can easily batch them.
         for blit in blits {
-            let (source, layer, source_rect) = {
+            let (source, source_rect) = {
                 // A blit from the child render task into this target.
                 // TODO(gw): Support R8 format here once we start
                 //           creating mips for alpha masks.
                 let task = &render_tasks[blit.source];
-                let (source_rect, layer) = task.get_target_rect();
+                let source_rect = task.get_target_rect();
                 let source_texture = task.get_texture_source();
 
-                (source_texture, layer.0, source_rect)
+                (source_texture, source_rect)
             };
 
             debug_assert_eq!(source_rect.size, blit.target_rect.size);
@@ -2665,7 +2665,7 @@ impl Renderer {
 
             let read_target = DrawTarget::from_texture(
                 texture,
-                layer,
+                0,
                 false,
             );
 
@@ -3135,11 +3135,6 @@ impl Renderer {
                         color_space,
                         format,
                         rescale,
-                        [
-                            planes[0].texture_layer as f32,
-                            planes[1].texture_layer as f32,
-                            planes[2].texture_layer as f32,
-                        ],
                         uv_rects,
                     );
 
@@ -3168,7 +3163,6 @@ impl Renderer {
                         surface_rect.to_f32(),
                         surface_rect.to_f32(),
                         PremultipliedColorF::WHITE,
-                        plane.texture_layer as f32,
                         ZBufferId(0),
                         uv_rect,
                     );
@@ -3251,7 +3245,6 @@ impl Renderer {
                             tile.rect,
                             clip_rect,
                             color.premultiplied(),
-                            0.0,
                             tile.z_id,
                         ),
                         BatchTextures::composite_rgb(dummy),
@@ -3266,20 +3259,18 @@ impl Renderer {
                             tile.rect,
                             clip_rect,
                             PremultipliedColorF::BLACK,
-                            0.0,
                             tile.z_id,
                         ),
                         BatchTextures::composite_rgb(dummy),
                         (CompositeSurfaceFormat::Rgba, image_buffer_kind),
                     )
                 }
-                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture, layer } } => {
+                CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture } } => {
                     (
                         CompositeInstance::new(
                             tile.rect,
                             clip_rect,
                             PremultipliedColorF::WHITE,
-                            layer as f32,
                             tile.z_id,
                         ),
                         BatchTextures::composite_rgb(texture),
@@ -3316,11 +3307,6 @@ impl Renderer {
                                     color_space,
                                     format,
                                     rescale,
-                                    [
-                                        planes[0].texture_layer as f32,
-                                        planes[1].texture_layer as f32,
-                                        planes[2].texture_layer as f32,
-                                    ],
                                     uv_rects,
                                 ),
                                 textures,
@@ -3341,7 +3327,6 @@ impl Renderer {
                                     tile.rect,
                                     clip_rect,
                                     PremultipliedColorF::WHITE,
-                                    plane.texture_layer as f32,
                                     tile.z_id,
                                     uv_rect,
                                 ),
@@ -3764,7 +3749,7 @@ impl Renderer {
 
             let zero_color = [0.0, 0.0, 0.0, 0.0];
             for &task_id in &target.zero_clears {
-                let (rect, _) = render_tasks[task_id].get_target_rect();
+                let rect = render_tasks[task_id].get_target_rect();
                 self.device.clear_target(
                     Some(zero_color),
                     None,
@@ -3774,7 +3759,7 @@ impl Renderer {
 
             let one_color = [1.0, 1.0, 1.0, 1.0];
             for &task_id in &target.one_clears {
-                let (rect, _) = render_tasks[task_id].get_target_rect();
+                let rect = render_tasks[task_id].get_target_rect();
                 self.device.clear_target(
                     Some(one_color),
                     None,
@@ -3850,7 +3835,6 @@ impl Renderer {
     fn draw_texture_cache_target(
         &mut self,
         texture: &CacheTextureId,
-        layer: LayerIndex,
         target: &TextureCacheRenderTarget,
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
@@ -3876,7 +3860,7 @@ impl Renderer {
 
         let draw_target = DrawTarget::from_texture(
             texture,
-            layer,
+            0,
             false,
         );
         self.device.bind_draw_target(draw_target);
@@ -4399,10 +4383,9 @@ impl Renderer {
             // cache targets have already been updated and can be
             // skipped this time.
             if !frame.has_been_rendered {
-                for (&(texture_id, target_index), target) in &pass.texture_cache {
+                for (&texture_id, target) in &pass.texture_cache {
                     self.draw_texture_cache_target(
                         &texture_id,
-                        target_index,
                         target,
                         &frame.render_tasks,
                         &mut results.stats,
@@ -4418,14 +4401,14 @@ impl Renderer {
                     results.stats.color_target_count += 1;
 
                     let draw_target = match picture_target.surface {
-                        ResolvedSurfaceTexture::TextureCache { ref texture, layer } => {
+                        ResolvedSurfaceTexture::TextureCache { ref texture } => {
                             let (texture, _) = self.texture_resolver
                                 .resolve(texture)
                                 .expect("bug");
 
                             DrawTarget::from_texture(
                                 texture,
-                                layer as usize,
+                                0,
                                 true,
                             )
                         }
@@ -5884,7 +5867,7 @@ impl Renderer {
             for (id, texture) in renderer.textures {
                 info!("\t{}", texture.data);
                 let target = if texture.is_array {
-                    ImageBufferKind::Texture2DArray
+                    panic!("Texture arrays aren't supported");
                 } else {
                     ImageBufferKind::Texture2D
                 };

@@ -1308,7 +1308,7 @@ void Http3Session::CloseStream(Http3Stream* aStream, nsresult aResult) {
     // failed.
     if (mFirstStreamIdReuseIdleConnection.isSome() &&
         aStream->StreamId() == *mFirstStreamIdReuseIdleConnection) {
-      // TODO: investigate why this is failing MOZ_ASSERT(mConnectionIdleStart);
+      MOZ_ASSERT(mConnectionIdleStart);
       MOZ_ASSERT(mConnectionIdleEnd);
 
       if (mConnectionIdleStart) {

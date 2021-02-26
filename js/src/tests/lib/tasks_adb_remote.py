@@ -105,18 +105,22 @@ def setup_device(prefix, options):
     try:
         device = init_device(options)
 
+        def replace_lib_file(path, name):
+            localfile = os.path.join(JS_TESTS_DIR, *path)
+            remotefile = posixpath.join(options.remote_test_root, "lib", name)
+            device.push(localfile, remotefile, timeout=10)
+
         prefix[0] = posixpath.join(options.remote_test_root, "bin", "js")
         tempdir = posixpath.join(options.remote_test_root, "tmp")
         # Update the test root to point to our test directory.
         jit_tests_dir = posixpath.join(options.remote_test_root, "tests")
-        options.remote_test_root = posixpath.join(jit_tests_dir, "tests")
-        jtd_tests = posixpath.join(options.remote_test_root)
 
         init_remote_dir(device, jit_tests_dir)
-        device.push(JS_TESTS_DIR, jtd_tests, timeout=600)
-        device.chmod(jtd_tests, recursive=True)
-
         device.push(os.path.dirname(TEST_DIR), options.remote_test_root, timeout=600)
+        # Substitute lib files which are aliasing non262 files.
+        replace_lib_file(["non262", "shell.js"], "non262.js")
+        replace_lib_file(["non262", "reflect-parse", "Match.js"], "match.js")
+        replace_lib_file(["non262", "Math", "shell.js"], "math.js")
         device.chmod(options.remote_test_root, recursive=True)
 
         print("tasks_adb_remote.py : Device initialization completed")

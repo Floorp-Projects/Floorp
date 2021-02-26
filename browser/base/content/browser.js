@@ -968,18 +968,8 @@ const gStoragePressureObserver = {
         "browser.storageManager.pressureNotification.usageThresholdGB"
       );
     let msg = "";
-    let buttons = [];
+    let buttons = [{ supportPage: "storage-permissions" }];
     let usage = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    buttons.push({
-      "l10n-id": "space-alert-learn-more-button",
-      callback(notificationBar, button) {
-        let learnMoreURL =
-          Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          "storage-permissions";
-        // This is a content URL, loaded from trusted UX.
-        openTrustedLinkIn(learnMoreURL, "tab");
-      },
-    });
     if (usage < USAGE_THRESHOLD_BYTES) {
       // The firefox-used space < 5GB, then warn user to free some disk space.
       // This is because this usage is small and not the main cause for space issue.
@@ -4259,6 +4249,9 @@ const BrowserSearch = {
    *        The principal to use for a new window or tab.
    * @param csp
    *        The content security policy to use for a new window or tab.
+   * @param flipLoadInBackground [optional]
+   *        If a modifier/middle mouse button is used:
+   *        Flip preference to load search in background tab.
    * @param engine [optional]
    *        The search engine to use for the search.
    * @param tab [optional]
@@ -4274,6 +4267,7 @@ const BrowserSearch = {
     purpose,
     triggeringPrincipal,
     csp,
+    flipLoadInBackground = false,
     engine = null,
     tab = null
   ) {
@@ -4306,7 +4300,7 @@ const BrowserSearch = {
     openLinkIn(submission.uri.spec, where || "current", {
       private: usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window),
       postData: submission.postData,
-      inBackground,
+      inBackground: flipLoadInBackground ? !inBackground : inBackground,
       relatedToCurrent: true,
       triggeringPrincipal,
       csp,
@@ -4322,19 +4316,36 @@ const BrowserSearch = {
    * This should only be called from the context menu. See
    * BrowserSearch.loadSearch for the preferred API.
    */
-  async loadSearchFromContext(terms, usePrivate, triggeringPrincipal, csp) {
+  async loadSearchFromContext(
+    terms,
+    usePrivate,
+    triggeringPrincipal,
+    csp,
+    event
+  ) {
+    event = getRootEvent(event);
+    let where = whereToOpenLink(event);
+    if (where == "current") {
+      // override: historically search opens in new tab
+      where = "tab";
+    }
+    if (usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window)) {
+      where = "window";
+    }
+    let flipLoadInBackground = event.button == 1 || event.ctrlKey;
+
     let { engine, url } = await BrowserSearch._loadSearch(
       terms,
-      usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window)
-        ? "window"
-        : "tab",
+      where,
       usePrivate,
       "contextmenu",
       Services.scriptSecurityManager.createNullPrincipal(
         triggeringPrincipal.originAttributes
       ),
-      csp
+      csp,
+      flipLoadInBackground
     );
+
     if (engine) {
       BrowserSearchTelemetry.recordSearch(
         gBrowser.selectedBrowser,
@@ -4378,6 +4389,7 @@ const BrowserSearch = {
       "webextension",
       triggeringPrincipal,
       null,
+      false,
       engine,
       tab
     );

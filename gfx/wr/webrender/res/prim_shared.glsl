@@ -24,8 +24,7 @@ vec2 clamp_rect(vec2 pt, RectWithSize rect) {
 #ifndef SWGL_CLIP_MASK
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
-// XY and W are homogeneous coordinates, Z is the layer index
-varying vec4 vClipMaskUv;
+varying vec2 vClipMaskUv;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -125,7 +124,7 @@ VertexInfo write_vertex(vec2 local_pos,
     vec2 device_pos = world_pos.xy * task.device_pixel_scale;
 
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_offset = -task.content_origin + task.common_data.task_rect.p0;
+    vec2 final_offset = -task.content_origin + task.task_rect.p0;
 
     gl_Position = uTransform * vec4(device_pos + final_offset * world_pos.w, z * world_pos.w, world_pos.w);
 
@@ -215,7 +214,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     vec2 local_pos = local_segment_rect.p0 + local_segment_rect.size * aPosition.xy;
 
     // Convert the world positions to device pixel space.
-    vec2 task_offset = task.common_data.task_rect.p0 - task.content_origin;
+    vec2 task_offset = task.task_rect.p0 - task.content_origin;
 
     // Transform the current vertex to world space.
     vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
@@ -239,25 +238,25 @@ void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
 #ifdef SWGL_CLIP_MASK
     swgl_clipMask(
         sClipMask,
-        (task.common_data.task_rect.p0 - task.content_origin) - (area.common_data.task_rect.p0 - area.screen_origin),
-        area.common_data.task_rect.p0,
-        area.common_data.task_rect.size
+        (task.task_rect.p0 - task.content_origin) - (area.task_rect.p0 - area.screen_origin),
+        area.task_rect.p0,
+        area.task_rect.size
     );
 #else
     vec2 uv = world_pos.xy * area.device_pixel_scale +
-        world_pos.w * (area.common_data.task_rect.p0 - area.screen_origin);
+        world_pos.w * (area.task_rect.p0 - area.screen_origin);
     vClipMaskUvBounds = vec4(
-        area.common_data.task_rect.p0,
-        area.common_data.task_rect.p0 + area.common_data.task_rect.size
+        area.task_rect.p0,
+        area.task_rect.p0 + area.task_rect.size
     );
-    vClipMaskUv = vec4(uv, area.common_data.texture_layer_index, world_pos.w);
+    vClipMaskUv = uv;
 #endif
 }
 
 // Read the exta image data containing the homogeneous screen space coordinates
 // of the corners, interpolate between them, and return real screen space UV.
 vec2 get_image_quad_uv(int address, vec2 f) {
-    ImageResourceExtra extra_data = fetch_image_resource_extra(address);
+    ImageSourceExtra extra_data = fetch_image_source_extra(address);
     vec4 x = mix(extra_data.st_tl, extra_data.st_tr, f.x);
     vec4 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
     vec4 z = mix(x, y, f.y);
@@ -286,7 +285,7 @@ float do_clip() {
     }
     // anything outside of the mask is considered transparent
     //Note: we assume gl_FragCoord.w == interpolated(1 / vClipMaskUv.w)
-    vec2 mask_uv = vClipMaskUv.xy * gl_FragCoord.w;
+    vec2 mask_uv = vClipMaskUv * gl_FragCoord.w;
     bvec2 left = lessThanEqual(vClipMaskUvBounds.xy, mask_uv); // inclusive
     bvec2 right = greaterThan(vClipMaskUvBounds.zw, mask_uv); // non-inclusive
     // bail out if the pixel is outside the valid bounds

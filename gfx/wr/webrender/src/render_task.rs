@@ -9,10 +9,9 @@ use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange, ClipNod
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
-use crate::frame_graph::PassId;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
-use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, TextureSource, Swizzle};
+use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
 use crate::prim_store::{ClipData, PictureIndex};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
@@ -20,8 +19,8 @@ use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
 use crate::print_tree::{PrintTreePrinter};
 use crate::resource_cache::{ResourceCache, ImageRequest};
 use std::{usize, f32, i32, u32};
-use crate::render_target::{RenderTargetIndex, RenderTargetKind};
-use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
+use crate::render_target::RenderTargetKind;
+use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
 #[cfg(feature = "debugger")]
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
@@ -64,8 +63,6 @@ pub enum StaticRenderTaskSurface {
     TextureCache {
         /// Which texture in the texture cache should be drawn into.
         texture: CacheTextureId,
-        /// The target layer in the above texture.
-        layer: LayerIndex,
         /// What format this texture cache surface is
         target_kind: RenderTargetKind,
     },
@@ -135,25 +132,6 @@ impl RenderTaskLocation {
             RenderTaskLocation::Dynamic { rect, .. } => rect.size,
             RenderTaskLocation::Static { rect, .. } => rect.size,
             RenderTaskLocation::CacheRequest { size } => *size,
-        }
-    }
-
-    pub fn to_source_rect(&self) -> (DeviceIntRect, LayerIndex) {
-        match *self {
-            RenderTaskLocation::Unallocated { .. } => panic!("Expected position to be set for the task!"),
-            RenderTaskLocation::Dynamic { rect, .. } => (rect, 0),
-            RenderTaskLocation::Static { surface: StaticRenderTaskSurface::PictureCache { .. }, .. } => {
-                panic!("bug: picture cache tasks should never be a source!");
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
-                (rect, layer)
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::ReadOnly { .. } } => {
-                (rect, 0)
-            }
-            RenderTaskLocation::CacheRequest { .. } => {
-                panic!("should not be called");
-            }
         }
     }
 }
@@ -625,7 +603,6 @@ impl RenderTaskKind {
     pub fn write_task_data(
         &self,
         target_rect: DeviceIntRect,
-        target_index: RenderTargetIndex,
     ) -> RenderTaskData {
         // NOTE: The ordering and layout of these structures are
         //       required to match both the GPU structures declared
@@ -642,6 +619,7 @@ impl RenderTaskKind {
                     task.device_pixel_scale.0,
                     task.content_origin.x,
                     task.content_origin.y,
+                    0.0,
                 ]
             }
             RenderTaskKind::CacheMask(ref task) => {
@@ -649,11 +627,13 @@ impl RenderTaskKind {
                     task.device_pixel_scale.0,
                     task.actual_rect.origin.x,
                     task.actual_rect.origin.y,
+                    0.0,
                 ]
             }
             RenderTaskKind::ClipRegion(ref task) => {
                 [
                     task.device_pixel_scale.0,
+                    0.0,
                     0.0,
                     0.0,
                 ]
@@ -664,6 +644,7 @@ impl RenderTaskKind {
                     task.blur_std_deviation,
                     task.blur_region.width as f32,
                     task.blur_region.height as f32,
+                    0.0,
                 ]
             }
             RenderTaskKind::Image(..) |
@@ -674,21 +655,21 @@ impl RenderTaskKind {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Gradient(..) |
             RenderTaskKind::Blit(..) => {
-                [0.0; 3]
+                [0.0; 4]
             }
 
 
             RenderTaskKind::SvgFilter(ref task) => {
                 match task.info {
-                    SvgFilterInfo::Opacity(opacity) => [opacity, 0.0, 0.0],
-                    SvgFilterInfo::Offset(offset) => [offset.x, offset.y, 0.0],
-                    _ => [0.0; 3]
+                    SvgFilterInfo::Opacity(opacity) => [opacity, 0.0, 0.0, 0.0],
+                    SvgFilterInfo::Offset(offset) => [offset.x, offset.y, 0.0, 0.0],
+                    _ => [0.0; 4]
                 }
             }
 
             #[cfg(test)]
             RenderTaskKind::Test(..) => {
-                [0.0; 3]
+                [0.0; 4]
             }
         };
 
@@ -698,10 +679,10 @@ impl RenderTaskKind {
                 target_rect.origin.y as f32,
                 target_rect.size.width as f32,
                 target_rect.size.height as f32,
-                target_index.0 as f32,
                 data[0],
                 data[1],
                 data[2],
+                data[3],
             ]
         }
     }
@@ -1421,7 +1402,7 @@ impl RenderTask {
         }
     }
 
-    pub fn get_target_rect(&self) -> (DeviceIntRect, RenderTargetIndex) {
+    pub fn get_target_rect(&self) -> DeviceIntRect {
         match self.location {
             // Previously, we only added render tasks after the entire
             // primitive chain was determined visible. This meant that
@@ -1437,31 +1418,11 @@ impl RenderTask {
             // TODO(gw): Consider some kind of tag or other method
             //           to mark a task as unused explicitly. This
             //           would allow us to restore this debug check.
-            RenderTaskLocation::Dynamic { rect, .. } => {
-                (rect, RenderTargetIndex(0))
-            }
-            RenderTaskLocation::Unallocated { .. } => {
+            RenderTaskLocation::Dynamic { rect, .. } => rect,
+            RenderTaskLocation::Static { rect, .. } => rect,
+            RenderTaskLocation::CacheRequest { .. }
+            | RenderTaskLocation::Unallocated { .. } => {
                 panic!("bug: get_target_rect called before allocating");
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::PictureCache { ref surface, .. } } => {
-                let layer = match surface {
-                    ResolvedSurfaceTexture::TextureCache { layer, .. } => *layer,
-                    ResolvedSurfaceTexture::Native { .. } => 0,
-                };
-
-                (
-                    rect,
-                    RenderTargetIndex(layer as usize),
-                )
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
-                (rect, RenderTargetIndex(layer as usize))
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::ReadOnly { .. } } => {
-                (rect, RenderTargetIndex(0))
-            }
-            RenderTaskLocation::CacheRequest { .. }  => {
-                panic!();
             }
         }
     }
@@ -1542,7 +1503,6 @@ impl RenderTask {
     pub fn write_gpu_blocks(
         &mut self,
         target_rect: DeviceIntRect,
-        target_index: RenderTargetIndex,
         gpu_cache: &mut GpuCache,
     ) {
         profile_scope!("write_gpu_blocks");
@@ -1561,8 +1521,7 @@ impl RenderTask {
             let image_source = ImageSource {
                 p0,
                 p1,
-                texture_layer: target_index.0 as f32,
-                user_data: [0.0; 3],
+                user_data: [0.0; 4],
                 uv_rect_kind: self.uv_rect_kind,
             };
             image_source.write_gpu_blocks(&mut request);

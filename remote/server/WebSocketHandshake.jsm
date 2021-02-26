@@ -10,25 +10,27 @@ var EXPORTED_SYMBOLS = ["WebSocketHandshake"];
 
 const CC = Components.Constructor;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { executeSoon } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
+  executeSoon: "chrome://remote/content/shared/Sync.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
+  return CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
+});
+
+XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
+  return Cc["@mozilla.org/thread-manager;1"].getService();
+});
 
 XPCOMUtils.defineLazyGetter(this, "WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;
 });
-
-const CryptoHash = CC(
-  "@mozilla.org/security/hash;1",
-  "nsICryptoHash",
-  "initWithString"
-);
-const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
 
 // TODO(ato): Merge this with httpd.js so that we can respond to both HTTP/1.1
 // as well as WebSocket requests on the same server.

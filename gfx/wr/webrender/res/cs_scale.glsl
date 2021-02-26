@@ -5,14 +5,12 @@
 #include shared,prim_shared
 
 varying vec2 vUv;
-flat varying float vUvLayer;
 flat varying vec4 vUvRect;
 
 #ifdef WR_VERTEX_SHADER
 
 PER_INSTANCE in vec4 aScaleTargetRect;
 PER_INSTANCE in ivec4 aScaleSourceRect;
-PER_INSTANCE in int aScaleSourceLayer;
 
 void main(void) {
     RectWithSize src_rect = RectWithSize(vec2(aScaleSourceRect.xy), vec2(aScaleSourceRect.zw));
@@ -24,8 +22,6 @@ void main(void) {
 #else
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
 #endif
-
-    vUvLayer = float(aScaleSourceLayer);
 
     vUvRect = vec4(src_rect.p0 + vec2(0.5),
                    src_rect.p0 + src_rect.size - vec2(0.5)) / texture_size.xyxy;
@@ -42,12 +38,12 @@ void main(void) {
 
 void main(void) {
     vec2 st = clamp(vUv, vUvRect.xy, vUvRect.zw);
-    oFragColor = TEX_SAMPLE(sColor0, vec3(st, vUvLayer));
+    oFragColor = TEX_SAMPLE(sColor0, st);
 }
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    swgl_commitTextureLinearRGBA8(sColor0, vUv, vUvRect, vUvLayer);
+    swgl_commitTextureLinearRGBA8(sColor0, vUv, vUvRect, 0.0);
 }
 #endif
 

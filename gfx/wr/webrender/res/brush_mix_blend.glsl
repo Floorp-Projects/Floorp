@@ -29,7 +29,7 @@ void get_uv(
     out vec2 out_uv,
     out vec4 out_uv_sample_bounds
 ) {
-    ImageResource res = fetch_image_resource(res_address);
+    ImageSource res = fetch_image_source(res_address);
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 

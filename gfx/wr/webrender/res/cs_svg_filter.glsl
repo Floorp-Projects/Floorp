@@ -50,7 +50,7 @@ PER_INSTANCE in int aFilterGenericInt;
 PER_INSTANCE in ivec2 aFilterExtraDataAddress;
 
 struct FilterTask {
-    RenderTaskCommonData common_data;
+    RectWithSize task_rect;
     vec3 user_data;
 };
 
@@ -58,25 +58,21 @@ FilterTask fetch_filter_task(int address) {
     RenderTaskData task_data = fetch_render_task_data(address);
 
     FilterTask task = FilterTask(
-        task_data.common_data,
+        task_data.task_rect,
         task_data.user_data.xyz
     );
 
     return task;
 }
 
-vec4 compute_uv_rect(RenderTaskCommonData task, vec2 texture_size) {
-    RectWithSize task_rect = task.task_rect;
-
+vec4 compute_uv_rect(RectWithSize task_rect, vec2 texture_size) {
     vec4 uvRect = vec4(task_rect.p0 + vec2(0.5),
                        task_rect.p0 + task_rect.size - vec2(0.5));
     uvRect /= texture_size.xyxy;
     return uvRect;
 }
 
-vec2 compute_uv(RenderTaskCommonData task, vec2 texture_size) {
-    RectWithSize task_rect = task.task_rect;
-
+vec2 compute_uv(RectWithSize task_rect, vec2 texture_size) {
     vec2 uv0 = task_rect.p0 / texture_size;
     vec2 uv1 = floor(task_rect.p0 + task_rect.size) / texture_size;
     return mix(uv0, uv1, aPosition.xy);
@@ -84,22 +80,22 @@ vec2 compute_uv(RenderTaskCommonData task, vec2 texture_size) {
 
 void main(void) {
     FilterTask filter_task = fetch_filter_task(aFilterRenderTaskAddress);
-    RectWithSize target_rect = filter_task.common_data.task_rect;
+    RectWithSize target_rect = filter_task.task_rect;
 
     vec2 pos = target_rect.p0 + target_rect.size * aPosition.xy;
 
-    RenderTaskCommonData input_1_task;
+    RectWithSize input_1_task;
     if (aFilterInputCount > 0) {
         vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
-        input_1_task = fetch_render_task_common_data(aFilterInput1TaskAddress);
+        input_1_task = fetch_render_task_rect(aFilterInput1TaskAddress);
         vInput1UvRect = compute_uv_rect(input_1_task, texture_size);
         vInput1Uv = compute_uv(input_1_task, texture_size);
     }
 
-    RenderTaskCommonData input_2_task;
+    RectWithSize input_2_task;
     if (aFilterInputCount > 1) {
         vec2 texture_size = vec2(TEX_SIZE(sColor1).xy);
-        input_2_task = fetch_render_task_common_data(aFilterInput2TaskAddress);
+        input_2_task = fetch_render_task_rect(aFilterInput2TaskAddress);
         vInput2UvRect = compute_uv_rect(input_2_task, texture_size);
         vInput2Uv = compute_uv(input_2_task, texture_size);
     }
@@ -141,7 +137,7 @@ void main(void) {
             vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
             vFilterData0 = vec4(-filter_task.user_data.xy / texture_size, vec2(0.0));
 
-            RectWithSize task_rect = input_1_task.task_rect;
+            RectWithSize task_rect = input_1_task;
             vec4 clipRect = vec4(task_rect.p0, task_rect.p0 + task_rect.size);
             clipRect /= texture_size.xyxy;
             vFilterData1 = clipRect;

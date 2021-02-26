@@ -173,7 +173,7 @@ bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
         (uint32_t)ScrollInputMethod::MainThreadScrollbarButtonClick);
 
     if (!m) {
-      sb->MoveToNewPosition();
+      sb->MoveToNewPosition(nsScrollbarFrame::ImplementsScrollByUnit::No);
       if (!weakFrame.IsAlive()) {
         return false;
       }
@@ -218,7 +218,7 @@ void nsScrollbarButtonFrame::Notify() {
       if (m) {
         m->RepeatButtonScroll(sb);
       } else {
-        sb->MoveToNewPosition();
+        sb->MoveToNewPosition(nsScrollbarFrame::ImplementsScrollByUnit::No);
       }
     }
   }

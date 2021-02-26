@@ -115,7 +115,7 @@ add_task(async function() {
     "Should display storage pressure notification"
   );
 
-  let prefBtn = notification.getElementsByTagName("button")[1];
+  let prefBtn = notification.getElementsByTagName("button")[0];
   let aboutPrefPromise = openAboutPrefPromise();
   prefBtn.doCommand();
   await aboutPrefPromise;

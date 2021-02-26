@@ -235,10 +235,12 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
 
     // Step 11.10
     if (!paramName.IsEmpty() && !paramNameHadInvalidChars &&
-        !paramValueHadInvalidChars &&
-        !mimeType->mParameters.Get(paramName, &paramValue)) {
-      mimeType->mParameters.InsertOrUpdate(paramName, paramValue);
-      mimeType->mParameterNames.AppendElement(paramName);
+        !paramValueHadInvalidChars) {
+      // XXX Is the assigned value used anywhere?
+      paramValue = mimeType->mParameters.LookupOrInsertWith(paramName, [&] {
+        mimeType->mParameterNames.AppendElement(paramName);
+        return paramValue;
+      });
     }
   }
 
@@ -309,12 +311,14 @@ template <typename char_type>
 void TMimeType<char_type>::SetParameterValue(
     const nsTSubstring<char_type>& aName,
     const nsTSubstring<char_type>& aValue) {
-  if (!mParameters.Get(aName, nullptr)) {
-    mParameterNames.AppendElement(aName);
-  }
-  ParameterValue value;
-  value.Append(aValue);
-  mParameters.InsertOrUpdate(aName, value);
+  mParameters.WithEntryHandle(aName, [&](auto&& entry) {
+    if (!entry) {
+      mParameterNames.AppendElement(aName);
+    }
+    ParameterValue value;
+    value.Append(aValue);
+    entry.InsertOrUpdate(std::move(value));
+  });
 }
 
 template mozilla::UniquePtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(

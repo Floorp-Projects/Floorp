@@ -12,7 +12,7 @@ use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::internal_types::{
-    CacheTextureId, LayerIndex, Swizzle, SwizzleSettings,
+    CacheTextureId, Swizzle, SwizzleSettings,
     TextureUpdateList, TextureUpdateSource, TextureSource,
     TextureCacheAllocInfo, TextureCacheUpdate,
 };
@@ -75,12 +75,11 @@ enum EntryDetails {
 }
 
 impl EntryDetails {
-    // TODO(gw): We can remove LayerIndex from here completely in a follow up
-    fn describe(&self) -> (LayerIndex, DeviceIntPoint) {
+    fn describe(&self) -> DeviceIntPoint {
         match *self {
-            EntryDetails::Standalone { .. }  => (0, DeviceIntPoint::zero()),
-            EntryDetails::Picture { .. } => (0, DeviceIntPoint::zero()),
-            EntryDetails::Cache { origin, .. } => (0, origin),
+            EntryDetails::Standalone { .. }  => DeviceIntPoint::zero(),
+            EntryDetails::Picture { .. } => DeviceIntPoint::zero(),
+            EntryDetails::Cache { origin, .. } => origin,
         }
     }
 }
@@ -114,7 +113,7 @@ struct CacheEntry {
     /// Details specific to standalone or shared items.
     details: EntryDetails,
     /// Arbitrary user data associated with this item.
-    user_data: [f32; 3],
+    user_data: [f32; 4],
     /// The last frame this item was requested for rendering.
     // TODO(gw): This stamp is only used for picture cache tiles, and some checks
     //           in the glyph cache eviction code. We could probably remove it
@@ -174,11 +173,10 @@ impl CacheEntry {
     // to fetch from.
     fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
         if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
-            let (layer_index, origin) = self.details.describe();
+            let origin = self.details.describe();
             let image_source = ImageSource {
                 p0: origin.to_f32(),
                 p1: (origin + self.size).to_f32(),
-                texture_layer: layer_index as f32,
                 user_data: self.user_data,
                 uv_rect_kind: self.uv_rect_kind,
             };
@@ -588,7 +586,6 @@ impl PictureTextures {
                 height: tile_size.height,
                 format: ImageFormat::RGBA8,
                 filter: TextureFilter::Nearest,
-                layer_count: 1,
                 is_shared_cache: false,
                 has_depth: true,
             };
@@ -608,7 +605,7 @@ impl PictureTextures {
 
         CacheEntry {
             size: tile_size,
-            user_data: [0.0; 3],
+            user_data: [0.0; 4],
             last_access: now,
             details: EntryDetails::Picture {
                 size: tile_size,
@@ -706,7 +703,7 @@ impl PictureTextures {
 struct CacheAllocParams {
     descriptor: ImageDescriptor,
     filter: TextureFilter,
-    user_data: [f32; 3],
+    user_data: [f32; 4],
     uv_rect_kind: UvRectKind,
     shader: TargetShader,
 }
@@ -1062,7 +1059,7 @@ impl TextureCache {
         descriptor: ImageDescriptor,
         filter: TextureFilter,
         data: Option<CachedImageData>,
-        user_data: [f32; 3],
+        user_data: [f32; 4],
         mut dirty_rect: ImageDirtyRect,
         gpu_cache: &mut GpuCache,
         eviction_notice: Option<&EvictionNotice>,
@@ -1119,7 +1116,7 @@ impl TextureCache {
             // If the swizzling is supported, we always upload in the internal
             // texture format (thus avoiding the conversion by the driver).
             // Otherwise, pass the external format to the driver.
-            let (_, origin) = entry.details.describe();
+            let origin = entry.details.describe();
             let texture_id = entry.texture_id;
             let size = entry.size;
             let use_upload_format = self.swizzle.is_none();
@@ -1163,7 +1160,7 @@ impl TextureCache {
     // This function will assert in debug modes if the caller
     // tries to get a handle that was not requested this frame.
     pub fn get(&self, handle: &TextureCacheHandle) -> CacheItem {
-        let (texture_id, layer_index, uv_rect, swizzle, uv_rect_handle, user_data) = self.get_cache_location(handle);
+        let (texture_id, uv_rect, swizzle, uv_rect_handle, user_data) = self.get_cache_location(handle);
         CacheItem {
             uv_rect_handle,
             texture_id: TextureSource::TextureCache(
@@ -1171,7 +1168,6 @@ impl TextureCache {
                 swizzle,
             ),
             uv_rect,
-            texture_layer: layer_index as i32,
             user_data,
         }
     }
@@ -1184,15 +1180,14 @@ impl TextureCache {
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (CacheTextureId, LayerIndex, DeviceIntRect, Swizzle, GpuCacheHandle, [f32; 3]) {
+    ) -> (CacheTextureId, DeviceIntRect, Swizzle, GpuCacheHandle, [f32; 4]) {
         let entry = self
             .get_entry_opt(handle)
             .expect("BUG: was dropped from cache or not updated!");
         debug_assert_eq!(entry.last_access, self.now);
-        let (layer_index, origin) = entry.details.describe();
+        let origin = entry.details.describe();
         (
             entry.texture_id,
-            layer_index as usize,
             DeviceIntRect::new(origin, entry.size),
             entry.swizzle,
             entry.uv_rect_handle,
@@ -1406,7 +1401,6 @@ impl TextureCache {
                         DeviceIntPoint::zero(),
                         size.width,
                         size.height,
-                        0,
                     );
                 }
             }
@@ -1436,7 +1430,6 @@ impl TextureCache {
                         origin,
                         entry.size.width,
                         entry.size.height,
-                        0,
                     );
                 }
             }
@@ -1471,7 +1464,6 @@ impl TextureCache {
                         height: size.height,
                         format: parameters.formats.internal,
                         filter: parameters.filter,
-                        layer_count: 1,
                         is_shared_cache: true,
                         has_depth: false,
                     },
@@ -1563,7 +1555,6 @@ impl TextureCache {
             height: size.height,
             format,
             filter: TextureFilter::Linear,
-            layer_count: 1,
             is_shared_cache: false,
             has_depth: false,
         };
@@ -1596,7 +1587,6 @@ impl TextureCache {
             height: params.descriptor.size.height,
             format: params.descriptor.format,
             filter: params.filter,
-            layer_count: 1,
             is_shared_cache: false,
             has_depth: false,
         };
@@ -1832,7 +1822,6 @@ impl TextureCacheUpdate {
                     stride: Some(stride),
                     offset,
                     format_override,
-                    layer_index: 0,
                 }
             }
             DirtyRect::All => {
@@ -1842,7 +1831,6 @@ impl TextureCacheUpdate {
                     stride: descriptor.stride,
                     offset: descriptor.offset,
                     format_override,
-                    layer_index: 0,
                 }
             }
         }
@@ -1898,7 +1886,7 @@ mod test_texture_cache {
                 },
                 TextureFilter::Linear,
                 None,
-                [0.0; 3],
+                [0.0; 4],
                 DirtyRect::All,
                 &mut gpu_cache,
                 None,

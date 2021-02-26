@@ -6,13 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["TabObserver"];
 
-const { EventPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+
+  EventPromise: "chrome://remote/content/shared/Sync.jsm",
+});
 
 // TODO(ato):
 //

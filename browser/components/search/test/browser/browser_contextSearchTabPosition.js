@@ -50,12 +50,16 @@ add_task(async function test() {
   BrowserSearch.loadSearchFromContext(
     "mozilla",
     false,
-    Services.scriptSecurityManager.getSystemPrincipal()
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    Services.scriptSecurityManager.getSystemPrincipal().csp,
+    new MouseEvent("click")
   );
   BrowserSearch.loadSearchFromContext(
     "firefox",
     false,
-    Services.scriptSecurityManager.getSystemPrincipal()
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    Services.scriptSecurityManager.getSystemPrincipal().csp,
+    new MouseEvent("click")
   );
 
   // Wait for all the tabs to open.

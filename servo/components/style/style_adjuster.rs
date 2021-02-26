@@ -153,7 +153,7 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
         }
     }
 
-    /// https://html.spec.whatwg.org/multipage/interaction.html#inert-subtrees
+    /// https://html.spec.whatwg.org/multipage/#inert-subtrees
     ///
     ///    If -moz-inert is applied then add:
     ///        -moz-user-focus: none;

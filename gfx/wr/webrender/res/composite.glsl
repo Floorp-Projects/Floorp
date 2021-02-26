@@ -11,7 +11,6 @@ flat varying mat3 vYuvColorMatrix;
 flat varying vec3 vYuvOffsetVector;
 flat varying float vYuvCoefficient;
 flat varying int vYuvFormat;
-flat varying vec3 vYuvLayers;
 #ifdef SWGL_DRAW_SPAN
 flat varying int vYuvColorSpace;
 flat varying int vRescaleFactor;
@@ -24,7 +23,6 @@ flat varying vec4 vUVBounds_u;
 flat varying vec4 vUVBounds_v;
 #else
 flat varying vec4 vColor;
-flat varying float vLayer;
 varying vec2 vUv;
 flat varying vec4 vUVBounds;
 #endif
@@ -37,7 +35,6 @@ PER_INSTANCE in vec4 aDeviceRect;
 PER_INSTANCE in vec4 aDeviceClipRect;
 PER_INSTANCE in vec4 aColor;
 PER_INSTANCE in vec4 aParams;
-PER_INSTANCE in vec3 aTextureLayers;
 
 #ifdef WR_FEATURE_YUV
 // YUV treats these as a UV clip rect (clamp)
@@ -67,7 +64,6 @@ void main(void) {
     vYuvOffsetVector = get_yuv_offset_vector(yuv_color_space);
     vYuvCoefficient = yuv_coefficient;
     vYuvFormat = yuv_format;
-    vYuvLayers = aTextureLayers.xyz;
 
 #ifdef SWGL_DRAW_SPAN
     // swgl_commitTextureLinearYUV needs to know the color space specifier and
@@ -119,9 +115,8 @@ void main(void) {
         vUVBounds /= texture_size.xyxy;
     #endif
     }
-    // Pass through color and texture array layer
+    // Pass through color
     vColor = aColor;
-    vLayer = aTextureLayers.x;
 #endif
 
     gl_Position = uTransform * vec4(clipped_world_pos, aParams.x /* z_id */, 1.0);
@@ -136,7 +131,6 @@ void main(void) {
         vYuvColorMatrix,
         vYuvOffsetVector,
         vYuvCoefficient,
-        vYuvLayers,
         vUV_y,
         vUV_u,
         vUV_v,
@@ -148,9 +142,9 @@ void main(void) {
     // The color is just the texture sample modulated by a supplied color
     vec2 uv = clamp(vUv.xy, vUVBounds.xy, vUVBounds.zw);
 #   if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_2D) || defined(WR_FEATURE_TEXTURE_RECT)
-    vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, vLayer));
+    vec4 texel = TEX_SAMPLE(sColor0, uv);
 #   else
-    vec4 texel = textureLod(sColor0, vec3(uv, vLayer), 0.0);
+    vec4 texel = textureLod(sColor0, vec3(uv, 0.0), 0.0);
 #   endif
     vec4 color = vColor * texel;
 #endif
@@ -161,23 +155,23 @@ void main(void) {
 void swgl_drawSpanRGBA8() {
 #ifdef WR_FEATURE_YUV
     if (vYuvFormat == YUV_FORMAT_PLANAR) {
-        swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y, vYuvLayers.x,
-                                    sColor1, vUV_u, vUVBounds_u, vYuvLayers.y,
-                                    sColor2, vUV_v, vUVBounds_v, vYuvLayers.z,
+        swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y, 0.0,
+                                    sColor1, vUV_u, vUVBounds_u, 0.0,
+                                    sColor2, vUV_v, vUVBounds_v, 0.0,
                                     vYuvColorSpace, vRescaleFactor);
     } else if (vYuvFormat == YUV_FORMAT_NV12) {
-        swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y, vYuvLayers.x,
-                                    sColor1, vUV_u, vUVBounds_u, vYuvLayers.y,
+        swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y, 0.0,
+                                    sColor1, vUV_u, vUVBounds_u, 0.0,
                                     vYuvColorSpace, vRescaleFactor);
     } else if (vYuvFormat == YUV_FORMAT_INTERLEAVED) {
-        swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y, vYuvLayers.x,
+        swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y, 0.0,
                                     vYuvColorSpace, vRescaleFactor);
     }
 #else
     if (vColor != vec4(1.0)) {
-        swgl_commitTextureColorRGBA8(sColor0, vUv, vUVBounds, vColor, vLayer);
+        swgl_commitTextureColorRGBA8(sColor0, vUv, vUVBounds, vColor, 0.0);
     } else {
-        swgl_commitTextureRGBA8(sColor0, vUv, vUVBounds, vLayer);
+        swgl_commitTextureRGBA8(sColor0, vUv, vUVBounds, 0.0);
     }
 #endif
 }

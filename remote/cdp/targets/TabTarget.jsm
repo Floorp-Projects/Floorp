@@ -6,19 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["TabTarget"];
 
-const { Target } = ChromeUtils.import(
-  "chrome://remote/content/cdp/targets/Target.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { TabSession } = ChromeUtils.import(
-  "chrome://remote/content/cdp/sessions/TabSession.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { RemoteAgent } = ChromeUtils.import(
-  "chrome://remote/content/components/RemoteAgent.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
+  TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
+  Target: "chrome://remote/content/cdp/targets/Target.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
