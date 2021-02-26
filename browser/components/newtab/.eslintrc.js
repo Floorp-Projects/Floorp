@@ -38,7 +38,6 @@ module.exports = {
     {
       // These files use fluent-dom to insert content
       files: [
-        "content-src/aboutwelcome/components/HeroText.jsx",
         "content-src/aboutwelcome/components/Zap.jsx",
         "content-src/aboutwelcome/components/MultiStageAboutWelcome.jsx",
         "content-src/aboutwelcome/components/ReturnToAMO.jsx",
