@@ -597,15 +597,15 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
       continue;
     }
     nsresult rv = socket->SendWithAddress(&addr, packetToSend, &written);
-    MOZ_ASSERT(packetToSend.Length() == written);
-    if (NS_FAILED(rv)) {
+    LOG(("Http3Session::ProcessOutput sending packet rv=%d",
+         static_cast<int32_t>(rv)));
+    if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_WOULD_BLOCK)) {
       mSocketError = rv;
-      // Ok the socket is blocked or there is an error, return from here,
-      // we do not need to set a timer if error is not
-      // NS_BASE_STREAM_WOULD_BLOCK, i.e. we are closing the connection.
+      // If there was an error that is not NS_BASE_STREAM_WOULD_BLOCK
+      // return from here. We do not need to set a timer, because we
+      // will close the connection.
       return rv;
     }
-
     mTotalBytesWritten += packetToSend.Length();
     mLastWriteTime = PR_IntervalNow();
   }
