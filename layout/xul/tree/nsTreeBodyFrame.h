@@ -133,6 +133,10 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
   virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
                             nsIScrollbarMediator::ScrollSnapMode aSnap =
                                 nsIScrollbarMediator::DISABLE_SNAP) override;
+  virtual void ScrollByUnit(nsScrollbarFrame* aScrollbar,
+                            mozilla::ScrollMode aMode, int32_t aDirection,
+                            mozilla::ScrollUnit aUnit,
+                            ScrollSnapMode aSnap = DISABLE_SNAP) override;
   virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override;
   virtual void ThumbMoved(nsScrollbarFrame* aScrollbar, nscoord aOldPos,
                           nscoord aNewPos) override;
