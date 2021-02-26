@@ -523,6 +523,11 @@ var ProcessHangMonitor = {
 
     let buttons = [
       {
+        label: bundle.getString("processHang.add-on.learn-more.text"),
+        link:
+          "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
+      },
+      {
         label: bundle.getString("processHang.button_stop.label"),
         accessKey: bundle.getString("processHang.button_stop.accessKey"),
         callback() {
@@ -549,26 +554,10 @@ var ProcessHangMonitor = {
 
       let addonName = aps.getExtensionName(report.addonId);
 
-      let label = bundle.getFormattedString("processHang.add-on.label", [
+      message = bundle.getFormattedString("processHang.add-on.label", [
         addonName,
         brandBundle.getString("brandShortName"),
       ]);
-
-      let linkText = bundle.getString("processHang.add-on.learn-more.text");
-      let linkURL =
-        "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes";
-
-      let link = doc.createXULElement("label", { is: "text-link" });
-      link.setAttribute("role", "link");
-      link.setAttribute(
-        "onclick",
-        `openTrustedLinkIn(${JSON.stringify(linkURL)}, "tab")`
-      );
-      link.setAttribute("value", linkText);
-
-      message = doc.createDocumentFragment();
-      message.appendChild(doc.createTextNode(label + " "));
-      message.appendChild(link);
 
       buttons.unshift({
         label: bundle.getString("processHang.button_stop_sandbox.label"),
