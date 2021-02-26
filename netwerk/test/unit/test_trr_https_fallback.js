@@ -673,6 +673,11 @@ add_task(async function testH3Connection() {
   );
   Services.prefs.setBoolPref("network.http.http3.enabled", true);
 
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    100
+  );
+
   await trrServer.registerDoHAnswers("test.h3.com", "HTTPS", [
     {
       name: "test.h3.com",
