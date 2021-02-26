@@ -125,7 +125,7 @@ VertexInfo write_vertex(vec2 local_pos,
     vec2 device_pos = world_pos.xy * task.device_pixel_scale;
 
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_offset = -task.content_origin + task.common_data.task_rect.p0;
+    vec2 final_offset = -task.content_origin + task.task_rect.p0;
 
     gl_Position = uTransform * vec4(device_pos + final_offset * world_pos.w, z * world_pos.w, world_pos.w);
 
@@ -215,7 +215,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     vec2 local_pos = local_segment_rect.p0 + local_segment_rect.size * aPosition.xy;
 
     // Convert the world positions to device pixel space.
-    vec2 task_offset = task.common_data.task_rect.p0 - task.content_origin;
+    vec2 task_offset = task.task_rect.p0 - task.content_origin;
 
     // Transform the current vertex to world space.
     vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
@@ -239,18 +239,18 @@ void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
 #ifdef SWGL_CLIP_MASK
     swgl_clipMask(
         sClipMask,
-        (task.common_data.task_rect.p0 - task.content_origin) - (area.common_data.task_rect.p0 - area.screen_origin),
-        area.common_data.task_rect.p0,
-        area.common_data.task_rect.size
+        (task.task_rect.p0 - task.content_origin) - (area.task_rect.p0 - area.screen_origin),
+        area.task_rect.p0,
+        area.task_rect.size
     );
 #else
     vec2 uv = world_pos.xy * area.device_pixel_scale +
-        world_pos.w * (area.common_data.task_rect.p0 - area.screen_origin);
+        world_pos.w * (area.task_rect.p0 - area.screen_origin);
     vClipMaskUvBounds = vec4(
-        area.common_data.task_rect.p0,
-        area.common_data.task_rect.p0 + area.common_data.task_rect.size
+        area.task_rect.p0,
+        area.task_rect.p0 + area.task_rect.size
     );
-    vClipMaskUv = vec4(uv, area.common_data.texture_layer_index, world_pos.w);
+    vClipMaskUv = vec4(uv, 0.0, world_pos.w);
 #endif
 }
 
