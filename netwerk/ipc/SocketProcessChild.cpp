@@ -261,7 +261,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitSocketProcessBridgeParent(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mSocketProcessBridgeParentMap.Get(aContentProcessId, nullptr));
 
-  mSocketProcessBridgeParentMap.Put(
+  mSocketProcessBridgeParentMap.InsertOrUpdate(
       aContentProcessId, MakeRefPtr<SocketProcessBridgeParent>(
                              aContentProcessId, std::move(aEndpoint)));
   return IPC_OK();
@@ -429,7 +429,7 @@ void SocketProcessChild::AddDataBridgeToMap(
     uint64_t aChannelId, BackgroundDataBridgeParent* aActor) {
   ipc::AssertIsOnBackgroundThread();
   MutexAutoLock lock(mMutex);
-  mBackgroundDataBridgeMap.Put(aChannelId, aActor);
+  mBackgroundDataBridgeMap.InsertOrUpdate(aChannelId, aActor);
 }
 
 void SocketProcessChild::RemoveDataBridgeFromMap(uint64_t aChannelId) {

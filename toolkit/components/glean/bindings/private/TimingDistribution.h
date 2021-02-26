@@ -81,7 +81,7 @@ class TimingDistributionMetric {
     fog_timing_distribution_test_get_value(mId, &aPingName, &ret.sum, &buckets,
                                            &counts);
     for (size_t i = 0; i < buckets.Length(); ++i) {
-      ret.values.Put(buckets[i], counts[i]);
+      ret.values.InsertOrUpdate(buckets[i], counts[i]);
     }
     return Some(std::move(ret));
   }

@@ -1241,7 +1241,8 @@ void AudioContext::Unmute() const {
 void AudioContext::SetParamMapForWorkletName(
     const nsAString& aName, AudioParamDescriptorMap* aParamMap) {
   MOZ_ASSERT(!mWorkletParamDescriptors.GetValue(aName));
-  Unused << mWorkletParamDescriptors.Put(aName, move(*aParamMap), fallible);
+  Unused << mWorkletParamDescriptors.InsertOrUpdate(aName, move(*aParamMap),
+                                                    fallible);
 }
 
 size_t AudioContext::SizeOfIncludingThis(

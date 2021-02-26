@@ -71,7 +71,8 @@ class OriginKeyStore : public nsISupports {
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        key = mKeys.Put(principalString, MakeUnique<OriginKey>(salt)).get();
+        key = mKeys.InsertOrUpdate(principalString, MakeUnique<OriginKey>(salt))
+                  .get();
       }
       if (aPersist && !key->mSecondsStamp) {
         key->mSecondsStamp = PR_Now() / PR_USEC_PER_SEC;
@@ -258,7 +259,7 @@ class OriginKeyStore : public nsISupports {
         if (NS_FAILED(rv)) {
           continue;
         }
-        mKeys.Put(origin, MakeUnique<OriginKey>(key, secondsstamp));
+        mKeys.InsertOrUpdate(origin, MakeUnique<OriginKey>(key, secondsstamp));
       }
       mPersistCount = mKeys.Count();
       return NS_OK;

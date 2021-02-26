@@ -155,10 +155,10 @@ static void UnregisterBrowserId(BrowsingContext* aBrowsingContext) {
 }
 
 static void Register(BrowsingContext* aBrowsingContext) {
-  sBrowsingContexts->Put(aBrowsingContext->Id(), aBrowsingContext);
+  sBrowsingContexts->InsertOrUpdate(aBrowsingContext->Id(), aBrowsingContext);
   if (aBrowsingContext->IsTopContent()) {
-    sCurrentTopByBrowserId->Put(aBrowsingContext->BrowserId(),
-                                aBrowsingContext);
+    sCurrentTopByBrowserId->InsertOrUpdate(aBrowsingContext->BrowserId(),
+                                           aBrowsingContext);
   }
 
   aBrowsingContext->Group()->Register(aBrowsingContext);

@@ -753,7 +753,7 @@ nsresult nsAppShell::AddObserver(const nsAString& aObserverKey,
                                  nsIObserver* aObserver) {
   NS_ASSERTION(aObserver != nullptr,
                "nsAppShell::AddObserver: aObserver is null!");
-  mObserversHash.Put(aObserverKey, aObserver);
+  mObserversHash.InsertOrUpdate(aObserverKey, aObserver);
   return NS_OK;
 }
 

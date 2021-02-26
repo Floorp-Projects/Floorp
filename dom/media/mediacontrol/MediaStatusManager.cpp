@@ -67,7 +67,8 @@ void MediaStatusManager::NotifySessionCreated(uint64_t aBrowsingContextId) {
   }
 
   LOG("Session %" PRIu64 " has been created", aBrowsingContextId);
-  mMediaSessionInfoMap.Put(aBrowsingContextId, MediaSessionInfo::EmptyInfo());
+  mMediaSessionInfoMap.InsertOrUpdate(aBrowsingContextId,
+                                      MediaSessionInfo::EmptyInfo());
   if (IsSessionOwningAudioFocus(aBrowsingContextId)) {
     SetActiveMediaSessionContextId(aBrowsingContextId);
   }

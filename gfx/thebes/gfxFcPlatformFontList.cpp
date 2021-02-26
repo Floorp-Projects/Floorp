@@ -1343,7 +1343,7 @@ void gfxFcPlatformFontList::AddPatternToFontList(
       FontVisibility visibility =
           aAppFonts ? FontVisibility::Base : GetVisibilityForFamily(keyName);
       aFontFamily = new gfxFontconfigFontFamily(aFamilyName, visibility);
-      mFontFamilies.Put(keyName, RefPtr{aFontFamily});
+      mFontFamilies.InsertOrUpdate(keyName, RefPtr{aFontFamily});
     }
     // Record if the family contains fonts from the app font set
     // (in which case we won't rely on fontconfig's charmap, due to
@@ -1376,11 +1376,11 @@ void gfxFcPlatformFontList::AddPatternToFontList(
   GetFaceNames(aFont, aFamilyName, psname, fullname);
   if (!psname.IsEmpty()) {
     ToLowerCase(psname);
-    mLocalNames.Put(psname, aFont);
+    mLocalNames.InsertOrUpdate(psname, aFont);
   }
   if (!fullname.IsEmpty()) {
     ToLowerCase(fullname);
-    mLocalNames.Put(fullname, aFont);
+    mLocalNames.InsertOrUpdate(fullname, aFont);
   }
 }
 
@@ -1634,13 +1634,13 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
     GetFaceNames(aPattern, aFamilyName, psname, fullname);
     if (!psname.IsEmpty()) {
       ToLowerCase(psname);
-      mLocalNameTable.Put(
+      mLocalNameTable.InsertOrUpdate(
           psname, fontlist::LocalFaceRec::InitData(keyName, descriptor));
     }
     if (!fullname.IsEmpty()) {
       ToLowerCase(fullname);
       if (fullname != psname) {
-        mLocalNameTable.Put(
+        mLocalNameTable.InsertOrUpdate(
             fullname, fontlist::LocalFaceRec::InitData(keyName, descriptor));
       }
     }
@@ -2009,7 +2009,7 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
   }
 
   // Cache the resulting list, so we don't have to do this again.
-  mFcSubstituteCache.Put(familyName, cachedFamilies);
+  mFcSubstituteCache.InsertOrUpdate(familyName, cachedFamilies);
 
   if (cachedFamilies.IsEmpty()) {
     return false;

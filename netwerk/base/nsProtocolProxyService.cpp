@@ -1349,7 +1349,7 @@ void nsProtocolProxyService::DisableProxy(nsProxyInfo* pi) {
 
   // If this fails, oh well... means we don't have enough memory
   // to remember the failed proxy.
-  mFailedProxies.Put(key, dsec);
+  mFailedProxies.InsertOrUpdate(key, dsec);
 }
 
 bool nsProtocolProxyService::IsProxyDisabled(nsProxyInfo* pi) {

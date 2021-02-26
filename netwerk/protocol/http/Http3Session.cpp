@@ -710,7 +710,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 
   LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
   Http3Stream* stream = new Http3Stream(aHttpTransaction, this);
-  mStreamTransactionHash.Put(aHttpTransaction, RefPtr{stream});
+  mStreamTransactionHash.InsertOrUpdate(aHttpTransaction, RefPtr{stream});
 
   if (mState == ZERORTT) {
     if (!stream->Do0RTT()) {
@@ -850,7 +850,7 @@ nsresult Http3Session::TryActivating(
     mConnectionIdleEnd = TimeStamp::Now();
     mFirstStreamIdReuseIdleConnection = Some(*aStreamId);
   }
-  mStreamIdHash.Put(*aStreamId, RefPtr{aStream});
+  mStreamIdHash.InsertOrUpdate(*aStreamId, RefPtr{aStream});
   mTransactionCount++;
 
   return NS_OK;
@@ -1519,7 +1519,7 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
 
   LOG(("joinconnection [%p %s] %s result=%d lookup\n", this,
        ConnectionInfo()->HashKey().get(), key.get(), joinedReturn));
-  mJoinConnectionCache.Put(key, joinedReturn);
+  mJoinConnectionCache.InsertOrUpdate(key, joinedReturn);
   if (!justKidding) {
     // cache a kidding entry too as this one is good for both
     nsAutoCString key2(hostname);
@@ -1527,7 +1527,7 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
     key2.Append('k');
     key2.AppendInt(port);
     if (!mJoinConnectionCache.Get(key2)) {
-      mJoinConnectionCache.Put(key2, joinedReturn);
+      mJoinConnectionCache.InsertOrUpdate(key2, joinedReturn);
     }
   }
   return joinedReturn;

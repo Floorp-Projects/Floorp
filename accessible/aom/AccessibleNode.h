@@ -91,8 +91,8 @@ struct ParentObject;
     if (aValue.IsNull()) {                                                  \
       m##typeName##Properties.Remove(static_cast<int>(aProperty));          \
     } else {                                                                \
-      m##typeName##Properties.Put(static_cast<int>(aProperty),              \
-                                  aValue.Value());                          \
+      m##typeName##Properties.InsertOrUpdate(static_cast<int>(aProperty),   \
+                                             aValue.Value());               \
     }                                                                       \
   }
 
@@ -152,7 +152,7 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
       mStringProperties.Remove(static_cast<int>(aProperty));
     } else {
       nsString value(aValue);
-      mStringProperties.Put(static_cast<int>(aProperty), value);
+      mStringProperties.InsertOrUpdate(static_cast<int>(aProperty), value);
     }
   }
 
@@ -190,7 +190,8 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
     if (!aValue) {
       mRelationProperties.Remove(static_cast<int>(aProperty));
     } else {
-      mRelationProperties.Put(static_cast<int>(aProperty), RefPtr{aValue});
+      mRelationProperties.InsertOrUpdate(static_cast<int>(aProperty),
+                                         RefPtr{aValue});
     }
   }
 

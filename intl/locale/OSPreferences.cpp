@@ -536,7 +536,7 @@ OSPreferences::GetDateTimePattern(int32_t aDateFormatStyle,
     NS_WARNING("flushing DateTimePattern cache");
     mPatternCache.Clear();
   }
-  mPatternCache.Put(key, pattern);
+  mPatternCache.InsertOrUpdate(key, pattern);
 
   aRetVal = pattern;
   return NS_OK;

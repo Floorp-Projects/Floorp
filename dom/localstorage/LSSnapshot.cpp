@@ -202,7 +202,7 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
       mLoadedItems.PutEntry(itemInfo.key());
     }
 
-    mValues.Put(itemInfo.key(), value.AsString());
+    mValues.InsertOrUpdate(itemInfo.key(), value.AsString());
   }
 
   if (loadState == LoadState::Partial) {
@@ -352,7 +352,7 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
       if (oldValue.IsVoid()) {
         mValues.Remove(aKey);
       } else {
-        mValues.Put(aKey, oldValue);
+        mValues.InsertOrUpdate(aKey, oldValue);
       }
     });
 
@@ -441,7 +441,7 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
 
     auto autoRevertValue = MakeScopeExit([&] {
       MOZ_ASSERT(!oldValue.IsVoid());
-      mValues.Put(aKey, oldValue);
+      mValues.InsertOrUpdate(aKey, oldValue);
     });
 
     // Anything that can fail must be done early before we start modifying the
@@ -646,7 +646,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
           mUnknownItems.PutEntry(aKey);
         } else {
           mLoadedItems.PutEntry(aKey);
-          mValues.Put(aKey, result);
+          mValues.InsertOrUpdate(aKey, result);
 
           // mLoadedItems.Count()==mInitLength is checked below.
         }
@@ -655,7 +655,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
           const LSItemInfo& itemInfo = itemInfos[i];
 
           mLoadedItems.PutEntry(itemInfo.key());
-          mValues.Put(itemInfo.key(), itemInfo.value().AsString());
+          mValues.InsertOrUpdate(itemInfo.key(), itemInfo.value().AsString());
         }
 
         if (mLoadedItems.Count() == mInitLength) {
@@ -669,7 +669,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
       if (aValue.WasPassed()) {
         const nsString& value = aValue.Value();
         if (!value.IsVoid()) {
-          mValues.Put(aKey, value);
+          mValues.InsertOrUpdate(aKey, value);
         } else if (!result.IsVoid()) {
           mValues.Remove(aKey);
         }
@@ -693,7 +693,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
           MOZ_ASSERT(!result.IsVoid());
 
           mLoadedItems.PutEntry(aKey);
-          mValues.Put(aKey, result);
+          mValues.InsertOrUpdate(aKey, result);
 
           // mLoadedItems.Count()==mInitLength is checked below.
 
@@ -701,7 +701,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
             const LSItemInfo& itemInfo = itemInfos[i];
 
             mLoadedItems.PutEntry(itemInfo.key());
-            mValues.Put(itemInfo.key(), itemInfo.value().AsString());
+            mValues.InsertOrUpdate(itemInfo.key(), itemInfo.value().AsString());
           }
 
           if (mLoadedItems.Count() == mInitLength) {
@@ -717,7 +717,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
       if (aValue.WasPassed()) {
         const nsString& value = aValue.Value();
         if (!value.IsVoid()) {
-          mValues.Put(aKey, value);
+          mValues.InsertOrUpdate(aKey, value);
         } else if (!result.IsVoid()) {
           mValues.Remove(aKey);
         }
@@ -787,7 +787,7 @@ nsresult LSSnapshot::EnsureAllKeys() {
   nsDataHashtable<nsStringHashKey, nsString> newValues;
 
   for (auto key : keys) {
-    newValues.Put(key, VoidString());
+    newValues.InsertOrUpdate(key, VoidString());
   }
 
   if (mHasOtherProcessObservers) {
@@ -801,8 +801,9 @@ nsresult LSSnapshot::EnsureAllKeys() {
 
         switch (writeAndNotifyInfo.type()) {
           case LSWriteAndNotifyInfo::TLSSetItemAndNotifyInfo: {
-            newValues.Put(writeAndNotifyInfo.get_LSSetItemAndNotifyInfo().key(),
-                          VoidString());
+            newValues.InsertOrUpdate(
+                writeAndNotifyInfo.get_LSSetItemAndNotifyInfo().key(),
+                VoidString());
             break;
           }
           case LSWriteAndNotifyInfo::TLSRemoveItemAndNotifyInfo: {
@@ -834,7 +835,8 @@ nsresult LSSnapshot::EnsureAllKeys() {
 
         switch (writeInfo.type()) {
           case LSWriteInfo::TLSSetItemInfo: {
-            newValues.Put(writeInfo.get_LSSetItemInfo().key(), VoidString());
+            newValues.InsertOrUpdate(writeInfo.get_LSSetItemInfo().key(),
+                                     VoidString());
             break;
           }
           case LSWriteInfo::TLSRemoveItemInfo: {

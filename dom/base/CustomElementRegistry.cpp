@@ -569,7 +569,7 @@ CandidateFinder::CandidateFinder(
     }
 
     Element* key = elem.get();
-    mCandidates.Put(key, elem.forget());
+    mCandidates.InsertOrUpdate(key, elem.forget());
   }
 }
 
@@ -984,7 +984,7 @@ void CustomElementRegistry::Define(
       disableInternals, disableShadow);
 
   CustomElementDefinition* def = definition.get();
-  mCustomDefinitions.Put(nameAtom, std::move(definition));
+  mCustomDefinitions.InsertOrUpdate(nameAtom, std::move(definition));
 
   MOZ_ASSERT(mCustomDefinitions.Count() == mConstructors.count(),
              "Number of entries should be the same");
@@ -1043,7 +1043,7 @@ void CustomElementRegistry::SetElementCreationCallback(
   }
 
   RefPtr<CustomElementCreationCallback> callback = &aCallback;
-  mElementCreationCallbacks.Put(nameAtom, std::move(callback));
+  mElementCreationCallbacks.InsertOrUpdate(nameAtom, std::move(callback));
 }
 
 void CustomElementRegistry::Upgrade(nsINode& aRoot) {

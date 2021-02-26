@@ -1177,12 +1177,14 @@ bool nsAccessibilityService::Init() {
   eventListenerService->AddListenerChangeListener(this);
 
   for (uint32_t i = 0; i < ArrayLength(sHTMLMarkupMapList); i++) {
-    mHTMLMarkupMap.Put(sHTMLMarkupMapList[i].tag, &sHTMLMarkupMapList[i]);
+    mHTMLMarkupMap.InsertOrUpdate(sHTMLMarkupMapList[i].tag,
+                                  &sHTMLMarkupMapList[i]);
   }
 
 #ifdef MOZ_XUL
   for (uint32_t i = 0; i < ArrayLength(sXULMarkupMapList); i++) {
-    mXULMarkupMap.Put(sXULMarkupMapList[i].tag, &sXULMarkupMapList[i]);
+    mXULMarkupMap.InsertOrUpdate(sXULMarkupMapList[i].tag,
+                                 &sXULMarkupMapList[i]);
   }
 #endif
 

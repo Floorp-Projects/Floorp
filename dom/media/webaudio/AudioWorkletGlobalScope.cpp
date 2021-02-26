@@ -171,7 +171,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    * 8. Append the key-value pair name → processorCtor to node name to processor
    * constructor map of the associated AudioWorkletGlobalScope.
    */
-  if (!mNameToProcessorMap.Put(aName, RefPtr{&aProcessorCtor}, fallible)) {
+  if (!mNameToProcessorMap.InsertOrUpdate(aName, RefPtr{&aProcessorCtor},
+                                          fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }

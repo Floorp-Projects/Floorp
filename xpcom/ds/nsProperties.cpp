@@ -28,7 +28,7 @@ nsProperties::Set(const char* prop, nsISupports* value) {
   if (NS_WARN_IF(!prop)) {
     return NS_ERROR_INVALID_ARG;
   }
-  Put(prop, value);
+  InsertOrUpdate(prop, value);
   return NS_OK;
 }
 

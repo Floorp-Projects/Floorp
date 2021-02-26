@@ -86,7 +86,7 @@ LSDatabase::LSDatabase(const nsACString& aOrigin)
   }
 
   MOZ_ASSERT(!gLSDatabases->Get(mOrigin));
-  gLSDatabases->Put(mOrigin, this);
+  gLSDatabases->InsertOrUpdate(mOrigin, this);
 }
 
 LSDatabase::~LSDatabase() {

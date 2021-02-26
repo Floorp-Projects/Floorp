@@ -134,7 +134,7 @@ class DocRemoteAccessibleWrap : public RemoteAccessibleWrap {
   }
 
   void AddID(uint32_t aID, AccessibleWrap* aAcc) {
-    mIDToAccessibleMap.Put(aID, aAcc);
+    mIDToAccessibleMap.InsertOrUpdate(aID, aAcc);
   }
   void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
   AccessibleWrap* GetAccessibleByID(uint32_t aID) const {

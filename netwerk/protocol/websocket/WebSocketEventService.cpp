@@ -339,8 +339,8 @@ void WebSocketEventService::AssociateWebSocketImplWithSerialID(
     nsIWebSocketImpl* aWebSocketImpl, uint32_t aWebSocketSerialID) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mWebSocketImplMap.Put(aWebSocketSerialID,
-                        do_GetWeakReference(aWebSocketImpl));
+  mWebSocketImplMap.InsertOrUpdate(aWebSocketSerialID,
+                                   do_GetWeakReference(aWebSocketImpl));
 }
 
 NS_IMETHODIMP

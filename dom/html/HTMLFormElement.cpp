@@ -2025,7 +2025,7 @@ HTMLFormElement::IndexOfControl(nsIFormControl* aControl) {
 
 void HTMLFormElement::SetCurrentRadioButton(const nsAString& aName,
                                             HTMLInputElement* aRadio) {
-  mSelectedRadioButtons.Put(aName, RefPtr{aRadio});
+  mSelectedRadioButtons.InsertOrUpdate(aName, RefPtr{aRadio});
 }
 
 HTMLInputElement* HTMLFormElement::GetCurrentRadioButton(
@@ -2177,8 +2177,8 @@ uint32_t HTMLFormElement::GetRequiredRadioCount(const nsAString& aName) const {
 void HTMLFormElement::RadioRequiredWillChange(const nsAString& aName,
                                               bool aRequiredAdded) {
   if (aRequiredAdded) {
-    mRequiredRadioButtonCounts.Put(aName,
-                                   mRequiredRadioButtonCounts.Get(aName) + 1);
+    mRequiredRadioButtonCounts.InsertOrUpdate(
+        aName, mRequiredRadioButtonCounts.Get(aName) + 1);
   } else {
     uint32_t requiredNb = mRequiredRadioButtonCounts.Get(aName);
     NS_ASSERTION(requiredNb >= 1,
@@ -2186,7 +2186,7 @@ void HTMLFormElement::RadioRequiredWillChange(const nsAString& aName,
     if (requiredNb == 1) {
       mRequiredRadioButtonCounts.Remove(aName);
     } else {
-      mRequiredRadioButtonCounts.Put(aName, requiredNb - 1);
+      mRequiredRadioButtonCounts.InsertOrUpdate(aName, requiredNb - 1);
     }
   }
 }
@@ -2197,7 +2197,7 @@ bool HTMLFormElement::GetValueMissingState(const nsAString& aName) const {
 
 void HTMLFormElement::SetValueMissingState(const nsAString& aName,
                                            bool aValue) {
-  mValueMissingRadioGroups.Put(aName, aValue);
+  mValueMissingRadioGroups.InsertOrUpdate(aName, aValue);
 }
 
 EventStates HTMLFormElement::IntrinsicState() const {
@@ -2361,7 +2361,7 @@ void HTMLFormElement::AddToPastNamesMap(const nsAString& aName,
   // previous entry with the same name, if any.
   nsCOMPtr<nsIContent> node = do_QueryInterface(aChild);
   if (node) {
-    mPastNameLookupTable.Put(aName, ToSupports(node));
+    mPastNameLookupTable.InsertOrUpdate(aName, ToSupports(node));
     node->SetFlags(MAY_BE_IN_PAST_NAMES_MAP);
   }
 }

@@ -300,7 +300,8 @@ void BrowserParent::AddBrowserParentToTable(layers::LayersId aLayersId,
   if (!sLayerToBrowserParentTable) {
     sLayerToBrowserParentTable = new LayerToBrowserParentTable();
   }
-  sLayerToBrowserParentTable->Put(uint64_t(aLayersId), aBrowserParent);
+  sLayerToBrowserParentTable->InsertOrUpdate(uint64_t(aLayersId),
+                                             aBrowserParent);
 }
 
 void BrowserParent::RemoveBrowserParentFromTable(layers::LayersId aLayersId) {

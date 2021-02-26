@@ -1345,7 +1345,7 @@ nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
     uint32_t duration;
     match->GetCacheDuration(&duration);
 
-    result->response.fullHashes.Put(fullHash, nowSec + duration);
+    result->response.fullHashes.InsertOrUpdate(fullHash, nowSec + duration);
   }
 
   return ProcessComplete(result);
@@ -2096,7 +2096,7 @@ NS_IMETHODIMP
 nsUrlClassifierDBService::SetHashCompleter(
     const nsACString& tableName, nsIUrlClassifierHashCompleter* completer) {
   if (completer) {
-    mCompleters.Put(tableName, completer);
+    mCompleters.InsertOrUpdate(tableName, completer);
   } else {
     mCompleters.Remove(tableName);
   }

@@ -22,7 +22,7 @@ void ChildProcessChannelListener::RegisterCallback(uint64_t aIdentifier,
                   args->mTiming);
     args->mResolver(rv);
   } else {
-    mCallbacks.Put(aIdentifier, std::move(aCallback));
+    mCallbacks.InsertOrUpdate(aIdentifier, std::move(aCallback));
   }
 }
 
@@ -35,8 +35,8 @@ void ChildProcessChannelListener::OnChannelReady(
         (*callback)(aLoadState, std::move(aStreamFilterEndpoints), aTiming);
     aResolver(rv);
   } else {
-    mChannelArgs.Put(aIdentifier,
-                     CallbackArgs{aLoadState, std::move(aStreamFilterEndpoints),
+    mChannelArgs.InsertOrUpdate(
+        aIdentifier, CallbackArgs{aLoadState, std::move(aStreamFilterEndpoints),
                                   aTiming, std::move(aResolver)});
   }
 }

@@ -511,7 +511,7 @@ RequestContextService::GetRequestContext(const uint64_t rcID,
 
   if (!mTable.Get(rcID, rc)) {
     nsCOMPtr<nsIRequestContext> newSC = new RequestContext(rcID);
-    mTable.Put(rcID, newSC);
+    mTable.InsertOrUpdate(rcID, newSC);
     newSC.swap(*rc);
   }
 
@@ -547,7 +547,7 @@ RequestContextService::NewRequestContext(nsIRequestContext** rc) {
       mNextRCID++;
 
   nsCOMPtr<nsIRequestContext> newSC = new RequestContext(rcID);
-  mTable.Put(rcID, newSC);
+  mTable.InsertOrUpdate(rcID, newSC);
   newSC.swap(*rc);
 
   return NS_OK;

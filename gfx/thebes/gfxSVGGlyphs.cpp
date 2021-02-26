@@ -231,7 +231,7 @@ Element* gfxSVGGlyphs::GetGlyphElement(uint32_t aGlyphId) {
     if (gfxSVGGlyphsDocument* set = FindOrCreateGlyphsDocument(aGlyphId)) {
       elem = set->GetGlyphElement(aGlyphId);
     }
-    mGlyphIdMap.Put(aGlyphId, elem);
+    mGlyphIdMap.InsertOrUpdate(aGlyphId, elem);
   }
 
   return elem;
@@ -453,7 +453,7 @@ void gfxSVGGlyphsDocument::InsertGlyphId(Element* aGlyphElement) {
     id = id * 10 + (ch - '0');
   }
 
-  mGlyphIdMap.Put(id, aGlyphElement);
+  mGlyphIdMap.InsertOrUpdate(id, aGlyphElement);
 }
 
 size_t gfxSVGGlyphsDocument::SizeOfIncludingThis(

@@ -100,8 +100,9 @@ void CompositorAnimationStorage::SetAnimatedValueForWebRender(
 
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
-    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(gfx::Matrix4x4(),
-                                                       aFrameTransform, aData));
+    mAnimatedValues.InsertOrUpdate(
+        aId,
+        MakeUnique<AnimatedValue>(gfx::Matrix4x4(), aFrameTransform, aData));
     return;
   }
   MOZ_ASSERT(aPreviousValue->Is<AnimationTransform>());
@@ -118,8 +119,9 @@ void CompositorAnimationStorage::SetAnimatedValue(
 
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
-    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aTransformInDevSpace,
-                                                       aFrameTransform, aData));
+    mAnimatedValues.InsertOrUpdate(
+        aId, MakeUnique<AnimatedValue>(aTransformInDevSpace, aFrameTransform,
+                                       aData));
     return;
   }
   MOZ_ASSERT(aPreviousValue->Is<AnimationTransform>());
@@ -135,7 +137,7 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
 
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
-    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aColor));
+    mAnimatedValues.InsertOrUpdate(aId, MakeUnique<AnimatedValue>(aColor));
     return;
   }
 
@@ -151,7 +153,7 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
 
   if (!aPreviousValue) {
     MOZ_ASSERT(!mAnimatedValues.Contains(aId));
-    mAnimatedValues.Put(aId, MakeUnique<AnimatedValue>(aOpacity));
+    mAnimatedValues.InsertOrUpdate(aId, MakeUnique<AnimatedValue>(aOpacity));
     return;
   }
 

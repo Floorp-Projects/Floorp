@@ -104,7 +104,7 @@ KeyframeEffect::KeyframeEffect(Document* aDocument,
       mProperties(aOther.mProperties.Clone()),
       mBaseValues(aOther.mBaseValues.Count()) {
   for (auto iter = aOther.mBaseValues.ConstIter(); !iter.Done(); iter.Next()) {
-    mBaseValues.Put(iter.Key(), RefPtr{iter.Data()});
+    mBaseValues.InsertOrUpdate(iter.Key(), RefPtr{iter.Data()});
   }
 }
 
@@ -575,7 +575,7 @@ void KeyframeEffect::EnsureBaseStyle(
       Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
                                                  aProperty.mProperty)
           .Consume();
-  mBaseValues.Put(aProperty.mProperty, std::move(baseValue));
+  mBaseValues.InsertOrUpdate(aProperty.mProperty, std::move(baseValue));
 }
 
 void KeyframeEffect::WillComposeStyle() {

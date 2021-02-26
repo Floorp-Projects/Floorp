@@ -835,8 +835,8 @@ class GetLoadedModulesResultRunnable final : public Runnable {
 
       auto orgName = dllSvc->GetBinaryOrgName(info.GetModulePath().get());
       if (orgName) {
-        mCertSubjects.Put(info.GetModulePath(),
-                          nsDependentString(orgName.get()));
+        mCertSubjects.InsertOrUpdate(info.GetModulePath(),
+                                     nsDependentString(orgName.get()));
       }
     }
   }

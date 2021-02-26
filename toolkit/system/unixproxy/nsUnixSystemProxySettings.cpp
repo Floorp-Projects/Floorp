@@ -203,7 +203,7 @@ nsresult nsUnixSystemProxySettings::SetProxyResultFromGSettings(
         mGSettings->GetCollectionForSchema(key, getter_AddRefs(proxy_settings));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mSchemeProxySettings.Put(key, proxy_settings);
+    mSchemeProxySettings.InsertOrUpdate(key, proxy_settings);
   }
 
   nsAutoCString host;

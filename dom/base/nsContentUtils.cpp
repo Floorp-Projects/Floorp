@@ -966,9 +966,9 @@ bool nsContentUtils::InitializeEventTable() {
   for (uint32_t i = 0; i < ArrayLength(eventArray) - 1; ++i) {
     MOZ_ASSERT(!sAtomEventTable->Lookup(eventArray[i].mAtom),
                "Double-defining event name; fix your EventNameList.h");
-    sAtomEventTable->Put(eventArray[i].mAtom, eventArray[i]);
+    sAtomEventTable->InsertOrUpdate(eventArray[i].mAtom, eventArray[i]);
     if (ShouldAddEventToStringEventTable(eventArray[i])) {
-      sStringEventTable->Put(
+      sStringEventTable->InsertOrUpdate(
           Substring(nsDependentAtomString(eventArray[i].mAtom), 2),
           eventArray[i]);
     }
@@ -991,8 +991,9 @@ void nsContentUtils::InitializeTouchEventTable() {
         {nullptr}};
     // Subtract one from the length because of the trailing null
     for (uint32_t i = 0; i < ArrayLength(touchEventArray) - 1; ++i) {
-      sAtomEventTable->Put(touchEventArray[i].mAtom, touchEventArray[i]);
-      sStringEventTable->Put(
+      sAtomEventTable->InsertOrUpdate(touchEventArray[i].mAtom,
+                                      touchEventArray[i]);
+      sStringEventTable->InsertOrUpdate(
           Substring(nsDependentAtomString(touchEventArray[i].mAtom), 2),
           touchEventArray[i]);
     }
@@ -4091,7 +4092,7 @@ nsAtom* nsContentUtils::GetEventMessageAndAtom(
   // sAtomEventTable instead.
   mapping.mMaybeSpecialSVGorSMILEvent =
       GetEventMessage(atom) != eUnidentifiedEvent;
-  sStringEventTable->Put(aName, mapping);
+  sStringEventTable->InsertOrUpdate(aName, mapping);
   return mapping.mAtom;
 }
 
@@ -4724,7 +4725,7 @@ void nsContentUtils::AddEntryToDOMArenaTable(nsINode* aNode,
         new nsRefPtrHashtable<nsPtrHashKey<const nsINode>, dom::DOMArena>();
   }
   aNode->SetFlags(NODE_KEEPS_DOMARENA);
-  sDOMArenaHashtable->Put(aNode, RefPtr<DOMArena>(aDOMArena));
+  sDOMArenaHashtable->InsertOrUpdate(aNode, RefPtr<DOMArena>(aDOMArena));
 }
 
 already_AddRefed<DOMArena> nsContentUtils::TakeEntryFromDOMArenaTable(

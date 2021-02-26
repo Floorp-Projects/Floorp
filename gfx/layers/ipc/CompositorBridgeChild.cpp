@@ -418,7 +418,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvSharedCompositorFrameMetrics(
   auto data =
       MakeUnique<SharedFrameMetricsData>(metrics, handle, aLayersId, aAPZCId);
   const auto& viewID = data->GetViewID();
-  mFrameMetricsTable.Put(viewID, std::move(data));
+  mFrameMetricsTable.InsertOrUpdate(viewID, std::move(data));
   return IPC_OK();
 }
 

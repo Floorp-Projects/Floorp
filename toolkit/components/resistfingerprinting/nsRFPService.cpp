@@ -788,7 +788,7 @@ void nsRFPService::MaybeCreateSpoofingKeyCodesForEnUS() {
     KeyboardHashKey key(lang, reg, keyboardInfo.mKeyIdx, keyboardInfo.mKey);
     MOZ_ASSERT(!sSpoofingKeyboardCodes->Contains(key),
                "Double-defining key code; fix your KeyCodeConsensus file");
-    sSpoofingKeyboardCodes->Put(key, &keyboardInfo.mSpoofingCode);
+    sSpoofingKeyboardCodes->InsertOrUpdate(key, &keyboardInfo.mSpoofingCode);
   }
 
   sInitialized = true;

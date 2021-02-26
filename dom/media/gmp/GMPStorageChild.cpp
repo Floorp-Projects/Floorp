@@ -84,7 +84,7 @@ GMPErr GMPStorageChild::CreateRecord(const nsCString& aRecordName,
   }
 
   RefPtr<GMPRecordImpl> record(new GMPRecordImpl(this, aRecordName, aClient));
-  mRecords.Put(aRecordName, RefPtr{record});  // Addrefs
+  mRecords.InsertOrUpdate(aRecordName, RefPtr{record});  // Addrefs
 
   // The GMPRecord holds a self reference until the GMP calls Close() on
   // it. This means the object is always valid (even if neutered) while

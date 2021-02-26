@@ -53,7 +53,7 @@ class StatementCache {
       stmt = CreateStatement(aQuery);
       NS_ENSURE_TRUE(stmt, nullptr);
 
-      mCachedStatements.Put(aQuery, stmt);
+      mCachedStatements.InsertOrUpdate(aQuery, stmt);
     }
     return stmt.forget();
   }

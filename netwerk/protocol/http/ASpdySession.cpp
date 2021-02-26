@@ -82,7 +82,7 @@ bool SpdyPushCache::RegisterPushedStreamHttp2(const nsCString& key,
           key.get(), stream->StreamID()));
     return false;
   }
-  mHashHttp2.Put(key, stream);
+  mHashHttp2.InsertOrUpdate(key, stream);
   return true;
 }
 

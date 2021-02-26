@@ -518,7 +518,7 @@ void nsSSLIOLayerHelpers::rememberTolerantAtVersion(const nsACString& hostName,
 
   entry.AssertInvariant();
 
-  mTLSIntoleranceInfo.Put(key, entry);
+  mTLSIntoleranceInfo.InsertOrUpdate(key, entry);
 }
 
 void nsSSLIOLayerHelpers::forgetIntolerance(const nsACString& hostName,
@@ -536,7 +536,7 @@ void nsSSLIOLayerHelpers::forgetIntolerance(const nsACString& hostName,
     entry.intoleranceReason = 0;
 
     entry.AssertInvariant();
-    mTLSIntoleranceInfo.Put(key, entry);
+    mTLSIntoleranceInfo.InsertOrUpdate(key, entry);
   }
 }
 
@@ -581,7 +581,7 @@ bool nsSSLIOLayerHelpers::rememberIntolerantAtVersion(
   entry.intolerant = intolerant;
   entry.intoleranceReason = intoleranceReason;
   entry.AssertInvariant();
-  mTLSIntoleranceInfo.Put(key, entry);
+  mTLSIntoleranceInfo.InsertOrUpdate(key, entry);
 
   return true;
 }

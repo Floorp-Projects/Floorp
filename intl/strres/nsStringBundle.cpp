@@ -905,7 +905,7 @@ bundleCacheEntry_t* nsStringBundleService::insertIntoCache(
   cacheEntry->mHashKey = aHashKey;
   cacheEntry->mBundle = aBundle;
 
-  mBundleMap.Put(cacheEntry->mHashKey, cacheEntry.get());
+  mBundleMap.InsertOrUpdate(cacheEntry->mHashKey, cacheEntry.get());
 
   return cacheEntry.release();
 }

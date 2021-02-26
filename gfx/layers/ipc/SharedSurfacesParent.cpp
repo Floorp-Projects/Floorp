@@ -135,7 +135,7 @@ void SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
   wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
   surface->AddConsumer();
-  sInstance->mSurfaces.Put(id, std::move(surface));
+  sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));
 }
 
 /* static */
@@ -185,7 +185,7 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
   surface->AddConsumer();
-  sInstance->mSurfaces.Put(id, std::move(surface));
+  sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));
 }
 
 /* static */

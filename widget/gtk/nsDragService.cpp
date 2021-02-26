@@ -1028,12 +1028,12 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
     }
     memcpy(copy.Elements(), data, len);
 
-    mCachedData.Put(flavor, std::move(copy));
+    mCachedData.InsertOrUpdate(flavor, std::move(copy));
   } else {
     LOG(("Failed to get data.  selection data len was %d\n",
          mTargetDragDataLen));
 
-    mCachedData.Put(flavor, nsTArray<uint8_t>());
+    mCachedData.InsertOrUpdate(flavor, nsTArray<uint8_t>());
   }
 }
 

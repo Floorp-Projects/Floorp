@@ -3175,7 +3175,7 @@ MediaTrackGraph* MediaTrackGraph::GetInstance(
                                     channelCount, aOutputDeviceID, mainThread);
 
     uint32_t hashkey = WindowToHash(aWindow, sampleRate, aOutputDeviceID);
-    gGraphs.Put(hashkey, graph);
+    gGraphs.InsertOrUpdate(hashkey, graph);
 
     LOG(LogLevel::Debug,
         ("Starting up MediaTrackGraph %p for window %p", graph, aWindow));

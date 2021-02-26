@@ -110,7 +110,7 @@ ShadowParts ShadowParts::Parse(const nsAString& aString) {
         .LookupOrInsertWith(mapping.first,
                             [] { return MakeUnique<PartList>(); })
         ->AppendElement(std::move(mapping.second));
-    parts.mReverseMappings.Put(second, std::move(mapping.first));
+    parts.mReverseMappings.InsertOrUpdate(second, std::move(mapping.first));
   }
 
   return parts;

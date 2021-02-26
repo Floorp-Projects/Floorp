@@ -48,7 +48,7 @@ ComputedStyle* nsTreeStyleCache::GetComputedStyle(
     // We had a miss. Make a new state and add it to our hash.
     currState = mNextState;
     mNextState++;
-    mTransitionTable->Put(transition, currState);
+    mTransitionTable->InsertOrUpdate(transition, currState);
   }
 
   for (uint32_t i = 0; i < count; i++) {
@@ -59,7 +59,7 @@ ComputedStyle* nsTreeStyleCache::GetComputedStyle(
       // We had a miss. Make a new state and add it to our hash.
       currState = mNextState;
       mNextState++;
-      mTransitionTable->Put(transition, currState);
+      mTransitionTable->InsertOrUpdate(transition, currState);
     }
   }
 
@@ -95,7 +95,7 @@ ComputedStyle* nsTreeStyleCache::GetComputedStyle(
       mCache = MakeUnique<ComputedStyleCache>();
     }
     result = newResult.get();
-    mCache->Put(currState, std::move(newResult));
+    mCache->InsertOrUpdate(currState, std::move(newResult));
   }
 
   return result;

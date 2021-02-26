@@ -487,7 +487,7 @@ already_AddRefed<GMPContentParent> GMPServiceChild::GetBridgedGMPContentParent(
   DebugOnly<bool> ok = endpoint.Bind(parent);
   MOZ_ASSERT(ok);
 
-  mContentParents.Put(aOtherPid, RefPtr{parent});
+  mContentParents.InsertOrUpdate(aOtherPid, RefPtr{parent});
 
   return parent.forget();
 }

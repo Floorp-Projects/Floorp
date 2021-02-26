@@ -50,7 +50,7 @@ static void SetupCacheEntry(LookupCacheV4* aLookupCache,
 
   response->negativeCacheExpirySec =
       aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
-  response->fullHashes.Put(
+  response->fullHashes.InsertOrUpdate(
       CreatePrefixFromURL(aCompletion, COMPLETE_SIZE),
       aPosExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC);
 

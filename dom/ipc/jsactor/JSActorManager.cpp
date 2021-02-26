@@ -97,7 +97,7 @@ already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
   if (aRv.Failed()) {
     return nullptr;
   }
-  mJSActors.Put(aName, RefPtr{actor});
+  mJSActors.InsertOrUpdate(aName, RefPtr{actor});
   return actor.forget();
 }
 

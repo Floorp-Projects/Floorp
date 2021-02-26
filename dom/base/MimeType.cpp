@@ -237,7 +237,7 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
     if (!paramName.IsEmpty() && !paramNameHadInvalidChars &&
         !paramValueHadInvalidChars &&
         !mimeType->mParameters.Get(paramName, &paramValue)) {
-      mimeType->mParameters.Put(paramName, paramValue);
+      mimeType->mParameters.InsertOrUpdate(paramName, paramValue);
       mimeType->mParameterNames.AppendElement(paramName);
     }
   }
@@ -314,7 +314,7 @@ void TMimeType<char_type>::SetParameterValue(
   }
   ParameterValue value;
   value.Append(aValue);
-  mParameters.Put(aName, value);
+  mParameters.InsertOrUpdate(aName, value);
 }
 
 template mozilla::UniquePtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(

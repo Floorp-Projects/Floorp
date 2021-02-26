@@ -81,7 +81,7 @@ class ObserverTable : public nsDataHashtable<nsPtrHashKey<IProgressObserver>,
   ObserverTable(const ObserverTable& aOther) {
     NS_WARNING("Forced to copy ObserverTable due to nested notifications");
     for (auto iter = aOther.ConstIter(); !iter.Done(); iter.Next()) {
-      this->Put(iter.Key(), iter.Data());
+      this->InsertOrUpdate(iter.Key(), iter.Data());
     }
   }
 

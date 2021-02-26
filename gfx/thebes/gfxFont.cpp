@@ -458,7 +458,7 @@ void gfxFontShaper::MergeFontFeatures(
 
   // add feature values from font
   for (const gfxFontFeature& feature : aFontFeatures) {
-    mergedFeatures.Put(feature.mTag, feature.mValue);
+    mergedFeatures.InsertOrUpdate(feature.mTag, feature.mValue);
   }
 
   // font-variant-caps - handled here due to the need for fallback handling
@@ -469,33 +469,33 @@ void gfxFontShaper::MergeFontFeatures(
       break;
 
     case NS_FONT_VARIANT_CAPS_ALLSMALL:
-      mergedFeatures.Put(HB_TAG('c', '2', 's', 'c'), 1);
+      mergedFeatures.InsertOrUpdate(HB_TAG('c', '2', 's', 'c'), 1);
       // fall through to the small-caps case
       [[fallthrough]];
 
     case NS_FONT_VARIANT_CAPS_SMALLCAPS:
-      mergedFeatures.Put(HB_TAG('s', 'm', 'c', 'p'), 1);
+      mergedFeatures.InsertOrUpdate(HB_TAG('s', 'm', 'c', 'p'), 1);
       break;
 
     case NS_FONT_VARIANT_CAPS_ALLPETITE:
-      mergedFeatures.Put(aAddSmallCaps ? HB_TAG('c', '2', 's', 'c')
-                                       : HB_TAG('c', '2', 'p', 'c'),
-                         1);
+      mergedFeatures.InsertOrUpdate(aAddSmallCaps ? HB_TAG('c', '2', 's', 'c')
+                                                  : HB_TAG('c', '2', 'p', 'c'),
+                                    1);
       // fall through to the petite-caps case
       [[fallthrough]];
 
     case NS_FONT_VARIANT_CAPS_PETITECAPS:
-      mergedFeatures.Put(aAddSmallCaps ? HB_TAG('s', 'm', 'c', 'p')
-                                       : HB_TAG('p', 'c', 'a', 'p'),
-                         1);
+      mergedFeatures.InsertOrUpdate(aAddSmallCaps ? HB_TAG('s', 'm', 'c', 'p')
+                                                  : HB_TAG('p', 'c', 'a', 'p'),
+                                    1);
       break;
 
     case NS_FONT_VARIANT_CAPS_TITLING:
-      mergedFeatures.Put(HB_TAG('t', 'i', 't', 'l'), 1);
+      mergedFeatures.InsertOrUpdate(HB_TAG('t', 'i', 't', 'l'), 1);
       break;
 
     case NS_FONT_VARIANT_CAPS_UNICASE:
-      mergedFeatures.Put(HB_TAG('u', 'n', 'i', 'c'), 1);
+      mergedFeatures.InsertOrUpdate(HB_TAG('u', 'n', 'i', 'c'), 1);
       break;
 
     default:
@@ -508,10 +508,10 @@ void gfxFontShaper::MergeFontFeatures(
     case NS_FONT_VARIANT_POSITION_NORMAL:
       break;
     case NS_FONT_VARIANT_POSITION_SUPER:
-      mergedFeatures.Put(HB_TAG('s', 'u', 'p', 's'), 1);
+      mergedFeatures.InsertOrUpdate(HB_TAG('s', 'u', 'p', 's'), 1);
       break;
     case NS_FONT_VARIANT_POSITION_SUB:
-      mergedFeatures.Put(HB_TAG('s', 'u', 'b', 's'), 1);
+      mergedFeatures.InsertOrUpdate(HB_TAG('s', 'u', 'b', 's'), 1);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected variantSubSuper");
@@ -529,7 +529,7 @@ void gfxFontShaper::MergeFontFeatures(
     }
 
     for (const gfxFontFeature& feature : featureList) {
-      mergedFeatures.Put(feature.mTag, feature.mValue);
+      mergedFeatures.InsertOrUpdate(feature.mTag, feature.mValue);
     }
   }
 
@@ -537,8 +537,8 @@ void gfxFontShaper::MergeFontFeatures(
   if (styleRuleFeatures.IsEmpty()) {
     // Disable common ligatures if non-zero letter-spacing is in effect.
     if (aDisableLigatures) {
-      mergedFeatures.Put(HB_TAG('l', 'i', 'g', 'a'), 0);
-      mergedFeatures.Put(HB_TAG('c', 'l', 'i', 'g'), 0);
+      mergedFeatures.InsertOrUpdate(HB_TAG('l', 'i', 'g', 'a'), 0);
+      mergedFeatures.InsertOrUpdate(HB_TAG('c', 'l', 'i', 'g'), 0);
     }
   } else {
     for (const gfxFontFeature& feature : styleRuleFeatures) {
@@ -549,12 +549,12 @@ void gfxFontShaper::MergeFontFeatures(
       // features specified directly as tags will come last and therefore
       // take precedence over everything else.
       if (feature.mTag) {
-        mergedFeatures.Put(feature.mTag, feature.mValue);
+        mergedFeatures.InsertOrUpdate(feature.mTag, feature.mValue);
       } else if (aDisableLigatures) {
         // Handle ligature-disabling setting at the boundary between high-
         // and low-level features.
-        mergedFeatures.Put(HB_TAG('l', 'i', 'g', 'a'), 0);
-        mergedFeatures.Put(HB_TAG('c', 'l', 'i', 'g'), 0);
+        mergedFeatures.InsertOrUpdate(HB_TAG('l', 'i', 'g', 'a'), 0);
+        mergedFeatures.InsertOrUpdate(HB_TAG('c', 'l', 'i', 'g'), 0);
       }
     }
   }
@@ -1128,7 +1128,8 @@ void gfxFont::CheckForFeaturesInvolvingSpace() {
     if (!sScriptTagToCode) {
       sScriptTagToCode = new nsDataHashtable<nsUint32HashKey, Script>(
           size_t(Script::NUM_SCRIPT_CODES));
-      sScriptTagToCode->Put(HB_TAG('D', 'F', 'L', 'T'), Script::COMMON);
+      sScriptTagToCode->InsertOrUpdate(HB_TAG('D', 'F', 'L', 'T'),
+                                       Script::COMMON);
       // Ensure that we don't try to look at script codes beyond what the
       // current version of ICU (at runtime -- in case of system ICU)
       // knows about.
@@ -1144,7 +1145,7 @@ void gfxFont::CheckForFeaturesInvolvingSpace() {
                                             &scriptCount, scriptTags, nullptr,
                                             nullptr);
         for (unsigned int i = 0; i < scriptCount; i++) {
-          sScriptTagToCode->Put(scriptTags[i], s);
+          sScriptTagToCode->InsertOrUpdate(scriptTags[i], s);
         }
       }
 

@@ -45,7 +45,7 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet() {
 
 void nsHTMLCSSStyleSheet::CacheStyleAttr(const nsAString& aSerialized,
                                          MiscContainer* aValue) {
-  mCachedStyleAttrs.Put(aSerialized, aValue);
+  mCachedStyleAttrs.InsertOrUpdate(aSerialized, aValue);
 }
 
 void nsHTMLCSSStyleSheet::EvictStyleAttr(const nsAString& aSerialized,

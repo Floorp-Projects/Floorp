@@ -1105,7 +1105,7 @@ static bool AddExactEntry(CacheEntryTable* aEntries, nsACString const& aKey,
   }
 
   LOG(("AddExactEntry [entry=%p put]", aEntry));
-  aEntries->Put(aKey, RefPtr{aEntry});
+  aEntries->InsertOrUpdate(aKey, RefPtr{aEntry});
   return true;
 }
 
@@ -1192,11 +1192,11 @@ void CacheStorageService::RecordMemoryOnlyEntry(CacheEntry* aEntry,
       return;
     }
 
-    entries =
-        sGlobalEntryTables
-            ->Put(memoryStorageID,
-                  MakeUnique<CacheEntryTable>(CacheEntryTable::MEMORY_ONLY))
-            .get();
+    entries = sGlobalEntryTables
+                  ->InsertOrUpdate(
+                      memoryStorageID,
+                      MakeUnique<CacheEntryTable>(CacheEntryTable::MEMORY_ONLY))
+                  .get();
     LOG(("  new memory-only storage table for %s", memoryStorageID.get()));
   }
 
@@ -1251,7 +1251,7 @@ void CacheStorageService::ForceEntryValidFor(nsACString const& aContextKey,
   // This will be the timeout
   TimeStamp validUntil = now + TimeDuration::FromSeconds(aSecondsToTheFuture);
 
-  mForcedValidEntries.Put(aContextKey + aEntryKey, validUntil);
+  mForcedValidEntries.InsertOrUpdate(aContextKey + aEntryKey, validUntil);
 }
 
 void CacheStorageService::RemoveEntryForceValid(nsACString const& aContextKey,
@@ -1615,7 +1615,7 @@ nsresult CacheStorageService::AddStorageEntry(
       // Entry is not in the hashtable or has just been truncated...
       entry = new CacheEntry(aContextKey, aURI, aIdExtension, aWriteToDisk,
                              aSkipSizeCheck, aPin);
-      entries->Put(entryKey, RefPtr{entry});
+      entries->InsertOrUpdate(entryKey, RefPtr{entry});
       LOG(("  new entry %p for %s", entry.get(), entryKey.get()));
     }
 
@@ -2210,7 +2210,7 @@ void CacheStorageService::TelemetryRecordEntryRemoval(CacheEntry const* entry) {
 
   TimeStamp now = TimeStamp::NowLoRes();
   TelemetryPrune(now);
-  mPurgeTimeStamps.Put(key, now);
+  mPurgeTimeStamps.InsertOrUpdate(key, now);
 
   Telemetry::Accumulate(Telemetry::HTTP_CACHE_ENTRY_REUSE_COUNT,
                         entry->UseCount());

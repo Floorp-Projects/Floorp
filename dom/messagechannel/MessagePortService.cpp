@@ -104,12 +104,13 @@ bool MessagePortService::RequestEntangling(MessagePortParent* aParent,
       return false;
     }
 
-    mPorts.Put(aDestinationUUID,
-               MakeUnique<MessagePortServiceData>(aParent->ID()));
+    mPorts.InsertOrUpdate(aDestinationUUID,
+                          MakeUnique<MessagePortServiceData>(aParent->ID()));
 
     data = mPorts
-               .Put(aParent->ID(),
-                    MakeUnique<MessagePortServiceData>(aDestinationUUID))
+               .InsertOrUpdate(
+                   aParent->ID(),
+                   MakeUnique<MessagePortServiceData>(aDestinationUUID))
                .get();
   }
 

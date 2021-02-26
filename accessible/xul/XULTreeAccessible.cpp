@@ -443,7 +443,7 @@ LocalAccessible* XULTreeAccessible::GetTreeItemAccessible(int32_t aRow) const {
 
   RefPtr<LocalAccessible> treeItem = CreateTreeItemAccessible(aRow);
   if (treeItem) {
-    mAccessibleCache.Put(key, RefPtr{treeItem});
+    mAccessibleCache.InsertOrUpdate(key, RefPtr{treeItem});
     Document()->BindToDocument(treeItem, nullptr);
     return treeItem;
   }

@@ -33,7 +33,8 @@ void LSWriteOptimizerBase::DeleteItem(const nsAString& aKey, int64_t aDelta) {
       existingWriteInfo->GetType() == WriteInfo::InsertItem) {
     mWriteInfos.Remove(aKey);
   } else {
-    mWriteInfos.Put(aKey, MakeUnique<DeleteItemInfo>(NextSerialNumber(), aKey));
+    mWriteInfos.InsertOrUpdate(
+        aKey, MakeUnique<DeleteItemInfo>(NextSerialNumber(), aKey));
   }
 
   mTotalDelta += aDelta;

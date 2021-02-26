@@ -139,7 +139,7 @@ nsresult PrefixArrayToPrefixStringMap(const _PrefixArray& aPrefixArray,
       dst += size;
     }
 
-    aOut.Put(size, std::move(str));
+    aOut.InsertOrUpdate(size, std::move(str));
   }
 
   return NS_OK;

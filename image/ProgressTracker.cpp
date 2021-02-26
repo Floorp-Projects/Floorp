@@ -438,7 +438,7 @@ void ProgressTracker::AddObserver(IProgressObserver* aObserver) {
                "Adding duplicate entry for image observer");
 
     WeakPtr<IProgressObserver> weakPtr = observer.get();
-    aTable->Put(observer, weakPtr);
+    aTable->InsertOrUpdate(observer, weakPtr);
   });
 
   MOZ_ASSERT(mObserversWithTargets <= ObserverCount());
