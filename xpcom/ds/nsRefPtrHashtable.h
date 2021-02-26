@@ -33,14 +33,14 @@ class nsRefPtrHashtable
   /**
    * @copydoc nsBaseHashtable::Get
    * @param aData This is an XPCOM getter, so aData is already_addrefed.
-   *   If the key doesn't exist, aData will be set to nullptr.
+   *   If the key doesn't exist, *aData will be set to nullptr.
    */
   bool Get(KeyType aKey, UserDataType* aData) const;
 
   /**
    * @copydoc nsBaseHashtable::Get
    */
-  already_AddRefed<PtrType> Get(KeyType aKey) const;
+  [[nodiscard]] already_AddRefed<PtrType> Get(KeyType aKey) const;
 
   /**
    * Gets a weak reference to the hashtable entry.
@@ -48,7 +48,7 @@ class nsRefPtrHashtable
    *               to false otherwise.
    * @return The entry, or nullptr if not found. Do not release this pointer!
    */
-  PtrType* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
+  [[nodiscard]] PtrType* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 
   // Hide base class' InsertOrUpdate overloads intentionally, to make any
   // necessary refcounting explicit when calling InsertOrUpdate.

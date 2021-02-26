@@ -38,7 +38,7 @@ class nsDataHashtable : public nsBaseHashtable<KeyClass, DataType, DataType> {
    * @return a reference to the found value, or nullptr if no entry was found
    * with the given key.
    */
-  DataType* GetValue(KeyType aKey) {
+  [[nodiscard]] DataType* GetValue(KeyType aKey) {
     if (EntryType* ent = this->GetEntry(aKey)) {
       return ent->GetModifiableData();
     }

@@ -4650,10 +4650,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
       LineRange& minor = isRowOrder ? area.mCols : area.mRows;
       if (major.IsDefinite() && minor.IsAuto()) {
         // Items with 'auto' in the minor dimension only.
-        uint32_t cursor = 0;
-        if (isSparse) {
-          cursors->Get(major.mStart, &cursor);
-        }
+        const uint32_t cursor = isSparse ? cursors->Get(major.mStart) : 0;
         (this->*placeAutoMinorFunc)(cursor, &area, clampMaxLine);
         if (isMasonry) {
           item.MaybeInhibitSubgridInMasonry(aState.mFrame, gridAxisTrackCount);

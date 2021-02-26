@@ -1179,9 +1179,8 @@ KeyNameIndex WidgetKeyboardEvent::GetKeyNameIndex(const nsAString& aKeyValue) {
                                              static_cast<KeyNameIndex>(i));
     }
   }
-  KeyNameIndex result = KEY_NAME_INDEX_USE_STRING;
-  sKeyNameIndexHashtable->Get(aKeyValue, &result);
-  return result;
+  return sKeyNameIndexHashtable->MaybeGet(aKeyValue).valueOr(
+      KEY_NAME_INDEX_USE_STRING);
 }
 
 /* static */
@@ -1195,9 +1194,8 @@ CodeNameIndex WidgetKeyboardEvent::GetCodeNameIndex(
                                               static_cast<CodeNameIndex>(i));
     }
   }
-  CodeNameIndex result = CODE_NAME_INDEX_USE_STRING;
-  sCodeNameIndexHashtable->Get(aCodeValue, &result);
-  return result;
+  return sCodeNameIndexHashtable->MaybeGet(aCodeValue)
+      .valueOr(CODE_NAME_INDEX_USE_STRING);
 }
 
 /* static */
@@ -1895,9 +1893,8 @@ EditorInputType InternalEditorInputEvent::GetEditorInputType(
                                           static_cast<EditorInputType>(i));
     }
   }
-  EditorInputType result = EditorInputType::eUnknown;
-  sInputTypeHashtable->Get(aInputType, &result);
-  return result;
+  return sInputTypeHashtable->MaybeGet(aInputType)
+      .valueOr(EditorInputType::eUnknown);
 }
 
 }  // namespace mozilla

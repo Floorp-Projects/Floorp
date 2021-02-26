@@ -3132,9 +3132,7 @@ MediaTrackGraph* MediaTrackGraph::GetInstanceIfExists(
       aSampleRate ? aSampleRate : CubebUtils::PreferredSampleRate();
   uint32_t hashkey = WindowToHash(aWindow, sampleRate, aOutputDeviceID);
 
-  MediaTrackGraphImpl* graph = nullptr;
-  gGraphs.Get(hashkey, &graph);
-  return graph;
+  return gGraphs.Get(hashkey);
 }
 
 MediaTrackGraph* MediaTrackGraph::GetInstance(
