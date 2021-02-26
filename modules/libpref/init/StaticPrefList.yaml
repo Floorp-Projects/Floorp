@@ -8916,6 +8916,11 @@
   value: false
   mirror: always
 
+- name: network.http.http3.enable_0rtt
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # When a h3 transaction is inserted in the pending queue, the time (ms) we wait
 # to create a TCP backup connection.
 - name: network.http.http3.backup_timer_delay
