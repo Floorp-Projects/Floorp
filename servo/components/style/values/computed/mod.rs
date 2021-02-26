@@ -22,11 +22,12 @@ use crate::properties;
 use crate::properties::{ComputedValues, LonghandId, StyleBuilder};
 use crate::rule_cache::RuleCacheConditions;
 use crate::{ArcSlice, Atom, One};
-use euclid::default::Size2D;
+use euclid::{default, Point2D, Rect, Size2D};
 use servo_arc::Arc;
 use std::cell::RefCell;
 use std::cmp;
 use std::f32;
+use std::ops::{Add, Sub};
 
 #[cfg(feature = "gecko")]
 pub use self::align::{
@@ -70,7 +71,7 @@ pub use self::list::MozListReversed;
 pub use self::list::Quotes;
 pub use self::motion::{OffsetPath, OffsetRotate};
 pub use self::outline::OutlineStyle;
-pub use self::page::{Orientation, PaperSize, PageSize};
+pub use self::page::{Orientation, PageSize, PaperSize};
 pub use self::percentage::{NonNegativePercentage, Percentage};
 pub use self::position::AspectRatio;
 pub use self::position::{
@@ -213,7 +214,7 @@ impl<'a> Context<'a> {
     }
 
     /// The current viewport size, used to resolve viewport units.
-    pub fn viewport_size_for_viewport_unit_resolution(&self) -> Size2D<Au> {
+    pub fn viewport_size_for_viewport_unit_resolution(&self) -> default::Size2D<Au> {
         self.builder
             .device
             .au_viewport_size_for_viewport_unit_resolution()
@@ -358,11 +359,11 @@ where
     }
 }
 
-impl<T> ToComputedValue for Size2D<T>
+impl<T> ToComputedValue for default::Size2D<T>
 where
     T: ToComputedValue,
 {
-    type ComputedValue = Size2D<<T as ToComputedValue>::ComputedValue>;
+    type ComputedValue = default::Size2D<<T as ToComputedValue>::ComputedValue>;
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
@@ -509,10 +510,11 @@ trivial_to_computed_value!(u16);
 trivial_to_computed_value!(u32);
 trivial_to_computed_value!(usize);
 trivial_to_computed_value!(Atom);
+trivial_to_computed_value!(crate::values::AtomIdent);
 #[cfg(feature = "servo")]
-trivial_to_computed_value!(html5ever::Namespace);
+trivial_to_computed_value!(crate::Namespace);
 #[cfg(feature = "servo")]
-trivial_to_computed_value!(html5ever::Prefix);
+trivial_to_computed_value!(crate::Prefix);
 trivial_to_computed_value!(String);
 trivial_to_computed_value!(Box<str>);
 trivial_to_computed_value!(crate::OwnedStr);
@@ -819,3 +821,29 @@ pub type GridLine = GenericGridLine<Integer>;
 
 /// `<grid-template-rows> | <grid-template-columns>`
 pub type GridTemplateComponent = GenericGridTemplateComponent<LengthPercentage, Integer>;
+
+impl ClipRect {
+    /// Given a border box, resolves the clip rect against the border box
+    /// in the same space the border box is in
+    pub fn for_border_rect<T: Copy + From<Length> + Add<Output = T> + Sub<Output = T>, U>(
+        &self,
+        border_box: Rect<T, U>,
+    ) -> Rect<T, U> {
+        fn extract_clip_component<T: From<Length>>(p: &LengthOrAuto, or: T) -> T {
+            match *p {
+                LengthOrAuto::Auto => or,
+                LengthOrAuto::LengthPercentage(ref length) => T::from(*length),
+            }
+        }
+
+        let clip_origin = Point2D::new(
+            From::from(self.left.auto_is(|| Length::new(0.))),
+            From::from(self.top.auto_is(|| Length::new(0.))),
+        );
+        let right = extract_clip_component(&self.right, border_box.size.width);
+        let bottom = extract_clip_component(&self.bottom, border_box.size.height);
+        let clip_size = Size2D::new(right - clip_origin.x, bottom - clip_origin.y);
+
+        Rect::new(clip_origin, clip_size).translate(border_box.origin.to_vector())
+    }
+}

@@ -15,6 +15,7 @@ use crate::properties::longhands::display::computed_value::T as Display;
 use crate::properties::{ComputedValues, PropertyFlags};
 use crate::selector_parser::AttrValue as SelectorAttrValue;
 use crate::selector_parser::{PseudoElementCascadeType, SelectorParser};
+use crate::values::{AtomIdent, AtomString};
 use crate::{Atom, CaseSensitivityExt, LocalName, Namespace, Prefix};
 use cssparser::{serialize_identifier, CowRcStr, Parser as CssParser, SourceLocation, ToCss};
 use fxhash::FxHashMap;
@@ -29,7 +30,9 @@ use style_traits::{ParseError, StyleParseErrorKind};
 /// A pseudo-element, both public and private.
 ///
 /// NB: If you add to this list, be sure to update `each_simple_pseudo_element` too.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, ToShmem)]
+#[derive(
+    Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, ToShmem,
+)]
 #[allow(missing_docs)]
 #[repr(usize)]
 pub enum PseudoElement {
@@ -342,7 +345,6 @@ impl ToCss for NonTSPseudoClass {
             Fullscreen => ":fullscreen",
             Hover => ":hover",
             Indeterminate => ":indeterminate",
-            MozInert => ":-moz-inert",
             Link => ":link",
             PlaceholderShown => ":placeholder-shown",
             ReadWrite => ":read-write",
@@ -695,15 +697,15 @@ impl ElementSnapshot for ServoElementSnapshot {
             .map(|v| v.as_atom())
     }
 
-    fn is_part(&self, _name: &Atom) -> bool {
+    fn is_part(&self, _name: &AtomIdent) -> bool {
         false
     }
 
-    fn imported_part(&self, _: &Atom) -> Option<Atom> {
+    fn imported_part(&self, _: &AtomIdent) -> Option<AtomIdent> {
         None
     }
 
-    fn has_class(&self, name: &Atom, case_sensitivity: CaseSensitivity) -> bool {
+    fn has_class(&self, name: &AtomIdent, case_sensitivity: CaseSensitivity) -> bool {
         self.get_attr(&ns!(), &local_name!("class"))
             .map_or(false, |v| {
                 v.as_tokens()
@@ -714,11 +716,11 @@ impl ElementSnapshot for ServoElementSnapshot {
 
     fn each_class<F>(&self, mut callback: F)
     where
-        F: FnMut(&Atom),
+        F: FnMut(&AtomIdent),
     {
         if let Some(v) = self.get_attr(&ns!(), &local_name!("class")) {
             for class in v.as_tokens() {
-                callback(class);
+                callback(AtomIdent::cast(class));
             }
         }
     }
@@ -726,7 +728,7 @@ impl ElementSnapshot for ServoElementSnapshot {
     fn lang_attr(&self) -> Option<SelectorAttrValue> {
         self.get_attr(&ns!(xml), &local_name!("lang"))
             .or_else(|| self.get_attr(&ns!(), &local_name!("lang")))
-            .map(|v| String::from(v as &str))
+            .map(|v| SelectorAttrValue::from(v as &str))
     }
 }
 
@@ -736,7 +738,7 @@ impl ServoElementSnapshot {
         &self,
         ns: &NamespaceConstraint<&Namespace>,
         local_name: &LocalName,
-        operation: &AttrSelectorOperation<&String>,
+        operation: &AttrSelectorOperation<&AtomString>,
     ) -> bool {
         match *ns {
             NamespaceConstraint::Specific(ref ns) => self
