@@ -1039,11 +1039,7 @@ void nsAutoMutationBatch::Done() {
 
       if (allObservers.Length()) {
         auto* const transientReceivers =
-            ob->mTransientReceivers
-                .LookupOrInsertWith(
-                    removed,
-                    [] { return MakeUnique<nsCOMArray<nsMutationReceiver>>(); })
-                .get();
+            ob->mTransientReceivers.GetOrInsertNew(removed);
         for (uint32_t k = 0; k < allObservers.Length(); ++k) {
           nsMutationReceiver* r = allObservers[k];
           nsMutationReceiver* orig = r->GetParent() ? r->GetParent() : r;

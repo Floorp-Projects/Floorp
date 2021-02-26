@@ -1906,12 +1906,7 @@ void ServiceWorkerManager::AddScopeAndRegistration(
 
   MOZ_ASSERT(!scopeKey.IsEmpty());
 
-  auto* const data =
-      swm->mRegistrationInfos
-          .LookupOrInsertWith(
-              scopeKey,
-              [] { return MakeUnique<RegistrationDataPerPrincipal>(); })
-          .get();
+  auto* const data = swm->mRegistrationInfos.GetOrInsertNew(scopeKey);
 
   data->mScopeContainer.InsertScope(aScope);
   data->mInfos.InsertOrUpdate(aScope, RefPtr{aInfo});
