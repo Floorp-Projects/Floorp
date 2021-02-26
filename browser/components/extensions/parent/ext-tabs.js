@@ -252,8 +252,7 @@ class TabsUpdateFilterEventManager extends EventManager {
           return false;
         }
         if (filter.urls) {
-          // We check permission first because tab.uri is null if !hasTabPermission.
-          return tab.hasTabPermission && filter.urls.matches(tab.uri);
+          return filter.urls.matches(tab._uri) && tab.hasTabPermission;
         }
         return true;
       }
