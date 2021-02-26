@@ -217,9 +217,13 @@ class TabsUpdateFilterEventManager extends EventManager {
       function sanitize(tab, changeInfo) {
         let result = {};
         let nonempty = false;
-        const hasTabs = tab.hasTabPermission;
         for (let prop in changeInfo) {
-          if (hasTabs || !restricted.has(prop)) {
+          // In practice, changeInfo contains at most one property from
+          // restricted. Therefore it is not necessary to cache the value
+          // of tab.hasTabPermission outside the loop.
+          // Unnecessarily accessing tab.hasTabPermission can cause bugs, see
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1694699#c21
+          if (!restricted.has(prop) || tab.hasTabPermission) {
             nonempty = true;
             result[prop] = changeInfo[prop];
           }
