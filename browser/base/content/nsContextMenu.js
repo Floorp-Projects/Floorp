@@ -789,7 +789,8 @@ class nsContextMenu {
     goUpdateGlobalEditMenuItems();
 
     this.showItem("context-undo", this.onTextInput);
-    this.showItem("context-sep-undo", this.onTextInput);
+    this.showItem("context-redo", this.onTextInput);
+    this.showItem("context-sep-redo", this.onTextInput);
     this.showItem("context-cut", this.onTextInput);
     this.showItem("context-copy", this.isContentSelected || this.onTextInput);
     this.showItem("context-paste", this.onTextInput);
