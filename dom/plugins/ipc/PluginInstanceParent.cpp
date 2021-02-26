@@ -8,6 +8,7 @@
 #include <stdint.h>  // for intptr_t
 
 #include "mozilla/BasicEvents.h"
+#include "mozilla/D3DMessageUtils.h"  // for DxgiAdapterDesc
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
