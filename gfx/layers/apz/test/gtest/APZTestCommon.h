@@ -269,16 +269,8 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     // on APZCTreeManager. This allows us to templates for functions like
     // TouchDown, TouchUp, etc so that we can reuse the code for dispatching
     // events into both APZC and APZCTM.
-    APZEventResult result;
-    result.mStatus = ReceiveInputEvent(aEvent, &result.mInputBlockId);
-    return result;
-  }
-
-  nsEventStatus ReceiveInputEvent(const InputData& aEvent,
-                                  uint64_t* aOutInputBlockId) {
     return GetInputQueue()->ReceiveInputEvent(
-        this, TargetConfirmationFlags{!mWaitForMainThread}, aEvent,
-        aOutInputBlockId);
+        this, TargetConfirmationFlags{!mWaitForMainThread}, aEvent);
   }
 
   void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault) {
@@ -779,9 +771,13 @@ void APZCTesterBase::PinchWithTouchInput(
       MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, mcc->Time(), 0);
   mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus));
   mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus));
-  nsEventStatus status = aTarget->ReceiveInputEvent(mtiStart, aOutInputBlockId);
+  APZEventResult result;
+  result = aTarget->ReceiveInputEvent(mtiStart);
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = result.mInputBlockId;
+  }
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = status;
+    (*aOutEventStatuses)[0] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
@@ -803,9 +799,9 @@ void APZCTesterBase::PinchWithTouchInput(
       CreateSingleTouchData(inputId, pinchStartPoint1));
   mtiMove1.mTouches.AppendElement(
       CreateSingleTouchData(inputId + 1, pinchStartPoint2));
-  status = aTarget->ReceiveInputEvent(mtiMove1, nullptr);
+  result = aTarget->ReceiveInputEvent(mtiMove1);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = status;
+    (*aOutEventStatuses)[1] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
@@ -825,7 +821,7 @@ void APZCTesterBase::PinchWithTouchInput(
         CreateSingleTouchData(inputId, stepPoint1));
     mtiMoveStep.mTouches.AppendElement(
         CreateSingleTouchData(inputId + 1, stepPoint2));
-    Unused << aTarget->ReceiveInputEvent(mtiMoveStep, nullptr);
+    Unused << aTarget->ReceiveInputEvent(mtiMoveStep);
 
     mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
   }
@@ -841,9 +837,9 @@ void APZCTesterBase::PinchWithTouchInput(
       CreateSingleTouchData(inputId, pinchEndPoint1));
   mtiMove2.mTouches.AppendElement(
       CreateSingleTouchData(inputId + 1, pinchEndPoint2));
-  status = aTarget->ReceiveInputEvent(mtiMove2, nullptr);
+  result = aTarget->ReceiveInputEvent(mtiMove2);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = status;
+    (*aOutEventStatuses)[2] = result.mStatus;
   }
 
   if (aOptions & (PinchOptions::LiftFinger1 | PinchOptions::LiftFinger2)) {
@@ -859,9 +855,9 @@ void APZCTesterBase::PinchWithTouchInput(
       mtiEnd.mTouches.AppendElement(
           CreateSingleTouchData(inputId + 1, pinchEndPoint2));
     }
-    status = aTarget->ReceiveInputEvent(mtiEnd, nullptr);
+    result = aTarget->ReceiveInputEvent(mtiEnd);
     if (aOutEventStatuses) {
-      (*aOutEventStatuses)[3] = status;
+      (*aOutEventStatuses)[3] = result.mStatus;
     }
   }
 
@@ -893,30 +889,26 @@ void APZCTesterBase::PinchWithPinchInput(
   const TimeDuration TIME_BETWEEN_PINCH_INPUT =
       TimeDuration::FromMilliseconds(50);
 
-  nsEventStatus actualStatus = aTarget->ReceiveInputEvent(
-      CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START, aFocus,
-                              10.0, 10.0, mcc->Time()),
-      nullptr);
+  APZEventResult actual = aTarget->ReceiveInputEvent(CreatePinchGestureInput(
+      PinchGestureInput::PINCHGESTURE_START, aFocus, 10.0, 10.0, mcc->Time()));
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = actualStatus;
+    (*aOutEventStatuses)[0] = actual.mStatus;
   }
   mcc->AdvanceBy(TIME_BETWEEN_PINCH_INPUT);
 
-  actualStatus = aTarget->ReceiveInputEvent(
+  actual = aTarget->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                              aSecondFocus, 10.0 * aScale, 10.0, mcc->Time()),
-      nullptr);
+                              aSecondFocus, 10.0 * aScale, 10.0, mcc->Time()));
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = actualStatus;
+    (*aOutEventStatuses)[1] = actual.mStatus;
   }
   mcc->AdvanceBy(TIME_BETWEEN_PINCH_INPUT);
 
-  actualStatus = aTarget->ReceiveInputEvent(
+  actual = aTarget->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_END, aSecondFocus,
-                              10.0 * aScale, 10.0 * aScale, mcc->Time()),
-      nullptr);
+                              10.0 * aScale, 10.0 * aScale, mcc->Time()));
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = actualStatus;
+    (*aOutEventStatuses)[2] = actual.mStatus;
   }
 }
 
