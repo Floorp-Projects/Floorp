@@ -60,6 +60,7 @@ class nsUDPSocket final : public nsASocketHandler, public nsIUDPSocket {
   NetAddr mAddr;
   OriginAttributes mOriginAttributes;
   nsCOMPtr<nsIUDPSocketListener> mListener;
+  nsCOMPtr<nsIUDPSocketSyncListener> mSyncListener;
   nsCOMPtr<nsIEventTarget> mListenerTarget;
   bool mAttached;
   RefPtr<nsSocketTransportService> mSts;
