@@ -1506,13 +1506,17 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
   RefPtr<URLAndReferrerInfo> url =
       new URLAndReferrerInfo(targetURI, referrerInfo);
 
-  SVGMozElementObserver* observer =
-      static_cast<SVGMozElementObserver*>(hashtable->GetWeak(url));
-  if (!observer) {
-    observer = new SVGMozElementObserver(url, aFrame, /* aWatchImage */ true);
-    hashtable->InsertOrUpdate(url, observer);
-  }
-  return observer->GetAndObserveReferencedElement();
+  return static_cast<SVGMozElementObserver*>(
+             hashtable
+                 ->LookupOrInsertWith(
+                     url,
+                     [&] {
+                       return MakeRefPtr<SVGMozElementObserver>(
+                           url, aFrame,
+                           /* aWatchImage */ true);
+                     })
+                 .get())
+      ->GetAndObserveReferencedElement();
 }
 
 Element* SVGObserverUtils::GetAndObserveBackgroundClip(nsIFrame* aFrame) {
