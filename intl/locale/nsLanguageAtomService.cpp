@@ -135,17 +135,18 @@ nsAtom* nsLanguageAtomService::GetLocaleLanguage() {
 
 nsStaticAtom* nsLanguageAtomService::GetLanguageGroup(nsAtom* aLanguage,
                                                       bool* aNeedsToCache) {
-  if (nsStaticAtom* group = mLangToGroup.Get(aLanguage)) {
-    return group;
-  }
   if (aNeedsToCache) {
+    if (nsStaticAtom* atom = mLangToGroup.Get(aLanguage)) {
+      return atom;
+    }
     *aNeedsToCache = true;
     return nullptr;
   }
-  AssertIsMainThreadOrServoFontMetricsLocked();
-  nsStaticAtom* group = GetUncachedLanguageGroup(aLanguage);
-  mLangToGroup.InsertOrUpdate(aLanguage, group);
-  return group;
+
+  return mLangToGroup.LookupOrInsertWith(aLanguage, [&] {
+    AssertIsMainThreadOrServoFontMetricsLocked();
+    return GetUncachedLanguageGroup(aLanguage);
+  });
 }
 
 nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
