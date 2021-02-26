@@ -100,7 +100,6 @@ pub struct BlurInstance {
 pub struct ScalingInstance {
     pub target_rect: DeviceRect,
     pub source_rect: DeviceIntRect,
-    pub source_layer: i32,
 }
 
 #[derive(Clone, Debug)]

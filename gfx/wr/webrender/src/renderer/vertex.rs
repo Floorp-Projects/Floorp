@@ -225,11 +225,6 @@ pub mod desc {
                 count: 4,
                 kind: VertexAttributeKind::I32,
             },
-            VertexAttribute {
-                name: "aScaleSourceLayer",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
         ],
     };
 
