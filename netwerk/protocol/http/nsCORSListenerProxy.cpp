@@ -306,7 +306,7 @@ nsPreflightCache::CacheEntry* nsPreflightCache::GetEntry(
     }
   }
 
-  auto* newEntryWeakRef = mTable.Put(key, std::move(newEntry)).get();
+  auto* newEntryWeakRef = mTable.InsertOrUpdate(key, std::move(newEntry)).get();
   mList.insertFront(newEntryWeakRef);
 
   return newEntryWeakRef;

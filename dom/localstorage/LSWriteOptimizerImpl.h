@@ -36,7 +36,7 @@ void LSWriteOptimizer<T, U>::InsertItem(const nsAString& aKey, const T& aValue,
   } else {
     newWriteInfo = MakeUnique<InsertItemInfo>(NextSerialNumber(), aKey, aValue);
   }
-  mWriteInfos.Put(aKey, std::move(newWriteInfo));
+  mWriteInfos.InsertOrUpdate(aKey, std::move(newWriteInfo));
 
   mTotalDelta += aDelta;
 }
@@ -55,7 +55,7 @@ void LSWriteOptimizer<T, U>::UpdateItem(const nsAString& aKey, const T& aValue,
     newWriteInfo = MakeUnique<UpdateItemInfo>(NextSerialNumber(), aKey, aValue,
                                               /* aUpdateWithMove */ false);
   }
-  mWriteInfos.Put(aKey, std::move(newWriteInfo));
+  mWriteInfos.InsertOrUpdate(aKey, std::move(newWriteInfo));
 
   mTotalDelta += aDelta;
 }

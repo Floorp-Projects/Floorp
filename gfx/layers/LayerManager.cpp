@@ -182,7 +182,8 @@ void LayerManager::PayloadPresented(const TimeStamp& aTimeStamp) {
 
 void LayerManager::AddPartialPrerenderedAnimation(
     uint64_t aCompositorAnimationId, dom::Animation* aAnimation) {
-  mPartialPrerenderedAnimations.Put(aCompositorAnimationId, RefPtr{aAnimation});
+  mPartialPrerenderedAnimations.InsertOrUpdate(aCompositorAnimationId,
+                                               RefPtr{aAnimation});
   aAnimation->SetPartialPrerendered(aCompositorAnimationId);
 }
 

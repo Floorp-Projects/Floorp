@@ -297,7 +297,8 @@ RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
   rootFragment.mDependencies = std::move(aDependencies);
 
   resolver->QueueDependencies(rootFragment.mDependencies);
-  resolver->mReceivedFragments.Put(dom::TabId(0), std::move(rootFragment));
+  resolver->mReceivedFragments.InsertOrUpdate(dom::TabId(0),
+                                              std::move(rootFragment));
 
   resolver->MaybeResolve();
 
@@ -336,7 +337,7 @@ void CrossProcessPaint::ReceiveFragment(dom::WindowGlobalParent* aWGP,
   // Queue paints for child tabs
   QueueDependencies(aFragment.mDependencies);
 
-  mReceivedFragments.Put(surfaceId, std::move(aFragment));
+  mReceivedFragments.InsertOrUpdate(surfaceId, std::move(aFragment));
   mPendingFragments -= 1;
 
   // Resolve this paint if we have received all pending fragments
@@ -456,7 +457,7 @@ nsresult CrossProcessPaint::ResolveInternal(dom::TabId aTabId,
 
   RefPtr<RecordedDependentSurface> surface = new RecordedDependentSurface{
       fragment->mSize, std::move(fragment->mRecording)};
-  aResolved->Put(aTabId, std::move(surface));
+  aResolved->InsertOrUpdate(aTabId, std::move(surface));
   return NS_OK;
 }
 

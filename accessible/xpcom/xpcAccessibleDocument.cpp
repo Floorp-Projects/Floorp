@@ -172,7 +172,7 @@ xpcAccessibleGeneric* xpcAccessibleDocument::GetAccessible(
     xpcAcc = new xpcAccessibleGeneric(aAccessible);
   }
 
-  mCache.Put(aAccessible, xpcAcc);
+  mCache.InsertOrUpdate(aAccessible, xpcAcc);
   return xpcAcc;
 }
 
@@ -202,13 +202,13 @@ xpcAccessibleGeneric* xpcAccessibleDocument::GetXPCAccessible(
   if (aProxy->mIsHyperText) {
     interfaces |= eText;
     acc = new xpcAccessibleHyperText(aProxy, interfaces);
-    mCache.Put(aProxy, acc);
+    mCache.InsertOrUpdate(aProxy, acc);
 
     return acc;
   }
 
   acc = new xpcAccessibleGeneric(aProxy, interfaces);
-  mCache.Put(aProxy, acc);
+  mCache.InsertOrUpdate(aProxy, acc);
 
   return acc;
 }

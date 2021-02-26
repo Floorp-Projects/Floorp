@@ -3292,7 +3292,8 @@ void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
     MutexAutoLock lock(mQuotaMutex);
 
     MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLockIdTable.Contains(aLock.Id()));
-    mDirectoryLockIdTable.Put(aLock.Id(), WrapNotNullUnchecked(&aLock));
+    mDirectoryLockIdTable.InsertOrUpdate(aLock.Id(),
+                                         WrapNotNullUnchecked(&aLock));
   }
 
   if (aLock.ShouldUpdateLockTable()) {
@@ -8334,7 +8335,7 @@ void GetUsageOp::ProcessOriginInternal(QuotaManager* aQuotaManager,
     originUsage->usage() = 0;
     originUsage->lastAccessed() = 0;
 
-    mOriginUsagesIndex.Put(aOrigin, index);
+    mOriginUsagesIndex.InsertOrUpdate(aOrigin, index);
   }
 
   if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {

@@ -438,7 +438,7 @@ nsresult SVGFilterInstance::BuildPrimitives(
 
     nsAutoString str;
     filter->GetResultImageName().GetAnimValue(str, filter);
-    imageTable.Put(str, primitiveDescrIndex);
+    imageTable.InsertOrUpdate(str, primitiveDescrIndex);
   }
 
   return NS_OK;

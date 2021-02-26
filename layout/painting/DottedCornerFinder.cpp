@@ -509,7 +509,7 @@ void DottedCornerFinder::FindBestOverlap(Float aMinR, Float aMinBorderRadius,
   if (DottedCornerCache.Count() > DottedCornerCacheSize) {
     DottedCornerCache.Clear();
   }
-  DottedCornerCache.Put(key, BestOverlap(mBestOverlap, mCount));
+  DottedCornerCache.InsertOrUpdate(key, BestOverlap(mBestOverlap, mCount));
 }
 
 bool DottedCornerFinder::GetCountAndLastOverlap(Float aOverlap, size_t* aCount,

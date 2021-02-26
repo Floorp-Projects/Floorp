@@ -478,7 +478,7 @@ int32_t gfxDWriteFont::GetGlyphWidth(uint16_t aGID) {
   }
 
   width = NS_lround(MeasureGlyphWidth(aGID) * 65536.0);
-  mGlyphWidths->Put(aGID, width);
+  mGlyphWidths->InsertOrUpdate(aGID, width);
   return width;
 }
 

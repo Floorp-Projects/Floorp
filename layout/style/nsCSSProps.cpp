@@ -101,7 +101,8 @@ void nsCSSProps::AddRefTable(void) {
     for (nsCSSPropertyID p = nsCSSPropertyID(0);
          size_t(p) < ArrayLength(kIDLNameTable); p = nsCSSPropertyID(p + 1)) {
       if (kIDLNameTable[p]) {
-        gPropertyIDLNameTable->Put(nsDependentCString(kIDLNameTable[p]), p);
+        gPropertyIDLNameTable->InsertOrUpdate(
+            nsDependentCString(kIDLNameTable[p]), p);
       }
     }
 

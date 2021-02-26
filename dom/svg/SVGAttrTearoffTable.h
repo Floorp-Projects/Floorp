@@ -74,7 +74,7 @@ void SVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(
     return;
   }
 
-  mTable->Put(aSimple, aTearoff);
+  mTable->InsertOrUpdate(aSimple, aTearoff);
 }
 
 template <class SimpleType, class TearoffType>

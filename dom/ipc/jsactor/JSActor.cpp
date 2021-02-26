@@ -243,8 +243,8 @@ already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
   meta.queryId() = mNextQueryId++;
   meta.kind() = JSActorMessageKind::Query;
 
-  mPendingQueries.Put(meta.queryId(),
-                      PendingQuery{promise, meta.messageName()});
+  mPendingQueries.InsertOrUpdate(meta.queryId(),
+                                 PendingQuery{promise, meta.messageName()});
 
   SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
   return promise.forget();

@@ -649,7 +649,7 @@ static PresShell* GetFocusedPresShell() {
 void nsDisplayListBuilder::BeginFrame() {
   nsCSSRendering::BeginFrameTreesLocked();
   mCurrentAGR = mRootAGR;
-  mFrameToAnimatedGeometryRootMap.Put(mReferenceFrame, mRootAGR);
+  mFrameToAnimatedGeometryRootMap.InsertOrUpdate(mReferenceFrame, mRootAGR);
 
   mIsPaintingToWindow = false;
   mUseHighQualityScaling = false;
@@ -790,7 +790,8 @@ AnimatedGeometryRoot* nsDisplayListBuilder::WrapAGRForFrame(
     }
     result = AnimatedGeometryRoot::CreateAGRForFrame(
         aAnimatedGeometryRoot, parent, aIsAsync, IsRetainingDisplayList());
-    mFrameToAnimatedGeometryRootMap.Put(aAnimatedGeometryRoot, result);
+    mFrameToAnimatedGeometryRootMap.InsertOrUpdate(aAnimatedGeometryRoot,
+                                                   result);
   }
   MOZ_ASSERT(!aParent || result->mParentAGR == aParent);
   return result;
@@ -821,7 +822,7 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
   bool isAsync;
   nsIFrame* agrFrame = FindAnimatedGeometryRootFrameFor(aFrame, isAsync);
   result = WrapAGRForFrame(agrFrame, isAsync);
-  mFrameToAnimatedGeometryRootMap.Put(aFrame, result);
+  mFrameToAnimatedGeometryRootMap.InsertOrUpdate(aFrame, result);
   return result;
 }
 
@@ -1942,8 +1943,8 @@ bool nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
 
   if (onBudget) {
     documentBudget += cost;
-    mFrameWillChangeBudgets.Put(aFrame,
-                                FrameWillChangeBudget(presContext, cost));
+    mFrameWillChangeBudgets.InsertOrUpdate(
+        aFrame, FrameWillChangeBudget(presContext, cost));
     aFrame->SetMayHaveWillChangeBudget(true);
   }
 

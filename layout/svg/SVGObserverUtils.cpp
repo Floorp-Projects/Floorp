@@ -1510,7 +1510,7 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
       static_cast<SVGMozElementObserver*>(hashtable->GetWeak(url));
   if (!observer) {
     observer = new SVGMozElementObserver(url, aFrame, /* aWatchImage */ true);
-    hashtable->Put(url, observer);
+    hashtable->InsertOrUpdate(url, observer);
   }
   return observer->GetAndObserveReferencedElement();
 }

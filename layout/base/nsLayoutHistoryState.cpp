@@ -91,14 +91,14 @@ nsLayoutHistoryState::AddNewPresState(const nsACString& aKey, float aScrollX,
   newState->allowScrollOriginDowngrade() = aAllowScrollOriginDowngrade;
   newState->resolution() = aRes;
 
-  mStates.Put(nsCString(aKey), std::move(newState));
+  mStates.InsertOrUpdate(nsCString(aKey), std::move(newState));
 
   return NS_OK;
 }
 
 void nsLayoutHistoryState::AddState(const nsCString& aStateKey,
                                     UniquePtr<PresState> aState) {
-  mStates.Put(aStateKey, std::move(aState));
+  mStates.InsertOrUpdate(aStateKey, std::move(aState));
 }
 
 PresState* nsLayoutHistoryState::GetState(const nsCString& aKey) {

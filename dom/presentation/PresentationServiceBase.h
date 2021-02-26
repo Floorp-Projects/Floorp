@@ -83,7 +83,7 @@ class PresentationServiceBase {
           .LookupOrInsertWith(aWindowId,
                               [] { return MakeUnique<nsTArray<nsString>>(); })
           ->AppendElement(nsString(aSessionId));
-      mRespondingWindowIds.Put(aSessionId, aWindowId);
+      mRespondingWindowIds.InsertOrUpdate(aSessionId, aWindowId);
     }
 
     void RemoveSessionId(const nsAString& aSessionId) {

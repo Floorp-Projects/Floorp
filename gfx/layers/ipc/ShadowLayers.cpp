@@ -829,7 +829,7 @@ void ShadowLayerForwarder::Connect(CompositableClient* aCompositable,
   static uint64_t sNextID = 1;
   uint64_t id = sNextID++;
 
-  mCompositables.Put(id, aCompositable);
+  mCompositables.InsertOrUpdate(id, aCompositable);
 
   CompositableHandle handle(id);
   aCompositable->InitIPDL(handle);

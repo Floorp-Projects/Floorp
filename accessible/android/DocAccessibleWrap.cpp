@@ -120,7 +120,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       if (inViewAccs.Contains(acc->UniqueID())) {
         break;
       }
-      inViewAccs.Put(acc->UniqueID(), RefPtr{acc});
+      inViewAccs.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
   }
 
@@ -240,7 +240,7 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
                     acc->Bounds(), acc->ActionCount(), name, textValue, nodeID,
                     description, acc->CurValue(), acc->MinValue(),
                     acc->MaxValue(), acc->Step(), attributes));
-      mFocusPath.Put(acc->UniqueID(), RefPtr{acc});
+      mFocusPath.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
 
     ipcDoc->SendBatch(eBatch_FocusPath, cacheData);
@@ -250,7 +250,7 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
     for (AccessibleWrap* acc = aAccessible; acc && acc != this->LocalParent();
          acc = static_cast<AccessibleWrap*>(acc->LocalParent())) {
       accessibles.AppendElement(acc);
-      mFocusPath.Put(acc->UniqueID(), RefPtr{acc});
+      mFocusPath.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
 
     sessionAcc->ReplaceFocusPathCache(accessibles);

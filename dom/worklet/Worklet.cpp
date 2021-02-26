@@ -485,7 +485,7 @@ void Worklet::AddImportFetchHandler(const nsACString& aURI,
   MOZ_ASSERT(!mImportHandlers.GetWeak(aURI));
   MOZ_ASSERT(NS_IsMainThread());
 
-  mImportHandlers.Put(aURI, RefPtr{aHandler});
+  mImportHandlers.InsertOrUpdate(aURI, RefPtr{aHandler});
 }
 
 }  // namespace dom

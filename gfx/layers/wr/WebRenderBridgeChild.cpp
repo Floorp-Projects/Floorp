@@ -291,7 +291,7 @@ Maybe<wr::FontInstanceKey> WebRenderBridgeChild::GetFontKeyForScaledFont(
     UpdateResources(resources.ref());
   }
 
-  mFontInstanceKeys.Put(aScaledFont, instanceKey);
+  mFontInstanceKeys.InsertOrUpdate(aScaledFont, instanceKey);
 
   return Some(instanceKey);
 }
@@ -320,7 +320,7 @@ Maybe<wr::FontKey> WebRenderBridgeChild::GetFontKeyForUnscaledFont(
       UpdateResources(resources.ref());
     }
 
-    mFontKeys.Put(aUnscaled, fontKey);
+    mFontKeys.InsertOrUpdate(aUnscaled, fontKey);
   }
 
   return Some(fontKey);
@@ -380,7 +380,7 @@ void WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
   static uint64_t sNextID = 1;
   uint64_t id = sNextID++;
 
-  mCompositables.Put(id, aCompositable);
+  mCompositables.InsertOrUpdate(id, aCompositable);
 
   CompositableHandle handle(id);
   aCompositable->InitIPDL(handle);

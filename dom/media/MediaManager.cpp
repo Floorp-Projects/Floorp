@@ -2787,7 +2787,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 focusSource);
 
             // Store the task w/callbacks.
-            self->mActiveCallbacks.Put(callID, std::move(task));
+            self->mActiveCallbacks.InsertOrUpdate(callID, std::move(task));
 
             // Add a WindowID cross-reference so OnNavigation can tear
             // things down
@@ -3349,7 +3349,7 @@ void MediaManager::AddWindowID(uint64_t aWindowId,
 
   aListener->MuteOrUnmuteCameras(mCamerasMuted);
   aListener->MuteOrUnmuteMicrophones(mMicrophonesMuted);
-  GetActiveWindows()->Put(aWindowId, std::move(aListener));
+  GetActiveWindows()->InsertOrUpdate(aWindowId, std::move(aListener));
 }
 
 void MediaManager::RemoveWindowID(uint64_t aWindowId) {

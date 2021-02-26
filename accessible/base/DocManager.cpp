@@ -143,7 +143,7 @@ xpcAccessibleDocument* DocManager::GetXPCDocument(DocAccessible* aDocument) {
   xpcAccessibleDocument* xpcDoc = mXPCDocumentCache.GetWeak(aDocument);
   if (!xpcDoc) {
     xpcDoc = new xpcAccessibleDocument(aDocument);
-    mXPCDocumentCache.Put(aDocument, RefPtr{xpcDoc});
+    mXPCDocumentCache.InsertOrUpdate(aDocument, RefPtr{xpcDoc});
   }
   return xpcDoc;
 }
@@ -164,7 +164,7 @@ xpcAccessibleDocument* DocManager::GetXPCDocument(DocAccessibleParent* aDoc) {
   MOZ_ASSERT(!aDoc->IsShutdown(), "Adding a shutdown doc to remote XPC cache");
   doc = new xpcAccessibleDocument(aDoc,
                                   Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
-  sRemoteXPCDocumentCache->Put(aDoc, RefPtr{doc});
+  sRemoteXPCDocumentCache->InsertOrUpdate(aDoc, RefPtr{doc});
 
   return doc;
 }
@@ -486,7 +486,7 @@ DocAccessible* DocManager::CreateDocOrRootAccessible(Document* aDocument) {
                 : new DocAccessibleWrap(aDocument, presShell);
 
   // Cache the document accessible into document cache.
-  mDocAccessibleCache.Put(aDocument, RefPtr{docAcc});
+  mDocAccessibleCache.InsertOrUpdate(aDocument, RefPtr{docAcc});
 
   // Initialize the document accessible.
   docAcc->Init();

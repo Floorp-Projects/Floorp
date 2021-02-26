@@ -305,12 +305,15 @@ void TelemetryOrigin::InitializeGlobalState() {
     hashOffset += hashLength;
 
     // -1 to leave off the null terminators.
-    gOriginToIndexMap->Put(nsDependentCString(origin, originLength - 1), i);
-    gHashToIndexMap->Put(nsDependentCString(hash, hashLength - 1), i);
+    gOriginToIndexMap->InsertOrUpdate(
+        nsDependentCString(origin, originLength - 1), i);
+    gHashToIndexMap->InsertOrUpdate(nsDependentCString(hash, hashLength - 1),
+                                    i);
   }
 
   // Add the meta-origin for tracking recordings to untracked origins.
-  gOriginToIndexMap->Put(kUnknownOrigin, gOriginHashesList->Length());
+  gOriginToIndexMap->InsertOrUpdate(kUnknownOrigin,
+                                    gOriginHashesList->Length());
 
   gMetricToOriginBag = MakeUnique<IdToOriginBag>();
 
@@ -428,7 +431,7 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
         OriginBag& bag = copy.LookupOrInsert(iter.Key());
         auto originIt = iter.Data().ConstIter();
         for (; !originIt.Done(); originIt.Next()) {
-          bag.Put(originIt.Key(), originIt.Data());
+          bag.InsertOrUpdate(originIt.Key(), originIt.Data());
         }
       }
     }

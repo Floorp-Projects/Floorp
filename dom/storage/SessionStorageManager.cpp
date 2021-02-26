@@ -51,7 +51,7 @@ void RecvPropagateBackgroundSessionStorageManager(
       // Assuming the target top browsing context should haven't been
       // registered yet.
       MOZ_DIAGNOSTIC_ASSERT(!sManagers->GetWeak(aTargetTopContextId));
-      sManagers->Put(aTargetTopContextId, std::move(mgr));
+      sManagers->InsertOrUpdate(aTargetTopContextId, std::move(mgr));
     }
   }
 }
@@ -74,7 +74,9 @@ SessionStorageManagerBase::GetOriginRecord(
   if (!mOATable.Get(aOriginAttrs, &table)) {
     if (aMakeIfNeeded) {
       table =
-          mOATable.Put(aOriginAttrs, MakeUnique<OriginKeyHashTable>()).get();
+          mOATable
+              .InsertOrUpdate(aOriginAttrs, MakeUnique<OriginKeyHashTable>())
+              .get();
     } else {
       return nullptr;
     }
@@ -89,7 +91,8 @@ SessionStorageManagerBase::GetOriginRecord(
       } else {
         newOriginRecord->mCache = new SessionStorageCache();
       }
-      originRecord = table->Put(aOriginKey, std::move(newOriginRecord)).get();
+      originRecord =
+          table->InsertOrUpdate(aOriginKey, std::move(newOriginRecord)).get();
     } else {
       return nullptr;
     }

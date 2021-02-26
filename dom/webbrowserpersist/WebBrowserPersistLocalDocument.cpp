@@ -624,7 +624,7 @@ PersistNodeFixup::PersistNodeFixup(WebBrowserPersistLocalDocument* aParent,
       rv = aMap->GetURIMapping(i, urlFrom, *urlTo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (NS_SUCCEEDED(rv)) {
-        mMap.Put(urlFrom, std::move(urlTo));
+        mMap.InsertOrUpdate(urlFrom, std::move(urlTo));
       }
     }
   }

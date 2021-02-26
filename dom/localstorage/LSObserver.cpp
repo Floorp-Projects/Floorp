@@ -34,7 +34,7 @@ LSObserver::LSObserver(const nsACString& aOrigin)
   }
 
   MOZ_ASSERT(!gLSObservers->Get(mOrigin));
-  gLSObservers->Put(mOrigin, this);
+  gLSObservers->InsertOrUpdate(mOrigin, this);
 }
 
 LSObserver::~LSObserver() {

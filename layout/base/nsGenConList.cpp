@@ -168,7 +168,7 @@ void nsGenConList::Insert(nsGenConNode* aNode) {
       }
     }
 #endif
-    mNodes.Put(aNode->mPseudoFrame, aNode);
+    mNodes.InsertOrUpdate(aNode->mPseudoFrame, aNode);
   } else {
 #ifdef DEBUG
     nsGenConNode* frameFirstNode = mNodes.Get(aNode->mPseudoFrame);

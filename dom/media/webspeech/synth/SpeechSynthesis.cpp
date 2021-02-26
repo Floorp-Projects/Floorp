@@ -248,7 +248,7 @@ void SpeechSynthesis::GetVoices(
 
   for (uint32_t i = 0; i < aResult.Length(); i++) {
     SpeechSynthesisVoice* voice = aResult[i];
-    mVoiceCache.Put(voice->mUri, RefPtr{voice});
+    mVoiceCache.InsertOrUpdate(voice->mUri, RefPtr{voice});
   }
 }
 

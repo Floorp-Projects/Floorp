@@ -1879,7 +1879,7 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
         nsAutoCString token{tokenSubstring};
         int32_t index = token.Find(";");
         if (index != kNotFound) {
-          mAltSvcMappingTemptativeMap.Put(
+          mAltSvcMappingTemptativeMap.InsertOrUpdate(
               Substring(token, 0, index),
               MakeUnique<nsCString>(Substring(token, index + 1)));
         }
@@ -2750,7 +2750,7 @@ void nsHttpHandler::AddHttpChannel(uint64_t aId, nsISupports* aChannel) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsWeakPtr channel(do_GetWeakReference(aChannel));
-  mIDToHttpChannelMap.Put(aId, std::move(channel));
+  mIDToHttpChannelMap.InsertOrUpdate(aId, std::move(channel));
 }
 
 void nsHttpHandler::RemoveHttpChannel(uint64_t aId) {

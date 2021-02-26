@@ -502,7 +502,7 @@ gfx::DataSourceSurface* CanvasTranslator::LookupDataSurface(
 
 void CanvasTranslator::AddDataSurface(
     gfx::ReferencePtr aRefPtr, RefPtr<gfx::DataSourceSurface>&& aSurface) {
-  mDataSurfaces.Put(aRefPtr, std::move(aSurface));
+  mDataSurfaces.InsertOrUpdate(aRefPtr, std::move(aSurface));
 }
 
 void CanvasTranslator::RemoveDataSurface(gfx::ReferencePtr aRefPtr) {

@@ -97,7 +97,7 @@ class Timeout final : protected LinkedListElement<RefPtr<Timeout>> {
     }
     mTimeouts = aTimeouts;
     if (mTimeouts) {
-      mTimeouts->Put(key, this);
+      mTimeouts->InsertOrUpdate(key, this);
     }
   }
 

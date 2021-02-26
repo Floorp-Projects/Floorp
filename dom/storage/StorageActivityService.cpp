@@ -162,7 +162,7 @@ void StorageActivityService::SendActivityInternal(nsIPrincipal* aPrincipal) {
 void StorageActivityService::SendActivityInternal(const nsACString& aOrigin) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  mActivities.Put(aOrigin, PR_Now());
+  mActivities.InsertOrUpdate(aOrigin, PR_Now());
   MaybeStartTimer();
 }
 
@@ -289,7 +289,7 @@ StorageActivityService::MoveOriginInTime(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  mActivities.Put(origin, aWhen / PR_USEC_PER_SEC);
+  mActivities.InsertOrUpdate(origin, aWhen / PR_USEC_PER_SEC);
   return NS_OK;
 }
 

@@ -33,7 +33,7 @@ nsControllerCommandTable::RegisterCommand(const char* aCommandName,
                                           nsIControllerCommand* aCommand) {
   NS_ENSURE_TRUE(mMutable, NS_ERROR_FAILURE);
 
-  mCommandsTable.Put(nsDependentCString(aCommandName), aCommand);
+  mCommandsTable.InsertOrUpdate(nsDependentCString(aCommandName), aCommand);
 
   return NS_OK;
 }

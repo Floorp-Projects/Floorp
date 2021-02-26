@@ -1249,7 +1249,7 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
     bool existed = mEchRetryCounterMap.Get(id, &count);
     MOZ_ASSERT(existed, "table not initialized");
     if (existed) {
-      mEchRetryCounterMap.Put(id, ++count);
+      mEchRetryCounterMap.InsertOrUpdate(id, ++count);
     }
   });
 
@@ -3151,12 +3151,14 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
 
   // echConfig is used, so initialize the retry counters to 0.
   if (!mConnInfo->GetEchConfig().IsEmpty()) {
-    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_WITH_ECH_COUNT, 0);
-    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_WITHOUT_ECH_COUNT,
-                            0);
-    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_ECH_FAILED_COUNT,
-                            0);
-    mEchRetryCounterMap.Put(Telemetry::TRANSACTION_ECH_RETRY_OTHERS_COUNT, 0);
+    mEchRetryCounterMap.InsertOrUpdate(
+        Telemetry::TRANSACTION_ECH_RETRY_WITH_ECH_COUNT, 0);
+    mEchRetryCounterMap.InsertOrUpdate(
+        Telemetry::TRANSACTION_ECH_RETRY_WITHOUT_ECH_COUNT, 0);
+    mEchRetryCounterMap.InsertOrUpdate(
+        Telemetry::TRANSACTION_ECH_RETRY_ECH_FAILED_COUNT, 0);
+    mEchRetryCounterMap.InsertOrUpdate(
+        Telemetry::TRANSACTION_ECH_RETRY_OTHERS_COUNT, 0);
   }
 
   return NS_OK;

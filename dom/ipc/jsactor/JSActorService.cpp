@@ -169,7 +169,7 @@ void JSActorService::LoadJSActorInfos(nsTArray<JSProcessActorInfo>& aProcess,
     auto name = info.name();
     RefPtr<JSProcessActorProtocol> proto =
         JSProcessActorProtocol::FromIPC(std::move(info));
-    mProcessActorDescriptors.Put(std::move(name), RefPtr{proto});
+    mProcessActorDescriptors.InsertOrUpdate(std::move(name), RefPtr{proto});
 
     // Add observers for each actor.
     proto->AddObservers();
@@ -179,7 +179,7 @@ void JSActorService::LoadJSActorInfos(nsTArray<JSProcessActorInfo>& aProcess,
     auto name = info.name();
     RefPtr<JSWindowActorProtocol> proto =
         JSWindowActorProtocol::FromIPC(std::move(info));
-    mWindowActorDescriptors.Put(std::move(name), RefPtr{proto});
+    mWindowActorDescriptors.InsertOrUpdate(std::move(name), RefPtr{proto});
 
     // Register listeners for each chrome target.
     for (EventTarget* target : mChromeEventTargets) {

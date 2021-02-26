@@ -63,7 +63,7 @@ CachingDatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
 #endif
         }));
 
-    mCachedStatements.Put(aQuery, stmt);
+    mCachedStatements.InsertOrUpdate(aQuery, stmt);
   }
 
   return CachedStatement{this, std::move(stmt), aQuery};

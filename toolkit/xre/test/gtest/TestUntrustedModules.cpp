@@ -24,7 +24,7 @@ class ModuleLoadCounter final {
   ModuleLoadCounter(const nsString (&aNames)[N], const int (&aCounts)[N])
       : mCounters(N) {
     for (int i = 0; i < N; ++i) {
-      mCounters.Put(aNames[i], aCounts[i]);
+      mCounters.InsertOrUpdate(aNames[i], aCounts[i]);
     }
   }
 

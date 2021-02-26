@@ -3651,7 +3651,7 @@ nsNavHistoryResult::BookmarkFolderObserversForId(int64_t aFolderId,
 
   // need to create a new list
   list = new FolderObserverList;
-  mBookmarkFolderObservers.Put(aFolderId, list);
+  mBookmarkFolderObservers.InsertOrUpdate(aFolderId, list);
   return list;
 }
 

@@ -1040,7 +1040,7 @@ already_AddRefed<GMPStorage> GeckoMediaPluginServiceParent::GetMemoryStorageFor(
   RefPtr<GMPStorage> s;
   if (!mTempGMPStorage.Get(aNodeId, getter_AddRefs(s))) {
     s = CreateGMPMemoryStorage();
-    mTempGMPStorage.Put(aNodeId, RefPtr{s});
+    mTempGMPStorage.InsertOrUpdate(aNodeId, RefPtr{s});
   }
   return s.forget();
 }
@@ -1081,7 +1081,7 @@ nsresult GeckoMediaPluginServiceParent::GetNodeId(
       return rv;
     }
     aOutId = salt;
-    mPersistentStorageAllowed.Put(salt, false);
+    mPersistentStorageAllowed.InsertOrUpdate(salt, false);
     return NS_OK;
   }
 
@@ -1103,7 +1103,7 @@ nsresult GeckoMediaPluginServiceParent::GetNodeId(
         }
         auto salt = MakeUnique<nsCString>(newSalt);
 
-        mPersistentStorageAllowed.Put(*salt, false);
+        mPersistentStorageAllowed.InsertOrUpdate(*salt, false);
 
         entry.Insert(std::move(salt));
       }
@@ -1200,7 +1200,7 @@ nsresult GeckoMediaPluginServiceParent::GetNodeId(
   }
 
   aOutId = salt;
-  mPersistentStorageAllowed.Put(salt, true);
+  mPersistentStorageAllowed.InsertOrUpdate(salt, true);
 
   return NS_OK;
 }

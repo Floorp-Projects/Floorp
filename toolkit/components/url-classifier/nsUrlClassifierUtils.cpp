@@ -875,7 +875,7 @@ nsresult nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict) {
     nsTArray<nsCString> tables;
     Classifier::SplitTables(owningLists, tables);
     for (auto tableName : tables) {
-      aDict.Put(tableName, MakeUnique<nsCString>(provider));
+      aDict.InsertOrUpdate(tableName, MakeUnique<nsCString>(provider));
     }
   }
 

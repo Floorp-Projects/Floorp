@@ -2147,7 +2147,7 @@ nsresult nsMemoryReporterManager::RegisterReporterHelper(
   //
   if (aStrong) {
     nsCOMPtr<nsIMemoryReporter> kungFuDeathGrip = aReporter;
-    mStrongReporters->Put(aReporter, aIsAsync);
+    mStrongReporters->InsertOrUpdate(aReporter, aIsAsync);
     CrashIfRefcountIsZero(aReporter);
   } else {
     CrashIfRefcountIsZero(aReporter);
@@ -2160,7 +2160,7 @@ nsresult nsMemoryReporterManager::RegisterReporterHelper(
       // CollectReports().
       return NS_ERROR_XPC_BAD_CONVERT_JS;
     }
-    mWeakReporters->Put(aReporter, aIsAsync);
+    mWeakReporters->InsertOrUpdate(aReporter, aIsAsync);
   }
 
   return NS_OK;

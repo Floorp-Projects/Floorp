@@ -197,7 +197,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
       mozilla::dom::BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
       MOZ_ASSERT(blobImpl);
 
-      refCounts.Put(blobImpl, refCounts.Get(blobImpl) + 1);
+      refCounts.InsertOrUpdate(blobImpl, refCounts.Get(blobImpl) + 1);
     }
 
     for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
@@ -535,7 +535,7 @@ static void AddDataEntryInternal(const nsACString& aURI, T aObject,
                                                   aAgentClusterId);
   BlobURLsReporter::GetJSStackForBlob(info.get());
 
-  gDataTable->Put(aURI, std::move(info));
+  gDataTable->InsertOrUpdate(aURI, std::move(info));
 }
 
 void BlobURLProtocolHandler::Init(void) {

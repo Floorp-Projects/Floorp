@@ -24,7 +24,7 @@ nsSystemStatusBarCocoa::AddItem(Element* aElement) {
   }
 
   nsCOMPtr<nsISupports> keyPtr = aElement;
-  mItems.Put(keyPtr, mozilla::MakeUnique<StatusItem>(menu));
+  mItems.InsertOrUpdate(keyPtr, mozilla::MakeUnique<StatusItem>(menu));
 
   return NS_OK;
 }

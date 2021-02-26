@@ -67,7 +67,7 @@ nsHashPropertyBagBase::SetProperty(const nsAString& aName, nsIVariant* aValue) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  mPropertyHash.Put(aName, aValue);
+  mPropertyHash.InsertOrUpdate(aName, aValue);
 
   return NS_OK;
 }

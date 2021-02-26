@@ -1436,14 +1436,15 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
       if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
               data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, psname))) {
         ToLowerCase(psname);
-        mLocalNameTable.Put(psname, fontlist::LocalFaceRec::InitData(key, i));
+        mLocalNameTable.InsertOrUpdate(
+            psname, fontlist::LocalFaceRec::InitData(key, i));
       }
       if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
               data, size, gfxFontUtils::NAME_ID_FULL, fullname))) {
         ToLowerCase(fullname);
         if (fullname != psname) {
-          mLocalNameTable.Put(fullname,
-                              fontlist::LocalFaceRec::InitData(key, i));
+          mLocalNameTable.InsertOrUpdate(
+              fullname, fontlist::LocalFaceRec::InitData(key, i));
         }
       }
     }
@@ -1776,7 +1777,7 @@ void gfxDWriteFontList::GetFontsFromCollection(
     if (mBadUnderlineFamilyNames.ContainsSorted(name)) {
       fam->SetBadUnderlineFamily();
     }
-    mFontFamilies.Put(name, RefPtr{fam});
+    mFontFamilies.InsertOrUpdate(name, RefPtr{fam});
 
     // now add other family name localizations, if present
     uint32_t nameCount = names->GetCount();
@@ -1877,10 +1878,10 @@ nsresult gfxDWriteFontList::GetFontSubstitutes() {
       }
       if (SharedFontList()->FindFamily(actualFontName,
                                        /*aPrimaryNameOnly*/ true)) {
-        mSubstitutions.Put(substituteName,
-                           MakeUnique<nsCString>(actualFontName));
+        mSubstitutions.InsertOrUpdate(substituteName,
+                                      MakeUnique<nsCString>(actualFontName));
       } else if (mSubstitutions.Get(actualFontName)) {
-        mSubstitutions.Put(
+        mSubstitutions.InsertOrUpdate(
             substituteName,
             MakeUnique<nsCString>(*mSubstitutions.Get(actualFontName)));
       } else {
@@ -1890,7 +1891,7 @@ nsresult gfxDWriteFontList::GetFontSubstitutes() {
       gfxFontFamily* ff;
       if (!actualFontName.IsEmpty() &&
           (ff = mFontFamilies.GetWeak(actualFontName))) {
-        mFontSubstitutes.Put(substituteName, RefPtr{ff});
+        mFontSubstitutes.InsertOrUpdate(substituteName, RefPtr{ff});
       } else {
         mNonExistingFonts.AppendElement(substituteName);
       }
@@ -1928,8 +1929,8 @@ void gfxDWriteFontList::GetDirectWriteSubstitutes() {
       BuildKeyNameFromFontName(actualFontName);
       if (SharedFontList()->FindFamily(actualFontName,
                                        /*aPrimaryNameOnly*/ true)) {
-        mSubstitutions.Put(substituteName,
-                           MakeUnique<nsCString>(actualFontName));
+        mSubstitutions.InsertOrUpdate(substituteName,
+                                      MakeUnique<nsCString>(actualFontName));
       } else {
         mNonExistingFonts.AppendElement(substituteName);
       }
@@ -1943,7 +1944,7 @@ void gfxDWriteFontList::GetDirectWriteSubstitutes() {
       BuildKeyNameFromFontName(actualFontName);
       gfxFontFamily* ff;
       if (nullptr != (ff = mFontFamilies.GetWeak(actualFontName))) {
-        mFontSubstitutes.Put(substituteName, RefPtr{ff});
+        mFontSubstitutes.InsertOrUpdate(substituteName, RefPtr{ff});
       } else {
         mNonExistingFonts.AppendElement(substituteName);
       }
@@ -2343,7 +2344,7 @@ void DirectWriteFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
 
     // if have data, load
     if (haveData) {
-      mFontFaceData.Put(fullID, fontData);
+      mFontFaceData.InsertOrUpdate(fullID, fontData);
     }
   }
 }

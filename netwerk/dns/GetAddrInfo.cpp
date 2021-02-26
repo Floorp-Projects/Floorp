@@ -436,7 +436,7 @@ NS_IMETHODIMP NativeDNSResolverOverride::SetCnameOverride(
   }
 
   AutoWriteLock lock(mLock);
-  mCnames.Put(aHost, nsCString(aCNAME));
+  mCnames.InsertOrUpdate(aHost, nsCString(aCNAME));
 
   return NS_OK;
 }

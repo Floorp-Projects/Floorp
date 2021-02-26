@@ -76,7 +76,7 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
   switch (aEvent->mMessage) {
     case eMouseEnterIntoWidget:
       // In this case we have to know information about available mouse pointers
-      sActivePointersIds->Put(
+      sActivePointersIds->InsertOrUpdate(
           aEvent->pointerId,
           MakeUnique<PointerInfo>(false, aEvent->mInputSource, true, nullptr));
 
@@ -88,7 +88,7 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
         // XXXedgar, test could possibly synthesize a mousedown event on a
         // coordinate outside the browser window and cause aTargetContent to be
         // nullptr, not sure if this also happens on real usage.
-        sActivePointersIds->Put(
+        sActivePointersIds->InsertOrUpdate(
             pointerEvent->pointerId,
             MakeUnique<PointerInfo>(
                 true, pointerEvent->mInputSource, pointerEvent->mIsPrimary,
@@ -107,7 +107,7 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
         if (pointerEvent->mInputSource !=
             MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
-          sActivePointersIds->Put(
+          sActivePointersIds->InsertOrUpdate(
               pointerEvent->pointerId,
               MakeUnique<PointerInfo>(false, pointerEvent->mInputSource,
                                       pointerEvent->mIsPrimary, nullptr));
@@ -207,7 +207,7 @@ bool PointerEventHandler::SetPointerCaptureRemoteTarget(
     return false;
   }
 
-  sPointerCaptureRemoteTargetTable->Put(aPointerId, aBrowserParent);
+  sPointerCaptureRemoteTargetTable->InsertOrUpdate(aPointerId, aBrowserParent);
   return true;
 }
 

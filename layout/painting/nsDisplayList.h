@@ -990,7 +990,7 @@ class nsDisplayListBuilder {
   }
 
   void AddEffectUpdate(RemoteBrowser* aBrowser, EffectsInfo aUpdate) {
-    mEffectsUpdates.Put(aBrowser, aUpdate);
+    mEffectsUpdates.InsertOrUpdate(aBrowser, aUpdate);
   }
 
   /**

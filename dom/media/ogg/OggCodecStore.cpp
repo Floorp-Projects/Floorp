@@ -15,7 +15,7 @@ OggCodecStore::OggCodecStore() : mMonitor("CodecStore") {}
 OggCodecState* OggCodecStore::Add(uint32_t serial,
                                   UniquePtr<OggCodecState> codecState) {
   MonitorAutoLock mon(mMonitor);
-  return mCodecStates.Put(serial, std::move(codecState)).get();
+  return mCodecStates.InsertOrUpdate(serial, std::move(codecState)).get();
 }
 
 bool OggCodecStore::Contains(uint32_t serial) {

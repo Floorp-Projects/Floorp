@@ -394,7 +394,7 @@ uint32_t Http2Session::RegisterStreamID(Http2Stream* stream, uint32_t aNewID) {
     return kDeadStreamID;
   }
 
-  mStreamIDHash.Put(aNewID, stream);
+  mStreamIDHash.InsertOrUpdate(aNewID, stream);
 
   if (aNewID & 1) {
     // don't count push streams here
@@ -538,7 +538,7 @@ bool Http2Session::AddStream(nsAHttpTransaction* aHttpTransaction,
         this, refStream.get(), mSerial, mNextStreamID));
 
   RefPtr<Http2Stream> stream = refStream;
-  mStreamTransactionHash.Put(aHttpTransaction, std::move(refStream));
+  mStreamTransactionHash.InsertOrUpdate(aHttpTransaction, std::move(refStream));
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
@@ -1933,7 +1933,8 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   // whole session must call cleanupStream() after this point in order
   // to remove the stream from that hash.
   WeakPtr<Http2Stream> pushedWeak = pushedStream.get();
-  self->mStreamTransactionHash.Put(transactionBuffer, std::move(pushedStream));
+  self->mStreamTransactionHash.InsertOrUpdate(transactionBuffer,
+                                              std::move(pushedStream));
   self->mPushedStreams.AppendElement(
       static_cast<Http2PushedStream*>(pushedWeak.get()));
 
@@ -2633,7 +2634,7 @@ nsresult Http2Session::RecvOrigin(Http2Session* self) {
     key.Append(':');
     key.AppendInt(port);
     if (!self->mOriginFrame.Get(key)) {
-      self->mOriginFrame.Put(key, true);
+      self->mOriginFrame.InsertOrUpdate(key, true);
       RefPtr<HttpConnectionBase> conn(self->HttpConnection());
       MOZ_ASSERT(conn.get());
       gHttpHandler->ConnMgr()->RegisterOriginCoalescingKey(conn, host, port);
@@ -3982,7 +3983,7 @@ void Http2Session::RegisterTunnel(Http2Stream* aTunnel) {
   nsCString const& regKey = aTunnel->RegistrationKey();
   uint32_t newcount = FindTunnelCount(regKey) + 1;
   mTunnelHash.Remove(regKey);
-  mTunnelHash.Put(regKey, newcount);
+  mTunnelHash.InsertOrUpdate(regKey, newcount);
   LOG3(("Http2Stream::RegisterTunnel %p stream=%p tunnels=%d [%s]", this,
         aTunnel, newcount, regKey.get()));
 }
@@ -3994,7 +3995,7 @@ void Http2Session::UnRegisterTunnel(Http2Stream* aTunnel) {
   uint32_t newcount = FindTunnelCount(regKey) - 1;
   mTunnelHash.Remove(regKey);
   if (newcount) {
-    mTunnelHash.Put(regKey, newcount);
+    mTunnelHash.InsertOrUpdate(regKey, newcount);
   }
   LOG3(("Http2Session::UnRegisterTunnel %p stream=%p tunnels=%d [%s]", this,
         aTunnel, newcount, regKey.get()));
@@ -4496,7 +4497,7 @@ bool Http2Session::RealJoinConnection(const nsACString& hostname, int32_t port,
 
   LOG(("joinconnection [%p %s] %s result=%d lookup\n", this,
        ConnectionInfo()->HashKey().get(), key.get(), joinedReturn));
-  mJoinConnectionCache.Put(key, joinedReturn);
+  mJoinConnectionCache.InsertOrUpdate(key, joinedReturn);
   if (!justKidding) {
     // cache a kidding entry too as this one is good for both
     nsAutoCString key2(hostname);
@@ -4504,7 +4505,7 @@ bool Http2Session::RealJoinConnection(const nsACString& hostname, int32_t port,
     key2.Append('k');
     key2.AppendInt(port);
     if (!mJoinConnectionCache.Get(key2)) {
-      mJoinConnectionCache.Put(key2, joinedReturn);
+      mJoinConnectionCache.InsertOrUpdate(key2, joinedReturn);
     }
   }
   return joinedReturn;

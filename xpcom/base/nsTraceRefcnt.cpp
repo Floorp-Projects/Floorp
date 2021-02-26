@@ -307,10 +307,10 @@ static BloatEntry* GetBloatEntry(const char* aTypeName,
   EnsureBloatView();
   BloatEntry* entry = gBloatView->Get(aTypeName);
   if (!entry && aInstanceSize > 0) {
-    entry =
-        gBloatView
-            ->Put(aTypeName, MakeUnique<BloatEntry>(aTypeName, aInstanceSize))
-            .get();
+    entry = gBloatView
+                ->InsertOrUpdate(
+                    aTypeName, MakeUnique<BloatEntry>(aTypeName, aInstanceSize))
+                .get();
   } else {
     MOZ_ASSERT(
         aInstanceSize == 0 || entry->GetClassSize() == aInstanceSize,

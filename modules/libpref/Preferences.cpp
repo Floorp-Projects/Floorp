@@ -3207,7 +3207,7 @@ PreferenceServiceReporter::CollectReports(
     uint32_t oldCount = 0;
     prefCounter.Get(callback->GetDomain(), &oldCount);
     uint32_t currentCount = oldCount + 1;
-    prefCounter.Put(callback->GetDomain(), currentCount);
+    prefCounter.InsertOrUpdate(callback->GetDomain(), currentCount);
 
     // Keep track of preferences that have a suspiciously large number of
     // referents (a symptom of a leak).

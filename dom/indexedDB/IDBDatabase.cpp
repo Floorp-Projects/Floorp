@@ -806,7 +806,7 @@ PBackgroundIDBDatabaseFileChild* IDBDatabase::GetOrCreateFileActorForBlob(
 
     MOZ_ASSERT(actor->GetActorEventTarget(),
                "The event target shall be inherited from its manager actor.");
-    mFileActors.Put(weakRef, actor);
+    mFileActors.InsertOrUpdate(weakRef, actor);
   }
 
   MOZ_ASSERT(actor);

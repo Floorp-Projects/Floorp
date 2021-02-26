@@ -3486,7 +3486,7 @@ static void ClipItemsExceptCaret(
         i->SetClipChain(intersection, true);
       } else {
         i->IntersectClip(aBuilder, aExtraClip, true);
-        aCache.Put(clip, i->GetClipChain());
+        aCache.InsertOrUpdate(clip, i->GetClipChain());
       }
     }
     nsDisplayList* children = i->GetSameCoordinateSystemChildren();

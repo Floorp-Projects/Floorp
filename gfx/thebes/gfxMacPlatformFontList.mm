@@ -881,7 +881,7 @@ void gfxMacPlatformFontList::AddFamily(const nsACString& aFamilyName, FontVisibi
   ToLowerCase(aFamilyName, key);
 
   RefPtr<gfxFontFamily> familyEntry = new gfxMacFontFamily(aFamilyName, aVisibility, sizeHint);
-  mFontFamilies.Put(key, RefPtr{familyEntry});
+  mFontFamilies.InsertOrUpdate(key, RefPtr{familyEntry});
 
   // check the bad underline blocklist
   if (mBadUnderlineFamilyNames.ContainsSorted(key)) {
@@ -1141,7 +1141,7 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
           fe->Name(), fe->Weight(), true, static_cast<const MacOSFontEntry*>(fe)->mSizeHint);
       familyEntry->AddFontEntry(fontEntry);
       familyEntry->SetHasStyles(true);
-      mFontFamilies.Put(key, std::move(familyEntry));
+      mFontFamilies.InsertOrUpdate(key, std::move(familyEntry));
       LOG_FONTLIST(
           ("(fontlist-singleface) added new family: %s, key: %s\n", familyName.get(), key.get()));
     }
@@ -1234,7 +1234,7 @@ void gfxMacPlatformFontList::InitSystemFontNames() {
     if (fam) {
       nsAutoCString key;
       GenerateFontListKey(mSystemTextFontFamilyName, key);
-      mFontFamilies.Put(key, std::move(fam));
+      mFontFamilies.InsertOrUpdate(key, std::move(fam));
     }
   }
 
@@ -1679,7 +1679,7 @@ void MacFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
         }
       }
 
-      mFontFaceData.Put(fontName, fontData);
+      mFontFaceData.InsertOrUpdate(fontName, fontData);
     }
 
     if (mLoadOtherNames && hasOtherFamilyNames) {
@@ -1698,7 +1698,7 @@ void MacFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
 
   // if found other names, insert them in the hash table
   if (otherFamilyNames.Length() != 0) {
-    mOtherFamilyNames.Put(aFamilyName, otherFamilyNames);
+    mOtherFamilyNames.InsertOrUpdate(aFamilyName, otherFamilyNames);
     mLoadStats.othernames += otherFamilyNames.Length();
   }
 }

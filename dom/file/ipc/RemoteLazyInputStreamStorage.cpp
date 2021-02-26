@@ -106,7 +106,7 @@ void RemoteLazyInputStreamStorage::AddStream(nsIInputStream* aInputStream,
   data->mSize = aSize;
 
   mozilla::StaticMutexAutoLock lock(gMutex);
-  mStorage.Put(aID, std::move(data));
+  mStorage.InsertOrUpdate(aID, std::move(data));
 }
 
 nsCOMPtr<nsIInputStream> RemoteLazyInputStreamStorage::ForgetStream(

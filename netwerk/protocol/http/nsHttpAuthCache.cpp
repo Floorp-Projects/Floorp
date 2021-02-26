@@ -129,7 +129,7 @@ nsresult nsHttpAuthCache::SetAuthEntry(const char* scheme, const char* host,
       return rv;
     }
 
-    mDB.Put(key, std::move(node));
+    mDB.InsertOrUpdate(key, std::move(node));
     return NS_OK;
   }
 

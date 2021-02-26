@@ -244,7 +244,7 @@ Command GetInternalCommand(const char* aCommandName,
   if (!sCommandHashtable) {
     sCommandHashtable = new nsDataHashtable<nsDepCharHashKey, Command>();
 #define NS_DEFINE_COMMAND(aName, aCommandStr) \
-  sCommandHashtable->Put(#aCommandStr, Command::aName);
+  sCommandHashtable->InsertOrUpdate(#aCommandStr, Command::aName);
 
 #define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam)
 
@@ -1175,8 +1175,8 @@ KeyNameIndex WidgetKeyboardEvent::GetKeyNameIndex(const nsAString& aKeyValue) {
   if (!sKeyNameIndexHashtable) {
     sKeyNameIndexHashtable = new KeyNameIndexHashtable(ArrayLength(kKeyNames));
     for (size_t i = 0; i < ArrayLength(kKeyNames); i++) {
-      sKeyNameIndexHashtable->Put(nsDependentString(kKeyNames[i]),
-                                  static_cast<KeyNameIndex>(i));
+      sKeyNameIndexHashtable->InsertOrUpdate(nsDependentString(kKeyNames[i]),
+                                             static_cast<KeyNameIndex>(i));
     }
   }
   KeyNameIndex result = KEY_NAME_INDEX_USE_STRING;
@@ -1191,8 +1191,8 @@ CodeNameIndex WidgetKeyboardEvent::GetCodeNameIndex(
     sCodeNameIndexHashtable =
         new CodeNameIndexHashtable(ArrayLength(kCodeNames));
     for (size_t i = 0; i < ArrayLength(kCodeNames); i++) {
-      sCodeNameIndexHashtable->Put(nsDependentString(kCodeNames[i]),
-                                   static_cast<CodeNameIndex>(i));
+      sCodeNameIndexHashtable->InsertOrUpdate(nsDependentString(kCodeNames[i]),
+                                              static_cast<CodeNameIndex>(i));
     }
   }
   CodeNameIndex result = CODE_NAME_INDEX_USE_STRING;
@@ -1891,8 +1891,8 @@ EditorInputType InternalEditorInputEvent::GetEditorInputType(
   if (!sInputTypeHashtable) {
     sInputTypeHashtable = new InputTypeHashtable(ArrayLength(kInputTypeNames));
     for (size_t i = 0; i < ArrayLength(kInputTypeNames); i++) {
-      sInputTypeHashtable->Put(nsDependentString(kInputTypeNames[i]),
-                               static_cast<EditorInputType>(i));
+      sInputTypeHashtable->InsertOrUpdate(nsDependentString(kInputTypeNames[i]),
+                                          static_cast<EditorInputType>(i));
     }
   }
   EditorInputType result = EditorInputType::eUnknown;

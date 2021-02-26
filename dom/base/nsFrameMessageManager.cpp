@@ -1024,7 +1024,7 @@ void MessageManagerReporter::CountReferents(
     uint32_t oldCount = 0;
     aReferentCount->mMessageCounter.Get(key, &oldCount);
     uint32_t currentCount = oldCount + listenerCount;
-    aReferentCount->mMessageCounter.Put(key, currentCount);
+    aReferentCount->mMessageCounter.InsertOrUpdate(key, currentCount);
 
     // Keep track of messages that have a suspiciously large
     // number of referents (symptom of leak).
@@ -1342,7 +1342,7 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     if (!isRunOnce) {
       // Root the object also for caching.
       auto* holder = new nsMessageManagerScriptHolder(cx, script);
-      sCachedScripts->Put(aURL, holder);
+      sCachedScripts->InsertOrUpdate(aURL, holder);
     }
   }
 }

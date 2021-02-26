@@ -981,7 +981,7 @@ static void MarkAsInitialEntry(
   if (!aEntry->BCHistoryLength().Modified()) {
     ++(aEntry->BCHistoryLength());
   }
-  aHashtable.Put(aEntry->DocshellID(), aEntry);
+  aHashtable.InsertOrUpdate(aEntry->DocshellID(), aEntry);
   for (const RefPtr<SessionHistoryEntry>& entry : aEntry->Children()) {
     if (entry) {
       MarkAsInitialEntry(entry, aHashtable);
@@ -2045,7 +2045,7 @@ nsSHistory::IsEmptyOrHasEntriesForSingleTopLevelPage() {
 static void CollectEntries(
     nsDataHashtable<nsIDHashKey, SessionHistoryEntry*>& aHashtable,
     SessionHistoryEntry* aEntry) {
-  aHashtable.Put(aEntry->DocshellID(), aEntry);
+  aHashtable.InsertOrUpdate(aEntry->DocshellID(), aEntry);
   for (const RefPtr<SessionHistoryEntry>& entry : aEntry->Children()) {
     if (entry) {
       CollectEntries(aHashtable, entry);

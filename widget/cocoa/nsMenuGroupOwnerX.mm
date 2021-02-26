@@ -146,7 +146,7 @@ void nsMenuGroupOwnerX::RegisterForContentChanges(nsIContent* aContent,
   if (!mContentToObserverTable.Contains(aContent)) {
     aContent->AddMutationObserver(this);
   }
-  mContentToObserverTable.Put(aContent, aMenuObject);
+  mContentToObserverTable.InsertOrUpdate(aContent, aMenuObject);
 }
 
 void nsMenuGroupOwnerX::UnregisterForContentChanges(nsIContent* aContent) {
@@ -176,7 +176,7 @@ uint32_t nsMenuGroupOwnerX::RegisterForCommand(nsMenuItemX* inMenuItem) {
   // make id unique
   ++mCurrentCommandID;
 
-  mCommandToMenuObjectTable.Put(mCurrentCommandID, inMenuItem);
+  mCommandToMenuObjectTable.InsertOrUpdate(mCurrentCommandID, inMenuItem);
 
   return mCurrentCommandID;
 }

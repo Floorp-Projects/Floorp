@@ -63,7 +63,7 @@ static void RemoveDuplicatesInternal(AtomArray* aArray, uint32_t aStart) {
       aArray->RemoveElementAt(i);
       i--;
     } else {
-      tokens.Put(atom, true);
+      tokens.InsertOrUpdate(atom, true);
     }
   }
 }

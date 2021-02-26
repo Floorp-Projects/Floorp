@@ -41,7 +41,7 @@ class FileManagerBase {
                                             AcquireStrongRefFromRawPtr{}},
                                  id);
 
-      mFileInfos.Put(id, fileInfo);
+      mFileInfos.InsertOrUpdate(id, fileInfo);
       return Some(fileInfo);
     });
   }

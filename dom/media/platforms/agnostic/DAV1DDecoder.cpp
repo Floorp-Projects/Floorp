@@ -102,7 +102,7 @@ RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::InvokeDecode(
   // release callback are not coming in the same order that the
   // buffers have been added in the decoder (threading ordering
   // inside decoder)
-  mDecodingBuffers.Put(aSample->Data(), RefPtr{aSample});
+  mDecodingBuffers.InsertOrUpdate(aSample->Data(), RefPtr{aSample});
   Dav1dData data;
   int res = dav1d_data_wrap(&data, aSample->Data(), aSample->Size(),
                             ReleaseDataBuffer_s, this);

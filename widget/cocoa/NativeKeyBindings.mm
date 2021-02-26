@@ -57,7 +57,7 @@ NativeKeyBindings::NativeKeyBindings() {}
 
 inline objc_selector* ToObjcSelectorPtr(SEL aSel) { return reinterpret_cast<objc_selector*>(aSel); }
 #define SEL_TO_COMMAND(aSel, aCommand) \
-  mSelectorToCommand.Put(ToObjcSelectorPtr(@selector(aSel)), aCommand)
+  mSelectorToCommand.InsertOrUpdate(ToObjcSelectorPtr(@selector(aSel)), aCommand)
 
 void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info, ("%p NativeKeyBindings::Init", this));

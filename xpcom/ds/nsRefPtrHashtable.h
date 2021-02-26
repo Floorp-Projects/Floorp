@@ -50,17 +50,17 @@ class nsRefPtrHashtable
    */
   PtrType* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 
-  // Hide base class' Put overloads intentionally, to make any necessary
-  // refcounting explicit when calling Put.
+  // Hide base class' InsertOrUpdate overloads intentionally, to make any
+  // necessary refcounting explicit when calling InsertOrUpdate.
 
   template <typename U,
             typename = std::enable_if_t<std::is_base_of_v<PtrType, U>>>
-  void Put(KeyType aKey, RefPtr<U>&& aData);
+  void InsertOrUpdate(KeyType aKey, RefPtr<U>&& aData);
 
   template <typename U,
             typename = std::enable_if_t<std::is_base_of_v<PtrType, U>>>
-  [[nodiscard]] bool Put(KeyType aKey, RefPtr<U>&& aData,
-                         const mozilla::fallible_t&);
+  [[nodiscard]] bool InsertOrUpdate(KeyType aKey, RefPtr<U>&& aData,
+                                    const mozilla::fallible_t&);
 
   /**
    * Remove the entry associated with aKey (if any), optionally _moving_ its
@@ -151,17 +151,17 @@ PtrType* nsRefPtrHashtable<KeyClass, PtrType>::GetWeak(KeyType aKey,
 
 template <class KeyClass, class PtrType>
 template <typename U, typename>
-void nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
-                                               RefPtr<U>&& aData) {
-  if (!Put(aKey, std::move(aData), mozilla::fallible)) {
+void nsRefPtrHashtable<KeyClass, PtrType>::InsertOrUpdate(KeyType aKey,
+                                                          RefPtr<U>&& aData) {
+  if (!InsertOrUpdate(aKey, std::move(aData), mozilla::fallible)) {
     NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
   }
 }
 
 template <class KeyClass, class PtrType>
 template <typename U, typename>
-bool nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey, RefPtr<U>&& aData,
-                                               const mozilla::fallible_t&) {
+bool nsRefPtrHashtable<KeyClass, PtrType>::InsertOrUpdate(
+    KeyType aKey, RefPtr<U>&& aData, const mozilla::fallible_t&) {
   typename base_type::EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
 
   if (!ent) {

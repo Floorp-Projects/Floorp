@@ -195,7 +195,7 @@ uint32_t MsaaIdGenerator::GetContentProcessIDFor(
   // If we run out of content process IDs, we're in trouble
   MOZ_RELEASE_ASSERT(index < ArrayLength(sContentProcessIdBitmap));
 
-  sContentParentIdMap->Put(aIPCContentProcessID, value);
+  sContentParentIdMap->InsertOrUpdate(aIPCContentProcessID, value);
   return value;
 }
 

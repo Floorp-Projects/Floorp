@@ -156,7 +156,7 @@ bool OggCodecState::AddVorbisComment(UniquePtr<MetadataTags>& aTags,
     LOG(LogLevel::Debug, ("Skipping comment: invalid UTF-8 in value"));
     return false;
   }
-  aTags->Put(key, value);
+  aTags->InsertOrUpdate(key, value);
   return true;
 }
 
@@ -1563,7 +1563,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
 
   int32_t keyPointsRead = keyPoints->Length();
   if (keyPointsRead > 0) {
-    mIndex.Put(serialno, std::move(keyPoints));
+    mIndex.InsertOrUpdate(serialno, std::move(keyPoints));
   }
 
   LOG(LogLevel::Debug, ("Loaded %d keypoints for Skeleton on stream %u",

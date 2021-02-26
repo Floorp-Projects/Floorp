@@ -132,7 +132,7 @@ void MediaKeys::Terminated() {
   for (auto iter = mKeySessions.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<MediaKeySession>& session = iter.Data();
     // XXX Could the RefPtr still be moved here?
-    keySessions.Put(session->GetSessionId(), RefPtr{session});
+    keySessions.InsertOrUpdate(session->GetSessionId(), RefPtr{session});
   }
   for (auto iter = keySessions.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<MediaKeySession>& session = iter.Data();
@@ -238,14 +238,14 @@ PromiseId MediaKeys::StorePromise(DetailedPromise* aPromise) {
   }
 #endif
 
-  mPromises.Put(id, RefPtr{aPromise});
+  mPromises.InsertOrUpdate(id, RefPtr{aPromise});
   return id;
 }
 
 void MediaKeys::ConnectPendingPromiseIdWithToken(PromiseId aId,
                                                  uint32_t aToken) {
   // Should only be called from MediaKeySession::GenerateRequest.
-  mPromiseIdToken.Put(aId, aToken);
+  mPromiseIdToken.InsertOrUpdate(aId, aToken);
   EME_LOG(
       "MediaKeys[%p]::ConnectPendingPromiseIdWithToken() id=%u => token(%u)",
       this, aId, aToken);
@@ -326,7 +326,7 @@ void MediaKeys::OnSessionIdReady(MediaKeySession* aSession) {
         "MediaKeySession with invalid sessionId passed to OnSessionIdReady()");
     return;
   }
-  mKeySessions.Put(aSession->GetSessionId(), RefPtr{aSession});
+  mKeySessions.InsertOrUpdate(aSession->GetSessionId(), RefPtr{aSession});
 }
 
 void MediaKeys::ResolvePromise(PromiseId aId) {
@@ -361,7 +361,7 @@ void MediaKeys::ResolvePromise(PromiseId aId) {
         "CDM LoadSession() returned a different session ID than requested");
     return;
   }
-  mKeySessions.Put(session->GetSessionId(), RefPtr{session});
+  mKeySessions.InsertOrUpdate(session->GetSessionId(), RefPtr{session});
   promise->MaybeResolve(session);
 }
 
@@ -619,7 +619,7 @@ already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
   EME_LOG("MediaKeys[%p]::CreateSession(aSessionType=%" PRIu8
           ") putting session with token=%" PRIu32 " into mPendingSessions",
           this, static_cast<uint8_t>(aSessionType), session->Token());
-  mPendingSessions.Put(session->Token(), RefPtr{session});
+  mPendingSessions.InsertOrUpdate(session->Token(), RefPtr{session});
 
   return session.forget();
 }

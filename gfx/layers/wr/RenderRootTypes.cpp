@@ -70,7 +70,7 @@ bool ReadScrollUpdates(const IPC::Message* aMsg, PickleIterator* aIter,
         !ReadIPDLParam(aMsg, aIter, aActor, &data)) {
       return false;
     }
-    map.Put(key, std::move(data));
+    map.InsertOrUpdate(key, std::move(data));
   }
 
   MOZ_RELEASE_ASSERT(map.Count() == count);

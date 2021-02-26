@@ -398,9 +398,9 @@ void SpeechDispatcherService::Setup() {
 
       uri.Append(NS_ConvertUTF8toUTF16(lang));
 
-      mVoices.Put(uri, MakeRefPtr<SpeechDispatcherVoice>(
-                           NS_ConvertUTF8toUTF16(list[i]->name),
-                           NS_ConvertUTF8toUTF16(lang)));
+      mVoices.InsertOrUpdate(uri, MakeRefPtr<SpeechDispatcherVoice>(
+                                      NS_ConvertUTF8toUTF16(list[i]->name),
+                                      NS_ConvertUTF8toUTF16(lang)));
     }
   }
 
@@ -502,7 +502,7 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
       return NS_ERROR_FAILURE;
     }
 
-    mCallbacks.Put(msg_id, std::move(callback));
+    mCallbacks.InsertOrUpdate(msg_id, std::move(callback));
   } else {
     // Speech dispatcher does not work well with empty strings.
     // In that case, don't send empty string to speechd,

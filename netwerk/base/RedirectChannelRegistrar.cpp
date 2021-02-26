@@ -40,7 +40,7 @@ NS_IMETHODIMP
 RedirectChannelRegistrar::RegisterChannel(nsIChannel* channel, uint64_t id) {
   MutexAutoLock lock(mLock);
 
-  mRealChannels.Put(id, channel);
+  mRealChannels.InsertOrUpdate(id, channel);
 
   return NS_OK;
 }
@@ -62,7 +62,7 @@ RedirectChannelRegistrar::LinkChannels(uint64_t id, nsIParentChannel* channel,
 
   if (!mRealChannels.Get(id, _retval)) return NS_ERROR_NOT_AVAILABLE;
 
-  mParentChannels.Put(id, channel);
+  mParentChannels.InsertOrUpdate(id, channel);
   return NS_OK;
 }
 
