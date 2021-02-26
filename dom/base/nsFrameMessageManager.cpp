@@ -1005,9 +1005,9 @@ void MessageManagerReporter::CountReferents(
     }
 
     nsString key(it.Key());
-    const uint32_t oldCount = aReferentCount->mMessageCounter.Get(key);
-    uint32_t currentCount = oldCount + listenerCount;
-    aReferentCount->mMessageCounter.InsertOrUpdate(key, currentCount);
+    const uint32_t currentCount =
+        (aReferentCount->mMessageCounter.LookupOrInsert(key, 0) +=
+         listenerCount);
 
     // Keep track of messages that have a suspiciously large
     // number of referents (symptom of leak).
