@@ -130,7 +130,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_sse2<F: Format>(
     *dest.add(F::kBIndex) = *otdata_b.offset(*output.offset(2isize) as isize);
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_sse2(
+pub unsafe fn qcms_transform_data_rgb_out_lut_sse2(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -139,7 +139,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_sse2(
     qcms_transform_data_template_lut_sse2::<RGB>(transform, src, dest, length);
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_sse2(
+pub unsafe fn qcms_transform_data_rgba_out_lut_sse2(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -149,7 +149,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_sse2(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_sse2(
+pub unsafe fn qcms_transform_data_bgra_out_lut_sse2(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,

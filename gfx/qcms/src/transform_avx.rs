@@ -200,7 +200,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
 }
 #[no_mangle]
 #[target_feature(enable = "avx")]
-pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
+pub unsafe fn qcms_transform_data_rgb_out_lut_avx(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_avx(
 }
 #[no_mangle]
 #[target_feature(enable = "avx")]
-pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
+pub unsafe fn qcms_transform_data_rgba_out_lut_avx(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -220,7 +220,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_avx(
 }
 #[no_mangle]
 #[target_feature(enable = "avx")]
-pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_avx(
+pub unsafe fn qcms_transform_data_bgra_out_lut_avx(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,

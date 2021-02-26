@@ -195,7 +195,6 @@ class GfxQcms_ProfilePairBase : public ::testing::Test {
         mPrecache(false) {}
 
   void TransformPrecache();
-  void TransformPrecachePlatformExt();
 
   void SetUp() override {
     // XXX: This means that we can't have qcms v2 unit test
@@ -347,70 +346,6 @@ void GfxQcms_ProfilePairBase::TransformPrecache() {
   EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_precache));
 }
 
-void GfxQcms_ProfilePairBase::TransformPrecachePlatformExt() {
-  PrecacheOutput();
-
-  // Verify RGB transforms.
-  ASSERT_TRUE(SetBuffers(QCMS_DATA_RGB_8));
-  ASSERT_TRUE(SetTransform(QCMS_DATA_RGB_8));
-  ProduceRef(qcms_transform_data_rgb_out_lut_precache);
-#ifdef MOZILLA_MAY_SUPPORT_SSE2
-  if (mozilla::supports_sse2()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_sse2));
-  }
-#endif
-#ifdef MOZILLA_MAY_SUPPORT_AVX
-  if (mozilla::supports_avx()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_avx));
-  }
-#endif
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-  if (mozilla::supports_neon()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_neon));
-  }
-#endif
-
-  // Verify RGBA transforms.
-  ASSERT_TRUE(SetBuffers(QCMS_DATA_RGBA_8));
-  ASSERT_TRUE(SetTransform(QCMS_DATA_RGBA_8));
-  ProduceRef(qcms_transform_data_rgba_out_lut_precache);
-#ifdef MOZILLA_MAY_SUPPORT_SSE2
-  if (mozilla::supports_sse2()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgba_out_lut_sse2));
-  }
-#endif
-#ifdef MOZILLA_MAY_SUPPORT_AVX
-  if (mozilla::supports_avx()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgba_out_lut_avx));
-  }
-#endif
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-  if (mozilla::supports_neon()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgba_out_lut_neon));
-  }
-#endif
-
-  // Verify BGRA transforms.
-  ASSERT_TRUE(SetBuffers(QCMS_DATA_BGRA_8));
-  ASSERT_TRUE(SetTransform(QCMS_DATA_BGRA_8));
-  ProduceRef(qcms_transform_data_bgra_out_lut_precache);
-#ifdef MOZILLA_MAY_SUPPORT_SSE2
-  if (mozilla::supports_sse2()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_bgra_out_lut_sse2));
-  }
-#endif
-#ifdef MOZILLA_MAY_SUPPORT_AVX
-  if (mozilla::supports_avx()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_bgra_out_lut_avx));
-  }
-#endif
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-  if (mozilla::supports_neon()) {
-    EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_bgra_out_lut_neon));
-  }
-#endif
-}
-
 class GfxQcms_sRGB_To_sRGB : public GfxQcms_ProfilePairBase {
  protected:
   void SetUp() override {
@@ -438,18 +373,11 @@ class GfxQcms_sRGB_To_ThinkpadW540 : public GfxQcms_ProfilePairBase {
   }
 };
 
-#define TEST_QCMS_PROFILE_F(test_fixture)                    \
-  TEST_F(test_fixture, TransformPrecachePlatformExt) {       \
-    GfxQcms_ProfilePairBase::TransformPrecachePlatformExt(); \
-  }
-
 TEST_F(GfxQcms_sRGB_To_sRGB, TransformPrecache) {
   // TODO(aosmond): This doesn't pass for the non-identity transform. Should
   // they produce the same results?
   GfxQcms_ProfilePairBase::TransformPrecache();
 }
-
-TEST_QCMS_PROFILE_F(GfxQcms_sRGB_To_sRGB)
 
 TEST_F(GfxQcms_sRGB_To_sRGB, TransformIdentity) {
   PrecacheOutput();
@@ -458,9 +386,6 @@ TEST_F(GfxQcms_sRGB_To_sRGB, TransformIdentity) {
   qcms_transform_data(mTransform, mInput.get(), mOutput.get(), mPixels);
   EXPECT_TRUE(VerifyOutput(mInput));
 }
-
-TEST_QCMS_PROFILE_F(GfxQcms_sRGB_To_SamsungSyncmaster)
-TEST_QCMS_PROFILE_F(GfxQcms_sRGB_To_ThinkpadW540)
 
 class GfxQcmsPerf_Base : public GfxQcms_sRGB_To_ThinkpadW540 {
  protected:
