@@ -29,8 +29,6 @@ add_task(async function test_text_input_spellcheck() {
     [
       "context-undo",
       false,
-      "context-redo",
-      false,
       "---",
       null,
       "context-cut",
@@ -90,8 +88,6 @@ add_task(async function test_text_input_spellcheckwrong() {
       null,
       "context-undo",
       null,
-      "context-redo",
-      null,
       "---",
       null,
       "context-cut",
@@ -126,8 +122,6 @@ add_task(async function test_text_input_spellcheckwrong() {
 
 const kCorrectItems = [
   "context-undo",
-  false,
-  "context-redo",
   false,
   "---",
   null,
