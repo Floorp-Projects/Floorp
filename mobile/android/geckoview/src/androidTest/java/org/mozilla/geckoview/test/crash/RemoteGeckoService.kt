@@ -22,7 +22,7 @@ class RemoteGeckoService : Service() {
 
     var session: GeckoSession? = null;
 
-    class TestHandler: Handler() {
+    class TestHandler: Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 CMD_CRASH_PARENT_NATIVE -> {
