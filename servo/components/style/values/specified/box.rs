@@ -34,16 +34,17 @@ fn moz_box_display_values_enabled(context: &ParserContext) -> bool {
         static_prefs::pref!("layout.css.xul-box-display-values.content.enabled")
 }
 
+#[cfg(not(feature = "servo-layout-2020"))]
 fn flexbox_enabled() -> bool {
-    #[cfg(feature = "servo-layout-2020")]
-    {
-        return servo_config::prefs::pref_map()
-            .get("layout.flexbox.enabled")
-            .as_bool()
-            .unwrap_or(false);
-    }
-
     true
+}
+
+#[cfg(feature = "servo-layout-2020")]
+fn flexbox_enabled() -> bool {
+    servo_config::prefs::pref_map()
+        .get("layout.flexbox.enabled")
+        .as_bool()
+        .unwrap_or(false)
 }
 
 /// Defines an element’s display type, which consists of
@@ -513,9 +514,7 @@ fn is_valid_inside_for_list_item<'i>(inside: &Result<DisplayInside, ParseError<'
 
 /// Parse `list-item`.
 fn parse_list_item<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), ParseError<'i>> {
-    Ok(try_match_ident_ignore_ascii_case! { input,
-        "list-item" => (),
-    })
+    Ok(input.expect_ident_matching("list-item")?)
 }
 
 impl Parse for Display {
