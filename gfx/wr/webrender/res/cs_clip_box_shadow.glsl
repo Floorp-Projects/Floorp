@@ -127,7 +127,7 @@ void main(void) {
 
     float in_shadow_rect = init_transform_rough_fs(vLocalPos.xy / vLocalPos.w);
 
-    float texel = TEX_SAMPLE(sColor0, vec3(uv, 0.0)).r;
+    float texel = TEX_SAMPLE(sColor0, uv).r;
 
     float alpha = mix(texel, 1.0 - texel, vClipMode);
     float result = vLocalPos.w > 0.0 ? mix(vClipMode, alpha, in_shadow_rect) : 0.0;
