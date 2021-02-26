@@ -1330,7 +1330,7 @@ class UrlbarView {
       default:
         if (result.heuristic) {
           isVisitAction = true;
-        } else {
+        } else if (result.providerName != "UrlbarProviderQuickSuggest") {
           setURL = true;
         }
         break;
