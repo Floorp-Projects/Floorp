@@ -25,7 +25,6 @@ use webrender_build::shader::{ShaderFeatures, ShaderFeatureFlags, get_shader_fea
 pub(crate) fn get_feature_string(kind: ImageBufferKind) -> &'static str {
     match kind {
         ImageBufferKind::Texture2D => "TEXTURE_2D",
-        ImageBufferKind::Texture2DArray => "TEXTURE_2D_ARRAY",
         ImageBufferKind::TextureRect => "TEXTURE_RECT",
         ImageBufferKind::TextureExternal => "TEXTURE_EXTERNAL",
     }
@@ -34,7 +33,6 @@ pub(crate) fn get_feature_string(kind: ImageBufferKind) -> &'static str {
 fn has_platform_support(kind: ImageBufferKind, gl_type: &GlType) -> bool {
     match (kind, gl_type) {
         (ImageBufferKind::Texture2D, _) => true,
-        (ImageBufferKind::Texture2DArray, _) => true,
         (ImageBufferKind::TextureRect, &GlType::Gles) => false,
         (ImageBufferKind::TextureRect, &GlType::Gl) => true,
         (ImageBufferKind::TextureExternal, &GlType::Gles) => true,
@@ -42,11 +40,10 @@ fn has_platform_support(kind: ImageBufferKind, gl_type: &GlType) -> bool {
     }
 }
 
-pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 4] = [
+pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 3] = [
     ImageBufferKind::Texture2D,
     ImageBufferKind::TextureRect,
     ImageBufferKind::TextureExternal,
-    ImageBufferKind::Texture2DArray,
 ];
 
 const ADVANCED_BLEND_FEATURE: &str = "ADVANCED_BLEND";
