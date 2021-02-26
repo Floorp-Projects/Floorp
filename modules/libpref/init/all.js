@@ -2559,7 +2559,7 @@ pref("browser.tabs.remote.autostart", false);
 
 // Whether certain properties from origin attributes should be included as part
 // of remote types. Only in effect when fission is enabled.
-pref("browser.tabs.remote.useOriginAttributesInRemoteType", false);
+pref("browser.tabs.remote.useOriginAttributesInRemoteType", true);
 
 // Pref to control whether we use separate content processes for top-level load
 // of file:// URIs.
