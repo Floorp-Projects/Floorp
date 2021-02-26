@@ -63,7 +63,7 @@ void brush_vs(
     int brush_flags,
     vec4 unused
 ) {
-    ImageResource res = fetch_image_resource(prim_user_data.x);
+    ImageSource res = fetch_image_source(prim_user_data.x);
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 

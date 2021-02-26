@@ -256,7 +256,7 @@ void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
 // Read the exta image data containing the homogeneous screen space coordinates
 // of the corners, interpolate between them, and return real screen space UV.
 vec2 get_image_quad_uv(int address, vec2 f) {
-    ImageResourceExtra extra_data = fetch_image_resource_extra(address);
+    ImageSourceExtra extra_data = fetch_image_source_extra(address);
     vec4 x = mix(extra_data.st_tl, extra_data.st_tr, f.x);
     vec4 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
     vec4 z = mix(x, y, f.y);

@@ -60,7 +60,7 @@ void main(void) {
     Transform clip_transform = fetch_transform(cmi.base.clip_transform_id);
     Transform prim_transform = fetch_transform(cmi.base.prim_transform_id);
     BoxShadowData bs_data = fetch_data();
-    ImageResource res = fetch_image_resource_direct(cmi.resource_address);
+    ImageSource res = fetch_image_source_direct(cmi.resource_address);
 
     RectWithSize dest_rect = bs_data.dest_rect;
 

@@ -68,7 +68,7 @@ void brush_vs(
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
 #endif
 
-    ImageResource res = fetch_image_resource(specific_resource_address);
+    ImageSource res = fetch_image_source(specific_resource_address);
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 

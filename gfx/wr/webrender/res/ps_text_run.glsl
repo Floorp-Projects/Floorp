@@ -61,7 +61,7 @@ struct GlyphResource {
 
 GlyphResource fetch_glyph_resource(int address) {
     vec4 data[2] = fetch_from_gpu_cache_2(address);
-    return GlyphResource(data[0], data[1].yz, data[1].w);
+    return GlyphResource(data[0], data[1].xy, data[1].z);
 }
 
 struct TextRun {
