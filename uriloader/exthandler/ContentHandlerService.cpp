@@ -220,18 +220,12 @@ ContentHandlerService::ExistsForProtocol(const nsACString& aProtocolScheme,
 
 NS_IMETHODIMP ContentHandlerService::GetTypeFromExtension(
     const nsACString& aFileExtension, nsACString& _retval) {
-  nsCString* cachedType = nullptr;
-  if (!!mExtToTypeMap.Get(aFileExtension, &cachedType) && !!cachedType) {
-    _retval.Assign(*cachedType);
-    return NS_OK;
-  }
-  nsCString type;
-  mHandlerServiceChild->SendGetTypeFromExtension(nsCString(aFileExtension),
-                                                 &type);
-  _retval.Assign(type);
-  mExtToTypeMap.InsertOrUpdate(nsCString(aFileExtension),
-                               MakeUnique<nsCString>(type));
-
+  _retval.Assign(*mExtToTypeMap.LookupOrInsertWith(aFileExtension, [&] {
+    nsCString type;
+    mHandlerServiceChild->SendGetTypeFromExtension(nsCString(aFileExtension),
+                                                   &type);
+    return MakeUnique<nsCString>(type);
+  }));
   return NS_OK;
 }
 
