@@ -395,6 +395,11 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
     return;
   }
 
+  if (mSyncListener) {
+    mSyncListener->OnPacketReceived(this);
+    return;
+  }
+
   PRNetAddr prClientAddr;
   int32_t count;
   // Bug 1252755 - use 9216 bytes to allign with nICEr and transportlayer to
@@ -454,7 +459,10 @@ void nsUDPSocket::OnSocketDetached(PRFileDesc* fd) {
     CloseSocket();
   }
 
-  if (mListener) {
+  if (mSyncListener) {
+    mSyncListener->OnStopListening(this, mCondition);
+    mSyncListener = nullptr;
+  } else if (mListener) {
     // need to atomically clear mListener.  see our Close() method.
     RefPtr<nsIUDPSocketListener> listener = nullptr;
     {
@@ -669,7 +677,7 @@ nsUDPSocket::Close() {
     MutexAutoLock lock(mLock);
     // we want to proxy the close operation to the socket thread if a listener
     // has been set.  otherwise, we should just close the socket here...
-    if (!mListener) {
+    if (!mListener && !mSyncListener) {
       // Here we want to go directly with closing the socket since some tests
       // expects this happen synchronously.
       CloseSocket();
@@ -1054,6 +1062,7 @@ nsUDPSocket::AsyncListen(nsIUDPSocketListener* aListener) {
   // ensuring mFD implies ensuring mLock
   NS_ENSURE_TRUE(mFD, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mListener == nullptr, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(mSyncListener == nullptr, NS_ERROR_IN_PROGRESS);
   {
     MutexAutoLock lock(mLock);
     mListenerTarget = GetCurrentEventTarget();
@@ -1065,6 +1074,18 @@ nsUDPSocket::AsyncListen(nsIUDPSocketListener* aListener) {
       mListener = new SocketListenerProxyBackground(aListener);
     }
   }
+  return PostEvent(this, &nsUDPSocket::OnMsgAttach);
+}
+
+NS_IMETHODIMP
+nsUDPSocket::SyncListen(nsIUDPSocketSyncListener* aListener) {
+  // ensuring mFD implies ensuring mLock
+  NS_ENSURE_TRUE(mFD, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mListener == nullptr, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(mSyncListener == nullptr, NS_ERROR_IN_PROGRESS);
+
+  mSyncListener = aListener;
+
   return PostEvent(this, &nsUDPSocket::OnMsgAttach);
 }
 
@@ -1170,6 +1191,29 @@ nsUDPSocket::SendBinaryStreamWithAddress(const NetAddr* aAddr,
   RefPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, mFD, prAddr);
   return NS_AsyncCopy(aStream, os, mSts, NS_ASYNCCOPY_VIA_READSEGMENTS,
                       UDP_PACKET_CHUNK_SIZE);
+}
+
+NS_IMETHODIMP
+nsUDPSocket::RecvWithAddr(NetAddr* addr, nsTArray<uint8_t>& aData) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  PRNetAddr prAddr;
+  int32_t count;
+  char buff[9216];
+  count = PR_RecvFrom(mFD, buff, sizeof(buff), 0, &prAddr, PR_INTERVAL_NO_WAIT);
+  if (count < 0) {
+    UDPSOCKET_LOG(
+        ("nsUDPSocket::RecvWithAddr: PR_RecvFrom failed [this=%p]\n", this));
+    return NS_OK;
+  }
+  mByteReadCount += count;
+  PRNetAddrToNetAddr(&prAddr, addr);
+
+  if (!aData.AppendElements(buff, count, fallible)) {
+    UDPSOCKET_LOG((
+        "nsUDPSocket::OnSocketReady: AppendElements FAILED [this=%p]\n", this));
+    mCondition = NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
 }
 
 nsresult nsUDPSocket::SetSocketOption(const PRSocketOptionData& aOpt) {
