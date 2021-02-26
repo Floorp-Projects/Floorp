@@ -1,7 +1,7 @@
 // Lowering provides a specialisation when the base operand is a constant which
 // is a power of two.
 
-loadRelativeToScript("../../../tests/non262/Math/shell.js");
+load(libdir + "math.js");
 
 function test(x, y, z) {
     function pow(x, y) { return `Math.pow(${x}, ${y})` };
