@@ -115,7 +115,7 @@ pub struct qcms_transform {
 }
 
 pub type transform_fn_t =
-    Option<unsafe extern "C" fn(_: &qcms_transform, _: *const u8, _: *mut u8, _: usize) -> ()>;
+    Option<unsafe fn(_: &qcms_transform, _: *const u8, _: *mut u8, _: usize) -> ()>;
 /// The format of pixel data
 #[repr(u32)]
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -446,7 +446,7 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
         i += 1
     }
 }
-unsafe extern "C" fn qcms_transform_data_gray_out_lut(
+unsafe fn qcms_transform_data_gray_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -454,7 +454,7 @@ unsafe extern "C" fn qcms_transform_data_gray_out_lut(
 ) {
     qcms_transform_data_gray_template_lut::<Gray, RGB>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_gray_rgba_out_lut(
+unsafe fn qcms_transform_data_gray_rgba_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -462,7 +462,7 @@ unsafe extern "C" fn qcms_transform_data_gray_rgba_out_lut(
 ) {
     qcms_transform_data_gray_template_lut::<Gray, RGBA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_gray_bgra_out_lut(
+unsafe fn qcms_transform_data_gray_bgra_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -470,7 +470,7 @@ unsafe extern "C" fn qcms_transform_data_gray_bgra_out_lut(
 ) {
     qcms_transform_data_gray_template_lut::<Gray, BGRA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_graya_rgba_out_lut(
+unsafe fn qcms_transform_data_graya_rgba_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -478,7 +478,7 @@ unsafe extern "C" fn qcms_transform_data_graya_rgba_out_lut(
 ) {
     qcms_transform_data_gray_template_lut::<GrayAlpha, RGBA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_graya_bgra_out_lut(
+unsafe fn qcms_transform_data_graya_bgra_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -486,7 +486,7 @@ unsafe extern "C" fn qcms_transform_data_graya_bgra_out_lut(
 ) {
     qcms_transform_data_gray_template_lut::<GrayAlpha, BGRA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F: Format>(
+unsafe fn qcms_transform_data_gray_template_precache<I: GrayFormat, F: Format>(
     transform: *const qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
@@ -528,7 +528,7 @@ unsafe extern "C" fn qcms_transform_data_gray_template_precache<I: GrayFormat, F
         i += 1
     }
 }
-unsafe extern "C" fn qcms_transform_data_gray_out_precache(
+unsafe fn qcms_transform_data_gray_out_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -536,7 +536,7 @@ unsafe extern "C" fn qcms_transform_data_gray_out_precache(
 ) {
     qcms_transform_data_gray_template_precache::<Gray, RGB>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_gray_rgba_out_precache(
+unsafe fn qcms_transform_data_gray_rgba_out_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -544,7 +544,7 @@ unsafe extern "C" fn qcms_transform_data_gray_rgba_out_precache(
 ) {
     qcms_transform_data_gray_template_precache::<Gray, RGBA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_gray_bgra_out_precache(
+unsafe fn qcms_transform_data_gray_bgra_out_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -552,7 +552,7 @@ unsafe extern "C" fn qcms_transform_data_gray_bgra_out_precache(
 ) {
     qcms_transform_data_gray_template_precache::<Gray, BGRA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_graya_rgba_out_precache(
+unsafe fn qcms_transform_data_graya_rgba_out_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -560,7 +560,7 @@ unsafe extern "C" fn qcms_transform_data_graya_rgba_out_precache(
 ) {
     qcms_transform_data_gray_template_precache::<GrayAlpha, RGBA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_graya_bgra_out_precache(
+unsafe fn qcms_transform_data_graya_bgra_out_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -568,7 +568,7 @@ unsafe extern "C" fn qcms_transform_data_graya_bgra_out_precache(
 ) {
     qcms_transform_data_gray_template_precache::<GrayAlpha, BGRA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
+unsafe fn qcms_transform_data_template_lut_precache<F: Format>(
     transform: &qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
@@ -625,7 +625,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut_precache<F: Format>(
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_precache(
+pub unsafe fn qcms_transform_data_rgb_out_lut_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -634,7 +634,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut_precache(
     qcms_transform_data_template_lut_precache::<RGB>(transform, src, dest, length);
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_precache(
+pub unsafe fn qcms_transform_data_rgba_out_lut_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -643,7 +643,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut_precache(
     qcms_transform_data_template_lut_precache::<RGBA>(transform, src, dest, length);
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut_precache(
+pub unsafe fn qcms_transform_data_bgra_out_lut_precache(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -883,7 +883,7 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
         i += 1
     }
 }
-unsafe extern "C" fn qcms_transform_data_tetra_clut_rgb(
+unsafe fn qcms_transform_data_tetra_clut_rgb(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -891,7 +891,7 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_rgb(
 ) {
     qcms_transform_data_tetra_clut_template::<RGB>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_tetra_clut_rgba(
+unsafe fn qcms_transform_data_tetra_clut_rgba(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -899,7 +899,7 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_rgba(
 ) {
     qcms_transform_data_tetra_clut_template::<RGBA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_tetra_clut_bgra(
+unsafe fn qcms_transform_data_tetra_clut_bgra(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -907,7 +907,7 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_bgra(
 ) {
     qcms_transform_data_tetra_clut_template::<BGRA>(transform, src, dest, length);
 }
-unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
+unsafe fn qcms_transform_data_template_lut<F: Format>(
     transform: &qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
@@ -969,7 +969,7 @@ unsafe extern "C" fn qcms_transform_data_template_lut<F: Format>(
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut(
+pub unsafe fn qcms_transform_data_rgb_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -978,7 +978,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgb_out_lut(
     qcms_transform_data_template_lut::<RGB>(transform, src, dest, length);
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut(
+pub unsafe fn qcms_transform_data_rgba_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
@@ -987,7 +987,7 @@ pub unsafe extern "C" fn qcms_transform_data_rgba_out_lut(
     qcms_transform_data_template_lut::<RGBA>(transform, src, dest, length);
 }
 #[no_mangle]
-pub unsafe extern "C" fn qcms_transform_data_bgra_out_lut(
+pub unsafe fn qcms_transform_data_bgra_out_lut(
     transform: &qcms_transform,
     src: *const u8,
     dest: *mut u8,
