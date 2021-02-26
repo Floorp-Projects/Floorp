@@ -186,7 +186,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   nsAutoCString peerId;
   mSocketControl->GetPeerId(peerId);
   nsTArray<uint8_t> token;
-  if (NS_SUCCEEDED(SSLTokensCache::Get(peerId, token))) {
+  if (StaticPrefs::network_http_http3_enable_0rtt() &&
+      NS_SUCCEEDED(SSLTokensCache::Get(peerId, token))) {
     LOG(("Found a resumption token in the cache."));
     mHttp3Connection->SetResumptionToken(token);
     if (mHttp3Connection->IsZeroRtt()) {
@@ -487,7 +488,8 @@ nsresult Http3Session::ProcessEvents() {
         break;
       case Http3Event::Tag::ResumptionToken: {
         LOG(("Http3Session::ProcessEvents - ResumptionToken"));
-        if (!data.IsEmpty()) {
+        if (StaticPrefs::network_http_http3_enable_0rtt() &&
+            !data.IsEmpty()) {
           LOG(("Got a resumption token"));
           nsAutoCString peerId;
           mSocketControl->GetPeerId(peerId);
