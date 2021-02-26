@@ -644,14 +644,12 @@ void nsHttpTransaction::OnTransportStatus(nsITransport* transport,
 
   if (status == NS_NET_STATUS_CONNECTED_TO ||
       status == NS_NET_STATUS_WAITING_FOR) {
-    nsISocketTransport* socketTransport =
-        mConnection ? mConnection->Transport() : nullptr;
-    if (socketTransport) {
+    if (mConnection) {
       MutexAutoLock lock(mLock);
-      socketTransport->GetSelfAddr(&mSelfAddr);
-      socketTransport->GetPeerAddr(&mPeerAddr);
-      socketTransport->ResolvedByTRR(&mResolvedByTRR);
-      socketTransport->GetEchConfigUsed(&mEchConfigUsed);
+      mConnection->GetSelfAddr(&mSelfAddr);
+      mConnection->GetPeerAddr(&mPeerAddr);
+      mResolvedByTRR = mConnection->ResolvedByTRR();
+      mEchConfigUsed = mConnection->GetEchConfigUsed();
     }
   }
 

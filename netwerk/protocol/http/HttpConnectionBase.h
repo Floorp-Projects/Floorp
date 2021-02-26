@@ -67,7 +67,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
 
   virtual void DontReuse() = 0;
 
-  nsISocketTransport* Transport() { return mSocketTransport; }
   virtual nsAHttpTransaction* Transaction() = 0;
   nsHttpConnectionInfo* ConnectionInfo() { return mConnInfo; }
 
@@ -131,8 +130,14 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   PRIntervalTime Rtt() { return mRtt; }
   virtual void SetEvent(nsresult aStatus) = 0;
 
+  virtual nsISocketTransport* Transport() { return nullptr; }
+
+  virtual nsresult GetSelfAddr(NetAddr* addr) = 0;
+  virtual nsresult GetPeerAddr(NetAddr* addr) = 0;
+  virtual bool ResolvedByTRR() = 0;
+  virtual bool GetEchConfigUsed() = 0;
+
  protected:
-  nsCOMPtr<nsISocketTransport> mSocketTransport;
 
   // The capabailities associated with the most recent transaction
   uint32_t mTransactionCaps;

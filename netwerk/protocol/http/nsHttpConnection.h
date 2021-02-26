@@ -182,6 +182,13 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   int64_t BytesWritten() override { return mTotalBytesWritten; }
 
+  nsISocketTransport* Transport() override { return mSocketTransport; }
+
+  nsresult GetSelfAddr(NetAddr* addr) override;
+  nsresult GetPeerAddr(NetAddr* addr) override;
+  bool ResolvedByTRR() override;
+  bool GetEchConfigUsed() override;
+
  private:
   // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
   enum TCPKeepaliveConfig {
@@ -345,6 +352,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   bool mDid0RTTSpdy;
 
   nsresult mErrorBeforeConnect = NS_OK;
+
+  nsCOMPtr<nsISocketTransport> mSocketTransport;
 
  private:
   bool mThroughCaptivePortal;
