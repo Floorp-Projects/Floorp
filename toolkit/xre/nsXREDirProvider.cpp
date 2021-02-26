@@ -37,6 +37,7 @@
 
 #include "mozilla/dom/ScriptSettings.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
@@ -1056,30 +1057,24 @@ void nsXREDirProvider::DoShutdown() {
   AUTO_PROFILER_LABEL("nsXREDirProvider::DoShutdown", OTHER);
 
   if (mProfileNotified) {
-    nsCOMPtr<nsIObserverService> obsSvc =
-        mozilla::services::GetObserverService();
-    NS_ASSERTION(obsSvc, "No observer service?");
-    if (obsSvc) {
-      static const char16_t kShutdownPersist[] = u"shutdown-persist";
-      obsSvc->NotifyObservers(nullptr, "profile-change-net-teardown",
-                              kShutdownPersist);
-      obsSvc->NotifyObservers(nullptr, "profile-change-teardown",
-                              kShutdownPersist);
+    mozilla::AppShutdown::AdvanceShutdownPhase(
+        mozilla::ShutdownPhase::AppShutdownNetTeardown, nullptr);
+    mozilla::AppShutdown::AdvanceShutdownPhase(
+        mozilla::ShutdownPhase::AppShutdownTeardown, nullptr);
 
 #ifdef DEBUG
-      // Not having this causes large intermittent leaks. See bug 1340425.
-      if (JSContext* cx = mozilla::dom::danger::GetJSContext()) {
-        JS_GC(cx);
-      }
+    // Not having this causes large intermittent leaks. See bug 1340425.
+    if (JSContext* cx = mozilla::dom::danger::GetJSContext()) {
+      JS_GC(cx);
+    }
 #endif
 
-      obsSvc->NotifyObservers(nullptr, "profile-before-change",
-                              kShutdownPersist);
-      obsSvc->NotifyObservers(nullptr, "profile-before-change-qm",
-                              kShutdownPersist);
-      obsSvc->NotifyObservers(nullptr, "profile-before-change-telemetry",
-                              kShutdownPersist);
-    }
+    mozilla::AppShutdown::AdvanceShutdownPhase(
+        mozilla::ShutdownPhase::AppShutdown, nullptr);
+    mozilla::AppShutdown::AdvanceShutdownPhase(
+        mozilla::ShutdownPhase::AppShutdownQM, nullptr);
+    mozilla::AppShutdown::AdvanceShutdownPhase(
+        mozilla::ShutdownPhase::AppShutdownTelemetry, nullptr);
     mProfileNotified = false;
   }
 

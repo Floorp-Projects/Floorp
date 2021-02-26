@@ -1220,7 +1220,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
       !mInProgressImports.Get(info.Key(), &mod)) {
     // We're trying to import a new JSM, but we're late in shutdown and this
     // will likely not succeed and might even crash, so fail here.
-    if (PastShutdownPhase(ShutdownPhase::ShutdownFinal)) {
+    if (PastShutdownPhase(ShutdownPhase::XPCOMShutdownFinal)) {
       return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
     }
 

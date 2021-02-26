@@ -441,11 +441,10 @@ nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
 
     // No chance of the shutdown being cancelled from here on; tell people
     // we're shutting down for sure while all services are still available.
-    if (obsService) {
-      bool isRestarting = mozilla::AppShutdown::IsRestarting();
-      obsService->NotifyObservers(nullptr, "quit-application",
-                                  isRestarting ? u"restart" : u"shutdown");
-    }
+    bool isRestarting = mozilla::AppShutdown::IsRestarting();
+    mozilla::AppShutdown::AdvanceShutdownPhase(
+        mozilla::ShutdownPhase::AppShutdownConfirmed,
+        isRestarting ? u"restart" : u"shutdown");
 
     if (!mRunning) {
       postedExitEvent = true;

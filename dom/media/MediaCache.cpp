@@ -773,7 +773,7 @@ RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength,
         thread->Shutdown();
       }
     } sClearThread;
-    ClearOnShutdown(&sClearThread, ShutdownPhase::ShutdownThreads);
+    ClearOnShutdown(&sClearThread, ShutdownPhase::XPCOMShutdownThreads);
   }
 
   if (!sThread) {

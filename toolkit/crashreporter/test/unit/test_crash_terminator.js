@@ -11,7 +11,7 @@ function setup_crash() {
   );
 
   Services.prefs.setBoolPref("toolkit.terminator.testing", true);
-  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 10);
+  Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 150);
 
   // Initialize the terminator
   // (normally, this is done through the manifest file, but xpcshell
@@ -19,12 +19,12 @@ function setup_crash() {
   let terminator = Cc[
     "@mozilla.org/toolkit/shutdown-terminator;1"
   ].createInstance(Ci.nsIObserver);
-  terminator.observe(null, "profile-after-change", null);
+  terminator.observe(null, "terminator-test-profile-after-change", null);
 
   // Inform the terminator that shutdown has started
   // Pick an arbitrary notification
-  terminator.observe(null, "xpcom-will-shutdown", null);
-  terminator.observe(null, "profile-before-change", null);
+  terminator.observe(null, "terminator-test-profile-before-change", null);
+  terminator.observe(null, "terminator-test-xpcom-will-shutdown", null);
 
   dump("Waiting (actively) for the crash\n");
   Services.tm.spinEventLoopUntil(() => false);
@@ -32,7 +32,7 @@ function setup_crash() {
 
 function after_crash(mdump, extra) {
   info("Crash signature: " + JSON.stringify(extra, null, "\t"));
-  Assert.equal(extra.ShutdownProgress, "profile-before-change");
+  Assert.equal(extra.ShutdownProgress, "xpcom-will-shutdown");
 }
 
 add_task(async function run_test() {

@@ -89,7 +89,7 @@ class U2FPrefManager final : public nsIObserver {
                                      PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED);
       Preferences::AddStrongObserver(gPrefManager,
                                      PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION);
-      ClearOnShutdown(&gPrefManager, ShutdownPhase::ShutdownThreads);
+      ClearOnShutdown(&gPrefManager, ShutdownPhase::XPCOMShutdownThreads);
     }
     return gPrefManager;
   }
