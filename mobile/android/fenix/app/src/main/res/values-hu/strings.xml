@@ -219,6 +219,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">További tudnivalók</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s keresés</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Keresés közvetlenül a címsávból</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Új Firefox-lap megnyitása</string>

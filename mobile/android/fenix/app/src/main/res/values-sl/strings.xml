@@ -217,6 +217,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Več o tem</string>
 
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Iščite neposredno iz naslovne vrstice</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Odpri nov zavihek v Firefoxu</string>

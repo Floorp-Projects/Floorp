@@ -222,6 +222,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Läs mer</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Sök med %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Sök direkt från adressfältet</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Öppna en ny Firefox-flik</string>

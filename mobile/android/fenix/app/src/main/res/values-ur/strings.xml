@@ -77,6 +77,8 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">برخاست کریں</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">کیمرے تک رسائی کی ضرورت ہے۔ Android کی ترتیبات پر جائیں ، اجازتیں ٹیپ کریں ، اور اجازت پر ٹیپ کریں۔</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">سیٹنگز پر جائیں</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -118,6 +120,8 @@
     <string name="browser_menu_edit_bookmark">بُک مارک کی تدوین کریں</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">ایڈ اون</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">ایکسٹینشنز</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">یہاں کوئی ایڈونس نہیں ہے</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -205,6 +209,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">مزید سیکھیں</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s تلاش کریں</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">ایک نیا Firefox ٹیب کھولیں</string>
@@ -262,6 +269,8 @@
     <string name="preferences_open_links_in_a_private_tab">لنکس نجی ٹیب میں کھولیں</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">نجی براؤزنگ میں اسکرین شاٹس کی اجازت دیں</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">اگر اجازت دی جائے تو ، جب ایک سے زیادہ اطلاقات کھلے ہیں تو نجی ٹیبز بھی نظر آئیں گے</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">نجی براؤزنگ شارٹکٹ شامل کریں</string>
     <!-- Preference for accessibility -->
@@ -344,6 +353,12 @@
     <string name="customize_addon_collection_hint">مجموعہ کا نام</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">مجموعہ کرنے والا مالک (صارف شناخت)</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">ایڈ آن کی معاونت نہیں ہے</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">ایڈ آن پہلے ہی نصب ہے</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -478,6 +493,11 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">آلہ کے تھیم پر عمل کریں</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">تازہ کرنے کے لیے کھینچیں</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">ٹول بار کو چھپانے کے لئے اسکرول کریں</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">ٹیبز کو کھولنے کے لئے ٹول بار کو سوائپ کریں</string>
 
@@ -500,6 +520,10 @@
     <string name="library_desktop_bookmarks_unfiled">دیگر نشانیاں</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">سابقات</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">نیا ٹیب</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">صفحے میں تلاش کریں</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">سینک ہو چکے ٹیبز</string>
     <!-- Option in Library to open Reading List -->
@@ -530,6 +554,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">ٹیبس</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">ٹیب ویو</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">فہرست</string>
     <!-- Option for a grid tab view -->
@@ -595,6 +621,8 @@
     <string name="tab_tray_multiselect_menu_item_close">بند كریں</string>
     <!-- Content description for tabs tray multiselect share button -->
     <string name="tab_tray_multiselect_share_content_description">منتخب شدہ ٹیبز کا اشتراک کریں</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">منتخب کردہ ٹیبز مینو</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">مجموعہ سے ٹیب کو ہٹا دیں</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -693,10 +721,14 @@
     <!-- Downloads -->
     <!-- Text for the button to clear all downloads -->
     <string name="download_delete_all">ڈاؤن لوڈ حذف کریں</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">کیا آپ واقعی اپنے ڈاؤن لوڈ صاف کرنا چاہتے ہیں؟</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ڈاؤن لوڈز کو ہٹا دیا گیا</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
     <string name="download_delete_single_item_snackbar">%1$s ہٹائیں</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">ڈاؤن لوڈ فائلیں نہیں ہیں</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d منتخب کیا گیا</string>
@@ -829,6 +861,8 @@
     <string name="preference_phone_feature_location">مقام</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">اعلانات</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">مستقل اسٹوریج</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM کے زیرانتظام مواد</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -846,16 +880,22 @@
     <string name="tracking_protection_on">چالو</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">بند</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">آڈیو اور ویڈیو کی اجازت دیں</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">آڈیو اور ویڈیو کی اجازت دیں</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">صرف سیلولر ڈیٹا پر آڈیو اور ویڈیو بلاک کریں</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Wi-Fi پر آڈیو اور ویڈیو چلے گی</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">صرف آڈیو بلاک کریں</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">صرف آڈیو کو مسدود کریں</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">آڈیو اور ویڈیو بلاک کریں</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">آڈیو اور ویڈیو کو مسدود کریں</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">چالو</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1050,6 +1090,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">ذخیرہ کار جگہ کو خالی کرتا ہے</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">سائٹ کی اجازت</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">ڈاؤن لوڈز</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">براؤزنگ کا ڈیٹا مٹائیں</string>
     <!-- Title for the Delete browsing data on quit preference -->

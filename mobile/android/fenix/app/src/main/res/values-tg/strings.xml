@@ -217,6 +217,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Маълумоти бештар</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Ҷустуҷӯ дар %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Ҷустуҷӯи бевосита аз навори нишонӣ</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Кушодани варақаи нави Firefox</string>
