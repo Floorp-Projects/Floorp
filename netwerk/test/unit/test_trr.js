@@ -7,14 +7,12 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
-const mainThread = Services.tm.currentThread;
 
 const gDefaultPref = Services.prefs.getDefaultBranch("");
 const gOverride = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
 
-const defaultOriginAttributes = {};
 let h2Port = trr_test_setup();
 
 async function SetParentalControlEnabled(aEnabled) {
@@ -36,110 +34,6 @@ registerCleanupFunction(async () => {
   trr_clear_prefs();
 });
 
-class DNSListener {
-  constructor(
-    name,
-    expectedAnswer,
-    expectedSuccess = true,
-    delay,
-    trrServer = "",
-    expectEarlyFail = false,
-    flags = 0
-  ) {
-    this.name = name;
-    this.expectedAnswer = expectedAnswer;
-    this.expectedSuccess = expectedSuccess;
-    this.delay = delay;
-    this.promise = new Promise(resolve => {
-      this.resolve = resolve;
-    });
-
-    let resolverInfo =
-      trrServer == "" ? null : dns.newTRRResolverInfo(trrServer);
-    try {
-      this.request = dns.asyncResolve(
-        name,
-        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
-        flags,
-        resolverInfo,
-        this,
-        mainThread,
-        defaultOriginAttributes
-      );
-      Assert.ok(!expectEarlyFail);
-    } catch (e) {
-      Assert.ok(expectEarlyFail);
-      this.resolve([e]);
-    }
-  }
-
-  onLookupComplete(inRequest, inRecord, inStatus) {
-    Assert.ok(
-      inRequest == this.request,
-      "Checking that this is the correct callback"
-    );
-
-    // If we don't expect success here, just resolve and the caller will
-    // decide what to do with the results.
-    if (!this.expectedSuccess) {
-      this.resolve([inRequest, inRecord, inStatus]);
-      return;
-    }
-
-    Assert.equal(inStatus, Cr.NS_OK, "Checking status");
-    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
-    let answer = inRecord.getNextAddrAsString();
-    Assert.equal(
-      answer,
-      this.expectedAnswer,
-      `Checking result for ${this.name}`
-    );
-
-    if (this.delay !== undefined) {
-      Assert.greaterOrEqual(
-        inRecord.trrFetchDurationNetworkOnly,
-        this.delay,
-        `the response should take at least ${this.delay}`
-      );
-
-      Assert.greaterOrEqual(
-        inRecord.trrFetchDuration,
-        this.delay,
-        `the response should take at least ${this.delay}`
-      );
-
-      if (this.delay == 0) {
-        // The response timing should be really 0
-        Assert.equal(
-          inRecord.trrFetchDurationNetworkOnly,
-          0,
-          `the response time should be 0`
-        );
-
-        Assert.equal(
-          inRecord.trrFetchDuration,
-          this.delay,
-          `the response time should be 0`
-        );
-      }
-    }
-
-    this.resolve([inRequest, inRecord, inStatus]);
-  }
-
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIDNSListener) || aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
-  }
-
-  // Implement then so we can await this as a promise.
-  then() {
-    return this.promise.then.apply(this.promise, arguments);
-  }
-}
-
 async function waitForConfirmation(expectedResponseIP, confirmationShouldFail) {
   // Check that the confirmation eventually completes.
   let count = 100;
@@ -150,7 +44,7 @@ async function waitForConfirmation(expectedResponseIP, confirmationShouldFail) {
       // because of the increased delay between the emulator and host.
       await new Promise(resolve => do_timeout(100 * (100 / count), resolve));
     }
-    let [, inRecord] = await new DNSListener(
+    let [, inRecord] = await new TRRDNSListener(
       `ip${count}.example.org`,
       undefined,
       false
@@ -247,7 +141,7 @@ add_task(async function test_A_record() {
   info("Verifying a basic A record");
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2"); // TRR-first
-  await new DNSListener("bar.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   info("Verifying a basic A record - without bootstrapping");
   dns.clearCache(true);
@@ -257,7 +151,7 @@ add_task(async function test_A_record() {
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
   Services.prefs.setCharPref("network.dns.localDomains", TRR_Domain);
 
-  await new DNSListener("bar.example.com", "3.3.3.3");
+  await new TRRDNSListener("bar.example.com", "3.3.3.3");
 
   Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
   Services.prefs.clearUserPref("network.dns.localDomains");
@@ -266,20 +160,20 @@ add_task(async function test_A_record() {
   // Don't clear the cache. That is what we're checking.
   setModeAndURI(3, "404");
 
-  await new DNSListener("bar.example.com", "3.3.3.3");
+  await new TRRDNSListener("bar.example.com", "3.3.3.3");
   info("verify working credentials in DOH request");
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=4.4.4.4&auth=true");
   Services.prefs.setCharPref("network.trr.credentials", "user:password");
 
-  await new DNSListener("bar.example.com", "4.4.4.4");
+  await new TRRDNSListener("bar.example.com", "4.4.4.4");
 
   info("Verify failing credentials in DOH request");
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=4.4.4.4&auth=true");
   Services.prefs.setCharPref("network.trr.credentials", "evil:person");
 
-  let [, , inStatus] = await new DNSListener(
+  let [, , inStatus] = await new TRRDNSListener(
     "wrong.example.com",
     undefined,
     false
@@ -298,14 +192,14 @@ add_task(async function test_push() {
   info("Asking server to push us a record");
   setModeAndURI(3, "doh?responseIP=5.5.5.5&push=true");
 
-  await new DNSListener("first.example.com", "5.5.5.5");
+  await new TRRDNSListener("first.example.com", "5.5.5.5");
 
   // At this point the second host name should've been pushed and we can resolve it using
   // cache only. Set back the URI to a path that fails.
   // Don't clear the cache, otherwise we lose the pushed record.
   setModeAndURI(3, "404");
 
-  await new DNSListener("push.example.org", "2018::2018");
+  await new TRRDNSListener("push.example.org", "2018::2018");
 });
 
 add_task(async function test_AAAA_records() {
@@ -316,37 +210,37 @@ add_task(async function test_AAAA_records() {
   Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv4=100");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv4=100");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv6=100");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv6=100");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2020");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
   setModeAndURI(3, "doh?responseIP=2020:2020::2030");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
 
   Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", false);
 
@@ -354,33 +248,33 @@ add_task(async function test_AAAA_records() {
   Services.prefs.setBoolPref("network.trr.early-AAAA", true);
   setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv4=100");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", false);
   setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv4=100");
-  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", true);
   setModeAndURI(3, "doh?responseIP=2020:2020::2020&delayIPv6=100");
 
-  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", false);
   setModeAndURI(3, "doh?responseIP=2020:2020::2030&delayIPv6=100");
-  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", true);
   setModeAndURI(3, "doh?responseIP=2020:2020::2020");
-  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2020");
 
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", false);
   setModeAndURI(3, "doh?responseIP=2020:2020::2030");
-  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+  await new TRRDNSListener("aaaa.example.com", "2020:2020::2030");
 
   Services.prefs.clearUserPref("network.trr.early-AAAA");
   Services.prefs.clearUserPref("network.trr.wait-for-A-and-AAAA");
@@ -391,7 +285,7 @@ add_task(async function test_RFC1918() {
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=192.168.0.1");
 
-  let [, , inStatus] = await new DNSListener(
+  let [, , inStatus] = await new TRRDNSListener(
     "rfc1918.example.com",
     undefined,
     false
@@ -402,7 +296,7 @@ add_task(async function test_RFC1918() {
     `${inStatus} should be an error code`
   );
   setModeAndURI(3, "doh?responseIP=::ffff:192.168.0.1");
-  [, , inStatus] = await new DNSListener(
+  [, , inStatus] = await new TRRDNSListener(
     "rfc1918-ipv6.example.com",
     undefined,
     false
@@ -416,10 +310,10 @@ add_task(async function test_RFC1918() {
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=192.168.0.1");
   Services.prefs.setBoolPref("network.trr.allow-rfc1918", true);
-  await new DNSListener("rfc1918.example.com", "192.168.0.1");
+  await new TRRDNSListener("rfc1918.example.com", "192.168.0.1");
   setModeAndURI(3, "doh?responseIP=::ffff:192.168.0.1");
 
-  await new DNSListener("rfc1918-ipv6.example.com", "::ffff:192.168.0.1");
+  await new TRRDNSListener("rfc1918-ipv6.example.com", "::ffff:192.168.0.1");
 
   Services.prefs.clearUserPref("network.trr.allow-rfc1918");
 });
@@ -432,14 +326,14 @@ add_task(async function test_GET_ECS() {
   Services.prefs.setBoolPref("network.trr.useGET", true);
   Services.prefs.setBoolPref("network.trr.disable-ECS", true);
 
-  await new DNSListener("ecs.example.com", "5.5.5.5");
+  await new TRRDNSListener("ecs.example.com", "5.5.5.5");
 
   info("Verifying resolution via GET with ECS enabled");
   dns.clearCache(true);
   setModeAndURI(3, "doh");
   Services.prefs.setBoolPref("network.trr.disable-ECS", false);
 
-  await new DNSListener("get.example.com", "5.5.5.5");
+  await new TRRDNSListener("get.example.com", "5.5.5.5");
 
   Services.prefs.clearUserPref("network.trr.useGET");
   Services.prefs.clearUserPref("network.trr.disable-ECS");
@@ -453,7 +347,7 @@ add_task(async function test_timeout_mode3() {
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
 
-  let [, , inStatus] = await new DNSListener(
+  let [, , inStatus] = await new TRRDNSListener(
     "timeout.example.com",
     undefined,
     false
@@ -467,7 +361,7 @@ add_task(async function test_timeout_mode3() {
   dns.clearCache(true);
   setModeAndURI(2, "dns-750ms");
 
-  await new DNSListener("timeout.example.com", "127.0.0.1"); // Should fallback
+  await new TRRDNSListener("timeout.example.com", "127.0.0.1"); // Should fallback
 
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
@@ -478,7 +372,7 @@ add_task(async function test_no_answers_fallback() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=none"); // TRR-first
 
-  await new DNSListener("confirm.example.com", "127.0.0.1");
+  await new TRRDNSListener("confirm.example.com", "127.0.0.1");
 });
 
 add_task(async function test_404_fallback() {
@@ -486,7 +380,7 @@ add_task(async function test_404_fallback() {
   dns.clearCache(true);
   setModeAndURI(2, "404"); // TRR-first
 
-  await new DNSListener("test404.example.com", "127.0.0.1");
+  await new TRRDNSListener("test404.example.com", "127.0.0.1");
 });
 
 add_task(async function test_mode_1_and_4() {
@@ -506,14 +400,14 @@ add_task(async function test_CNAME() {
   // a lookup with this path as the DoH URI should resolve to that A record.
   setModeAndURI(3, "dns-cname");
 
-  await new DNSListener("cname.example.com", "99.88.77.66");
+  await new TRRDNSListener("cname.example.com", "99.88.77.66");
 
   info("Verifying that we bail out when we're thrown into a CNAME loop");
   dns.clearCache(true);
   // First mode 3.
   setModeAndURI(3, "doh?responseIP=none&cnameloop=true");
 
-  let [, , inStatus] = await new DNSListener(
+  let [, , inStatus] = await new TRRDNSListener(
     "test18.example.com",
     undefined,
     false
@@ -527,14 +421,14 @@ add_task(async function test_CNAME() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=none&cnameloop=true");
 
-  await new DNSListener("test20.example.com", "127.0.0.1"); // Should fallback
+  await new TRRDNSListener("test20.example.com", "127.0.0.1"); // Should fallback
 
   info("Check that we correctly handle CNAME bundled with an A record");
   dns.clearCache(true);
   // "dns-cname-a" path causes server to send a CNAME as well as an A record
   setModeAndURI(3, "dns-cname-a");
 
-  await new DNSListener("cname-a.example.com", "9.8.7.6");
+  await new TRRDNSListener("cname-a.example.com", "9.8.7.6");
 });
 
 add_task(async function test_name_mismatch() {
@@ -544,7 +438,7 @@ add_task(async function test_name_mismatch() {
   // regardless of what was requested.
   setModeAndURI(3, "doh?hostname=mismatch.example.com");
 
-  let [, , inStatus] = await new DNSListener(
+  let [, , inStatus] = await new TRRDNSListener(
     "bar.example.com",
     undefined,
     false
@@ -562,7 +456,7 @@ add_task(async function test_mode_2() {
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
   Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
 
-  await new DNSListener("bar.example.com", "192.192.192.192");
+  await new TRRDNSListener("bar.example.com", "192.192.192.192");
 });
 
 add_task(async function test_excluded_domains() {
@@ -571,19 +465,19 @@ add_task(async function test_excluded_domains() {
   setModeAndURI(2, "doh?responseIP=192.192.192.192");
   Services.prefs.setCharPref("network.trr.excluded-domains", "bar.example.com");
 
-  await new DNSListener("bar.example.com", "127.0.0.1"); // Do53 result
+  await new TRRDNSListener("bar.example.com", "127.0.0.1"); // Do53 result
 
   dns.clearCache(true);
   Services.prefs.setCharPref("network.trr.excluded-domains", "example.com");
 
-  await new DNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
   dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.excluded-domains",
     "foo.test.com, bar.example.com"
   );
-  await new DNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
   dns.clearCache(true);
   Services.prefs.setCharPref(
@@ -591,7 +485,7 @@ add_task(async function test_excluded_domains() {
     "bar.example.com, foo.test.com"
   );
 
-  await new DNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
   Services.prefs.clearUserPref("network.trr.excluded-domains");
 });
@@ -644,7 +538,7 @@ add_task(async function test_captiveportal_canonicalURL() {
   // a socket to a non-local IP would trigger a crash.
   await cpPromise;
   // Simply resolving the captive portal domain should still use TRR
-  await new DNSListener("detectportal.firefox.com", "2.2.2.2");
+  await new TRRDNSListener("detectportal.firefox.com", "2.2.2.2");
 
   Services.prefs.clearUserPref("network.captive-portal-service.enabled");
   Services.prefs.clearUserPref("network.captive-portal-service.testMode");
@@ -658,7 +552,7 @@ add_task(async function test_parentalcontrols() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
   await SetParentalControlEnabled(true);
-  await new DNSListener("www.example.com", "127.0.0.1");
+  await new TRRDNSListener("www.example.com", "127.0.0.1");
   await SetParentalControlEnabled(false);
 });
 
@@ -673,22 +567,22 @@ add_task(async function test_builtin_excluded_domains() {
     "network.trr.builtin-excluded-domains",
     "bar.example.com"
   );
-  await new DNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
   dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.builtin-excluded-domains",
     "example.com"
   );
-  await new DNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
   dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.builtin-excluded-domains",
     "foo.test.com, bar.example.com"
   );
-  await new DNSListener("bar.example.com", "127.0.0.1");
-  await new DNSListener("foo.test.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("foo.test.com", "127.0.0.1");
 });
 
 add_task(async function test_excluded_domains_mode3() {
@@ -698,18 +592,18 @@ add_task(async function test_excluded_domains_mode3() {
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
   Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
 
-  await new DNSListener("excluded", "192.192.192.192", true);
+  await new TRRDNSListener("excluded", "192.192.192.192", true);
 
   dns.clearCache(true);
   Services.prefs.setCharPref("network.trr.excluded-domains", "excluded");
 
-  await new DNSListener("excluded", "127.0.0.1");
+  await new TRRDNSListener("excluded", "127.0.0.1");
 
   // Test .local
   dns.clearCache(true);
   Services.prefs.setCharPref("network.trr.excluded-domains", "excluded,local");
 
-  await new DNSListener("test.local", "127.0.0.1");
+  await new TRRDNSListener("test.local", "127.0.0.1");
 
   // Test .other
   dns.clearCache(true);
@@ -718,7 +612,7 @@ add_task(async function test_excluded_domains_mode3() {
     "excluded,local,other"
   );
 
-  await new DNSListener("domain.other", "127.0.0.1");
+  await new TRRDNSListener("domain.other", "127.0.0.1");
 });
 
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1666072#c23
@@ -755,7 +649,7 @@ add_task({ skip_if: () => true }, async function test25e() {
   // a socket to a non-local IP would trigger a crash.
   await cpPromise;
   // // Simply resolving the captive portal domain should still use TRR
-  await new DNSListener("detectportal.firefox.com", "192.192.192.192");
+  await new TRRDNSListener("detectportal.firefox.com", "192.192.192.192");
 
   Services.prefs.clearUserPref("network.captive-portal-service.enabled");
   Services.prefs.clearUserPref("network.captive-portal-service.testMode");
@@ -769,7 +663,7 @@ add_task(async function test_parentalcontrols_mode3() {
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=192.192.192.192");
   await SetParentalControlEnabled(true);
-  await new DNSListener("www.example.com", "127.0.0.1");
+  await new TRRDNSListener("www.example.com", "127.0.0.1");
   await SetParentalControlEnabled(false);
 });
 
@@ -783,7 +677,7 @@ add_task(async function test_builtin_excluded_domains_mode3() {
     "excluded"
   );
 
-  await new DNSListener("excluded", "127.0.0.1");
+  await new TRRDNSListener("excluded", "127.0.0.1");
 
   // Test .local
   dns.clearCache(true);
@@ -792,7 +686,7 @@ add_task(async function test_builtin_excluded_domains_mode3() {
     "excluded,local"
   );
 
-  await new DNSListener("test.local", "127.0.0.1");
+  await new TRRDNSListener("test.local", "127.0.0.1");
 
   // Test .other
   dns.clearCache(true);
@@ -801,7 +695,7 @@ add_task(async function test_builtin_excluded_domains_mode3() {
     "excluded,local,other"
   );
 
-  await new DNSListener("domain.other", "127.0.0.1");
+  await new TRRDNSListener("domain.other", "127.0.0.1");
 });
 
 add_task(async function count_cookies() {
@@ -822,15 +716,19 @@ add_task(async function test_connection_closed() {
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
 
-  await new DNSListener("bar.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  let [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  let [, , inStatus] = await new TRRDNSListener(
+    "closeme.com",
+    undefined,
+    false
+  );
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
-  await new DNSListener("bar2.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar2.example.com", "2.2.2.2");
 
   // No bootstrap this time
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
@@ -839,15 +737,15 @@ add_task(async function test_connection_closed() {
   Services.prefs.setCharPref("network.trr.excluded-domains", "excluded,local");
   Services.prefs.setCharPref("network.dns.localDomains", TRR_Domain);
 
-  await new DNSListener("bar.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
-  await new DNSListener("bar2.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar2.example.com", "2.2.2.2");
 
   // No local domains either
   dns.clearCache(true);
@@ -855,15 +753,15 @@ add_task(async function test_connection_closed() {
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
 
-  await new DNSListener("bar.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
-  await new DNSListener("bar2.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar2.example.com", "2.2.2.2");
 
   // Now make sure that even in mode 3 without a bootstrap address
   // we are able to restart the TRR connection if it drops - the TRR service
@@ -874,16 +772,16 @@ add_task(async function test_connection_closed() {
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
 
-  await new DNSListener("bar.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new DNSListener("closeme.com", undefined, false);
+  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
   dns.clearCache(true);
-  await new DNSListener("bar2.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar2.example.com", "2.2.2.2");
 
   // This test exists to document what happens when we're in TRR only mode
   // and we don't set a bootstrap address. We use DNS to resolve the
@@ -893,12 +791,12 @@ add_task(async function test_connection_closed() {
   Services.prefs.setCharPref("network.dns.localDomains", "closeme.com");
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
 
-  await new DNSListener("bar.example.com", "9.9.9.9");
+  await new TRRDNSListener("bar.example.com", "9.9.9.9");
 
   // makes the TRR connection shut down. Should fallback to DNS
-  await new DNSListener("closeme.com", "127.0.0.1");
+  await new TRRDNSListener("closeme.com", "127.0.0.1");
   // TRR should be back up again
-  await new DNSListener("bar2.example.com", "9.9.9.9");
+  await new TRRDNSListener("bar2.example.com", "9.9.9.9");
 });
 
 add_task(async function test_clearCacheOnURIChange() {
@@ -907,7 +805,7 @@ add_task(async function test_clearCacheOnURIChange() {
   Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", true);
   setModeAndURI(2, "doh?responseIP=7.7.7.7");
 
-  await new DNSListener("bar.example.com", "7.7.7.7");
+  await new TRRDNSListener("bar.example.com", "7.7.7.7");
 
   // The TRR cache should be cleared by this pref change.
   Services.prefs.setCharPref(
@@ -915,7 +813,7 @@ add_task(async function test_clearCacheOnURIChange() {
     `https://localhost:${h2Port}/doh?responseIP=8.8.8.8`
   );
 
-  await new DNSListener("bar.example.com", "8.8.8.8");
+  await new TRRDNSListener("bar.example.com", "8.8.8.8");
   Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", false);
 });
 
@@ -924,9 +822,9 @@ add_task(async function test_dnsSuffix() {
   async function checkDnsSuffixInMode(mode) {
     dns.clearCache(true);
     setModeAndURI(mode, "doh?responseIP=1.2.3.4&push=true");
-    await new DNSListener("example.org", "1.2.3.4");
-    await new DNSListener("push.example.org", "2018::2018");
-    await new DNSListener("test.com", "1.2.3.4");
+    await new TRRDNSListener("example.org", "1.2.3.4");
+    await new TRRDNSListener("push.example.org", "2018::2018");
+    await new TRRDNSListener("test.com", "1.2.3.4");
 
     let networkLinkService = {
       dnsSuffixList: ["example.org"],
@@ -936,14 +834,14 @@ add_task(async function test_dnsSuffix() {
       networkLinkService,
       "network:dns-suffix-list-updated"
     );
-    await new DNSListener("test.com", "1.2.3.4");
+    await new TRRDNSListener("test.com", "1.2.3.4");
     if (Services.prefs.getBoolPref("network.trr.split_horizon_mitigations")) {
-      await new DNSListener("example.org", "127.0.0.1");
+      await new TRRDNSListener("example.org", "127.0.0.1");
       // Also test that we don't use the pushed entry.
-      await new DNSListener("push.example.org", "127.0.0.1");
+      await new TRRDNSListener("push.example.org", "127.0.0.1");
     } else {
-      await new DNSListener("example.org", "1.2.3.4");
-      await new DNSListener("push.example.org", "2018::2018");
+      await new TRRDNSListener("example.org", "1.2.3.4");
+      await new TRRDNSListener("push.example.org", "2018::2018");
     }
 
     // Attempt to clean up, just in case
@@ -971,7 +869,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 0); // TRR-disabled
 
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr1.example.com",
     "2.2.2.2",
     true,
@@ -980,13 +878,13 @@ add_task(async function test_async_resolve_with_trr_server() {
   );
 
   // Test request without trr server, it should return a native dns response.
-  await new DNSListener("bar_with_trr1.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar_with_trr1.example.com", "127.0.0.1");
 
   // Mode 2
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr2.example.com",
     "3.3.3.3",
     true,
@@ -995,13 +893,13 @@ add_task(async function test_async_resolve_with_trr_server() {
   );
 
   // Test request without trr server, it should return a response from trr server defined in the pref.
-  await new DNSListener("bar_with_trr2.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar_with_trr2.example.com", "2.2.2.2");
 
   // Mode 3
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=2.2.2.2");
 
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr3.example.com",
     "3.3.3.3",
     true,
@@ -1010,7 +908,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   );
 
   // Test request without trr server, it should return a response from trr server defined in the pref.
-  await new DNSListener("bar_with_trr3.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar_with_trr3.example.com", "2.2.2.2");
 
   // Mode 5
   dns.clearCache(true);
@@ -1018,7 +916,7 @@ add_task(async function test_async_resolve_with_trr_server() {
 
   // When dns is resolved in socket process, we can't set |expectEarlyFail| to true.
   let inSocketProcess = mozinfo.socketprocess_networking;
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr3.example.com",
     undefined,
     false,
@@ -1028,16 +926,16 @@ add_task(async function test_async_resolve_with_trr_server() {
   );
 
   // Call normal AsyncOpen, it will return result from the native resolver.
-  await new DNSListener("bar_with_trr3.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar_with_trr3.example.com", "127.0.0.1");
 
   // Check that cache is ignored when server is different
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=2.2.2.2");
 
-  await new DNSListener("bar_with_trr4.example.com", "2.2.2.2", true);
+  await new TRRDNSListener("bar_with_trr4.example.com", "2.2.2.2", true);
 
   // The record will be fetch again.
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr4.example.com",
     "3.3.3.3",
     true,
@@ -1046,7 +944,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   );
 
   // The record will be fetch again.
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr5.example.com",
     "4.4.4.4",
     true,
@@ -1058,7 +956,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-  let [, , inStatus] = await new DNSListener(
+  let [, , inStatus] = await new TRRDNSListener(
     "bar_with_trr6.example.com",
     undefined,
     false,
@@ -1070,13 +968,13 @@ add_task(async function test_async_resolve_with_trr_server() {
     `${inStatus} should be an error code`
   );
 
-  await new DNSListener("bar_with_trr6.example.com", "2.2.2.2", true);
+  await new TRRDNSListener("bar_with_trr6.example.com", "2.2.2.2", true);
 
   // Check that DoH push doesn't work
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr7.example.com",
     "3.3.3.3",
     true,
@@ -1088,7 +986,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   // shouldn't be neither in the default cache not in AsyncResoleWithTrrServer cache.
   setModeAndURI(2, "404");
 
-  await new DNSListener(
+  await new TRRDNSListener(
     "push.example.org",
     "3.3.3.3",
     true,
@@ -1096,7 +994,7 @@ add_task(async function test_async_resolve_with_trr_server() {
     `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3&push=true`
   );
 
-  await new DNSListener("push.example.org", "127.0.0.1");
+  await new TRRDNSListener("push.example.org", "127.0.0.1");
 
   // Check confirmation is ignored
   dns.clearCache(true);
@@ -1109,7 +1007,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   );
 
   // AsyncResoleWithTrrServer will succeed
-  await new DNSListener(
+  await new TRRDNSListener(
     "bar_with_trr8.example.com",
     "3.3.3.3",
     true,
@@ -1123,7 +1021,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-  [, , inStatus] = await new DNSListener(
+  [, , inStatus] = await new TRRDNSListener(
     "only_once.example.com",
     undefined,
     false,
@@ -1145,13 +1043,13 @@ add_task(async function test_fetch_time() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2&delayIPv4=20");
 
-  await new DNSListener("bar_time.example.com", "2.2.2.2", true, 20);
+  await new TRRDNSListener("bar_time.example.com", "2.2.2.2", true, 20);
 
   // gets an error from DoH. It will fall back to regular DNS. The TRR timing should be 0.
   dns.clearCache(true);
   setModeAndURI(2, "404&delayIPv4=20");
 
-  await new DNSListener("bar_time1.example.com", "127.0.0.1", true, 0);
+  await new TRRDNSListener("bar_time1.example.com", "127.0.0.1", true, 0);
 
   // check an excluded domain. It should fall back to regular DNS. The TRR timing should be 0.
   dns.clearCache(true);
@@ -1161,14 +1059,14 @@ add_task(async function test_fetch_time() {
   );
   setModeAndURI(2, "doh?responseIP=2.2.2.2&delayIPv4=20");
 
-  await new DNSListener("bar_time2.example.com", "127.0.0.1", true, 0);
+  await new TRRDNSListener("bar_time2.example.com", "127.0.0.1", true, 0);
 
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
 
   // verify RFC1918 address from the server is rejected and the TRR timing will be not set because the response will be from the native resolver.
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=192.168.0.1&delayIPv4=20");
-  await new DNSListener("rfc1918_time.example.com", "127.0.0.1", true, 0);
+  await new TRRDNSListener("rfc1918_time.example.com", "127.0.0.1", true, 0);
 });
 
 add_task(async function test_content_encoding_gzip() {
@@ -1180,7 +1078,7 @@ add_task(async function test_content_encoding_gzip() {
   );
   setModeAndURI(3, "doh?responseIP=2.2.2.2");
 
-  await new DNSListener("bar.example.com", "2.2.2.2");
+  await new TRRDNSListener("bar.example.com", "2.2.2.2");
   Services.prefs.clearUserPref(
     "network.trr.send_empty_accept-encoding_headers"
   );
@@ -1195,14 +1093,14 @@ add_task(async function test_redirect() {
   Services.prefs.setBoolPref("network.trr.useGET", true);
   Services.prefs.setBoolPref("network.trr.disable-ECS", true);
 
-  await new DNSListener("ecs.example.com", "4.4.4.4");
+  await new TRRDNSListener("ecs.example.com", "4.4.4.4");
 
   // POST
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.useGET", false);
   setModeAndURI(3, "doh?redirect=4.4.4.4");
 
-  await new DNSListener("bar.example.com", "4.4.4.4");
+  await new TRRDNSListener("bar.example.com", "4.4.4.4");
 
   Services.prefs.clearUserPref("network.trr.useGET");
   Services.prefs.clearUserPref("network.trr.disable-ECS");
@@ -1221,7 +1119,7 @@ add_task(async function test_confirmation() {
     "confirm.example.com"
   );
 
-  await new DNSListener("example.org", "127.0.0.1");
+  await new TRRDNSListener("example.org", "127.0.0.1");
   await new Promise(resolve => do_timeout(1000, resolve));
   await waitForConfirmation("7.7.7.7");
 
@@ -1238,7 +1136,7 @@ add_task(async function test_confirmation() {
     "confirm.example.com"
   );
 
-  await new DNSListener("skipConfirmationForMode3.example.com", "1::ffff");
+  await new TRRDNSListener("skipConfirmationForMode3.example.com", "1::ffff");
 
   // Reset between each test to force re-confirm
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
@@ -1252,7 +1150,7 @@ add_task(async function test_confirmation() {
   );
 
   // DoH available immediately
-  await new DNSListener("example.org", "7.7.7.7");
+  await new TRRDNSListener("example.org", "7.7.7.7");
 
   // Reset between each test to force re-confirm
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
@@ -1268,7 +1166,7 @@ add_task(async function test_confirmation() {
 
   await waitForConfirmation("7.7.7.7", true);
 
-  await new DNSListener("example.org", "127.0.0.1");
+  await new TRRDNSListener("example.org", "127.0.0.1");
 
   // Reset
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
@@ -1280,12 +1178,12 @@ add_task(async function test_fqdn() {
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=9.8.7.6");
 
-  await new DNSListener("fqdn.example.org.", "9.8.7.6");
+  await new TRRDNSListener("fqdn.example.org.", "9.8.7.6");
 
   // GET
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.useGET", true);
-  await new DNSListener("fqdn_get.example.org.", "9.8.7.6");
+  await new TRRDNSListener("fqdn_get.example.org.", "9.8.7.6");
 
   Services.prefs.clearUserPref("network.trr.useGET");
 });
@@ -1300,23 +1198,23 @@ add_task(async function test_detected_uri() {
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=3.4.5.6`
   );
-  await new DNSListener("domainA.example.org.", "3.4.5.6");
+  await new TRRDNSListener("domainA.example.org.", "3.4.5.6");
   dns.setDetectedTrrURI(
     `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4`
   );
-  await new DNSListener("domainB.example.org.", "1.2.3.4");
+  await new TRRDNSListener("domainB.example.org.", "1.2.3.4");
   gDefaultPref.setCharPref("network.trr.uri", defaultURI);
 
   // With a user-set doh uri this time.
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=4.5.6.7");
-  await new DNSListener("domainA.example.org.", "4.5.6.7");
+  await new TRRDNSListener("domainA.example.org.", "4.5.6.7");
 
   // This should be a no-op, since we have a user-set URI
   dns.setDetectedTrrURI(
     `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4`
   );
-  await new DNSListener("domainB.example.org.", "4.5.6.7");
+  await new TRRDNSListener("domainB.example.org.", "4.5.6.7");
 
   // Test network link status change
   dns.clearCache(true);
@@ -1326,11 +1224,11 @@ add_task(async function test_detected_uri() {
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=3.4.5.6`
   );
-  await new DNSListener("domainA.example.org.", "3.4.5.6");
+  await new TRRDNSListener("domainA.example.org.", "3.4.5.6");
   dns.setDetectedTrrURI(
     `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4`
   );
-  await new DNSListener("domainB.example.org.", "1.2.3.4");
+  await new TRRDNSListener("domainB.example.org.", "1.2.3.4");
 
   let networkLinkService = {
     platformDNSIndications: 0,
@@ -1343,7 +1241,7 @@ add_task(async function test_detected_uri() {
     "changed"
   );
 
-  await new DNSListener("domainC.example.org.", "3.4.5.6");
+  await new TRRDNSListener("domainC.example.org.", "3.4.5.6");
 
   gDefaultPref.setCharPref("network.trr.uri", defaultURI);
 });
@@ -1570,7 +1468,7 @@ add_task(async function test_ipv6_trr_fallback() {
   );
   gOverride.addIPOverride("ipv6.host.com", "1:1::2");
 
-  await new DNSListener(
+  await new TRRDNSListener(
     "ipv6.host.com",
     "1:1::2",
     true,
@@ -1645,10 +1543,10 @@ add_task(async function test_purge_trr_cache_on_mode_change() {
     `https://foo.example.com:${h2Port}/doh?responseIP=3.3.3.3`
   );
 
-  await new DNSListener("cached.example.com", "3.3.3.3");
+  await new TRRDNSListener("cached.example.com", "3.3.3.3");
   Services.prefs.clearUserPref("doh-rollout.mode");
 
-  await new DNSListener("cached.example.com", "127.0.0.1");
+  await new TRRDNSListener("cached.example.com", "127.0.0.1");
 
   Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", false);
 });
