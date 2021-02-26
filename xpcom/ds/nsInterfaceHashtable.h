@@ -42,7 +42,7 @@ class nsInterfaceHashtable
   /**
    * @copydoc nsBaseHashtable::Get
    */
-  already_AddRefed<Interface> Get(KeyType aKey) const;
+  [[nodiscard]] already_AddRefed<Interface> Get(KeyType aKey) const;
 
   /**
    * Gets a weak reference to the hashtable entry.
@@ -50,7 +50,7 @@ class nsInterfaceHashtable
    *               to false otherwise.
    * @return The entry, or nullptr if not found. Do not release this pointer!
    */
-  Interface* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
+  [[nodiscard]] Interface* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
 
   /**
    * Allows inserting a value into the hashtable, moving its owning reference

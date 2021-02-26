@@ -3204,9 +3204,7 @@ PreferenceServiceReporter::CollectReports(
       numStrong++;
     }
 
-    uint32_t oldCount = 0;
-    prefCounter.Get(callback->GetDomain(), &oldCount);
-    uint32_t currentCount = oldCount + 1;
+    const uint32_t currentCount = prefCounter.Get(callback->GetDomain()) + 1;
     prefCounter.InsertOrUpdate(callback->GetDomain(), currentCount);
 
     // Keep track of preferences that have a suspiciously large number of
@@ -3218,8 +3216,7 @@ PreferenceServiceReporter::CollectReports(
 
   for (uint32_t i = 0; i < suspectPreferences.Length(); i++) {
     nsCString& suspect = suspectPreferences[i];
-    uint32_t totalReferentCount = 0;
-    prefCounter.Get(suspect, &totalReferentCount);
+    const uint32_t totalReferentCount = prefCounter.Get(suspect);
 
     nsPrintfCString suspectPath(
         "preference-service-suspect/"

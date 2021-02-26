@@ -117,13 +117,17 @@ class nsBaseHashtable
    * Return the number of entries in the table.
    * @return    number of entries
    */
-  uint32_t Count() const { return nsTHashtable<EntryType>::Count(); }
+  [[nodiscard]] uint32_t Count() const {
+    return nsTHashtable<EntryType>::Count();
+  }
 
   /**
    * Return whether the table is empty.
    * @return    whether empty
    */
-  bool IsEmpty() const { return nsTHashtable<EntryType>::IsEmpty(); }
+  [[nodiscard]] bool IsEmpty() const {
+    return nsTHashtable<EntryType>::IsEmpty();
+  }
 
   /**
    * Get the value, returning a flag indicating the presence of the entry in
@@ -134,8 +138,12 @@ class nsBaseHashtable
    *        If you only need to check if the key exists, aData may be null.
    * @return true if the key exists. If key does not exist, aData is not
    *   modified.
+   *
+   * @attention As opposed to Remove, this does not assign a value to *aData if
+   * no entry is present! (And also as opposed to the member function Get with
+   * the same signature that nsClassHashtable defines and hides this one.)
    */
-  bool Get(KeyType aKey, UserDataType* aData) const {
+  [[nodiscard]] bool Get(KeyType aKey, UserDataType* aData) const {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent) {
       return false;
@@ -162,7 +170,7 @@ class nsBaseHashtable
    * @note If zero/default-initialized values are stored in the table, it is
    *       not possible to distinguish between such a value and a missing entry.
    */
-  UserDataType Get(KeyType aKey) const {
+  [[nodiscard]] UserDataType Get(KeyType aKey) const {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent) {
       return UserDataType{};
@@ -178,7 +186,7 @@ class nsBaseHashtable
    * @return The found value wrapped in a Maybe, or Nothing if no entry was
    *         found with the given key.
    */
-  mozilla::Maybe<UserDataType> MaybeGet(KeyType aKey) const {
+  [[nodiscard]] mozilla::Maybe<UserDataType> MaybeGet(KeyType aKey) const {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent) {
       return mozilla::Nothing();
@@ -257,6 +265,10 @@ class nsBaseHashtable
    *              zero or nullptr for primitive types).
    * @return true if an entry for aKey was found (and removed)
    */
+  // XXX This should also better be marked nodiscard, but due to
+  // nsClassHashtable not guaranteeing non-nullness of entries, it is usually
+  // only checked if aData is nullptr in such cases.
+  // [[nodiscard]]
   bool Remove(KeyType aKey, DataType* aData) {
     if (auto* ent = this->GetEntry(aKey)) {
       if (aData) {
@@ -534,7 +546,7 @@ class nsBaseHashtable
      *
      * \pre HasEntry()
      */
-    DataType& Data() { return Entry()->mData; }
+    [[nodiscard]] DataType& Data() { return Entry()->mData; }
 
    private:
     friend class nsBaseHashtable;
@@ -558,7 +570,7 @@ class nsBaseHashtable
    * trigger debug assertions, and result in undefined behaviour otherwise.
    */
   template <class F>
-  auto WithEntryHandle(KeyType aKey, F&& aFunc)
+  [[nodiscard]] auto WithEntryHandle(KeyType aKey, F&& aFunc)
       -> std::invoke_result_t<F, EntryHandle&&> {
     return Base::WithEntryHandle(
         aKey, [&aFunc](auto entryHandle) -> decltype(auto) {
@@ -576,7 +588,8 @@ class nsBaseHashtable
    * For more details, see the explanation on the non-fallible overload above.
    */
   template <class F>
-  auto WithEntryHandle(KeyType aKey, const fallible_t& aFallible, F&& aFunc)
+  [[nodiscard]] auto WithEntryHandle(KeyType aKey, const fallible_t& aFallible,
+                                     F&& aFunc)
       -> std::invoke_result_t<F, mozilla::Maybe<EntryHandle>&&> {
     return Base::WithEntryHandle(
         aKey, aFallible, [&aFunc](auto maybeEntryHandle) {

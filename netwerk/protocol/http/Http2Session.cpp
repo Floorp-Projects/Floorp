@@ -3973,8 +3973,7 @@ uint32_t Http2Session::FindTunnelCount(nsHttpConnectionInfo* aConnInfo) {
 }
 uint32_t Http2Session::FindTunnelCount(nsCString const& aHashKey) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  uint32_t rv = 0;
-  mTunnelHash.Get(aHashKey, &rv);
+  uint32_t rv = mTunnelHash.Get(aHashKey);
   return rv;
 }
 
