@@ -203,8 +203,8 @@ EventSourceEventService::AddListener(uint64_t aInnerWindowID,
 
   WindowListener* listener =
       mWindows
-          .GetOrInsertWith(aInnerWindowID,
-                           [] { return MakeUnique<WindowListener>(); })
+          .LookupOrInsertWith(aInnerWindowID,
+                              [] { return MakeUnique<WindowListener>(); })
           .get();
 
   listener->mListeners.AppendElement(aListener);

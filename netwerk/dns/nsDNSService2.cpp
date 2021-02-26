@@ -1435,8 +1435,8 @@ nsDNSService::ReportFailedSVCDomainName(const nsACString& aOwnerName,
   MutexAutoLock lock(mLock);
 
   mFailedSVCDomainNames
-      .GetOrInsertWith(aOwnerName,
-                       [] { return MakeUnique<nsTArray<nsCString>>(1); })
+      .LookupOrInsertWith(aOwnerName,
+                          [] { return MakeUnique<nsTArray<nsCString>>(1); })
       ->AppendElement(aSVCDomainName);
   return NS_OK;
 }

@@ -376,8 +376,8 @@ bool IsExpired(const EventKey& key) { return key.id == kExpiredEventId; }
 EventRecordArray* GetEventRecordsForProcess(const StaticMutexAutoLock& lock,
                                             ProcessID processType) {
   return gEventRecords
-      .GetOrInsertWith(uint32_t(processType),
-                       [] { return MakeUnique<EventRecordArray>(); })
+      .LookupOrInsertWith(uint32_t(processType),
+                          [] { return MakeUnique<EventRecordArray>(); })
       .get();
 }
 

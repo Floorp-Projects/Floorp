@@ -13,10 +13,10 @@ class GMPMemoryStorage : public GMPStorage {
   GMPErr Open(const nsCString& aRecordName) override {
     MOZ_ASSERT(!IsOpen(aRecordName));
 
-    Record* record =
-        mRecords
-            .GetOrInsertWith(aRecordName, [] { return MakeUnique<Record>(); })
-            .get();
+    Record* record = mRecords
+                         .LookupOrInsertWith(
+                             aRecordName, [] { return MakeUnique<Record>(); })
+                         .get();
     record->mIsOpen = true;
     return GMPNoErr;
   }

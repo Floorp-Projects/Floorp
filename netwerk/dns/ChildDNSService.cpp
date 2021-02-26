@@ -136,7 +136,7 @@ nsresult ChildDNSService::AsyncResolveInternal(
     GetDNSRecordHashKey(hostname, DNSResolverInfo::URL(aResolver), type,
                         aOriginAttributes, flags, originalListenerAddr, key);
     mPendingRequests
-        .GetOrInsertWith(
+        .LookupOrInsertWith(
             key,
             [] { return MakeUnique<nsTArray<RefPtr<DNSRequestSender>>>(); })
         ->AppendElement(sender);

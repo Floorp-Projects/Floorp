@@ -674,7 +674,7 @@ void FileHandleThreadPool::Enqueue(FileHandle* aFileHandle,
 
   DirectoryInfo* directoryInfo =
       mDirectoryInfos
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               directoryId,
               [&] { return UniquePtr<DirectoryInfo>(new DirectoryInfo(this)); })
           .get();

@@ -4690,8 +4690,8 @@ OverOutElementsWrapper* EventStateManager::GetWrapperByEventID(
     return mMouseEnterLeaveHelper;
   }
   return mPointersEnterLeaveHelper
-      .GetOrInsertWith(pointer->pointerId,
-                       [] { return new OverOutElementsWrapper(); })
+      .LookupOrInsertWith(pointer->pointerId,
+                          [] { return new OverOutElementsWrapper(); })
       .get();
 }
 

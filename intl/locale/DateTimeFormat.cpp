@@ -251,7 +251,7 @@ nsresult DateTimeFormat::FormatUDateTime(
         new nsDataHashtable<nsCStringHashKey, UDateFormat*>(kMaxCachedFormats);
   }
 
-  UDateFormat*& dateTimeFormat = mFormatCache->GetOrInsert(key);
+  UDateFormat*& dateTimeFormat = mFormatCache->LookupOrInsert(key);
 
   if (!dateTimeFormat) {
     // We didn't have a cached formatter for this key, so create one.

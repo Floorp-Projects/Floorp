@@ -254,7 +254,7 @@ ClientSourceParent* ClientManagerService::FindSource(
 
 void ClientManagerService::WaitForSource(ClientHandleParent* aHandle,
                                          const nsID& aID) {
-  auto& entry = mPendingHandles.GetOrInsert(aID);
+  auto& entry = mPendingHandles.LookupOrInsert(aID);
   entry.AppendElement(aHandle);
 }
 

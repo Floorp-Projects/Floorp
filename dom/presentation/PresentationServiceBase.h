@@ -80,8 +80,8 @@ class PresentationServiceBase {
       }
 
       mRespondingSessionIds
-          .GetOrInsertWith(aWindowId,
-                           [] { return MakeUnique<nsTArray<nsString>>(); })
+          .LookupOrInsertWith(aWindowId,
+                              [] { return MakeUnique<nsTArray<nsString>>(); })
           ->AppendElement(nsString(aSessionId));
       mRespondingWindowIds.Put(aSessionId, aWindowId);
     }
@@ -150,11 +150,11 @@ class PresentationServiceBase {
       for (const auto& url : aAvailabilityUrls) {
         AvailabilityEntry* const entry =
             mAvailabilityUrlTable
-                .GetOrInsertWith(url,
-                                 [&] {
-                                   aAddedUrls.AppendElement(url);
-                                   return MakeUnique<AvailabilityEntry>();
-                                 })
+                .LookupOrInsertWith(url,
+                                    [&] {
+                                      aAddedUrls.AppendElement(url);
+                                      return MakeUnique<AvailabilityEntry>();
+                                    })
                 .get();
         if (!entry->mListeners.Contains(aListener)) {
           entry->mListeners.AppendElement(aListener);
@@ -228,7 +228,7 @@ class PresentationServiceBase {
             nsIPresentationAvailabilityListener* listener =
                 entry->mListeners.ObjectAt(i);
             availabilityListenerTable
-                .GetOrInsertWith(
+                .LookupOrInsertWith(
                     listener, [] { return MakeUnique<nsTArray<nsString>>(); })
                 ->AppendElement(it.Key());
           }

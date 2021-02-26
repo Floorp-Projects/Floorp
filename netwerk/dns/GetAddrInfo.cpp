@@ -423,7 +423,7 @@ NS_IMETHODIMP NativeDNSResolverOverride::AddIPOverride(
   }
 
   AutoWriteLock lock(mLock);
-  auto& overrides = mOverrides.GetOrInsert(aHost);
+  auto& overrides = mOverrides.LookupOrInsert(aHost);
   overrides.AppendElement(tempAddr);
 
   return NS_OK;

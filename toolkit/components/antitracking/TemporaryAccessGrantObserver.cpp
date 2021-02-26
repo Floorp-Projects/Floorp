@@ -35,7 +35,7 @@ void TemporaryAccessGrantObserver::Create(PermissionManager* aPM,
   if (!sObservers) {
     sObservers = MakeUnique<ObserversTable>();
   }
-  Unused << sObservers->GetOrInsertWith(
+  sObservers->LookupOrInsertWith(
       std::make_pair(nsCOMPtr<nsIPrincipal>(aPrincipal), nsCString(aType)),
       [&]() -> nsCOMPtr<nsITimer> {
         // Only create a new observer if we don't have a matching

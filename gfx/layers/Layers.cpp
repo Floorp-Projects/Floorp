@@ -2136,7 +2136,7 @@ bool LayerManager::AddPendingScrollUpdateForNextTransaction(
     return false;
   }
 
-  mPendingScrollUpdates.GetOrInsert(aScrollId).AppendElement(aUpdateInfo);
+  mPendingScrollUpdates.LookupOrInsert(aScrollId).AppendElement(aUpdateInfo);
   return true;
 }
 

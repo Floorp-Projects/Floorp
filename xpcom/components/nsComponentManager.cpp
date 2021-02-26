@@ -728,7 +728,7 @@ void nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
 
   KnownModule* const km =
       mKnownModules
-          .GetOrInsertWith(hash, [&] { return MakeUnique<KnownModule>(fl); })
+          .LookupOrInsertWith(hash, [&] { return MakeUnique<KnownModule>(fl); })
           .get();
 
   void* place = mArena.Allocate(sizeof(nsCID));

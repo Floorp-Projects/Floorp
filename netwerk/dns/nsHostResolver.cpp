@@ -906,7 +906,7 @@ nsresult nsHostResolver::GetHostRecord(const nsACString& host,
   nsHostKey key(host, aTrrServer, type, flags, af, pb, originSuffix);
 
   RefPtr<nsHostRecord> rec =
-      mRecordDB.GetOrInsertWith(key, [&] { return InitRecord(key); });
+      mRecordDB.LookupOrInsertWith(key, [&] { return InitRecord(key); });
   if (rec->IsAddrRecord()) {
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
     if (addrRec->addr) {
@@ -1049,7 +1049,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     }
 
     RefPtr<nsHostRecord> rec =
-        mRecordDB.GetOrInsertWith(key, [&] { return InitRecord(key); });
+        mRecordDB.LookupOrInsertWith(key, [&] { return InitRecord(key); });
 
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
     MOZ_ASSERT(rec, "Record should not be null");

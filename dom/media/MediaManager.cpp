@@ -2793,7 +2793,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             // things down
             nsTArray<nsString>* const array =
                 self->mCallIds
-                    .GetOrInsertWith(
+                    .LookupOrInsertWith(
                         windowID,
                         [] { return MakeUnique<nsTArray<nsString>>(); })
                     .get();

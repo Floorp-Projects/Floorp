@@ -370,7 +370,7 @@ WebSocketEventService::AddListener(uint64_t aInnerWindowID,
   ++mCountListeners;
 
   mWindows
-      .GetOrInsertWith(
+      .LookupOrInsertWith(
           aInnerWindowID,
           [&] {
             auto listener = MakeUnique<WindowListener>();

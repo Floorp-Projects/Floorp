@@ -240,7 +240,7 @@ void EffectCompositor::RequestRestyle(dom::Element* aElement,
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashEntry::KeyType key = {aElement, aPseudoType};
 
-  bool& restyleEntry = elementsToRestyle.GetOrInsert(key, false);
+  bool& restyleEntry = elementsToRestyle.LookupOrInsert(key, false);
   if (aRestyleType == RestyleType::Throttled) {
     mPresContext->PresShell()->SetNeedThrottledAnimationFlush();
   } else {

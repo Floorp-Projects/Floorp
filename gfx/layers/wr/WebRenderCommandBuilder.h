@@ -136,7 +136,7 @@ class WebRenderCommandBuilder final {
       frame->AddProperty(WebRenderUserDataProperty::Key(), userDataTable);
     }
 
-    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsertWith(
+    RefPtr<WebRenderUserData>& data = userDataTable->LookupOrInsertWith(
         WebRenderUserDataKey(aItem->GetPerFrameKey(), T::Type()), [&] {
           auto data = MakeRefPtr<T>(GetRenderRootStateManager(), aItem);
           mWebRenderUserDatas.PutEntry(data);

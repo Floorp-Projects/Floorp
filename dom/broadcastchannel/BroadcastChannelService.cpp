@@ -83,7 +83,7 @@ void BroadcastChannelService::RegisterActor(
 
   auto* const parents =
       mAgents
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               aOriginChannelKey,
               [] { return MakeUnique<nsTArray<BroadcastChannelParent*>>(); })
           .get();

@@ -165,12 +165,13 @@ inline DocAccessible::AttrRelProviders* DocAccessible::GetOrCreateRelProviders(
       aElement->GetUncomposedDocOrConnectedShadowRoot();
   DependentIDsHashtable* hash =
       mDependentIDsHashes
-          .GetOrInsertWith(docOrShadowRoot,
-                           [] { return MakeUnique<DependentIDsHashtable>(); })
+          .LookupOrInsertWith(
+              docOrShadowRoot,
+              [] { return MakeUnique<DependentIDsHashtable>(); })
           .get();
 
   return hash
-      ->GetOrInsertWith(aID, [] { return MakeUnique<AttrRelProviders>(); })
+      ->LookupOrInsertWith(aID, [] { return MakeUnique<AttrRelProviders>(); })
       .get();
 }
 
