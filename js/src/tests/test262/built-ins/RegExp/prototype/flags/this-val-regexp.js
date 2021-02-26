@@ -1,3 +1,4 @@
+// |reftest| skip -- regexp-match-indices is not supported
 // Copyright (C) 2017 Aleksey Shvayka. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -20,7 +21,7 @@ info: |
   14. Let sticky be ToBoolean(? Get(R, "sticky")).
   15. If sticky is true, append "y" as the last code unit of result.
   16. Return result.
-features: [regexp-dotall]
+features: [regexp-dotall, regexp-match-indices]
 ---*/
 
 assert.sameValue(/./.flags, '', 'no flags');
@@ -30,5 +31,6 @@ assert.sameValue(/./m.flags, 'm', 'multiline');
 assert.sameValue(/./s.flags, 's', 'dotAll');
 assert.sameValue(/./u.flags, 'u', 'unicode');
 assert.sameValue(/./y.flags, 'y', 'sticky');
+assert.sameValue(/./d.flags, 'd', 'hasIndices');
 
 reportCompare(0, 0);
