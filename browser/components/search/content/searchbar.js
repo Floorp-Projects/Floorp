@@ -815,6 +815,7 @@
     _buildContextMenu() {
       const raw = `
         <menuitem data-l10n-id="text-action-undo" cmd="cmd_undo"/>
+        <menuitem data-l10n-id="text-action-redo" cmd="cmd_redo"/>
         <menuseparator/>
         <menuitem data-l10n-id="text-action-cut" cmd="cmd_cut"/>
         <menuitem data-l10n-id="text-action-copy" cmd="cmd_copy"/>
