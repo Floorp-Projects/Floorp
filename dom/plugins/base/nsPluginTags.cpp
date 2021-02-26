@@ -16,7 +16,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "nsNetUtil.h"
-#include "prenv.h"
 #include <cctype>
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/FakePluginTagInitBinding.h"

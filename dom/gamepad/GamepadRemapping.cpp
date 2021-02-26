@@ -14,9 +14,6 @@
 #include "mozilla/dom/GamepadRemapping.h"
 #include "mozilla/dom/GamepadPlatformService.h"
 
-#include <vector>
-#include <unordered_map>
-
 namespace mozilla::dom {
 
 // Follow the canonical ordering recommendation for the "Standard Gamepad"
