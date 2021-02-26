@@ -116,9 +116,11 @@ bool DecoderDoctorLogger::EnsureLogIsEnabled() {
               TaskCategory::Other,
               NS_NewRunnableFunction("DDLogger shutdown setup", [] {
                 sDDLogShutdowner = MakeUnique<DDLogShutdowner>();
-                ClearOnShutdown(&sDDLogShutdowner, ShutdownPhase::Shutdown);
+                ClearOnShutdown(&sDDLogShutdowner,
+                                ShutdownPhase::XPCOMShutdown);
                 sDDLogDeleter = MakeUnique<DDLogDeleter>();
-                ClearOnShutdown(&sDDLogDeleter, ShutdownPhase::ShutdownThreads);
+                ClearOnShutdown(&sDDLogDeleter,
+                                ShutdownPhase::XPCOMShutdownThreads);
               })));
 
           // Nobody else should change the state when *we* are enabling logging.

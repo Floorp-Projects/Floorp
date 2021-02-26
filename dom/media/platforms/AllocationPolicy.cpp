@@ -97,7 +97,8 @@ NotNull<AllocPolicy*> GlobalAllocPolicy::Instance(TrackType aTrack) {
           TaskCategory::Other,
           NS_NewRunnableFunction(
               "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
-                ClearOnShutdown(&sAudioPolicy, ShutdownPhase::ShutdownThreads);
+                ClearOnShutdown(&sAudioPolicy,
+                                ShutdownPhase::XPCOMShutdownThreads);
               }));
       return new AllocPolicyImpl(MediaDecoderLimitDefault());
     }();
@@ -108,7 +109,8 @@ NotNull<AllocPolicy*> GlobalAllocPolicy::Instance(TrackType aTrack) {
         TaskCategory::Other,
         NS_NewRunnableFunction(
             "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
-              ClearOnShutdown(&sVideoPolicy, ShutdownPhase::ShutdownThreads);
+              ClearOnShutdown(&sVideoPolicy,
+                              ShutdownPhase::XPCOMShutdownThreads);
             }));
     return new AllocPolicyImpl(MediaDecoderLimitDefault());
   }();

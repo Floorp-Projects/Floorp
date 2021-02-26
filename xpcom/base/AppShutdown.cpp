@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AppShutdown.h"
-
 #ifdef XP_WIN
 #  include <windows.h>
 #else
@@ -13,6 +11,7 @@
 #endif
 
 #include "GeckoProfiler.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Printf.h"
@@ -21,11 +20,19 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/LateWriteChecks.h"
+#include "mozilla/Services.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsICertStorage.h"
 #include "nsThreadUtils.h"
+
+#include "AppShutdown.h"
+
+// TODO: understand why on Android we cannot include this and if we should
+#ifndef ANDROID
+#  include "nsTerminator.h"
+#endif
 #include "prenv.h"
 
 #ifdef MOZ_NEW_XULSTORE
@@ -33,6 +40,29 @@
 #endif
 
 namespace mozilla {
+
+const char* sPhaseObserverKeys[] = {
+    nullptr,                            // NotInShutdown
+    "quit-application",                 // AppShutdownConfirmed
+    "profile-change-net-teardown",      // AppShutdownNetTeardown
+    "profile-change-teardown",          // AppShutdownTeardown
+    "profile-before-change",            // AppShutdown
+    "profile-before-change-qm",         // AppShutdownQM
+    "profile-before-change-telemetry",  // AppShutdownTelemetry
+    "xpcom-will-shutdown",              // XPCOMWillShutdown
+    "xpcom-shutdown",                   // XPCOMShutdown
+    "xpcom-shutdown-threads",           // XPCOMShutdownThreads
+    nullptr,                            // XPCOMShutdownLoaders
+    nullptr,                            // XPCOMShutdownFinal
+    nullptr                             // CCPostLastCycleCollection
+};
+
+static_assert(sizeof(sPhaseObserverKeys) / sizeof(sPhaseObserverKeys[0]) ==
+              (size_t)ShutdownPhase::ShutdownPhase_Length);
+
+#ifndef ANDROID
+static nsTerminator* sTerminator = nullptr;
+#endif
 
 static ShutdownPhase sFastShutdownPhase = ShutdownPhase::NotInShutdown;
 static ShutdownPhase sLateWriteChecksPhase = ShutdownPhase::NotInShutdown;
@@ -54,11 +84,11 @@ static char* sSavedProfLDEnvVar = nullptr;
 ShutdownPhase GetShutdownPhaseFromPrefValue(int32_t aPrefValue) {
   switch (aPrefValue) {
     case 1:
-      return ShutdownPhase::ShutdownPostLastCycleCollection;
+      return ShutdownPhase::CCPostLastCycleCollection;
     case 2:
-      return ShutdownPhase::ShutdownThreads;
+      return ShutdownPhase::XPCOMShutdownThreads;
     case 3:
-      return ShutdownPhase::Shutdown;
+      return ShutdownPhase::XPCOMShutdown;
       // NOTE: the remaining values from the ShutdownPhase enum will be added
       // when we're at least reasonably confident that the world won't come
       // crashing down if we do a fast shutdown at that point.
@@ -76,6 +106,11 @@ void AppShutdown::SaveEnvVarsForPotentialRestart() {
     sSavedXulAppFile = Smprintf("%s=%s", "XUL_APP_FILE", s).release();
     MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(sSavedXulAppFile);
   }
+}
+
+const char* AppShutdown::GetObserverKey(ShutdownPhase aPhase) {
+  return sPhaseObserverKeys[static_cast<std::underlying_type_t<ShutdownPhase>>(
+      aPhase)];
 }
 
 void AppShutdown::MaybeDoRestart() {
@@ -134,6 +169,10 @@ void AppShutdown::Init(AppShutdownMode aMode, int aExitCode) {
   }
 
   sExitCode = aExitCode;
+
+#ifndef ANDROID
+  sTerminator = new nsTerminator();
+#endif
 
   // Late-write checks needs to find the profile directory, so it has to
   // be initialized before services::Shutdown or (because of
@@ -241,6 +280,30 @@ void AppShutdown::DoImmediateExit(int aExitCode) {
 
 bool AppShutdown::IsRestarting() {
   return sShutdownMode == AppShutdownMode::Restart;
+}
+
+void AppShutdown::AdvanceShutdownPhase(
+    ShutdownPhase aPhase, const char16_t* aNotificationData,
+    nsCOMPtr<nsISupports> aNotificationSubject) {
+#ifndef ANDROID
+  if (sTerminator) {
+    sTerminator->AdvancePhase(aPhase);
+  }
+#endif
+
+  mozilla::KillClearOnShutdown(aPhase);
+
+  MaybeFastShutdown(aPhase);
+
+  const char* aTopic = AppShutdown::GetObserverKey(aPhase);
+  if (aTopic) {
+    nsCOMPtr<nsIObserverService> obsService =
+        mozilla::services::GetObserverService();
+    if (obsService) {
+      obsService->NotifyObservers(aNotificationSubject, aTopic,
+                                  aNotificationData);
+    }
+  }
 }
 
 }  // namespace mozilla
