@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
-import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
@@ -60,12 +59,21 @@ class NavigationToolbarRobot {
 
     fun verifyTabButtonShortcutMenuItems() = assertTabButtonShortcutMenuItems()
 
-    fun verifyReaderViewDetected(visible: Boolean = false): ViewInteraction =
+    fun verifyReaderViewDetected(visible: Boolean = false) =
         assertReaderViewDetected(visible)
+
+    fun verifyCloseReaderViewDetected(visible: Boolean = false) =
+        assertCloseReaderViewDetected(visible)
 
     fun typeSearchTerm(searchTerm: String) = awesomeBar().perform(typeText(searchTerm))
 
-    fun toggleReaderView() = readerViewToggle().click()
+    fun toggleReaderView() {
+        mDevice.findObject(UiSelector()
+            .resourceId("$packageName:id/mozac_browser_toolbar_page_actions"))
+            .waitForExists(waitingTime)
+
+        readerViewToggle().click()
+    }
 
     class Transition {
 
@@ -312,7 +320,11 @@ private fun goBackButton() = mDevice.pressBack()
 private fun readerViewToggle() =
     onView(withParent(withId(R.id.mozac_browser_toolbar_page_actions)))
 
-private fun assertReaderViewDetected(visible: Boolean) =
+private fun assertReaderViewDetected(visible: Boolean) {
+    mDevice.findObject(UiSelector()
+        .description("Reader view"))
+        .waitForExists(waitingTime)
+
     onView(
         allOf(
             withParent(withId(R.id.mozac_browser_toolbar_page_actions)),
@@ -322,6 +334,23 @@ private fun assertReaderViewDetected(visible: Boolean) =
         if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
         else ViewAssertions.doesNotExist()
     )
+}
+
+private fun assertCloseReaderViewDetected(visible: Boolean) {
+    mDevice.findObject(UiSelector()
+        .description("Close reader view"))
+        .waitForExists(waitingTime)
+
+    onView(
+        allOf(
+            withParent(withId(R.id.mozac_browser_toolbar_page_actions)),
+            withContentDescription("Close reader view")
+        )
+    ).check(
+        if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+        else ViewAssertions.doesNotExist()
+    )
+}
 
 inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
     try {

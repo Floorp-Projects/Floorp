@@ -5,22 +5,22 @@
 package org.mozilla.fenix.ui
 
 import android.view.View
+import androidx.test.espresso.IdlingRegistry
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.ui.robots.navigationToolbar
-import androidx.test.espresso.IdlingRegistry
-import org.junit.Ignore
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.mDevice
+import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
  *  Tests for verifying basic functionality of content context menus
@@ -125,6 +125,15 @@ class ReaderViewTest {
             toggleReaderView()
             mDevice.waitForIdle()
         }
+        browserScreen {
+            verifyPageContent(estimatedReadingTime)
+        }
+        navigationToolbar {
+            verifyCloseReaderViewDetected(true)
+            toggleReaderView()
+            mDevice.waitForIdle()
+            verifyReaderViewDetected(true)
+        }
 
         if (!FeatureFlags.toolbarMenuFeature) {
             browserScreen {
@@ -134,12 +143,14 @@ class ReaderViewTest {
             }.closeBrowserMenuToBrowser { }
         }
 
-        navigationToolbar {
-            toggleReaderView()
-            mDevice.waitForIdle()
-        }.openThreeDotMenu {
-            verifyReaderViewAppearance(false)
-        }.close { }
+        if (!FeatureFlags.toolbarMenuFeature) {
+            navigationToolbar {
+                toggleReaderView()
+                mDevice.waitForIdle()
+            }.openThreeDotMenu {
+                verifyReaderViewAppearance(false)
+            }.close { }
+        }
     }
 
     @Test
