@@ -6,10 +6,13 @@ function wasmValid(mod) {
   assertEq(WebAssembly.validate(mod), true);
 }
 
-// Note: the pattern variable is ignored until compilation is implemented
-// for exception instructions, which allows checking error messages.
 function wasmInvalid(mod, pattern) {
   assertEq(WebAssembly.validate(mod), false);
+  assertErrorMessage(
+    () => new WebAssembly.Module(mod),
+    WebAssembly.CompileError,
+    pattern
+  );
 }
 
 const emptyType = { args: [], ret: VoidCode };
