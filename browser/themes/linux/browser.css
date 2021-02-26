@@ -7,6 +7,12 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../shared/browser.inc.css
+/**
+ * We intentionally do not include browser-custom-colors.inc.css,
+ * instead choosing to fall back to system colours and transparencies
+ * in order to accomodate the wider variety of system themes on that
+ * platform.
+ */
 
 :root {
   --toolbar-non-lwt-bgcolor: -moz-dialog;

@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include ../../shared/customizableui/panelUI.inc.css
+/**
+ * We intentionally do not include panelUI-custom-colors.inc.css,
+ * instead choosing to fall back to system colours and transparencies
+ * in order to accomodate the wider variety of system themes on that
+ * platform.
+ */
 
 #BMB_bookmarksPopup menupopup {
   appearance: none;
