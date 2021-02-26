@@ -67,7 +67,7 @@ void main(void) {
     ImageResource res = fetch_image_resource(ph.user_data.x);
     ClipArea clip_area = fetch_clip_area(ph.user_data.w);
 
-    vec2 dest_origin = dest_task.common_data.task_rect.p0 -
+    vec2 dest_origin = dest_task.task_rect.p0 -
                        dest_task.content_origin;
 
     vec2 local_pos = bilerp(geometry.local[0], geometry.local[1],
