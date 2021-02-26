@@ -818,7 +818,7 @@ pub struct RenderPass {
     /// The subpasses that describe targets being rendered to in this pass
     pub alpha: RenderTargetList<AlphaRenderTarget>,
     pub color: RenderTargetList<ColorRenderTarget>,
-    pub texture_cache: FastHashMap<(CacheTextureId, usize), TextureCacheRenderTarget>,
+    pub texture_cache: FastHashMap<CacheTextureId, TextureCacheRenderTarget>,
     pub picture_cache: Vec<PictureCacheTarget>,
     /// The set of tasks to be performed in this pass, as indices into the
     /// `RenderTaskGraph`.
@@ -1140,13 +1140,11 @@ fn fg_test_2() {
 
     let tc_0 = StaticRenderTaskSurface::TextureCache {
         texture: CacheTextureId(0),
-        layer: 0,
         target_kind: RenderTargetKind::Color,
     };
 
     let tc_1 = StaticRenderTaskSurface::TextureCache {
         texture: CacheTextureId(1),
-        layer: 0,
         target_kind: RenderTargetKind::Color,
     };
 

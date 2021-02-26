@@ -750,7 +750,8 @@ pub enum UvRectKind {
 pub struct ImageSource {
     pub p0: DevicePoint,
     pub p1: DevicePoint,
-    pub texture_layer: f32,
+    // TODO(nical): will go into user_data in a subsequent patch.
+    pub unused: f32,
     pub user_data: [f32; 3],
     pub uv_rect_kind: UvRectKind,
 }
@@ -766,7 +767,7 @@ impl ImageSource {
             self.p1.y,
         ]);
         request.push([
-            self.texture_layer,
+            self.unused,
             self.user_data[0],
             self.user_data[1],
             self.user_data[2],

@@ -2375,7 +2375,7 @@ impl Renderer {
                             // This needs to be a render target because some render
                             // tasks get rendered into the texture cache.
                             Some(RenderTargetInfo { has_depth: info.has_depth }),
-                            info.layer_count,
+                            1,
                         );
 
                         if info.is_shared_cache {

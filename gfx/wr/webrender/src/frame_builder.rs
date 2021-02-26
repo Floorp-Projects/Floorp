@@ -848,9 +848,9 @@ pub fn build_render_pass(
                     .or_insert_with(Vec::new)
                     .push(task_id);
             }
-            SubPassSurface::Persistent { surface: StaticRenderTaskSurface::TextureCache { target_kind, texture, layer, .. } } => {
+            SubPassSurface::Persistent { surface: StaticRenderTaskSurface::TextureCache { target_kind, texture, .. } } => {
                 let texture = pass.texture_cache
-                    .entry((texture, layer))
+                    .entry(texture)
                     .or_insert_with(||
                         TextureCacheRenderTarget::new(target_kind)
                     );
@@ -955,7 +955,7 @@ pub fn build_render_pass(
         for (task_id, batcher) in task_ids.into_iter().zip(batchers.into_iter()) {
             profile_scope!("task");
             let task = &render_tasks[task_id];
-            let (target_rect, _) = task.get_target_rect();
+            let target_rect = task.get_target_rect();
 
             match task.location {
                 RenderTaskLocation::Static { surface: StaticRenderTaskSurface::PictureCache { ref surface, .. }, .. } => {

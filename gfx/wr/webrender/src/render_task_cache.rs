@@ -186,15 +186,13 @@ impl RenderTaskCache {
         );
 
         // Get the allocation details in the texture cache, and store
-        // this in the render task. The renderer will draw this
-        // task into the appropriate layer and rect of the texture
-        // cache on this frame.
-        let (texture_id, texture_layer, uv_rect, _, _, _) =
+        // this in the render task. The renderer will draw this task
+        // into the appropriate rect of the texture cache on this frame.
+        let (texture_id, uv_rect, _, _, _) =
             texture_cache.get_cache_location(&entry.handle);
 
         let surface = StaticRenderTaskSurface::TextureCache {
             texture: texture_id,
-            layer: texture_layer,
             target_kind,
         };
 
