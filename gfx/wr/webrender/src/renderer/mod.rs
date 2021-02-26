@@ -74,7 +74,7 @@ use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
 use crate::internal_types::{TextureSource, ResourceCacheError};
-use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
+use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureUpdateList};
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
 use crate::picture::{self, ResolvedSurfaceTexture};
@@ -3835,7 +3835,6 @@ impl Renderer {
     fn draw_texture_cache_target(
         &mut self,
         texture: &CacheTextureId,
-        layer: LayerIndex,
         target: &TextureCacheRenderTarget,
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
@@ -3861,7 +3860,7 @@ impl Renderer {
 
         let draw_target = DrawTarget::from_texture(
             texture,
-            layer,
+            0,
             false,
         );
         self.device.bind_draw_target(draw_target);
@@ -4387,7 +4386,6 @@ impl Renderer {
                 for (&texture_id, target) in &pass.texture_cache {
                     self.draw_texture_cache_target(
                         &texture_id,
-                        0,
                         target,
                         &frame.render_tasks,
                         &mut results.stats,
