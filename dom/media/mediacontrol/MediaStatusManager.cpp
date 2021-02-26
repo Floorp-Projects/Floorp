@@ -62,33 +62,28 @@ void MediaStatusManager::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
 }
 
 void MediaStatusManager::NotifySessionCreated(uint64_t aBrowsingContextId) {
-  if (!mMediaSessionInfoMap.WithEntryHandle(
-          aBrowsingContextId, [&](auto&& entry) {
-            if (entry) return true;
+  if (mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+    return;
+  }
 
-            LOG("Session %" PRIu64 " has been created", aBrowsingContextId);
-            entry.Insert(MediaSessionInfo::EmptyInfo());
-            return false;
-          })) {
-    // This can't be done from within the WithEntryHandle functor, since it
-    // accesses mMediaSessionInfoMap.
-    if (IsSessionOwningAudioFocus(aBrowsingContextId)) {
-      SetActiveMediaSessionContextId(aBrowsingContextId);
-    }
+  LOG("Session %" PRIu64 " has been created", aBrowsingContextId);
+  mMediaSessionInfoMap.InsertOrUpdate(aBrowsingContextId,
+                                      MediaSessionInfo::EmptyInfo());
+  if (IsSessionOwningAudioFocus(aBrowsingContextId)) {
+    SetActiveMediaSessionContextId(aBrowsingContextId);
   }
 }
 
 void MediaStatusManager::NotifySessionDestroyed(uint64_t aBrowsingContextId) {
-  mMediaSessionInfoMap.WithEntryHandle(aBrowsingContextId, [&](auto&& entry) {
-    if (entry) return;
-
-    LOG("Session %" PRIu64 " has been destroyed", aBrowsingContextId);
-    entry.Remove();
-    if (mActiveMediaSessionContextId &&
-        *mActiveMediaSessionContextId == aBrowsingContextId) {
-      ClearActiveMediaSessionContextIdIfNeeded();
-    }
-  });
+  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+    return;
+  }
+  LOG("Session %" PRIu64 " has been destroyed", aBrowsingContextId);
+  mMediaSessionInfoMap.Remove(aBrowsingContextId);
+  if (mActiveMediaSessionContextId &&
+      *mActiveMediaSessionContextId == aBrowsingContextId) {
+    ClearActiveMediaSessionContextIdIfNeeded();
+  }
 }
 
 void MediaStatusManager::UpdateMetadata(

@@ -473,16 +473,23 @@ void GeckoMediaPluginServiceChild::RemoveShutdownBlockerIfNeeded() {
 
 already_AddRefed<GMPContentParent> GMPServiceChild::GetBridgedGMPContentParent(
     ProcessId aOtherPid, ipc::Endpoint<PGMPContentParent>&& endpoint) {
-  return do_AddRef(mContentParents.LookupOrInsertWith(aOtherPid, [&] {
-    MOZ_ASSERT(aOtherPid == endpoint.OtherPid());
+  RefPtr<GMPContentParent> parent;
+  mContentParents.Get(aOtherPid, getter_AddRefs(parent));
 
-    auto parent = MakeRefPtr<GMPContentParent>();
+  if (parent) {
+    return parent.forget();
+  }
 
-    DebugOnly<bool> ok = endpoint.Bind(parent);
-    MOZ_ASSERT(ok);
+  MOZ_ASSERT(aOtherPid == endpoint.OtherPid());
 
-    return parent;
-  }));
+  parent = new GMPContentParent();
+
+  DebugOnly<bool> ok = endpoint.Bind(parent);
+  MOZ_ASSERT(ok);
+
+  mContentParents.InsertOrUpdate(aOtherPid, RefPtr{parent});
+
+  return parent.forget();
 }
 
 void GMPServiceChild::RemoveGMPContentParent(
