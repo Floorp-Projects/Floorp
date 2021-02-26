@@ -976,4 +976,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_swipe_toolbar_switch_tabs),
         default = true
     )
+
+    var creditCardsFeature by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_credit_cards_feature),
+        default = false,
+        featureFlag = FeatureFlags.creditCardsFeature
+    )
+
+    var addressFeature by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_address_feature),
+        default = false,
+        featureFlag = FeatureFlags.addressesFeature
+    )
 }

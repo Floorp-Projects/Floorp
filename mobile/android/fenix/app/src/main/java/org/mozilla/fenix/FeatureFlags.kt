@@ -20,6 +20,16 @@ object FeatureFlags {
     val nimbusExperiments = Config.channel.isNightlyOrDebug
 
     /**
+     * Enables the Addresses autofill feature.
+     */
+    val addressesFeature = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables the Credit Cards autofill feature.
+     */
+    val creditCardsFeature = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables WebAuthn support.
      */
     val webAuthFeature = Config.channel.isNightlyOrDebug
