@@ -676,10 +676,10 @@ JitScript* ICScript::outerJitScript() {
 // different decision in WarpScriptOracle::maybeInlineIC. This means:
 //
 // 1. The hash will change if we attach a new stub.
-// 2. The hash will change if we increment the entered count of any
-//    CacheIR stub other than the first.
-// 3. The hash will change if we increment the entered count of the
-//    fallback stub.
+// 2. The hash will change if the entered count of any CacheIR stub
+//    other than the first changes from 0.
+// 3. The hash will change if the entered count of the fallback stub
+//    changes from 0.
 //
 HashNumber ICScript::hash() {
   HashNumber h = 0;
@@ -689,18 +689,18 @@ HashNumber ICScript::hash() {
     // Hash the address of the first stub.
     h = mozilla::AddToHash(h, stub);
 
-    // Hash the entered count of each subsequent CacheIRStub.
+    // Hash whether subsequent stubs have entry count 0.
     if (!stub->isFallback()) {
       stub = stub->toCacheIRStub()->next();
       while (!stub->isFallback()) {
-        h = mozilla::AddToHash(h, stub->enteredCount());
+        h = mozilla::AddToHash(h, stub->enteredCount() == 0);
         stub = stub->toCacheIRStub()->next();
       }
     }
 
-    // Hash the enteredCount of the fallback stub.
+    // Hash whether the fallback has entry count 0.
     MOZ_ASSERT(stub->isFallback());
-    h = mozilla::AddToHash(h, stub->enteredCount());
+    h = mozilla::AddToHash(h, stub->enteredCount() == 0);
   }
 
   if (inlinedChildren_) {
