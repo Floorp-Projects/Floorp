@@ -395,7 +395,7 @@ typedef EnumSet<ScrollDirection> ScrollDirections;
 
 constexpr ScrollDirections EitherScrollDirection(ScrollDirection::eVertical,ScrollDirection::eHorizontal);
 constexpr ScrollDirections HorizontalScrollDirection(ScrollDirection::eHorizontal);
-constexpr ScrollDirections VerticalScollDirection(ScrollDirection::eVertical);
+constexpr ScrollDirections VerticalScrollDirection(ScrollDirection::eVertical);
 
 
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(CompositionPayloadType, uint8_t, (
