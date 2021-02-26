@@ -270,10 +270,7 @@
       <menuitem id="context-undo"
                 data-l10n-id="text-action-undo"
                 command="cmd_undo"/>
-      <menuitem id="context-redo"
-                data-l10n-id="text-action-redo"
-                command="cmd_redo"/>
-      <menuseparator id="context-sep-redo"/>
+      <menuseparator id="context-sep-undo"/>
       <menuitem id="context-cut"
                 data-l10n-id="text-action-cut"
                 command="cmd_cut"/>

@@ -1056,7 +1056,6 @@ add_task(async function test_textarea() {
   /*
   yield test_contextmenu("#test-textarea",
     ["context-undo",                false,
-     "context-redo",                false,
      "---",                         null,
      "context-cut",                 true,
      "context-copy",                true,
@@ -1083,7 +1082,6 @@ add_task(async function test_textarea_spellcheck() {
      "spell-add-to-dictionary", true,
      "---",                 null,
      "context-undo",        false,
-     "context-redo",        false,
      "---",                 null,
      "context-cut",         true,
      "context-copy",        true,
@@ -1124,7 +1122,6 @@ add_task(async function test_undo_add_to_dictionary() {
     ["spell-undo-add-to-dictionary", true,
      "---",                 null,
      "context-undo",        false,
-     "context-redo",        false,
      "---",                 null,
      "context-cut",         true,
      "context-copy",        true,
@@ -1158,7 +1155,6 @@ add_task(async function test_contenteditable() {
      "spell-add-to-dictionary", true,
      "---",                 null,
      "context-undo",        false,
-     "context-redo",        false,
      "---",                 null,
      "context-cut",         true,
      "context-copy",        true,
@@ -1622,7 +1618,6 @@ add_task(async function test_select_input_text() {
   /*
   yield test_contextmenu("#test-select-input-text",
     ["context-undo",                 false,
-     "context-redo",                 false,
      "---",                          null,
      "context-cut",                  true,
      "context-copy",                 true,
@@ -1655,7 +1650,6 @@ add_task(async function test_select_input_text_password() {
   /*
   yield test_contextmenu("#test-select-input-text-type-password",
     ["context-undo",        false,
-     "context-redo",        false,
      "---",                 null,
      "context-cut",         true,
      "context-copy",        true,
@@ -1778,7 +1772,6 @@ add_task(async function test_input_spell_false() {
   /*
   yield test_contextmenu("#test-contenteditable-spellcheck-false",
     ["context-undo",        false,
-     "context-redo",        false,
      "---",                 null,
      "context-cut",         true,
      "context-copy",        true,
