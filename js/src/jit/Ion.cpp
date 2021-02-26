@@ -1206,22 +1206,21 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
-  if (mir->optimizationInfo().licmEnabled()) {
+  // LICM can hoist instructions from conditional branches and
+  // trigger bailouts. Disable it if bailing out of a hoisted
+  // instruction has previously invalidated this script.
+  if (mir->optimizationInfo().licmEnabled() &&
+      !mir->outerInfo().hadLICMInvalidation()) {
     AutoTraceLog log(logger, TraceLogger_LICM);
-    // LICM can hoist instructions from conditional branches and
-    // trigger bailouts. Disable it if bailing out of a hoisted
-    // instruction has previously invalidated this script.
-    if (!mir->outerInfo().hadLICMInvalidation()) {
-      JitSpewCont(JitSpew_LICM, "\n");
-      if (!LICM(mir, graph)) {
-        return false;
-      }
-      gs.spewPass("LICM");
-      AssertExtendedGraphCoherency(graph);
+    JitSpewCont(JitSpew_LICM, "\n");
+    if (!LICM(mir, graph)) {
+      return false;
+    }
+    gs.spewPass("LICM");
+    AssertExtendedGraphCoherency(graph);
 
-      if (mir->shouldCancel("LICM")) {
-        return false;
-      }
+    if (mir->shouldCancel("LICM")) {
+      return false;
     }
   }
 
@@ -1382,7 +1381,8 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
-  if (mir->optimizationInfo().instructionReorderingEnabled()) {
+  if (mir->optimizationInfo().instructionReorderingEnabled() &&
+      !mir->outerInfo().hadReorderingBailout()) {
     AutoTraceLog log(logger, TraceLogger_ReorderInstructions);
     if (!ReorderInstructions(graph)) {
       return false;
