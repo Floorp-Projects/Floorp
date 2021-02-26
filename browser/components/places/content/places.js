@@ -229,7 +229,7 @@ var PlacesOrganizer = {
       }
     }
 
-    // remove the "Edit" context-menu item, we're in our own details pane
+    // remove the "Properties" context-menu item, we've our own details pane
     document
       .getElementById("placesContext")
       .removeChild(document.getElementById("placesContext_show:info"));
