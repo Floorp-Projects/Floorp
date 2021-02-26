@@ -110,7 +110,7 @@ add_task(async function test_trr_flags() {
   const URL = `http://example.com:${httpserv.identity.primaryPort}/`;
 
   for (let mode of [0, 1, 2, 3, 4, 5]) {
-    setModeAndURI(mode, "404");
+    setModeAndURI(mode, "doh?responseIP=127.0.0.1");
     for (let flag of [
       Ci.nsIRequest.TRR_DEFAULT_MODE,
       Ci.nsIRequest.TRR_DISABLED_MODE,
@@ -119,17 +119,22 @@ add_task(async function test_trr_flags() {
     ]) {
       dns.clearCache(true);
       let chan = makeChan(URL, flag);
-      let channelFlags;
-      if (
-        ([0, 2, 3].includes(mode) && flag == Ci.nsIRequest.TRR_ONLY_MODE) ||
-        (mode == 3 && flag == Ci.nsIRequest.TRR_DEFAULT_MODE)
-      ) {
-        channelFlags = CL_EXPECT_FAILURE;
-      }
+      let expectTRR =
+        ([2, 3].includes(mode) && flag != Ci.nsIRequest.TRR_DISABLED_MODE) ||
+        (mode == 0 &&
+          [Ci.nsIRequest.TRR_FIRST_MODE, Ci.nsIRequest.TRR_ONLY_MODE].includes(
+            flag
+          ));
+
       await new Promise(resolve =>
-        chan.asyncOpen(new ChannelListener(resolve, null, channelFlags))
+        chan.asyncOpen(new ChannelListener(resolve))
       );
+
       equal(chan.getTRRMode(), flag);
+      equal(
+        expectTRR,
+        chan.QueryInterface(Ci.nsIHttpChannelInternal).isResolvedByTRR
+      );
     }
   }
 
