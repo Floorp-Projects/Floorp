@@ -1353,12 +1353,18 @@ class UrlbarView {
       result.type != UrlbarUtils.RESULT_TYPE.TAB_SWITCH
     ) {
       item.toggleAttribute("sponsored", true);
-      actionSetter = () => {
-        this.document.l10n.setAttributes(
-          action,
-          "urlbar-result-action-sponsored"
-        );
-      };
+      if (result.payload.sponsoredText) {
+        action.removeAttribute("data-l10n-id");
+        actionSetter = () =>
+          (action.textContent = result.payload.sponsoredText);
+      } else {
+        actionSetter = () => {
+          this.document.l10n.setAttributes(
+            action,
+            "urlbar-result-action-sponsored"
+          );
+        };
+      }
     } else {
       item.removeAttribute("sponsored");
     }
