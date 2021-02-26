@@ -111,6 +111,7 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
     "devtools/client/perftools.ftl",
     // Needed for the onboarding UI
     "devtools/client/toolbox-options.ftl",
+    "browser/branding/brandings.ftl",
   ]);
 
   // Do some initialization, especially with privileged things that are part of the
