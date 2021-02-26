@@ -97,6 +97,45 @@ static void AddrToString(nsINetAddr* netAddr, nsACString& addrStr) {
   }
 }
 
+static void AddrToString(NetAddr& netAddr, nsACString& addrStr) {
+  char buf[kIPv6CStrBufSize];
+  netAddr.ToStringBuffer(buf, kIPv6CStrBufSize);
+
+  if (netAddr.raw.family == AF_INET6) {
+    // Append '[' and ']'
+    addrStr.Append("[");
+    addrStr.Append(buf, strlen(buf));
+    addrStr.Append("]:");
+    addrStr.AppendInt(ntohs(netAddr.inet6.port));
+  } else {
+    addrStr.Append(buf, strlen(buf));
+    addrStr.Append(":");
+    addrStr.AppendInt(ntohs(netAddr.inet.port));
+  }
+}
+
+static nsresult StringAndPortToNetAddr(nsACString& remoteAddrStr,
+                                       uint16_t remotePort, NetAddr* netAddr) {
+  memset(netAddr, 0, sizeof(*netAddr));
+  PRNetAddr remotePRAddr;
+  memset(&remotePRAddr, 0, sizeof(remotePRAddr));
+  PRStatus prRv =
+      PR_StringToNetAddr(remoteAddrStr.BeginReading(), &remotePRAddr);
+  MOZ_ASSERT(prRv == PR_SUCCESS);
+  if (prRv != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRNetAddrToNetAddr(&remotePRAddr, netAddr);
+  if (netAddr->raw.family == AF_INET6) {
+    netAddr->inet6.port = htons(remotePort);
+  } else {
+    netAddr->inet.port = htons(remotePort);
+  }
+
+  return NS_OK;
+}
+
 nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
                             nsINetAddr* selfAddr, nsINetAddr* peerAddr,
                             HttpConnectionUDP* udpConn, uint32_t controlFlags,
@@ -277,7 +316,13 @@ void Http3Session::ProcessInput(nsIUDPSocket* socket) {
     if (NS_FAILED(rv) || data.IsEmpty()) {
       break;
     }
-    mHttp3Connection->ProcessInput(data);
+    nsAutoCString remoteAddrStr;
+    AddrToString(addr, remoteAddrStr);
+    rv = mHttp3Connection->ProcessInput(&remoteAddrStr, data);
+    MOZ_ALWAYS_SUCCEEDS(rv);
+    if (NS_FAILED(rv)) {
+      break;
+    }
 
     LOG(("Http3Session::ProcessInput received=%zu", data.Length()));
     mTotalBytesRead += data.Length();
@@ -532,14 +577,27 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
 
   // Check if we have a packet that could not have been sent in a previous
   // iteration or maybe get new packets to send.
-  while (mPacketToSend.Length() ||
-         NS_SUCCEEDED(mHttp3Connection->GetDataToSend(mPacketToSend))) {
-    MOZ_ASSERT(mPacketToSend.Length());
-    LOG(("Http3Session::ProcessOutput sending packet with %u bytes [this=%p].",
-         (uint32_t)mPacketToSend.Length(), this));
+  while (true) {
+    nsTArray<uint8_t> packetToSend;
+    nsAutoCString remoteAddrStr;
+    uint16_t port = 0;
+    if (NS_FAILED(mHttp3Connection->GetDataToSend(&remoteAddrStr, &port,
+                                                  packetToSend))) {
+      break;
+    }
+    MOZ_ASSERT(packetToSend.Length());
+    LOG(("Http3Session::ProcessOutput sending packet with %u bytes to %s "
+         "port=%d [this=%p].",
+         (uint32_t)packetToSend.Length(),
+         PromiseFlatCString(remoteAddrStr).get(), port, this));
+
     uint32_t written = 0;
-    nsresult rv = socket->SendWithAddr(mNetAddr, mPacketToSend, &written);
-    MOZ_ASSERT(mPacketToSend.Length() == written);
+    NetAddr addr;
+    if (NS_FAILED(StringAndPortToNetAddr(remoteAddrStr, port, &addr))) {
+      continue;
+    }
+    nsresult rv = socket->SendWithAddress(&addr, packetToSend, &written);
+    MOZ_ASSERT(packetToSend.Length() == written);
     if (NS_FAILED(rv)) {
       mSocketError = rv;
       // Ok the socket is blocked or there is an error, return from here,
@@ -548,9 +606,8 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
       return rv;
     }
 
-    mTotalBytesWritten += mPacketToSend.Length();
+    mTotalBytesWritten += packetToSend.Length();
     mLastWriteTime = PR_IntervalNow();
-    mPacketToSend.TruncateLength(0);
   }
 
   SetupTimer(timeout);

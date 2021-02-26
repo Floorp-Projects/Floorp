@@ -175,8 +175,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   // True if the mTimer is inited and waiting for firing.
   bool mTimerActive;
 
-  nsTArray<uint8_t> mPacketToSend;
-
   RefPtr<HttpConnectionUDP> mUdpConn;
 
   // The underlying socket transport object is needed to propogate some events
