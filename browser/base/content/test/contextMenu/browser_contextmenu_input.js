@@ -24,8 +24,6 @@ add_task(async function test_text_input() {
   await test_contextmenu("#input_text", [
     "context-undo",
     false,
-    "context-redo",
-    false,
     "---",
     null,
     "context-cut",
@@ -50,8 +48,6 @@ add_task(async function test_text_input_disabled() {
     "#input_disabled",
     [
       "context-undo",
-      false,
-      "context-redo",
       false,
       "---",
       null,
@@ -100,8 +96,6 @@ add_task(async function test_password_input() {
       "---",
       null,
       "context-undo",
-      false,
-      "context-redo",
       false,
       "---",
       null,
@@ -167,8 +161,6 @@ add_task(async function test_tel_email_url_number_input() {
       selector,
       [
         "context-undo",
-        false,
-        "context-redo",
         false,
         "---",
         null,
@@ -262,8 +254,6 @@ add_task(async function test_search_input() {
     [
       "context-undo",
       false,
-      "context-redo",
-      false,
       "---",
       null,
       "context-cut",
@@ -299,8 +289,6 @@ add_task(async function test_text_input_readonly() {
     "#input_readonly",
     [
       "context-undo",
-      false,
-      "context-redo",
       false,
       "---",
       null,
