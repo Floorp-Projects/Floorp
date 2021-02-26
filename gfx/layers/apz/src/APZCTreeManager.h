@@ -601,6 +601,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   ScreenMargin GetGeckoFixedLayerMargins() const;
 
+  ScreenMargin GetCompositorFixedLayerMargins() const;
+
  private:
   typedef bool (*GuidComparator)(const ScrollableLayerGuid&,
                                  const ScrollableLayerGuid&);
