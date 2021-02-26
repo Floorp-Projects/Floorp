@@ -158,20 +158,20 @@ TEST_F(APZCPanningTester, PanWithHistoricalTouchData) {
   // First simulation: full data
 
   APZEventResult result = TouchDown(apzc, ScreenIntPoint(0, 50), mcc->Time());
-  if (result.mStatus != nsEventStatus_eConsumeNoDefault &&
+  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault &&
       StaticPrefs::layout_css_touch_action_enabled()) {
     SetDefaultAllowedTouchBehavior(apzc, result.mInputBlockId);
   }
 
   mcc->AdvanceByMillis(50);
-  result.mStatus = TouchMove(apzc, ScreenIntPoint(0, 45), mcc->Time());
+  result = TouchMove(apzc, ScreenIntPoint(0, 45), mcc->Time());
   mcc->AdvanceByMillis(10);
-  result.mStatus = TouchMove(apzc, ScreenIntPoint(0, 40), mcc->Time());
+  result = TouchMove(apzc, ScreenIntPoint(0, 40), mcc->Time());
   mcc->AdvanceByMillis(10);
-  result.mStatus = TouchMove(apzc, ScreenIntPoint(0, 30), mcc->Time());
+  result = TouchMove(apzc, ScreenIntPoint(0, 30), mcc->Time());
   mcc->AdvanceByMillis(10);
-  result.mStatus = TouchMove(apzc, ScreenIntPoint(0, 20), mcc->Time());
-  result.mStatus = TouchUp(apzc, ScreenIntPoint(0, 20), mcc->Time());
+  result = TouchMove(apzc, ScreenIntPoint(0, 20), mcc->Time());
+  result = TouchUp(apzc, ScreenIntPoint(0, 20), mcc->Time());
   auto velocityFromFullDataAsSeparateEvents = apzc->GetVelocityVector();
   apzc->CancelAnimation();
 
@@ -180,16 +180,16 @@ TEST_F(APZCPanningTester, PanWithHistoricalTouchData) {
   // Second simulation: partial data
 
   result = TouchDown(apzc, ScreenIntPoint(0, 50), mcc->Time());
-  if (result.mStatus != nsEventStatus_eConsumeNoDefault &&
+  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault &&
       StaticPrefs::layout_css_touch_action_enabled()) {
     SetDefaultAllowedTouchBehavior(apzc, result.mInputBlockId);
   }
 
   mcc->AdvanceByMillis(50);
-  result.mStatus = TouchMove(apzc, ScreenIntPoint(0, 45), mcc->Time());
+  result = TouchMove(apzc, ScreenIntPoint(0, 45), mcc->Time());
   mcc->AdvanceByMillis(30);
-  result.mStatus = TouchMove(apzc, ScreenIntPoint(0, 20), mcc->Time());
-  result.mStatus = TouchUp(apzc, ScreenIntPoint(0, 20), mcc->Time());
+  result = TouchMove(apzc, ScreenIntPoint(0, 20), mcc->Time());
+  result = TouchUp(apzc, ScreenIntPoint(0, 20), mcc->Time());
   auto velocityFromPartialData = apzc->GetVelocityVector();
   apzc->CancelAnimation();
 
@@ -198,13 +198,13 @@ TEST_F(APZCPanningTester, PanWithHistoricalTouchData) {
   // Third simulation: full data via historical data
 
   result = TouchDown(apzc, ScreenIntPoint(0, 50), mcc->Time());
-  if (result.mStatus != nsEventStatus_eConsumeNoDefault &&
+  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault &&
       StaticPrefs::layout_css_touch_action_enabled()) {
     SetDefaultAllowedTouchBehavior(apzc, result.mInputBlockId);
   }
 
   mcc->AdvanceByMillis(50);
-  result.mStatus = TouchMove(apzc, ScreenIntPoint(0, 45), mcc->Time());
+  result = TouchMove(apzc, ScreenIntPoint(0, 45), mcc->Time());
   mcc->AdvanceByMillis(30);
 
   MultiTouchInput mti =
@@ -227,9 +227,9 @@ TEST_F(APZCPanningTester, PanWithHistoricalTouchData) {
           0.0f,
           0.0f});
   mti.mTouches.AppendElement(singleTouchData);
-  result.mStatus = apzc->ReceiveInputEvent(mti).mStatus;
+  result = apzc->ReceiveInputEvent(mti);
 
-  result.mStatus = TouchUp(apzc, ScreenIntPoint(0, 20), mcc->Time());
+  result = TouchUp(apzc, ScreenIntPoint(0, 20), mcc->Time());
   auto velocityFromFullDataViaHistory = apzc->GetVelocityVector();
   apzc->CancelAnimation();
 
