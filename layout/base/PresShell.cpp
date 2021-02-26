@@ -10551,11 +10551,7 @@ void ReflowCountMgr::Add(const char* aName, nsIFrame* aFrame) {
   NS_ASSERTION(aName != nullptr, "Name shouldn't be null!");
 
   if (mDumpFrameCounts) {
-    auto* const counter =
-        mCounts
-            .LookupOrInsertWith(
-                aName, [this] { return MakeUnique<ReflowCounter>(this); })
-            .get();
+    auto* const counter = mCounts.GetOrInsertNew(aName, this);
     counter->Add();
   }
 

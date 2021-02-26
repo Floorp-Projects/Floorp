@@ -3344,11 +3344,8 @@ void nsHttpConnectionMgr::RegisterOriginCoalescingKey(HttpConnectionBase* conn,
 
   nsCString newKey;
   BuildOriginFrameHashKey(newKey, ci, host, port);
-  mCoalescingHash
-      .LookupOrInsertWith(newKey,
-                          [] { return MakeUnique<nsTArray<nsWeakPtr>>(1); })
-      ->AppendElement(
-          do_GetWeakReference(static_cast<nsISupportsWeakReference*>(conn)));
+  mCoalescingHash.GetOrInsertNew(newKey, 1)->AppendElement(
+      do_GetWeakReference(static_cast<nsISupportsWeakReference*>(conn)));
 
   LOG(
       ("nsHttpConnectionMgr::RegisterOriginCoalescingKey "

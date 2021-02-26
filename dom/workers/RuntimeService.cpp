@@ -1222,12 +1222,7 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
     if (!isServiceWorker) {
       // Service workers are excluded since their lifetime is separate from
       // that of dom windows.
-      if (auto* const windowArray =
-              mWindowMap
-                  .LookupOrInsertWith(
-                      window,
-                      [] { return MakeUnique<nsTArray<WorkerPrivate*>>(1); })
-                  .get();
+      if (auto* const windowArray = mWindowMap.GetOrInsertNew(window, 1);
           !windowArray->Contains(&aWorkerPrivate)) {
         windowArray->AppendElement(&aWorkerPrivate);
       } else {

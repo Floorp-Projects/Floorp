@@ -119,14 +119,9 @@ nsresult nsStreamConverterService::AddAdjacency(const char* aContractID) {
   // each MIME-type is represented as a key in our hashtable.
 
   nsTArray<RefPtr<nsAtom>>* const fromEdges =
-      mAdjacencyList
-          .LookupOrInsertWith(
-              fromStr,
-              [] { return mozilla::MakeUnique<nsTArray<RefPtr<nsAtom>>>(); })
-          .get();
+      mAdjacencyList.GetOrInsertNew(fromStr);
 
-  mozilla::Unused << mAdjacencyList.LookupOrInsertWith(
-      toStr, [] { return mozilla::MakeUnique<nsTArray<RefPtr<nsAtom>>>(); });
+  mAdjacencyList.GetOrInsertNew(toStr);
 
   // Now we know the FROM and TO types are represented as keys in the hashtable.
   // Let's "connect" the verticies, making an edge.

@@ -7627,13 +7627,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
     MOZ_ASSERT(id > 0);
 
     const auto entry =
-        WrapNotNull(mFileInfoEntries
-                        .LookupOrInsertWith(id,
-                                            [&file] {
-                                              return MakeUnique<FileInfoEntry>(
-                                                  file.FileInfoPtr());
-                                            })
-                        .get());
+        WrapNotNull(mFileInfoEntries.GetOrInsertNew(id, file.FileInfoPtr()));
 
     if (mInSavepoint) {
       mSavepointEntriesIndex.InsertOrUpdate(id, entry);

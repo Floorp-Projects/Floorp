@@ -752,10 +752,7 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetRadioGroup(
 
 nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
     const nsAString& aName) {
-  return mRadioGroups
-      .LookupOrInsertWith(aName,
-                          [] { return MakeUnique<nsRadioGroupStruct>(); })
-      .get();
+  return mRadioGroups.GetOrInsertNew(aName);
 }
 
 int32_t DocumentOrShadowRoot::StyleOrderIndexOfSheet(
