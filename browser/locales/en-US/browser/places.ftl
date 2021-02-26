@@ -5,33 +5,30 @@
 places-open =
   .label = Open
   .accesskey = O
-places-open-in-tab =
-  .label = Open in New Tab
+places-open-tab =
+  .label = Open in a New Tab
   .accesskey = w
-places-open-all-bookmarks =
-  .label = Open All Bookmarks
-  .accesskey = O
 places-open-all-in-tabs =
   .label = Open All in Tabs
   .accesskey = O
-places-open-in-window =
-  .label = Open in New Window
+places-open-window =
+  .label = Open in a New Window
   .accesskey = N
-places-open-in-private-window =
-  .label = Open in New Private Window
+places-open-private-window =
+  .label = Open in a New Private Window
   .accesskey = P
 
-places-add-bookmark =
-  .label = Add Bookmark…
+places-new-bookmark =
+  .label = New Bookmark…
   .accesskey = B
-places-add-folder-contextmenu =
-  .label = Add Folder…
+places-new-folder-contextmenu =
+  .label = New Folder…
   .accesskey = F
-places-add-folder =
-  .label = Add Folder…
+places-new-folder =
+  .label = New Folder…
   .accesskey = o
-places-add-separator =
-  .label = Add Separator
+places-new-separator =
+  .label = New Separator
   .accesskey = S
 
 places-view =
@@ -64,12 +61,8 @@ places-delete-domain-data =
 places-sortby-name =
   .label = Sort By Name
   .accesskey = r
-# places-edit-bookmark and places-edit-generic will show one or the other and can have the same access key.
-places-edit-bookmark =
-  .label = Edit Bookmark…
-  .accesskey = i
-places-edit-generic =
-  .label = Edit…
+places-properties =
+  .label = Properties
   .accesskey = i
 
 # Managed bookmarks are created by an administrator and cannot be changed by the user.
@@ -82,17 +75,3 @@ managed-bookmarks-subfolder =
 # This label is used for the "Other Bookmarks" folder that appears in the bookmarks toolbar.
 other-bookmarks-folder =
   .label = Other Bookmarks
-
-# Variables:
-# $count (number) - The number of elements being selected for removal.
-places-remove-bookmark =
-  .label =
-      { $count ->
-          [1] Remove Bookmark
-         *[other] Remove Bookmarks
-      }
-  .accesskey = e
-
-places-manage-bookmarks =
-  .label = Manage Bookmarks
-  .accesskey = M
