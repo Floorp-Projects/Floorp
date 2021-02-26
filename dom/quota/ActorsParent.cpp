@@ -6674,11 +6674,7 @@ already_AddRefed<GroupInfo> QuotaManager::LockedGetOrCreateGroupInfo(
   mQuotaMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-  GroupInfoPair* const pair =
-      mGroupInfoPairs
-          .LookupOrInsertWith(aGroup,
-                              [] { return MakeUnique<GroupInfoPair>(); })
-          .get();
+  GroupInfoPair* const pair = mGroupInfoPairs.GetOrInsertNew(aGroup);
 
   RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (!groupInfo) {

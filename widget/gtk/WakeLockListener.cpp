@@ -483,11 +483,7 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
     return NS_OK;
 
   WakeLockTopic* const topicLock =
-      mTopics
-          .LookupOrInsertWith(
-              topic,
-              [&] { return MakeUnique<WakeLockTopic>(topic, mConnection); })
-          .get();
+      mTopics.GetOrInsertNew(topic, topic, mConnection);
 
   // Treat "locked-background" the same as "unlocked" on desktop linux.
   bool shouldLock = state.EqualsLiteral("locked-foreground");

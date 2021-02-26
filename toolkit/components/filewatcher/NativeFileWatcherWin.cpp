@@ -1098,10 +1098,7 @@ void NativeFileWatcherIOTask::AppendCallbacksToHashtables(
     const nsMainThreadPtrHandle<nsINativeFileWatcherErrorCallback>&
         aOnErrorHandle) {
   ChangeCallbackArray* const callbacksArray =
-      mChangeCallbacksTable
-          .LookupOrInsertWith(aPath,
-                              [] { return MakeUnique<ChangeCallbackArray>(); })
-          .get();
+      mChangeCallbacksTable.GetOrInsertNew(aPath);
 
   // Now we do have an entry for that path. Check to see if the callback is
   // already there.
@@ -1115,10 +1112,7 @@ void NativeFileWatcherIOTask::AppendCallbacksToHashtables(
 
   // Same thing for the error callback.
   ErrorCallbackArray* const errorCallbacksArray =
-      mErrorCallbacksTable
-          .LookupOrInsertWith(aPath,
-                              [] { return MakeUnique<ErrorCallbackArray>(); })
-          .get();
+      mErrorCallbacksTable.GetOrInsertNew(aPath);
 
   ErrorCallbackArray::index_type errorCallbackIndex =
       errorCallbacksArray->IndexOf(aOnErrorHandle);

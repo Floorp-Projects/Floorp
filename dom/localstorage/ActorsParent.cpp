@@ -3228,11 +3228,7 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
   const auto notNullObserver = WrapNotNull(observer.get());
 
   nsTArray<NotNull<Observer*>>* const array =
-      gObservers
-          ->LookupOrInsertWith(
-              notNullObserver->Origin(),
-              [] { return MakeUnique<nsTArray<NotNull<Observer*>>>(); })
-          .get();
+      gObservers->GetOrInsertNew(notNullObserver->Origin());
   array->AppendElement(notNullObserver);
 
   if (RefPtr<Datastore> datastore = GetDatastore(observer->Origin())) {

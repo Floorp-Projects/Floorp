@@ -2195,9 +2195,7 @@ void CacheFile::QueueChunkListener(uint32_t aIndex,
   }
   item->mCallback = aCallback;
 
-  mChunkListeners
-      .LookupOrInsertWith(aIndex, [] { return MakeUnique<ChunkListeners>(); })
-      ->mItems.AppendElement(item);
+  mChunkListeners.GetOrInsertNew(aIndex)->mItems.AppendElement(item);
 }
 
 nsresult CacheFile::NotifyChunkListeners(uint32_t aIndex, nsresult aResult,

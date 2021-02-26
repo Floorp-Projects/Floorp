@@ -1514,10 +1514,7 @@ nsresult internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
   // Get the process-specific storage or create one if it's not
   // available.
   ScalarStorageMapType* const scalarStorage =
-      processStorage
-          .LookupOrInsertWith(storageId,
-                              [] { return MakeUnique<ScalarStorageMapType>(); })
-          .get();
+      processStorage.GetOrInsertNew(storageId);
 
   // Check if the scalar is already allocated in the parent or in the child
   // storage.
@@ -1798,10 +1795,7 @@ nsresult internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
   // Get the process-specific storage or create one if it's not
   // available.
   KeyedScalarStorageMapType* const scalarStorage =
-      processStorage
-          .LookupOrInsertWith(
-              storageId, [] { return MakeUnique<KeyedScalarStorageMapType>(); })
-          .get();
+      processStorage.GetOrInsertNew(storageId);
 
   if (scalarStorage->Get(aId.id, &scalar)) {
     *aRet = scalar;

@@ -79,10 +79,8 @@ class PresentationServiceBase {
         return;
       }
 
-      mRespondingSessionIds
-          .LookupOrInsertWith(aWindowId,
-                              [] { return MakeUnique<nsTArray<nsString>>(); })
-          ->AppendElement(nsString(aSessionId));
+      mRespondingSessionIds.GetOrInsertNew(aWindowId)->AppendElement(
+          nsString(aSessionId));
       mRespondingWindowIds.InsertOrUpdate(aSessionId, aWindowId);
     }
 
@@ -227,10 +225,8 @@ class PresentationServiceBase {
           for (uint32_t i = 0; i < entry->mListeners.Length(); ++i) {
             nsIPresentationAvailabilityListener* listener =
                 entry->mListeners.ObjectAt(i);
-            availabilityListenerTable
-                .LookupOrInsertWith(
-                    listener, [] { return MakeUnique<nsTArray<nsString>>(); })
-                ->AppendElement(it.Key());
+            availabilityListenerTable.GetOrInsertNew(listener)->AppendElement(
+                it.Key());
           }
         }
       }

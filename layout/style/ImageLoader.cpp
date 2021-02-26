@@ -440,8 +440,7 @@ already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
   if (NS_FAILED(rv) || !request) {
     return nullptr;
   }
-  sImages->LookupOrInsertWith(request,
-                              [] { return MakeUnique<ImageTableEntry>(); });
+  sImages->GetOrInsertNew(request);
   return request.forget();
 }
 
