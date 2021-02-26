@@ -619,6 +619,7 @@ impl RenderTaskKind {
                     task.device_pixel_scale.0,
                     task.content_origin.x,
                     task.content_origin.y,
+                    0.0,
                 ]
             }
             RenderTaskKind::CacheMask(ref task) => {
@@ -626,11 +627,13 @@ impl RenderTaskKind {
                     task.device_pixel_scale.0,
                     task.actual_rect.origin.x,
                     task.actual_rect.origin.y,
+                    0.0,
                 ]
             }
             RenderTaskKind::ClipRegion(ref task) => {
                 [
                     task.device_pixel_scale.0,
+                    0.0,
                     0.0,
                     0.0,
                 ]
@@ -641,6 +644,7 @@ impl RenderTaskKind {
                     task.blur_std_deviation,
                     task.blur_region.width as f32,
                     task.blur_region.height as f32,
+                    0.0,
                 ]
             }
             RenderTaskKind::Image(..) |
@@ -651,21 +655,21 @@ impl RenderTaskKind {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Gradient(..) |
             RenderTaskKind::Blit(..) => {
-                [0.0; 3]
+                [0.0; 4]
             }
 
 
             RenderTaskKind::SvgFilter(ref task) => {
                 match task.info {
-                    SvgFilterInfo::Opacity(opacity) => [opacity, 0.0, 0.0],
-                    SvgFilterInfo::Offset(offset) => [offset.x, offset.y, 0.0],
-                    _ => [0.0; 3]
+                    SvgFilterInfo::Opacity(opacity) => [opacity, 0.0, 0.0, 0.0],
+                    SvgFilterInfo::Offset(offset) => [offset.x, offset.y, 0.0, 0.0],
+                    _ => [0.0; 4]
                 }
             }
 
             #[cfg(test)]
             RenderTaskKind::Test(..) => {
-                [0.0; 3]
+                [0.0; 4]
             }
         };
 
@@ -675,10 +679,10 @@ impl RenderTaskKind {
                 target_rect.origin.y as f32,
                 target_rect.size.width as f32,
                 target_rect.size.height as f32,
-                0.0,
                 data[0],
                 data[1],
                 data[2],
+                data[3],
             ]
         }
     }
