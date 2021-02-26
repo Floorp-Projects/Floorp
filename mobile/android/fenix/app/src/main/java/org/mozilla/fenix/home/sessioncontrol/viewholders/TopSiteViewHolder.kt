@@ -11,6 +11,7 @@ import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSitesAdapter
+import org.mozilla.fenix.utils.AccessibilityGridLayoutManager
 
 class TopSiteViewHolder(
     view: View,
@@ -20,8 +21,12 @@ class TopSiteViewHolder(
     private val topSitesAdapter = TopSitesAdapter(interactor)
 
     init {
+        val gridLayoutManager =
+            AccessibilityGridLayoutManager(view.context, SPAN_COUNT)
+
         view.top_sites_list.apply {
             adapter = topSitesAdapter
+            layoutManager = gridLayoutManager
         }
     }
 
@@ -31,5 +36,6 @@ class TopSiteViewHolder(
 
     companion object {
         const val LAYOUT_ID = R.layout.component_top_sites
+        const val SPAN_COUNT = 4
     }
 }

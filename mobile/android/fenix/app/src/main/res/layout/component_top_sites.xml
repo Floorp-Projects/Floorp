@@ -24,7 +24,7 @@ to keep layout_width="match_parent"-->
         android:clipToPadding="false"
         android:overScrollMode="never"
         android:nestedScrollingEnabled="false"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:spanCount="4"
+        tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        tools:spanCount="4"
         tools:listitem="@layout/top_site_item" />
 </LinearLayout>
