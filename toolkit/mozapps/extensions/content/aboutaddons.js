@@ -1954,58 +1954,76 @@ class SidebarFooter extends HTMLElement {
     let list = document.createElement("ul");
     list.classList.add("sidebar-footer-list");
 
-    let prefsItem = document.createElement("li");
-    prefsItem.classList.add("sidebar-footer-item");
-    let prefsLink = document.createElement("a");
-    prefsLink.classList.add("sidebar-footer-link", "preferences-icon");
-    prefsLink.id = "preferencesButton";
-    prefsLink.href = "about:preferences";
-    document.l10n.setAttributes(prefsLink, "sidebar-preferences-button-title");
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    prefsLink.addEventListener("click", e => {
-      e.preventDefault();
-      AMTelemetry.recordLinkEvent({
-        object: "aboutAddons",
-        value: "about:preferences",
-        extra: {
-          view: getTelemetryViewName(this),
-        },
-      });
-      windowRoot.ownerGlobal.switchToTabHavingURI("about:preferences", true, {
-        ignoreFragment: "whenComparing",
-        triggeringPrincipal: systemPrincipal,
-      });
+    let prefsItem = this.createItem({
+      icon: "chrome://global/skin/icons/settings.svg",
+      createLinkElement: () => {
+        let link = document.createElement("a");
+        link.href = "about:preferences";
+        return link;
+      },
+      titleL10nId: "sidebar-preferences-button-title",
+      labelL10nId: "preferences",
+      onClick: e => {
+        e.preventDefault();
+        AMTelemetry.recordLinkEvent({
+          object: "aboutAddons",
+          value: "about:preferences",
+          extra: {
+            view: getTelemetryViewName(this),
+          },
+        });
+        windowRoot.ownerGlobal.switchToTabHavingURI("about:preferences", true, {
+          ignoreFragment: "whenComparing",
+          triggeringPrincipal: systemPrincipal,
+        });
+      },
     });
-    let prefsText = document.createElement("span");
-    prefsText.classList.add("sidebar-footer-link-text");
-    document.l10n.setAttributes(prefsText, "preferences");
-    prefsLink.append(prefsText);
-    prefsItem.append(prefsLink);
 
-    let supportItem = document.createElement("li");
-    supportItem.classList.add("sidebar-footer-item");
-    let supportLink = document.createElement("a", { is: "support-link" });
-    document.l10n.setAttributes(supportLink, "sidebar-help-button-title");
-    supportLink.classList.add("sidebar-footer-link", "help-icon");
-    supportLink.id = "help-button";
-    supportLink.setAttribute("support-page", "addons-help");
-    supportLink.addEventListener("click", e => {
-      AMTelemetry.recordLinkEvent({
-        object: "aboutAddons",
-        value: "support",
-        extra: {
-          view: getTelemetryViewName(this),
-        },
-      });
+    let supportItem = this.createItem({
+      icon: "chrome://global/skin/icons/help.svg",
+      createLinkElement: () => {
+        let link = document.createElement("a", { is: "support-link" });
+        link.setAttribute("support-page", "addons-help");
+        link.id = "help-button";
+        return link;
+      },
+      titleL10nId: "sidebar-help-button-title",
+      labelL10nId: "help-button",
+      onClick: e => {
+        AMTelemetry.recordLinkEvent({
+          object: "aboutAddons",
+          value: "support",
+          extra: {
+            view: getTelemetryViewName(this),
+          },
+        });
+      },
     });
-    let supportText = document.createElement("span");
-    supportText.classList.add("sidebar-footer-link-text");
-    document.l10n.setAttributes(supportText, "help-button");
-    supportLink.append(supportText);
-    supportItem.append(supportLink);
 
     list.append(prefsItem, supportItem);
     this.append(list);
+  }
+
+  createItem({ onClick, titleL10nId, labelL10nId, icon, createLinkElement }) {
+    let listItem = document.createElement("li");
+
+    let link = createLinkElement();
+    link.classList.add("sidebar-footer-link");
+    link.addEventListener("click", onClick);
+    document.l10n.setAttributes(link, titleL10nId);
+
+    let img = document.createElement("img");
+    img.src = icon;
+    img.className = "sidebar-footer-icon";
+
+    let label = document.createElement("span");
+    label.className = "sidebar-footer-label";
+    document.l10n.setAttributes(label, labelL10nId);
+
+    link.append(img, label);
+    listItem.append(link);
+    return listItem;
   }
 }
 customElements.define("sidebar-footer", SidebarFooter, { extends: "footer" });
