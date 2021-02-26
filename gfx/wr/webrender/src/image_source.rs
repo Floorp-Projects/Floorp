@@ -56,7 +56,7 @@ pub fn resolve_image(
                             DeviceIntPoint::zero(),
                             image_properties.descriptor.size,
                         ),
-                        user_data: [0.0, 0.0, 0.0],
+                        user_data: [0.0; 4],
                     };
 
                     deferred_resolves.push(DeferredResolve {

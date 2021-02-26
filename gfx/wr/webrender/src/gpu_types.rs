@@ -740,9 +740,11 @@ pub enum UvRectKind {
 pub struct ImageSource {
     pub p0: DevicePoint,
     pub p1: DevicePoint,
-    // TODO(nical): will go into user_data in a subsequent patch.
-    pub unused: f32,
-    pub user_data: [f32; 3],
+    // TODO: It appears that only glyphs make use of user_data (to store glyph offset
+    // and scale).
+    // Perhaps we should separate the two so we don't have to push an empty unused vec4
+    // for all image sources.
+    pub user_data: [f32; 4],
     pub uv_rect_kind: UvRectKind,
 }
 
@@ -756,12 +758,7 @@ impl ImageSource {
             self.p1.x,
             self.p1.y,
         ]);
-        request.push([
-            self.unused,
-            self.user_data[0],
-            self.user_data[1],
-            self.user_data[2],
-        ]);
+        request.push(self.user_data);
 
         // If this is a polygon uv kind, then upload the four vertices.
         if let UvRectKind::Quad { top_left, top_right, bottom_left, bottom_right } = self.uv_rect_kind {
