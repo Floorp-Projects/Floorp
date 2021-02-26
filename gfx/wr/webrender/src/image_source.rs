@@ -56,7 +56,6 @@ pub fn resolve_image(
                             DeviceIntPoint::zero(),
                             image_properties.descriptor.size,
                         ),
-                        texture_layer: 0,
                         user_data: [0.0, 0.0, 0.0],
                     };
 

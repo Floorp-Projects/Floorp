@@ -274,7 +274,7 @@ impl RenderTarget for ColorRenderTarget {
                         }
                     };
 
-                    let (target_rect, _) = task.get_target_rect();
+                    let target_rect = task.get_target_rect();
 
                     let scissor_rect = if pic_task.can_merge {
                         None
@@ -418,8 +418,7 @@ impl RenderTarget for ColorRenderTarget {
             }
             RenderTaskKind::Blit(ref task_info) => {
                 let target_rect = task
-                    .get_target_rect()
-                    .0;
+                    .get_target_rect();
                 self.blits.push(BlitJob {
                     source: task_info.source,
                     target_rect,
@@ -487,7 +486,7 @@ impl RenderTarget for AlphaRenderTarget {
     ) {
         profile_scope!("add_task");
         let task = &render_tasks[task_id];
-        let (target_rect, _) = task.get_target_rect();
+        let target_rect = task.get_target_rect();
 
         match task.kind {
             RenderTaskKind::Image(..) |
@@ -627,10 +626,10 @@ impl TextureCacheRenderTarget {
 
         match task.kind {
             RenderTaskKind::LineDecoration(ref info) => {
-                self.clears.push(target_rect.0);
+                self.clears.push(target_rect);
 
                 self.line_decorations.push(LineDecorationJob {
-                    task_rect: target_rect.0.to_f32(),
+                    task_rect: target_rect.to_f32(),
                     local_size: info.local_size,
                     style: info.style as i32,
                     axis_select: match info.orientation {
@@ -654,13 +653,13 @@ impl TextureCacheRenderTarget {
                 // task to this target.
                 self.blits.push(BlitJob {
                     source: task_info.source,
-                    target_rect: target_rect.0,
+                    target_rect,
                 });
             }
             RenderTaskKind::Border(ref task_info) => {
-                self.clears.push(target_rect.0);
+                self.clears.push(target_rect);
 
-                let task_origin = target_rect.0.origin.to_f32();
+                let task_origin = target_rect.origin.to_f32();
                 // TODO(gw): Clone here instead of a move of this vec, since the frame
                 //           graph is immutable by this point. It's rare that borders
                 //           are drawn since they are persisted in the texture cache,
@@ -692,7 +691,7 @@ impl TextureCacheRenderTarget {
                 }
 
                 self.gradients.push(GradientJob {
-                    task_rect: target_rect.0.to_f32(),
+                    task_rect: target_rect.to_f32(),
                     axis_select,
                     stops,
                     colors,
@@ -745,13 +744,12 @@ fn add_scaling_instances(
 ) {
     let target_rect = target_task
         .get_target_rect()
-        .0
         .inner_rect(task.padding)
         .to_f32();
 
     let source = source_task.unwrap().get_texture_source();
 
-    let (source_rect, source_layer) = source_task.unwrap().location.to_source_rect();
+    let source_rect = source_task.unwrap().get_target_rect();
 
     instances
         .entry(source)
@@ -759,7 +757,7 @@ fn add_scaling_instances(
         .push(ScalingInstance {
             target_rect,
             source_rect,
-            source_layer: source_layer as i32,
+            source_layer: 0,
         });
 }
 

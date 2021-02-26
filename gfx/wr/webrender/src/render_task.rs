@@ -11,7 +11,7 @@ use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
-use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, TextureSource, Swizzle};
+use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
 use crate::prim_store::{ClipData, PictureIndex};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
@@ -19,7 +19,7 @@ use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
 use crate::print_tree::{PrintTreePrinter};
 use crate::resource_cache::{ResourceCache, ImageRequest};
 use std::{usize, f32, i32, u32};
-use crate::render_target::{RenderTargetIndex, RenderTargetKind};
+use crate::render_target::RenderTargetKind;
 use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
 #[cfg(feature = "debugger")]
 use crate::render_task_graph::RenderTaskGraph;
@@ -132,25 +132,6 @@ impl RenderTaskLocation {
             RenderTaskLocation::Dynamic { rect, .. } => rect.size,
             RenderTaskLocation::Static { rect, .. } => rect.size,
             RenderTaskLocation::CacheRequest { size } => *size,
-        }
-    }
-
-    pub fn to_source_rect(&self) -> (DeviceIntRect, LayerIndex) {
-        match *self {
-            RenderTaskLocation::Unallocated { .. } => panic!("Expected position to be set for the task!"),
-            RenderTaskLocation::Dynamic { rect, .. } => (rect, 0),
-            RenderTaskLocation::Static { surface: StaticRenderTaskSurface::PictureCache { .. }, .. } => {
-                panic!("bug: picture cache tasks should never be a source!");
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
-                (rect, layer)
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::ReadOnly { .. } } => {
-                (rect, 0)
-            }
-            RenderTaskLocation::CacheRequest { .. } => {
-                panic!("should not be called");
-            }
         }
     }
 }
@@ -622,7 +603,6 @@ impl RenderTaskKind {
     pub fn write_task_data(
         &self,
         target_rect: DeviceIntRect,
-        target_index: RenderTargetIndex,
     ) -> RenderTaskData {
         // NOTE: The ordering and layout of these structures are
         //       required to match both the GPU structures declared
@@ -695,7 +675,7 @@ impl RenderTaskKind {
                 target_rect.origin.y as f32,
                 target_rect.size.width as f32,
                 target_rect.size.height as f32,
-                target_index.0 as f32,
+                0.0,
                 data[0],
                 data[1],
                 data[2],
@@ -1519,7 +1499,6 @@ impl RenderTask {
     pub fn write_gpu_blocks(
         &mut self,
         target_rect: DeviceIntRect,
-        target_index: RenderTargetIndex,
         gpu_cache: &mut GpuCache,
     ) {
         profile_scope!("write_gpu_blocks");
