@@ -142,7 +142,7 @@ void main(void) {
     // The color is just the texture sample modulated by a supplied color
     vec2 uv = clamp(vUv.xy, vUVBounds.xy, vUVBounds.zw);
 #   if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_2D) || defined(WR_FEATURE_TEXTURE_RECT)
-    vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, 0.0));
+    vec4 texel = TEX_SAMPLE(sColor0, uv);
 #   else
     vec4 texel = textureLod(sColor0, vec3(uv, 0.0), 0.0);
 #   endif
