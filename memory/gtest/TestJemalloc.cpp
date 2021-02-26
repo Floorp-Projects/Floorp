@@ -655,6 +655,7 @@ TEST(Jemalloc, JunkPoison)
   _gdb_sleep_duration = old_gdb_sleep_duration;
 #  endif
 }
+#endif  // !defined(XP_WIN) || !defined(MOZ_CODE_COVERAGE)
 
 TEST(Jemalloc, GuardRegion)
 {
@@ -756,5 +757,3 @@ TEST(Jemalloc, DisposeArena)
   _gdb_sleep_duration = old_gdb_sleep_duration;
 #  endif
 }
-
-#endif
