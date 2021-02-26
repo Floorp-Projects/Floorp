@@ -25,14 +25,16 @@
 
 var EXPORTED_SYMBOLS = ["ContextObserver"];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { executeSoon } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+
+  executeSoon: "chrome://remote/content/shared/Sync.jsm",
+});
 
 class ContextObserver {
   constructor(chromeEventHandler) {

@@ -638,8 +638,6 @@ pub enum ResolvedSurfaceTexture {
     TextureCache {
         /// The texture ID to draw to.
         texture: TextureSource,
-        /// Slice index in the texture array to draw to.
-        layer: i32,
     },
     Native {
         /// The arbitrary id of this tile.
@@ -662,7 +660,6 @@ impl SurfaceTextureDescriptor {
 
                 ResolvedSurfaceTexture::TextureCache {
                     texture: cache_item.texture_id,
-                    layer: cache_item.texture_layer,
                 }
             }
             SurfaceTextureDescriptor::Native { id } => {

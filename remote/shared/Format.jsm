@@ -6,14 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["pprint", "truncate"];
 
-const { Log } = ChromeUtils.import("chrome://remote/content/shared/Log.jsm");
-
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "log", Log.get);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
+  Log: "chrome://remote/content/shared/Log.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "log", () => Log.get());
 
 const ELEMENT_NODE = 1;
 const MAX_STRING_LENGTH = 250;

@@ -609,13 +609,12 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         threadRow && threadRow.classList.contains("thread");
         threadRow = threadRow.nextSibling
       ) {
-        await TestUtils.waitForCondition(
-          () =>
-            threadRow.children.length >= 3 && threadRow.children[2].textContent,
+        Assert.ok(
+          threadRow.children.length >= 3 && threadRow.children[1].textContent,
           "The thread row should be populated"
         );
         let children = threadRow.children;
-        let cpuContent = children[2].textContent;
+        let cpuContent = children[1].textContent;
         let tidContent = document.l10n.getAttributes(children[0].children[0])
           .args.tid;
 
@@ -624,7 +623,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         Assert.notEqual(tid, 0, "The tid should be set");
         Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
 
-        info("Sanity checks: CPU (User and Kernel)");
+        info("Sanity checks: CPU (per thread)");
         testCpu(
           cpuContent,
           threadRow.thread.totalCpu,

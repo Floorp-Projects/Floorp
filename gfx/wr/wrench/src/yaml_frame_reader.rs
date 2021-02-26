@@ -757,7 +757,6 @@ impl YamlFrameReader {
             let external_target = match item["external-target"].as_str() {
                 Some(ref s) => match &s[..] {
                     "2d" => ImageBufferKind::Texture2D,
-                    "array" => ImageBufferKind::Texture2DArray,
                     "rect" => ImageBufferKind::TextureRect,
                     _ => panic!("Unsupported external texture target."),
                 }

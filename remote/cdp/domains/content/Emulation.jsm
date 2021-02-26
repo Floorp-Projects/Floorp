@@ -6,9 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["Emulation"];
 
-const { ContentProcessDomain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ContentProcessDomain:
+    "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
+});
 
 class Emulation extends ContentProcessDomain {
   // commands

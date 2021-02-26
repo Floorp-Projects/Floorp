@@ -20,7 +20,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/cdp/RecommendedPreferences.jsm",
   TargetList: "chrome://remote/content/cdp/targets/TargetList.jsm",
 });
-XPCOMUtils.defineLazyGetter(this, "log", Log.get);
+
+XPCOMUtils.defineLazyGetter(this, "log", () => Log.get());
 
 const ENABLED = "remote.enabled";
 const FORCE_LOCAL = "remote.force-local";

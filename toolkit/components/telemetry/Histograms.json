@@ -10181,8 +10181,8 @@
   "PRINT_INIT_TO_PLATFORM_SENT_SETTINGS_MS" : {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["jwatt@jwatt.org"],
-    "expires_in_version": "89",
+    "alert_emails": ["jwatt@jwatt.org", "emilio@mozilla.com"],
+    "expires_in_version": "92",
     "description": "Milliseconds taken from when a print is initiated (typically by the user) to when the platform code is sent the print settings to create the initial print preview document.",
     "kind": "exponential",
     "high": 10000,
@@ -10193,8 +10193,8 @@
   "PRINT_INIT_TO_PREVIEW_DOC_SHOWN_MS" : {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["jwatt@jwatt.org"],
-    "expires_in_version": "89",
+    "alert_emails": ["jwatt@jwatt.org", "emilio@mozilla.com"],
+    "expires_in_version": "92",
     "description": "Milliseconds taken from when a print is initiated (typically by the user) to when the initial print preview document is shown.",
     "kind": "exponential",
     "high": 10000,

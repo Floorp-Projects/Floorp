@@ -331,7 +331,6 @@ pub struct TextureCacheAllocation {
 pub struct TextureCacheAllocInfo {
     pub width: i32,
     pub height: i32,
-    pub layer_count: i32,
     pub format: ImageFormat,
     pub filter: TextureFilter,
     pub target: ImageBufferKind,
@@ -358,7 +357,6 @@ pub struct TextureCacheUpdate {
     pub rect: DeviceIntRect,
     pub stride: Option<i32>,
     pub offset: i32,
-    pub layer_index: i32,
     pub format_override: Option<ImageFormat>,
     pub source: TextureUpdateSource,
 }
@@ -418,7 +416,6 @@ impl TextureUpdateList {
         origin: DeviceIntPoint,
         width: i32,
         height: i32,
-        layer_index: usize
     ) {
         let size = DeviceIntSize::new(width, height);
         let rect = DeviceIntRect::new(origin, size);
@@ -426,7 +423,6 @@ impl TextureUpdateList {
             rect,
             stride: None,
             offset: 0,
-            layer_index: layer_index as i32,
             format_override: None,
             source: TextureUpdateSource::DebugClear,
         });

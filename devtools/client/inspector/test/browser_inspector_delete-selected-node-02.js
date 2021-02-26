@@ -23,7 +23,9 @@ add_task(async function() {
         "its parent node is selected and breadcrumbs are updated."
     );
 
-    await deleteNodeWithContextMenu("#deleteManually");
+    await selectNode("#deleteManually", inspector);
+    const nodeToBeDeleted = inspector.selection.nodeFront;
+    await deleteNodeWithContextMenu(nodeToBeDeleted, inspector);
 
     info("Performing checks.");
     await assertNodeSelectedAndPanelsUpdated(
@@ -83,7 +85,9 @@ add_task(async function() {
         "when the node is followed by a non-element node"
     );
 
-    await deleteNodeWithContextMenu("#deleteWithNonElement");
+    await selectNode("#deleteWithNonElement", inspector);
+    const nodeToBeDeleted = inspector.selection.nodeFront;
+    await deleteNodeWithContextMenu(nodeToBeDeleted, inspector);
 
     let expectedCrumbs = ["html", "body", "div#deleteToMakeSingleTextNode"];
     await assertNodeSelectedAndCrumbsUpdated(expectedCrumbs, Node.TEXT_NODE);
@@ -96,40 +100,6 @@ add_task(async function() {
 
     expectedCrumbs = ["html", "body", "div#deleteToMakeSingleTextNode"];
     await assertNodeSelectedAndCrumbsUpdated(expectedCrumbs, Node.ELEMENT_NODE);
-  }
-
-  async function deleteNodeWithContextMenu(selector) {
-    await selectNode(selector, inspector);
-    const nodeToBeDeleted = inspector.selection.nodeFront;
-
-    info("Getting the node container in the markup view.");
-    const container = await getContainerForSelector(selector, inspector);
-
-    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
-      target: container.tagLine,
-    });
-    const menuItem = allMenuItems.find(item => item.id === "node-menu-delete");
-
-    info("Clicking 'Delete Node' in the context menu.");
-    is(menuItem.disabled, false, "delete menu item is enabled");
-    menuItem.click();
-
-    // close the open context menu
-    EventUtils.synthesizeKey("KEY_Escape");
-
-    info("Waiting for inspector to update.");
-    await inspector.once("inspector-updated");
-
-    // Since the mutations are sent asynchronously from the server, the
-    // inspector-updated event triggered by the deletion might happen before
-    // the mutation is received and the element is removed from the
-    // breadcrumbs. See bug 1284125.
-    if (inspector.breadcrumbs.indexOf(nodeToBeDeleted) > -1) {
-      info("Crumbs haven't seen deletion. Waiting for breadcrumbs-updated.");
-      await inspector.once("breadcrumbs-updated");
-    }
-
-    return menuItem;
   }
 
   function assertNodeSelectedAndCrumbsUpdated(

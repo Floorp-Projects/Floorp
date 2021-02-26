@@ -6,10 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["WindowManager"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { EventPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
+  EventPromise: "chrome://remote/content/shared/Sync.jsm",
+});
 
 var WindowManager = {
   async focus(window) {

@@ -2533,12 +2533,12 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   // Returns true if domNode is in window or a subframe.
   _childOfWindow: function(window, domNode) {
-    let win = nodeDocument(domNode).defaultView;
-    while (win) {
+    while (domNode) {
+      const win = nodeDocument(domNode).defaultView;
       if (win === window) {
         return true;
       }
-      win = getFrameElement(win);
+      domNode = getFrameElement(win);
     }
     return false;
   },

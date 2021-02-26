@@ -301,7 +301,7 @@ impl GlyphRasterizer {
                             },
                             TextureFilter::Linear,
                             Some(CachedImageData::Raw(Arc::new(glyph.bytes))),
-                            [glyph.left, -glyph.top, glyph.scale],
+                            [glyph.left, -glyph.top, glyph.scale, 0.0],
                             DirtyRect::All,
                             gpu_cache,
                             Some(glyph_key_cache.eviction_notice()),

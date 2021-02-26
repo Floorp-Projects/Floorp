@@ -25,7 +25,7 @@ PER_INSTANCE in int aBlurSourceTaskAddress;
 PER_INSTANCE in int aBlurDirection;
 
 struct BlurTask {
-    RenderTaskCommonData common_data;
+    RectWithSize task_rect;
     float blur_radius;
     vec2 blur_region;
 };
@@ -34,7 +34,7 @@ BlurTask fetch_blur_task(int address) {
     RenderTaskData task_data = fetch_render_task_data(address);
 
     BlurTask task = BlurTask(
-        task_data.common_data,
+        task_data.task_rect,
         task_data.user_data.x,
         task_data.user_data.yz
     );
@@ -68,10 +68,9 @@ void calculate_gauss_coefficients(float sigma) {
 
 void main(void) {
     BlurTask blur_task = fetch_blur_task(aBlurRenderTaskAddress);
-    RenderTaskCommonData src_task = fetch_render_task_common_data(aBlurSourceTaskAddress);
+    RectWithSize src_rect = fetch_render_task_rect(aBlurSourceTaskAddress);
 
-    RectWithSize src_rect = src_task.task_rect;
-    RectWithSize target_rect = blur_task.common_data.task_rect;
+    RectWithSize target_rect = blur_task.task_rect;
 
     vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
 

@@ -6,10 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["DialogHandler"];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 const DIALOG_TYPES = {
   ALERT: "alert",
