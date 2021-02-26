@@ -707,8 +707,7 @@ nsSocketTransport::nsSocketTransport()
       mKeepaliveIdleTimeS(-1),
       mKeepaliveRetryIntervalS(-1),
       mKeepaliveProbeCount(-1),
-      mDoNotRetryToConnect(false),
-      mUsingQuic(false) {
+      mDoNotRetryToConnect(false) {
   this->mNetAddr.raw.family = 0;
   this->mNetAddr.inet = {};
   this->mSelfAddr.raw.family = 0;
@@ -804,14 +803,11 @@ nsresult nsSocketTransport::Init(const nsTArray<nsCString>& types,
     else
       mTypes.AppendElement(types[type++]);
 
-    // quic does not have a socketProvider.
-    if (!mTypes[i].EqualsLiteral("quic")) {
-      nsCOMPtr<nsISocketProvider> provider;
-      rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("no registered socket provider");
-        return rv;
-      }
+    nsCOMPtr<nsISocketProvider> provider;
+    rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("no registered socket provider");
+      return rv;
     }
 
     // note if socket type corresponds to a transparent proxy
@@ -1121,37 +1117,6 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
   const char* host = mOriginHost.get();
   int32_t port = (int32_t)mOriginPort;
 
-  if (mTypes[0].EqualsLiteral("quic")) {
-    fd = PR_OpenUDPSocket(mNetAddr.raw.family);
-    if (!fd) {
-      SOCKET_LOG(("  error creating UDP nspr socket [rv=%" PRIx32 "]\n",
-                  static_cast<uint32_t>(rv)));
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mUsingQuic = true;
-    // Create security control and info object for quic.
-    RefPtr<QuicSocketControl> quicCtrl = new QuicSocketControl(controlFlags);
-    quicCtrl->SetHostName(mHttpsProxy ? mProxyHost.get() : host);
-    quicCtrl->SetPort(mHttpsProxy ? mProxyPort : port);
-    nsCOMPtr<nsISupports> secinfo;
-    quicCtrl->QueryInterface(NS_GET_IID(nsISupports), (void**)(&secinfo));
-
-    // remember security info and give notification callbacks to PSM...
-    nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    {
-      MutexAutoLock lock(mLock);
-      mSecInfo = secinfo;
-      callbacks = mCallbacks;
-      SOCKET_LOG(
-          ("  [secinfo=%p callbacks=%p]\n", mSecInfo.get(), mCallbacks.get()));
-    }
-    // don't call into PSM while holding mLock!!
-    quicCtrl->SetNotificationCallbacks(callbacks);
-
-    return NS_OK;
-  }
-
   nsCOMPtr<nsISocketProviderService> spserv =
       nsSocketProviderService::GetOrCreate();
   nsCOMPtr<nsIProxyInfo> proxyInfo = mProxyInfo;
@@ -1389,39 +1354,27 @@ nsresult nsSocketTransport::InitiateSocket() {
   status = PR_SetSocketOption(fd, &opt);
   NS_ASSERTION(status == PR_SUCCESS, "unable to make socket non-blocking");
 
-  if (mUsingQuic) {
-    opt.option = PR_SockOpt_RecvBufferSize;
-    opt.value.recv_buffer_size =
-        StaticPrefs::network_http_http3_recvBufferSize();
-    status = PR_SetSocketOption(fd, &opt);
+  if (mReuseAddrPort) {
+    SOCKET_LOG(("  Setting port/addr reuse socket options\n"));
+
+    // Set ReuseAddr for TCP sockets to enable having several
+    // sockets bound to same local IP and port
+    PRSocketOptionData opt_reuseaddr;
+    opt_reuseaddr.option = PR_SockOpt_Reuseaddr;
+    opt_reuseaddr.value.reuse_addr = PR_TRUE;
+    status = PR_SetSocketOption(fd, &opt_reuseaddr);
     if (status != PR_SUCCESS) {
-      SOCKET_LOG(("  Couldn't set recv buffer size"));
+      SOCKET_LOG(("  Couldn't set reuse addr socket option: %d\n", status));
     }
-  }
 
-  if (!mUsingQuic) {
-    if (mReuseAddrPort) {
-      SOCKET_LOG(("  Setting port/addr reuse socket options\n"));
-
-      // Set ReuseAddr for TCP sockets to enable having several
-      // sockets bound to same local IP and port
-      PRSocketOptionData opt_reuseaddr;
-      opt_reuseaddr.option = PR_SockOpt_Reuseaddr;
-      opt_reuseaddr.value.reuse_addr = PR_TRUE;
-      status = PR_SetSocketOption(fd, &opt_reuseaddr);
-      if (status != PR_SUCCESS) {
-        SOCKET_LOG(("  Couldn't set reuse addr socket option: %d\n", status));
-      }
-
-      // And also set ReusePort for platforms supporting this socket option
-      PRSocketOptionData opt_reuseport;
-      opt_reuseport.option = PR_SockOpt_Reuseport;
-      opt_reuseport.value.reuse_port = PR_TRUE;
-      status = PR_SetSocketOption(fd, &opt_reuseport);
-      if (status != PR_SUCCESS &&
-          PR_GetError() != PR_OPERATION_NOT_SUPPORTED_ERROR) {
-        SOCKET_LOG(("  Couldn't set reuse port socket option: %d\n", status));
-      }
+    // And also set ReusePort for platforms supporting this socket option
+    PRSocketOptionData opt_reuseport;
+    opt_reuseport.option = PR_SockOpt_Reuseport;
+    opt_reuseport.value.reuse_port = PR_TRUE;
+    status = PR_SetSocketOption(fd, &opt_reuseport);
+    if (status != PR_SUCCESS &&
+        PR_GetError() != PR_OPERATION_NOT_SUPPORTED_ERROR) {
+      SOCKET_LOG(("  Couldn't set reuse port socket option: %d\n", status));
     }
 
     // disable the nagle algorithm - if we rely on it to coalesce writes into
@@ -1536,18 +1489,6 @@ nsresult nsSocketTransport::InitiateSocket() {
       }
       mEchConfigUsed = true;
     }
-  }
-
-  if (mUsingQuic) {
-    //
-    // we pretend that we are connected!
-    //
-    if (PR_Connect(fd, &prAddr, NS_SOCKET_CONNECT_TIMEOUT) == PR_SUCCESS) {
-      OnSocketConnected();
-      return NS_OK;
-    }
-    PRErrorCode code = PR_GetError();
-    return ErrorAccordingToNSPR(code);
   }
 
   // We use PRIntervalTime here because we need

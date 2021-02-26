@@ -451,13 +451,6 @@ class nsSocketTransport final : public nsASocketHandler,
 
   bool mDoNotRetryToConnect;
 
-  // If the connection is used for QUIC this is set to true. That will mean
-  // that UDP will be used. QUIC do not have a SocketProvider because it is a
-  // mix of transport and application(HTTP) level protocol. nsSocketTransport
-  // will creat a UDP socket and SecInfo(QuicSocketControl). The protocol
-  // handler will be created by nsHttpconnectionMgr.
-  bool mUsingQuic;
-
   // Whether the port remapping has already been applied.  We definitely want to
   // prevent duplicate calls in case of chaining remapping.
   bool mPortRemappingApplied = false;

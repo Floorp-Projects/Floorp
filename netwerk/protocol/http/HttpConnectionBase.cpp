@@ -35,7 +35,6 @@ HttpConnectionBase::HttpConnectionBase()
     : mTransactionCaps(0),
       mExperienced(false),
       mBootstrappedTimingsSet(false),
-      mTotalBytesWritten(0),
       mCallbacksLock("nsHttpConnection::mCallbacksLock"),
       mRtt(0) {
   LOG(("Creating HttpConnectionBase @%p\n", this));

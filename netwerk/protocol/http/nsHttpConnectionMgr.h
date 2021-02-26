@@ -176,6 +176,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   static nsAHttpConnection* MakeConnectionHandle(HttpConnectionBase* aWrapped);
   void RegisterOriginCoalescingKey(HttpConnectionBase*, const nsACString& host,
                                    int32_t port);
+  // A test if be-conservative should be used when proxy is setup for the
+  // connection
+  bool BeConservativeIfProxied(nsIProxyInfo* proxy);
 
  protected:
   friend class ConnectionEntry;
@@ -440,10 +443,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // Then, it notifies selected transactions' connection of the new active tab
   // id.
   void NotifyConnectionOfWindowIdChange(uint64_t previousWindowId);
-
-  // A test if be-conservative should be used when proxy is setup for the
-  // connection
-  bool BeConservativeIfProxied(nsIProxyInfo* proxy);
 };
 
 }  // namespace net

@@ -173,12 +173,9 @@ void HttpConnectionUDP::PrintDiagnostics(nsCString& log) {
 
   log.AppendPrintf("    dontReuse = %d isReused = %d\n", mDontReuse, mIsReused);
 
-  PRIntervalTime now = PR_IntervalNow();
-  log.AppendPrintf("    time since last read = %ums\n",
-                   PR_IntervalToMilliseconds(now - mLastReadTime));
-
   log.AppendPrintf("    read/written %" PRId64 "/%" PRId64 "\n",
-                   mTotalBytesRead, mTotalBytesWritten);
+                   mHttp3Session ? mHttp3Session->BytesRead() : 0,
+                   mHttp3Session ? mHttp3Session->GetBytesWritten() : 0);
 
   log.AppendPrintf("    rtt = %ums\n", PR_IntervalToMilliseconds(mRtt));
 }

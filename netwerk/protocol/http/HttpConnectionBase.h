@@ -53,16 +53,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
 
   HttpConnectionBase();
 
-  // Initialize the connection:
-  //  info        - specifies the connection parameters.
-  //  maxHangTime - limits the amount of time this connection can spend on a
-  //                single transaction before it should no longer be kept
-  //                alive.  a value of 0xffff indicates no limit.
-  [[nodiscard]] virtual nsresult Init(
-      nsHttpConnectionInfo* info, uint16_t maxHangTime, nsISocketTransport*,
-      nsIAsyncInputStream*, nsIAsyncOutputStream*, bool connectedTransport,
-      nsresult status, nsIInterfaceRequestor*, PRIntervalTime) = 0;
-
   // Activate causes the given transaction to be processed on this
   // connection.  It fails if there is already an existing transaction unless
   // a multiplexing protocol such as SPDY is being used
@@ -128,7 +118,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual bool IsProxyConnectInProgress() = 0;
   virtual bool LastTransactionExpectedNoContent() = 0;
   virtual void SetLastTransactionExpectedNoContent(bool) = 0;
-  int64_t BytesWritten() { return mTotalBytesWritten; }  // includes TLS
+  virtual int64_t BytesWritten() = 0;  // includes TLS
   void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks);
   void SetTrafficCategory(HttpTrafficCategory);
 
@@ -154,8 +144,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   bool mBootstrappedTimingsSet;
   TimingStruct mBootstrappedTimings;
 
-  int64_t mTotalBytesWritten;  // does not include CONNECT tunnel
-
   Mutex mCallbacksLock;
   nsMainThreadPtrHandle<nsIInterfaceRequestor> mCallbacks;
 
@@ -167,10 +155,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)
 
 #define NS_DECL_HTTPCONNECTIONBASE                                             \
-  [[nodiscard]] nsresult Init(                                                 \
-      nsHttpConnectionInfo*, uint16_t, nsISocketTransport*,                    \
-      nsIAsyncInputStream*, nsIAsyncOutputStream*, bool, nsresult,             \
-      nsIInterfaceRequestor*, PRIntervalTime) override;                        \
   [[nodiscard]] nsresult Activate(nsAHttpTransaction*, uint32_t, int32_t)      \
       override;                                                                \
   [[nodiscard]] nsresult OnHeadersAvailable(                                   \
