@@ -757,7 +757,6 @@ fn add_scaling_instances(
         .push(ScalingInstance {
             target_rect,
             source_rect,
-            source_layer: 0,
         });
 }
 
