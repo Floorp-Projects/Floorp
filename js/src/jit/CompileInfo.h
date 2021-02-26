@@ -80,6 +80,7 @@ class CompileInfo {
         hadEagerTruncationBailout_(script->hadEagerTruncationBailout()),
         hadSpeculativePhiBailout_(script->hadSpeculativePhiBailout()),
         hadLICMInvalidation_(script->hadLICMInvalidation()),
+        hadReorderingBailout_(script->hadReorderingBailout()),
         hadBoundsCheckBailout_(script->failedBoundsCheck()),
         hadUnboxFoldingBailout_(script->hadUnboxFoldingBailout()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
@@ -145,6 +146,7 @@ class CompileInfo {
         hadEagerTruncationBailout_(false),
         hadSpeculativePhiBailout_(false),
         hadLICMInvalidation_(false),
+        hadReorderingBailout_(false),
         hadBoundsCheckBailout_(false),
         hadUnboxFoldingBailout_(false),
         mayReadFrameArgsDirectly_(false),
@@ -340,6 +342,7 @@ class CompileInfo {
   bool hadEagerTruncationBailout() const { return hadEagerTruncationBailout_; }
   bool hadSpeculativePhiBailout() const { return hadSpeculativePhiBailout_; }
   bool hadLICMInvalidation() const { return hadLICMInvalidation_; }
+  bool hadReorderingBailout() const { return hadReorderingBailout_; }
   bool hadBoundsCheckBailout() const { return hadBoundsCheckBailout_; }
   bool hadUnboxFoldingBailout() const { return hadUnboxFoldingBailout_; }
 
@@ -370,6 +373,7 @@ class CompileInfo {
   bool hadEagerTruncationBailout_;
   bool hadSpeculativePhiBailout_;
   bool hadLICMInvalidation_;
+  bool hadReorderingBailout_;
   bool hadBoundsCheckBailout_;
   bool hadUnboxFoldingBailout_;
 

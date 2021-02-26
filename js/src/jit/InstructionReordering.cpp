@@ -207,6 +207,14 @@ bool jit::ReorderInstructions(MIRGraph& graph) {
 
       iter++;
       MoveBefore(*block, target, ins);
+
+      // Instruction reordering can move a bailing instruction up past a call
+      // that throws an exception, causing spurious bailouts. This should rarely
+      // be an issue in practice, so we only update the bailout kind if we don't
+      // have anything more specific.
+      if (ins->bailoutKind() == BailoutKind::TranspiledCacheIR) {
+        ins->setBailoutKind(BailoutKind::InstructionReordering);
+      }
     }
 
     if (block->isLoopBackedge()) {

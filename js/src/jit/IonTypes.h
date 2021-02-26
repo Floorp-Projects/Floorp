@@ -122,6 +122,12 @@ enum class BailoutKind : uint8_t {
   // mark the hadLICMInvalidation flag on the script.
   LICM,
 
+  // An instruction moved up by InstructionReordering.  If this
+  // instruction bails out, we will mark the ReorderingBailout flag on
+  // the script. If this happens too frequently, we will invalidate
+  // the script.
+  InstructionReordering,
+
   // An instruction created or hoisted by tryHoistBoundsCheck.
   // If this instruction bails out, we will invalidate the current Warp script
   // and mark the HoistBoundsCheckBailout flag on the script.
@@ -184,6 +190,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "TypePolicy";
     case BailoutKind::LICM:
       return "LICM";
+    case BailoutKind::InstructionReordering:
+      return "InstructionReordering";
     case BailoutKind::HoistBoundsCheck:
       return "HoistBoundsCheck";
     case BailoutKind::EagerTruncation:
