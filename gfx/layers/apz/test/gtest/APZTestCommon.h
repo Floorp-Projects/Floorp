@@ -408,10 +408,10 @@ class APZCTesterBase : public ::testing::Test {
   };
 
   template <class InputReceiver>
-  void Tap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
-           TimeDuration aTapLength,
-           nsEventStatus (*aOutEventStatuses)[2] = nullptr,
-           uint64_t* aOutInputBlockId = nullptr);
+  APZEventResult Tap(const RefPtr<InputReceiver>& aTarget,
+                     const ScreenIntPoint& aPoint, TimeDuration aTapLength,
+                     nsEventStatus (*aOutEventStatuses)[2] = nullptr,
+                     uint64_t* aOutInputBlockId = nullptr);
 
   template <class InputReceiver>
   void TapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
@@ -503,30 +503,32 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PanOptions)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PinchOptions)
 
 template <class InputReceiver>
-void APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
-                         const ScreenIntPoint& aPoint, TimeDuration aTapLength,
-                         nsEventStatus (*aOutEventStatuses)[2],
-                         uint64_t* aOutInputBlockId) {
-  APZEventResult result = TouchDown(aTarget, aPoint, mcc->Time());
+APZEventResult APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
+                                   const ScreenIntPoint& aPoint,
+                                   TimeDuration aTapLength,
+                                   nsEventStatus (*aOutEventStatuses)[2],
+                                   uint64_t* aOutInputBlockId) {
+  APZEventResult touchDownResult = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = result.GetStatus();
+    (*aOutEventStatuses)[0] = touchDownResult.GetStatus();
   }
   if (aOutInputBlockId) {
-    *aOutInputBlockId = result.mInputBlockId;
+    *aOutInputBlockId = touchDownResult.mInputBlockId;
   }
   mcc->AdvanceBy(aTapLength);
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
-    SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
+      touchDownResult.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, touchDownResult.mInputBlockId);
   }
 
-  result = TouchUp(aTarget, aPoint, mcc->Time());
+  APZEventResult touchUpResult = TouchUp(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = result.GetStatus();
+    (*aOutEventStatuses)[1] = touchUpResult.GetStatus();
   }
+  return touchDownResult;
 }
 
 template <class InputReceiver>
