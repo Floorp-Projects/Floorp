@@ -137,7 +137,7 @@ NS_IMPL_ISUPPORTS(TimerKeys, TimerKeys)
 
 Timer* TimerKeys::Get(const nsAString& aKey, bool aCreate) {
   if (aCreate) {
-    return mTimers.GetOrInsertWith(aKey, [] { return new Timer(); });
+    return mTimers.LookupOrInsertWith(aKey, [] { return new Timer(); });
   }
   return mTimers.GetWeak(aKey);
 }

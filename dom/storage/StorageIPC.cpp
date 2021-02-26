@@ -1464,7 +1464,7 @@ mozilla::ipc::IPCResult RecvPBackgroundLocalStorageCacheConstructor(
   }
 
   gLocalStorageCacheParents
-      ->GetOrInsertWith(
+      ->LookupOrInsertWith(
           aOriginKey,
           [] { return MakeUnique<nsTArray<LocalStorageCacheParent*>>(); })
       ->AppendElement(actor);

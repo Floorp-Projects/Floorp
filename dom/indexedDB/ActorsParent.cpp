@@ -7628,11 +7628,11 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
 
     const auto entry =
         WrapNotNull(mFileInfoEntries
-                        .GetOrInsertWith(id,
-                                         [&file] {
-                                           return MakeUnique<FileInfoEntry>(
-                                               file.FileInfoPtr());
-                                         })
+                        .LookupOrInsertWith(id,
+                                            [&file] {
+                                              return MakeUnique<FileInfoEntry>(
+                                                  file.FileInfoPtr());
+                                            })
                         .get());
 
     if (mInSavepoint) {
@@ -16776,7 +16776,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
     info->mLiveDatabases.AppendElement(
         WrapNotNullUnchecked(mDatabase.unsafeGetRawPtr()));
   } else {
-    // XXX Maybe use GetOrInsertWith above, to avoid a second lookup here?
+    // XXX Maybe use LookupOrInsertWith above, to avoid a second lookup here?
     info = gLiveDatabaseHashtable
                ->Put(mDatabaseId,
                      MakeUnique<DatabaseActorInfo>(

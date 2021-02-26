@@ -2029,7 +2029,7 @@ void SelectionRangeState::SelectNodesExceptInSubtree(const Position& aStart,
   static constexpr auto kEllipsis = u"\x2026"_ns;
 
   nsINode* root = aStart.mNode->SubtreeRoot();
-  auto& start = mPositions.GetOrInsertWith(root, [&] {
+  auto& start = mPositions.LookupOrInsertWith(root, [&] {
     return Position{root, 0};
   });
 

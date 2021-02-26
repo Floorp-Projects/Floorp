@@ -48,7 +48,7 @@ struct RetainedDisplayListData {
    * frame does not exist in this RetainedDisplayListData, it is added with
    * default constructible flags FrameFlags::None.
    */
-  FrameFlags& Flags(nsIFrame* aFrame) { return mFrames.GetOrInsert(aFrame); }
+  FrameFlags& Flags(nsIFrame* aFrame) { return mFrames.LookupOrInsert(aFrame); }
 
   /**
    * Returns flags set for the given |aFrame|, or FrameFlags::None if the frame

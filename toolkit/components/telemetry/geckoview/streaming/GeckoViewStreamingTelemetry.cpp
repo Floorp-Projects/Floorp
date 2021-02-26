@@ -245,10 +245,10 @@ void HistogramAccumulate(const nsCString& aName, bool aIsCategorical,
   StaticMutexAutoLock lock(gMutex);
 
   if (aIsCategorical) {
-    nsTArray<uint32_t>& samples = gCategoricalBatch.GetOrInsert(aName);
+    nsTArray<uint32_t>& samples = gCategoricalBatch.LookupOrInsert(aName);
     samples.AppendElement(aValue);
   } else {
-    nsTArray<uint32_t>& samples = gBatch.GetOrInsert(aName);
+    nsTArray<uint32_t>& samples = gBatch.LookupOrInsert(aName);
     samples.AppendElement(aValue);
   }
 

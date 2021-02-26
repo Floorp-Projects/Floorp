@@ -812,7 +812,7 @@ Document* ExternalResourceMap::RequestResource(
     return resource->mDocument;
   }
 
-  RefPtr<PendingLoad>& loadEntry = mPendingLoads.GetOrInsert(clone);
+  RefPtr<PendingLoad>& loadEntry = mPendingLoads.LookupOrInsert(clone);
   if (loadEntry) {
     RefPtr<PendingLoad> load(loadEntry);
     load.forget(aPendingLoad);

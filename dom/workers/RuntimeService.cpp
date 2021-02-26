@@ -1151,7 +1151,7 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
 
     auto* const domainInfo =
         mDomainMap
-            .GetOrInsertWith(
+            .LookupOrInsertWith(
                 domain,
                 [&domain, parent] {
                   NS_ASSERTION(!parent, "Shouldn't have a parent here!");
@@ -1224,7 +1224,7 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
       // that of dom windows.
       if (auto* const windowArray =
               mWindowMap
-                  .GetOrInsertWith(
+                  .LookupOrInsertWith(
                       window,
                       [] { return MakeUnique<nsTArray<WorkerPrivate*>>(1); })
                   .get();

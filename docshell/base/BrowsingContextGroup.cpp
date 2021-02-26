@@ -34,8 +34,9 @@ already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetOrCreate(
     ClearOnShutdown(&sBrowsingContextGroups);
   }
 
-  RefPtr<BrowsingContextGroup> group = sBrowsingContextGroups->GetOrInsertWith(
-      aId, [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); });
+  RefPtr<BrowsingContextGroup> group =
+      sBrowsingContextGroups->LookupOrInsertWith(
+          aId, [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); });
   return group.forget();
 }
 
@@ -403,7 +404,7 @@ already_AddRefed<DocGroup> BrowsingContextGroup::AddDocument(
     const nsACString& aKey, Document* aDocument) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<DocGroup>& docGroup = mDocGroups.GetOrInsertWith(
+  RefPtr<DocGroup>& docGroup = mDocGroups.LookupOrInsertWith(
       aKey, [&] { return DocGroup::Create(this, aKey); });
 
   docGroup->AddDocument(aDocument);

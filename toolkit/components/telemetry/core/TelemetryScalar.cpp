@@ -1515,8 +1515,8 @@ nsresult internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
   // available.
   ScalarStorageMapType* const scalarStorage =
       processStorage
-          .GetOrInsertWith(storageId,
-                           [] { return MakeUnique<ScalarStorageMapType>(); })
+          .LookupOrInsertWith(storageId,
+                              [] { return MakeUnique<ScalarStorageMapType>(); })
           .get();
 
   // Check if the scalar is already allocated in the parent or in the child
@@ -1799,7 +1799,7 @@ nsresult internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
   // available.
   KeyedScalarStorageMapType* const scalarStorage =
       processStorage
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               storageId, [] { return MakeUnique<KeyedScalarStorageMapType>(); })
           .get();
 
@@ -2000,7 +2000,7 @@ nsresult internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
   for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
     ScalarStorageMapType* scalarStorage = iter.UserData();
     ScalarTupleArray& processScalars =
-        aScalarsToReflect.GetOrInsert(iter.Key());
+        aScalarsToReflect.LookupOrInsert(iter.Key());
 
     // Are we in the "Dynamic" process?
     bool isDynamicProcess =
@@ -2060,7 +2060,7 @@ nsresult internal_KeyedScalarSnapshotter(
   for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
     KeyedScalarStorageMapType* scalarStorage = iter.UserData();
     KeyedScalarTupleArray& processScalars =
-        aScalarsToReflect.GetOrInsert(iter.Key());
+        aScalarsToReflect.LookupOrInsert(iter.Key());
 
     // Are we in the "Dynamic" process?
     bool isDynamicProcess =
@@ -4003,7 +4003,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
 
       // Add the scalar to the map.
       PersistedScalarArray& processScalars =
-          scalarsToUpdate.GetOrInsert(static_cast<uint32_t>(processID));
+          scalarsToUpdate.LookupOrInsert(static_cast<uint32_t>(processID));
       processScalars.AppendElement(std::make_pair(
           nsCString(NS_ConvertUTF16toUTF8(scalarName)), unpackedVal));
     }
@@ -4175,7 +4175,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
 
         // Add the scalar to the map.
         PersistedKeyedScalarArray& processScalars =
-            scalarsToUpdate.GetOrInsert(static_cast<uint32_t>(processID));
+            scalarsToUpdate.LookupOrInsert(static_cast<uint32_t>(processID));
         processScalars.AppendElement(
             mozilla::MakeTuple(nsCString(NS_ConvertUTF16toUTF8(scalarName)),
                                nsString(keyName), unpackedVal));

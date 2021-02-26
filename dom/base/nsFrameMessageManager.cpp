@@ -241,7 +241,7 @@ void nsFrameMessageManager::AddMessageListener(const nsAString& aMessageName,
                                                ErrorResult& aError) {
   auto* const listeners =
       mListeners
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               aMessageName,
               [] {
                 return MakeUnique<
@@ -316,7 +316,7 @@ void nsFrameMessageManager::AddWeakMessageListener(
 
   auto* const listeners =
       mListeners
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               aMessageName,
               [] {
                 return MakeUnique<

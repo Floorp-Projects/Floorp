@@ -352,7 +352,7 @@ void WindowContext::Init() {
     gWindowContexts = new WindowContextByIdMap();
     ClearOnShutdown(&gWindowContexts);
   }
-  auto& entry = gWindowContexts->GetOrInsert(mInnerWindowId);
+  auto& entry = gWindowContexts->LookupOrInsert(mInnerWindowId);
   MOZ_RELEASE_ASSERT(!entry, "Duplicate WindowContext for ID!");
   entry = this;
 

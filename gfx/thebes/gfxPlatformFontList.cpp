@@ -1589,7 +1589,8 @@ gfxFontEntry* gfxPlatformFontList::FindFontForFamily(
 gfxFontEntry* gfxPlatformFontList::GetOrCreateFontEntry(
     fontlist::Face* aFace, const fontlist::Family* aFamily) {
   return mFontEntries
-      .GetOrInsertWith(aFace, [=] { return CreateFontEntry(aFace, aFamily); })
+      .LookupOrInsertWith(aFace,
+                          [=] { return CreateFontEntry(aFace, aFamily); })
       .get();
 }
 

@@ -190,7 +190,7 @@ void WindowGlobalParent::OriginCounter::UpdateSiteOriginsFrom(
     aParent->DocumentPrincipal()->GetSiteOrigin(origin);
 
     if (aIncrease) {
-      int32_t& count = mOriginMap.GetOrInsert(origin);
+      int32_t& count = mOriginMap.LookupOrInsert(origin);
       count += 1;
       mMaxOrigins = std::max(mMaxOrigins, mOriginMap.Count());
     } else if (auto entry = mOriginMap.Lookup(origin)) {

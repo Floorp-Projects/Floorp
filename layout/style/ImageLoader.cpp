@@ -170,7 +170,7 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
   auto* const frameSet =
       mRequestToFrameMap
-          .GetOrInsertWith(
+          .LookupOrInsertWith(
               aRequest,
               [&] {
                 mDocument->ImageTracker()->Add(aRequest);
@@ -194,11 +194,11 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
   auto* const requestSet =
       mFrameToRequestMap
-          .GetOrInsertWith(aFrame,
-                           [=]() {
-                             aFrame->SetHasImageRequest(true);
-                             return MakeUnique<RequestSet>();
-                           })
+          .LookupOrInsertWith(aFrame,
+                              [=]() {
+                                aFrame->SetHasImageRequest(true);
+                                return MakeUnique<RequestSet>();
+                              })
           .get();
 
   // Add frame to the frameSet, and handle any special processing the
@@ -440,8 +440,8 @@ already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
   if (NS_FAILED(rv) || !request) {
     return nullptr;
   }
-  sImages->GetOrInsertWith(request,
-                           [] { return MakeUnique<ImageTableEntry>(); });
+  sImages->LookupOrInsertWith(request,
+                              [] { return MakeUnique<ImageTableEntry>(); });
   return request.forget();
 }
 

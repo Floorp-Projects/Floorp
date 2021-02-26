@@ -7161,7 +7161,7 @@ ChromeMessageBroadcaster* nsGlobalWindowInner::GetGroupMessageManager(
   MOZ_ASSERT(IsChromeWindow());
 
   return mChromeFields.mGroupMessageManagers
-      .GetOrInsertWith(
+      .LookupOrInsertWith(
           aGroup,
           [&] {
             return MakeAndAddRef<ChromeMessageBroadcaster>(MessageManager());

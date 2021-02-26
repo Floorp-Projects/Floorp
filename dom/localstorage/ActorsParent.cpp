@@ -3228,7 +3228,7 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
 
   nsTArray<NotNull<Observer*>>* const array =
       gObservers
-          ->GetOrInsertWith(
+          ->LookupOrInsertWith(
               notNullObserver->Origin(),
               [] { return MakeUnique<nsTArray<NotNull<Observer*>>>(); })
           .get();
@@ -5451,7 +5451,7 @@ void Snapshot::SaveItem(const nsAString& aKey, const LSValue& aOldValue,
   }
 
   if (!mLoadedItems.GetEntry(aKey) && !mUnknownItems.GetEntry(aKey)) {
-    Unused << mValues.GetOrInsert(aKey, aOldValue);
+    mValues.LookupOrInsert(aKey, aOldValue);
   }
 
   if (aAffectsOrder && !mSavedKeys) {

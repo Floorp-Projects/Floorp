@@ -118,7 +118,7 @@ Attr* nsDOMAttributeMap::GetAttribute(mozilla::dom::NodeInfo* aNodeInfo) {
 
   nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
-  return mAttributeCache.GetOrInsertWith(attr, [&] {
+  return mAttributeCache.LookupOrInsertWith(attr, [&] {
     // Newly inserted entry!
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
     auto* nim = ni->NodeInfoManager();
