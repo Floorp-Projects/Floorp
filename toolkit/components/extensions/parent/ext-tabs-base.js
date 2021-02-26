@@ -200,7 +200,7 @@ class TabBase {
    *        @readonly
    */
   get matchesHostPermission() {
-    return this.extension.allowedOrigins.matches(this._url);
+    return this.extension.allowedOrigins.matches(this._uri);
   }
 
   /**
@@ -235,15 +235,12 @@ class TabBase {
   }
 
   /**
-   * @property {nsIURI | null} uri
-   *        Returns the current URI of this tab if the extension has permission
-   *        to read it, or null otherwise.
+   * @property {nsIURI} _uri
+   *        Returns the current URI of this tab.
    *        @readonly
    */
-  get uri() {
-    if (this.hasTabPermission) {
-      return this.browser.currentURI;
-    }
+  get _uri() {
+    return this.browser.currentURI;
   }
 
   /**
@@ -629,8 +626,8 @@ class TabBase {
       if (!this.hasTabPermission) {
         return false;
       }
-      // Using _url and _title instead of url/title to avoid repeated permission checks.
-      if (queryInfo.url && !queryInfo.url.matches(this._url)) {
+      // Using _uri and _title instead of url/title to avoid repeated permission checks.
+      if (queryInfo.url && !queryInfo.url.matches(this._uri)) {
         return false;
       }
       if (queryInfo.title && !queryInfo.title.matches(this._title)) {
