@@ -844,6 +844,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   // Don't optimize if there are other stubs with entered-count > 0. Counters
   // are reset when a new stub is attached so this means the stub that was added
   // most recently didn't handle all cases.
+  // If this code is changed, ICScript::hash may also need changing.
   for (ICStub* next = stub->next(); next; next = next->maybeNext()) {
     if (next->enteredCount() == 0) {
       continue;
