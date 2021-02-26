@@ -17,8 +17,23 @@ exclude: true
 - Added [`WebExtension.Download#update`][88.1] that can be used to
   implement the WebExtension `downloads` API. This method is used to communicate
   updates in the download status to the Web Extension
+- Added [`PanZoomController.onTouchEventForDetailResult`][88.2] and
+  [`GeckoView.onTouchEventForDetailResult`][88.3] to tell information
+  that the website doesn't expect browser apps to react the event,
+  also and deprecated [`PanZoomController.onTouchEventForResult`][88.4]
+  and [`GeckoView.onTouchEventForResult`][88.5]. With these new methods
+  browser apps can differentiate cases where the browser can do something
+  the browser's specific behavior in response to the event (e.g.
+  pull-to-refresh) and cases where the browser should not react to the event
+  because the event was consumed in the web site (e.g. in canvas like
+  web apps).
+  ([bug 1678505]({{bugzilla}}1678505)).
 
 [88.1]: {{javadoc_uri}}/WebExtension.Download.html#update-org.mozilla.geckoview.WebExtension.Download.Info-
+[88.2]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForDetailResult
+[88.3]: {{javadoc_uri}}/GeckoView.html#onTouchEventForDetailResult
+[88.4]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForResult
+[88.5]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult
 
 ## v87
 - ⚠ Added [`WebExtension.DownloadInitData`][87.1] class that can be used to
@@ -903,4 +918,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2ca865a6a509dfc7100d38f906877c5467c43cd0
+[api-version]: 5d8a7b8b9a5722ee3dc7997e8f6f0a4b217a7036
