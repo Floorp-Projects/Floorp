@@ -9,11 +9,7 @@
 
 #include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/GamepadPlatformService.h"
-#include "mozilla/dom/GamepadRemapping.h"
-#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Tainting.h"
-#include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
 #include <CoreFoundation/CoreFoundation.h>
@@ -609,7 +605,7 @@ namespace mozilla {
 namespace dom {
 
 void StartGamepadMonitoring() {
-  ::mozilla::ipc::AssertIsOnBackgroundThread();
+  AssertIsOnBackgroundThread();
   if (gService) {
     return;
   }
@@ -619,7 +615,7 @@ void StartGamepadMonitoring() {
 }
 
 void StopGamepadMonitoring() {
-  ::mozilla::ipc::AssertIsOnBackgroundThread();
+  AssertIsOnBackgroundThread();
   if (!gService) {
     return;
   }

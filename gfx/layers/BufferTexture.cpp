@@ -17,8 +17,6 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureForwarder.h"
 
-#include "gfxPlatform.h"
-
 #ifdef MOZ_WIDGET_GTK
 #  include "gfxPlatformGtk.h"
 #endif
