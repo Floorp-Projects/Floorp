@@ -12,7 +12,7 @@ fuzzy(0-100,0-30) == 1149923.html 1149923-ref.html # use fuzzy due to few distor
 == 1429411.html 1429411-ref.html
 fuzzy-if(winWidget,0-1,0-4) == 1435143.html 1435143-ref.html
 == 1444904.html 1444904-ref.html
-fuzzy-if(winWidget&&webrender,90-95,1000-1100) == 1451168.html 1451168-ref.html
+fuzzy-if(winWidget&&webrender,90-95,1000-1100) fuzzy-if(cocoaWidget&&swgl,1-1,1-1) == 1451168.html 1451168-ref.html
 == 1461313.html 1461313-ref.html
 fuzzy(5-32,21908-26621) fuzzy-if(webrender,0-5,0-1052) == 1463802.html 1463802-ref.html
 fuzzy(0-11,0-4) == 1474722.html 1474722-ref.html
@@ -24,6 +24,6 @@ fuzzy-if(webrender,2-7,17500-36908) == 1523776.html 1523776-ref.html
 == bug1523410-translate-scale-snap.html bug1523410-translate-scale-snap-ref.html
 == 1523080.html 1523080-ref.html
 == 1616444-same-color-different-paths.html 1616444-same-color-different-paths-ref.html
-skip-if(!asyncPan||!webrender||Android) fuzzy-if(winWidget,94-94,3415-3419) pref(apz.allow_zooming,true) == picture-caching-on-async-zoom.html picture-caching-on-async-zoom.html?ref
+skip-if(!asyncPan||!webrender||Android) fuzzy-if(winWidget,94-94,3415-3419) fuzzy-if(cocoaWidget&&swgl,1-1,1-1) pref(apz.allow_zooming,true) == picture-caching-on-async-zoom.html picture-caching-on-async-zoom.html?ref
 pref(apz.allow_zooming,true) == 1662062-1-no-blurry.html 1662062-1-ref.html
 == 1681610.html 1681610-ref.html
