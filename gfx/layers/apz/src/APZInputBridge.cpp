@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/APZInputBridge.h"
 
+#include "AsyncPanZoomController.h"
 #include "InputData.h"                      // for MouseInput, etc
 #include "InputBlockState.h"                // for InputBlockState
 #include "mozilla/dom/WheelEventBinding.h"  // for WheelEvent constants
@@ -26,6 +27,30 @@ namespace layers {
 APZEventResult::APZEventResult()
     : mStatus(nsEventStatus_eIgnore),
       mInputBlockId(InputBlockState::NO_BLOCK_ID) {}
+
+APZEventResult::APZEventResult(
+    const RefPtr<AsyncPanZoomController>& aInitialTarget,
+    TargetConfirmationFlags aFlags)
+    : APZEventResult() {
+  mHandledResult = [&]() -> Maybe<APZHandledResult> {
+    if (!aInitialTarget->IsRootContent()) {
+      // If the initial target is not the root, this will definitely not be
+      // handled by the root. (The confirmed target is either the initial
+      // target, or a descendant.)
+      return Some(APZHandledResult::HandledByContent);
+    }
+
+    if (!aFlags.mDispatchToContent) {
+      // If the initial target is the root and we don't need to dispatch to
+      // content, the event will definitely be handled by the root.
+      return Some(APZHandledResult::HandledByRoot);
+    }
+
+    // Otherwise, we're not sure.
+    return Nothing();
+  }();
+  aInitialTarget->GetGuid(&mTargetGuid);
+}
 
 static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
   return aEvent.mMessage == eMouseMove || aEvent.mMessage == eMouseDown ||
