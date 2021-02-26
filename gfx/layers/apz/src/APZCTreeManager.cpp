@@ -3123,6 +3123,11 @@ ScreenMargin APZCTreeManager::GetGeckoFixedLayerMargins() const {
   return mGeckoFixedLayerMargins;
 }
 
+ScreenMargin APZCTreeManager::GetCompositorFixedLayerMargins() const {
+  RecursiveMutexAutoLock lock(mTreeLock);
+  return mCompositorFixedLayerMargins;
+}
+
 AsyncPanZoomController* APZCTreeManager::FindRootContentApzcForLayersId(
     LayersId aLayersId) const {
   mTreeLock.AssertCurrentThreadIn();
