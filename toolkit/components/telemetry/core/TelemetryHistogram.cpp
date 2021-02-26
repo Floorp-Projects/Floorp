@@ -989,9 +989,9 @@ Histogram::Histogram(HistogramID histogramId, const HistogramInfo& info,
     for (uint32_t i = 0; i < info.store_count; i++) {
       auto store = nsDependentCString(
           &gHistogramStringTable[gHistogramStoresTable[info.store_index + i]]);
-      mStorage.Put(store, UniquePtr<base::Histogram>(
-                              internal_CreateBaseHistogramInstance(
-                                  info, bucketsOffset)));
+      mStorage.InsertOrUpdate(store, UniquePtr<base::Histogram>(
+                                         internal_CreateBaseHistogramInstance(
+                                             info, bucketsOffset)));
     }
   }
 }
@@ -1133,7 +1133,7 @@ KeyedHistogram::KeyedHistogram(HistogramID id, const HistogramInfo& info,
     for (uint32_t i = 0; i < info.store_count; i++) {
       auto store = nsDependentCString(
           &gHistogramStringTable[gHistogramStoresTable[info.store_index + i]]);
-      mStorage.Put(store, MakeUnique<KeyedHistogramMapType>());
+      mStorage.InsertOrUpdate(store, MakeUnique<KeyedHistogramMapType>());
     }
   }
 }
@@ -1176,7 +1176,8 @@ nsresult KeyedHistogram::GetHistogram(const nsCString& aStore,
   h->ClearFlags(base::Histogram::kUmaTargetedHistogramFlag);
   *histogram = h.get();
 
-  bool inserted = histogramMap->Put(key, std::move(h), mozilla::fallible);
+  bool inserted =
+      histogramMap->InsertOrUpdate(key, std::move(h), mozilla::fallible);
   if (MOZ_UNLIKELY(!inserted)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1412,7 +1413,7 @@ nsresult KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
     }
 
     // Append to the final snapshot.
-    aSnapshot.Put(iter.Key(), std::move(keySnapshot));
+    aSnapshot.InsertOrUpdate(iter.Key(), std::move(keySnapshot));
   }
 
   if (aClearSubsession) {

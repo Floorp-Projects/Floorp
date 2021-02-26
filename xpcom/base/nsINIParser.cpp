@@ -241,7 +241,7 @@ nsresult nsINIParser::DeleteString(const char* aSection, const char* aKey) {
     if (!val->next) {
       mSections.Remove(aSection);
     } else {
-      mSections.Put(aSection, std::move(val->next));
+      mSections.InsertOrUpdate(aSection, std::move(val->next));
       delete val;
     }
     return NS_OK;
@@ -283,7 +283,7 @@ nsresult nsINIParser::RenameSection(const char* aSection,
 
   mozilla::UniquePtr<INIValue> val;
   if (mSections.Remove(aSection, &val)) {
-    mSections.Put(aNewName, std::move(val));
+    mSections.InsertOrUpdate(aNewName, std::move(val));
   } else {
     return NS_ERROR_FAILURE;
   }

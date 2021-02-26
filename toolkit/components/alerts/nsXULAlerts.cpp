@@ -360,7 +360,7 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
                           argsArray, getter_AddRefs(newWindow));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mNamedWindows.Put(name, newWindow);
+  mNamedWindows.InsertOrUpdate(name, newWindow);
   alertObserver->SetAlertWindow(newWindow);
 
   return NS_OK;

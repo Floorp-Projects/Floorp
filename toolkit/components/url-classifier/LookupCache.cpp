@@ -937,7 +937,7 @@ void LookupCacheV2::AddGethashResultToCache(
     response->negativeCacheExpirySec = defaultExpirySec;
 
     FullHashExpiryCache& fullHashes = response->fullHashes;
-    fullHashes.Put(fullhash, defaultExpirySec);
+    fullHashes.InsertOrUpdate(fullhash, defaultExpirySec);
   }
 
   for (const Prefix& prefix : aMissPrefixes) {

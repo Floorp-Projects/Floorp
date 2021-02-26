@@ -350,7 +350,7 @@ void gfxPlatformFontList::ApplyWhitelist() {
   for (auto& f : accepted) {
     nsAutoCString fontFamilyName(f->Name());
     ToLowerCase(fontFamilyName);
-    mFontFamilies.Put(fontFamilyName, std::move(f));
+    mFontFamilies.InsertOrUpdate(fontFamilyName, std::move(f));
   }
 }
 
@@ -424,7 +424,7 @@ bool gfxPlatformFontList::AddWithLegacyFamilyName(const nsACString& aLegacyName,
     family = CreateFontFamily(aLegacyName, aVisibility);
     family->SetHasStyles(true);  // we don't want the family to search for
                                  // faces, we're adding them directly here
-    mOtherFamilyNames.Put(key, RefPtr{family});
+    mOtherFamilyNames.InsertOrUpdate(key, RefPtr{family});
     added = true;
   }
   family->AddFontEntry(aFontEntry->Clone());
@@ -1600,7 +1600,7 @@ void gfxPlatformFontList::AddOtherFamilyName(
   GenerateFontListKey(aOtherFamilyName, key);
 
   if (!mOtherFamilyNames.GetWeak(key)) {
-    mOtherFamilyNames.Put(key, RefPtr{aFamilyEntry});
+    mOtherFamilyNames.InsertOrUpdate(key, RefPtr{aFamilyEntry});
     LOG_FONTLIST(
         ("(fontlist-otherfamily) canonical family: %s, "
          "other family: %s\n",
@@ -1614,7 +1614,7 @@ void gfxPlatformFontList::AddOtherFamilyName(
 void gfxPlatformFontList::AddFullname(gfxFontEntry* aFontEntry,
                                       const nsCString& aFullname) {
   if (!mExtraNames->mFullnames.GetWeak(aFullname)) {
-    mExtraNames->mFullnames.Put(aFullname, RefPtr{aFontEntry});
+    mExtraNames->mFullnames.InsertOrUpdate(aFullname, RefPtr{aFontEntry});
     LOG_FONTLIST(("(fontlist-fullname) name: %s, fullname: %s\n",
                   aFontEntry->Name().get(), aFullname.get()));
   }
@@ -1623,7 +1623,8 @@ void gfxPlatformFontList::AddFullname(gfxFontEntry* aFontEntry,
 void gfxPlatformFontList::AddPostscriptName(gfxFontEntry* aFontEntry,
                                             const nsCString& aPostscriptName) {
   if (!mExtraNames->mPostscriptNames.GetWeak(aPostscriptName)) {
-    mExtraNames->mPostscriptNames.Put(aPostscriptName, RefPtr{aFontEntry});
+    mExtraNames->mPostscriptNames.InsertOrUpdate(aPostscriptName,
+                                                 RefPtr{aFontEntry});
     LOG_FONTLIST(("(fontlist-postscript) name: %s, psname: %s\n",
                   aFontEntry->Name().get(), aPostscriptName.get()));
   }

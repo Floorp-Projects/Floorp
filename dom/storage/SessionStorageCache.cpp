@@ -173,7 +173,7 @@ nsresult SessionStorageCache::SetItem(DataSetType aDataSetType,
     }
   }
 
-  dataSet->mKeys.Put(aKey, nsString(aValue));
+  dataSet->mKeys.InsertOrUpdate(aKey, nsString(aValue));
   return NS_OK;
 }
 
@@ -224,13 +224,13 @@ already_AddRefed<SessionStorageCache> SessionStorageCache::Clone() const {
 
   cache->mDefaultSet.mOriginQuotaUsage = mDefaultSet.mOriginQuotaUsage;
   for (auto iter = mDefaultSet.mKeys.ConstIter(); !iter.Done(); iter.Next()) {
-    cache->mDefaultSet.mKeys.Put(iter.Key(), iter.Data());
+    cache->mDefaultSet.mKeys.InsertOrUpdate(iter.Key(), iter.Data());
     cache->mDefaultSet.mWriteOptimizer.InsertItem(iter.Key(), iter.Data());
   }
 
   cache->mSessionSet.mOriginQuotaUsage = mSessionSet.mOriginQuotaUsage;
   for (auto iter = mSessionSet.mKeys.ConstIter(); !iter.Done(); iter.Next()) {
-    cache->mSessionSet.mKeys.Put(iter.Key(), iter.Data());
+    cache->mSessionSet.mKeys.InsertOrUpdate(iter.Key(), iter.Data());
     cache->mSessionSet.mWriteOptimizer.InsertItem(iter.Key(), iter.Data());
   }
 

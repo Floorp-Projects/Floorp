@@ -516,7 +516,7 @@ VLPrefixSet::VLPrefixSet(const PrefixStringMap& aMap) : mCount(0) {
     uint32_t size = iter.Key();
     MOZ_ASSERT(iter.Data()->Length() % size == 0,
                "PrefixString must be a multiple of the prefix size.");
-    mMap.Put(size, MakeUnique<PrefixString>(*iter.Data(), size));
+    mMap.InsertOrUpdate(size, MakeUnique<PrefixString>(*iter.Data(), size));
     mCount += iter.Data()->Length() / size;
   }
 }

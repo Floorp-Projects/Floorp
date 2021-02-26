@@ -612,7 +612,7 @@ nsresult nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader** result,
     }
 
     MOZ_ASSERT(!mZips.Contains(uri));
-    mZips.Put(uri, RefPtr{zip});
+    mZips.InsertOrUpdate(uri, RefPtr{zip});
   }
   zip.forget(result);
   return rv;
@@ -668,7 +668,7 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const nsACString& entry,
     }
 
     MOZ_ASSERT(!mZips.Contains(uri));
-    mZips.Put(uri, RefPtr{zip});
+    mZips.InsertOrUpdate(uri, RefPtr{zip});
   }
   zip.forget(result);
   return rv;

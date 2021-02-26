@@ -88,7 +88,7 @@ static nsresult ListInterfaceAddresses(int aFd, const char* aInterface,
   nsCString addrStr;
   addrStr.AssignASCII(host);
 
-  aAddrMap.Put(ifaceStr, addrStr);
+  aAddrMap.InsertOrUpdate(ifaceStr, addrStr);
 
   return NS_OK;
 }

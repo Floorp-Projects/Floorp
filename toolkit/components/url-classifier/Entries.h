@@ -330,7 +330,7 @@ struct CachedFullHashResponse {
 
     fullHashes.Clear();
     for (auto iter = aOther.fullHashes.ConstIter(); !iter.Done(); iter.Next()) {
-      fullHashes.Put(iter.Key(), iter.Data());
+      fullHashes.InsertOrUpdate(iter.Key(), iter.Data());
     }
 
     return *this;

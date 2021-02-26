@@ -225,14 +225,15 @@ class nsBaseHashtable
    * \param aData the new data
    */
   template <typename U>
-  DataType& Put(KeyType aKey, U&& aData) {
+  DataType& InsertOrUpdate(KeyType aKey, U&& aData) {
     return WithEntryHandle(aKey, [&aData](auto entryHandle) -> DataType& {
       return entryHandle.InsertOrUpdate(std::forward<U>(aData));
     });
   }
 
   template <typename U>
-  [[nodiscard]] bool Put(KeyType aKey, U&& aData, const fallible_t& aFallible) {
+  [[nodiscard]] bool InsertOrUpdate(KeyType aKey, U&& aData,
+                                    const fallible_t& aFallible) {
     return WithEntryHandle(aKey, aFallible, [&aData](auto maybeEntryHandle) {
       if (!maybeEntryHandle) {
         return false;

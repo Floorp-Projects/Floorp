@@ -242,7 +242,7 @@ PerformanceMetricsCollector::RequestMetricsInternal() {
   LOG(("[%s] Expecting %d results back", nsIDToCString(uuid).get(),
        numResultsRequired));
   results->SetNumResultsRequired(numResultsRequired);
-  mAggregatedResults.Put(uuid, std::move(results));
+  mAggregatedResults.InsertOrUpdate(uuid, std::move(results));
 
   // calling all content processes via IPDL (async)
   for (uint32_t i = 0; i < numChildren; i++) {

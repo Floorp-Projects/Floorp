@@ -124,7 +124,7 @@ void MediaSystemResourceManager::Register(MediaSystemResourceClient* aClient) {
   MOZ_ASSERT(aClient);
   MOZ_ASSERT(!mResourceClients.Get(aClient->mId));
 
-  mResourceClients.Put(aClient->mId, aClient);
+  mResourceClients.InsertOrUpdate(aClient->mId, aClient);
 }
 
 void MediaSystemResourceManager::Unregister(

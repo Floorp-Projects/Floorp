@@ -38,7 +38,7 @@ const Quotes* QuotesForLang(const nsAtom* aLang) {
       const char* s = i.mLangs;
       size_t len;
       while ((len = strlen(s))) {
-        sQuotesForLang->Put(nsDependentCString(s, len), i.mQuotes);
+        sQuotesForLang->InsertOrUpdate(nsDependentCString(s, len), i.mQuotes);
         s += len + 1;
       }
     }

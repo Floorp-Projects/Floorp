@@ -45,7 +45,7 @@ class DocAccessibleParent : public RemoteAccessible,
     sMaxDocID++;
     mActorID = sMaxDocID;
     MOZ_ASSERT(!LiveDocs().Get(mActorID));
-    LiveDocs().Put(mActorID, this);
+    LiveDocs().InsertOrUpdate(mActorID, this);
   }
 
   /**

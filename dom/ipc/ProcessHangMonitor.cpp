@@ -887,7 +887,7 @@ bool HangMonitorParent::TakeBrowserMinidump(const PluginHangData& aPhd,
             "Failed to generate timely browser stack, "
             "this is bad for plugin hang analysis!");
       } else {
-        mBrowserCrashDumpIds.Put(aPhd.pluginId(), aCrashId);
+        mBrowserCrashDumpIds.InsertOrUpdate(aPhd.pluginId(), aCrashId);
         return true;
       }
     }
@@ -995,7 +995,7 @@ void HangMonitorParent::UpdateMinidump(uint32_t aPluginId,
   }
 
   MutexAutoLock lock(mBrowserCrashDumpHashLock);
-  mBrowserCrashDumpIds.Put(aPluginId, aDumpId);
+  mBrowserCrashDumpIds.InsertOrUpdate(aPluginId, aDumpId);
 }
 
 /* HangMonitoredProcess implementation */

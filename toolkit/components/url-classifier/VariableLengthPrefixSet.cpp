@@ -116,7 +116,7 @@ nsresult VariableLengthPrefixSet::SetPrefixes(AddPrefixArray& aAddPrefixes,
     const char* buf = reinterpret_cast<const char*>(completions[i].buf);
     completionStr->Append(buf, COMPLETE_SIZE);
   }
-  mVLPrefixSet.Put(COMPLETE_SIZE, std::move(completionStr));
+  mVLPrefixSet.InsertOrUpdate(COMPLETE_SIZE, std::move(completionStr));
 
   return NS_OK;
 }
@@ -176,7 +176,8 @@ nsresult VariableLengthPrefixSet::SetPrefixes(PrefixStringMap& aPrefixMap) {
       continue;
     }
 
-    mVLPrefixSet.Put(iter.Key(), MakeUnique<nsCString>(*iter.Data()));
+    mVLPrefixSet.InsertOrUpdate(iter.Key(),
+                                MakeUnique<nsCString>(*iter.Data()));
   }
 
   return NS_OK;
@@ -203,12 +204,12 @@ nsresult VariableLengthPrefixSet::GetPrefixes(PrefixStringMap& aPrefixMap) {
       begin[i] = NativeEndian::swapToBigEndian(array[i]);
     }
 
-    aPrefixMap.Put(PREFIX_SIZE_FIXED, std::move(prefixes));
+    aPrefixMap.InsertOrUpdate(PREFIX_SIZE_FIXED, std::move(prefixes));
   }
 
   // Copy variable-length prefix set
   for (auto iter = mVLPrefixSet.ConstIter(); !iter.Done(); iter.Next()) {
-    aPrefixMap.Put(iter.Key(), MakeUnique<nsCString>(*iter.Data()));
+    aPrefixMap.InsertOrUpdate(iter.Key(), MakeUnique<nsCString>(*iter.Data()));
   }
 
   return NS_OK;
@@ -351,7 +352,7 @@ nsresult VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(read == stringLength, NS_ERROR_FAILURE);
 
-    mVLPrefixSet.Put(prefixSize, std::move(vlPrefixes));
+    mVLPrefixSet.InsertOrUpdate(prefixSize, std::move(vlPrefixes));
     totalPrefixes += prefixCount;
     LOG(("[%s] Loaded %u %u-byte prefixes", mName.get(), prefixCount,
          prefixSize));

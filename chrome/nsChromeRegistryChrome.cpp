@@ -610,7 +610,7 @@ void nsChromeRegistryChrome::ManifestOverride(ManifestProcessingContext& cx,
         "Cannot register non-local URI '%s' for an override.", resolved);
     return;
   }
-  mOverrideTable.Put(chromeuri, resolveduri);
+  mOverrideTable.InsertOrUpdate(chromeuri, resolveduri);
 
   if (mDynamicRegistration) {
     SerializedURI serializedChrome;

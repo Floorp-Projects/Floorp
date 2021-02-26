@@ -429,7 +429,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase {
         mChildren.Length());
     for (uint32_t i = 0; i < mChildren.Length(); ++i) {
       mChildren[i]->CheckCanary();
-      oldIndexMap.Put(mChildren[i]->mLayer, i);
+      oldIndexMap.InsertOrUpdate(mChildren[i]->mLayer, i);
     }
 
     uint32_t i = 0;  // cursor into the old child list mChildren

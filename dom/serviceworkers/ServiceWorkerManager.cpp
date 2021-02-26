@@ -1589,9 +1589,9 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
   // XXX we could use WithEntryHandle here to avoid a hashtable lookup, except
   // that leads to a false positive assertion, see bug 1370674 comment 7.
   if (!mRegistrationInfos.Get(aKey, &data)) {
-    data =
-        mRegistrationInfos.Put(aKey, MakeUnique<RegistrationDataPerPrincipal>())
-            .get();
+    data = mRegistrationInfos
+               .InsertOrUpdate(aKey, MakeUnique<RegistrationDataPerPrincipal>())
+               .get();
   }
 
   RefPtr queue = data->mJobQueues.LookupOrInsertWith(
@@ -1914,7 +1914,7 @@ void ServiceWorkerManager::AddScopeAndRegistration(
           .get();
 
   data->mScopeContainer.InsertScope(aScope);
-  data->mInfos.Put(aScope, RefPtr{aInfo});
+  data->mInfos.InsertOrUpdate(aScope, RefPtr{aInfo});
   swm->NotifyListenersOnRegister(aInfo);
 }
 

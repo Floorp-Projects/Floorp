@@ -2843,8 +2843,9 @@ nsresult LoadArchivedOrigins() {
         LS_TRY(OkIf(originAttributes.PopulateFromSuffix(originSuffix)),
                Err(NS_ERROR_FAILURE));
 
-        archivedOrigins->Put(hashKey, MakeUnique<ArchivedOriginInfo>(
-                                          originAttributes, originNoSuffix));
+        archivedOrigins->InsertOrUpdate(
+            hashKey,
+            MakeUnique<ArchivedOriginInfo>(originAttributes, originNoSuffix));
 
         return Ok{};
       }));
@@ -4229,7 +4230,7 @@ already_AddRefed<Connection> ConnectionThread::CreateConnection(
   RefPtr<Connection> connection =
       new Connection(this, aOriginMetadata, std::move(aArchivedOriginScope),
                      aDatabaseWasNotAvailable);
-  mConnections.Put(aOriginMetadata.mOrigin, RefPtr{connection});
+  mConnections.InsertOrUpdate(aOriginMetadata.mOrigin, RefPtr{connection});
 
   return connection.forget();
 }
@@ -4691,7 +4692,7 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aKey,
 
     NotifySnapshots(aDatabase, aKey, oldValue, /* affectsOrder */ isNewItem);
 
-    mValues.Put(aKey, aValue);
+    mValues.InsertOrUpdate(aKey, aValue);
 
     int64_t delta;
 
@@ -7246,7 +7247,8 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
     }
 
     MOZ_ASSERT(!gDatastores->MaybeGet(Origin()));
-    gDatastores->Put(Origin(), WrapMovingNotNullUnchecked(mDatastore));
+    gDatastores->InsertOrUpdate(Origin(),
+                                WrapMovingNotNullUnchecked(mDatastore));
   }
 
   if (mPrivateBrowsingId && !mInvalidated) {
@@ -7258,7 +7260,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
       auto privateDatastore =
           MakeUnique<PrivateDatastore>(WrapMovingNotNull(mDatastore));
 
-      gPrivateDatastores->Put(Origin(), std::move(privateDatastore));
+      gPrivateDatastores->InsertOrUpdate(Origin(), std::move(privateDatastore));
 
       mPrivateDatastoreRegistered.Flip();
     }
@@ -7269,7 +7271,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
   if (!gPreparedDatastores) {
     gPreparedDatastores = new PreparedDatastoreHashtable();
   }
-  const auto& preparedDatastore = gPreparedDatastores->Put(
+  const auto& preparedDatastore = gPreparedDatastores->InsertOrUpdate(
       mDatastoreId, MakeUnique<PreparedDatastore>(
                         mDatastore, mContentParentId, Origin(), mDatastoreId,
                         /* aForPreload */ mForPreload));
@@ -7464,7 +7466,7 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
         LSValue value;
         LS_TRY(value.InitFromStatement(&stmt, 1));
 
-        mPrepareDatastoreOp->mValues.Put(key, value);
+        mPrepareDatastoreOp->mValues.InsertOrUpdate(key, value);
         mPrepareDatastoreOp->mSizeOfKeys += key.Length();
         mPrepareDatastoreOp->mSizeOfItems += key.Length() + value.Length();
 #ifdef DEBUG
@@ -7640,7 +7642,7 @@ void PrepareObserverOp::GetResponse(LSRequestResponse& aResponse) {
   if (!gPreparedObsevers) {
     gPreparedObsevers = new PreparedObserverHashtable();
   }
-  gPreparedObsevers->Put(observerId, std::move(observer));
+  gPreparedObsevers->InsertOrUpdate(observerId, std::move(observer));
 
   LSRequestPrepareObserverResponse prepareObserverResponse;
   prepareObserverResponse.observerId() = observerId;

@@ -144,7 +144,7 @@ nsStaticAtom* nsLanguageAtomService::GetLanguageGroup(nsAtom* aLanguage,
   }
   AssertIsMainThreadOrServoFontMetricsLocked();
   nsStaticAtom* group = GetUncachedLanguageGroup(aLanguage);
-  mLangToGroup.Put(aLanguage, group);
+  mLangToGroup.InsertOrUpdate(aLanguage, group);
   return group;
 }
 

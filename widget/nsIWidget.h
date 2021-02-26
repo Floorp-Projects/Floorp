@@ -321,7 +321,7 @@ struct AutoObserverNotifier {
       return 0;
     }
     uint64_t observerId = ++sObserverId;
-    sSavedObservers.Put(observerId, mObserver);
+    sSavedObservers.InsertOrUpdate(observerId, mObserver);
     SkipNotification();
     return observerId;
   }

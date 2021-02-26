@@ -898,7 +898,7 @@ bool gfxFontEntry::SupportsOpenTypeFeature(Script aScript,
 
   hb_face_destroy(face);
 
-  mSupportedFeatures->Put(scriptFeature, result);
+  mSupportedFeatures->InsertOrUpdate(scriptFeature, result);
 
   return result;
 }
@@ -956,7 +956,7 @@ const hb_set_t* gfxFontEntry::InputsForOpenTypeFeature(Script aScript,
 
   hb_face_destroy(face);
 
-  mFeatureInputs->Put(scriptFeature, inputGlyphs);
+  mFeatureInputs->InsertOrUpdate(scriptFeature, inputGlyphs);
   return inputGlyphs;
 }
 
@@ -989,7 +989,7 @@ bool gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag) {
                   : false;
   ReleaseGrFace(face);
 
-  mSupportedFeatures->Put(scriptFeature, result);
+  mSupportedFeatures->InsertOrUpdate(scriptFeature, result);
 
   return result;
 }

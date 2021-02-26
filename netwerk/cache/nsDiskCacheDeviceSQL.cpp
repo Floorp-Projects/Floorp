@@ -1263,7 +1263,7 @@ nsresult nsOfflineCacheDevice::InitActiveCaches() {
     statement->GetUTF8String(1, clientID);
 
     mActiveCaches.PutEntry(clientID);
-    mActiveCachesByGroup.Put(group, MakeUnique<nsCString>(clientID));
+    mActiveCachesByGroup.InsertOrUpdate(group, MakeUnique<nsCString>(clientID));
 
     rv = statement->ExecuteStep(&hasRows);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2136,7 +2136,7 @@ nsresult nsOfflineCacheDevice::CreateApplicationCache(
   if (!weak) return NS_ERROR_OUT_OF_MEMORY;
 
   MutexAutoLock lock(mLock);
-  mCaches.Put(clientID, weak);
+  mCaches.InsertOrUpdate(clientID, weak);
 
   cache.swap(*out);
 
@@ -2172,7 +2172,7 @@ nsresult nsOfflineCacheDevice::GetApplicationCache_Unlocked(
     weak = do_GetWeakReference(cache);
     if (!weak) return NS_ERROR_OUT_OF_MEMORY;
 
-    mCaches.Put(clientID, weak);
+    mCaches.InsertOrUpdate(clientID, weak);
   }
 
   cache.swap(*out);
@@ -2536,7 +2536,7 @@ nsresult nsOfflineCacheDevice::ActivateCache(const nsACString& group,
 
   if (!clientID.IsEmpty()) {
     mActiveCaches.PutEntry(clientID);
-    mActiveCachesByGroup.Put(group, MakeUnique<nsCString>(clientID));
+    mActiveCachesByGroup.InsertOrUpdate(group, MakeUnique<nsCString>(clientID));
   }
 
   return NS_OK;

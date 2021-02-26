@@ -466,7 +466,7 @@ nsConsoleService::RegisterListener(nsIConsoleListener* aListener) {
     // Reregistering a listener isn't good
     return NS_ERROR_FAILURE;
   }
-  mListeners.Put(canonical, aListener);
+  mListeners.InsertOrUpdate(canonical, aListener);
   return NS_OK;
 }
 

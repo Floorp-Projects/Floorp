@@ -35,7 +35,7 @@ GMPErr GMPTimerChild::SetTimer(GMPTask* aTask, int64_t aTimeoutMS) {
     return GMPQuotaExceededErr;
   }
   uint32_t timerId = mTimerCount;
-  mTimers.Put(timerId, aTask);
+  mTimers.InsertOrUpdate(timerId, aTask);
   mTimerCount++;
 
   if (!SendSetTimer(timerId, aTimeoutMS)) {

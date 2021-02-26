@@ -199,7 +199,7 @@ static nsDataHashtable<nsCStringHashKey, int32_t> DecoderVersionTable() {
    * will be erased. An example of assigning the version number `1` for AV1
    * decoder is:
    *
-   * decoderVersionTable.Put("video/av1"_ns, 1);
+   * decoderVersionTable.InsertOrUpdate("video/av1"_ns, 1);
    *
    * For the decoders not listed here the `CheckVersion` method exits early, to
    * avoid sending unecessary IPC messages.

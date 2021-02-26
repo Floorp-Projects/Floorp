@@ -744,7 +744,7 @@ void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
     return;
   }
 
-  mAddonEntries.Put(aAddon.Id(), aBrowserParent);
+  mAddonEntries.InsertOrUpdate(aAddon.Id(), aBrowserParent);
   if (!mChannelEntry) {
     mChannelEntry = WebRequestService::GetSingleton().RegisterChannel(this);
     CheckEventListeners();

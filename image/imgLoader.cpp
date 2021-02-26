@@ -1530,7 +1530,7 @@ bool imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry) {
              nullptr));
   }
 
-  cache.Put(aKey, RefPtr{entry});
+  cache.InsertOrUpdate(aKey, RefPtr{entry});
 
   // We can be called to resurrect an evicted entry.
   if (entry->Evicted()) {

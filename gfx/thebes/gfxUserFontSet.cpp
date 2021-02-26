@@ -1021,7 +1021,7 @@ gfxUserFontFamily* gfxUserFontSet::GetFamily(const nsACString& aFamilyName) {
   gfxUserFontFamily* family = mFontFamilies.GetWeak(key);
   if (!family) {
     family = new gfxUserFontFamily(aFamilyName);
-    mFontFamilies.Put(key, RefPtr{family});
+    mFontFamilies.InsertOrUpdate(key, RefPtr{family});
   }
   return family;
 }

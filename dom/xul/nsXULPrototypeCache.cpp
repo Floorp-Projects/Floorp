@@ -160,7 +160,7 @@ nsresult nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument) {
   NS_GetURIWithoutRef(aDocument->GetURI(), getter_AddRefs(uri));
 
   // Put() releases any old value
-  mPrototypeTable.Put(uri, RefPtr{aDocument});
+  mPrototypeTable.InsertOrUpdate(uri, RefPtr{aDocument});
 
   return NS_OK;
 }
@@ -171,7 +171,7 @@ mozilla::StyleSheet* nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI) {
 
 nsresult nsXULPrototypeCache::PutStyleSheet(RefPtr<StyleSheet>&& aStyleSheet) {
   nsIURI* uri = aStyleSheet->GetSheetURI();
-  mStyleSheetTable.Put(uri, std::move(aStyleSheet));
+  mStyleSheetTable.InsertOrUpdate(uri, std::move(aStyleSheet));
   return NS_OK;
 }
 
@@ -258,7 +258,7 @@ nsresult nsXULPrototypeCache::GetInputStream(nsIURI* uri,
   rv = NewObjectInputStreamFromBuffer(buf, len, getter_AddRefs(ois));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mInputStreamTable.Put(uri, ois);
+  mInputStreamTable.InsertOrUpdate(uri, ois);
 
   ois.forget(stream);
   return NS_OK;
@@ -289,7 +289,7 @@ nsresult nsXULPrototypeCache::GetOutputStream(nsIURI* uri,
     rv = NewObjectOutputWrappedStorageStream(
         getter_AddRefs(objectOutput), getter_AddRefs(storageStream), false);
     NS_ENSURE_SUCCESS(rv, rv);
-    mOutputStreamTable.Put(uri, storageStream);
+    mOutputStreamTable.InsertOrUpdate(uri, storageStream);
   }
   objectOutput.forget(stream);
   return NS_OK;

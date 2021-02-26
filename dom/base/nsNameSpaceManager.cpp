@@ -235,7 +235,7 @@ nsresult nsNameSpaceManager::AddNameSpace(already_AddRefed<nsAtom> aURI,
 
   MOZ_ASSERT(aNameSpaceID == (int32_t)mURIArray.Length());
   mURIArray.AppendElement(uri.forget());
-  mURIToIDTable.Put(mURIArray.LastElement(), aNameSpaceID);
+  mURIToIDTable.InsertOrUpdate(mURIArray.LastElement(), aNameSpaceID);
 
   return NS_OK;
 }
@@ -250,7 +250,7 @@ nsresult nsNameSpaceManager::AddDisabledNameSpace(already_AddRefed<nsAtom> aURI,
 
   MOZ_ASSERT(aNameSpaceID == (int32_t)mURIArray.Length());
   mURIArray.AppendElement(uri.forget());
-  mDisabledURIToIDTable.Put(mURIArray.LastElement(), aNameSpaceID);
+  mDisabledURIToIDTable.InsertOrUpdate(mURIArray.LastElement(), aNameSpaceID);
 
   return NS_OK;
 }

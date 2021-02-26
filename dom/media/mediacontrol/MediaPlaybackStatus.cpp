@@ -105,7 +105,8 @@ MediaPlaybackStatus::ContextMediaInfo&
 MediaPlaybackStatus::GetNotNullContextInfo(uint64_t aContextId) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mContextInfoMap.Contains(aContextId)) {
-    mContextInfoMap.Put(aContextId, MakeUnique<ContextMediaInfo>(aContextId));
+    mContextInfoMap.InsertOrUpdate(aContextId,
+                                   MakeUnique<ContextMediaInfo>(aContextId));
   }
   return *(mContextInfoMap.GetValue(aContextId)->get());
 }

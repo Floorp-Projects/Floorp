@@ -3342,7 +3342,7 @@ PaintedLayerDataNode* PaintedLayerDataTree::EnsureNodeFor(
     node = parentNode->AddChildNodeFor(aAnimatedGeometryRoot);
   }
   MOZ_ASSERT(node);
-  mNodes.Put(aAnimatedGeometryRoot, node);
+  mNodes.InsertOrUpdate(aAnimatedGeometryRoot, node);
   return node;
 }
 
@@ -5608,16 +5608,16 @@ void ContainerState::CollectOldLayers() {
     if (Layer* maskLayer = layer->GetMaskLayer()) {
       NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
                    "Could not recycle mask layer, unsupported layer type.");
-      mRecycledMaskImageLayers.Put(MaskLayerKey(layer, Nothing()),
-                                   static_cast<ImageLayer*>(maskLayer));
+      mRecycledMaskImageLayers.InsertOrUpdate(
+          MaskLayerKey(layer, Nothing()), static_cast<ImageLayer*>(maskLayer));
     }
     for (size_t i = 0; i < layer->GetAncestorMaskLayerCount(); i++) {
       Layer* maskLayer = layer->GetAncestorMaskLayerAt(i);
 
       NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
                    "Could not recycle mask layer, unsupported layer type.");
-      mRecycledMaskImageLayers.Put(MaskLayerKey(layer, Some(i)),
-                                   static_cast<ImageLayer*>(maskLayer));
+      mRecycledMaskImageLayers.InsertOrUpdate(
+          MaskLayerKey(layer, Some(i)), static_cast<ImageLayer*>(maskLayer));
     }
   }
 }

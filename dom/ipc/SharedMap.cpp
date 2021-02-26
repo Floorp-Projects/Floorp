@@ -226,7 +226,7 @@ Result<Ok, nsresult> SharedMap::MaybeRebuild() {
     // matter for this (the actual move will only happen within Put), to be
     // clear about this, we call entry->Name() before calling Put.
     const auto& name = entry->Name();
-    mEntries.Put(name, std::move(entry));
+    mEntries.InsertOrUpdate(name, std::move(entry));
   }
 
   return Ok();

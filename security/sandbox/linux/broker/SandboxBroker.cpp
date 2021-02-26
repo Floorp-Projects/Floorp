@@ -109,7 +109,7 @@ SandboxBroker::Policy::~Policy() = default;
 
 SandboxBroker::Policy::Policy(const Policy& aOther) {
   for (auto iter = aOther.mMap.ConstIter(); !iter.Done(); iter.Next()) {
-    mMap.Put(iter.Key(), iter.Data());
+    mMap.InsertOrUpdate(iter.Key(), iter.Data());
   }
 }
 
@@ -163,7 +163,7 @@ void SandboxBroker::Policy::AddPath(int aPerms, const char* aPath,
     SANDBOX_LOG_ERROR("policy for %s: %d -> %d", aPath, perms, perms | aPerms);
   }
   perms |= aPerms;
-  mMap.Put(path, perms);
+  mMap.InsertOrUpdate(path, perms);
 }
 
 void SandboxBroker::Policy::AddTree(int aPerms, const char* aPath) {
@@ -240,7 +240,7 @@ void SandboxBroker::Policy::AddPrefixInternal(int aPerms,
     SANDBOX_LOG_ERROR("policy for %s: %d -> %d",
                       PromiseFlatCString(aPath).get(), origPerms, newPerms);
   }
-  mMap.Put(aPath, newPerms);
+  mMap.InsertOrUpdate(aPath, newPerms);
 }
 
 void SandboxBroker::Policy::AddFilePrefix(int aPerms, const char* aDir,
@@ -345,7 +345,7 @@ void SandboxBroker::Policy::FixRecursivePermissions() {
       SANDBOX_LOG_ERROR("new policy for %s: %d -> %d",
                         PromiseFlatCString(path).get(), localPerms, newPerms);
     }
-    mMap.Put(path, newPerms);
+    mMap.InsertOrUpdate(path, newPerms);
   }
 }
 
@@ -945,7 +945,7 @@ void SandboxBroker::ThreadMain(void) {
                     SANDBOX_LOG_ERROR("Recording mapping %s -> %s", xlat.get(),
                                       orig.get());
                   }
-                  mSymlinkMap.Put(xlat, orig);
+                  mSymlinkMap.InsertOrUpdate(xlat, orig);
                 }
                 // Make sure we can invert a fully resolved mapping too. If our
                 // caller is realpath, and there's a relative path involved, the
@@ -959,7 +959,7 @@ void SandboxBroker::ThreadMain(void) {
                       SANDBOX_LOG_ERROR("Recording mapping %s -> %s",
                                         resolvedXlat.get(), orig.get());
                     }
-                    mSymlinkMap.Put(resolvedXlat, orig);
+                    mSymlinkMap.InsertOrUpdate(resolvedXlat, orig);
                   }
                   free(resolvedBuf);
                 }

@@ -1956,7 +1956,7 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
     // In a case it was already cached.
     imageRequest->GetImage(aResult);
     nsTreeImageCacheEntry cacheEntry(imageRequest, imgNotificationObserver);
-    mImageCache.Put(imageSrc, cacheEntry);
+    mImageCache.InsertOrUpdate(imageSrc, cacheEntry);
   }
   return NS_OK;
 }

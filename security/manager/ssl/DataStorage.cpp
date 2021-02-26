@@ -114,7 +114,7 @@ already_AddRefed<DataStorage> DataStorage::GetFromRawFileName(
   RefPtr<DataStorage> storage;
   if (!sDataStorages->Get(aFilename, getter_AddRefs(storage))) {
     storage = new DataStorage(aFilename);
-    sDataStorages->Put(aFilename, RefPtr{storage});
+    sDataStorages->InsertOrUpdate(aFilename, RefPtr{storage});
   }
   return storage.forget();
 }
@@ -485,7 +485,7 @@ DataStorage::Reader::Run() {
         Entry newerEntry;
         bool present = mDataStorage->mPersistentDataTable.Get(key, &newerEntry);
         if (!present) {
-          mDataStorage->mPersistentDataTable.Put(key, entry);
+          mDataStorage->mPersistentDataTable.InsertOrUpdate(key, entry);
         }
       }
     } while (true);
@@ -799,7 +799,7 @@ nsresult DataStorage::PutInternal(const nsCString& aKey, Entry& aEntry,
                                   DataStorageType aType,
                                   const MutexAutoLock& aProofOfLock) {
   DataStorageTable& table = GetTableForType(aType, aProofOfLock);
-  table.Put(aKey, aEntry);
+  table.InsertOrUpdate(aKey, aEntry);
 
   if (aType == DataStorage_Persistent) {
     mPendingWrite = true;

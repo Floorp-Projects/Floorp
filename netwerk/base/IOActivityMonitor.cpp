@@ -416,7 +416,7 @@ bool IOActivityMonitor::IncrementActivity(const nsACString& aLocation,
   activity.mTx = aTx;
   activity.mRx = aRx;
 
-  if (NS_WARN_IF(!mActivities.Put(aLocation, activity, fallible))) {
+  if (NS_WARN_IF(!mActivities.InsertOrUpdate(aLocation, activity, fallible))) {
     return false;
   }
   return true;

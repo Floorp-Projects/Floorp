@@ -106,7 +106,7 @@ bool nsSystemAlertsService::IsActiveListener(const nsAString& aAlertName,
 void nsSystemAlertsService::AddListener(const nsAString& aAlertName,
                                         nsAlertsIconListener* aListener) {
   RefPtr<nsAlertsIconListener> oldListener = mActiveListeners.Get(aAlertName);
-  mActiveListeners.Put(aAlertName, aListener);
+  mActiveListeners.InsertOrUpdate(aAlertName, aListener);
   if (oldListener) {
     // If an alert with this name already exists, close it.
     oldListener->Close();

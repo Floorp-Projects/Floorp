@@ -149,7 +149,7 @@ static PRStatus FuzzyConnect(PRFileDesc* fd, const PRNetAddr* addr,
     return PR_FAILURE;
   }
 
-  gConnectedNetworkFuzzingBuffers.Put(fd, buf);
+  gConnectedNetworkFuzzingBuffers.InsertOrUpdate(fd, buf);
   fuzzingNoWaitRequired = false;
 
   FUZZING_LOG(("[FuzzyConnect] Successfully opened connection: %p", fd));

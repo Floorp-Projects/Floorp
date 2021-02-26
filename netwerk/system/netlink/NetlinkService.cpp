@@ -769,7 +769,9 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
       LOG(("Creating new link [index=%u, name=%s, flags=%u, type=%u]",
            linkIndex, linkName.get(), link->GetFlags(), link->GetType()));
       linkInfo =
-          mLinks.Put(linkIndex, MakeUnique<LinkInfo>(std::move(link))).get();
+          mLinks
+              .InsertOrUpdate(linkIndex, MakeUnique<LinkInfo>(std::move(link)))
+              .get();
     } else {
       LOG(("Updating link [index=%u, name=%s, flags=%u, type=%u]", linkIndex,
            linkName.get(), link->GetFlags(), link->GetType()));
@@ -1049,7 +1051,7 @@ void NetlinkService::OnNeighborMessage(struct nlmsghdr* aNlh) {
       neigh->GetAsString(neighDbgStr);
       LOG(("Adding neighbor: %s", neighDbgStr.get()));
     }
-    linkInfo->mNeighbors.Put(key, std::move(neigh));
+    linkInfo->mNeighbors.InsertOrUpdate(key, std::move(neigh));
   } else {
     if (LOG_ENABLED()) {
       nsAutoCString neighDbgStr;

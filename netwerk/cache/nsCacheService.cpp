@@ -837,7 +837,7 @@ nsresult nsCacheService::GetCustomOfflineDevice(
     }
 
     (*aDevice)->SetAutoShutdown();
-    mCustomOfflineDevices.Put(profilePath, RefPtr{*aDevice});
+    mCustomOfflineDevices.InsertOrUpdate(profilePath, RefPtr{*aDevice});
   }
 
   return NS_OK;

@@ -123,7 +123,7 @@ already_AddRefed<StorageUsage> LocalStorageManager::GetOriginUsage(
     storageChild->AsyncGetUsage(usage);
   }
 
-  mUsages.Put(aOriginNoSuffix, usage);
+  mUsages.InsertOrUpdate(aOriginNoSuffix, usage);
 
   return usage.forget();
 }

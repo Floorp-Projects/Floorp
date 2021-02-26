@@ -45,7 +45,7 @@ nsCategoryObserver::nsCategoryObserver(const nsACString& aCategory)
       nsAutoCString entryName;
       categoryEntry->GetEntry(entryName);
 
-      mHash.Put(entryName, service);
+      mHash.InsertOrUpdate(entryName, service);
     }
   }
 
@@ -142,7 +142,7 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsISupports> service = do_GetService(entryValue.get());
 
     if (service) {
-      mHash.Put(str, service);
+      mHash.InsertOrUpdate(str, service);
     }
     if (mCallback) {
       mCallback(mClosure);

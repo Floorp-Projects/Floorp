@@ -888,7 +888,7 @@ void RememberCertErrorsTable::RememberCertHasError(
     bits.mIsUntrusted = infoObject->mIsUntrusted;
 
     MutexAutoLock lock(mMutex);
-    mErrorHosts.Put(hostPortKey, bits);
+    mErrorHosts.InsertOrUpdate(hostPortKey, bits);
   } else {
     MutexAutoLock lock(mMutex);
     mErrorHosts.Remove(hostPortKey);

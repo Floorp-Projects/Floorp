@@ -827,7 +827,7 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI) {
   nsresult rv = aURI->GetSpec(uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mRecentBookmark.Put(uriString, GetNow());
+  mRecentBookmark.InsertOrUpdate(uriString, GetNow());
 
   if (mRecentBookmark.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentBookmark);
@@ -1376,7 +1376,7 @@ nsresult PlacesSQLQueryBuilder::SelectAsDay() {
     }
 
     nsPrintfCString dateParam("dayTitle%d", i);
-    mAddParams.Put(dateParam, dateName);
+    mAddParams.InsertOrUpdate(dateParam, dateName);
 
     nsPrintfCString dayRange(
         "SELECT :%s AS dayTitle, "
@@ -1413,7 +1413,7 @@ nsresult PlacesSQLQueryBuilder::SelectAsSite() {
   NS_ENSURE_STATE(history);
 
   history->GetStringFromName("localhost", localFiles);
-  mAddParams.Put("localhost"_ns, localFiles);
+  mAddParams.InsertOrUpdate("localhost"_ns, localFiles);
 
   // If there are additional conditions the query has to join on visits too.
   nsAutoCString visitsJoin;
@@ -1499,18 +1499,18 @@ nsresult PlacesSQLQueryBuilder::SelectAsRoots() {
   nsAutoCString unfiledTitle;
 
   history->GetStringFromName("BookmarksToolbarFolderTitle", toolbarTitle);
-  mAddParams.Put("BookmarksToolbarFolderTitle"_ns, toolbarTitle);
+  mAddParams.InsertOrUpdate("BookmarksToolbarFolderTitle"_ns, toolbarTitle);
   history->GetStringFromName("BookmarksMenuFolderTitle", menuTitle);
-  mAddParams.Put("BookmarksMenuFolderTitle"_ns, menuTitle);
+  mAddParams.InsertOrUpdate("BookmarksMenuFolderTitle"_ns, menuTitle);
   history->GetStringFromName("OtherBookmarksFolderTitle", unfiledTitle);
-  mAddParams.Put("OtherBookmarksFolderTitle"_ns, unfiledTitle);
+  mAddParams.InsertOrUpdate("OtherBookmarksFolderTitle"_ns, unfiledTitle);
 
   nsAutoCString mobileString;
 
   if (Preferences::GetBool(MOBILE_BOOKMARKS_PREF, false)) {
     nsAutoCString mobileTitle;
     history->GetStringFromName("MobileBookmarksFolderTitle", mobileTitle);
-    mAddParams.Put("MobileBookmarksFolderTitle"_ns, mobileTitle);
+    mAddParams.InsertOrUpdate("MobileBookmarksFolderTitle"_ns, mobileTitle);
 
     mobileString = nsLiteralCString(
         ","
@@ -1547,13 +1547,13 @@ nsresult PlacesSQLQueryBuilder::SelectAsLeftPane() {
   nsAutoCString allBookmarksTitle;
 
   history->GetStringFromName("OrganizerQueryHistory", historyTitle);
-  mAddParams.Put("OrganizerQueryHistory"_ns, historyTitle);
+  mAddParams.InsertOrUpdate("OrganizerQueryHistory"_ns, historyTitle);
   history->GetStringFromName("OrganizerQueryDownloads", downloadsTitle);
-  mAddParams.Put("OrganizerQueryDownloads"_ns, downloadsTitle);
+  mAddParams.InsertOrUpdate("OrganizerQueryDownloads"_ns, downloadsTitle);
   history->GetStringFromName("TagsFolderTitle", tagsTitle);
-  mAddParams.Put("TagsFolderTitle"_ns, tagsTitle);
+  mAddParams.InsertOrUpdate("TagsFolderTitle"_ns, tagsTitle);
   history->GetStringFromName("OrganizerQueryAllBookmarks", allBookmarksTitle);
-  mAddParams.Put("OrganizerQueryAllBookmarks"_ns, allBookmarksTitle);
+  mAddParams.InsertOrUpdate("OrganizerQueryAllBookmarks"_ns, allBookmarksTitle);
 
   mQueryString = nsPrintfCString(
       "SELECT * FROM ("
@@ -1942,7 +1942,7 @@ nsNavHistory::MarkPageAsTyped(nsIURI* aURI) {
   nsresult rv = aURI->GetSpec(uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mRecentTyped.Put(uriString, GetNow());
+  mRecentTyped.InsertOrUpdate(uriString, GetNow());
 
   if (mRecentTyped.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentTyped);
@@ -1967,7 +1967,7 @@ nsNavHistory::MarkPageAsFollowedLink(nsIURI* aURI) {
   nsresult rv = aURI->GetSpec(uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mRecentLink.Put(uriString, GetNow());
+  mRecentLink.InsertOrUpdate(uriString, GetNow());
 
   if (mRecentLink.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentLink);

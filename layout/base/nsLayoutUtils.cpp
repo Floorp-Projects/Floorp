@@ -595,7 +595,7 @@ ViewID nsLayoutUtils::FindOrCreateIDFor(nsIContent* aContent) {
     scrollId = sScrollIdCounter++;
     aContent->SetProperty(nsGkAtoms::RemoteId, new ViewID(scrollId),
                           DestroyViewID);
-    GetContentMap().Put(scrollId, aContent);
+    GetContentMap().InsertOrUpdate(scrollId, aContent);
   }
 
   return scrollId;
@@ -7349,7 +7349,7 @@ static void AddFontsFromTextRun(gfxTextRun* aTextRun, nsTextFrame* aFrame,
       // A new font entry we haven't seen before
       fontFace = new InspectorFontFace(fe, aTextRun->GetFontGroup(),
                                        glyphRuns.GetGlyphRun()->mMatchType);
-      aFontFaces.Put(fe, fontFace);
+      aFontFaces.InsertOrUpdate(fe, fontFace);
       aResult.AppendElement(fontFace);
     }
 

@@ -2170,7 +2170,7 @@ Connection::CreateFunction(const nsACString& aFunctionName,
   if (srv != SQLITE_OK) return convertResultCode(srv);
 
   FunctionInfo info = {aFunction, aNumArguments};
-  mFunctions.Put(aFunctionName, info);
+  mFunctions.InsertOrUpdate(aFunctionName, info);
 
   return NS_OK;
 }

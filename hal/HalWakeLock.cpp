@@ -208,7 +208,7 @@ void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
   totalCount.numHidden += aHiddenAdjust;
 
   if (processCount.numLocks) {
-    table->Put(aProcessID, processCount);
+    table->InsertOrUpdate(aProcessID, processCount);
   } else {
     table->Remove(aProcessID);
   }

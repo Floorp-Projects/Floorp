@@ -466,7 +466,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
             "MediaKeySystemAccessManager::DeprecationWarningLambda Logging "
             "deprecation warning '%s' to WebConsole.",
             aMsgName);
-        warnings.Put(aMsgName, true);
+        warnings.InsertOrUpdate(aMsgName, true);
         AutoTArray<nsString, 1> params;
         nsString& uri = *params.AppendElement();
         if (doc) {

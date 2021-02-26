@@ -152,8 +152,9 @@ bool GMPInfoFileParser::Init(nsIFile* aInfoFile) {
 
     auto value = MakeUnique<nsCString>(Substring(line, colon + 1));
     value->Trim(" ");
-    mValues.Put(key,
-                std::move(value));  // Hashtable assumes ownership of value.
+    mValues.InsertOrUpdate(
+        key,
+        std::move(value));  // Hashtable assumes ownership of value.
   }
 
   return true;

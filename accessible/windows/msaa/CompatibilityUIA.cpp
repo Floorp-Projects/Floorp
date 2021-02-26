@@ -295,7 +295,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
 
       // An object that is not ours. Since we do not yet know which kernel
       // object we're interested in, we'll save the current object for later.
-      objMap.Put(curHandle.mObject, curHandle.mPid);
+      objMap.InsertOrUpdate(curHandle.mObject, curHandle.mPid);
     } else if (handle == section.get()) {
       // This is the file mapping that we opened above. We save this mObject
       // in order to compare to Section objects opened by other processes.

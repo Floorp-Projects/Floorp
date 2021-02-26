@@ -572,7 +572,7 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
       }
 
       const auto& cachePath = script->mCachePath;
-      mScripts.Put(cachePath, std::move(script));
+      mScripts.InsertOrUpdate(cachePath, std::move(script));
     }
 
     if (buf.error()) {

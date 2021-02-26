@@ -1745,9 +1745,9 @@ void CounterStyle::CallFallbackStyle(CounterValue aOrdinal,
 CounterStyleManager::CounterStyleManager(nsPresContext* aPresContext)
     : mPresContext(aPresContext) {
   // Insert the static styles into cache table
-  mStyles.Put(nsGkAtoms::none, GetNoneStyle());
-  mStyles.Put(nsGkAtoms::decimal, GetDecimalStyle());
-  mStyles.Put(nsGkAtoms::disc, GetDiscStyle());
+  mStyles.InsertOrUpdate(nsGkAtoms::none, GetNoneStyle());
+  mStyles.InsertOrUpdate(nsGkAtoms::decimal, GetDecimalStyle());
+  mStyles.InsertOrUpdate(nsGkAtoms::disc, GetDiscStyle());
 }
 
 CounterStyleManager::~CounterStyleManager() {
@@ -1808,7 +1808,7 @@ CounterStyle* CounterStyleManager::ResolveCounterStyle(nsAtom* aName) {
   if (!data) {
     data = GetDecimalStyle();
   }
-  mStyles.Put(aName, data);
+  mStyles.InsertOrUpdate(aName, data);
   return data;
 }
 

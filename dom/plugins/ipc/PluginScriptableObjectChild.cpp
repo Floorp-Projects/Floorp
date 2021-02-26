@@ -47,7 +47,7 @@ PluginScriptableObjectChild::HashIdentifier(const nsCString& aIdentifier) {
   }
 
   stored = new StoredIdentifier(aIdentifier);
-  sIdentifiers.Put(aIdentifier, stored);
+  sIdentifiers.InsertOrUpdate(aIdentifier, stored);
   return stored;
 }
 

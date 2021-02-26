@@ -638,9 +638,10 @@ void gfxFT2FontList::CollectInitData(const FontListEntry& aFLE,
   BuildKeyNameFromFontName(key);
   auto faceList = mFaceInitData.Get(key);
   if (!faceList) {
-    faceList =
-        mFaceInitData.Put(key, MakeUnique<nsTArray<fontlist::Face::InitData>>())
-            .get();
+    faceList = mFaceInitData
+                   .InsertOrUpdate(
+                       key, MakeUnique<nsTArray<fontlist::Face::InitData>>())
+                   .get();
     mFamilyInitData.AppendElement(
         fontlist::Family::InitData{key, aFLE.familyName()});
   }
@@ -652,13 +653,13 @@ void gfxFT2FontList::CollectInitData(const FontListEntry& aFLE,
   nsAutoCString psname(aPSName), fullname(aFullName);
   if (!psname.IsEmpty()) {
     ToLowerCase(psname);
-    mLocalNameTable.Put(psname,
-                        fontlist::LocalFaceRec::InitData(key, aFLE.filepath()));
+    mLocalNameTable.InsertOrUpdate(
+        psname, fontlist::LocalFaceRec::InitData(key, aFLE.filepath()));
   }
   if (!fullname.IsEmpty()) {
     ToLowerCase(fullname);
     if (fullname != psname) {
-      mLocalNameTable.Put(
+      mLocalNameTable.InsertOrUpdate(
           fullname, fontlist::LocalFaceRec::InitData(key, aFLE.filepath()));
     }
   }
@@ -1286,7 +1287,7 @@ void gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
       RefPtr<gfxFontFamily> family = mFontFamilies.GetWeak(familyKey);
       if (!family) {
         family = new FT2FontFamily(familyName, visibility);
-        mFontFamilies.Put(familyKey, RefPtr{family});
+        mFontFamilies.InsertOrUpdate(familyKey, RefPtr{family});
         if (mSkipSpaceLookupCheckFamilies.Contains(familyKey)) {
           family->SetSkipSpaceFeatureCheck(true);
         }
@@ -1595,7 +1596,7 @@ void gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
     RefPtr<gfxFontFamily> family = mFontFamilies.GetWeak(key);
     if (!family) {
       family = new FT2FontFamily(aFLE.familyName(), aFLE.visibility());
-      mFontFamilies.Put(key, RefPtr{family});
+      mFontFamilies.InsertOrUpdate(key, RefPtr{family});
       if (mSkipSpaceLookupCheckFamilies.Contains(key)) {
         family->SetSkipSpaceFeatureCheck(true);
       }

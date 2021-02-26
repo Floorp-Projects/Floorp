@@ -51,7 +51,7 @@ static void AddSHEntrySharedParentState(
     sIdToSharedState =
         new nsDataHashtable<nsUint64HashKey, SHEntrySharedParentState*>();
   }
-  sIdToSharedState->Put(aSharedState->mId, aSharedState);
+  sIdToSharedState->InsertOrUpdate(aSharedState->mId, aSharedState);
 }
 
 SHEntrySharedParentState::SHEntrySharedParentState() {
@@ -82,7 +82,7 @@ void SHEntrySharedParentState::ChangeId(uint64_t aId) {
 
   sIdToSharedState->Remove(mId);
   mId = aId;
-  sIdToSharedState->Put(mId, this);
+  sIdToSharedState->InsertOrUpdate(mId, this);
 }
 
 void SHEntrySharedParentState::CopyFrom(SHEntrySharedParentState* aEntry) {

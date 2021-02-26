@@ -26,7 +26,7 @@ class DocAccessibleWrap : public DocAccessible {
    * Manage the mapping from id to Accessible.
    */
   void AddID(uint32_t aID, AccessibleWrap* aAcc) {
-    mIDToAccessibleMap.Put(aID, aAcc);
+    mIDToAccessibleMap.InsertOrUpdate(aID, aAcc);
   }
   void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
   AccessibleWrap* GetAccessibleByID(int32_t aID) const;
