@@ -31,7 +31,6 @@ use xpcom::{interfaces::nsrefcnt, AtomicRefcnt, RefCounted, RefPtr};
 pub struct NeqoHttp3Conn {
     conn: Http3Client,
     local_addr: SocketAddr,
-    remote_addr: SocketAddr,
     refcnt: AtomicRefcnt,
     packets_to_send: Vec<Datagram>,
 }
@@ -136,7 +135,6 @@ impl NeqoHttp3Conn {
         let conn = Box::into_raw(Box::new(NeqoHttp3Conn {
             conn,
             local_addr: local,
-            remote_addr: remote,
             refcnt: unsafe { AtomicRefcnt::new() },
             packets_to_send: Vec::new(),
         }));
@@ -203,11 +201,23 @@ pub extern "C" fn neqo_http3conn_new(
  * packet holds packet data.
  */
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_process_input(conn: &mut NeqoHttp3Conn, packet: *const ThinVec<u8>) {
+pub extern "C" fn neqo_http3conn_process_input(
+    conn: &mut NeqoHttp3Conn,
+    remote_addr: &nsACString,
+    packet: *const ThinVec<u8>,
+) -> nsresult {
+    let remote =  match str::from_utf8(remote_addr) {
+        Ok(s) => match s.parse() {
+            Ok(addr) => addr,
+            Err(_) => return NS_ERROR_INVALID_ARG,
+        },
+        Err(_) => return NS_ERROR_INVALID_ARG,
+    };
     conn.conn.process_input(
-        Datagram::new(conn.remote_addr, conn.local_addr, unsafe { (*packet).to_vec() }),
+        Datagram::new(remote, conn.local_addr, unsafe { (*packet).to_vec() }),
         Instant::now(),
     );
+    return NS_OK;
 }
 
 /* Process output and store data to be sent into conn.packets_to_send.
@@ -246,12 +256,16 @@ pub extern "C" fn neqo_http3conn_has_data_to_send(conn: &mut NeqoHttp3Conn) -> b
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_get_data_to_send(
     conn: &mut NeqoHttp3Conn,
+    remote_addr: &mut nsACString,
+    remote_port: &mut u16,
     packet: &mut ThinVec<u8>,
 ) -> nsresult {
     match conn.packets_to_send.pop() {
         None => NS_BASE_STREAM_WOULD_BLOCK,
         Some(d) => {
             packet.extend_from_slice(&d);
+            remote_addr.append(&d.destination().ip().to_string());
+             *remote_port = d.destination().port();
             NS_OK
         }
     }
