@@ -349,6 +349,7 @@ add_task(async function test_tabs_shutdown() {
       if ("hidden" in changeInfo) {
         browser.test.assertEq(tabId, testTab.id, "correct tab was hidden");
         browser.test.assertTrue(changeInfo.hidden, "tab is hidden");
+        browser.test.assertEq(tab.url, testTab.url, "tab has correct URL");
         browser.test.sendMessage("changeInfo");
       }
     });
