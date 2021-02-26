@@ -2366,7 +2366,7 @@ NS_IMETHODIMP
 PresShell::PageMove(bool aForward, bool aExtend) {
   nsIFrame* frame = nullptr;
   if (!aExtend) {
-    frame = do_QueryFrame(GetScrollableFrameToScroll(VerticalScollDirection));
+    frame = do_QueryFrame(GetScrollableFrameToScroll(VerticalScrollDirection));
     // If there is no scrollable frame, get the frame to move caret instead.
   }
   if (!frame || frame->PresContext() != mPresContext) {
@@ -2386,7 +2386,7 @@ PresShell::PageMove(bool aForward, bool aExtend) {
 NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(VerticalScollDirection);
+      GetScrollableFrameToScroll(VerticalScrollDirection);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(
         mozilla::Telemetry::SCROLL_INPUT_METHODS,
@@ -2402,7 +2402,7 @@ PresShell::ScrollPage(bool aForward) {
 NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(VerticalScollDirection);
+      GetScrollableFrameToScroll(VerticalScrollDirection);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(
         mozilla::Telemetry::SCROLL_INPUT_METHODS,
@@ -2440,7 +2440,7 @@ PresShell::ScrollCharacter(bool aRight) {
 NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(VerticalScollDirection);
+      GetScrollableFrameToScroll(VerticalScrollDirection);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(
         mozilla::Telemetry::SCROLL_INPUT_METHODS,
