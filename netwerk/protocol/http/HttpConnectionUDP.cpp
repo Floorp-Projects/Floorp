@@ -78,6 +78,7 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
     if (!dnsAddrRecord) {
       return NS_ERROR_FAILURE;
     }
+    dnsAddrRecord->IsTRR(&mResolvedByTRR);
     NetAddr peerAddr;
     nsresult rv = dnsAddrRecord->GetNextAddr(
         mConnInfo->GetRoutedHost().IsEmpty() ? mConnInfo->OriginPort()
@@ -86,6 +87,7 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
     if (NS_FAILED(rv)) {
       return rv;
     }
+
     mSocket = do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
     if (NS_FAILED(rv)) {
       return rv;
@@ -112,9 +114,8 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
       return rv;
     }
 
-    nsCOMPtr<nsINetAddr> localAddr;
     // get the resulting socket address.
-    rv = mSocket->GetLocalAddr(getter_AddRefs(localAddr));
+    rv = mSocket->GetLocalAddr(getter_AddRefs(mSelfAddr));
     if (NS_FAILED(rv)) {
       mSocket->Close();
       mSocket = nullptr;
@@ -134,9 +135,9 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
       controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
     }
 
-    nsCOMPtr<nsINetAddr> peerNetAddr = new nsNetAddr(&peerAddr);
+    mPeerAddr = new nsNetAddr(&peerAddr);
     mHttp3Session = new Http3Session();
-    rv = mHttp3Session->Init(mConnInfo, localAddr, peerNetAddr, this,
+    rv = mHttp3Session->Init(mConnInfo, mSelfAddr, mPeerAddr, this,
                              controlFlags, callbacks);
     if (NS_FAILED(rv)) {
       LOG(
@@ -344,8 +345,8 @@ nsresult HttpConnectionUDP::TakeTransport(
 
 void HttpConnectionUDP::GetSecurityInfo(nsISupports** secinfo) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("HttpConnectionUDP::GetSecurityInfo http3Session=%p socket=%p\n",
-       mHttp3Session.get(), mSocketTransport.get()));
+  LOG(("HttpConnectionUDP::GetSecurityInfo http3Session=%p\n",
+       mHttp3Session.get()));
 
   if (mHttp3Session &&
       NS_SUCCEEDED(mHttp3Session->GetTransactionSecurityInfo(secinfo))) {
@@ -651,6 +652,26 @@ NS_IMETHODIMP HttpConnectionUDP::OnStopListening(nsIUDPSocket* aSocket,
                                                  nsresult aStatus) {
   CloseTransaction(mHttp3Session, aStatus);
   return NS_OK;
+}
+
+nsresult HttpConnectionUDP::GetSelfAddr(NetAddr* addr) {
+  if (mSelfAddr) {
+    return mSelfAddr->GetNetAddr(addr);
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+nsresult HttpConnectionUDP::GetPeerAddr(NetAddr* addr) {
+  if (mPeerAddr) {
+    return mPeerAddr->GetNetAddr(addr);
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+bool HttpConnectionUDP::ResolvedByTRR() {
+  return mResolvedByTRR;
 }
 
 }  // namespace net

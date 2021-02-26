@@ -81,6 +81,11 @@ class HttpConnectionUDP final : public HttpConnectionBase,
 
   int64_t BytesWritten() override;
 
+  nsresult GetSelfAddr(NetAddr* addr) override;
+  nsresult GetPeerAddr(NetAddr* addr) override;
+  bool ResolvedByTRR() override;
+  bool GetEchConfigUsed() override { return false; }
+
  private:
   [[nodiscard]] nsresult OnTransactionDone(nsresult reason);
   nsresult RecvData();
@@ -108,6 +113,9 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   PRIntervalTime mLastRequestBytesSentTime;
   nsCOMPtr<nsIUDPSocket> mSocket;
 
+  nsCOMPtr<nsINetAddr> mSelfAddr;
+  nsCOMPtr<nsINetAddr> mPeerAddr;
+  bool mResolvedByTRR = false;
  private:
   // Http3
   RefPtr<Http3Session> mHttp3Session;

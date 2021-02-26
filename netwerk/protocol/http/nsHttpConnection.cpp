@@ -2614,5 +2614,37 @@ bool nsHttpConnection::IsPersistent() { return IsKeepAlive() && !mDontReuse; }
 
 nsAHttpTransaction* nsHttpConnection::Transaction() { return mTransaction; }
 
+nsresult nsHttpConnection::GetSelfAddr(NetAddr* addr) {
+  if (!mSocketTransport) {
+    return NS_ERROR_FAILURE;
+  } else {
+    return mSocketTransport->GetSelfAddr(addr);
+  }
+}
+
+nsresult nsHttpConnection::GetPeerAddr(NetAddr* addr) {
+  if (!mSocketTransport) {
+    return NS_ERROR_FAILURE;
+  } else {
+    return mSocketTransport->GetPeerAddr(addr);
+  }
+}
+
+bool nsHttpConnection::ResolvedByTRR() {
+  bool val = false;
+  if (mSocketTransport) {
+    mSocketTransport->ResolvedByTRR(&val);
+  }
+  return val;
+}
+
+bool nsHttpConnection::GetEchConfigUsed() {
+  bool val = false;
+  if (mSocketTransport) {
+    mSocketTransport->GetEchConfigUsed(&val);
+  }
+  return val;
+}
+
 }  // namespace net
 }  // namespace mozilla
