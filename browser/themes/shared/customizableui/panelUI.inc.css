@@ -32,6 +32,8 @@
   --arrowpanel-menuitem-margin: 0;
   --arrowpanel-menuitem-padding: 4px 12px;
   --arrowpanel-menuitem-border-radius: unset;
+  --panel-separator-margin: 6px 0;
+  --panel-subview-body-padding: 6px 0;
 
   --panelview-toolbarbutton-hover-bgcolor: var(--arrowpanel-dimmed);
   --panelview-toolbarbutton-hover-color: inherit;
@@ -43,9 +45,9 @@
   --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
   --panel-banner-item-update-supported-bgcolor: #74BF43;
   --panel-banner-item-update-unsupported-bgcolor: #FFE900;
-  --panel-separator-margin: 6px 0;
+  --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
   --panel-shortcut-color: inherit;
-  --panel-subview-body-padding: 6px 0;
+  --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px -moz-accent-color;
 }
 
 :root[lwt-popup-brighttext] {
@@ -60,49 +62,8 @@
   --arrowpanel-menuitem-margin: 0 8px;
   --arrowpanel-menuitem-padding: 8px;
   --arrowpanel-menuitem-border-radius: 4px;
-
-  --panelview-toolbarbutton-hover-bgcolor: rgb(224,224,230);
-  --panelview-toolbarbutton-hover-color: inherit;
-  --panelview-toolbarbutton-active-bgcolor: rgb(207,207,216);
-  --panelview-toolbarbutton-active-color: inherit;
-  --panel-banner-item-color: rgb(8,64,63);
-  --panel-banner-item-background-color: rgb(209,255,238);
-
-  /**
-   * --panel-banner-item-hover-bgcolor, --panel-banner-item-active-bgcolor
-   * and --panel-banner-item-update-unsupported-bgcolor are temporary
-   * colours until the right ones are determined, which is tracked by
-   * bug 1692040.
-   */
-  --panel-banner-item-hover-bgcolor: hsla(96,65%,75%,.8);
-  --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
-  --panel-banner-item-update-unsupported-bgcolor: #FFE900;
-
-  --panel-banner-item-update-supported-bgcolor: rgb(0,135,135);
   --panel-separator-margin: 4px 8px;
-  --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
-  --panel-shortcut-color: rgb(91,91,102);
   --panel-subview-body-padding: 8px 0;
-  --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px rgb(0,97,224);
-  --panel-disabled-color: rgba(21,20,26,0.4);
-}
-
-:root[lwt-popup-brighttext] {
-  --panelview-toolbarbutton-hover-bgcolor: #00B4F5;
-  --panelview-toolbarbutton-hover-color: #FFFFFF;
-  --panelview-toolbarbutton-active-bgcolor: #008DEB;
-  --panelview-toolbarbutton-active-color: #FFFFFF;
-
-  /**
-   * --panel-banner-item-color, --panel-banner-item-background-color,
-   * --panel-banner-item-hover-bgcolor and --panel-banner-item-active-bgcolor
-   * are temporary colours until the right ones are determined, which is
-   * tracked by bug 1692040.
-   */
-  --panel-banner-item-color: @appmenuWarningColorBrightText@;
-  --panel-banner-item-background-color: rgba(48,230,11,.1);
-  --panel-banner-item-hover-bgcolor: rgba(48,230,11,.15);
-  --panel-banner-item-active-bgcolor: rgba(48,230,11,.2);
 }
 
 } /*** END proton ***/
@@ -819,17 +780,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2 {
     padding: 6px 12px;
-    background-color: rgb(240,240,244); /** Named color: Theme Buttons / Secondary **/
+    background-color: var(--buttons-secondary-bgcolor);
     font-size: 11px;
     font-weight: 600;
   }
 
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2:hover {
-    background-color: rgb(224,224,230); /** Named color: Theme Buttons / Secondary Hover **/
+    background-color: var(--buttons-secondary-hover-bgcolor);
   }
 
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2:active {
-    background-color: rgb(207,207,216); /** Named color: Light Theme Buttons / Secondary Pressed **/
+    background-color: var(--buttons-secondary-active-bgcolor);
   }
 
   #fxa-manage-account-button > vbox > label,
@@ -1336,7 +1297,7 @@ panelview .toolbarbutton-1,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
   -moz-context-properties: fill;
-  fill: rgb(91,91,102); /** Named color: Dark Grey / 05 **/
+  fill: var(--buttons-secondary-color);
 }
 
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
@@ -1351,19 +1312,19 @@ panelview .toolbarbutton-1,
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
-  background-color: rgb(240,240,244); /** Named color: Theme Buttons / Secondary **/
+  background-color: var(--buttons-secondary-bgcolor);
 }
 
 #appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon,
 #appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
-  background-color: rgb(224,224,230); /** Named color: Theme Buttons / Secondary Hover **/
+  background-color: var(--buttons-secondary-hover-bgcolor);
 }
 
 #appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
-  background-color: rgb(207,207,216); /** Named color: Light Theme Buttons / Secondary Pressed **/
+  background-color: var(--buttons-secondary-active-bgcolor);
 }
 
 #appMenu-zoomReduce-button2@buttonStateFocus@ > .toolbarbutton-icon,
