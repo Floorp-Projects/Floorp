@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.tab_tray_item.view.*
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter
+import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.Tabs
@@ -27,7 +28,7 @@ import org.mozilla.fenix.ext.updateAccessibilityCollectionItemInfo
 
 class FenixTabsAdapter(
     private val context: Context,
-    imageLoader: ImageLoader
+    imageLoader: ImageLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
 ) : TabsAdapter(
     viewHolderProvider = { parentView ->
         TabTrayViewHolder(

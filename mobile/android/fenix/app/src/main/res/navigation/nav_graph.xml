@@ -119,6 +119,11 @@
         app:popUpTo="@id/tabTrayDialogFragment"
         app:popUpToInclusive="true"/>
     <action
+        android:id="@+id/action_global_tabsTrayFragment"
+        app:destination="@id/tabsTrayFragment"
+        app:popUpTo="@id/tabsTrayFragment"
+        app:popUpToInclusive="true" />
+    <action
         android:id="@+id/action_global_savedLoginsAuthFragment"
         app:destination="@id/savedLoginsAuthFragment" />
     <action
@@ -127,6 +132,15 @@
     <action
         android:id="@+id/action_global_tabSettingsFragment"
         app:destination="@id/tabsSettingsFragment" />
+
+    <dialog
+        android:id="@+id/tabsTrayFragment"
+        android:name="org.mozilla.fenix.tabstray.TabsTrayFragment">
+        <argument
+            android:name="enterMultiselect"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </dialog>
 
     <dialog
         android:id="@+id/tabTrayDialogFragment"

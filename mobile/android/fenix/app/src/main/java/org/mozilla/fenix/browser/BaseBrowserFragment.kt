@@ -294,7 +294,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 thumbnailsFeature.get()?.requestScreenshot()
                 findNavController().nav(
                     R.id.browserFragment,
-                    BrowserFragmentDirections.actionGlobalTabTrayDialogFragment()
+                    getTrayDirection(context)
                 )
             },
             onCloseTab = { closedSession ->
@@ -1277,6 +1277,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             isDisplayedWithBrowserToolbar = true
         ).setText(DynamicDownloadDialog.getCannotOpenFileErrorMessage(context, downloadState))
             .show()
+    }
+
+    /**
+     * Retrieves the correct tray direction while using a feature flag.
+     *
+     * Remove this when [FeatureFlags.tabsTrayRewrite] is removed.
+     */
+    private fun getTrayDirection(context: Context) = if (context.settings().tabsTrayRewrite) {
+        BrowserFragmentDirections.actionGlobalTabsTrayFragment()
+    } else {
+        BrowserFragmentDirections.actionGlobalTabTrayDialogFragment()
     }
 
     companion object {

@@ -1013,9 +1013,14 @@ class HomeFragment : Fragment() {
     }
 
     private fun openTabTray() {
+        val direction = if (requireContext().settings().tabsTrayRewrite) {
+            HomeFragmentDirections.actionGlobalTabsTrayFragment()
+        } else {
+            HomeFragmentDirections.actionGlobalTabTrayDialogFragment()
+        }
         findNavController().nav(
             R.id.homeFragment,
-            HomeFragmentDirections.actionGlobalTabTrayDialogFragment()
+            direction
         )
     }
 

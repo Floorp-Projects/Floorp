@@ -701,7 +701,6 @@ class TabTrayView(
     fun scrollToSelectedBrowserTab(selectedTabId: String? = null) {
         view.tabsTray.apply {
             val recyclerViewIndex = getSelectedBrowserTabViewIndex(selectedTabId)
-
             layoutManager?.scrollToPosition(recyclerViewIndex)
             smoothScrollBy(
                 0,
