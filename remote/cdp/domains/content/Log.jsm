@@ -6,10 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const { ContentProcessDomain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
+  ContentProcessDomain:
+    "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
+});
 
 const CONSOLE_MESSAGE_LEVEL_MAP = {
   [Ci.nsIConsoleMessage.debug]: "verbose",

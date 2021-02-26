@@ -6,12 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["DomainCache"];
 
-const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/Domain.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { UnknownMethodError } = ChromeUtils.import(
-  "chrome://remote/content/cdp/Error.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
+  UnknownMethodError: "chrome://remote/content/cdp/Error.jsm",
+});
 
 /**
  * Lazy domain instance cache.

@@ -6,18 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["TargetList"];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://gre/modules/EventEmitter.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { TabTarget } = ChromeUtils.import(
-  "chrome://remote/content/cdp/targets/TabTarget.jsm"
-);
-const { MainProcessTarget } = ChromeUtils.import(
-  "chrome://remote/content/cdp/targets/MainProcessTarget.jsm"
-);
-const { TabObserver } = ChromeUtils.import(
-  "chrome://remote/content/cdp/observers/TargetObserver.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  MainProcessTarget:
+    "chrome://remote/content/cdp/targets/MainProcessTarget.jsm",
+  TabObserver: "chrome://remote/content/cdp/observers/TargetObserver.jsm",
+  TabTarget: "chrome://remote/content/cdp/targets/TabTarget.jsm",
+});
 
 class TargetList {
   constructor() {

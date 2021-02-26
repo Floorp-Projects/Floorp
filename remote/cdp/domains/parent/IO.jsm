@@ -12,14 +12,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
-});
 
-const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/Domain.jsm"
-);
-const { StreamRegistry } = ChromeUtils.import(
-  "chrome://remote/content/cdp/StreamRegistry.jsm"
-);
+  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
+  StreamRegistry: "chrome://remote/content/cdp/StreamRegistry.jsm",
+});
 
 const DEFAULT_CHUNK_SIZE = 10 * 1024 * 1024;
 
