@@ -1037,12 +1037,8 @@ nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData) {
 
 already_AddRefed<GMPStorage> GeckoMediaPluginServiceParent::GetMemoryStorageFor(
     const nsACString& aNodeId) {
-  RefPtr<GMPStorage> s;
-  if (!mTempGMPStorage.Get(aNodeId, getter_AddRefs(s))) {
-    s = CreateGMPMemoryStorage();
-    mTempGMPStorage.InsertOrUpdate(aNodeId, RefPtr{s});
-  }
-  return s.forget();
+  return do_AddRef(mTempGMPStorage.LookupOrInsertWith(
+      aNodeId, [] { return CreateGMPMemoryStorage(); }));
 }
 
 NS_IMETHODIMP

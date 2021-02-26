@@ -122,7 +122,7 @@ bool MediaSystemResourceManager::IsIpcClosed() { return mChild ? true : false; }
 void MediaSystemResourceManager::Register(MediaSystemResourceClient* aClient) {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   MOZ_ASSERT(aClient);
-  MOZ_ASSERT(!mResourceClients.Get(aClient->mId));
+  MOZ_ASSERT(!mResourceClients.Contains(aClient->mId));
 
   mResourceClients.InsertOrUpdate(aClient->mId, aClient);
 }
@@ -131,7 +131,7 @@ void MediaSystemResourceManager::Unregister(
     MediaSystemResourceClient* aClient) {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   MOZ_ASSERT(aClient);
-  MOZ_ASSERT(mResourceClients.Get(aClient->mId));
+  MOZ_ASSERT(mResourceClients.Contains(aClient->mId));
   MOZ_ASSERT(mResourceClients.Get(aClient->mId) == aClient);
 
   mResourceClients.Remove(aClient->mId);
