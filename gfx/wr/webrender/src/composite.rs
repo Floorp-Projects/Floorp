@@ -142,7 +142,6 @@ pub struct ExternalSurfaceDescriptor {
 #[derive(Debug, Copy, Clone)]
 pub struct ExternalPlaneDescriptor {
     pub texture: TextureSource,
-    pub texture_layer: i32,
     pub uv_rect: TexelRect,
 }
 
@@ -150,7 +149,6 @@ impl ExternalPlaneDescriptor {
     fn invalid() -> Self {
         ExternalPlaneDescriptor {
             texture: TextureSource::Invalid,
-            texture_layer: 0,
             uv_rect: TexelRect::invalid(),
         }
     }
@@ -767,7 +765,6 @@ impl CompositeState {
                 let plane = &mut planes[i];
                 *plane = ExternalPlaneDescriptor {
                     texture: cache_item.texture_id,
-                    texture_layer: 0,
                     uv_rect: cache_item.uv_rect.into(),
                 };
             }

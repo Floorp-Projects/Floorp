@@ -3135,11 +3135,6 @@ impl Renderer {
                         color_space,
                         format,
                         rescale,
-                        [
-                            planes[0].texture_layer as f32,
-                            planes[1].texture_layer as f32,
-                            planes[2].texture_layer as f32,
-                        ],
                         uv_rects,
                     );
 
@@ -3168,7 +3163,6 @@ impl Renderer {
                         surface_rect.to_f32(),
                         surface_rect.to_f32(),
                         PremultipliedColorF::WHITE,
-                        plane.texture_layer as f32,
                         ZBufferId(0),
                         uv_rect,
                     );
@@ -3251,7 +3245,6 @@ impl Renderer {
                             tile.rect,
                             clip_rect,
                             color.premultiplied(),
-                            0.0,
                             tile.z_id,
                         ),
                         BatchTextures::composite_rgb(dummy),
@@ -3266,7 +3259,6 @@ impl Renderer {
                             tile.rect,
                             clip_rect,
                             PremultipliedColorF::BLACK,
-                            0.0,
                             tile.z_id,
                         ),
                         BatchTextures::composite_rgb(dummy),
@@ -3274,13 +3266,11 @@ impl Renderer {
                     )
                 }
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture } } => {
-                    let layer = 0.0;
                     (
                         CompositeInstance::new(
                             tile.rect,
                             clip_rect,
                             PremultipliedColorF::WHITE,
-                            layer,
                             tile.z_id,
                         ),
                         BatchTextures::composite_rgb(texture),
@@ -3317,11 +3307,6 @@ impl Renderer {
                                     color_space,
                                     format,
                                     rescale,
-                                    [
-                                        planes[0].texture_layer as f32,
-                                        planes[1].texture_layer as f32,
-                                        planes[2].texture_layer as f32,
-                                    ],
                                     uv_rects,
                                 ),
                                 textures,
@@ -3342,7 +3327,6 @@ impl Renderer {
                                     tile.rect,
                                     clip_rect,
                                     PremultipliedColorF::WHITE,
-                                    plane.texture_layer as f32,
                                     tile.z_id,
                                     uv_rect,
                                 ),

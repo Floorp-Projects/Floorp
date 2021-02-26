@@ -555,7 +555,6 @@ fn copy_from_staging_to_cache_using_draw_calls(
             dest_rect,
             dest_rect,
             PremultipliedColorF::WHITE,
-            0.0,
             ZBufferId(0),
             src_rect,
         ));
