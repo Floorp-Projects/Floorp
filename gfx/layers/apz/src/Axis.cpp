@@ -506,7 +506,7 @@ bool AxisY::CanScrollTo(Side aSide) const {
   }
 }
 
-bool AxisY::CanScrollDownwardsWithDynamicToolbar() const {
+bool AxisY::CanVerticalScrollWithDynamicToolbar() const {
   return GetCompositionLengthWithoutDynamicToolbar() == ParentLayerCoord(0)
              ? CanScroll()
              : GetPageLength() - GetCompositionLengthWithoutDynamicToolbar() >

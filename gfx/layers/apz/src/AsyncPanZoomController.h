@@ -526,11 +526,11 @@ class AsyncPanZoomController {
   // in the given direction.
   bool CanScroll(ScrollDirection aDirection) const;
 
-  // Return true if there is room to scroll downwards along with moving the
-  // dynamic toolbar.
+  // Return true if there is room to scroll along with moving the dynamic
+  // toolbar.
   //
   // NOTE: This function should be used only for the root content APZC.
-  bool CanScrollDownwardsWithDynamicToolbar() const;
+  bool CanVerticalScrollWithDynamicToolbar() const;
 
   // Return true if there is room to scroll downwards.
   bool CanScrollDownwards() const;
