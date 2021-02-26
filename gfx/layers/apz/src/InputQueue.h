@@ -37,8 +37,8 @@ class PinchGestureBlockState;
 class KeyboardBlockState;
 class AsyncDragMetrics;
 class QueuedInput;
-enum class APZHandledResult : uint8_t;
 struct APZEventResult;
+struct APZHandledResult;
 
 /**
  * This class stores incoming input events, associated with "input blocks",
