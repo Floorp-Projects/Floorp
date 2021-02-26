@@ -63,8 +63,6 @@ pub enum StaticRenderTaskSurface {
     TextureCache {
         /// Which texture in the texture cache should be drawn into.
         texture: CacheTextureId,
-        /// The target layer in the above texture.
-        layer: LayerIndex,
         /// What format this texture cache surface is
         target_kind: RenderTargetKind,
     },
@@ -1420,7 +1418,7 @@ impl RenderTask {
         }
     }
 
-    pub fn get_target_rect(&self) -> (DeviceIntRect, RenderTargetIndex) {
+    pub fn get_target_rect(&self) -> DeviceIntRect {
         match self.location {
             // Previously, we only added render tasks after the entire
             // primitive chain was determined visible. This meant that
@@ -1436,31 +1434,11 @@ impl RenderTask {
             // TODO(gw): Consider some kind of tag or other method
             //           to mark a task as unused explicitly. This
             //           would allow us to restore this debug check.
-            RenderTaskLocation::Dynamic { rect, .. } => {
-                (rect, RenderTargetIndex(0))
-            }
-            RenderTaskLocation::Unallocated { .. } => {
+            RenderTaskLocation::Dynamic { rect, .. } => rect,
+            RenderTaskLocation::Static { rect, .. } => rect,
+            RenderTaskLocation::CacheRequest { .. }
+            | RenderTaskLocation::Unallocated { .. } => {
                 panic!("bug: get_target_rect called before allocating");
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::PictureCache { ref surface, .. } } => {
-                let layer = match surface {
-                    ResolvedSurfaceTexture::TextureCache { layer, .. } => *layer,
-                    ResolvedSurfaceTexture::Native { .. } => 0,
-                };
-
-                (
-                    rect,
-                    RenderTargetIndex(layer as usize),
-                )
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::TextureCache { layer, .. } } => {
-                (rect, RenderTargetIndex(layer as usize))
-            }
-            RenderTaskLocation::Static { rect, surface: StaticRenderTaskSurface::ReadOnly { .. } } => {
-                (rect, RenderTargetIndex(0))
-            }
-            RenderTaskLocation::CacheRequest { .. }  => {
-                panic!();
             }
         }
     }
@@ -1560,7 +1538,7 @@ impl RenderTask {
             let image_source = ImageSource {
                 p0,
                 p1,
-                texture_layer: target_index.0 as f32,
+                unused: 0.0,
                 user_data: [0.0; 3],
                 uv_rect_kind: self.uv_rect_kind,
             };
