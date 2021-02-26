@@ -27,6 +27,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.fetch.Response
 import mozilla.components.feature.downloads.DownloadsUseCases.ConsumeDownloadUseCase
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.ui.DownloadAppChooserDialog
@@ -268,6 +269,36 @@ class DownloadsFeatureTest {
     }
 
     @Test
+    fun `WHEN dismissing a download dialog THEN the download stream should be closed`() {
+        val downloadsUseCases = spy(DownloadsUseCases(store))
+        val consumeDownloadUseCase = mock<ConsumeDownloadUseCase>()
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
+        val dialogFragment = spy(object : DownloadDialogFragment() {})
+        val fragmentManager: FragmentManager = mock()
+
+        doReturn(dialogFragment).`when`(fragmentManager).findFragmentByTag(DownloadDialogFragment.FRAGMENT_TAG)
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
+                .joinBlocking()
+        doReturn(consumeDownloadUseCase).`when`(downloadsUseCases).consumeDownload
+
+        val feature = spy(DownloadsFeature(
+            testContext,
+            store,
+            useCases = downloadsUseCases,
+            downloadManager = mock(),
+            fragmentManager = fragmentManager
+        ))
+
+        val tab = store.state.findTab("test-tab")
+
+        feature.showDownloadDialog(tab!!, download)
+
+        dialogFragment.onCancelDownload()
+        verify(feature).closeDownloadResponse(tab.id)
+        verify(consumeDownloadUseCase).invoke(anyString(), anyString())
+    }
+
+    @Test
     fun `onPermissionsResult will start download if permissions were granted and thirdParty enabled`() {
         val downloadsUseCases = spy(DownloadsUseCases(store))
         val consumeDownloadUseCase = mock<ConsumeDownloadUseCase>()
@@ -351,12 +382,12 @@ class DownloadsFeatureTest {
             arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
         ).`when`(downloadManager).permissions
 
-        val feature = DownloadsFeature(
+        val feature = spy(DownloadsFeature(
             testContext,
             store,
             useCases = DownloadsUseCases(store),
             downloadManager = downloadManager
-        )
+        ))
 
         feature.start()
 
@@ -371,6 +402,7 @@ class DownloadsFeatureTest {
         assertNull(store.state.findTab("test-tab")!!.content.download)
 
         verify(downloadManager, never()).download(any(), anyString())
+        verify(feature).closeDownloadResponse("test-tab")
     }
 
     @Test
@@ -675,6 +707,58 @@ class DownloadsFeatureTest {
     }
 
     @Test
+    fun `WHEN dismissing a downloader app dialog THEN the download stream should be closed`() {
+        val downloadsUseCases = spy(DownloadsUseCases(store))
+        val consumeDownloadUseCase = mock<ConsumeDownloadUseCase>()
+        val tab = createTab("https://www.mozilla.org", id = "test-tab")
+        val download = DownloadState(url = "https://www.mozilla.org/file.txt", sessionId = "test-tab")
+        val ourApp = mock<DownloaderApp>()
+        val anotherApp = mock<DownloaderApp>()
+        val apps = listOf(ourApp, anotherApp)
+        val dialog = spy(DownloadAppChooserDialog())
+        val fragmentManager: FragmentManager = mockFragmentManager()
+        val feature = spy(DownloadsFeature(
+            testContext,
+            store,
+            downloadsUseCases,
+            downloadManager = mock(),
+            shouldForwardToThirdParties = { true },
+            fragmentManager = fragmentManager
+        ))
+
+        doReturn(consumeDownloadUseCase).`when`(downloadsUseCases).consumeDownload
+
+        feature.showAppDownloaderDialog(tab, download, apps, dialog)
+        dialog.onDismiss()
+
+        verify(feature).closeDownloadResponse(tab.id)
+        verify(consumeDownloadUseCase).invoke(anyString(), anyString())
+    }
+
+    @Test
+    fun `WHEN calling closeDownloadResponse THEN the response must be closed`() {
+        val downloadsUseCases = spy(DownloadsUseCases(store))
+        val tab = createTab("https://www.mozilla.org")
+        val response = mock<Response>()
+        val download = DownloadState(url = "https://www.mozilla.org/file.txt", sessionId = tab.id, response = response)
+
+        val feature = spy(DownloadsFeature(
+            testContext,
+            store,
+            downloadsUseCases,
+            downloadManager = mock(),
+            shouldForwardToThirdParties = { true },
+            fragmentManager = mock()
+        ))
+
+        store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
+        store.dispatch(ContentAction.UpdateDownloadAction(tab.id, download = download)).joinBlocking()
+
+        feature.closeDownloadResponse(tab.id)
+        verify(response).close()
+    }
+
+    @Test
     fun `when isAlreadyAppDownloaderDialog we must NOT show the appChooserDialog`() {
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val download = DownloadState(url = "https://www.mozilla.org/file.txt", sessionId = "test-tab")
@@ -836,6 +920,7 @@ class DownloadsFeatureTest {
         dialog.onDismiss()
 
         verify(consumeDownloadUseCase).invoke(anyString(), anyString())
+        verify(feature).closeDownloadResponse(tab.id)
     }
 
     @Test
@@ -890,6 +975,7 @@ class DownloadsFeatureTest {
         store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
 
         verify(feature).dismissAllDownloadDialogs()
+        verify(feature).closeDownloadResponse(any())
         verify(downloadsUseCases).consumeDownload
         assertNull(feature.previousTab)
     }
@@ -925,6 +1011,7 @@ class DownloadsFeatureTest {
         store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
 
         verify(feature, never()).dismissAllDownloadDialogs()
+        verify(feature, never()).closeDownloadResponse(tab.id)
         verify(downloadsUseCases, never()).consumeDownload
         assertNotNull(feature.previousTab)
     }

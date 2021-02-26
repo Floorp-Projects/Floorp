@@ -20,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -111,6 +112,7 @@ class DownloadsFeature(
                             previousTab?.let { tab ->
                                 // We have an old download request.
                                 tab.content.download?.let { download ->
+                                    closeDownloadResponse(tab.id)
                                     dismissAllDownloadDialogs()
                                     useCases.consumeDownload(tab.id, download.id)
                                     previousTab = null
@@ -209,6 +211,7 @@ class DownloadsFeature(
                     processDownload(tab, download)
                 }
             } else {
+                closeDownloadResponse(tab.id)
                 useCases.consumeDownload(tab.id, download.id)
             }
         }
@@ -239,6 +242,7 @@ class DownloadsFeature(
         }
 
         dialog.onCancelDownload = {
+            closeDownloadResponse(tab.id)
             useCases.consumeDownload.invoke(tab.id, download.id)
         }
 
@@ -284,6 +288,7 @@ class DownloadsFeature(
         }
 
         appChooserDialog.onDismiss = {
+            closeDownloadResponse(tab.id)
             useCases.consumeDownload.invoke(tab.id, download.id)
         }
 
@@ -301,6 +306,12 @@ class DownloadsFeature(
     @VisibleForTesting
     internal fun isAlreadyAppDownloaderDialog(): Boolean {
         return findPreviousAppDownloaderDialogFragment() != null
+    }
+
+    internal fun closeDownloadResponse(tabId: String) {
+        store.state.findTabOrCustomTab(tabId)?.let {
+            it.content.download?.response?.close()
+        }
     }
 
     private fun findPreviousAppDownloaderDialogFragment(): DownloadAppChooserDialog? {
