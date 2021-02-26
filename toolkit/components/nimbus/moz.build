@@ -13,6 +13,8 @@ BROWSER_CHROME_MANIFESTS += [
 
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
+SPHINX_TREES["docs"] = "docs"
+
 TESTING_JS_MODULES += [
     "schemas/ExperimentFeatureManifest.schema.json",
     "schemas/NimbusExperiment.schema.json",

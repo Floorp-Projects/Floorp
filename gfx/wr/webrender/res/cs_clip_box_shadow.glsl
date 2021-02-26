@@ -7,7 +7,6 @@
 varying vec4 vLocalPos;
 varying vec2 vUv;
 flat varying vec4 vUvBounds;
-flat varying float vLayer;
 flat varying vec4 vEdge;
 flat varying vec4 vUvBounds_NoClamp;
 flat varying float vClipMode;
@@ -61,7 +60,7 @@ void main(void) {
     Transform clip_transform = fetch_transform(cmi.base.clip_transform_id);
     Transform prim_transform = fetch_transform(cmi.base.prim_transform_id);
     BoxShadowData bs_data = fetch_data();
-    ImageResource res = fetch_image_resource_direct(cmi.resource_address);
+    ImageSource res = fetch_image_source_direct(cmi.resource_address);
 
     RectWithSize dest_rect = bs_data.dest_rect;
 
@@ -74,7 +73,6 @@ void main(void) {
         cmi.base.screen_origin,
         cmi.base.device_pixel_scale
     );
-    vLayer = res.layer;
     vClipMode = float(bs_data.clip_mode);
 
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
@@ -129,7 +127,7 @@ void main(void) {
 
     float in_shadow_rect = init_transform_rough_fs(vLocalPos.xy / vLocalPos.w);
 
-    float texel = TEX_SAMPLE(sColor0, vec3(uv, vLayer)).r;
+    float texel = TEX_SAMPLE(sColor0, uv).r;
 
     float alpha = mix(texel, 1.0 - texel, vClipMode);
     float result = vLocalPos.w > 0.0 ? mix(vClipMode, alpha, in_shadow_rect) : 0.0;

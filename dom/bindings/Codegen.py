@@ -21640,8 +21640,14 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
                 // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
                 // all we want is to wrap into _some_ scope and then unwrap to find
                 // the reflector, and wrapping has no side-effects.
-                JSAutoRealm tempRealm(cx, UnprivilegedJunkScopeOrWorkerGlobal());
+                JSObject* scope = UnprivilegedJunkScopeOrWorkerGlobal(fallible);
+                if (!scope) {
+                  aRv.Throw(NS_ERROR_UNEXPECTED);
+                  return%s;
+                }
+                JSAutoRealm tempRealm(cx, scope);
                 """
+                % self.getDefaultRetval()
             )
 
         code += dedent(

@@ -6,16 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["Security"];
 
-const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/Domain.jsm"
-);
-
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.jsm",
+
+  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   sss: ["@mozilla.org/ssservice;1", "nsISiteSecurityService"],

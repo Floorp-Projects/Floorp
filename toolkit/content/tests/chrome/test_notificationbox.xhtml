@@ -29,8 +29,33 @@ var testtag_notificationbox_buttons = [
   }
 ];
 
-function testtag_notificationbox_buttonpressed(event)
+var testtag_notificationbox_links = [
+  {
+    label: "Link 1",
+    callback: testtag_notificationbox_buttonpressed,
+    link: "about:mozilla"
+  },
+  {
+    label: "Button 2",
+    accesskey: "u",
+    callback: testtag_notificationbox_buttonpressed,
+  }
+];
+
+var testtag_notificationbox_supportpage = [
+  {
+    supportPage: "test1",
+  },
+  {
+    label: "This is an existing label",
+    supportPage: "test2",
+  }
+];
+
+function testtag_notificationbox_buttonpressed(notification, button)
 {
+  SimpleTest.is(button.localName, "button");
+  return false;
 }
 
 function testtag_notificationbox(nb)
@@ -279,6 +304,54 @@ var tests =
     }
   },
   {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("Notification", "note", "happy.png",
+                                      nb.PRIORITY_INFO_LOW,
+                                      testtag_notificationbox_links,
+                                      notification_eventCallback);
+      SimpleTest.is(ntf && ntf.localName == "notification", true, "append link notification with callback");
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
+
+      let button = ntf.messageDetails.lastElementChild;
+      SimpleTest.is(button.localName, "button", "button is a button");
+      SimpleTest.ok(!button.href, "button href is not set");
+
+      let link = ntf.messageText.lastElementChild;
+      SimpleTest.is(link.localName, "label", "link is a label");
+      SimpleTest.is(link.href, "about:mozilla", "link href is correct");
+
+      SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
+    }
+  },
+  {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("Notification", "note", "happy.png",
+                                      nb.PRIORITY_INFO_LOW,
+                                      testtag_notificationbox_supportpage,
+                                      notification_eventCallback);
+      SimpleTest.is(ntf && ntf.localName == "notification", true, "append support page notification");
+      return ntf;
+    },
+    result(nb, ntf) {
+      testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
+
+      let link = ntf.messageText.lastElementChild.previousSibling;
+      SimpleTest.is(link.localName, "label", "link 1 is a label");
+      SimpleTest.ok(link.value != "", "link 1 label is set");
+      SimpleTest.ok(link.href.endsWith("/test1"), "link 1 href is set");
+
+      link = ntf.messageText.lastElementChild;
+      SimpleTest.is(link.localName, "label", "link 2 is a label");
+      SimpleTest.is(link.value, "This is an existing label", "link 2 label is set");
+      SimpleTest.ok(link.href.endsWith("/test2"), "link 2 href is set");
+
+      SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
+    }
+  },
+  {
     test(nb, unused) {
       // add a number of notifications and check that they are added in order
       nb.appendNotification("Four", "4", null, nb.PRIORITY_INFO_HIGH, testtag_notificationbox_buttons);
@@ -382,7 +455,7 @@ var appendPriorityTests = [
         runTimedTests(appendPriorityTests, -1, nb, ++priority);
       }
     }
-  }
+  },
 ];
 
 function testtag_notificationbox_State(nb, testid, expecteditem, expectedcount)

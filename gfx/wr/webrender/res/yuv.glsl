@@ -119,7 +119,6 @@ vec4 sample_yuv(
     mat3 yuv_color_matrix,
     vec3 yuv_offset_vector,
     float coefficient,
-    vec3 yuv_layers,
     vec2 in_uv_y,
     vec2 in_uv_u,
     vec2 in_uv_v,
@@ -136,9 +135,9 @@ vec4 sample_yuv(
                 vec2 uv_y = clamp(in_uv_y, uv_bounds_y.xy, uv_bounds_y.zw);
                 vec2 uv_u = clamp(in_uv_u, uv_bounds_u.xy, uv_bounds_u.zw);
                 vec2 uv_v = clamp(in_uv_v, uv_bounds_v.xy, uv_bounds_v.zw);
-                yuv_value.x = TEX_SAMPLE(sColor0, vec3(uv_y, yuv_layers.x)).r;
-                yuv_value.y = TEX_SAMPLE(sColor1, vec3(uv_u, yuv_layers.y)).r;
-                yuv_value.z = TEX_SAMPLE(sColor2, vec3(uv_v, yuv_layers.z)).r;
+                yuv_value.x = TEX_SAMPLE(sColor0, uv_y).r;
+                yuv_value.y = TEX_SAMPLE(sColor1, uv_u).r;
+                yuv_value.z = TEX_SAMPLE(sColor2, uv_v).r;
             }
             break;
 
@@ -146,8 +145,8 @@ vec4 sample_yuv(
             {
                 vec2 uv_y = clamp(in_uv_y, uv_bounds_y.xy, uv_bounds_y.zw);
                 vec2 uv_uv = clamp(in_uv_u, uv_bounds_u.xy, uv_bounds_u.zw);
-                yuv_value.x = TEX_SAMPLE(sColor0, vec3(uv_y, yuv_layers.x)).r;
-                yuv_value.yz = TEX_SAMPLE(sColor1, vec3(uv_uv, yuv_layers.y)).rg;
+                yuv_value.x = TEX_SAMPLE(sColor0, uv_y).r;
+                yuv_value.yz = TEX_SAMPLE(sColor1, uv_uv).rg;
             }
             break;
 
@@ -157,7 +156,7 @@ vec4 sample_yuv(
                 // the existing green, blue and red color channels."
                 // https://www.khronos.org/registry/OpenGL/extensions/APPLE/APPLE_rgb_422.txt
                 vec2 uv_y = clamp(in_uv_y, uv_bounds_y.xy, uv_bounds_y.zw);
-                yuv_value = TEX_SAMPLE(sColor0, vec3(uv_y, yuv_layers.x)).gbr;
+                yuv_value = TEX_SAMPLE(sColor0, uv_y).gbr;
             }
             break;
 

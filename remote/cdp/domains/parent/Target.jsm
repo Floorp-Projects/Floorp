@@ -9,30 +9,24 @@ var EXPORTED_SYMBOLS = ["Target"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.jsm",
+
+  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
+  MainProcessTarget:
+    "chrome://remote/content/cdp/targets/MainProcessTarget.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
+  TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
+  WindowManager: "chrome://remote/content/shared/WindowManager.jsm",
+});
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "UUIDGen",
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator"
-);
-
-const { ContextualIdentityService } = ChromeUtils.import(
-  "resource://gre/modules/ContextualIdentityService.jsm"
-);
-const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/cdp/domains/Domain.jsm"
-);
-const { MainProcessTarget } = ChromeUtils.import(
-  "chrome://remote/content/cdp/targets/MainProcessTarget.jsm"
-);
-const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/TabManager.jsm"
-);
-const { TabSession } = ChromeUtils.import(
-  "chrome://remote/content/cdp/sessions/TabSession.jsm"
-);
-const { WindowManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/WindowManager.jsm"
 );
 
 let browserContextIds = 1;

@@ -60,7 +60,7 @@ pub struct RenderTaskCacheKey {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskCacheEntry {
-    user_data: Option<[f32; 3]>,
+    user_data: Option<[f32; 4]>,
     target_kind: RenderTargetKind,
     is_opaque: bool,
     pub handle: TextureCacheHandle,
@@ -176,7 +176,7 @@ impl RenderTaskCache {
             descriptor,
             TextureFilter::Linear,
             None,
-            entry.user_data.unwrap_or([0.0; 3]),
+            entry.user_data.unwrap_or([0.0; 4]),
             DirtyRect::All,
             gpu_cache,
             None,
@@ -186,15 +186,13 @@ impl RenderTaskCache {
         );
 
         // Get the allocation details in the texture cache, and store
-        // this in the render task. The renderer will draw this
-        // task into the appropriate layer and rect of the texture
-        // cache on this frame.
-        let (texture_id, texture_layer, uv_rect, _, _, _) =
+        // this in the render task. The renderer will draw this task
+        // into the appropriate rect of the texture cache on this frame.
+        let (texture_id, uv_rect, _, _, _) =
             texture_cache.get_cache_location(&entry.handle);
 
         let surface = StaticRenderTaskSurface::TextureCache {
             texture: texture_id,
-            layer: texture_layer,
             target_kind,
         };
 
@@ -210,7 +208,7 @@ impl RenderTaskCache {
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
         rg_builder: &mut RenderTaskGraphBuilder,
-        user_data: Option<[f32; 3]>,
+        user_data: Option<[f32; 4]>,
         is_opaque: bool,
         parent: RenderTaskParent,
         surfaces: &[SurfaceInfo],

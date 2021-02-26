@@ -4,10 +4,16 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
+var EXPORTED_SYMBOLS = ["ChannelEventSinkFactory"];
+
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 const Cm = Components.manager;
 
@@ -105,5 +111,4 @@ ChannelEventSinkFactory.getService = function() {
     .wrappedJSObject;
 };
 
-var EXPORTED_SYMBOLS = ["ChannelEventSinkFactory"];
 this.ChannelEventSinkFactory = ChannelEventSinkFactory;

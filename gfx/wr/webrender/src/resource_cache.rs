@@ -79,8 +79,7 @@ pub struct CacheItem {
     pub texture_id: TextureSource,
     pub uv_rect_handle: GpuCacheHandle,
     pub uv_rect: DeviceIntRect,
-    pub texture_layer: i32,
-    pub user_data: [f32; 3],
+    pub user_data: [f32; 4],
 }
 
 impl CacheItem {
@@ -89,8 +88,7 @@ impl CacheItem {
             texture_id: TextureSource::Invalid,
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect: DeviceIntRect::zero(),
-            texture_layer: 0,
-            user_data: [0.0, 0.0, 0.0],
+            user_data: [0.0; 4],
         }
     }
 
@@ -584,7 +582,7 @@ impl ResourceCache {
         key: RenderTaskCacheKey,
         gpu_cache: &mut GpuCache,
         rg_builder: &mut RenderTaskGraphBuilder,
-        user_data: Option<[f32; 3]>,
+        user_data: Option<[f32; 4]>,
         is_opaque: bool,
         parent: RenderTaskParent,
         surfaces: &[SurfaceInfo],
@@ -1352,7 +1350,7 @@ impl ResourceCache {
                     descriptor,
                     filter,
                     Some(image_data),
-                    [0.0; 3],
+                    [0.0; 4],
                     dirty_rect,
                     gpu_cache,
                     None,

@@ -1420,3 +1420,41 @@ async function checkEyeDropperColorAt(
   );
   is(colorValue, expectedColor, assertionDescription);
 }
+
+/**
+ * Delete the provided node front using the context menu in the markup view.
+ * Will resolve after the inspector UI was fully updated.
+ *
+ * @param {NodeFront} node
+ *        The node front to delete.
+ * @param {Inspector} inspector
+ *        The current inspector panel instance.
+ */
+async function deleteNodeWithContextMenu(node, inspector) {
+  const container = inspector.markup.getContainer(node);
+
+  const allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    target: container.tagLine,
+  });
+  const menuItem = allMenuItems.find(item => item.id === "node-menu-delete");
+  const onInspectorUpdated = inspector.once("inspector-updated");
+
+  info("Clicking 'Delete Node' in the context menu.");
+  is(menuItem.disabled, false, "delete menu item is enabled");
+  menuItem.click();
+
+  // close the open context menu
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  info("Waiting for inspector to update.");
+  await onInspectorUpdated;
+
+  // Since the mutations are sent asynchronously from the server, the
+  // inspector-updated event triggered by the deletion might happen before
+  // the mutation is received and the element is removed from the
+  // breadcrumbs. See bug 1284125.
+  if (inspector.breadcrumbs.indexOf(node) > -1) {
+    info("Crumbs haven't seen deletion. Waiting for breadcrumbs-updated.");
+    await inspector.once("breadcrumbs-updated");
+  }
+}

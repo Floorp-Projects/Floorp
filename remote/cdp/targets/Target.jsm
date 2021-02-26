@@ -6,18 +6,21 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
-const { Connection } = ChromeUtils.import(
-  "chrome://remote/content/cdp/Connection.jsm"
-);
-const { WebSocketTransport } = ChromeUtils.import(
-  "chrome://remote/content/server/WebSocketTransport.jsm"
-);
-const { WebSocketHandshake } = ChromeUtils.import(
-  "chrome://remote/content/server/WebSocketHandshake.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const UUIDGen = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Connection: "chrome://remote/content/cdp/Connection.jsm",
+  WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
+  WebSocketTransport: "chrome://remote/content/server/WebSocketTransport.jsm",
+});
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UUIDGen",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
 );
 
 /**

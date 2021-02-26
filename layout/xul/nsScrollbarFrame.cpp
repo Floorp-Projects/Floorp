@@ -23,6 +23,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/StaticPrefs_apz.h"
 
 using namespace mozilla;
 using mozilla::dom::Element;
@@ -207,20 +208,32 @@ nsresult nsScrollbarFrame::GetXULMargin(nsMargin& aMargin) {
 }
 
 void nsScrollbarFrame::SetIncrementToLine(int32_t aDirection) {
+  mSmoothScroll = true;
+  mDirection = aDirection;
+  mScrollUnit = ScrollUnit::LINES;
+
   // get the scrollbar's content node
   nsIContent* content = GetContent();
-  mSmoothScroll = true;
   mIncrement = aDirection * nsSliderFrame::GetIncrement(content);
 }
 
 void nsScrollbarFrame::SetIncrementToPage(int32_t aDirection) {
+  mSmoothScroll = true;
+  mDirection = aDirection;
+  mScrollUnit = ScrollUnit::PAGES;
+
   // get the scrollbar's content node
   nsIContent* content = GetContent();
-  mSmoothScroll = true;
   mIncrement = aDirection * nsSliderFrame::GetPageIncrement(content);
 }
 
 void nsScrollbarFrame::SetIncrementToWhole(int32_t aDirection) {
+  // Don't repeat or use smooth scrolling if scrolling to beginning or end
+  // of a page.
+  mSmoothScroll = false;
+  mDirection = aDirection;
+  mScrollUnit = ScrollUnit::WHOLE;
+
   // get the scrollbar's content node
   nsIContent* content = GetContent();
   if (aDirection == -1)
@@ -228,12 +241,22 @@ void nsScrollbarFrame::SetIncrementToWhole(int32_t aDirection) {
   else
     mIncrement = nsSliderFrame::GetMaxPosition(content) -
                  nsSliderFrame::GetCurrentPosition(content);
-  // Don't repeat or use smooth scrolling if scrolling to beginning or end
-  // of a page.
-  mSmoothScroll = false;
 }
 
-int32_t nsScrollbarFrame::MoveToNewPosition() {
+int32_t nsScrollbarFrame::MoveToNewPosition(
+    ImplementsScrollByUnit aImplementsScrollByUnit) {
+  if (aImplementsScrollByUnit == ImplementsScrollByUnit::Yes &&
+      StaticPrefs::apz_scrollbarbuttonrepeat_enabled()) {
+    nsIScrollbarMediator* m = GetScrollbarMediator();
+    MOZ_ASSERT(m);
+    // aImplementsScrollByUnit being Yes indicates the caller doesn't care
+    // about the return value.
+    m->ScrollByUnit(this,
+                    mSmoothScroll ? ScrollMode::Smooth : ScrollMode::Instant,
+                    mDirection, mScrollUnit, nsIScrollbarMediator::ENABLE_SNAP);
+    return 0;
+  }
+
   // get the scrollbar's content node
   RefPtr<Element> content = GetContent()->AsElement();
 

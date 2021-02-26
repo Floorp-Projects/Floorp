@@ -225,11 +225,6 @@ pub mod desc {
                 count: 4,
                 kind: VertexAttributeKind::I32,
             },
-            VertexAttribute {
-                name: "aScaleSourceLayer",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
         ],
     };
 
@@ -618,11 +613,6 @@ pub mod desc {
             VertexAttribute {
                 name: "aUvRect2",
                 count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
-                name: "aTextureLayers",
-                count: 3,
                 kind: VertexAttributeKind::F32,
             },
         ],

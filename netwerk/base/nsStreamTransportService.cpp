@@ -289,9 +289,17 @@ nsStreamTransportService::Dispatch(already_AddRefed<nsIRunnable> task,
 }
 
 NS_IMETHODIMP
-nsStreamTransportService::DelayedDispatch(already_AddRefed<nsIRunnable>,
-                                          uint32_t) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+nsStreamTransportService::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
+                                          uint32_t aDelayMs) {
+  nsCOMPtr<nsIRunnable> event = aEvent;
+  NS_ENSURE_TRUE(!!aDelayMs, NS_ERROR_UNEXPECTED);
+
+  RefPtr<DelayedRunnable> r =
+      new DelayedRunnable(do_AddRef(this), event.forget(), aDelayMs);
+  nsresult rv = r->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP_(bool)

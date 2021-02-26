@@ -291,8 +291,9 @@ class PromptParent extends JSWindowActorParent {
       let bag;
 
       if (
-        args.modalType === Services.prompt.MODAL_TYPE_TAB ||
-        args.modalType === Services.prompt.MODAL_TYPE_CONTENT
+        (args.modalType === Services.prompt.MODAL_TYPE_TAB ||
+          args.modalType === Services.prompt.MODAL_TYPE_CONTENT) &&
+        win?.gBrowser?.getTabDialogBox
       ) {
         if (!browser) {
           let modal_type =
@@ -319,6 +320,9 @@ class PromptParent extends JSWindowActorParent {
           bag
         );
       } else {
+        // Ensure we set the correct modal type at this point.
+        // If we use window prompts as a fallback it may not be set.
+        args.modalType = Services.prompt.MODAL_TYPE_WINDOW;
         // Window prompt
         bag = PromptUtils.objectToPropBag(args);
         Services.ww.openWindow(

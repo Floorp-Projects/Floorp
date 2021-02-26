@@ -18,6 +18,7 @@ async function test_decoder_doctor_notification(
   notificationMessage,
   label,
   accessKey,
+  isLink,
   tabChecker
 ) {
   const TEST_URL = "https://example.org";
@@ -100,28 +101,48 @@ async function test_decoder_doctor_notification(
         );
 
         let button = notification.querySelector("button");
+        let link = notification.querySelector(".text-link");
         if (!label) {
-          ok(!button, "There should not be button");
+          ok(!button, "There should not be a button");
+          ok(!link, "There should not be a link");
           return;
         }
 
-        is(
-          button.getAttribute("label"),
-          label,
-          `notification button should be '${label}'`
-        );
-        is(
-          button.getAttribute("accesskey"),
-          accessKey,
-          "notification button should have accesskey"
-        );
+        if (isLink) {
+          ok(!button, "There should not be a button");
+          is(
+            link.getAttribute("value"),
+            label,
+            `notification link should be '${label}'`
+          );
+          ok(
+            !link.hasAttribute("accesskey"),
+            "notification link should not have accesskey"
+          );
+        } else {
+          ok(!link, "There should not be a link");
+          is(
+            button.getAttribute("label"),
+            label,
+            `notification button should be '${label}'`
+          );
+          is(
+            button.getAttribute("accesskey"),
+            accessKey,
+            "notification button should have accesskey"
+          );
+        }
 
         if (!tabChecker) {
           ok(false, "Test implementation error: Missing tabChecker");
           return;
         }
         let awaitNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
-        button.click();
+        if (button) {
+          button.click();
+        } else {
+          link.click();
+        }
         let openedTab = await awaitNewTab;
         tabChecker(openedTab);
         BrowserTestUtils.removeTab(openedTab);
@@ -196,6 +217,7 @@ add_task(async function test_platform_decoder_not_found() {
     message,
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.button"),
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
+    true,
     tab_checker_for_sumo("fix-video-audio-problems-firefox-windows")
   );
 });
@@ -212,6 +234,7 @@ add_task(async function test_cannot_initialize_pulseaudio() {
     message,
     gNavigatorBundle.getString("decoder.noCodecs.button"),
     gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
+    true,
     tab_checker_for_sumo("fix-common-audio-and-video-issues")
   );
 });
@@ -252,6 +275,7 @@ add_task(async function test_decode_error() {
     message,
     gNavigatorBundle.getString("decoder.decodeError.button"),
     gNavigatorBundle.getString("decoder.decodeError.accesskey"),
+    false,
     tab_checker_for_webcompat({
       url: "DocURL",
       label: "type-media",
@@ -284,6 +308,7 @@ add_task(async function test_decode_warning() {
     message,
     gNavigatorBundle.getString("decoder.decodeError.button"),
     gNavigatorBundle.getString("decoder.decodeError.accesskey"),
+    false,
     tab_checker_for_webcompat({
       url: "DocURL",
       label: "type-media",

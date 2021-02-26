@@ -6,8 +6,6 @@
 
 #include shared,prim_shared,brush,yuv
 
-flat varying vec3 vYuvLayers;
-
 varying vec2 vUv_Y;
 flat varying vec4 vUvBounds_Y;
 
@@ -70,23 +68,20 @@ void brush_vs(
 #endif
 
     if (vFormat == YUV_FORMAT_PLANAR) {
-        ImageResource res_y = fetch_image_resource(prim_user_data.x);
-        ImageResource res_u = fetch_image_resource(prim_user_data.y);
-        ImageResource res_v = fetch_image_resource(prim_user_data.z);
+        ImageSource res_y = fetch_image_source(prim_user_data.x);
+        ImageSource res_u = fetch_image_source(prim_user_data.y);
+        ImageSource res_v = fetch_image_source(prim_user_data.z);
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
         write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE_YUV(sColor1), vUv_U, vUvBounds_U);
         write_uv_rect(res_v.uv_rect.p0, res_v.uv_rect.p1, f, TEX_SIZE_YUV(sColor2), vUv_V, vUvBounds_V);
-        vYuvLayers = vec3(res_y.layer, res_u.layer, res_v.layer);
     } else if (vFormat == YUV_FORMAT_NV12) {
-        ImageResource res_y = fetch_image_resource(prim_user_data.x);
-        ImageResource res_u = fetch_image_resource(prim_user_data.y);
+        ImageSource res_y = fetch_image_source(prim_user_data.x);
+        ImageSource res_u = fetch_image_source(prim_user_data.y);
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
         write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE_YUV(sColor1), vUv_U, vUvBounds_U);
-        vYuvLayers = vec3(res_y.layer, res_u.layer, 0.0);
     } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
-        ImageResource res_y = fetch_image_resource(prim_user_data.x);
+        ImageSource res_y = fetch_image_source(prim_user_data.x);
         write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
-        vYuvLayers = vec3(res_y.layer, 0.0, 0.0);
     }
 }
 #endif
@@ -99,7 +94,6 @@ Fragment brush_fs() {
         vYuvColorMatrix,
         vYuvOffsetVector,
         vCoefficient,
-        vYuvLayers,
         vUv_Y,
         vUv_U,
         vUv_V,
@@ -118,16 +112,16 @@ Fragment brush_fs() {
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
     if (vFormat == YUV_FORMAT_PLANAR) {
-        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, vYuvLayers.x,
-                                    sColor1, vUv_U, vUvBounds_U, vYuvLayers.y,
-                                    sColor2, vUv_V, vUvBounds_V, vYuvLayers.z,
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, 0.0,
+                                    sColor1, vUv_U, vUvBounds_U, 0.0,
+                                    sColor2, vUv_V, vUvBounds_V, 0.0,
                                     vYuvColorSpace, vRescaleFactor);
     } else if (vFormat == YUV_FORMAT_NV12) {
-        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, vYuvLayers.x,
-                                    sColor1, vUv_U, vUvBounds_U, vYuvLayers.y,
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, 0.0,
+                                    sColor1, vUv_U, vUvBounds_U, 0.0,
                                     vYuvColorSpace, vRescaleFactor);
     } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
-        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, vYuvLayers.x,
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, 0.0,
                                     vYuvColorSpace, vRescaleFactor);
     }
 }

@@ -22,11 +22,7 @@
 
 #include base
 
-#if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_RECT) || defined(WR_FEATURE_TEXTURE_2D)
 #define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord.xy)
-#else
-#define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord)
-#endif
 
 #if defined(WR_FEATURE_TEXTURE_EXTERNAL) && defined(PLATFORM_ANDROID)
 // On some Mali GPUs we have encountered crashes in glDrawElements when using
@@ -187,10 +183,6 @@ uniform sampler2DRect sColor2;
 uniform samplerExternalOES sColor0;
 uniform samplerExternalOES sColor1;
 uniform samplerExternalOES sColor2;
-#elif defined WR_FEATURE_TEXTURE_2D_ARRAY
-uniform sampler2DArray sColor0;
-uniform sampler2DArray sColor1;
-uniform sampler2DArray sColor2;
 #endif
 
 #ifdef WR_FEATURE_DITHERING

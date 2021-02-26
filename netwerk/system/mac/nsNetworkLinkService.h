@@ -60,7 +60,7 @@ class nsNetworkLinkService : public nsINetworkLinkService,
                                    CFArrayRef changedKeys, void* info);
   void calculateNetworkIdWithDelay(uint32_t aDelay);
   void calculateNetworkIdInternal(void);
-  void DNSConfigChanged();
+  void DNSConfigChanged(uint32_t aDelayMs);
   void GetDnsSuffixListInternal();
   bool RoutingFromKernel(nsTArray<nsCString>& aHash);
   bool RoutingTable(nsTArray<nsCString>& aHash);

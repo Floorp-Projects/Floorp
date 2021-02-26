@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function handleRequest(req, resp) {
-  resp.setHeader("Content-Type", "text/html", false);
+  resp.setHeader("Content-Type", "text/html; charset=UTF-8", false);
   if (req.hasHeader("Origin") && req.getHeader("Origin") != "null") {
     resp.write("error");
     return;

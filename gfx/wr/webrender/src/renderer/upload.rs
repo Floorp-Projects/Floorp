@@ -84,9 +84,7 @@ pub fn upload_to_texture_cache(
     for (texture_id, updates) in update_list {
         let texture = &renderer.texture_resolver.texture_cache_map[&texture_id];
         for update in updates {
-            let TextureCacheUpdate { rect, stride, offset, layer_index, format_override, source } = update;
-
-            assert_eq!(layer_index, 0);
+            let TextureCacheUpdate { rect, stride, offset, format_override, source } = update;
 
             let dummy_data;
             let data = match source {
@@ -557,7 +555,6 @@ fn copy_from_staging_to_cache_using_draw_calls(
             dest_rect,
             dest_rect,
             PremultipliedColorF::WHITE,
-            0.0,
             ZBufferId(0),
             src_rect,
         ));
