@@ -27,6 +27,9 @@ const log = console.createInstance({
 const RS_COLLECTION = "quicksuggest";
 const RS_PREF = "quicksuggest.enabled";
 
+// Categories that should show "Firefox Suggests" instead of "Sponsored"
+const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
+
 /**
  * Fetches the suggestions data from RemoteSettings and builds the tree
  * to provide suggestions for UrlbarProviderQuickSuggest.
@@ -85,6 +88,7 @@ class Suggestions {
       impression_url: result.impression_url,
       block_id: result.id,
       advertiser: result.advertiser.toLocaleLowerCase(),
+      isSponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
       icon,
     };
   }

@@ -28,6 +28,7 @@ const SUGGEST_PREF = "suggest.quicksuggest";
 const ONBOARDING_COUNT_PREF = "quicksuggest.onboardingCount";
 const ONBOARDING_MAX_COUNT_PREF = "quicksuggest.onboardingMaxCount";
 
+const NONSPONSORED_ACTION_TEXT = "Firefox Suggests";
 const ONBOARDING_TEXT = "Learn more about Firefox Suggests";
 
 const TELEMETRY_SCALAR_IMPRESSION =
@@ -121,6 +122,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
       sponsoredAdvertiser: suggestion.advertiser,
       isSponsored: true,
     };
+
+    if (!suggestion.isSponsored) {
+      payload.sponsoredText = NONSPONSORED_ACTION_TEXT;
+    }
 
     // Show the help button if we haven't reached the max onboarding count yet.
     if (this._onboardingCount < this._onboardingMaxCount) {
