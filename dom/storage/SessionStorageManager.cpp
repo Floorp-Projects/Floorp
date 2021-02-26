@@ -50,7 +50,7 @@ void RecvPropagateBackgroundSessionStorageManager(
             sManagers->Get(aCurrentTopContextId)) {
       // Assuming the target top browsing context should haven't been
       // registered yet.
-      MOZ_DIAGNOSTIC_ASSERT(!sManagers->GetWeak(aTargetTopContextId));
+      MOZ_DIAGNOSTIC_ASSERT(!sManagers->Contains(aTargetTopContextId));
       sManagers->InsertOrUpdate(aTargetTopContextId, std::move(mgr));
     }
   }
@@ -70,35 +70,29 @@ SessionStorageManagerBase::OriginRecord*
 SessionStorageManagerBase::GetOriginRecord(
     const nsACString& aOriginAttrs, const nsACString& aOriginKey,
     const bool aMakeIfNeeded, SessionStorageCache* const aCloneFrom) {
-  OriginKeyHashTable* table;
-  if (!mOATable.Get(aOriginAttrs, &table)) {
-    if (aMakeIfNeeded) {
-      table =
-          mOATable
-              .InsertOrUpdate(aOriginAttrs, MakeUnique<OriginKeyHashTable>())
-              .get();
-    } else {
-      return nullptr;
-    }
+  // XXX It seems aMakeIfNeeded is always known at compile-time, so this could
+  // be split into two functions.
+
+  if (aMakeIfNeeded) {
+    return mOATable.GetOrInsertNew(aOriginAttrs)
+        ->LookupOrInsertWith(
+            aOriginKey,
+            [&] {
+              auto newOriginRecord = MakeUnique<OriginRecord>();
+              if (aCloneFrom) {
+                newOriginRecord->mCache = aCloneFrom->Clone();
+              } else {
+                newOriginRecord->mCache = new SessionStorageCache();
+              }
+              return newOriginRecord;
+            })
+        .get();
   }
 
-  OriginRecord* originRecord;
-  if (!table->Get(aOriginKey, &originRecord)) {
-    if (aMakeIfNeeded) {
-      auto newOriginRecord = MakeUnique<OriginRecord>();
-      if (aCloneFrom) {
-        newOriginRecord->mCache = aCloneFrom->Clone();
-      } else {
-        newOriginRecord->mCache = new SessionStorageCache();
-      }
-      originRecord =
-          table->InsertOrUpdate(aOriginKey, std::move(newOriginRecord)).get();
-    } else {
-      return nullptr;
-    }
-  }
+  auto* const table = mOATable.Get(aOriginAttrs);
+  if (!table) return nullptr;
 
-  return originRecord;
+  return table->Get(aOriginKey);
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SessionStorageManager)
