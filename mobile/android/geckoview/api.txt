@@ -41,7 +41,6 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
-import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
@@ -71,7 +70,6 @@ import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
-import org.mozilla.geckoview.DeprecationSchedule;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -1318,8 +1316,7 @@ package org.mozilla.geckoview {
     method public boolean getAutofillEnabled();
     method @NonNull public PanZoomController getPanZoomController();
     method @AnyThread @Nullable public GeckoSession getSession();
-    method @NonNull public GeckoResult<PanZoomController.InputResultDetail> onTouchEventForDetailResult(@NonNull MotionEvent);
-    method @Deprecated @DeprecationSchedule(version=90,id="on-touch-event-for-result") @NonNull public GeckoResult<Integer> onTouchEventForResult(@NonNull MotionEvent);
+    method @NonNull public GeckoResult<Integer> onTouchEventForResult(@NonNull MotionEvent);
     method @Nullable @UiThread public GeckoSession releaseSession();
     method public void setAutofillEnabled(boolean);
     method public void setDynamicToolbarMaxHeight(int);
@@ -1505,8 +1502,7 @@ package org.mozilla.geckoview {
     method public void onMotionEvent(@NonNull MotionEvent);
     method public void onMouseEvent(@NonNull MotionEvent);
     method public void onTouchEvent(@NonNull MotionEvent);
-    method @NonNull public GeckoResult<PanZoomController.InputResultDetail> onTouchEventForDetailResult(@NonNull MotionEvent);
-    method @Deprecated @DeprecationSchedule(version=90,id="on-touch-event-for-result") @NonNull public GeckoResult<Integer> onTouchEventForResult(@NonNull MotionEvent);
+    method @NonNull public GeckoResult<Integer> onTouchEventForResult(@NonNull MotionEvent);
     method @UiThread public void scrollBy(@NonNull ScreenLength, @NonNull ScreenLength);
     method @UiThread public void scrollBy(@NonNull ScreenLength, @NonNull ScreenLength, int);
     method @UiThread public void scrollTo(@NonNull ScreenLength, @NonNull ScreenLength);
@@ -1519,23 +1515,8 @@ package org.mozilla.geckoview {
     field public static final int INPUT_RESULT_HANDLED_CONTENT = 2;
     field public static final int INPUT_RESULT_IGNORED = 3;
     field public static final int INPUT_RESULT_UNHANDLED = 0;
-    field public static final int OVERSCROLL_FLAG_HORIZONTAL = 1;
-    field public static final int OVERSCROLL_FLAG_NONE = 0;
-    field public static final int OVERSCROLL_FLAG_VERTICAL = 2;
-    field public static final int SCROLLABLE_FLAG_BOTTOM = 4;
-    field public static final int SCROLLABLE_FLAG_LEFT = 8;
-    field public static final int SCROLLABLE_FLAG_NONE = 0;
-    field public static final int SCROLLABLE_FLAG_RIGHT = 2;
-    field public static final int SCROLLABLE_FLAG_TOP = 1;
     field public static final int SCROLL_BEHAVIOR_AUTO = 1;
     field public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
-  }
-
-  public static class PanZoomController.InputResultDetail {
-    ctor protected InputResultDetail(int, int, int);
-    method @AnyThread public int handledResult();
-    method @AnyThread public int overscrollDirections();
-    method @AnyThread public int scrollableDirections();
   }
 
   @UiThread public class ProfilerController {
