@@ -251,7 +251,6 @@ class PanZoomControllerTest : BaseSessionTest() {
         val down = MotionEvent.obtain(
                 downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, x, y, 0);
 
-        @Suppress("DEPRECATION")
         val result = mainSession.panZoomController.onTouchEventForResult(down)
 
         val up = MotionEvent.obtain(
@@ -457,7 +456,6 @@ class PanZoomControllerTest : BaseSessionTest() {
         val down = MotionEvent.obtain(
                 downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, 50f, 90f, 0)
 
-        @Suppress("DEPRECATION")
         val result = mainSession.panZoomController.onTouchEventForResult(down)
         var move = MotionEvent.obtain(
                 downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, 50f, 70f, 0)

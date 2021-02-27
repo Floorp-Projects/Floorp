@@ -269,8 +269,16 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     // on APZCTreeManager. This allows us to templates for functions like
     // TouchDown, TouchUp, etc so that we can reuse the code for dispatching
     // events into both APZC and APZCTM.
+    APZEventResult result;
+    result.mStatus = ReceiveInputEvent(aEvent, &result.mInputBlockId);
+    return result;
+  }
+
+  nsEventStatus ReceiveInputEvent(const InputData& aEvent,
+                                  uint64_t* aOutInputBlockId) {
     return GetInputQueue()->ReceiveInputEvent(
-        this, TargetConfirmationFlags{!mWaitForMainThread}, aEvent);
+        this, TargetConfirmationFlags{!mWaitForMainThread}, aEvent,
+        aOutInputBlockId);
   }
 
   void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault) {
@@ -408,10 +416,10 @@ class APZCTesterBase : public ::testing::Test {
   };
 
   template <class InputReceiver>
-  APZEventResult Tap(const RefPtr<InputReceiver>& aTarget,
-                     const ScreenIntPoint& aPoint, TimeDuration aTapLength,
-                     nsEventStatus (*aOutEventStatuses)[2] = nullptr,
-                     uint64_t* aOutInputBlockId = nullptr);
+  void Tap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+           TimeDuration aTapLength,
+           nsEventStatus (*aOutEventStatuses)[2] = nullptr,
+           uint64_t* aOutInputBlockId = nullptr);
 
   template <class InputReceiver>
   void TapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
@@ -503,32 +511,30 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PanOptions)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PinchOptions)
 
 template <class InputReceiver>
-APZEventResult APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
-                                   const ScreenIntPoint& aPoint,
-                                   TimeDuration aTapLength,
-                                   nsEventStatus (*aOutEventStatuses)[2],
-                                   uint64_t* aOutInputBlockId) {
-  APZEventResult touchDownResult = TouchDown(aTarget, aPoint, mcc->Time());
+void APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
+                         const ScreenIntPoint& aPoint, TimeDuration aTapLength,
+                         nsEventStatus (*aOutEventStatuses)[2],
+                         uint64_t* aOutInputBlockId) {
+  APZEventResult result = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = touchDownResult.GetStatus();
+    (*aOutEventStatuses)[0] = result.mStatus;
   }
   if (aOutInputBlockId) {
-    *aOutInputBlockId = touchDownResult.mInputBlockId;
+    *aOutInputBlockId = result.mInputBlockId;
   }
   mcc->AdvanceBy(aTapLength);
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      touchDownResult.GetStatus() != nsEventStatus_eConsumeNoDefault) {
-    SetDefaultAllowedTouchBehavior(aTarget, touchDownResult.mInputBlockId);
+      result.mStatus != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
-  APZEventResult touchUpResult = TouchUp(aTarget, aPoint, mcc->Time());
+  result.mStatus = TouchUp(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = touchUpResult.GetStatus();
+    (*aOutEventStatuses)[1] = result.mStatus;
   }
-  return touchDownResult;
 }
 
 template <class InputReceiver>
@@ -588,13 +594,13 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
     *aOutInputBlockId = result.mInputBlockId;
   }
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = result.GetStatus();
+    (*aOutEventStatuses)[0] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Allowed touch behaviours must be set after sending touch-start.
-  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+  if (result.mStatus != nsEventStatus_eConsumeNoDefault) {
     if (aAllowedTouchBehaviors) {
       EXPECT_EQ(1UL, aAllowedTouchBehaviors->Length());
       aTarget->SetAllowedTouchBehavior(*aOutInputBlockId,
@@ -604,9 +610,9 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
     }
   }
 
-  result = TouchMove(aTarget, aTouchStart, mcc->Time());
+  result.mStatus = TouchMove(aTarget, aTouchStart, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = result.GetStatus();
+    (*aOutEventStatuses)[1] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
@@ -620,20 +626,20 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
     mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
   }
 
-  result = TouchMove(aTarget, aTouchEnd, mcc->Time());
+  result.mStatus = TouchMove(aTarget, aTouchEnd, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = result.GetStatus();
+    (*aOutEventStatuses)[2] = result.mStatus;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   if (!(aOptions & PanOptions::KeepFingerDown)) {
-    result = TouchUp(aTarget, aTouchEnd, mcc->Time());
+    result.mStatus = TouchUp(aTarget, aTouchEnd, mcc->Time());
   } else {
-    result.SetStatusAsIgnore();
+    result.mStatus = nsEventStatus_eIgnore;
   }
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[3] = result.GetStatus();
+    (*aOutEventStatuses)[3] = result.mStatus;
   }
 
   if ((aOptions & PanOptions::NoFling)) {
@@ -683,7 +689,7 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
                                uint64_t (*aOutInputBlockIds)[2]) {
   APZEventResult result = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = result.GetStatus();
+    (*aOutEventStatuses)[0] = result.mStatus;
   }
   if (aOutInputBlockIds) {
     (*aOutInputBlockIds)[0] = result.mInputBlockId;
@@ -693,18 +699,18 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+      result.mStatus != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
-  result = TouchUp(aTarget, aPoint, mcc->Time());
+  result.mStatus = TouchUp(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = result.GetStatus();
+    (*aOutEventStatuses)[1] = result.mStatus;
   }
   mcc->AdvanceByMillis(10);
   result = TouchDown(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = result.GetStatus();
+    (*aOutEventStatuses)[2] = result.mStatus;
   }
   if (aOutInputBlockIds) {
     (*aOutInputBlockIds)[1] = result.mInputBlockId;
@@ -712,13 +718,13 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
   mcc->AdvanceByMillis(10);
 
   if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+      result.mStatus != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
-  result = TouchUp(aTarget, aPoint, mcc->Time());
+  result.mStatus = TouchUp(aTarget, aPoint, mcc->Time());
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[3] = result.GetStatus();
+    (*aOutEventStatuses)[3] = result.mStatus;
   }
 }
 
@@ -773,13 +779,9 @@ void APZCTesterBase::PinchWithTouchInput(
       MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, mcc->Time(), 0);
   mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus));
   mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus));
-  APZEventResult result;
-  result = aTarget->ReceiveInputEvent(mtiStart);
-  if (aOutInputBlockId) {
-    *aOutInputBlockId = result.mInputBlockId;
-  }
+  nsEventStatus status = aTarget->ReceiveInputEvent(mtiStart, aOutInputBlockId);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = result.GetStatus();
+    (*aOutEventStatuses)[0] = status;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
@@ -801,9 +803,9 @@ void APZCTesterBase::PinchWithTouchInput(
       CreateSingleTouchData(inputId, pinchStartPoint1));
   mtiMove1.mTouches.AppendElement(
       CreateSingleTouchData(inputId + 1, pinchStartPoint2));
-  result = aTarget->ReceiveInputEvent(mtiMove1);
+  status = aTarget->ReceiveInputEvent(mtiMove1, nullptr);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = result.GetStatus();
+    (*aOutEventStatuses)[1] = status;
   }
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
@@ -823,7 +825,7 @@ void APZCTesterBase::PinchWithTouchInput(
         CreateSingleTouchData(inputId, stepPoint1));
     mtiMoveStep.mTouches.AppendElement(
         CreateSingleTouchData(inputId + 1, stepPoint2));
-    Unused << aTarget->ReceiveInputEvent(mtiMoveStep);
+    Unused << aTarget->ReceiveInputEvent(mtiMoveStep, nullptr);
 
     mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
   }
@@ -839,9 +841,9 @@ void APZCTesterBase::PinchWithTouchInput(
       CreateSingleTouchData(inputId, pinchEndPoint1));
   mtiMove2.mTouches.AppendElement(
       CreateSingleTouchData(inputId + 1, pinchEndPoint2));
-  result = aTarget->ReceiveInputEvent(mtiMove2);
+  status = aTarget->ReceiveInputEvent(mtiMove2, nullptr);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = result.GetStatus();
+    (*aOutEventStatuses)[2] = status;
   }
 
   if (aOptions & (PinchOptions::LiftFinger1 | PinchOptions::LiftFinger2)) {
@@ -857,9 +859,9 @@ void APZCTesterBase::PinchWithTouchInput(
       mtiEnd.mTouches.AppendElement(
           CreateSingleTouchData(inputId + 1, pinchEndPoint2));
     }
-    result = aTarget->ReceiveInputEvent(mtiEnd);
+    status = aTarget->ReceiveInputEvent(mtiEnd, nullptr);
     if (aOutEventStatuses) {
-      (*aOutEventStatuses)[3] = result.GetStatus();
+      (*aOutEventStatuses)[3] = status;
     }
   }
 
@@ -891,26 +893,30 @@ void APZCTesterBase::PinchWithPinchInput(
   const TimeDuration TIME_BETWEEN_PINCH_INPUT =
       TimeDuration::FromMilliseconds(50);
 
-  APZEventResult actual = aTarget->ReceiveInputEvent(CreatePinchGestureInput(
-      PinchGestureInput::PINCHGESTURE_START, aFocus, 10.0, 10.0, mcc->Time()));
+  nsEventStatus actualStatus = aTarget->ReceiveInputEvent(
+      CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START, aFocus,
+                              10.0, 10.0, mcc->Time()),
+      nullptr);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = actual.GetStatus();
+    (*aOutEventStatuses)[0] = actualStatus;
   }
   mcc->AdvanceBy(TIME_BETWEEN_PINCH_INPUT);
 
-  actual = aTarget->ReceiveInputEvent(
+  actualStatus = aTarget->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                              aSecondFocus, 10.0 * aScale, 10.0, mcc->Time()));
+                              aSecondFocus, 10.0 * aScale, 10.0, mcc->Time()),
+      nullptr);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = actual.GetStatus();
+    (*aOutEventStatuses)[1] = actualStatus;
   }
   mcc->AdvanceBy(TIME_BETWEEN_PINCH_INPUT);
 
-  actual = aTarget->ReceiveInputEvent(
+  actualStatus = aTarget->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_END, aSecondFocus,
-                              10.0 * aScale, 10.0 * aScale, mcc->Time()));
+                              10.0 * aScale, 10.0 * aScale, mcc->Time()),
+      nullptr);
   if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = actual.GetStatus();
+    (*aOutEventStatuses)[2] = actualStatus;
   }
 }
 

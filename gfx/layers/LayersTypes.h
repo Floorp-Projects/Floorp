@@ -386,16 +386,16 @@ class CompositableHandle final {
 };
 
 // clang-format off
-MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint8_t, (
+MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint32_t, (
   eVertical,
   eHorizontal
 ));
 
-using ScrollDirections = EnumSet<ScrollDirection, uint8_t>;
+typedef EnumSet<ScrollDirection> ScrollDirections;
 
 constexpr ScrollDirections EitherScrollDirection(ScrollDirection::eVertical,ScrollDirection::eHorizontal);
 constexpr ScrollDirections HorizontalScrollDirection(ScrollDirection::eHorizontal);
-constexpr ScrollDirections VerticalScrollDirection(ScrollDirection::eVertical);
+constexpr ScrollDirections VerticalScollDirection(ScrollDirection::eVertical);
 
 
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(CompositionPayloadType, uint8_t, (

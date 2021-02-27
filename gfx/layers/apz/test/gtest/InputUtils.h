@@ -56,21 +56,21 @@ APZEventResult TouchDown(const RefPtr<InputReceiver>& aTarget,
 }
 
 template <class InputReceiver>
-APZEventResult TouchMove(const RefPtr<InputReceiver>& aTarget,
-                         const ScreenIntPoint& aPoint, TimeStamp aTime) {
+nsEventStatus TouchMove(const RefPtr<InputReceiver>& aTarget,
+                        const ScreenIntPoint& aPoint, TimeStamp aTime) {
   MultiTouchInput mti =
       CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime);
   mti.mTouches.AppendElement(CreateSingleTouchData(0, aPoint));
-  return aTarget->ReceiveInputEvent(mti);
+  return aTarget->ReceiveInputEvent(mti).mStatus;
 }
 
 template <class InputReceiver>
-APZEventResult TouchUp(const RefPtr<InputReceiver>& aTarget,
-                       const ScreenIntPoint& aPoint, TimeStamp aTime) {
+nsEventStatus TouchUp(const RefPtr<InputReceiver>& aTarget,
+                      const ScreenIntPoint& aPoint, TimeStamp aTime) {
   MultiTouchInput mti =
       CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime);
   mti.mTouches.AppendElement(CreateSingleTouchData(0, aPoint));
-  return aTarget->ReceiveInputEvent(mti);
+  return aTarget->ReceiveInputEvent(mti).mStatus;
 }
 
 template <class InputReceiver>
