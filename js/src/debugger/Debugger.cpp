@@ -195,8 +195,11 @@ ArrayObject* js::GetFunctionParameterNamesArray(JSContext* cx,
     for (size_t i = 0; i < fun->nargs(); i++, fi++) {
       MOZ_ASSERT(fi.argumentSlot() == i);
       if (JSAtom* atom = fi.name()) {
-        cx->markAtom(atom);
-        names[i].setString(atom);
+        // Skip any internal, non-identifier names, like for example ".args".
+        if (IsIdentifier(atom)) {
+          cx->markAtom(atom);
+          names[i].setString(atom);
+        }
       }
     }
   }

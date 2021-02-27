@@ -7,8 +7,7 @@ var gDO = dbg.addDebuggee(g);
 // Class definitions go in the global's lexical environment, so we can't use
 // getOwnPropertyDescriptor or g.X to retrieve their constructor.
 //
-// Derived clasess use a different script from the self-hosted compartment, so
-// check those too.
+// Derived clasess use a different script, so check those too.
 gDO.executeInGlobal(`   // 1729
   class X {};           // 1730
                         // 1731
