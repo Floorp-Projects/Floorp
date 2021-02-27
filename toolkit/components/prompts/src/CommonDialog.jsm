@@ -119,31 +119,19 @@ CommonDialog.prototype = {
     let infoTitle = this.ui.infoTitle;
     infoTitle.appendChild(infoTitle.ownerDocument.createTextNode(title));
 
-    // Specific check to prevent showing the title on the old content prompts for macOS.
-    // This should be removed when the old content prompts are removed.
+    // Hide it, unless we're displaying a content modal, or are on macOS (where there is no titlebar):
     let contentSubDialogPromptEnabled = Services.prefs.getBoolPref(
       "prompts.contentPromptSubDialog"
     );
-    let isOldContentPrompt =
+    // For prompts opened with TabModalPrompt, hide it.
+    let hideForTabPromptModal =
       !contentSubDialogPromptEnabled &&
       this.args.modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT;
-    // Specific check to prevent showing the title on the tab-level on Windows and
-    // Linux.
-    let isOpenedWithTabDialog =
-      this.args.openedWithTabDialog &&
-      this.args.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB &&
-      AppConstants.platform != "macosx";
 
-    // After making these preventative checks, we can determine to show it if we're on
-    // macOS (where there is no titlebar) or if the prompt is a common dialog document
-    // and has been embedded (has a chromeEventHandler).
     infoTitle.hidden =
-      isOldContentPrompt ||
-      isOpenedWithTabDialog ||
-      !(
-        AppConstants.platform == "macosx" ||
-        commonDialogEl?.ownerGlobal.docShell.chromeEventHandler
-      );
+      hideForTabPromptModal ||
+      (this.args.modalType != Ci.nsIPrompt.MODAL_TYPE_CONTENT &&
+        AppConstants.platform != "macosx");
 
     if (commonDialogEl) {
       commonDialogEl.ownerDocument.title = title;
