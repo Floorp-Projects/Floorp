@@ -7979,11 +7979,11 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
   if (hasHeritage == HasHeritage::Yes) {
     // Synthesize the equivalent to `function f(...args)`
     funbox->setHasRest();
-    if (!notePositionalFormalParameter(funNode,
-                                       TaggedParserAtomIndex::WellKnown::args(),
-                                       synthesizedBodyPos.begin,
-                                       /* disallowDuplicateParams = */ false,
-                                       /* duplicatedParam = */ nullptr)) {
+    if (!notePositionalFormalParameter(
+            funNode, TaggedParserAtomIndex::WellKnown::dotArgs(),
+            synthesizedBodyPos.begin,
+            /* disallowDuplicateParams = */ false,
+            /* duplicatedParam = */ nullptr)) {
       return null();
     }
     funbox->setArgCount(1);
@@ -8028,12 +8028,12 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
       return null();
     }
 
-    NameNodeType argsNameNode =
-        newName(TaggedParserAtomIndex::WellKnown::args(), synthesizedBodyPos);
+    NameNodeType argsNameNode = newName(
+        TaggedParserAtomIndex::WellKnown::dotArgs(), synthesizedBodyPos);
     if (!argsNameNode) {
       return null();
     }
-    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::args())) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotArgs())) {
       return null();
     }
 
