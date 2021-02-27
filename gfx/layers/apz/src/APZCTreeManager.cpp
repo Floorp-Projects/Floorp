@@ -1516,8 +1516,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         TargetConfirmationFlags confFlags{hitResult};
-        result = mInputQueue->ReceiveInputEvent(hit.mTargetApzc, confFlags,
-                                                mouseInput);
+        result.mStatus = mInputQueue->ReceiveInputEvent(
+            hit.mTargetApzc, confFlags, mouseInput, &result.mInputBlockId);
 
         // If we're starting an async scrollbar drag
         bool apzDragEnabled = StaticPrefs::apz_drag_enabled();
@@ -1528,12 +1528,16 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
                              hit.mTargetApzc.get());
         }
 
-        if (result.GetStatus() == nsEventStatus_eConsumeDoDefault) {
+        if (result.mStatus == nsEventStatus_eConsumeDoDefault) {
           // This input event is part of a drag block, so whether or not it is
           // directed at a scrollbar depends on whether the drag block started
           // on a scrollbar.
           hitScrollbar = mInputQueue->IsDragOnScrollbar(hitScrollbar);
         }
+
+        // Update the out-parameters so they are what the caller expects.
+        hit.mTargetApzc->GetGuid(&result.mTargetGuid);
+        result.mHandledResult = hit.HandledByRoot();
 
         if (!hitScrollbar) {
           // The input was not targeted at a scrollbar, so we untransform it
@@ -1591,7 +1595,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           if (hit.mTargetApzc) {
             SynthesizePinchGestureFromMouseWheel(wheelInput, hit.mTargetApzc);
           }
-          result.SetStatusAsConsumeNoDefault();
+          result.mStatus = nsEventStatus_eConsumeNoDefault;
           return result;
         }
 
@@ -1614,10 +1618,13 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, wheelInput);
+        result.mStatus = mInputQueue->ReceiveInputEvent(
+            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, wheelInput,
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
+        hit.mTargetApzc->GetGuid(&result.mTargetGuid);
+        result.mHandledResult = hit.HandledByRoot();
         wheelInput.mOrigin = *untransformedOrigin;
       }
       break;
@@ -1670,10 +1677,13 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, panInput);
+        result.mStatus = mInputQueue->ReceiveInputEvent(
+            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, panInput,
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
+        hit.mTargetApzc->GetGuid(&result.mTargetGuid);
+        result.mHandledResult = hit.HandledByRoot();
         panInput.mPanStartPoint = *untransformedStartPoint;
         panInput.mPanDisplacement = *untransformedDisplacement;
 
@@ -1716,10 +1726,13 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, pinchInput);
+        result.mStatus = mInputQueue->ReceiveInputEvent(
+            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, pinchInput,
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
+        hit.mTargetApzc->GetGuid(&result.mTargetGuid);
+        result.mHandledResult = hit.HandledByRoot();
         pinchInput.mFocusPoint = *untransformedFocusPoint;
       }
       break;
@@ -1743,10 +1756,13 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           return result;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, tapInput);
+        result.mStatus = mInputQueue->ReceiveInputEvent(
+            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, tapInput,
+            &result.mInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
+        hit.mTargetApzc->GetGuid(&result.mTargetGuid);
+        result.mHandledResult = hit.HandledByRoot();
         tapInput.mPoint = *untransformedPoint;
       }
       break;
@@ -1828,13 +1844,14 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       APZ_KEY_LOG("Dispatching key input with apzc=%p\n", targetApzc.get());
 
       // Dispatch the event to the input queue.
-      result = mInputQueue->ReceiveInputEvent(
-          targetApzc, TargetConfirmationFlags{true}, keyInput);
+      result.mStatus = mInputQueue->ReceiveInputEvent(
+          targetApzc, TargetConfirmationFlags{true}, keyInput,
+          &result.mInputBlockId);
 
       // Any keyboard event that is dispatched to the input queue at this point
       // should have been consumed
-      MOZ_ASSERT(result.GetStatus() == nsEventStatus_eConsumeDoDefault ||
-                 result.GetStatus() == nsEventStatus_eConsumeNoDefault);
+      MOZ_ASSERT(result.mStatus == nsEventStatus_eConsumeDoDefault ||
+                 result.mStatus == nsEventStatus_eConsumeNoDefault);
 
       keyInput.mHandledByAPZ = true;
       focusSetter.MarkAsNonFocusChanging();
@@ -1938,8 +1955,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         mRetainedTouchIdentifier =
             mTouchBlockHitResult.mTargetApzc->GetLastTouchIdentifier();
       }
-
-      result.SetStatusAsConsumeNoDefault();
+      result.mStatus = nsEventStatus_eConsumeNoDefault;
       return result;
     }
 
@@ -2007,7 +2023,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         }
       }
       if (aInput.mTouches.IsEmpty()) {
-        result.SetStatusAsConsumeNoDefault();
+        result.mStatus = nsEventStatus_eConsumeNoDefault;
         return result;
       }
     }
@@ -2016,9 +2032,12 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
       MOZ_ASSERT(mTouchBlockHitResult.mHitResult !=
                  CompositorHitTestInvisibleToHit);
 
-      result = mInputQueue->ReceiveInputEvent(
+      mTouchBlockHitResult.mTargetApzc->GetGuid(&result.mTargetGuid);
+      result.mHandledResult = mTouchBlockHitResult.HandledByRoot();
+      result.mStatus = mInputQueue->ReceiveInputEvent(
           mTouchBlockHitResult.mTargetApzc,
           TargetConfirmationFlags{mTouchBlockHitResult.mHitResult}, aInput,
+          &result.mInputBlockId, &result.mHandledResult,
           touchBehaviors.IsEmpty() ? Nothing()
                                    : Some(std::move(touchBehaviors)));
 
@@ -2039,7 +2058,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         Maybe<ScreenIntPoint> untransformedScreenPoint =
             UntransformBy(outTransform, touchData.mScreenPoint);
         if (!untransformedScreenPoint) {
-          result.SetStatusAsIgnore();
+          result.mStatus = nsEventStatus_eIgnore;
           return result;
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
@@ -2103,8 +2122,9 @@ APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
 
   TargetConfirmationFlags targetConfirmed{aHitInfo};
   APZEventResult result;
-  result = mInputQueue->ReceiveInputEvent(mTouchBlockHitResult.mTargetApzc,
-                                          targetConfirmed, mouseInput);
+  result.mStatus = mInputQueue->ReceiveInputEvent(
+      mTouchBlockHitResult.mTargetApzc, targetConfirmed, mouseInput,
+      &result.mInputBlockId);
 
   // |aScrollThumbNode| is non-null iff. this is the event that starts the drag.
   // If so, set up the drag.
@@ -2112,6 +2132,9 @@ APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
     SetupScrollbarDrag(mouseInput, aScrollThumbNode,
                        mTouchBlockHitResult.mTargetApzc.get());
   }
+
+  mTouchBlockHitResult.mTargetApzc->GetGuid(&result.mTargetGuid);
+  result.mHandledResult = mTouchBlockHitResult.HandledByRoot();
 
   // Since the input was targeted at a scrollbar:
   //    - The original touch event (which will be sent on to content) will
@@ -2243,10 +2266,10 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
                              newSpan,
                              aWheelInput.modifiers};
 
-  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchStart);
-  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchScale1);
-  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchScale2);
-  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchEnd);
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchStart, nullptr);
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchScale1, nullptr);
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchScale2, nullptr);
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchEnd, nullptr);
 }
 
 void APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
@@ -3123,11 +3146,6 @@ ScreenMargin APZCTreeManager::GetGeckoFixedLayerMargins() const {
   return mGeckoFixedLayerMargins;
 }
 
-ScreenMargin APZCTreeManager::GetCompositorFixedLayerMargins() const {
-  RecursiveMutexAutoLock lock(mTreeLock);
-  return mCompositorFixedLayerMargins;
-}
-
 AsyncPanZoomController* APZCTreeManager::FindRootContentApzcForLayersId(
     LayersId aLayersId) const {
   mTreeLock.AssertCurrentThreadIn();
@@ -3948,6 +3966,21 @@ APZCTreeManager::StickyPositionInfo::StickyPositionInfo(
   mLayersId = aNode->GetLayersId();
   mStickyScrollRangeInner = aNode->GetStickyScrollRangeInner();
   mStickyScrollRangeOuter = aNode->GetStickyScrollRangeOuter();
+}
+
+Maybe<APZHandledResult> APZCTreeManager::HitTestResult::HandledByRoot() const {
+  if (!mTargetApzc->IsRootContent()) {
+    // If the initial target is not the root, this will definitely not be
+    // handled by the root. (The confirmed target is either the initial
+    // target, or a descendant.)
+    return Some(APZHandledResult::HandledByContent);
+  } else if ((mHitResult & CompositorHitTestDispatchToContent).isEmpty()) {
+    // If the initial target is the root and we don't need to dispatch to
+    // content, the event will definitely be handled by the root.
+    return Some(APZHandledResult::HandledByRoot);
+  }
+  // Otherwise, we're not sure.
+  return Nothing();
 }
 
 }  // namespace layers

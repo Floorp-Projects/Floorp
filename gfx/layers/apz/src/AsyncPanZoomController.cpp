@@ -860,7 +860,7 @@ bool AsyncPanZoomController::ArePointerEventsConsumable(
         // In the case of the root APZC with any dynamic toolbar, it
         // shoule be pannable if there is room moving the dynamic
         // toolbar.
-        (IsRootContent() && CanVerticalScrollWithDynamicToolbar())));
+        (IsRootContent() && CanScrollDownwardsWithDynamicToolbar())));
 
   bool pannable;
 
@@ -2226,38 +2226,16 @@ bool AsyncPanZoomController::CanScroll(ScrollDirection aDirection) const {
   return false;
 }
 
-bool AsyncPanZoomController::CanVerticalScrollWithDynamicToolbar() const {
+bool AsyncPanZoomController::CanScrollDownwardsWithDynamicToolbar() const {
   MOZ_ASSERT(IsRootContent());
 
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  return mY.CanVerticalScrollWithDynamicToolbar();
+  return mY.CanScrollDownwardsWithDynamicToolbar();
 }
 
 bool AsyncPanZoomController::CanScrollDownwards() const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   return mY.CanScrollTo(eSideBottom);
-}
-
-SideBits AsyncPanZoomController::ScrollableDirections() const {
-  SideBits result;
-  {  // scope lock to respect lock ordering with APZCTreeManager::mTreeLock
-    // which will be acquired in the `GetCompositorFixedLayerMargins` below.
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    result = mX.ScrollableDirections() | mY.ScrollableDirections();
-  }
-
-  if (IsRootContent()) {
-    if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-      ScreenMargin fixedLayerMargins =
-          treeManagerLocal->GetCompositorFixedLayerMargins();
-      {
-        RecursiveMutexAutoLock lock(mRecursiveMutex);
-        result |= mY.ScrollableDirectionsWithDynamicToolbar(fixedLayerMargins);
-      }
-    }
-  }
-
-  return result;
 }
 
 bool AsyncPanZoomController::IsContentOfHonouredTargetRightToLeft(
