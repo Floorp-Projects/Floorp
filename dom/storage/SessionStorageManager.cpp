@@ -625,7 +625,7 @@ BackgroundSessionStorageManager* BackgroundSessionStorageManager::GetOrCreate(
                   return;
                 }
               },
-              ShutdownPhase::XPCOMShutdown);
+              ShutdownPhase::Shutdown);
         }));
   }
 

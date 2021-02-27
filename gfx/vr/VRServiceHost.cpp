@@ -240,8 +240,7 @@ void VRServiceHost::PuppetReset() {
   // If we're already into ShutdownFinal, the VRPuppetCommandBuffer instance
   // will have been cleared, so don't try to access it after that point.
   if (!mVRProcessEnabled &&
-      !(NS_IsMainThread() &&
-        PastShutdownPhase(ShutdownPhase::XPCOMShutdownFinal))) {
+      !(NS_IsMainThread() && PastShutdownPhase(ShutdownPhase::ShutdownFinal))) {
     // Puppet is running in this process, tell it to reset directly.
     VRPuppetCommandBuffer::Get().Reset();
   }
