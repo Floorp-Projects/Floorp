@@ -69,7 +69,7 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Додайте ярлик для відкриття приватних вкладок з головного екрану.</string>
+    <string name="cfr_message">Додайте ярлик для відкриття приватних вкладок з головного екрана.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Додати ярлик</string>
     <!-- Text for the negative button -->
@@ -527,7 +527,7 @@
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Сеанси</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Знімки екрану</string>
+    <string name="library_screenshots">Знімки екрана</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Завантаження</string>
     <!-- Option in library to open Bookmarks page -->

@@ -498,9 +498,9 @@
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
-    <string name="preference_light_theme">Svijetli</string>
+    <string name="preference_light_theme">Svijetla</string>
     <!-- Preference for using dark theme -->
-    <string name="preference_dark_theme">Tamni</string>
+    <string name="preference_dark_theme">Tamna</string>
 
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">Postavljeno u postavkama za štednju baterije</string>

@@ -227,7 +227,7 @@
     <string name="search_suggestions_onboarding_learn_more_link">详细了解</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
-    <string name="search_engine_suggestions_title">搜索 %s</string>
+    <string name="search_engine_suggestions_title">%s 上搜索</string>
 
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">直接从地址栏搜索</string>

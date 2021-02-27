@@ -215,6 +215,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Aprender más</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Buscar %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Buscar directamente desde la barra de direcciones</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Abrir una nueva pestaña de Firefox</string>

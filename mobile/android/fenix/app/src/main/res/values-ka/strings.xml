@@ -213,6 +213,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ვრცლად</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">საძიებოდ %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">მოიძიეთ პირდაპირ მისამართების ველიდან</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">ახალი Firefox-ჩანართის გახსნა</string>
