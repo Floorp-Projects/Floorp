@@ -12,6 +12,7 @@
 #define nsScrollbarFrame_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ScrollTypes.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 
