@@ -472,7 +472,7 @@ nsresult nsStringBundleBase::ParseProperties(nsIPersistentProperties** aProps) {
 nsresult nsStringBundle::LoadProperties() {
   // Something such as Necko might use string bundle after ClearOnShutdown is
   // called. LocaleService etc is already down, so we cannot get bundle data.
-  if (PastShutdownPhase(ShutdownPhase::Shutdown)) {
+  if (PastShutdownPhase(ShutdownPhase::XPCOMShutdown)) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
@@ -500,7 +500,7 @@ nsresult SharedStringBundle::LoadProperties() {
   // our string bundles come from). Since shared string bundles won't be
   // useful after shutdown has started anyway (and we almost certainly got
   // here from a pre-load attempt in an idle task), just bail out.
-  if (PastShutdownPhase(ShutdownPhase::Shutdown)) {
+  if (PastShutdownPhase(ShutdownPhase::XPCOMShutdown)) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 

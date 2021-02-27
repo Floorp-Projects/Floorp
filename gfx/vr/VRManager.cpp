@@ -161,7 +161,7 @@ VRManager::VRManager()
   VRServiceHost::Init(mVRProcessEnabled);
   mServiceHost = VRServiceHost::Get();
   // We must shutdown before VRServiceHost, which is cleared
-  // on ShutdownPhase::ShutdownFinal, potentially before VRManager.
+  // on ShutdownPhase::XPCOMShutdownFinal, potentially before VRManager.
   // We hold a reference to VRServiceHost to ensure it stays
   // alive until we have shut down.
 #else

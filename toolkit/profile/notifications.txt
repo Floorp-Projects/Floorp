@@ -44,15 +44,6 @@ observer's Observe() method.
       profile-do-change
       profile-after-change
 
-"shutdown-persist"
-  The user is logging out and whatever data the observer stores
-  for the current profile should be released from memory and
-  saved to disk.
-  The following topics happen in this context:
-      profile-change-net-teardown
-      profile-change-teardown
-      profile-before-change
-
 See https://wiki.mozilla.org/XPCOM_Shutdown for more details about the shutdown
 process.
 

@@ -31,11 +31,16 @@ function nsTerminatorTelemetry() {}
 
 var HISTOGRAMS = {
   "quit-application": "SHUTDOWN_PHASE_DURATION_TICKS_QUIT_APPLICATION",
+  "profile-change-net-teardown":
+    "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_NET_TEARDOWN",
   "profile-change-teardown":
     "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_TEARDOWN",
   "profile-before-change":
     "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE",
+  "profile-before-change-qm":
+    "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE_QM",
   "xpcom-will-shutdown": "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_WILL_SHUTDOWN",
+  "xpcom-shutdown": "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_SHUTDOWN",
 };
 
 nsTerminatorTelemetry.prototype = {
