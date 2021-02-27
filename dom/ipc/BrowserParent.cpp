@@ -1463,10 +1463,10 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
     localEvent.mMessage = eMouseEnterIntoWidget;
     DebugOnly<bool> ret =
         isInputPriorityEventEnabled
-            ? SendRealMouseButtonEvent(localEvent, guid, blockId)
-            : SendNormalPriorityRealMouseButtonEvent(localEvent, guid, blockId);
-    NS_WARNING_ASSERTION(
-        ret, "SendRealMouseButtonEvent(eMouseEnterIntoWidget) failed");
+            ? SendRealMouseEnterExitWidgetEvent(localEvent, guid, blockId)
+            : SendNormalPriorityRealMouseEnterExitWidgetEvent(localEvent, guid,
+                                                              blockId);
+    NS_WARNING_ASSERTION(ret, "SendRealMouseEnterExitWidgetEvent() failed");
     MOZ_ASSERT(!ret || localEvent.HasBeenPostedToRemoteProcess());
   }
 
@@ -1497,6 +1497,18 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
             : SendNormalPriorityRealMouseMoveEventForTests(aEvent, guid,
                                                            blockId);
     NS_WARNING_ASSERTION(ret, "SendRealMouseMoveEventForTests() failed");
+    MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+    return;
+  }
+
+  if (eMouseEnterIntoWidget == aEvent.mMessage ||
+      eMouseExitFromWidget == aEvent.mMessage) {
+    DebugOnly<bool> ret =
+        isInputPriorityEventEnabled
+            ? SendRealMouseEnterExitWidgetEvent(aEvent, guid, blockId)
+            : SendNormalPriorityRealMouseEnterExitWidgetEvent(aEvent, guid,
+                                                              blockId);
+    NS_WARNING_ASSERTION(ret, "SendRealMouseEnterExitWidgetEvent() failed");
     MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
     return;
   }
