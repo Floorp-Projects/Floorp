@@ -11349,19 +11349,19 @@ class AutoLibraryLoader {
 static bool ReadSelfHostedXDRFile(JSContext* cx, FileContents& buf) {
   FILE* file = fopen(selfHostedXDRPath, "rb");
   if (!file) {
-    JS_ReportErrorUTF8(cx, "Can't open self-hosted stencil XDR file.");
+    fprintf(stderr, "Can't open self-hosted stencil XDR file.\n");
     return false;
   }
   AutoCloseFile autoClose(file);
 
   struct stat st;
   if (fstat(fileno(file), &st) < 0) {
-    JS_ReportErrorASCII(cx, "Unable to stat file");
+    fprintf(stderr, "Unable to stat self-hosted stencil XDR file.\n");
     return false;
   }
 
   if (st.st_size >= INT32_MAX) {
-    JS_ReportErrorASCII(cx, "Stencil XDR file too large.");
+    fprintf(stderr, "self-hosted stencil XDR file too large.\n");
     return false;
   }
   uint32_t filesize = uint32_t(st.st_size);
@@ -11371,7 +11371,7 @@ static bool ReadSelfHostedXDRFile(JSContext* cx, FileContents& buf) {
   }
   size_t cc = fread(buf.begin(), 1, filesize, file);
   if (cc != filesize) {
-    JS_ReportErrorUTF8(cx, "Short read on self-hosted stencil XDR file.");
+    fprintf(stderr, "Short read on self-hosted stencil XDR file.\n");
     return false;
   }
 
@@ -12098,12 +12098,14 @@ int main(int argc, char** argv, char** envp) {
   Maybe<FileContents> buffer;
   if (selfHostedXDRPath && !encodeSelfHostedCode) {
     buffer.emplace(cx);
-    if (!ReadSelfHostedXDRFile(cx, *buffer)) {
-      MOZ_CRASH("Could not read self-hosted stencil XDR file.");
+    if (ReadSelfHostedXDRFile(cx, *buffer)) {
+      MOZ_ASSERT(buffer->length() > 0);
+      mozilla::Span<uint8_t> xdrSpan = buffer.ref();
+      cx->runtime()->setSelfHostedXDR(xdrSpan);
+    } else {
+      fprintf(stderr, "Falling back on parsing source.\n");
+      selfHostedXDRPath = nullptr;
     }
-    MOZ_ASSERT(buffer->length() > 0);
-    mozilla::Span<uint8_t> xdrSpan = buffer.ref();
-    cx->runtime()->setSelfHostedXDR(xdrSpan);
   }
   if (selfHostedXDRPath && encodeSelfHostedCode) {
     cx->runtime()->setSelfHostedXDRWriterCallback(&WriteSelfHostedXDRFile);
