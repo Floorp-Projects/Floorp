@@ -35,16 +35,6 @@ class AutofillCreditCardsAddressesStorage(
         AutofillStorageConnection
     }
 
-    init {
-        // Set the name of the native library so that we use the appservices megazord for
-        // compiled code.
-        // TODO remove this when https://github.com/mozilla/application-services/issues/3874 lands
-        System.setProperty(
-            "uniffi.component.autofill.libraryOverride",
-            System.getProperty("mozilla.appservices.megazord.library", "megazord")
-        )
-    }
-
     override suspend fun addCreditCard(creditCardFields: UpdatableCreditCardFields): CreditCard =
         withContext(coroutineContext) {
             conn.getStorage().addCreditCard(creditCardFields.into()).into()
