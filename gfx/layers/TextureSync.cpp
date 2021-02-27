@@ -14,6 +14,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/StaticMonitor.h"
 #include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 
 #ifdef DEBUG
 #  define LOG_ERROR(str, args...)                                  \

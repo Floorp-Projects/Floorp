@@ -7,6 +7,8 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_Layers_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_Layers_H
 
+#include <unordered_map>
+
 #include "mozilla/HashFunctions.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/ScreenshotGrabber.h"
