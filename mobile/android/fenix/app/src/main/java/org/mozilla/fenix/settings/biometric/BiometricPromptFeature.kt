@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings.logins.biometric
+package org.mozilla.fenix.settings.biometric
 
 import android.content.Context
 import android.os.Build.VERSION.SDK_INT
@@ -16,8 +16,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.settings.logins.biometric.ext.isEnrolled
-import org.mozilla.fenix.settings.logins.biometric.ext.isHardwareAvailable
+import org.mozilla.fenix.settings.biometric.ext.isEnrolled
+import org.mozilla.fenix.settings.biometric.ext.isHardwareAvailable
 
 /**
  * A [LifecycleAwareFeature] for the Android Biometric API to prompt for user authentication.

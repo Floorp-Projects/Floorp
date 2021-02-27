@@ -32,7 +32,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
-import org.mozilla.fenix.settings.logins.biometric.BiometricPromptFeature
+import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import org.mozilla.fenix.settings.logins.SyncLoginsPreferenceView
 import org.mozilla.fenix.settings.requirePreference
 
