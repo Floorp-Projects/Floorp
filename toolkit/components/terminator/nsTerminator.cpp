@@ -15,6 +15,7 @@
  * process as fast as possible, without any cleanup.
  */
 
+#include "mozilla/ShutdownPhase.h"
 #include "nsTerminator.h"
 
 #include "prthread.h"
@@ -39,6 +40,7 @@
 #  include <unistd.h>
 #endif
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -64,6 +66,8 @@
 // forcefully.
 #define ADDITIONAL_WAIT_BEFORE_CRASH_MS 3000
 
+#define HEARTBEAT_INTERVAL_MS 100
+
 namespace mozilla {
 
 namespace {
@@ -76,24 +80,33 @@ namespace {
  * ticks between the time we receive a notification and the next one.
  */
 struct ShutdownStep {
-  char const* const mTopic;
+  mozilla::ShutdownPhase mPhase;
   int mTicks;
 
-  constexpr explicit ShutdownStep(const char* const topic)
-      : mTopic(topic), mTicks(-1) {}
+  constexpr explicit ShutdownStep(mozilla::ShutdownPhase aPhase)
+      : mPhase(aPhase), mTicks(-1) {}
 };
 
 static ShutdownStep sShutdownSteps[] = {
-    ShutdownStep("quit-application"),
-    ShutdownStep("profile-change-net-teardown"),
-    ShutdownStep("profile-change-teardown"),
-    ShutdownStep("profile-before-change"),
-    ShutdownStep("profile-before-change-qm"),
-    ShutdownStep("xpcom-will-shutdown"),
-    ShutdownStep("xpcom-shutdown"),
+    ShutdownStep(mozilla::ShutdownPhase::AppShutdownConfirmed),
+    ShutdownStep(mozilla::ShutdownPhase::AppShutdownNetTeardown),
+    ShutdownStep(mozilla::ShutdownPhase::AppShutdownTeardown),
+    ShutdownStep(mozilla::ShutdownPhase::AppShutdown),
+    ShutdownStep(mozilla::ShutdownPhase::AppShutdownQM),
+    ShutdownStep(mozilla::ShutdownPhase::XPCOMWillShutdown),
+    ShutdownStep(mozilla::ShutdownPhase::XPCOMShutdown),
 };
 
 Atomic<bool> sShutdownNotified;
+
+int GetStepForPhase(mozilla::ShutdownPhase aPhase) {
+  for (size_t i = 0; i < std::size(sShutdownSteps); i++) {
+    if (sShutdownSteps[i].mPhase >= aPhase) {
+      return (int)i;
+    }
+  }
+  return -1;
+}
 
 // Utility function: create a thread that is non-joinable,
 // does not prevent the process from terminating, is never
@@ -172,9 +185,9 @@ void RunWatchdog(void* arg) {
     // more reasonable.
     //
 #if defined(XP_WIN)
-    Sleep(1000 /* ms */);
+    Sleep(HEARTBEAT_INTERVAL_MS /* ms */);
 #else
-    usleep(1000000 /* usec */);
+    usleep(HEARTBEAT_INTERVAL_MS * 1000 /* usec */);
 #endif
 
     if (gHeartbeat++ < timeToLive) {
@@ -185,24 +198,24 @@ void RunWatchdog(void* arg) {
 
     // The shutdown steps are not completed yet. Let's report the last one.
     if (!sShutdownNotified) {
-      const char* lastStep = nullptr;
+      mozilla::ShutdownPhase lastStep = mozilla::ShutdownPhase::NotInShutdown;
       // Looping inverse here to make the search more robust in case
       // the observer that triggers UpdateHeartbeat was not called
       // at all or in the expected order on some step. This should
       // give us always the last known ShutdownStep.
       for (int i = ArrayLength(sShutdownSteps) - 1; i >= 0; --i) {
         if (sShutdownSteps[i].mTicks > -1) {
-          lastStep = sShutdownSteps[i].mTopic;
+          lastStep = sShutdownSteps[i].mPhase;
           break;
         }
       }
 
-      if (lastStep) {
+      if (lastStep != mozilla::ShutdownPhase::NotInShutdown) {
         nsCString msg;
         msg.AppendPrintf(
             "Shutdown hanging at step %s. "
             "Something is blocking the main-thread.",
-            lastStep);
+            mozilla::AppShutdown::GetObserverKey(lastStep));
         // This string will be leaked.
         MOZ_CRASH_UNSAFE(strdup(msg.BeginReading()));
       }
@@ -349,6 +362,7 @@ void RunWriter(void* arg) {
     // will be written correctly, but, again, we don't care enough
     // about the data to make more efforts.
     //
+    Unused << PR_Delete(destinationPath.get());
     if (PR_Rename(tmpFilePath.get(), destinationPath.get()) != PR_SUCCESS) {
       break;
     }
@@ -361,25 +375,11 @@ NS_IMPL_ISUPPORTS(nsTerminator, nsIObserver)
 
 nsTerminator::nsTerminator() : mInitialized(false), mCurrentStep(-1) {}
 
-// During startup, register as an observer for all interesting topics.
-nsresult nsTerminator::SelfInit() {
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (!os) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  for (auto& shutdownStep : sShutdownSteps) {
-    DebugOnly<nsresult> rv = os->AddObserver(this, shutdownStep.mTopic, false);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddObserver failed");
-  }
-
-  return NS_OK;
-}
-
 // Actually launch these threads. This takes place at the first sign of
 // shutdown.
 void nsTerminator::Start() {
   MOZ_ASSERT(!mInitialized);
+  sShutdownNotified = false;
   StartWatchdog();
 #if !defined(NS_FREE_PERMANENT_DATA)
   // Only allow nsTerminator to write on non-leak-checked builds so we don't
@@ -388,7 +388,33 @@ void nsTerminator::Start() {
   StartWriter();
 #endif  // !defined(NS_FREE_PERMANENT_DATA)
   mInitialized = true;
-  sShutdownNotified = false;
+}
+
+NS_IMETHODIMP
+nsTerminator::Observe(nsISupports*, const char* aTopic, const char16_t*) {
+  // This Observe is now only used for testing purposes.
+  // XXX: Check if we should change our testing strategy.
+  if (strcmp(aTopic, "terminator-test-quit-application") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::AppShutdownConfirmed);
+  } else if (strcmp(aTopic, "terminator-test-profile-change-net-teardown") ==
+             0) {
+    AdvancePhase(mozilla::ShutdownPhase::AppShutdownNetTeardown);
+  } else if (strcmp(aTopic, "terminator-test-profile-change-teardown") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::AppShutdownTeardown);
+  } else if (strcmp(aTopic, "terminator-test-profile-before-change") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::AppShutdown);
+  } else if (strcmp(aTopic, "terminator-test-profile-before-change-qm") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::AppShutdownQM);
+  } else if (strcmp(aTopic,
+                    "terminator-test-profile-before-change-telemetry") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::AppShutdownTelemetry);
+  } else if (strcmp(aTopic, "terminator-test-xpcom-will-shutdown") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::XPCOMWillShutdown);
+  } else if (strcmp(aTopic, "terminator-test-xpcom-shutdown") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::XPCOMShutdown);
+  }
+
+  return NS_OK;
 }
 
 // Prepare, allocate and start the watchdog thread.
@@ -431,11 +457,12 @@ void nsTerminator::StartWatchdog() {
 #endif
 
   UniquePtr<Options> options(new Options());
-  const PRIntervalTime ticksDuration = PR_MillisecondsToInterval(1000);
+  const PRIntervalTime ticksDuration =
+      PR_MillisecondsToInterval(HEARTBEAT_INTERVAL_MS);
   options->crashAfterTicks = crashAfterMS / ticksDuration;
   // Handle systems where ticksDuration is greater than crashAfterMS.
   if (options->crashAfterTicks == 0) {
-    options->crashAfterTicks = crashAfterMS / 1000;
+    options->crashAfterTicks = crashAfterMS / HEARTBEAT_INTERVAL_MS;
   }
 
   DebugOnly<PRThread*> watchdogThread =
@@ -478,14 +505,11 @@ void nsTerminator::StartWriter() {
   }
 }
 
-NS_IMETHODIMP
-nsTerminator::Observe(nsISupports*, const char* aTopic, const char16_t*) {
-  if (strcmp(aTopic, "profile-after-change") == 0) {
-    return SelfInit();
+void nsTerminator::AdvancePhase(mozilla::ShutdownPhase aPhase) {
+  // If we are done, do nothing
+  if (sShutdownNotified) {
+    return;
   }
-
-  // Other notifications are shutdown-related.
-
   // As we have seen examples in the wild of shutdown notifications
   // not being sent (or not being sent in the expected order), we do
   // not assume a specific order.
@@ -493,41 +517,29 @@ nsTerminator::Observe(nsISupports*, const char* aTopic, const char16_t*) {
     Start();
   }
 
-  UpdateHeartbeat(aTopic);
+  UpdateHeartbeat(GetStepForPhase(aPhase));
 #if !defined(NS_FREE_PERMANENT_DATA)
   // Only allow nsTerminator to write on non-leak checked builds so we don't get
   // leak warnings on shutdown for intentional leaks (see bug 1242084). This
   // will be enabled again by bug 1255484 when 1255478 lands.
   UpdateTelemetry();
 #endif  // !defined(NS_FREE_PERMANENT_DATA)
-  UpdateCrashReport(aTopic);
-
-  // Perform a little cleanup
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  MOZ_RELEASE_ASSERT(os);
-  (void)os->RemoveObserver(this, aTopic);
-
-  return NS_OK;
+  UpdateCrashReport(mozilla::AppShutdown::GetObserverKey(aPhase));
 }
 
-void nsTerminator::UpdateHeartbeat(const char* aTopic) {
-  // Reset the clock, find out how long the current phase has lasted.
-  uint32_t ticks = gHeartbeat.exchange(0);
-  if (mCurrentStep >= 0) {
-    sShutdownSteps[mCurrentStep].mTicks = ticks;
-  }
+void nsTerminator::UpdateHeartbeat(int32_t aStep) {
+  MOZ_ASSERT(aStep >= mCurrentStep);
 
-  // Find out where we now are in the current shutdown.
-  // Don't assume that shutdown takes place in the expected order.
-  int nextStep = -1;
-  for (size_t i = 0; i < ArrayLength(sShutdownSteps); ++i) {
-    if (strcmp(sShutdownSteps[i].mTopic, aTopic) == 0) {
-      nextStep = i;
-      break;
+  if (aStep > mCurrentStep) {
+    // Reset the clock, find out how long the current phase has lasted.
+    uint32_t ticks = gHeartbeat.exchange(0);
+    if (mCurrentStep >= 0) {
+      sShutdownSteps[mCurrentStep].mTicks = ticks;
     }
+    sShutdownSteps[aStep].mTicks = 0;
+
+    mCurrentStep = aStep;
   }
-  MOZ_ASSERT(nextStep != -1);
-  mCurrentStep = nextStep;
 }
 
 void nsTerminator::UpdateTelemetry() {
@@ -556,7 +568,8 @@ void nsTerminator::UpdateTelemetry() {
       telemetryData->AppendLiteral(", ");
     }
     telemetryData->AppendLiteral(R"(")");
-    telemetryData->Append(shutdownStep.mTopic);
+    telemetryData->Append(
+        mozilla::AppShutdown::GetObserverKey(shutdownStep.mPhase));
     telemetryData->AppendLiteral(R"(": )");
     telemetryData->AppendInt(shutdownStep.mTicks);
   }

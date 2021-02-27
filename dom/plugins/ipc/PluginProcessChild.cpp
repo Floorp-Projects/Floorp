@@ -176,7 +176,7 @@ void PluginProcessChild::CleanUp() {
   NS_LogTerm();
 #endif
 
-  mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownFinal);
+  mozilla::KillClearOnShutdown(ShutdownPhase::XPCOMShutdownFinal);
 
   AbstractThread::ShutdownMainThread();
 

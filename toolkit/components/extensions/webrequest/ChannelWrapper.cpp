@@ -100,7 +100,7 @@ static LinkedList<ChannelWrapper>& ChannelList() {
   static UniquePtr<ChannelListHolder> sChannelList;
   if (!sChannelList) {
     sChannelList.reset(new ChannelListHolder());
-    ClearOnShutdown(&sChannelList, ShutdownPhase::Shutdown);
+    ClearOnShutdown(&sChannelList, ShutdownPhase::XPCOMShutdown);
   }
   return *sChannelList;
 }

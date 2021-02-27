@@ -257,7 +257,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
                 NS_NewRunnableFunction(
                     "MediaCapabilities::AllocPolicy:Video", []() {
                       ClearOnShutdown(&sVideoAllocPolicy,
-                                      ShutdownPhase::ShutdownThreads);
+                                      ShutdownPhase::XPCOMShutdownThreads);
                     }));
             return new SingleAllocPolicy(TrackInfo::TrackType::kVideoTrack,
                                          taskQueue);

@@ -2839,7 +2839,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // can't init the process without it, and since we're going to be canceling
   // whatever load attempt that initiated this process creation anyway, just
   // bail out now if shutdown has already started.
-  if (PastShutdownPhase(ShutdownPhase::Shutdown)) {
+  if (PastShutdownPhase(ShutdownPhase::XPCOMShutdown)) {
     return false;
   }
 

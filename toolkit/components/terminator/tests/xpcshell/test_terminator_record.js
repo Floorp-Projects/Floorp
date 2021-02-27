@@ -16,6 +16,17 @@ var PATH;
 var PATH_TMP;
 var terminator;
 
+let KEYS = [
+  "quit-application",
+  "profile-change-net-teardown",
+  "profile-change-teardown",
+  "profile-before-change",
+  "profile-before-change-qm",
+  "profile-before-change-telemetry",
+  "xpcom-will-shutdown",
+  "xpcom-shutdown",
+];
+
 add_task(async function init() {
   do_get_profile();
   PATH = Path.join(Constants.Path.localProfileDir, "ShutdownDuration.json");
@@ -28,7 +39,6 @@ add_task(async function init() {
   terminator = Cc["@mozilla.org/toolkit/shutdown-terminator;1"].createInstance(
     Ci.nsIObserver
   );
-  terminator.observe(null, "profile-after-change", null);
 });
 
 var promiseShutdownDurationData = async function() {
@@ -51,23 +61,22 @@ var promiseShutdownDurationData = async function() {
 };
 
 add_task(async function test_record() {
-  let PHASE0 = "profile-change-teardown";
-  let PHASE1 = "profile-before-change";
-  let PHASE2 = "xpcom-will-shutdown";
   let t0 = Date.now();
 
   info("Starting shutdown");
-  terminator.observe(null, "profile-change-teardown", null);
+  terminator.observe(null, "terminator-test-" + KEYS[2], null);
+  await new Promise(resolve => setTimeout(resolve, 200));
 
   info("Moving to next phase");
-  terminator.observe(null, PHASE1, null);
+  terminator.observe(null, "terminator-test-" + KEYS[3], null);
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   let data = await promiseShutdownDurationData();
 
   let t1 = Date.now();
 
-  Assert.ok(PHASE0 in data, "The file contains the expected key");
-  let duration = data[PHASE0];
+  Assert.ok(KEYS[2] in data, "The file contains the expected key");
+  let duration = data[KEYS[2]];
   Assert.equal(typeof duration, "number");
   Assert.ok(duration >= 0, "Duration is a non-negative number");
   Assert.ok(
@@ -77,7 +86,7 @@ add_task(async function test_record() {
 
   Assert.equal(
     Object.keys(data).length,
-    1,
+    2,
     "Data does not contain other durations"
   );
 
@@ -89,7 +98,7 @@ add_task(async function test_record() {
   let WAIT_MS = 2000;
   await new Promise(resolve => setTimeout(resolve, WAIT_MS));
 
-  terminator.observe(null, PHASE2, null);
+  terminator.observe(null, "terminator-test-" + KEYS[4], null);
   data = await promiseShutdownDurationData();
 
   let t2 = Date.now();
@@ -98,18 +107,20 @@ add_task(async function test_record() {
     Object.keys(data)
       .sort()
       .join(", "),
-    [PHASE0, PHASE1].sort().join(", "),
+    [KEYS[2], KEYS[3], KEYS[4]].sort().join(", "),
     "The file contains the expected keys"
   );
-  Assert.equal(data[PHASE0], duration, "Duration of phase 0 hasn't changed");
-  let duration2 = data[PHASE1];
+  Assert.equal(data[KEYS[2]], duration, "Duration of phase 0 hasn't changed");
+  let duration2 = data[KEYS[3]];
   Assert.equal(typeof duration2, "number");
+  // XXX: It seems, we have quite some jitter here, so we cannot rely
+  // ticks to be an accurate measure of time and thus accept lower values.
   Assert.ok(
-    duration2 >= WAIT_MS / 2000,
-    "We have waited at least " + WAIT_MS / 2000 + " ticks"
+    duration2 >= WAIT_MS / 100 / 2,
+    "We have waited at least " + WAIT_MS / 100 / 2 + " ticks"
   );
   Assert.ok(
-    duration2 <= Math.ceil((t2 - t1) / 1000) + 1,
+    duration2 <= Math.ceil((t2 - t1) / 100) + 1,
     "Duration is reasonable"
   );
 });

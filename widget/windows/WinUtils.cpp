@@ -2137,7 +2137,7 @@ const WinUtils::WhitelistVec& WinUtils::GetWhitelistedPaths() {
   static WhitelistVec sWhitelist([]() -> WhitelistVec {
     auto setClearFn = [ptr = &sWhitelist]() -> void {
       RunOnShutdown([ptr]() -> void { ptr->clear(); },
-                    ShutdownPhase::ShutdownFinal);
+                    ShutdownPhase::XPCOMShutdownFinal);
     };
 
     if (NS_IsMainThread()) {
