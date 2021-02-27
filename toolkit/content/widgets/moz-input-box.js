@@ -14,6 +14,7 @@
     get editMenuItems() {
       return `
       <menuitem data-l10n-id="text-action-undo" cmd="cmd_undo"></menuitem>
+      <menuitem data-l10n-id="text-action-redo" cmd="cmd_redo"></menuitem>
       <menuseparator></menuseparator>
       <menuitem data-l10n-id="text-action-cut" cmd="cmd_cut"></menuitem>
       <menuitem data-l10n-id="text-action-copy" cmd="cmd_copy"></menuitem>

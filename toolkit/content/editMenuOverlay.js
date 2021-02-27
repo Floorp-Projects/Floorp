@@ -114,6 +114,7 @@ window.addEventListener("contextmenu", e => {
       MozXULElement.parseXULToFragment(`
       <menupopup id="textbox-contextmenu" class="textbox-contextmenu">
         <menuitem data-l10n-id="text-action-undo" command="cmd_undo"></menuitem>
+        <menuitem data-l10n-id="text-action-redo" command="cmd_redo"></menuitem>
         <menuseparator></menuseparator>
         <menuitem data-l10n-id="text-action-cut" command="cmd_cut"></menuitem>
         <menuitem data-l10n-id="text-action-copy" command="cmd_copy"></menuitem>

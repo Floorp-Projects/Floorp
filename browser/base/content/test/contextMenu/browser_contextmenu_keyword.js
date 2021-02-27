@@ -29,6 +29,8 @@ add_task(async function test_text_input_spellcheck_noform() {
     [
       "context-undo",
       false,
+      "context-redo",
+      false,
       "---",
       null,
       "context-cut",
@@ -95,6 +97,8 @@ add_task(async function test_text_input_spellcheck_loginform() {
       null,
       "context-undo",
       false,
+      "context-redo",
+      false,
       "---",
       null,
       "context-cut",
@@ -147,6 +151,8 @@ add_task(async function test_text_input_spellcheck_searchform() {
     "#search_text",
     [
       "context-undo",
+      false,
+      "context-redo",
       false,
       "---",
       null,
