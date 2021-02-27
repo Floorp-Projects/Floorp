@@ -125,7 +125,7 @@ TestHangReport.prototype = {
 };
 
 // on dev edition we add a button for js debugging of hung scripts.
-let buttonCount = AppConstants.MOZ_DEV_EDITION ? 3 : 2;
+let buttonCount = AppConstants.MOZ_DEV_EDITION ? 2 : 1;
 
 add_task(async function setup() {
   // Create a fake WebExtensionPolicy that we can use for
@@ -162,13 +162,13 @@ add_task(async function terminateScriptTest() {
   let buttons = notification.currentNotification.getElementsByTagName("button");
   is(buttons.length, buttonCount, "proper number of buttons");
 
-  // Click the "Stop It" button, we should get a terminate script callback
+  // Click the "Stop" button, we should get a terminate script callback
   buttons[0].click();
   let action = await hangReport.promise;
   is(
     action,
     TEST_ACTION_TERMSCRIPT,
-    "Clicking 'Stop It' should have terminated the script."
+    "Clicking 'Stop' should have terminated the script."
   );
 });
 
@@ -184,6 +184,11 @@ add_task(async function waitForScriptTest() {
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
   is(buttons.length, buttonCount, "proper number of buttons");
+  let toolbarbuttons = notification.currentNotification.getElementsByTagName(
+    "toolbarbutton"
+  );
+  is(toolbarbuttons.length, 1, "proper number of toolbarbuttons");
+  let closeButton = toolbarbuttons[0];
 
   await pushPrefs(["browser.hangNotification.waitPeriod", 1000]);
 
@@ -206,7 +211,7 @@ add_task(async function waitForScriptTest() {
   });
 
   // Click the "Wait" button this time, we shouldn't get a callback at all.
-  buttons[1].click();
+  closeButton.click();
 
   // send another hang pulse, we should not get a notification here
   Services.obs.notifyObservers(hangReport, "process-hang-report");
@@ -256,17 +261,17 @@ add_task(async function terminatePluginTest() {
   let notification = await promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
-  // Plugin hangs only ever show 2 buttons in the notification - even in
+  // Plugin hangs only ever show 1 button in the notification - even in
   // DevEdition.
-  is(buttons.length, 2, "proper number of buttons");
+  is(buttons.length, 1, "proper number of buttons");
 
-  // Click the "Stop It" button, we should get a terminate script callback
+  // Click the "Stop" button, we should get a terminate script callback
   buttons[0].click();
   let action = await hangReport.promise;
   is(
     action,
     TEST_ACTION_TERMPLUGIN,
-    "Expected the 'Stop it' button to terminate the plug-in"
+    "Expected the 'Stop' button to terminate the plug-in"
   );
 });
 

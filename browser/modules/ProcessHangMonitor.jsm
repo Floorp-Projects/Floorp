@@ -13,6 +13,40 @@ const { AppConstants } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
+ * Elides the middle of a string by replacing it with an elipsis if it is
+ * longer than `threshold` characters. Does its best to not break up grapheme
+ * clusters.
+ */
+function elideMiddleOfString(str, threshold) {
+  const searchDistance = 5;
+  const stubLength = threshold / 2 - searchDistance;
+  if (str.length <= threshold || stubLength < searchDistance) {
+    return str;
+  }
+
+  function searchElisionPoint(position) {
+    let unsplittableCharacter = c => /[\p{M}\uDC00-\uDFFF]/u.test(c);
+    for (let i = 0; i < searchDistance; i++) {
+      if (!unsplittableCharacter(str[position + i])) {
+        return position + i;
+      }
+
+      if (!unsplittableCharacter(str[position - i])) {
+        return position - i;
+      }
+    }
+    return position;
+  }
+
+  let elisionStart = searchElisionPoint(stubLength);
+  let elisionEnd = searchElisionPoint(str.length - stubLength);
+  if (elisionStart < elisionEnd) {
+    str = str.slice(0, elisionStart) + "\u2026" + str.slice(elisionEnd);
+  }
+  return str;
+}
+
+/**
  * This JSM is responsible for observing content process hang reports
  * and asking the user what to do about them. See nsIHangReport for
  * the platform interface.
@@ -528,35 +562,29 @@ var ProcessHangMonitor = {
           "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
       },
       {
-        label: bundle.getString("processHang.button_stop.label"),
+        label: bundle.getString("processHang.button_stop.label2"),
         accessKey: bundle.getString("processHang.button_stop.accessKey"),
         callback() {
           ProcessHangMonitor.stopIt(win);
         },
       },
-      {
-        label: bundle.getString("processHang.button_wait.label"),
-        accessKey: bundle.getString("processHang.button_wait.accessKey"),
-        callback() {
-          ProcessHangMonitor.waitLonger(win);
-        },
-      },
     ];
 
-    let message = bundle.getString("processHang.label");
+    let message;
+    let doc = win.document;
+    let brandShortName = doc
+      .getElementById("bundle_brand")
+      .getString("brandShortName");
     if (report.addonId) {
       let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(
         Ci.nsIAddonPolicyService
       );
 
-      let doc = win.document;
-      let brandBundle = doc.getElementById("bundle_brand");
-
       let addonName = aps.getExtensionName(report.addonId);
 
       message = bundle.getFormattedString("processHang.add-on.label", [
         addonName,
-        brandBundle.getString("brandShortName"),
+        brandShortName,
       ]);
 
       buttons.unshift({
@@ -568,6 +596,24 @@ var ProcessHangMonitor = {
           ProcessHangMonitor.stopGlobal(win);
         },
       });
+    } else {
+      let scriptBrowser = report.scriptBrowser;
+      let tab = scriptBrowser?.ownerGlobal.gBrowser?.getTabForBrowser(
+        scriptBrowser
+      );
+      if (!tab) {
+        message = bundle.getFormattedString(
+          "processHang.nonspecific_tab.label",
+          [brandShortName]
+        );
+      } else {
+        let title = tab.getAttribute("label");
+        title = elideMiddleOfString(title, 60);
+        message = bundle.getFormattedString("processHang.specific_tab.label", [
+          title,
+          brandShortName,
+        ]);
+      }
     }
 
     if (AppConstants.MOZ_DEV_EDITION && report.hangType == report.SLOW_SCRIPT) {
@@ -585,7 +631,12 @@ var ProcessHangMonitor = {
       "process-hang",
       "chrome://browser/content/aboutRobots-icon.png",
       win.gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH,
-      buttons
+      buttons,
+      event => {
+        if (event == "dismissed") {
+          ProcessHangMonitor.waitLonger(win);
+        }
+      }
     );
   },
 
