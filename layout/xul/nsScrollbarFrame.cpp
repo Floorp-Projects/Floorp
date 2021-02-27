@@ -22,6 +22,7 @@
 #include "nsIContent.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/StaticPrefs_apz.h"
 
