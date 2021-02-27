@@ -93,15 +93,6 @@ vec4 get_node_pos(vec2 pos, Transform transform) {
 
 #ifdef WR_FRAGMENT_SHADER
 
-float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
-    vec2 d = max(p0 - pos, pos - p1);
-    // Instead of using a true signed distance to rect here, we just use the
-    // simpler approximation of the maximum distance on either axis from the
-    // outside of the rectangle. This avoids expensive use of length() and only
-    // causes mostly imperceptible differences at corner pixels.
-    return max(d.x, d.y);
-}
-
 float init_transform_fs(vec2 local_pos) {
     // Get signed distance from local rect bounds.
     float d = signed_distance_rect(

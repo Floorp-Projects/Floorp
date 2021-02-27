@@ -74,7 +74,7 @@ struct VertexShaderImpl {
 };
 
 // The number of pixels in a step.
-enum : int32_t { swgl_StepSize = 4 };
+constexpr int32_t swgl_StepSize = 4;
 
 struct FragmentShaderImpl {
   typedef void (*InitSpanFunc)(FragmentShaderImpl*, const void* interps,
