@@ -10041,6 +10041,7 @@ bool nsContentUtils::IsMessageCriticalInputEvent(const IPC::Message& aMsg) {
     switch (aMsg.type()) {
       case mozilla::dom::PBrowser::Msg_RealMouseButtonEvent__ID:
       case mozilla::dom::PBrowser::Msg_RealKeyEvent__ID:
+      case mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID:
       case mozilla::dom::PBrowser::Msg_RealTouchEvent__ID:
       case mozilla::dom::PBrowser::Msg_RealDragEvent__ID:
         return true;
