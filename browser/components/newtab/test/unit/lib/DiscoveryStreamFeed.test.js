@@ -877,7 +877,7 @@ describe("DiscoveryStreamFeed", () => {
             title: "",
             sponsor: "",
             sponsored_by_override: undefined,
-            items: [{ id: "data", min_score: 0, score: 1 }],
+            items: [{ id: "data", score: 1 }],
           },
         },
         lastUpdated: 0,
@@ -885,7 +885,7 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.deepEqual(
         feed.store.getState().DiscoveryStream.spocs.data.spocs.items[0],
-        { id: "data", min_score: 0, score: 1 }
+        { id: "data", score: 1 }
       );
     });
     it("should normalizeSpocsItems for older spoc data", async () => {
@@ -899,7 +899,7 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.deepEqual(
         feed.store.getState().DiscoveryStream.spocs.data.spocs.items[0],
-        { id: "data", min_score: 0, score: 1 }
+        { id: "data", score: 1 }
       );
     });
     it("should call personalizationVersionOverride with feature_flags", async () => {
@@ -937,7 +937,7 @@ describe("DiscoveryStreamFeed", () => {
           context: "",
           sponsor: "",
           sponsored_by_override: undefined,
-          items: [{ id: "data", score: 1, min_score: 0 }],
+          items: [{ id: "data", score: 1 }],
         },
         placement2: {
           title: "",
@@ -972,7 +972,7 @@ describe("DiscoveryStreamFeed", () => {
           context: "context",
           sponsor: "",
           sponsored_by_override: undefined,
-          items: [{ id: "data", score: 1, min_score: 0 }],
+          items: [{ id: "data", score: 1 }],
         },
       });
     });
@@ -1173,26 +1173,28 @@ describe("DiscoveryStreamFeed", () => {
 
     it("should sort based on item_score", async () => {
       const { data: result } = await feed.scoreItems([
-        { id: 2, flight_id: 2, item_score: 0.8, min_score: 0.1 },
-        { id: 3, flight_id: 3, item_score: 0.7, min_score: 0.1 },
-        { id: 1, flight_id: 1, item_score: 0.9, min_score: 0.1 },
+        { id: 2, flight_id: 2, item_score: 0.8 },
+        { id: 4, flight_id: 4, item_score: 0.5 },
+        { id: 3, flight_id: 3, item_score: 0.7 },
+        { id: 1, flight_id: 1, item_score: 0.9 },
       ]);
 
       assert.deepEqual(result, [
-        { id: 1, flight_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1 },
-        { id: 2, flight_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1 },
-        { id: 3, flight_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1 },
+        { id: 1, flight_id: 1, item_score: 0.9, score: 0.9 },
+        { id: 2, flight_id: 2, item_score: 0.8, score: 0.8 },
+        { id: 3, flight_id: 3, item_score: 0.7, score: 0.7 },
+        { id: 4, flight_id: 4, item_score: 0.5, score: 0.5 },
       ]);
     });
 
     it("should sort based on priority", async () => {
       const { data: result } = await feed.scoreItems([
-        { id: 6, flight_id: 6, priority: 2, item_score: 0.7, min_score: 0.1 },
-        { id: 2, flight_id: 3, priority: 1, item_score: 0.2, min_score: 0.1 },
-        { id: 4, flight_id: 4, item_score: 0.6, min_score: 0.1 },
-        { id: 5, flight_id: 5, priority: 2, item_score: 0.8, min_score: 0.1 },
-        { id: 3, flight_id: 3, item_score: 0.8, min_score: 0.1 },
-        { id: 1, flight_id: 1, priority: 1, item_score: 0.3, min_score: 0.1 },
+        { id: 6, flight_id: 6, priority: 2, item_score: 0.7 },
+        { id: 2, flight_id: 3, priority: 1, item_score: 0.2 },
+        { id: 4, flight_id: 4, item_score: 0.6 },
+        { id: 5, flight_id: 5, priority: 2, item_score: 0.8 },
+        { id: 3, flight_id: 3, item_score: 0.8 },
+        { id: 1, flight_id: 1, priority: 1, item_score: 0.3 },
       ]);
 
       assert.deepEqual(result, [
@@ -1202,7 +1204,6 @@ describe("DiscoveryStreamFeed", () => {
           priority: 1,
           score: 0.3,
           item_score: 0.3,
-          min_score: 0.1,
         },
         {
           id: 2,
@@ -1210,7 +1211,6 @@ describe("DiscoveryStreamFeed", () => {
           priority: 1,
           score: 0.2,
           item_score: 0.2,
-          min_score: 0.1,
         },
         {
           id: 5,
@@ -1218,7 +1218,6 @@ describe("DiscoveryStreamFeed", () => {
           priority: 2,
           score: 0.8,
           item_score: 0.8,
-          min_score: 0.1,
         },
         {
           id: 6,
@@ -1226,45 +1225,18 @@ describe("DiscoveryStreamFeed", () => {
           priority: 2,
           score: 0.7,
           item_score: 0.7,
-          min_score: 0.1,
         },
-        { id: 3, flight_id: 3, item_score: 0.8, score: 0.8, min_score: 0.1 },
-        { id: 4, flight_id: 4, item_score: 0.6, score: 0.6, min_score: 0.1 },
-      ]);
-    });
-
-    it("should remove items with scores lower than min_score", async () => {
-      const { data: result } = await feed.scoreItems([
-        { id: 2, flight_id: 2, item_score: 0.8, min_score: 0.9 },
-        { id: 3, flight_id: 3, item_score: 0.7, min_score: 0.7 },
-        { id: 1, flight_id: 1, item_score: 0.9, min_score: 0.8 },
-      ]);
-
-      assert.deepEqual(result, [
-        { id: 1, flight_id: 1, item_score: 0.9, score: 0.9, min_score: 0.8 },
-        { id: 3, flight_id: 3, item_score: 0.7, score: 0.7, min_score: 0.7 },
+        { id: 3, flight_id: 3, item_score: 0.8, score: 0.8 },
+        { id: 4, flight_id: 4, item_score: 0.6, score: 0.6 },
       ]);
     });
 
     it("should add a score prop to spocs", async () => {
       const { data: result } = await feed.scoreItems([
-        { flight_id: 1, item_score: 0.9, min_score: 0.1 },
+        { flight_id: 1, item_score: 0.9 },
       ]);
 
       assert.equal(result[0].score, 0.9);
-    });
-    it("should score items using item_score and min_score", async () => {
-      const { data: result } = await feed.scoreItems([
-        { item_score: 0.8, min_score: 0.1 },
-        { item_score: 0.5, min_score: 0.6 },
-        { item_score: 0.7, min_score: 0.1 },
-        { item_score: 0.9, min_score: 0.1 },
-      ]);
-      assert.deepEqual(result, [
-        { item_score: 0.9, score: 0.9, min_score: 0.1 },
-        { item_score: 0.8, score: 0.8, min_score: 0.1 },
-        { item_score: 0.7, score: 0.7, min_score: 0.1 },
-      ]);
     });
   });
 
@@ -2547,12 +2519,10 @@ describe("DiscoveryStreamFeed", () => {
               recommendations: [
                 {
                   id: "first",
-                  min_score: 0.5,
                   item_score: 0.7,
                 },
                 {
                   id: "second",
-                  min_score: 0.5,
                   item_score: 0.6,
                 },
               ],
@@ -2566,17 +2536,14 @@ describe("DiscoveryStreamFeed", () => {
               recommendations: [
                 {
                   id: "third",
-                  min_score: 0.5,
                   item_score: 0.4,
                 },
                 {
                   id: "fourth",
-                  min_score: 0.5,
                   item_score: 0.6,
                 },
                 {
                   id: "fifth",
-                  min_score: 0.5,
                   item_score: 0.8,
                 },
               ],
@@ -2593,13 +2560,11 @@ describe("DiscoveryStreamFeed", () => {
             recommendations: [
               {
                 id: "second",
-                min_score: 0.5,
                 item_score: 0.6,
                 score: 0.6,
               },
               {
                 id: "first",
-                min_score: 0.5,
                 item_score: 0.7,
                 score: 0.7,
               },
@@ -2614,15 +2579,18 @@ describe("DiscoveryStreamFeed", () => {
             recommendations: [
               {
                 id: "fifth",
-                min_score: 0.5,
                 item_score: 0.8,
                 score: 0.8,
               },
               {
                 id: "fourth",
-                min_score: 0.5,
                 item_score: 0.6,
                 score: 0.6,
+              },
+              {
+                id: "third",
+                item_score: 0.4,
+                score: 0.4,
               },
             ],
             settings: {
@@ -2682,15 +2650,12 @@ describe("DiscoveryStreamFeed", () => {
           placement1: {
             items: [
               {
-                min_score: 0.5,
                 item_score: 0.6,
               },
               {
-                min_score: 0.5,
                 item_score: 0.4,
               },
               {
-                min_score: 0.5,
                 item_score: 0.8,
               },
             ],
@@ -2698,11 +2663,9 @@ describe("DiscoveryStreamFeed", () => {
           placement2: {
             items: [
               {
-                min_score: 0.5,
                 item_score: 0.6,
               },
               {
-                min_score: 0.5,
                 item_score: 0.8,
               },
             ],
@@ -2719,26 +2682,26 @@ describe("DiscoveryStreamFeed", () => {
           placement1: {
             items: [
               {
-                min_score: 0.5,
                 score: 0.8,
                 item_score: 0.8,
               },
               {
-                min_score: 0.5,
                 score: 0.6,
                 item_score: 0.6,
+              },
+              {
+                score: 0.4,
+                item_score: 0.4,
               },
             ],
           },
           placement2: {
             items: [
               {
-                min_score: 0.5,
                 score: 0.8,
                 item_score: 0.8,
               },
               {
-                min_score: 0.5,
                 score: 0.6,
                 item_score: 0.6,
               },
@@ -2860,21 +2823,6 @@ describe("DiscoveryStreamFeed", () => {
       assert.isTrue(!feed.affinityProvider);
     });
   });
-  describe("#scoreItems", () => {
-    it("should score items using item_score and min_score", async () => {
-      const { data: result } = await feed.scoreItems([
-        { item_score: 0.8, min_score: 0.1 },
-        { item_score: 0.5, min_score: 0.6 },
-        { item_score: 0.7, min_score: 0.1 },
-        { item_score: 0.9, min_score: 0.1 },
-      ]);
-      assert.deepEqual(result, [
-        { item_score: 0.9, score: 0.9, min_score: 0.1 },
-        { item_score: 0.8, score: 0.8, min_score: 0.1 },
-        { item_score: 0.7, score: 0.7, min_score: 0.1 },
-      ]);
-    });
-  });
   describe("#scoreItem", () => {
     it("should call calculateItemRelevanceScore with affinity provider", async () => {
       const item = {};
@@ -2899,17 +2847,6 @@ describe("DiscoveryStreamFeed", () => {
       };
       const result = await feed.scoreItem(item);
       assert.equal(result.score, 0.6);
-    });
-    it("should add min_score of 0 if undefined", async () => {
-      const item = {};
-      feed._prefCache.config = {
-        personalized: true,
-      };
-      feed.affinityProvider = {
-        calculateItemRelevanceScore: () => 0.5,
-      };
-      const result = await feed.scoreItem(item);
-      assert.equal(result.min_score, 0);
     });
   });
 });

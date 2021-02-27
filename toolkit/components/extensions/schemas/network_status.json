@@ -29,7 +29,7 @@
           },
           "type": {
             "type": "string",
-            "enum": ["unknown", "ethernet", "usb", "wifi", "wimax", "2g", "3g", "4g"],
+            "enum": ["unknown", "ethernet", "usb", "wifi", "wimax", "mobile"],
             "description": "If known, the type of network connection that is avialable."
           },
           "id": {

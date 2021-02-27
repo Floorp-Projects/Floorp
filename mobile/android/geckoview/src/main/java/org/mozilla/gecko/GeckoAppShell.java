@@ -79,7 +79,6 @@ import android.provider.Settings;
 import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.collection.SimpleArrayMap;
-import android.telephony.TelephonyManager;
 import android.text.format.DateFormat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -226,10 +225,7 @@ public class GeckoAppShell {
     static public final int LINK_TYPE_USB = 2;
     static public final int LINK_TYPE_WIFI = 3;
     static public final int LINK_TYPE_WIMAX = 4;
-    static public final int LINK_TYPE_2G = 5;
-    static public final int LINK_TYPE_3G = 6;
-    static public final int LINK_TYPE_4G = 7;
-    static public final int LINK_TYPE_5G = 8;
+    static public final int LINK_TYPE_MOBILE = 9;
 
     public static final String PREFS_OOM_EXCEPTION = "OOMException";
 
@@ -1184,55 +1180,9 @@ public class GeckoAppShell {
             case ConnectivityManager.TYPE_WIMAX:
                 return LINK_TYPE_WIMAX;
             case ConnectivityManager.TYPE_MOBILE:
-                break; // We will handle sub-types after the switch.
+                return LINK_TYPE_MOBILE;
             default:
                 Log.w(LOGTAG, "Ignoring the current network type.");
-                return LINK_TYPE_UNKNOWN;
-        }
-
-        TelephonyManager tm = (TelephonyManager)
-            getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        if (tm == null) {
-            Log.e(LOGTAG, "Telephony service does not exist");
-            return LINK_TYPE_UNKNOWN;
-        }
-
-        final int networkType;
-
-        try {
-            // Bug 1694179 workaround, on Android 11 this throws
-            networkType = tm.getNetworkType();
-        } catch (final Exception ex) {
-            return LINK_TYPE_4G;
-        }
-
-        switch (networkType) {
-            case TelephonyManager.NETWORK_TYPE_IDEN:
-            case TelephonyManager.NETWORK_TYPE_CDMA:
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-                return LINK_TYPE_2G;
-            case TelephonyManager.NETWORK_TYPE_1xRTT:
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-                return LINK_TYPE_2G; // 2.5G
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                return LINK_TYPE_3G;
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_EHRPD:
-                return LINK_TYPE_3G; // 3.5G
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-                return LINK_TYPE_3G; // 3.75G
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                return LINK_TYPE_4G; // 3.9G
-            case TelephonyManager.NETWORK_TYPE_NR:
-                return LINK_TYPE_5G; // 5G
-            case TelephonyManager.NETWORK_TYPE_UNKNOWN:
-            default:
-                Log.w(LOGTAG, "Connected to an unknown mobile network!");
                 return LINK_TYPE_UNKNOWN;
         }
     }

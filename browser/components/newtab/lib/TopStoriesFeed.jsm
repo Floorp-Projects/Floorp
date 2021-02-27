@@ -210,9 +210,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.spocCampaignMap = new Map(
           body.spocs.map(s => [s.id, `${s.campaign_id}`])
         );
-        this.spocs = this.transform(body.spocs).filter(
-          s => s.score >= s.min_score
-        );
+        this.spocs = this.transform(body.spocs);
         this.cleanUpCampaignImpressionPref();
       }
       this.storiesLastUpdated = Date.now();
@@ -237,9 +235,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.spocCampaignMap = new Map(
           data.stories.spocs.map(s => [s.id, `${s.campaign_id}`])
         );
-        this.spocs = this.transform(data.stories.spocs).filter(
-          s => s.score >= s.min_score
-        );
+        this.spocs = this.transform(data.stories.spocs);
         this.cleanUpCampaignImpressionPref();
       }
     }
@@ -273,7 +269,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
           image: this.normalizeUrl(s.image_src),
           referrer: this.stories_referrer,
           url: s.url,
-          min_score: s.min_score || 0,
           score: s.item_score || 1,
           spoc_meta: this.show_spocs
             ? { campaign_id: s.campaign_id, caps: s.caps }

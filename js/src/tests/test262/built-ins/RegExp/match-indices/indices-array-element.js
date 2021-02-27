@@ -12,7 +12,7 @@ info: |
 ---*/
 
 let input = "abcd";
-let match = /b(c)/.exec(input);
+let match = /b(c)/d.exec(input);
 let indices = match.indices;
 
 // `indices[0]` is an array
