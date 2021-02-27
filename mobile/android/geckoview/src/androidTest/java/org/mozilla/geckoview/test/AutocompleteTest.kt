@@ -8,11 +8,11 @@ import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import android.os.Handler
-import android.os.Looper
 import android.view.KeyEvent
 
 import org.hamcrest.Matchers.*
 
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -27,6 +27,7 @@ import org.mozilla.geckoview.Autocomplete.LoginSelectOption
 import org.mozilla.geckoview.Autocomplete.LoginStorageDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 
@@ -60,7 +61,7 @@ class AutocompleteTest : BaseSessionTest() {
                     : GeckoResult<Array<LoginEntry>>? {
                 assertThat("Domain should match", domain, equalTo("localhost"))
 
-                Handler(Looper.getMainLooper()).postDelayed({
+                Handler().postDelayed({
                     fetchHandled.complete(null)
                 }, acceptDelay)
 
@@ -869,7 +870,7 @@ class AutocompleteTest : BaseSessionTest() {
                 }
 
 
-                Handler(Looper.getMainLooper()).postDelayed({
+                Handler().postDelayed({
                     selectHandled.complete(null)
                 }, acceptDelay)
 
@@ -1127,7 +1128,7 @@ class AutocompleteTest : BaseSessionTest() {
                         .password(passMod)
                         .build())
 
-                Handler(Looper.getMainLooper()).postDelayed({
+                Handler().postDelayed({
                     selectHandled.complete(null)
                 }, acceptDelay)
 
@@ -1255,7 +1256,7 @@ class AutocompleteTest : BaseSessionTest() {
                 genPass = login.password
 
                 if (numSelects == 0) {
-                    Handler(Looper.getMainLooper()).postDelayed({
+                    Handler().postDelayed({
                         selectHandled.complete(null)
                     }, acceptDelay)
                 }
