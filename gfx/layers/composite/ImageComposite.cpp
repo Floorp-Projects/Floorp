@@ -10,6 +10,7 @@
 
 #include "GeckoProfiler.h"
 #include "gfxPlatform.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 
