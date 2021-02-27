@@ -30,7 +30,10 @@ var subtests = [
   // As with the previous test, this test cannot inject touch events every 100ms
   // because it waits for a long-tap, so we have to use the "fake injection" code
   // instead.
-  {"file": "helper_long_tap.html", "prefs": shared_prefs},
+  // This test also disables synthesized mousemoves from reflow so it can make
+  // more precise assertions about the order in which events arrive.
+  {"file": "helper_long_tap.html", "prefs": [...shared_prefs,
+                                             ["layout.reflow.synthMouseMove", false]]},
 
   // For the following tests, we want to make sure APZ doesn't wait for a content
   // response that is never going to arrive. To detect this we set the content response
