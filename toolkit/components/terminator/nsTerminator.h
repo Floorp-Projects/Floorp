@@ -18,21 +18,21 @@ class nsTerminator final : public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   nsTerminator();
-  void AdvancePhase(mozilla::ShutdownPhase aPhase);
 
  private:
+  nsresult SelfInit();
   void Start();
   void StartWatchdog();
   void StartWriter();
 
-  void UpdateHeartbeat(int aStep);
+  void UpdateHeartbeat(const char* aTopic);
   void UpdateTelemetry();
   void UpdateCrashReport(const char* aTopic);
 
   ~nsTerminator() = default;
 
   bool mInitialized;
-  int mCurrentStep;
+  int32_t mCurrentStep;
 };
 
 // This is called by XPCOMInit when the shutdown is completed.

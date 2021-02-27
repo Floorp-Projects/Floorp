@@ -7,7 +7,6 @@
 #ifndef AppShutdown_h
 #define AppShutdown_h
 
-#include <type_traits>
 #include "ShutdownPhase.h"
 
 namespace mozilla {
@@ -20,6 +19,7 @@ enum class AppShutdownMode {
 class AppShutdown {
  public:
   static bool IsShuttingDown();
+
   /**
    * Returns the current exit code that the process will be terminated with.
    */
@@ -48,6 +48,12 @@ class AppShutdown {
   static void MaybeDoRestart();
 
   /**
+   * This will perform a fast shutdown via _exit(0) or similar if the user's
+   * prefs are configured to do so at this phase.
+   */
+  static void MaybeFastShutdown(ShutdownPhase aPhase);
+
+  /**
    * The _exit() call is not a safe way to terminate your own process on
    * Windows, because _exit runs DLL detach callbacks which run static
    * destructors for xul.dll.
@@ -63,25 +69,6 @@ class AppShutdown {
    * restart.
    */
   static bool IsRestarting();
-
-  /**
-   * Wrapper for shutdown notifications that inform the terminator before
-   * we notify other observers. Calls MaybeFastShutdown.
-   */
-  static void AdvanceShutdownPhase(
-      ShutdownPhase aPhase, const char16_t* aNotificationData = nullptr,
-      nsCOMPtr<nsISupports> aNotificationSubject = nullptr);
-
-  /**
-   * This will perform a fast shutdown via _exit(0) or similar if the user's
-   * prefs are configured to do so at this phase.
-   */
-  static void MaybeFastShutdown(ShutdownPhase aPhase);
-
-  /**
-   * Map shutdown phases to observer keys
-   */
-  static const char* GetObserverKey(ShutdownPhase aPhase);
 };
 
 }  // namespace mozilla

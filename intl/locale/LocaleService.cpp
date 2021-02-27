@@ -152,7 +152,7 @@ LocaleService* LocaleService::GetInstance() {
     }
     // DOM might use ICUUtils and LocaleService during UnbindFromTree by
     // final cycle collection.
-    ClearOnShutdown(&sInstance, ShutdownPhase::CCPostLastCycleCollection);
+    ClearOnShutdown(&sInstance, ShutdownPhase::ShutdownPostLastCycleCollection);
   }
   return sInstance;
 }

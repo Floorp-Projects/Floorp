@@ -500,7 +500,7 @@ void RegisterArrayData(const ArrayData* aArrayData, size_t aLength) {
 
   if (!sArrayData) {
     sArrayData = new Vector<std::pair<const ArrayData*, size_t>>();
-    ClearOnShutdown(&sArrayData, ShutdownPhase::XPCOMShutdownThreads);
+    ClearOnShutdown(&sArrayData, ShutdownPhase::ShutdownThreads);
   }
 
   MOZ_ALWAYS_TRUE(sArrayData->emplaceBack(std::make_pair(aArrayData, aLength)));
