@@ -72,6 +72,7 @@ SI bool test_none(Bool cond) {
   return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0;
 }
 #endif
+SI bool test_equal(Bool cond) { return test_none(cond != cond.x); }
 
 float make_float(float n) { return n; }
 
@@ -284,6 +285,8 @@ enum XYZW {
   A = 3,
 };
 
+struct bvec4_scalar;
+
 struct bvec2_scalar {
   bool x;
   bool y;
@@ -291,6 +294,23 @@ struct bvec2_scalar {
   bvec2_scalar() : bvec2_scalar(false) {}
   IMPLICIT constexpr bvec2_scalar(bool a) : x(a), y(a) {}
   constexpr bvec2_scalar(bool x, bool y) : x(x), y(y) {}
+
+  bool& select(XYZW c) {
+    switch (c) {
+      case X:
+        return x;
+      case Y:
+        return y;
+      default:
+        UNREACHABLE;
+    }
+  }
+  bool sel(XYZW c1) { return select(c1); }
+
+  bvec2_scalar sel(XYZW c1, XYZW c2) {
+    return bvec2_scalar(select(c1), select(c2));
+  }
+  bvec4_scalar sel(XYZW c1, XYZW c2, XYZW c3, XYZW c4);
 };
 
 struct bvec2_scalar1 {
@@ -316,6 +336,8 @@ struct bvec2 {
     }
   }
   Bool sel(XYZW c1) { return select(c1); }
+
+  bvec2 sel(XYZW c1, XYZW c2) { return bvec2(select(c1), select(c2)); }
 
   bvec2 operator~() { return bvec2(~x, ~y); }
 
@@ -383,6 +405,9 @@ struct vec2_scalar {
   }
   friend vec2_scalar operator*(vec2_scalar a, vec2_scalar b) {
     return vec2_scalar(a.x * b.x, a.y * b.y);
+  }
+  friend vec2_scalar operator/(vec2_scalar a, float b) {
+    return vec2_scalar(a.x / b, a.y / b);
   }
   friend vec2_scalar operator/(vec2_scalar a, vec2_scalar b) {
     return vec2_scalar(a.x / b.x, a.y / b.y);
@@ -607,9 +632,31 @@ Float length(vec2 a) { return sqrt(a.x * a.x + a.y * a.y); }
 
 float length(vec2_scalar a) { return hypotf(a.x, a.y); }
 
-SI Float distance(vec2 a, vec2 b) { return length(a - b); }
+template <typename A, typename B>
+SI auto distance(A a, B b) {
+  return length(a - b);
+}
 
-SI vec2 normalize(vec2 a) { return a / length(a); }
+template <typename T>
+SI T normalize(T a) {
+  return a / length(a);
+}
+
+SI vec2 sqrt(vec2 a) { return vec2(sqrt(a.x), sqrt(a.y)); }
+
+SI vec2_scalar sqrt(vec2_scalar a) { return vec2_scalar(sqrt(a.x), sqrt(a.y)); }
+
+SI vec2 recip(vec2 a) { return vec2(recip(a.x), recip(a.y)); }
+
+SI vec2_scalar recip(vec2_scalar a) {
+  return vec2_scalar(recip(a.x), recip(a.y));
+}
+
+SI vec2 inversesqrt(vec2 a) { return vec2(inversesqrt(a.x), inversesqrt(a.y)); }
+
+SI vec2_scalar inversesqrt(vec2_scalar a) {
+  return vec2_scalar(inversesqrt(a.x), inversesqrt(a.y));
+}
 
 #define abs __glsl_abs
 
@@ -623,6 +670,13 @@ Float abs(Float v) {
 #else
   return bit_cast<Float>(bit_cast<I32>(v) & bit_cast<I32>(0.0f - v));
 #endif
+}
+
+float sign(float a) { return copysignf(1.0f, a); }
+
+Float sign(Float v) {
+  return bit_cast<Float>((bit_cast<I32>(v) & 0x80000000) |
+                         bit_cast<I32>(Float(1.0f)));
 }
 
 Float cast(U32 v) { return CONVERT((I32)v, Float); }
@@ -709,10 +763,14 @@ vec2 fract(vec2 v) { return vec2(fract(v.x), fract(v.y)); }
 // uniform scaling, and thus abs(dFdx(p.x)) + abs(dFdy(p.x)) = abs(dFdx(p.x)) +
 // abs(dFdx(p.y)) which mirrors abs(dFdx(p.y)) + abs(dFdy(p.y)) = abs(dFdx(p.y))
 // + abs(dFdx(p.x)).
-vec2 fwidth(vec2 p) {
+vec2_scalar fwidth(vec2 p) {
   Float d = abs(SHUFFLE(p.x, p.y, 1, 1, 5, 5) - SHUFFLE(p.x, p.y, 0, 0, 4, 4));
-  return vec2(d + d.zwxy);
+  return vec2_scalar(d.x + d.z);
 }
+
+float dFdx(Float x) { return x.y - x.x; }
+
+vec2_scalar dFdx(vec2 p) { return vec2_scalar(dFdx(p.x), dFdx(p.y)); }
 
 // See
 // http://www.machinedlearnings.com/2011/06/fast-approximate-logarithm-exponential.html.
@@ -1200,6 +1258,10 @@ struct bvec4_scalar {
   }
 };
 
+bvec4_scalar bvec2_scalar::sel(XYZW c1, XYZW c2, XYZW c3, XYZW c4) {
+  return bvec4_scalar{select(c1), select(c2), select(c3), select(c4)};
+}
+
 struct bvec4_scalar1 {
   bool x;
 
@@ -1541,6 +1603,10 @@ SI vec3 if_then_else(ivec3 c, vec3 t, vec3 e) {
 
 vec3 step(vec3 edge, vec3 x) {
   return vec3(step(edge.x, x.x), step(edge.y, x.y), step(edge.z, x.z));
+}
+
+vec3_scalar step(vec3_scalar edge, vec3_scalar x) {
+  return vec3_scalar(step(edge.x, x.x), step(edge.y, x.y), step(edge.z, x.z));
 }
 
 SI vec3 min(vec3 a, vec3 b) {
@@ -1976,6 +2042,10 @@ SI vec4 if_then_else(I32 c, vec4 t, vec4 e) {
 
 SI vec4 if_then_else(int32_t c, vec4 t, vec4 e) { return c ? t : e; }
 
+SI vec4_scalar if_then_else(int32_t c, vec4_scalar t, vec4_scalar e) {
+  return c ? t : e;
+}
+
 SI vec2 clamp(vec2 a, vec2 minVal, vec2 maxVal) {
   return vec2(clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y));
 }
@@ -2009,6 +2079,16 @@ SI vec4_scalar clamp(vec4_scalar a, vec4_scalar minVal, vec4_scalar maxVal) {
   return vec4_scalar{
       clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y),
       clamp(a.z, minVal.z, maxVal.z), clamp(a.w, minVal.w, maxVal.w)};
+}
+
+vec4 step(vec4 edge, vec4 x) {
+  return vec4(step(edge.x, x.x), step(edge.y, x.y), step(edge.z, x.z),
+              step(edge.w, x.w));
+}
+
+vec4_scalar step(vec4_scalar edge, vec4_scalar x) {
+  return vec4_scalar(step(edge.x, x.x), step(edge.y, x.y), step(edge.z, x.z),
+                     step(edge.w, x.w));
 }
 
 template <typename T>
@@ -2052,6 +2132,16 @@ SI bvec2_scalar lessThan(vec2_scalar x, vec2_scalar y) {
   return bvec2_scalar(lessThan(x.x, y.x), lessThan(x.y, y.y));
 }
 
+SI bvec4 lessThan(vec4 x, vec4 y) {
+  return bvec4(lessThan(x.x, y.x), lessThan(x.y, y.y), lessThan(x.z, y.z),
+               lessThan(x.w, y.w));
+}
+
+SI bvec4_scalar lessThan(vec4_scalar x, vec4_scalar y) {
+  return bvec4_scalar{lessThan(x.x, y.x), lessThan(x.y, y.y),
+                      lessThan(x.z, y.z), lessThan(x.w, y.w)};
+}
+
 template <typename T>
 auto greaterThan(T x, T y) -> decltype(x > y) {
   return x > y;
@@ -2065,6 +2155,16 @@ bvec2_scalar greaterThan(vec2_scalar x, vec2_scalar y) {
   return bvec2_scalar(greaterThan(x.x, y.x), greaterThan(x.y, y.y));
 }
 
+SI bvec4 greaterThan(vec4 x, vec4 y) {
+  return bvec4(greaterThan(x.x, y.x), greaterThan(x.y, y.y),
+               greaterThan(x.z, y.z), greaterThan(x.w, y.w));
+}
+
+SI bvec4_scalar greaterThan(vec4_scalar x, vec4_scalar y) {
+  return bvec4_scalar{greaterThan(x.x, y.x), greaterThan(x.y, y.y),
+                      greaterThan(x.z, y.z), greaterThan(x.w, y.w)};
+}
+
 template <typename T>
 auto greaterThanEqual(T x, T y) -> decltype(x >= y) {
   return x >= y;
@@ -2073,6 +2173,30 @@ auto greaterThanEqual(T x, T y) -> decltype(x >= y) {
 bvec4 greaterThanEqual(vec4 x, vec4 y) {
   return bvec4(greaterThanEqual(x.x, y.x), greaterThanEqual(x.y, y.y),
                greaterThanEqual(x.z, y.z), greaterThanEqual(x.w, y.w));
+}
+
+template <typename T>
+auto equal(T x, T y) -> decltype(x > y) {
+  return x == y;
+}
+
+bvec2 equal(vec2 x, vec2 y) { return bvec2(equal(x.x, y.x), equal(x.y, y.y)); }
+
+bvec2_scalar equal(vec2_scalar x, vec2_scalar y) {
+  return bvec2_scalar(equal(x.x, y.x), equal(x.y, y.y));
+}
+
+template <typename T>
+auto notEqual(T x, T y) -> decltype(x > y) {
+  return x != y;
+}
+
+bvec2 notEqual(vec2 x, vec2 y) {
+  return bvec2(notEqual(x.x, y.x), notEqual(x.y, y.y));
+}
+
+bvec2_scalar notEqual(vec2_scalar x, vec2_scalar y) {
+  return bvec2_scalar(notEqual(x.x, y.x), notEqual(x.y, y.y));
 }
 
 struct mat4_scalar;
@@ -2571,6 +2695,26 @@ Float atan(Float a, Float b) {
           atan2f(a.w, b.w)};
 }
 
+bvec4 equal(vec4 x, vec4 y) {
+  return bvec4(equal(x.x, y.x), equal(x.y, y.y), equal(x.z, y.z),
+               equal(x.w, y.w));
+}
+
+bvec4_scalar equal(vec4_scalar x, vec4_scalar y) {
+  return bvec4_scalar(equal(x.x, y.x), equal(x.y, y.y), equal(x.z, y.z),
+                      equal(x.w, y.w));
+}
+
+bvec4 notEqual(vec4 x, vec4 y) {
+  return bvec4(notEqual(x.x, y.x), notEqual(x.y, y.y), notEqual(x.z, y.z),
+               notEqual(x.w, y.w));
+}
+
+bvec4_scalar notEqual(vec4_scalar x, vec4_scalar y) {
+  return bvec4_scalar(notEqual(x.x, y.x), notEqual(x.y, y.y),
+                      notEqual(x.z, y.z), notEqual(x.w, y.w));
+}
+
 bvec4 notEqual(ivec4 a, ivec4 b) {
   return bvec4(a.x != b.x, a.y != b.y, a.z != b.z, a.w != b.w);
 }
@@ -2594,11 +2738,17 @@ vec2 abs(vec2 v) { return vec2(abs(v.x), abs(v.y)); }
 
 vec2_scalar abs(vec2_scalar v) { return vec2_scalar{fabsf(v.x), fabsf(v.y)}; }
 
+vec2 sign(vec2 v) { return vec2(sign(v.x), sign(v.y)); }
+
+vec2_scalar sign(vec2_scalar v) { return vec2_scalar{sign(v.x), sign(v.y)}; }
+
 Float mod(Float a, Float b) { return a - b * floor(a / b); }
 
 vec2 mod(vec2 a, vec2 b) { return vec2(mod(a.x, b.x), mod(a.y, b.y)); }
 
 vec3 abs(vec3 v) { return vec3(abs(v.x), abs(v.y), abs(v.z)); }
+
+vec3 sign(vec3 v) { return vec3(sign(v.x), sign(v.y), sign(v.z)); }
 
 mat2 inverse(mat2 v) {
   Float det = v[0].x * v[1].y - v[0].y * v[1].x;

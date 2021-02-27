@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,ellipse
+#include shared,rect,ellipse
 
 // For edges, the colors are the same. For corners, these
 // are the colors of each edge making up the corner.
