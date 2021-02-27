@@ -7,7 +7,6 @@
 UNIFIED_SOURCES += [
     "TestBasic.cpp",
     "TestEventRegions.cpp",
-    "TestEventResult.cpp",
     "TestFlingAcceleration.cpp",
     "TestGestureDetector.cpp",
     "TestHitTesting.cpp",

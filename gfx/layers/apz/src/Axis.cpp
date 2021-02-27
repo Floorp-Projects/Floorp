@@ -464,19 +464,6 @@ bool AxisX::CanScrollTo(Side aSide) const {
   }
 }
 
-SideBits AxisX::ScrollableDirections() const {
-  SideBits directions = SideBits::eNone;
-
-  if (CanScrollTo(eSideLeft)) {
-    directions |= SideBits::eLeft;
-  }
-  if (CanScrollTo(eSideRight)) {
-    directions |= SideBits::eRight;
-  }
-
-  return directions;
-}
-
 OverscrollBehavior AxisX::GetOverscrollBehavior() const {
   return GetScrollMetadata().GetOverscrollBehavior().mBehaviorX;
 }
@@ -519,47 +506,8 @@ bool AxisY::CanScrollTo(Side aSide) const {
   }
 }
 
-SideBits AxisY::ScrollableDirections() const {
-  SideBits directions = SideBits::eNone;
-
-  if (CanScrollTo(eSideTop)) {
-    directions |= SideBits::eTop;
-  }
-  if (CanScrollTo(eSideBottom)) {
-    directions |= SideBits::eBottom;
-  }
-
-  return directions;
-}
-
-bool AxisY::HasDynamicToolbar() const {
-  return GetCompositionLengthWithoutDynamicToolbar() != ParentLayerCoord(0);
-}
-
-SideBits AxisY::ScrollableDirectionsWithDynamicToolbar(
-    const ScreenMargin& aFixedLayerMargins) const {
-  MOZ_ASSERT(mAsyncPanZoomController->IsRootContent());
-
-  SideBits directions = ScrollableDirections();
-
-  if (HasDynamicToolbar()) {
-    ScreenCoord toolbarHeight = ViewAs<ScreenPixel>(
-        GetCompositionLength() - GetCompositionLengthWithoutDynamicToolbar(),
-        PixelCastJustification::ScreenIsParentLayerForRoot);
-
-    if (fabs(aFixedLayerMargins.bottom) > COORDINATE_EPSILON) {
-      directions |= SideBits::eTop;
-    }
-    if (toolbarHeight + aFixedLayerMargins.bottom > COORDINATE_EPSILON) {
-      directions |= SideBits::eBottom;
-    }
-  }
-
-  return directions;
-}
-
-bool AxisY::CanVerticalScrollWithDynamicToolbar() const {
-  return !HasDynamicToolbar()
+bool AxisY::CanScrollDownwardsWithDynamicToolbar() const {
+  return GetCompositionLengthWithoutDynamicToolbar() == ParentLayerCoord(0)
              ? CanScroll()
              : GetPageLength() - GetCompositionLengthWithoutDynamicToolbar() >
                    COORDINATE_EPSILON;
