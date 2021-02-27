@@ -217,6 +217,7 @@ void UiCompositorControllerParent::NotifyFirstPaint() {
 void UiCompositorControllerParent::NotifyUpdateScreenMetrics(
     const GeckoViewMetrics& aMetrics) {
 #if defined(MOZ_WIDGET_ANDROID)
+  // TODO: Need to handle different x-and y-scales.
   CSSToScreenScale scale = ViewTargetAs<ScreenPixel>(
       aMetrics.mZoom.ToScaleFactor(),
       PixelCastJustification::ScreenIsParentLayerForRoot);

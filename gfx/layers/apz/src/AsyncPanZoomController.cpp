@@ -1543,6 +1543,7 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     MOZ_ASSERT(Metrics().IsRootContent());
     MOZ_ASSERT(Metrics().GetZoom().AreScalesSame());
 
+    // TODO: Need to handle different x-and y-scales.
     CSSToParentLayerScale userZoom = Metrics().GetZoom().ToScaleFactor();
     ParentLayerPoint focusPoint =
         aEvent.mLocalFocusPoint - Metrics().GetCompositionBounds().TopLeft();
@@ -5224,6 +5225,7 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     ParentLayerRect compositionBounds = Metrics().GetCompositionBounds();
     CSSRect cssPageRect = Metrics().GetScrollableRect();
     CSSPoint scrollOffset = Metrics().GetVisualScrollOffset();
+    // TODO: Need to handle different x-and y-scales.
     CSSToParentLayerScale currentZoom = Metrics().GetZoom().ToScaleFactor();
     CSSToParentLayerScale targetZoom;
 

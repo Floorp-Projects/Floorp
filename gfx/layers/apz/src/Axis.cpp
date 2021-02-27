@@ -318,7 +318,7 @@ ParentLayerCoord Axis::DisplacementWillOverscrollAmount(
 CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const {
   // Internally, do computations in ParentLayer coordinates *before* the scale
   // is applied.
-  CSSToParentLayerScale zoom = GetFrameMetrics().GetZoom().ToScaleFactor();
+  CSSToParentLayerScale zoom = GetAxisScale(GetFrameMetrics().GetZoom());
   ParentLayerCoord focus = aFocus * zoom;
   ParentLayerCoord originAfterScale = (GetOrigin() + focus) - (focus / aScale);
 
@@ -433,6 +433,11 @@ ParentLayerCoord AxisX::GetPointOffset(const ParentLayerPoint& aPoint) const {
   return aPoint.x;
 }
 
+CSSToParentLayerScale AxisX::GetAxisScale(
+    const CSSToParentLayerScale2D& aScale) const {
+  return CSSToParentLayerScale(aScale.xScale);
+}
+
 ParentLayerCoord AxisX::GetRectLength(const ParentLayerRect& aRect) const {
   return aRect.Width();
 }
@@ -473,6 +478,11 @@ AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
 
 ParentLayerCoord AxisY::GetPointOffset(const ParentLayerPoint& aPoint) const {
   return aPoint.y;
+}
+
+CSSToParentLayerScale AxisY::GetAxisScale(
+    const CSSToParentLayerScale2D& aScale) const {
+  return CSSToParentLayerScale(aScale.yScale);
 }
 
 ParentLayerCoord AxisY::GetRectLength(const ParentLayerRect& aRect) const {
