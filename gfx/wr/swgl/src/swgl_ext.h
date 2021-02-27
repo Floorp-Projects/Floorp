@@ -58,32 +58,33 @@ static ALWAYS_INLINE auto swgl_forceScalar(T v) -> decltype(force_scalar(v)) {
 
 // Commit an entire span of a solid color. This dispatches to clip-masked and
 // anti-aliased fast-paths as appropriate.
-#define swgl_commitSolid(format, v)                                \
-  do {                                                             \
-    if (blend_key) {                                               \
-      if (swgl_ClipFlags & SWGL_CLIP_FLAG_MASK) {                  \
-        commit_masked_solid_span(swgl_Out##format,                 \
-                                 packColor(swgl_Out##format, (v)), \
-                                 swgl_SpanLength);                 \
-      } else if (swgl_ClipFlags & SWGL_CLIP_FLAG_AA) {             \
-        commit_aa_solid_span(swgl_Out##format,                     \
-                             pack_span(swgl_Out##format, (v)),     \
-                             swgl_SpanLength);                     \
-      } else {                                                     \
-        commit_solid_span<true>(swgl_Out##format,                  \
-                                pack_span(swgl_Out##format, (v)),  \
-                                swgl_SpanLength);                  \
-      }                                                            \
-    } else {                                                       \
-      commit_solid_span<false>(swgl_Out##format,                   \
-                               pack_span(swgl_Out##format, (v)),   \
-                               swgl_SpanLength);                   \
-    }                                                              \
-    swgl_Out##format += swgl_SpanLength;                           \
-    swgl_SpanLength = 0;                                           \
+#define swgl_commitSolid(format, v, n)                                   \
+  do {                                                                   \
+    int len = (n);                                                       \
+    if (blend_key) {                                                     \
+      if (swgl_ClipFlags & SWGL_CLIP_FLAG_MASK) {                        \
+        commit_masked_solid_span(swgl_Out##format,                       \
+                                 packColor(swgl_Out##format, (v)), len); \
+      } else if (swgl_ClipFlags & SWGL_CLIP_FLAG_AA) {                   \
+        commit_aa_solid_span(swgl_Out##format,                           \
+                             pack_span(swgl_Out##format, (v)), len);     \
+      } else {                                                           \
+        commit_solid_span<true>(swgl_Out##format,                        \
+                                pack_span(swgl_Out##format, (v)), len);  \
+      }                                                                  \
+    } else {                                                             \
+      commit_solid_span<false>(swgl_Out##format,                         \
+                               pack_span(swgl_Out##format, (v)), len);   \
+    }                                                                    \
+    swgl_Out##format += len;                                             \
+    swgl_SpanLength -= len;                                              \
   } while (0)
-#define swgl_commitSolidRGBA8(v) swgl_commitSolid(RGBA8, v)
-#define swgl_commitSolidR8(v) swgl_commitSolid(R8, v)
+#define swgl_commitSolidRGBA8(v) swgl_commitSolid(RGBA8, v, swgl_SpanLength)
+#define swgl_commitSolidR8(v) swgl_commitSolid(R8, v, swgl_SpanLength)
+#define swgl_commitPartialSolidRGBA8(len, v) \
+  swgl_commitSolid(RGBA8, v, min(int(len), swgl_SpanLength))
+#define swgl_commitPartialSolidR8(len, v) \
+  swgl_commitSolid(R8, v, min(int(len), swgl_SpanLength))
 
 #define swgl_commitChunk(format, chunk)                 \
   do {                                                  \
@@ -94,13 +95,11 @@ static ALWAYS_INLINE auto swgl_forceScalar(T v) -> decltype(force_scalar(v)) {
     swgl_SpanLength -= swgl_StepSize;                   \
   } while (0)
 
-// Commit a single chunk of a color scaled by an alpha weight
-#define swgl_commitColor(format, color, alpha)                     \
-  swgl_commitChunk(format, applyColor(pack_pixels_##format(color), \
-                                      packColor(swgl_Out##format, alpha)))
-#define swgl_commitColorRGBA8(color, alpha) \
-  swgl_commitColor(RGBA8, color, alpha)
-#define swgl_commitColorR8(color, alpha) swgl_commitColor(R8, color, alpha)
+// Commit a single chunk of a color
+#define swgl_commitColor(format, color) \
+  swgl_commitChunk(format, pack_pixels_##format(color))
+#define swgl_commitColorRGBA8(color) swgl_commitColor(RGBA8, color)
+#define swgl_commitColorR8(color) swgl_commitColor(R8, color)
 
 template <typename S>
 static ALWAYS_INLINE bool swgl_isTextureLinear(S s) {
