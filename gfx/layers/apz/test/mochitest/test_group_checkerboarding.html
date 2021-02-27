@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
     if (isApzEnabled()) {
@@ -46,10 +47,24 @@
         { file: "helper_checkerboard_zoom_during_load.html", "prefs": no_multiplier_prefs },
       ];
 
-      let isWindows = navigator.platform.indexOf("Win") == 0;
-      if (!isWindows) {
+      let platform = getPlatform();
+      if (platform != "windows") {
         subtests.push(
           { file: "helper_checkerboard_zoomoverflowhidden.html", "prefs": zoom_and_pan_prefs }
+        );
+      }
+
+      var scrollbarbutton_prefs = [
+        ...prefs,
+        ["general.smoothScroll", true],
+        // bug 1682919 only affects the main thread scrollbar button repeat codepath
+        ["apz.scrollbarbuttonrepeat.enabled", false]
+      ];
+
+      // Only Windows has scrollbar buttons in automation.
+      if (platform == "windows") {
+        subtests.push(
+          { file: "helper_scrollbarbuttonclick_checkerboard.html", "prefs": scrollbarbutton_prefs},
         );
       }
 
