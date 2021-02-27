@@ -1,10 +1,7 @@
-commit f6034ebe9fb92d4d3dea644b9225bdc18b44a7ab
-Author: Ujjwal Sharma <ryzokuken@disroot.org>
-Date:   Tue Feb 16 19:57:19 2021 +0530
+commit 516ca9af3938bfe8694cf0998f9193c57e826adb
+Author: Gus Caplan <me@gus.host>
+Date:   Wed Oct 21 20:14:28 2020 -0400
 
-    Add DateTimeFormat tests for OrdinaryHasInstance
+    Update tests for ECMA262 #2216
     
-    Add tests to make sure DateTimeFormat does not call the instanceof
-    operator and calls OrdinaryHasInstance instead.
-    
-    Refs: https://github.com/tc39/ecma402/pull/500
+    https://github.com/tc39/ecma262/pull/2216

@@ -24,12 +24,8 @@ function getLinkType() {
       return "wifi";
     case gNetworkLinkService.LINK_TYPE_WIMAX:
       return "wimax";
-    case gNetworkLinkService.LINK_TYPE_2G:
-      return "2g";
-    case gNetworkLinkService.LINK_TYPE_3G:
-      return "3g";
-    case gNetworkLinkService.LINK_TYPE_4G:
-      return "4g";
+    case gNetworkLinkService.LINK_TYPE_MOBILE:
+      return "mobile";
     default:
       return "unknown";
   }

@@ -24,6 +24,16 @@ const TEST_DATA = [
     impression_url: "http://impression.reporting.test.com/",
     advertiser: "TestAdvertiser",
   },
+  {
+    id: 2,
+    url: `${TEST_URL}?q=nonsponsored`,
+    title: "Non-Sponsored",
+    keywords: ["nonspon"],
+    click_url: "http://click.reporting.test.com/nonsponsored",
+    impression_url: "http://impression.reporting.test.com/nonsponsored",
+    advertiser: "TestAdvertiserNonSponsored",
+    iab_category: "5 - Education",
+  },
 ];
 
 const ABOUT_BLANK = "about:blank";
@@ -44,20 +54,48 @@ function sleep(ms) {
  * @param {number} [index]
  *   The expected index of the Quick Suggest result.  Pass -1 to use the index
  *   of the last result.
+ * @param {boolean} [isSponsored]
+ *   True if the result is expected to be sponsored and false if non-sponsored
+ *   (i.e., "Firefox Suggests").
  * @param {object} [win]
  *   The window in which to read the results from.
  * @returns {result}
  *   The result at the given index.
  */
-async function assertIsQuickSuggest(index = -1, win = window) {
+async function assertIsQuickSuggest({
+  index = -1,
+  isSponsored = true,
+  win = window,
+} = {}) {
   if (index < 0) {
     index = UrlbarTestUtils.getResultCount(win) - 1;
     Assert.greater(index, -1, "Sanity check: Result count should be > 0");
   }
+
   let result = await UrlbarTestUtils.getDetailsOfResultAt(win, index);
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
-  Assert.equal(result.url, `${TEST_URL}?q=frabbits`);
+
+  // Confusingly, `isSponsored` is set on the result payload for all quick
+  // suggest results, even non-sponsored ones.  It's just a marker of whether
+  // the result is a quick suggest.
   Assert.ok(result.isSponsored, "Result isSponsored");
+
+  let url;
+  let actionText;
+  if (isSponsored) {
+    url = `${TEST_URL}?q=frabbits`;
+    actionText = "Sponsored";
+  } else {
+    url = `${TEST_URL}?q=nonsponsored`;
+    actionText = "Firefox Suggests";
+  }
+  Assert.equal(result.url, url, "Result URL");
+  Assert.equal(
+    result.element.row._elements.get("action").textContent,
+    actionText,
+    "Result action text"
+  );
+
   return result;
 }
 
@@ -122,7 +160,7 @@ add_task(async function basic_test() {
     window,
     value: "frab",
   });
-  await assertIsQuickSuggest(1);
+  await assertIsQuickSuggest({ index: 1 });
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -190,7 +228,7 @@ add_task(async function test_suggestions_enabled_private() {
     window: win,
     value: "frab",
   });
-  await assertIsQuickSuggest(-1, win);
+  await assertIsQuickSuggest({ index: -1, win });
   await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
 });
@@ -258,7 +296,7 @@ add_task(async function onboarding_notEndOfEngagement() {
     value: "frab",
     fireInputEvent: true,
   });
-  let result = await assertIsQuickSuggest(1);
+  let result = await assertIsQuickSuggest({ index: 1 });
   let helpButton = result.element.row._elements.get("helpButton");
   Assert.ok(helpButton, "The help button should be present");
   Assert.equal(
@@ -302,7 +340,7 @@ add_task(async function onboarding_abandonment() {
     value: "frab",
     fireInputEvent: true,
   });
-  let result = await assertIsQuickSuggest(1);
+  let result = await assertIsQuickSuggest({ index: 1 });
   let helpButton = result.element.row._elements.get("helpButton");
   Assert.ok(helpButton, "The help button should be present");
   Assert.equal(
@@ -394,4 +432,14 @@ add_task(async function onboarding_maxCount() {
   });
 
   await PlacesUtils.history.clear();
+});
+
+// Tests a non-sponsored result.
+add_task(async function nonSponsored() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "nonspon",
+  });
+  await assertIsQuickSuggest({ index: 1, isSponsored: false });
+  await UrlbarTestUtils.promisePopupClose(window);
 });

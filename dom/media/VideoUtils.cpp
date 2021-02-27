@@ -775,9 +775,7 @@ bool OnCellularConnection() {
     case nsINetworkLinkService::LINK_TYPE_WIFI:
       return false;
     case nsINetworkLinkService::LINK_TYPE_WIMAX:
-    case nsINetworkLinkService::LINK_TYPE_2G:
-    case nsINetworkLinkService::LINK_TYPE_3G:
-    case nsINetworkLinkService::LINK_TYPE_4G:
+    case nsINetworkLinkService::LINK_TYPE_MOBILE:
       return true;
   }
 
