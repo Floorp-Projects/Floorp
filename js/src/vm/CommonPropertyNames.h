@@ -27,7 +27,6 @@
   MACRO_(anonymous, anonymous, "anonymous")                                    \
   MACRO_(Any, Any, "Any")                                                      \
   MACRO_(apply, apply, "apply")                                                \
-  MACRO_(args, args, "args")                                                   \
   MACRO_(arguments, arguments, "arguments")                                    \
   MACRO_(ArrayBufferSpecies, ArrayBufferSpecies, "$ArrayBufferSpecies")        \
   MACRO_(ArrayIterator, ArrayIterator, "Array Iterator")                       \
@@ -123,6 +122,7 @@
   MACRO_(domNode, domNode, "domNode")                                          \
   MACRO_(done, done, "done")                                                   \
   MACRO_(dotAll, dotAll, "dotAll")                                             \
+  MACRO_(dotArgs, dotArgs, ".args")                                            \
   MACRO_(dotGenerator, dotGenerator, ".generator")                             \
   MACRO_(dotThis, dotThis, ".this")                                            \
   MACRO_(dotInitializers, dotInitializers, ".initializers")                    \
