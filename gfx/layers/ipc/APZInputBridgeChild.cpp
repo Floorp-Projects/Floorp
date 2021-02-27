@@ -102,7 +102,7 @@ APZEventResult APZInputBridgeChild::ReceiveInputEvent(InputData& aEvent) {
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("Invalid InputData type.");
-      res.SetStatusAsConsumeNoDefault();
+      res.mStatus = nsEventStatus_eConsumeNoDefault;
       return res;
     }
   }

@@ -9,7 +9,6 @@
 
 #include "mozilla/EventForwards.h"  // for WidgetInputEvent, nsEventStatus
 #include "mozilla/layers/APZPublicUtils.h"       // for APZWheelAction
-#include "mozilla/layers/LayersTypes.h"          // for ScrollDirections
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 #include "Units.h"                               // for LayoutDeviceIntPoint
 
@@ -20,12 +19,9 @@ class InputData;
 namespace layers {
 
 class APZInputBridgeParent;
-class AsyncPanZoomController;
-class InputBlockState;
 struct ScrollableLayerGuid;
-struct TargetConfirmationFlags;
 
-enum class APZHandledPlace : uint8_t {
+enum class APZHandledResult : uint8_t {
   Unhandled = 0,         // we know for sure that the event will not be handled
                          // by either the root APZC or others
   HandledByRoot = 1,     // we know for sure that the event will be handled
@@ -35,33 +31,6 @@ enum class APZHandledPlace : uint8_t {
                          // in a document
   Invalid = 3,
   Last = Invalid
-};
-
-struct APZHandledResult {
-  APZHandledPlace mPlace = APZHandledPlace::Invalid;
-  SideBits mScrollableDirections = SideBits::eNone;
-  ScrollDirections mOverscrollDirections = ScrollDirections();
-
-  APZHandledResult() = default;
-  APZHandledResult(APZHandledPlace aPlace,
-                   const AsyncPanZoomController* aTarget);
-  APZHandledResult(APZHandledPlace aPlace, SideBits aScrollableDirections,
-                   ScrollDirections aOverscrollDirections)
-      : mPlace(aPlace),
-        mScrollableDirections(aScrollableDirections),
-        mOverscrollDirections(aOverscrollDirections) {}
-
-  bool IsHandledByContent() const {
-    return mPlace == APZHandledPlace::HandledByContent;
-  }
-  bool IsHandledByRoot() const {
-    return mPlace == APZHandledPlace::HandledByRoot;
-  }
-  bool operator==(const APZHandledResult& aOther) const {
-    return mPlace == aOther.mPlace &&
-           mScrollableDirections == aOther.mScrollableDirections &&
-           mOverscrollDirections == aOther.mOverscrollDirections;
-  }
 };
 
 /**
@@ -75,51 +44,6 @@ struct APZEventResult {
    */
   APZEventResult();
 
-  /**
-   * Creates a result with a status of eIgnore, no block ID, the guid of the
-   * given initial target, and an APZHandledResult if we are sure the event
-   * is not going to be dispatched to contents.
-   */
-  APZEventResult(const RefPtr<AsyncPanZoomController>& aInitialTarget,
-                 TargetConfirmationFlags aFlags);
-
-  void SetStatusAsConsumeNoDefault() {
-    mStatus = nsEventStatus_eConsumeNoDefault;
-  }
-
-  void SetStatusAsIgnore() {
-    mStatus = nsEventStatus_eIgnore;
-  }
-
-  // Set mStatus to nsEventStatus_eConsumeDoDefault and set mHandledResult
-  // depending on |aTarget|.
-  void SetStatusAsConsumeDoDefault(
-      const RefPtr<AsyncPanZoomController>& aTarget);
-  // Set mStatus to nsEventStatus_eConsumeDoDefault and set mHandledResult
-  // depending on |aBlock|'s target APZC.
-  void SetStatusAsConsumeDoDefault(const InputBlockState& aBlock);
-  // Smilar to above two functions, but we need to use this function if it's
-  // possible that the event needs to be handled as if it's consumed by the root
-  // APZC in the case where the target APZC area is covered by dynamic toolbar
-  // so that browser apps can move the toolbar corresponding to the event.
-  void SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
-      const InputBlockState& aBlock, TargetConfirmationFlags aFlags);
-
-  // DO NOT USE THIS UpdateStatus DIRECTLY. THIS FUNCTION IS ONLY FOR
-  // SERIALIZATION / DESERIALIZATION OF THIS STRUCT IN IPC.
-  void UpdateStatus(nsEventStatus aStatus) { mStatus = aStatus; }
-  nsEventStatus GetStatus() const { return mStatus; };
-
-  // DO NOT USE THIS UpdateHandledResult DIRECTLY. THIS FUNCTION IS ONLY FOR
-  // SERIALIZATION / DESERIALIZATION OF THIS STRUCT IN IPC.
-  void UpdateHandledResult(const Maybe<APZHandledResult>& aHandledResult) {
-    mHandledResult = aHandledResult;
-  }
-  const Maybe<APZHandledResult>& GetHandledResult() const {
-    return mHandledResult;
-  }
-
- private:
   /**
    * A status flag indicated how APZ handled the event.
    * The interpretation of each value is as follows:
@@ -141,7 +65,13 @@ struct APZEventResult {
    *   CONSUMED when we are uncertain.
    */
   nsEventStatus mStatus;
-
+  /**
+   * The guid of the APZC initially targeted by this event.
+   * This will usually be the APZC that handles the event, but in cases
+   * where the event is dispatched to content, it may end up being
+   * handled by a different APZC.
+   */
+  ScrollableLayerGuid mTargetGuid;
   /**
    * This is:
    *  - set to HandledByRoot if we know for sure that the event will be handled
@@ -150,15 +80,6 @@ struct APZEventResult {
    *  - left empty if we are unsure.
    */
   Maybe<APZHandledResult> mHandledResult;
-
- public:
-  /**
-   * The guid of the APZC initially targeted by this event.
-   * This will usually be the APZC that handles the event, but in cases
-   * where the event is dispatched to content, it may end up being
-   * handled by a different APZC.
-   */
-  ScrollableLayerGuid mTargetGuid;
   /**
    * If this event started or was added to an input block, the id of that
    * input block, otherwise InputBlockState::NO_BLOCK_ID.

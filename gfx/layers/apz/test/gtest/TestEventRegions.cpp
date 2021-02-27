@@ -311,3 +311,101 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   targets.AppendElement(apzc2->GetGuid());
   manager->SetTargetAPZC(inputBlockId, targets);
 }
+
+// Test that APZEventResult::mHandledResult is correctly
+// populated.
+TEST_F(APZEventRegionsTesterLayersOnly, HandledByRootApzcFlag) {
+  // Create simple layer tree containing a dispatch-to-content region
+  // that covers part but not all of its area.
+  const char* layerTreeSyntax = "c";
+  nsIntRegion layerVisibleRegions[] = {
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+  };
+  root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm,
+                         layers);
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                            CSSRect(0, 0, 100, 200));
+  ModifyFrameMetrics(root, [](ScrollMetadata& sm, FrameMetrics& metrics) {
+    metrics.SetIsRootContent(true);
+  });
+  // away from the scrolling container layer.
+  EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
+  // bottom half is dispatch-to-content
+  regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 50, 100, 50));
+  root->SetEventRegions(regions);
+  registration =
+      MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+  UpdateHitTestingTree();
+
+  // Tap the top half and check that we report that the event was
+  // handled by the root APZC.
+  APZEventResult result =
+      TouchDown(manager, ScreenIntPoint(50, 25), mcc->Time());
+  TouchUp(manager, ScreenIntPoint(50, 25), mcc->Time());
+  EXPECT_EQ(result.mHandledResult, Some(APZHandledResult::HandledByRoot));
+
+  // Tap the bottom half and check that we report that we're not
+  // sure whether the event was handled by the root APZC.
+  result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
+  TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
+  EXPECT_EQ(result.mHandledResult, Nothing());
+
+  // Register an input block callback that will tell us the
+  // delayed answer.
+  APZHandledResult delayedAnswer = APZHandledResult::Invalid;
+  manager->AddInputBlockCallback(result.mInputBlockId,
+                                 [&](uint64_t id, APZHandledResult answer) {
+                                   EXPECT_EQ(id, result.mInputBlockId);
+                                   delayedAnswer = answer;
+                                 });
+
+  // Send APZ the relevant notifications to allow it to process the
+  // input block.
+  manager->SetAllowedTouchBehavior(result.mInputBlockId,
+                                   {AllowedTouchBehavior::VERTICAL_PAN});
+  manager->SetTargetAPZC(result.mInputBlockId, {result.mTargetGuid});
+  manager->ContentReceivedInputBlock(result.mInputBlockId,
+                                     /*preventDefault=*/false);
+
+  // Check that we received the delayed answer and it is what we expect.
+  EXPECT_EQ(delayedAnswer, APZHandledResult::HandledByRoot);
+
+  // Now repeat the tap on the bottom half, but simulate a prevent-default.
+  // This time, we expect a delayed answer of `HandledByContent`.
+  result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
+  TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
+  EXPECT_EQ(result.mHandledResult, Nothing());
+  manager->AddInputBlockCallback(result.mInputBlockId,
+                                 [&](uint64_t id, APZHandledResult answer) {
+                                   EXPECT_EQ(id, result.mInputBlockId);
+                                   delayedAnswer = answer;
+                                 });
+  manager->SetAllowedTouchBehavior(result.mInputBlockId,
+                                   {AllowedTouchBehavior::VERTICAL_PAN});
+  manager->SetTargetAPZC(result.mInputBlockId, {result.mTargetGuid});
+  manager->ContentReceivedInputBlock(result.mInputBlockId,
+                                     /*preventDefault=*/true);
+  EXPECT_EQ(delayedAnswer, APZHandledResult::HandledByContent);
+
+  // Shrink the scrollable area, now it's no longer scrollable.
+  ModifyFrameMetrics(root, [](ScrollMetadata& sm, FrameMetrics& metrics) {
+    metrics.SetScrollableRect(CSSRect(0, 0, 100, 100));
+  });
+  UpdateHitTestingTree();
+  // Now repeat the tap on the bottom half with an event handler.
+  // This time, we expect a delayed answer of `Unhandled`.
+  result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
+  TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
+  EXPECT_EQ(result.mHandledResult, Nothing());
+  manager->AddInputBlockCallback(result.mInputBlockId,
+                                 [&](uint64_t id, APZHandledResult answer) {
+                                   EXPECT_EQ(id, result.mInputBlockId);
+                                   delayedAnswer = answer;
+                                 });
+  manager->SetAllowedTouchBehavior(result.mInputBlockId,
+                                   {AllowedTouchBehavior::VERTICAL_PAN});
+  manager->SetTargetAPZC(result.mInputBlockId, {result.mTargetGuid});
+  manager->ContentReceivedInputBlock(result.mInputBlockId,
+                                     /*preventDefault=*/false);
+  EXPECT_EQ(delayedAnswer, APZHandledResult::Unhandled);
+}
