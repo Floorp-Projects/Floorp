@@ -172,8 +172,7 @@ already_AddRefed<nsHttpHandler> nsHttpHandler::GetInstance() {
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     // There is code that may be executed during the final cycle collection
     // shutdown and still referencing gHttpHandler.
-    ClearOnShutdown(&gHttpHandler,
-                    ShutdownPhase::ShutdownPostLastCycleCollection);
+    ClearOnShutdown(&gHttpHandler, ShutdownPhase::CCPostLastCycleCollection);
   }
   RefPtr<nsHttpHandler> httpHandler = gHttpHandler;
   return httpHandler.forget();

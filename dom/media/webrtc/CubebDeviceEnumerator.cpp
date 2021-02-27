@@ -30,7 +30,7 @@ CubebDeviceEnumerator* CubebDeviceEnumerator::GetInstance() {
     sInstance = new CubebDeviceEnumerator();
     static bool clearOnShutdownSetup = []() -> bool {
       auto setClearOnShutdown = []() -> void {
-        ClearOnShutdown(&sInstance, ShutdownPhase::ShutdownThreads);
+        ClearOnShutdown(&sInstance, ShutdownPhase::XPCOMShutdownThreads);
       };
       if (NS_IsMainThread()) {
         setClearOnShutdown();

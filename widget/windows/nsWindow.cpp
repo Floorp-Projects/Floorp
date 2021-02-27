@@ -5197,22 +5197,30 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         // Windows won't let us do that. Bug 212316.
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
-        const char16_t* context = u"shutdown-persist";
         const char16_t* syncShutdown = u"syncShutdown";
         const char16_t* quitType = GetQuitType();
+
+        AppShutdown::Init(AppShutdownMode::Normal, 0);
 
         obsServ->NotifyObservers(nullptr, "quit-application-granted",
                                  syncShutdown);
         obsServ->NotifyObservers(nullptr, "quit-application-forced", nullptr);
-        obsServ->NotifyObservers(nullptr, "quit-application", quitType);
-        obsServ->NotifyObservers(nullptr, "profile-change-net-teardown",
-                                 context);
-        obsServ->NotifyObservers(nullptr, "profile-change-teardown", context);
-        obsServ->NotifyObservers(nullptr, "profile-before-change", context);
-        obsServ->NotifyObservers(nullptr, "profile-before-change-qm", context);
-        obsServ->NotifyObservers(nullptr, "profile-before-change-telemetry",
-                                 context);
-        mozilla::AppShutdown::DoImmediateExit();
+
+        AppShutdown::OnShutdownConfirmed();
+
+        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownConfirmed,
+                                          quitType);
+        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownNetTeardown,
+                                          nullptr);
+        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTeardown,
+                                          nullptr);
+        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdown, nullptr);
+        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownQM,
+                                          nullptr);
+        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTelemetry,
+                                          nullptr);
+
+        AppShutdown::DoImmediateExit();
       }
       sCanQuit = TRI_UNKNOWN;
       result = true;
