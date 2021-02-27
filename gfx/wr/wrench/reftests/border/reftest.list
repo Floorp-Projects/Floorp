@@ -5,7 +5,7 @@ platform(linux,mac) == border-gradient-nine-patch.yaml border-gradient-nine-patc
 platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-gradient-nine-patch.png
 == fuzzy(1,10) border-radii.yaml border-radii.png
 == border-none.yaml border-none-ref.yaml
-fuzzy(128,69) fuzzy-if(platform(swgl),1,116) == border-overlapping-corner.yaml border-overlapping-corner-ref.yaml
+fuzzy(128,69) fuzzy-if(platform(swgl),2,118) == border-overlapping-corner.yaml border-overlapping-corner-ref.yaml
 == border-overlapping-edge.yaml border-overlapping-edge-ref.yaml
 == border-invisible.yaml border-invisible-ref.yaml
 platform(linux,mac) fuzzy(3,80) == border-suite.yaml border-suite.png
@@ -15,7 +15,7 @@ skip_on(android,device) == border-double-simple.yaml border-double-simple-ref.ya
 == border-double-simple-2.yaml border-double-simple-2-ref.yaml
 skip_on(android,device) fuzzy(64,24) == border-groove-simple.yaml border-groove-simple-ref.yaml  # Fails on Pixel2
 skip_on(android,device) fuzzy(64,24) == border-ridge-simple.yaml border-ridge-simple-ref.yaml  # Fails on Pixel2
-platform(linux,mac) fuzzy(1,3) == degenerate-curve.yaml degenerate-curve.png
+platform(linux,mac) fuzzy(1,26) == degenerate-curve.yaml degenerate-curve.png
 platform(linux,mac) == border-image.yaml border-image-ref.png
 platform(linux,mac) == border-image-empty-slice.yaml border-image-empty-slice-ref.png
 platform(linux,mac) == border-image-round.yaml border-image-round-ref.png
