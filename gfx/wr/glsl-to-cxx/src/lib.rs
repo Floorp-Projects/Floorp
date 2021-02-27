@@ -3164,7 +3164,7 @@ pub fn show_iteration_statement(state: &mut OutputState, ist: &hir::IterationSta
             show_statement(state, body);
             state.write(" while (");
             show_hir_expr(state, cond);
-            state.write(")\n");
+            state.write(");\n");
         }
         hir::IterationStatement::For(ref init, ref rest, ref body) => {
             state.write("for (");
