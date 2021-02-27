@@ -85,6 +85,19 @@ partial interface Event {
   [ChromeOnly] void preventMultipleActions();
   [ChromeOnly] readonly attribute boolean multipleActionsPrevented;
   [ChromeOnly] readonly attribute boolean isSynthesized;
+  /**
+   * When the event target is a remote browser, calling this will fire an
+   * reply event in the chrome process.
+   */
+  [ChromeOnly] void requestReplyFromRemoteContent();
+  /**
+   * Returns true when the event shouldn't be handled by chrome.
+   */
+  [ChromeOnly] readonly attribute boolean isWaitingReplyFromRemoteContent;
+  /**
+   * Returns true when the event is a reply event from a remote process.
+   */
+  [ChromeOnly] readonly attribute boolean isReplyEventFromRemoteContent;
 };
 
 dictionary EventInit {
