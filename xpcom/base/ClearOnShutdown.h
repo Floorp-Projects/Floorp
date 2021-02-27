@@ -19,8 +19,7 @@
  * This header exports two public methods in the mozilla namespace:
  *
  *   template<class SmartPtr>
- *   void ClearOnShutdown(SmartPtr *aPtr,
- * aPhase=ShutdownPhase::XPCOMShutdownFinal)
+ *   void ClearOnShutdown(SmartPtr *aPtr, aPhase=ShutdownPhase::ShutdownFinal)
  *
  * This function takes a pointer to a smart pointer and nulls the smart pointer
  * on shutdown (and a particular phase of shutdown as needed).  If a phase
@@ -41,7 +40,7 @@
  *
  *   template <typename CallableT>
  *   void RunOnShutdown(CallableT&& aCallable,
- *                      aPhase = ShutdownPhase::XPCOMShutdownFinal)
+ *                      aPhase = ShutdownPhase::ShutdownFinal)
  *
  * This function takes a callable and executes it upon shutdown at the start of
  * the specified phase. If the phase has already occurred when RunOnShutdown()
@@ -109,7 +108,7 @@ extern ShutdownPhase sCurrentShutdownPhase;
 
 template <class SmartPtr>
 inline void ClearOnShutdown(
-    SmartPtr* aPtr, ShutdownPhase aPhase = ShutdownPhase::XPCOMShutdownFinal) {
+    SmartPtr* aPtr, ShutdownPhase aPhase = ShutdownPhase::ShutdownFinal) {
   using namespace ClearOnShutdown_Internal;
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -119,9 +118,8 @@ inline void ClearOnShutdown(
 }
 
 template <typename CallableT>
-inline void RunOnShutdown(
-    CallableT&& aCallable,
-    ShutdownPhase aPhase = ShutdownPhase::XPCOMShutdownFinal) {
+inline void RunOnShutdown(CallableT&& aCallable,
+                          ShutdownPhase aPhase = ShutdownPhase::ShutdownFinal) {
   using namespace ClearOnShutdown_Internal;
 
   MOZ_ASSERT(NS_IsMainThread());
