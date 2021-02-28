@@ -6,9 +6,11 @@ package org.mozilla.fenix.settings.creditcards
 
 import android.os.Bundle
 import androidx.navigation.fragment.findNavController
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import mozilla.components.service.fxa.SyncEngine
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SyncPreferenceView
@@ -50,5 +52,17 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
                 findNavController().navigate(directions)
             }
         )
+    }
+
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        when (preference.key) {
+            getPreferenceKey(R.string.pref_key_credit_cards_add_credit_card) -> {
+                val directions =
+                    CreditCardsSettingFragmentDirections.actionCreditCardsSettingFragmentToCreditCardEditorFragment()
+                findNavController().navigate(directions)
+            }
+        }
+
+        return super.onPreferenceTreeClick(preference)
     }
 }

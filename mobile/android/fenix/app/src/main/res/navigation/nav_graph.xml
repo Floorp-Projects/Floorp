@@ -1044,6 +1044,17 @@
                 app:exitAnim="@anim/slide_out_left"
                 app:popEnterAnim="@anim/slide_in_left"
                 app:popExitAnim="@anim/slide_out_right" />
+            <action
+                android:id="@+id/action_creditCardsSettingFragment_to_creditCardEditorFragment"
+                app:destination="@id/creditCardEditorFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/slide_out_left"
+                app:popEnterAnim="@anim/slide_in_left"
+                app:popExitAnim="@anim/slide_out_right" />
         </fragment>
+        <fragment
+            android:id="@+id/creditCardEditorFragment"
+            android:name="org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment"
+            android:label="@string/credit_cards_add_card" />
     </navigation>
 </navigation>

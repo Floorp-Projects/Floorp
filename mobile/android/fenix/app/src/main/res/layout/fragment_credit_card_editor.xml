@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:orientation="vertical">
+
+    <!-- Card Number -->
+    <TextView
+        android:id="@+id/card_number_title"
+        android:layout_width="wrap_content"
+        android:layout_height="16dp"
+        android:gravity="center_vertical"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp"
+        android:text="@string/credit_cards_card_number"
+        android:textColor="?primaryText"
+        android:textSize="12sp"
+        android:letterSpacing="0.05"
+        app:fontFamily="@font/metropolis_semibold" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/card_number_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?primaryText"
+        app:errorEnabled="true"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/card_number_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif"
+            android:textColor="?primaryText"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="8sp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:imeOptions="flagNoExtractUi"
+            android:inputType="phone"
+            android:digits="0123456789- " />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Name on Card -->
+    <TextView
+        android:id="@+id/name_on_card_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp"
+        android:text="@string/credit_cards_name_on_card"
+        android:textColor="?primaryText"
+        android:textSize="12sp"
+        android:layout_marginTop="10dp"
+        android:letterSpacing="0.05"
+        app:fontFamily="@font/metropolis_semibold" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/name_on_card_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="11dp"
+        android:textColor="?primaryText"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/name_on_card_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="8sp"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="?primaryText"
+            android:textSize="16sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Expiration Date -->
+    <TextView
+        android:id="@+id/expiration_date_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp"
+        android:text="@string/credit_cards_expiration_date"
+        android:textColor="?primaryText"
+        android:textSize="12sp"
+        android:layout_marginTop="10dp"
+        android:letterSpacing="0.05"
+        app:fontFamily="@font/metropolis_semibold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="24dp"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/expiry_month_drop_down"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@android:layout/simple_list_item_1" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?primaryText" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/expiry_year_drop_down"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@android:layout/simple_list_item_1" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?primaryText" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Card Nickname -->
+    <TextView
+        android:id="@+id/card_nickname_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp"
+        android:text="@string/credit_cards_card_nickname"
+        android:textColor="?primaryText"
+        android:textSize="12sp"
+        android:layout_marginTop="10dp"
+        android:letterSpacing="0.05"
+        app:fontFamily="@font/metropolis_semibold" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/card_nickname_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="11dp"
+        android:textColor="?primaryText"
+        app:errorEnabled="true"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/card_nickname_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="8sp"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="?primaryText"
+            android:textSize="16sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/delete_button"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:letterSpacing="0"
+            android:padding="10dp"
+            android:text="@string/credit_cards_delete_card"
+            android:textAllCaps="false"
+            android:textColor="@color/destructive_button_text_color"
+            android:visibility="gone"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancel_button"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:letterSpacing="0"
+            android:padding="10dp"
+            android:text="@string/cancel"
+            android:textAllCaps="false"
+            android:textColor="?primaryText"
+            android:textStyle="bold"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/save_button" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/save_button"
+            style="@style/NeutralButton"
+            android:layout_width="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/save"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>
