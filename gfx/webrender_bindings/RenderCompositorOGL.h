@@ -31,9 +31,6 @@ class RenderCompositorOGL : public RenderCompositor {
 
   LayoutDeviceIntSize GetBufferSize() override;
 
-  // Interface for wr::Compositor
-  CompositorCapabilities GetCompositorCapabilities() override;
-
   // Interface for partial present
   bool UsePartialPresent() override;
   bool RequestFullRender() override;
