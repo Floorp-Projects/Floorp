@@ -242,14 +242,6 @@ LayoutDeviceIntSize RenderCompositorEGL::GetBufferSize() {
 #endif
 }
 
-CompositorCapabilities RenderCompositorEGL::GetCompositorCapabilities() {
-  CompositorCapabilities caps;
-
-  caps.virtual_surface_size = 0;
-
-  return caps;
-}
-
 bool RenderCompositorEGL::UsePartialPresent() {
   return gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0;
 }

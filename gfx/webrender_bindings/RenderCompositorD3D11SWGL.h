@@ -56,9 +56,6 @@ class RenderCompositorD3D11SWGL : public RenderCompositor {
     return this;
   }
 
-  // Interface for wr::Compositor
-  CompositorCapabilities GetCompositorCapabilities() override;
-
   bool ShouldUseNativeCompositor() override { return true; }
 
   void CompositorBeginFrame() override {}

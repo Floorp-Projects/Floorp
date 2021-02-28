@@ -97,14 +97,6 @@ LayoutDeviceIntSize RenderCompositorOGL::GetBufferSize() {
   return mWidget->GetClientSize();
 }
 
-CompositorCapabilities RenderCompositorOGL::GetCompositorCapabilities() {
-  CompositorCapabilities caps;
-
-  caps.virtual_surface_size = 0;
-
-  return caps;
-}
-
 uint32_t RenderCompositorOGL::GetMaxPartialPresentRects() {
   return gfx::gfxVars::WebRenderMaxPartialPresentRects();
 }

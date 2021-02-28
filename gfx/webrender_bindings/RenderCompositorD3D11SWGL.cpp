@@ -243,13 +243,6 @@ GLenum RenderCompositorD3D11SWGL::IsContextLost(bool aForce) {
   }
 }
 
-CompositorCapabilities RenderCompositorD3D11SWGL::GetCompositorCapabilities() {
-  CompositorCapabilities caps;
-
-  caps.virtual_surface_size = 0;
-  return caps;
-}
-
 void RenderCompositorD3D11SWGL::Bind(wr::NativeTileId aId,
                                      wr::DeviceIntPoint* aOffset,
                                      uint32_t* aFboId,

@@ -1122,7 +1122,7 @@ impl Renderer {
 
                 CompositorKind::Native {
                     max_update_rects,
-                    virtual_surface_size: capabilities.virtual_surface_size,
+                    capabilities,
                 }
             }
         };
