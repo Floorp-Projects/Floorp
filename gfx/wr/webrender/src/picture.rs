@@ -4739,6 +4739,7 @@ impl PicturePrimitive {
                 let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
                 let mut debug_info = SliceDebugInfo::new();
                 let mut surface_tasks = Vec::with_capacity(tile_cache.tiles.len());
+                let mut surface_device_rect = DeviceRect::zero();
                 let device_pixel_scale = frame_state
                     .surfaces[surface_index.0]
                     .device_pixel_scale;
@@ -4751,6 +4752,7 @@ impl PicturePrimitive {
                 let device_clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
                 for tile in tile_cache.tiles.values_mut() {
+                    surface_device_rect = surface_device_rect.union(&tile.device_valid_rect);
 
                     if tile.is_visible {
                         // Get the world space rect that this tile will actually occupy on screem
@@ -5059,7 +5061,7 @@ impl PicturePrimitive {
                 frame_state.init_surface_tiled(
                     surface_index,
                     surface_tasks,
-                    device_clip_rect.translate(tile_cache.device_position.to_vector()),
+                    surface_device_rect,
                 );
             }
             Some(ref mut raster_config) => {
