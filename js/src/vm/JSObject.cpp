@@ -925,56 +925,6 @@ JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
   return obj;
 }
 
-static bool NewObjectWithGroupIsCachable(JSContext* cx, HandleObjectGroup group,
-                                         NewObjectKind newKind) {
-  if (!group->proto().isObject() || newKind != GenericObject ||
-      !group->clasp()->isNativeObject() || cx->isHelperThreadContext()) {
-    return false;
-  }
-
-  return true;
-}
-
-/*
- * Create a plain object with the specified group. This bypasses getNewGroup to
- * avoid losing creation site information for objects made by scripted 'new'.
- */
-JSObject* js::NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
-                                       gc::AllocKind allocKind,
-                                       NewObjectKind newKind) {
-  MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
-  if (CanChangeToBackgroundAllocKind(allocKind, group->clasp())) {
-    allocKind = ForegroundToBackgroundAllocKind(allocKind);
-  }
-
-  bool isCachable = NewObjectWithGroupIsCachable(cx, group, newKind);
-  if (isCachable) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    if (cache.lookupGroup(group, allocKind, &entry)) {
-      JSObject* obj =
-          cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, group));
-      if (obj) {
-        return obj;
-      }
-    }
-  }
-
-  JSObject* obj = NewObject(cx, group, allocKind, newKind);
-  if (!obj) {
-    return nullptr;
-  }
-
-  if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
-    NewObjectCache& cache = cx->caches().newObjectCache;
-    NewObjectCache::EntryIndex entry = -1;
-    cache.lookupGroup(group, allocKind, &entry);
-    cache.fillGroup(entry, group, allocKind, &obj->as<NativeObject>());
-  }
-
-  return obj;
-}
-
 bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
   gc::AllocKind allocKind = NewObjectGCKind();
   NewObjectKind newKind = GenericObject;

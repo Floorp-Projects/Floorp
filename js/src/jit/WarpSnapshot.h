@@ -422,7 +422,7 @@ class WarpNewArray : public WarpOpSnapshot {
 #endif
 };
 
-// Template object for JSOp::NewObject, JSOp::NewInit, JSOp::NewObjectWithGroup.
+// Template object for JSOp::NewObject or JSOp::NewInit.
 class WarpNewObject : public WarpOpSnapshot {
   WarpGCPtr<JSObject*> templateObject_;
 
