@@ -112,9 +112,10 @@ void wr_compositor_enable_native_compositor(void* aCompositor, bool aEnable) {
   compositor->EnableNativeCompositor(aEnable);
 }
 
-CompositorCapabilities wr_compositor_get_capabilities(void* aCompositor) {
+void wr_compositor_get_capabilities(void* aCompositor,
+                                    CompositorCapabilities* aCaps) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
-  return compositor->GetCompositorCapabilities();
+  compositor->GetCompositorCapabilities(aCaps);
 }
 
 void wr_compositor_unbind(void* aCompositor) {
