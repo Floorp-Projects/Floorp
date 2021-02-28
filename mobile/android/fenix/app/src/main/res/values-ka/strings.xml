@@ -972,7 +972,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">ბოლოს გამოყენებული</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Sync შესვლა</string>
+    <string name="sync_sign_in">დასინქრონებაში შესვლა</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">ყველა მოწყობილობაზე გაგზავნა</string>
     <!-- An option from the share dialog to reconnect to sync -->
