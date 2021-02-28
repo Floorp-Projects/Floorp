@@ -996,18 +996,10 @@ bool js::obj_isPrototypeOf(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 PlainObject* js::ObjectCreateImpl(JSContext* cx, HandleObject proto,
-                                  NewObjectKind newKind,
-                                  HandleObjectGroup group) {
+                                  NewObjectKind newKind) {
   // Give the new object a small number of fixed slots, like we do for empty
   // object literals ({}).
   gc::AllocKind allocKind = GuessObjectGCKind(0);
-
-  // Use a faster allocation path if the group is known.
-  if (group) {
-    MOZ_ASSERT(group->proto().toObjectOrNull() == proto);
-    return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
-  }
-
   return NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
                                                       newKind);
 }
@@ -1015,8 +1007,7 @@ PlainObject* js::ObjectCreateImpl(JSContext* cx, HandleObject proto,
 PlainObject* js::ObjectCreateWithTemplate(JSContext* cx,
                                           HandlePlainObject templateObj) {
   RootedObject proto(cx, templateObj->staticPrototype());
-  RootedObjectGroup group(cx, templateObj->group());
-  return ObjectCreateImpl(cx, proto, GenericObject, group);
+  return ObjectCreateImpl(cx, proto, GenericObject);
 }
 
 // ES 2017 draft 19.1.2.3.1

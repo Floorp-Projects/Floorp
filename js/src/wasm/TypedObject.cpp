@@ -187,20 +187,15 @@ OutlineTypedObject* OutlineTypedObject::createUnattached(JSContext* cx,
                                                          gc::InitialHeap heap) {
   AutoSetNewObjectMetadata metadata(cx);
 
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &OutlineTypedObject::class_,
-                                       TaggedProto(&descr->typedProto())));
-  if (!group) {
-    return nullptr;
-  }
+  RootedObject proto(cx, &descr->typedProto());
 
   MOZ_ASSERT(gc::GetGCObjectKindForBytes(sizeof(OutlineTypedObject)) ==
              allocKind);
 
   NewObjectKind newKind =
       (heap == gc::TenuredHeap) ? TenuredObject : GenericObject;
-  OutlineTypedObject* obj =
-      NewObjectWithGroup<OutlineTypedObject>(cx, group, allocKind, newKind);
+  auto* obj = NewObjectWithGivenProtoAndKinds<OutlineTypedObject>(
+      cx, proto, allocKind, newKind);
   if (!obj) {
     return nullptr;
   }
@@ -502,17 +497,12 @@ InlineTypedObject* InlineTypedObject::create(JSContext* cx,
                                              gc::InitialHeap heap) {
   gc::AllocKind allocKind = allocKindForTypeDescriptor(descr);
 
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &InlineTypedObject::class_,
-                                       TaggedProto(&descr->typedProto())));
-  if (!group) {
-    return nullptr;
-  }
+  RootedObject proto(cx, &descr->typedProto());
 
   NewObjectKind newKind =
       (heap == gc::TenuredHeap) ? TenuredObject : GenericObject;
-  auto* obj =
-      NewObjectWithGroup<InlineTypedObject>(cx, group, allocKind, newKind);
+  auto* obj = NewObjectWithGivenProtoAndKinds<InlineTypedObject>(
+      cx, proto, allocKind, newKind);
   if (!obj) {
     return nullptr;
   }
