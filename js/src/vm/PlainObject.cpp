@@ -42,14 +42,9 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
 
   PlainObject* res;
   if (proto) {
-    Rooted<ObjectGroup*> group(
-        cx, ObjectGroup::defaultNewGroup(cx, &PlainObject::class_,
-                                         TaggedProto(proto)));
-    if (!group) {
-      return nullptr;
-    }
     js::gc::AllocKind allocKind = NewObjectGCKind();
-    res = NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
+    res = NewObjectWithGivenProtoAndKinds<PlainObject>(cx, proto, allocKind,
+                                                       newKind);
   } else {
     res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);
   }
