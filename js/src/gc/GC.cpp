@@ -305,8 +305,6 @@ static_assert(js::jit::CodeAlignment >= MinFirstWordAlignment,
               "CellFlagBitsReservedForGC should support JIT code");
 static_assert(js::gc::JSClassAlignBytes >= MinFirstWordAlignment,
               "CellFlagBitsReservedForGC should support JSClass pointers");
-static_assert(js::ScopeDataAlignBytes >= MinFirstWordAlignment,
-              "CellFlagBitsReservedForGC should support scope data pointers");
 
 static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");

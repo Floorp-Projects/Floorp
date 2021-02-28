@@ -478,7 +478,7 @@ inline void Scope::initData(
   AddCellMemory(this, SizeOfAllocatedData(data.get().get()),
                 MemoryUse::ScopeData);
 
-  setHeaderPtr(data.get().release());
+  data_ = data.get().release();
 }
 
 template <typename EnvironmentT>
