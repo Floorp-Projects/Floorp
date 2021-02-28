@@ -94,19 +94,15 @@ class NewObjectCache {
     const JSClass* clasp;
 
     /*
-     * Key with one of three possible values:
+     * Key with one of two possible values:
      *
-     * - Global for the object. The object must have a standard class for
-     *   which the global's prototype can be determined, and the object's
-     *   parent will be the global.
+     * - Global for the object. The object must have a standard class and will
+     *   have this global's builtin prototype for this class as proto.
      *
-     * - Prototype for the object (cannot be global). The object's parent
-     *   will be the prototype's parent.
-     *
-     * - Type for the object. The object's parent will be the type's
-     *   prototype's parent.
+     * - Prototype for the object (non-null). Cannot be a global object because
+     *   that would be ambiguous (see previous case).
      */
-    gc::Cell* key;
+    JSObject* key;
 
     /* Allocation kind for the constructed object. */
     gc::AllocKind kind;
@@ -147,11 +143,6 @@ class NewObjectCache {
   inline bool lookupGlobal(const JSClass* clasp, js::GlobalObject* global,
                            gc::AllocKind kind, EntryIndex* pentry);
 
-  bool lookupGroup(js::ObjectGroup* group, gc::AllocKind kind,
-                   EntryIndex* pentry) {
-    return lookup(group->clasp(), group, kind, pentry);
-  }
-
   /*
    * Return a new object from a cache hit produced by a lookup method, or
    * nullptr if returning the object could possibly trigger GC (does not
@@ -168,15 +159,8 @@ class NewObjectCache {
                          js::GlobalObject* global, gc::AllocKind kind,
                          NativeObject* obj);
 
-  void fillGroup(EntryIndex entry, js::ObjectGroup* group, gc::AllocKind kind,
-                 NativeObject* obj) {
-    MOZ_ASSERT(obj->group() == group);
-    return fill(entry, group->clasp(), group, kind, obj);
-  }
-
   /* Invalidate any entries which might produce an object with shape/proto. */
-  void invalidateEntriesForShape(JSContext* cx, HandleShape shape,
-                                 HandleObject proto);
+  void invalidateEntriesForShape(Shape* shape, JSObject* proto);
 
  private:
   EntryIndex makeIndex(const JSClass* clasp, gc::Cell* key,
@@ -185,7 +169,7 @@ class NewObjectCache {
     return hash % std::size(entries);
   }
 
-  bool lookup(const JSClass* clasp, gc::Cell* key, gc::AllocKind kind,
+  bool lookup(const JSClass* clasp, JSObject* key, gc::AllocKind kind,
               EntryIndex* pentry) {
     *pentry = makeIndex(clasp, key, kind);
     Entry* entry = &entries[*pentry];
@@ -195,7 +179,7 @@ class NewObjectCache {
     return entry->clasp == clasp && entry->key == key;
   }
 
-  void fill(EntryIndex entry_, const JSClass* clasp, gc::Cell* key,
+  void fill(EntryIndex entry_, const JSClass* clasp, JSObject* key,
             gc::AllocKind kind, NativeObject* obj) {
     MOZ_ASSERT(unsigned(entry_) < std::size(entries));
     MOZ_ASSERT(entry_ == makeIndex(clasp, key, kind));
