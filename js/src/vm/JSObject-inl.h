@@ -530,25 +530,6 @@ inline T* NewBuiltinClassInstance(JSContext* cx, gc::AllocKind allocKind,
 // Used to optimize calls to (new Object())
 bool NewObjectScriptedCall(JSContext* cx, MutableHandleObject obj);
 
-JSObject* NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
-                                   gc::AllocKind allocKind,
-                                   NewObjectKind newKind);
-
-template <typename T>
-inline T* NewObjectWithGroup(JSContext* cx, HandleObjectGroup group,
-                             gc::AllocKind allocKind,
-                             NewObjectKind newKind = GenericObject) {
-  JSObject* obj = NewObjectWithGroupCommon(cx, group, allocKind, newKind);
-  return obj ? &obj->as<T>() : nullptr;
-}
-
-template <typename T>
-inline T* NewObjectWithGroup(JSContext* cx, HandleObjectGroup group,
-                             NewObjectKind newKind = GenericObject) {
-  gc::AllocKind allocKind = gc::GetGCObjectKind(group->clasp());
-  return NewObjectWithGroup<T>(cx, group, allocKind, newKind);
-}
-
 /*
  * As for gc::GetGCObjectKind, where numElements is a guess at the final size of
  * the object, zero if the final size is unknown. This should only be used for
