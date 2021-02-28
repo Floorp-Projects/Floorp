@@ -195,7 +195,7 @@ class BaselineCodeGen {
   // Handles JSOp::Lt, JSOp::Gt, and friends
   [[nodiscard]] bool emitCompare();
 
-  // Handles JSOp::NewObject, JSOp::NewObjectWithGroup, and JSOp::NewInit.
+  // Handles JSOp::NewObject and JSOp::NewInit.
   [[nodiscard]] bool emitNewObject();
 
   // For a JOF_JUMP op, jumps to the op's jump target.
