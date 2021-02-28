@@ -48,7 +48,6 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
-#include "mozilla/StaticPrefs_svg.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -831,14 +830,11 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   // FIXME(heycam): We could create a single PropertyProvider for all
   // TextRenderedRuns that correspond to the text frame, rather than recreate
   // it each time here.
-  Maybe<nsTextFrame::PropertyProvider> provider;
-  if (StaticPrefs::svg_text_spacing_enabled()) {
-    provider.emplace(mFrame, start);
-  }
+  nsTextFrame::PropertyProvider provider(mFrame, start);
 
   // Measure that range.
   gfxTextRun::Metrics metrics = textRun->MeasureText(
-      range, gfxFont::LOOSE_INK_EXTENTS, nullptr, provider.ptrOr(nullptr));
+      range, gfxFont::LOOSE_INK_EXTENTS, nullptr, &provider);
   // Make sure it includes the font-box.
   gfxRect fontBox(0, -metrics.mAscent, metrics.mAdvanceWidth,
                   metrics.mAscent + metrics.mDescent);
@@ -851,7 +847,7 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   gfxFloat x, width;
   if (aFlags & eNoHorizontalOverflow) {
     x = 0.0;
-    width = textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
+    width = textRun->GetAdvanceWidth(range, &provider);
   } else {
     x = metrics.mBoundingBox.x;
     width = metrics.mBoundingBox.width;
@@ -932,10 +928,7 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  Maybe<nsTextFrame::PropertyProvider> provider;
-  if (StaticPrefs::svg_text_spacing_enabled()) {
-    provider.emplace(mFrame, it);
-  }
+  nsTextFrame::PropertyProvider provider(mFrame, it);
 
   // Get the covered content offset/length for this rendered run in skipped
   // characters, since that is what GetAdvanceWidth expects.
@@ -960,12 +953,12 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
   // Measure the advance width in the text run between the start of
   // frame's content and the start of the rendered run's content,
   nscoord startEdge = textRun->GetAdvanceWidth(
-      Range(frameRange.start, runRange.start), provider.ptrOr(nullptr));
+      Range(frameRange.start, runRange.start), &provider);
 
   // and between the end of the rendered run's content and the end
   // of the frame's content.
-  nscoord endEdge = textRun->GetAdvanceWidth(
-      Range(runRange.end, frameRange.end), provider.ptrOr(nullptr));
+  nscoord endEdge =
+      textRun->GetAdvanceWidth(Range(runRange.end, frameRange.end), &provider);
 
   if (textRun->IsRightToLeft()) {
     aVisIStartEdge = endEdge;
@@ -979,15 +972,12 @@ void TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
 nscoord TextRenderedRun::GetAdvanceWidth() const {
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  Maybe<nsTextFrame::PropertyProvider> provider;
-  if (StaticPrefs::svg_text_spacing_enabled()) {
-    provider.emplace(mFrame, it);
-  }
+  nsTextFrame::PropertyProvider provider(mFrame, it);
 
   Range range = ConvertOriginalToSkipped(it, mTextFrameContentOffset,
                                          mTextFrameContentLength);
 
-  return textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
+  return textRun->GetAdvanceWidth(range, &provider);
 }
 
 int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
@@ -1032,17 +1022,14 @@ int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
-  Maybe<nsTextFrame::PropertyProvider> provider;
-  if (StaticPrefs::svg_text_spacing_enabled()) {
-    provider.emplace(mFrame, it);
-  }
+  nsTextFrame::PropertyProvider provider(mFrame, it);
 
   // Next check that the point lies horizontally within the left and right
   // edges of the text.
   Range range = ConvertOriginalToSkipped(it, mTextFrameContentOffset,
                                          mTextFrameContentLength);
-  gfxFloat runAdvance = aContext->AppUnitsToGfxUnits(
-      textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr)));
+  gfxFloat runAdvance =
+      aContext->AppUnitsToGfxUnits(textRun->GetAdvanceWidth(range, &provider));
 
   gfxFloat pos = writingMode.IsVertical() ? p.y : p.x;
   if (pos < 0 || pos >= runAdvance) {
@@ -1056,7 +1043,7 @@ int32_t TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
   for (int32_t i = mTextFrameContentLength - 1; i >= 0; i--) {
     range = ConvertOriginalToSkipped(it, mTextFrameContentOffset, i);
     gfxFloat advance = aContext->AppUnitsToGfxUnits(
-        textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr)));
+        textRun->GetAdvanceWidth(range, &provider));
     if ((rtl && pos < runAdvance - advance) || (!rtl && pos >= advance)) {
       return i;
     }
@@ -2322,14 +2309,11 @@ gfxFloat CharIterator::GetAdvance(nsPresContext* aContext) const {
 
   gfxSkipCharsIterator start =
       TextFrame()->EnsureTextRun(nsTextFrame::eInflated);
-  Maybe<nsTextFrame::PropertyProvider> provider;
-  if (StaticPrefs::svg_text_spacing_enabled()) {
-    provider.emplace(TextFrame(), start);
-  }
+  nsTextFrame::PropertyProvider provider(TextFrame(), start);
 
   uint32_t offset = mSkipCharsIterator.GetSkippedOffset();
-  gfxFloat advance = mTextRun->GetAdvanceWidth(Range(offset, offset + 1),
-                                               provider.ptrOr(nullptr));
+  gfxFloat advance =
+      mTextRun->GetAdvanceWidth(Range(offset, offset + 1), &provider);
   return aContext->AppUnitsToGfxUnits(advance) * mLengthAdjustScaleFactor *
          cssPxPerDevPx;
 }
@@ -3687,15 +3671,12 @@ float SVGTextFrame::GetSubStringLength(nsIContent* aContent, uint32_t charnum,
 
       gfxSkipCharsIterator it = frame->EnsureTextRun(nsTextFrame::eInflated);
       gfxTextRun* textRun = frame->GetTextRun(nsTextFrame::eInflated);
-      Maybe<nsTextFrame::PropertyProvider> provider;
-      if (StaticPrefs::svg_text_spacing_enabled()) {
-        provider.emplace(frame, it);
-      }
+      nsTextFrame::PropertyProvider provider(frame, it);
 
       Range range = ConvertOriginalToSkipped(it, offset, trimmedLength);
 
       // Accumulate the advance.
-      textLength += textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
+      textLength += textRun->GetAdvanceWidth(range, &provider);
     }
 
     // Advance, ready for next call:
@@ -3767,15 +3748,12 @@ float SVGTextFrame::GetSubStringLengthSlowFallback(nsIContent* aContent,
       gfxSkipCharsIterator it =
           run.mFrame->EnsureTextRun(nsTextFrame::eInflated);
       gfxTextRun* textRun = run.mFrame->GetTextRun(nsTextFrame::eInflated);
-      Maybe<nsTextFrame::PropertyProvider> provider;
-      if (StaticPrefs::svg_text_spacing_enabled()) {
-        provider.emplace(run.mFrame, it);
-      }
+      nsTextFrame::PropertyProvider provider(run.mFrame, it);
 
       Range range = ConvertOriginalToSkipped(it, offset, length);
 
       // Accumulate the advance.
-      textLength += textRun->GetAdvanceWidth(range, provider.ptrOr(nullptr));
+      textLength += textRun->GetAdvanceWidth(range, &provider);
     }
 
     run = runIter.Next();
@@ -4323,10 +4301,7 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
   for (nsTextFrame* frame = frit.Current(); frame; frame = frit.Next()) {
     gfxSkipCharsIterator it = frame->EnsureTextRun(nsTextFrame::eInflated);
     gfxTextRun* textRun = frame->GetTextRun(nsTextFrame::eInflated);
-    Maybe<nsTextFrame::PropertyProvider> provider;
-    if (StaticPrefs::svg_text_spacing_enabled()) {
-      provider.emplace(frame, it);
-    }
+    nsTextFrame::PropertyProvider provider(frame, it);
 
     // Reset the position to the new frame's position.
     position = frit.Position();
@@ -4367,8 +4342,8 @@ void SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions) {
         // the PropertyProvider only has spacing information for the current
         // text frame.)
         uint32_t offset = it.GetSkippedOffset();
-        nscoord advance = textRun->GetAdvanceWidth(Range(offset, offset + 1),
-                                                   provider.ptrOr(nullptr));
+        nscoord advance =
+            textRun->GetAdvanceWidth(Range(offset, offset + 1), &provider);
         (textRun->IsVertical() ? position.y : position.x) +=
             textRun->IsRightToLeft() ? -advance : advance;
       }

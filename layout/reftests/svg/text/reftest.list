@@ -208,6 +208,6 @@ needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy-if(skiaContent,0-1,0-200) needs-focus == textpath-selection.svg textpath-selection-ref.svg
 
 # letter-spacing and word-spacing
-pref(svg.text-spacing.enabled,true) == simple-letter-spacing.svg simple-letter-spacing-ref.svg
-pref(svg.text-spacing.enabled,true) == simple-word-spacing.svg simple-word-spacing-ref.svg
-pref(svg.text-spacing.enabled,true) == multiple-chunks-letter-spacing.svg multiple-chunks-letter-spacing-ref.svg
+== simple-letter-spacing.svg simple-letter-spacing-ref.svg
+== simple-word-spacing.svg simple-word-spacing-ref.svg
+== multiple-chunks-letter-spacing.svg multiple-chunks-letter-spacing-ref.svg
