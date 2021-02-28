@@ -402,20 +402,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
         buffer ? gc::GetGCObjectKind(instanceClass())
                : AllocKindForLazyBuffer(len.get() * BYTES_PER_ELEMENT);
 
-    // Subclassing mandates that we hand in the proto every time. Most of
-    // the time, though, that [[Prototype]] will not be interesting. If
-    // it isn't, we can do some more TI optimizations.
-    RootedObject checkProto(cx);
-    if (proto) {
-      checkProto = GlobalObject::getOrCreatePrototype(cx, protoKey());
-      if (!checkProto) {
-        return nullptr;
-      }
-    }
-
     AutoSetNewObjectMetadata metadata(cx);
     Rooted<TypedArrayObject*> obj(cx);
-    if (proto && proto != checkProto) {
+    if (proto) {
       obj = makeProtoInstance(cx, proto, allocKind);
     } else {
       obj = newBuiltinClassInstance(cx, allocKind, GenericObject);
