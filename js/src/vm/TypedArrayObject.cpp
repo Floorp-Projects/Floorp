@@ -393,11 +393,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     return obj ? &obj->as<TypedArrayObject>() : nullptr;
   }
 
-  static TypedArrayObject* makeTypedInstance(JSContext* cx,
-                                             gc::AllocKind allocKind) {
-    return newBuiltinClassInstance(cx, allocKind, GenericObject);
-  }
-
   static TypedArrayObject* makeInstance(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
       BufferSize byteOffset, BufferSize len, HandleObject proto) {
@@ -423,7 +418,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     if (proto && proto != checkProto) {
       obj = makeProtoInstance(cx, proto, allocKind);
     } else {
-      obj = makeTypedInstance(cx, allocKind);
+      obj = newBuiltinClassInstance(cx, allocKind, GenericObject);
     }
     if (!obj || !obj->init(cx, buffer, byteOffset, len, BYTES_PER_ELEMENT)) {
       return nullptr;
