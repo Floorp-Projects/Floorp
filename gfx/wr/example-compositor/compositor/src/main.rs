@@ -158,7 +158,10 @@ impl webrender::Compositor for DirectCompositeInterface {
     }
 
     fn get_capabilities(&self) -> webrender::CompositorCapabilities {
-        webrender::CompositorCapabilities { virtual_surface_size: 1024 * 1024 }
+        webrender::CompositorCapabilities {
+            virtual_surface_size: 1024 * 1024,
+            ..Default::default()
+        }
     }
 
     fn invalidate_tile(
