@@ -20,8 +20,7 @@ class PlainObject;
 [[nodiscard]] bool obj_construct(JSContext* cx, unsigned argc, JS::Value* vp);
 
 PlainObject* ObjectCreateImpl(JSContext* cx, HandleObject proto,
-                              NewObjectKind newKind = GenericObject,
-                              HandleObjectGroup group = nullptr);
+                              NewObjectKind newKind = GenericObject);
 
 PlainObject* ObjectCreateWithTemplate(JSContext* cx,
                                       Handle<PlainObject*> templateObj);
