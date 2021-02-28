@@ -52,6 +52,7 @@ locales = [
   "ka",
   "kab",
   "kk",
+  "kmr",
   "kn",
   "ko",
   "lij",
@@ -82,6 +83,7 @@ locales = [
   "te",
   "tg",
   "th",
+  "tl",
   "tr",
   "trs",
   "uk",
@@ -91,4 +93,3 @@ locales = [
   "zh-CN",
   "zh-TW",
 ]
-
