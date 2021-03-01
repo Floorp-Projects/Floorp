@@ -1977,6 +1977,10 @@ var gBrowserInit = {
     let safeMode = document.getElementById("helpSafeMode");
     if (Services.appinfo.inSafeMode) {
       document.l10n.setAttributes(safeMode, "menu-help-safe-mode-with-addons");
+      safeMode.setAttribute(
+        "appmenu-data-l10n-id",
+        "appmenu-help-safe-mode-with-addons"
+      );
     }
 
     // BiDi UI
