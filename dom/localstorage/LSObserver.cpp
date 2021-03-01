@@ -33,7 +33,7 @@ LSObserver::LSObserver(const nsACString& aOrigin)
     gLSObservers = new LSObserverHashtable();
   }
 
-  MOZ_ASSERT(!gLSObservers->Get(mOrigin));
+  MOZ_ASSERT(!gLSObservers->Contains(mOrigin));
   gLSObservers->InsertOrUpdate(mOrigin, this);
 }
 

@@ -4221,7 +4221,7 @@ already_AddRefed<Connection> ConnectionThread::CreateConnection(
     bool aDatabaseWasNotAvailable) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOriginMetadata.mOrigin.IsEmpty());
-  MOZ_ASSERT(!mConnections.GetWeak(aOriginMetadata.mOrigin));
+  MOZ_ASSERT(!mConnections.Contains(aOriginMetadata.mOrigin));
 
   RefPtr<Connection> connection =
       new Connection(this, aOriginMetadata, std::move(aArchivedOriginScope),
@@ -7242,7 +7242,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
       gDatastores = new DatastoreHashtable();
     }
 
-    MOZ_ASSERT(!gDatastores->MaybeGet(Origin()));
+    MOZ_ASSERT(!gDatastores->Contains(Origin()));
     gDatastores->InsertOrUpdate(Origin(),
                                 WrapMovingNotNullUnchecked(mDatastore));
   }
@@ -7252,14 +7252,14 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
       gPrivateDatastores = MakeUnique<PrivateDatastoreHashtable>();
     }
 
-    if (!gPrivateDatastores->Get(Origin())) {
+    gPrivateDatastores->LookupOrInsertWith(Origin(), [&] {
       auto privateDatastore =
           MakeUnique<PrivateDatastore>(WrapMovingNotNull(mDatastore));
 
-      gPrivateDatastores->InsertOrUpdate(Origin(), std::move(privateDatastore));
-
       mPrivateDatastoreRegistered.Flip();
-    }
+
+      return privateDatastore;
+    });
   }
 
   mDatastoreId = ++gLastDatastoreId;

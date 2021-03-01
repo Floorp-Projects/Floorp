@@ -17,26 +17,24 @@ void LSWriteOptimizer<T, U>::InsertItem(const nsAString& aKey, const T& aValue,
                                         int64_t aDelta) {
   AssertIsOnOwningThread();
 
-  WriteInfo* existingWriteInfo;
-  UniquePtr<WriteInfo> newWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::DeleteItem) {
-    // We could just simply replace the deletion with ordinary update, but
-    // that
-    // would preserve item's original position/index. Imagine a case when we
-    // have only one existing key k1. Now let's create a new optimizer and
-    // remove k1, add k2 and add k1 back. The final order should be k2, k1
-    // (ordinary update would produce k1, k2). So we need to differentiate
-    // between normal update and "optimized" update which resulted from a
-    // deletion followed by an insertion. We use the UpdateWithMove flag for
-    // this.
+  mWriteInfos.WithEntryHandle(aKey, [&](auto&& entry) {
+    if (entry && entry.Data()->GetType() == WriteInfo::DeleteItem) {
+      // We could just simply replace the deletion with ordinary update, but
+      // that would preserve item's original position/index. Imagine a case when
+      // we have only one existing key k1. Now let's create a new optimizer and
+      // remove k1, add k2 and add k1 back. The final order should be k2, k1
+      // (ordinary update would produce k1, k2). So we need to differentiate
+      // between normal update and "optimized" update which resulted from a
+      // deletion followed by an insertion. We use the UpdateWithMove flag for
+      // this.
 
-    newWriteInfo = MakeUnique<UpdateItemInfo>(NextSerialNumber(), aKey, aValue,
-                                              /* aUpdateWithMove */ true);
-  } else {
-    newWriteInfo = MakeUnique<InsertItemInfo>(NextSerialNumber(), aKey, aValue);
-  }
-  mWriteInfos.InsertOrUpdate(aKey, std::move(newWriteInfo));
+      entry.Update(MakeUnique<UpdateItemInfo>(NextSerialNumber(), aKey, aValue,
+                                              /* aUpdateWithMove */ true));
+    } else {
+      entry.InsertOrUpdate(
+          MakeUnique<InsertItemInfo>(NextSerialNumber(), aKey, aValue));
+    }
+  });
 
   mTotalDelta += aDelta;
 }
@@ -46,16 +44,16 @@ void LSWriteOptimizer<T, U>::UpdateItem(const nsAString& aKey, const T& aValue,
                                         int64_t aDelta) {
   AssertIsOnOwningThread();
 
-  WriteInfo* existingWriteInfo;
-  UniquePtr<WriteInfo> newWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::InsertItem) {
-    newWriteInfo = MakeUnique<InsertItemInfo>(NextSerialNumber(), aKey, aValue);
-  } else {
-    newWriteInfo = MakeUnique<UpdateItemInfo>(NextSerialNumber(), aKey, aValue,
-                                              /* aUpdateWithMove */ false);
-  }
-  mWriteInfos.InsertOrUpdate(aKey, std::move(newWriteInfo));
+  mWriteInfos.WithEntryHandle(aKey, [&](auto&& entry) {
+    if (entry && entry.Data()->GetType() == WriteInfo::InsertItem) {
+      entry.Update(
+          MakeUnique<InsertItemInfo>(NextSerialNumber(), aKey, aValue));
+    } else {
+      entry.InsertOrUpdate(
+          MakeUnique<UpdateItemInfo>(NextSerialNumber(), aKey, aValue,
+                                     /* aUpdateWithMove */ false));
+    }
+  });
 
   mTotalDelta += aDelta;
 }

@@ -28,14 +28,14 @@ class LSWriteOptimizerBase::WriteInfoComparator {
 void LSWriteOptimizerBase::DeleteItem(const nsAString& aKey, int64_t aDelta) {
   AssertIsOnOwningThread();
 
-  WriteInfo* existingWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::InsertItem) {
-    mWriteInfos.Remove(aKey);
-  } else {
-    mWriteInfos.InsertOrUpdate(
-        aKey, MakeUnique<DeleteItemInfo>(NextSerialNumber(), aKey));
-  }
+  mWriteInfos.WithEntryHandle(aKey, [&](auto&& entry) {
+    if (entry && entry.Data()->GetType() == WriteInfo::InsertItem) {
+      entry.Remove();
+    } else {
+      entry.InsertOrUpdate(
+          MakeUnique<DeleteItemInfo>(NextSerialNumber(), aKey));
+    }
+  });
 
   mTotalDelta += aDelta;
 }
