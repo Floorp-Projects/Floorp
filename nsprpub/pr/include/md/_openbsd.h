@@ -16,10 +16,12 @@
 #define _PR_SI_ARCHITECTURE "alpha"
 #elif defined(__amd64__)
 #define _PR_SI_ARCHITECTURE "amd64"
-#elif defined(__m68k__)
-#define _PR_SI_ARCHITECTURE "m68k"
+#elif defined(__powerpc64__)
+#define _PR_SI_ARCHITECTURE "powerpc64"
 #elif defined(__powerpc__)
 #define _PR_SI_ARCHITECTURE "powerpc"
+#elif defined(__aarch64__)
+#define _PR_SI_ARCHITECTURE "aarch64"
 #elif defined(__sparc__)
 #define _PR_SI_ARCHITECTURE "sparc"
 #elif defined(__arm__)
@@ -189,6 +191,8 @@ struct _MDCPU {
 #define _MD_CLEAN_THREAD(_thread)
 
 #endif /* ! _PR_PTHREADS */
+
+extern void _MD_EarlyInit(void);
 
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT          _PR_UnixInit
