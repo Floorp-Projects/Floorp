@@ -99,7 +99,7 @@ static const CSSCoord kMeterHeight = 12.0f;
 
 // nsCheckboxRadioFrame takes the bottom of the content box as the baseline.
 // This border-width makes its baseline 2px under the bottom, which is nice.
-static const CSSCoord kCheckboxRadioBorderWidth = 2.0f;
+static constexpr CSSCoord kCheckboxRadioBorderWidth = 2.0f;
 
 }  // namespace widget
 }  // namespace mozilla
@@ -305,7 +305,8 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                      const EventStates&, DPIRatio);
   void PaintArrow(DrawTarget&, const LayoutDeviceRect&,
                   const float aArrowPolygonX[], const float aArrowPolygonY[],
-                  const int32_t aArrowNumPoints, const sRGBColor aFillColor);
+                  const float aArrowPolygonSize, const int32_t aArrowNumPoints,
+                  const sRGBColor aFillColor);
   void PaintMenulistArrowButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
                                 const EventStates&);
   void PaintSpinnerButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
