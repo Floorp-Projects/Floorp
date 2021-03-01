@@ -1694,13 +1694,20 @@ PR_IMPLEMENT(PRStatus) PR_SetCurrentThreadName(const char *name)
         return PR_SUCCESS;
     }
 
+#if defined(DARWIN)
+    /* Mac OS X has a length limit of 63 characters, but there is no API
+     * exposing it.
+     */
+#define SETNAME_LENGTH_CONSTRAINT 63
+#else
     /*
      * The 15-character name length limit is an experimentally determined
-     * length of a null-terminated string that most linux distros and OS X
-     * accept as an argument to pthread_setname_np.  Otherwise the E2BIG
+     * length of a null-terminated string that most linux distros accept
+     * as an argument to pthread_setname_np.  Otherwise the E2BIG
      * error is returned by the function.
      */
 #define SETNAME_LENGTH_CONSTRAINT 15
+#endif
 #define SETNAME_FRAGMENT1_LENGTH (SETNAME_LENGTH_CONSTRAINT >> 1)
 #define SETNAME_FRAGMENT2_LENGTH \
     (SETNAME_LENGTH_CONSTRAINT - SETNAME_FRAGMENT1_LENGTH - 1)
