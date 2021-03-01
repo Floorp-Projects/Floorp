@@ -63,11 +63,18 @@ async function testTabConsoleMessagesResources(executeInIframe) {
         "Received a message"
       );
       ok(resource.message, "message is wrapped into a message attribute");
-      const expected = (expectedExistingCalls.length > 0
+      const isCachedMessage = expectedExistingCalls.length > 0;
+      const expected = (isCachedMessage
         ? expectedExistingCalls
         : expectedRuntimeCalls
       ).shift();
       checkConsoleAPICall(resource.message, expected);
+      is(
+        resource.isAlreadyExistingResource,
+        isCachedMessage,
+        "isAlreadyExistingResource has the expected value"
+      );
+
       if (expectedRuntimeCalls.length == 0) {
         runtimeDoneResolve();
       }
@@ -157,7 +164,8 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
           .find(target => target.url == IFRAME_URL)
       : targetList.targetFront;
   for (let i = 0; i < expectedRuntimeConsoleCalls.length; i++) {
-    const { message, targetFront } = availableResources[i];
+    const resource = availableResources[i];
+    const { message, targetFront } = resource;
     is(
       targetFront,
       expectedTargetFront,
@@ -165,6 +173,11 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
     );
     const expected = expectedRuntimeConsoleCalls[i];
     checkConsoleAPICall(message, expected);
+    is(
+      resource.isAlreadyExistingResource,
+      false,
+      "isAlreadyExistingResource is false since we're ignoring existing resources"
+    );
   }
 
   targetList.destroy();

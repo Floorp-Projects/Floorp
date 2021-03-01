@@ -108,7 +108,8 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`SyntaxError: redeclaration of let a`, {
@@ -190,7 +191,8 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`TypeError longString message`, {
@@ -284,7 +286,8 @@ rawPackets.set(`TypeError longString message`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw string with URL`, {
@@ -341,7 +344,8 @@ rawPackets.set(`throw string with URL`, {
     "exception": "“https://evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is evil and “https://not-so-evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is not good either",
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw ""`, {
@@ -398,7 +402,8 @@ rawPackets.set(`throw ""`, {
     "exception": "",
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw "tomato"`, {
@@ -455,7 +460,8 @@ rawPackets.set(`throw "tomato"`, {
     "exception": "tomato",
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw false`, {
@@ -512,7 +518,8 @@ rawPackets.set(`throw false`, {
     "exception": false,
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw 0`, {
@@ -569,7 +576,8 @@ rawPackets.set(`throw 0`, {
     "exception": 0,
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw null`, {
@@ -628,7 +636,8 @@ rawPackets.set(`throw null`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw undefined`, {
@@ -687,7 +696,8 @@ rawPackets.set(`throw undefined`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw Symbol`, {
@@ -748,7 +758,8 @@ rawPackets.set(`throw Symbol`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw Object`, {
@@ -832,7 +843,8 @@ rawPackets.set(`throw Object`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw Error Object`, {
@@ -910,7 +922,8 @@ rawPackets.set(`throw Error Object`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`throw Error Object with custom name`, {
@@ -988,7 +1001,8 @@ rawPackets.set(`throw Error Object with custom name`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject ""`, {
@@ -1045,7 +1059,8 @@ rawPackets.set(`Promise reject ""`, {
     "exception": "",
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject "tomato"`, {
@@ -1102,7 +1117,8 @@ rawPackets.set(`Promise reject "tomato"`, {
     "exception": "tomato",
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject false`, {
@@ -1159,7 +1175,8 @@ rawPackets.set(`Promise reject false`, {
     "exception": false,
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject 0`, {
@@ -1216,7 +1233,8 @@ rawPackets.set(`Promise reject 0`, {
     "exception": 0,
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject null`, {
@@ -1275,7 +1293,8 @@ rawPackets.set(`Promise reject null`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject undefined`, {
@@ -1334,7 +1353,8 @@ rawPackets.set(`Promise reject undefined`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject Symbol`, {
@@ -1395,7 +1415,8 @@ rawPackets.set(`Promise reject Symbol`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject Object`, {
@@ -1479,7 +1500,8 @@ rawPackets.set(`Promise reject Object`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject Error Object`, {
@@ -1557,7 +1579,8 @@ rawPackets.set(`Promise reject Error Object`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Promise reject Error Object with custom name`, {
@@ -1635,7 +1658,8 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
     },
     "hasException": true
   },
-  "resourceType": "error-message"
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
 });
 
 

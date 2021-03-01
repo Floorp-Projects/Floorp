@@ -26,12 +26,15 @@ async function testPlatformMessagesResources() {
     targetList,
   } = await initMultiProcessResourceWatcher();
 
-  const expectedMessages = [
+  const cachedMessages = [
     "This is a cached message",
     "This is another cached message",
+  ];
+  const liveMessages = [
     "This is a live message",
     "This is another live message",
   ];
+  const expectedMessages = [...cachedMessages, ...liveMessages];
   const receivedMessages = [];
 
   info(
@@ -64,6 +67,13 @@ async function testPlatformMessagesResources() {
       ok(
         resource.timeStamp.toString().match(/^\d+$/),
         "The resource has a timeStamp property"
+      );
+
+      const isCachedMessage = receivedMessages.length <= cachedMessages.length;
+      is(
+        resource.isAlreadyExistingResource,
+        isCachedMessage,
+        "isAlreadyExistingResource has the expected value"
       );
 
       if (receivedMessages.length == expectedMessages.length) {
@@ -138,9 +148,15 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
 
   await waitUntil(() => availableResources.length === expectedMessages.length);
   for (let i = 0; i < expectedMessages.length; i++) {
-    const { message } = availableResources[i];
+    const resource = availableResources[i];
+    const { message } = resource;
     const expected = expectedMessages[i];
     is(message, expected, `Message[${i}] is correct`);
+    is(
+      resource.isAlreadyExistingResource,
+      false,
+      "isAlreadyExistingResource is false since we ignore existing resources"
+    );
   }
 
   Services.console.reset();

@@ -72,14 +72,14 @@ add_task(async function() {
       `${URL_ROOT_ORG_SSL}${WORKER_FILE}#simple-worker-in-iframe`
   );
 
-  checkStartWorkerLogMessage(
-    startLogFromWorkerInMainPage,
-    `${URL_ROOT_SSL}${WORKER_FILE}#simple-worker`
-  );
-  checkStartWorkerLogMessage(
-    startLogFromWorkerInIframe,
-    `${URL_ROOT_ORG_SSL}${WORKER_FILE}#simple-worker-in-iframe`
-  );
+  checkStartWorkerLogMessage(startLogFromWorkerInMainPage, {
+    expectedUrl: `${URL_ROOT_SSL}${WORKER_FILE}#simple-worker`,
+    isAlreadyExistingResource: true,
+  });
+  checkStartWorkerLogMessage(startLogFromWorkerInIframe, {
+    expectedUrl: `${URL_ROOT_ORG_SSL}${WORKER_FILE}#simple-worker-in-iframe`,
+    isAlreadyExistingResource: true,
+  });
   let messageCount = resources.length;
 
   info(
@@ -167,14 +167,12 @@ add_task(async function() {
       message.arguments[1] === "live message in spawned worker from iframe"
   );
 
-  checkStartWorkerLogMessage(
-    startLogFromSpawnedWorkerInMainPage,
-    `${URL_ROOT_SSL}${WORKER_FILE}#spawned-worker`
-  );
-  checkStartWorkerLogMessage(
-    startLogFromSpawnedWorkerInIframe,
-    `${URL_ROOT_ORG_SSL}${WORKER_FILE}#spawned-worker-in-iframe`
-  );
+  checkStartWorkerLogMessage(startLogFromSpawnedWorkerInMainPage, {
+    expectedUrl: `${URL_ROOT_SSL}${WORKER_FILE}#spawned-worker`,
+  });
+  checkStartWorkerLogMessage(startLogFromSpawnedWorkerInIframe, {
+    expectedUrl: `${URL_ROOT_ORG_SSL}${WORKER_FILE}#spawned-worker-in-iframe`,
+  });
   checkLogInWorkerMessage(
     liveMessageFromSpawnedWorkerInMainPage,
     "live message in spawned worker from main page"
@@ -206,10 +204,9 @@ add_task(async function() {
       1}, got ${resources.length})`
   );
   const startLogFromWorkerInSecondIframe = resources[resources.length - 1];
-  checkStartWorkerLogMessage(
-    startLogFromWorkerInSecondIframe,
-    `${URL_ROOT_ORG_SSL}${WORKER_FILE}#simple-worker-in-second-iframe`
-  );
+  checkStartWorkerLogMessage(startLogFromWorkerInSecondIframe, {
+    expectedUrl: `${URL_ROOT_ORG_SSL}${WORKER_FILE}#simple-worker-in-second-iframe`,
+  });
 
   targetList.destroy();
   await client.close();
@@ -221,7 +218,10 @@ add_task(async function() {
   });
 });
 
-function checkStartWorkerLogMessage(resource, expectedUrl) {
+function checkStartWorkerLogMessage(
+  resource,
+  { expectedUrl, isAlreadyExistingResource = false }
+) {
   const { message } = resource;
   const [firstArg, secondArg, thirdArg] = message.arguments;
   is(firstArg, "[WORKER] started", "Got the expected first argument");
@@ -230,6 +230,11 @@ function checkStartWorkerLogMessage(resource, expectedUrl) {
     thirdArg?._grip?.class,
     "DedicatedWorkerGlobalScope",
     "the global scope was logged as expected"
+  );
+  is(
+    resource.isAlreadyExistingResource,
+    isAlreadyExistingResource,
+    "Resource has expected value for isAlreadyExistingResource"
   );
 }
 
@@ -242,5 +247,10 @@ function checkLogInWorkerMessage(resource, expectedMessage) {
     thirdArg?._grip?.class,
     "MessageEvent",
     "the message event object was logged as expected"
+  );
+  is(
+    resource.isAlreadyExistingResource,
+    false,
+    "Resource has expected value for isAlreadyExistingResource"
   );
 }
