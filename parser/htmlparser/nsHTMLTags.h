@@ -55,15 +55,13 @@ class nsHTMLTags {
   static nsHTMLTag CaseSensitiveStringTagToId(const nsAString& aTagName) {
     NS_ASSERTION(gTagTable, "no lookup table, needs addref");
 
-    nsHTMLTag* tag = gTagTable->GetValue(aTagName);
-    return tag ? *tag : eHTMLTag_userdefined;
+    return gTagTable->MaybeGet(aTagName).valueOr(eHTMLTag_userdefined);
   }
   static nsHTMLTag CaseSensitiveAtomTagToId(nsAtom* aTagName) {
     NS_ASSERTION(gTagAtomTable, "no lookup table, needs addref");
     NS_ASSERTION(aTagName, "null tagname!");
 
-    nsHTMLTag* tag = gTagAtomTable->GetValue(aTagName);
-    return tag ? *tag : eHTMLTag_userdefined;
+    return gTagAtomTable->MaybeGet(aTagName).valueOr(eHTMLTag_userdefined);
   }
 
 #ifdef DEBUG

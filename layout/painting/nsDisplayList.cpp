@@ -1996,8 +1996,8 @@ void nsDisplayListBuilder::RemoveFromWillChangeBudgets(const nsIFrame* aFrame) {
   if (auto entry = mFrameWillChangeBudgets.Lookup(aFrame)) {
     const FrameWillChangeBudget& frameBudget = entry.Data();
 
-    DocumentWillChangeBudget* documentBudget =
-        mDocumentWillChangeBudgets.GetValue(frameBudget.mPresContext);
+    auto documentBudget =
+        mDocumentWillChangeBudgets.Lookup(frameBudget.mPresContext);
 
     if (documentBudget) {
       *documentBudget -= frameBudget.mUsage;

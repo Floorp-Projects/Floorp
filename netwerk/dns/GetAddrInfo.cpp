@@ -296,13 +296,13 @@ bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
     return false;
   }
   AutoReadLock lock(overrideService->mLock);
-  nsTArray<PRNetAddr>* overrides = overrideService->mOverrides.GetValue(aHost);
+  auto overrides = overrideService->mOverrides.Lookup(aHost);
   if (!overrides) {
     return false;
   }
   nsCString* cname = nullptr;
   if (aFlags & nsHostResolver::RES_CANON_NAME) {
-    cname = overrideService->mCnames.GetValue(aHost);
+    cname = overrideService->mCnames.Lookup(aHost).DataPtrOrNull();
   }
 
   RefPtr<AddrInfo> ai;
