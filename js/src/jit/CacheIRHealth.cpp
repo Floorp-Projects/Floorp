@@ -68,15 +68,22 @@ CacheIRHealth::Happiness CacheIRHealth::spewStubHealth(
   return stubHappiness;
 }
 
-CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
-    AutoStructuredSpewer& spew, ICEntry* entry) {
+CacheIRHealth::Happiness CacheIRHealth::spewICEntryHealth(
+    AutoStructuredSpewer& spew, HandleScript script, jit::ICEntry* entry,
+    jsbytecode* pc, JSOp op) {
+  spew->property("op", CodeName(op));
+
+  // TODO: If a perf issue arises, look into improving the SrcNotes
+  // API call below.
+  unsigned column;
+  spew->property("lineno", PCToLineNumber(script, pc, &column));
+  spew->property("column", column);
+
   jit::ICStub* stub = entry->firstStub();
-
-  spew->beginListProperty("stubs");
-
   Happiness entryHappiness = Happy;
   bool sawNonZeroCount = false;
 
+  spew->beginListProperty("stubs");
   while (stub && !stub->isFallback()) {
     spew->beginObject();
     {
@@ -113,20 +120,6 @@ CacheIRHealth::Happiness CacheIRHealth::spewHealthForStubsInCacheIREntry(
   spew->property("fallbackCount", entry->fallbackStub()->enteredCount());
 
   return entryHappiness;
-}
-
-CacheIRHealth::Happiness CacheIRHealth::spewJSOpAndCacheIRHealth(
-    AutoStructuredSpewer& spew, HandleScript script, jit::ICEntry* entry,
-    jsbytecode* pc, JSOp op) {
-  spew->property("op", CodeName(op));
-
-  // TODO: If a perf issue arises, look into improving the SrcNotes
-  // API call below.
-  unsigned column;
-  spew->property("lineno", PCToLineNumber(script, pc, &column));
-  spew->property("column", column);
-
-  return spewHealthForStubsInCacheIREntry(spew, entry);
 }
 
 void CacheIRHealth::spewScriptFinalWarmUpCount(JSContext* cx,
@@ -188,7 +181,7 @@ void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
   jsbytecode* op = entry->pc(script);
   JSOp jsOp = JSOp(*op);
 
-  spewJSOpAndCacheIRHealth(spew, script, entry, op, jsOp);
+  spewICEntryHealth(spew, script, entry, op, jsOp);
 }
 
 void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
@@ -234,7 +227,7 @@ void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
     if (entry) {
       spew->beginObject();
       Happiness entryHappiness =
-          spewJSOpAndCacheIRHealth(spew, script, entry, next, op);
+          spewICEntryHealth(spew, script, entry, next, op);
 
       if (entryHappiness < scriptHappiness) {
         scriptHappiness = entryHappiness;
