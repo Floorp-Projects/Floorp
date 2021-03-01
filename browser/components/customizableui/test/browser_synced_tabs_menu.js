@@ -522,7 +522,7 @@ add_task(async function() {
     return promise;
   }
 
-  showMoreButton = checkTabsPage(25, "Show More");
+  showMoreButton = checkTabsPage(25, "Show More Tabs");
   await clickShowMoreButton();
 
   checkTabsPage(77, null);

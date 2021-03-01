@@ -54,6 +54,7 @@ appmenu-fxa-sync-and-save-data =
 appmenu-fxa-signed-in-label = Sign In
 appmenu-fxa-setup-sync =
     .label = Turn On Syncing…
+appmenu-fxa-show-more-tabs = Show More Tabs
 
 appmenuitem-save-page =
     .label = Save Page As…
