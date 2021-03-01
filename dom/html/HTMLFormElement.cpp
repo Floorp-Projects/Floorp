@@ -2177,16 +2177,15 @@ uint32_t HTMLFormElement::GetRequiredRadioCount(const nsAString& aName) const {
 void HTMLFormElement::RadioRequiredWillChange(const nsAString& aName,
                                               bool aRequiredAdded) {
   if (aRequiredAdded) {
-    mRequiredRadioButtonCounts.InsertOrUpdate(
-        aName, mRequiredRadioButtonCounts.Get(aName) + 1);
+    mRequiredRadioButtonCounts.LookupOrInsert(aName, 0) += 1;
   } else {
-    uint32_t requiredNb = mRequiredRadioButtonCounts.Get(aName);
-    NS_ASSERTION(requiredNb >= 1,
+    auto requiredNb = mRequiredRadioButtonCounts.Lookup(aName);
+    NS_ASSERTION(requiredNb && *requiredNb >= 1,
                  "At least one radio button has to be required!");
-    if (requiredNb == 1) {
-      mRequiredRadioButtonCounts.Remove(aName);
+    if (*requiredNb == 1) {
+      requiredNb.Remove();
     } else {
-      mRequiredRadioButtonCounts.InsertOrUpdate(aName, requiredNb - 1);
+      *requiredNb -= 1;
     }
   }
 }
