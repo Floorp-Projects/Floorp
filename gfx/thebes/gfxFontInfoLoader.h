@@ -85,7 +85,7 @@ class FontInfoData {
   // fetches localized family name data from cached font data
   const nsTArray<nsCString>* GetOtherFamilyNames(
       const nsACString& aFamilyName) {
-    return mOtherFamilyNames.GetValue(aFamilyName);
+    return mOtherFamilyNames.Lookup(aFamilyName).DataPtrOrNull();
   }
 
   nsTArray<nsCString> mFontFamiliesToLoad;

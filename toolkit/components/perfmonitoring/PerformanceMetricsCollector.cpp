@@ -292,7 +292,7 @@ nsresult PerformanceMetricsCollector::DataReceived(
 nsresult PerformanceMetricsCollector::DataReceivedInternal(
     const nsID& aUUID, const nsTArray<PerformanceInfo>& aMetrics) {
   MOZ_ASSERT(gInstance == this);
-  UniquePtr<AggregatedResults>* results = mAggregatedResults.GetValue(aUUID);
+  auto results = mAggregatedResults.Lookup(aUUID);
   if (!results) {
     LOG(("[%s] UUID is gone from mAggregatedResults",
          nsIDToCString(aUUID).get()));

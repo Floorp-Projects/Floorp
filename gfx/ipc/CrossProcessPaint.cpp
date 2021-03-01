@@ -320,11 +320,11 @@ void CrossProcessPaint::ReceiveFragment(dom::WindowGlobalParent* aWGP,
   dom::TabId surfaceId = GetTabId(aWGP);
 
   MOZ_ASSERT(mPendingFragments > 0);
-  MOZ_ASSERT(!mReceivedFragments.GetValue(surfaceId));
+  MOZ_ASSERT(!mReceivedFragments.Contains(surfaceId));
 
   // Double check our invariants to protect against a compromised content
   // process
-  if (mPendingFragments == 0 || mReceivedFragments.GetValue(surfaceId) ||
+  if (mPendingFragments == 0 || mReceivedFragments.Contains(surfaceId) ||
       aFragment.IsEmpty()) {
     CPP_LOG("Dropping invalid fragment from %p.\n", aWGP);
     LostFragment(aWGP);
@@ -388,7 +388,7 @@ void CrossProcessPaint::QueuePaint(dom::WindowGlobalParent* aWGP,
                                    const Maybe<IntRect>& aRect,
                                    nscolor aBackgroundColor,
                                    CrossProcessPaintFlags aFlags) {
-  MOZ_ASSERT(!mReceivedFragments.GetValue(GetTabId(aWGP)));
+  MOZ_ASSERT(!mReceivedFragments.Contains(GetTabId(aWGP)));
 
   CPP_LOG("Queueing paint for %p.\n", aWGP);
 

@@ -1240,7 +1240,7 @@ void AudioContext::Unmute() const {
 
 void AudioContext::SetParamMapForWorkletName(
     const nsAString& aName, AudioParamDescriptorMap* aParamMap) {
-  MOZ_ASSERT(!mWorkletParamDescriptors.GetValue(aName));
+  MOZ_ASSERT(!mWorkletParamDescriptors.Contains(aName));
   Unused << mWorkletParamDescriptors.InsertOrUpdate(aName, move(*aParamMap),
                                                     fallible);
 }

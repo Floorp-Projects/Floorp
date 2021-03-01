@@ -1102,7 +1102,7 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
     // as mTargetDragContext.
     // Especially with multiple items the same data is requested
     // very often.
-    if (nsTArray<uint8_t>* cached = mCachedData.GetValue(flavor)) {
+    if (auto cached = mCachedData.Lookup(flavor)) {
       mTargetDragDataLen = cached->Length();
       LOG(("Using cached data for %s, length is %d", flavor.get(),
            mTargetDragDataLen));
