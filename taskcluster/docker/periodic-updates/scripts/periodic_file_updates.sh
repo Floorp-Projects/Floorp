@@ -304,7 +304,7 @@ function compare_remote_settings_files {
     remote_records_url="$REMOTE_SETTINGS_SERVER/buckets/${bucket}/collections/${collection}/records"
     local_location_output="$REMOTE_SETTINGS_OUTPUT/${bucket}/${collection}.json"
     mkdir -p "$REMOTE_SETTINGS_OUTPUT/${bucket}"
-    ${WGET} -qO "$local_location_output" "$remote_records_url"
+    ${WGET} -qO- "$remote_records_url" | ${JQ} . > "${local_location_output}"
 
     # 5. Download attachments if needed.
     if [ "${bucket}" = "blocklists" ] && [ "${collection}" = "addons-bloomfilters" ]; then
