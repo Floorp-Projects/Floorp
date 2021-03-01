@@ -205,13 +205,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::GetISupports(
 // static
 already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     JSContext* cx, const nsXPTInterfaceInfo* aInfo) {
-  static const uint16_t MAX_LOCAL_MEMBER_COUNT = 16;
-  XPCNativeMember local_members[MAX_LOCAL_MEMBER_COUNT];
-  RefPtr<XPCNativeInterface> obj;
-  XPCNativeMember* members = nullptr;
-
   int i;
-  bool failed = false;
   uint16_t totalCount;
   uint16_t realTotalCount = 0;
   XPCNativeMember* cur;
@@ -250,8 +244,13 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
   uint16_t constCount = aInfo->ConstantCount();
   totalCount = methodCount + constCount;
 
+  static const uint16_t MAX_LOCAL_MEMBER_COUNT = 16;
+  XPCNativeMember local_members[MAX_LOCAL_MEMBER_COUNT];
+  UniquePtr<XPCNativeMember[]> array;
+  XPCNativeMember* members;
   if (totalCount > MAX_LOCAL_MEMBER_COUNT) {
-    members = new XPCNativeMember[totalCount];
+    array = MakeUnique<XPCNativeMember[]>(totalCount);
+    members = array.get();
   } else {
     members = local_members;
   }
@@ -274,8 +273,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     jsid name;
     if (!info.GetId(cx, name)) {
       NS_ERROR("bad method name");
-      failed = true;
-      break;
+      return nullptr;
     }
 
     if (info.IsSetter()) {
@@ -292,8 +290,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method name");
       if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
         NS_WARNING("Too many members in interface");
-        failed = true;
-        break;
+        return nullptr;
       }
       cur = &members[realTotalCount];
       cur->SetName(name);
@@ -307,72 +304,60 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     }
   }
 
-  if (!failed) {
-    for (i = 0; i < constCount; i++) {
-      RootedValue constant(cx);
-      nsCString namestr;
-      if (NS_FAILED(aInfo->GetConstant(i, &constant, getter_Copies(namestr)))) {
-        failed = true;
-        break;
-      }
-
-      str = JS_AtomizeAndPinString(cx, namestr.get());
-      if (!str) {
-        NS_ERROR("bad constant name");
-        failed = true;
-        break;
-      }
-      jsid name = PropertyKey::fromPinnedString(str);
-
-      // XXX need better way to find dups
-      // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
-      if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
-        NS_WARNING("Too many members in interface");
-        failed = true;
-        break;
-      }
-      cur = &members[realTotalCount];
-      cur->SetName(name);
-      cur->SetConstant(i);
-      cur->SetIndexInInterface(realTotalCount);
-      ++realTotalCount;
+  for (i = 0; i < constCount; i++) {
+    RootedValue constant(cx);
+    nsCString namestr;
+    if (NS_FAILED(aInfo->GetConstant(i, &constant, getter_Copies(namestr)))) {
+      return nullptr;
     }
+
+    str = JS_AtomizeAndPinString(cx, namestr.get());
+    if (!str) {
+      NS_ERROR("bad constant name");
+      return nullptr;
+    }
+    jsid name = PropertyKey::fromPinnedString(str);
+
+    // XXX need better way to find dups
+    // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
+    if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
+      NS_WARNING("Too many members in interface");
+      return nullptr;
+    }
+    cur = &members[realTotalCount];
+    cur->SetName(name);
+    cur->SetConstant(i);
+    cur->SetIndexInInterface(realTotalCount);
+    ++realTotalCount;
   }
 
-  if (!failed) {
-    const char* bytes = aInfo->Name();
-    if (nullptr == bytes ||
-        nullptr == (str = JS_AtomizeAndPinString(cx, bytes))) {
-      failed = true;
-    }
+  const char* bytes = aInfo->Name();
+  if (nullptr == bytes ||
+      nullptr == (str = JS_AtomizeAndPinString(cx, bytes))) {
+    return nullptr;
   }
 
-  if (!failed) {
-    interfaceName = PropertyKey::fromPinnedString(str);
+  interfaceName = PropertyKey::fromPinnedString(str);
 
-    // Use placement new to create an object with the right amount of space
-    // to hold the members array
-    int size = sizeof(XPCNativeInterface);
-    if (realTotalCount > 1) {
-      size += (realTotalCount - 1) * sizeof(XPCNativeMember);
-    }
-    void* place = new char[size];
-    if (place) {
-      obj = new (place) XPCNativeInterface(aInfo, interfaceName);
-    }
-
-    if (obj) {
-      obj->mMemberCount = realTotalCount;
-      // copy valid members
-      if (realTotalCount) {
-        memcpy(obj->mMembers, members,
-               realTotalCount * sizeof(XPCNativeMember));
-      }
-    }
+  // Use placement new to create an object with the right amount of space
+  // to hold the members array
+  int size = sizeof(XPCNativeInterface);
+  if (realTotalCount > 1) {
+    size += (realTotalCount - 1) * sizeof(XPCNativeMember);
+  }
+  void* place = new char[size];
+  if (!place) {
+    return nullptr;
   }
 
-  if (members && members != local_members) {
-    delete[] members;
+  RefPtr<XPCNativeInterface> obj =
+      new (place) XPCNativeInterface(aInfo, interfaceName);
+  MOZ_ASSERT(obj);
+
+  obj->mMemberCount = realTotalCount;
+  // copy valid members
+  if (realTotalCount) {
+    memcpy(obj->mMembers, members, realTotalCount * sizeof(XPCNativeMember));
   }
 
   return obj.forget();
