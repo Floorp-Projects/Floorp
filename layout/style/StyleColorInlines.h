@@ -27,7 +27,18 @@ inline StyleRGBA StyleRGBA::Transparent() { return {0, 0, 0, 0}; }
 
 template <>
 inline StyleColor StyleColor::FromColor(nscolor aColor) {
-  return StyleColor::Numeric(StyleRGBA::FromColor(aColor));
+  return StyleColor{
+      StyleRGBA::FromColor(aColor),
+      StyleComplexColorRatios::NUMERIC,
+  };
+}
+
+template <>
+inline StyleColor StyleColor::CurrentColor() {
+  return StyleColor{
+      StyleRGBA::Transparent(),
+      StyleComplexColorRatios::CURRENT_COLOR,
+  };
 }
 
 template <>
