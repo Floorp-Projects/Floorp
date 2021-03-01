@@ -19,6 +19,7 @@
 #include <fontconfig/fontconfig.h>
 #include "gfxPlatformGtk.h"
 #include "mozilla/FontPropertyTypes.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"

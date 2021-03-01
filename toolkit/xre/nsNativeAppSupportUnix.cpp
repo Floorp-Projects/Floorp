@@ -19,6 +19,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWidget.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 
 #include <stdlib.h>
