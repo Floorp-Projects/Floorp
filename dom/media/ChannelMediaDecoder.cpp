@@ -172,9 +172,8 @@ already_AddRefed<ChannelMediaDecoder> ChannelMediaDecoder::Create(
     MediaDecoderInit& aInit, DecoderDoctorDiagnostics* aDiagnostics) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ChannelMediaDecoder> decoder;
-
-  const MediaContainerType& type = aInit.mContainerType;
-  if (DecoderTraits::IsSupportedType(type)) {
+  if (DecoderTraits::CanHandleContainerType(aInit.mContainerType,
+                                            aDiagnostics) != CANPLAY_NO) {
     decoder = new ChannelMediaDecoder(aInit);
     return decoder.forget();
   }
@@ -189,7 +188,8 @@ bool ChannelMediaDecoder::CanClone() {
 
 already_AddRefed<ChannelMediaDecoder> ChannelMediaDecoder::Clone(
     MediaDecoderInit& aInit) {
-  if (!mResource || !DecoderTraits::IsSupportedType(aInit.mContainerType)) {
+  if (!mResource || DecoderTraits::CanHandleContainerType(
+                        aInit.mContainerType, nullptr) == CANPLAY_NO) {
     return nullptr;
   }
   RefPtr<ChannelMediaDecoder> decoder = new ChannelMediaDecoder(aInit);
