@@ -1,6 +1,6 @@
 # This is an LTS! We should upgrade after the next LTS is released, unless
 # we've switched to the in-tree debian base images by then.
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 MAINTAINER release@mozilla.com
 
