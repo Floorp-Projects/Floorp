@@ -306,6 +306,9 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
       case MP4PARSE_CODEC_ALAC:
         codecString = "alac";
         break;
+      case MP4PARSE_CODEC_H263:
+        codecString = "h.263";
+        break;
       case MP4PARSE_CODEC_AVC:
         codecString = "h.264";
         break;

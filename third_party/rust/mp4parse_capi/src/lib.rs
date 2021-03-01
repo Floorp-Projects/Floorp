@@ -51,8 +51,6 @@ use std::ops::Neg;
 use std::ops::{Add, Sub};
 
 // Symbols we need from our rust api.
-use mp4parse::read_avif;
-use mp4parse::read_mp4;
 use mp4parse::serialize_opus_header;
 use mp4parse::AudioCodecSpecific;
 use mp4parse::AvifContext;
@@ -125,6 +123,7 @@ pub enum Mp4parseCodec {
     Ac3,
     Ec3,
     Alac,
+    H263,
 }
 
 impl Default for Mp4parseCodec {
@@ -479,7 +478,9 @@ impl ContextParser for Mp4parseParser {
     }
 
     fn read<T: Read>(io: &mut T) -> mp4parse::Result<Self::Context> {
-        read_mp4(io)
+        let r = mp4parse::read_mp4(io);
+        log::debug!("mp4parse::read_mp4 -> {:?}", r);
+        r
     }
 }
 
@@ -501,7 +502,9 @@ impl ContextParser for Mp4parseAvifParser {
     }
 
     fn read<T: Read>(io: &mut T) -> mp4parse::Result<Self::Context> {
-        read_avif(io)
+        let r = mp4parse::read_avif(io);
+        log::debug!("mp4parse::read_avif -> {:?}", r);
+        r
     }
 }
 
@@ -1103,6 +1106,7 @@ fn mp4parse_get_track_video_info_safe(
             VideoCodecSpecific::VPxConfig(_) => Mp4parseCodec::Vp9,
             VideoCodecSpecific::AV1Config(_) => Mp4parseCodec::Av1,
             VideoCodecSpecific::AVCConfig(_) => Mp4parseCodec::Avc,
+            VideoCodecSpecific::H263Config(_) => Mp4parseCodec::H263,
             VideoCodecSpecific::ESDSConfig(_) =>
             // MP4V (14496-2) video is unsupported.
             {
@@ -1113,6 +1117,9 @@ fn mp4parse_get_track_video_info_safe(
         sample_info.image_height = video.height;
 
         match video.codec_specific {
+            VideoCodecSpecific::AV1Config(ref config) => {
+                sample_info.extra_data.set_data(&config.raw_config);
+            }
             VideoCodecSpecific::AVCConfig(ref data) | VideoCodecSpecific::ESDSConfig(ref data) => {
                 sample_info.extra_data.set_data(data);
             }

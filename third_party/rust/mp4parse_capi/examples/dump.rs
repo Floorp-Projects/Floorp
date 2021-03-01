@@ -20,6 +20,20 @@ extern "C" fn buf_read(buf: *mut u8, size: usize, userdata: *mut std::os::raw::c
     }
 }
 
+fn dump_avif(filename: &str) {
+    let mut file = File::open(filename).expect("Unknown file");
+    let io = Mp4parseIo {
+        read: Some(buf_read),
+        userdata: &mut file as *mut _ as *mut std::os::raw::c_void,
+    };
+
+    unsafe {
+        let mut parser = std::ptr::null_mut();
+        let rv = mp4parse_avif_new(&io, &mut parser);
+        println!("mp4parse_avif_new -> {:?}", rv);
+    }
+}
+
 fn dump_file(filename: &str) {
     let mut file = File::open(filename).expect("Unknown file");
     let io = Mp4parseIo {
@@ -33,6 +47,10 @@ fn dump_file(filename: &str) {
 
         match rv {
             Mp4parseStatus::Ok => (),
+            Mp4parseStatus::Invalid => {
+                println!("-- failed to parse as mp4 video, trying AVIF");
+                dump_avif(filename);
+            }
             _ => {
                 println!("-- fail to parse: {:?}, '-v' for more info", rv);
                 return;
