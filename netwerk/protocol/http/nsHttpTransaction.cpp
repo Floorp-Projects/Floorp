@@ -1245,11 +1245,10 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
 
   Telemetry::HistogramID id = Telemetry::TRANSACTION_ECH_RETRY_OTHERS_COUNT;
   auto updateCount = MakeScopeExit([&] {
-    uint32_t count = 0;
-    bool existed = mEchRetryCounterMap.Get(id, &count);
-    MOZ_ASSERT(existed, "table not initialized");
-    if (existed) {
-      mEchRetryCounterMap.InsertOrUpdate(id, ++count);
+    auto entry = mEchRetryCounterMap.Lookup(id);
+    MOZ_ASSERT(entry, "table not initialized");
+    if (entry) {
+      *entry += 1;
     }
   });
 
