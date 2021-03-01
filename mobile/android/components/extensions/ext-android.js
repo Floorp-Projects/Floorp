@@ -328,8 +328,7 @@ class Tab extends TabBase {
   }
 
   get cookieStoreId() {
-    // Expose the same session context ID that the GeckoView app is sending to us.
-    return this.window.moduleManager.settings.unsafeSessionContextId;
+    return getCookieStoreIdForTab(this, this.nativeTab);
   }
 
   get height() {

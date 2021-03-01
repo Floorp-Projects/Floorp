@@ -84,6 +84,11 @@ global.getContainerForCookieStoreId = function(storeId) {
   }
 
   let containerId = storeId.substring(CONTAINER_STORE.length);
+
+  if (AppConstants.platform === "android") {
+    return parseInt(containerId, 10);
+  } // TODO: Bug 1643740, support ContextualIdentityService on Android
+
   if (ContextualIdentityService.getPublicIdentityFromId(containerId)) {
     return parseInt(containerId, 10);
   }

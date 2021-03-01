@@ -14,6 +14,9 @@
 "use strict";
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
@@ -62,19 +65,11 @@ add_task(async function() {
             },
             {
               create: {cookieStoreId: null},
-              result: {cookieStoreId: null},
+              result: {cookieStoreId: "firefox-default"},
             },
             {
               create: {cookieStoreId: "firefox-container-1"},
               result: {cookieStoreId: "firefox-container-1"},
-            },
-            {
-              create: {cookieStoreId: "😅"},
-              result: {cookieStoreId: "😅"},
-            },
-            {
-              create: {cookieStoreId: "漢字"},
-              result: {cookieStoreId: "漢字"},
             },
           ];
 
@@ -149,6 +144,7 @@ add_task(async function() {
   await extension.startup();
   await extension.awaitFinish("tabs.create");
   await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });
 </script>
 

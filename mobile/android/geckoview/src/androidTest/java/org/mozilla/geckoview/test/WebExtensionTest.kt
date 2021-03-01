@@ -624,6 +624,7 @@ class WebExtensionTest : BaseSessionTest() {
     // - Verify that request came from right extension
     @Test
     fun testBrowserTabsCreateWithCookieStoreId() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("privacy.userContext.enabled" to true));
         val tabsCreateResult = GeckoResult<Void>()
         var tabsExtension: WebExtension? = null
         val tabDelegate = object : WebExtension.TabDelegate {
