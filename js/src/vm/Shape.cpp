@@ -93,7 +93,7 @@ void Shape::removeFromDictionary(NativeObject* obj) {
   if (parent) {
     parent->setDictionaryNextPtr(dictNext);
   }
-  *dictNext.prevPtr() = parent;
+  dictNext.setPrev(parent);
   clearDictionaryNextPtr();
 
   obj->shape()->clearCachedBigEnoughForShapeTable();
@@ -105,7 +105,7 @@ void Shape::insertIntoDictionaryBefore(DictionaryShapeLink next) {
   MOZ_ASSERT(inDictionary());
   MOZ_ASSERT(dictNext.isNone());
 
-  Shape* prev = *next.prevPtr();
+  Shape* prev = next.prev();
 
 #ifdef DEBUG
   if (prev) {
@@ -121,7 +121,7 @@ void Shape::insertIntoDictionaryBefore(DictionaryShapeLink next) {
   }
 
   setDictionaryNextPtr(next);
-  *dictNext.prevPtr() = this;
+  dictNext.setPrev(this);
 }
 
 bool Shape::makeOwnBaseShape(JSContext* cx) {

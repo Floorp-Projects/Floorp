@@ -223,7 +223,8 @@ class DictionaryShapeLink {
     return !((*this) == other);
   }
 
-  GCPtrShape* prevPtr();
+  inline Shape* prev();
+  inline void setPrev(Shape* shape);
 } JS_HAZ_GC_POINTER;
 
 class PropertyTree {
