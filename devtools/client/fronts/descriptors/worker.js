@@ -12,13 +12,15 @@ const {
   registerFront,
 } = require("devtools/shared/protocol");
 const { TargetMixin } = require("devtools/client/fronts/targets/target-mixin");
+const {
+  DescriptorMixin,
+} = require("devtools/client/fronts/descriptors/descriptor-mixin");
 
-class WorkerDescriptorFront extends TargetMixin(
-  FrontClassWithSpec(workerDescriptorSpec)
+class WorkerDescriptorFront extends DescriptorMixin(
+  TargetMixin(FrontClassWithSpec(workerDescriptorSpec))
 ) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
-    this._client = client;
 
     this.traits = {};
 
@@ -28,10 +30,6 @@ class WorkerDescriptorFront extends TargetMixin(
     // So that we should destroy the target in order to significate that the target
     // is no longer debuggable.
     this.once("worker-close", this.destroy.bind(this));
-  }
-
-  get client() {
-    return this._client;
   }
 
   form(json) {
