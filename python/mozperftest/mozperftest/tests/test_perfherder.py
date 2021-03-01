@@ -53,7 +53,7 @@ def test_perfherder():
 
     # Check some metadata
     assert output["application"]["name"] == "firefox"
-    assert output["framework"]["name"] == "browsertime"
+    assert output["framework"]["name"] == "mozperftest"
     assert output["pushTimestamp"] == 1.0
 
     # Check some numbers in our data
@@ -88,7 +88,7 @@ def test_perfherder_simple_names():
 
     # Check some metadata
     assert output["application"]["name"] == "firefox"
-    assert output["framework"]["name"] == "browsertime"
+    assert output["framework"]["name"] == "mozperftest"
 
     # Check some numbers in our data
     assert len(output["suites"]) == 1
@@ -162,7 +162,7 @@ def test_perfherder_names_simplified_with_no_exclusions():
 
     # Check some metadata
     assert output["application"]["name"] == "firefox"
-    assert output["framework"]["name"] == "browsertime"
+    assert output["framework"]["name"] == "mozperftest"
 
     # Check some numbers in our data
     assert len(output["suites"]) == 1
@@ -395,7 +395,7 @@ def test_perfherder_logcat():
 
     # Check some metadata
     assert output["application"]["name"] == "firefox"
-    assert output["framework"]["name"] == "browsertime"
+    assert output["framework"]["name"] == "mozperftest"
 
     # Check some numbers in our data
     assert len(output["suites"]) == 1
