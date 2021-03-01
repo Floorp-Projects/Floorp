@@ -277,7 +277,7 @@ nsresult nsINIParser::RenameSection(const char* aSection,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (mSections.Get(aNewName, nullptr)) {
+  if (mSections.Contains(aNewName)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
