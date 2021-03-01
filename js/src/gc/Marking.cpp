@@ -1451,8 +1451,8 @@ void WasmFunctionScope::RuntimeData::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
 }
 void Scope::traceChildren(JSTracer* trc) {
-  TraceNullableCellHeaderEdge(trc, this, "scope enclosing");
   TraceNullableEdge(trc, &environmentShape_, "scope env shape");
+  TraceNullableEdge(trc, &enclosingScope_, "scope enclosing");
   applyScopeDataTyped([trc](auto data) { data->trace(trc); });
 }
 inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
