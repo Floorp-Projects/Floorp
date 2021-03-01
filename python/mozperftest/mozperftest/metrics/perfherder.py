@@ -252,7 +252,7 @@ class Perfherder(Layer):
         if subtest_should_alert is None:
             subtest_should_alert = []
         if framework is None:
-            framework = {"name": "browsertime"}
+            framework = {"name": "mozperftest"}
         if application is None:
             application = {"name": "firefox", "version": "9000"}
         if metrics_info is None:
