@@ -21,6 +21,9 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
+const {
+  DescriptorMixin,
+} = require("devtools/client/fronts/descriptors/descriptor-mixin");
 
 /**
  * DescriptorFront for tab targets.
@@ -30,10 +33,11 @@ const {
  *        TODO: This event could move to the server in order to support
  *        remoteness change for remote debugging.
  */
-class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
+class TabDescriptorFront extends DescriptorMixin(
+  FrontClassWithSpec(tabDescriptorSpec)
+) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
-    this._client = client;
 
     // The tab descriptor can be configured to create either local tab targets
     // (eg, regular tab toolbox) or browsing context targets (eg tab remote
@@ -46,10 +50,6 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
 
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._handleTabEvent = this._handleTabEvent.bind(this);
-  }
-
-  get client() {
-    return this._client;
   }
 
   form(json) {
