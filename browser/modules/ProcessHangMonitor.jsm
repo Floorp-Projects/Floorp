@@ -648,7 +648,7 @@ var ProcessHangMonitor = {
         message,
         "process-hang",
         "chrome://browser/content/aboutRobots-icon.png",
-        win.gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH,
+        win.gHighPriorityNotificationBox.PRIORITY_INFO_HIGH,
         buttons,
         event => {
           if (event == "dismissed") {
