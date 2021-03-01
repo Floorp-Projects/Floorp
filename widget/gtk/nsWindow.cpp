@@ -3699,10 +3699,6 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
   if (!StaticPrefs::ui_context_menus_after_mouseup()) {
     DispatchContextMenuEventFromMouseEvent(domButton, aEvent);
   }
-
-  if (!mIsX11Display) {
-    WaylandDragWorkaround(aEvent);
-  }
 }
 
 void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
@@ -6457,46 +6453,13 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
 /* static */
 bool nsWindow::DragInProgress(void) {
   nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-  if (!dragService) {
-    return false;
-  }
+
+  if (!dragService) return false;
 
   nsCOMPtr<nsIDragSession> currentDragSession;
   dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
 
   return currentDragSession != nullptr;
-}
-
-// This is an ugly workaround for
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1622107
-// We try to detect when Wayland compositor / gtk fails to deliver
-// info about finished D&D operations and cancel it on our own.
-void nsWindow::WaylandDragWorkaround(GdkEventButton* aEvent) {
-  static int buttonPressCountWithDrag = 0;
-
-  // We track only left button state as Firefox performs D&D on left
-  // button only.
-  if (aEvent->button != 1 || aEvent->type != GDK_BUTTON_PRESS) {
-    return;
-  }
-
-  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-  if (!dragService) {
-    return;
-  }
-  nsCOMPtr<nsIDragSession> currentDragSession;
-  dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
-
-  if (currentDragSession != nullptr) {
-    buttonPressCountWithDrag++;
-    if (buttonPressCountWithDrag > 1) {
-      NS_WARNING(
-          "Quit unfinished Wayland Drag and Drop operation. Buggy Wayland "
-          "compositor?");
-      buttonPressCountWithDrag = 0;
-      dragService->EndDragSession(false, 0);
-    }
-  }
 }
 
 static bool is_mouse_in_window(GdkWindow* aWindow, gdouble aMouseX,
