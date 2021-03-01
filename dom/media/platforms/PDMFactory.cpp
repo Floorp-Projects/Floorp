@@ -752,7 +752,9 @@ bool PDMFactory::SupportsMimeType(const nsACString& aMimeType,
 /* static */
 bool PDMFactory::AllDecodersAreRemote() {
   return StaticPrefs::media_rdd_process_enabled() &&
+#if defined(MOZ_FFVPX)
          StaticPrefs::media_rdd_ffvpx_enabled() &&
+#endif
          StaticPrefs::media_rdd_opus_enabled() &&
          StaticPrefs::media_rdd_theora_enabled() &&
          StaticPrefs::media_rdd_vorbis_enabled() &&
