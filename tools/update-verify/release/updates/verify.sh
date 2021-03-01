@@ -229,7 +229,7 @@ do
                 echo "Unknown override cert - skipping"
                 ;;
             esac
-            python "${cert_replacer}" "${MY_DIR}/../mar_certs" "${updater}.orig" "${updater}" ${overrides}
+            python3 "${cert_replacer}" "${MY_DIR}/../mar_certs" "${updater}.orig" "${updater}" ${overrides}
         else
             echo "override_certs is '${override_certs}', not replacing any certificates"
         fi
