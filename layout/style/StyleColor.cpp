@@ -50,9 +50,7 @@ template <>
 bool StyleColor::MaybeTransparent() const {
   // We know that the color is opaque when it's a numeric color with
   // alpha == 255.
-  // TODO(djg): Should we extend this to check Complex with bgRatio =
-  // 0, and fgRatio * alpha >= 255?
-  return !IsNumeric() || AsNumeric().alpha != 255;
+  return ratios != StyleComplexColorRatios::NUMERIC || color.alpha != 255;
 }
 
 template <>
@@ -62,32 +60,31 @@ nscolor StyleColor::CalcColor(nscolor aColor) const {
 
 template <>
 nscolor StyleColor::CalcColor(const StyleRGBA& aForegroundColor) const {
-  if (IsNumeric()) {
-    return AsNumeric().ToColor();
+  if (ratios == StyleComplexColorRatios::NUMERIC) {
+    return color.ToColor();
   }
-  if (IsCurrentColor()) {
+  if (ratios == StyleComplexColorRatios::CURRENT_COLOR) {
     return aForegroundColor.ToColor();
   }
-  MOZ_ASSERT(IsComplex());
-  const auto& complex = AsComplex();
-  return LinearBlendColors(complex.color, complex.ratios.bg, aForegroundColor,
-                           complex.ratios.fg);
+  return LinearBlendColors(color, ratios.bg, aForegroundColor, ratios.fg);
 }
 
 template <>
 nscolor StyleColor::CalcColor(const ComputedStyle& aStyle) const {
   // Common case that is numeric color, which is pure background, we
   // can skip resolving StyleText().
-  // TODO(djg): Is this optimization worth it?
-  if (IsNumeric()) {
-    return AsNumeric().ToColor();
+  if (ratios == StyleComplexColorRatios::NUMERIC) {
+    return color.ToColor();
   }
   return CalcColor(aStyle.StyleText()->mColor);
 }
 
 template <>
 nscolor StyleColor::CalcColor(const nsIFrame* aFrame) const {
-  return CalcColor(*aFrame->Style());
+  if (ratios == StyleComplexColorRatios::NUMERIC) {
+    return color.ToColor();
+  }
+  return CalcColor(aFrame->StyleText()->mColor);
 }
 
 }  // namespace mozilla
