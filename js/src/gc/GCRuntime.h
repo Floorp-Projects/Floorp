@@ -255,6 +255,21 @@ class WeakCacheSweepIterator {
   void settle();
 };
 
+class BarrierTracer final : public JS::CallbackTracer {
+ public:
+  static BarrierTracer* fromTracer(JSTracer* trc);
+
+  explicit BarrierTracer(JSRuntime* rt);
+
+  void performBarrier(JS::GCCellPtr cell);
+
+ private:
+  void onChild(const JS::GCCellPtr& thing) override;
+  void handleBufferFull(JS::GCCellPtr cell);
+
+  GCMarker& marker;
+};
+
 class GCRuntime {
   friend GCMarker::MarkQueueProgress GCMarker::processMarkQueue();
 
@@ -385,6 +400,7 @@ class GCRuntime {
   bool isHeapCompacting() const { return state() == State::Compact; }
   bool isForegroundSweeping() const { return state() == State::Sweep; }
   bool isBackgroundSweeping() const { return sweepTask.wasStarted(); }
+  bool isBackgroundMarking() const { return markTask.wasStarted(); }
   void waitBackgroundSweepEnd();
   void waitBackgroundAllocEnd() { allocTask.cancelAndWait(); }
   void waitBackgroundFreeEnd();
@@ -874,6 +890,7 @@ class GCRuntime {
   js::StringStats stringStats;
 
   GCMarker marker;
+  BarrierTracer barrierTracer;
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
 

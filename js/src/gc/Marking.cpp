@@ -964,10 +964,6 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
   // performing a read barrier. This means we can skip a bunch of checks and
   // call info the tracer directly.
 
-  AutoGeckoProfilerEntry profilingStackFrame(
-      TlsContext.get(), "PerformIncrementalReadBarrier",
-      JS::ProfilingCategoryPair::GCCC_Barrier);
-
   MOZ_ASSERT(thing);
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
 
@@ -975,16 +971,40 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
   Zone* zone = cell->zone();
   MOZ_ASSERT(zone->needsIncrementalBarrier());
 
-  // Skip disptaching on known tracer type.
-  GCMarker* gcmarker = GCMarker::fromTracer(zone->barrierTracer());
+  // Skip dispatching on known tracer type.
+  BarrierTracer* trc = BarrierTracer::fromTracer(zone->barrierTracer());
+  trc->performBarrier(thing);
+}
 
-  // Mark the argument, as DoMarking above.
-  ApplyGCThingTyped(thing, [gcmarker](auto thing) {
-    MOZ_ASSERT(ShouldMark(gcmarker, thing));
-    CheckTracedThing(gcmarker, thing);
-    AutoClearTracingSource acts(gcmarker);
-    gcmarker->markAndTraverse(thing);
-  });
+void js::gc::PerformIncrementalBarrier(TenuredCell* cell) {
+  // Internal version of previous function called for both read and pre-write
+  // barriers.
+
+  MOZ_ASSERT(cell);
+  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
+
+  Zone* zone = cell->zone();
+  MOZ_ASSERT(zone->needsIncrementalBarrier());
+
+  // Skip disptaching on known tracer type.
+  BarrierTracer* trc = BarrierTracer::fromTracer(zone->barrierTracer());
+
+  trc->performBarrier(JS::GCCellPtr(cell, cell->getTraceKind()));
+}
+
+void js::gc::PerformIncrementalBarrierDuringFlattening(JSString* str) {
+  TenuredCell* cell = &str->asTenured();
+
+  // Skip recording ropes. Buffering them is problematic because they will have
+  // their flags temporarily overwritten during flattening. Fortunately their
+  // children will also be barriered by flattening process so we don't need to
+  // traverse them.
+  if (str->isRope()) {
+    cell->markBlack();
+    return;
+  }
+
+  PerformIncrementalBarrier(cell);
 }
 
 template <typename T>
@@ -1780,7 +1800,11 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
   // This method leaves the mark color as it found it.
   AutoSetMarkColor autoSetBlack(*this, MarkColor::Black);
 
-  for (;;) {
+  while (!isDrained()) {
+    if (!traceBarrieredCells(budget)) {
+      return false;
+    }
+
     while (hasBlackEntries()) {
       MOZ_ASSERT(markColor() == MarkColor::Black);
       processMarkStackTop(budget);
@@ -1805,28 +1829,24 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
       } while (hasGrayEntries());
     }
 
-    if (hasBlackEntries()) {
-      // We can end up marking black during gray marking in the following case:
-      // a WeakMap has a CCW key whose delegate (target) is black, and during
-      // gray marking we mark the map (gray). The delegate's color will be
-      // propagated to the key. (And we can't avoid this by marking the key
-      // gray, because even though the value will end up gray in either case,
-      // the WeakMap entry must be preserved because the CCW could get
-      // collected and then we could re-wrap the delegate and look it up in the
-      // map again, and need to get back the original value.)
+    // Do all normal marking before any delayed marking.
+    //
+    // We can end up marking black during gray marking in the following case: a
+    // WeakMap has a CCW key whose delegate (target) is black, and during gray
+    // marking we mark the map (gray). The delegate's color will be propagated
+    // to the key. (And we can't avoid this by marking the key gray, because
+    // even though the value will end up gray in either case, the WeakMap entry
+    // must be preserved because the CCW could get collected and then we could
+    // re-wrap the delegate and look it up in the map again, and need to get
+    // back the original value.)
+    MOZ_ASSERT(!hasGrayEntries());
+    if (!barrierBuffer().empty() || hasBlackEntries()) {
       continue;
     }
 
-    if (!hasDelayedChildren()) {
-      break;
-    }
-
-    /*
-     * Mark children of things that caused too deep recursion during the
-     * above tracing. Don't do this until we're done with everything
-     * else.
-     */
-    if (!markAllDelayedChildren(budget, reportTime)) {
+    // Mark children of things that caused too deep recursion during the
+    // above tracing.
+    if (hasDelayedChildren() && !markAllDelayedChildren(budget, reportTime)) {
       return false;
     }
   }
@@ -2384,6 +2404,10 @@ bool GCMarker::init() {
          auxStack.init(gc::MarkStack::AuxiliaryStack, incrementalGCEnabled);
 }
 
+bool GCMarker::isDrained() {
+  return barrierBuffer().empty() && isMarkStackEmpty() && !delayedMarkingList;
+}
+
 void GCMarker::start() {
   MOZ_ASSERT(state == MarkingState::NotActive);
   state = MarkingState::RegularMarking;
@@ -2408,6 +2432,7 @@ void GCMarker::stop() {
   }
   state = MarkingState::NotActive;
 
+  barrierBuffer().clearAndFree();
   stack.clear();
   auxStack.clear();
   setMainStackColor(MarkColor::Black);
@@ -2436,6 +2461,7 @@ inline void GCMarker::forEachDelayedMarkingArena(F&& f) {
 void GCMarker::reset() {
   color = MarkColor::Black;
 
+  barrierBuffer().clearAndFree();
   stack.clear();
   auxStack.clear();
   setMainStackColor(MarkColor::Black);
@@ -4020,15 +4046,14 @@ void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   }
 
   // If the cell is in a zone that we're currently marking, then it's possible
-  // that it is currently white but will end up gray. To handle this case, push
-  // any cells in zones that are currently being marked onto the mark stack and
-  // they will eventually get marked black.
+  // that it is currently white but will end up gray. To handle this case,
+  // trigger the barrier for any cells in zones that are currently being
+  // marked. This will ensure they will eventually get marked black.
   if (zone->isGCMarking()) {
     if (!cell->isMarkedBlack()) {
-      Cell* tmp = cell;
-      JSTracer* trc = &runtime()->gc.marker;
-      TraceManuallyBarrieredGenericPointerEdge(trc, &tmp, "read barrier");
-      MOZ_ASSERT(tmp == cell);
+      // Skip disptaching on known tracer type.
+      BarrierTracer* trc = BarrierTracer::fromTracer(zone->barrierTracer());
+      trc->performBarrier(thing);
       unmarkedAny = true;
     }
     return;
@@ -4104,6 +4129,133 @@ bool js::UnmarkGrayShapeRecursively(Shape* shape) {
 #ifdef DEBUG
 Cell* js::gc::UninlinedForwarded(const Cell* cell) { return Forwarded(cell); }
 #endif
+
+#ifdef DEBUG
+static bool CellHasChildren(JS::GCCellPtr cell) {
+  struct Tracer : public JS::CallbackTracer {
+    bool hasChildren = false;
+    explicit Tracer(JSRuntime* runtime) : JS::CallbackTracer(runtime) {}
+    void onChild(const JS::GCCellPtr& thing) { hasChildren = true; }
+  };
+
+  Tracer trc(cell.asCell()->runtimeFromMainThread());
+  JS::TraceChildren(&trc, cell);
+  return trc.hasChildren;
+}
+#endif
+
+static bool CellMayHaveChildren(JS::GCCellPtr cell) {
+  bool mayHaveChildren;
+
+  switch (cell.kind()) {
+    case JS::TraceKind::BigInt:
+      mayHaveChildren = false;
+      break;
+
+    case JS::TraceKind::String: {
+      JSString* string = &cell.as<JSString>();
+      mayHaveChildren = string->hasBase() || string->isRope();
+      break;
+    }
+
+    default:
+      mayHaveChildren = true;
+      break;
+  }
+
+  MOZ_ASSERT_IF(!mayHaveChildren, !CellHasChildren(cell));
+  return mayHaveChildren;
+}
+
+/* static */
+BarrierTracer* BarrierTracer::fromTracer(JSTracer* trc) {
+  MOZ_ASSERT(trc->asCallbackTracer()->kind() == JS::TracerKind::Barrier);
+  return static_cast<BarrierTracer*>(trc->asCallbackTracer());
+}
+
+BarrierTracer::BarrierTracer(JSRuntime* rt)
+    : CallbackTracer(rt, JS::TracerKind::Barrier,
+                     JS::WeakEdgeTraceAction::Skip),
+      marker(rt->gc.marker) {}
+
+void BarrierTracer::onChild(const JS::GCCellPtr& thing) {
+  if (MapGCThingTyped(thing,
+                      [this](auto* ptr) { return ShouldMark(&marker, ptr); })) {
+    performBarrier(thing);
+  }
+}
+
+// If the barrier buffer grows too large, trace all barriered things at that
+// point.
+constexpr static size_t MaxBarrierBufferSize = 4096;
+
+void BarrierTracer::performBarrier(JS::GCCellPtr cell) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
+  MOZ_ASSERT(!runtime()->gc.isBackgroundMarking());
+  MOZ_ASSERT(!cell.asCell()->isForwarded());
+
+  // Mark the cell here to prevent us recording it again.
+  if (!cell.asCell()->asTenured().markIfUnmarked()) {
+    return;
+  }
+
+  // NOTE: This assumes that cells that don't have children do not require their
+  // traceChildren method to be called.
+  bool requiresTracing = CellMayHaveChildren(cell);
+  if (!requiresTracing) {
+    return;
+  }
+
+  BarrierBuffer& buffer = marker.barrierBuffer();
+  if (buffer.length() >= MaxBarrierBufferSize || !buffer.append(cell)) {
+    handleBufferFull(cell);
+  }
+}
+
+void BarrierTracer::handleBufferFull(JS::GCCellPtr cell) {
+  SliceBudget budget = SliceBudget::unlimited();
+  marker.traceBarrieredCells(budget);
+  marker.traceBarrieredCell(cell);
+}
+
+bool GCMarker::traceBarrieredCells(SliceBudget& budget) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()) ||
+             CurrentThreadIsGCMarking());
+  MOZ_ASSERT(markColor() == MarkColor::Black);
+
+  AutoGeckoProfilerEntry profilingStackFrame(
+      TlsContext.get(), "GCMarker::traceBarrieredCells",
+      JS::ProfilingCategoryPair::GCCC_Barrier);
+
+  BarrierBuffer& buffer = barrierBuffer();
+  while (!buffer.empty()) {
+    traceBarrieredCell(buffer.popCopy());
+    budget.step();
+    if (budget.isOverBudget()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void GCMarker::traceBarrieredCell(JS::GCCellPtr cell) {
+  MOZ_ASSERT(cell.asCell()->isTenured());
+  MOZ_ASSERT(cell.asCell()->isMarkedBlack());
+  MOZ_ASSERT(!cell.asCell()->isForwarded());
+
+  ApplyGCThingTyped(cell, [this](auto thing) {
+    if (!ShouldMark(this, thing)) {
+      return;
+    }
+
+    CheckTracedThing(this, thing);
+    AutoClearTracingSource acts(this);
+
+    MOZ_ASSERT(thing->isMarkedBlack());
+    traverse(thing);
+  });
+}
 
 namespace js {
 namespace debug {

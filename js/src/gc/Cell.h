@@ -54,6 +54,8 @@ enum class AllocKind : uint8_t;
 class StoreBuffer;
 class TenuredCell;
 
+extern void PerformIncrementalBarrier(TenuredCell* cell);
+extern void PerformIncrementalBarrierDuringFlattening(JSString* str);
 extern void UnmarkGrayGCThingRecursively(TenuredCell* cell);
 
 // Like gc::MarkColor but allows the possibility of the cell being unmarked.
@@ -479,10 +481,7 @@ MOZ_ALWAYS_INLINE void ReadBarrierImpl(TenuredCell* thing) {
   if (shadowZone->needsIncrementalBarrier()) {
     // We should only observe barriers being enabled on the main thread.
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
-    Cell* tmp = thing;
-    TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp,
-                                             "read barrier");
-    MOZ_ASSERT(tmp == thing);
+    PerformIncrementalBarrier(thing);
     return;
   }
 
@@ -533,10 +532,7 @@ MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(TenuredCell* thing) {
 
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
   MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(zone));
-  Cell* tmp = thing;
-  TraceManuallyBarrieredGenericPointerEdge(zone->barrierTracer(), &tmp,
-                                           "pre barrier");
-  MOZ_ASSERT(tmp == thing);
+  PerformIncrementalBarrier(thing);
 }
 
 MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(Cell* thing) {
@@ -580,6 +576,26 @@ MOZ_ALWAYS_INLINE void PreWriteBarrier(JS::Zone* zone, T* data,
 template <typename T>
 MOZ_ALWAYS_INLINE void PreWriteBarrier(JS::Zone* zone, T* data) {
   PreWriteBarrier(zone, data, [](JSTracer* trc, T* data) { data->trace(trc); });
+}
+
+// Special case pre-write barrier for strings used during rope flattening. This
+// is a work around as buffering these strings is problematic as they may have
+// their cell headers overwritten with temporary GC data.
+inline void PreWriteBarrierDuringFlattening(JSString* str) {
+  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
+
+  if (IsInsideNursery(str)) {
+    return;
+  }
+
+  auto* cell = reinterpret_cast<TenuredCell*>(str);
+  JS::shadow::Zone* zone = cell->shadowZoneFromAnyThread();
+
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(zone->runtimeFromAnyThread()));
+
+  if (zone->needsIncrementalBarrier()) {
+    PerformIncrementalBarrierDuringFlattening(str);
+  }
 }
 
 #ifdef DEBUG
