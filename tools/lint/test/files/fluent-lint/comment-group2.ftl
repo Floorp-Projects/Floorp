@@ -6,6 +6,6 @@
 
 ## Pass: The last group comment is allowed to be an empty ##
 
-fake1 = Fake text
+fake-identifier-1 = Fake text
 
 ##

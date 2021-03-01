@@ -7,3 +7,6 @@ ID01:
         - Invalid_Id
     files:
         - excluded.ftl
+ID02:
+    messages: []
+    files: []

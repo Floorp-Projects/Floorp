@@ -55,6 +55,8 @@ class Linter(visitor.Visitor):
         self.double_quote_re = re.compile(r"\"")
         self.ellipsis_re = re.compile(r"\.\.\.")
 
+        self.minimum_id_length = 9
+
         self.state = {
             # The resource comment should be at the top of the page after the license.
             "node_can_be_resource_comment": True,
@@ -81,7 +83,9 @@ class Linter(visitor.Visitor):
         )
 
         if self.debug_print_json:
-            print(node.to_json())
+            import json
+
+            print(json.dumps(node.to_json(), indent=2))
             # Only debug print the root node.
             self.debug_print_json = False
 
@@ -101,6 +105,11 @@ class Linter(visitor.Visitor):
         self.state["can_have_group_comment"] = True
         super().generic_visit(node)
 
+    def visit_MessageReference(self, node):
+        # We don't recurse into message references, the identifiers are either
+        # checked elsewhere or are attributes and come from DOM.
+        pass
+
     def visit_Identifier(self, node):
         if (
             self.path not in self.exclusions["ID01"]["files"]
@@ -109,6 +118,16 @@ class Linter(visitor.Visitor):
         ):
             self.add_error(
                 node, "ID01", "Identifiers may only contain lowercase characters and -"
+            )
+        if (
+            len(node.name) < self.minimum_id_length
+            and self.path not in self.exclusions["ID02"]["files"]
+            and node.name not in self.exclusions["ID02"]["messages"]
+        ):
+            self.add_error(
+                node,
+                "ID02",
+                f"Identifiers must be at least {self.minimum_id_length} characters long",
             )
 
     def visit_TextElement(self, node):
@@ -181,6 +200,12 @@ class Linter(visitor.Visitor):
                 "Resource comments (###) should have one empty line above them.",
             )
             return
+
+    def visit_SelectExpression(self, node):
+        # We only want to visit the variant values, the identifiers in selectors
+        # and keys are allowed to be free form.
+        for variant in node.variants:
+            super().generic_visit(variant.value)
 
     def visit_GroupComment(self, node):
         # This node is a comment with: "##"

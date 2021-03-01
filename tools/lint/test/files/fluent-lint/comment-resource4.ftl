@@ -5,4 +5,4 @@
 
 ### Fail: (RC03) There should be only one space above.
 
-fake1 = Fake text
+fake-identifier-1 = Fake text
