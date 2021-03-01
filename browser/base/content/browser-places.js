@@ -1917,6 +1917,11 @@ var BookmarkingUI = {
     CustomizableUI.addListener(this);
     this.updateEmptyToolbarMessage();
     this.star.addEventListener("mouseover", this, { once: true });
+
+    if (gProtonTabs) {
+      let bhTooltip = document.getElementById("bhTooltip");
+      bhTooltip.setAttribute("position", "after_start");
+    }
   },
 
   _hasBookmarksObserver: false,

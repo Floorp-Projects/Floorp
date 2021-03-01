@@ -71,6 +71,12 @@
         ],
       });
 
+      let tabTooltip = document.getElementById("tabbrowser-tab-tooltip");
+      if (gProtonTabs) {
+        tabTooltip.setAttribute("position", "after_start");
+        tabTooltip.setAttribute("anchortoclosest", "tab");
+      }
+
       // We take over setting the document title, so remove the l10n id to
       // avoid it being re-translated and overwriting document content if
       // we ever switch languages at runtime. After a language change, the
@@ -5240,7 +5246,7 @@
         label = this.getTabTooltip(tab);
       }
 
-      if (!gProton) {
+      if (!gProtonTabs) {
         event.target.setAttribute("label", label);
         return;
       }
