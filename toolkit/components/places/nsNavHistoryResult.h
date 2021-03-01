@@ -150,8 +150,6 @@ class nsNavHistoryResult final
 
   void InvalidateTree();
 
-  bool mBatchInProgress;
-
   nsMaybeWeakPtrArray<nsINavHistoryResultObserver> mObservers;
   bool mSuppressNotifications;
 
@@ -175,10 +173,20 @@ class nsNavHistoryResult final
 
   void OnMobilePrefChanged();
 
+  bool IsBatching() const { return mBatchInProgress > 0; };
+
   static void OnMobilePrefChangedCallback(const char* prefName, void* self);
 
  protected:
   virtual ~nsNavHistoryResult();
+
+ private:
+  // Number of batch processes currently running. IsBatching() returns true if
+  // this value is greater than or equal to 1. Also, when this value changes to
+  // 1 from 0, batching() in nsINavHistoryResultObserver is called with
+  // parameter as true, when changes to 0, that means finishing all batch
+  // processes, batching() is called with false.
+  uint32_t mBatchInProgress;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)

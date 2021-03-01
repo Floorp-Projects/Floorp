@@ -1903,7 +1903,7 @@ void nsNavHistoryQueryResultNode::ClearChildren(bool aUnregister) {
 nsresult nsNavHistoryQueryResultNode::Refresh() {
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
-  if (result->mBatchInProgress) {
+  if (result->IsBatching()) {
     result->requestRefresh(this);
     return NS_OK;
   }
@@ -2039,7 +2039,7 @@ nsresult nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
-  if (result->mBatchInProgress &&
+  if (result->IsBatching() &&
       ++mBatchChanges > MAX_BATCH_CHANGES_BEFORE_REFRESH) {
     nsresult rv = Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2198,7 +2198,7 @@ nsresult nsNavHistoryQueryResultNode::OnTitleChanged(
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
-  if (result->mBatchInProgress &&
+  if (result->IsBatching() &&
       ++mBatchChanges > MAX_BATCH_CHANGES_BEFORE_REFRESH) {
     nsresult rv = Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2264,7 +2264,7 @@ nsresult nsNavHistoryQueryResultNode::OnPageRemovedFromStore(
     nsIURI* aURI, const nsACString& aGUID, uint16_t aReason) {
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
-  if (result->mBatchInProgress &&
+  if (result->IsBatching() &&
       ++mBatchChanges > MAX_BATCH_CHANGES_BEFORE_REFRESH) {
     nsresult rv = Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2890,7 +2890,7 @@ void nsNavHistoryFolderResultNode::ClearChildren(bool unregister) {
 nsresult nsNavHistoryFolderResultNode::Refresh() {
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
-  if (result->mBatchInProgress) {
+  if (result->IsBatching()) {
     result->requestRefresh(this);
     return NS_OK;
   }
@@ -3462,10 +3462,10 @@ nsNavHistoryResult::nsNavHistoryResult(
       mIsBookmarksObserver(false),
       mIsMobilePrefObserver(false),
       mBookmarkFolderObservers(64),
-      mBatchInProgress(false),
       mSuppressNotifications(false),
       mIsHistoryDetailsObserver(false),
-      mObserversWantHistoryDetails(true) {
+      mObserversWantHistoryDetails(true),
+      mBatchInProgress(0) {
   mSortingMode = aOptions->SortingMode();
 
   mRootNode->mResult = this;
@@ -3721,7 +3721,7 @@ nsNavHistoryResult::AddObserver(nsINavHistoryResultObserver* aObserver,
 
   // If we are batching, notify a fake batch start to the observers.
   // Not doing so would then notify a not coupled batch end.
-  if (mBatchInProgress) {
+  if (IsBatching()) {
     NOTIFY_RESULT_OBSERVERS(this, Batching(true));
   }
 
@@ -3865,8 +3865,7 @@ NS_IMETHODIMP
 nsNavHistoryResult::OnBeginUpdateBatch() {
   // Since we could be observing both history and bookmarks, it's possible both
   // notify the batch.  We can safely ignore nested calls.
-  if (!mBatchInProgress) {
-    mBatchInProgress = true;
+  if (++mBatchInProgress == 1) {
     ENUMERATE_HISTORY_OBSERVERS(OnBeginUpdateBatch());
     ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnBeginUpdateBatch());
 
@@ -3883,14 +3882,10 @@ nsNavHistoryResult::OnEndUpdateBatch() {
   // Notice it's possible we are notified OnEndUpdateBatch more times than
   // onBeginUpdateBatch, since the result could be created in the middle of
   // nested batches.
-  if (mBatchInProgress) {
+  if (--mBatchInProgress == 0) {
     ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
     ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnEndUpdateBatch());
 
-    // Setting mBatchInProgress before notifying the end of the batch to
-    // observers would make evantual calls to Refresh() directly handled rather
-    // than enqueued.  Thus set it just before handling refreshes.
-    mBatchInProgress = false;
     NOTIFY_REFRESH_PARTICIPANTS();
     NOTIFY_RESULT_OBSERVERS(this, Batching(false));
   }
