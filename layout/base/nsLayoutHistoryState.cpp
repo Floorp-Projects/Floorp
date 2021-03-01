@@ -102,7 +102,7 @@ void nsLayoutHistoryState::AddState(const nsCString& aStateKey,
 }
 
 PresState* nsLayoutHistoryState::GetState(const nsCString& aKey) {
-  UniquePtr<PresState>* statePtr = mStates.GetValue(aKey);
+  auto statePtr = mStates.Lookup(aKey);
   if (!statePtr) {
     return nullptr;
   }

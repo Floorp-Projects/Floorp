@@ -117,13 +117,8 @@ void Gamepad::SetTouchEvent(uint32_t aTouchIndex,
 
   // Handling cross-origin tracking.
   GamepadTouchState touchState(aTouch);
-  if (auto hashValue = mTouchIdHash.GetValue(touchState.touchId)) {
-    touchState.touchId = *hashValue;
-  } else {
-    touchState.touchId = mTouchIdHashValue;
-    mTouchIdHash.InsertOrUpdate(aTouch.touchId, mTouchIdHashValue);
-    ++mTouchIdHashValue;
-  }
+  touchState.touchId = mTouchIdHash.LookupOrInsertWith(
+      touchState.touchId, [&] { return mTouchIdHashValue++; });
   mTouchEvents[aTouchIndex]->SetTouchState(touchState);
   UpdateTimestamp();
 }
