@@ -197,7 +197,7 @@ class BlobURLsReporter final : public nsIMemoryReporter {
       mozilla::dom::BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
       MOZ_ASSERT(blobImpl);
 
-      refCounts.InsertOrUpdate(blobImpl, refCounts.Get(blobImpl) + 1);
+      refCounts.LookupOrInsert(blobImpl, 0) += 1;
     }
 
     for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
