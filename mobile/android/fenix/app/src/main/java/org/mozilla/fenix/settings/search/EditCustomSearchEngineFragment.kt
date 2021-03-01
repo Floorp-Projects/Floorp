@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.state.search.SearchEngine
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -118,7 +119,8 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                 SearchStringValidator.Result.Success -> {
                     val update = searchEngine.copy(
                         name = name,
-                        resultUrls = listOf(searchString.toSearchUrl())
+                        resultUrls = listOf(searchString.toSearchUrl()),
+                        icon = requireComponents.core.icons.loadIcon(IconRequest(searchString)).await().bitmap
                     )
 
                     requireComponents.useCases.searchUseCases.addSearchEngine(update)
