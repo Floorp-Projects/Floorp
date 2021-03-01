@@ -7,9 +7,10 @@
 #ifndef nsDataHashtable_h__
 #define nsDataHashtable_h__
 
-#include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
-#include "mozilla/Maybe.h"
+
+// Not used here, but included for convenience.
+#include "nsHashKeys.h"
 
 /**
  * templated hashtable class maps keys to simple datatypes.
@@ -18,32 +19,14 @@
  *   for a complete specification.
  * @param DataType the simple datatype being wrapped
  * @see nsInterfaceHashtable, nsClassHashtable
+ *
+ * XXX This could be made a type alias instead of a subclass, but all forward
+ * declarations must be adjusted.
  */
 template <class KeyClass, class DataType>
 class nsDataHashtable : public nsBaseHashtable<KeyClass, DataType, DataType> {
- private:
-  typedef nsBaseHashtable<KeyClass, DataType, DataType> BaseClass;
-
  public:
-  using typename BaseClass::EntryType;
-  using typename BaseClass::KeyType;
-
-  nsDataHashtable() = default;
-  explicit nsDataHashtable(uint32_t aInitLength) : BaseClass(aInitLength) {}
-
-  /**
-   * Retrieve a reference to the value for a key.
-   *
-   * @param aKey the key to retrieve.
-   * @return a reference to the found value, or nullptr if no entry was found
-   * with the given key.
-   */
-  [[nodiscard]] DataType* GetValue(KeyType aKey) {
-    if (EntryType* ent = this->GetEntry(aKey)) {
-      return ent->GetModifiableData();
-    }
-    return nullptr;
-  }
+  using nsBaseHashtable<KeyClass, DataType, DataType>::nsBaseHashtable;
 };
 
 #endif  // nsDataHashtable_h__
