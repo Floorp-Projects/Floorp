@@ -1987,19 +1987,15 @@ class nsContextMenu {
   }
 
   printFrame() {
-    PrintUtils.startPrintWindow(
-      "context_print_frame",
-      this.actor.browsingContext,
-      { printFrameOnly: true }
-    );
+    PrintUtils.startPrintWindow(this.actor.browsingContext, {
+      printFrameOnly: true,
+    });
   }
 
   printSelection() {
-    PrintUtils.startPrintWindow(
-      "context_print_selection",
-      this.actor.browsingContext,
-      { printSelectionOnly: true }
-    );
+    PrintUtils.startPrintWindow(this.actor.browsingContext, {
+      printSelectionOnly: true,
+    });
   }
 
   switchPageDirection() {

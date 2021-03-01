@@ -23,11 +23,9 @@ BrowserDOMWindow.prototype = {
 
   _maybeOpen(aOpenWindowInfo, aWhere) {
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
-      return PrintUtils.startPrintWindow(
-        "window_print",
-        aOpenWindowInfo.parent,
-        { openWindowInfo: aOpenWindowInfo }
-      );
+      return PrintUtils.startPrintWindow(aOpenWindowInfo.parent, {
+        openWindowInfo: aOpenWindowInfo,
+      });
     }
     return null;
   },
