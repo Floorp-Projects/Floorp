@@ -17,6 +17,8 @@ namespace js {
 namespace jit {
 
 class ICEntry;
+class ICStub;
+class ICCacheIRStub;
 
 // [SMDOC] CacheIR Health Report
 //
@@ -57,9 +59,15 @@ class CacheIRHealth {
   Happiness determineStubHappiness(uint32_t stubHealthScore);
   // Health of an individual stub.
   Happiness spewStubHealth(AutoStructuredSpewer& spew, ICCacheIRStub* stub);
+  // If there is more than just a fallback stub in an IC Entry, then additional
+  // information about the IC entry.
+  bool spewNonFallbackICInformation(AutoStructuredSpewer& spew,
+                                    ICStub* firstStub,
+                                    Happiness* entryHappiness);
   // Health of all the stubs in an individual CacheIR Entry.
-  Happiness spewICEntryHealth(AutoStructuredSpewer& spew, HandleScript script,
-                              jit::ICEntry* entry, jsbytecode* pc, JSOp op);
+  bool spewICEntryHealth(AutoStructuredSpewer& spew, HandleScript script,
+                         ICEntry* entry, jsbytecode* pc, JSOp op,
+                         Happiness* entryHappiness);
 
  public:
   // Spews the final hit count for scripts where we care about its final hit
