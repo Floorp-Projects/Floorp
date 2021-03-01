@@ -11,9 +11,9 @@ job-defaults:
         toolchain:
             - win64-node-10
             - win64-geckodriver
-    platform: win64-shippable/opt
+    platform: windows10-64-shippable/opt
     require-build:
-        win64-shippable/opt: build-win64-shippable/opt
+        windows10-64-shippable/opt: build-win64-shippable/opt
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
 
