@@ -164,14 +164,14 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
 
   if (!maybeEntryTypes.WasPassed() && !maybeType.WasPassed()) {
     /* Per spec (3.3.1.2), this should be a syntax error. */
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowTypeError("Can't call observe without `type` or `entryTypes`");
     return;
   }
 
   if (maybeEntryTypes.WasPassed() &&
       (maybeType.WasPassed() || maybeBuffered.WasPassed())) {
     /* Per spec (3.3.1.3), this, too, should be a syntax error. */
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.ThrowTypeError("Can't call observe with both `type` and `entryTypes`");
     return;
   }
 
