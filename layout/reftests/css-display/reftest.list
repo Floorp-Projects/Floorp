@@ -16,7 +16,6 @@ fuzzy-if(winWidget,0-12,0-100) == display-contents-style-inheritance-1-dom-mutat
 == display-contents-visibility-hidden.html display-contents-visibility-hidden-ref.html
 == display-contents-visibility-hidden-2.html display-contents-visibility-hidden-ref.html
 == display-contents-495385-2d.html display-contents-495385-2d-ref.html
-asserts(0-1) fuzzy-if(Android,0-8,0-3216) == display-contents-fieldset.html display-contents-fieldset-ref.html # bug 1089223
 == display-contents-list-item-child.html display-contents-list-item-child-ref.html
 == display-contents-dyn-insert-text.html display-contents-dyn-insert-text-ref.html
 == display-contents-writing-mode-1.html display-contents-writing-mode-1-ref.html
