@@ -3790,7 +3790,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 // shadowOptions method on the various window types.
 static const NSUInteger kWindowShadowOptionsNoShadow = 0;
 static const NSUInteger kWindowShadowOptionsMenu = 2;
-static const NSUInteger kWindowShadowOptionsTooltip = 4;
+static const NSUInteger kWindowShadowOptionsTooltipMojaveOrLater = 4;
 - (NSUInteger)shadowOptions {
   if (!self.hasShadow) {
     return kWindowShadowOptionsNoShadow;
@@ -3799,12 +3799,17 @@ static const NSUInteger kWindowShadowOptionsTooltip = 4;
   switch (self.shadowStyle) {
     case StyleWindowShadow::None:
       return kWindowShadowOptionsNoShadow;
+
     case StyleWindowShadow::Default:  // we treat "default" as "default panel"
     case StyleWindowShadow::Menu:
     case StyleWindowShadow::Sheet:
       return kWindowShadowOptionsMenu;
+
     case StyleWindowShadow::Tooltip:
-      return kWindowShadowOptionsTooltip;
+      if (nsCocoaFeatures::OnMojaveOrLater()) {
+        return kWindowShadowOptionsTooltipMojaveOrLater;
+      }
+      return kWindowShadowOptionsMenu;
   }
 }
 
