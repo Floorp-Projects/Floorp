@@ -89,7 +89,7 @@ void BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   // Obtain our array of observers for this URI.
   auto* const links =
       mTrackedURIs.WithEntryHandle(aURI, [&](auto&& entry) -> ObservingLinks* {
-        MOZ_DIAGNOSTIC_ASSERT(!entry || !entry.Data().mLinks.IsEmpty(),
+        MOZ_DIAGNOSTIC_ASSERT(!entry || !entry->mLinks.IsEmpty(),
                               "An empty key was kept around in our hashtable!");
         if (!entry) {
           ScheduleVisitedQuery(aURI);
@@ -152,7 +152,7 @@ void BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
     return;
   }
 
-  ObserverArray& observers = entry.Data().mLinks;
+  ObserverArray& observers = entry->mLinks;
   if (!observers.RemoveElement(aLink)) {
     MOZ_ASSERT_UNREACHABLE("Trying to unregister node that wasn't registered!");
     return;

@@ -217,7 +217,7 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
           entry.Data()->Reset();
         }
 
-        return entry.Data().get();
+        return entry->get();
       });
 
   rec->mExpirationTime = aExpirationTime;

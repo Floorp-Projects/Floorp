@@ -142,7 +142,7 @@ class GMPDiskStorage : public GMPStorage {
                 .get();
           }
 
-          return entry.Data().get();
+          return entry->get();
         });
     if (!record) {
       return GMPGenericErr;
