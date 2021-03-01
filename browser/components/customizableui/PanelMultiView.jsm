@@ -120,7 +120,7 @@ XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gProtonAppMenuEnabled",
-  "browser.proton.appmenu.enabled",
+  "browser.proton.enabled",
   false
 );
 

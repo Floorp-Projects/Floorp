@@ -348,7 +348,7 @@ var UITour = {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "protonAppMenuEnabled",
-      "browser.proton.appmenu.enabled",
+      "browser.proton.enabled",
       false
     );
 
