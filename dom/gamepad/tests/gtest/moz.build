@@ -4,6 +4,7 @@
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     SOURCES = [
+        "TestGamepadStateBroadcastWindows.cpp",
         "TestSynchronizedSharedMemoryWindows.cpp",
     ]
 else:

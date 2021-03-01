@@ -37,6 +37,7 @@ namespace mozilla::dom {
 
 class GamepadPlatformService;
 class GamepadServiceTest;
+class GamepadTestHelper;
 class XRInputSource;
 
 // The "kind" of a gamepad handle is based on which provider created it
@@ -73,6 +74,7 @@ class GamepadHandle {
   // create new handles and inspect their actual value
   friend class mozilla::dom::GamepadPlatformService;
   friend class mozilla::dom::GamepadServiceTest;
+  friend class mozilla::dom::GamepadTestHelper;
   friend class mozilla::dom::XRInputSource;
   friend class mozilla::gfx::VRDisplayClient;
   friend class mozilla::gfx::VRManager;
