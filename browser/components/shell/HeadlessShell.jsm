@@ -20,8 +20,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const progressListeners = new Set();
 
 class ScreenshotParent extends JSWindowActorParent {
-  takeScreenshot(params) {
-    return this.sendQuery("TakeScreenshot", params);
+  getDimensions(params) {
+    return this.sendQuery("GetDimensions", params);
   }
 }
 
@@ -31,7 +31,6 @@ ChromeUtils.registerWindowActor("Screenshot", {
   },
   child: {
     moduleURI: "resource:///modules/ScreenshotChild.jsm",
-    messages: ["TakeScreenshot"],
   },
 });
 
@@ -117,6 +116,7 @@ async function takeScreenshot(
       "style",
       `width: ${contentWidth}px; min-width: ${contentWidth}px; height: ${contentHeight}px; min-height: ${contentHeight}px;`
     );
+    browser.setAttribute("maychangeremoteness", "true");
     doc.documentElement.appendChild(browser);
 
     await loadContentWindow(browser, url);
@@ -124,10 +124,35 @@ async function takeScreenshot(
     let actor = browser.browsingContext.currentWindowGlobal.getActor(
       "Screenshot"
     );
-    let blob = await actor.takeScreenshot({
-      fullWidth,
-      fullHeight,
-    });
+    let dimensions = await actor.getDimensions();
+
+    let canvas = doc.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "html:canvas"
+    );
+    let context = canvas.getContext("2d");
+    let width = dimensions.innerWidth;
+    let height = dimensions.innerHeight;
+    if (fullWidth) {
+      width += dimensions.scrollMaxX - dimensions.scrollMinX;
+    }
+    if (fullHeight) {
+      height += dimensions.scrollMaxY - dimensions.scrollMinY;
+    }
+    canvas.width = width;
+    canvas.height = height;
+    let rect = new DOMRect(0, 0, width, height);
+
+    let snapshot = await browser.browsingContext.currentWindowGlobal.drawSnapshot(
+      rect,
+      1,
+      "rgb(255, 255, 255)"
+    );
+    context.drawImage(snapshot, 0, 0);
+
+    snapshot.close();
+
+    let blob = await new Promise(resolve => canvas.toBlob(resolve));
 
     let reader = await new Promise(resolve => {
       let fr = new FileReader();
