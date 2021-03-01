@@ -1695,11 +1695,6 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
   return false;
 }
 
-static int GetScrollbarButtonCount() {
-  int32_t buttons = LookAndFeel::GetInt(LookAndFeel::IntID::ScrollArrowStyle);
-  return CountPopulation32(static_cast<uint32_t>(buttons));
-}
-
 bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
                                            nsIFrame* aFrame,
                                            StyleAppearance aAppearance,
@@ -1799,36 +1794,14 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
       }
       [[fallthrough]];
     case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbartrackHorizontal:
-    case StyleAppearance::ScrollbartrackVertical:
-    case StyleAppearance::Scrollcorner: {
+    case StyleAppearance::ScrollbarthumbHorizontal: {
       auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
       auto width = style->StyleUIReset()->mScrollbarWidth;
       auto sizes = GetScrollbarSizes(aPresContext, width, Overlay::No);
       MOZ_ASSERT(sizes.mHorizontal == sizes.mVertical);
+      // TODO: for short scrollbars it could be nice if the thumb could shrink
+      // under this size.
       aResult->SizeTo(sizes.mHorizontal, sizes.mHorizontal);
-      if (width != StyleScrollbarWidth::Thin) {
-        // If the scrollbar has any buttons, then we increase the minimum
-        // size so that they fit too.
-        //
-        // FIXME(heycam): We should probably ensure that the thumb disappears
-        // if a scrollbar is big enough to fit the buttons but not the thumb,
-        // which is what the Windows native theme does.  If we do that, then
-        // the minimum size here needs to be reduced accordingly.
-        switch (aAppearance) {
-          case StyleAppearance::ScrollbarHorizontal:
-            aResult->width *= GetScrollbarButtonCount() + 1;
-            break;
-          case StyleAppearance::ScrollbarVertical:
-            aResult->height *= GetScrollbarButtonCount() + 1;
-            break;
-          default:
-            break;
-        }
-      }
       break;
     }
     default:
