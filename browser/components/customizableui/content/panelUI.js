@@ -213,8 +213,16 @@ const PanelUI = {
     }
     this._ensureEventListenersAdded();
     if (this.panel.state == "open") {
+      document.l10n.setAttributes(
+        this.menuButton,
+        "appmenu-menu-button-closed"
+      );
       this.hide();
     } else if (this.panel.state == "closed") {
+      document.l10n.setAttributes(
+        this.menuButton,
+        "appmenu-menu-button-opened"
+      );
       this.show(aEvent);
     }
   },
