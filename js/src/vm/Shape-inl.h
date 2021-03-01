@@ -215,14 +215,24 @@ inline void Shape::dictNextPreWriteBarrier() {
   }
 }
 
-inline GCPtrShape* DictionaryShapeLink::prevPtr() {
+inline Shape* DictionaryShapeLink::prev() {
   MOZ_ASSERT(!isNone());
 
   if (isShape()) {
-    return &toShape()->parent;
+    return toShape()->parent;
   }
 
-  return toObject()->as<NativeObject>().shapePtr();
+  return toObject()->as<NativeObject>().shape();
+}
+
+inline void DictionaryShapeLink::setPrev(Shape* shape) {
+  MOZ_ASSERT(!isNone());
+
+  if (isShape()) {
+    toShape()->parent = shape;
+  } else {
+    toObject()->as<NativeObject>().setShape(shape);
+  }
 }
 
 template <class ObjectSubclass>
