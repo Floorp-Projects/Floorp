@@ -1,0 +1,20 @@
+<html>
+<head>
+<script>
+window.addEventListener('load', async () => {
+  const frame = document.createElement('frame')
+  document.documentElement.appendChild(frame)
+  const pc = new RTCPeerConnection({})
+  await pc.createOffer({ 'offerToReceiveAudio': true })
+  const [{sender, receiver}] = pc.getTransceivers()
+  await sender.replaceTrack(receiver.track)
+  await sender.replaceTrack(null)
+  const stream = await frame.contentWindow.navigator.mediaDevices.getUserMedia({
+    'audio': {},
+    'fake': true
+  })
+  await sender.replaceTrack(stream.getTracks()[0])
+})
+</script>
+</head>
+</html>
