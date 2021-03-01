@@ -1743,6 +1743,17 @@ var gMainPane = {
   },
 
   buildContentProcessCountMenuList() {
+    if (Services.appinfo.fissionAutostart) {
+      document.getElementById("limitContentProcess").hidden = true;
+      document.getElementById("contentProcessCount").hidden = true;
+      document.getElementById(
+        "contentProcessCountEnabledDescription"
+      ).hidden = true;
+      document.getElementById(
+        "contentProcessCountDisabledDescription"
+      ).hidden = true;
+      return;
+    }
     if (Services.appinfo.browserTabsRemoteAutostart) {
       let processCountPref = Preferences.get("dom.ipc.processCount");
       let defaultProcessCount = processCountPref.defaultValue;
