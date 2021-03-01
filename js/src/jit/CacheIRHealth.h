@@ -58,13 +58,8 @@ class CacheIRHealth {
   // Health of an individual stub.
   Happiness spewStubHealth(AutoStructuredSpewer& spew, ICCacheIRStub* stub);
   // Health of all the stubs in an individual CacheIR Entry.
-  Happiness spewHealthForStubsInCacheIREntry(AutoStructuredSpewer& spew,
-                                             ICEntry* entry);
-  // Show JSOps present in the script, formatted for CacheIR
-  // health report.
-  Happiness spewJSOpAndCacheIRHealth(AutoStructuredSpewer& spew,
-                                     HandleScript script, jit::ICEntry* entry,
-                                     jsbytecode* pc, JSOp op);
+  Happiness spewICEntryHealth(AutoStructuredSpewer& spew, HandleScript script,
+                              jit::ICEntry* entry, jsbytecode* pc, JSOp op);
 
  public:
   // Spews the final hit count for scripts where we care about its final hit
