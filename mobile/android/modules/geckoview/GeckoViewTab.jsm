@@ -38,6 +38,11 @@ class Tab {
   getActive() {
     return this.active;
   }
+
+  get userContextId() {
+    return this.browser.ownerGlobal.moduleManager.settings
+      .unsafeSessionContextId;
+  }
 }
 
 // Because of bug 1410749, we can't use 0, though, and just to be safe
