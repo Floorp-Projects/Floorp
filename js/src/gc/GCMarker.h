@@ -33,7 +33,10 @@ namespace gc {
 
 enum IncrementalProgress { NotFinished = 0, Finished };
 
+class BarrierTracer;
 struct Cell;
+
+using BarrierBuffer = Vector<JS::GCCellPtr, 0, SystemAllocPolicy>;
 
 struct WeakKeyTableHashPolicy {
   using Lookup = Cell*;
@@ -351,7 +354,7 @@ class GCMarker final : public JSTracer {
   // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
   void restoreWeakDelegate(JSObject* key, JSObject* delegate);
 
-  bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
+  bool isDrained();
 
   // The mark queue is a testing-only feature for controlling mark ordering and
   // yield timing.
@@ -444,6 +447,18 @@ class GCMarker final : public JSTracer {
   inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
                              size_t start, size_t end);
 
+  gc::MarkStack& getStack(gc::MarkColor which) {
+    return which == mainStackColor ? stack : auxStack;
+  }
+  const gc::MarkStack& getStack(gc::MarkColor which) const {
+    return which == mainStackColor ? stack : auxStack;
+  }
+
+  gc::MarkStack& currentStack() {
+    MOZ_ASSERT(currentStackPtr);
+    return *currentStackPtr;
+  }
+
   bool isMarkStackEmpty() { return stack.isEmpty() && auxStack.isEmpty(); }
 
   bool hasBlackEntries() const {
@@ -467,6 +482,18 @@ class GCMarker final : public JSTracer {
   template <typename F>
   void forEachDelayedMarkingArena(F&& f);
 
+  gc::BarrierBuffer& barrierBuffer() { return barrierBuffer_.ref(); }
+  bool traceBarrieredCells(SliceBudget& budget);
+  void traceBarrieredCell(JS::GCCellPtr cell);
+
+  /*
+   * List of cells encountered by the pre-write barrier whose children have yet
+   * to be marked. These cells have already been marked black. They are "grey"
+   * in the GC sense.
+   */
+  MainThreadOrGCTaskData<gc::BarrierBuffer> barrierBuffer_;
+  friend class gc::BarrierTracer;
+
   /*
    * The mark stack. Pointers in this stack are "gray" in the GC sense, but may
    * mark the contained items either black or gray (in the CC sense) depending
@@ -486,18 +513,6 @@ class GCMarker final : public JSTracer {
   MainThreadOrGCTaskData<gc::MarkColor> mainStackColor;
 
   MainThreadOrGCTaskData<gc::MarkStack*> currentStackPtr;
-
-  gc::MarkStack& getStack(gc::MarkColor which) {
-    return which == mainStackColor ? stack : auxStack;
-  }
-  const gc::MarkStack& getStack(gc::MarkColor which) const {
-    return which == mainStackColor ? stack : auxStack;
-  }
-
-  gc::MarkStack& currentStack() {
-    MOZ_ASSERT(currentStackPtr);
-    return *currentStackPtr;
-  }
 
   /* Pointer to the top of the stack of arenas we are delaying marking on. */
   MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;

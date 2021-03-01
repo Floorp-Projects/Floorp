@@ -53,7 +53,8 @@ enum class TracerKind {
 
   // Specific kinds of callback tracer.
   UnmarkGray,
-  VerifyTraceProtoAndIface
+  VerifyTraceProtoAndIface,
+  Barrier
 };
 
 enum class WeakMapTraceAction {
