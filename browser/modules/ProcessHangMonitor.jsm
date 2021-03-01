@@ -550,11 +550,6 @@ var ProcessHangMonitor = {
 
     let buttons = [
       {
-        label: bundle.getString("processHang.add-on.learn-more.text"),
-        link:
-          "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
-      },
-      {
         label: bundle.getString("processHang.button_stop.label2"),
         accessKey: bundle.getString("processHang.button_stop.accessKey"),
         callback() {
@@ -582,15 +577,22 @@ var ProcessHangMonitor = {
         brandShortName,
       ]);
 
-      buttons.unshift({
-        label: bundle.getString("processHang.button_stop_sandbox.label"),
-        accessKey: bundle.getString(
-          "processHang.button_stop_sandbox.accessKey"
-        ),
-        callback() {
-          ProcessHangMonitor.stopGlobal(win);
+      buttons.unshift(
+        {
+          label: bundle.getString("processHang.add-on.learn-more.text"),
+          link:
+            "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
         },
-      });
+        {
+          label: bundle.getString("processHang.button_stop_sandbox.label"),
+          accessKey: bundle.getString(
+            "processHang.button_stop_sandbox.accessKey"
+          ),
+          callback() {
+            ProcessHangMonitor.stopGlobal(win);
+          },
+        }
+      );
     } else {
       let scriptBrowser = report.scriptBrowser;
       if (scriptBrowser == win.gBrowser?.selectedBrowser) {
