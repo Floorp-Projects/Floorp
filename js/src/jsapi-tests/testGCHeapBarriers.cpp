@@ -78,12 +78,6 @@ JSObject* CreateTenuredGCThing(JSContext* cx) {
   return obj;
 }
 
-static void MakeWhite(JSObject* obj) {
-  gc::TenuredCell* cell = &obj->asTenured();
-  cell->unmark();
-  MOZ_ASSERT(!obj->isMarkedAny());
-}
-
 static void MakeGray(JSObject* obj) {
   gc::TenuredCell* cell = &obj->asTenured();
   cell->unmark();
@@ -436,6 +430,8 @@ bool TestUnbarrieredOperations(ObjectT obj, ObjectT obj2, WrapperT& wrapper,
 
 END_TEST(testGCHeapReadBarriers)
 
+using ObjectVector = Vector<JSObject*, 0, SystemAllocPolicy>;
+
 // Test pre-barrier implementation on wrapper types. The following wrapper types
 // have a pre-barrier:
 //  - GCPtr
@@ -450,10 +446,16 @@ BEGIN_TEST(testGCHeapPreBarriers) {
       JS_GetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED);
   JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
 
-  RootedObject obj1(cx, CreateTenuredGCThing<JSObject>(cx));
-  RootedObject obj2(cx, CreateTenuredGCThing<JSObject>(cx));
-  CHECK(obj1);
-  CHECK(obj2);
+  // Create a bunch of objects. These are unrooted and will be used to test
+  // whether barriers have fired by checking whether they have been marked
+  // black.
+  size_t objectCount = 100;  // Increase this if necessary when adding tests.
+  ObjectVector testObjects;
+  for (size_t i = 0; i < objectCount; i++) {
+    JSObject* obj = CreateTenuredGCThing<JSObject>(cx);
+    CHECK(obj);
+    CHECK(testObjects.append(obj));
+  }
 
   // Start an incremental GC so we can detect if we cause barriers to fire, as
   // these will mark objects black.
@@ -466,14 +468,14 @@ BEGIN_TEST(testGCHeapPreBarriers) {
   }
   MOZ_ASSERT(cx->zone()->needsIncrementalBarrier());
 
-  TestWrapper<HeapPtr<JSObject*>>(obj1, obj2);
-  TestWrapper<PreBarriered<JSObject*>>(obj1, obj2);
+  TestWrapper<HeapPtr<JSObject*>>(testObjects);
+  TestWrapper<PreBarriered<JSObject*>>(testObjects);
 
   // GCPtr is different because 1) it doesn't support move operations as it's
   // supposed to be part of a GC thing and 2) it doesn't perform a pre-barrier
   // in its destructor because these are only destroyed as part of a GC where
   // the barrier is unnecessary.
-  TestGCPtr(obj1, obj2);
+  TestGCPtr(testObjects);
 
   gc::FinishGC(cx, JS::GCReason::API);
 
@@ -483,17 +485,18 @@ BEGIN_TEST(testGCHeapPreBarriers) {
 }
 
 template <typename Wrapper>
-bool TestWrapper(HandleObject obj1, HandleObject obj2) {
-  CHECK(TestCopyConstruction<Wrapper>(obj1));
-  CHECK(TestMoveConstruction<Wrapper>(obj1));
-  CHECK(TestAssignment<Wrapper>(obj1, obj2));
-  CHECK(TestMoveAssignment<Wrapper>(obj1, obj2));
+bool TestWrapper(ObjectVector& testObjects) {
+  CHECK(TestCopyConstruction<Wrapper>(testObjects.popCopy()));
+  CHECK(TestMoveConstruction<Wrapper>(testObjects.popCopy()));
+  CHECK(TestAssignment<Wrapper>(testObjects.popCopy(), testObjects.popCopy()));
+  CHECK(TestMoveAssignment<Wrapper>(testObjects.popCopy(),
+                                    testObjects.popCopy()));
   return true;
 }
 
 template <typename Wrapper>
-bool TestCopyConstruction(HandleObject obj) {
-  MakeWhite(obj);
+bool TestCopyConstruction(JSObject* obj) {
+  CHECK(!obj->isMarkedAny());
 
   {
     Wrapper wrapper1(obj);
@@ -504,14 +507,14 @@ bool TestCopyConstruction(HandleObject obj) {
   }
 
   // Check destructor performs pre-barrier.
-  MOZ_ASSERT(obj->isMarkedBlack());
+  CHECK(obj->isMarkedBlack());
 
   return true;
 }
 
 template <typename Wrapper>
-bool TestMoveConstruction(HandleObject obj) {
-  MakeWhite(obj);
+bool TestMoveConstruction(JSObject* obj) {
+  CHECK(!obj->isMarkedAny());
 
   {
     Wrapper wrapper1(obj);
@@ -529,9 +532,9 @@ bool TestMoveConstruction(HandleObject obj) {
 }
 
 template <typename Wrapper>
-bool TestAssignment(HandleObject obj1, HandleObject obj2) {
-  MakeWhite(obj1);
-  MakeWhite(obj2);
+bool TestAssignment(JSObject* obj1, JSObject* obj2) {
+  CHECK(!obj1->isMarkedAny());
+  CHECK(!obj2->isMarkedAny());
 
   {
     Wrapper wrapper1(obj1);
@@ -552,9 +555,9 @@ bool TestAssignment(HandleObject obj1, HandleObject obj2) {
 }
 
 template <typename Wrapper>
-bool TestMoveAssignment(HandleObject obj1, HandleObject obj2) {
-  MakeWhite(obj1);
-  MakeWhite(obj2);
+bool TestMoveAssignment(JSObject* obj1, JSObject* obj2) {
+  CHECK(!obj1->isMarkedAny());
+  CHECK(!obj2->isMarkedAny());
 
   {
     Wrapper wrapper1(obj1);
@@ -575,14 +578,14 @@ bool TestMoveAssignment(HandleObject obj1, HandleObject obj2) {
   return true;
 }
 
-bool TestGCPtr(HandleObject obj1, HandleObject obj2) {
-  CHECK(TestGCPtrCopyConstruction(obj1));
-  CHECK(TestGCPtrAssignment(obj1, obj2));
+bool TestGCPtr(ObjectVector& testObjects) {
+  CHECK(TestGCPtrCopyConstruction(testObjects.popCopy()));
+  CHECK(TestGCPtrAssignment(testObjects.popCopy(), testObjects.popCopy()));
   return true;
 }
 
-bool TestGCPtrCopyConstruction(HandleObject obj) {
-  MakeWhite(obj);
+bool TestGCPtrCopyConstruction(JSObject* obj) {
+  CHECK(!obj->isMarkedAny());
 
   {
     // Let us destroy GCPtrs ourselves for testing purposes.
@@ -601,9 +604,9 @@ bool TestGCPtrCopyConstruction(HandleObject obj) {
   return true;
 }
 
-bool TestGCPtrAssignment(HandleObject obj1, HandleObject obj2) {
-  MakeWhite(obj1);
-  MakeWhite(obj2);
+bool TestGCPtrAssignment(JSObject* obj1, JSObject* obj2) {
+  CHECK(!obj1->isMarkedAny());
+  CHECK(!obj2->isMarkedAny());
 
   {
     // Let us destroy GCPtrs ourselves for testing purposes.
