@@ -431,7 +431,8 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
   ScriptStencil& script = compilationState.scriptData[scriptIndex];
   ScriptStencilExtra& scriptExtra = compilationState.scriptExtra[scriptIndex];
 
-  scriptExtra.immutableFlags = smooshScript.immutable_flags;
+  scriptExtra.immutableFlags =
+      ImmutableScriptFlags(smooshScript.immutable_flags);
 
   // FIXME: The following flags should be set in jsparagus.
   scriptExtra.immutableFlags.setFlag(ImmutableFlags::SelfHosted,
