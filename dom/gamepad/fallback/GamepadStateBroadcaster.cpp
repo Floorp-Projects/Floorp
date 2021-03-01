@@ -32,6 +32,48 @@ void GamepadStateBroadcaster::RemoveReceiver(
   MOZ_CRASH("Should never be called");
 }
 
+void GamepadStateBroadcaster::AddGamepad(
+    GamepadHandle aHandle, const char* aID, GamepadMappingType aMapping,
+    GamepadHand aHand, uint32_t aNumButtons, uint32_t aNumAxes,
+    uint32_t aNumHaptics, uint32_t aNumLights, uint32_t aNumTouches) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateBroadcaster::RemoveGamepad(GamepadHandle aHandle) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateBroadcaster::NewAxisMoveEvent(GamepadHandle aHandle,
+                                               uint32_t aAxis, double aValue) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateBroadcaster::NewButtonEvent(GamepadHandle aHandle,
+                                             uint32_t aButton, bool aPressed,
+                                             bool aTouched, double aValue) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateBroadcaster::NewLightIndicatorTypeEvent(
+    GamepadHandle aHandle, uint32_t aLight, GamepadLightIndicatorType aType) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateBroadcaster::NewPoseEvent(GamepadHandle aHandle,
+                                           const GamepadPoseState& aState) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateBroadcaster::NewMultiTouchEvent(
+    GamepadHandle aHandle, uint32_t aTouchArrayIndex,
+    const GamepadTouchState& aState) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateBroadcaster::SendTestCommand(uint32_t aCommandId) {
+  MOZ_CRASH("Should never be called");
+}
+
 GamepadStateBroadcaster::GamepadStateBroadcaster(
     GamepadStateBroadcaster&& aOther) noexcept = default;
 

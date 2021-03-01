@@ -32,4 +32,18 @@ GamepadStateReceiver::GamepadStateReceiver() = default;
 GamepadStateReceiver::GamepadStateReceiver(UniquePtr<Impl> aImpl)
     : mImpl(std::move(aImpl)) {}
 
+bool GamepadStateReceiver::StartMonitoringThread(
+    const std::function<void(const GamepadChangeEvent&)>& aFn) {
+  MOZ_CRASH("Should never be called");
+}
+bool GamepadStateReceiver::StartMonitoringThreadForTesting(
+    const std::function<void(const GamepadChangeEvent&)>& aMonitorFn,
+    const std::function<void(uint32_t)>& aTestCommandFn) {
+  MOZ_CRASH("Should never be called");
+}
+
+void GamepadStateReceiver::StopMonitoringThread() {
+  MOZ_CRASH("Should never be called");
+}
+
 }  // namespace mozilla::dom
