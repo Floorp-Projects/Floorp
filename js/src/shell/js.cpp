@@ -2398,12 +2398,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     if (!v.isUndefined()) {
-      if (loadBytecode) {
-        JS_ReportErrorASCII(cx,
-                            "Can't use both loadBytecode and envChainObject");
-        return false;
-      }
-
       if (!v.isObject()) {
         JS_ReportErrorNumberASCII(
             cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
