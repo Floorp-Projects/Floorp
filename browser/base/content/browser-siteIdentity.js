@@ -879,20 +879,15 @@ var gIdentityHandler = {
       return;
     }
 
-    // If this condition is true, the URL bar will have an "invalid"
-    // pageproxystate, which will hide the security indicators. Thus, we can
-    // safely avoid updating the security UI.
-    //
-    // This will also filter out intermediate about:blank loads to avoid
-    // flickering the identity block and doing unnecessary work.
-    if (this._hasInvalidPageProxyState()) {
-      gPermissionPanel.hidePermissionIcons();
-      return;
-    }
-
     this._refreshIdentityIcons();
 
-    gPermissionPanel.refreshPermissionIcons();
+    // If this condition is true, the URL bar will have an "invalid"
+    // pageproxystate, so we should hide the permission icons.
+    if (this._hasInvalidPageProxyState()) {
+      gPermissionPanel.hidePermissionIcons();
+    } else {
+      gPermissionPanel.refreshPermissionIcons();
+    }
 
     // Hide the shield icon if it is a chrome page.
     gProtectionsHandler._trackingProtectionIconContainer.classList.toggle(
