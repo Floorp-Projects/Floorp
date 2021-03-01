@@ -325,6 +325,17 @@ body {
     .onboardingContainer .helptext.default {
       align-self: center;
       max-width: 40%; }
+    .onboardingContainer .helptext span {
+      padding-inline-end: 4px; }
+  .onboardingContainer .helptext-img {
+    height: 1.5em;
+    width: 1.5em;
+    margin-inline-end: 4px;
+    vertical-align: middle; }
+    .onboardingContainer .helptext-img.end {
+      margin: 4px; }
+    .onboardingContainer .helptext-img.footer {
+      vertical-align: bottom; }
   .onboardingContainer .steps {
     display: flex;
     flex-direction: row;
