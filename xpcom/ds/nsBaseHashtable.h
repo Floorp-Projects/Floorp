@@ -80,16 +80,26 @@ class nsBaseHashtableET : public KeyClass {
 };
 
 /**
- * templated hashtable for simple data types
- * This class manages simple data types that do not need construction or
- * destruction.
+ * Templated hashtable. Usually, this isn't instantiated directly but through
+ * its sub-class templates nsDataHashtable, nsInterfaceHashtable,
+ * nsClassHashtable and nsRefPtrHashtable.
+ *
+ * Originally, UserDataType used to be the only type exposed to the user in the
+ * public member function signatures (hence its name), but this has proven to
+ * inadequate over time. Now, UserDataType is only exposed in by-value
+ * getter member functions that are called *Get*. Member functions that provide
+ * access to the DataType are called Lookup rather than Get. Note that this rule
+ * does not apply to nsRefPtrHashtable and nsInterfaceHashtable, as they are
+ * provide a similar interface, but are no genuine sub-classes of
+ * nsBaseHashtable.
  *
  * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
  *   for a complete specification.
  * @param DataType the datatype stored in the hashtable,
  *   for example, uint32_t or nsCOMPtr.
- * @param UserDataType the user sees, for example uint32_t or nsISupports*
- * @param Converter that can be used to map from DataType to UserDataType. A
+ * @param UserDataType the datatype returned from the by-value getter member
+ *   functions (named *Get*), for example uint32_t or nsISupports*
+ * @param Converter that is used to map from DataType to UserDataType. A
  *   default converter is provided that assumes implicit conversion is an
  *   option.
  */
