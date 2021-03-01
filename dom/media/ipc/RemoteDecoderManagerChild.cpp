@@ -88,7 +88,8 @@ void RemoteDecoderManagerChild::Init() {
             "RemoteDecoderManagerChild::InitPBackground", []() {
               ipc::PBackgroundChild* bgActor =
                   ipc::BackgroundChild::GetOrCreateForCurrentThread();
-              NS_ASSERTION(bgActor, "Failed to start Background channel");
+              NS_WARNING_ASSERTION(bgActor,
+                                   "Failed to start Background channel");
               Unused << bgActor;
             }));
 
