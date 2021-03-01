@@ -66,7 +66,15 @@ async function testErrorMessagesResources() {
       }
 
       const index = receivedMessages.length;
-      receivedMessages.push(pageError);
+      receivedMessages.push(resource);
+
+      const isAlreadyExistingResource =
+        receivedMessages.length <= expectedPageErrors.size;
+      is(
+        resource.isAlreadyExistingResource,
+        isAlreadyExistingResource,
+        "isAlreadyExistingResource has expected value"
+      );
 
       info(`checking received page error #${index}: ${pageError.errorMessage}`);
       ok(pageError, "The resource has a pageError attribute");
@@ -82,12 +90,13 @@ async function testErrorMessagesResources() {
     onAvailable,
   });
 
+  await BrowserTestUtils.waitForCondition(
+    () => receivedMessages.length === expectedPageErrors.size
+  );
+
   info(
     "Now log errors *after* the call to ResourceWatcher.watchResources and after having" +
       " received all existing messages"
-  );
-  await BrowserTestUtils.waitForCondition(
-    () => receivedMessages.length === expectedPageErrors.size
   );
   await triggerErrors(tab);
 
@@ -132,9 +141,15 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   const expectedMessages = Array.from(expectedPageErrors.values());
   await waitUntil(() => availableResources.length === expectedMessages.length);
   for (let i = 0; i < expectedMessages.length; i++) {
-    const { pageError } = availableResources[i];
+    const resource = availableResources[i];
+    const { pageError } = resource;
     const expected = expectedMessages[i];
     checkPageErrorResource(pageError, expected);
+    is(
+      resource.isAlreadyExistingResource,
+      false,
+      "isAlreadyExistingResource is set to false for live messages"
+    );
   }
 
   Services.console.reset();

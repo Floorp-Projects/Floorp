@@ -39,7 +39,8 @@ rawPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropp
     "isForwardedFromContentProcess": false
   },
   "resourceType": "css-message",
-  "cssSelectors": "p"
+  "cssSelectors": "p",
+  "isAlreadyExistingResource": false
 });
 
 rawPackets.set(`Error in parsing value for ‘padding-top’.  Declaration dropped.`, {
@@ -63,7 +64,8 @@ rawPackets.set(`Error in parsing value for ‘padding-top’.  Declaration dropp
     "isForwardedFromContentProcess": false
   },
   "resourceType": "css-message",
-  "cssSelectors": "p"
+  "cssSelectors": "p",
+  "isAlreadyExistingResource": false
 });
 
 

@@ -45,7 +45,8 @@ async function testWatchingCssMessages() {
   const receivedMessages = [];
   const { onAvailable, onAllMessagesReceived } = setupOnAvailableFunction(
     targetList,
-    receivedMessages
+    receivedMessages,
+    false
   );
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_MESSAGE], {
     onAvailable,
@@ -107,7 +108,8 @@ async function testWatchingCachedCssMessages() {
   const receivedMessages = [];
   const { onAvailable } = setupOnAvailableFunction(
     targetList,
-    receivedMessages
+    receivedMessages,
+    true
   );
   await resourceWatcher.watchResources([ResourceWatcher.TYPES.CSS_MESSAGE], {
     onAvailable,
@@ -119,7 +121,11 @@ async function testWatchingCachedCssMessages() {
   await client.close();
 }
 
-function setupOnAvailableFunction(targetList, receivedMessages) {
+function setupOnAvailableFunction(
+  targetList,
+  receivedMessages,
+  isAlreadyExistingResource
+) {
   // The expected messages are the CSS warnings:
   // - one for the rule in the style element
   // - two for the JS modified style we're doing in the test.
@@ -134,6 +140,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
         warning: true,
       },
       cssSelectors: "html",
+      isAlreadyExistingResource,
     },
     {
       pageError: {
@@ -144,6 +151,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
         error: false,
         warning: true,
       },
+      isAlreadyExistingResource,
     },
     {
       pageError: {
@@ -154,6 +162,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
         error: false,
         warning: true,
       },
+      isAlreadyExistingResource,
     },
   ];
 
@@ -175,7 +184,7 @@ function setupOnAvailableFunction(targetList, receivedMessages) {
       }
 
       const index = receivedMessages.length;
-      receivedMessages.push(pageError);
+      receivedMessages.push(resource);
 
       info(
         `checking received css message #${index}: ${pageError.errorMessage}`
