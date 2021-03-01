@@ -50,6 +50,18 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
     return gfx::YUVColorSpace::UNKNOWN;
   }
 
+  RenderAndroidSurfaceTextureHost* AsRenderAndroidSurfaceTextureHost()
+      override {
+    return this;
+  }
+
+  mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
+  const gfx::IntSize mSize;
+  const gfx::SurfaceFormat mFormat;
+  // mContinuousUpdate was used for rendering video in the past.
+  // It is not used on current gecko.
+  const bool mContinuousUpdate;
+
  private:
   virtual ~RenderAndroidSurfaceTextureHost();
   bool EnsureAttachedToGLContext();
@@ -63,12 +75,6 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
     STATUS_PREPARED
   };
 
-  const mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
-  const gfx::IntSize mSize;
-  const gfx::SurfaceFormat mFormat;
-  // mContinuousUpdate was used for rendering video in the past.
-  // It is not used on current gecko.
-  const bool mContinuousUpdate;
   // XXX const bool mIgnoreTransform;
   PrepareStatus mPrepareStatus;
   bool mAttachedToGLContext;

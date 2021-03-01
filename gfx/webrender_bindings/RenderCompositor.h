@@ -32,6 +32,7 @@ class CompositorWidget;
 
 namespace wr {
 
+class RenderCompositorLayersSWGL;
 class RenderCompositorD3D11SWGL;
 
 class RenderCompositor {
@@ -90,6 +91,10 @@ class RenderCompositor {
   }
 
   virtual RenderCompositorD3D11SWGL* AsRenderCompositorD3D11SWGL() {
+    return nullptr;
+  }
+
+  virtual RenderCompositorLayersSWGL* AsRenderCompositorLayersSWGL() {
     return nullptr;
   }
 
