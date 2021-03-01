@@ -399,6 +399,17 @@ class WebConsoleUI {
         continue;
       }
 
+      // Don't show messages emitted from a private window before the Browser Console was
+      // opened to avoid leaking data from past usage of the browser (e.g. content message
+      // from now closed private tabs)
+      if (
+        (this.isBrowserToolboxConsole || this.isBrowserConsole) &&
+        resource.isAlreadyExistingResource &&
+        (resource.pageError?.private || resource.message?.private)
+      ) {
+        continue;
+      }
+
       if (resource.resourceType === TYPES.NETWORK_EVENT_STACKTRACE) {
         this.wrapper.networkDataProvider?.onStackTraceAvailable(resource);
         continue;
