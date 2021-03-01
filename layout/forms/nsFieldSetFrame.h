@@ -53,10 +53,10 @@ class nsFieldSetFrame final : public nsContainerFrame {
                                    nsFrameList& aChildList) override;
   virtual void AppendFrames(ChildListID aListID,
                             nsFrameList& aFrameList) override;
-#ifdef DEBUG
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                             const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override;
+#ifdef DEBUG
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 #endif
 
