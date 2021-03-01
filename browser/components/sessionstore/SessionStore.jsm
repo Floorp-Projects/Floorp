@@ -4036,15 +4036,19 @@ var SessionStoreInternal = {
    * @returns a promise resolved when all windows have been opened
    */
   _openWindows(root) {
+    let windowsOpened = [];
     for (let winData of root.windows) {
       if (!winData || !winData.tabs || !winData.tabs[0]) {
         continue;
       }
-      this._openWindowWithState({ windows: [winData] });
+      windowsOpened.push(this._openWindowWithState({ windows: [winData] }));
     }
-    return Promise.all(
-      [...WINDOW_SHOWING_PROMISES.values()].map(deferred => deferred.promise)
-    );
+    let windowOpenedPromises = [];
+    for (const openedWindow of windowsOpened) {
+      let deferred = WINDOW_SHOWING_PROMISES.get(openedWindow);
+      windowOpenedPromises.push(deferred.promise);
+    }
+    return Promise.all(windowOpenedPromises);
   },
 
   /**
