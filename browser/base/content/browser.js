@@ -2628,10 +2628,7 @@ function HandleAppCommandEvent(evt) {
       BrowserOpenFileWindow();
       break;
     case "Print":
-      PrintUtils.startPrintWindow(
-        "app_command",
-        gBrowser.selectedBrowser.browsingContext
-      );
+      PrintUtils.startPrintWindow(gBrowser.selectedBrowser.browsingContext);
       break;
     case "Save":
       saveBrowser(gBrowser.selectedBrowser);
@@ -6066,11 +6063,9 @@ nsBrowserAccess.prototype = {
         break;
       }
       case Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER: {
-        let browser = PrintUtils.startPrintWindow(
-          "window_print",
-          aOpenWindowInfo.parent,
-          { openWindowInfo: aOpenWindowInfo }
-        );
+        let browser = PrintUtils.startPrintWindow(aOpenWindowInfo.parent, {
+          openWindowInfo: aOpenWindowInfo,
+        });
         if (browser) {
           browsingContext = browser.browsingContext;
         }
@@ -6150,11 +6145,9 @@ nsBrowserAccess.prototype = {
     aSkipLoad
   ) {
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
-      return PrintUtils.startPrintWindow(
-        "window_print",
-        aParams.openWindowInfo.parent,
-        { openWindowInfo: aParams.openWindowInfo }
-      );
+      return PrintUtils.startPrintWindow(aParams.openWindowInfo.parent, {
+        openWindowInfo: aParams.openWindowInfo,
+      });
     }
 
     if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {

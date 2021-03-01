@@ -1257,20 +1257,14 @@ this.tabs = class extends ExtensionAPI {
         print() {
           let activeTab = getTabOrActive(null);
           let { PrintUtils } = activeTab.ownerGlobal;
-          PrintUtils.startPrintWindow(
-            "ext_tabs_print",
-            activeTab.linkedBrowser.browsingContext
-          );
+          PrintUtils.startPrintWindow(activeTab.linkedBrowser.browsingContext);
         },
 
         async printPreview() {
           let activeTab = getTabOrActive(null);
           let { PrintUtils, PrintPreviewListener } = activeTab.ownerGlobal;
           try {
-            await PrintUtils.printPreview(
-              "ext_tabs_printpreview",
-              PrintPreviewListener
-            );
+            await PrintUtils.printPreview(PrintPreviewListener);
           } catch (ex) {
             return Promise.reject({ message: "Print preview failed" });
           }

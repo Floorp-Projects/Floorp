@@ -4106,23 +4106,6 @@ pdf.viewer:
 
 # The following section contains scalars for printing.
 printing:
-  trigger:
-    bug_numbers:
-      - 1669925
-    description: >
-      The thing that triggered the print dialog, like "keyboard_shortcut", etc.
-    keyed: true
-    expires: "89"
-    kind: uint
-    notification_emails:
-      - jwatt@jwatt.org
-      - emilio@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-
   paper_size:
     bug_numbers:
       - 1660686
