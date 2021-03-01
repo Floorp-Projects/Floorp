@@ -426,7 +426,16 @@ Relation HTMLTableAccessible::RelationByType(RelationType aType) const {
 
 LocalAccessible* HTMLTableAccessible::Caption() const {
   LocalAccessible* child = mChildren.SafeElementAt(0, nullptr);
-  return child && child->Role() == roles::CAPTION ? child : nullptr;
+  // Since this is an HTML table the caption needs to be a caption
+  // element with no ARIA role (except for a reduntant role='caption').
+  // If we did a full Role() calculation here we risk getting into an infinite
+  // loop where the parent role would depend on its name which would need to be
+  // calculated by retrieving the caption (bug 1420773.)
+  return child && child->NativeRole() == roles::CAPTION &&
+                 (!child->HasStrongARIARole() ||
+                  child->IsARIARole(nsGkAtoms::caption))
+             ? child
+             : nullptr;
 }
 
 void HTMLTableAccessible::Summary(nsString& aSummary) {

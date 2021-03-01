@@ -74,6 +74,8 @@
       testRole("aria_region_has_labelledby", ROLE_REGION);
       testRole("aria_region_has_title", ROLE_REGION);
       testRole("aria_region_empty_name", ROLE_TEXT);
+      testRole("aria_region_as_table_with_caption", ROLE_REGION);
+      testRole("aria_region_as_table_with_miscaption", ROLE_TABLE);
       testRole("aria_row", ROLE_ROW);
       testRole("aria_rowheader", ROLE_ROWHEADER);
       testRole("aria_scrollbar", ROLE_SCROLLBAR);
@@ -304,6 +306,8 @@
   <span id="aria_region_has_labelledby" role="region" aria-labelledby="label"><span id="label" aria-label="label"></span>
   <span id="aria_region_has_title" role="region" title="title"></span>
   <span id="aria_region_empty_name" role="region" aria-label="" title="" aria-labelledby="empty"></span><span id="empty"></span>
+  <table id="aria_region_as_table_with_caption" role="region"><caption>hello</caption></table>
+  <table id="aria_region_as_table_with_miscaption" role="region"><caption role="option">hello</caption></table>
   <span id="aria_row" role="row"></span>
   <span id="aria_rowheader" role="rowheader"></span>
   <span id="aria_scrollbar" role="scrollbar"></span>
