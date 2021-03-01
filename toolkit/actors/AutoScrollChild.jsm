@@ -204,6 +204,7 @@ class AutoScrollChild extends JSWindowActorChild {
     }
 
     Services.els.addSystemEventListener(this.document, "mousemove", this, true);
+    Services.els.addSystemEventListener(this.document, "mouseup", this, true);
     this.document.addEventListener("pagehide", this, true);
 
     this._ignoreMouseEvents = true;
@@ -250,6 +251,12 @@ class AutoScrollChild extends JSWindowActorChild {
       Services.els.removeSystemEventListener(
         this.document,
         "mousemove",
+        this,
+        true
+      );
+      Services.els.removeSystemEventListener(
+        this.document,
+        "mouseup",
         this,
         true
       );
@@ -324,26 +331,38 @@ class AutoScrollChild extends JSWindowActorChild {
   }
 
   handleEvent(event) {
-    if (event.type == "mousemove") {
-      this._screenX = event.screenX;
-      this._screenY = event.screenY;
-    } else if (event.type == "mousedown") {
-      if (
-        event.isTrusted & !event.defaultPrevented &&
-        event.button == 1 &&
-        !this._scrollable &&
-        !this.isAutoscrollBlocker(event.originalTarget)
-      ) {
-        this.startScroll(event);
-      }
-    } else if (event.type == "pagehide") {
-      if (this._scrollable) {
-        var doc = this._scrollable.ownerDocument || this._scrollable.document;
-        if (doc == event.target) {
-          this.sendAsyncMessage("Autoscroll:Cancel");
-          this.stopScroll();
+    switch (event.type) {
+      case "mousemove":
+        this._screenX = event.screenX;
+        this._screenY = event.screenY;
+        break;
+      case "mousedown":
+        if (
+          event.isTrusted &&
+          !event.defaultPrevented &&
+          event.button === 1 &&
+          !this._scrollable &&
+          !this.isAutoscrollBlocker(event.originalTarget)
+        ) {
+          this.startScroll(event);
         }
-      }
+      // fallthrough
+      case "mouseup":
+        if (this._ignoreMouseEvents) {
+          // Middle mouse click event shouldn't be fired in web content for
+          // compatibility with Chrome.
+          event.preventClickEvent();
+        }
+        break;
+      case "pagehide":
+        if (this._scrollable) {
+          var doc = this._scrollable.ownerDocument || this._scrollable.document;
+          if (doc == event.target) {
+            this.sendAsyncMessage("Autoscroll:Cancel");
+            this.stopScroll();
+          }
+        }
+        break;
     }
   }
 
