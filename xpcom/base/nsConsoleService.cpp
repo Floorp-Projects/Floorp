@@ -460,14 +460,17 @@ nsConsoleService::RegisterListener(nsIConsoleListener* aListener) {
   }
 
   nsCOMPtr<nsISupports> canonical = do_QueryInterface(aListener);
+  MOZ_ASSERT(canonical);
 
   MutexAutoLock lock(mLock);
-  if (mListeners.GetWeak(canonical)) {
-    // Reregistering a listener isn't good
-    return NS_ERROR_FAILURE;
-  }
-  mListeners.InsertOrUpdate(canonical, aListener);
-  return NS_OK;
+  return mListeners.WithEntryHandle(canonical, [&](auto&& entry) {
+    if (entry) {
+      // Reregistering a listener isn't good
+      return NS_ERROR_FAILURE;
+    }
+    entry.Insert(aListener);
+    return NS_OK;
+  });
 }
 
 NS_IMETHODIMP
@@ -481,12 +484,10 @@ nsConsoleService::UnregisterListener(nsIConsoleListener* aListener) {
 
   MutexAutoLock lock(mLock);
 
-  if (!mListeners.GetWeak(canonical)) {
-    // Unregistering a listener that was never registered?
-    return NS_ERROR_FAILURE;
-  }
-  mListeners.Remove(canonical);
-  return NS_OK;
+  return mListeners.Remove(canonical)
+             ? NS_OK
+             // Unregistering a listener that was never registered?
+             : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
