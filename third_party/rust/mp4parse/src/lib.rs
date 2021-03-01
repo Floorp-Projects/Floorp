@@ -418,6 +418,7 @@ pub enum VideoCodecSpecific {
     VPxConfig(VPxConfigBox),
     AV1Config(AV1ConfigBox),
     ESDSConfig(TryVec<u8>),
+    H263Config(TryVec<u8>),
 }
 
 #[derive(Debug)]
@@ -470,7 +471,18 @@ pub struct AV1ConfigBox {
     pub chroma_sample_position: u8,
     pub initial_presentation_delay_present: bool,
     pub initial_presentation_delay_minus_one: u8,
-    pub config_obus: TryVec<u8>,
+    // The raw config contained in the av1c box. Because some decoders accept this data as a binary
+    // blob, rather than as structured data, we store the blob here for convenience.
+    pub raw_config: TryVec<u8>,
+}
+
+impl AV1ConfigBox {
+    /// See https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-syntax
+    const CONFIG_OBUS_OFFSET: usize = 4;
+
+    pub fn config_obus(&self) -> &[u8] {
+        &self.raw_config[Self::CONFIG_OBUS_OFFSET..]
+    }
 }
 
 #[derive(Debug)]
@@ -1111,6 +1123,7 @@ pub enum CodecType {
     EncryptedAudio,
     LPCM, // QT
     ALAC,
+    H263,
 }
 
 impl Default for CodecType {
@@ -3015,17 +3028,21 @@ fn read_vpcc<T: Read>(src: &mut BMFFBox<T>) -> Result<VPxConfigBox> {
 }
 
 fn read_av1c<T: Read>(src: &mut BMFFBox<T>) -> Result<AV1ConfigBox> {
-    let marker_byte = src.read_u8()?;
+    // We want to store the raw config as well as a structured (parsed) config, so create a copy of
+    // the raw config so we have it later, and then parse the structured data from that.
+    let raw_config = src.read_into_try_vec()?;
+    let mut raw_config_slice = raw_config.as_slice();
+    let marker_byte = raw_config_slice.read_u8()?;
     if marker_byte & 0x80 != 0x80 {
         return Err(Error::Unsupported("missing av1C marker bit"));
     }
     if marker_byte & 0x7f != 0x01 {
         return Err(Error::Unsupported("missing av1C marker bit"));
     }
-    let profile_byte = src.read_u8()?;
+    let profile_byte = raw_config_slice.read_u8()?;
     let profile = (profile_byte & 0xe0) >> 5;
     let level = profile_byte & 0x1f;
-    let flags_byte = src.read_u8()?;
+    let flags_byte = raw_config_slice.read_u8()?;
     let tier = (flags_byte & 0x80) >> 7;
     let bit_depth = match flags_byte & 0x60 {
         0x60 => 12,
@@ -3036,16 +3053,13 @@ fn read_av1c<T: Read>(src: &mut BMFFBox<T>) -> Result<AV1ConfigBox> {
     let chroma_subsampling_x = (flags_byte & 0x08) >> 3;
     let chroma_subsampling_y = (flags_byte & 0x04) >> 2;
     let chroma_sample_position = flags_byte & 0x03;
-    let delay_byte = src.read_u8()?;
+    let delay_byte = raw_config_slice.read_u8()?;
     let initial_presentation_delay_present = (delay_byte & 0x10) == 0x10;
     let initial_presentation_delay_minus_one = if initial_presentation_delay_present {
         delay_byte & 0x0f
     } else {
         0
     };
-
-    let config_obus_size = src.bytes_left();
-    let config_obus = read_buf(src, config_obus_size)?;
 
     Ok(AV1ConfigBox {
         profile,
@@ -3058,7 +3072,7 @@ fn read_av1c<T: Read>(src: &mut BMFFBox<T>) -> Result<AV1ConfigBox> {
         chroma_sample_position,
         initial_presentation_delay_present,
         initial_presentation_delay_minus_one,
-        config_obus,
+        raw_config,
     })
 }
 
@@ -3550,6 +3564,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
         BoxType::VP9SampleEntry => CodecType::VP9,
         BoxType::AV1SampleEntry => CodecType::AV1,
         BoxType::ProtectedVisualSampleEntry => CodecType::EncryptedVideo,
+        BoxType::H263SampleEntry => CodecType::H263,
         _ => {
             debug!("Unsupported video codec, box {:?} found", name);
             CodecType::Unknown
@@ -3594,6 +3609,20 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
                 // TODO(kinetik): Parse avcC box?  For now we just stash the data.
                 codec_specific = Some(VideoCodecSpecific::AVCConfig(avcc));
             }
+            BoxType::H263SpecificBox => {
+                if (name != BoxType::H263SampleEntry) || codec_specific.is_some() {
+                    return Err(Error::InvalidData("malformed video sample entry"));
+                }
+                let h263_dec_spec_struc_size = b
+                    .head
+                    .size
+                    .checked_sub(b.head.offset)
+                    .expect("offset invalid");
+                let h263_dec_spec_struc = read_buf(&mut b.content, h263_dec_spec_struc_size)?;
+                debug!("{:?} (h263DecSpecStruc)", h263_dec_spec_struc);
+
+                codec_specific = Some(VideoCodecSpecific::H263Config(h263_dec_spec_struc));
+            }
             BoxType::VPCodecConfigurationBox => {
                 // vpcC
                 if (name != BoxType::VP8SampleEntry
@@ -3607,7 +3636,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleEntry>
                 codec_specific = Some(VideoCodecSpecific::VPxConfig(vpcc));
             }
             BoxType::AV1CodecConfigurationBox => {
-                if name != BoxType::AV1SampleEntry {
+                if name != BoxType::AV1SampleEntry && name != BoxType::ProtectedVisualSampleEntry {
                     return Err(Error::InvalidData("malformed video sample entry"));
                 }
                 let av1c = read_av1c(&mut b)?;
