@@ -275,8 +275,10 @@ class LIRGeneratorShared {
   // Returns a box allocation. The use is either typed, a Value, or
   // a constant (if useConstant is true).
   inline LBoxAllocation useBoxOrTypedOrConstant(MDefinition* mir,
-                                                bool useConstant);
-  inline LBoxAllocation useBoxOrTyped(MDefinition* mir);
+                                                bool useConstant,
+                                                bool useAtStart = false);
+  inline LBoxAllocation useBoxOrTyped(MDefinition* mir,
+                                      bool useAtStart = false);
 
   // Returns an int64 allocation for an Int64-typed instruction.
   inline LInt64Allocation useInt64(MDefinition* mir, LUse::Policy policy,

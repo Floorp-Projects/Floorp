@@ -767,6 +767,34 @@ class LCreateArgumentsObject : public LCallInstructionHelper<1, 1, 3> {
   }
 };
 
+// Allocate a new arguments object for an inlined frame.
+class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 1> {
+ public:
+  LIR_HEADER(CreateInlinedArgumentsObject)
+
+  static const size_t CallObj = 0;
+  static const size_t Callee = 1;
+  static const size_t NumNonArgumentOperands = 2;
+  static size_t ArgIndex(size_t i) {
+    return NumNonArgumentOperands + BOX_PIECES * i;
+  }
+
+  LCreateInlinedArgumentsObject(uint32_t numOperands, const LDefinition& temp)
+      : LVariadicInstruction(classOpcode, numOperands) {
+    setIsCall();
+    setTemp(0, temp);
+  }
+
+  const LAllocation* getCallObject() { return getOperand(CallObj); }
+  const LAllocation* getCallee() { return getOperand(Callee); }
+
+  const LDefinition* temp() { return getTemp(0); }
+
+  MCreateInlinedArgumentsObject* mir() const {
+    return mir_->toCreateInlinedArgumentsObject();
+  }
+};
+
 // Get argument from arguments object.
 class LGetArgumentsObjectArg : public LInstructionHelper<BOX_PIECES, 1, 1> {
  public:

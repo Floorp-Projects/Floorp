@@ -417,10 +417,6 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: can't ion-compile");
     return false;
   }
-  if (script->needsArgsObj()) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: needs args obj");
-    return false;
-  }
   if (script->isDebuggee()) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: is debuggee");
     return false;
@@ -455,6 +451,14 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
   JSScript* targetScript = target->nonLazyScript();
   if (script_ == targetScript) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: recursion");
+    return false;
+  }
+
+  if (targetScript->needsArgsObj() && loc.isInvokeOp() &&
+      loc.getCallArgc() > ArgumentsObject::MaxInlinedArgs) {
+    JitSpew(JitSpew_WarpTrialInlining,
+            "SKIP: needs arguments object with argc %u (maximum %u)",
+            loc.getCallArgc(), ArgumentsObject::MaxInlinedArgs);
     return false;
   }
 
