@@ -273,8 +273,6 @@ var PrintUtils = {
    * Initialize a print, this will open the tab modal UI if it is enabled or
    * defer to the native dialog/silent print.
    *
-   * @param aTrigger What triggered the print, in string format, for telemetry
-   *        purposes.
    * @param aBrowsingContext
    *        The BrowsingContext of the window to print.
    *        Note that the browsing context could belong to a subframe of the
@@ -288,21 +286,12 @@ var PrintUtils = {
    *                              the given browsing context.
    *        {printFrameOnly}      Whether to print the selected frame.
    */
-  startPrintWindow(aTrigger, aBrowsingContext, aOptions) {
+  startPrintWindow(aBrowsingContext, aOptions) {
     const printInitiationTime = Date.now();
     let openWindowInfo, printSelectionOnly, printFrameOnly;
     if (aOptions) {
       ({ openWindowInfo, printSelectionOnly, printFrameOnly } = aOptions);
     }
-
-    // When we have a non-null openWindowInfo, we only want to record
-    // telemetry if we're triggered by window.print() itself, otherwise it's an
-    // internal print (like the one we do when we actually print from the
-    // preview dialog, etc.), and that'd cause us to overcount.
-    if (!openWindowInfo || openWindowInfo.isForWindowDotPrint) {
-      Services.telemetry.keyedScalarAdd("printing.trigger", aTrigger, 1);
-    }
-
     let browser = null;
     if (openWindowInfo) {
       browser = document.createXULElement("browser");
@@ -421,8 +410,6 @@ var PrintUtils = {
   /**
    * Initializes print preview.
    *
-   * @param aTrigger Optionaly, if it's an external call, what triggered the
-   *                 print, in string format, for telemetry purposes.
    * @param aListenerObj
    *        An object that defines the following functions:
    *
@@ -464,11 +451,7 @@ var PrintUtils = {
    *        dialog is opened here in PrintUtils, and then we listen for update
    *        messages from the child. Bug 1558588 is about removing this.
    */
-  printPreview(aTrigger, aListenerObj) {
-    if (aTrigger) {
-      Services.telemetry.keyedScalarAdd("printing.trigger", aTrigger, 1);
-    }
-
+  printPreview(aListenerObj) {
     if (PRINT_TAB_MODAL) {
       let browsingContext = gBrowser.selectedBrowser.browsingContext;
       let focusedBc = Services.focus.focusedContentBrowsingContext;
