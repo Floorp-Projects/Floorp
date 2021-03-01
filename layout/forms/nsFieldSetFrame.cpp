@@ -809,6 +809,7 @@ void nsFieldSetFrame::SetInitialChildList(ChildListID aListID,
              "Setting principal child list should populate our inner frame "
              "or our rendered legend");
 }
+
 void nsFieldSetFrame::AppendFrames(ChildListID aListID,
                                    nsFrameList& aFrameList) {
   MOZ_ASSERT(aListID == kNoReflowPrincipalList &&
@@ -819,13 +820,23 @@ void nsFieldSetFrame::AppendFrames(ChildListID aListID,
   MOZ_ASSERT(GetInner(), "at this point we should have an inner frame");
 }
 
-#ifdef DEBUG
 void nsFieldSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                    const nsLineList::iterator* aPrevFrameLine,
                                    nsFrameList& aFrameList) {
-  MOZ_CRASH("nsFieldSetFrame::InsertFrames not supported");
+  MOZ_ASSERT(aListID == kPrincipalList && !aPrevFrame && !GetLegend(),
+             "InsertFrames should only be used to prepend a rendered legend "
+             "from nsCSSFrameConstructor::ConstructFramesFromItemList");
+  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
+                                 aFrameList);
+  MOZ_ASSERT(GetLegend());
+  if (nsBlockFrame* legend = do_QueryFrame(GetLegend())) {
+    // A rendered legend always establish a new formatting context.
+    // https://html.spec.whatwg.org/multipage/rendering.html#rendered-legend
+    legend->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
+  }
 }
 
+#ifdef DEBUG
 void nsFieldSetFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   MOZ_CRASH("nsFieldSetFrame::RemoveFrame not supported");
 }
