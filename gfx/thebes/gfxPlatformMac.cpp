@@ -884,19 +884,29 @@ class OSXVsyncSource final : public VsyncSource {
         return;
       }
 
-      auto displayLink = mDisplayLink.Lock();
-      if (*displayLink &&
-          CVDisplayLinkGetCurrentCGDisplay(*displayLink) == aDisplay) {
+      if (!NS_IsMainThread()) {
+        return;
+      }
+
+      bool didReconfigureCurrentDisplayLinkDisplay = false;
+      {  // scope for lock
+        auto displayLink = mDisplayLink.Lock();
+        didReconfigureCurrentDisplayLinkDisplay =
+            *displayLink &&
+            CVDisplayLinkGetCurrentCGDisplay(*displayLink) == aDisplay;
+      }
+
+      if (didReconfigureCurrentDisplayLinkDisplay) {
         // The link's current display has been reconfigured.
-        // Stop and start the display link, because otherwise it may be stuck
-        // for a while in some cases, e.g. after fast user switching or sleep.
-        CVDisplayLinkStop(*displayLink);
-        CVDisplayLinkStart(*displayLink);
+        // Recreate the display link, because otherwise it may be stuck with a
+        // "removed" display forever and never notify us again.
+        DisableVsync();
+        EnableVsync();
       }
     }
 
     // Accessed from main thread and from display reconfiguration callback
-    // thread.
+    // thread... which also happens to be the main thread.
     DataMutex<CVDisplayLinkRef> mDisplayLink;
 
     // Accessed only from the main thread.
