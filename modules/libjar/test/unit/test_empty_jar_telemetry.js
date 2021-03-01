@@ -28,6 +28,8 @@ Services.prefs.setBoolPref(
   true
 );
 
+Services.prefs.setBoolPref("network.jar.record_failure_reason", true);
+
 const fileBase = "test_empty_file.zip";
 const file = do_get_file("data/" + fileBase);
 const jarBase = "jar:" + Services.io.newFileURI(file).spec + "!";
@@ -45,6 +47,7 @@ function setup() {
 setup();
 
 registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("network.jar.record_failure_reason");
   try {
     copy.remove(false);
   } catch (e) {}
