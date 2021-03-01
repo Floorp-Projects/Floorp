@@ -2633,14 +2633,17 @@ nsresult Http2Session::RecvOrigin(Http2Session* self) {
     nsAutoCString key(host);
     key.Append(':');
     key.AppendInt(port);
-    if (!self->mOriginFrame.Get(key)) {
-      self->mOriginFrame.InsertOrUpdate(key, true);
-      RefPtr<HttpConnectionBase> conn(self->HttpConnection());
-      MOZ_ASSERT(conn.get());
-      gHttpHandler->ConnMgr()->RegisterOriginCoalescingKey(conn, host, port);
-    } else {
-      LOG3(("Http2Session::RecvOrigin %p origin frame already in set\n", self));
-    }
+    self->mOriginFrame.WithEntryHandle(key, [&](auto&& entry) {
+      if (!entry) {
+        entry.Insert(true);
+        RefPtr<HttpConnectionBase> conn(self->HttpConnection());
+        MOZ_ASSERT(conn.get());
+        gHttpHandler->ConnMgr()->RegisterOriginCoalescingKey(conn, host, port);
+      } else {
+        LOG3(("Http2Session::RecvOrigin %p origin frame already in set\n",
+              self));
+      }
+    });
   }
 
   self->ResetDownstreamState();
@@ -3980,9 +3983,7 @@ uint32_t Http2Session::FindTunnelCount(nsCString const& aHashKey) {
 void Http2Session::RegisterTunnel(Http2Stream* aTunnel) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   nsCString const& regKey = aTunnel->RegistrationKey();
-  uint32_t newcount = FindTunnelCount(regKey) + 1;
-  mTunnelHash.Remove(regKey);
-  mTunnelHash.InsertOrUpdate(regKey, newcount);
+  const uint32_t newcount = ++mTunnelHash.LookupOrInsert(regKey, 0);
   LOG3(("Http2Stream::RegisterTunnel %p stream=%p tunnels=%d [%s]", this,
         aTunnel, newcount, regKey.get()));
 }
@@ -3990,11 +3991,11 @@ void Http2Session::RegisterTunnel(Http2Stream* aTunnel) {
 void Http2Session::UnRegisterTunnel(Http2Stream* aTunnel) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   nsCString const& regKey = aTunnel->RegistrationKey();
-  MOZ_ASSERT(FindTunnelCount(regKey));
-  uint32_t newcount = FindTunnelCount(regKey) - 1;
-  mTunnelHash.Remove(regKey);
-  if (newcount) {
-    mTunnelHash.InsertOrUpdate(regKey, newcount);
+  auto entry = mTunnelHash.Lookup(regKey);
+  MOZ_ASSERT(entry);
+  const uint32_t newcount = --(*entry);
+  if (!newcount) {
+    entry.Remove();
   }
   LOG3(("Http2Session::UnRegisterTunnel %p stream=%p tunnels=%d [%s]", this,
         aTunnel, newcount, regKey.get()));

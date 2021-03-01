@@ -2153,31 +2153,31 @@ nsresult nsOfflineCacheDevice::GetApplicationCache_Unlocked(
     const nsACString& clientID, nsIApplicationCache** out) {
   *out = nullptr;
 
-  nsCOMPtr<nsIApplicationCache> cache;
-
-  nsWeakPtr weak;
-  if (mCaches.Get(clientID, getter_AddRefs(weak)))
-    cache = do_QueryReferent(weak);
-
-  if (!cache) {
-    nsCString group;
-    nsresult rv = GetGroupForCache(clientID, group);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (group.IsEmpty()) {
-      return NS_OK;
+  return mCaches.WithEntryHandle(clientID, [&](auto&& entry) {
+    nsCOMPtr<nsIApplicationCache> cache;
+    if (entry) {
+      cache = do_QueryReferent(*entry);
     }
 
-    cache = new nsApplicationCache(this, group, clientID);
-    weak = do_GetWeakReference(cache);
-    if (!weak) return NS_ERROR_OUT_OF_MEMORY;
+    if (!cache) {
+      nsCString group;
+      nsresult rv = GetGroupForCache(clientID, group);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    mCaches.InsertOrUpdate(clientID, weak);
-  }
+      if (group.IsEmpty()) {
+        return NS_OK;
+      }
 
-  cache.swap(*out);
+      cache = new nsApplicationCache(this, group, clientID);
+      nsWeakPtr weak = do_GetWeakReference(cache);
+      if (!weak) return NS_ERROR_OUT_OF_MEMORY;
 
-  return NS_OK;
+      entry.InsertOrUpdate(weak);
+    }
+
+    cache.swap(*out);
+    return NS_OK;
+  });
 }
 
 nsresult nsOfflineCacheDevice::GetActiveCache(const nsACString& group,
@@ -2527,17 +2527,17 @@ nsresult nsOfflineCacheDevice::ActivateCache(const nsACString& group,
 
   MutexAutoLock lock(mLock);
 
-  nsCString* active;
-  if (mActiveCachesByGroup.Get(group, &active)) {
-    mActiveCaches.RemoveEntry(*active);
-    mActiveCachesByGroup.Remove(group);
-    active = nullptr;
-  }
+  mActiveCachesByGroup.WithEntryHandle(group, [&](auto&& entry) {
+    if (entry) {
+      mActiveCaches.RemoveEntry(*entry.Data());
+      entry.Remove();
+    }
 
-  if (!clientID.IsEmpty()) {
-    mActiveCaches.PutEntry(clientID);
-    mActiveCachesByGroup.InsertOrUpdate(group, MakeUnique<nsCString>(clientID));
-  }
+    if (!clientID.IsEmpty()) {
+      mActiveCaches.PutEntry(clientID);
+      entry.Insert(MakeUnique<nsCString>(clientID));
+    }
+  });
 
   return NS_OK;
 }

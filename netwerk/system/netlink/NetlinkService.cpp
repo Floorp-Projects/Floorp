@@ -757,48 +757,46 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
     return;
   }
 
-  uint32_t linkIndex = link->GetIndex();
-  nsAutoCString linkName;
-  link->GetName(linkName);
+  const uint32_t linkIndex = link->GetIndex();
+  mLinks.WithEntryHandle(linkIndex, [&](auto&& entry) {
+    nsAutoCString linkName;
+    link->GetName(linkName);
 
-  LinkInfo* linkInfo = nullptr;
-  mLinks.Get(linkIndex, &linkInfo);
+    if (aNlh->nlmsg_type == RTM_NEWLINK) {
+      if (!entry) {
+        LOG(("Creating new link [index=%u, name=%s, flags=%u, type=%u]",
+             linkIndex, linkName.get(), link->GetFlags(), link->GetType()));
+        entry.Insert(MakeUnique<LinkInfo>(std::move(link)));
+      } else {
+        LOG(("Updating link [index=%u, name=%s, flags=%u, type=%u]", linkIndex,
+             linkName.get(), link->GetFlags(), link->GetType()));
 
-  if (aNlh->nlmsg_type == RTM_NEWLINK) {
-    if (!linkInfo) {
-      LOG(("Creating new link [index=%u, name=%s, flags=%u, type=%u]",
-           linkIndex, linkName.get(), link->GetFlags(), link->GetType()));
-      linkInfo =
-          mLinks
-              .InsertOrUpdate(linkIndex, MakeUnique<LinkInfo>(std::move(link)))
-              .get();
-    } else {
-      LOG(("Updating link [index=%u, name=%s, flags=%u, type=%u]", linkIndex,
-           linkName.get(), link->GetFlags(), link->GetType()));
+        auto* linkInfo = entry->get();
 
-      // Check whether administrative state has changed.
-      if (linkInfo->mLink->GetFlags() & IFF_UP &&
-          !(link->GetFlags() & IFF_UP)) {
-        LOG(("  link went down"));
-        // If the link went down, remove all routes and neighbors, but keep
-        // addresses.
-        linkInfo->mDefaultRoutes.Clear();
-        linkInfo->mNeighbors.Clear();
+        // Check whether administrative state has changed.
+        if (linkInfo->mLink->GetFlags() & IFF_UP &&
+            !(link->GetFlags() & IFF_UP)) {
+          LOG(("  link went down"));
+          // If the link went down, remove all routes and neighbors, but keep
+          // addresses.
+          linkInfo->mDefaultRoutes.Clear();
+          linkInfo->mNeighbors.Clear();
+        }
+
+        linkInfo->mLink = std::move(link);
+        linkInfo->UpdateStatus();
       }
-
-      linkInfo->mLink = std::move(link);
-      linkInfo->UpdateStatus();
-    }
-  } else {
-    if (!linkInfo) {
-      // This can happen during startup
-      LOG(("Link info doesn't exist [index=%u, name=%s]", linkIndex,
-           linkName.get()));
     } else {
-      LOG(("Removing link [index=%u, name=%s]", linkIndex, linkName.get()));
-      mLinks.Remove(linkIndex);
+      if (!entry) {
+        // This can happen during startup
+        LOG(("Link info doesn't exist [index=%u, name=%s]", linkIndex,
+             linkName.get()));
+      } else {
+        LOG(("Removing link [index=%u, name=%s]", linkIndex, linkName.get()));
+        entry.Remove();
+      }
     }
-  }
+  });
 }
 
 void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
@@ -826,9 +824,9 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
 
   // There might be already an equal address in the array even in case of
   // RTM_NEWADDR message, e.g. when lifetime of IPv6 address is renewed. Equal
-  // in this case means that IP and prefix is the same but some attributes might
-  // be different. Remove existing equal address in case of RTM_DELADDR as well
-  // as RTM_NEWADDR message and add a new one in the latter case.
+  // in this case means that IP and prefix is the same but some attributes
+  // might be different. Remove existing equal address in case of RTM_DELADDR
+  // as well as RTM_NEWADDR message and add a new one in the latter case.
   for (uint32_t i = 0; i < linkInfo->mAddresses.Length(); ++i) {
     if (aNlh->nlmsg_type == RTM_NEWADDR &&
         linkInfo->mAddresses[i]->MsgEquals(*address)) {
@@ -886,7 +884,8 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
 
   // Don't treat address changes during initial scan as a network change
   if (mInitialScanFinished) {
-    // Send network event change regardless of whether the ID has changed or not
+    // Send network event change regardless of whether the ID has changed or
+    // not
     mSendNetworkChangeEvent = true;
     TriggerNetworkIDCalculation();
   }
@@ -1306,9 +1305,9 @@ int NetlinkService::GetPollWait() {
 
   double period = (TimeStamp::Now() - mTriggerTime).ToMilliseconds();
   if (period >= kNetworkChangeCoalescingPeriod) {
-    // Coalescing time has elapsed, send route check messages to find out where
-    // IPv4 and IPv6 traffic is routed and calculate network ID after the
-    // response is received.
+    // Coalescing time has elapsed, send route check messages to find out
+    // where IPv4 and IPv6 traffic is routed and calculate network ID after
+    // the response is received.
     EnqueueRtMsg(AF_INET, &mRouteCheckIPv4);
     EnqueueRtMsg(AF_INET6, &mRouteCheckIPv6);
 
