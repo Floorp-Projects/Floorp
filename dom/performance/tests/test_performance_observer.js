@@ -20,7 +20,7 @@ test(t => {
   var observer = new PerformanceObserver(() => {});
 
   assert_throws(
-    { name: "SyntaxError" },
+    { name: "TypeError" },
     function() {
       observer.observe();
     },
@@ -28,7 +28,7 @@ test(t => {
   );
 
   assert_throws(
-    { name: "SyntaxError" },
+    { name: "TypeError" },
     function() {
       observer.observe({ unsupportedAttribute: "unsupported" });
     },
