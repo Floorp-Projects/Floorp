@@ -323,9 +323,7 @@ void Link::GetOrigin(nsAString& aOrigin) {
 
 void Link::GetProtocol(nsAString& _protocol) {
   nsCOMPtr<nsIURI> uri(GetURI());
-  if (!uri) {
-    _protocol.AssignLiteral("http");
-  } else {
+  if (uri) {
     nsAutoCString scheme;
     (void)uri->GetScheme(scheme);
     CopyASCIItoUTF16(scheme, _protocol);
