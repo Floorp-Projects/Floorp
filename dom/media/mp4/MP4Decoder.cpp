@@ -39,12 +39,6 @@ static bool IsWhitelistedH264Codec(const nsAString& aCodec) {
           profile == H264_PROFILE_EXTENDED || profile == H264_PROFILE_HIGH);
 }
 
-/* static */
-bool MP4Decoder::IsSupportedTypeWithoutDiagnostics(
-    const MediaContainerType& aContainerType) {
-  return IsSupportedType(aContainerType, nullptr);
-}
-
 static bool IsTypeValid(const MediaContainerType& aType) {
   // Whitelist MP4 types, so they explicitly match what we encounter on
   // the web, as opposed to what we use internally (i.e. what our demuxers
