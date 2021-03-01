@@ -28,7 +28,7 @@ add_task(async function() {
   console.log("foobar");
 
   info("Wait for existing browser mochitest log");
-  await waitForNextResource(
+  const existingMsg = await waitForNextResource(
     resourceWatcher,
     ResourceWatcher.TYPES.CONSOLE_MESSAGE,
     {
@@ -38,7 +38,12 @@ add_task(async function() {
       },
     }
   );
-  ok(true, "The existing log was retrieved");
+  ok(existingMsg, "The existing log was retrieved");
+  is(
+    existingMsg.isAlreadyExistingResource,
+    true,
+    "isAlreadyExistingResource is true for the existing message"
+  );
 
   // We can't use waitForNextResource here as we have to ensure
   // waiting for watchResource resolution before doing the console log.
@@ -47,14 +52,15 @@ add_task(async function() {
     resolveMochitestRuntimeLog = resolve;
   });
   const onAvailable = resources => {
-    if (
-      resources.some(resource => resource.message.arguments[0] == "foobar2")
-    ) {
+    const runtimeLogResource = resources.find(
+      resource => resource.message.arguments[0] == "foobar2"
+    );
+    if (runtimeLogResource) {
       resourceWatcher.unwatchResources(
         [ResourceWatcher.TYPES.CONSOLE_MESSAGE],
         { onAvailable }
       );
-      resolveMochitestRuntimeLog();
+      resolveMochitestRuntimeLog(runtimeLogResource);
     }
   };
   await resourceWatcher.watchResources(
@@ -67,8 +73,13 @@ add_task(async function() {
   console.log("foobar2");
 
   info("Wait for runtime browser mochitest log");
-  await onMochitestRuntimeLog;
-  ok(true, "The runtime log was retrieved");
+  const runtimeLogResource = await onMochitestRuntimeLog;
+  ok(runtimeLogResource, "The runtime log was retrieved");
+  is(
+    runtimeLogResource.isAlreadyExistingResource,
+    false,
+    "isAlreadyExistingResource is false for the runtime message"
+  );
 
   const onEarlyLog = waitForNextResource(
     resourceWatcher,
@@ -82,8 +93,13 @@ add_task(async function() {
   );
   await addTab(TEST_URL);
   info("Wait for early page log");
-  await onEarlyLog;
-  ok(true, "The early page log was retrieved");
+  const earlyResource = await onEarlyLog;
+  ok(earlyResource, "The early page log was retrieved");
+  is(
+    earlyResource.isAlreadyExistingResource,
+    false,
+    "isAlreadyExistingResource is false for the early message"
+  );
 
   targetList.destroy();
   await client.close();
