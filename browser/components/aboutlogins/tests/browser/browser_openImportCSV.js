@@ -127,15 +127,18 @@ class CsvImportHelper {
       let errors = dialog.shadowRoot.querySelector(
         ".import-items-errors .result-count"
       ).textContent;
-      return {
+      const dialogData = {
         added,
         modified,
         noChange,
         errors,
-        l10nFocused: dialog.shadowRoot.activeElement.getAttribute(
-          "data-l10n-id"
-        ),
       };
+      if (dialog.shadowRoot.activeElement) {
+        dialogData.l10nFocused = dialog.shadowRoot.activeElement.getAttribute(
+          "data-l10n-id"
+        );
+      }
+      return dialogData;
     });
   }
 
@@ -252,13 +255,15 @@ class CsvImportHelper {
   }
 }
 
+const random = Math.round(Math.random() * 100000001);
+
 add_task(async function test_open_import_one_item_from_csv() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:logins" },
     async browser => {
       await CsvImportHelper.clickImportFromCsvMenu(browser, [
         "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
-        "https://example.com,joe@example.com,qwerty,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb46f0},1589617814635,1589710449871,1589617846802",
+        `https://example.com,joe${random}@example.com,qwerty,My realm,,{${random}-e194-4279-ae1b-d7d281bb46f0},1589617814635,1589710449871,1589617846802`,
       ]);
       await CsvImportHelper.waitForImportToComplete();
 
@@ -281,15 +286,15 @@ add_task(async function test_open_import_all_four_categories() {
     async browser => {
       const initialCsvData = [
         "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
-        "https://example1.com,existing,existing,,,{eeec0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924000",
-        "https://example1.com,duplicate,duplicate,,,{dddd0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363",
+        `https://example1.com,existing${random},existing,,,{${random}-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924000`,
+        `https://example1.com,duplicate,duplicate,,,{dddd0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363`,
       ];
       const updatedCsvData = [
         "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
-        "https://example1.com,added,added,,,,,,",
-        "https://example1.com,existing,modified,,,{eeec0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363",
-        "https://example1.com,duplicate,duplicate,,,{dddd0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363",
-        "https://example1.com,error,,,,,,,",
+        `https://example1.com,added${random},added,,,,,,`,
+        `https://example1.com,existing${random},modified,,,{${random}-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363`,
+        `https://example1.com,duplicate,duplicate,,,{dddd0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363`,
+        `https://example1.com,error,,,,,,,`,
       ];
 
       await CsvImportHelper.clickImportFromCsvMenu(browser, initialCsvData);
@@ -319,13 +324,13 @@ add_task(async function test_open_import_all_four_detailed_report() {
     async browser => {
       const initialCsvData = [
         "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
-        "https://example2.com,existing,existing,,,{eeec0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924000",
+        `https://example2.com,existing${random},existing,,,{${random}-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924000`,
         "https://example2.com,duplicate,duplicate,,,{dddd0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363",
       ];
       const updatedCsvData = [
         "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
-        "https://example2.com,added,added,,,,,,",
-        "https://example2.com,existing,modified,,,{eeec0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363",
+        `https://example2.com,added${random},added,,,,,,`,
+        `https://example2.com,existing${random},modified,,,{${random}-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363`,
         "https://example2.com,duplicate,duplicate,,,{dddd0080-07a1-4bcf-86f0-7d56b9c1f48f},1582229924361,1582495972623,1582229924363",
         "https://example2.com,error,,,,,,,",
       ];
