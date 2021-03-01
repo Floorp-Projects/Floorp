@@ -2,7 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifndef CROSS_COMPILE
+ifdef FUZZING
+ifdef MOZ_CODE_COVERAGE
+SKIP = 1
+endif
+endif
+
+ifdef CROSS_COMPILE
+SKIP = 1
+endif
+
+ifneq ($(SKIP),1)
 
 ifeq ($(OS_TARGET),WINNT)
 LOGALLOC_VAR = MOZ_REPLACE_MALLOC_LIB
