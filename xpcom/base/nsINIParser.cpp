@@ -205,7 +205,7 @@ nsresult nsINIParser::SetString(const char* aSection, const char* aKey,
       return;
     }
 
-    INIValue* v = entry.Data().get();
+    INIValue* v = entry->get();
 
     // Check whether this key has already been specified; overwrite
     // if so, or append if not.

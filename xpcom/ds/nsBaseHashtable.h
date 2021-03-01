@@ -352,6 +352,25 @@ class nsBaseHashtable
       MOZ_ASSERT(!!*this, "must have an entry to access its value");
       return mEntry->mData;
     }
+
+    [[nodiscard]] const DataType& Data() const {
+      MOZ_ASSERT(!!*this, "must have an entry to access its value");
+      return mEntry->mData;
+    }
+
+    [[nodiscard]] DataType* DataPtrOrNull() {
+      return static_cast<bool>(*this) ? &mEntry->mData : nullptr;
+    }
+
+    [[nodiscard]] const DataType* DataPtrOrNull() const {
+      return static_cast<bool>(*this) ? &mEntry->mData : nullptr;
+    }
+
+    [[nodiscard]] DataType* operator->() { return &Data(); }
+    [[nodiscard]] const DataType* operator->() const { return &Data(); }
+
+    [[nodiscard]] DataType& operator*() { return Data(); }
+    [[nodiscard]] const DataType& operator*() const { return Data(); }
   };
 
   /**
@@ -547,6 +566,14 @@ class nsBaseHashtable
      * \pre HasEntry()
      */
     [[nodiscard]] DataType& Data() { return Entry()->mData; }
+
+    [[nodiscard]] DataType* DataPtrOrNull() {
+      return static_cast<bool>(*this) ? &Data() : nullptr;
+    }
+
+    [[nodiscard]] DataType* operator->() { return &Data(); }
+
+    [[nodiscard]] DataType& operator*() { return Data(); }
 
    private:
     friend class nsBaseHashtable;

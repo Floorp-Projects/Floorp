@@ -72,17 +72,17 @@ class StringTableBuilder {
   using ElemType = typename StringType::char_type;
 
   StringTableEntry Add(const StringType& aKey) {
-    return mEntries.WithEntryHandle(
-        aKey, [&](auto&& entry) -> StringTableEntry {
-          entry.OrInsertWith([&]() {
-            Entry newEntry{mSize, aKey};
-            mSize += aKey.Length() + 1;
+    return mEntries.WithEntryHandle(aKey,
+                                    [&](auto&& entry) -> StringTableEntry {
+                                      entry.OrInsertWith([&]() {
+                                        Entry newEntry{mSize, aKey};
+                                        mSize += aKey.Length() + 1;
 
-            return newEntry;
-          });
+                                        return newEntry;
+                                      });
 
-          return {entry.Data().mOffset, aKey.Length()};
-        });
+                                      return {entry->mOffset, aKey.Length()};
+                                    });
   }
 
   void Write(const RangedPtr<uint8_t>& aBuffer) {

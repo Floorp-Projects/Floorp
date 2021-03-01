@@ -3445,7 +3445,7 @@ void DatastoreWriteOptimizer::ApplyAndReset(
     LSItemInfo& item = aOrderedItems[index];
 
     if (auto entry = mWriteInfos.Lookup(item.key())) {
-      WriteInfo* writeInfo = entry.Data().get();
+      WriteInfo* writeInfo = entry->get();
 
       switch (writeInfo->GetType()) {
         case WriteInfo::DeleteItem:
