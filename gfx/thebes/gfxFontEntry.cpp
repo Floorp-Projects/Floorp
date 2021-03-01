@@ -855,52 +855,44 @@ bool gfxFontEntry::SupportsOpenTypeFeature(Script aScript,
                "need to bump the size of the feature shift");
 
   uint32_t scriptFeature = SCRIPT_FEATURE(aScript, aFeatureTag);
-  bool result;
-  if (mSupportedFeatures->Get(scriptFeature, &result)) {
-    return result;
-  }
+  return mSupportedFeatures->LookupOrInsertWith(scriptFeature, [&] {
+    bool result = false;
+    hb_face_t* face = GetHBFace();
 
-  result = false;
+    if (hb_ot_layout_has_substitution(face)) {
+      hb_script_t hbScript =
+          gfxHarfBuzzShaper::GetHBScriptUsedForShaping(aScript);
 
-  hb_face_t* face = GetHBFace();
+      // Get the OpenType tag(s) that match this script code
+      unsigned int scriptCount = 4;
+      hb_tag_t scriptTags[4];
+      hb_ot_tags_from_script_and_language(hbScript, HB_LANGUAGE_INVALID,
+                                          &scriptCount, scriptTags, nullptr,
+                                          nullptr);
 
-  if (hb_ot_layout_has_substitution(face)) {
-    hb_script_t hbScript =
-        gfxHarfBuzzShaper::GetHBScriptUsedForShaping(aScript);
-
-    // Get the OpenType tag(s) that match this script code
-    unsigned int scriptCount = 4;
-    hb_tag_t scriptTags[4];
-    hb_ot_tags_from_script_and_language(hbScript, HB_LANGUAGE_INVALID,
-                                        &scriptCount, scriptTags, nullptr,
-                                        nullptr);
-
-    // Append DEFAULT to the returned tags, if room
-    if (scriptCount < 4) {
-      scriptTags[scriptCount++] = HB_OT_TAG_DEFAULT_SCRIPT;
-    }
-
-    // Now check for 'smcp' under the first of those scripts that is present
-    const hb_tag_t kGSUB = HB_TAG('G', 'S', 'U', 'B');
-    for (unsigned int i = 0; i < scriptCount; i++) {
-      unsigned int scriptIndex;
-      if (hb_ot_layout_table_find_script(face, kGSUB, scriptTags[i],
-                                         &scriptIndex)) {
-        if (hb_ot_layout_language_find_feature(
-                face, kGSUB, scriptIndex, HB_OT_LAYOUT_DEFAULT_LANGUAGE_INDEX,
-                aFeatureTag, nullptr)) {
-          result = true;
-        }
-        break;
+      // Append DEFAULT to the returned tags, if room
+      if (scriptCount < 4) {
+        scriptTags[scriptCount++] = HB_OT_TAG_DEFAULT_SCRIPT;
       }
+
+      // Now check for 'smcp' under the first of those scripts that is present
+      const hb_tag_t kGSUB = HB_TAG('G', 'S', 'U', 'B');
+      result = std::any_of(scriptTags, scriptTags + scriptCount,
+                           [&](const hb_tag_t& scriptTag) {
+                             unsigned int scriptIndex;
+                             return hb_ot_layout_table_find_script(
+                                        face, kGSUB, scriptTag, &scriptIndex) &&
+                                    hb_ot_layout_language_find_feature(
+                                        face, kGSUB, scriptIndex,
+                                        HB_OT_LAYOUT_DEFAULT_LANGUAGE_INDEX,
+                                        aFeatureTag, nullptr);
+                           });
     }
-  }
 
-  hb_face_destroy(face);
+    hb_face_destroy(face);
 
-  mSupportedFeatures->InsertOrUpdate(scriptFeature, result);
-
-  return result;
+    return result;
+  });
 }
 
 const hb_set_t* gfxFontEntry::InputsForOpenTypeFeature(Script aScript,

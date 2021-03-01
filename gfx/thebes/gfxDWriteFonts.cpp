@@ -472,14 +472,8 @@ int32_t gfxDWriteFont::GetGlyphWidth(uint16_t aGID) {
     mGlyphWidths = MakeUnique<nsDataHashtable<nsUint32HashKey, int32_t>>(128);
   }
 
-  int32_t width = -1;
-  if (mGlyphWidths->Get(aGID, &width)) {
-    return width;
-  }
-
-  width = NS_lround(MeasureGlyphWidth(aGID) * 65536.0);
-  mGlyphWidths->InsertOrUpdate(aGID, width);
-  return width;
+  return mGlyphWidths->LookupOrInsertWith(
+      aGID, [&] { return NS_lround(MeasureGlyphWidth(aGID) * 65536.0); });
 }
 
 bool gfxDWriteFont::GetForceGDIClassic() const {
