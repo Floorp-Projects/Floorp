@@ -159,21 +159,16 @@ bool ExtensionPolicyService::UnregisterExtension(WebExtensionPolicy& aPolicy) {
 }
 
 bool ExtensionPolicyService::RegisterObserver(DocumentObserver& aObserver) {
-  if (mObservers.GetWeak(&aObserver)) {
-    return false;
-  }
-
-  mObservers.InsertOrUpdate(&aObserver, RefPtr{&aObserver});
-  return true;
+  bool inserted = false;
+  mObservers.LookupOrInsertWith(&aObserver, [&] {
+    inserted = true;
+    return RefPtr{&aObserver};
+  });
+  return inserted;
 }
 
 bool ExtensionPolicyService::UnregisterObserver(DocumentObserver& aObserver) {
-  if (!mObservers.GetWeak(&aObserver)) {
-    return false;
-  }
-
-  mObservers.Remove(&aObserver);
-  return true;
+  return mObservers.Remove(&aObserver);
 }
 
 /*****************************************************************************
