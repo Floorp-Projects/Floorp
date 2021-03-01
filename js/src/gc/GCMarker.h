@@ -271,25 +271,31 @@ class GCMarker final : public JSTracer {
   void stop();
   void reset();
 
-  // Mark the given GC thing and traverse its children at some point.
+  // If |thing| is unmarked, mark it and then traverse its children.
   template <typename T>
-  void traverse(T thing);
+  void markAndTraverse(T* thing);
+
+  // Traverse a GC thing's children, using a strategy depending on the type.
+  // This can either processing them immediately or push them onto the mark
+  // stack for later.
+  template <typename T>
+  void traverse(T* thing);
 
   // Calls traverse on target after making additional assertions.
   template <typename S, typename T>
-  void traverseEdge(S source, T* target);
+  void markAndTraverseEdge(S source, T* target);
   template <typename S, typename T>
-  void traverseEdge(S source, const T& target);
+  void markAndTraverseEdge(S source, const T& target);
 
   // Helper methods that coerce their second argument to the base pointer
   // type.
   template <typename S>
-  void traverseObjectEdge(S source, JSObject* target) {
-    traverseEdge(source, target);
+  void markAndTraverseObjectEdge(S source, JSObject* target) {
+    markAndTraverseEdge(source, target);
   }
   template <typename S>
-  void traverseStringEdge(S source, JSString* target) {
-    traverseEdge(source, target);
+  void markAndTraverseStringEdge(S source, JSString* target) {
+    markAndTraverseEdge(source, target);
   }
 
   template <typename S, typename T>
@@ -401,12 +407,19 @@ class GCMarker final : public JSTracer {
   // already been marked.
   inline void repush(JSObject* obj);
 
+  // Process a marked thing's children by calling T::traceChildren().
   template <typename T>
-  void markAndTraceChildren(T* thing);
+  void traceChildren(T* thing);
+
+  // Process a marked thing's children recursively using an iterative loop and
+  // manual dispatch, for kinds where this is possible.
   template <typename T>
-  void markAndPush(T* thing);
+  void scanChildren(T* thing);
+
+  // Push a marked thing onto the mark stack. Its children will be marked later.
   template <typename T>
-  void markAndScan(T* thing);
+  void pushThing(T* thing);
+
   template <typename T>
   void markImplicitEdgesHelper(T oldThing);
   void eagerlyMarkChildren(JSLinearString* str);

@@ -106,13 +106,15 @@ using mozilla::PodCopy;
 //  |         +------------+---------------+             +<----------+     :
 //  |         |                            |             |           |     :
 //  |         v                            v             v           |     :
-//  |    DoCallback                    DoMarking    traverseEdge     |     :
+//  |    DoCallback                    DoMarking markAndTraverseEdge |     :
 //  |         |                            |             |           |     :
 //  |         |                            +------+------+           |     :
 //  |         |                                   |                  |     :
 //  |         v                                   v                  |     :
-//  |  CallbackTracer::                   GCMarker::traverse         |     :
+//  |  CallbackTracer::                    markAndTraverse           |     :
 //  |    onSomeEdge                               |                  |     :
+//  |                                             |                  |     :
+//  |                                          traverse              |     :
 //  |                                             |                  |     :
 //  |             +-------------------+-----------+------+           |     :
 //  |             |                   |                  |           |     :
@@ -945,7 +947,7 @@ void DoMarking(GCMarker* gcmarker, T* thing) {
 
   CheckTracedThing(gcmarker, thing);
   AutoClearTracingSource acts(gcmarker);
-  gcmarker->traverse(thing);
+  gcmarker->markAndTraverse(thing);
 
   // Mark the compartment as live.
   SetMaybeAliveFlag(thing);
@@ -981,8 +983,19 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
     MOZ_ASSERT(ShouldMark(gcmarker, thing));
     CheckTracedThing(gcmarker, thing);
     AutoClearTracingSource acts(gcmarker);
-    gcmarker->traverse(thing);
+    gcmarker->markAndTraverse(thing);
   });
+}
+
+template <typename T>
+void js::GCMarker::markAndTraverse(T* thing) {
+  if (thing->isPermanentAndMayBeShared()) {
+    return;
+  }
+
+  if (mark(thing)) {
+    traverse(thing);
+  }
 }
 
 // The simplest traversal calls out to the fully generic traceChildren function
@@ -991,31 +1004,28 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
 // Thus, this generic tracing should only be used in cases where subsequent
 // tracing will not recurse.
 template <typename T>
-void js::GCMarker::markAndTraceChildren(T* thing) {
-  if (thing->isPermanentAndMayBeShared()) {
-    return;
-  }
-  if (mark(thing)) {
-    AutoSetTracingSource asts(this, thing);
-    thing->traceChildren(this);
-  }
+void js::GCMarker::traceChildren(T* thing) {
+  MOZ_ASSERT(!thing->isPermanentAndMayBeShared());
+  MOZ_ASSERT(thing->isMarkedAny());
+  AutoSetTracingSource asts(this, thing);
+  thing->traceChildren(this);
 }
 namespace js {
 template <>
 void GCMarker::traverse(BaseShape* thing) {
-  markAndTraceChildren(thing);
+  traceChildren(thing);
 }
 template <>
 void GCMarker::traverse(JS::Symbol* thing) {
-  markAndTraceChildren(thing);
+  traceChildren(thing);
 }
 template <>
 void GCMarker::traverse(JS::BigInt* thing) {
-  markAndTraceChildren(thing);
+  traceChildren(thing);
 }
 template <>
 void GCMarker::traverse(RegExpShared* thing) {
-  markAndTraceChildren(thing);
+  traceChildren(thing);
 }
 }  // namespace js
 
@@ -1023,26 +1033,23 @@ void GCMarker::traverse(RegExpShared* thing) {
 // recursion. We traverse trees of these edges immediately, with aggressive,
 // manual inlining, implemented by eagerlyTraceChildren.
 template <typename T>
-void js::GCMarker::markAndScan(T* thing) {
-  if (thing->isPermanentAndMayBeShared()) {
-    return;
-  }
-  if (mark(thing)) {
-    eagerlyMarkChildren(thing);
-  }
+void js::GCMarker::scanChildren(T* thing) {
+  MOZ_ASSERT(!thing->isPermanentAndMayBeShared());
+  MOZ_ASSERT(thing->isMarkedAny());
+  eagerlyMarkChildren(thing);
 }
 namespace js {
 template <>
 void GCMarker::traverse(JSString* thing) {
-  markAndScan(thing);
+  scanChildren(thing);
 }
 template <>
 void GCMarker::traverse(Shape* thing) {
-  markAndScan(thing);
+  scanChildren(thing);
 }
 template <>
 void GCMarker::traverse(js::Scope* thing) {
-  markAndScan(thing);
+  scanChildren(thing);
 }
 }  // namespace js
 
@@ -1052,28 +1059,27 @@ void GCMarker::traverse(js::Scope* thing) {
 // included for historical reasons. JSScript normally cannot recurse, but may
 // be used as a weakmap key and thereby recurse into weakmapped values.
 template <typename T>
-void js::GCMarker::markAndPush(T* thing) {
-  if (!mark(thing)) {
-    return;
-  }
+void js::GCMarker::pushThing(T* thing) {
+  MOZ_ASSERT(!thing->isPermanentAndMayBeShared());
+  MOZ_ASSERT(thing->isMarkedAny());
   pushTaggedPtr(thing);
 }
 namespace js {
 template <>
 void GCMarker::traverse(JSObject* thing) {
-  markAndPush(thing);
+  pushThing(thing);
 }
 template <>
 void GCMarker::traverse(ObjectGroup* thing) {
-  markAndPush(thing);
+  pushThing(thing);
 }
 template <>
 void GCMarker::traverse(jit::JitCode* thing) {
-  markAndPush(thing);
+  pushThing(thing);
 }
 template <>
 void GCMarker::traverse(BaseScript* thing) {
-  markAndPush(thing);
+  pushThing(thing);
 }
 }  // namespace js
 
@@ -1131,15 +1137,17 @@ inline void GCMarker::checkTraversedEdge(S source, T* target) {
 }
 
 template <typename S, typename T>
-void js::GCMarker::traverseEdge(S source, T* target) {
+void js::GCMarker::markAndTraverseEdge(S source, T* target) {
   checkTraversedEdge(source, target);
-  traverse(target);
+  if (!target->isPermanentAndMayBeShared()) {
+    markAndTraverse(target);
+  }
 }
 
 template <typename S, typename T>
-void js::GCMarker::traverseEdge(S source, const T& thing) {
-  ApplyGCThingTyped(thing,
-                    [this, source](auto t) { this->traverseEdge(source, t); });
+void js::GCMarker::markAndTraverseEdge(S source, const T& thing) {
+  ApplyGCThingTyped(
+      thing, [this, source](auto t) { this->markAndTraverseEdge(source, t); });
 }
 
 namespace {
@@ -1253,23 +1261,23 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
       base->traceChildrenSkipShapeCache(this);
     }
 
-    traverseEdge(shape, shape->propidRef().get());
+    markAndTraverseEdge(shape, shape->propidRef().get());
 
     // Normally only the last shape in a dictionary list can have a pointer to
     // an object here, but it's possible that we can see this if we trace
     // barriers while removing a shape from a dictionary list.
     if (shape->dictNext.isObject()) {
-      traverseEdge(shape, shape->dictNext.toObject());
+      markAndTraverseEdge(shape, shape->dictNext.toObject());
     }
 
     // When triggered between slices on behalf of a barrier, these
     // objects may reside in the nursery, so require an extra check.
     // FIXME: Bug 1157967 - remove the isTenured checks.
     if (shape->hasGetterObject() && shape->getterObject()->isTenured()) {
-      traverseEdge(shape, shape->getterObject());
+      markAndTraverseEdge(shape, shape->getterObject());
     }
     if (shape->hasSetterObject() && shape->setterObject()->isTenured()) {
-      traverseEdge(shape, shape->setterObject());
+      markAndTraverseEdge(shape, shape->setterObject());
     }
 
     shape = shape->previous();
@@ -1430,7 +1438,7 @@ void Scope::traceChildren(JSTracer* trc) {
 inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   do {
     if (scope->environmentShape()) {
-      traverseEdge(scope, scope->environmentShape());
+      markAndTraverseEdge(scope, scope->environmentShape());
     }
     AbstractTrailingNamesArray<JSAtom>* names = nullptr;
     uint32_t length = 0;
@@ -1438,7 +1446,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::Function: {
         FunctionScope::RuntimeData& data = scope->as<FunctionScope>().data();
         if (data.canonicalFunction) {
-          traverseObjectEdge(scope, data.canonicalFunction);
+          markAndTraverseObjectEdge(scope, data.canonicalFunction);
         }
         names = &data.trailingNames;
         length = data.slotInfo.length;
@@ -1484,7 +1492,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::Module: {
         ModuleScope::RuntimeData& data = scope->as<ModuleScope>().data();
         if (data.module) {
-          traverseObjectEdge(scope, data.module);
+          markAndTraverseObjectEdge(scope, data.module);
         }
         names = &data.trailingNames;
         length = data.slotInfo.length;
@@ -1497,7 +1505,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::WasmInstance: {
         WasmInstanceScope::RuntimeData& data =
             scope->as<WasmInstanceScope>().data();
-        traverseObjectEdge(scope, data.instance);
+        markAndTraverseObjectEdge(scope, data.instance);
         names = &data.trailingNames;
         length = data.slotInfo.length;
         break;
@@ -1514,12 +1522,12 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
     if (scope->kind_ == ScopeKind::Function) {
       for (uint32_t i = 0; i < length; i++) {
         if (JSAtom* name = names->get(i).name()) {
-          traverseStringEdge(scope, name);
+          markAndTraverseStringEdge(scope, name);
         }
       }
     } else {
       for (uint32_t i = 0; i < length; i++) {
-        traverseStringEdge(scope, names->get(i).name());
+        markAndTraverseStringEdge(scope, names->get(i).name());
       }
     }
     scope = scope->enclosing();
@@ -1539,12 +1547,12 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
 
 void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
   if (group->proto().isObject()) {
-    traverseEdge(group, group->proto().toObject());
+    markAndTraverseEdge(group, group->proto().toObject());
   }
 
   // Note: the realm's global can be nullptr if we GC while creating the global.
   if (GlobalObject* global = group->realm()->unsafeUnbarrieredMaybeGlobal()) {
-    traverseEdge(group, static_cast<JSObject*>(global));
+    markAndTraverseEdge(group, static_cast<JSObject*>(global));
   }
 }
 
@@ -1680,7 +1688,7 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
       }
 
       // Mark the object and push it onto the stack.
-      traverse(obj);
+      markAndTraverse(obj);
 
       if (isMarkStackEmpty()) {
         if (obj->asTenured().arena()->onDelayedMarkingList()) {
@@ -1947,7 +1955,7 @@ scan_value_range:
     index++;
 
     if (v.isString()) {
-      traverseEdge(obj, v.toString());
+      markAndTraverseEdge(obj, v.toString());
     } else if (v.isObject()) {
       JSObject* obj2 = &v.toObject();
 #ifdef DEBUG
@@ -1968,13 +1976,13 @@ scan_value_range:
         goto scan_obj;
       }
     } else if (v.isSymbol()) {
-      traverseEdge(obj, v.toSymbol());
+      markAndTraverseEdge(obj, v.toSymbol());
     } else if (v.isBigInt()) {
-      traverseEdge(obj, v.toBigInt());
+      markAndTraverseEdge(obj, v.toBigInt());
     } else if (v.isPrivateGCThing()) {
       // v.toGCCellPtr cannot be inlined, so construct one manually.
       Cell* cell = v.toGCThing();
-      traverseEdge(obj, JS::GCCellPtr(cell, cell->getTraceKind()));
+      markAndTraverseEdge(obj, JS::GCCellPtr(cell, cell->getTraceKind()));
     }
   }
   return;
@@ -1989,8 +1997,8 @@ scan_obj : {
   }
 
   markImplicitEdges(obj);
-  traverseEdge(obj, obj->group());
-  traverseEdge(obj, obj->shape());
+  markAndTraverseEdge(obj, obj->group());
+  markAndTraverseEdge(obj, obj->shape());
 
   CallTraceHook(this, obj);
 
