@@ -22,6 +22,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
 #include "private/pprio.h"
@@ -823,6 +824,10 @@ nsJARChannel::SetContentLength(int64_t aContentLength) {
 
 static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
                                   nsresult aStatus, bool aCanceled) {
+  if (!StaticPrefs::network_jar_record_failure_reason()) {
+    return;
+  }
+
   // The event can only hold 80 characters.
   // We only save the file name and path inside the jar.
   auto findFilenameStart = [](const nsCString& aSpec) -> uint32_t {
@@ -853,6 +858,7 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   // To test this telemetry we use a zip file and we want to make
   // sure don't filter it out.
   bool isTest = fileName.Find("test_empty_file.zip!") != -1;
+  bool isOmniJa = StringBeginsWith(fileName, "omni.ja!"_ns);
 
   Telemetry::SetEventRecordingEnabled("zero_byte_load"_ns, true);
   Telemetry::EventID eventType = Telemetry::EventID::Zero_byte_load_Load_Others;
@@ -873,7 +879,7 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
     // We're going to skip reporting telemetry on JS loads
     // coming not from omni.ja.
     // See Bug 1693711 for investigation into those empty loads.
-    if (!isTest && !StringBeginsWith(fileName, "omni.ja!"_ns)) {
+    if (!isTest && !isOmniJa) {
       return;
     }
     eventType = Telemetry::EventID::Zero_byte_load_Load_Js;
@@ -887,7 +893,7 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
     }
 
     // We're not investigating YSODs from extensions for now.
-    if (!StringBeginsWith(fileName, "omni.ja!"_ns)) {
+    if (!isOmniJa) {
       return;
     }
 
@@ -898,16 +904,36 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
     eventType = Telemetry::EventID::Zero_byte_load_Load_Json;
   } else if (StringEndsWith(fileName, ".html"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Html;
+    // See bug 1695560. Filter out non-omni.ja HTML.
+    if (!isOmniJa) {
+      return;
+    }
+
+    // See bug 1695560. "activity-stream-noscripts.html" with NS_ERROR_FAILURE
+    // is filtered out.
+    if (fileName.EqualsLiteral("omni.ja!/chrome/browser/res/activity-stream/"
+                               "prerendered/activity-stream-noscripts.html") &&
+        aStatus == NS_ERROR_FAILURE) {
+      return;
+    }
   } else if (StringEndsWith(fileName, ".png"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Png;
+    // See bug 1695560.
+    if (!isOmniJa) {
+      return;
+    }
   } else if (StringEndsWith(fileName, ".svg"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Svg;
+    // See bug 1695560.
+    if (!isOmniJa) {
+      return;
+    }
   }
 
   // We're going to, for now, filter out `other` category.
   // See Bug 1693711 for investigation into those empty loads.
   if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Others &&
-      !StringBeginsWith(fileName, "omni.ja!"_ns)) {
+      !isOmniJa) {
     return;
   }
 
@@ -919,6 +945,21 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   if (!isTest &&
       (eventType == Telemetry::EventID::Zero_byte_load_Load_Ftl ||
        eventType == Telemetry::EventID::Zero_byte_load_Load_Json) &&
+      aStatus == NS_ERROR_FILE_NOT_FOUND) {
+    return;
+  }
+
+  // See bug 1695560. "search-extensions/google/favicon.ico" with
+  // NS_BINDING_ABORTED is filtered out.
+  if (fileName.EqualsLiteral(
+          "omni.ja!/chrome/browser/search-extensions/google/favicon.ico") &&
+      aStatus == NS_BINDING_ABORTED) {
+    return;
+  }
+
+  // See bug 1695560. "update.locale" with
+  // NS_ERROR_FILE_NOT_FOUND is filtered out.
+  if (fileName.EqualsLiteral("omni.ja!/update.locale") &&
       aStatus == NS_ERROR_FILE_NOT_FOUND) {
     return;
   }

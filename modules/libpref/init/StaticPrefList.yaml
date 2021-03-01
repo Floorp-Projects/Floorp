@@ -8959,6 +8959,12 @@
   value: false
   mirror: always
 
+# Whether to record the telemetry event when a JAR channel is failed to load.
+- name: network.jar.record_failure_reason
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
