@@ -33,6 +33,7 @@ EXPORTS.mozilla.dom += [
     "ipc/GamepadMessageUtils.h",
     "ipc/GamepadTestChannelChild.h",
     "ipc/GamepadTestChannelParent.h",
+    "SynchronizedSharedMemory.h",
 ]
 
 UNIFIED_SOURCES = [
@@ -64,9 +65,18 @@ elif CONFIG["OS_ARCH"] == "Linux":
 else:
     UNIFIED_SOURCES += ["fallback/FallbackGamepad.cpp"]
 
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    IPDL_SOURCES += ["windows/SynchronizedSharedMemoryRemoteInfo.ipdlh"]
+    SOURCES += ["windows/SynchronizedSharedMemory.cpp"]
+else:
+    IPDL_SOURCES += ["fallback/SynchronizedSharedMemoryRemoteInfo.ipdlh"]
+    SOURCES += ["fallback/SynchronizedSharedMemory.cpp"]
+
 LOCAL_INCLUDES += [
     "ipc",
 ]
+
+TEST_DIRS += ["tests/gtest"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
