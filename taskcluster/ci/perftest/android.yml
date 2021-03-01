@@ -23,21 +23,21 @@ hw-g5:
     description: Run ./mach perftest on a G5
     treeherder:
         symbol: perftest-g5
-    platform: android-hw-g5-7-0-arm7-api-16/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
 
 hw-p2:
     worker-type: t-bitbar-gw-perf-p2
     description: Run ./mach perftest on a Pixel 2
     treeherder:
         symbol: perftest-p2
-    platform: android-hw-p2-8-0-android-aarch64/opt
+    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
 
 hw-g5-view-fenix:
     worker-type: t-bitbar-gw-perf-g5
     description: Run VIEW perftest on Fenix on a G5
     treeherder:
         symbol: perftest(view-fenix)
-    platform: android-hw-g5-7-0-arm7-api-16/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: true
         batch: true
@@ -67,7 +67,7 @@ hw-p2-view-fenix:
     description: Run VIEW perftest on Fenix on a Pixel2
     treeherder:
         symbol: perftest(view-fenix)
-    platform: android-hw-p2-8-0-android-aarch64/opt
+    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
     attributes:
         cron: true
         batch: true
@@ -98,7 +98,7 @@ hw-g5-view-gv:
     description: Run VIEW perftest on GV on a G5
     treeherder:
         symbol: perftest(view-gv)
-    platform: android-hw-g5-7-0-arm7-api-16/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: true
     run:
@@ -127,7 +127,7 @@ hw-p2-view-gv:
     description: Run VIEW perftest on GV on a Pixel 2
     treeherder:
         symbol: perftest(view-gv)
-    platform: android-hw-p2-8-0-android-aarch64/opt
+    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
     attributes:
         cron: true
     run:
@@ -157,7 +157,7 @@ hw-g5-main-fenix:
     description: Run main (home activity) perftest on Fenix on a G5
     treeherder:
         symbol: perftest(main-fenix)
-    platform: android-hw-g5-7-0-arm7-api-16/opt
+    platform: android-hw-g5-7-0-arm7-api-16-shippable/opt
     attributes:
         cron: false
     run:
@@ -189,7 +189,7 @@ hw-p2-main-fenix:
     description: Run main (home activity) perftest on Fenix on a Pixel 2
     treeherder:
         symbol: perftest(main-fenix)
-    platform: android-hw-p2-8-0-android-aarch64/opt
+    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
     attributes:
         cron: false
     run:
