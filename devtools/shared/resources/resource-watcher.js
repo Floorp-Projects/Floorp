@@ -784,7 +784,7 @@ class ResourceWatcher {
     const legacyListeners =
       this._existingLegacyListeners.get(targetFront) || [];
     if (legacyListeners.includes(resourceType)) {
-      console.error(
+      console.warn(
         `Already started legacy listener for ${resourceType} on ${targetFront.actorID}`
       );
       return;
