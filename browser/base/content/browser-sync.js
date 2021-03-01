@@ -303,7 +303,9 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       "subviewbutton-nav",
       "subviewbutton-nav-down"
     );
-    let label = this.tabsList.getAttribute(labelAttr);
+    let label = gSync.fluentStrings.formatValueSync(
+      this.tabsList.getAttribute(labelAttr)
+    );
     showMoreItem.setAttribute("label", label);
     let tooltipText = this.tabsList.getAttribute(tooltipAttr);
     showMoreItem.setAttribute("tooltiptext", tooltipText);
