@@ -83,3 +83,60 @@ ID01:
         # policies-descriptions.ftl: These IDs are generated programmatically
         # from policy names.
         - browser/locales/en-US/browser/policies/policies-descriptions.ftl
+ID02:
+    messages:
+        # browser/components/ion/content/ion.ftl
+        - ion
+        # browser/locales/en-US/browser/aboutDialog.ftl
+        - helpus
+        # browser/locales/en-US/browser/aboutLogins.ftl
+        - menu
+        # browser/locales/en-US/browser/newInstallPage.ftl
+        - title
+        - heading
+        - lost
+        # browser/locales/en-US/browser/pageInfo.ftl
+        - copy
+        - perm-tab
+        # browser/locales/en-US/browser/tabContextMenu.ftl
+        - pin-tab
+        # browser/locales/en-US/browser/touchbar/touchbar.ftl
+        - back
+        - forward
+        - reload
+        - home
+        - find
+        - new-tab
+        - share
+        # security/manager/locales/en-US/security/certificates/deviceManager.ftl
+        - devmgr
+        # toolkit/locales/en-US/toolkit/about/aboutPerformance.ftl
+        - type-tab
+        - size-KB
+        - size-MB
+        - size-GB
+        - item
+        # toolkit/locales/en-US/toolkit/about/aboutPlugins.ftl
+        - file-dd
+        - path-dd
+        # toolkit/locales/en-US/toolkit/about/aboutServiceWorkers.ftl
+        - scope
+        - waiting
+        # toolkit/locales/en-US/toolkit/about/aboutSupport.ftl
+        # yaml interprets yes and no as booleans if quotes are not present.
+        - "yes"
+        - "no"
+        - unknown
+        - found
+        - missing
+        - gpu-ram
+        - apz-none
+        # toolkit/locales/en-US/toolkit/printing/printDialogs.ftl
+        - portrait
+        - scale
+        - print-bg
+        - hf-blank
+        - hf-title
+        - hf-url
+        - hf-page
+    files: []

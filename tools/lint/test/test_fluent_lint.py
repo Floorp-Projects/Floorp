@@ -16,7 +16,7 @@ def test_lint_exclusions(lint, paths):
 
 def test_lint_single_file(lint, paths):
     results = lint(paths("bad.ftl"))
-    assert len(results) == 9
+    assert len(results) == 10
     assert results[0].rule == "ID01"
     assert results[0].lineno == 1
     assert results[0].column == 1
@@ -44,6 +44,9 @@ def test_lint_single_file(lint, paths):
     assert results[8].rule == "TE03"
     assert results[8].lineno == 24
     assert results[8].column == 18
+    assert results[9].rule == "ID02"
+    assert results[9].lineno == 31
+    assert results[9].column == 1
 
 
 def test_comment_group(lint, paths):

@@ -27,3 +27,15 @@ good-function-call = Last modified: { DATETIME($timeChanged, day: "numeric", mon
 
 #   $engineName (String) - The engine name that will currently be used for the private window.
 good-variable-identifier = { $engineName } is your default search engine in Private Windows
+
+short-id = I am too short
+
+identifiers-in-selectors-should-be-ignored =
+  .label = { $tabCount ->
+      [1] Send Tab to Device
+      [UPPERCASE] Send Tab to Device
+     *[other] Send { $tabCount } Tabs to Device
+  }
+
+this-message-reference-is-ignored =
+    .label = { menu-quit.label }

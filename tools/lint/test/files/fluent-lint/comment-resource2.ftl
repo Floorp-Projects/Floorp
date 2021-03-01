@@ -3,4 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ### Fail: (RC03) There should be an empty line preceeding.
 
-fake1 = Fake text
+fake-identifier-1 = Fake text
