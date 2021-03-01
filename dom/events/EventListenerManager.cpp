@@ -413,6 +413,12 @@ void EventListenerManager::AddEventListenerInternal(
         doc->SetUseCounter(eUseCounter_custom_onunderflow);
       }
     }
+  } else if (aTypeAtom == nsGkAtoms::onDOMMouseScroll) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      if (Document* doc = window->GetExtantDoc()) {
+        doc->SetUseCounter(eUseCounter_custom_ondommousescroll);
+      }
+    }
   }
 
   if (IsApzAwareListener(listener)) {
