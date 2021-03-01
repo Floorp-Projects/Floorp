@@ -6186,17 +6186,12 @@ uint32_t TelemetryIdForFile(nsIFile* aFile) {
     gTelemetryIdHashtable = new TelemetryIdHashtable();
   }
 
-  uint32_t id;
-  if (!gTelemetryIdHashtable->Get(hashValue, &id)) {
+  return gTelemetryIdHashtable->LookupOrInsertWith(hashValue, [] {
     static uint32_t sNextId = 1;
 
     // We're locked, no need for atomics.
-    id = sNextId++;
-
-    gTelemetryIdHashtable->InsertOrUpdate(hashValue, id);
-  }
-
-  return id;
+    return sNextId++;
+  });
 }
 
 const CommonIndexOpenCursorParams& GetCommonIndexOpenCursorParams(
@@ -9151,29 +9146,33 @@ SafeRefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
 
   MOZ_ASSERT(gLoggingInfoHashtable);
   RefPtr<DatabaseLoggingInfo> loggingInfo =
-      gLoggingInfoHashtable->Get(aLoggingInfo.backgroundChildLoggingId());
-  if (loggingInfo) {
-    MOZ_ASSERT(aLoggingInfo.backgroundChildLoggingId() == loggingInfo->Id());
+      gLoggingInfoHashtable->WithEntryHandle(
+          aLoggingInfo.backgroundChildLoggingId(), [&](auto&& entry) {
+            if (entry) {
+              [[maybe_unused]] const auto& loggingInfo = entry.Data();
+              MOZ_ASSERT(aLoggingInfo.backgroundChildLoggingId() ==
+                         loggingInfo->Id());
 #if !DISABLE_ASSERTS_FOR_FUZZING
-    NS_WARNING_ASSERTION(
-        aLoggingInfo.nextTransactionSerialNumber() ==
-            loggingInfo->mLoggingInfo.nextTransactionSerialNumber(),
-        "NextTransactionSerialNumber doesn't match!");
-    NS_WARNING_ASSERTION(
-        aLoggingInfo.nextVersionChangeTransactionSerialNumber() ==
-            loggingInfo->mLoggingInfo
-                .nextVersionChangeTransactionSerialNumber(),
-        "NextVersionChangeTransactionSerialNumber doesn't match!");
-    NS_WARNING_ASSERTION(
-        aLoggingInfo.nextRequestSerialNumber() ==
-            loggingInfo->mLoggingInfo.nextRequestSerialNumber(),
-        "NextRequestSerialNumber doesn't match!");
+              NS_WARNING_ASSERTION(
+                  aLoggingInfo.nextTransactionSerialNumber() ==
+                      loggingInfo->mLoggingInfo.nextTransactionSerialNumber(),
+                  "NextTransactionSerialNumber doesn't match!");
+              NS_WARNING_ASSERTION(
+                  aLoggingInfo.nextVersionChangeTransactionSerialNumber() ==
+                      loggingInfo->mLoggingInfo
+                          .nextVersionChangeTransactionSerialNumber(),
+                  "NextVersionChangeTransactionSerialNumber doesn't match!");
+              NS_WARNING_ASSERTION(
+                  aLoggingInfo.nextRequestSerialNumber() ==
+                      loggingInfo->mLoggingInfo.nextRequestSerialNumber(),
+                  "NextRequestSerialNumber doesn't match!");
 #endif  // !DISABLE_ASSERTS_FOR_FUZZING
-  } else {
-    loggingInfo = new DatabaseLoggingInfo(aLoggingInfo);
-    gLoggingInfoHashtable->InsertOrUpdate(
-        aLoggingInfo.backgroundChildLoggingId(), loggingInfo);
-  }
+            } else {
+              entry.Insert(new DatabaseLoggingInfo(aLoggingInfo));
+            }
+
+            return do_AddRef(entry.Data());
+          });
 
   return MakeSafeRefPtr<Factory>(std::move(loggingInfo));
 }
@@ -13319,7 +13318,8 @@ void Maintenance::RegisterDatabaseMaintenance(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabaseMaintenance);
   MOZ_ASSERT(mState == State::BeginDatabaseMaintenance);
-  MOZ_ASSERT(!mDatabaseMaintenances.Get(aDatabaseMaintenance->DatabasePath()));
+  MOZ_ASSERT(
+      !mDatabaseMaintenances.Contains(aDatabaseMaintenance->DatabasePath()));
 
   mDatabaseMaintenances.InsertOrUpdate(aDatabaseMaintenance->DatabasePath(),
                                        aDatabaseMaintenance);
@@ -15284,20 +15284,19 @@ nsresult FactoryOp::Open() {
     const auto lockedPrivateBrowsingInfoHashtable =
         gPrivateBrowsingInfoHashtable->Lock();
 
-    if (!lockedPrivateBrowsingInfoHashtable->Contains(mDatabaseId)) {
+    lockedPrivateBrowsingInfoHashtable->LookupOrInsertWith(mDatabaseId, [] {
       IndexedDBCipherStrategy cipherStrategy;
 
-      // XXX Generate key using proper random data, such that we can ensure the
-      // use of unique IVs per key by discriminating by database's file id &
-      // offset.
+      // XXX Generate key using proper random data, such that we can ensure
+      // the use of unique IVs per key by discriminating by database's file
+      // id & offset.
       auto keyOrErr = cipherStrategy.GenerateKey();
 
       // XXX Propagate the error to the caller rather than asserting.
       MOZ_RELEASE_ASSERT(keyOrErr.isOk());
 
-      lockedPrivateBrowsingInfoHashtable->InsertOrUpdate(mDatabaseId,
-                                                         keyOrErr.unwrap());
-    }
+      return keyOrErr.unwrap();
+    });
   }
 
   mState = State::FinishOpen;
@@ -18532,7 +18531,7 @@ bool CreateIndexOp::Init(TransactionBase& aTransaction) {
 
   for (const auto& indexEntry : objectStoreMetadata->mIndexes) {
     const FullIndexMetadata* const value = indexEntry.GetData();
-    MOZ_ASSERT(!uniqueIndexTable.Get(value->mCommonMetadata.id()));
+    MOZ_ASSERT(!uniqueIndexTable.Contains(value->mCommonMetadata.id()));
 
     if (NS_WARN_IF(!uniqueIndexTable.InsertOrUpdate(
             value->mCommonMetadata.id(), value->mCommonMetadata.unique(),
@@ -19414,7 +19413,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
 
       MOZ_ASSERT(indexId == updateInfo.indexId());
       MOZ_ASSERT_IF(!indexMetadata->mCommonMetadata.multiEntry(),
-                    !mUniqueIndexTable.ref().Get(indexId));
+                    !mUniqueIndexTable.ref().Contains(indexId));
 
       if (NS_WARN_IF(!mUniqueIndexTable.ref().InsertOrUpdate(indexId, unique,
                                                              fallible))) {
