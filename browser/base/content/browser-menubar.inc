@@ -477,8 +477,8 @@
                           appmenu-data-l10n-id="appmenu-help-more-troubleshooting-info"/>
                 <menuitem id="helpSafeMode"
                           oncommand="safeModeRestart();"
-                          data-l10n-id="menu-help-safe-mode-without-addons"
-                          appmenu-data-l10n-id="appmenu-help-safe-mode-without-addons"/>
+                          data-l10n-id="menu-help-enter-troubleshoot-mode"
+                          appmenu-data-l10n-id="appmenu-help-enter-troubleshoot-mode"/>
                 <menuitem id="help_taskManager"
                           oncommand="switchToTabHavingURI('about:performance', true)"
                           onclick="checkForMiddleClick(this, event);"
