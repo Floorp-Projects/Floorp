@@ -2272,9 +2272,17 @@ void ReflowInput::InitConstraints(
       AutoMaybeDisableFontInflation an(mFrame);
 
       const bool isBlockLevel =
-          (mStyleDisplay->DisplayOutside() == StyleDisplayOutside::Block ||
-           mStyleDisplay->DisplayOutside() ==
-               StyleDisplayOutside::TableCaption ||
+          ((!mStyleDisplay->IsInlineOutsideStyle() &&
+            // internal table values on replaced elements behaves as inline
+            // https://drafts.csswg.org/css-tables-3/#table-structure
+            // "... it is handled instead as though the author had declared
+            //  either 'block' (for 'table' display) or 'inline' (for all
+            //  other values)"
+            !(mFlags.mIsReplaced && (mStyleDisplay->IsInnerTableStyle() ||
+                                     mStyleDisplay->DisplayOutside() ==
+                                         StyleDisplayOutside::TableCaption))) ||
+           // The inner table frame always fills its outer wrapper table frame,
+           // even for 'inline-table'.
            mFrame->IsTableFrame()) &&
           // XXX abs.pos. continuations treated like blocks, see comment in
           // the else-if condition above.
