@@ -838,7 +838,7 @@ TextureClient* SourceSurfaceImage::GetTextureClient(
   return mTextureClients.WithEntryHandle(
       aKnowsCompositor->GetSerial(), [&](auto&& entry) -> TextureClient* {
         if (entry) {
-          return entry.Data().get();
+          return entry->get();
         }
 
         RefPtr<TextureClient> textureClient;

@@ -2258,7 +2258,7 @@ gfxPlatformFontList::PrefFontList* gfxFcPlatformFontList::FindGenericFamilies(
 
           entry.Insert(std::move(prefFonts));
         }
-        return entry.Data().get();
+        return entry->get();
       });
 }
 

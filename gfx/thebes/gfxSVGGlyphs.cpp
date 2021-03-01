@@ -127,7 +127,7 @@ gfxSVGGlyphsDocument* gfxSVGGlyphs::FindOrCreateGlyphsDocument(
           return nullptr;
         }
 
-        return glyphDocsEntry.Data().get();
+        return glyphDocsEntry->get();
       });
 }
 

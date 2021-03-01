@@ -185,9 +185,9 @@ void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
           entry.Insert(MakeUnique<ProcessLockTable>());
         } else {
           Unused << entry.Data()->Get(aProcessID, &processCount);
-          CountWakeLocks(entry.Data().get(), &totalCount);
+          CountWakeLocks(entry->get(), &totalCount);
         }
-        return entry.Data().get();
+        return entry->get();
       });
 
   MOZ_ASSERT(processCount.numLocks >= processCount.numHidden);

@@ -1453,7 +1453,7 @@ nsresult HTMLFormElement::RemoveElementFromTableInternal(
 
   // If it's not a content node then it must be a RadioNodeList.
   MOZ_ASSERT(nsCOMPtr<RadioNodeList>(do_QueryInterface(entry.Data())));
-  auto* list = static_cast<RadioNodeList*>(entry.Data().get());
+  auto* list = static_cast<RadioNodeList*>(entry->get());
 
   list->RemoveElement(aChild);
 
@@ -2293,7 +2293,7 @@ nsresult HTMLFormElement::AddElementToTableInternal(
       } else {
         // There's already a list in the hash, add the child to the list.
         MOZ_ASSERT(nsCOMPtr<RadioNodeList>(do_QueryInterface(entry.Data())));
-        auto* list = static_cast<RadioNodeList*>(entry.Data().get());
+        auto* list = static_cast<RadioNodeList*>(entry->get());
 
         NS_ASSERTION(
             list->Length() > 1,

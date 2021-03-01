@@ -641,7 +641,7 @@ class MOZ_RAII SharedPrefMapBuilder {
       return mDefaultEntries.WithEntryHandle(aDefaultValue, [&](auto&& entry) {
         entry.OrInsertWith([&] { return Entry{index, false, aDefaultValue}; });
 
-        return ValueIdx{entry.Data().mIndex, false};
+        return ValueIdx{entry->mIndex, false};
       });
     }
 
