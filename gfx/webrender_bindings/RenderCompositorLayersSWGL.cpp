@@ -19,6 +19,8 @@
 
 #if defined(XP_WIN)
 #  include "mozilla/webrender/RenderCompositorD3D11SWGL.h"
+#else
+#  include "mozilla/webrender/RenderCompositorOGLSWGL.h"
 #endif
 
 namespace mozilla {
@@ -31,7 +33,7 @@ UniquePtr<RenderCompositor> RenderCompositorLayersSWGL::Create(
 #ifdef XP_WIN
   return RenderCompositorD3D11SWGL::Create(std::move(aWidget), aError);
 #else
-  return nullptr;
+  return RenderCompositorOGLSWGL::Create(std::move(aWidget), aError);
 #endif
 }
 
@@ -237,6 +239,8 @@ void RenderCompositorLayersSWGL::AttachExternalImage(
 #if defined(XP_WIN)
   MOZ_RELEASE_ASSERT(image->AsRenderDXGITextureHost() ||
                      image->AsRenderDXGIYCbCrTextureHost());
+#elif defined(ANDROID)
+  MOZ_RELEASE_ASSERT(image->AsRenderAndroidSurfaceTextureHost());
 #endif
 
   auto surfaceCursor = mSurfaces.find(aId);

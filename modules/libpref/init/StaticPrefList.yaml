@@ -4874,6 +4874,11 @@
   value: true
   mirror: once
 
+- name: gfx.webrender.software.opengl
+  type: bool
+  value: false
+  mirror: once
+
 - name: gfx.webrender.software.d3d11.upload-mode
   type: RelaxedAtomicInt32
   value: 4 
