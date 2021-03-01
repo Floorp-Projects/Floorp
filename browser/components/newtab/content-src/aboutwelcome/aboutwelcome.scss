@@ -459,6 +459,25 @@ body {
       align-self: center;
       max-width: 40%;
     }
+
+    span {
+      padding-inline-end: 4px;
+    }
+  }
+
+  .helptext-img {
+    height: 1.5em;
+    width: 1.5em;
+    margin-inline-end: 4px;
+    vertical-align: middle;
+
+    &.end {
+      margin: 4px;
+    }
+
+    &.footer {
+      vertical-align: bottom;
+    }
   }
 
   .steps {

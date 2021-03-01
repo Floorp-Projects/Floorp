@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Localized } from "./MSLocalized";
 import { Zap } from "./Zap";
+import { HelpText } from "./HelpText";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import {
   BASE_PARAMS,
@@ -393,12 +394,11 @@ export class WelcomeScreen extends React.PureComponent {
 
   renderHelpText() {
     return (
-      <Localized text={this.props.content.help_text.text}>
-        <p
-          id="helptext"
-          className={`helptext ${this.props.content.help_text.position}`}
-        />
-      </Localized>
+      <HelpText
+        text={this.props.content.help_text.text}
+        position={this.props.content.help_text.position}
+        hasImg={this.props.content.help_text.img}
+      />
     );
   }
 

@@ -58,6 +58,10 @@ const TEST_MULTISTAGE_CONTENT = {
             data: { entrypoint: "test" },
           },
         },
+        help_text: {
+          text: { string_id: "onboarding-multistage-set-default-subtitle" },
+          position: "footer",
+        },
       },
     },
     {
@@ -78,6 +82,14 @@ const TEST_MULTISTAGE_CONTENT = {
         },
         secondary_button: {
           label: "link",
+        },
+        help_text: {
+          text: "Here's some helptext with an icon",
+          img: {
+            src:
+              "chrome://activity-stream/content/data/content/assets/cfr_fb_container.png",
+          },
+          position: "footer",
         },
       },
     },
@@ -315,6 +327,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "label.theme",
       "input[type='radio']",
       "div.indicator.current",
+      "p.helptext.footer[data-l10n-id='onboarding-multistage-set-default-subtitle']",
     ],
     // Unexpected selectors:
     ["main.AW_STEP2", "main.AW_STEP3", "div.tiles-container.info"]
@@ -332,6 +345,8 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "h1.welcomeZap",
       "span.zap.long",
       "div.tiles-container.info",
+      "p.helptext",
+      "img.helptext-img",
     ],
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top", "div.test-img"]
