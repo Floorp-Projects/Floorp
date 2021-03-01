@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/PodOperations.h"
@@ -2044,6 +2045,7 @@ static void my_LargeAllocFailCallback() {
 static const uint32_t CacheEntry_SOURCE = 0;
 static const uint32_t CacheEntry_BYTECODE = 1;
 static const uint32_t CacheEntry_KIND = 2;
+static const uint32_t CacheEntry_OPTIONS = 3;
 
 enum class BytecodeCacheKind : uint32_t {
   Undefined = 0,
@@ -2051,8 +2053,54 @@ enum class BytecodeCacheKind : uint32_t {
   Stencil,
 };
 
+// Some compile options can't be combined differently between save and load.
+//
+// CacheEntries store a CacheOption set, and on load an exception is thrown
+// if the entries are incompatible.
+
+enum CacheOptions : uint32_t {
+  IsRunOnce,
+  NoScriptRval,
+  Global,
+  NonSyntactic,
+  SourceIsLazy,
+  ForceFullParse,
+};
+
+struct CacheOptionSet : public mozilla::EnumSet<CacheOptions> {
+  using mozilla::EnumSet<CacheOptions>::EnumSet;
+
+  explicit CacheOptionSet(const CompileOptions& options) : EnumSet() {
+    initFromOptions(options);
+  }
+
+  void initFromOptions(const CompileOptions& options) {
+    if (options.noScriptRval) {
+      *this += CacheOptions::NoScriptRval;
+    }
+    if (options.isRunOnce) {
+      *this += CacheOptions::IsRunOnce;
+    }
+    if (options.sourceIsLazy) {
+      *this += CacheOptions::SourceIsLazy;
+    }
+    if (options.forceFullParse()) {
+      *this += CacheOptions::ForceFullParse;
+    }
+    if (options.nonSyntacticScope) {
+      *this += CacheOptions::NonSyntactic;
+    }
+  }
+};
+
+static bool CacheOptionsCompatible(const CacheOptionSet& a,
+                                   const CacheOptionSet& b) {
+  // If the options are identical, they are trivially compatible.
+  return a == b;
+}
+
 static const JSClass CacheEntry_class = {"CacheEntryObject",
-                                         JSCLASS_HAS_RESERVED_SLOTS(3)};
+                                         JSCLASS_HAS_RESERVED_SLOTS(4)};
 
 static bool CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2072,6 +2120,12 @@ static bool CacheEntry(JSContext* cx, unsigned argc, JS::Value* vp) {
   JS::SetReservedSlot(obj, CacheEntry_BYTECODE, UndefinedValue());
   JS::SetReservedSlot(obj, CacheEntry_KIND,
                       Int32Value(int32_t(BytecodeCacheKind::Undefined)));
+
+  // Fill in empty option set.
+  CacheOptionSet defaultOptions;
+  JS::SetReservedSlot(obj, CacheEntry_OPTIONS,
+                      Int32Value(defaultOptions.serialize()));
+
   args.rval().setObject(*obj);
   return true;
 }
@@ -2104,6 +2158,20 @@ static void CacheEntry_setKind(JSContext* cx, HandleObject cache,
   JS::SetReservedSlot(cache, CacheEntry_KIND, Int32Value(int32_t(kind)));
 }
 
+static bool CacheEntry_compatible(JSContext* cx, HandleObject cache,
+                                  const CacheOptionSet& currentOptionSet) {
+  CacheOptionSet cacheEntryOptions;
+  MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
+  Value v = JS::GetReservedSlot(cache, CacheEntry_OPTIONS);
+  cacheEntryOptions.deserialize(v.toInt32());
+  if (!CacheOptionsCompatible(cacheEntryOptions, currentOptionSet)) {
+    JS_ReportErrorASCII(cx,
+                        "CacheEntry_compatible: Incompatible cache contents");
+    return false;
+  }
+  return true;
+}
+
 static uint8_t* CacheEntry_getBytecode(JSContext* cx, HandleObject cache,
                                        size_t* length) {
   MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
@@ -2121,6 +2189,7 @@ static uint8_t* CacheEntry_getBytecode(JSContext* cx, HandleObject cache,
 }
 
 static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
+                                   const CacheOptionSet& cacheOptions,
                                    uint8_t* buffer, uint32_t length) {
   MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
 
@@ -2135,6 +2204,8 @@ static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
   }
 
   JS::SetReservedSlot(cache, CacheEntry_BYTECODE, ObjectValue(*arrayBuffer));
+  JS::SetReservedSlot(cache, CacheEntry_OPTIONS,
+                      Int32Value(cacheOptions.serialize()));
   return true;
 }
 
@@ -2226,6 +2297,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   bool assertEqBytecode = false;
   JS::RootedObjectVector envChain(cx);
   RootedObject callerGlobal(cx, cx->global());
+  CacheOptionSet optionSet;
 
   options.setIntroductionType("js shell evaluate")
       .setFileAndLine("@evaluate", 1);
@@ -2371,6 +2443,12 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
+  if (envChain.length() != 0) {
+    options.setNonSyntacticScope(true);
+  }
+
+  optionSet.initFromOptions(options);
+
   AutoStableStringChars codeChars(cx);
   if (!codeChars.initTwoByte(cx, code)) {
     return false;
@@ -2384,6 +2462,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   if (loadBytecode) {
     size_t loadLength = 0;
     uint8_t* loadData = nullptr;
+
+    if (!CacheEntry_compatible(cx, cacheEntry, optionSet)) {
+      return false;
+    }
+
     loadData = CacheEntry_getBytecode(cx, cacheEntry, &loadLength);
     if (!loadData) {
       return false;
@@ -2393,10 +2476,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     loadCacheKind = CacheEntry_getKind(cx, cacheEntry);
-  }
-
-  if (envChain.length() != 0) {
-    options.setNonSyntacticScope(true);
   }
 
   {
@@ -2561,7 +2640,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     uint8_t* saveData = saveBuffer.extractOrCopyRawBuffer();
-    if (!CacheEntry_setBytecode(cx, cacheEntry, saveData, saveLength)) {
+    if (!CacheEntry_setBytecode(cx, cacheEntry, optionSet, saveData,
+                                saveLength)) {
       js_free(saveData);
       return false;
     }
