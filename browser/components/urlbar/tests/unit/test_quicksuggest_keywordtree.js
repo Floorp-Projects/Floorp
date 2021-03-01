@@ -15,18 +15,22 @@ let data = [
   },
   {
     term: "helzo bar",
-    keywords: ["helzo ", "helzo b", "helzo ba"],
+    keywords: ["helzo b", "helzo ba"],
   },
 ];
 
 function basicChecks(tree) {
-  Assert.equal(tree.get("nomatch"), null);
-  Assert.equal(tree.get("he"), null);
-  Assert.equal(tree.get("helzo"), "helzo foo");
-  Assert.equal(tree.get("helzo "), "helzo bar");
-  Assert.equal(tree.get("helzo foo"), "helzo foo");
-  Assert.equal(tree.get("helzo b"), "helzo bar");
-  Assert.equal(tree.get("helzo bar"), "helzo bar");
+  Assert.equal(tree.get("nomatch").result, null);
+  Assert.equal(tree.get("he").result, null);
+  Assert.equal(tree.get("hel").result, "helzo foo");
+  Assert.equal(tree.get("hel").fullKeyword, "helzo");
+  Assert.equal(tree.get("helzo").result, "helzo foo");
+  Assert.equal(tree.get("helzo").fullKeyword, "helzo");
+  Assert.equal(tree.get("helzo ").result, "helzo foo");
+  Assert.equal(tree.get("helzo foo").result, "helzo foo");
+  Assert.equal(tree.get("helzo b").result, "helzo bar");
+  Assert.equal(tree.get("helzo b").fullKeyword, "helzo bar");
+  Assert.equal(tree.get("helzo bar").result, "helzo bar");
 }
 
 function createTree() {
@@ -59,11 +63,7 @@ add_task(async function test_flatten() {
       he: {
         lzo: {
           "^": "helzo foo",
-          " ": {
-            "^": "helzo bar",
-            foo: { "^": "helzo foo" },
-            bar: { "^": "helzo bar" },
-          },
+          " ": { foo: { "^": "helzo foo" }, bar: { "^": "helzo bar" } },
         },
       },
     },
