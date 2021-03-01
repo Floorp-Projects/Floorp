@@ -8330,26 +8330,19 @@ void GetUsageOp::ProcessOriginInternal(QuotaManager* aQuotaManager,
     return;
   }
 
-  OriginUsage* originUsage;
-
   // We can't store pointers to OriginUsage objects in the hashtable
   // since AppendElement() reallocates its internal array buffer as number
   // of elements grows.
-  uint32_t index;
-  if (mOriginUsagesIndex.Get(aOrigin, &index)) {
-    originUsage = &mOriginUsages[index];
-  } else {
-    index = mOriginUsages.Length();
+  const auto& originUsage =
+      mOriginUsagesIndex.WithEntryHandle(aOrigin, [&](auto&& entry) {
+        if (entry) {
+          return WrapNotNullUnchecked(&mOriginUsages[entry.Data()]);
+        }
 
-    originUsage = mOriginUsages.AppendElement();
+        entry.Insert(mOriginUsages.Length());
 
-    originUsage->origin() = aOrigin;
-    originUsage->persisted() = false;
-    originUsage->usage() = 0;
-    originUsage->lastAccessed() = 0;
-
-    mOriginUsagesIndex.InsertOrUpdate(aOrigin, index);
-  }
+        return mOriginUsages.EmplaceBack(nsCString{aOrigin}, false, 0, 0);
+      });
 
   if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
     originUsage->persisted() = aPersisted;
