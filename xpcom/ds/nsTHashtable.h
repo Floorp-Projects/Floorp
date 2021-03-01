@@ -555,11 +555,14 @@ template <class EntryType>
       EntryType::ALLOW_MEMMOVE
           ? mozilla::detail::FixedSizeEntryMover<sizeof(EntryType)>
           : s_CopyEntry,
+      // Simplify hashtable clearing in case our entries are trivially
+      // destructible.
+      std::is_trivially_destructible_v<EntryType> ? nullptr : s_ClearEntry,
       // We don't use a generic initEntry hook because we want to allow
       // initialization of data members defined in derived classes directly
       // in the entry constructor (for example when a member can't be default
       // constructed).
-      s_ClearEntry, nullptr};
+      nullptr};
   return &sOps;
 }
 
