@@ -338,7 +338,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
 
   // Use placement new to create an object with the right amount of space
   // to hold the members array
-  int size = sizeof(XPCNativeInterface);
+  size_t size = sizeof(XPCNativeInterface);
   if (realTotalCount > 1) {
     size += (realTotalCount - 1) * sizeof(XPCNativeMember);
   }
