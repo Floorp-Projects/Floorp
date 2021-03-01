@@ -10,6 +10,9 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
+const {
+  DescriptorMixin,
+} = require("devtools/client/fronts/descriptors/descriptor-mixin");
 loader.lazyRequireGetter(
   this,
   "BrowsingContextTargetFront",
@@ -17,16 +20,12 @@ loader.lazyRequireGetter(
   true
 );
 
-class WebExtensionDescriptorFront extends FrontClassWithSpec(
-  webExtensionDescriptorSpec
+class WebExtensionDescriptorFront extends DescriptorMixin(
+  FrontClassWithSpec(webExtensionDescriptorSpec)
 ) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
-    this._client = client;
     this.traits = {};
-  }
-  get client() {
-    return this._client;
   }
 
   form(json) {
