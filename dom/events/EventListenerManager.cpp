@@ -419,6 +419,12 @@ void EventListenerManager::AddEventListenerInternal(
         doc->SetUseCounter(eUseCounter_custom_ondommousescroll);
       }
     }
+  } else if (aTypeAtom == nsGkAtoms::onMozMousePixelScroll) {
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      if (Document* doc = window->GetExtantDoc()) {
+        doc->SetUseCounter(eUseCounter_custom_onmozmousepixelscroll);
+      }
+    }
   }
 
   if (IsApzAwareListener(listener)) {
