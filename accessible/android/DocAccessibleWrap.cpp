@@ -117,10 +117,18 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
 
     for (LocalAccessible* acc = visibleAcc; acc && acc != docAcc->LocalParent();
          acc = acc->LocalParent()) {
-      if (inViewAccs.Contains(acc->UniqueID())) {
+      const bool alreadyPresent =
+          inViewAccs.WithEntryHandle(acc->UniqueID(), [&](auto&& entry) {
+            if (entry) {
+              return true;
+            }
+
+            entry.Insert(RefPtr{acc});
+            return false;
+          });
+      if (alreadyPresent) {
         break;
       }
-      inViewAccs.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
   }
 
