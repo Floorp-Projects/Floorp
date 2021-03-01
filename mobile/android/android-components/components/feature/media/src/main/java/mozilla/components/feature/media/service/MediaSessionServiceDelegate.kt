@@ -69,8 +69,6 @@ internal class MediaSessionServiceDelegate(
         mediaSession.setCallback(MediaSessionCallback(store))
         notificationScope = MainScope()
 
-        startForegroundNotification()
-
         scope = store.flowScoped { flow ->
             flow.map { state -> state.findActiveMediaTab() }
                 .ifChanged { tab -> tab?.mediaSessionState }
@@ -89,8 +87,7 @@ internal class MediaSessionServiceDelegate(
 
         when (intent?.action) {
             AbstractMediaSessionService.ACTION_LAUNCH -> {
-                // Nothing to do here. The service will subscribe to the store in onCreate() and
-                // update its state from the store.
+                startForegroundNotification()
             }
             AbstractMediaSessionService.ACTION_PLAY -> {
                 controller?.play()
@@ -123,9 +120,7 @@ internal class MediaSessionServiceDelegate(
             MediaSession.PlaybackState.PLAYING -> {
                 audioFocus.request(state.id)
                 emitStatePlayFact()
-                if (!isForegroundService) {
-                    startForegroundNotification()
-                }
+                startForegroundNotification()
             }
             MediaSession.PlaybackState.PAUSED -> {
                 emitStatePauseFact()
@@ -159,9 +154,11 @@ internal class MediaSessionServiceDelegate(
     }
 
     private fun startForegroundNotification() {
-        val notification = notification.createDummy(mediaSession)
-        service.startForeground(notificationId, notification)
-        isForegroundService = true
+        if (!isForegroundService) {
+            val notification = notification.createDummy(mediaSession)
+            service.startForeground(notificationId, notification)
+            isForegroundService = true
+        }
     }
 
     private fun stopForeground() {

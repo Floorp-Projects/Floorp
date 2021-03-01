@@ -44,6 +44,10 @@ class MediaSessionServiceDelegateTest {
         val delegate = MediaSessionServiceDelegate(testContext, service, store)
 
         delegate.onCreate()
+        delegate.onStartCommand(AbstractMediaSessionService.launchIntent(
+            testContext,
+            service::class.java
+        ))
 
         verify(service).startForeground(ArgumentMatchers.anyInt(), any())
         assertTrue(delegate.isForegroundService)
@@ -159,7 +163,6 @@ class MediaSessionServiceDelegateTest {
 
         delegate.onCreate()
 
-        verify(service).startForeground(ArgumentMatchers.anyInt(), any())
         verify(service, never()).stopSelf()
         verify(delegate, never()).shutdown()
         verify(controller, never()).pause()
@@ -183,7 +186,7 @@ class MediaSessionServiceDelegateTest {
                     "https://www.mozilla.org",
                     mediaSessionState = MediaSessionState(
                         controller,
-                        playbackState = MediaSession.PlaybackState.PAUSED
+                        playbackState = MediaSession.PlaybackState.PLAYING
                     )
                 )
             )
@@ -195,24 +198,28 @@ class MediaSessionServiceDelegateTest {
 
         delegate.onCreate()
 
-        verify(service).startForeground(ArgumentMatchers.anyInt(), any())
         verify(service, never()).stopSelf()
         verify(controller, never()).pause()
-        verify(service).stopForeground(false)
-        assertFalse(delegate.isForegroundService)
+        assertTrue(delegate.isForegroundService)
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
 
-        delegate.onStartCommand(AbstractMediaSessionService.playIntent(
+        delegate.onStartCommand(AbstractMediaSessionService.launchIntent(
             testContext,
             service::class.java
         ))
 
-        verify(controller).play()
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
 
-        mediaSessionCallback.onPause()
+        delegate.onStartCommand(AbstractMediaSessionService.pauseIntent(
+            testContext,
+            service::class.java
+        ))
         verify(controller).pause()
+        mediaSessionCallback.onPause()
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
 
         mediaSessionCallback.onPlay()
-        verify(controller, times(2)).play()
+        verify(controller, times(1)).play()
     }
 
     @Test
