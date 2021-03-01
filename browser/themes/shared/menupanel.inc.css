@@ -4,7 +4,7 @@
 
 /* Menu panel and palette styles */
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #appMenu-new-window-button {
   list-style-image: url(chrome://browser/skin/new-window.svg);
 }
@@ -180,7 +180,7 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 }
 } /** END not Proton **/
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 /**
  * These are placeholder icons until we get the proper Proton
  * assets for zoom/fullscreen/sync.

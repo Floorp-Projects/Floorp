@@ -57,7 +57,7 @@
   --panel-banner-item-active-bgcolor: rgba(48,230,11,.2);
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 :root {
   --arrowpanel-menuitem-margin: 0 8px;
   --arrowpanel-menuitem-padding: 8px;
@@ -131,7 +131,7 @@
   background: #FFE900 url(chrome://browser/skin/update-badge.svg) no-repeat center;
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .panel-banner-item[notificationid="update-available"] > .toolbarbutton-icon,
 .panel-banner-item[notificationid="update-downloading"] > .toolbarbutton-icon,
 .panel-banner-item[notificationid="update-manual"] > .toolbarbutton-icon,
@@ -147,7 +147,7 @@
 }
 }
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .panel-banner-item[notificationid="update-available"]::after,
 .panel-banner-item[notificationid="update-downloading"]::after,
 .panel-banner-item[notificationid="update-manual"]::after,
@@ -271,7 +271,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   padding: var(--panel-subview-body-padding);
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
   toolbarseparator + .panel-subview-body,
   .subview-subheader + .panel-subview-body {
     padding: 0;
@@ -628,7 +628,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   -moz-box-orient: horizontal;
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .addon-banner-item,
 .panel-banner-item {
   margin: 0 8px 4px;
@@ -640,7 +640,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 } /** END Proton **/
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .panel-banner-item {
   border-block: 1px solid var(--panel-separator-color);
   padding-inline-start: 12px;
@@ -762,7 +762,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   background-color: @appmenuWarningBackgroundColorActive@;
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
   #appMenu-fxa-status2[fxastatus] {
     margin: 0;
     padding: 0;
@@ -833,7 +833,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   text-align: start;
 }
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .addon-banner-item > .toolbarbutton-text,
 .panel-banner-item > .toolbarbutton-text {
   margin: 0;
@@ -841,7 +841,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 } /** END not Proton **/
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .addon-banner-item > .toolbarbutton-text,
 .panel-banner-item > .toolbarbutton-text {
   margin-inline-start: 8px;
@@ -1002,7 +1002,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
   #PanelUI-fxa-menu-account-signout-button {
     list-style-image: url(chrome://browser/skin/sign-out.svg);
   }
@@ -1234,7 +1234,7 @@ panelview .toolbarbutton-1,
   color: var(--panel-disabled-color);
 }
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .subviewbutton > .toolbarbutton-text {
   padding: 0;
   padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined below. */
@@ -1281,7 +1281,7 @@ panelview .toolbarbutton-1,
   fill: currentColor;
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 #appMenu-zoomReduce-button2@buttonStateHoverOrFocus@,
 #appMenu-zoomReduce-button2@buttonStateActive@,
 #appMenu-zoomEnlarge-button2@buttonStateHoverOrFocus@,
@@ -1542,7 +1542,7 @@ panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
   panelview .toolbarbutton-1@buttonStateHoverOrFocus@,
   toolbarbutton.subviewbutton@buttonStateHoverOrFocus@,
   .navigable.subviewbutton@buttonStateHoverOrFocus@,
@@ -1555,7 +1555,7 @@ panelview .toolbarbutton-1 {
   }
 } /** END not Proton **/
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
   /**
    * Focus in Proton uses a box-shadow because we want the stroke to be
    * internal to the rect without affecting the surrounding layout. This
@@ -1646,7 +1646,7 @@ menuitem.panel-subview-footer@menuStateActive@,
   padding: 0;
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .PanelUI-subView toolbarseparator.proton-zap {
   border-image: var(--panel-separator-zap-gradient) 1;
 }
@@ -1976,7 +1976,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 @media (min-resolution: 1.1dppx) {
-  @supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+  @supports not -moz-bool-pref("browser.proton.enabled") {
     .panel-banner-item[notificationid^=update] {
       list-style-image: url(chrome://branding/content/icon32.png);
     }
@@ -2011,13 +2011,13 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   padding: 4px;
 }
 
-@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
   .panel-header {
     padding-top: 8px;
   }
 } /** END Proton **/
 
-@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
   .panel-header {
     border-bottom: 1px solid var(--panel-separator-color);
   }
