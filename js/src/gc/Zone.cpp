@@ -164,10 +164,9 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       crossZoneStringWrappers_(this),
       gcGrayRoots_(this),
       weakCaches_(this),
-      gcEphemeronEdges_(this, SystemAllocPolicy(),
-                        rt->randomHashCodeScrambler()),
-      gcNurseryEphemeronEdges_(this, SystemAllocPolicy(),
-                               rt->randomHashCodeScrambler()),
+      gcWeakKeys_(this, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
+      gcNurseryWeakKeys_(this, SystemAllocPolicy(),
+                         rt->randomHashCodeScrambler()),
       typeDescrObjects_(this, this),
       markedAtoms_(this),
       atomCache_(this),
@@ -215,8 +214,7 @@ Zone::~Zone() {
 
 bool Zone::init() {
   regExps_.ref() = make_unique<RegExpZone>(this);
-  return regExps_.ref() && gcEphemeronEdges().init() &&
-         gcNurseryEphemeronEdges().init();
+  return regExps_.ref() && gcWeakKeys().init() && gcNurseryWeakKeys().init();
 }
 
 void Zone::setNeedsIncrementalBarrier(bool needs) {
@@ -243,7 +241,7 @@ void Zone::changeGCState(GCState prev, GCState next) {
 }
 
 template <class Pred>
-static void EraseIf(js::gc::EphemeronEdgeVector& entries, Pred pred) {
+static void EraseIf(js::gc::WeakEntryVector& entries, Pred pred) {
   auto* begin = entries.begin();
   auto* const end = entries.end();
 
@@ -258,30 +256,29 @@ static void EraseIf(js::gc::EphemeronEdgeVector& entries, Pred pred) {
   entries.shrinkBy(removed);
 }
 
-static void SweepEphemeronEdgesWhileMinorSweeping(
-    js::gc::EphemeronEdgeVector& entries) {
-  EraseIf(entries, [](js::gc::EphemeronEdge& edge) -> bool {
-    return IsAboutToBeFinalizedDuringMinorSweep(&edge.target);
+static void SweepWeakEntryVectorWhileMinorSweeping(
+    js::gc::WeakEntryVector& entries) {
+  EraseIf(entries, [](js::gc::WeakMarkable& markable) -> bool {
+    return IsAboutToBeFinalizedDuringMinorSweep(&markable.key);
   });
 }
 
 void Zone::sweepAfterMinorGC(JSTracer* trc) {
-  sweepEphemeronTablesAfterMinorGC();
+  sweepWeakKeysAfterMinorGC();
   crossZoneStringWrappers().sweepAfterMinorGC(trc);
 }
 
-void Zone::sweepEphemeronTablesAfterMinorGC() {
-  for (EphemeronEdgeTable::Range r = gcNurseryEphemeronEdges().all();
-       !r.empty(); r.popFront()) {
-    // Sweep gcNurseryEphemeronEdges to move live (forwarded) keys to
-    // gcEphemeronEdges, scanning through all the entries for such keys to
-    // update them.
+void Zone::sweepWeakKeysAfterMinorGC() {
+  for (WeakKeyTable::Range r = gcNurseryWeakKeys().all(); !r.empty();
+       r.popFront()) {
+    // Sweep gcNurseryWeakKeys to move live (forwarded) keys to gcWeakKeys,
+    // scanning through all the entries for such keys to update them.
     //
     // Forwarded and dead keys may also appear in their delegates' entries,
     // so sweep those too (see below.)
 
     // The tricky case is when the key has a delegate that was already
-    // tenured. Then it will be in its compartment's gcEphemeronEdges, but we
+    // tenured. Then it will be in its compartment's gcWeakKeys, but we
     // still need to update the key (which will be in the entries
     // associated with it.)
     gc::Cell* key = r.front().key;
@@ -293,17 +290,17 @@ void Zone::sweepEphemeronTablesAfterMinorGC() {
 
     // Key been moved. The value is an array of <map,key> pairs; update all
     // keys in that array.
-    EphemeronEdgeVector& entries = r.front().value;
-    SweepEphemeronEdgesWhileMinorSweeping(entries);
+    WeakEntryVector& entries = r.front().value;
+    SweepWeakEntryVectorWhileMinorSweeping(entries);
 
-    // Live (moved) nursery cell. Append entries to gcEphemeronEdges.
-    auto* entry = gcEphemeronEdges().get(key);
+    // Live (moved) nursery cell. Append entries to gcWeakKeys.
+    auto entry = gcWeakKeys().get(key);
     if (!entry) {
-      if (!gcEphemeronEdges().put(key, gc::EphemeronEdgeVector())) {
+      if (!gcWeakKeys().put(key, gc::WeakEntryVector())) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         oomUnsafe.crash("Failed to tenure weak keys entry");
       }
-      entry = gcEphemeronEdges().get(key);
+      entry = gcWeakKeys().get(key);
     }
 
     for (auto& markable : entries) {
@@ -322,21 +319,21 @@ void Zone::sweepEphemeronTablesAfterMinorGC() {
     }
     MOZ_ASSERT(delegate->isTenured());
 
-    // If delegate was formerly nursery-allocated, we will sweep its entries
-    // when we visit its gcNurseryEphemeronEdges (if we haven't already). Note
-    // that we don't know the nursery address of the delegate, since the
-    // location it was stored in has already been updated.
+    // If delegate was formerly nursery-allocated, we will sweep its
+    // entries when we visit its gcNurseryWeakKeys (if we haven't already).
+    // Note that we don't know the nursery address of the delegate, since
+    // the location it was stored in has already been updated.
     //
-    // Otherwise, it will be in gcEphemeronEdges and we sweep it here.
-    auto* p = delegate->zone()->gcEphemeronEdges().get(delegate);
+    // Otherwise, it will be in gcWeakKeys and we sweep it here.
+    auto p = delegate->zone()->gcWeakKeys().get(delegate);
     if (p) {
-      SweepEphemeronEdgesWhileMinorSweeping(p->value);
+      SweepWeakEntryVectorWhileMinorSweeping(p->value);
     }
   }
 
-  if (!gcNurseryEphemeronEdges().clear()) {
+  if (!gcNurseryWeakKeys().clear()) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    oomUnsafe.crash("OOM while clearing gcNurseryEphemeronEdges.");
+    oomUnsafe.crash("OOM while clearing gcNurseryWeakKeys.");
   }
 }
 
