@@ -4,8 +4,8 @@
 
 ### Pass: This is a resource comment with proper spacing.
 
-fake1 = Fake text
+fake-identifier-1 = Fake text
 
 ### Fail: (RC01) There should not be more than one resource comment
 
-fake2 = Fake text
+fake-identifier-2 = Fake text
