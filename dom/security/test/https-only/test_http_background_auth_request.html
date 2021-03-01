@@ -93,8 +93,10 @@ async function runTests() {
     is(requestCounter, 2, "two requests total (kickoff, upgraded)");
   }
 
-  let wrappedWin = SpecialPowers.wrap(testWin);
-  is(wrappedWin.document.body.innerHTML, "", "exception page should not be displayed");
+  await SpecialPowers.spawn(testWin, [], () => {
+    let innerHTML = content.document.body.innerHTML;
+    is(innerHTML, "", "expection page should not be displayed");
+  });
 
   testWin.close();
 
