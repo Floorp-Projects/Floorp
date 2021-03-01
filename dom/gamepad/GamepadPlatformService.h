@@ -146,6 +146,8 @@ class GamepadPlatformService final {
 
   std::map<GamepadHandle, GamepadAdded> mGamepadAdded;
 
+  // This variable may contain the shared-memory "GamepadStateBroadcaster" if
+  // it is available. If not, everything will just fall back to using IPDL
   Maybe<GamepadStateBroadcaster> mMaybeGamepadStateBroadcaster;
 };
 
