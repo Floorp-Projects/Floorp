@@ -97,24 +97,6 @@ add_task(async function() {
     "selected item should be the default one"
   );
 
-  let contentProcessCountEnabledDescription = doc.querySelector(
-    "#contentProcessCountEnabledDescription"
-  );
-  is(
-    contentProcessCountEnabledDescription.hidden,
-    false,
-    "process count enabled description should be shown"
-  );
-
-  let contentProcessCountDisabledDescription = doc.querySelector(
-    "#contentProcessCountDisabledDescription"
-  );
-  is(
-    contentProcessCountDisabledDescription.hidden,
-    true,
-    "process count enabled description should be hidden"
-  );
-
   allowHWAccel.click();
   allowHWAccelPref = Services.prefs.getBoolPref("layers.acceleration.disabled");
   is(
