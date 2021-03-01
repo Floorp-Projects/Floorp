@@ -117,6 +117,24 @@ add_task(async function test_shared_worker() {
   });
 });
 
+add_task(async function test_shared_worker_microtask() {
+  await check_use_counter_worker("CONSOLE_LOG", "SHARED", async browser => {
+    await ContentTask.spawn(browser, {}, function() {
+      return new Promise(resolve => {
+        let worker = new content.SharedWorker(
+          "file_use_counter_shared_worker_microtask.js"
+        );
+        worker.port.onmessage = function(e) {
+          if (e.data === "DONE") {
+            resolve();
+          }
+        };
+        worker.port.postMessage("RUN");
+      });
+    });
+  });
+});
+
 add_task(async function test_service_worker() {
   await check_use_counter_worker("CONSOLE_LOG", "SERVICE", async browser => {
     await ContentTask.spawn(browser, {}, function() {
