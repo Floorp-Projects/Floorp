@@ -1573,6 +1573,8 @@ process attach {continue_flag}-p {pid!s}
         finally:
             device.remove_forwards("tcp:%d" % local_jdb_port)
             device.shell("pkill -f lldb-server", enable_run_as=True)
+            if not use_existing_process:
+                device.shell("am clear-debug-app")
 
     def _run_jsshell(self, params, debug, debugger, debugger_args):
         try:
