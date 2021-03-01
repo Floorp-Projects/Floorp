@@ -727,20 +727,26 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
   // The extra cost of initializing a GLX context while blocking the main
   // thread is not worth it when using basic composition.
   //
-  // Don't call gl::sGLXLibrary.SupportsVideoSync() when EGL is used.
+  // Only call gl::sGLXLibrary.SupportsVideoSync() on EGL when using mesa
+  // drivers.
   // NVIDIA drivers refuse to use EGL GL context when GLX was initialized first
   // and fail silently.
+  //
+  // Do not use GLX vsync on Xwayland as we'll get an emulated 60Hz timer from
+  // it and and issues like bug 1635186 appear.
   if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     bool useGlxVsync = false;
 
     nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
     nsString adapterDriverVendor;
     gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
+    nsString windowProtocol;
+    gfxInfo->GetWindowProtocol(windowProtocol);
 
-    // Nvidia doesn't support GLX at the same time as EGL but Mesa does.
-    if (!gfxVars::UseEGL() || (adapterDriverVendor.Find("mesa") != -1)) {
-      useGlxVsync = gl::sGLXLibrary.SupportsVideoSync();
-    }
+    useGlxVsync =
+        (windowProtocol.Find("xwayland") == -1) &&
+        (!gfxVars::UseEGL() || (adapterDriverVendor.Find("mesa") != -1)) &&
+        gl::sGLXLibrary.SupportsVideoSync();
     if (useGlxVsync) {
       RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
       VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
