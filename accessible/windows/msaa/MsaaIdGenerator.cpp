@@ -174,29 +174,27 @@ uint32_t MsaaIdGenerator::GetContentProcessIDFor(
     ClearOnShutdown(&sContentParentIdMap);
   }
 
-  uint32_t value = 0;
-  if (sContentParentIdMap->Get(aIPCContentProcessID, &value)) {
-    return value;
-  }
-
-  uint32_t index = 0;
-  for (; index < ArrayLength(sContentProcessIdBitmap); ++index) {
-    if (sContentProcessIdBitmap[index] == UINT64_MAX) {
-      continue;
+  return sContentParentIdMap->LookupOrInsertWith(aIPCContentProcessID, [] {
+    uint32_t value = 0;
+    uint32_t index = 0;
+    for (; index < ArrayLength(sContentProcessIdBitmap); ++index) {
+      if (sContentProcessIdBitmap[index] == UINT64_MAX) {
+        continue;
+      }
+      uint32_t bitIndex =
+          CountTrailingZeroes64(~sContentProcessIdBitmap[index]);
+      MOZ_ASSERT(!(sContentProcessIdBitmap[index] & (1ULL << bitIndex)));
+      MOZ_ASSERT(bitIndex != 0 || index != 0);
+      sContentProcessIdBitmap[index] |= (1ULL << bitIndex);
+      value = index * kBitsPerElement + bitIndex;
+      break;
     }
-    uint32_t bitIndex = CountTrailingZeroes64(~sContentProcessIdBitmap[index]);
-    MOZ_ASSERT(!(sContentProcessIdBitmap[index] & (1ULL << bitIndex)));
-    MOZ_ASSERT(bitIndex != 0 || index != 0);
-    sContentProcessIdBitmap[index] |= (1ULL << bitIndex);
-    value = index * kBitsPerElement + bitIndex;
-    break;
-  }
 
-  // If we run out of content process IDs, we're in trouble
-  MOZ_RELEASE_ASSERT(index < ArrayLength(sContentProcessIdBitmap));
+    // If we run out of content process IDs, we're in trouble
+    MOZ_RELEASE_ASSERT(index < ArrayLength(sContentProcessIdBitmap));
 
-  sContentParentIdMap->InsertOrUpdate(aIPCContentProcessID, value);
-  return value;
+    return value;
+  });
 }
 
 void MsaaIdGenerator::ReleaseContentProcessIDFor(

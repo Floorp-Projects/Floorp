@@ -140,12 +140,8 @@ void DocManager::NotifyOfRemoteDocShutdown(DocAccessibleParent* aDoc) {
 xpcAccessibleDocument* DocManager::GetXPCDocument(DocAccessible* aDocument) {
   if (!aDocument) return nullptr;
 
-  xpcAccessibleDocument* xpcDoc = mXPCDocumentCache.GetWeak(aDocument);
-  if (!xpcDoc) {
-    xpcDoc = new xpcAccessibleDocument(aDocument);
-    mXPCDocumentCache.InsertOrUpdate(aDocument, RefPtr{xpcDoc});
-  }
-  return xpcDoc;
+  return mXPCDocumentCache.LookupOrInsertWith(
+      aDocument, [&] { return MakeRefPtr<xpcAccessibleDocument>(aDocument); });
 }
 
 xpcAccessibleDocument* DocManager::GetXPCDocument(DocAccessibleParent* aDoc) {
