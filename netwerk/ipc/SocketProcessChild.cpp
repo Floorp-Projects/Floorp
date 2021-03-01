@@ -259,7 +259,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitSocketProcessBridgeParent(
     const ProcessId& aContentProcessId,
     Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mSocketProcessBridgeParentMap.Get(aContentProcessId, nullptr));
+  MOZ_ASSERT(!mSocketProcessBridgeParentMap.Contains(aContentProcessId));
 
   mSocketProcessBridgeParentMap.InsertOrUpdate(
       aContentProcessId, MakeRefPtr<SocketProcessBridgeParent>(

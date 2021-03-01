@@ -509,11 +509,10 @@ RequestContextService::GetRequestContext(const uint64_t rcID,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!mTable.Get(rcID, rc)) {
-    nsCOMPtr<nsIRequestContext> newSC = new RequestContext(rcID);
-    mTable.InsertOrUpdate(rcID, newSC);
-    newSC.swap(*rc);
-  }
+  *rc = do_AddRef(mTable.LookupOrInsertWith(rcID, [&] {
+          nsCOMPtr<nsIRequestContext> newSC = new RequestContext(rcID);
+          return newSC;
+        })).take();
 
   return NS_OK;
 }
