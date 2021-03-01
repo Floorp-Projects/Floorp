@@ -1422,6 +1422,7 @@ Toolbox.prototype = {
   },
 
   _pingTelemetry: function() {
+    Services.prefs.setBoolPref("devtools.everOpened", true);
     this.telemetry.toolOpened("toolbox", this.sessionId, this);
 
     this.telemetry
