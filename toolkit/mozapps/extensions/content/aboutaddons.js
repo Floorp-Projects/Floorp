@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
@@ -102,6 +103,16 @@ const BUILTIN_THEME_PREVIEWS = new Map([
     "chrome://mozapps/content/extensions/firefox-alpenglow.svg",
   ],
 ]);
+
+if (
+  AppConstants.NIGHTLY_BUILD &&
+  Services.prefs.getBoolPref("browser.proton.enabled", false)
+) {
+  BUILTIN_THEME_PREVIEWS.set(
+    "firefox-compact-proton-dark@mozilla.org",
+    "chrome://mozapps/content/extensions/firefox-compact-dark.svg"
+  );
+}
 
 const PERMISSION_MASKS = {
   "ask-to-activate": AddonManager.PERM_CAN_ASK_TO_ACTIVATE,
