@@ -286,12 +286,14 @@ PLDHashTable::~PLDHashTable() {
     return;
   }
 
-  // Clear any remaining live entries.
-  mEntryStore.ForEachSlot(Capacity(), mEntrySize, [&](const Slot& aSlot) {
-    if (aSlot.IsLive()) {
-      mOps->clearEntry(this, aSlot.ToEntry());
-    }
-  });
+  // Clear any remaining live entries (if not trivially destructible).
+  if (mOps->clearEntry) {
+    mEntryStore.ForEachSlot(Capacity(), mEntrySize, [&](const Slot& aSlot) {
+      if (aSlot.IsLive()) {
+        mOps->clearEntry(this, aSlot.ToEntry());
+      }
+    });
+  }
 
   // Entry storage is freed last, by ~EntryStore().
 }
@@ -566,9 +568,11 @@ void PLDHashTable::RawRemove(Slot& aSlot) {
   MOZ_ASSERT(aSlot.IsLive());
 
   // Load keyHash first in case clearEntry() goofs it.
-  PLDHashEntryHdr* entry = aSlot.ToEntry();
   PLDHashNumber keyHash = aSlot.KeyHash();
-  mOps->clearEntry(this, entry);
+  if (mOps->clearEntry) {
+    PLDHashEntryHdr* entry = aSlot.ToEntry();
+    mOps->clearEntry(this, entry);
+  }
   if (keyHash & kCollisionFlag) {
     aSlot.MarkRemoved();
     mRemovedCount++;
