@@ -191,6 +191,10 @@ const DevToolsShim = {
     this._gDevTools.restoreDevToolsSession(session);
   },
 
+  isDevToolsUser() {
+    return DevtoolsStartup.isDevToolsUser();
+  },
+
   /**
    * Called from nsContextMenu.js in mozilla-central when using the Inspect Accessibility
    * context menu item.
