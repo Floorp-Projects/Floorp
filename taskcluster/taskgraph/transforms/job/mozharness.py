@@ -140,9 +140,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         )
 
     # Running via mozharness assumes an image that contains build.sh:
-    # by default, debian8-amd64-build, but it could be another image (like
+    # by default, debian10-amd64-build, but it could be another image (like
     # android-build).
-    worker.setdefault("docker-image", {"in-tree": "debian8-amd64-build"})
+    worker.setdefault("docker-image", {"in-tree": "debian10-amd64-build"})
 
     worker.setdefault("artifacts", []).append(
         {
