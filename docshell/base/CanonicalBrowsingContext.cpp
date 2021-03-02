@@ -24,7 +24,6 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/MozPromiseInlines.h"
 #include "nsDocShell.h"
@@ -158,45 +157,21 @@ void CanonicalBrowsingContext::MaybeAddAsProgressListener(
 }
 
 void CanonicalBrowsingContext::ReplacedBy(
-    CanonicalBrowsingContext* aNewContext,
-    const RemotenessChangeOptions& aRemotenessOptions) {
-  MOZ_ASSERT(!aNewContext->mWebProgress);
-  MOZ_ASSERT(!aNewContext->mSessionHistory);
+    CanonicalBrowsingContext* aNewContext) {
+  MOZ_ASSERT(!aNewContext->EverAttached());
   MOZ_ASSERT(IsTop() && aNewContext->IsTop());
   if (mStatusFilter) {
     mStatusFilter->RemoveProgressListener(mWebProgress);
     mStatusFilter = nullptr;
   }
   aNewContext->mWebProgress = std::move(mWebProgress);
-
-  // Use the Transaction for the fields which need to be updated whether or not
-  // the new context has been attached before.
-  // SetWithoutSyncing can be used if context hasn't been attached.
-  Transaction txn;
-  txn.SetBrowserId(GetBrowserId());
-  txn.SetHistoryID(GetHistoryID());
-  txn.SetExplicitActive(GetExplicitActive());
-  if (aNewContext->EverAttached()) {
-    MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
-  } else {
-    txn.CommitWithoutSyncing(aNewContext);
-  }
-
-  // XXXBFCache name handling is still a bit broken in Fission in general,
-  // at least in case name should be cleared.
-  if (aRemotenessOptions.mTryUseBFCache) {
-    MOZ_ASSERT(!aNewContext->EverAttached());
-    aNewContext->mFields.SetWithoutSyncing<IDX_Name>(GetName());
-    aNewContext->mFields.SetWithoutSyncing<IDX_HasLoadedNonInitialDocument>(
-        GetHasLoadedNonInitialDocument());
-  }
+  aNewContext->mFields.SetWithoutSyncing<IDX_BrowserId>(GetBrowserId());
+  aNewContext->mFields.SetWithoutSyncing<IDX_HistoryID>(GetHistoryID());
+  aNewContext->mFields.SetWithoutSyncing<IDX_ExplicitActive>(
+      GetExplicitActive());
 
   if (mSessionHistory) {
     mSessionHistory->SetBrowsingContext(aNewContext);
-    if (mozilla::BFCacheInParent()) {
-      // XXXBFCache Should we clear the epoch always?
-      mSessionHistory->SetEpoch(0, Nothing());
-    }
     mSessionHistory.swap(aNewContext->mSessionHistory);
     RefPtr<ChildSHistory> childSHistory = ForgetChildSHistory();
     aNewContext->SetChildSHistory(childSHistory);
@@ -330,11 +305,6 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
 
 SessionHistoryEntry* CanonicalBrowsingContext::GetActiveSessionHistoryEntry() {
   return mActiveEntry;
-}
-
-void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
-    SessionHistoryEntry* aEntry) {
-  mActiveEntry = aEntry;
 }
 
 bool CanonicalBrowsingContext::HasHistoryEntry(nsISHEntry* aEntry) {
@@ -1153,8 +1123,8 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
     // The process has been created, hand off to nsFrameLoaderOwner to finish
     // the process switch.
     ErrorResult error;
-    frameLoaderOwner->ChangeRemotenessToProcess(mContentParent, mOptions,
-                                                mSpecificGroup, error);
+    frameLoaderOwner->ChangeRemotenessToProcess(
+        mContentParent, mReplaceBrowsingContext, mSpecificGroup, error);
     if (error.Failed()) {
       Cancel(error.StealNSResult());
       return;
@@ -1258,8 +1228,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
     oldBrowser->Destroy();
   }
 
-  MOZ_ASSERT(!mOptions.mReplaceBrowsingContext,
-             "Cannot replace BC for subframe");
+  MOZ_ASSERT(!mReplaceBrowsingContext, "Cannot replace BC for subframe");
   nsCOMPtr<nsIPrincipal> initialPrincipal =
       NullPrincipal::CreateWithInheritedAttributes(
           target->OriginAttributesRef(),
@@ -1345,11 +1314,11 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
 
 CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
     CanonicalBrowsingContext* aTarget, RemotenessPromise::Private* aPromise,
-    uint64_t aPendingSwitchId, const RemotenessChangeOptions& aOptions)
+    uint64_t aPendingSwitchId, bool aReplaceBrowsingContext)
     : mTarget(aTarget),
       mPromise(aPromise),
       mPendingSwitchId(aPendingSwitchId),
-      mOptions(aOptions) {}
+      mReplaceBrowsingContext(aReplaceBrowsingContext) {}
 
 CanonicalBrowsingContext::PendingRemotenessChange::~PendingRemotenessChange() {
   MOZ_ASSERT(!mPromise && !mTarget && !mContentParent && !mSpecificGroup &&
@@ -1365,18 +1334,19 @@ BrowserParent* CanonicalBrowsingContext::GetBrowserParent() const {
 }
 
 RefPtr<CanonicalBrowsingContext::RemotenessPromise>
-CanonicalBrowsingContext::ChangeRemoteness(
-    const RemotenessChangeOptions& aOptions, uint64_t aPendingSwitchId) {
+CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
+                                           uint64_t aPendingSwitchId,
+                                           bool aReplaceBrowsingContext,
+                                           uint64_t aSpecificGroupId) {
   MOZ_DIAGNOSTIC_ASSERT(IsContent(),
                         "cannot change the process of chrome contexts");
   MOZ_DIAGNOSTIC_ASSERT(
       IsTop() == IsEmbeddedInProcess(0),
       "toplevel content must be embedded in the parent process");
-  MOZ_DIAGNOSTIC_ASSERT(!aOptions.mReplaceBrowsingContext || IsTop(),
+  MOZ_DIAGNOSTIC_ASSERT(!aReplaceBrowsingContext || IsTop(),
                         "Cannot replace BrowsingContext for subframes");
-  MOZ_DIAGNOSTIC_ASSERT(
-      aOptions.mSpecificGroupId == 0 || aOptions.mReplaceBrowsingContext,
-      "Cannot specify group ID unless replacing BC");
+  MOZ_DIAGNOSTIC_ASSERT(aSpecificGroupId == 0 || aReplaceBrowsingContext,
+                        "Cannot specify group ID unless replacing BC");
   MOZ_DIAGNOSTIC_ASSERT(aPendingSwitchId || !IsTop(),
                         "Should always have aPendingSwitchId for top-level "
                         "frames");
@@ -1398,7 +1368,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
     return RemotenessPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
-  if (aOptions.mRemoteType.IsEmpty() && (!IsTop() || !GetEmbedderElement())) {
+  if (aRemoteType.IsEmpty() && (!IsTop() || !GetEmbedderElement())) {
     NS_WARNING("Cannot load non-remote subframes");
     return RemotenessPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
@@ -1413,7 +1383,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
       embedderWindowGlobal->GetBrowserParent();
   // Switching to local. No new process, so perform switch sync.
   if (embedderBrowser &&
-      aOptions.mRemoteType == embedderBrowser->Manager()->GetRemoteType()) {
+      aRemoteType == embedderBrowser->Manager()->GetRemoteType()) {
     MOZ_DIAGNOSTIC_ASSERT(
         aPendingSwitchId,
         "We always have a PendingSwitchId, except for print-preview loads, "
@@ -1435,8 +1405,8 @@ CanonicalBrowsingContext::ChangeRemoteness(
 
     // If the embedder process is remote, tell that remote process to become
     // the owner.
-    MOZ_DIAGNOSTIC_ASSERT(!aOptions.mReplaceBrowsingContext);
-    MOZ_DIAGNOSTIC_ASSERT(!aOptions.mRemoteType.IsEmpty());
+    MOZ_DIAGNOSTIC_ASSERT(!aReplaceBrowsingContext);
+    MOZ_DIAGNOSTIC_ASSERT(!aRemoteType.IsEmpty());
     SetOwnerProcessId(embedderBrowser->Manager()->ChildID());
     Unused << embedderWindowGlobal->SendMakeFrameLocal(this, aPendingSwitchId);
     return RemotenessPromise::CreateAndResolve(embedderBrowser, __func__);
@@ -1444,15 +1414,15 @@ CanonicalBrowsingContext::ChangeRemoteness(
 
   // Switching to remote. Wait for new process to launch before switch.
   auto promise = MakeRefPtr<RemotenessPromise::Private>(__func__);
-  RefPtr<PendingRemotenessChange> change =
-      new PendingRemotenessChange(this, promise, aPendingSwitchId, aOptions);
+  RefPtr<PendingRemotenessChange> change = new PendingRemotenessChange(
+      this, promise, aPendingSwitchId, aReplaceBrowsingContext);
   mPendingRemotenessChange = change;
 
   // If a specific BrowsingContextGroup ID was specified for this load, make
   // sure to keep it alive until the process switch is completed.
-  if (aOptions.mSpecificGroupId) {
+  if (aSpecificGroupId) {
     change->mSpecificGroup =
-        BrowsingContextGroup::GetOrCreate(aOptions.mSpecificGroupId);
+        BrowsingContextGroup::GetOrCreate(aSpecificGroupId);
     change->mSpecificGroup->AddKeepAlive();
   }
 
@@ -1474,7 +1444,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
     change->mPrepareToChangePromise = GenericPromise::FromDomPromise(blocker);
   }
 
-  if (aOptions.mRemoteType.IsEmpty()) {
+  if (aRemoteType.IsEmpty()) {
     change->ProcessReady();
   } else {
     // Try to predict which BrowsingContextGroup will be used for the final load
@@ -1485,12 +1455,11 @@ CanonicalBrowsingContext::ChangeRemoteness(
     // It's _technically_ OK to provide a group here if we're actually going to
     // switch into a brand new group, though it's sub-optimal, as it can
     // restrict the set of processes we're using.
-    BrowsingContextGroup* finalGroup = aOptions.mReplaceBrowsingContext
-                                           ? change->mSpecificGroup.get()
-                                           : Group();
+    BrowsingContextGroup* finalGroup =
+        aReplaceBrowsingContext ? change->mSpecificGroup.get() : Group();
 
     change->mContentParent = ContentParent::GetNewOrUsedLaunchingBrowserProcess(
-        /* aRemoteType = */ aOptions.mRemoteType,
+        /* aRemoteType = */ aRemoteType,
         /* aGroup = */ finalGroup,
         /* aPriority = */ hal::PROCESS_PRIORITY_FOREGROUND,
         /* aPreferUsed = */ false);
@@ -1540,12 +1509,6 @@ bool CanonicalBrowsingContext::SupportsLoadingInParent(
   // case. Devtools clears all prior requests when it detects a new navigation,
   // so it drops the main document load that happened here.
   if (WatchedByDevTools()) {
-    return false;
-  }
-
-  // Session-history-in-parent implementation relies currently on getting a
-  // round trip through a child process.
-  if (aLoadState->LoadIsFromSessionHistory()) {
     return false;
   }
 
@@ -1619,6 +1582,12 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
 
   uint64_t outerWindowId = 0;
   if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
+    return false;
+  }
+
+  // Session-history-in-parent implementation relies currently on getting a
+  // round trip through a child process.
+  if (aLoadState->LoadIsFromSessionHistory()) {
     return false;
   }
 

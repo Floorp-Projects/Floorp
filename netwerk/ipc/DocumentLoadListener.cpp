@@ -46,7 +46,6 @@
 #include "nsQueryObject.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsSandboxFlags.h"
-#include "nsSHistory.h"
 #include "nsStringStream.h"
 #include "nsURILoader.h"
 #include "nsWebNavigationInfo.h"
@@ -64,8 +63,6 @@
 
 mozilla::LazyLogModule gDocumentChannelLog("DocumentChannel");
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
-
-extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
 using namespace mozilla::dom;
 
@@ -523,7 +520,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   if (identChannel && aChannelId) {
     Unused << identChannel->SetChannelId(*aChannelId);
   }
-  mDocumentChannelId = aChannelId;
 
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
@@ -908,8 +904,7 @@ void DocumentLoadListener::CleanupParentLoadAttempt(uint64_t aLoadIdent) {
 }
 
 auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
-                                           uint64_t aLoadIdent,
-                                           Maybe<uint64_t> aChannelId)
+                                           uint64_t aLoadIdent)
     -> RefPtr<OpenPromise> {
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
@@ -924,8 +919,6 @@ auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
     *aListener = nullptr;
     return nullptr;
   }
-
-  loadListener->mDocumentChannelId = aChannelId;
 
   MOZ_DIAGNOSTIC_ASSERT(loadListener->mOpenPromise);
   loadListener.forget(aListener);
@@ -1497,7 +1490,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   // Determine what type of content process this load should finish in.
   nsAutoCString preferredRemoteType(currentRemoteType);
-  RemotenessChangeOptions options;
+  bool replaceBrowsingContext = false;
+  uint64_t specificGroupId = 0;
 
   // If we're in a preloaded browser, force browsing context replacement to
   // ensure the current process is re-selected.
@@ -1512,7 +1506,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       if (NS_SUCCEEDED(mChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
           !originalURI->GetSpecOrDefault().EqualsLiteral("about:newtab")) {
         LOG(("Process Switch: leaving preloaded browser"));
-        options.mReplaceBrowsingContext = true;
+        replaceBrowsingContext = true;
         browserElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
                                   true);
       }
@@ -1523,7 +1517,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers.
   {
     bool isCOOPSwitch = HasCrossOriginOpenerPolicyMismatch();
-    options.mReplaceBrowsingContext |= isCOOPSwitch;
+    replaceBrowsingContext |= isCOOPSwitch;
 
     // Determine our COOP status, which will be used to determine our preferred
     // remote type.
@@ -1559,10 +1553,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   if (!parentWindow && browsingContext->Group()->Toplevels().Length() == 1) {
     if (IsLargeAllocationLoad(browsingContext, mChannel)) {
       preferredRemoteType = LARGE_ALLOCATION_REMOTE_TYPE;
-      options.mReplaceBrowsingContext = true;
+      replaceBrowsingContext = true;
     } else if (preferredRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
       preferredRemoteType = DEFAULT_REMOTE_TYPE;
-      options.mReplaceBrowsingContext = true;
+      replaceBrowsingContext = true;
     }
   }
 
@@ -1580,8 +1574,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
       if (browsingContext->Group()->Id() !=
           addonPolicy->GetBrowsingContextGroupId()) {
-        options.mReplaceBrowsingContext = true;
-        options.mSpecificGroupId = addonPolicy->GetBrowsingContextGroupId();
+        replaceBrowsingContext = true;
+        specificGroupId = addonPolicy->GetBrowsingContextGroupId();
       }
     } else {
       // As a temporary measure, extension iframes must be loaded within the
@@ -1609,10 +1603,11 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     currentPrincipal = wgp->DocumentPrincipal();
   }
 
+  nsAutoCString remoteType;
   rv = e10sUtils->GetRemoteTypeForPrincipal(
       resultPrincipal, mChannelCreationURI, browsingContext->UseRemoteTabs(),
       browsingContext->UseRemoteSubframes(), preferredRemoteType,
-      currentPrincipal, parentWindow, options.mRemoteType);
+      currentPrincipal, parentWindow, remoteType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Process Switch Abort: getRemoteTypeForPrincipal threw an exception"));
     return false;
@@ -1621,81 +1616,32 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // If the final decision is to switch from an 'extension' remote type to any
   // other remote type, ensure the browsing context is replaced so that we leave
   // the extension-specific BrowsingContextGroup.
-  if (!parentWindow && currentRemoteType != options.mRemoteType &&
+  if (!parentWindow && currentRemoteType != remoteType &&
       currentRemoteType == EXTENSION_REMOTE_TYPE) {
-    options.mReplaceBrowsingContext = true;
-  }
-
-  if (mozilla::BFCacheInParent() && nsSHistory::GetMaxTotalViewers() > 0 &&
-      !parentWindow && !browsingContext->HadOriginalOpener() &&
-      browsingContext->Group()->Toplevels().Length() == 1 &&
-      !options.mRemoteType.IsEmpty() &&
-      browsingContext->GetHasLoadedNonInitialDocument() &&
-      mLoadStateLoadType != LOAD_ERROR_PAGE) {
-    options.mReplaceBrowsingContext = true;
-    options.mTryUseBFCache = true;
+    replaceBrowsingContext = true;
   }
 
   LOG(("GetRemoteTypeForPrincipal -> current:%s remoteType:%s",
-       currentRemoteType.get(), options.mRemoteType.get()));
+       currentRemoteType.get(), remoteType.get()));
 
   // Check if a process switch is needed.
-  if (currentRemoteType == options.mRemoteType &&
-      !options.mReplaceBrowsingContext) {
-    LOG(("Process Switch Abort: type (%s) is compatible",
-         options.mRemoteType.get()));
+  if (currentRemoteType == remoteType && !replaceBrowsingContext) {
+    LOG(("Process Switch Abort: type (%s) is compatible", remoteType.get()));
     return false;
   }
 
-  if (NS_WARN_IF(parentWindow && options.mRemoteType.IsEmpty())) {
+  if (NS_WARN_IF(parentWindow && remoteType.IsEmpty())) {
     LOG(("Process Switch Abort: non-remote target process for subframe"));
     return false;
   }
 
-  *aWillSwitchToRemote = !options.mRemoteType.IsEmpty();
+  *aWillSwitchToRemote = !remoteType.IsEmpty();
 
   // If we're doing a document load, we can immediately perform a process
   // switch.
   if (mIsDocumentLoad) {
-    if (options.mTryUseBFCache && wgp) {
-      if (RefPtr<BrowserParent> browserParent = wgp->GetBrowserParent()) {
-        nsTArray<RefPtr<PContentParent::CanSavePresentationPromise>>
-            canSavePromises;
-        browsingContext->Group()->EachParent([&](ContentParent* aParent) {
-          RefPtr<PContentParent::CanSavePresentationPromise> canSave =
-              aParent->SendCanSavePresentation(browsingContext,
-                                               mDocumentChannelId);
-          canSavePromises.AppendElement(canSave);
-        });
-
-        PContentParent::CanSavePresentationPromise::All(
-            GetCurrentSerialEventTarget(), canSavePromises)
-            ->Then(
-                GetMainThreadSerialEventTarget(), __func__,
-                [self = RefPtr{this}, browsingContext,
-                 options](const nsTArray<bool> aCanSaves) mutable {
-                  bool canSave = !aCanSaves.Contains(false);
-                  MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                          ("DocumentLoadListener::MaybeTriggerProcessSwitch "
-                           "saving presentation=%i",
-                           canSave));
-                  options.mTryUseBFCache = canSave;
-                  self->TriggerProcessSwitch(browsingContext, options);
-                },
-                [self = RefPtr{this}, browsingContext,
-                 options](ipc::ResponseRejectReason) mutable {
-                  MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                          ("DocumentLoadListener::MaybeTriggerProcessSwitch "
-                           "error in trying to save presentation"));
-                  options.mTryUseBFCache = false;
-                  self->TriggerProcessSwitch(browsingContext, options);
-                });
-        return true;
-      }
-    }
-
-    options.mTryUseBFCache = false;
-    TriggerProcessSwitch(browsingContext, options);
+    TriggerProcessSwitch(browsingContext, remoteType, replaceBrowsingContext,
+                         specificGroupId);
     return true;
   }
 
@@ -1714,8 +1660,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   mObjectUpgradeHandler->UpgradeObjectLoad()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self = RefPtr{this}, options,
-       wgp](const RefPtr<CanonicalBrowsingContext>& aBrowsingContext) mutable {
+      [self = RefPtr{this}, remoteType, replaceBrowsingContext, specificGroupId,
+       wgp](const RefPtr<CanonicalBrowsingContext>& aBrowsingContext) {
         if (aBrowsingContext->IsDiscarded() ||
             wgp != aBrowsingContext->GetParentWindowContext()) {
           LOG(
@@ -1726,7 +1672,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
         }
 
         LOG(("Process Switch: Upgraded Object to Document Load"));
-        self->TriggerProcessSwitch(aBrowsingContext, options);
+        self->TriggerProcessSwitch(aBrowsingContext, remoteType,
+                                   replaceBrowsingContext, specificGroupId);
       },
       [self = RefPtr{this}](nsresult aStatusCode) {
         MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
@@ -1736,8 +1683,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 }
 
 void DocumentLoadListener::TriggerProcessSwitch(
-    CanonicalBrowsingContext* aContext,
-    const RemotenessChangeOptions& aOptions) {
+    CanonicalBrowsingContext* aContext, const nsCString& aRemoteType,
+    bool aReplaceBrowsingContext, uint64_t aSpecificGroupId) {
   nsAutoCString currentRemoteType(NOT_REMOTE_TYPE);
   if (RefPtr<ContentParent> contentParent = aContext->GetContentParent()) {
     currentRemoteType = contentParent->GetRemoteType();
@@ -1745,7 +1692,7 @@ void DocumentLoadListener::TriggerProcessSwitch(
   MOZ_ASSERT_IF(currentRemoteType.IsEmpty(), !OtherPid());
 
   LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
-       currentRemoteType.get(), aOptions.mRemoteType.get()));
+       currentRemoteType.get(), aRemoteType.get()));
 
   // We're now committing to a process switch, so we can disconnect from
   // the listeners in the old process.
@@ -1763,7 +1710,9 @@ void DocumentLoadListener::TriggerProcessSwitch(
   DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
 
   LOG(("Process Switch: Calling ChangeRemoteness"));
-  aContext->ChangeRemoteness(aOptions, mLoadIdentifier)
+  aContext
+      ->ChangeRemoteness(aRemoteType, mLoadIdentifier, aReplaceBrowsingContext,
+                         aSpecificGroupId)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr{this}](BrowserParent* aBrowserParent) {

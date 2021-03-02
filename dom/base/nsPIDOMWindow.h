@@ -297,12 +297,12 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // Calling suspend should prevent any asynchronous tasks from
   // executing javascript for this window.  This means setTimeout,
   // requestAnimationFrame, and events should not be fired. Suspending
-  // a window maybe also suspends its children.  Workers may
+  // a window also suspends its children and workers.  Workers may
   // continue to perform computations in the background.  A window
   // can have Suspend() called multiple times and will only resume after
   // a matching number of Resume() calls.
-  void Suspend(bool aIncludeSubWindows = true);
-  void Resume(bool aIncludeSubWindows = true);
+  void Suspend();
+  void Resume();
 
   // Whether or not this window was suspended by the BrowserContextGroup
   bool GetWasSuspendedByGroup() const { return mWasSuspendedByGroup; }

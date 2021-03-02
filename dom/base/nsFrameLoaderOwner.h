@@ -18,9 +18,7 @@ class BrowsingContext;
 class BrowsingContextGroup;
 class BrowserBridgeChild;
 class ContentParent;
-class Element;
 struct RemotenessOptions;
-struct RemotenessChangeOptions;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -73,18 +71,12 @@ class nsFrameLoaderOwner : public nsISupports {
   //
   // If `aReplaceBrowsingContext` is set, BrowsingContext preservation will be
   // disabled for this process switch.
-  void ChangeRemotenessToProcess(
-      mozilla::dom::ContentParent* aContentParent,
-      const mozilla::dom::RemotenessChangeOptions& aOptions,
-      mozilla::dom::BrowsingContextGroup* aGroup, mozilla::ErrorResult& rv);
+  void ChangeRemotenessToProcess(mozilla::dom::ContentParent* aContentParent,
+                                 bool aReplaceBrowsingContext,
+                                 mozilla::dom::BrowsingContextGroup* aGroup,
+                                 mozilla::ErrorResult& rv);
 
   void SubframeCrashed();
-
-  void ReplaceFrameLoader(nsFrameLoader* aNewFrameLoader);
-
-  void AttachFrameLoader(nsFrameLoader* aFrameLoader);
-  void DetachFrameLoader(nsFrameLoader* aFrameLoader);
-  void FrameLoaderDestroying(nsFrameLoader* aFrameLoader);
 
  private:
   bool UseRemoteSubframes();
@@ -102,23 +94,15 @@ class nsFrameLoaderOwner : public nsISupports {
   ChangeRemotenessContextType ShouldPreserveBrowsingContext(
       bool aIsRemote, bool aReplaceBrowsingContext);
 
-  void ChangeRemotenessCommon(
-      const ChangeRemotenessContextType& aContextType,
-      const mozilla::dom::RemotenessChangeOptions& aOptions,
-      bool aSwitchingInProgressLoad, bool aIsRemote,
-      mozilla::dom::BrowsingContextGroup* aGroup,
-      std::function<void()>& aFrameLoaderInit, mozilla::ErrorResult& aRv);
-
-  void ChangeFrameLoaderCommon(mozilla::dom::Element* aOwner);
+  void ChangeRemotenessCommon(const ChangeRemotenessContextType& aContextType,
+                              bool aSwitchingInProgressLoad, bool aIsRemote,
+                              mozilla::dom::BrowsingContextGroup* aGroup,
+                              std::function<void()>& aFrameLoaderInit,
+                              mozilla::ErrorResult& aRv);
 
  protected:
   virtual ~nsFrameLoaderOwner() = default;
   RefPtr<nsFrameLoader> mFrameLoader;
-
-  // The list contains all the nsFrameLoaders created for this owner or moved
-  // from another nsFrameLoaderOwner which haven't been destroyed yet.
-  // In particular it contains all the nsFrameLoaders which are in bfcache.
-  mozilla::LinkedList<nsFrameLoader> mFrameLoaderList;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsFrameLoaderOwner, NS_FRAMELOADEROWNER_IID)

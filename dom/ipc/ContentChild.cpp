@@ -28,7 +28,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoadInfo.h"
-#include "mozilla/Logging.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
@@ -42,7 +41,6 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SharedStyleSheetCache.h"
-#include "mozilla/SimpleEnumerator.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
@@ -110,7 +108,6 @@
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/net/CaptivePortalService.h"
 #include "mozilla/net/CookieServiceChild.h"
-#include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
@@ -123,9 +120,7 @@
 #include "nsFocusManager.h"
 #include "nsIConsoleService.h"
 #include "nsIInputStreamChannel.h"
-#include "nsILoadGroup.h"
 #include "nsIOpenWindowInfo.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIStringBundle.h"
 #include "nsIURIMutator.h"
 #include "nsQueryObject.h"
@@ -294,8 +289,6 @@
 #ifdef MOZ_CODE_COVERAGE
 #  include "mozilla/CodeCoverageHandler.h"
 #endif
-
-extern mozilla::LazyLogModule gSHIPBFCacheLog;
 
 using namespace mozilla;
 using namespace mozilla::docshell;
@@ -4247,65 +4240,6 @@ mozilla::ipc::IPCResult ContentChild::RecvDispatchBeforeUnloadToSubtree(
   } else {
     DispatchBeforeUnloadToSubtree(aStartingAt.get(), std::move(aResolver));
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvCanSavePresentation(
-    const MaybeDiscarded<BrowsingContext>& aTopLevelContext,
-    Maybe<uint64_t> aDocumentChannelId,
-    CanSavePresentationResolver&& aResolver) {
-  if (aTopLevelContext.IsNullOrDiscarded()) {
-    aResolver(false);
-    return IPC_OK();
-  }
-
-  bool canSave = true;
-  // XXXBFCache pass the flags to telemetry.
-  uint16_t flags = 0;
-  BrowsingContext* browsingContext = aTopLevelContext.get();
-  browsingContext->PreOrderWalk([&](BrowsingContext* aContext) {
-    Document* doc = aContext->GetDocument();
-    if (doc) {
-      nsIRequest* request = nullptr;
-      if (aDocumentChannelId.isSome() && aContext->IsTop()) {
-        nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-        if (loadGroup) {
-          nsCOMPtr<nsISimpleEnumerator> requests;
-          loadGroup->GetRequests(getter_AddRefs(requests));
-          bool hasMore = false;
-          if (NS_SUCCEEDED(requests->HasMoreElements(&hasMore)) && hasMore) {
-            // If there are any requests, the only one we allow with bfcache
-            // is the DocumentChannel request.
-            nsCOMPtr<nsISupports> elem;
-            requests->GetNext(getter_AddRefs(elem));
-            nsCOMPtr<nsIIdentChannel> identChannel = do_QueryInterface(elem);
-            if (identChannel &&
-                identChannel->ChannelId() == aDocumentChannelId.value()) {
-              request = identChannel;
-            }
-          }
-        }
-      }
-      // Go through also the subdocuments so that flags are collected.
-      bool canSaveDoc = doc->CanSavePresentation(request, flags, false);
-      canSave = canSaveDoc && canSave;
-
-      if (MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug)) {
-        nsAutoCString uri;
-        if (doc->GetDocumentURI()) {
-          uri = doc->GetDocumentURI()->GetSpecOrDefault();
-        }
-
-        MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                ("ContentChild::RecvCanSavePresentation can save presentation "
-                 "[%i] for [%s]",
-                 canSaveDoc, uri.get()));
-      }
-    }
-  });
-
-  aResolver(canSave);
-
   return IPC_OK();
 }
 

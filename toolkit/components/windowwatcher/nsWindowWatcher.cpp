@@ -1245,9 +1245,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   }
 
   if (uriToLoad && aNavigate) {
-    // XXXBFCache Per spec this should effectively use
-    // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL when noopener is passed to
-    // window.open(). Bug 1694993.
     loadState->SetLoadFlags(
         windowIsNew
             ? static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD)

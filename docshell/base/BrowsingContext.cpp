@@ -2621,25 +2621,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
   });
 }
 
-bool BrowsingContext::CanSet(FieldIndex<IDX_IsInBFCache>, bool,
-                             ContentParent* aSource) {
-  return IsTop() && !aSource && mozilla::BFCacheInParent();
-}
-
-void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
-  MOZ_RELEASE_ASSERT(mozilla::BFCacheInParent());
-  MOZ_DIAGNOSTIC_ASSERT(IsTop());
-
-  const bool isInBFCache = GetIsInBFCache();
-  PreOrderWalk([&](BrowsingContext* aContext) {
-    nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
-    if (shell) {
-      static_cast<nsDocShell*>(shell.get())
-          ->FirePageHideShowNonRecursive(!isInBFCache);
-    }
-  });
-}
-
 void BrowsingContext::SetCustomPlatform(const nsAString& aPlatform,
                                         ErrorResult& aRv) {
   Top()->SetPlatformOverride(aPlatform, aRv);
