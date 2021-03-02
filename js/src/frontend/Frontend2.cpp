@@ -9,7 +9,7 @@
 #include "mozilla/Maybe.h"                  // mozilla::Maybe
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/Range.h"                  // mozilla::Range
-#include "mozilla/Span.h"                   // mozilla::{Span, Span}
+#include "mozilla/Span.h"                   // mozilla::Span
 #include "mozilla/Variant.h"                // mozilla::AsVariant
 
 #include <stddef.h>  // size_t
@@ -37,6 +37,7 @@
 #include "js/UniquePtr.h"             // js::UniquePtr
 #include "js/Utility.h"    // JS::UniqueTwoByteChars, StringBufferArena
 #include "vm/JSScript.h"   // JSScript
+#include "vm/Scope.h"      // GetScopeDataTrailingNames
 #include "vm/ScopeKind.h"  // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote, GCThingIndex
 
@@ -138,7 +139,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         }
 
         CopyBindingNames(cx, global.bindings, allAtoms,
-                         data->trailingNames.start());
+                         GetScopeDataTrailingNamesPointer(data));
 
         data->slotInfo.letStart = global.let_start;
         data->slotInfo.constStart = global.const_start;
@@ -162,7 +163,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         }
 
         CopyBindingNames(cx, var.bindings, allAtoms,
-                         data->trailingNames.start());
+                         GetScopeDataTrailingNamesPointer(data));
 
         // NOTE: data->slotInfo.nextFrameSlot is set in
         // ScopeStencil::createForVarScope.
@@ -190,7 +191,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         }
 
         CopyBindingNames(cx, lexical.bindings, allAtoms,
-                         data->trailingNames.start());
+                         GetScopeDataTrailingNamesPointer(data));
 
         // NOTE: data->slotInfo.nextFrameSlot is set in
         // ScopeStencil::createForLexicalScope.
@@ -218,7 +219,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         }
 
         CopyBindingNames(cx, function.bindings, allAtoms,
-                         data->trailingNames.start());
+                         GetScopeDataTrailingNamesPointer(data));
 
         // NOTE: data->slotInfo.nextFrameSlot is set in
         // ScopeStencil::createForFunctionScope.

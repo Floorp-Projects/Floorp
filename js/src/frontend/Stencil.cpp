@@ -38,7 +38,7 @@
 #include "vm/ObjectGroup.h"   // TenuredObject
 #include "vm/Printer.h"       // js::Fprinter
 #include "vm/RegExpObject.h"  // js::RegExpObject
-#include "vm/Scope.h"  // Scope, *Scope, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter
+#include "vm/Scope.h"  // Scope, *Scope, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
 #include "vm/ScopeKind.h"     // ScopeKind
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
@@ -2138,10 +2138,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
   json.beginObjectProperty("data");
 
-  const AbstractTrailingNamesArray<TaggedParserAtomIndex>* trailingNames =
-      nullptr;
-  uint32_t length = 0;
-
+  mozilla::Span<const ParserBindingName> trailingNames;
   switch (kind_) {
     case ScopeKind::Function: {
       const auto* data =
@@ -2152,8 +2149,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
                     data->slotInfo.nonPositionalFormalStart);
       json.property("varStart", data->slotInfo.varStart);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2162,8 +2158,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
           static_cast<const VarScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2179,8 +2174,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("constStart", data->slotInfo.constStart);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2194,8 +2188,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
           static_cast<const EvalScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2206,8 +2199,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("letStart", data->slotInfo.letStart);
       json.property("constStart", data->slotInfo.constStart);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2219,8 +2211,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("letStart", data->slotInfo.letStart);
       json.property("constStart", data->slotInfo.constStart);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2230,8 +2221,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("globalsStart", data->slotInfo.globalsStart);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2240,8 +2230,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
           static_cast<const WasmFunctionScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
-      trailingNames = &data->trailingNames;
-      length = data->length;
+      trailingNames = GetScopeDataTrailingNames(data);
       break;
     }
 
@@ -2251,11 +2240,11 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
   }
 
-  if (trailingNames) {
+  if (!trailingNames.empty()) {
     char index[64];
     json.beginObjectProperty("trailingNames");
-    for (size_t i = 0; i < length; i++) {
-      const auto& name = (*trailingNames)[i];
+    for (size_t i = 0; i < trailingNames.size(); i++) {
+      const auto& name = trailingNames[i];
       SprintfLiteral(index, "%zu", i);
       json.beginObjectProperty(index);
 
