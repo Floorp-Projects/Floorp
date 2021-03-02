@@ -10400,7 +10400,7 @@ bool BytecodeEmitter::emitClass(
 
     // The constructor scope should only contain the |.initializers| binding.
     MOZ_ASSERT(!constructorScope->isEmptyScope());
-    MOZ_ASSERT(constructorScope->scopeBindings()->slotInfo.length == 1);
+    MOZ_ASSERT(constructorScope->scopeBindings()->length == 1);
     MOZ_ASSERT(constructorScope->scopeBindings()->trailingNames[0].name() ==
                TaggedParserAtomIndex::WellKnown::dotInitializers());
 

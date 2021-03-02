@@ -994,7 +994,7 @@ static MOZ_ALWAYS_INLINE ParserBindingName* InitializeIndexedBindings(
 
 }  // namespace detail
 
-// Initialize |data->trailingNames| bindings, then set |data->slotInfo.length|
+// Initialize |data->trailingNames| bindings, then set |data->length|
 // to the count of bindings added (which must equal |count|).
 //
 // First, |firstBindings| are added to |data->trailingNames|.  Then any "steps"
@@ -1006,7 +1006,7 @@ template <class Data, typename... Step>
 static MOZ_ALWAYS_INLINE void InitializeBindingData(
     Data* data, uint32_t count, const ParserBindingNameVector& firstBindings,
     Step&&... step) {
-  MOZ_ASSERT(data->slotInfo.length == 0, "data shouldn't be filled yet");
+  MOZ_ASSERT(data->length == 0, "data shouldn't be filled yet");
 
   ParserBindingName* start = data->trailingNames.start();
   ParserBindingName* cursor = std::uninitialized_copy(
@@ -1019,7 +1019,7 @@ static MOZ_ALWAYS_INLINE void InitializeBindingData(
                                         std::forward<Step>(step)...);
 
   MOZ_ASSERT(PointerRangeSize(start, end) == count);
-  data->slotInfo.length = count;
+  data->length = count;
 }
 
 Maybe<GlobalScope::ParserData*> NewGlobalScopeData(JSContext* cx,
