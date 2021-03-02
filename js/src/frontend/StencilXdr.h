@@ -44,10 +44,6 @@ class StencilXDR {
   static XDRResult ScopeData(XDRState<mode>* xdr, ScopeStencil& stencil,
                              BaseParserScopeData*& baseScopeData);
 
-  template <XDRMode mode, typename ScopeT>
-  static XDRResult ScopeSpecificData(XDRState<mode>* xdr,
-                                     BaseParserScopeData*& baseScopeData);
-
   template <XDRMode mode>
   static XDRResult ObjLiteral(XDRState<mode>* xdr, ObjLiteralStencil& stencil);
 
