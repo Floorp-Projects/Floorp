@@ -1,8 +1,12 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
    TEXT_COLOR, TAB_BACKGROUND_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB, testBorderColor,
-   waitForTransition, loadTestSubscript */
+   waitForTransition, loadTestSubscript, backgroundColorSetOnRoot */
 
 "use strict";
+
+const { ClientEnvironmentBase } = ChromeUtils.import(
+  "resource://gre/modules/components-utils/ClientEnvironment.jsm"
+);
 
 const BACKGROUND =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0" +
@@ -100,4 +104,20 @@ function testBorderColor(element, expected) {
 
 function loadTestSubscript(filePath) {
   Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
+}
+
+/**
+ * Windows 7 and 8 set the window's background-color on :root instead of
+ * #navigator-toolbox to avoid bug 1695280. When that bug is fixed, this
+ * function and the assertions it gates can be removed.
+ *
+ * @returns {boolean} True if the window's background-color is set on :root
+ *   rather than #navigator-toolbox.
+ **/
+function backgroundColorSetOnRoot() {
+  const os = ClientEnvironmentBase.os;
+  if (!os.isWindows) {
+    return false;
+  }
+  return os.windowsVersion < 10;
 }
