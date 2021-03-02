@@ -51,14 +51,10 @@ export class TopSiteLink extends React.PureComponent {
         }
         break;
       case "dragstart":
-        event.target.blur();
-        if (this.props.link.sponsored_position) {
-          event.preventDefault();
-          break;
-        }
         this.dragged = true;
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("text/topsite-index", this.props.index);
+        event.target.blur();
         this.props.onDragEvent(
           event,
           this.props.index,
