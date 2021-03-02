@@ -1196,7 +1196,7 @@ void nsDocShell::FirePageHideNotificationInternal(
 }
 
 void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
-  MOZ_ASSERT(StaticPrefs::fission_bfcacheInParent());
+  MOZ_ASSERT(mozilla::BFCacheInParent());
 
   if (!mContentViewer) {
     return;

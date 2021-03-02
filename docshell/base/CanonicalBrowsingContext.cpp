@@ -183,7 +183,7 @@ void CanonicalBrowsingContext::ReplacedBy(
 
   if (mSessionHistory) {
     mSessionHistory->SetBrowsingContext(aNewContext);
-    if (StaticPrefs::fission_bfcacheInParent()) {
+    if (mozilla::BFCacheInParent()) {
       // XXXBFCache Should we clear the epoch always?
       mSessionHistory->SetEpoch(0, Nothing());
     }
