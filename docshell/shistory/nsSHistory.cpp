@@ -1247,8 +1247,8 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
                       canonicalBC->SetActiveSessionHistoryEntry(she);
                       loadingBC->Canonical()->SetActiveSessionHistoryEntry(
                           nullptr);
-                      RemotenessChangeState state;
-                      canonicalBC->ReplacedBy(loadingBC->Canonical(), state);
+                      RemotenessChangeOptions options;
+                      canonicalBC->ReplacedBy(loadingBC->Canonical(), options);
                       frameLoaderOwner->ReplaceFrameLoader(fl);
 
                       // The old page can't be stored in the bfcache,
