@@ -123,7 +123,7 @@ jobs:
         parent: debian10-base
     gdb-test:
         symbol: I(gdb)
-        parent: debian8-amd64-build
+        parent: debian10-amd64-build
         definition: gdb-test
     mingw32-build:
         symbol: I(mingw)
