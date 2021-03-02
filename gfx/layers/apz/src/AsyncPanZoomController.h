@@ -526,6 +526,9 @@ class AsyncPanZoomController {
   // in the given direction.
   bool CanScroll(ScrollDirection aDirection) const;
 
+  // Return the directions in which this APZC is able to scroll.
+  SideBits ScrollableDirections() const;
+
   // Return true if there is room to scroll along with moving the dynamic
   // toolbar.
   //
