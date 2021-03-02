@@ -169,7 +169,7 @@ static nscoord AddChecked(nscoord aFirst, nscoord aSecond) {
 // Bug 567039: We treat -moz-fit-content and -moz-available as property's
 // initial value for now.
 static inline bool IsAutoOrEnumOnBSize(const StyleSize& aSize, bool aIsInline) {
-  return aSize.IsAuto() || (!aIsInline && !aSize.IsLengthPercentage());
+  return aSize.IsAuto() || (!aIsInline && aSize.IsExtremumLength());
 }
 
 // Helper-macros to let us pick one of two expressions to evaluate
@@ -1346,7 +1346,8 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
         // value 'max-content'.
         styleFlexBaseSize.emplace(StyleSize::Auto());
       } else {
-        styleFlexBaseSize.emplace(StyleSize::MaxContent());
+        styleFlexBaseSize.emplace(
+            StyleSize::ExtremumLength(StyleExtremumLength::MaxContent));
       }
     } else if (flexBasis.IsSize() && !flexBasis.IsAuto()) {
       // For all other non-'auto' flex-basis values, we just swap in the
@@ -4472,14 +4473,11 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   // "block-end" set and have block-size:auto.  (There are actually other cases,
   // too -- e.g. if our parent is itself a block-dir flex container and we're
   // flexible -- but we'll let our ancestors handle those sorts of cases.)
-  //
-  // TODO(emilio): the !bsize.IsLengthPercentage() preserves behavior, but it's
-  // too conservative. min/max-content don't really depend on the container.
   WritingMode wm = aReflowInput.GetWritingMode();
   const nsStylePosition* stylePos = StylePosition();
   const auto& bsize = stylePos->BSize(wm);
   if (bsize.HasPercent() || (StyleDisplay()->IsAbsolutelyPositionedStyle() &&
-                             (bsize.IsAuto() || !bsize.IsLengthPercentage()) &&
+                             (bsize.IsAuto() || bsize.IsExtremumLength()) &&
                              !stylePos->mOffset.GetBStart(wm).IsAuto() &&
                              !stylePos->mOffset.GetBEnd(wm).IsAuto())) {
     AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);

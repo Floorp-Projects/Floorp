@@ -73,6 +73,10 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
     } else if (styleISize->ConvertsToPercentage()) {
       // do nothing
     } else {
+      NS_ASSERTION(styleISize->IsAuto() || styleISize->IsExtremumLength() ||
+                       styleISize->HasLengthAndPercentage(),
+                   "bad inline size");
+
       // The 'table-layout: fixed' algorithm considers only cells in the
       // first row.
       bool originates;
@@ -81,8 +85,12 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
           cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
       if (cellFrame) {
         styleISize = &cellFrame->StylePosition()->ISize(wm);
-        if (styleISize->ConvertsToLength() || styleISize->IsMinContent() ||
-            styleISize->IsMaxContent()) {
+        if (styleISize->ConvertsToLength() ||
+            (styleISize->IsExtremumLength() &&
+             (styleISize->AsExtremumLength() ==
+                  StyleExtremumLength::MaxContent ||
+              styleISize->AsExtremumLength() ==
+                  StyleExtremumLength::MinContent))) {
           nscoord cellISize = nsLayoutUtils::IntrinsicForContainer(
               aRenderingContext, cellFrame, IntrinsicISizeType::MinISize);
           if (colSpan > 1) {
@@ -208,6 +216,11 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
       colFrame->AddPrefPercent(pct);
       pctTotal += pct;
     } else {
+      NS_ASSERTION(styleISize->IsAuto() || styleISize->IsExtremumLength() ||
+                       (styleISize->IsLengthPercentage() &&
+                        !styleISize->ConvertsToLength()),
+                   "bad inline size");
+
       // The 'table-layout: fixed' algorithm considers only cells in the
       // first row.
       bool originates;
@@ -217,8 +230,12 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
       if (cellFrame) {
         const nsStylePosition* cellStylePos = cellFrame->StylePosition();
         styleISize = &cellStylePos->ISize(wm);
-        if (styleISize->ConvertsToLength() || styleISize->IsMaxContent() ||
-            styleISize->IsMinContent()) {
+        if (styleISize->ConvertsToLength() ||
+            (styleISize->IsExtremumLength() &&
+             (styleISize->AsExtremumLength() ==
+                  StyleExtremumLength::MaxContent ||
+              styleISize->AsExtremumLength() ==
+                  StyleExtremumLength::MinContent))) {
           // XXX This should use real percentage padding
           // Note that the difference between MinISize and PrefISize
           // shouldn't matter for any of these values of styleISize; use
