@@ -6,6 +6,7 @@
 #include <objc/objc-runtime.h>
 
 #include "nsMenuBarX.h"
+#include "nsMenuBaseX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
@@ -343,7 +344,12 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {
       if (!targetMenu) {
         return;
       }
-      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(targetMenu->Content())) {
+      MOZ_RELEASE_ASSERT(targetMenu->MenuObjectType() == eSubmenuObjectType ||
+                         targetMenu->MenuObjectType() == eMenuItemObjectType);
+      RefPtr<nsIContent> content = targetMenu->MenuObjectType() == eSubmenuObjectType
+                                       ? static_cast<nsMenuX*>(targetMenu)->Content()
+                                       : static_cast<nsMenuItemX*>(targetMenu)->Content();
+      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
         visible++;
         if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
           currentMenu = static_cast<nsMenuX*>(targetMenu);

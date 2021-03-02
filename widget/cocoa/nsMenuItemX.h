@@ -60,10 +60,13 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
   nsresult DispatchDOMEvent(const nsString& eventName,
                             bool* preventDefaultCalled);
   void SetupIcon();
+  nsIContent* Content() { return mContent; }
 
  protected:
   void UncheckRadioSiblings(nsIContent* aCheckedElement);
   void SetKeyEquiv();
+
+  nsCOMPtr<nsIContent> mContent;  // XUL <menuitem> or <menuseparator>
 
   EMenuItemType mType;
 
