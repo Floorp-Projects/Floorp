@@ -179,7 +179,6 @@ nsEventStatus InputQueue::ReceiveTouchInput(
       result = nsEventStatus_eConsumeNoDefault;
     } else {
       if (aOutputHandledResult &&
-          *aOutputHandledResult == Some(APZHandledResult::HandledByContent) &&
           !target->IsRootContent() &&
           block->GetOverscrollHandoffChain()
               ->ScrollingDownWillMoveDynamicToolbar(target)) {
