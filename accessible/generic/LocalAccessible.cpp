@@ -105,15 +105,13 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(LocalAccessible)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(LocalAccessible, LastRelease())
 
 LocalAccessible::LocalAccessible(nsIContent* aContent, DocAccessible* aDoc)
-    : mContent(aContent),
+    : Accessible(),
+      mContent(aContent),
       mDoc(aDoc),
       mParent(nullptr),
       mIndexInParent(-1),
-      mRoleMapEntryIndex(aria::NO_ROLE_MAP_ENTRY_INDEX),
       mStateFlags(0),
       mContextFlags(0),
-      mType(0),
-      mGenericTypes(0),
       mReorderEventTarget(false),
       mShowEventTarget(false),
       mHideEventTarget(false) {
@@ -2783,14 +2781,9 @@ void LocalAccessible::StaticAsserts() const {
   static_assert(
       eLastStateFlag <= (1 << kStateFlagsBits) - 1,
       "LocalAccessible::mStateFlags was oversized by eLastStateFlag!");
-  static_assert(eLastAccType <= (1 << kTypeBits) - 1,
-                "LocalAccessible::mType was oversized by eLastAccType!");
   static_assert(
       eLastContextFlag <= (1 << kContextFlagsBits) - 1,
       "LocalAccessible::mContextFlags was oversized by eLastContextFlag!");
-  static_assert(
-      eLastAccGenericType <= (1 << kGenericTypesBits) - 1,
-      "LocalAccessible::mGenericType was oversized by eLastAccGenericType!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
