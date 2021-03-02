@@ -81,7 +81,8 @@ class Suggestions {
       `${pad(d.getDate())}${pad(d.getHours())}`;
     let icon = await this.fetchIcon(result.icon);
     return {
-      title: match.fullKeyword + " — " + result.title,
+      fullKeyword: match.fullKeyword,
+      title: result.title,
       url: result.url.replace("%YYYYMMDDHH%", date),
       click_url: result.click_url.replace("%YYYYMMDDHH%", date),
       // impression_url doesn't have any parameters
