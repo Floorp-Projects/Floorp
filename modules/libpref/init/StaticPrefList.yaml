@@ -4496,11 +4496,19 @@
   value: false
   mirror: always
 
-# Prefer EGL over GLX if available.
-- name: gfx.prefer-x11-egl
+#ifdef MOZ_X11
+# Whether to force using GLX over EGL.
+- name: gfx.x11-egl.force-disabled
   type: bool
   value: false
   mirror: once
+
+# Whether to force using EGL over GLX.
+- name: gfx.x11-egl.force-enabled
+  type: bool
+  value: false
+  mirror: once
+#endif
 
 - name: gfx.testing.device-fail
   type: RelaxedAtomicBool
