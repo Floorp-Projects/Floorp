@@ -131,7 +131,6 @@ impl DebugRenderer {
             debug_font_data::BMP_HEIGHT,
             TextureFilter::Linear,
             None,
-            1,
         );
         device.upload_texture_immediate(
             &font_texture,
