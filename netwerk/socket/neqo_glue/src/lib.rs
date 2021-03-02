@@ -206,7 +206,7 @@ pub extern "C" fn neqo_http3conn_process_input(
     remote_addr: &nsACString,
     packet: *const ThinVec<u8>,
 ) -> nsresult {
-    let remote =  match str::from_utf8(remote_addr) {
+    let remote = match str::from_utf8(remote_addr) {
         Ok(s) => match s.parse() {
             Ok(addr) => addr,
             Err(_) => return NS_ERROR_INVALID_ARG,
@@ -265,7 +265,7 @@ pub extern "C" fn neqo_http3conn_get_data_to_send(
         Some(d) => {
             packet.extend_from_slice(&d);
             remote_addr.append(&d.destination().ip().to_string());
-             *remote_port = d.destination().port();
+            *remote_port = d.destination().port();
             NS_OK
         }
     }
