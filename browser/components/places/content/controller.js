@@ -549,6 +549,8 @@ PlacesController.prototype = {
    *     true if it should be hidden inside the private browsing mode
    *  9) The "forcehideintabbrowser" attribute may be set on a menu-item if
    *     it should be hidden when we're in a tabbed browsing window.
+   * 10) The "forcehidenotintabbrowser" attribute may be set on a menu-item if
+   *     it should be hidden when we're not in a tabbed browsing window.
    * @param   aPopup
    *          The menupopup to build children into.
    * @return true if at least one item is visible, false otherwise.
@@ -587,12 +589,16 @@ PlacesController.prototype = {
         var hideIfInTabBrowser =
           item.getAttribute("forcehideintabbrowser") == "true" &&
           window.top.gBrowser;
+        var hideIfNotInTabBrowser =
+          item.getAttribute("forcehidenotintabbrowser") == "true" &&
+          !window.top.gBrowser;
         var hideIfPrivate =
           item.getAttribute("hideifprivatebrowsing") == "true" &&
           PrivateBrowsingUtils.isWindowPrivate(window);
         var shouldHideItem =
           hideIfNoIP ||
           hideIfInTabBrowser ||
+          hideIfNotInTabBrowser ||
           hideIfPrivate ||
           !this._shouldShowMenuItem(item, metadata);
         item.hidden = item.disabled = shouldHideItem;
@@ -621,20 +627,32 @@ PlacesController.prototype = {
         // New separator, count again:
         visibleItemsBeforeSep = false;
       }
+
+      if (item.id === "placesContext_deleteBookmark") {
+        document.l10n.setAttributes(item, "places-remove-bookmark", {
+          count: metadata.length,
+        });
+      }
     }
 
-    // Set Open Folder/Links In Tabs items enabled state if they're visible
+    // Set Open Folder/Links In Tabs or Open Bookmark item's enabled state if they're visible
     if (usableItemCount > 0) {
-      var openContainerInTabsItem = document.getElementById(
+      let openContainerInTabsItem = document.getElementById(
         "placesContext_openContainer:tabs"
       );
-      if (!openContainerInTabsItem.hidden) {
-        var containerToUse = this._view.selectedNode || this._view.result.root;
-        if (PlacesUtils.nodeIsContainer(containerToUse)) {
-          if (!PlacesUtils.hasChildURIs(containerToUse)) {
-            openContainerInTabsItem.disabled = true;
-            // Ensure that we don't display the menu if nothing is enabled:
-            usableItemCount--;
+      let openBookmarksItem = document.getElementById(
+        "placesContext_openBookmarkContainer:tabs"
+      );
+      for (let menuItem of [openContainerInTabsItem, openBookmarksItem]) {
+        if (!menuItem.hidden) {
+          var containerToUse =
+            this._view.selectedNode || this._view.result.root;
+          if (PlacesUtils.nodeIsContainer(containerToUse)) {
+            if (!PlacesUtils.hasChildURIs(containerToUse)) {
+              menuItem.disabled = true;
+              // Ensure that we don't display the menu if nothing is enabled:
+              usableItemCount--;
+            }
           }
         }
       }

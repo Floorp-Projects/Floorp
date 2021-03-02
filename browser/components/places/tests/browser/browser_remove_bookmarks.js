@@ -51,7 +51,9 @@ add_task(async function test_remove_bookmark_from_toolbar() {
   });
   await popupShownPromise;
 
-  let contextMenuDeleteItem = document.getElementById("placesContext_delete");
+  let contextMenuDeleteBookmark = document.getElementById(
+    "placesContext_deleteBookmark"
+  );
 
   let removePromise = PlacesTestUtils.waitForNotification(
     "bookmark-removed",
@@ -59,7 +61,7 @@ add_task(async function test_remove_bookmark_from_toolbar() {
     "places"
   );
 
-  EventUtils.synthesizeMouseAtCenter(contextMenuDeleteItem, {});
+  EventUtils.synthesizeMouseAtCenter(contextMenuDeleteBookmark, {});
 
   await removePromise;
 
@@ -106,8 +108,8 @@ add_task(async function test_remove_bookmark_from_library() {
   );
 
   let contextMenu = library.document.getElementById("placesContext");
-  let contextMenuDeleteItem = library.document.getElementById(
-    "placesContext_delete"
+  let contextMenuDeleteBookmark = library.document.getElementById(
+    "placesContext_deleteBookmark"
   );
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(
@@ -143,7 +145,7 @@ add_task(async function test_remove_bookmark_from_library() {
     events => events.some(event => event.url == uris[0]),
     "places"
   );
-  EventUtils.synthesizeMouseAtCenter(contextMenuDeleteItem, {}, library);
+  EventUtils.synthesizeMouseAtCenter(contextMenuDeleteBookmark, {}, library);
 
   await removePromise;
 
