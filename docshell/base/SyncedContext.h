@@ -74,6 +74,16 @@ class Transaction {
   mozilla::ipc::IPCResult CommitFromIPC(const MaybeDiscarded<Context>& aOwner,
                                         uint64_t aEpoch, ContentChild* aSource);
 
+  // Apply the changes from this transaction to the specified Context WITHOUT
+  // syncing the changes to other processes.
+  //
+  // Unlike `Commit`, this method will NOT call the corresponding `CanSet` or
+  // `DidSet` methods, and can be performed when the target context is
+  // unattached or discarded.
+  //
+  // NOTE: YOU PROBABLY DO NOT WANT TO USE THIS METHOD
+  void CommitWithoutSyncing(Context* aOwner);
+
  private:
   friend struct mozilla::ipc::IPDLParamTraits<Transaction<Context>>;
 
