@@ -10,10 +10,7 @@ if (shouldDelay) {
     },
   });
 
-  Services.tm.spinEventLoopUntil(
-    "Test(crasher_subprocess_tail.js:shouldDelay)",
-    () => shouldCrashNow
-  );
+  Services.tm.spinEventLoopUntil(() => shouldCrashNow);
 }
 
 // now actually crash

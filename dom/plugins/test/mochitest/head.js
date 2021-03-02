@@ -124,10 +124,7 @@ function setTestPluginEnabledState(aState, aPluginName) {
   SpecialPowers.setTestPluginEnabledState(aState, name).then(() => {
     resolved = true;
   });
-  SpecialPowers.Services.tm.spinEventLoopUntil(
-    "Test(head.js:setTestPluginEnabledState)",
-    () => resolved
-  );
+  SpecialPowers.Services.tm.spinEventLoopUntil(() => resolved);
 }
 
 /**

@@ -212,10 +212,7 @@ function awaitPromise(promise) {
     }
   );
 
-  Services.tm.spinEventLoopUntil(
-    "XPIProvider.jsm:awaitPromise",
-    () => success !== undefined
-  );
+  Services.tm.spinEventLoopUntil(() => success !== undefined);
 
   if (!success) {
     throw result;

@@ -37,10 +37,7 @@ function* testSteps() {
     transaction2 = db.transaction("foo");
   });
 
-  tm.spinEventLoopUntil(
-    "Test(test_transaction_lifetimes_nested.js:testSteps)",
-    () => eventHasRun
-  );
+  tm.spinEventLoopUntil(() => eventHasRun);
 
   ok(transaction2, "Non-null transaction2");
 

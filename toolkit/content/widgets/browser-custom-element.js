@@ -1714,7 +1714,6 @@
         // callbacks after the browser window the promise lives in has closed,
         // so we have to check for that case explicitly.
         Services.tm.spinEventLoopUntilOrShutdown(
-          "browser-custom-element.js:permitUnload",
           () => window.closed || success !== undefined
         );
         if (success) {
