@@ -46,7 +46,7 @@ class RemoteAccessibleBase {
     mChildren.InsertElementAt(aIdx, aChild);
   }
 
-  uint32_t ChildrenCount() const { return mChildren.Length(); }
+  uint32_t ChildCount() const { return mChildren.Length(); }
   Derived* RemoteChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
   Derived* RemoteFirstChild() const {
     return mChildren.Length() ? mChildren[0] : nullptr;

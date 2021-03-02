@@ -59,7 +59,7 @@ already_AddRefed<nsIPersistentProperties> RemoteAccessibleWrap::Attributes() {
 }
 
 uint32_t RemoteAccessibleWrap::ChildCount() const {
-  return Proxy()->ChildrenCount();
+  return Proxy()->ChildCount();
 }
 
 LocalAccessible* RemoteAccessibleWrap::LocalChildAt(uint32_t aIndex) const {
