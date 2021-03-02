@@ -2623,11 +2623,11 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_IsInBFCache>, bool,
                              ContentParent* aSource) {
-  return IsTop() && !aSource && StaticPrefs::fission_bfcacheInParent();
+  return IsTop() && !aSource && mozilla::BFCacheInParent();
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
-  MOZ_RELEASE_ASSERT(StaticPrefs::fission_bfcacheInParent());
+  MOZ_RELEASE_ASSERT(mozilla::BFCacheInParent());
   MOZ_DIAGNOSTIC_ASSERT(IsTop());
 
   const bool isInBFCache = GetIsInBFCache();
