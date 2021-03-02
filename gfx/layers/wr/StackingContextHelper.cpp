@@ -62,7 +62,8 @@ StackingContextHelper::StackingContextHelper(
           transform2d * aParentSC.mSnappingSurfaceTransform;
     }
 
-  } else if (aParams.reference_frame_kind == wr::WrReferenceFrameKind::Zoom &&
+  } else if (aParams.reference_frame_kind ==
+                 wr::WrReferenceFrameKind::Transform &&
              aContainerItem &&
              aContainerItem->GetType() == DisplayItemType::TYPE_ASYNC_ZOOM &&
              aContainerItem->Frame()) {

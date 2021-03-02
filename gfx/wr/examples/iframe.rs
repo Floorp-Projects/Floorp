@@ -68,7 +68,10 @@ impl Example for App {
             space_and_clip.spatial_id,
             TransformStyle::Flat,
             PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity()),
-            ReferenceFrameKind::Transform,
+            ReferenceFrameKind::Transform {
+                is_2d_scale_translation: false,
+                should_snap: false,
+            },
         );
 
         // And this is for the root pipeline
