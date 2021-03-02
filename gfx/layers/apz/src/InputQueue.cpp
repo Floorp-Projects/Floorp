@@ -874,21 +874,21 @@ static APZHandledResult GetHandledResultFor(
     const AsyncPanZoomController* aApzc,
     const InputBlockState& aCurrentInputBlock) {
   if (aCurrentInputBlock.ShouldDropEvents()) {
-    return APZHandledResult::HandledByContent;
+    return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
   }
 
   if (aApzc && aApzc->IsRootContent()) {
     return aApzc->CanVerticalScrollWithDynamicToolbar()
-               ? APZHandledResult::HandledByRoot
-               : APZHandledResult::Unhandled;
+               ? APZHandledResult{APZHandledPlace::HandledByRoot, aApzc}
+               : APZHandledResult{APZHandledPlace::Unhandled, aApzc};
   }
 
   // Return `HandledByRoot` if scroll positions in all relevant APZC are at the
   // bottom edge and if there are contents covered by the dynamic toolbar.
   return aApzc && aCurrentInputBlock.GetOverscrollHandoffChain()
                       ->ScrollingDownWillMoveDynamicToolbar(aApzc)
-             ? APZHandledResult::HandledByRoot
-             : APZHandledResult::HandledByContent;
+             ? APZHandledResult{APZHandledPlace::HandledByRoot, aApzc}
+             : APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
 }
 
 void InputQueue::ProcessQueue() {

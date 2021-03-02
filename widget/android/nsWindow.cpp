@@ -405,8 +405,7 @@ class NPZCSupport final
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return (result.GetHandledResult() ==
-                Some(APZHandledResult::HandledByRoot))
+        return result.GetHandledResult()->IsHandledByRoot()
                    ? INPUT_RESULT_HANDLED
                    : INPUT_RESULT_HANDLED_CONTENT;
       default:
@@ -459,14 +458,14 @@ class NPZCSupport final
   }
 
   static int32_t ConvertAPZHandledResult(APZHandledResult aHandledResult) {
-    switch (aHandledResult) {
-      case APZHandledResult::Unhandled:
+    switch (aHandledResult.mPlace) {
+      case APZHandledPlace::Unhandled:
         return INPUT_RESULT_UNHANDLED;
-      case APZHandledResult::HandledByRoot:
+      case APZHandledPlace::HandledByRoot:
         return INPUT_RESULT_HANDLED;
-      case APZHandledResult::HandledByContent:
+      case APZHandledPlace::HandledByContent:
         return INPUT_RESULT_HANDLED_CONTENT;
-      case APZHandledResult::Invalid:
+      case APZHandledPlace::Invalid:
         MOZ_ASSERT_UNREACHABLE("The handled result should NOT be Invalid");
         return INPUT_RESULT_UNHANDLED;
     }
@@ -546,8 +545,7 @@ class NPZCSupport final
       case nsEventStatus_eIgnore:
         return INPUT_RESULT_UNHANDLED;
       case nsEventStatus_eConsumeDoDefault:
-        return (result.GetHandledResult() ==
-                Some(APZHandledResult::HandledByRoot))
+        return result.GetHandledResult()->IsHandledByRoot()
                    ? INPUT_RESULT_HANDLED
                    : INPUT_RESULT_HANDLED_CONTENT;
       default:

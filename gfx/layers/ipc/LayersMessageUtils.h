@@ -577,11 +577,48 @@ struct ParamTraits<nsEventStatus>
                                       nsEventStatus_eSentinel> {};
 
 template <>
-struct ParamTraits<mozilla::layers::APZHandledResult>
+struct ParamTraits<mozilla::layers::APZHandledPlace>
     : public ContiguousEnumSerializer<
-          mozilla::layers::APZHandledResult,
-          mozilla::layers::APZHandledResult::Unhandled,
-          mozilla::layers::APZHandledResult::Last> {};
+          mozilla::layers::APZHandledPlace,
+          mozilla::layers::APZHandledPlace::Unhandled,
+          mozilla::layers::APZHandledPlace::Last> {};
+
+template <>
+struct ParamTraits<mozilla::layers::ScrollDirections> {
+  typedef mozilla::layers::ScrollDirections paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.serialize());
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    uint8_t value;
+    if (!ReadParam(aMsg, aIter, &value)) {
+      return false;
+    }
+    aResult->deserialize(value);
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::APZHandledResult> {
+  typedef mozilla::layers::APZHandledResult paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mPlace);
+    WriteParam(aMsg, aParam.mScrollableDirections);
+    WriteParam(aMsg, aParam.mOverscrollDirections);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mPlace) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollableDirections) &&
+            ReadParam(aMsg, aIter, &aResult->mOverscrollDirections));
+  }
+};
 
 template <>
 struct ParamTraits<mozilla::layers::APZEventResult> {
