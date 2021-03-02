@@ -120,6 +120,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   nsISHistory* GetSessionHistory();
   SessionHistoryEntry* GetActiveSessionHistoryEntry();
+  void SetActiveSessionHistoryEntry(SessionHistoryEntry* aEntry);
 
   UniquePtr<LoadingSessionHistoryInfo> CreateLoadingSessionHistoryEntryForLoad(
       nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
