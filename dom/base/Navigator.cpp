@@ -71,6 +71,7 @@
 #include "nsICookieManager.h"
 #include "nsICookieService.h"
 #include "nsIHttpChannel.h"
+#include "nsIMarionette.h"
 #include "nsStreamUtils.h"
 #include "WidgetUtils.h"
 #include "nsIScriptError.h"
@@ -2161,7 +2162,14 @@ webgpu::Instance* Navigator::Gpu() {
 
 /* static */
 bool Navigator::Webdriver() {
-  return Preferences::GetBool("marionette.enabled", false);
+  bool marionetteRunning = false;
+
+  nsCOMPtr<nsIMarionette> marionette = do_GetService(NS_MARIONETTE_CONTRACTID);
+  if (marionette) {
+    marionette->GetRunning(&marionetteRunning);
+  }
+
+  return marionetteRunning;
 }
 
 }  // namespace mozilla::dom
