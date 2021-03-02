@@ -3549,9 +3549,7 @@ class Document : public nsINode,
   bool DevToolsWatchingDOMMutations() const {
     return mDevToolsWatchingDOMMutations;
   }
-  void SetDevToolsWatchingDOMMutations(bool aValue) {
-    mDevToolsWatchingDOMMutations = aValue;
-  }
+  void SetDevToolsWatchingDOMMutations(bool aValue);
 
   void MaybeWarnAboutZoom();
 
