@@ -36,46 +36,36 @@ CachingDatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
 
   AUTO_PROFILER_LABEL("CachingDatabaseConnection::GetCachedStatement", DOM);
 
-  // XXX This could be simplified if we had nsBaseHashtable::LookupOrInsertWith
-  // that could handle a functor returning a Result, see Bug 1693530.
   QM_TRY_UNWRAP(
       auto stmt,
-      (mCachedStatements.WithEntryHandle(
-          aQuery,
-          [&](auto&& entry)
-              -> Result<nsCOMPtr<mozIStorageStatement>, nsresult> {
-            if (!entry) {
-              const auto extraInfo =
-                  ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
+      mCachedStatements.TryLookupOrInsertWith(
+          aQuery, [&]() -> Result<nsCOMPtr<mozIStorageStatement>, nsresult> {
+            const auto extraInfo =
+                ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
 
-              QM_TRY_UNWRAP(
-                  auto stmt,
-                  MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
-                                             **mStorageConnection,
-                                             CreateStatement, aQuery),
-                  QM_PROPAGATE,
-                  ([&aQuery,
-                    &storageConnection = **mStorageConnection](const auto&) {
+            QM_TRY_RETURN(
+                MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                           **mStorageConnection,
+                                           CreateStatement, aQuery),
+                QM_PROPAGATE,
+                ([&aQuery,
+                  &storageConnection = **mStorageConnection](const auto&) {
 #ifdef DEBUG
-                    nsCString msg;
-                    MOZ_ALWAYS_SUCCEEDS(
-                        storageConnection.GetLastErrorString(msg));
+                  nsCString msg;
+                  MOZ_ALWAYS_SUCCEEDS(
+                      storageConnection.GetLastErrorString(msg));
 
-                    nsAutoCString error =
-                        "The statement '"_ns + aQuery +
-                        "' failed to compile with the error message '"_ns +
-                        msg + "'."_ns;
+                  nsAutoCString error =
+                      "The statement '"_ns + aQuery +
+                      "' failed to compile with the error message '"_ns + msg +
+                      "'."_ns;
 
-                    NS_WARNING(error.get());
+                  NS_WARNING(error.get());
 #else
                     (void)aQuery;
 #endif
-                  }));
-
-              entry.Insert(std::move(stmt));
-            }
-            return entry.Data();
-          })));
+                }));
+          }));
 
   return CachedStatement{this, std::move(stmt), aQuery};
 }
