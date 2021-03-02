@@ -347,7 +347,7 @@ impl GpuCacheTexture {
                         DeviceIntSize::new(blocks.len() as i32, 1),
                     );
 
-                    uploader.upload(device, texture, rect, 0, None, None, blocks.as_ptr(), blocks.len());
+                    uploader.upload(device, texture, rect, None, None, blocks.as_ptr(), blocks.len());
 
                     row.clear_dirty();
                 }

@@ -159,7 +159,6 @@ pub fn upload_to_texture_cache(
                     &mut renderer.device,
                     texture,
                     rect,
-                    0,
                     stride,
                     format_override,
                     data.as_ptr(),
@@ -188,7 +187,6 @@ pub fn upload_to_texture_cache(
                     &mut renderer.device,
                     texture,
                     DeviceIntRect::from_size(texture.get_dimensions()),
-                    0,
                     None,
                     pbo,
                 );
@@ -199,7 +197,6 @@ pub fn upload_to_texture_cache(
                     &mut renderer.device,
                     texture,
                     batch_buffer.upload_rect,
-                    0,
                     Some(BATCH_UPLOAD_TEXTURE_SIZE.width * bpp),
                     None,
                     bytes.as_ptr(),
