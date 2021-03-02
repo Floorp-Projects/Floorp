@@ -6,12 +6,10 @@ job-defaults:
     # Run only on try and code-review tasks
     # to avoid running clang tools on the whole codebase
     run-on-projects: []
-    platform: linux64/opt
+    platform: linux64/debug
+    worker-type: t-linux-xlarge-source
     attributes:
         code-review: true
-    worker-type:
-        by-platform:
-            linux64.*: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: static-analysis-build}
         max-run-time: 5400
@@ -107,7 +105,7 @@ external:
 linux64-non-unified:
     description: Run syntax test for non-unified build on C/C++ files.
     treeherder:
-        symbol: cpp(non-unified-linux64)
+        symbol: cpp(non-unified)
         tier: 1
     attributes:
         code-review: false
@@ -125,8 +123,9 @@ linux64-non-unified:
 
 macosx64-non-unified:
     description: Run syntax test for non-unified build on C/C++ files.
+    platform: osx-cross/debug
     treeherder:
-        symbol: cpp(non-unified-macos64)
+        symbol: cpp(non-unified)
         tier: 1
     attributes:
         code-review: false
