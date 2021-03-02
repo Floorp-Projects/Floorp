@@ -1366,35 +1366,6 @@ BrowserGlue.prototype = {
       "1.1",
       "resource://builtin-themes/dark/"
     );
-
-    if (
-      AppConstants.NIGHTLY_BUILD &&
-      Services.prefs.getBoolPref("browser.proton.enabled", false)
-    ) {
-      // Temporarily install a fork of the Dark Theme to do development on for
-      // Proton. We only make this available if `browser.proton.enabled` is set
-      // to true, and we make sure to uninstall it again during shutdown.
-      const kProtonDarkThemeID = "firefox-compact-proton-dark@mozilla.org";
-      AddonManager.maybeInstallBuiltinAddon(
-        kProtonDarkThemeID,
-        "1.0",
-        "resource://builtin-themes/proton-dark/"
-      );
-      AsyncShutdown.profileChangeTeardown.addBlocker(
-        "Uninstall Proton Dark Mode",
-        async () => {
-          try {
-            let addon = await AddonManager.getAddonByID(kProtonDarkThemeID);
-            await addon.uninstall();
-          } catch (e) {
-            Cu.reportError(
-              "Failed to uninstall firefox-compact-proton-dark on shutdown"
-            );
-          }
-        }
-      );
-    }
-
     AddonManager.maybeInstallBuiltinAddon(
       "firefox-alpenglow@mozilla.org",
       "1.2",
