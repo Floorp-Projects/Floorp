@@ -10,6 +10,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=632379
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
+  <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+    menuitem { height: 19px; box-sizing: border-box }
+  ]]></style>
+
 <toolbox flex="1">
   <menubar>
     <menu label="MENU" accesskey="m" id="mainMenu">
@@ -174,8 +178,9 @@ var count=0;
 
 function snapshot(elem)
 {
-    todo(false, "snapshot() called");
+    info("snapshot() called");
     pos[count] = elem.getBoundingClientRect().top;
+    info(elem.querySelector("menuitem").getBoundingClientRect().height);
     ++count;
     if (count <= 1) {
         // close the submenu and open the bottom submenu
@@ -183,18 +188,18 @@ function snapshot(elem)
         sendString("9");
     } else {
         if (!navigator.platform.includes("Mac")) {
-            is(pos[1], pos[0], "Popup should open in the same place when the menu is scrolled");
+            is(pos[1], pos[0], `Popup ${elem.parentNode.id} should open in the same place when the menu is scrolled`);
         } else {
             todo(false, "This test fails on Mac since it was ported to chrome: Bug 668716.");
         }
-        todo(false, "Test finished");
+        info("Test finished");
         gFinished = true;
         SimpleTest.finish();
     }
 }
 
 function doTest() {
-    todo(false, "doTest() called");
+    info("doTest() called");
     // open the top-level menu
     $("mainMenu").open = true;
 }
@@ -202,14 +207,14 @@ function doTest() {
 function openSubmenu()
 {
     if (!gFinished) {
-        todo(false, "openSubmenu() called");
+        info("openSubmenu() called");
     }
     // open a submenu in the middle
     sendString("5");
 }
 
 SimpleTest.waitForExplicitFinish();
-todo(false, "Wait for focus");
+info("Wait for focus");
 SimpleTest.waitForFocus(doTest);
 
 ]]></script>
