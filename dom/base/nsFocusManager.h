@@ -363,6 +363,9 @@ class nsFocusManager final : public nsIFocusManager,
    * start at the active top-level window and navigate down the currently
    * focused elements for each frame in the tree to get to aBrowsingContext.
    */
+  bool AdjustInProcessWindowFocus(
+      mozilla::dom::BrowsingContext* aBrowsingContext, bool aCheckPermission,
+      bool aIsVisible);
   void AdjustWindowFocus(mozilla::dom::BrowsingContext* aBrowsingContext,
                          bool aCheckPermission, bool aIsVisible);
 
