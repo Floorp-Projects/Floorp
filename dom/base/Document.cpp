@@ -1291,6 +1291,11 @@ void Document::Shutdown() {
 Document::Document(const char* aContentType)
     : nsINode(nullptr),
       DocumentOrShadowRoot(this),
+      mBlockAllMixedContent(false),
+      mBlockAllMixedContentPreloads(false),
+      mUpgradeInsecureRequests(false),
+      mUpgradeInsecurePreloads(false),
+      mDontWarnAboutMutationEventsAndAllowSlowDOMMutations(false),
       mCharacterSet(WINDOWS_1252_ENCODING),
       mCharacterSetSource(0),
       mParentDocument(nullptr),
@@ -1299,11 +1304,6 @@ Document::Document(const char* aContentType)
 #ifdef DEBUG
       mStyledLinksCleared(false),
 #endif
-      mBlockAllMixedContent(false),
-      mBlockAllMixedContentPreloads(false),
-      mUpgradeInsecureRequests(false),
-      mUpgradeInsecurePreloads(false),
-      mDevToolsWatchingDOMMutations(false),
       mBidiEnabled(false),
       mMayNeedFontPrefsUpdate(true),
       mMathMLEnabled(false),
@@ -3494,10 +3494,8 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
       // Set up 'block-all-mixed-content' if not already inherited
       // from the parent context or set by any other CSP.
       if (!mBlockAllMixedContent) {
-        bool block = false;
-        rv = mCSP->GetBlockAllMixedContent(&block);
+        rv = mCSP->GetBlockAllMixedContent(&mBlockAllMixedContent);
         NS_ENSURE_SUCCESS_VOID(rv);
-        mBlockAllMixedContent = block;
       }
       if (!mBlockAllMixedContentPreloads) {
         mBlockAllMixedContentPreloads = mBlockAllMixedContent;
@@ -3506,10 +3504,8 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
       // Set up 'upgrade-insecure-requests' if not already inherited
       // from the parent context or set by any other CSP.
       if (!mUpgradeInsecureRequests) {
-        bool upgrade = false;
-        rv = mCSP->GetUpgradeInsecureRequests(&upgrade);
+        rv = mCSP->GetUpgradeInsecureRequests(&mUpgradeInsecureRequests);
         NS_ENSURE_SUCCESS_VOID(rv);
-        mUpgradeInsecureRequests = upgrade;
       }
       if (!mUpgradeInsecurePreloads) {
         mUpgradeInsecurePreloads = mUpgradeInsecureRequests;
@@ -3526,16 +3522,12 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
   // 2) apply settings from speculative csp
   if (mPreloadCSP) {
     if (!mBlockAllMixedContentPreloads) {
-      bool block = false;
-      rv = mPreloadCSP->GetBlockAllMixedContent(&block);
+      rv = mPreloadCSP->GetBlockAllMixedContent(&mBlockAllMixedContentPreloads);
       NS_ENSURE_SUCCESS_VOID(rv);
-      mBlockAllMixedContent = block;
     }
     if (!mUpgradeInsecurePreloads) {
-      bool upgrade = false;
-      rv = mPreloadCSP->GetUpgradeInsecureRequests(&upgrade);
+      rv = mPreloadCSP->GetUpgradeInsecureRequests(&mUpgradeInsecurePreloads);
       NS_ENSURE_SUCCESS_VOID(rv);
-      mUpgradeInsecurePreloads = upgrade;
     }
   }
 }
@@ -9567,7 +9559,8 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
   {
-    if (nsINode* parent = adoptedNode->GetParentNode()) {
+    nsINode* parent = adoptedNode->GetParentNode();
+    if (parent) {
       nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent);
     }
   }
@@ -13309,80 +13302,6 @@ already_AddRefed<nsINode> Document::GetTooltipNode() {
   return nullptr;
 }
 
-namespace {
-
-class DevToolsMutationObserver final : public nsStubMutationObserver {
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-
-  // We handle this in nsContentUtils::MaybeFireNodeRemoved, since devtools
-  // relies on the event firing _before_ the removal happens.
-  // NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
-  // NOTE(emilio, bug 1694627): DevTools doesn't seem to deal with character
-  // data changes right now (maybe intentionally?).
-  // NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
-
-  DevToolsMutationObserver() = default;
-
- private:
-  void FireEvent(nsINode* aTarget, const nsAString& aType);
-
-  ~DevToolsMutationObserver() = default;
-};
-
-NS_IMPL_ISUPPORTS(DevToolsMutationObserver, nsIMutationObserver)
-
-void DevToolsMutationObserver::FireEvent(nsINode* aTarget,
-                                         const nsAString& aType) {
-  if (aTarget->ChromeOnlyAccess()) {
-    return;
-  }
-  (new AsyncEventDispatcher(aTarget, aType, CanBubble::eNo,
-                            ChromeOnlyDispatch::eYes, Composed::eYes))
-      ->RunDOMEventWhenSafe();
-}
-
-void DevToolsMutationObserver::AttributeChanged(Element* aElement,
-                                                int32_t aNamespaceID,
-                                                nsAtom* aAttribute,
-                                                int32_t aModType,
-                                                const nsAttrValue* aOldValue) {
-  FireEvent(aElement, u"devtoolsattrmodified"_ns);
-}
-
-void DevToolsMutationObserver::ContentAppended(nsIContent* aFirstNewContent) {
-  for (nsIContent* c = aFirstNewContent; c; c = c->GetNextSibling()) {
-    ContentInserted(c);
-  }
-}
-
-void DevToolsMutationObserver::ContentInserted(nsIContent* aChild) {
-  FireEvent(aChild, u"devtoolschildinserted"_ns);
-}
-
-static StaticRefPtr<DevToolsMutationObserver> sDevToolsMutationObserver;
-
-}  // namespace
-
-void Document::SetDevToolsWatchingDOMMutations(bool aValue) {
-  if (mDevToolsWatchingDOMMutations == aValue) {
-    return;
-  }
-  mDevToolsWatchingDOMMutations = aValue;
-  if (aValue) {
-    if (MOZ_UNLIKELY(!sDevToolsMutationObserver)) {
-      sDevToolsMutationObserver = new DevToolsMutationObserver();
-      ClearOnShutdown(&sDevToolsMutationObserver);
-    }
-    AddMutationObserver(sDevToolsMutationObserver);
-  } else if (sDevToolsMutationObserver) {
-    RemoveMutationObserver(sDevToolsMutationObserver);
-  }
-}
-
 void Document::MaybeWarnAboutZoom() {
   if (mHasWarnedAboutZoom) {
     return;
@@ -15053,7 +14972,10 @@ void Document::InitUseCounters() {
   }
   mUseCountersInitialized = true;
 
-  static_assert(Telemetry::HistogramUseCounterCount > 0);
+  if (Telemetry::HistogramUseCounterCount == 0) {
+    // No use counters defined.
+    return;
+  }
 
   if (!ShouldIncludeInTelemetry(/* aAllowExtensionURIs = */ true)) {
     return;
