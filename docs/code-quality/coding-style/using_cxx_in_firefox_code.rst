@@ -402,10 +402,6 @@ Data structures
      - ``nsInterfaceHashtable.h``
      - ``std::unordered_map``
      - Adaptation of ``nsTHashtable``, see `XPCOM hashtable guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Hashtables>`__
-   * - ``nsJSThingHashtable``
-     - ``nsJSThingHashtable.h``
-     -
-     - Adaptation of ``nsTHashtable``, see `XPCOM hashtable guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Hashtables>`__
    * - ``mozilla::LinkedList``
      - ``mozilla/LinkedList.h``
      - ``std::list``
