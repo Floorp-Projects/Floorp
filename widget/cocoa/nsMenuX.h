@@ -82,10 +82,9 @@ class nsMenuX : public nsMenuObjectX, public nsChangeObserver {
   uint32_t mVisibleItemsCount;         // cache
   nsMenuObjectX* mParent;              // [weak]
   nsMenuGroupOwnerX* mMenuGroupOwner;  // [weak]
-  // The icon object should never outlive its creating nsMenuX object.
-  RefPtr<nsMenuItemIconX> mIcon;  // [strong]
-  GeckoNSMenu* mNativeMenu;       // [strong]
-  MenuDelegate* mMenuDelegate;    // [strong]
+  mozilla::UniquePtr<nsMenuItemIconX> mIcon;
+  GeckoNSMenu* mNativeMenu;     // [strong]
+  MenuDelegate* mMenuDelegate;  // [strong]
   // nsMenuX objects should always have a valid native menu item.
   NSMenuItem* mNativeMenuItem;  // [strong]
   bool mIsEnabled;

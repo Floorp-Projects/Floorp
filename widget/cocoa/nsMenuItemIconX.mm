@@ -51,20 +51,10 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
 }
 
 nsMenuItemIconX::~nsMenuItemIconX() {
-  Destroy();
-  MOZ_COUNT_DTOR(nsMenuItemIconX);
-}
-
-// Called from mMenuObjectX's destructor, to prevent us from outliving it
-// (as might otherwise happen if calls to our imgINotificationObserver methods
-// are still outstanding).  mMenuObjectX owns our mNativeMenuItem.
-void nsMenuItemIconX::Destroy() {
   if (mIconLoader) {
     mIconLoader->Destroy();
-    mIconLoader = nullptr;
   }
-  mMenuObject = nullptr;
-  mNativeMenuItem = nil;
+  MOZ_COUNT_DTOR(nsMenuItemIconX);
 }
 
 nsresult nsMenuItemIconX::SetupIcon() {
