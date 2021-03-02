@@ -61,24 +61,7 @@ class SharedSurfaceTextureData : public TextureData {
 
   mozilla::ipc::FileDescriptor GetAcquireFence() override;
 };
-/*
-class SharedSurfaceTextureClient : public TextureClient {
- public:
-  SharedSurfaceTextureClient(SharedSurfaceTextureData* aData,
-                             TextureFlags aFlags, LayersIPCChannel* aAllocator);
 
-  ~SharedSurfaceTextureClient();
-
-  static RefPtr<SharedSurfaceTextureClient> Create(
-      UniquePtr<gl::SharedSurface> surf, gl::SurfaceFactory* factory,
-      LayersIPCChannel* aAllocator, TextureFlags aFlags);
-
-  const auto& Desc() const {
-    return static_cast<const SharedSurfaceTextureData*>(GetInternalData())
-        ->mDesc;
-  }
-};
-*/
 }  // namespace layers
 }  // namespace mozilla
 

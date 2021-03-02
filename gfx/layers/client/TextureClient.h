@@ -751,9 +751,6 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   // Used when TextureClient is recycled with TextureFlags::RECYCLE flag.
   bool mAddedToCompositableClient;
 
-  bool mWorkaroundAnnoyingSharedSurfaceLifetimeIssues;
-  bool mWorkaroundAnnoyingSharedSurfaceOwnershipIssues;
-
   RefPtr<TextureReadbackSink> mReadbackSink;
 
   uint64_t mFwdTransactionId;
