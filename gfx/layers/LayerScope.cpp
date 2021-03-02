@@ -35,6 +35,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsISocketTransport.h"
@@ -1561,7 +1562,8 @@ void LayerScope::SendLayerDump(UniquePtr<Packet> aPacket) {
 /*static*/
 bool LayerScope::CheckSendable() {
   // Only compositor threads check LayerScope status
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread() || gIsGtest);
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread() ||
+             wr::RenderThread::IsInRenderThread() || gIsGtest);
 
   if (!StaticPrefs::gfx_layerscope_enabled()) {
     return false;
