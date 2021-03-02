@@ -29,7 +29,6 @@
 #include "builtin/Boolean.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParserAtom.h"
-#include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"
@@ -42,6 +41,7 @@
 #include "vm/GeckoProfiler.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 
+#include "gc/Marking-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
