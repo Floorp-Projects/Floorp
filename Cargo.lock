@@ -2810,18 +2810,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libz-sys"
-version = "1.0.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eb5e43362e38e2bca2fd5f5134c4d4564a23a5c28e9b95411652021a8675ebe"
-dependencies = [
- "cc",
- "libc",
- "pkg-config",
- "vcpkg",
-]
-
-[[package]]
 name = "line-wrap"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3248,16 +3236,6 @@ dependencies = [
  "syn",
  "void",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "mozjs_sys"
-version = "0.0.0"
-dependencies = [
- "glob",
- "libc",
- "libz-sys",
- "num_cpus",
 ]
 
 [[package]]
