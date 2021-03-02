@@ -29,24 +29,6 @@ inline mozilla::a11y::role LocalAccessible::Role() const {
   return ARIATransformRole(roleMapEntry->role);
 }
 
-inline bool LocalAccessible::HasARIARole() const {
-  return mRoleMapEntryIndex != aria::NO_ROLE_MAP_ENTRY_INDEX;
-}
-
-inline bool LocalAccessible::IsARIARole(nsAtom* aARIARole) const {
-  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  return roleMapEntry && roleMapEntry->Is(aARIARole);
-}
-
-inline bool LocalAccessible::HasStrongARIARole() const {
-  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  return roleMapEntry && roleMapEntry->roleRule == kUseMapRole;
-}
-
-inline const nsRoleMapEntry* LocalAccessible::ARIARoleMap() const {
-  return aria::GetRoleMapFromIndex(mRoleMapEntryIndex);
-}
-
 inline mozilla::a11y::role LocalAccessible::ARIARole() {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole) {
@@ -67,12 +49,6 @@ inline bool LocalAccessible::IsSearchbox() const {
          (mContent->IsHTMLElement(nsGkAtoms::input) &&
           mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                              nsGkAtoms::search, eCaseMatters));
-}
-
-inline bool LocalAccessible::HasGenericType(AccGenericType aType) const {
-  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  return (mGenericTypes & aType) ||
-         (roleMapEntry && roleMapEntry->IsOfType(aType));
 }
 
 inline bool LocalAccessible::NativeHasNumericValue() const {
