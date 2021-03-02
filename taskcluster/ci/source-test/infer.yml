@@ -6,12 +6,10 @@ job-defaults:
     # Run only on try and code-review tasks
     # to avoid running infer on the whole codebase
     run-on-projects: []
-    platform: linux64/opt
+    platform: linux64/debug
+    worker-type: t-linux-xlarge-source
     attributes:
         code-review: true
-    worker-type:
-        by-platform:
-            linux64.*: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 5400
