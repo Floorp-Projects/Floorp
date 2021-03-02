@@ -525,7 +525,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
     RootedShape last(
         cx, EmptyShape::getInitialShape(
                 cx, nobj->getClass(), nobj->taggedProto(),
-                nobj->numFixedSlots(), nobj->lastProperty()->getObjectFlags()));
+                nobj->numFixedSlots(), nobj->lastProperty()->objectFlags()));
     if (!last) {
       return false;
     }
@@ -757,7 +757,7 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 
 static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
                                   gc::AllocKind kind, NewObjectKind newKind,
-                                  uint32_t initialShapeFlags = 0) {
+                                  ObjectFlags objectFlags = {}) {
   const JSClass* clasp = group->clasp();
 
   MOZ_ASSERT(clasp != &ArrayObject::class_);
@@ -773,7 +773,7 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
                       : GetGCKindSlots(kind, clasp);
 
   RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, group->proto(),
-                                                    nfixed, initialShapeFlags));
+                                                    nfixed, objectFlags));
   if (!shape) {
     return nullptr;
   }
@@ -818,7 +818,7 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                             Handle<TaggedProto> proto,
                                             gc::AllocKind allocKind,
                                             NewObjectKind newKind,
-                                            uint32_t initialShapeFlags) {
+                                            ObjectFlags objectFlags) {
   if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
     allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
@@ -842,8 +842,7 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  RootedObject obj(cx,
-                   NewObject(cx, group, allocKind, newKind, initialShapeFlags));
+  RootedObject obj(cx, NewObject(cx, group, allocKind, newKind, objectFlags));
   if (!obj) {
     return nullptr;
   }
@@ -1174,7 +1173,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     JSContext* cx, HandleNativeObject dst, HandleNativeObject src) {
   cx->check(src, dst);
   MOZ_ASSERT(src->getClass() == dst->getClass());
-  MOZ_ASSERT(dst->lastProperty()->getObjectFlags() == 0);
+  MOZ_ASSERT(dst->lastProperty()->objectFlags().isEmpty());
   MOZ_ASSERT(src->numFixedSlots() == dst->numFixedSlots());
 
   if (!dst->ensureElements(cx, src->getDenseInitializedLength())) {
@@ -1194,9 +1193,9 @@ static bool InitializePropertiesFromCompatibleNativeObject(
   } else {
     // We need to generate a new shape for dst that has dst's proto but all
     // the property information from src.  Note that we asserted above that
-    // dst's object flags are 0.
+    // dst's object flags are empty.
     shape = EmptyShape::getInitialShape(cx, dst->getClass(), dst->taggedProto(),
-                                        dst->numFixedSlots(), 0);
+                                        dst->numFixedSlots(), ObjectFlags());
     if (!shape) {
       return false;
     }
@@ -1762,9 +1761,9 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   // to require a guard.
   //
   // Heuristics:
-  //  - Set UNCACHEABLE_PROTO flag on shape to avoid creating too many private
+  //  - Set UncacheableProto flag on shape to avoid creating too many private
   //    shape copies.
-  //  - Only propagate along proto chain if we are marked DELEGATE. This avoids
+  //  - Only propagate along proto chain if we are marked Delegate. This avoids
   //    reshaping in normal object access cases.
   //
   // NOTE: We only handle NativeObjects and don't propagate reshapes through
@@ -2372,9 +2371,9 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj,
     ObjectElements::PrepareForPreventExtensions(cx, nobj);
   }
 
-  // Finally, set the NOT_EXTENSIBLE flag on the BaseShape and ObjectElements.
-  if (!JSObject::setFlags(cx, obj, BaseShape::NOT_EXTENSIBLE,
-                          JSObject::GENERATE_SHAPE)) {
+  // Finally, set the NotExtensible flag on the Shape and ObjectElements.
+  if (!JSObject::setFlag(cx, obj, ObjectFlag::NotExtensible,
+                         JSObject::GENERATE_SHAPE)) {
     return false;
   }
   if (obj->is<NativeObject>()) {
@@ -2506,7 +2505,7 @@ bool js::SetImmutablePrototype(JSContext* cx, HandleObject obj,
     return Proxy::setImmutablePrototype(cx, obj, succeeded);
   }
 
-  if (!JSObject::setFlags(cx, obj, BaseShape::IMMUTABLE_PROTOTYPE)) {
+  if (!JSObject::setFlag(cx, obj, ObjectFlag::ImmutablePrototype)) {
     return false;
   }
   *succeeded = true;

@@ -93,11 +93,11 @@ const char* js::ScopeKindString(ScopeKind kind) {
 }
 
 Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
-                                 uint32_t numSlots, uint32_t baseShapeFlags) {
+                                 uint32_t numSlots, ObjectFlags objectFlags) {
   // Put as many slots into the object header as possible.
   uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
   return EmptyShape::getInitialShape(cx, cls, TaggedProto(nullptr), numFixed,
-                                     baseShapeFlags);
+                                     objectFlags);
 }
 
 static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
@@ -126,15 +126,14 @@ static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
 
 Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                                   const JSClass* cls, uint32_t numSlots,
-                                  uint32_t baseShapeFlags) {
-  RootedShape shape(cx,
-                    EmptyEnvironmentShape(cx, cls, numSlots, baseShapeFlags));
+                                  ObjectFlags objectFlags) {
+  RootedShape shape(cx, EmptyEnvironmentShape(cx, cls, numSlots, objectFlags));
   if (!shape) {
     return nullptr;
   }
 
   RootedAtom name(cx);
-  StackBaseShape stackBase(cls, baseShapeFlags);
+  StackBaseShape stackBase(cls, objectFlags);
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
@@ -154,15 +153,14 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
 Shape* js::CreateEnvironmentShape(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
-    const JSClass* cls, uint32_t numSlots, uint32_t baseShapeFlags) {
-  RootedShape shape(cx,
-                    EmptyEnvironmentShape(cx, cls, numSlots, baseShapeFlags));
+    const JSClass* cls, uint32_t numSlots, ObjectFlags objectFlags) {
+  RootedShape shape(cx, EmptyEnvironmentShape(cx, cls, numSlots, objectFlags));
   if (!shape) {
     return nullptr;
   }
 
   RootedAtom name(cx);
-  StackBaseShape stackBase(cls, baseShapeFlags);
+  StackBaseShape stackBase(cls, objectFlags);
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
@@ -231,17 +229,17 @@ static void MarkParserScopeData(JSContext* cx,
 static bool SetEnvironmentShape(JSContext* cx, BindingIter& freshBi,
                                 BindingIter& bi, const JSClass* cls,
                                 uint32_t firstFrameSlot,
-                                uint32_t baseShapeFlags,
+                                ObjectFlags objectFlags,
                                 MutableHandleShape envShape) {
-  envShape.set(CreateEnvironmentShape(
-      cx, freshBi, cls, bi.nextEnvironmentSlot(), baseShapeFlags));
+  envShape.set(CreateEnvironmentShape(cx, freshBi, cls,
+                                      bi.nextEnvironmentSlot(), objectFlags));
   return envShape;
 }
 
 static bool SetEnvironmentShape(JSContext* cx, ParserBindingIter& freshBi,
                                 ParserBindingIter& bi, const JSClass* cls,
                                 uint32_t firstFrameSlot,
-                                uint32_t baseShapeFlags,
+                                ObjectFlags objectFlags,
                                 mozilla::Maybe<uint32_t>* envShape) {
   envShape->emplace(bi.nextEnvironmentSlot());
   return true;
@@ -254,7 +252,7 @@ static bool PrepareScopeData(
     typename MaybeRootedScopeData<ConcreteScope, AtomT>::HandleType data,
     uint32_t firstFrameSlot, ShapeT envShape) {
   const JSClass* cls = &EnvironmentT::class_;
-  uint32_t baseShapeFlags = EnvironmentT::BASESHAPE_FLAGS;
+  constexpr ObjectFlags objectFlags = EnvironmentT::OBJECT_FLAGS;
 
   // Copy a fresh BindingIter for use below.
   AbstractBindingIter<AtomT> freshBi(bi);
@@ -272,8 +270,8 @@ static bool PrepareScopeData(
 
   // Make a new environment shape if any environment slots were used.
   if (bi.nextEnvironmentSlot() != JSSLOT_FREE(cls)) {
-    if (!SetEnvironmentShape(cx, freshBi, bi, cls, firstFrameSlot,
-                             baseShapeFlags, envShape)) {
+    if (!SetEnvironmentShape(cx, freshBi, bi, cls, firstFrameSlot, objectFlags,
+                             envShape)) {
       return false;
     }
   }
@@ -558,7 +556,7 @@ Shape* Scope::maybeCloneEnvironmentShape(JSContext* cx) {
   if (shape && shape->zoneFromAnyThread() != cx->zone()) {
     BindingIter bi(this);
     return CreateEnvironmentShape(cx, bi, shape->getObjectClass(),
-                                  shape->slotSpan(), shape->getObjectFlags());
+                                  shape->slotSpan(), shape->objectFlags());
   }
   return shape;
 }
@@ -856,8 +854,7 @@ LexicalScope* LexicalScope::createWithData(
 /* static */
 Shape* LexicalScope::getEmptyExtensibleEnvironmentShape(JSContext* cx) {
   const JSClass* cls = &LexicalEnvironmentObject::class_;
-  return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls),
-                               /* baseShapeFlags = */ 0);
+  return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), ObjectFlags());
 }
 
 template <XDRMode mode>
@@ -2190,17 +2187,17 @@ bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
                                        BaseScopeData* scopeData,
                                        MutableHandleShape shape) const {
   const JSClass* cls = &SpecificEnvironmentT::class_;
-  uint32_t baseShapeFlags = SpecificEnvironmentT::BASESHAPE_FLAGS;
+  constexpr ObjectFlags objectFlags = SpecificEnvironmentT::OBJECT_FLAGS;
 
   if (hasEnvironmentShape()) {
     if (numEnvironmentSlots() > 0) {
       BindingIter bi(kind, scopeData, firstFrameSlot_);
       shape.set(CreateEnvironmentShape(cx, bi, cls, numEnvironmentSlots(),
-                                       baseShapeFlags));
+                                       objectFlags));
       return shape;
     }
 
-    shape.set(EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), baseShapeFlags));
+    shape.set(EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), objectFlags));
     return shape;
   }
 

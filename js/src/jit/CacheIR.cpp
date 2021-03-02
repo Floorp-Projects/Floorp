@@ -600,7 +600,7 @@ static void GuardGroupProto(CacheIRWriter& writer, JSObject* obj,
                             ObjOperandId objId) {
   // Uses the group to determine if the prototype is unchanged. This works
   // because groups have an immutable prototype. This can be used if the shape
-  // has the UNCACHEABLE_PROTO flag set.
+  // has the UncacheableProto flag set.
 
   ObjectGroup* group = obj->group();
   writer.guardGroupForProto(objId, group);
@@ -641,7 +641,7 @@ static void TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj,
 static void GeneratePrototypeGuardsForReceiver(CacheIRWriter& writer,
                                                JSObject* obj,
                                                ObjOperandId objId) {
-  // If receiver was marked UNCACHEABLE_PROTO, the previous shape guard
+  // If receiver was marked UncacheableProto, the previous shape guard
   // doesn't ensure the prototype is unchanged. In this case we must use the
   // group to check the prototype.
   if (obj->hasUncacheableProto()) {
@@ -668,7 +668,7 @@ static bool ProtoChainSupportsTeleporting(JSObject* obj, JSObject* holder) {
   }
 
   // The holder itself only gets reshaped by teleportation if it is not
-  // marked UNCACHEABLE_PROTO. See: ReshapeForProtoMutation.
+  // marked UncacheableProto. See: ReshapeForProtoMutation.
   return !holder->hasUncacheableProto();
 }
 
@@ -711,10 +711,10 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   // link we are mutating is itself a prototype, we regenerate shapes down
   // the chain. This means the same two shape checks as above are sufficient.
   //
-  // An additional wrinkle is the UNCACHEABLE_PROTO shape flag. This
+  // An additional wrinkle is the UncacheableProto shape flag. This
   // indicates that the shape no longer implies any specific prototype. As
   // well, the shape will not be updated by the teleporting optimization.
-  // If any shape from receiver to holder (inclusive) is UNCACHEABLE_PROTO,
+  // If any shape from receiver to holder (inclusive) is UncacheableProto,
   // we don't apply the optimization.
   //
   // See:
@@ -724,7 +724,7 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   MOZ_ASSERT(holder);
   MOZ_ASSERT(obj != holder);
 
-  // Only DELEGATE objects participate in teleporting so peel off the first
+  // Only Delegate objects participate in teleporting so peel off the first
   // object in the chain if needed and handle it directly.
   JSObject* pobj = obj;
   if (!obj->isDelegate()) {
@@ -1269,7 +1269,7 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
     }
 
     if (!holder) {
-      // UNCACHEABLE_PROTO may result in guards against specific
+      // ObjectFlag::UncacheableProto may result in guards against specific
       // (cross-compartment) prototype objects, so don't try to attach IC if we
       // see the flag at all.
       if (UncacheableProtoOnChain(unwrapped)) {

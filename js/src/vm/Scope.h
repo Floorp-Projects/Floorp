@@ -1539,12 +1539,12 @@ void DumpBindings(JSContext* cx, Scope* scope);
 JSAtom* FrameSlotName(JSScript* script, jsbytecode* pc);
 
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
-                             uint32_t numSlots, uint32_t baseShapeFlags);
+                             uint32_t numSlots, ObjectFlags objectFlags);
 
 template <class T>
 Shape* EmptyEnvironmentShape(JSContext* cx) {
   return EmptyEnvironmentShape(cx, &T::class_, T::RESERVED_SLOTS,
-                               T::BASESHAPE_FLAGS);
+                               T::OBJECT_FLAGS);
 }
 
 //
@@ -1693,15 +1693,15 @@ class MutableWrappedPtrOperations<ScopeIter, Wrapper>
 
 Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                               const JSClass* cls, uint32_t numSlots,
-                              uint32_t baseShapeFlags);
+                              ObjectFlags objectFlags);
 
 Shape* CreateEnvironmentShape(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
-    const JSClass* cls, uint32_t numSlots, uint32_t baseShapeFlags);
+    const JSClass* cls, uint32_t numSlots, ObjectFlags objectFlags);
 
 Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
-                             uint32_t numSlots, uint32_t baseShapeFlags);
+                             uint32_t numSlots, ObjectFlags objectFlags);
 
 static inline size_t GetOffsetOfParserScopeDataTrailingNames(ScopeKind kind) {
   switch (kind) {

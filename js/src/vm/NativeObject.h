@@ -195,8 +195,8 @@ class ObjectElements {
     SHARED_MEMORY = 0x8,
 
     // These elements are not extensible. If this flag is set, the object's
-    // BaseShape must also have the NOT_EXTENSIBLE flag. This exists on
-    // ObjectElements in addition to BaseShape to simplify JIT code.
+    // Shape must also have the NotExtensible flag. This exists on
+    // ObjectElements in addition to Shape to simplify JIT code.
     NOT_EXTENSIBLE = 0x10,
 
     // These elements are set to integrity level "sealed". If this flag is
@@ -206,9 +206,9 @@ class ObjectElements {
     // These elements are set to integrity level "frozen". If this flag is
     // set, the SEALED flag must be set as well.
     //
-    // This flag must only be set if the BaseShape has the FROZEN_ELEMENTS flag.
-    // The BaseShape flag ensures a shape guard can be used to guard against
-    // frozen elements. The ObjectElements flag is convenient for JIT code and
+    // This flag must only be set if the Shape has the FrozenElements flag.
+    // The Shape flag ensures a shape guard can be used to guard against frozen
+    // elements. The ObjectElements flag is convenient for JIT code and
     // ObjectElements assertions.
     FROZEN = 0x40,
 
@@ -753,8 +753,7 @@ class NativeObject : public JSObject {
 
   [[nodiscard]] static bool reshapeForShadowedProp(JSContext* cx,
                                                    HandleNativeObject obj);
-  static bool clearFlag(JSContext* cx, HandleNativeObject obj,
-                        BaseShape::Flag flag);
+  static bool clearFlag(JSContext* cx, HandleNativeObject obj, ObjectFlag flag);
 
   // The maximum number of slots in an object.
   // |MAX_SLOTS_COUNT * sizeof(JS::Value)| shouldn't overflow
@@ -817,18 +816,16 @@ class NativeObject : public JSObject {
   // Native objects are never proxies. Call isExtensible instead.
   bool nonProxyIsExtensible() const = delete;
 
-  bool isExtensible() const {
-    return !hasAllFlags(js::BaseShape::NOT_EXTENSIBLE);
-  }
+  bool isExtensible() const { return !hasFlag(ObjectFlag::NotExtensible); }
 
   /*
    * Whether there may be indexed properties on this object, excluding any in
    * the object's elements.
    */
-  bool isIndexed() const { return hasAllFlags(js::BaseShape::INDEXED); }
+  bool isIndexed() const { return hasFlag(ObjectFlag::Indexed); }
 
   static bool setHadElementsAccess(JSContext* cx, HandleNativeObject obj) {
-    return setFlags(cx, obj, js::BaseShape::HAD_ELEMENTS_ACCESS);
+    return setFlag(cx, obj, ObjectFlag::HadElementsAccess);
   }
 
   /*
@@ -836,11 +833,11 @@ class NativeObject : public JSObject {
    * PropertyTree::MAX_HEIGHT.
    */
   bool hadElementsAccess() const {
-    return hasAllFlags(js::BaseShape::HAD_ELEMENTS_ACCESS);
+    return hasFlag(ObjectFlag::HadElementsAccess);
   }
 
   bool hasInterestingSymbol() const {
-    return hasAllFlags(js::BaseShape::HAS_INTERESTING_SYMBOL);
+    return hasFlag(ObjectFlag::HasInterestingSymbol);
   }
 
   /*
@@ -1333,7 +1330,7 @@ class NativeObject : public JSObject {
     return getElementsHeader()->isSealed();
   }
   bool denseElementsAreFrozen() const {
-    return hasAllFlags(js::BaseShape::FROZEN_ELEMENTS);
+    return hasFlag(ObjectFlag::FrozenElements);
   }
 
   bool denseElementsArePacked() const {

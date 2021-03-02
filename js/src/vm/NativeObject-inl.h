@@ -66,7 +66,7 @@ inline bool NativeObject::canRemoveLastProperty() {
    */
   MOZ_ASSERT(!inDictionaryMode());
   Shape* previous = lastProperty()->previous().get();
-  return previous->getObjectFlags() == lastProperty()->getObjectFlags();
+  return previous->objectFlags() == lastProperty()->objectFlags();
 }
 
 inline void NativeObject::initDenseElementHole(uint32_t index) {
