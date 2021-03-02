@@ -26,7 +26,7 @@
 #include <unistd.h>
 
 #include "mozilla/Unused.h"
-#include "nsAppRunner.h"  // for IsWaylandDisabled on IsX11EGLEnabled
+#include "nsAppRunner.h"  // for IsWaylandEnabled on IsX11EGLEnabled
 #include "stdint.h"
 
 #ifdef __SUNPRO_CC
@@ -1200,7 +1200,7 @@ int childgltest() {
   int pci_count = get_pci_status();
 
 #ifdef MOZ_WAYLAND
-  if (!IsWaylandDisabled()) {
+  if (IsWaylandEnabled()) {
     wayland_egltest();
   } else
 #endif
