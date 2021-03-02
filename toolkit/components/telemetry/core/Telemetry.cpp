@@ -73,7 +73,6 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
-#include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #if defined(XP_WIN)
 #  include "nsUnicharUtils.h"
@@ -873,9 +872,9 @@ TelemetryImpl::GetLoadedModules(JSContext* cx, Promise** aPromise) {
     return result.StealNSResult();
   }
 
-  nsCOMPtr<nsIThreadManager> tm = do_GetService(NS_THREADMANAGER_CONTRACTID);
   nsCOMPtr<nsIThread> getModulesThread;
-  nsresult rv = tm->NewThread(0, 0, getter_AddRefs(getModulesThread));
+  nsresult rv =
+      NS_NewNamedThread("TelemetryModule", getter_AddRefs(getModulesThread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_FAILURE);
     return NS_OK;
