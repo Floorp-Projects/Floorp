@@ -16,6 +16,8 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadEventChannelParent, override)
 
   static already_AddRefed<GamepadEventChannelParent> Create();
+
+  bool ActorInit();
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvVibrateHaptic(
@@ -41,7 +43,6 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
   GamepadEventChannelParent();
   ~GamepadEventChannelParent() = default;
 
-  bool mIsShutdown;
   nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 };
 
