@@ -610,59 +610,6 @@ ipc::IPCResult WebGPUChild::RecvDropAction(const ipc::ByteBuf& aByteBuf) {
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUChild::RecvFreeAdapter(RawId id) {
-  ffi::wgpu_client_kill_adapter_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeDevice(RawId id) {
-  ffi::wgpu_client_kill_device_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreePipelineLayout(RawId id) {
-  ffi::wgpu_client_kill_pipeline_layout_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeShaderModule(RawId id) {
-  ffi::wgpu_client_kill_shader_module_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeBindGroupLayout(RawId id) {
-  ffi::wgpu_client_kill_bind_group_layout_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeBindGroup(RawId id) {
-  ffi::wgpu_client_kill_bind_group_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeCommandBuffer(RawId id) {
-  ffi::wgpu_client_kill_encoder_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeRenderPipeline(RawId id) {
-  ffi::wgpu_client_kill_render_pipeline_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeComputePipeline(RawId id) {
-  ffi::wgpu_client_kill_compute_pipeline_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeBuffer(RawId id) {
-  ffi::wgpu_client_kill_buffer_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeTexture(RawId id) {
-  ffi::wgpu_client_kill_texture_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeTextureView(RawId id) {
-  ffi::wgpu_client_kill_texture_view_id(mClient, id);
-  return IPC_OK();
-}
-ipc::IPCResult WebGPUChild::RecvFreeSampler(RawId id) {
-  ffi::wgpu_client_kill_sampler_id(mClient, id);
-  return IPC_OK();
-}
-
 void WebGPUChild::DeviceCreateSwapChain(RawId aSelfId,
                                         const RGBDescriptor& aRgbDesc,
                                         size_t maxBufferCount,
