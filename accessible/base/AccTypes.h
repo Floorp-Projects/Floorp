@@ -86,8 +86,11 @@ enum AccGenericType {
   eTableCell = 1 << 13,
   eTableRow = 1 << 14,
   eText = 1 << 15,
+  eNumericValue = 1 << 16,
+  eActionable = 1 << 17,  // This is for remote accessibles
 
-  eLastAccGenericType = eText
+  eLastAccGenericType = eActionable,
+  eAllGenericTypes = (eLastAccGenericType << 1) - 1
 };
 
 }  // namespace a11y

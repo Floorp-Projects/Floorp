@@ -52,7 +52,7 @@ inline bool LocalAccessible::IsSearchbox() const {
 }
 
 inline bool LocalAccessible::NativeHasNumericValue() const {
-  return mStateFlags & eHasNumericValue;
+  return mGenericTypes & eNumericValue;
 }
 
 inline bool LocalAccessible::ARIAHasNumericValue() const {

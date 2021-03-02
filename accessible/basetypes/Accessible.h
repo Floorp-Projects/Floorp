@@ -41,7 +41,7 @@ class Accessible {
 
  private:
   static const uint8_t kTypeBits = 6;
-  static const uint8_t kGenericTypesBits = 16;
+  static const uint8_t kGenericTypesBits = 18;
 
   void StaticAsserts() const;
 
