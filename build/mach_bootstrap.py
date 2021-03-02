@@ -4,15 +4,11 @@
 
 from __future__ import division, print_function, unicode_literals
 
-import errno
-import json
 import math
 import os
 import platform
 import shutil
-import subprocess
 import sys
-import uuid
 
 if sys.version_info[0] < 3:
     import __builtin__ as builtins
@@ -318,9 +314,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         _finalize_telemetry_glean(
             context.telemetry, handler.name == "bootstrap", success
         )
-        _finalize_telemetry_legacy(
-            context, instance, handler, success, start_time, end_time, topsrcdir
-        )
 
     def populate_context(key=None):
         if key is None:
@@ -394,96 +387,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                 raise
 
     return driver
-
-
-def _finalize_telemetry_legacy(
-    context, instance, handler, success, start_time, end_time, topsrcdir
-):
-    """Record and submit legacy telemetry.
-
-    Parameterized by the raw gathered telemetry, this function handles persisting and
-    submission of the data.
-
-    This has been designated as "legacy" telemetry because modern telemetry is being
-    submitted with "Glean".
-    """
-    from mozboot.util import get_state_dir
-    from mozbuild.base import MozbuildObject
-    from mozbuild.telemetry import gather_telemetry
-    from mach.telemetry import is_telemetry_enabled, is_applicable_telemetry_environment
-
-    if not (
-        is_applicable_telemetry_environment() and is_telemetry_enabled(context.settings)
-    ):
-        return
-
-    if not isinstance(instance, MozbuildObject):
-        instance = MozbuildObject.from_environment()
-
-    command_attrs = getattr(context, "command_attrs", {})
-
-    # We gather telemetry for every operation.
-    data = gather_telemetry(
-        command=handler.name,
-        success=success,
-        start_time=start_time,
-        end_time=end_time,
-        mach_context=context,
-        instance=instance,
-        command_attrs=command_attrs,
-    )
-    if data:
-        telemetry_dir = os.path.join(get_state_dir(), "telemetry")
-        try:
-            os.mkdir(telemetry_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        outgoing_dir = os.path.join(telemetry_dir, "outgoing")
-        try:
-            os.mkdir(outgoing_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-        with open(os.path.join(outgoing_dir, str(uuid.uuid4()) + ".json"), "w") as f:
-            json.dump(data, f, sort_keys=True)
-
-    # The user is performing a maintenance command, skip the upload
-    if handler.name in (
-        "bootstrap",
-        "doctor",
-        "mach-commands",
-        "vcs-setup",
-        "create-mach-environment",
-        "install-moz-phab",
-        # We call mach environment in client.mk which would cause the
-        # data submission to block the forward progress of make.
-        "environment",
-    ):
-        return False
-
-    if "TEST_MACH_TELEMETRY_NO_SUBMIT" in os.environ:
-        # In our telemetry tests, we want telemetry to be collected for analysis, but
-        # we don't want it submitted.
-        return False
-
-    state_dir = get_state_dir()
-
-    machpath = os.path.join(instance.topsrcdir, "mach")
-    with open(os.devnull, "wb") as devnull:
-        subprocess.Popen(
-            [
-                sys.executable,
-                machpath,
-                "python",
-                "--no-virtualenv",
-                os.path.join(topsrcdir, "build", "submit_telemetry_data.py"),
-                state_dir,
-            ],
-            stdout=devnull,
-            stderr=devnull,
-        )
 
 
 def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
