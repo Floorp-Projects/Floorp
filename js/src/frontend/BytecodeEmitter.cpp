@@ -72,6 +72,7 @@
 #include "vm/JSFunction.h"          // JSFunction,
 #include "vm/JSScript.h"  // JSScript, ScriptSourceObject, MemberInitializers, BaseScript
 #include "vm/Opcodes.h"        // JSOp, JSOpLength_*
+#include "vm/Scope.h"          // GetScopeDataTrailingNames
 #include "vm/SharedStencil.h"  // ScopeNote
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind
 #include "vm/WellKnownAtom.h"  // js_*_str
@@ -10401,7 +10402,8 @@ bool BytecodeEmitter::emitClass(
     // The constructor scope should only contain the |.initializers| binding.
     MOZ_ASSERT(!constructorScope->isEmptyScope());
     MOZ_ASSERT(constructorScope->scopeBindings()->length == 1);
-    MOZ_ASSERT(constructorScope->scopeBindings()->trailingNames[0].name() ==
+    MOZ_ASSERT(GetScopeDataTrailingNames(constructorScope->scopeBindings())[0]
+                   .name() ==
                TaggedParserAtomIndex::WellKnown::dotInitializers());
 
     auto needsInitializer = [](ParseNode* propdef) {

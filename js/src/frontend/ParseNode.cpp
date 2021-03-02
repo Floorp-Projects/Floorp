@@ -18,6 +18,7 @@
 #include "vm/BigIntType.h"
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"
+#include "vm/Scope.h"  // GetScopeDataTrailingNames
 
 using namespace js;
 using namespace js::frontend;
@@ -363,8 +364,9 @@ void LexicalScopeNode::dumpImpl(ParserBase* parser, GenericPrinter& out,
   int nameIndent = indent + strlen(name) + 3;
   if (!isEmptyScope()) {
     LexicalScope::ParserData* bindings = scopeBindings();
-    for (uint32_t i = 0; i < bindings->length; i++) {
-      auto index = bindings->trailingNames[i].name();
+    auto names = GetScopeDataTrailingNames(bindings);
+    for (uint32_t i = 0; i < names.size(); i++) {
+      auto index = names[i].name();
       if (parser) {
         if (index == TaggedParserAtomIndex::WellKnown::empty()) {
           out.put("#<zero-length name>");
@@ -374,7 +376,7 @@ void LexicalScopeNode::dumpImpl(ParserBase* parser, GenericPrinter& out,
       } else {
         DumpTaggedParserAtomIndexNoQuote(out, index, nullptr);
       }
-      if (i < bindings->length - 1) {
+      if (i < names.size() - 1) {
         IndentNewLine(out, nameIndent);
       }
     }
