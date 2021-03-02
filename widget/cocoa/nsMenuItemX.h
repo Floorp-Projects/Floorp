@@ -62,7 +62,7 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
   void SetupIcon();
 
  protected:
-  void UncheckRadioSiblings(nsIContent* inCheckedElement);
+  void UncheckRadioSiblings(nsIContent* aCheckedElement);
   void SetKeyEquiv();
 
   EMenuItemType mType;

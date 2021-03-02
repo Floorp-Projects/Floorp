@@ -23,7 +23,7 @@ uint8_t GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute);
 unsigned int MacModifiersForGeckoModifiers(uint8_t geckoModifiers);
 nsMenuBarX* GetHiddenWindowMenuBar();   // returned object is not retained
 NSMenuItem* GetStandardEditMenuItem();  // returned object is not retained
-bool NodeIsHiddenOrCollapsed(nsIContent* inContent);
+bool NodeIsHiddenOrCollapsed(nsIContent* aContent);
 int CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild);
 
 // Find the menu item by following the path aLocationString from aRootMenu.
