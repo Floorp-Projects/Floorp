@@ -69,9 +69,6 @@ jobs:
         symbol: I(toolchain)
         parent: debian8-base
         definition: toolchain-build
-        packages:
-            - deb8-cmake
-            - deb8-ninja
     deb10-toolchain-build:
         symbol: I(deb10-toolchain)
         parent: debian10-base
