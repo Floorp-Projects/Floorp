@@ -144,12 +144,6 @@ class HyperTextAccessible : public AccessibleWrap {
    */
   DOMPoint OffsetToDOMPoint(int32_t aOffset) const;
 
-  /**
-   * Return true if the used ARIA role (if any) allows the hypertext accessible
-   * to expose text interfaces.
-   */
-  bool IsTextRole();
-
   //////////////////////////////////////////////////////////////////////////////
   // TextAccessible
 

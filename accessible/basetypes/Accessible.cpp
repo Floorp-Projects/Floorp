@@ -45,3 +45,20 @@ bool Accessible::HasGenericType(AccGenericType aType) const {
   return (mGenericTypes & aType) ||
          (roleMapEntry && roleMapEntry->IsOfType(aType));
 }
+
+bool Accessible::IsTextRole() {
+  if (!IsHyperText()) {
+    return false;
+  }
+
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry && (roleMapEntry->role == roles::GRAPHIC ||
+                       roleMapEntry->role == roles::IMAGE_MAP ||
+                       roleMapEntry->role == roles::SLIDER ||
+                       roleMapEntry->role == roles::PROGRESSBAR ||
+                       roleMapEntry->role == roles::SEPARATOR)) {
+    return false;
+  }
+
+  return true;
+}
