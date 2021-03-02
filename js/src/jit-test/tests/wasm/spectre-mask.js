@@ -23,16 +23,16 @@ var ins = wasmEvalText(`
 
 switch (wasmCompileMode()) {
 case "ion":
-    assertEq(wasmDis(ins.exports.wasm2wasm, 'stable', true).match(/call.*\n.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.wasm2import, 'stable', true).match(/call.*\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.wasmIndirect, 'stable', true).match(/call.*\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.instanceCall, 'stable', true).match(/call.*\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasm2wasm, {tier:'stable', asString:true}).match(/call.*\n.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasm2import, {tier:'stable', asString:true}).match(/call.*\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasmIndirect, {tier:'stable', asString:true}).match(/call.*\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.instanceCall, {tier:'stable', asString:true}).match(/call.*\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
     break;
 case "baseline":
-    assertEq(wasmDis(ins.exports.wasm2wasm, 'stable', true).match(/call.*\n.*add.*%rsp\n.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.wasm2import, 'stable', true).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.wasmIndirect, 'stable', true).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
-    assertEq(wasmDis(ins.exports.instanceCall, 'stable', true).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasm2wasm, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasm2import, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.wasmIndirect, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
+    assertEq(wasmDis(ins.exports.instanceCall, {tier:'stable', asString:true}).match(/call.*\n.*add.*%rsp\n(?:.*movq.*\n)*.*mov %eax, %eax/).length, 1);
     break;
 default:
     throw "Unexpected compile mode";

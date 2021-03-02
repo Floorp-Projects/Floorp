@@ -25,6 +25,7 @@
 
 #include "jsnum.h"
 
+#include "jit/Disassemble.h"
 #include "jit/ExecutableAllocator.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
@@ -1534,6 +1535,65 @@ uint8_t* Code::serialize(uint8_t* cursor, const LinkData& linkData) const {
 
   *out = code;
   return cursor;
+}
+
+void Code::disassemble(JSContext* cx, Tier tier, int kindSelection,
+                       PrintCallback printString) const {
+  const MetadataTier& metadataTier = metadata(tier);
+  const CodeTier& codeTier = this->codeTier(tier);
+  const ModuleSegment& segment = codeTier.segment();
+
+  for (const CodeRange& range : metadataTier.codeRanges) {
+    if (kindSelection & (1 << range.kind())) {
+      MOZ_ASSERT(range.begin() < segment.length());
+      MOZ_ASSERT(range.end() < segment.length());
+
+      const char* kind;
+      char kindbuf[128];
+      switch (range.kind()) {
+        case CodeRange::Function:
+          kind = "Function";
+          break;
+        case CodeRange::InterpEntry:
+          kind = "InterpEntry";
+          break;
+        case CodeRange::JitEntry:
+          kind = "JitEntry";
+          break;
+        case CodeRange::ImportInterpExit:
+          kind = "ImportInterpExit";
+          break;
+        case CodeRange::ImportJitExit:
+          kind = "ImportJitExit";
+          break;
+        default:
+          SprintfLiteral(kindbuf, "CodeRange::Kind(%d)", range.kind());
+          kind = kindbuf;
+          break;
+      }
+      const char* separator =
+          "\n--------------------------------------------------\n";
+      // The buffer is quite large in order to accomodate mangled C++ names;
+      // lengths over 3500 have been observed in the wild.
+      char buf[4096];
+      if (range.hasFuncIndex()) {
+        const char* funcName = "(unknown)";
+        UTF8Bytes namebuf;
+        if (metadata().getFuncNameStandalone(range.funcIndex(), &namebuf) &&
+            namebuf.append('\0')) {
+          funcName = namebuf.begin();
+        }
+        SprintfLiteral(buf, "%sKind = %s, index = %d, name = %s:\n", separator,
+                       kind, range.funcIndex(), funcName);
+      } else {
+        SprintfLiteral(buf, "%sKind = %s\n", separator, kind);
+      }
+      printString(buf);
+
+      uint8_t* theCode = segment.base() + range.begin();
+      jit::Disassemble(theCode, range.end() - range.begin(), printString);
+    }
+  }
 }
 
 void wasm::PatchDebugSymbolicAccesses(uint8_t* codeBase, MacroAssembler& masm) {
