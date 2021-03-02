@@ -197,7 +197,8 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(HasMainMediaController, bool)                                         \
   /* The number of entries added to the session history because of this       \
    * browsing context. */                                                     \
-  FIELD(HistoryEntryCount, uint32_t)
+  FIELD(HistoryEntryCount, uint32_t)                                          \
+  FIELD(IsInBFCache, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -1034,6 +1035,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_FullZoom>, float aOldValue);
   void DidSet(FieldIndex<IDX_TextZoom>, float aOldValue);
   void DidSet(FieldIndex<IDX_AuthorStyleDisabledDefault>);
+
+  bool CanSet(FieldIndex<IDX_IsInBFCache>, bool, ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_IsInBFCache>);
 
   // True if the process attemping to set field is the same as the owning
   // process. Deprecated. New code that might use this should generally be moved

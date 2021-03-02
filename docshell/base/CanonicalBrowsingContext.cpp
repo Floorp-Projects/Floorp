@@ -24,6 +24,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/MozPromiseInlines.h"
 #include "nsDocShell.h"
@@ -158,7 +159,8 @@ void CanonicalBrowsingContext::MaybeAddAsProgressListener(
 
 void CanonicalBrowsingContext::ReplacedBy(CanonicalBrowsingContext* aNewContext,
                                           const RemotenessChangeState& aState) {
-  MOZ_ASSERT(!aNewContext->EverAttached());
+  MOZ_ASSERT(!aNewContext->mWebProgress);
+  MOZ_ASSERT(!aNewContext->mSessionHistory);
   MOZ_ASSERT(IsTop() && aNewContext->IsTop());
   if (mStatusFilter) {
     mStatusFilter->RemoveProgressListener(mWebProgress);
@@ -170,8 +172,20 @@ void CanonicalBrowsingContext::ReplacedBy(CanonicalBrowsingContext* aNewContext,
   aNewContext->mFields.SetWithoutSyncing<IDX_ExplicitActive>(
       GetExplicitActive());
 
+  // XXXBFCache name handling is still a bit broken in Fission in general,
+  // at least in case name should be cleared.
+  if (aState.mTryUseBFCache) {
+    aNewContext->mFields.SetWithoutSyncing<IDX_Name>(GetName());
+    aNewContext->mFields.SetWithoutSyncing<IDX_HasLoadedNonInitialDocument>(
+        GetHasLoadedNonInitialDocument());
+  }
+
   if (mSessionHistory) {
     mSessionHistory->SetBrowsingContext(aNewContext);
+    if (StaticPrefs::fission_bfcacheInParent()) {
+      // XXXBFCache Should we clear the epoch always?
+      mSessionHistory->SetEpoch(0, Nothing());
+    }
     mSessionHistory.swap(aNewContext->mSessionHistory);
     RefPtr<ChildSHistory> childSHistory = ForgetChildSHistory();
     aNewContext->SetChildSHistory(childSHistory);
@@ -305,6 +319,11 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
 
 SessionHistoryEntry* CanonicalBrowsingContext::GetActiveSessionHistoryEntry() {
   return mActiveEntry;
+}
+
+void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
+    SessionHistoryEntry* aEntry) {
+  mActiveEntry = aEntry;
 }
 
 bool CanonicalBrowsingContext::HasHistoryEntry(nsISHEntry* aEntry) {
@@ -1511,6 +1530,12 @@ bool CanonicalBrowsingContext::SupportsLoadingInParent(
     return false;
   }
 
+  // Session-history-in-parent implementation relies currently on getting a
+  // round trip through a child process.
+  if (aLoadState->LoadIsFromSessionHistory()) {
+    return false;
+  }
+
   // DocumentChannel currently only supports connecting channels into the
   // content process, so we can only support schemes that will always be loaded
   // there for now. Restrict to just http(s) for simplicity.
@@ -1581,12 +1606,6 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
 
   uint64_t outerWindowId = 0;
   if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
-    return false;
-  }
-
-  // Session-history-in-parent implementation relies currently on getting a
-  // round trip through a child process.
-  if (aLoadState->LoadIsFromSessionHistory()) {
     return false;
   }
 

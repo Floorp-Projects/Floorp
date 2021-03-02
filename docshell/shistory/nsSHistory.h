@@ -154,6 +154,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   };
 
   static void LoadURIs(nsTArray<LoadEntryResult>& aLoadResults);
+  static void LoadURIOrBFCache(LoadEntryResult& aLoadEntry);
 
   // If this doesn't return an error then either aLoadResult is set to nothing,
   // in which case the caller should ignore the load, or it returns a valid
