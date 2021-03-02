@@ -62,37 +62,39 @@ void MediaStatusManager::NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
 }
 
 void MediaStatusManager::NotifySessionCreated(uint64_t aBrowsingContextId) {
-  if (mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
-    return;
-  }
+  const bool created = mMediaSessionInfoMap.WithEntryHandle(
+      aBrowsingContextId, [&](auto&& entry) {
+        if (entry) return false;
 
-  LOG("Session %" PRIu64 " has been created", aBrowsingContextId);
-  mMediaSessionInfoMap.InsertOrUpdate(aBrowsingContextId,
-                                      MediaSessionInfo::EmptyInfo());
-  if (IsSessionOwningAudioFocus(aBrowsingContextId)) {
+        LOG("Session %" PRIu64 " has been created", aBrowsingContextId);
+        entry.Insert(MediaSessionInfo::EmptyInfo());
+        return true;
+      });
+
+  if (created && IsSessionOwningAudioFocus(aBrowsingContextId)) {
+    // This can't be done from within the WithEntryHandle functor, since it
+    // accesses mMediaSessionInfoMap.
     SetActiveMediaSessionContextId(aBrowsingContextId);
   }
 }
 
 void MediaStatusManager::NotifySessionDestroyed(uint64_t aBrowsingContextId) {
-  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
-    return;
-  }
-  LOG("Session %" PRIu64 " has been destroyed", aBrowsingContextId);
-  mMediaSessionInfoMap.Remove(aBrowsingContextId);
-  if (mActiveMediaSessionContextId &&
-      *mActiveMediaSessionContextId == aBrowsingContextId) {
-    ClearActiveMediaSessionContextIdIfNeeded();
+  if (mMediaSessionInfoMap.Remove(aBrowsingContextId)) {
+    LOG("Session %" PRIu64 " has been destroyed", aBrowsingContextId);
+
+    if (mActiveMediaSessionContextId &&
+        *mActiveMediaSessionContextId == aBrowsingContextId) {
+      ClearActiveMediaSessionContextIdIfNeeded();
+    }
   }
 }
 
 void MediaStatusManager::UpdateMetadata(
     uint64_t aBrowsingContextId, const Maybe<MediaMetadataBase>& aMetadata) {
-  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
+  if (!info) {
     return;
   }
-
-  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
   if (IsMetadataEmpty(aMetadata)) {
     LOG("Reset metadata for session %" PRIu64, aBrowsingContextId);
     info->mMetadata.reset();
@@ -260,10 +262,10 @@ nsString MediaStatusManager::GetDefaultFaviconURL() const {
 
 void MediaStatusManager::SetDeclaredPlaybackState(
     uint64_t aBrowsingContextId, MediaSessionPlaybackState aState) {
-  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
+  if (!info) {
     return;
   }
-  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
   LOG("SetDeclaredPlaybackState from %s to %s",
       ToMediaSessionPlaybackStateStr(info->mDeclaredPlaybackState),
       ToMediaSessionPlaybackStateStr(aState));
@@ -327,10 +329,10 @@ void MediaStatusManager::UpdateActualPlaybackState() {
 
 void MediaStatusManager::EnableAction(uint64_t aBrowsingContextId,
                                       MediaSessionAction aAction) {
-  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
+  if (!info) {
     return;
   }
-  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
   if (info->IsActionSupported(aAction)) {
     LOG("Action '%s' has already been enabled for context %" PRIu64,
         ToMediaSessionActionStr(aAction), aBrowsingContextId);
@@ -344,10 +346,10 @@ void MediaStatusManager::EnableAction(uint64_t aBrowsingContextId,
 
 void MediaStatusManager::DisableAction(uint64_t aBrowsingContextId,
                                        MediaSessionAction aAction) {
-  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
+  if (!info) {
     return;
   }
-  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
   if (!info->IsActionSupported(aAction)) {
     LOG("Action '%s' hasn't been enabled yet for context %" PRIu64,
         ToMediaSessionActionStr(aAction), aBrowsingContextId);
