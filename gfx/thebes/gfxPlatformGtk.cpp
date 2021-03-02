@@ -107,21 +107,9 @@ gfxPlatformGtk::gfxPlatformGtk() {
     }
 #endif
 
-    bool useEGLOnX11 = false;
-#ifdef MOZ_X11
-    useEGLOnX11 =
-        StaticPrefs::gfx_prefer_x11_egl_AtStartup() || IsX11EGLEnvvarEnabled();
-    if (useEGLOnX11) {
-      nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-      nsAutoString testType;
-      gfxInfo->GetTestType(testType);
-      // We can only use X11/EGL if we actually found the EGL library and
-      // successfully use it to determine system information in glxtest.
-      useEGLOnX11 = testType == u"EGL";
-    }
+    InitX11EGLConfig();
 
-#endif
-    if (IsWaylandDisplay() || useEGLOnX11) {
+    if (IsWaylandDisplay() || gfxConfig::IsEnabled(Feature::X11_EGL)) {
       gfxVars::SetUseEGL(true);
 
       nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -152,6 +140,46 @@ gfxPlatformGtk::gfxPlatformGtk() {
 gfxPlatformGtk::~gfxPlatformGtk() {
   Factory::ReleaseFTLibrary(gPlatformFTLibrary);
   gPlatformFTLibrary = nullptr;
+}
+
+void gfxPlatformGtk::InitX11EGLConfig() {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::X11_EGL);
+#ifdef MOZ_X11
+  feature.EnableByDefault();
+
+  if (StaticPrefs::gfx_x11_egl_force_enabled_AtStartup()) {
+    feature.UserForceEnable("Force enabled by pref");
+  } else if (IsX11EGLEnvvarEnabled()) {
+    feature.UserForceEnable("Force enabled by envvar");
+  } else if (StaticPrefs::gfx_x11_egl_force_disabled_AtStartup()) {
+    feature.UserDisable("Force disabled by pref",
+                        "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
+  }
+
+  nsCString failureId;
+  int32_t status;
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+  if (NS_FAILED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_X11_EGL,
+                                          failureId, &status))) {
+    feature.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
+                    "FEATURE_FAILURE_NO_GFX_INFO"_ns);
+  } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+    feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
+                    failureId);
+  }
+
+  nsAutoString testType;
+  gfxInfo->GetTestType(testType);
+  // We can only use X11/EGL if we actually found the EGL library and
+  // successfully use it to determine system information in glxtest.
+  if (testType != u"EGL") {
+    feature.ForceDisable(FeatureStatus::Broken, "glxtest could not use EGL",
+                         "FEATURE_FAILURE_GLXTEST_NO_EGL"_ns);
+  }
+#else
+  feature.DisableByDefault(FeatureStatus::Unavailable, "X11 support missing",
+                           "FEATURE_FAILURE_NO_X11"_ns);
+#endif
 }
 
 void gfxPlatformGtk::FlushContentDrawing() {
