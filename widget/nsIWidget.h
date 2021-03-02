@@ -1700,6 +1700,11 @@ class nsIWidget : public nsISupports {
                                             bool aLongTap,
                                             nsIObserver* aObserver);
 
+  virtual nsresult SynthesizeNativePenInput(
+      uint32_t aPointerId, TouchPointerState aPointerState,
+      LayoutDeviceIntPoint aPoint, double aPressure, uint32_t aRotation,
+      int32_t aTiltX, int32_t aTiltY, nsIObserver* aObserver) = 0;
+
   /*
    * Cancels all active simulated touch input points and pending long taps.
    * Native widgets should track existing points such that they can clear the

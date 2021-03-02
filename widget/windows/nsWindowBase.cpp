@@ -61,8 +61,7 @@ bool nsWindowBase::InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
     return false;
   }
 
-  POINTER_TOUCH_INFO info;
-  memset(&info, 0, sizeof(POINTER_TOUCH_INFO));
+  POINTER_TOUCH_INFO info{};
 
   info.touchFlags = TOUCH_FLAG_NONE;
   info.touchMask =
@@ -231,6 +230,109 @@ nsresult nsWindowBase::ClearNativeTouchSequence(nsIObserver* aObserver) {
 
   return NS_OK;
 }
+
+#if !defined(NTDDI_WIN10_RS5) || (NTDDI_VERSION < NTDDI_WIN10_RS5)
+static CreateSyntheticPointerDevicePtr CreateSyntheticPointerDevice;
+static DestroySyntheticPointerDevicePtr DestroySyntheticPointerDevice;
+static InjectSyntheticPointerInputPtr InjectSyntheticPointerInput;
+#endif
+static HSYNTHETICPOINTERDEVICE sSyntheticPenDevice;
+
+static bool InitPenInjection() {
+  if (sSyntheticPenDevice) {
+    return true;
+  }
+#if !defined(NTDDI_WIN10_RS5) || (NTDDI_VERSION < NTDDI_WIN10_RS5)
+  HMODULE hMod = LoadLibraryW(kUser32LibName);
+  if (!hMod) {
+    return false;
+  }
+  CreateSyntheticPointerDevice =
+      (CreateSyntheticPointerDevicePtr)GetProcAddress(
+          hMod, "CreateSyntheticPointerDevice");
+  if (!CreateSyntheticPointerDevice) {
+    WinUtils::Log("CreateSyntheticPointerDevice not available.");
+    return false;
+  }
+  DestroySyntheticPointerDevice =
+      (DestroySyntheticPointerDevicePtr)GetProcAddress(
+          hMod, "DestroySyntheticPointerDevice");
+  if (!DestroySyntheticPointerDevice) {
+    WinUtils::Log("DestroySyntheticPointerDevice not available.");
+    return false;
+  }
+  InjectSyntheticPointerInput = (InjectSyntheticPointerInputPtr)GetProcAddress(
+      hMod, "InjectSyntheticPointerInput");
+  if (!InjectSyntheticPointerInput) {
+    WinUtils::Log("InjectSyntheticPointerInput not available.");
+    return false;
+  }
+#endif
+  sSyntheticPenDevice =
+      CreateSyntheticPointerDevice(PT_PEN, 1, POINTER_FEEDBACK_DEFAULT);
+  return !!sSyntheticPenDevice;
+}
+
+nsresult nsWindowBase::SynthesizeNativePenInput(
+    uint32_t aPointerId, nsIWidget::TouchPointerState aPointerState,
+    LayoutDeviceIntPoint aPoint, double aPressure, uint32_t aRotation,
+    int32_t aTiltX, int32_t aTiltY, nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "peninput");
+  if (!InitPenInjection()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // win api expects a value from 0 to 1024. aPointerPressure is a value
+  // from 0.0 to 1.0.
+  uint32_t pressure = (uint32_t)ceil(aPressure * 1024);
+
+  // If we already know about this pointer id get it's record
+  return mActivePointers.WithEntryHandle(aPointerId, [&](auto&& entry) {
+    POINTER_FLAGS flags;
+    // Can't use MOZ_TRY_VAR because it confuses WithEntryHandle
+    auto result = PointerStateToFlag(aPointerState, !!entry);
+    if (result.isOk()) {
+      flags = result.unwrap();
+    } else {
+      return result.unwrapErr();
+    }
+
+    if (!entry) {
+      entry.Insert(MakeUnique<PointerInfo>(aPointerId, aPoint,
+                                           PointerInfo::PointerType::PEN));
+    } else {
+      if (entry.Data()->mType != PointerInfo::PointerType::PEN) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (aPointerState & TOUCH_REMOVE) {
+        // Remove the pointer from our tracking list. This is UniquePtr wrapped,
+        // so shouldn't leak.
+        entry.Remove();
+      }
+    }
+
+    POINTER_TYPE_INFO info{};
+
+    info.type = PT_PEN;
+    info.penInfo.pointerInfo.pointerType = PT_PEN;
+    info.penInfo.pointerInfo.pointerFlags = flags;
+    info.penInfo.pointerInfo.pointerId = aPointerId;
+    info.penInfo.pointerInfo.ptPixelLocation.x = aPoint.x;
+    info.penInfo.pointerInfo.ptPixelLocation.y = aPoint.y;
+
+    info.penInfo.penFlags = PEN_FLAG_NONE;
+    info.penInfo.penMask = PEN_MASK_PRESSURE | PEN_MASK_ROTATION |
+                           PEN_MASK_TILT_X | PEN_MASK_TILT_Y;
+    info.penInfo.pressure = pressure;
+    info.penInfo.rotation = aRotation;
+    info.penInfo.tiltX = aTiltX;
+    info.penInfo.tiltY = aTiltY;
+
+    return InjectSyntheticPointerInput(sSyntheticPenDevice, &info, 1)
+               ? NS_OK
+               : NS_ERROR_UNEXPECTED;
+  });
+};
 
 bool nsWindowBase::HandleAppCommandMsg(const MSG& aAppCommandMsg,
                                        LRESULT* aRetValue) {
