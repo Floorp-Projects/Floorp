@@ -492,7 +492,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
       SingleTouchData(0, touchPoint, ScreenSize(0, 0), 0, 0));
 
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault,
-            manager->ReceiveInputEvent(mti).mStatus);
+            manager->ReceiveInputEvent(mti).GetStatus());
   EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
   check.Call("post-first-touch-start");
 
@@ -517,13 +517,13 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   // a repaint
   mti.mType = MultiTouchInput::MULTITOUCH_START;
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault,
-            manager->ReceiveInputEvent(mti).mStatus);
+            manager->ReceiveInputEvent(mti).GetStatus());
   EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
   check.Call("post-second-touch-start");
 
   mti.mType = MultiTouchInput::MULTITOUCH_END;
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault,
-            manager->ReceiveInputEvent(mti).mStatus);
+            manager->ReceiveInputEvent(mti).GetStatus());
   EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
 }
 
@@ -544,7 +544,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
                          ScrollWheelInput::SCROLLDELTA_PIXEL, origin, 0, 10,
                          false, WheelDeltaAdjustmentStrategy::eNone);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault,
-              manager->ReceiveInputEvent(swi).mStatus);
+              manager->ReceiveInputEvent(swi).GetStatus());
     EXPECT_EQ(origin, swi.mOrigin);
 
     AsyncTransform viewTransform;
@@ -572,7 +572,7 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
                        ScrollWheelInput::SCROLLDELTA_PIXEL, origin, 0, 10,
                        false, WheelDeltaAdjustmentStrategy::eNone);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault,
-            manager->ReceiveInputEvent(swi).mStatus);
+            manager->ReceiveInputEvent(swi).GetStatus());
   EXPECT_EQ(origin, swi.mOrigin);
 
   AsyncTransform viewTransform;
@@ -603,7 +603,7 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
                          ScrollWheelInput::SCROLLDELTA_PIXEL, origin, 0, 0,
                          false, WheelDeltaAdjustmentStrategy::eNone);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault,
-            manager->ReceiveInputEvent(swi).mStatus);
+            manager->ReceiveInputEvent(swi).GetStatus());
   EXPECT_EQ(origin, swi.mOrigin);
 }
 
