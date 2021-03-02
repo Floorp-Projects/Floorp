@@ -19,7 +19,7 @@ const TEST_DATA = [
     id: 1,
     url: `${TEST_URL}?q=frabbits`,
     title: "frabbits",
-    keywords: ["frab"],
+    keywords: ["fra", "frab"],
     click_url: "http://click.reporting.test.com/",
     impression_url: "http://impression.reporting.test.com/",
     advertiser: "TestAdvertiser",
@@ -155,13 +155,23 @@ add_task(async function init() {
 });
 
 add_task(async function basic_test() {
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, ABOUT_BLANK);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "frab",
+    value: "fra",
   });
   await assertIsQuickSuggest({ index: 1 });
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  Assert.equal(
+    row.querySelector(".urlbarView-title").firstChild.textContent,
+    "fra",
+    "The part of the keyword that matches users input is not bold."
+  );
+  Assert.equal(
+    row.querySelector(".urlbarView-title > strong").textContent,
+    "b",
+    "The auto completed section of the keyword is bolded."
+  );
+  await UrlbarTestUtils.promisePopupClose(window);
 });
 
 add_task(async function test_case_insensitive() {
