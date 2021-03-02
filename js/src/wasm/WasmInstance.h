@@ -175,7 +175,7 @@ class Instance {
   // Wasm disassembly support
 
   void disassembleExport(JSContext* cx, uint32_t funcIndex, Tier tier,
-                         PrintCallback callback) const;
+                         PrintCallback printString) const;
 
  public:
   // Functions to be called directly from wasm code.
