@@ -348,6 +348,9 @@ void gc::GCRuntime::endVerifyPreBarriers() {
 
   bool compartmentCreated = false;
 
+  SliceBudget budget = SliceBudget::unlimited();
+  marker.traceBarrieredCells(budget);
+
   /* We need to disable barriers before tracing, which may invoke barriers. */
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     if (!zone->needsIncrementalBarrier()) {
