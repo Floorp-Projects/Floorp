@@ -60,20 +60,6 @@ jobs:
                 url: http://snapshot.debian.org/archive/debian/20170413T152542Z/pool/main/p/python-setuptools/python-setuptools_33.1.1-1%7Ebpo8%2B1.dsc
                 sha256: e5a152e45151ee2d19959d8266e9bff09f5164ee04a0613aeb8f1d7a304fa073
 
-    deb8-cmake:
-        description: "Cmake backport for Debian jessie"
-        treeherder:
-            symbol: Deb8(cmake)
-        worker:
-            env:
-                DEB_BUILD_PROFILES: stage1
-        run:
-            using: debian-package
-            dsc:
-                url: http://snapshot.debian.org/archive/debian/20200320T222820Z/pool/main/c/cmake/cmake_3.16.3-1%7Ebpo9%2B1.dsc
-                sha256: 714651ac6c974694eb3452f37a70624d3d786ac02fb8ea4eb8fddae44649105d
-            patch: cmake-jessie.diff
-
     deb10-cmake:
         description: "Cmake backport for Debian buster"
         treeherder:
