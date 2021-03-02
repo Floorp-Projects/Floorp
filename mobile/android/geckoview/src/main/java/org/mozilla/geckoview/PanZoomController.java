@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.SystemClock;
+import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 import androidx.annotation.IntDef;
@@ -136,19 +137,57 @@ public class PanZoomController {
     @WrapForJNI
     public static final int OVERSCROLL_FLAG_VERTICAL = 1 << 1;
 
+    /**
+     * Represents how a {@link MotionEvent} was handled in Gecko.
+     * This value can be used by browser apps to implement features like pull-to-refresh. Failing
+     * to account this value might break some websites expectations about touch events.
+     *
+     * For example, a {@link PanZoomController.InputResultDetail#handledResult} value of
+     * {@link PanZoomController#INPUT_RESULT_HANDLED} and
+     * {@link PanZoomController.InputResultDetail#overscrollDirections} of
+     * {@link PanZoomController#OVERSCROLL_FLAG_NONE} indicates that the event was consumed for a panning
+     * or zooming operation and that the website does not expect the browser to react to the touch
+     * event (say, by triggering the pull-to-refresh feature) even though the scroll container reached
+     * to the edge.
+     */
     @WrapForJNI
     public static class InputResultDetail {
-        protected InputResultDetail(final @InputResult int aHandledResult,
-                                    final @ScrollableDirections int aScrollableDirections,
-                                    final @OverscrollDirections int aOverscrollDirections) {
-            handledResult = aHandledResult;
-            scrollableDirections = aScrollableDirections;
-            overscrollDirections = aOverscrollDirections;
+        protected InputResultDetail(final @InputResult int handledResult,
+                                    final @ScrollableDirections int scrollableDirections,
+                                    final @OverscrollDirections int overscrollDirections) {
+            mHandledResult = handledResult;
+            mScrollableDirections = scrollableDirections;
+            mOverscrollDirections = overscrollDirections;
         }
 
-        public final @InputResult int handledResult;
-        public final @ScrollableDirections int scrollableDirections;
-        public final @OverscrollDirections int overscrollDirections;
+        /**
+         * @return One of the {@link #INPUT_RESULT_UNHANDLED INPUT_RESULT_*} indicating how
+         * the event was handled.
+         */
+        @AnyThread
+        public @InputResult int handledResult() {
+            return mHandledResult;
+        }
+        /**
+         * @return an OR-ed value of {@link #SCROLLABLE_FLAG_NONE SCROLLABLE_FLAG_*} indicating which
+         * directions can be scrollable.
+         */
+        @AnyThread
+        public @ScrollableDirections int scrollableDirections() {
+            return mScrollableDirections;
+        }
+        /**
+         * @return an OR-ed value of {@link #OVERSCROLL_FLAG_NONE OVERSCROLL_FLAG_*} indicating which
+         * directions can be over-scrollable.
+         */
+        @AnyThread
+        public @OverscrollDirections int overscrollDirections() {
+            return mOverscrollDirections;
+        }
+
+        private final @InputResult int mHandledResult;
+        private final @ScrollableDirections int mScrollableDirections;
+        private final @OverscrollDirections int mOverscrollDirections;
     }
 
     private SynthesizedEventState mPointerState;
@@ -474,16 +513,35 @@ public class PanZoomController {
      *         {@link PanZoomController#INPUT_RESULT_UNHANDLED INPUT_RESULT_*}) constants indicating
      *         how the event was handled.
      */
+    @Deprecated @DeprecationSchedule(version = 90, id = "on-touch-event-for-result")
     public @NonNull GeckoResult<Integer> onTouchEventForResult(final @NonNull MotionEvent event) {
+        return onTouchEventForDetailResult(event).map(detail -> detail.handledResult());
+    }
+
+    /**
+     * Process a touch event through the pan-zoom controller. Treat any mouse events as
+     * "touch" rather than as "mouse". Pointer coordinates should be relative to the
+     * display surface.
+     *
+     * NOTE: It is highly recommended to only call this with ACTION_DOWN or in otherwise
+     * limited capacity. Returning a GeckoResult for every touch event will generate
+     * a lot of allocations and unnecessary GC pressure. Instead, prefer to call
+     * {@link #onTouchEvent(MotionEvent)}.
+     *
+     * @param event MotionEvent to process.
+     * @return A GeckoResult resolving to {@link PanZoomController.InputResultDetail}).
+     */
+    public @NonNull GeckoResult<InputResultDetail> onTouchEventForDetailResult(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         if (!sTreatMouseAsTouch && event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
-            return GeckoResult.fromValue(handleMouseEvent(event));
+            return GeckoResult.fromValue(
+                new InputResultDetail(handleMouseEvent(event), SCROLLABLE_FLAG_NONE, OVERSCROLL_FLAG_NONE));
         }
 
         final GeckoResult<InputResultDetail> result = new GeckoResult<>();
         handleMotionEvent(event, result);
-        return result.map(detail -> detail.handledResult);
+        return result;
     }
 
     /**
