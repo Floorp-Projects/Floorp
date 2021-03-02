@@ -67,7 +67,6 @@ RUN apt-get update && \
       tar \
       unzip \
       uuid \
-      valgrind \
       wget \
       x11-utils \
       xvfb \
