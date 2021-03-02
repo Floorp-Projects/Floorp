@@ -1026,13 +1026,12 @@ class LocalAccessible : public nsISupports, public Accessible {
     eIsNotInDocument = 1 << 1,  // accessible is not in document
     eSharedNode = 1 << 2,  // accessible shares DOM node from another accessible
     eNotNodeMapEntry = 1 << 3,   // accessible shouldn't be in document node map
-    eHasNumericValue = 1 << 4,   // accessible has a numeric value
-    eGroupInfoDirty = 1 << 5,    // accessible needs to update group info
-    eKidsMutating = 1 << 6,      // subtree is being mutated
-    eIgnoreDOMUIEvent = 1 << 7,  // don't process DOM UI events for a11y events
-    eRelocated = 1 << 8,         // accessible was moved in tree
-    eNoKidsFromDOM = 1 << 9,     // accessible doesn't allow children from DOM
-    eHasTextKids = 1 << 10,      // accessible have a text leaf in children
+    eGroupInfoDirty = 1 << 4,    // accessible needs to update group info
+    eKidsMutating = 1 << 5,      // subtree is being mutated
+    eIgnoreDOMUIEvent = 1 << 6,  // don't process DOM UI events for a11y events
+    eRelocated = 1 << 7,         // accessible was moved in tree
+    eNoKidsFromDOM = 1 << 8,     // accessible doesn't allow children from DOM
+    eHasTextKids = 1 << 9,       // accessible have a text leaf in children
 
     eLastStateFlag = eHasTextKids
   };
