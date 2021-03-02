@@ -3373,19 +3373,27 @@ static inline bool IsNonAutoNonZeroBSize(const StyleSize& aCoord) {
   // return false here, so we treat them like 'auto' pending a real
   // implementation. (See bug 1126420.)
   //
-  // FIXME (bug 567039, bug 527285) This isn't correct for the 'fill' value,
-  // which should more likely (but not necessarily, depending on the available
-  // space) be returning true.
-  if (aCoord.BehavesLikeInitialValueOnBlockAxis()) {
+  // FIXME (bug 567039, bug 527285)
+  // This isn't correct for the 'fill' value, which should more
+  // likely (but not necessarily, depending on the available space)
+  // be returning true.
+  if (aCoord.IsAuto() || aCoord.IsExtremumLength()) {
     return false;
   }
-  MOZ_ASSERT(aCoord.IsLengthPercentage());
-  // If we evaluate the length/percent/calc at a percentage basis of
-  // both nscoord_MAX and 0, and it's zero both ways, then it's a zero
-  // length, percent, or combination thereof.  Test > 0 so we clamp
-  // negative calc() results to 0.
-  return aCoord.AsLengthPercentage().Resolve(nscoord_MAX) > 0 ||
-         aCoord.AsLengthPercentage().Resolve(0) > 0;
+  if (aCoord.IsLengthPercentage()) {
+    // If we evaluate the length/percent/calc at a percentage basis of
+    // both nscoord_MAX and 0, and it's zero both ways, then it's a zero
+    // length, percent, or combination thereof.  Test > 0 so we clamp
+    // negative calc() results to 0.
+    return aCoord.AsLengthPercentage().Resolve(nscoord_MAX) > 0 ||
+           aCoord.AsLengthPercentage().Resolve(0) > 0;
+  }
+  MOZ_ASSERT(false, "unexpected unit for height or min-height");
+  return true;
+}
+
+static bool BehavesLikeInitialValueOnBlockAxis(const StyleSize& aCoord) {
+  return aCoord.IsAuto() || aCoord.IsExtremumLength();
 }
 
 /* virtual */
@@ -3409,7 +3417,7 @@ bool nsBlockFrame::IsSelfEmpty() {
   // FIXME: Handle the case that both inline and block sizes are auto.
   // https://github.com/w3c/csswg-drafts/issues/5060.
   // Note: block-size could be zero or auto/intrinsic keywords here.
-  if (position->BSize(wm).BehavesLikeInitialValueOnBlockAxis() &&
+  if (BehavesLikeInitialValueOnBlockAxis(position->BSize(wm)) &&
       position->mAspectRatio.HasFiniteRatio()) {
     return false;
   }

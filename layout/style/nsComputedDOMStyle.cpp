@@ -2234,16 +2234,16 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginWidthFor(
   return val.forget();
 }
 
-static void SetValueToExtremumLength(nsROCSSPrimitiveValue* aValue,
-                                     nsIFrame::ExtremumLength aSize) {
+void nsComputedDOMStyle::SetValueToExtremumLength(nsROCSSPrimitiveValue* aValue,
+                                                  StyleExtremumLength aSize) {
   switch (aSize) {
-    case nsIFrame::ExtremumLength::MaxContent:
+    case StyleExtremumLength::MaxContent:
       return aValue->SetString("max-content");
-    case nsIFrame::ExtremumLength::MinContent:
+    case StyleExtremumLength::MinContent:
       return aValue->SetString("min-content");
-    case nsIFrame::ExtremumLength::MozAvailable:
+    case StyleExtremumLength::MozAvailable:
       return aValue->SetString("-moz-available");
-    case nsIFrame::ExtremumLength::MozFitContent:
+    case StyleExtremumLength::MozFitContent:
       return aValue->SetString("-moz-fit-content");
   }
   MOZ_ASSERT_UNREACHABLE("Unknown extremum length?");
@@ -2254,8 +2254,8 @@ void nsComputedDOMStyle::SetValueToSize(nsROCSSPrimitiveValue* aValue,
   if (aSize.IsAuto()) {
     return aValue->SetString("auto");
   }
-  if (auto length = nsIFrame::ToExtremumLength(aSize)) {
-    return SetValueToExtremumLength(aValue, *length);
+  if (aSize.IsExtremumLength()) {
+    return SetValueToExtremumLength(aValue, aSize.AsExtremumLength());
   }
   MOZ_ASSERT(aSize.IsLengthPercentage());
   SetValueToLengthPercentage(aValue, aSize.AsLengthPercentage(), true);
@@ -2266,8 +2266,8 @@ void nsComputedDOMStyle::SetValueToMaxSize(nsROCSSPrimitiveValue* aValue,
   if (aSize.IsNone()) {
     return aValue->SetString("none");
   }
-  if (auto length = nsIFrame::ToExtremumLength(aSize)) {
-    return SetValueToExtremumLength(aValue, *length);
+  if (aSize.IsExtremumLength()) {
+    return SetValueToExtremumLength(aValue, aSize.AsExtremumLength());
   }
   MOZ_ASSERT(aSize.IsLengthPercentage());
   SetValueToLengthPercentage(aValue, aSize.AsLengthPercentage(), true);

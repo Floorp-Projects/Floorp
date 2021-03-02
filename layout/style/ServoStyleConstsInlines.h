@@ -810,12 +810,12 @@ inline bool StyleFlexBasis::IsAuto() const {
 
 template <>
 inline bool StyleSize::BehavesLikeInitialValueOnBlockAxis() const {
-  return IsAuto() || !IsLengthPercentage();
+  return IsAuto() || IsExtremumLength();
 }
 
 template <>
 inline bool StyleMaxSize::BehavesLikeInitialValueOnBlockAxis() const {
-  return IsNone() || !IsLengthPercentage();
+  return IsNone() || IsExtremumLength();
 }
 
 template <>

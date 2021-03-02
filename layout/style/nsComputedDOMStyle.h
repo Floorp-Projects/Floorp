@@ -60,6 +60,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   using Document = mozilla::dom::Document;
   using LengthPercentage = mozilla::LengthPercentage;
   using LengthPercentageOrAuto = mozilla::LengthPercentageOrAuto;
+  using StyleExtremumLength = mozilla::StyleExtremumLength;
   using ComputedStyle = mozilla::ComputedStyle;
 
  public:
@@ -293,6 +294,9 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   void SetValueToMaxSize(nsROCSSPrimitiveValue* aValue,
                          const mozilla::StyleMaxSize&);
+
+  void SetValueToExtremumLength(nsROCSSPrimitiveValue* aValue,
+                                StyleExtremumLength);
 
   bool GetCBContentWidth(nscoord& aWidth);
   bool GetCBContentHeight(nscoord& aHeight);

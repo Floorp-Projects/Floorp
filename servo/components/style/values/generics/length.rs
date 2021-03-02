@@ -6,6 +6,7 @@
 
 use crate::parser::{Parse, ParserContext};
 #[cfg(feature = "gecko")]
+use crate::values::computed::ExtremumLength;
 use crate::Zero;
 use cssparser::Parser;
 use style_traits::ParseError;
@@ -150,14 +151,9 @@ impl<LengthPercentage: Parse> Parse for LengthPercentageOrAuto<LengthPercentage>
 pub enum GenericSize<LengthPercent> {
     LengthPercentage(LengthPercent),
     Auto,
+    #[cfg(feature = "gecko")]
     #[animation(error)]
-    MaxContent,
-    #[animation(error)]
-    MinContent,
-    #[animation(error)]
-    MozFitContent,
-    #[animation(error)]
-    MozAvailable,
+    ExtremumLength(ExtremumLength),
 }
 
 pub use self::GenericSize as Size;
@@ -198,16 +194,9 @@ impl<LengthPercentage> Size<LengthPercentage> {
 pub enum GenericMaxSize<LengthPercent> {
     LengthPercentage(LengthPercent),
     None,
+    #[cfg(feature = "gecko")]
     #[animation(error)]
-    #[parse(aliases = "-moz-max-content")]
-    MaxContent,
-    #[animation(error)]
-    #[parse(aliases = "-moz-min-content")]
-    MinContent,
-    #[animation(error)]
-    MozFitContent,
-    #[animation(error)]
-    MozAvailable,
+    ExtremumLength(ExtremumLength),
 }
 
 pub use self::GenericMaxSize as MaxSize;

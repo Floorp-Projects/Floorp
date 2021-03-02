@@ -91,6 +91,7 @@ include = [
   "DisplayMode",
   "PrefersColorScheme",
   "PrefersContrast",
+  "ExtremumLength",
   "FillRule",
   "FontDisplay",
   "FontFaceSourceListComponent",

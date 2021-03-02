@@ -639,6 +639,7 @@ class nsIFrame : public nsQueryFrame {
   using ReflowOutput = mozilla::ReflowOutput;
   using Visibility = mozilla::Visibility;
   using LengthPercentage = mozilla::LengthPercentage;
+  using StyleExtremumLength = mozilla::StyleExtremumLength;
 
   typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::FrameProperties FrameProperties;
@@ -4766,29 +4767,6 @@ class nsIFrame : public nsQueryFrame {
     return false;
   }
 
-  enum class ExtremumLength {
-    MinContent,
-    MaxContent,
-    MozAvailable,
-    MozFitContent,
-  };
-
-  template <typename SizeOrMaxSize>
-  static Maybe<ExtremumLength> ToExtremumLength(const SizeOrMaxSize& aSize) {
-    switch (aSize.tag) {
-      case SizeOrMaxSize::Tag::MinContent:
-        return mozilla::Some(ExtremumLength::MinContent);
-      case SizeOrMaxSize::Tag::MaxContent:
-        return mozilla::Some(ExtremumLength::MaxContent);
-      case SizeOrMaxSize::Tag::MozAvailable:
-        return mozilla::Some(ExtremumLength::MozAvailable);
-      case SizeOrMaxSize::Tag::MozFitContent:
-        return mozilla::Some(ExtremumLength::MozFitContent);
-      default:
-        return mozilla::Nothing();
-    }
-  }
-
   /**
    * Helper function - computes the content-box inline size for aSize, which is
    * a more complex version to resolve a StyleExtremumLength.
@@ -4801,7 +4779,7 @@ class nsIFrame : public nsQueryFrame {
       gfxContext* aRenderingContext, const mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aContainingBlockSize,
       const mozilla::LogicalSize& aContentEdgeToBoxSizing,
-      nscoord aBoxSizingToMarginEdge, ExtremumLength aSize,
+      nscoord aBoxSizingToMarginEdge, StyleExtremumLength aSize,
       mozilla::ComputeSizeFlags aFlags);
 
   /**
@@ -4820,17 +4798,16 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::LogicalSize& aContentEdgeToBoxSizing,
       nscoord aBoxSizingToMarginEdge, const SizeOrMaxSize& aSize,
       mozilla::ComputeSizeFlags aFlags = {}) {
+    MOZ_ASSERT(aSize.IsExtremumLength() || aSize.IsLengthPercentage(),
+               "This doesn't handle auto / none");
     if (aSize.IsLengthPercentage()) {
       return {ComputeISizeValue(aWM, aContainingBlockSize,
                                 aContentEdgeToBoxSizing,
                                 aSize.AsLengthPercentage())};
     }
-    auto length = ToExtremumLength(aSize);
-    MOZ_ASSERT(length, "This doesn't handle none / auto");
     return ComputeISizeValue(aRenderingContext, aWM, aContainingBlockSize,
                              aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
-                             length.valueOr(ExtremumLength::MinContent),
-                             aFlags);
+                             aSize.AsExtremumLength(), aFlags);
   }
 
   DisplayItemDataArray* DisplayItemData() const {
