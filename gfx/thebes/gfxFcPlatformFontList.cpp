@@ -1975,46 +1975,51 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
 
   // Because the FcConfigSubstitute call is quite expensive, we cache the
   // actual font families found via this process. So check the cache first:
-  const auto& cachedFamilies =
-      mFcSubstituteCache.LookupOrInsertWith(familyName, [&] {
-        // It wasn't in the cache, so we need to ask fontconfig...
-        const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
-        FcChar8* sentinelFirstFamily = nullptr;
-        RefPtr<FcPattern> sentinelSubst = dont_AddRef(FcPatternCreate());
-        FcPatternAddString(sentinelSubst, FC_FAMILY, kSentinelName);
-        FcConfigSubstitute(nullptr, sentinelSubst, FcMatchPattern);
-        FcPatternGetString(sentinelSubst, FC_FAMILY, 0, &sentinelFirstFamily);
+  if (auto cachedFamilies = mFcSubstituteCache.Lookup(familyName)) {
+    if (cachedFamilies->IsEmpty()) {
+      return false;
+    }
+    aOutput->AppendElements(*cachedFamilies);
+    return true;
+  }
 
-        // substitutions for font, -moz-sentinel pattern
-        RefPtr<FcPattern> fontWithSentinel = dont_AddRef(FcPatternCreate());
-        FcPatternAddString(fontWithSentinel, FC_FAMILY,
-                           ToFcChar8Ptr(familyName.get()));
-        FcPatternAddString(fontWithSentinel, FC_FAMILY, kSentinelName);
-        FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
+  // It wasn't in the cache, so we need to ask fontconfig...
+  const FcChar8* kSentinelName = ToFcChar8Ptr("-moz-sentinel");
+  FcChar8* sentinelFirstFamily = nullptr;
+  RefPtr<FcPattern> sentinelSubst = dont_AddRef(FcPatternCreate());
+  FcPatternAddString(sentinelSubst, FC_FAMILY, kSentinelName);
+  FcConfigSubstitute(nullptr, sentinelSubst, FcMatchPattern);
+  FcPatternGetString(sentinelSubst, FC_FAMILY, 0, &sentinelFirstFamily);
 
-        // Add all font family matches until reaching the sentinel.
-        nsTArray<FamilyAndGeneric> cachedFamilies;
-        FcChar8* substName = nullptr;
-        for (int i = 0; FcPatternGetString(fontWithSentinel, FC_FAMILY, i,
-                                           &substName) == FcResultMatch;
-             i++) {
-          if (sentinelFirstFamily &&
-              FcStrCmp(substName, sentinelFirstFamily) == 0) {
-            break;
-          }
-          gfxPlatformFontList::FindAndAddFamilies(
-              aGeneric, nsDependentCString(ToCharPtr(substName)),
-              &cachedFamilies, aFlags, aStyle, aLanguage);
-        }
+  // substitutions for font, -moz-sentinel pattern
+  RefPtr<FcPattern> fontWithSentinel = dont_AddRef(FcPatternCreate());
+  FcPatternAddString(fontWithSentinel, FC_FAMILY,
+                     ToFcChar8Ptr(familyName.get()));
+  FcPatternAddString(fontWithSentinel, FC_FAMILY, kSentinelName);
+  FcConfigSubstitute(nullptr, fontWithSentinel, FcMatchPattern);
 
-        // Cache the resulting list, so we don't have to do this again.
-        return cachedFamilies;
-      });
+  // Add all font family matches until reaching the sentinel.
+  AutoTArray<FamilyAndGeneric, 10> cachedFamilies;
+  FcChar8* substName = nullptr;
+  for (int i = 0; FcPatternGetString(fontWithSentinel, FC_FAMILY, i,
+                                     &substName) == FcResultMatch;
+       i++) {
+    if (sentinelFirstFamily && FcStrCmp(substName, sentinelFirstFamily) == 0) {
+      break;
+    }
+    gfxPlatformFontList::FindAndAddFamilies(
+        aGeneric, nsDependentCString(ToCharPtr(substName)), &cachedFamilies,
+        aFlags, aStyle, aLanguage);
+  }
 
-  if (cachedFamilies.IsEmpty()) {
+  // Cache the resulting list, so we don't have to do this again.
+  const auto& insertedCachedFamilies =
+      mFcSubstituteCache.InsertOrUpdate(familyName, std::move(cachedFamilies));
+
+  if (insertedCachedFamilies.IsEmpty()) {
     return false;
   }
-  aOutput->AppendElements(cachedFamilies);
+  aOutput->AppendElements(insertedCachedFamilies);
   return true;
 }
 
