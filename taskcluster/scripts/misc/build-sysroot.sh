@@ -5,7 +5,7 @@ set -e
 
 arch=$1
 shift
-SNAPSHOT=20200422T205110Z
+SNAPSHOT=20210208T213147Z
 
 case "$arch" in
 i386|amd64)
