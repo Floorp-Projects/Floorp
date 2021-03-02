@@ -128,7 +128,10 @@ var PromiseTestUtils = {
 
     PromiseDebugging.addUncaughtRejectionObserver(observer);
     Promise.reject(this._ensureDOMPromiseRejectionsProcessedReason);
-    Services.tm.spinEventLoopUntil(() => observed);
+    Services.tm.spinEventLoopUntil(
+      "Test(PromiseTestUtils.jsm:ensureDOMPromiseRejectionsProcessed)",
+      () => observed
+    );
     PromiseDebugging.removeUncaughtRejectionObserver(observer);
   },
   _ensureDOMPromiseRejectionsProcessedReason: {},

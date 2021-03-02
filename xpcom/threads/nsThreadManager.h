@@ -82,7 +82,8 @@ class nsThreadManager : public nsIThreadManager {
  private:
   nsThreadManager();
 
-  nsresult SpinEventLoopUntilInternal(nsINestedEventLoopCondition* aCondition,
+  nsresult SpinEventLoopUntilInternal(const nsACString& aVeryGoodReasonToDoThis,
+                                      nsINestedEventLoopCondition* aCondition,
                                       bool aCheckingShutdown);
 
   static void ReleaseThread(void* aData);
