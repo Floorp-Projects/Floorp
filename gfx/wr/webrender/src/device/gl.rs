@@ -3905,7 +3905,6 @@ pub struct FormatDesc {
 #[derive(Debug)]
 struct UploadChunk<'a> {
     rect: DeviceIntRect,
-    layer_index: i32,
     stride: Option<i32>,
     offset: usize,
     format_override: Option<ImageFormat>,
@@ -4353,7 +4352,6 @@ impl<'a> TextureUploader<'a> {
         device: &mut Device,
         texture: &'a Texture,
         rect: DeviceIntRect,
-        layer_index: i32,
         format_override: Option<ImageFormat>,
         mut staging_buffer: UploadStagingBuffer<'a>,
     ) -> usize {
@@ -4361,7 +4359,6 @@ impl<'a> TextureUploader<'a> {
 
         staging_buffer.buffer.chunks.push(UploadChunk {
             rect,
-            layer_index,
             stride: Some(staging_buffer.stride as i32),
             offset: staging_buffer.offset,
             format_override,
@@ -4385,7 +4382,6 @@ impl<'a> TextureUploader<'a> {
         device: &mut Device,
         texture: &'a Texture,
         mut rect: DeviceIntRect,
-        layer_index: i32,
         stride: Option<i32>,
         format_override: Option<ImageFormat>,
         data: *const T,
@@ -4426,7 +4422,6 @@ impl<'a> TextureUploader<'a> {
 
                 Self::update_impl(device, UploadChunk {
                     rect,
-                    layer_index,
                     stride: Some(src_stride as i32),
                     offset: data as _,
                     format_override,
@@ -4463,7 +4458,7 @@ impl<'a> TextureUploader<'a> {
                     }
                 }
 
-                self.upload_staged(device, texture, rect, layer_index, format_override, staging_buffer)
+                self.upload_staged(device, texture, rect, format_override, staging_buffer)
             }
         }
     }

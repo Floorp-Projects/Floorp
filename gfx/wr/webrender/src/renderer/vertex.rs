@@ -771,7 +771,6 @@ impl<T> VertexDataTexture<T> {
             device,
             self.texture(),
             rect,
-            0,
             None,
             None,
             data.as_ptr(),
