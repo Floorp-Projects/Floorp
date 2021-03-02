@@ -768,7 +768,7 @@ def checkAndConfigureV4l2loopback(device):
 
     VIDIOC_QUERYCAP = 0x80685600
 
-    fd = libc.open(device, O_RDWR)
+    fd = libc.open(six.ensure_binary(device), O_RDWR)
     if fd < 0:
         return False, ""
 
@@ -776,7 +776,7 @@ def checkAndConfigureV4l2loopback(device):
     if libc.ioctl(fd, VIDIOC_QUERYCAP, ctypes.byref(vcap)) != 0:
         return False, ""
 
-    if vcap.driver != "v4l2 loopback":
+    if six.ensure_text(vcap.driver) != "v4l2 loopback":
         return False, ""
 
     class v4l2_control(ctypes.Structure):
@@ -798,7 +798,7 @@ def checkAndConfigureV4l2loopback(device):
     libc.ioctl(fd, VIDIOC_S_CTRL, ctypes.byref(control))
     libc.close(fd)
 
-    return True, vcap.card
+    return True, six.ensure_text(vcap.card)
 
 
 def findTestMediaDevices(log):
