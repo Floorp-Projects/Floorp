@@ -1,0 +1,28 @@
+<html>
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        let node
+        const textarea = document.getElementById('id_14')
+        const abbr = document.getElementById('id_9')
+        document.addEventListener('DOMAttrModified', (e) => {
+          node = e.originalTarget.getRootNode({})
+          abbr.insertBefore(textarea, abbr.childNodes[0])
+        }, false)
+        abbr.contentEditable = false
+        node.normalize()
+        document.designMode = 'on'
+        document.execCommand('insertParagraph', false, null)
+      })
+    </script>
+</head>
+<body>
+<dfn contenteditable='true'>
+    <abbr id='id_9'></abbr>
+</dfn>
+<h3>
+    <textarea id='id_14' autofocus></textarea>
+    <script></script>
+</h3>
+</body>
+</html>
