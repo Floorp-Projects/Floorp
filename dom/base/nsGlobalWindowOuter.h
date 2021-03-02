@@ -19,7 +19,6 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsDataHashtable.h"
-#include "nsJSThingHashtable.h"
 #include "nsCycleCollectionParticipant.h"
 
 // Interfaces Needed
