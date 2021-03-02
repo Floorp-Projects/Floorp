@@ -195,6 +195,16 @@ Selection.prototype = {
     return this.isNode() && this.nodeFront.namespaceURI == xhtmlNs;
   },
 
+  isSVGNode: function() {
+    const svgNs = "http://www.w3.org/2000/svg";
+    return this.isNode() && this.nodeFront.namespaceURI == svgNs;
+  },
+
+  isMathMLNode: function() {
+    const mathmlNs = "http://www.w3.org/1998/Math/MathML";
+    return this.isNode() && this.nodeFront.namespaceURI == mathmlNs;
+  },
+
   // Node type
 
   isElementNode: function() {
