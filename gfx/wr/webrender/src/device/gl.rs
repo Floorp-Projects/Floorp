@@ -463,10 +463,6 @@ impl Texture {
         self.size
     }
 
-    pub fn get_layer_count(&self) -> i32 {
-        1
-    }
-
     pub fn get_format(&self) -> ImageFormat {
         self.format
     }
