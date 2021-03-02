@@ -94,7 +94,7 @@ function asyncCleanup() {
   });
 
   let tm = Cc["@mozilla.org/thread-manager;1"].getService();
-  tm.spinEventLoopUntil(() => closed);
+  tm.spinEventLoopUntil("Test(head_storage.js:asyncCleanup)", () => closed);
 
   // we need to null out the database variable to get a new connection the next
   // time getOpenedDatabase is called

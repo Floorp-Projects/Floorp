@@ -130,7 +130,7 @@ interface nsIThreadManager : nsISupports
    * C++ code should not use this function, instead preferring
    * mozilla::SpinEventLoopUntil.
    */
-  void spinEventLoopUntil(in nsINestedEventLoopCondition condition);
+  void spinEventLoopUntil(in ACString aVeryGoodReasonToDoThis, in nsINestedEventLoopCondition condition);
 
   /**
    * Similar to the previous method, but the spinning of the event loop
@@ -139,7 +139,7 @@ interface nsIThreadManager : nsISupports
    * C++ code should not use this function, instead preferring
    * mozilla::SpinEventLoopUntil.
    */
-  void spinEventLoopUntilOrShutdown(in nsINestedEventLoopCondition condition);
+  void spinEventLoopUntilOrShutdown(in ACString aVeryGoodReasonToDoThis, in nsINestedEventLoopCondition condition);
 
   /**
    * Spin the current thread's event loop until there are no more pending

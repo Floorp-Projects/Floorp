@@ -977,3 +977,10 @@ Winsock_LSP:
   description: >
     Information on winsock LSPs injected in our networking stack.
   type: string
+
+XPCOMSpinEventLoopStack:
+  description: >
+    If we crash while some code is spinning manually the event
+    loop, we will see the stack of nested annotations here.
+  type: string
+

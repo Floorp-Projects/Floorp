@@ -705,18 +705,63 @@ nsThreadManager::GetCurrentThread(nsIThread** aResult) {
 }
 
 NS_IMETHODIMP
-nsThreadManager::SpinEventLoopUntil(nsINestedEventLoopCondition* aCondition) {
-  return SpinEventLoopUntilInternal(aCondition, false);
+nsThreadManager::SpinEventLoopUntil(const nsACString& aVeryGoodReasonToDoThis,
+                                    nsINestedEventLoopCondition* aCondition) {
+  return SpinEventLoopUntilInternal(aVeryGoodReasonToDoThis, aCondition, false);
 }
 
 NS_IMETHODIMP
 nsThreadManager::SpinEventLoopUntilOrShutdown(
+    const nsACString& aVeryGoodReasonToDoThis,
     nsINestedEventLoopCondition* aCondition) {
-  return SpinEventLoopUntilInternal(aCondition, true);
+  return SpinEventLoopUntilInternal(aVeryGoodReasonToDoThis, aCondition, true);
 }
 
+struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
+  explicit AutoNestedEventLoopAnnotation(const nsACString& aEntry)
+      : mPrev(sCurrent) {
+    sCurrent = this;
+    if (mPrev) {
+      mStack = mPrev->mStack + "|"_ns + aEntry;
+    } else {
+      mStack = aEntry;
+    }
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::XPCOMSpinEventLoopStack, mStack);
+  }
+
+  ~AutoNestedEventLoopAnnotation() {
+    MOZ_ASSERT(sCurrent == this);
+    sCurrent = mPrev;
+    if (mPrev) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::XPCOMSpinEventLoopStack, mPrev->mStack);
+    } else {
+      CrashReporter::RemoveCrashReportAnnotation(
+          CrashReporter::Annotation::XPCOMSpinEventLoopStack);
+    }
+  }
+
+ private:
+  AutoNestedEventLoopAnnotation(const AutoNestedEventLoopAnnotation&) = delete;
+  AutoNestedEventLoopAnnotation& operator=(
+      const AutoNestedEventLoopAnnotation&) = delete;
+
+  static AutoNestedEventLoopAnnotation* sCurrent;
+
+  AutoNestedEventLoopAnnotation* mPrev;
+  nsCString mStack;
+};
+
+AutoNestedEventLoopAnnotation* AutoNestedEventLoopAnnotation::sCurrent =
+    nullptr;
+
 nsresult nsThreadManager::SpinEventLoopUntilInternal(
+    const nsACString& aVeryGoodReasonToDoThis,
     nsINestedEventLoopCondition* aCondition, bool aCheckingShutdown) {
+  AutoNestedEventLoopAnnotation annotation(aVeryGoodReasonToDoThis);
+
+  // XXX: We would want to AssertIsOnMainThread(); but that breaks some GTest.
   nsCOMPtr<nsINestedEventLoopCondition> condition(aCondition);
   nsresult rv = NS_OK;
 
