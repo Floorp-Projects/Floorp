@@ -111,9 +111,9 @@ Advanced usage
 Shared suppression files
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-`/build/valgrind/ <http://mxr.mozilla.org/mozilla-central/source/build/valgrind/>`__
+`/build/valgrind/ <https://searchfox.org/mozilla-central/source/build/valgrind/>`__
 contains the suppression files used by the periodic Valgrind jobs on
-Tinderbox. Some of these files are platform-specific.
+Treeherder. Some of these files are platform-specific.
 
 Running mochitests under Valgrind?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
