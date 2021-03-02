@@ -2153,7 +2153,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("varStart", data->slotInfo.varStart);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 
@@ -2163,7 +2163,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 
@@ -2180,7 +2180,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("constStart", data->slotInfo.constStart);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 
@@ -2195,7 +2195,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 
@@ -2207,7 +2207,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("constStart", data->slotInfo.constStart);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 
@@ -2220,7 +2220,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("constStart", data->slotInfo.constStart);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 
@@ -2231,7 +2231,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("globalsStart", data->slotInfo.globalsStart);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 
@@ -2241,7 +2241,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
-      length = data->slotInfo.length;
+      length = data->length;
       break;
     }
 

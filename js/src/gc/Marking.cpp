@@ -1424,31 +1424,31 @@ void BindingIter::trace(JSTracer* trc) {
   TraceNullableBindingNames(trc, names_, length_);
 }
 void LexicalScope::RuntimeData::trace(JSTracer* trc) {
-  TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceBindingNames(trc, trailingNames.start(), length);
 }
 void FunctionScope::RuntimeData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &canonicalFunction, "scope canonical function");
-  TraceNullableBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceNullableBindingNames(trc, trailingNames.start(), length);
 }
 void VarScope::RuntimeData::trace(JSTracer* trc) {
-  TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceBindingNames(trc, trailingNames.start(), length);
 }
 void GlobalScope::RuntimeData::trace(JSTracer* trc) {
-  TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceBindingNames(trc, trailingNames.start(), length);
 }
 void EvalScope::RuntimeData::trace(JSTracer* trc) {
-  TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceBindingNames(trc, trailingNames.start(), length);
 }
 void ModuleScope::RuntimeData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &module, "scope module");
-  TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceBindingNames(trc, trailingNames.start(), length);
 }
 void WasmInstanceScope::RuntimeData::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &instance, "wasm instance");
-  TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceBindingNames(trc, trailingNames.start(), length);
 }
 void WasmFunctionScope::RuntimeData::trace(JSTracer* trc) {
-  TraceBindingNames(trc, trailingNames.start(), slotInfo.length);
+  TraceBindingNames(trc, trailingNames.start(), length);
 }
 void Scope::traceChildren(JSTracer* trc) {
   TraceNullableEdge(trc, &environmentShape_, "scope env shape");
@@ -1469,14 +1469,14 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
           markAndTraverseObjectEdge(scope, data.canonicalFunction);
         }
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
 
       case ScopeKind::FunctionBodyVar: {
         VarScope::RuntimeData& data = scope->as<VarScope>().data();
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
 
@@ -1489,7 +1489,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::ClassBody: {
         LexicalScope::RuntimeData& data = scope->as<LexicalScope>().data();
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
 
@@ -1497,7 +1497,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::NonSyntactic: {
         GlobalScope::RuntimeData& data = scope->as<GlobalScope>().data();
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
 
@@ -1505,7 +1505,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::StrictEval: {
         EvalScope::RuntimeData& data = scope->as<EvalScope>().data();
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
 
@@ -1515,7 +1515,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
           markAndTraverseObjectEdge(scope, data.module);
         }
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
 
@@ -1527,7 +1527,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
             scope->as<WasmInstanceScope>().data();
         markAndTraverseObjectEdge(scope, data.instance);
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
 
@@ -1535,7 +1535,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
         WasmFunctionScope::RuntimeData& data =
             scope->as<WasmFunctionScope>().data();
         names = &data.trailingNames;
-        length = data.slotInfo.length;
+        length = data.length;
         break;
       }
     }

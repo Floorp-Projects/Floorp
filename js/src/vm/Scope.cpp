@@ -182,7 +182,7 @@ Shape* js::CreateEnvironmentShape(
 
 template <class DataT>
 inline size_t SizeOfAllocatedData(DataT* data) {
-  return SizeOfScopeData<DataT>(data->slotInfo.length);
+  return SizeOfScopeData<DataT>(data->length);
 }
 
 template <typename ConcreteScope>
@@ -193,7 +193,7 @@ static UniquePtr<typename ConcreteScope::RuntimeData> CopyScopeData(
   // Make sure the binding names are marked in the context's zone, if we are
   // copying data from another zone.
   BindingName* names = data->trailingNames.start();
-  uint32_t length = data->slotInfo.length;
+  uint32_t length = data->length;
   for (size_t i = 0; i < length; i++) {
     if (JSAtom* name = names[i].name()) {
       cx->markAtom(name);
@@ -208,7 +208,7 @@ static UniquePtr<typename ConcreteScope::RuntimeData> CopyScopeData(
 
   auto* dataCopy = new (bytes) Data(*data);
 
-  std::uninitialized_copy_n(data->trailingNames.start(), data->slotInfo.length,
+  std::uninitialized_copy_n(data->trailingNames.start(), data->length,
                             dataCopy->trailingNames.start());
 
   return UniquePtr<Data>(dataCopy);
@@ -219,7 +219,7 @@ static void MarkParserScopeData(JSContext* cx,
                                 typename ConcreteScope::ParserData* data,
                                 frontend::CompilationState& compilationState) {
   auto* names = data->trailingNames.start();
-  uint32_t length = data->slotInfo.length;
+  uint32_t length = data->length;
   for (size_t i = 0; i < length; i++) {
     auto index = names[i].name();
     if (!index) {
@@ -322,11 +322,11 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
   // Convert all scope ParserAtoms to rooted JSAtoms.
   // Rooting is necessary as conversion can gc.
   JS::RootedVector<JSAtom*> jsatoms(cx);
-  if (!jsatoms.reserve(data->slotInfo.length)) {
+  if (!jsatoms.reserve(data->length)) {
     return nullptr;
   }
   auto* names = data->trailingNames.start();
-  uint32_t length = data->slotInfo.length;
+  uint32_t length = data->length;
   for (size_t i = 0; i < length; i++) {
     JSAtom* jsatom = nullptr;
     if (names[i].name()) {
@@ -338,10 +338,14 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
 
   // Allocate a new scope-data of the right kind.
   UniquePtr<ConcreteData> scopeData(
-      NewEmptyScopeData<ConcreteScope, JSAtom>(cx, data->slotInfo.length));
+      NewEmptyScopeData<ConcreteScope, JSAtom>(cx, data->length));
   if (!scopeData) {
     return nullptr;
   }
+
+  // NOTE: There shouldn't be any fallible operation or GC between setting
+  //       `length` and filling `trailingNames`.
+  scopeData.get()->length = data->length;
 
   memcpy(&scopeData.get()->slotInfo, &data->slotInfo,
          sizeof(typename ConcreteScope::SlotInfo));
@@ -409,7 +413,7 @@ XDRResult Scope::XDRSizedBindingNames(
 
   uint32_t length;
   if (mode == XDR_ENCODE) {
-    length = scope->data().slotInfo.length;
+    length = scope->data().length;
   }
   MOZ_TRY(xdr->codeUint32(&length));
 
@@ -431,12 +435,10 @@ XDRResult Scope::XDRSizedBindingNames(
 
   for (uint32_t i = 0; i < length; i++) {
     if (mode == XDR_DECODE) {
-      MOZ_ASSERT(i == data->slotInfo.length, "must be decoding at the end");
+      MOZ_ASSERT(i == data->length, "must be decoding at the end");
     }
-    MOZ_TRY(
-        XDRTrailingName(xdr, &data->trailingNames[i], &data->slotInfo.length));
+    MOZ_TRY(XDRTrailingName(xdr, &data->trailingNames[i], &data->length));
   }
-  MOZ_ASSERT(data->slotInfo.length == length);
 
   dataGuard.release();
   return Ok();
@@ -1042,7 +1044,7 @@ XDRResult FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun,
     MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
 
     if (mode == XDR_DECODE) {
-      if (!data->slotInfo.length) {
+      if (!data->length) {
         MOZ_ASSERT(!data->slotInfo.nonPositionalFormalStart);
         MOZ_ASSERT(!data->slotInfo.varStart);
         MOZ_ASSERT(!data->slotInfo.nextFrameSlot);
@@ -1138,7 +1140,7 @@ XDRResult VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
     MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
 
     if (mode == XDR_DECODE) {
-      if (!data->slotInfo.length) {
+      if (!data->length) {
         MOZ_ASSERT(!data->slotInfo.nextFrameSlot);
       }
 
@@ -1229,7 +1231,7 @@ XDRResult GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
     MOZ_TRY(xdr->codeUint32(&data->slotInfo.constStart));
 
     if (mode == XDR_DECODE) {
-      if (!data->slotInfo.length) {
+      if (!data->length) {
         MOZ_ASSERT(!data->slotInfo.letStart);
         MOZ_ASSERT(!data->slotInfo.constStart);
       }
@@ -1357,7 +1359,7 @@ XDRResult EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
     MOZ_TRY(XDRSizedBindingNames<EvalScope>(xdr, scope.as<EvalScope>(), &data));
 
     if (mode == XDR_DECODE) {
-      if (!data->slotInfo.length) {
+      if (!data->length) {
         MOZ_ASSERT(!data->slotInfo.nextFrameSlot);
       }
       scope.set(createWithData(cx, kind, &uniqueData.ref(), enclosing));
@@ -1382,8 +1384,7 @@ template
     EvalScope::XDR(XDRState<XDR_DECODE>* xdr, ScopeKind kind,
                    HandleScope enclosing, MutableHandleScope scope);
 
-ModuleScope::RuntimeData::RuntimeData(size_t nameCount)
-    : trailingNames(nameCount) {}
+ModuleScope::RuntimeData::RuntimeData(size_t length) : trailingNames(length) {}
 
 static void InitModule(ModuleScope::RuntimeData& data,
                        HandleModuleObject module) {
@@ -1472,7 +1473,7 @@ XDRResult ModuleScope::XDR(XDRState<mode>* xdr, HandleModuleObject module,
     MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
 
     if (mode == XDR_DECODE) {
-      if (!data->slotInfo.length) {
+      if (!data->length) {
         MOZ_ASSERT(!data->slotInfo.varStart);
         MOZ_ASSERT(!data->slotInfo.letStart);
         MOZ_ASSERT(!data->slotInfo.constStart);
@@ -1514,12 +1515,12 @@ static void InitializeTrailingName(
 template <class DataT>
 static void InitializeNextTrailingName(const Rooted<UniquePtr<DataT>>& data,
                                        JSAtom* name) {
-  InitializeTrailingName(data->trailingNames, data->slotInfo.length, name);
-  data->slotInfo.length++;
+  InitializeTrailingName(data->trailingNames, data->length, name);
+  data->length++;
 }
 
-WasmInstanceScope::RuntimeData::RuntimeData(size_t nameCount)
-    : trailingNames(nameCount) {}
+WasmInstanceScope::RuntimeData::RuntimeData(size_t length)
+    : trailingNames(length) {}
 
 /* static */
 WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
@@ -1556,7 +1557,7 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
     InitializeNextTrailingName(data, wasmName);
   }
 
-  MOZ_ASSERT(data->slotInfo.length == namesCount);
+  MOZ_ASSERT(data->length == namesCount);
 
   data->instance.init(instance);
   data->slotInfo.globalsStart = globalsStart;
@@ -1602,7 +1603,7 @@ WasmFunctionScope* WasmFunctionScope::create(JSContext* cx,
 
     InitializeNextTrailingName(data, wasmName);
   }
-  MOZ_ASSERT(data->slotInfo.length == namesCount);
+  MOZ_ASSERT(data->length == namesCount);
 
   return Scope::create<WasmFunctionScope>(cx, ScopeKind::WasmFunction,
                                           enclosing,
@@ -1682,6 +1683,7 @@ template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
     LexicalScope::AbstractData<NameT>& data, uint32_t firstFrameSlot,
     uint8_t flags) {
+  auto length = data.length;
   auto& slotInfo = data.slotInfo;
 
   // Named lambda scopes can only have environment slots. If the callee
@@ -1691,18 +1693,18 @@ void BaseAbstractBindingIter<NameT>::init(
     // don't apply.
     init(0, 0, 0, 0, 0, CanHaveEnvironmentSlots | flags, firstFrameSlot,
          JSSLOT_FREE(&LexicalEnvironmentObject::class_),
-         data.trailingNames.start(), slotInfo.length);
+         data.trailingNames.start(), length);
   } else {
     //            imports - [0, 0)
     // positional formals - [0, 0)
     //      other formals - [0, 0)
     //               vars - [0, 0)
     //               lets - [0, slotInfo.constStart)
-    //             consts - [slotInfo.constStart, slotInfo.length)
+    //             consts - [slotInfo.constStart, length)
     init(0, 0, 0, 0, slotInfo.constStart,
          CanHaveFrameSlots | CanHaveEnvironmentSlots | flags, firstFrameSlot,
          JSSLOT_FREE(&LexicalEnvironmentObject::class_),
-         data.trailingNames.start(), slotInfo.length);
+         data.trailingNames.start(), length);
   }
 }
 
@@ -1720,17 +1722,18 @@ void BaseAbstractBindingIter<NameT>::init(
     flags |= CanHaveArgumentSlots;
   }
 
+  auto length = data.length;
   auto& slotInfo = data.slotInfo;
 
   //            imports - [0, 0)
   // positional formals - [0, slotInfo.nonPositionalFormalStart)
   //      other formals - [slotInfo.nonPositionalParamStart, slotInfo.varStart)
-  //               vars - [slotInfo.varStart, slotInfo.length)
-  //               lets - [slotInfo.length, slotInfo.length)
-  //             consts - [slotInfo.length, slotInfo.length)
-  init(0, slotInfo.nonPositionalFormalStart, slotInfo.varStart, slotInfo.length,
-       slotInfo.length, flags, 0, JSSLOT_FREE(&CallObject::class_),
-       data.trailingNames.start(), slotInfo.length);
+  //               vars - [slotInfo.varStart, length)
+  //               lets - [length, length)
+  //             consts - [length, length)
+  init(0, slotInfo.nonPositionalFormalStart, slotInfo.varStart, length, length,
+       flags, 0, JSSLOT_FREE(&CallObject::class_), data.trailingNames.start(),
+       length);
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     FunctionScope::AbstractData<JSAtom>&, uint8_t);
@@ -1740,18 +1743,17 @@ template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(VarScope::AbstractData<NameT>& data,
                                           uint32_t firstFrameSlot) {
-  auto& slotInfo = data.slotInfo;
+  auto length = data.length;
 
   //            imports - [0, 0)
   // positional formals - [0, 0)
   //      other formals - [0, 0)
-  //               vars - [0, slotInfo.length)
-  //               lets - [slotInfo.length, slotInfo.length)
-  //             consts - [slotInfo.length, slotInfo.length)
-  init(0, 0, 0, slotInfo.length, slotInfo.length,
-       CanHaveFrameSlots | CanHaveEnvironmentSlots, firstFrameSlot,
-       JSSLOT_FREE(&VarEnvironmentObject::class_), data.trailingNames.start(),
-       slotInfo.length);
+  //               vars - [0, length)
+  //               lets - [length, length)
+  //             consts - [length, length)
+  init(0, 0, 0, length, length, CanHaveFrameSlots | CanHaveEnvironmentSlots,
+       firstFrameSlot, JSSLOT_FREE(&VarEnvironmentObject::class_),
+       data.trailingNames.start(), length);
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     VarScope::AbstractData<JSAtom>&, uint32_t);
@@ -1761,6 +1763,7 @@ template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
     GlobalScope::AbstractData<NameT>& data) {
+  auto length = data.length;
   auto& slotInfo = data.slotInfo;
 
   //            imports - [0, 0)
@@ -1768,9 +1771,9 @@ void BaseAbstractBindingIter<NameT>::init(
   //      other formals - [0, 0)
   //               vars - [0, slotInfo.letStart)
   //               lets - [slotInfo.letStart, slotInfo.constStart)
-  //             consts - [slotInfo.constStart, slotInfo.length)
+  //             consts - [slotInfo.constStart, length)
   init(0, 0, 0, slotInfo.letStart, slotInfo.constStart, CannotHaveSlots,
-       UINT32_MAX, UINT32_MAX, data.trailingNames.start(), slotInfo.length);
+       UINT32_MAX, UINT32_MAX, data.trailingNames.start(), length);
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     GlobalScope::AbstractData<JSAtom>&);
@@ -1793,16 +1796,16 @@ void BaseAbstractBindingIter<NameT>::init(EvalScope::AbstractData<NameT>& data,
     firstEnvironmentSlot = UINT32_MAX;
   }
 
-  auto& slotInfo = data.slotInfo;
+  auto length = data.length;
 
   //            imports - [0, 0)
   // positional formals - [0, 0)
   //      other formals - [0, 0)
-  //               vars - [0, slotInfo.length)
-  //               lets - [slotInfo.length, slotInfo.length)
-  //             consts - [slotInfo.length, slotInfo.length)
-  init(0, 0, 0, slotInfo.length, slotInfo.length, flags, firstFrameSlot,
-       firstEnvironmentSlot, data.trailingNames.start(), slotInfo.length);
+  //               vars - [0, length)
+  //               lets - [length, length)
+  //             consts - [length, length)
+  init(0, 0, 0, length, length, flags, firstFrameSlot, firstEnvironmentSlot,
+       data.trailingNames.start(), length);
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     EvalScope::AbstractData<JSAtom>&, bool);
@@ -1812,6 +1815,7 @@ template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
     ModuleScope::AbstractData<NameT>& data) {
+  auto length = data.length;
   auto& slotInfo = data.slotInfo;
 
   //            imports - [0, slotInfo.varStart)
@@ -1819,12 +1823,12 @@ void BaseAbstractBindingIter<NameT>::init(
   //      other formals - [slotInfo.varStart, slotInfo.varStart)
   //               vars - [slotInfo.varStart, slotInfo.letStart)
   //               lets - [slotInfo.letStart, slotInfo.constStart)
-  //             consts - [slotInfo.constStart, slotInfo.length)
+  //             consts - [slotInfo.constStart, length)
   init(slotInfo.varStart, slotInfo.varStart, slotInfo.varStart,
        slotInfo.letStart, slotInfo.constStart,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, 0,
        JSSLOT_FREE(&ModuleEnvironmentObject::class_),
-       data.trailingNames.start(), slotInfo.length);
+       data.trailingNames.start(), length);
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     ModuleScope::AbstractData<JSAtom>&);
@@ -1834,17 +1838,16 @@ template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
     WasmInstanceScope::AbstractData<NameT>& data) {
-  auto& slotInfo = data.slotInfo;
+  auto length = data.length;
 
   //            imports - [0, 0)
   // positional formals - [0, 0)
   //      other formals - [0, 0)
-  //               vars - [0, slotInfo.length)
-  //               lets - [slotInfo.length, slotInfo.length)
-  //             consts - [slotInfo.length, slotInfo.length)
-  init(0, 0, 0, slotInfo.length, slotInfo.length,
-       CanHaveFrameSlots | CanHaveEnvironmentSlots, UINT32_MAX, UINT32_MAX,
-       data.trailingNames.start(), slotInfo.length);
+  //               vars - [0, length)
+  //               lets - [length, length)
+  //             consts - [length, length)
+  init(0, 0, 0, length, length, CanHaveFrameSlots | CanHaveEnvironmentSlots,
+       UINT32_MAX, UINT32_MAX, data.trailingNames.start(), length);
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     WasmInstanceScope::AbstractData<JSAtom>&);
@@ -1854,17 +1857,16 @@ template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
     WasmFunctionScope::AbstractData<NameT>& data) {
-  auto& slotInfo = data.slotInfo;
+  auto length = data.length;
 
   //            imports - [0, 0)
   // positional formals - [0, 0)
   //      other formals - [0, 0)
-  //               vars - [0, slotInfo.length)
-  //               lets - [slotInfo.length, slotInfo.length)
-  //             consts - [slotInfo.length, slotInfo.length)
-  init(0, 0, 0, slotInfo.length, slotInfo.length,
-       CanHaveFrameSlots | CanHaveEnvironmentSlots, UINT32_MAX, UINT32_MAX,
-       data.trailingNames.start(), slotInfo.length);
+  //               vars - [0, length)
+  //               lets - [length, length)
+  //             consts - [length, length)
+  init(0, 0, 0, length, length, CanHaveFrameSlots | CanHaveEnvironmentSlots,
+       UINT32_MAX, UINT32_MAX, data.trailingNames.start(), length);
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
     WasmFunctionScope::AbstractData<JSAtom>&);
