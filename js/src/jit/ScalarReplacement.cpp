@@ -1291,11 +1291,11 @@ bool ArgumentsReplacer::escapes(MInstruction* ins) {
 
       // This is a replaceable consumer.
       case MDefinition::Opcode::ArgumentsObjectLength:
+      case MDefinition::Opcode::GetArgumentsObjectArg:
         break;
 
       // This is a replaceable consumer that is not yet supported
       // for |arguments| of inlined functions.
-      case MDefinition::Opcode::GetArgumentsObjectArg:
       case MDefinition::Opcode::LoadArgumentsObjectArg:
       case MDefinition::Opcode::ApplyArgsObj:
         if (!args_->isCreateArgumentsObject()) {
@@ -1418,18 +1418,32 @@ void ArgumentsReplacer::visitGetArgumentsObjectArg(
     return;
   }
 
-  // TODO: Support inlined arguments.
-  MOZ_ASSERT(!isInlinedArguments());
-
   // We don't support setting arguments in ArgumentsReplacer::escapes,
-  // so we can load the argument from the frame without worrying
+  // so we can load the initial value of the argument without worrying
   // about it being stale.
-  auto* index = MConstant::New(alloc(), Int32Value(ins->argno()));
-  ins->block()->insertBefore(ins, index);
+  MDefinition* getArg;
+  if (isInlinedArguments()) {
+    // Inlined frames have direct access to the actual arguments.
+    auto* actualArgs = args_->toCreateInlinedArgumentsObject();
+    if (ins->argno() < actualArgs->numActuals()) {
+      getArg = actualArgs->getArg(ins->argno())->toInstruction();
+    } else {
+      // Omitted arguments are not mapped to the arguments object, and
+      // will always be undefined.
+      auto* undef = MConstant::New(alloc(), UndefinedValue());
+      ins->block()->insertBefore(ins, undef);
+      getArg = undef;
+    }
+  } else {
+    // Load the argument from the frame.
+    auto* index = MConstant::New(alloc(), Int32Value(ins->argno()));
+    ins->block()->insertBefore(ins, index);
 
-  auto* loadArg = MGetFrameArgument::New(alloc(), index);
-  ins->block()->insertBefore(ins, loadArg);
-  ins->replaceAllUsesWith(loadArg);
+    auto* loadArg = MGetFrameArgument::New(alloc(), index);
+    ins->block()->insertBefore(ins, loadArg);
+    getArg = loadArg;
+  }
+  ins->replaceAllUsesWith(getArg);
 
   // Remove original instruction.
   ins->block()->discard(ins);
