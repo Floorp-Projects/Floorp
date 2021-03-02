@@ -28,7 +28,7 @@
  *          awaitEvent BrowserWindowIterator
  *          navigateTab historyPushState promiseWindowRestored
  *          getIncognitoWindow startIncognitoMonitorExtension
- *          loadTestSubscript awaitBrowserLoaded
+ *          loadTestSubscript awaitBrowserLoaded backgroundColorSetOnRoot
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -60,6 +60,9 @@ const { CustomizableUI } = ChromeUtils.import(
 );
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
+);
+const { ClientEnvironmentBase } = ChromeUtils.import(
+  "resource://gre/modules/components-utils/ClientEnvironment.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
@@ -934,4 +937,20 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
   let details = await data;
   await windowWatcher.unload();
   return { win, details };
+}
+
+/**
+ * Windows 7 and 8 set the window's background-color on :root instead of
+ * #navigator-toolbox to avoid bug 1695280. When that bug is fixed, this
+ * function and the assertions it gates can be removed.
+ *
+ * @returns {boolean} True if the window's background-color is set on :root
+ *   rather than #navigator-toolbox.
+ **/
+function backgroundColorSetOnRoot() {
+  const os = ClientEnvironmentBase.os;
+  if (!os.isWindows) {
+    return false;
+  }
+  return os.windowsVersion < 10;
 }

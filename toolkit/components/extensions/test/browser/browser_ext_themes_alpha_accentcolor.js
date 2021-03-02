@@ -20,12 +20,17 @@ add_task(async function test_alpha_frame_color() {
 
   await extension.startup();
 
-  // Add the event listener before loading the extension
-  let toolbox = document.querySelector("#navigator-toolbox");
-  let toolboxCS = window.getComputedStyle(toolbox);
+  let computedStyle;
+  if (backgroundColorSetOnRoot()) {
+    let docEl = window.document.documentElement;
+    computedStyle = window.getComputedStyle(docEl);
+  } else {
+    let toolbox = document.querySelector("#navigator-toolbox");
+    computedStyle = window.getComputedStyle(toolbox);
+  }
 
   Assert.equal(
-    toolboxCS.backgroundColor,
+    computedStyle.backgroundColor,
     "rgb(230, 128, 0)",
     "Window background color should be opaque"
   );
