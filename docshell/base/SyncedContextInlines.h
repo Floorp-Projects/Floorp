@@ -223,6 +223,22 @@ void Transaction<Context>::Apply(Context* aOwner, bool aFromIPC) {
   mModified.clear();
 }
 
+template <typename Context>
+void Transaction<Context>::CommitWithoutSyncing(Context* aOwner) {
+  MOZ_LOG(
+      Context::GetSyncLog(), LogLevel::Debug,
+      ("Transaction::CommitWithoutSyncing(#%" PRIx64 "): %s", aOwner->Id(),
+       FormatTransaction<Context>(mModified, aOwner->mFields.mValues, mValues)
+           .get()));
+
+  EachIndex([&](auto idx) {
+    if (mModified.contains(idx)) {
+      aOwner->mFields.mValues.Get(idx) = std::move(mValues.Get(idx));
+    }
+  });
+  mModified.clear();
+}
+
 inline CanSetResult AsCanSetResult(CanSetResult aValue) { return aValue; }
 inline CanSetResult AsCanSetResult(bool aValue) {
   return aValue ? CanSetResult::Allow : CanSetResult::Deny;
