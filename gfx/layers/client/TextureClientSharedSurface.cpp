@@ -135,43 +135,5 @@ mozilla::ipc::FileDescriptor SharedSurfaceTextureData::GetAcquireFence() {
   return ipc::FileDescriptor();
 }
 
-/*
-static TextureFlags FlagsFrom(const SharedSurfaceDescriptor& desc) {
-  auto flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
-  if (!desc.isPremultAlpha) {
-    flags |= TextureFlags::NON_PREMULTIPLIED;
-  }
-  return flags;
-}
-
-SharedSurfaceTextureClient::SharedSurfaceTextureClient(
-    const SharedSurfaceDescriptor& aDesc, LayersIPCChannel* aAllocator)
-    : TextureClient(new SharedSurfaceTextureData(desc), FlagsFrom(desc),
-aAllocator) { mWorkaroundAnnoyingSharedSurfaceLifetimeIssues = true;
-}
-
-SharedSurfaceTextureClient::~SharedSurfaceTextureClient() {
-  // XXX - Things break when using the proper destruction handshake with
-  // SharedSurfaceTextureData because the TextureData outlives its gl
-  // context. Having a strong reference to the gl context creates a cycle.
-  // This needs to be fixed in a better way, though, because deleting
-  // the TextureData here can race with the compositor and cause flashing.
-  TextureData* data = mData;
-  mData = nullptr;
-
-  Destroy();
-
-  if (data) {
-    // Destroy mData right away without doing the proper deallocation handshake,
-    // because SharedSurface depends on things that may not outlive the
-    // texture's destructor so we can't wait until we know the compositor isn't
-    // using the texture anymore. It goes without saying that this is really bad
-    // and we should fix the bugs that block doing the right thing such as bug
-    // 1224199 sooner rather than later.
-    delete data;
-  }
-}
-*/
-
 }  // namespace layers
 }  // namespace mozilla

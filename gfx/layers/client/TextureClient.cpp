@@ -86,7 +86,6 @@ struct TextureDeallocParams {
   RefPtr<LayersIPCChannel> allocator;
   bool clientDeallocation;
   bool syncDeallocation;
-  bool workAroundSharedSurfaceOwnershipIssue;
 };
 
 void DeallocateTextureClient(TextureDeallocParams params);
@@ -558,13 +557,8 @@ void DeallocateTextureClient(TextureDeallocParams params) {
     // TextureClient before sharing it with the compositor. It means the data
     // cannot be owned by the TextureHost since we never created the
     // TextureHost...
-    // ..except if the lovely mWorkaroundAnnoyingSharedSurfaceOwnershipIssues
-    // member is set to true. In this case we are in a special situation where
-    // this TextureClient is in wrapped into another TextureClient which assumes
-    // it owns our data.
-    bool shouldDeallocate = !params.workAroundSharedSurfaceOwnershipIssue;
-    DestroyTextureData(params.data, params.allocator, shouldDeallocate,
-                       false);  // main-thread deallocation
+    DestroyTextureData(params.data, params.allocator, /* aDeallocate */ true,
+                       /* aMainThreadOnly */ false);
     return;
   }
 
@@ -591,22 +585,14 @@ void TextureClient::Destroy() {
   }
 
   TextureData* data = mData;
-  if (!mWorkaroundAnnoyingSharedSurfaceLifetimeIssues) {
-    mData = nullptr;
-  }
+  mData = nullptr;
 
   if (data || actor) {
     TextureDeallocParams params;
     params.actor = actor;
     params.allocator = mAllocator;
     params.clientDeallocation = !!(mFlags & TextureFlags::DEALLOCATE_CLIENT);
-    params.workAroundSharedSurfaceOwnershipIssue =
-        mWorkaroundAnnoyingSharedSurfaceOwnershipIssues;
-    if (mWorkaroundAnnoyingSharedSurfaceLifetimeIssues) {
-      params.data = nullptr;
-    } else {
-      params.data = data;
-    }
+    params.data = data;
     // At the moment we always deallocate synchronously when deallocating on the
     // client side, but having asynchronous deallocate in some of the cases will
     // be a worthwhile optimization.
@@ -1415,8 +1401,6 @@ TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags,
       mIsReadLocked(false),
       mUpdated(false),
       mAddedToCompositableClient(false),
-      mWorkaroundAnnoyingSharedSurfaceLifetimeIssues(false),
-      mWorkaroundAnnoyingSharedSurfaceOwnershipIssues(false),
       mFwdTransactionId(0),
       mSerial(++sSerialCounter)
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
