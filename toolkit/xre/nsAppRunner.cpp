@@ -754,11 +754,6 @@ bool SessionHistoryInParent() {
              fission_sessionHistoryInParent_AtStartup_DoNotUseDirectly();
 }
 
-bool BFCacheInParent() {
-  return SessionHistoryInParent() &&
-         StaticPrefs::fission_bfcacheInParent_DoNotUseDirectly();
-}
-
 }  // namespace mozilla
 
 /**

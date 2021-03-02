@@ -9,13 +9,11 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsIHttpChannel.h"
-#include "nsIXULRuntime.h"
 #include "nsSHEntryShared.h"
 #include "nsSHistory.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -389,28 +387,20 @@ void SessionHistoryEntry::RemoveLoadId(uint64_t aLoadId) {
 }
 
 SessionHistoryEntry::SessionHistoryEntry()
-    : mInfo(new SessionHistoryInfo()), mID(++gEntryID) {
-  MOZ_ASSERT(mozilla::SessionHistoryInParent());
-}
+    : mInfo(new SessionHistoryInfo()), mID(++gEntryID) {}
 
 SessionHistoryEntry::SessionHistoryEntry(nsDocShellLoadState* aLoadState,
                                          nsIChannel* aChannel)
-    : mInfo(new SessionHistoryInfo(aLoadState, aChannel)), mID(++gEntryID) {
-  MOZ_ASSERT(mozilla::SessionHistoryInParent());
-}
+    : mInfo(new SessionHistoryInfo(aLoadState, aChannel)), mID(++gEntryID) {}
 
 SessionHistoryEntry::SessionHistoryEntry(SessionHistoryInfo* aInfo)
-    : mInfo(MakeUnique<SessionHistoryInfo>(*aInfo)), mID(++gEntryID) {
-  MOZ_ASSERT(mozilla::SessionHistoryInParent());
-}
+    : mInfo(MakeUnique<SessionHistoryInfo>(*aInfo)), mID(++gEntryID) {}
 
 SessionHistoryEntry::SessionHistoryEntry(const SessionHistoryEntry& aEntry)
     : mInfo(MakeUnique<SessionHistoryInfo>(*aEntry.mInfo)),
       mParent(aEntry.mParent),
       mID(aEntry.mID),
-      mBCHistoryLength(aEntry.mBCHistoryLength) {
-  MOZ_ASSERT(mozilla::SessionHistoryInParent());
-}
+      mBCHistoryLength(aEntry.mBCHistoryLength) {}
 
 SessionHistoryEntry::~SessionHistoryEntry() {
   // Null out the mParent pointers on all our kids.
@@ -1344,29 +1334,6 @@ void SessionHistoryEntry::ReplaceWith(const SessionHistoryEntry& aSource) {
 
 SHEntrySharedParentState* SessionHistoryEntry::SharedInfo() const {
   return static_cast<SHEntrySharedParentState*>(mInfo->mSharedState.Get());
-}
-
-void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
-  MOZ_ASSERT_IF(aFrameLoader, !SharedInfo()->mFrameLoader);
-  // If the pref is disabled, we still allow evicting the existing entries.
-  MOZ_RELEASE_ASSERT(!aFrameLoader || mozilla::BFCacheInParent());
-  SharedInfo()->mFrameLoader = aFrameLoader;
-  if (aFrameLoader) {
-    // When a new frameloader is stored, try to evict some older
-    // frameloaders. Non-SHIP session history has a similar call in
-    // nsDocumentViewer::Show.
-    nsCOMPtr<nsISHistory> shistory;
-    GetShistory(getter_AddRefs(shistory));
-    if (shistory) {
-      int32_t index = 0;
-      shistory->GetIndex(&index);
-      shistory->EvictOutOfRangeContentViewers(index);
-    }
-  }
-}
-
-nsFrameLoader* SessionHistoryEntry::GetFrameLoader() {
-  return SharedInfo()->mFrameLoader;
 }
 
 void SessionHistoryEntry::SetInfo(SessionHistoryInfo* aInfo) {

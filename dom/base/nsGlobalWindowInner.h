@@ -310,19 +310,19 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
 
-  void Suspend(bool aIncludeSubWindows = true);
-  void Resume(bool aIncludeSubWindows = true);
+  void Suspend();
+  void Resume();
   virtual bool IsSuspended() const override;
 
   // Calling Freeze() on a window will automatically Suspend() it.  In
-  // addition, the window and its children (if aIncludeSubWindows is true) are
-  // further treated as no longer suitable for interaction with the user.  For
-  // example, it may be marked non-visible, cannot be focused, etc.  All worker
-  // threads are also frozen bringing them to a complete stop.  A window can
-  // have Freeze() called multiple times and will only thaw after a matching
-  // number of Thaw() calls.
-  void Freeze(bool aIncludeSubWindows = true);
-  void Thaw(bool aIncludeSubWindows = true);
+  // addition, the window and its children are further treated as no longer
+  // suitable for interaction with the user.  For example, it may be marked
+  // non-visible, cannot be focused, etc.  All worker threads are also frozen
+  // bringing them to a complete stop.  A window can have Freeze() called
+  // multiple times and will only thaw after a matching number of Thaw()
+  // calls.
+  void Freeze();
+  void Thaw();
   virtual bool IsFrozen() const override;
   void SyncStateFromParentWindow();
 
@@ -1064,8 +1064,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     return (aWindow->*aMethod)(aArgs...);
   }
 
-  void FreezeInternal(bool aIncludeSubWindows);
-  void ThawInternal(bool aIncludeSubWindows);
+  void FreezeInternal();
+  void ThawInternal();
 
   mozilla::CallState ShouldReportForServiceWorkerScopeInternal(
       const nsACString& aScope, bool* aResultOut);

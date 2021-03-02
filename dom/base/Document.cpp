@@ -113,7 +113,6 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -430,7 +429,6 @@
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
 
 mozilla::LazyLogModule gPageCacheLog("PageCache");
-mozilla::LazyLogModule gSHIPBFCacheLog("SHIPBFCache");
 mozilla::LazyLogModule gTimeoutDeferralLog("TimeoutDefer");
 mozilla::LazyLogModule gUseCountersLog("UseCounters");
 
@@ -10636,8 +10634,7 @@ void Document::CollectDescendantDocuments(
 }
 
 bool Document::CanSavePresentation(nsIRequest* aNewRequest,
-                                   uint16_t& aBFCacheCombo,
-                                   bool aIncludeSubdocuments) {
+                                   uint16_t& aBFCacheCombo) {
   bool ret = true;
 
   if (!IsBFCachingAllowed()) {
@@ -10766,16 +10763,16 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
     ret = false;
   }
 
-  if (aIncludeSubdocuments && mSubDocuments) {
+  if (mSubDocuments) {
     for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<SubDocMapEntry*>(iter.Get());
       Document* subdoc = entry->mSubDocument;
 
       uint16_t subDocBFCacheCombo = 0;
       // The aIgnoreRequest we were passed is only for us, so don't pass it on.
-      bool canCache = subdoc ? subdoc->CanSavePresentation(
-                                   nullptr, subDocBFCacheCombo, true)
-                             : false;
+      bool canCache =
+          subdoc ? subdoc->CanSavePresentation(nullptr, subDocBFCacheCombo)
+                 : false;
       if (!canCache) {
         MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
                 ("Save of %s blocked due to subdocument blocked", uri.get()));
@@ -10785,15 +10782,13 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
     }
   }
 
-  if (!mozilla::BFCacheInParent()) {
-    // BFCache is currently not compatible with remote subframes (bug 1609324)
-    if (RefPtr<BrowsingContext> browsingContext = GetBrowsingContext()) {
-      for (auto& child : browsingContext->Children()) {
-        if (!child->IsInProcess()) {
-          aBFCacheCombo |= BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES;
-          ret = false;
-          break;
-        }
+  // BFCache is currently not compatible with remote subframes (bug 1609324)
+  if (RefPtr<BrowsingContext> browsingContext = GetBrowsingContext()) {
+    for (auto& child : browsingContext->Children()) {
+      if (!child->IsInProcess()) {
+        aBFCacheCombo |= BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES;
+        ret = false;
+        break;
       }
     }
   }
@@ -11112,15 +11107,6 @@ void Document::DispatchPageTransition(EventTarget* aDispatchTarget,
 
 void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup) {
-  if (MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug)) {
-    nsCString uri;
-    if (GetDocumentURI()) {
-      uri = GetDocumentURI()->GetSpecOrDefault();
-    }
-    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-            ("Document::OnPageShow [%s] persisted=%i", uri.get(), aPersisted));
-  }
-
   const bool inFrameLoaderSwap = !!aDispatchStartTarget;
   MOZ_DIAGNOSTIC_ASSERT(
       inFrameLoaderSwap ==
@@ -11197,15 +11183,6 @@ static void ClearPendingFullscreenRequests(Document* aDoc);
 
 void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup) {
-  if (MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug)) {
-    nsCString uri;
-    if (GetDocumentURI()) {
-      uri = GetDocumentURI()->GetSpecOrDefault();
-    }
-    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-            ("Document::OnPageHide %s persisted=%i", uri.get(), aPersisted));
-  }
-
   const bool inFrameLoaderSwap = !!aDispatchStartTarget;
   MOZ_DIAGNOSTIC_ASSERT(
       inFrameLoaderSwap ==
