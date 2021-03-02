@@ -706,6 +706,17 @@ class MarkupContextMenu {
     return menu;
   }
 
+  _getEditMarkupString() {
+    if (this.selection.isHTMLNode()) {
+      return "inspectorHTMLEdit";
+    } else if (this.selection.isSVGNode()) {
+      return "inspectorSVGEdit";
+    } else if (this.selection.isMathMLNode()) {
+      return "inspectorMathMLEdit";
+    }
+    return "inspectorXMLEdit";
+  }
+
   _openMenu({ target, screenX = 0, screenY = 0 } = {}) {
     if (this.selection.isSlotted()) {
       // Slotted elements should not show any context menu.
@@ -731,7 +742,7 @@ class MarkupContextMenu {
     menu.append(
       new MenuItem({
         id: "node-menu-edithtml",
-        label: INSPECTOR_L10N.getStr("inspectorHTMLEdit.label"),
+        label: INSPECTOR_L10N.getStr(`${this._getEditMarkupString()}.label`),
         accesskey: INSPECTOR_L10N.getStr("inspectorHTMLEdit.accesskey"),
         disabled: isAnonymous || (!isElement && !isFragment),
         click: () => this._editHTML(),
