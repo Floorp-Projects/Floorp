@@ -159,20 +159,8 @@ class InputResultDetailTest : BaseSessionTest() {
             PanZoomController.OVERSCROLL_FLAG_VERTICAL)
     }
 
-    @WithDisplay(width = 100, height = 100)
-    @Test
-    fun testScrollHandoff() {
-        sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
-        setupDocument(SCROLL_HANDOFF_HTML_PATH);
-
-        var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-
-        // There is a child scroll container and its overscroll-behavior is `contain auto`
-        assertResultDetail("handoff", value,
-            PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
-            PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            PanZoomController.OVERSCROLL_FLAG_VERTICAL)
-
+    // NOTE: This function requires #scroll element in the target document.
+    private fun scrollToBottom() {
         // Prepare a scroll event listener.
         val scrollPromise = mainSession.evaluatePromiseJS("""
             new Promise(resolve => {
@@ -188,11 +176,26 @@ class InputResultDetailTest : BaseSessionTest() {
             const scroll = document.getElementById('scroll');
             scroll.scrollTo(0, scroll.scrollHeight);
         """.trimIndent())
-
-        // Wait a scroll event to make sure the scroll operation has happened.
         assertThat("scroll", scrollPromise.value as Boolean, equalTo(true));
-
         sessionRule.session.flushApzRepaints()
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun testScrollHandoff() {
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
+        setupDocument(SCROLL_HANDOFF_HTML_PATH);
+
+        var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+
+        // There is a child scroll container and its overscroll-behavior is `contain auto`
+        assertResultDetail("handoff", value,
+            PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
+            PanZoomController.SCROLLABLE_FLAG_BOTTOM,
+            PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+
+        // Scroll to the bottom edge
+        scrollToBottom()
 
         value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
 
@@ -201,5 +204,67 @@ class InputResultDetailTest : BaseSessionTest() {
             PanZoomController.INPUT_RESULT_HANDLED,
             PanZoomController.SCROLLABLE_FLAG_BOTTOM,
             (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL))
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun testOverscrollBehaviorNoneOnNonRoot() {
+        var files = arrayOf(
+            OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH)
+
+        for (file in files) {
+          setupDocument(file)
+
+          var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+
+          assertResultDetail("`overscroll-behavior: none` on non root scroll container", value,
+              PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
+              PanZoomController.SCROLLABLE_FLAG_BOTTOM,
+              PanZoomController.OVERSCROLL_FLAG_NONE)
+
+          // Scroll to the bottom edge so that the container is no longer scrollable downwards.
+          scrollToBottom()
+
+          value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+
+          // The touch event should be handled in the scroll container content.
+          assertResultDetail("`overscroll-behavior: none` on non root scroll container", value,
+              PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
+              PanZoomController.SCROLLABLE_FLAG_TOP,
+              PanZoomController.OVERSCROLL_FLAG_NONE)
+        }
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun testOverscrollBehaviorNoneOnNonRootWithDynamicToolbar() {
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
+
+        var files = arrayOf(
+            OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH)
+
+        for (file in files) {
+          setupDocument(file)
+
+          var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+
+          assertResultDetail("`overscroll-behavior: none` on non root scroll container", value,
+              PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
+              PanZoomController.SCROLLABLE_FLAG_BOTTOM,
+              PanZoomController.OVERSCROLL_FLAG_NONE)
+
+          // Scroll to the bottom edge so that the container is no longer scrollable downwards.
+          scrollToBottom()
+
+          value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+
+          // Now the touch event should be handed to the root scroller even if
+          // the scroll container's `overscroll-behavior` is none to move
+          // the dynamic toolbar.
+          assertResultDetail("`overscroll-behavior: none, none`", value,
+              PanZoomController.INPUT_RESULT_HANDLED,
+              PanZoomController.SCROLLABLE_FLAG_BOTTOM,
+              (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL))
+        }
     }
 }
