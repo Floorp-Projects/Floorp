@@ -22,6 +22,31 @@ class Accessible {
   Accessible();
 
  public:
+  virtual Accessible* Parent() const = 0;
+
+  /**
+   * Return child accessible at the given index.
+   */
+  virtual Accessible* ChildAt(uint32_t aIndex) const = 0;
+
+  virtual Accessible* NextSibling() const = 0;
+  virtual Accessible* PrevSibling() const = 0;
+
+  virtual uint32_t ChildCount() const = 0;
+
+  virtual int32_t IndexInParent() const = 0;
+
+  bool HasChildren() const { return !!FirstChild(); }
+
+  inline Accessible* FirstChild() const {
+    return ChildCount() ? ChildAt(0) : nullptr;
+  }
+
+  inline Accessible* LastChild() const {
+    uint32_t childCount = ChildCount();
+    return childCount ? ChildAt(childCount - 1) : nullptr;
+  }
+
   /**
    * Return ARIA role map if any.
    */
