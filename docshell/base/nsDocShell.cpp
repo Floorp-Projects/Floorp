@@ -3455,12 +3455,14 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
     } else {
       triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
     }
-    mActiveEntry = MakeUnique<SessionHistoryInfo>(
-        uri, triggeringPrincipal, nullptr, nullptr, nullptr,
-        nsLiteralCString("text/html"));
-    mBrowsingContext->SetActiveSessionHistoryEntry(
-        Nothing(), mActiveEntry.get(), MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags),
-        /* aUpdatedCacheKey = */ 0);
+    if (mozilla::SessionHistoryInParent()) {
+      mActiveEntry = MakeUnique<SessionHistoryInfo>(
+          uri, triggeringPrincipal, nullptr, nullptr, nullptr,
+          nsLiteralCString("text/html"));
+      mBrowsingContext->SetActiveSessionHistoryEntry(
+          Nothing(), mActiveEntry.get(), MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags),
+          /* aUpdatedCacheKey = */ 0);
+    }
     if (DisplayLoadError(rv, nullptr, PromiseFlatString(aURI).get(), nullptr) &&
         (loadFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
       return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
