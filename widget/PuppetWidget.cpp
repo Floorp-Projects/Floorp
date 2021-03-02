@@ -511,6 +511,20 @@ nsresult PuppetWidget::ClearNativeTouchSequence(nsIObserver* aObserver) {
   return NS_OK;
 }
 
+nsresult PuppetWidget::SynthesizeNativePenInput(
+    uint32_t aPointerId, TouchPointerState aPointerState,
+    LayoutDeviceIntPoint aPoint, double aPressure, uint32_t aRotation,
+    int32_t aTiltX, int32_t aTiltY, nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "peninput");
+  if (!mBrowserChild) {
+    return NS_ERROR_FAILURE;
+  }
+  mBrowserChild->SendSynthesizeNativePenInput(aPointerId, aPointerState, aPoint,
+                                              aPressure, aRotation, aTiltX,
+                                              aTiltY, notifier.SaveObserver());
+  return NS_OK;
+}
+
 void PuppetWidget::SetConfirmedTargetAPZC(
     uint64_t aInputBlockId,
     const nsTArray<ScrollableLayerGuid>& aTargets) const {

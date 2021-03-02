@@ -1153,6 +1153,34 @@ nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX, int32_t aScreenY,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendNativePenInput(uint32_t aPointerId,
+                                     uint32_t aPointerState, int32_t aScreenX,
+                                     int32_t aScreenY, double aPressure,
+                                     uint32_t aRotation, int32_t aTiltX,
+                                     int32_t aTiltY, nsIObserver* aObserver) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aPressure < 0 || aPressure > 1 || aRotation > 359 || aTiltX < -90 ||
+      aTiltX > 90 || aTiltY < -90 || aTiltY > 90) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NS_DispatchToMainThread(NativeInputRunnable::Create(
+      NewRunnableMethod<uint32_t, nsIWidget::TouchPointerState,
+                        LayoutDeviceIntPoint, double, uint32_t, int32_t,
+                        int32_t, nsIObserver*>(
+          "nsIWidget::SynthesizeNativePenInput", widget,
+          &nsIWidget::SynthesizeNativePenInput, aPointerId,
+          (nsIWidget::TouchPointerState)aPointerState,
+          LayoutDeviceIntPoint(aScreenX, aScreenY), aPressure, aRotation,
+          aTiltX, aTiltY, aObserver)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SuppressAnimation(bool aSuppress) {
   nsIWidget* widget = GetWidget();
   if (widget) {
