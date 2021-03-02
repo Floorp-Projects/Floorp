@@ -6866,18 +6866,26 @@ mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  CanonicalBrowsingContext* context = aContext.get_canonical();
-  BrowsingContext* parent = context->GetParent();
-  if (!parent) {
-    return IPC_OK();
-  }
-
-  CanonicalBrowsingContext* canonicalParent = parent->Canonical();
+  nsDataHashtable<nsPtrHashKey<ContentParent>, bool> processes(2);
+  processes.InsertOrUpdate(this, true);
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParent* cp = cpm->GetContentProcessById(
-      ContentParentId(canonicalParent->OwnerProcessId()));
-  Unused << cp->SendAdjustWindowFocus(context, aIsVisible);
+  CanonicalBrowsingContext* context = aContext.get_canonical();
+  while (context) {
+    BrowsingContext* parent = context->GetParent();
+    if (!parent) {
+      break;
+    }
+
+    CanonicalBrowsingContext* canonicalParent = parent->Canonical();
+    ContentParent* cp = cpm->GetContentProcessById(
+        ContentParentId(canonicalParent->OwnerProcessId()));
+    if (!processes.Get(cp)) {
+      Unused << cp->SendAdjustWindowFocus(context, aIsVisible);
+      processes.InsertOrUpdate(cp, true);
+    }
+    context = canonicalParent;
+  }
   return IPC_OK();
 }
 

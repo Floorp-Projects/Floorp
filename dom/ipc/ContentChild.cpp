@@ -3794,7 +3794,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAdjustWindowFocus(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->AdjustWindowFocus(aContext.get(), false, aIsVisible);
+    fm->AdjustInProcessWindowFocus(aContext.get(), false, aIsVisible);
   }
   return IPC_OK();
 }
