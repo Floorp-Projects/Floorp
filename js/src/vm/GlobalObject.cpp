@@ -513,7 +513,7 @@ bool GlobalObject::resolveOffThreadConstructor(JSContext* cx,
   }
 
   if (key == JSProto_Object &&
-      !JSObject::setFlags(cx, placeholder, BaseShape::IMMUTABLE_PROTOTYPE)) {
+      !JSObject::setFlag(cx, placeholder, ObjectFlag::ImmutablePrototype)) {
     return false;
   }
 

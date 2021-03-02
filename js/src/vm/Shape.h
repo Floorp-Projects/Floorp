@@ -32,6 +32,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/RootingAPI.h"
 #include "js/UbiNode.h"
+#include "util/EnumFlags.h"
 #include "vm/JSAtom.h"
 #include "vm/ObjectGroup.h"
 #include "vm/Printer.h"
@@ -668,50 +669,39 @@ class Shape;
 class UnownedBaseShape;
 struct StackBaseShape;
 
+// Flags set on the Shape which describe the referring object. Once set these
+// cannot be unset (except during object densification of sparse indexes), and
+// are transferred from shape to shape as the object's last property changes.
+//
+// If you add a new flag here, please add appropriate code to JSObject::dump to
+// dump it as part of the object representation.
+enum class ObjectFlag : uint16_t {
+  Delegate = 1 << 0,
+  NotExtensible = 1 << 1,
+  Indexed = 1 << 2,
+  HasInterestingSymbol = 1 << 3,
+  HadElementsAccess = 1 << 4,
+  FrozenElements = 1 << 5,  // See ObjectElements::FROZEN comment.
+  UncacheableProto = 1 << 6,
+  ImmutablePrototype = 1 << 7,
+
+  // See JSObject::isQualifiedVarObj().
+  QualifiedVarObj = 1 << 8,
+};
+
+using ObjectFlags = EnumFlags<ObjectFlag>;
+
 class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
  public:
   friend class Shape;
   friend struct StackBaseShape;
   friend struct StackShape;
 
-  enum Flag {
-    /* (0x1, 0x2 and 0x4 are unused) */
-
-    /*
-     * Flags set which describe the referring object. Once set these cannot
-     * be unset (except during object densification of sparse indexes), and
-     * are transferred from shape to shape as the object's last property
-     * changes.
-     *
-     * If you add a new flag here, please add appropriate code to
-     * JSObject::dump to dump it as part of object representation.
-     */
-
-    DELEGATE = 0x8,
-    NOT_EXTENSIBLE = 0x10,
-    INDEXED = 0x20,
-    HAS_INTERESTING_SYMBOL = 0x40,
-    HAD_ELEMENTS_ACCESS = 0x80,
-    FROZEN_ELEMENTS = 0x100,  // See ObjectElements::FROZEN comment.
-    // 0x200 is unused.
-    // 0x400 is unused.
-    UNCACHEABLE_PROTO = 0x800,
-    IMMUTABLE_PROTOTYPE = 0x1000,
-
-    // See JSObject::isQualifiedVarObj().
-    QUALIFIED_VAROBJ = 0x2000,
-
-    // 0x4000 is unused.
-    // 0x8000 is unused.
-
-    OBJECT_FLAG_MASK = 0xfff8
-  };
-
  private:
   /* Class of referring object, stored in the cell header */
   const JSClass* clasp() const { return headerPtr(); }
 
-  uint32_t flags; /* Vector of above flags. */
+  ObjectFlags flags;
 
   /* For owned BaseShapes, the canonical unowned BaseShape. */
   GCPtrUnownedBaseShape unowned_;
@@ -740,7 +730,7 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
     unowned_ = unowned;
   }
 
-  uint32_t getObjectFlags() const { return flags & OBJECT_FLAG_MASK; }
+  ObjectFlags objectFlags() const { return flags; }
 
   bool hasTable() const {
     MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
@@ -854,37 +844,36 @@ UnownedBaseShape* BaseShape::baseUnowned() {
 
 /* Entries for the per-zone baseShapes set of unowned base shapes. */
 struct StackBaseShape : public DefaultHasher<WeakHeapPtr<UnownedBaseShape*>> {
-  uint32_t flags;
+  ObjectFlags flags;
   const JSClass* clasp;
 
   explicit StackBaseShape(BaseShape* base)
-      : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
-        clasp(base->clasp()) {}
+      : flags(base->flags), clasp(base->clasp()) {}
 
-  inline StackBaseShape(const JSClass* clasp, uint32_t objectFlags);
+  inline StackBaseShape(const JSClass* clasp, ObjectFlags objectFlags);
   explicit inline StackBaseShape(Shape* shape);
 
   struct Lookup {
-    uint32_t flags;
+    ObjectFlags flags;
     const JSClass* clasp;
 
     MOZ_IMPLICIT Lookup(const StackBaseShape& base)
         : flags(base.flags), clasp(base.clasp) {}
 
     MOZ_IMPLICIT Lookup(UnownedBaseShape* base)
-        : flags(base->getObjectFlags()), clasp(base->clasp()) {
+        : flags(base->objectFlags()), clasp(base->clasp()) {
       MOZ_ASSERT(!base->isOwned());
     }
 
     explicit Lookup(const WeakHeapPtr<UnownedBaseShape*>& base)
-        : flags(base.unbarrieredGet()->getObjectFlags()),
+        : flags(base.unbarrieredGet()->objectFlags()),
           clasp(base.unbarrieredGet()->clasp()) {
       MOZ_ASSERT(!base.unbarrieredGet()->isOwned());
     }
   };
 
   static HashNumber hash(const Lookup& lookup) {
-    return mozilla::HashGeneric(lookup.flags, lookup.clasp);
+    return mozilla::HashGeneric(lookup.flags.toRaw(), lookup.clasp);
   }
   static inline bool match(const WeakHeapPtr<UnownedBaseShape*>& key,
                            const Lookup& lookup) {
@@ -1162,14 +1151,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   const JSClass* getObjectClass() const { return base()->clasp(); }
 
-  static Shape* setObjectFlags(JSContext* cx, BaseShape::Flag flag,
-                               TaggedProto proto, Shape* last);
+  static Shape* setObjectFlag(JSContext* cx, ObjectFlag flag, TaggedProto proto,
+                              Shape* last);
 
-  uint32_t getObjectFlags() const { return base()->getObjectFlags(); }
-  bool hasAllObjectFlags(BaseShape::Flag flags) const {
-    MOZ_ASSERT(flags);
-    MOZ_ASSERT(!(flags & ~BaseShape::OBJECT_FLAG_MASK));
-    return (base()->flags & flags) == flags;
+  ObjectFlags objectFlags() const { return base()->objectFlags(); }
+  bool hasObjectFlag(ObjectFlag flag) const {
+    return base()->objectFlags().hasFlag(flag);
   }
 
  protected:
@@ -1463,7 +1450,7 @@ class AccessorShape : public Shape {
 };
 
 inline StackBaseShape::StackBaseShape(Shape* shape)
-    : flags(shape->getObjectFlags()), clasp(shape->getObjectClass()) {}
+    : flags(shape->objectFlags()), clasp(shape->getObjectClass()) {}
 
 class MOZ_RAII AutoRooterGetterSetter {
   class Inner {
@@ -1499,10 +1486,10 @@ struct EmptyShape : public js::Shape {
    */
   static Shape* getInitialShape(JSContext* cx, const JSClass* clasp,
                                 TaggedProto proto, size_t nfixed,
-                                uint32_t objectFlags = 0);
+                                ObjectFlags objectFlags = {});
   static Shape* getInitialShape(JSContext* cx, const JSClass* clasp,
                                 TaggedProto proto, gc::AllocKind kind,
-                                uint32_t objectFlags = 0);
+                                ObjectFlags objectFlags = {});
 
   /*
    * Reinsert an alternate initial shape, to be returned by future
@@ -1549,11 +1536,14 @@ struct InitialShapeEntry {
     const JSClass* clasp;
     TaggedProto proto;
     uint32_t nfixed;
-    uint32_t baseFlags;
+    ObjectFlags objectFlags;
 
     Lookup(const JSClass* clasp, const TaggedProto& proto, uint32_t nfixed,
-           uint32_t baseFlags)
-        : clasp(clasp), proto(proto), nfixed(nfixed), baseFlags(baseFlags) {}
+           ObjectFlags objectFlags)
+        : clasp(clasp),
+          proto(proto),
+          nfixed(nfixed),
+          objectFlags(objectFlags) {}
   };
 
   inline InitialShapeEntry();
@@ -1568,7 +1558,7 @@ struct InitialShapeEntry {
     const Shape* shape = key.shape.unbarrieredGet();
     return lookup.clasp == shape->getObjectClass() &&
            lookup.nfixed == shape->numFixedSlots() &&
-           lookup.baseFlags == shape->getObjectFlags() &&
+           lookup.objectFlags == shape->objectFlags() &&
            key.proto.unbarrieredGet() == lookup.proto;
   }
   static void rekey(InitialShapeEntry& k, const InitialShapeEntry& newKey) {

@@ -16,9 +16,9 @@ prettyprinters.clear_module_printers(__name__)
 
 class JSObjectTypeCache(object):
     def __init__(self, value, cache):
-        baseshape_flags = gdb.lookup_type("js::BaseShape::Flag")
-        self.flag_DELEGATE = prettyprinters.enum_value(
-            baseshape_flags, "js::BaseShape::DELEGATE"
+        object_flag = gdb.lookup_type("js::ObjectFlag")
+        self.objectflag_Delegate = prettyprinters.enum_value(
+            object_flag, "js::ObjectFlag::Delegate"
         )
         self.func_ptr_type = gdb.lookup_type("JSFunction").pointer()
         self.class_NON_NATIVE = gdb.parse_and_eval("JSClass::NON_NATIVE")
@@ -63,8 +63,8 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
             native = self.value.cast(self.otc.NativeObject_ptr_t)
             shape = deref(native["shape_"])
             baseshape = get_header_ptr(shape, self.otc.BaseShape_ptr_t)
-            flags = baseshape["flags"]
-            is_delegate = bool(flags & self.otc.flag_DELEGATE)
+            flags = baseshape["flags"]["flags_"]
+            is_delegate = bool(flags & self.otc.objectflag_Delegate)
             name = None
             if class_name == "Function":
                 function = self.value

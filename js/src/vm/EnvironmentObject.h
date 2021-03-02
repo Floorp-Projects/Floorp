@@ -325,7 +325,7 @@ class CallObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 2;
-  static constexpr uint32_t BASESHAPE_FLAGS = BaseShape::QUALIFIED_VAROBJ;
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::QualifiedVarObj};
 
   /* These functions are internal and are exposed only for JITs. */
 
@@ -391,7 +391,7 @@ class VarEnvironmentObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 2;
-  static constexpr uint32_t BASESHAPE_FLAGS = BaseShape::QUALIFIED_VAROBJ;
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::QualifiedVarObj};
 
   static VarEnvironmentObject* create(JSContext* cx, HandleScope scope,
                                       AbstractFramePtr frame);
@@ -419,8 +419,8 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 2;
-  static constexpr uint32_t BASESHAPE_FLAGS =
-      BaseShape::NOT_EXTENSIBLE | BaseShape::QUALIFIED_VAROBJ;
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible,
+                                               ObjectFlag::QualifiedVarObj};
 
   static ModuleEnvironmentObject* create(JSContext* cx,
                                          HandleModuleObject module);
@@ -474,7 +474,7 @@ class WasmInstanceEnvironmentObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 2;
-  static constexpr uint32_t BASESHAPE_FLAGS = BaseShape::NOT_EXTENSIBLE;
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
 
   static WasmInstanceEnvironmentObject* createHollowForDebug(
       JSContext* cx, Handle<WasmInstanceScope*> scope);
@@ -498,7 +498,7 @@ class WasmFunctionCallObject : public EnvironmentObject {
   // TODO Check what Debugger behavior should be when it evaluates a
   // var declaration.
   static constexpr uint32_t RESERVED_SLOTS = 2;
-  static constexpr uint32_t BASESHAPE_FLAGS = BaseShape::NOT_EXTENSIBLE;
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
 
   static WasmFunctionCallObject* createHollowForDebug(
       JSContext* cx, HandleObject enclosing, Handle<WasmFunctionScope*> scope);
@@ -521,7 +521,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 2;
-  static constexpr uint32_t BASESHAPE_FLAGS = BaseShape::NOT_EXTENSIBLE;
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
 
  private:
   static LexicalEnvironmentObject* createTemplateObject(JSContext* cx,
@@ -636,7 +636,7 @@ class NonSyntacticVariablesObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 1;
-  static constexpr uint32_t BASESHAPE_FLAGS = 0;
+  static constexpr ObjectFlags OBJECT_FLAGS = {};
 
   static NonSyntacticVariablesObject* create(JSContext* cx);
 };
@@ -655,7 +655,7 @@ class WithEnvironmentObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 4;
-  static constexpr uint32_t BASESHAPE_FLAGS = 0;
+  static constexpr ObjectFlags OBJECT_FLAGS = {};
 
   static WithEnvironmentObject* create(JSContext* cx, HandleObject object,
                                        HandleObject enclosing,

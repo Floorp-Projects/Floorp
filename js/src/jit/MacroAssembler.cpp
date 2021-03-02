@@ -3625,8 +3625,10 @@ void MacroAssembler::branchIfObjectNotExtensible(Register obj, Register scratch,
 
   // Spectre-style checks are not needed here because we do not interpret data
   // based on this check.
-  branchTest32(Assembler::NonZero, Address(scratch, BaseShape::offsetOfFlags()),
-               Imm32(js::BaseShape::NOT_EXTENSIBLE), label);
+  static_assert(sizeof(ObjectFlags) == sizeof(uint16_t));
+  load16ZeroExtend(Address(scratch, BaseShape::offsetOfFlags()), scratch);
+  branchTest32(Assembler::NonZero, scratch,
+               Imm32(uint32_t(ObjectFlag::NotExtensible)), label);
 }
 
 void MacroAssembler::wasmTrap(wasm::Trap trap,
