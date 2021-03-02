@@ -2115,8 +2115,7 @@ void HTMLMediaElement::SetDecodeError(const nsAString& aError,
       {"NS_ERROR_DOM_MEDIA_DEMUXER_ERR", NS_ERROR_DOM_MEDIA_DEMUXER_ERR},
       {"NS_ERROR_DOM_MEDIA_CDM_ERR", NS_ERROR_DOM_MEDIA_CDM_ERR},
       {"NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR",
-       NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR}
-  };
+       NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR}};
   for (auto& error : kSupportedErrorList) {
     if (strcmp(error.mName, NS_ConvertUTF16toUTF8(aError).get()) == 0) {
       DecoderDoctorDiagnostics diagnostics;
