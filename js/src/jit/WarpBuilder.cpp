@@ -534,10 +534,6 @@ bool WarpBuilder::buildInlinePrologue() {
   // Initialize |this| slot.
   current->initSlot(info().thisSlot(), inlineCallInfo()->thisArg());
 
-  // We do not inline functions which need the arguments object.
-  // This means we can use `argSlot` below instead of `argSlotUnchecked`.
-  MOZ_ASSERT(!info().needsArgsObj());
-
   uint32_t callerArgs = inlineCallInfo()->argc();
   uint32_t actualArgs = info().nargs();
   uint32_t passedArgs = std::min<uint32_t>(callerArgs, actualArgs);
@@ -545,12 +541,12 @@ bool WarpBuilder::buildInlinePrologue() {
   // Initialize actually set arguments.
   for (uint32_t i = 0; i < passedArgs; i++) {
     MDefinition* arg = inlineCallInfo()->getArg(i);
-    current->initSlot(info().argSlot(i), arg);
+    current->initSlot(info().argSlotUnchecked(i), arg);
   }
 
   // Pass undefined for missing arguments.
   for (uint32_t i = passedArgs; i < actualArgs; i++) {
-    current->initSlot(info().argSlot(i), undef);
+    current->initSlot(info().argSlotUnchecked(i), undef);
   }
 
   // Initialize local slots.
@@ -1639,10 +1635,18 @@ bool WarpBuilder::build_Arguments(BytecodeLocation loc) {
 
   ArgumentsObject* templateObj = snapshot->templateObj();
   MDefinition* env = current->environmentChain();
-  auto* argsObj = MCreateArgumentsObject::New(alloc(), env, templateObj);
+
+  MInstruction* argsObj;
+  if (inlineCallInfo()) {
+    argsObj = MCreateInlinedArgumentsObject::New(alloc(), env, getCallee(),
+                                                 inlineCallInfo()->argv());
+  } else {
+    argsObj = MCreateArgumentsObject::New(alloc(), env, templateObj);
+  }
   current->add(argsObj);
   current->setArgumentsObject(argsObj);
   current->push(argsObj);
+
   return true;
 }
 

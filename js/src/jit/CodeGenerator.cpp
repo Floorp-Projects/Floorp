@@ -7259,6 +7259,39 @@ void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
   masm.bind(&done);
 }
 
+void CodeGenerator::visitCreateInlinedArgumentsObject(
+    LCreateInlinedArgumentsObject* lir) {
+  Register callObj = ToRegister(lir->getCallObject());
+  Register callee = ToRegister(lir->getCallee());
+  Register argsAddress = ToRegister(lir->temp());
+
+  // TODO: Do we have to worry about alignment here?
+
+  // Create a contiguous array of values for ArgumentsObject::create
+  // by pushing the arguments onto the stack in reverse order.
+  uint32_t argc = lir->mir()->numActuals();
+  for (uint32_t i = 0; i < argc; i++) {
+    uint32_t argNum = argc - i - 1;
+    uint32_t index = LCreateInlinedArgumentsObject::ArgIndex(argNum);
+    ConstantOrRegister arg =
+        toConstantOrRegister(lir, index, lir->mir()->getArg(argNum)->type());
+    masm.Push(arg);
+  }
+  masm.moveStackPtrTo(argsAddress);
+
+  pushArg(Imm32(argc));
+  pushArg(callObj);
+  pushArg(callee);
+  pushArg(argsAddress);
+
+  using Fn = ArgumentsObject* (*)(JSContext*, Value*, HandleFunction,
+                                  HandleObject, uint32_t);
+  callVM<Fn, ArgumentsObject::createForInlinedIon>(lir);
+
+  // Discard the array of values.
+  masm.freeStack(argc * sizeof(Value));
+}
+
 void CodeGenerator::visitGetArgumentsObjectArg(LGetArgumentsObjectArg* lir) {
   Register temp = ToRegister(lir->getTemp(0));
   Register argsObj = ToRegister(lir->getArgsObject());
