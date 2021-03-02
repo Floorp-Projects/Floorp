@@ -276,13 +276,20 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   /**
    * Updates state based on the `browser.urlbar.quicksuggest.enabled` pref.
-   * Right now we only need to enable/disable event telemetry.
+   * Enable/disable event telemetry and ensure QuickSuggest module is loaded
+   * when enabled.
    */
   _updateExperimentState() {
     Services.telemetry.setEventRecordingEnabled(
       TELEMETRY_EVENT_CATEGORY,
       UrlbarPrefs.get(EXPERIMENT_PREF)
     );
+    // QuickSuggest is only loaded by the UrlBar on it's first query, however
+    // there is work it can preload when idle instead of starting it on user
+    // input. Referencing it here will trigger its import and init.
+    if (UrlbarPrefs.get(EXPERIMENT_PREF)) {
+      UrlbarQuickSuggest; // eslint-disable-line no-unused-expressions
+    }
   }
 
   // Whether we added a result during the most recent query.
