@@ -370,6 +370,25 @@ class WebPlatformTestsTestPathsRunner(MozbuildObject):
         return True
 
 
+class WebPlatformTestsFissionRegressionsRunner(MozbuildObject):
+    def run(self, **kwargs):
+        import mozlog
+        import fissionregressions
+
+        src_root = self.topsrcdir
+        obj_root = self.topobjdir
+        logger = mozlog.structuredlog.StructuredLogger("web-platform-tests")
+
+        try:
+            return fissionregressions.run(logger, src_root, obj_root, **kwargs)
+        except Exception:
+            import traceback
+            import pdb
+
+            traceback.print_exc()
+            pdb.post_mortem()
+
+
 def create_parser_update():
     from update import updatecommandline
 
@@ -407,6 +426,12 @@ def create_parser_unittest():
     import unittestrunner
 
     return unittestrunner.get_parser()
+
+
+def create_parser_fission_regressions():
+    import fissionregressions
+
+    return fissionregressions.get_parser()
 
 
 def create_parser_testpaths():
@@ -600,5 +625,16 @@ class MachCommands(MachCommandBase):
     )
     def wpt_test_paths(self, **params):
         runner = self._spawn(WebPlatformTestsTestPathsRunner)
+        runner.run(**params)
+        return 0
+
+    @Command(
+        "wpt-fission-regressions",
+        category="testing",
+        description="Dump a list of fission-specific regressions",
+        parser=create_parser_fission_regressions,
+    )
+    def wpt_fission_regressions(self, **params):
+        runner = self._spawn(WebPlatformTestsFissionRegressionsRunner)
         runner.run(**params)
         return 0
