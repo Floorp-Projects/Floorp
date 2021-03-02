@@ -98,10 +98,12 @@ pub struct ManagerProxy {
 }
 
 impl ManagerProxy {
-    pub fn new() -> ManagerProxy {
+    pub fn new() -> Result<ManagerProxy, ()> {
         let (proxy_sender, manager_receiver) = channel();
         let (manager_sender, proxy_receiver) = channel();
-        let thread_handle = thread::spawn(move || {
+        let thread_handle = thread::Builder::new()
+                            .name("osclientcert".into())
+                            .spawn(move || {
             let mut real_manager = Manager::new();
             loop {
                 let arguments = match manager_receiver.recv() {
@@ -171,10 +173,16 @@ impl ManagerProxy {
                 }
             }
         });
-        ManagerProxy {
-            sender: proxy_sender,
-            receiver: proxy_receiver,
-            thread_handle: Some(thread_handle),
+        match thread_handle {
+            Ok(thread_handle) => Ok(ManagerProxy {
+                sender: proxy_sender,
+                receiver: proxy_receiver,
+                thread_handle: Some(thread_handle),
+            }),
+            Err(e) => {
+                error!("error creating manager proxy: {}", e);
+                Err(())
+            }
         }
     }
 
