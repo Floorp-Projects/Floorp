@@ -1969,3 +1969,37 @@ bool RCreateArgumentsObject::recover(JSContext* cx,
   iter.storeInstructionResult(JS::ObjectValue(*result));
   return true;
 }
+
+bool MCreateInlinedArgumentsObject::writeRecoverData(
+    CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(
+      uint32_t(RInstruction::Recover_CreateInlinedArgumentsObject));
+  writer.writeUnsigned(numActuals());
+  return true;
+}
+
+RCreateInlinedArgumentsObject::RCreateInlinedArgumentsObject(
+    CompactBufferReader& reader) {
+  numActuals_ = reader.readUnsigned();
+}
+
+bool RCreateInlinedArgumentsObject::recover(JSContext* cx,
+                                            SnapshotIterator& iter) const {
+  RootedObject callObject(cx, &iter.read().toObject());
+  RootedFunction callee(cx, &iter.read().toObject().as<JSFunction>());
+
+  JS::RootedValueArray<ArgumentsObject::MaxInlinedArgs> argsArray(cx);
+  for (uint32_t i = 0; i < numActuals_; i++) {
+    argsArray[i].set(iter.read());
+  }
+
+  RootedObject result(cx, ArgumentsObject::createFromValueArray(
+                              cx, argsArray, callee, callObject, numActuals_));
+  if (!result) {
+    return false;
+  }
+
+  iter.storeInstructionResult(JS::ObjectValue(*result));
+  return true;
+}

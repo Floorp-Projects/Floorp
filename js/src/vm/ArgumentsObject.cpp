@@ -425,21 +425,27 @@ ArgumentsObject* ArgumentsObject::createForIon(JSContext* cx,
 }
 
 /* static */
+ArgumentsObject* ArgumentsObject::createFromValueArray(
+    JSContext* cx, HandleValueArray argsArray, HandleFunction callee,
+    HandleObject scopeChain, uint32_t numActuals) {
+  MOZ_ASSERT(numActuals <= MaxInlinedArgs);
+  RootedObject callObj(
+      cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
+  CopyInlinedArgs copy(argsArray, callObj, callee, numActuals);
+  return create(cx, callee, numActuals, copy);
+}
+
+/* static */
 ArgumentsObject* ArgumentsObject::createForInlinedIon(JSContext* cx,
                                                       Value* args,
                                                       HandleFunction callee,
                                                       HandleObject scopeChain,
                                                       uint32_t numActuals) {
-  MOZ_ASSERT(numActuals <= MaxInlinedArgs);
-
   RootedExternalValueArray rootedArgs(cx, numActuals, args);
   HandleValueArray argsArray =
       HandleValueArray::fromMarkedLocation(numActuals, args);
 
-  RootedObject callObj(
-      cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
-  CopyInlinedArgs copy(argsArray, callObj, callee, numActuals);
-  return create(cx, callee, numActuals, copy);
+  return createFromValueArray(cx, argsArray, callee, scopeChain, numActuals);
 }
 
 /* static */
