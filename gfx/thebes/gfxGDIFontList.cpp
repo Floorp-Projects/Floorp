@@ -633,7 +633,7 @@ int CALLBACK gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW* lpelfe,
 
   gfxGDIFontList* fontList = PlatformFontList();
 
-  if (!fontList->mFontFamilies.Contains(key)) {
+  if (!fontList->mFontFamilies.GetWeak(key)) {
     NS_ConvertUTF16toUTF8 faceName(lf.lfFaceName);
     FontVisibility visibility = FontVisibility::Unknown;  // TODO
     RefPtr<GDIFontFamily> family = new GDIFontFamily(faceName, visibility);
