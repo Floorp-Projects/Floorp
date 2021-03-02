@@ -1348,7 +1348,8 @@ SHEntrySharedParentState* SessionHistoryEntry::SharedInfo() const {
 
 void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
   MOZ_ASSERT_IF(aFrameLoader, !SharedInfo()->mFrameLoader);
-  MOZ_RELEASE_ASSERT(StaticPrefs::fission_bfcacheInParent());
+  // If the pref is disabled, we still allow evicting the existing entries.
+  MOZ_RELEASE_ASSERT(!aFrameLoader || StaticPrefs::fission_bfcacheInParent());
   SharedInfo()->mFrameLoader = aFrameLoader;
   if (aFrameLoader) {
     // When a new frameloader is stored, try to evict some older

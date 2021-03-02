@@ -18,6 +18,7 @@ class BrowsingContext;
 class BrowsingContextGroup;
 class BrowserBridgeChild;
 class ContentParent;
+class Element;
 struct RemotenessOptions;
 struct RemotenessChangeState;
 }  // namespace dom
@@ -79,6 +80,12 @@ class nsFrameLoaderOwner : public nsISupports {
 
   void SubframeCrashed();
 
+  void ReplaceFrameLoader(nsFrameLoader* aNewFrameLoader);
+
+  void AttachFrameLoader(nsFrameLoader* aFrameLoader);
+  void DeattachFrameLoader(nsFrameLoader* aFrameLoader);
+  void FrameLoaderDestroying(nsFrameLoader* aFrameLoader);
+
  private:
   bool UseRemoteSubframes();
 
@@ -102,9 +109,13 @@ class nsFrameLoaderOwner : public nsISupports {
                               std::function<void()>& aFrameLoaderInit,
                               mozilla::ErrorResult& aRv);
 
+  void ChangeFrameLoaderCommon(mozilla::dom::Element* aOwner);
+
  protected:
   virtual ~nsFrameLoaderOwner() = default;
   RefPtr<nsFrameLoader> mFrameLoader;
+
+  mozilla::LinkedList<nsFrameLoader> mFrameLoaderList;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsFrameLoaderOwner, NS_FRAMELOADEROWNER_IID)

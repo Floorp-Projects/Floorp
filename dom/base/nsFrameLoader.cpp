@@ -193,12 +193,17 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mWillChangeProcess(false),
       mObservingOwnerContent(false),
       mTabProcessCrashFired(false),
-      mNotifyingCrash(false) {}
+      mNotifyingCrash(false) {
+  nsCOMPtr<nsFrameLoaderOwner> owner = do_QueryInterface(aOwner);
+  owner->AttachFrameLoader(this);
+}
 
 nsFrameLoader::~nsFrameLoader() {
   if (mMessageManager) {
     mMessageManager->Disconnect();
   }
+
+  MOZ_ASSERT(!mOwnerContent);
   MOZ_RELEASE_ASSERT(mDestroyCalled);
 }
 
@@ -1870,6 +1875,9 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
                              !doc->InUnlinkOrDeletion();
     doc->SetSubDocumentFor(mOwnerContent, nullptr);
     MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
+
+    nsCOMPtr<nsFrameLoaderOwner> owner = do_QueryInterface(mOwnerContent);
+    owner->FrameLoaderDestroying(this);
     SetOwnerContent(nullptr);
   }
 
@@ -2057,7 +2065,16 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
     mObservingOwnerContent = false;
     mOwnerContent->RemoveMutationObserver(this);
   }
+
+  if (RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(mOwnerContent)) {
+    owner->DeattachFrameLoader(this);
+  }
+
   mOwnerContent = aContent;
+
+  if (RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(mOwnerContent)) {
+    owner->AttachFrameLoader(this);
+  }
 
   if (mSessionStoreListener && mOwnerContent) {
     // mOwnerContent will only be null when the frame loader is being destroyed,

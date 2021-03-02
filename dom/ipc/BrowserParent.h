@@ -710,6 +710,7 @@ class BrowserParent final : public PBrowserParent,
   // Suspend nsIWebProgressListener events. This is used to block any further
   // progress events from the old process when process switching away.
   void SuspendProgressEvents() { mSuspendedProgressEvents = true; }
+  void ResumeProgressEvents() { mSuspendedProgressEvents = false; }
 
   bool CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
                           int32_t aNavigationIndex,
