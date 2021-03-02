@@ -119,7 +119,12 @@ add_task(async function test_setup() {
   do_get_profile(true);
 
   // Addon manager needs a profile directory.
-  loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  await loadAddonManager(
+    "xpcshell@tests.mozilla.org",
+    "XPCShell",
+    "1",
+    "1.9.2"
+  );
   finishAddonManagerStartup();
   fakeIntlReady();
 

@@ -21,7 +21,6 @@ Services.prefs.setCharPref("extensions.minCompatibleAppVersion", "0");
 Services.prefs.setCharPref("extensions.minCompatiblePlatformVersion", "0");
 Services.prefs.setBoolPref("extensions.experiments.enabled", true);
 
-AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
 Svc.Prefs.set("engine.addons", true);
 
 let engine;
@@ -40,9 +39,6 @@ const ADDONS = {
 };
 
 const XPIS = {};
-for (let [name, data] of Object.entries(ADDONS)) {
-  XPIS[name] = AddonTestUtils.createTempWebExtensionFile(data);
-}
 
 async function cleanup() {
   tracker.stop();
@@ -56,6 +52,10 @@ async function cleanup() {
 }
 
 add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+  for (let [name, data] of Object.entries(ADDONS)) {
+    XPIS[name] = AddonTestUtils.createTempWebExtensionFile(data);
+  }
   await Service.engineManager.register(AddonsEngine);
   engine = Service.engineManager.get("addons");
   reconciler = engine._reconciler;

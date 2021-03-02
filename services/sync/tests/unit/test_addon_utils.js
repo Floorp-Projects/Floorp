@@ -27,7 +27,10 @@ AddonTestUtils.createAppInfo(
   "1",
   "1.9.2"
 );
-AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
+
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
 
 function createAndStartHTTPServer(port = HTTP_PORT) {
   try {

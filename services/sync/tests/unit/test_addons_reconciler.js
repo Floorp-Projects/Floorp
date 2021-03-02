@@ -21,7 +21,6 @@ AddonTestUtils.createAppInfo(
   "1.9.2"
 );
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
 
 const ADDON_ID = "addon1@tests.mozilla.org";
 const XPI = AddonTestUtils.createTempWebExtensionFile({
@@ -39,6 +38,7 @@ function makeAddonsReconciler() {
 }
 
 add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
   Svc.Prefs.set("engine.addons", true);
   await Service.engineManager.register(AddonsEngine);
 });
