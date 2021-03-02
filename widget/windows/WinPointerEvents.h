@@ -30,30 +30,6 @@
 #  define WM_POINTERHWHEEL 0x024F
 #  define DM_POINTERHITTEST 0x0250
 
-typedef UINT32 PEN_FLAGS;
-#  define PEN_FLAG_NONE 0x00000000      // Default
-#  define PEN_FLAG_BARREL 0x00000001    // The barrel button is pressed
-#  define PEN_FLAG_INVERTED 0x00000002  // The pen is inverted
-#  define PEN_FLAG_ERASER 0x00000004    // The eraser button is pressed
-
-typedef UINT32 PEN_MASK;
-#  define PEN_MASK_NONE \
-    0x00000000  // Default - none of the optional fields are valid
-#  define PEN_MASK_PRESSURE 0x00000001  // The pressure field is valid
-#  define PEN_MASK_ROTATION 0x00000002  // The rotation field is valid
-#  define PEN_MASK_TILT_X 0x00000004    // The tiltX field is valid
-#  define PEN_MASK_TILT_Y 0x00000008    // The tiltY field is valid
-
-typedef struct tagPOINTER_PEN_INFO {
-  POINTER_INFO pointerInfo;
-  PEN_FLAGS penFlags;
-  PEN_MASK penMask;
-  UINT32 pressure;
-  UINT32 rotation;
-  INT32 tiltX;
-  INT32 tiltY;
-} POINTER_PEN_INFO;
-
 /*
  * Flags that appear in pointer input message parameters
  */

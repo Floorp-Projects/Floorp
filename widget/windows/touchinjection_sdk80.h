@@ -5,6 +5,8 @@
 #ifndef touchinjection_sdk80_h
 #define touchinjection_sdk80_h
 
+#include <windows.h>
+
 // Note, this isn't inclusive of all touch injection header info.
 // You may need to add more to expand on current apis.
 
@@ -14,6 +16,16 @@
 #  define TOUCH_FEEDBACK_INDIRECT 0x2
 #  define TOUCH_FEEDBACK_NONE 0x3
 
+enum POINTER_FEEDBACK_MODE {
+  POINTER_FEEDBACK_DEFAULT =
+      1,  // The injected pointer input feedback may get suppressed by the
+          // end-user settings in the Pen and Touch control panel.
+  POINTER_FEEDBACK_INDIRECT =
+      2,  // The injected pointer input feedback overrides the end-user settings
+          // in the Pen and Touch control panel.
+  POINTER_FEEDBACK_NONE = 3,  // No touch visualizations.
+};
+
 enum {
   PT_POINTER = 0x00000001,   // Generic pointer
   PT_TOUCH = 0x00000002,     // Touch
@@ -22,10 +34,10 @@ enum {
   PT_TOUCHPAD = 0x00000005,  // Touch pad
 };
 
-typedef DWORD POINTER_INPUT_TYPE;
-typedef UINT32 POINTER_FLAGS;
+using POINTER_INPUT_TYPE = DWORD;
+using POINTER_FLAGS = UINT32;
 
-typedef enum {
+enum POINTER_BUTTON_CHANGE_TYPE {
   POINTER_CHANGE_NONE,
   POINTER_CHANGE_FIRSTBUTTON_DOWN,
   POINTER_CHANGE_FIRSTBUTTON_UP,
@@ -37,9 +49,9 @@ typedef enum {
   POINTER_CHANGE_FOURTHBUTTON_UP,
   POINTER_CHANGE_FIFTHBUTTON_DOWN,
   POINTER_CHANGE_FIFTHBUTTON_UP,
-} POINTER_BUTTON_CHANGE_TYPE;
+};
 
-typedef struct {
+struct POINTER_INFO {
   POINTER_INPUT_TYPE pointerType;
   UINT32 pointerId;
   UINT32 frameId;
@@ -56,12 +68,12 @@ typedef struct {
   DWORD dwKeyStates;
   UINT64 PerformanceCount;
   POINTER_BUTTON_CHANGE_TYPE ButtonChangeType;
-} POINTER_INFO;
+};
 
-typedef UINT32 TOUCH_FLAGS;
-typedef UINT32 TOUCH_MASK;
+using TOUCH_FLAGS = UINT32;
+using TOUCH_MASK = UINT32;
 
-typedef struct {
+struct POINTER_TOUCH_INFO {
   POINTER_INFO pointerInfo;
   TOUCH_FLAGS touchFlags;
   TOUCH_MASK touchMask;
@@ -69,7 +81,40 @@ typedef struct {
   RECT rcContactRaw;
   UINT32 orientation;
   UINT32 pressure;
-} POINTER_TOUCH_INFO;
+};
+
+#  define PEN_FLAG_NONE 0x00000000      // Default
+#  define PEN_FLAG_BARREL 0x00000001    // The barrel button is pressed
+#  define PEN_FLAG_INVERTED 0x00000002  // The pen is inverted
+#  define PEN_FLAG_ERASER 0x00000004    // The eraser button is pressed
+
+#  define PEN_MASK_NONE \
+    0x00000000  // Default - none of the optional fields are valid
+#  define PEN_MASK_PRESSURE 0x00000001  // The pressure field is valid
+#  define PEN_MASK_ROTATION 0x00000002  // The rotation field is valid
+#  define PEN_MASK_TILT_X 0x00000004    // The tiltX field is valid
+#  define PEN_MASK_TILT_Y 0x00000008    // The tiltY field is valid
+
+using PEN_FLAGS = UINT32;
+using PEN_MASK = UINT32;
+
+struct POINTER_PEN_INFO {
+  POINTER_INFO pointerInfo;
+  PEN_FLAGS penFlags;
+  PEN_MASK penMask;
+  UINT32 pressure;
+  UINT32 rotation;
+  INT32 tiltX;
+  INT32 tiltY;
+};
+
+struct POINTER_TYPE_INFO {
+  POINTER_INPUT_TYPE type;
+  union {
+    POINTER_TOUCH_INFO touchInfo;
+    POINTER_PEN_INFO penInfo;
+  };
+};
 
 #  define TOUCH_FLAG_NONE 0x00000000  // Default
 
@@ -109,9 +154,18 @@ typedef struct {
 #define TOUCH_FLAGS_CONTACTDOWN \
   (POINTER_FLAG_DOWN | POINTER_FLAG_INRANGE | POINTER_FLAG_INCONTACT)
 
-typedef BOOL(WINAPI* InitializeTouchInjectionPtr)(UINT32 maxCount,
-                                                  DWORD dwMode);
-typedef BOOL(WINAPI* InjectTouchInputPtr)(UINT32 count,
-                                          CONST POINTER_TOUCH_INFO* info);
+using InitializeTouchInjectionPtr = BOOL(WINAPI*)(UINT32, DWORD);
+using InjectTouchInputPtr = BOOL(WINAPI*)(UINT32, const POINTER_TOUCH_INFO*);
+
+#if !defined(NTDDI_WIN10_RS5) || (NTDDI_VERSION < NTDDI_WIN10_RS5)
+#  define HSYNTHETICPOINTERDEVICE intptr_t
+#endif  // NTDDI_VERSION < NTDDI_WIN10_RS5
+
+using CreateSyntheticPointerDevicePtr = HSYNTHETICPOINTERDEVICE(WINAPI*)(
+    POINTER_INPUT_TYPE, ULONG, POINTER_FEEDBACK_MODE);
+using DestroySyntheticPointerDevicePtr = void(WINAPI*)(HSYNTHETICPOINTERDEVICE);
+using InjectSyntheticPointerInputPtr = BOOL(WINAPI*)(HSYNTHETICPOINTERDEVICE,
+                                                     const POINTER_TYPE_INFO*,
+                                                     UINT32);
 
 #endif  // touchinjection_sdk80_h
