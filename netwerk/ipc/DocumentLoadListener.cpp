@@ -520,6 +520,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   if (identChannel && aChannelId) {
     Unused << identChannel->SetChannelId(*aChannelId);
   }
+  mDocumentChannelId = aChannelId;
 
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
@@ -904,7 +905,8 @@ void DocumentLoadListener::CleanupParentLoadAttempt(uint64_t aLoadIdent) {
 }
 
 auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
-                                           uint64_t aLoadIdent)
+                                           uint64_t aLoadIdent,
+                                           Maybe<uint64_t> aChannelId)
     -> RefPtr<OpenPromise> {
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
@@ -919,6 +921,8 @@ auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
     *aListener = nullptr;
     return nullptr;
   }
+
+  loadListener->mDocumentChannelId = aChannelId;
 
   MOZ_DIAGNOSTIC_ASSERT(loadListener->mOpenPromise);
   loadListener.forget(aListener);
