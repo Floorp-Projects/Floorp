@@ -255,16 +255,27 @@ class WeakCacheSweepIterator {
   void settle();
 };
 
-class BarrierTracer final : public JS::CallbackTracer {
+class BarrierTracer final : public GenericTracer {
  public:
   static BarrierTracer* fromTracer(JSTracer* trc);
 
   explicit BarrierTracer(JSRuntime* rt);
 
+  JSObject* onObjectEdge(JSObject* obj) override;
+  Shape* onShapeEdge(Shape* shape) override;
+  JSString* onStringEdge(JSString* string) override;
+  js::BaseScript* onScriptEdge(js::BaseScript* script) override;
+  BaseShape* onBaseShapeEdge(BaseShape* base) override;
+  Scope* onScopeEdge(Scope* scope) override;
+  RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
+  BigInt* onBigIntEdge(BigInt* bi) override;
+  ObjectGroup* onObjectGroupEdge(ObjectGroup* group) override;
+  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
+  jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override;
+
   void performBarrier(JS::GCCellPtr cell);
 
  private:
-  void onChild(const JS::GCCellPtr& thing) override;
   void handleBufferFull(JS::GCCellPtr cell);
 
   GCMarker& marker;
