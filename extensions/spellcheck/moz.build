@@ -13,5 +13,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
 MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
 
+SPHINX_TREES["/extensions/spellcheck"] = "docs"
+
 with Files("**"):
     BUG_COMPONENT = ("Core", "Spelling checker")
