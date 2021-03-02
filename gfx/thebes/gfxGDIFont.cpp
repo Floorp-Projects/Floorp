@@ -416,24 +416,21 @@ int32_t gfxGDIFont::GetGlyphWidth(uint16_t aGID) {
     mGlyphWidths = MakeUnique<nsDataHashtable<nsUint32HashKey, int32_t>>(128);
   }
 
-  int32_t width;
-  if (mGlyphWidths->Get(aGID, &width)) {
-    return width;
-  }
+  return mGlyphWidths->WithEntryHandle(aGID, [&](auto&& entry) {
+    if (!entry) {
+      DCForMetrics dc;
+      AutoSelectFont fs(dc, GetHFONT());
 
-  DCForMetrics dc;
-  AutoSelectFont fs(dc, GetHFONT());
-
-  int devWidth;
-  if (GetCharWidthI(dc, aGID, 1, nullptr, &devWidth)) {
-    // clamp value to range [0..0x7fff], and convert to 16.16 fixed-point
-    devWidth = std::min(std::max(0, devWidth), 0x7fff);
-    width = devWidth << 16;
-    mGlyphWidths->InsertOrUpdate(aGID, width);
-    return width;
-  }
-
-  return -1;
+      int devWidth;
+      if (!GetCharWidthI(dc, aGID, 1, nullptr, &devWidth)) {
+        return -1;
+      }
+      // clamp value to range [0..0x7fff], and convert to 16.16 fixed-point
+      devWidth = std::min(std::max(0, devWidth), 0x7fff);
+      entry.Insert(devWidth << 16);
+    }
+    return *entry;
+  });
 }
 
 bool gfxGDIFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) {
