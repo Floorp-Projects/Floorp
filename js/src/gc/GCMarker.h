@@ -483,7 +483,10 @@ class GCMarker final : public JSTracer {
   void forEachDelayedMarkingArena(F&& f);
 
   gc::BarrierBuffer& barrierBuffer() { return barrierBuffer_.ref(); }
+
   bool traceBarrieredCells(SliceBudget& budget);
+  friend class gc::GCRuntime;
+
   void traceBarrieredCell(JS::GCCellPtr cell);
 
   /*
