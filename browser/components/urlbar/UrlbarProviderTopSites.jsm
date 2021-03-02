@@ -122,6 +122,10 @@ class ProviderTopSites extends UrlbarProvider {
     // on about:newtab.
     sites = sites.filter(site => site);
 
+    if (!UrlbarPrefs.get("sponsoredTopSites")) {
+      sites = sites.filter(site => !site.sponsored_position);
+    }
+
     // This is done here, rather than in the global scope, because
     // TOP_SITES_DEFAULT_ROWS causes the import of Reducers.jsm, and we want to
     // do that only when actually querying for Top Sites.
