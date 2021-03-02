@@ -71,12 +71,17 @@ linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
     treeherder:
         symbol: TL(libdmg-hfs+)
+    worker:
+        docker-image: {in-tree: deb10-toolchain-build}
     run:
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
     fetches:
         fetch:
             - libdmg-hfsplus
+        toolchain:
+            - linux64-clang-11
+            - linux64-toolchain-sysroot
 
 linux64-mar-tools:
     description: "mar-tools toolchain build"

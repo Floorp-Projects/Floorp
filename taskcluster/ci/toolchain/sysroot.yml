@@ -57,3 +57,5 @@ linux64-toolchain-sysroot:
             - libxml2-dev
             # For minidump-stackwalk
             - libcurl4-openssl-dev
+            - libssl-dev
+            - libbz2-dev
