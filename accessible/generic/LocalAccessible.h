@@ -9,7 +9,6 @@
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/AccTypes.h"
 #include "mozilla/a11y/RelationType.h"
-#include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/States.h"
 
 #include "mozilla/UniquePtr.h"
@@ -216,7 +215,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return enumerated accessible role (see constants in Role.h).
    */
-  mozilla::a11y::role Role() const;
+  virtual mozilla::a11y::role Role() const override;
 
   /**
    * Return accessible role specified by ARIA (see constants in
