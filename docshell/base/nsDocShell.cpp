@@ -1195,6 +1195,64 @@ void nsDocShell::FirePageHideNotificationInternal(
   }
 }
 
+void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
+  MOZ_ASSERT(StaticPrefs::fission_bfcacheInParent());
+
+  if (!mContentViewer) {
+    return;
+  }
+
+  // Emulate what non-SHIP BFCache does too. In pageshow case
+  // add and remove a request and before that call SetCurrentURI to get
+  // the location change notification.
+  // For pagehide, set mFiredUnloadEvent to true, so that unload doesn't fire.
+  nsCOMPtr<nsIContentViewer> contentViewer(mContentViewer);
+  if (aShow) {
+    mFiredUnloadEvent = false;
+    RefPtr<Document> doc = contentViewer->GetDocument();
+    if (doc) {
+      if (mBrowsingContext->IsTop()) {
+        doc->NotifyPossibleTitleChange(false);
+        if (mScriptGlobal && mScriptGlobal->GetCurrentInnerWindowInternal()) {
+          // XXXBFCache Resume doesn't go through oop iframes.
+          mScriptGlobal->GetCurrentInnerWindowInternal()->Thaw();
+        }
+      }
+      nsCOMPtr<nsIChannel> channel = doc->GetChannel();
+      if (channel) {
+        SetCurrentURI(doc->GetDocumentURI(), channel, true, 0);
+        mEODForCurrentDocument = false;
+        mIsRestoringDocument = true;
+        mLoadGroup->AddRequest(channel, nullptr);
+        mLoadGroup->RemoveRequest(channel, nullptr, NS_OK);
+        mIsRestoringDocument = false;
+      }
+      RefPtr<PresShell> presShell = GetPresShell();
+      if (presShell) {
+        // XXXBFcache Thaw doesn't deal with OOP iframes.
+        presShell->Thaw();
+      }
+    }
+  } else if (!mFiredUnloadEvent) {
+    // XXXBFCache check again that the page can enter bfcache.
+    // XXXBFCache should mTiming->NotifyUnloadEventStart()/End() be called here?
+    mFiredUnloadEvent = true;
+    contentViewer->PageHide(false);
+
+    if (mBrowsingContext->IsTop()) {
+      if (mScriptGlobal && mScriptGlobal->GetCurrentInnerWindowInternal()) {
+        // XXXBFCache Resume doesn't go through oop iframes.
+        mScriptGlobal->GetCurrentInnerWindowInternal()->Freeze();
+      }
+    }
+    RefPtr<PresShell> presShell = GetPresShell();
+    if (presShell) {
+      // XXXBFcache Freeze doesn't deal with OOP iframes.
+      presShell->Freeze();
+    }
+  }
+}
+
 nsresult nsDocShell::Dispatch(TaskCategory aCategory,
                               already_AddRefed<nsIRunnable>&& aRunnable) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
@@ -6898,6 +6956,7 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
   // Only save presentation for "normal" loads and link loads.  Anything else
   // probably wants to refetch the page, so caching the old presentation
   // would be incorrect.
+  // XXXBFCache in parent needs something like this!
   if (aLoadType != LOAD_NORMAL && aLoadType != LOAD_HISTORY &&
       aLoadType != LOAD_LINK && aLoadType != LOAD_STOP_CONTENT &&
       aLoadType != LOAD_STOP_CONTENT_AND_REPLACE &&

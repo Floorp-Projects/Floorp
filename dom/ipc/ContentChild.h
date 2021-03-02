@@ -824,6 +824,11 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<BrowsingContext>& aStartingAt,
       DispatchBeforeUnloadToSubtreeResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvCanSavePresentation(
+      const MaybeDiscarded<BrowsingContext>& aTopLevelContext,
+      Maybe<uint64_t> aDocumentChannelId,
+      CanSavePresentationResolver&& aResolve);
+
  public:
   static void DispatchBeforeUnloadToSubtree(
       BrowsingContext* aStartingAt,

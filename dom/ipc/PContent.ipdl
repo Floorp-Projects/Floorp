@@ -9,6 +9,7 @@ include protocol PBrowser;
 include protocol PCompositorManager;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
+include protocol PDocumentChannel;
 include protocol PExternalHelperApp;
 include protocol PHandlerService;
 include protocol PFileDescriptorSet;
@@ -944,6 +945,9 @@ child:
   // the `PermitUnloadResult` enum.
   async DispatchBeforeUnloadToSubtree(MaybeDiscardedBrowsingContext aStartingAt)
       returns (PermitUnloadResult result);
+
+  async CanSavePresentation(MaybeDiscardedBrowsingContext aTopLevelContext,
+      uint64_t? aDocumentChannelId) returns (bool success);
 
   // Update the cached list of codec supported in the given process.
   async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
