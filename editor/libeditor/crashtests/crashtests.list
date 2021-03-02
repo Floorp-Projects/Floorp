@@ -136,4 +136,5 @@ load 1645983-2.html
 load 1648564.html
 load 1659717.html
 load 1663725.html # throws
+load 1655508.html
 pref(dom.document.exec_command.nested_calls_allowed,true) load 1666556.html
