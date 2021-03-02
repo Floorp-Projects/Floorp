@@ -241,6 +241,15 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
     aEntry->SetContentViewer(nullptr);
     aEntry->SyncPresentationState();
     viewer->Destroy();
+  } else if (nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aEntry)) {
+    if (RefPtr<nsFrameLoader> frameLoader = she->GetFrameLoader()) {
+      MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+              ("nsSHistory::EvictContentViewerForEntry "
+               "destroying an nsFrameLoader."));
+      NotifyListenersContentViewerEvicted(1);
+      she->SetFrameLoader(nullptr);
+      frameLoader->Destroy();
+    }
   }
 
   // When dropping bfcache, we have to remove associated dynamic entries as
@@ -1138,6 +1147,9 @@ nsSHistory::NotifyOnHistoryReload(bool* aCanReload) {
 
 NS_IMETHODIMP
 nsSHistory::EvictOutOfRangeContentViewers(int32_t aIndex) {
+  MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+          ("nsSHistory::EvictOutOfRangeContentViewers %i", aIndex));
+
   // Check our per SHistory object limit in the currently navigated SHistory
   EvictOutOfRangeWindowContentViewers(aIndex);
   // Check our total limit across all SHistory objects
@@ -1411,9 +1423,18 @@ void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   // evicted.  Collect a set of them so we don't accidentally evict one of them
   // if it appears outside this range.
   nsCOMArray<nsIContentViewer> safeViewers;
+  nsTArray<RefPtr<nsFrameLoader>> safeFrameLoaders;
   for (int32_t i = startSafeIndex; i <= endSafeIndex; i++) {
     nsCOMPtr<nsIContentViewer> viewer = mEntries[i]->GetContentViewer();
-    safeViewers.AppendObject(viewer);
+    if (viewer) {
+      safeViewers.AppendObject(viewer);
+    } else if (nsCOMPtr<SessionHistoryEntry> she =
+                   do_QueryInterface(mEntries[i])) {
+      nsFrameLoader* frameLoader = she->GetFrameLoader();
+      if (frameLoader) {
+        safeFrameLoaders.AppendElement(frameLoader);
+      }
+    }
   }
 
   // Walk the SHistory list and evict any content viewers that aren't safe.
@@ -1422,8 +1443,18 @@ void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   for (int32_t i = 0; i < Length(); i++) {
     nsCOMPtr<nsISHEntry> entry = mEntries[i];
     nsCOMPtr<nsIContentViewer> viewer = entry->GetContentViewer();
-    if (safeViewers.IndexOf(viewer) == -1) {
-      EvictContentViewerForEntry(entry);
+    if (viewer) {
+      if (safeViewers.IndexOf(viewer) == -1) {
+        EvictContentViewerForEntry(entry);
+      }
+    } else if (nsCOMPtr<SessionHistoryEntry> she =
+                   do_QueryInterface(mEntries[i])) {
+      nsFrameLoader* frameLoader = she->GetFrameLoader();
+      if (frameLoader) {
+        if (!safeFrameLoaders.Contains(frameLoader)) {
+          EvictContentViewerForEntry(entry);
+        }
+      }
     }
   }
 }
@@ -1438,7 +1469,13 @@ class EntryAndDistance {
         mViewer(aEntry->GetContentViewer()),
         mLastTouched(mEntry->GetLastTouched()),
         mDistance(aDist) {
-    NS_ASSERTION(mViewer, "Entry should have a content viewer");
+    nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aEntry);
+    if (she) {
+      mFrameLoader = she->GetFrameLoader();
+    }
+    NS_ASSERTION(
+        mViewer || (StaticPrefs::fission_bfcacheInParent() && mFrameLoader),
+        "Entry should have a content viewer or frame loader.");
   }
 
   bool operator<(const EntryAndDistance& aOther) const {
@@ -1461,6 +1498,7 @@ class EntryAndDistance {
   RefPtr<nsSHistory> mSHistory;
   nsCOMPtr<nsISHEntry> mEntry;
   nsCOMPtr<nsIContentViewer> mViewer;
+  RefPtr<nsFrameLoader> mFrameLoader;
   uint32_t mLastTouched;
   int32_t mDistance;
 };
@@ -1506,12 +1544,14 @@ void nsSHistory::GloballyEvictContentViewers() {
       nsCOMPtr<nsISHEntry> entry = shist->mEntries[i];
       nsCOMPtr<nsIContentViewer> contentViewer = entry->GetContentViewer();
 
+      bool found = false;
+      bool hasContentViewerOrFrameLoader = false;
       if (contentViewer) {
+        hasContentViewerOrFrameLoader = true;
         // Because one content viewer might belong to multiple SHEntries, we
         // have to search through shEntries to see if we already know
         // about this content viewer.  If we find the viewer, update its
         // distance from the SHistory's index and continue.
-        bool found = false;
         for (uint32_t j = 0; j < shEntries.Length(); j++) {
           EntryAndDistance& container = shEntries[j];
           if (container.mViewer == contentViewer) {
@@ -1521,14 +1561,28 @@ void nsSHistory::GloballyEvictContentViewers() {
             break;
           }
         }
-
-        // If we didn't find a EntryAndDistance for this content viewer, make a
-        // new one.
-        if (!found) {
-          EntryAndDistance container(shist, entry,
-                                     DeprecatedAbs(i - shist->mIndex));
-          shEntries.AppendElement(container);
+      } else if (nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(entry)) {
+        if (RefPtr<nsFrameLoader> frameLoader = she->GetFrameLoader()) {
+          hasContentViewerOrFrameLoader = true;
+          // Similar search as above but using frameloader.
+          for (uint32_t j = 0; j < shEntries.Length(); j++) {
+            EntryAndDistance& container = shEntries[j];
+            if (container.mFrameLoader == frameLoader) {
+              container.mDistance = std::min(container.mDistance,
+                                             DeprecatedAbs(i - shist->mIndex));
+              found = true;
+              break;
+            }
+          }
         }
+      }
+
+      // If we didn't find a EntryAndDistance for this content viewer /
+      // frameloader, make a new one.
+      if (hasContentViewerOrFrameLoader && !found) {
+        EntryAndDistance container(shist, entry,
+                                   DeprecatedAbs(i - shist->mIndex));
+        shEntries.AppendElement(container);
       }
     }
 

@@ -2066,8 +2066,11 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
     mOwnerContent->RemoveMutationObserver(this);
   }
 
+  // XXXBFCache Need to update also all the non-current FrameLoaders in the
+  // owner when moving a FrameLoader.
+  // This temporary setup doesn't crash, but behaves badly with bfcached docs.
   if (RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(mOwnerContent)) {
-    owner->DeattachFrameLoader(this);
+    owner->DetachFrameLoader(this);
   }
 
   mOwnerContent = aContent;
