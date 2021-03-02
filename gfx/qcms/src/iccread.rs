@@ -22,12 +22,15 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use std::{
+    convert::TryInto,
     sync::atomic::{AtomicBool, Ordering},
     sync::Arc,
-    convert::TryInto,
 };
 
-use crate::{double_to_s15Fixed16Number, transform::{set_rgb_colorants, PrecacheOuput}};
+use crate::{
+    double_to_s15Fixed16Number,
+    transform::{set_rgb_colorants, PrecacheOuput},
+};
 use crate::{matrix::Matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
 
 pub static SUPPORTS_ICCV4: AtomicBool = AtomicBool::new(cfg!(feature = "iccv4-enabled"));
@@ -178,7 +181,7 @@ fn invalid_source(mut mem: &mut MemSource, reason: &'static str) {
     mem.invalid_reason = Some(reason);
 }
 fn read_u32(mem: &mut MemSource, offset: usize) -> u32 {
-    let val = mem.buf.get(offset..offset+4);
+    let val = mem.buf.get(offset..offset + 4);
     if let Some(val) = val {
         let val = val.try_into().unwrap();
         u32::from_be_bytes(val)
@@ -188,7 +191,7 @@ fn read_u32(mem: &mut MemSource, offset: usize) -> u32 {
     }
 }
 fn read_u16(mem: &mut MemSource, offset: usize) -> u16 {
-    let val = mem.buf.get(offset..offset+2);
+    let val = mem.buf.get(offset..offset + 2);
     if let Some(val) = val {
         let val = val.try_into().unwrap();
         u16::from_be_bytes(val)
@@ -218,14 +221,14 @@ fn read_uInt16Number(mem: &mut MemSource, offset: usize) -> uInt16Number {
 pub fn write_u32(mem: &mut [u8], offset: usize, value: u32) {
     // we use get() and expect() instead of [..] so there's only one call to panic
     // instead of two
-    mem.get_mut(offset..offset+std::mem::size_of_val(&value))
+    mem.get_mut(offset..offset + std::mem::size_of_val(&value))
         .expect("OOB")
         .copy_from_slice(&value.to_be_bytes());
 }
 pub fn write_u16(mem: &mut [u8], offset: usize, value: u16) {
     // we use get() and expect() instead of [..] so there's only one call to panic
     // intead of two
-    mem.get_mut(offset..offset+std::mem::size_of_val(&value))
+    mem.get_mut(offset..offset + std::mem::size_of_val(&value))
         .expect("OOB")
         .copy_from_slice(&value.to_be_bytes());
 }
