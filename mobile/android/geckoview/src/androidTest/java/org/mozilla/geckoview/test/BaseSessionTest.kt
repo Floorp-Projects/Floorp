@@ -96,6 +96,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val OVERSCROLL_BEHAVIOR_AUTO_HTML_PATH = "/assets/www/overscroll-behavior-auto.html"
         const val OVERSCROLL_BEHAVIOR_AUTO_NONE_HTML_PATH = "/assets/www/overscroll-behavior-auto-none.html"
         const val OVERSCROLL_BEHAVIOR_NONE_AUTO_HTML_PATH = "/assets/www/overscroll-behavior-none-auto.html"
+        const val OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH = "/assets/www/overscroll-behavior-none-on-non-root.html"
         const val SCROLL_HANDOFF_HTML_PATH = "/assets/www/scroll-handoff.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
