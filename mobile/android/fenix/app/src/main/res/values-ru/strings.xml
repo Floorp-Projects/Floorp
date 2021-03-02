@@ -1233,7 +1233,7 @@
     <string name="onboarding_tracking_protection_header_2">Автоматическая приватность</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Настройки конфиденциальности и безопасности блокируют трекеры, вредоносные программы, и компании, которые вас отслеживают.</string>
+    <string name="onboarding_tracking_protection_description_2">Настройки приватности и безопасности блокируют трекеры, вредоносные программы, и компании, которые вас отслеживают.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартная (по умолчанию)</string>
     <!-- text for standard blocking option button description -->
