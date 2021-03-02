@@ -195,7 +195,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   // Looks up aLoadIdent to find the associated, cleans up the registration
   static RefPtr<OpenPromise> ClaimParentLoad(DocumentLoadListener** aListener,
-                                             uint64_t aLoadIdent);
+                                             uint64_t aLoadIdent,
+                                             Maybe<uint64_t> aChannelId);
 
   // Called by the DocumentChannelParent if actor got destroyed or the parent
   // channel got deleted.
@@ -463,6 +464,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   nsTArray<StreamListenerFunction> mStreamListenerFunctions;
 
   nsCOMPtr<nsIChannel> mChannel;
+
+  Maybe<uint64_t> mDocumentChannelId;
 
   // An instance of ParentChannelListener that we use as a listener
   // between mChannel (and any future redirected mChannels) and us.
