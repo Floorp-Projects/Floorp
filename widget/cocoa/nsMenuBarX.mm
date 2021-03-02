@@ -6,11 +6,11 @@
 #include <objc/objc-runtime.h>
 
 #include "nsMenuBarX.h"
-#include "nsMenuBaseX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsCocoaUtils.h"
+#include "nsCocoaWindow.h"
 #include "nsChildView.h"
 
 #include "nsCOMPtr.h"
@@ -29,9 +29,6 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/dom/Element.h"
-
-using namespace mozilla;
-using mozilla::dom::Element;
 
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
@@ -73,7 +70,10 @@ static nsIContent* sQuitItemContent = nullptr;
 @end
 
 nsMenuBarX::nsMenuBarX()
-    : nsMenuGroupOwnerX(), mNeedsRebuild(false), mApplicationMenuDelegate(nil) {
+    : nsMenuGroupOwnerX(),
+      mParentWindow(nullptr),
+      mNeedsRebuild(false),
+      mApplicationMenuDelegate(nil) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
@@ -120,9 +120,14 @@ nsMenuBarX::~nsMenuBarX() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsMenuBarX::Create(Element* aContent) {
+nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (!aParent) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mParentWindow = aParent;
   mContent = aContent;
 
   if (mContent) {
@@ -139,6 +144,9 @@ nsresult nsMenuBarX::Create(Element* aContent) {
     ConstructFallbackNativeMenus();
   }
 
+  // Give this to the parent window. The parent takes ownership.
+  static_cast<nsCocoaWindow*>(mParentWindow)->SetMenuBar(this);
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -148,7 +156,15 @@ void nsMenuBarX::ConstructNativeMenus() {
   for (nsIContent* menuContent = mContent->GetFirstChild(); menuContent;
        menuContent = menuContent->GetNextSibling()) {
     if (menuContent->IsXULElement(nsGkAtoms::menu)) {
-      InsertMenuAtIndex(MakeUnique<nsMenuX>(this, this, menuContent->AsElement()), GetMenuCount());
+      nsMenuX* newMenu = new nsMenuX();
+      if (newMenu) {
+        nsresult rv = newMenu->Create(this, this, menuContent->AsElement());
+        if (NS_SUCCEEDED(rv)) {
+          InsertMenuAtIndex(newMenu, GetMenuCount());
+        } else {
+          delete newMenu;
+        }
+      }
     }
   }
 }
@@ -191,12 +207,12 @@ void nsMenuBarX::ConstructFallbackNativeMenus() {
   if (!mApplicationMenuDelegate) {
     mApplicationMenuDelegate = [[ApplicationMenuDelegate alloc] initWithApplicationMenu:this];
   }
-  sApplicationMenu.delegate = mApplicationMenuDelegate;
+  [sApplicationMenu setDelegate:mApplicationMenuDelegate];
   NSMenuItem* quitMenuItem = [[[NSMenuItem alloc] initWithTitle:labelStr
                                                          action:@selector(menuItemHit:)
                                                   keyEquivalent:keyStr] autorelease];
-  quitMenuItem.target = nsMenuBarX::sNativeEventTarget;
-  quitMenuItem.tag = eCommand_ID_Quit;
+  [quitMenuItem setTarget:nsMenuBarX::sNativeEventTarget];
+  [quitMenuItem setTag:eCommand_ID_Quit];
   [sApplicationMenu addItem:quitMenuItem];
   sApplicationMenuIsFallback = YES;
 
@@ -208,12 +224,13 @@ uint32_t nsMenuBarX::GetMenuCount() { return mMenuArray.Length(); }
 bool nsMenuBarX::MenuContainsAppMenu() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  return (mNativeMenu.numberOfItems > 0 && [mNativeMenu itemAtIndex:0].submenu == sApplicationMenu);
+  return ([mNativeMenu numberOfItems] > 0 &&
+          [[mNativeMenu itemAtIndex:0] submenu] == sApplicationMenu);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuBarX::InsertMenuAtIndex(UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex) {
+nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // If we've only yet created a fallback global Application menu (using
@@ -223,28 +240,31 @@ void nsMenuBarX::InsertMenuAtIndex(UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex) 
   }
   // If we haven't created a global Application menu yet, do it.
   if (!sApplicationMenu) {
-    CreateApplicationMenu(aMenu.get());
+    nsresult rv = NS_OK;  // avoid warning about rv being unused
+    rv = CreateApplicationMenu(aMenu);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create Application menu");
 
     // Hook the new Application menu up to the menu bar.
-    NSMenu* mainMenu = NSApp.mainMenu;
-    NS_ASSERTION(mainMenu.numberOfItems > 0,
+    NSMenu* mainMenu = [NSApp mainMenu];
+    NS_ASSERTION([mainMenu numberOfItems] > 0,
                  "Main menu does not have any items, something is terribly wrong!");
-    [mainMenu itemAtIndex:0].submenu = sApplicationMenu;
+    [[mainMenu itemAtIndex:0] setSubmenu:sApplicationMenu];
   }
 
   // add menu to array that owns our menus
-  nsMenuX* menu = aMenu.get();
-  mMenuArray.InsertElementAt(aIndex, std::move(aMenu));
+  mMenuArray.InsertElementAt(aIndex, aMenu);
 
   // hook up submenus
-  nsIContent* menuContent = menu->Content();
+  nsIContent* menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 && !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, menu);
+    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, aMenu);
     if (MenuContainsAppMenu()) {
       insertionIndex++;
     }
-    [mNativeMenu insertItem:menu->NativeMenuItem() atIndex:insertionIndex];
+    [mNativeMenu insertItem:aMenu->NativeMenuItem() atIndex:insertionIndex];
   }
+
+  return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -284,17 +304,25 @@ void nsMenuBarX::ObserveContentRemoved(mozilla::dom::Document* aDocument, nsICon
 
 void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument, nsIContent* aContainer,
                                         nsIContent* aChild) {
-  InsertMenuAtIndex(MakeUnique<nsMenuX>(this, this, aChild), aContainer->ComputeIndexOf(aChild));
+  nsMenuX* newMenu = new nsMenuX();
+  if (newMenu) {
+    nsresult rv = newMenu->Create(this, this, aChild);
+    if (NS_SUCCEEDED(rv)) {
+      InsertMenuAtIndex(newMenu, aContainer->ComputeIndexOf(aChild));
+    } else {
+      delete newMenu;
+    }
+  }
 }
 
-void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {
+void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSString* locationString =
-      [NSString stringWithCharacters:reinterpret_cast<const unichar*>(aIndexString.BeginReading())
-                              length:aIndexString.Length()];
+      [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
+                              length:indexString.Length()];
   NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
-  unsigned int indexCount = indexes.count;
+  unsigned int indexCount = [indexes count];
   if (indexCount == 0) {
     return;
   }
@@ -333,12 +361,7 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {
       if (!targetMenu) {
         return;
       }
-      MOZ_RELEASE_ASSERT(targetMenu->MenuObjectType() == eSubmenuObjectType ||
-                         targetMenu->MenuObjectType() == eMenuItemObjectType);
-      RefPtr<nsIContent> content = targetMenu->MenuObjectType() == eSubmenuObjectType
-                                       ? static_cast<nsMenuX*>(targetMenu)->Content()
-                                       : static_cast<nsMenuItemX*>(targetMenu)->Content();
-      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
+      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(targetMenu->Content())) {
         visible++;
         if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
           currentMenu = static_cast<nsMenuX*>(targetMenu);
@@ -399,7 +422,7 @@ void nsMenuBarX::SetSystemHelpMenu() {
   if (xulHelpMenu) {
     NSMenu* helpMenu = (NSMenu*)xulHelpMenu->NativeData();
     if (helpMenu) {
-      NSApp.helpMenu = helpMenu;
+      [NSApp setHelpMenu:helpMenu];
     }
   }
 
@@ -415,8 +438,8 @@ nsresult nsMenuBarX::Paint() {
 
   // We have to keep the same menu item for the Application menu so we keep
   // passing it along.
-  NSMenu* outgoingMenu = NSApp.mainMenu;
-  NS_ASSERTION(outgoingMenu.numberOfItems > 0,
+  NSMenu* outgoingMenu = [NSApp mainMenu];
+  NS_ASSERTION([outgoingMenu numberOfItems] > 0,
                "Main menu does not have any items, something is terribly wrong!");
 
   NSMenuItem* appMenuItem = [[outgoingMenu itemAtIndex:0] retain];
@@ -425,7 +448,7 @@ nsresult nsMenuBarX::Paint() {
   [appMenuItem release];
 
   // Set menu bar and event target.
-  NSApp.mainMenu = mNativeMenu;
+  [NSApp setMainMenu:mNativeMenu];
   SetSystemHelpMenu();
   nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
@@ -460,19 +483,23 @@ void nsMenuBarX::ApplicationMenuOpened() {
   }
 }
 
-bool nsMenuBarX::PerformKeyEquivalent(NSEvent* aEvent) {
-  return [mNativeMenu performSuperKeyEquivalent:aEvent];
+bool nsMenuBarX::PerformKeyEquivalent(NSEvent* theEvent) {
+  return [mNativeMenu performSuperKeyEquivalent:theEvent];
 }
 
-// Hide the item in the menu by setting the 'hidden' attribute. Returns it so
-// the caller can hang onto it if they so choose.
-already_AddRefed<Element> nsMenuBarX::HideItem(mozilla::dom::Document* aDocument,
-                                               const nsAString& aID) {
-  nsCOMPtr<Element> menuElement = aDocument->GetElementById(aID);
+// Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
+// the caller can hang onto it if they so choose. It is acceptable to pass nsull
+// for |outHiddenNode| if the caller doesn't care about the hidden node.
+void nsMenuBarX::HideItem(mozilla::dom::Document* inDoc, const nsAString& inID,
+                          nsIContent** outHiddenNode) {
+  nsCOMPtr<Element> menuElement = inDoc->GetElementById(inID);
   if (menuElement) {
     menuElement->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, u"true"_ns, false);
+    if (outHiddenNode) {
+      *outHiddenNode = menuElement.get();
+      NS_IF_ADDREF(*outHiddenNode);
+    }
   }
-  return menuElement.forget();
 }
 
 // Do what is necessary to conform to the Aqua guidelines for menus.
@@ -480,48 +507,47 @@ void nsMenuBarX::AquifyMenuBar() {
   RefPtr<mozilla::dom::Document> domDoc = mContent->GetComposedDoc();
   if (domDoc) {
     // remove the "About..." item and its separator
-    HideItem(domDoc, u"aboutSeparator"_ns);
-    mAboutItemContent = HideItem(domDoc, u"aboutName"_ns);
+    HideItem(domDoc, u"aboutSeparator"_ns, nullptr);
+    HideItem(domDoc, u"aboutName"_ns, getter_AddRefs(mAboutItemContent));
     if (!sAboutItemContent) {
       sAboutItemContent = mAboutItemContent;
     }
 
     // remove quit item and its separator
-    HideItem(domDoc, u"menu_FileQuitSeparator"_ns);
-    mQuitItemContent = HideItem(domDoc, u"menu_FileQuitItem"_ns);
+    HideItem(domDoc, u"menu_FileQuitSeparator"_ns, nullptr);
+    HideItem(domDoc, u"menu_FileQuitItem"_ns, getter_AddRefs(mQuitItemContent));
     if (!sQuitItemContent) {
       sQuitItemContent = mQuitItemContent;
     }
 
     // remove prefs item and its separator, but save off the pref content node
     // so we can invoke its command later.
-    HideItem(domDoc, u"menu_PrefsSeparator"_ns);
-    mPrefItemContent = HideItem(domDoc, u"menu_preferences"_ns);
+    HideItem(domDoc, u"menu_PrefsSeparator"_ns, nullptr);
+    HideItem(domDoc, u"menu_preferences"_ns, getter_AddRefs(mPrefItemContent));
     if (!sPrefItemContent) {
       sPrefItemContent = mPrefItemContent;
     }
 
     // hide items that we use for the Application menu
-    HideItem(domDoc, u"menu_mac_services"_ns);
-    HideItem(domDoc, u"menu_mac_hide_app"_ns);
-    HideItem(domDoc, u"menu_mac_hide_others"_ns);
-    HideItem(domDoc, u"menu_mac_show_all"_ns);
-    HideItem(domDoc, u"menu_mac_touch_bar"_ns);
+    HideItem(domDoc, u"menu_mac_services"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_hide_app"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_hide_others"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_show_all"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_touch_bar"_ns, nullptr);
   }
 }
 
 // for creating menu items destined for the Application menu
-NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString& aNodeID,
-                                                SEL aAction, int aTag,
-                                                NativeMenuItemTarget* aTarget) {
+NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString& nodeID,
+                                                SEL action, int tag, NativeMenuItemTarget* target) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  RefPtr<mozilla::dom::Document> doc = aMenu->Content()->GetUncomposedDoc();
+  RefPtr<mozilla::dom::Document> doc = inMenu->Content()->GetUncomposedDoc();
   if (!doc) {
     return nil;
   }
 
-  RefPtr<mozilla::dom::Element> menuItem = doc->GetElementById(aNodeID);
+  RefPtr<mozilla::dom::Element> menuItem = doc->GetElementById(nodeID);
   if (!menuItem) {
     return nil;
   }
@@ -576,15 +602,15 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString&
 
   // put together the actual NSMenuItem
   NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:labelString
-                                                       action:aAction
+                                                       action:action
                                                 keyEquivalent:keyEquiv];
 
-  newMenuItem.tag = aTag;
-  newMenuItem.target = aTarget;
-  newMenuItem.keyEquivalentModifierMask = macKeyModifiers;
+  [newMenuItem setTag:tag];
+  [newMenuItem setTarget:target];
+  [newMenuItem setKeyEquivalentModifierMask:macKeyModifiers];
 
   MenuItemInfo* info = [[MenuItemInfo alloc] initWithMenuGroupOwner:this];
-  newMenuItem.representedObject = info;
+  [newMenuItem setRepresentedObject:info];
   [info release];
 
   return newMenuItem;
@@ -593,13 +619,13 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString&
 }
 
 // build the Application menu shared by all menu bars
-void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
+nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // At this point, the application menu is the application menu from
   // the nib in cocoa widgets. We do not have a way to create an application
   // menu manually, so we grab the one from the nib and use that.
-  sApplicationMenu = [[NSApp.mainMenu itemAtIndex:0].submenu retain];
+  sApplicationMenu = [[[[NSApp mainMenu] itemAtIndex:0] submenu] retain];
 
   /*
     We support the following menu items here:
@@ -640,7 +666,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
     if (!mApplicationMenuDelegate) {
       mApplicationMenuDelegate = [[ApplicationMenuDelegate alloc] initWithApplicationMenu:this];
     }
-    sApplicationMenu.delegate = mApplicationMenuDelegate;
+    [sApplicationMenu setDelegate:mApplicationMenuDelegate];
 
     // This code reads attributes we are going to care about from the DOM elements
 
@@ -648,7 +674,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
     BOOL addAboutSeparator = FALSE;
 
     // Add the About menu item
-    itemBeingAdded = CreateNativeAppMenuItem(aMenu, u"aboutName"_ns, @selector(menuItemHit:),
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, u"aboutName"_ns, @selector(menuItemHit:),
                                              eCommand_ID_About, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
@@ -664,8 +690,9 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
     }
 
     // Add the Preferences menu item
-    itemBeingAdded = CreateNativeAppMenuItem(aMenu, u"menu_preferences"_ns, @selector(menuItemHit:),
-                                             eCommand_ID_Prefs, nsMenuBarX::sNativeEventTarget);
+    itemBeingAdded =
+        CreateNativeAppMenuItem(inMenu, u"menu_preferences"_ns, @selector(menuItemHit:),
+                                eCommand_ID_Prefs, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
@@ -676,14 +703,14 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
     }
 
     // Add Services menu item
-    itemBeingAdded = CreateNativeAppMenuItem(aMenu, u"menu_mac_services"_ns, nil, 0, nil);
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, u"menu_mac_services"_ns, nil, 0, nil);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
 
       // set this menu item up as the Mac OS X Services menu
       NSMenu* servicesMenu = [[GeckoServicesNSMenu alloc] initWithTitle:@""];
-      itemBeingAdded.submenu = servicesMenu;
-      NSApp.servicesMenu = servicesMenu;
+      [itemBeingAdded setSubmenu:servicesMenu];
+      [NSApp setServicesMenu:servicesMenu];
 
       [itemBeingAdded release];
       itemBeingAdded = nil;
@@ -696,7 +723,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
 
     // Add menu item to hide this application
     itemBeingAdded =
-        CreateNativeAppMenuItem(aMenu, u"menu_mac_hide_app"_ns, @selector(menuItemHit:),
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_hide_app"_ns, @selector(menuItemHit:),
                                 eCommand_ID_HideApp, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
@@ -708,7 +735,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
 
     // Add menu item to hide other applications
     itemBeingAdded =
-        CreateNativeAppMenuItem(aMenu, u"menu_mac_hide_others"_ns, @selector(menuItemHit:),
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_hide_others"_ns, @selector(menuItemHit:),
                                 eCommand_ID_HideOthers, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
@@ -720,7 +747,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
 
     // Add menu item to show all applications
     itemBeingAdded =
-        CreateNativeAppMenuItem(aMenu, u"menu_mac_show_all"_ns, @selector(menuItemHit:),
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_show_all"_ns, @selector(menuItemHit:),
                                 eCommand_ID_ShowAll, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
@@ -739,7 +766,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
 
     // Add Touch Bar customization menu item.
     itemBeingAdded =
-        CreateNativeAppMenuItem(aMenu, u"menu_mac_touch_bar"_ns, @selector(menuItemHit:),
+        CreateNativeAppMenuItem(inMenu, u"menu_mac_touch_bar"_ns, @selector(menuItemHit:),
                                 eCommand_ID_TouchBar, nsMenuBarX::sNativeEventTarget);
 
     if (itemBeingAdded) {
@@ -761,7 +788,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
 
     // Add quit menu item
     itemBeingAdded =
-        CreateNativeAppMenuItem(aMenu, u"menu_FileQuitItem"_ns, @selector(menuItemHit:),
+        CreateNativeAppMenuItem(inMenu, u"menu_FileQuitItem"_ns, @selector(menuItemHit:),
                                 eCommand_ID_Quit, nsMenuBarX::sNativeEventTarget);
     if (itemBeingAdded) {
       [sApplicationMenu addItem:itemBeingAdded];
@@ -773,14 +800,18 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
       NSMenuItem* defaultQuitItem = [[[NSMenuItem alloc] initWithTitle:@"Quit"
                                                                 action:@selector(menuItemHit:)
                                                          keyEquivalent:@"q"] autorelease];
-      defaultQuitItem.target = nsMenuBarX::sNativeEventTarget;
-      defaultQuitItem.tag = eCommand_ID_Quit;
+      [defaultQuitItem setTarget:nsMenuBarX::sNativeEventTarget];
+      [defaultQuitItem setTag:eCommand_ID_Quit];
       [sApplicationMenu addItem:defaultQuitItem];
     }
   }
 
+  return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
+
+void nsMenuBarX::SetParent(nsIWidget* aParent) { mParentWindow = aParent; }
 
 //
 // Objective-C class used to allow us to have keyboard commands
@@ -798,35 +829,35 @@ static BOOL gMenuItemsExecuteCommands = YES;
 // the keyboard command to the window. We still have the menus
 // go through the mechanics so they'll give the proper visual
 // feedback.
-- (BOOL)performKeyEquivalent:(NSEvent*)aEvent {
+- (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
   // We've noticed that Mac OS X expects this check in subclasses before
   // calling NSMenu's "performKeyEquivalent:".
   //
   // There is no case in which we'd need to do anything or return YES
   // when we have no items so we can just do this check first.
-  if (self.numberOfItems <= 0) {
+  if ([self numberOfItems] <= 0) {
     return NO;
   }
 
-  NSWindow* keyWindow = NSApp.keyWindow;
+  NSWindow* keyWindow = [NSApp keyWindow];
 
   // If there is no key window then just behave normally. This
   // probably means that this menu is associated with Gecko's
   // hidden window.
   if (!keyWindow) {
-    return [super performKeyEquivalent:aEvent];
+    return [super performKeyEquivalent:theEvent];
   }
 
-  NSResponder* firstResponder = keyWindow.firstResponder;
+  NSResponder* firstResponder = [keyWindow firstResponder];
 
   gMenuItemsExecuteCommands = NO;
-  [super performKeyEquivalent:aEvent];
+  [super performKeyEquivalent:theEvent];
   gMenuItemsExecuteCommands = YES;  // return to default
 
   // Return YES if we invoked a command and there is now no key window or we changed
   // the first responder. In this case we do not want to propagate the event because
   // we don't want it handled again.
-  if (!NSApp.keyWindow || NSApp.keyWindow.firstResponder != firstResponder) {
+  if (![NSApp keyWindow] || [[NSApp keyWindow] firstResponder] != firstResponder) {
     return YES;
   }
 
@@ -834,8 +865,8 @@ static BOOL gMenuItemsExecuteCommands = YES;
   return NO;
 }
 
-- (BOOL)performSuperKeyEquivalent:(NSEvent*)aEvent {
-  return [super performKeyEquivalent:aEvent];
+- (BOOL)performSuperKeyEquivalent:(NSEvent*)theEvent {
+  return [super performKeyEquivalent:theEvent];
 }
 
 @end
@@ -847,19 +878,19 @@ static BOOL gMenuItemsExecuteCommands = YES;
 @implementation NativeMenuItemTarget
 
 // called when some menu item in this menu gets hit
-- (IBAction)menuItemHit:(id)aSender {
+- (IBAction)menuItemHit:(id)sender {
   if (!gMenuItemsExecuteCommands) {
     return;
   }
 
-  int tag = [aSender tag];
+  int tag = [sender tag];
 
   nsMenuGroupOwnerX* menuGroupOwner = nullptr;
   nsMenuBarX* menuBar = nullptr;
-  MenuItemInfo* info = [aSender representedObject];
+  MenuItemInfo* info = [sender representedObject];
 
   if (info) {
-    menuGroupOwner = info.menuGroupOwner;
+    menuGroupOwner = [info menuGroupOwner];
     if (!menuGroupOwner) {
       return;
     }
@@ -886,19 +917,19 @@ static BOOL gMenuItemsExecuteCommands = YES;
     return;
   }
   if (tag == eCommand_ID_HideApp) {
-    [NSApp hide:aSender];
+    [NSApp hide:sender];
     return;
   }
   if (tag == eCommand_ID_HideOthers) {
-    [NSApp hideOtherApplications:aSender];
+    [NSApp hideOtherApplications:sender];
     return;
   }
   if (tag == eCommand_ID_ShowAll) {
-    [NSApp unhideAllApplications:aSender];
+    [NSApp unhideAllApplications:sender];
     return;
   }
   if (tag == eCommand_ID_TouchBar) {
-    [NSApp toggleTouchBarCustomizationPalette:aSender];
+    [NSApp toggleTouchBarCustomizationPalette:sender];
     return;
   }
   if (tag == eCommand_ID_Quit) {
@@ -941,7 +972,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 @implementation GeckoServicesNSMenuItem
 
 - (id)target {
-  id realTarget = super.target;
+  id realTarget = [super target];
   if (gMenuItemsExecuteCommands) {
     return realTarget;
   }
@@ -949,14 +980,14 @@ static BOOL gMenuItemsExecuteCommands = YES;
 }
 
 - (SEL)action {
-  SEL realAction = super.action;
+  SEL realAction = [super action];
   if (gMenuItemsExecuteCommands) {
     return realAction;
   }
   return realAction ? @selector(_doNothing:) : nullptr;
 }
 
-- (void)_doNothing:(id)aSender {
+- (void)_doNothing:(id)sender {
 }
 
 @end
@@ -967,39 +998,39 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
 @implementation GeckoServicesNSMenu
 
-- (void)addItem:(NSMenuItem*)aNewItem {
-  [self _overrideClassOfMenuItem:aNewItem];
-  [super addItem:aNewItem];
+- (void)addItem:(NSMenuItem*)newItem {
+  [self _overrideClassOfMenuItem:newItem];
+  [super addItem:newItem];
 }
 
 - (NSMenuItem*)addItemWithTitle:(NSString*)aString
                          action:(SEL)aSelector
-                  keyEquivalent:(NSString*)aKeyEquiv {
-  NSMenuItem* newItem = [super addItemWithTitle:aString action:aSelector keyEquivalent:aKeyEquiv];
+                  keyEquivalent:(NSString*)keyEquiv {
+  NSMenuItem* newItem = [super addItemWithTitle:aString action:aSelector keyEquivalent:keyEquiv];
   [self _overrideClassOfMenuItem:newItem];
   return newItem;
 }
 
-- (void)insertItem:(NSMenuItem*)aNewItem atIndex:(NSInteger)aIndex {
-  [self _overrideClassOfMenuItem:aNewItem];
-  [super insertItem:aNewItem atIndex:aIndex];
+- (void)insertItem:(NSMenuItem*)newItem atIndex:(NSInteger)index {
+  [self _overrideClassOfMenuItem:newItem];
+  [super insertItem:newItem atIndex:index];
 }
 
 - (NSMenuItem*)insertItemWithTitle:(NSString*)aString
                             action:(SEL)aSelector
-                     keyEquivalent:(NSString*)aKeyEquiv
-                           atIndex:(NSInteger)aIndex {
+                     keyEquivalent:(NSString*)keyEquiv
+                           atIndex:(NSInteger)index {
   NSMenuItem* newItem = [super insertItemWithTitle:aString
                                             action:aSelector
-                                     keyEquivalent:aKeyEquiv
-                                           atIndex:aIndex];
+                                     keyEquivalent:keyEquiv
+                                           atIndex:index];
   [self _overrideClassOfMenuItem:newItem];
   return newItem;
 }
 
-- (void)_overrideClassOfMenuItem:(NSMenuItem*)aMenuItem {
-  if ([aMenuItem class] == [NSMenuItem class]) {
-    object_setClass(aMenuItem, [GeckoServicesNSMenuItem class]);
+- (void)_overrideClassOfMenuItem:(NSMenuItem*)menuItem {
+  if ([menuItem class] == [NSMenuItem class]) {
+    object_setClass(menuItem, [GeckoServicesNSMenuItem class]);
   }
 }
 

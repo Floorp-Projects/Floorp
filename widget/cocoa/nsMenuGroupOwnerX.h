@@ -40,8 +40,6 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
 
   nsChangeObserver* LookupContentChangeObserver(nsIContent* aContent);
 
-  RefPtr<nsIContent> mContent;
-
   uint32_t mCurrentCommandID;  // unique command id (per menu-bar) to
                                // give to next item that asks
 

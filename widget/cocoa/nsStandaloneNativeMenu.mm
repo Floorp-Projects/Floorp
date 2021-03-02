@@ -6,14 +6,11 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsStandaloneNativeMenu.h"
-#include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsIMutationObserver.h"
 #include "nsGkAtoms.h"
 #include "nsObjCExceptions.h"
 #include "mozilla/dom/Element.h"
-
-using namespace mozilla;
 
 using mozilla::dom::Element;
 
@@ -22,7 +19,11 @@ NS_IMPL_ISUPPORTS_INHERITED(nsStandaloneNativeMenu, nsMenuGroupOwnerX, nsIMutati
 
 nsStandaloneNativeMenu::nsStandaloneNativeMenu() : mMenu(nullptr), mContainerStatusBarItem(nil) {}
 
-nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {}
+nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {
+  if (mMenu) {
+    delete mMenu;
+  }
+}
 
 NS_IMETHODIMP
 nsStandaloneNativeMenu::Init(Element* aElement) {
@@ -39,7 +40,14 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
     return rv;
   }
 
-  mMenu = MakeUnique<nsMenuX>(this, this, aElement);
+  mMenu = new nsMenuX();
+  rv = mMenu->Create(this, this, aElement);
+  if (NS_FAILED(rv)) {
+    delete mMenu;
+    mMenu = nullptr;
+    return rv;
+  }
+
   mMenu->SetupIcon();
 
   return NS_OK;
@@ -64,7 +72,7 @@ nsStandaloneNativeMenu::MenuWillOpen(bool* aResult) {
 
   // Force an update on the mMenu by faking an open/close on all of
   // its submenus.
-  UpdateMenu(mMenu.get());
+  UpdateMenu(mMenu);
 
   *aResult = true;
   return NS_OK;
@@ -101,8 +109,8 @@ nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
 
   // We can't perform an action on an item with a submenu, that will raise
   // an obj-c exception.
-  if (item && !item.hasSubmenu) {
-    NSMenu* parent = item.menu;
+  if (item && ![item hasSubmenu]) {
+    NSMenu* parent = [item menu];
     if (parent) {
       // NSLog(@"Performing action for native menu item titled: %@\n",
       //       [[currentSubmenu itemAtIndex:targetIndex] title]);
@@ -127,17 +135,17 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
-  NSArray<NSString*>* indexes = [locationString componentsSeparatedByString:@"|"];
-  unsigned int indexCount = indexes.count;
+  NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
+  unsigned int indexCount = [indexes count];
   if (indexCount == 0) {
     return NS_OK;
   }
 
-  nsMenuX* currentMenu = mMenu.get();
+  nsMenuX* currentMenu = mMenu;
 
   // now find the correct submenu
   for (unsigned int i = 1; currentMenu && i < indexCount; i++) {
-    int targetIndex = [indexes objectAtIndex:i].intValue;
+    int targetIndex = [[indexes objectAtIndex:i] intValue];
     int visible = 0;
     uint32_t length = currentMenu->GetItemCount();
     for (unsigned int j = 0; j < length; j++) {
@@ -145,12 +153,7 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
       if (!targetMenu) {
         return NS_OK;
       }
-      MOZ_RELEASE_ASSERT(targetMenu->MenuObjectType() == eSubmenuObjectType ||
-                         targetMenu->MenuObjectType() == eMenuItemObjectType);
-      RefPtr<nsIContent> content = targetMenu->MenuObjectType() == eSubmenuObjectType
-                                       ? static_cast<nsMenuX*>(targetMenu)->Content()
-                                       : static_cast<nsMenuItemX*>(targetMenu)->Content();
-      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
+      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(targetMenu->Content())) {
         visible++;
         if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
           currentMenu = static_cast<nsMenuX*>(targetMenu);
@@ -172,11 +175,11 @@ void nsStandaloneNativeMenu::IconUpdated() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mContainerStatusBarItem) {
-    NSImage* menuImage = mMenu->NativeMenuItem().image;
+    NSImage* menuImage = [mMenu->NativeMenuItem() image];
     if (menuImage) {
-      [menuImage setTemplate:YES];
+      [menuImage setTemplate:true];
     }
-    mContainerStatusBarItem.image = menuImage;
+    [mContainerStatusBarItem setImage:menuImage];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
