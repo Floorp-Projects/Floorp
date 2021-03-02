@@ -72,11 +72,6 @@ jobs:
         symbol: I(deb8)
         parent: debian8-base
         definition: debian-build
-    debian8-mozjs-rust-build:
-        symbol: I(deb8jsrs)
-        parent: debian8-amd64-build
-        packages:
-            - deb8-cmake
     valgrind-build:
         symbol: I(vb)
         parent: debian8-amd64-build
