@@ -168,14 +168,24 @@ void CanonicalBrowsingContext::ReplacedBy(
     mStatusFilter = nullptr;
   }
   aNewContext->mWebProgress = std::move(mWebProgress);
-  aNewContext->mFields.SetWithoutSyncing<IDX_BrowserId>(GetBrowserId());
-  aNewContext->mFields.SetWithoutSyncing<IDX_HistoryID>(GetHistoryID());
-  aNewContext->mFields.SetWithoutSyncing<IDX_ExplicitActive>(
-      GetExplicitActive());
+
+  // Use the Transaction for the fields which need to be updated whether or not
+  // the new context has been attached before.
+  // SetWithoutSyncing can be used if context hasn't been attached.
+  Transaction txn;
+  txn.SetBrowserId(GetBrowserId());
+  txn.SetHistoryID(GetHistoryID());
+  txn.SetExplicitActive(GetExplicitActive());
+  if (aNewContext->EverAttached()) {
+    MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
+  } else {
+    txn.CommitWithoutSyncing(aNewContext);
+  }
 
   // XXXBFCache name handling is still a bit broken in Fission in general,
   // at least in case name should be cleared.
   if (aRemotenessOptions.mTryUseBFCache) {
+    MOZ_ASSERT(!aNewContext->EverAttached());
     aNewContext->mFields.SetWithoutSyncing<IDX_Name>(GetName());
     aNewContext->mFields.SetWithoutSyncing<IDX_HasLoadedNonInitialDocument>(
         GetHasLoadedNonInitialDocument());
