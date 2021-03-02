@@ -39,6 +39,103 @@ class Accessible {
    */
   bool HasGenericType(AccGenericType aType) const;
 
+  // Type "is" methods
+
+  bool IsDoc() const { return HasGenericType(eDocument); }
+
+  bool IsTableRow() const { return HasGenericType(eTableRow); }
+
+  /**
+   * Note: The eTable* types defined in the ARIA map are used in
+   * nsAccessibilityService::CreateAccessible to determine which ARIAGrid*
+   * classes to use for accessible object creation. However, an invalid table
+   * structure might cause these classes not to be used after all.
+   *
+   * To make sure we're really dealing with a table cell, only check the
+   * generic type defined by the class, not the type defined in the ARIA map.
+   */
+  bool IsTableCell() const { return mGenericTypes & eTableCell; }
+
+  bool IsTable() const { return HasGenericType(eTable); }
+
+  bool IsHyperText() const { return HasGenericType(eHyperText); }
+
+  bool IsSelect() const { return HasGenericType(eSelect); }
+
+  bool IsActionable() const { return HasGenericType(eActionable); }
+
+  bool IsText() const { return mGenericTypes & eText; }
+
+  bool IsImage() const { return mType == eImageType; }
+
+  bool IsApplication() const { return mType == eApplicationType; }
+
+  bool IsAlert() const { return HasGenericType(eAlert); }
+
+  bool IsAutoComplete() const { return HasGenericType(eAutoComplete); }
+
+  bool IsButton() const { return HasGenericType(eButton); }
+
+  bool IsCombobox() const { return HasGenericType(eCombobox); }
+
+  bool IsGenericHyperText() const { return mType == eHyperTextType; }
+
+  bool IsHTMLBr() const { return mType == eHTMLBRType; }
+  bool IsHTMLCaption() const { return mType == eHTMLCaptionType; }
+  bool IsHTMLCombobox() const { return mType == eHTMLComboboxType; }
+  bool IsHTMLFileInput() const { return mType == eHTMLFileInputType; }
+
+  bool IsHTMLListItem() const { return mType == eHTMLLiType; }
+
+  bool IsHTMLLink() const { return mType == eHTMLLinkType; }
+
+  bool IsHTMLOptGroup() const { return mType == eHTMLOptGroupType; }
+
+  bool IsHTMLTable() const { return mType == eHTMLTableType; }
+  bool IsHTMLTableRow() const { return mType == eHTMLTableRowType; }
+
+  bool IsImageMap() const { return mType == eImageMapType; }
+
+  bool IsList() const { return HasGenericType(eList); }
+
+  bool IsListControl() const { return HasGenericType(eListControl); }
+
+  bool IsMenuButton() const { return HasGenericType(eMenuButton); }
+
+  bool IsMenuPopup() const { return mType == eMenuPopupType; }
+
+  bool IsProxy() const { return mType == eProxyType; }
+
+  bool IsOuterDoc() const { return mType == eOuterDocType; }
+
+  bool IsProgress() const { return mType == eProgressType; }
+
+  bool IsRoot() const { return mType == eRootType; }
+
+  bool IsPassword() const { return mType == eHTMLTextPasswordFieldType; }
+
+  bool IsTextLeaf() const { return mType == eTextLeafType; }
+
+  bool IsXULLabel() const { return mType == eXULLabelType; }
+
+  bool IsXULListItem() const { return mType == eXULListItemType; }
+
+  bool IsXULTabpanels() const { return mType == eXULTabpanelsType; }
+
+  bool IsXULTooltip() const { return mType == eXULTooltipType; }
+
+  bool IsXULTree() const { return mType == eXULTreeType; }
+
+  bool IsAutoCompletePopup() const {
+    return HasGenericType(eAutoCompletePopup);
+  }
+
+  bool IsTextField() const {
+    return mType == eHTMLTextFieldType || mType == eHTMLTextPasswordFieldType;
+  }
+
+  virtual bool HasNumericValue() const = 0;
+
  private:
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 18;
