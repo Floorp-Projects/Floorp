@@ -748,11 +748,6 @@ class Code : public ShareableBase<Code> {
   void ensureProfilingLabels(bool profilingEnabled) const;
   const char* profilingLabel(uint32_t funcIndex) const;
 
-  // Wasm disassembly support
-
-  void disassemble(JSContext* cx, Tier tier, int kindSelection,
-                   PrintCallback printString) const;
-
   // about:memory reporting:
 
   void addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
