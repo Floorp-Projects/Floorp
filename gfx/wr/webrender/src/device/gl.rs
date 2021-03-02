@@ -938,10 +938,6 @@ pub struct Capabilities {
     pub supports_color_buffer_float: bool,
     /// Whether the device supports persistently mapped buffers, via glBufferStorage.
     pub supports_buffer_storage: bool,
-    /// Whether we are able to use `glBlitFramebuffers` with the draw fbo
-    /// bound to a non-0th layer of a texture array. This is buggy on
-    /// Adreno devices.
-    pub supports_blit_to_texture_array: bool,
     /// Whether advanced blend equations are supported.
     pub supports_advanced_blend_equation: bool,
     /// Whether dual-source blending is supported.
@@ -1568,10 +1564,6 @@ impl Device {
             supports_extension(&extensions, "GL_ARB_buffer_storage")
         };
 
-        // Due to a bug on Adreno devices, blitting to an fbo bound to
-        // a non-0th layer of a texture array is not supported.
-        let supports_blit_to_texture_array = !renderer_name.starts_with("Adreno");
-
         // KHR_blend_equation_advanced renders incorrectly on Adreno
         // devices. This has only been confirmed up to Adreno 5xx, and has been
         // fixed for Android 9, so this condition could be made more specific.
@@ -1695,7 +1687,6 @@ impl Device {
                 supports_copy_image_sub_data,
                 supports_color_buffer_float,
                 supports_buffer_storage,
-                supports_blit_to_texture_array,
                 supports_advanced_blend_equation,
                 supports_dual_source_blending,
                 supports_khr_debug,
