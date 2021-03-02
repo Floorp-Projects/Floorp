@@ -168,7 +168,10 @@ function execAsync(aStmt, aOptions, aResults) {
     pending.cancel();
   }
 
-  Services.tm.spinEventLoopUntil(() => completed || _quit);
+  Services.tm.spinEventLoopUntil(
+    "Test(test_statement_executeAsync.js:execAsync)",
+    () => completed || _quit
+  );
 
   return pending;
 }

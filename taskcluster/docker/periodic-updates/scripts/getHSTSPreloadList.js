@@ -297,7 +297,10 @@ function spinResolve(promise) {
       done = true;
     });
 
-  Services.tm.spinEventLoopUntil(() => done);
+  Services.tm.spinEventLoopUntil(
+    "getHSTSPreloadList.js:spinResolve",
+    () => done
+  );
   if (error) {
     throw error;
   } else {

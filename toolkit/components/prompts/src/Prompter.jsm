@@ -1062,7 +1062,10 @@ class ModalPrompter {
       .finally(() => {
         closed = true;
       });
-    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
+    Services.tm.spinEventLoopUntilOrShutdown(
+      "prompts/Prompter.jsm:openPromptSync",
+      () => closed
+    );
   }
 
   async openPrompt(args) {
