@@ -364,7 +364,6 @@ impl GpuCacheTexture {
                 device.bind_draw_target(
                     DrawTarget::from_texture(
                         texture,
-                        0,
                         false,
                     ),
                 );
@@ -513,7 +512,7 @@ impl super::Renderer {
         let size = device_size_as_framebuffer_size(texture.get_dimensions());
         let mut texels = vec![0; (size.width * size.height * 16) as usize];
         self.device.begin_frame();
-        self.device.bind_read_target(ReadTarget::from_texture(texture, 0));
+        self.device.bind_read_target(ReadTarget::from_texture(texture));
         self.device.read_pixels_into(
             size.into(),
             api::ImageFormat::RGBAF32,

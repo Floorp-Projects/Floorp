@@ -118,7 +118,6 @@ pub fn upload_to_texture_cache(
                 TextureUpdateSource::DebugClear => {
                     let draw_target = DrawTarget::from_texture(
                         texture,
-                        0,
                         false,
                     );
                     renderer.device.bind_draw_target(draw_target);
@@ -498,7 +497,6 @@ fn copy_from_staging_to_cache_using_draw_calls(
 
             let draw_target = DrawTarget::from_texture(
                 dest_texture,
-                0,
                 false,
             );
             renderer.device.bind_draw_target(draw_target);

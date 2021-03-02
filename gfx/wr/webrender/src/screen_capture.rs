@@ -185,7 +185,7 @@ impl AsyncScreenshotGrabber {
                     0,
                 );
 
-                ReadTarget::from_texture(&self.scaling_textures[0], 0)
+                ReadTarget::from_texture(&self.scaling_textures[0])
             }
 
             AsyncScreenshotGrabberMode::CompositionRecorder => ReadTarget::Default,
@@ -280,14 +280,14 @@ impl AsyncScreenshotGrabber {
             );
 
             (
-                ReadTarget::from_texture(&self.scaling_textures[level + 1], 0),
+                ReadTarget::from_texture(&self.scaling_textures[level + 1]),
                 DeviceIntRect::new(DeviceIntPoint::new(0, 0), dest_size * 2),
             )
         } else {
             (read_target, read_target_rect)
         };
 
-        let draw_target = DrawTarget::from_texture(&self.scaling_textures[level], 0 as _, false);
+        let draw_target = DrawTarget::from_texture(&self.scaling_textures[level], false);
 
         let draw_target_rect = draw_target
             .to_framebuffer_rect(DeviceIntRect::new(DeviceIntPoint::new(0, 0), dest_size));
