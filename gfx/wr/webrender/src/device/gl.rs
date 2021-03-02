@@ -2606,27 +2606,14 @@ impl Device {
         let original_bound_fbo = self.bound_draw_fbo;
         for (fbo_index, &fbo_id) in fbos.iter().enumerate() {
             self.bind_external_draw_target(fbo_id);
-            match texture.target {
-                gl::TEXTURE_2D_ARRAY => {
-                    self.gl.framebuffer_texture_layer(
-                        gl::DRAW_FRAMEBUFFER,
-                        gl::COLOR_ATTACHMENT0,
-                        texture.id,
-                        0,
-                        fbo_index as _,
-                    )
-                }
-                _ => {
-                    assert_eq!(fbo_index, 0);
-                    self.gl.framebuffer_texture_2d(
-                        gl::DRAW_FRAMEBUFFER,
-                        gl::COLOR_ATTACHMENT0,
-                        texture.target,
-                        texture.id,
-                        0,
-                    )
-                }
-            }
+            assert_eq!(fbo_index, 0);
+            self.gl.framebuffer_texture_2d(
+                gl::DRAW_FRAMEBUFFER,
+                gl::COLOR_ATTACHMENT0,
+                texture.target,
+                texture.id,
+                0,
+            );
 
             if let Some(depth_rb) = depth_rb {
                 self.gl.framebuffer_renderbuffer(
@@ -3097,35 +3084,17 @@ impl Device {
     ) {
         self.bind_texture(DEFAULT_TEXTURE, texture, Swizzle::default());
         let desc = self.gl_describe_format(texture.format);
-        match texture.target {
-            gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES =>
-                self.gl.tex_sub_image_2d(
-                    texture.target,
-                    0,
-                    0,
-                    0,
-                    texture.size.width as gl::GLint,
-                    texture.size.height as gl::GLint,
-                    desc.external,
-                    desc.pixel_type,
-                    texels_to_u8_slice(pixels),
-                ),
-            gl::TEXTURE_2D_ARRAY =>
-                self.gl.tex_sub_image_3d(
-                    texture.target,
-                    0,
-                    0,
-                    0,
-                    0,
-                    texture.size.width as gl::GLint,
-                    texture.size.height as gl::GLint,
-                    1,
-                    desc.external,
-                    desc.pixel_type,
-                    texels_to_u8_slice(pixels),
-                ),
-            _ => panic!("BUG: Unexpected texture target!"),
-        }
+        self.gl.tex_sub_image_2d(
+            texture.target,
+            0,
+            0,
+            0,
+            texture.size.width as gl::GLint,
+            texture.size.height as gl::GLint,
+            desc.external,
+            desc.pixel_type,
+            texels_to_u8_slice(pixels),
+        );
     }
 
     pub fn read_pixels(&mut self, img_desc: &ImageDescriptor) -> Vec<u8> {
@@ -3183,29 +3152,15 @@ impl Device {
 
     /// Attaches the provided texture to the current Read FBO binding.
     fn attach_read_texture_raw(
-        &mut self, texture_id: gl::GLuint, target: gl::GLuint, layer_id: i32
+        &mut self, texture_id: gl::GLuint, target: gl::GLuint, _layer_id: i32
     ) {
-        match target {
-            gl::TEXTURE_2D_ARRAY => {
-                self.gl.framebuffer_texture_layer(
-                    gl::READ_FRAMEBUFFER,
-                    gl::COLOR_ATTACHMENT0,
-                    texture_id,
-                    0,
-                    layer_id,
-                )
-            }
-            _ => {
-                assert_eq!(layer_id, 0);
-                self.gl.framebuffer_texture_2d(
-                    gl::READ_FRAMEBUFFER,
-                    gl::COLOR_ATTACHMENT0,
-                    target,
-                    texture_id,
-                    0,
-                )
-            }
-        }
+        self.gl.framebuffer_texture_2d(
+            gl::READ_FRAMEBUFFER,
+            gl::COLOR_ATTACHMENT0,
+            target,
+            texture_id,
+            0,
+        )
     }
 
     pub fn attach_read_texture_external(
@@ -4573,21 +4528,6 @@ impl<'a> TextureUploader<'a> {
         let size = chunk.rect.size;
 
         match chunk.texture.target {
-            gl::TEXTURE_2D_ARRAY => {
-                device.gl.tex_sub_image_3d_pbo(
-                    chunk.texture.target,
-                    0,
-                    pos.x as _,
-                    pos.y as _,
-                    chunk.layer_index,
-                    size.width as _,
-                    size.height as _,
-                    1,
-                    gl_format,
-                    data_type,
-                    chunk.offset,
-                );
-            }
             gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES => {
                 device.gl.tex_sub_image_2d_pbo(
                     chunk.texture.target,
