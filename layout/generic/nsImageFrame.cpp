@@ -120,16 +120,16 @@ static bool HaveSpecifiedSize(const nsStylePosition* aStylePosition) {
 
 template <typename SizeOrMaxSize>
 static bool DependsOnIntrinsicSize(const SizeOrMaxSize& aMinOrMaxSize) {
-  if (!aMinOrMaxSize.IsExtremumLength()) {
+  auto length = nsIFrame::ToExtremumLength(aMinOrMaxSize);
+  if (!length) {
     return false;
   }
-  auto keyword = aMinOrMaxSize.AsExtremumLength();
-  switch (keyword) {
-    case StyleExtremumLength::MinContent:
-    case StyleExtremumLength::MaxContent:
-    case StyleExtremumLength::MozFitContent:
+  switch (*length) {
+    case nsIFrame::ExtremumLength::MinContent:
+    case nsIFrame::ExtremumLength::MaxContent:
+    case nsIFrame::ExtremumLength::MozFitContent:
       return true;
-    case StyleExtremumLength::MozAvailable:
+    case nsIFrame::ExtremumLength::MozAvailable:
       return false;
   }
   MOZ_ASSERT_UNREACHABLE("Unknown sizing keyword?");

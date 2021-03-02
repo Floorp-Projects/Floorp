@@ -831,14 +831,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
     if (aCoord.IsLengthPercentage()) {
       return aCoord.AsLengthPercentage().HasPercent();
     }
-
-    if (!aCoord.IsExtremumLength()) {
-      return false;
-    }
-
-    auto keyword = aCoord.AsExtremumLength();
-    return keyword == mozilla::StyleExtremumLength::MozFitContent ||
-           keyword == mozilla::StyleExtremumLength::MozAvailable;
+    return aCoord.IsMozFitContent() || aCoord.IsMozAvailable();
   }
 
   template <typename SizeOrMaxSize>
