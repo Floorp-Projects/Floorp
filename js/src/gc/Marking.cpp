@@ -4160,20 +4160,57 @@ static bool CellMayHaveChildren(JS::GCCellPtr cell) {
 
 /* static */
 BarrierTracer* BarrierTracer::fromTracer(JSTracer* trc) {
-  MOZ_ASSERT(trc->asCallbackTracer()->kind() == JS::TracerKind::Barrier);
-  return static_cast<BarrierTracer*>(trc->asCallbackTracer());
+  MOZ_ASSERT(trc->kind() == JS::TracerKind::Barrier);
+  return static_cast<BarrierTracer*>(trc->asGenericTracer());
 }
 
 BarrierTracer::BarrierTracer(JSRuntime* rt)
-    : CallbackTracer(rt, JS::TracerKind::Barrier,
-                     JS::WeakEdgeTraceAction::Skip),
+    : GenericTracer(rt, JS::TracerKind::Barrier, JS::WeakEdgeTraceAction::Skip),
       marker(rt->gc.marker) {}
 
-void BarrierTracer::onChild(const JS::GCCellPtr& thing) {
-  if (MapGCThingTyped(thing,
-                      [this](auto* ptr) { return ShouldMark(&marker, ptr); })) {
-    performBarrier(thing);
-  }
+JSObject* BarrierTracer::onObjectEdge(JSObject* obj) {
+  PreWriteBarrier(obj);
+  return obj;
+}
+Shape* BarrierTracer::onShapeEdge(Shape* shape) {
+  PreWriteBarrier(shape);
+  return shape;
+}
+JSString* BarrierTracer::onStringEdge(JSString* string) {
+  PreWriteBarrier(string);
+  return string;
+}
+js::BaseScript* BarrierTracer::onScriptEdge(js::BaseScript* script) {
+  PreWriteBarrier(script);
+  return script;
+}
+BaseShape* BarrierTracer::onBaseShapeEdge(BaseShape* base) {
+  PreWriteBarrier(base);
+  return base;
+}
+Scope* BarrierTracer::onScopeEdge(Scope* scope) {
+  PreWriteBarrier(scope);
+  return scope;
+}
+RegExpShared* BarrierTracer::onRegExpSharedEdge(RegExpShared* shared) {
+  PreWriteBarrier(shared);
+  return shared;
+}
+BigInt* BarrierTracer::onBigIntEdge(BigInt* bi) {
+  PreWriteBarrier(bi);
+  return bi;
+}
+ObjectGroup* BarrierTracer::onObjectGroupEdge(ObjectGroup* group) {
+  PreWriteBarrier(group);
+  return group;
+}
+JS::Symbol* BarrierTracer::onSymbolEdge(JS::Symbol* sym) {
+  PreWriteBarrier(sym);
+  return sym;
+}
+jit::JitCode* BarrierTracer::onJitCodeEdge(jit::JitCode* jit) {
+  PreWriteBarrier(jit);
+  return jit;
 }
 
 // If the barrier buffer grows too large, trace all barriered things at that
