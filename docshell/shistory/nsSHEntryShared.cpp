@@ -16,7 +16,7 @@
 #include "nsIWebNavigation.h"
 #include "nsSHistory.h"
 #include "nsThreadUtils.h"
-
+#include "nsFrameLoader.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 
@@ -70,6 +70,11 @@ SHEntrySharedParentState::SHEntrySharedParentState(
 SHEntrySharedParentState::~SHEntrySharedParentState() {
   MOZ_ASSERT(mId != 0);
 
+  RefPtr<nsFrameLoader> loader = mFrameLoader.forget();
+  if (loader) {
+    loader->Destroy();
+  }
+
   sIdToSharedState->Remove(mId);
   if (sIdToSharedState->IsEmpty()) {
     delete sIdToSharedState;
@@ -109,6 +114,14 @@ void dom::SHEntrySharedParentState::NotifyListenersContentViewerEvicted() {
 
 void SHEntrySharedChildState::CopyFrom(SHEntrySharedChildState* aEntry) {
   mChildShells.AppendObjects(aEntry->mChildShells);
+}
+
+void SHEntrySharedParentState::SetFrameLoader(nsFrameLoader* aFrameLoader) {
+  mFrameLoader = aFrameLoader;
+}
+
+nsFrameLoader* SHEntrySharedParentState::GetFrameLoader() {
+  return mFrameLoader;
 }
 
 }  // namespace dom
