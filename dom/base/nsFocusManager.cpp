@@ -1910,7 +1910,7 @@ void nsFocusManager::AdjustWindowFocus(BrowsingContext* aBrowsingContext,
       mozilla::dom::ContentChild* contentChild =
           mozilla::dom::ContentChild::GetSingleton();
       MOZ_ASSERT(contentChild);
-      contentChild->SendAdjustWindowFocus(bc, false, aIsVisible);
+      contentChild->SendAdjustWindowFocus(bc, aIsVisible);
       return;
     }
 

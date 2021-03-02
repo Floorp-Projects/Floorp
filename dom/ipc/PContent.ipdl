@@ -1801,7 +1801,6 @@ both:
             returns (bool unused);
 
     async AdjustWindowFocus(MaybeDiscardedBrowsingContext aContext,
-                            bool aCheckPermission,
                             bool aIsVisible);
     async WindowClose(MaybeDiscardedBrowsingContext aContext,
                       bool aTrustedCaller);
