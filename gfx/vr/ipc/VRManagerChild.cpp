@@ -603,7 +603,7 @@ void VRManagerChild::HandleFatalError(const char* aMsg) const {
 }
 
 void VRManagerChild::AddPromise(const uint32_t& aID, dom::Promise* aPromise) {
-  MOZ_ASSERT(!mGamepadPromiseList.Contains(aID));
+  MOZ_ASSERT(!mGamepadPromiseList.Get(aID, nullptr));
   mGamepadPromiseList.InsertOrUpdate(aID, RefPtr{aPromise});
 }
 
