@@ -39,8 +39,8 @@ class PluginDocument final : public MediaDocument, public nsIPluginDocument {
 
   void SetScriptGlobalObject(
       nsIScriptGlobalObject* aScriptGlobalObject) override;
-  bool CanSavePresentation(nsIRequest* aNewRequest,
-                           uint16_t& aBFCacheStatus) override;
+  bool CanSavePresentation(nsIRequest* aNewRequest, uint16_t& aBFCacheStatus,
+                           bool aIncludeSubdocuments = true) override;
 
   const nsCString& GetType() const { return mMimeType; }
   Element* GetPluginContent() { return mPluginContent; }
@@ -135,7 +135,8 @@ void PluginDocument::SetScriptGlobalObject(
 }
 
 bool PluginDocument::CanSavePresentation(nsIRequest* aNewRequest,
-                                         uint16_t& aBFCacheStatus) {
+                                         uint16_t& aBFCacheStatus,
+                                         bool aIncludeSubdocuments) {
   // Full-page plugins cannot be cached, currently, because we don't have
   // the stream listener data to feed to the plugin instance.
   return false;
