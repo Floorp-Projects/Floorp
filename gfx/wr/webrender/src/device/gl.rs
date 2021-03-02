@@ -3151,9 +3151,7 @@ impl Device {
     }
 
     /// Attaches the provided texture to the current Read FBO binding.
-    fn attach_read_texture_raw(
-        &mut self, texture_id: gl::GLuint, target: gl::GLuint, _layer_id: i32
-    ) {
+    fn attach_read_texture_raw(&mut self, texture_id: gl::GLuint, target: gl::GLuint) {
         self.gl.framebuffer_texture_2d(
             gl::READ_FRAMEBUFFER,
             gl::COLOR_ATTACHMENT0,
@@ -3164,13 +3162,13 @@ impl Device {
     }
 
     pub fn attach_read_texture_external(
-        &mut self, texture_id: gl::GLuint, target: ImageBufferKind, layer_id: i32
+        &mut self, texture_id: gl::GLuint, target: ImageBufferKind
     ) {
-        self.attach_read_texture_raw(texture_id, get_gl_target(target), layer_id)
+        self.attach_read_texture_raw(texture_id, get_gl_target(target))
     }
 
-    pub fn attach_read_texture(&mut self, texture: &Texture, layer_id: i32) {
-        self.attach_read_texture_raw(texture.id, texture.target, layer_id)
+    pub fn attach_read_texture(&mut self, texture: &Texture) {
+        self.attach_read_texture_raw(texture.id, texture.target)
     }
 
     fn bind_vao_impl(&mut self, id: gl::GLuint) {
