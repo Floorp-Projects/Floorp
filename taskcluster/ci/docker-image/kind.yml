@@ -72,8 +72,6 @@ jobs:
         symbol: I(deb8)
         parent: debian8-base
         definition: debian-build
-        packages:
-            - deb8-valgrind
         args:
             ARCH: amd64
     debian8-mozjs-rust-build:
@@ -84,6 +82,8 @@ jobs:
     valgrind-build:
         symbol: I(vb)
         parent: debian8-amd64-build
+        packages:
+            - deb8-valgrind
     lint:
         symbol: I(lnt)
     # Neither the debian10-raw nor the debian10-packages images can have

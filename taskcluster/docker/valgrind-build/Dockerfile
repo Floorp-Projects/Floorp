@@ -5,12 +5,16 @@ VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
+ARG TASKCLUSTER_ROOT_URL
+ARG DOCKER_IMAGE_PACKAGES
+RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES
+
 # We could try to be smart and install all the -dbg packages corresponding to
 # the installed packages, but, not all of them are actually for libraries used
 # by Firefox, leading to a larger docker image. Moreover, some of the -dbg
 # packages for unnecessary libraries pull other packages through dependencies,
 # that make for even larger docker images.
-RUN apt-get install \
+RUN apt-get update && apt-get install \
     dbus-1-dbg \
     libatk-bridge2.0-0-dbg \
     libatk1.0-dbg \
