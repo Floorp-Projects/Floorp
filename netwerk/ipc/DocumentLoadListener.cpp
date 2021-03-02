@@ -1490,8 +1490,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   // Determine what type of content process this load should finish in.
   nsAutoCString preferredRemoteType(currentRemoteType);
-  bool replaceBrowsingContext = false;
-  uint64_t specificGroupId = 0;
+  RemotenessChangeState changeState;
 
   // If we're in a preloaded browser, force browsing context replacement to
   // ensure the current process is re-selected.
@@ -1506,7 +1505,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       if (NS_SUCCEEDED(mChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
           !originalURI->GetSpecOrDefault().EqualsLiteral("about:newtab")) {
         LOG(("Process Switch: leaving preloaded browser"));
-        replaceBrowsingContext = true;
+        changeState.mReplaceBrowsingContext = true;
         browserElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
                                   true);
       }
@@ -1517,7 +1516,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers.
   {
     bool isCOOPSwitch = HasCrossOriginOpenerPolicyMismatch();
-    replaceBrowsingContext |= isCOOPSwitch;
+    changeState.mReplaceBrowsingContext |= isCOOPSwitch;
 
     // Determine our COOP status, which will be used to determine our preferred
     // remote type.
@@ -1553,10 +1552,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   if (!parentWindow && browsingContext->Group()->Toplevels().Length() == 1) {
     if (IsLargeAllocationLoad(browsingContext, mChannel)) {
       preferredRemoteType = LARGE_ALLOCATION_REMOTE_TYPE;
-      replaceBrowsingContext = true;
+      changeState.mReplaceBrowsingContext = true;
     } else if (preferredRemoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
       preferredRemoteType = DEFAULT_REMOTE_TYPE;
-      replaceBrowsingContext = true;
+      changeState.mReplaceBrowsingContext = true;
     }
   }
 
@@ -1574,8 +1573,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
       if (browsingContext->Group()->Id() !=
           addonPolicy->GetBrowsingContextGroupId()) {
-        replaceBrowsingContext = true;
-        specificGroupId = addonPolicy->GetBrowsingContextGroupId();
+        changeState.mReplaceBrowsingContext = true;
+        changeState.mSpecificGroupId = addonPolicy->GetBrowsingContextGroupId();
       }
     } else {
       // As a temporary measure, extension iframes must be loaded within the
@@ -1603,11 +1602,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     currentPrincipal = wgp->DocumentPrincipal();
   }
 
-  nsAutoCString remoteType;
   rv = e10sUtils->GetRemoteTypeForPrincipal(
       resultPrincipal, mChannelCreationURI, browsingContext->UseRemoteTabs(),
       browsingContext->UseRemoteSubframes(), preferredRemoteType,
-      currentPrincipal, parentWindow, remoteType);
+      currentPrincipal, parentWindow, changeState.mRemoteType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Process Switch Abort: getRemoteTypeForPrincipal threw an exception"));
     return false;
@@ -1616,32 +1614,33 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // If the final decision is to switch from an 'extension' remote type to any
   // other remote type, ensure the browsing context is replaced so that we leave
   // the extension-specific BrowsingContextGroup.
-  if (!parentWindow && currentRemoteType != remoteType &&
+  if (!parentWindow && currentRemoteType != changeState.mRemoteType &&
       currentRemoteType == EXTENSION_REMOTE_TYPE) {
-    replaceBrowsingContext = true;
+    changeState.mReplaceBrowsingContext = true;
   }
 
   LOG(("GetRemoteTypeForPrincipal -> current:%s remoteType:%s",
-       currentRemoteType.get(), remoteType.get()));
+       currentRemoteType.get(), changeState.mRemoteType.get()));
 
   // Check if a process switch is needed.
-  if (currentRemoteType == remoteType && !replaceBrowsingContext) {
-    LOG(("Process Switch Abort: type (%s) is compatible", remoteType.get()));
+  if (currentRemoteType == changeState.mRemoteType &&
+      !changeState.mReplaceBrowsingContext) {
+    LOG(("Process Switch Abort: type (%s) is compatible",
+         changeState.mRemoteType.get()));
     return false;
   }
 
-  if (NS_WARN_IF(parentWindow && remoteType.IsEmpty())) {
+  if (NS_WARN_IF(parentWindow && changeState.mRemoteType.IsEmpty())) {
     LOG(("Process Switch Abort: non-remote target process for subframe"));
     return false;
   }
 
-  *aWillSwitchToRemote = !remoteType.IsEmpty();
+  *aWillSwitchToRemote = !changeState.mRemoteType.IsEmpty();
 
   // If we're doing a document load, we can immediately perform a process
   // switch.
   if (mIsDocumentLoad) {
-    TriggerProcessSwitch(browsingContext, remoteType, replaceBrowsingContext,
-                         specificGroupId);
+    TriggerProcessSwitch(browsingContext, changeState);
     return true;
   }
 
@@ -1660,8 +1659,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   mObjectUpgradeHandler->UpgradeObjectLoad()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self = RefPtr{this}, remoteType, replaceBrowsingContext, specificGroupId,
-       wgp](const RefPtr<CanonicalBrowsingContext>& aBrowsingContext) {
+      [self = RefPtr{this}, changeState,
+       wgp](const RefPtr<CanonicalBrowsingContext>& aBrowsingContext) mutable {
         if (aBrowsingContext->IsDiscarded() ||
             wgp != aBrowsingContext->GetParentWindowContext()) {
           LOG(
@@ -1672,8 +1671,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
         }
 
         LOG(("Process Switch: Upgraded Object to Document Load"));
-        self->TriggerProcessSwitch(aBrowsingContext, remoteType,
-                                   replaceBrowsingContext, specificGroupId);
+        self->TriggerProcessSwitch(aBrowsingContext, changeState);
       },
       [self = RefPtr{this}](nsresult aStatusCode) {
         MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
@@ -1683,8 +1681,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 }
 
 void DocumentLoadListener::TriggerProcessSwitch(
-    CanonicalBrowsingContext* aContext, const nsCString& aRemoteType,
-    bool aReplaceBrowsingContext, uint64_t aSpecificGroupId) {
+    CanonicalBrowsingContext* aContext, const RemotenessChangeState& aState) {
   nsAutoCString currentRemoteType(NOT_REMOTE_TYPE);
   if (RefPtr<ContentParent> contentParent = aContext->GetContentParent()) {
     currentRemoteType = contentParent->GetRemoteType();
@@ -1692,7 +1689,7 @@ void DocumentLoadListener::TriggerProcessSwitch(
   MOZ_ASSERT_IF(currentRemoteType.IsEmpty(), !OtherPid());
 
   LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
-       currentRemoteType.get(), aRemoteType.get()));
+       currentRemoteType.get(), aState.mRemoteType.get()));
 
   // We're now committing to a process switch, so we can disconnect from
   // the listeners in the old process.
@@ -1710,9 +1707,7 @@ void DocumentLoadListener::TriggerProcessSwitch(
   DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
 
   LOG(("Process Switch: Calling ChangeRemoteness"));
-  aContext
-      ->ChangeRemoteness(aRemoteType, mLoadIdentifier, aReplaceBrowsingContext,
-                         aSpecificGroupId)
+  aContext->ChangeRemoteness(aState, mLoadIdentifier)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr{this}](BrowserParent* aBrowserParent) {

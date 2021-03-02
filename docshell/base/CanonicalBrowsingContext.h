@@ -44,6 +44,15 @@ struct LoadingSessionHistoryInfo;
 class SessionHistoryEntry;
 class WindowGlobalParent;
 
+// RemotenessChangeState is passed through the methods to store the state
+// of the possible remoteness change.
+struct RemotenessChangeState {
+  nsCString mRemoteType;
+  bool mReplaceBrowsingContext = false;
+  uint64_t mSpecificGroupId = 0;
+  bool mTryUseBFCache = false;
+};
+
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
 // parent needs.
@@ -206,10 +215,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // A NOT_REMOTE_TYPE aRemoteType argument will perform a process switch into
   // the parent process, and the method will resolve with a null BrowserParent.
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
-  RefPtr<RemotenessPromise> ChangeRemoteness(const nsACString& aRemoteType,
-                                             uint64_t aPendingSwitchId,
-                                             bool aReplaceBrowsingContext,
-                                             uint64_t aSpecificGroupId);
+  RefPtr<RemotenessPromise> ChangeRemoteness(
+      const RemotenessChangeState& aState, uint64_t aPendingSwitchId);
 
   // Return a media controller from the top-level browsing context that can
   // control all media belonging to this browsing context tree. Return nullptr
@@ -247,7 +254,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // process).
   // aNewContext is the newly created BrowsingContext that is replacing
   // us.
-  void ReplacedBy(CanonicalBrowsingContext* aNewContext);
+  void ReplacedBy(CanonicalBrowsingContext* aNewContext,
+                  const RemotenessChangeState& aState);
 
   bool HasHistoryEntry(nsISHEntry* aEntry);
 
@@ -293,7 +301,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     PendingRemotenessChange(CanonicalBrowsingContext* aTarget,
                             RemotenessPromise::Private* aPromise,
                             uint64_t aPendingSwitchId,
-                            bool aReplaceBrowsingContext);
+                            const RemotenessChangeState& aState);
 
     void Cancel(nsresult aRv);
 
@@ -312,7 +320,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     RefPtr<BrowsingContextGroup> mSpecificGroup;
 
     uint64_t mPendingSwitchId;
-    bool mReplaceBrowsingContext;
+    RemotenessChangeState mState;
   };
 
   friend class net::DocumentLoadListener;

@@ -156,8 +156,8 @@ void CanonicalBrowsingContext::MaybeAddAsProgressListener(
   aWebProgress->AddProgressListener(mStatusFilter, nsIWebProgress::NOTIFY_ALL);
 }
 
-void CanonicalBrowsingContext::ReplacedBy(
-    CanonicalBrowsingContext* aNewContext) {
+void CanonicalBrowsingContext::ReplacedBy(CanonicalBrowsingContext* aNewContext,
+                                          const RemotenessChangeState& aState) {
   MOZ_ASSERT(!aNewContext->EverAttached());
   MOZ_ASSERT(IsTop() && aNewContext->IsTop());
   if (mStatusFilter) {
@@ -1123,8 +1123,8 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
     // The process has been created, hand off to nsFrameLoaderOwner to finish
     // the process switch.
     ErrorResult error;
-    frameLoaderOwner->ChangeRemotenessToProcess(
-        mContentParent, mReplaceBrowsingContext, mSpecificGroup, error);
+    frameLoaderOwner->ChangeRemotenessToProcess(mContentParent, mState,
+                                                mSpecificGroup, error);
     if (error.Failed()) {
       Cancel(error.StealNSResult());
       return;
@@ -1228,7 +1228,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Finish() {
     oldBrowser->Destroy();
   }
 
-  MOZ_ASSERT(!mReplaceBrowsingContext, "Cannot replace BC for subframe");
+  MOZ_ASSERT(!mState.mReplaceBrowsingContext, "Cannot replace BC for subframe");
   nsCOMPtr<nsIPrincipal> initialPrincipal =
       NullPrincipal::CreateWithInheritedAttributes(
           target->OriginAttributesRef(),
@@ -1314,11 +1314,11 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
 
 CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
     CanonicalBrowsingContext* aTarget, RemotenessPromise::Private* aPromise,
-    uint64_t aPendingSwitchId, bool aReplaceBrowsingContext)
+    uint64_t aPendingSwitchId, const RemotenessChangeState& aState)
     : mTarget(aTarget),
       mPromise(aPromise),
       mPendingSwitchId(aPendingSwitchId),
-      mReplaceBrowsingContext(aReplaceBrowsingContext) {}
+      mState(aState) {}
 
 CanonicalBrowsingContext::PendingRemotenessChange::~PendingRemotenessChange() {
   MOZ_ASSERT(!mPromise && !mTarget && !mContentParent && !mSpecificGroup &&
@@ -1334,19 +1334,18 @@ BrowserParent* CanonicalBrowsingContext::GetBrowserParent() const {
 }
 
 RefPtr<CanonicalBrowsingContext::RemotenessPromise>
-CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
-                                           uint64_t aPendingSwitchId,
-                                           bool aReplaceBrowsingContext,
-                                           uint64_t aSpecificGroupId) {
+CanonicalBrowsingContext::ChangeRemoteness(const RemotenessChangeState& aState,
+                                           uint64_t aPendingSwitchId) {
   MOZ_DIAGNOSTIC_ASSERT(IsContent(),
                         "cannot change the process of chrome contexts");
   MOZ_DIAGNOSTIC_ASSERT(
       IsTop() == IsEmbeddedInProcess(0),
       "toplevel content must be embedded in the parent process");
-  MOZ_DIAGNOSTIC_ASSERT(!aReplaceBrowsingContext || IsTop(),
+  MOZ_DIAGNOSTIC_ASSERT(!aState.mReplaceBrowsingContext || IsTop(),
                         "Cannot replace BrowsingContext for subframes");
-  MOZ_DIAGNOSTIC_ASSERT(aSpecificGroupId == 0 || aReplaceBrowsingContext,
-                        "Cannot specify group ID unless replacing BC");
+  MOZ_DIAGNOSTIC_ASSERT(
+      aState.mSpecificGroupId == 0 || aState.mReplaceBrowsingContext,
+      "Cannot specify group ID unless replacing BC");
   MOZ_DIAGNOSTIC_ASSERT(aPendingSwitchId || !IsTop(),
                         "Should always have aPendingSwitchId for top-level "
                         "frames");
@@ -1368,7 +1367,7 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
     return RemotenessPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
-  if (aRemoteType.IsEmpty() && (!IsTop() || !GetEmbedderElement())) {
+  if (aState.mRemoteType.IsEmpty() && (!IsTop() || !GetEmbedderElement())) {
     NS_WARNING("Cannot load non-remote subframes");
     return RemotenessPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
@@ -1383,7 +1382,7 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
       embedderWindowGlobal->GetBrowserParent();
   // Switching to local. No new process, so perform switch sync.
   if (embedderBrowser &&
-      aRemoteType == embedderBrowser->Manager()->GetRemoteType()) {
+      aState.mRemoteType == embedderBrowser->Manager()->GetRemoteType()) {
     MOZ_DIAGNOSTIC_ASSERT(
         aPendingSwitchId,
         "We always have a PendingSwitchId, except for print-preview loads, "
@@ -1405,8 +1404,8 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
 
     // If the embedder process is remote, tell that remote process to become
     // the owner.
-    MOZ_DIAGNOSTIC_ASSERT(!aReplaceBrowsingContext);
-    MOZ_DIAGNOSTIC_ASSERT(!aRemoteType.IsEmpty());
+    MOZ_DIAGNOSTIC_ASSERT(!aState.mReplaceBrowsingContext);
+    MOZ_DIAGNOSTIC_ASSERT(!aState.mRemoteType.IsEmpty());
     SetOwnerProcessId(embedderBrowser->Manager()->ChildID());
     Unused << embedderWindowGlobal->SendMakeFrameLocal(this, aPendingSwitchId);
     return RemotenessPromise::CreateAndResolve(embedderBrowser, __func__);
@@ -1414,15 +1413,15 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
 
   // Switching to remote. Wait for new process to launch before switch.
   auto promise = MakeRefPtr<RemotenessPromise::Private>(__func__);
-  RefPtr<PendingRemotenessChange> change = new PendingRemotenessChange(
-      this, promise, aPendingSwitchId, aReplaceBrowsingContext);
+  RefPtr<PendingRemotenessChange> change =
+      new PendingRemotenessChange(this, promise, aPendingSwitchId, aState);
   mPendingRemotenessChange = change;
 
   // If a specific BrowsingContextGroup ID was specified for this load, make
   // sure to keep it alive until the process switch is completed.
-  if (aSpecificGroupId) {
+  if (aState.mSpecificGroupId) {
     change->mSpecificGroup =
-        BrowsingContextGroup::GetOrCreate(aSpecificGroupId);
+        BrowsingContextGroup::GetOrCreate(aState.mSpecificGroupId);
     change->mSpecificGroup->AddKeepAlive();
   }
 
@@ -1444,7 +1443,7 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
     change->mPrepareToChangePromise = GenericPromise::FromDomPromise(blocker);
   }
 
-  if (aRemoteType.IsEmpty()) {
+  if (aState.mRemoteType.IsEmpty()) {
     change->ProcessReady();
   } else {
     // Try to predict which BrowsingContextGroup will be used for the final load
@@ -1456,10 +1455,10 @@ CanonicalBrowsingContext::ChangeRemoteness(const nsACString& aRemoteType,
     // switch into a brand new group, though it's sub-optimal, as it can
     // restrict the set of processes we're using.
     BrowsingContextGroup* finalGroup =
-        aReplaceBrowsingContext ? change->mSpecificGroup.get() : Group();
+        aState.mReplaceBrowsingContext ? change->mSpecificGroup.get() : Group();
 
     change->mContentParent = ContentParent::GetNewOrUsedLaunchingBrowserProcess(
-        /* aRemoteType = */ aRemoteType,
+        /* aRemoteType = */ aState.mRemoteType,
         /* aGroup = */ finalGroup,
         /* aPriority = */ hal::PROCESS_PRIORITY_FOREGROUND,
         /* aPreferUsed = */ false);
