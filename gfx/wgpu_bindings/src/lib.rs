@@ -105,10 +105,30 @@ enum TextureAction<'a> {
     CreateView(id::TextureViewId, wgc::resource::TextureViewDescriptor<'a>),
 }
 
+#[repr(C)]
 #[derive(serde::Serialize, serde::Deserialize)]
 enum DropAction {
+    Adapter(id::AdapterId),
+    Device(id::DeviceId),
+    ShaderModule(id::ShaderModuleId),
+    PipelineLayout(id::PipelineLayoutId),
+    BindGroupLayout(id::BindGroupLayoutId),
+    BindGroup(id::BindGroupId),
+    CommandBuffer(id::CommandBufferId),
+    RenderBundle(id::RenderBundleId),
+    RenderPipeline(id::RenderPipelineId),
+    ComputePipeline(id::ComputePipelineId),
     Buffer(id::BufferId),
     Texture(id::TextureId),
+    TextureView(id::TextureViewId),
     Sampler(id::SamplerId),
-    BindGroupLayout(id::BindGroupLayoutId),
+}
+
+impl DropAction {
+    // helper function to construct byte bufs
+    fn to_byte_buf(&self) -> ByteBuf {
+        let mut data = Vec::new();
+        bincode::serialize_into(&mut data, self).unwrap();
+        ByteBuf::from_vec(data)
+    }
 }
