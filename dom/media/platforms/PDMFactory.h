@@ -44,8 +44,7 @@ class PDMFactory final {
   RefPtr<PDMCreateDecoderPromise> CreateDecoder(
       const CreateDecoderParams& aParams);
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const;
+  bool SupportsMimeType(const nsACString& aMimeType) const;
   bool Supports(const SupportDecoderParams& aParams,
                 DecoderDoctorDiagnostics* aDiagnostics) const;
 
