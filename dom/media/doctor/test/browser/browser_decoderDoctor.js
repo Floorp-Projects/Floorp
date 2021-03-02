@@ -205,15 +205,22 @@ function tab_checker_for_webcompat(expectedParams) {
 
 add_task(async function test_platform_decoder_not_found() {
   let message = "";
+  let decoderDoctorReportId = "";
   let isLinux = AppConstants.platform == "linux";
   if (isLinux) {
     message = gNavigatorBundle.getString("decoder.noCodecsLinux.message");
+    decoderDoctorReportId = "MediaPlatformDecoderNotFound";
   } else if (AppConstants.platform == "win") {
     message = gNavigatorBundle.getString("decoder.noHWAcceleration.message");
+    decoderDoctorReportId = "MediaWMFNeeded";
   }
 
   await test_decoder_doctor_notification(
-    { type: "platform-decoder-not-found", formats: "testFormat" },
+    {
+      type: "platform-decoder-not-found",
+      decoderDoctorReportId,
+      formats: "testFormat",
+    },
     message,
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.button"),
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
