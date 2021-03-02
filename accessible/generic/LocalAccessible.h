@@ -371,6 +371,22 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual void RelocateChild(uint32_t aNewIndex, LocalAccessible* aChild);
 
+  // Accessible hierarchy method overrides
+
+  virtual Accessible* Parent() const override { return LocalParent(); }
+
+  virtual Accessible* ChildAt(uint32_t aIndex) const override {
+    return LocalChildAt(aIndex);
+  }
+
+  virtual Accessible* NextSibling() const override {
+    return LocalNextSibling();
+  }
+
+  virtual Accessible* PrevSibling() const override {
+    return LocalPrevSibling();
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // LocalAccessible tree traverse methods
 
@@ -387,7 +403,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return child accessible count.
    */
-  virtual uint32_t ChildCount() const;
+  virtual uint32_t ChildCount() const override;
 
   /**
    * Return index of the given child accessible.
@@ -399,12 +415,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return index in parent accessible.
    */
-  virtual int32_t IndexInParent() const;
-
-  /**
-   * Return true if accessible has children;
-   */
-  bool HasChildren() const { return !!LocalChildAt(0); }
+  virtual int32_t IndexInParent() const override;
 
   /**
    * Return first/last/next/previous sibling of the accessible.
