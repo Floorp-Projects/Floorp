@@ -1087,7 +1087,6 @@ pub struct Device {
     use_optimized_shaders: bool,
 
     max_texture_size: i32,
-    max_texture_layers: u32,
     cached_programs: Option<Rc<ProgramCache>>,
 
     // Frame counter. This is used to map between CPU
@@ -1369,14 +1368,11 @@ impl Device {
         panic_on_gl_error: bool,
     ) -> Device {
         let mut max_texture_size = [0];
-        let mut max_texture_layers = [0];
         unsafe {
             gl.get_integer_v(gl::MAX_TEXTURE_SIZE, &mut max_texture_size);
-            gl.get_integer_v(gl::MAX_ARRAY_TEXTURE_LAYERS, &mut max_texture_layers);
         }
 
         let max_texture_size = max_texture_size[0];
-        let max_texture_layers = max_texture_layers[0] as u32;
         let renderer_name = gl.get_string(gl::RENDERER);
         info!("Renderer: {}", renderer_name);
         info!("Max texture size: {}", max_texture_size);
@@ -1742,7 +1738,6 @@ impl Device {
             depth_available: true,
 
             max_texture_size,
-            max_texture_layers,
             cached_programs,
             frame_id: GpuFrameId(0),
             extensions,
@@ -1781,11 +1776,6 @@ impl Device {
 
     pub fn surface_origin_is_top_left(&self) -> bool {
         self.surface_origin_is_top_left
-    }
-
-    /// Returns the limit on texture array layers.
-    pub fn max_texture_layers(&self) -> usize {
-        self.max_texture_layers as usize
     }
 
     pub fn get_capabilities(&self) -> &Capabilities {
