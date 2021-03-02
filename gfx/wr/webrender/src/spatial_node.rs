@@ -319,9 +319,14 @@ impl SpatialNode {
 
                 if info.invertible {
                     // Resolve the transform against any property bindings.
-                    let source_transform = LayoutFastTransform::from(
-                        scene_properties.resolve_layout_transform(&info.source_transform)
-                    );
+                    let source_transform = {
+                        let source_transform = scene_properties.resolve_layout_transform(&info.source_transform);
+                        if let ReferenceFrameKind::Transform { is_2d_scale_translation: true, .. } = info.kind {
+                            assert!(source_transform.is_2d_scale_translation(), "Reference frame was marked as only having 2d scale or translation");
+                        }
+
+                        LayoutFastTransform::from(source_transform)
+                    };
 
                     // Do a change-basis operation on the perspective matrix using
                     // the scroll offset.
@@ -340,7 +345,7 @@ impl SpatialNode {
                                 .then_translate(-scroll_offset)
                         }
                         ReferenceFrameKind::Perspective { scrolling_relative_to: None } |
-                        ReferenceFrameKind::Transform | ReferenceFrameKind::Zoom => source_transform,
+                        ReferenceFrameKind::Transform { .. } => source_transform,
                     };
 
                     let resolved_transform =
@@ -370,10 +375,9 @@ impl SpatialNode {
                             Some(ref scale_offset) => {
                                 // We generally do not want to snap animated transforms as it causes jitter.
                                 // However, we do want to snap the visual viewport offset when scrolling.
-                                // Therefore only snap the transform for Zoom reference frames. This may still
-                                // cause jitter when zooming, unfortunately.
+                                // This may still cause jitter when zooming, unfortunately.
                                 let mut maybe_snapped = scale_offset.clone();
-                                if info.kind == ReferenceFrameKind::Zoom {
+                                if let ReferenceFrameKind::Transform { should_snap: true, .. } = info.kind {
                                     maybe_snapped.offset = snap_offset(
                                         scale_offset.offset,
                                         state.coordinate_system_relative_scale_offset.scale,
@@ -408,7 +412,7 @@ impl SpatialNode {
                                 transform,
                                 world_transform,
                                 should_flatten: match (info.transform_style, info.kind) {
-                                    (TransformStyle::Flat, ReferenceFrameKind::Transform) => true,
+                                    (TransformStyle::Flat, ReferenceFrameKind::Transform { .. }) => true,
                                     (_, _) => false,
                                 },
                                 parent: Some(state.current_coordinate_system_id),
@@ -912,7 +916,10 @@ fn test_cst_perspective_relative_scroll() {
         None,
         TransformStyle::Flat,
         PropertyBinding::Value(LayoutTransform::identity()),
-        ReferenceFrameKind::Transform,
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
         LayoutVector2D::zero(),
         pipeline_id,
     );

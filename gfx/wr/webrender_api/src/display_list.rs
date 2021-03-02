@@ -1563,7 +1563,10 @@ impl DisplayListBuilder {
                     vertical_flip,
                     rotation,
                 },
-                kind: di::ReferenceFrameKind::Transform,
+                kind: di::ReferenceFrameKind::Transform {
+                    is_2d_scale_translation: false,
+                    should_snap: false,
+                },
                 id,
             },
         });

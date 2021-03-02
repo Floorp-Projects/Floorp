@@ -712,10 +712,15 @@ pub struct ReferenceFrameDisplayListItem {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub enum ReferenceFrameKind {
-    /// Zoom reference frames must be a scale + translation only
-    Zoom,
     /// A normal transform matrix, may contain perspective (the CSS transform property)
-    Transform,
+    Transform {
+        /// Optionally marks the transform as only ever having a simple 2D scale or translation,
+        /// allowing for optimizations.
+        is_2d_scale_translation: bool,
+        /// Marks that the transform should be snapped. Used for transforms which animate in
+        /// response to scrolling, eg for zooming or dynamic toolbar fixed-positioning.
+        should_snap: bool,
+    },
     /// A perspective transform, that optionally scrolls relative to a specific scroll node
     Perspective {
         scrolling_relative_to: Option<ExternalScrollId>,
@@ -1652,7 +1657,10 @@ impl_default_for_enums! {
     ComponentTransferFuncType => Identity,
     ClipMode => Clip,
     ClipId => ClipId::invalid(),
-    ReferenceFrameKind => Transform,
+    ReferenceFrameKind => Transform {
+        is_2d_scale_translation: false,
+        should_snap: false,
+    },
     Rotation => Degree0,
     TransformStyle => Flat,
     RasterSpace => Local(f32::default()),

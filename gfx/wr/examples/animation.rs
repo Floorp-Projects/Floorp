@@ -63,7 +63,10 @@ impl App {
             SpatialId::root_scroll_node(pipeline_id),
             TransformStyle::Flat,
             PropertyBinding::Binding(property_key, LayoutTransform::identity()),
-            ReferenceFrameKind::Transform,
+            ReferenceFrameKind::Transform {
+                is_2d_scale_translation: false,
+                should_snap: false,
+            },
         );
 
         builder.push_simple_stacking_context_with_filters(
