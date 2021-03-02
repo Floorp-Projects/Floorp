@@ -190,7 +190,6 @@ rsync_filter_list = """
 + /js/*.configure
 + /js/examples/**
 + /js/public/**
-+ /js/rust/**
 
 + */
 - /**

@@ -69,7 +69,6 @@ clippy:
         - dom/media/webrtc/sdp/rsdparsa_capi/
         - intl/encoding_glue/
         # not_unsafe_ptr_arg_deref
-        - js/rust/
         - storage/rust/
         - storage/variant/
         # nsstring

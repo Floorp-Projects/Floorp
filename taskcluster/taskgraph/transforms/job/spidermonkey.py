@@ -26,7 +26,6 @@ sm_run_schema = Schema(
             "spidermonkey",
             "spidermonkey-package",
             "spidermonkey-mozjs-crate",
-            "spidermonkey-rust-bindings",
         ),
         # SPIDERMONKEY_VARIANT and SPIDERMONKEY_PLATFORM
         Required("spidermonkey-variant"): text_type,
@@ -45,7 +44,6 @@ sm_run_schema = Schema(
 @run_job_using("docker-worker", "spidermonkey", schema=sm_run_schema)
 @run_job_using("docker-worker", "spidermonkey-package", schema=sm_run_schema)
 @run_job_using("docker-worker", "spidermonkey-mozjs-crate", schema=sm_run_schema)
-@run_job_using("docker-worker", "spidermonkey-rust-bindings", schema=sm_run_schema)
 def docker_worker_spidermonkey(config, job, taskdesc):
     run = job["run"]
 
@@ -71,8 +69,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         script = "build-sm-package.sh"
     elif run["using"] == "spidermonkey-mozjs-crate":
         script = "build-sm-mozjs-crate.sh"
-    elif run["using"] == "spidermonkey-rust-bindings":
-        script = "build-sm-rust-bindings.sh"
 
     run["using"] = "run-task"
     run["cwd"] = run["workdir"]
@@ -118,10 +114,6 @@ def generic_worker_spidermonkey(config, job, taskdesc):
         script = "build-sm-mozjs-crate.sh"
         # Don't allow untested configurations yet
         raise Exception("spidermonkey-mozjs-crate is not a supported configuration")
-    elif run["using"] == "spidermonkey-rust-bindings":
-        script = "build-sm-rust-bindings.sh"
-        # Don't allow untested configurations yet
-        raise Exception("spidermonkey-rust-bindings is not a supported configuration")
 
     run["using"] = "run-task"
     run["command"] = [
