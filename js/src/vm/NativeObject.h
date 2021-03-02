@@ -814,15 +814,6 @@ class NativeObject : public JSObject {
     return slot - numFixedSlots();
   }
 
-  /*
-   * The methods below shadow methods on JSObject and are more efficient for
-   * known-native objects.
-   */
-  bool hasAllFlags(js::BaseShape::Flag flags) const {
-    MOZ_ASSERT(flags);
-    return shape()->hasAllObjectFlags(flags);
-  }
-
   // Native objects are never proxies. Call isExtensible instead.
   bool nonProxyIsExtensible() const = delete;
 
