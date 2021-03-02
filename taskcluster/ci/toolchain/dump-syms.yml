@@ -26,6 +26,7 @@ linux64-dump-syms:
             - linux64-binutils
             - linux64-clang-11
             - linux64-rust-1.47
+            - linux64-sysroot
 
 macosx64-dump-syms:
     treeherder:
