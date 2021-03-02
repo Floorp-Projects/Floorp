@@ -24,9 +24,7 @@ ia2AccessibleHyperlink::QueryInterface(REFIID iid, void** ppv) {
 
   if (IID_IAccessibleHyperlink == iid) {
     auto accWrap = static_cast<AccessibleWrap*>(this);
-    if (accWrap->IsProxy()
-            ? !(accWrap->ProxyInterfaces() & Interfaces::HYPERLINK)
-            : !accWrap->IsLink())
+    if (accWrap->IsProxy() ? !accWrap->Proxy()->IsLink() : !accWrap->IsLink())
       return E_NOINTERFACE;
 
     *ppv = static_cast<IAccessibleHyperlink*>(this);

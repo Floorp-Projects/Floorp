@@ -568,14 +568,6 @@ class LocalAccessible : public nsISupports, public Accessible {
     MOZ_ASSERT(IsProxy());
     return mBits.proxy;
   }
-  uint32_t ProxyInterfaces() const {
-    MOZ_ASSERT(IsProxy());
-    return mInt.mProxyInterfaces;
-  }
-  void SetProxyInterfaces(uint32_t aInterfaces) {
-    MOZ_ASSERT(IsProxy());
-    mInt.mProxyInterfaces = aInterfaces;
-  }
 
   OuterDocAccessible* AsOuterDoc();
 
@@ -1109,10 +1101,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   friend class TreeMutation;
 
   UniquePtr<mozilla::a11y::EmbeddedObjCollector> mEmbeddedObjCollector;
-  union {
-    int32_t mIndexOfEmbeddedChild;
-    uint32_t mProxyInterfaces;
-  } mInt;
+  int32_t mIndexOfEmbeddedChild;
 
   friend class EmbeddedObjCollector;
 

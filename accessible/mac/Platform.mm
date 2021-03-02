@@ -40,7 +40,7 @@ void PlatformInit() {}
 
 void PlatformShutdown() {}
 
-void ProxyCreated(RemoteAccessible* aProxy, uint32_t) {
+void ProxyCreated(RemoteAccessible* aProxy) {
   if (aProxy->Role() == roles::WHITESPACE) {
     // We don't create a native object if we're child of a "flat" accessible;
     // for example, on OS X buttons shouldn't have any children, because that

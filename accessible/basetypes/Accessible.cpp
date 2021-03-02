@@ -14,6 +14,12 @@ Accessible::Accessible()
       mGenericTypes(static_cast<uint32_t>(0)),
       mRoleMapEntryIndex(aria::NO_ROLE_MAP_ENTRY_INDEX) {}
 
+Accessible::Accessible(AccType aType, AccGenericType aGenericTypes,
+                       uint8_t aRoleMapEntryIndex)
+    : mType(static_cast<uint32_t>(aType)),
+      mGenericTypes(static_cast<uint32_t>(aGenericTypes)),
+      mRoleMapEntryIndex(aRoleMapEntryIndex) {}
+
 void Accessible::StaticAsserts() const {
   static_assert(eLastAccType <= (1 << kTypeBits) - 1,
                 "Accessible::mType was oversized by eLastAccType!");

@@ -356,7 +356,7 @@ GeckoTextMarkerRange::GeckoTextMarkerRange(
     const AccessibleOrProxy& aAccessible) {
   if ((aAccessible.IsAccessible() &&
        aAccessible.AsAccessible()->IsHyperText()) ||
-      (aAccessible.IsProxy() && aAccessible.AsProxy()->mIsHyperText)) {
+      (aAccessible.IsProxy() && aAccessible.AsProxy()->IsHyperText())) {
     // The accessible is a hypertext. Initialize range to its inner text range.
     mStart = GeckoTextMarker(aAccessible, 0);
     mEnd = GeckoTextMarker(aAccessible, (CharacterCount(aAccessible)));

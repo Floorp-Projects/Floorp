@@ -1235,8 +1235,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
     doc->SetCOMInterface(proxy);
 #  endif
-    a11y::ProxyCreated(
-        doc, a11y::Interfaces::DOCUMENT | a11y::Interfaces::HYPERTEXT);
+    a11y::ProxyCreated(doc);
 #  ifdef XP_WIN
     // This *must* be called after ProxyCreated because WrapperFor will fail
     // before that.

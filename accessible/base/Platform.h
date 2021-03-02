@@ -85,7 +85,7 @@ void PlatformShutdown();
  * called when a new RemoteAccessible is created, so the platform may setup a
  * wrapper for it, or take other action.
  */
-void ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces);
+void ProxyCreated(RemoteAccessible* aProxy);
 
 /**
  * Called just before a RemoteAccessible is destroyed so its wrapper can be
