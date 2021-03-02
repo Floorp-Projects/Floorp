@@ -983,14 +983,12 @@ void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
                                                   DrawTarget& aDrawTarget,
                                                   const LayoutDeviceRect& aRect,
                                                   const EventStates& aState) {
-  const float kPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
-                             3.0f,  0.5f,  -0.5f, -3.0f, -3.5f};
-  const float kPolygonY[] = {-0.5f, 2.5f, 2.5f, -0.5f, -2.0f,
-                             -2.0f, 1.0f, 1.0f, -2.0f, -2.0f};
+  const float kPolygonX[] = {-4.0f, -0.5f, 0.5f,  4.0f,  4.0f,
+                             3.0f,  0.0f,  0.0f, -3.0f, -4.0f};
+  const float kPolygonY[] = {-1, 3.0f, 3.0f, -1.0f, -2.0f,
+                             -2.0f, 1.5f, 1.5f, -2.0f, -2.0f};
 
-  // TODO: Consider tweaking the coordinates so that the arrow is crisp at
-  // kMinimumDropdownArrowButtonWidth x kMinimumDropdownArrowButtonWidth.
-  const float kPolygonSize = 14.0f;
+  const float kPolygonSize = kMinimumDropdownArrowButtonWidth;
 
   sRGBColor arrowColor = ComputeMenulistArrowButtonColor(aState);
   PaintArrow(aDrawTarget, aRect, kPolygonX, kPolygonY, kPolygonSize,
@@ -1008,29 +1006,20 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
                        ColorPattern(ToDeviceColor(backgroundColor)));
 
-  const float arrowPolygonX[] = {-5.25f, -0.75f, 0.75f,  5.25f, 5.25f,
-                                 4.5f,   0.75f,  -0.75f, -4.5f, -5.25f};
-  const float arrowPolygonY[] = {-1.875f, 2.625f, 2.625f, -1.875f, -4.125f,
-                                 -4.125f, 0.375f, 0.375f, -4.125f, -4.125f};
-  // TODO: Consider tweaking the coordinates so that the polygon is crisp at
-  // kMinimumSpinnerButtonWidth x kMinimumSpinnerButtonHeight.
-  const float kPolygonSize = 14.0f;
-  const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
-  const float scaleX = ScaleToFillRect(aRect, kPolygonSize);
-  const float scaleY =
-      aAppearance == StyleAppearance::SpinnerDownbutton ? scaleX : -scaleX;
+  const float kPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
+                             2.5f,  0.0f,  0.0f, -2.5f, -3.5f};
+  float polygonY[] = {-1.5f, 1.5f, 1.5f, -1.5f, -2.5f,
+                      -2.5f, 0.0f, 0.0f, -2.5f, -2.5f};
 
-  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-  auto center = aRect.Center().ToUnknownPoint();
-  Point p =
-      center + Point(arrowPolygonX[0] * scaleX, arrowPolygonY[0] * scaleY);
-  builder->MoveTo(p);
-  for (int32_t i = 1; i < arrowNumPoints; i++) {
-    p = center + Point(arrowPolygonX[i] * scaleX, arrowPolygonY[i] * scaleY);
-    builder->LineTo(p);
+  const float kPolygonSize = kMinimumSpinnerButtonHeight;
+  if (aAppearance == StyleAppearance::SpinnerUpbutton) {
+    for (auto& coord : polygonY) {
+      coord = -coord;
+    }
   }
-  RefPtr<Path> path = builder->Finish();
-  aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(borderColor)));
+
+  PaintArrow(aDrawTarget, aRect, kPolygonX, polygonY, kPolygonSize,
+             ArrayLength(kPolygonX), borderColor);
 }
 
 template <typename PaintBackendData>
