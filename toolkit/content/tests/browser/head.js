@@ -165,9 +165,12 @@ async function setTestPluginEnabledState(newEnabledState, pluginName) {
   var plugin = getTestPlugin(pluginName);
   // Run a nested event loop to wait for the preference change to
   // propagate to the child. Yuck!
-  SpecialPowers.Services.tm.spinEventLoopUntil(() => {
-    return plugin.enabledState == newEnabledState;
-  });
+  SpecialPowers.Services.tm.spinEventLoopUntil(
+    "Test(browser/head.js:setTestPluginEnabledState)",
+    () => {
+      return plugin.enabledState == newEnabledState;
+    }
+  );
   SimpleTest.registerCleanupFunction(function() {
     return SpecialPowers.setTestPluginEnabledState(oldEnabledState, pluginName);
   });
