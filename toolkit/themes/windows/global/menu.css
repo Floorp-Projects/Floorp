@@ -147,7 +147,7 @@ menucaption {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   .menu-right {
     appearance: none;
-    list-style-image: url("chrome://global/skin/icons/menus/submenu.svg");
+    list-style-image: url("chrome://global/skin/icons/menu-arrow.svg");
     -moz-context-properties: fill;
     fill: currentColor;
   }

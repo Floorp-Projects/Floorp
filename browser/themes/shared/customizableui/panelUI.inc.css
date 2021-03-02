@@ -1234,16 +1234,9 @@ panelview .toolbarbutton-1,
   color: var(--panel-disabled-color);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
-.subviewbutton > .toolbarbutton-text {
-  padding: 0;
-  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined below. */
-}
-} /** END not Proton **/
-
 .subviewbutton > .menu-right {
   appearance: none;
-  list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+  list-style-image: url(chrome://global/skin/icons/menu-arrow.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
@@ -1256,6 +1249,17 @@ panelview .toolbarbutton-1,
 .subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.subviewbutton > .toolbarbutton-text {
+  padding: 0;
+  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined below. */
+}
+
+.subviewbutton > .menu-right {
+  list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+}
+} /** END not Proton **/
 
 .subviewbutton > .menu-right,
 .subviewbutton > .menu-accel-container > .menu-iconic-accel,
@@ -1376,25 +1380,34 @@ panelview .toolbarbutton-1,
   color: var(--panel-shortcut-color);
 }
 
+.widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   -moz-context-properties: fill, fill-opacity;
-  content: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+  content: url(chrome://global/skin/icons/menu-arrow.svg);
   fill: currentColor;
   fill-opacity: 0.6;
   float: inline-end;
   transform: translateY(1px);
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.widget-overflow-list .subviewbutton-nav::after,
+.PanelUI-subView .subviewbutton-nav::after {
+  content: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+}
+} /* END not Proton */
+
 .PanelUI-subView .subviewbutton-nav-down::after {
   transform: translateY(1px) rotate(90deg);
 }
 
+.widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
   transform: scaleX(-1) translateY(1px);
 }
 
 .subviewbutton[shortcut]::after,
-.subviewbutton[shortcut]::after,
+.widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   margin-inline-start: 10px;
 }
@@ -1784,19 +1797,6 @@ toolbaritem[overflowedItem=true],
   -moz-box-orient: horizontal;
 }
 
-.widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after {
-  transform: scaleX(-1);
-}
-
-.widget-overflow-list .subviewbutton-nav::after {
-  margin-inline-start: 10px;
-  -moz-context-properties: fill, fill-opacity;
-  content: url(chrome://browser/skin/customizableui/menu-arrow.svg);
-  fill: currentColor;
-  fill-opacity: 0.6;
-  float: inline-end;
-}
-
 toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   opacity: 0.5;
 }
@@ -2045,13 +2045,35 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .panel-header > .subviewbutton-back {
   -moz-context-properties: fill;
   fill: var(--arrowpanel-color);
-  list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
-  padding: 8px;
+  list-style-image: url(chrome://global/skin/icons/menu-arrow-left.svg);
+  padding: 10px;
+}
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+.subviewbutton-back {
+  transform: translateY(1px);
 }
 
 .subviewbutton-back:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+  transform: scaleX(-1) translateY(1px);
 }
+
+.panel-header > .subviewbutton-back > .toolbarbutton-icon {
+  width: 12px;
+  height: 12px;
+}
+} /** End Proton **/
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+  .panel-header > .subviewbutton-back {
+    list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
+    padding: 8px;
+  }
+
+  .subviewbutton-back:-moz-locale-dir(rtl) {
+    transform: scaleX(-1);
+  }
+} /** END not Proton **/
 
 .subviewbutton-back > .toolbarbutton-text {
   /* !important to override .cui-widget-panel .toolbarbutton-text
