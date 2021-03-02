@@ -86,7 +86,7 @@ ${suffix}
        (v128.store (i32.const 0) (call $f)))
     (func $f (export "f") (result v128)
       (v128.const ${bits})))`);
-    let output = wasmDis(ins.exports.f, "baseline", true);
+    let output = wasmDis(ins.exports.f, {tier:"baseline", asString:true});
     assertEq(output.match(new RegExp(expected)) != null, true);
     let mem = new Int8Array(ins.exports.mem.buffer);
     set(mem, 0, iota(16).map(x => -1-x));

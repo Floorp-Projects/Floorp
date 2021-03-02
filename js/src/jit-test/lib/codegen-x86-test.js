@@ -49,7 +49,7 @@ function codegenTestX86_adhoc(module_text, export_name, expected, options = {}) 
     assertEq(hasDisassembler(), true);
 
     let ins = wasmEvalText(module_text);
-    let output = wasmDis(ins.exports[export_name], "ion", true);
+    let output = wasmDis(ins.exports[export_name], {tier:"ion", asString:true});
     if (!options.no_prefix)
         expected = x86_prefix + '\n' + expected;
     if (!options.no_suffix)
