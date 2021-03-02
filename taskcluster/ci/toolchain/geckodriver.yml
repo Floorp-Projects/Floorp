@@ -84,6 +84,7 @@ win32-geckodriver:
     fetches:
         toolchain:
             - linux64-clang
+            - linux64-liblowercase
             - linux64-rust-windows
 
 win64-geckodriver:
@@ -104,4 +105,5 @@ win64-geckodriver:
     fetches:
         toolchain:
             - linux64-clang
+            - linux64-liblowercase
             - linux64-rust-windows

@@ -9,10 +9,6 @@ export TARGET="$1"
 
 cd $GECKO_PATH
 
-if [ -n "$TOOLTOOL_MANIFEST" ]; then
-  . taskcluster/scripts/misc/tooltool-download.sh
-fi
-
 EXE=
 COMPRESS_EXT=gz
 
@@ -27,13 +23,10 @@ case "$TARGET" in
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
     export CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
   fi
-  ( IFS=\;
-    for d in $LIB; do
-      (cd "$d"; rename y/A-Z/a-z/ *)
-    done
-  )
   # Bug 1584530: don't require the Microsoft MSVC runtime to be installed.
   export RUSTFLAGS="-Ctarget-feature=+crt-static"
+  export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
+  export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs2017_15.8.4
   ;;
 # OSX cross builds are a bit harder
 x86_64-apple-darwin)
@@ -42,6 +35,10 @@ x86_64-apple-darwin)
   export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
   ;;
 esac
+
+if [ -n "$TOOLTOOL_MANIFEST" ]; then
+  . taskcluster/scripts/misc/tooltool-download.sh
+fi
 
 export PATH="$MOZ_FETCHES_DIR/rustc/bin:$PATH"
 
