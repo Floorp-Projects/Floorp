@@ -208,6 +208,11 @@ bool RDDProcessManager::IsRDDProcessLaunching() {
   return !!mProcess && !mRDDChild;
 }
 
+bool RDDProcessManager::IsRDDProcessDestroyed() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return !mRDDChild && !mProcess;
+}
+
 void RDDProcessManager::OnProcessUnexpectedShutdown(RDDProcessHost* aHost) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mProcess && mProcess == aHost);
@@ -260,6 +265,12 @@ bool RDDProcessManager::CreateContentBridge(
     base::ProcessId aOtherProcess,
     ipc::Endpoint<PRemoteDecoderManagerChild>* aOutRemoteDecoderManager) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (IsRDDProcessDestroyed()) {
+    MOZ_LOG(sPDMLog, LogLevel::Debug,
+            ("RDD shutdown before creating content bridge"));
+    return false;
+  }
 
   ipc::Endpoint<PRemoteDecoderManagerParent> parentPipe;
   ipc::Endpoint<PRemoteDecoderManagerChild> childPipe;
