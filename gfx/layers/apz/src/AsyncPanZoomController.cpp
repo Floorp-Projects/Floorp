@@ -860,7 +860,7 @@ bool AsyncPanZoomController::ArePointerEventsConsumable(
         // In the case of the root APZC with any dynamic toolbar, it
         // shoule be pannable if there is room moving the dynamic
         // toolbar.
-        (IsRootContent() && CanScrollDownwardsWithDynamicToolbar())));
+        (IsRootContent() && CanVerticalScrollWithDynamicToolbar())));
 
   bool pannable;
 
@@ -2227,11 +2227,11 @@ bool AsyncPanZoomController::CanScroll(ScrollDirection aDirection) const {
   return false;
 }
 
-bool AsyncPanZoomController::CanScrollDownwardsWithDynamicToolbar() const {
+bool AsyncPanZoomController::CanVerticalScrollWithDynamicToolbar() const {
   MOZ_ASSERT(IsRootContent());
 
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  return mY.CanScrollDownwardsWithDynamicToolbar();
+  return mY.CanVerticalScrollWithDynamicToolbar();
 }
 
 bool AsyncPanZoomController::CanScrollDownwards() const {
