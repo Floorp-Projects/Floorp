@@ -265,7 +265,7 @@ void MediaDecodeTask::OnInitDemuxerCompleted() {
     UniquePtr<TrackInfo> audioInfo = mTrackDemuxer->GetInfo();
     // We actively ignore audio tracks that we know we can't play.
     if (audioInfo && audioInfo->IsValid() &&
-        platform->SupportsMimeType(audioInfo->mMimeType, nullptr)) {
+        platform->SupportsMimeType(audioInfo->mMimeType)) {
       mMediaInfo.mAudio = *audioInfo->GetAsAudioInfo();
     }
   }
