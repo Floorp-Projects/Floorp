@@ -340,6 +340,9 @@ class SessionHistoryEntry : public nsISHEntry {
 
   SHEntrySharedParentState* SharedInfo() const;
 
+  void SetFrameLoader(nsFrameLoader* aFrameLoader);
+  nsFrameLoader* GetFrameLoader();
+
   void AddChild(SessionHistoryEntry* aChild, int32_t aOffset,
                 bool aUseRemoteSubframes);
   void RemoveChild(SessionHistoryEntry* aChild);
