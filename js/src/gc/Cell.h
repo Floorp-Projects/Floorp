@@ -578,26 +578,6 @@ MOZ_ALWAYS_INLINE void PreWriteBarrier(JS::Zone* zone, T* data) {
   PreWriteBarrier(zone, data, [](JSTracer* trc, T* data) { data->trace(trc); });
 }
 
-// Special case pre-write barrier for strings used during rope flattening. This
-// is a work around as buffering these strings is problematic as they may have
-// their cell headers overwritten with temporary GC data.
-inline void PreWriteBarrierDuringFlattening(JSString* str) {
-  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
-
-  if (IsInsideNursery(str)) {
-    return;
-  }
-
-  auto* cell = reinterpret_cast<TenuredCell*>(str);
-  JS::shadow::Zone* zone = cell->shadowZoneFromAnyThread();
-
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(zone->runtimeFromAnyThread()));
-
-  if (zone->needsIncrementalBarrier()) {
-    PerformIncrementalBarrierDuringFlattening(str);
-  }
-}
-
 #ifdef DEBUG
 
 /* static */ void Cell::assertThingIsNotGray(Cell* cell) {
