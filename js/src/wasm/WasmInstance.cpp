@@ -2123,7 +2123,7 @@ void Instance::destroyBreakpointSite(JSFreeOp* fop, uint32_t offset) {
 }
 
 void Instance::disassembleExport(JSContext* cx, uint32_t funcIndex, Tier tier,
-                                 PrintCallback callback) const {
+                                 PrintCallback printString) const {
   const MetadataTier& metadataTier = metadata(tier);
   const FuncExport& funcExport = metadataTier.lookupFuncExport(funcIndex);
   const CodeRange& range = metadataTier.codeRange(funcExport);
@@ -2134,7 +2134,7 @@ void Instance::disassembleExport(JSContext* cx, uint32_t funcIndex, Tier tier,
   MOZ_ASSERT(range.end() < segment.length());
 
   uint8_t* functionCode = segment.base() + range.begin();
-  jit::Disassemble(functionCode, range.end() - range.begin(), callback);
+  jit::Disassemble(functionCode, range.end() - range.begin(), printString);
 }
 
 void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
