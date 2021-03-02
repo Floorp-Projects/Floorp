@@ -1980,7 +1980,7 @@ impl BatchBuilder {
                                             _ => ShaderColorMode::Image,
                                         },
                                         alpha_type: AlphaType::PremultipliedAlpha,
-                                        raster_space: RasterizationSpace::Screen,
+                                        raster_space: RasterizationSpace::Local,
                                         opacity: 1.0,
                                     }.encode(),
                                 );
