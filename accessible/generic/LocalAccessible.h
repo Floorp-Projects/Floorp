@@ -540,59 +540,20 @@ class LocalAccessible : public nsISupports, public Accessible {
     return mContent->IsAnyOfHTMLElements(nsGkAtoms::abbr, nsGkAtoms::acronym);
   }
 
-  bool IsAlert() const { return HasGenericType(eAlert); }
-
-  bool IsApplication() const { return mType == eApplicationType; }
   ApplicationAccessible* AsApplication();
 
-  bool IsAutoComplete() const { return HasGenericType(eAutoComplete); }
-
-  bool IsAutoCompletePopup() const {
-    return HasGenericType(eAutoCompletePopup);
-  }
-
-  bool IsButton() const { return HasGenericType(eButton); }
-
-  bool IsCombobox() const { return HasGenericType(eCombobox); }
-
-  bool IsDoc() const { return HasGenericType(eDocument); }
   DocAccessible* AsDoc();
 
-  bool IsGenericHyperText() const { return mType == eHyperTextType; }
-  bool IsHyperText() const { return HasGenericType(eHyperText); }
   HyperTextAccessible* AsHyperText();
 
-  bool IsHTMLBr() const { return mType == eHTMLBRType; }
-  bool IsHTMLCaption() const { return mType == eHTMLCaptionType; }
-  bool IsHTMLCombobox() const { return mType == eHTMLComboboxType; }
-  bool IsHTMLFileInput() const { return mType == eHTMLFileInputType; }
-
-  bool IsHTMLListItem() const { return mType == eHTMLLiType; }
   HTMLLIAccessible* AsHTMLListItem();
 
-  bool IsHTMLLink() const { return mType == eHTMLLinkType; }
   HTMLLinkAccessible* AsHTMLLink();
 
-  bool IsHTMLOptGroup() const { return mType == eHTMLOptGroupType; }
-
-  bool IsHTMLTable() const { return mType == eHTMLTableType; }
-  bool IsHTMLTableRow() const { return mType == eHTMLTableRowType; }
-
-  bool IsImage() const { return mType == eImageType; }
   ImageAccessible* AsImage();
 
-  bool IsImageMap() const { return mType == eImageMapType; }
   HTMLImageMapAccessible* AsImageMap();
 
-  bool IsList() const { return HasGenericType(eList); }
-
-  bool IsListControl() const { return HasGenericType(eListControl); }
-
-  bool IsMenuButton() const { return HasGenericType(eMenuButton); }
-
-  bool IsMenuPopup() const { return mType == eMenuPopupType; }
-
-  bool IsProxy() const { return mType == eProxyType; }
   RemoteAccessible* Proxy() const {
     MOZ_ASSERT(IsProxy());
     return mBits.proxy;
@@ -606,59 +567,23 @@ class LocalAccessible : public nsISupports, public Accessible {
     mInt.mProxyInterfaces = aInterfaces;
   }
 
-  bool IsOuterDoc() const { return mType == eOuterDocType; }
   OuterDocAccessible* AsOuterDoc();
 
-  bool IsProgress() const { return mType == eProgressType; }
-
-  bool IsRoot() const { return mType == eRootType; }
   a11y::RootAccessible* AsRoot();
 
   bool IsSearchbox() const;
 
-  bool IsSelect() const { return HasGenericType(eSelect); }
-
-  bool IsTable() const { return HasGenericType(eTable); }
   virtual TableAccessible* AsTable() { return nullptr; }
 
-  /**
-   * Note: The eTable* types defined in the ARIA map are used in
-   * nsAccessibilityService::CreateAccessible to determine which ARIAGrid*
-   * classes to use for accessible object creation. However, an invalid table
-   * structure might cause these classes not to be used after all.
-   *
-   * To make sure we're really dealing with a table cell, only check the
-   * generic type defined by the class, not the type defined in the ARIA map.
-   */
-  bool IsTableCell() const { return mGenericTypes & eTableCell; }
   virtual TableCellAccessible* AsTableCell() { return nullptr; }
   const TableCellAccessible* AsTableCell() const {
     return const_cast<LocalAccessible*>(this)->AsTableCell();
   }
 
-  bool IsTableRow() const { return HasGenericType(eTableRow); }
-
-  bool IsTextField() const {
-    return mType == eHTMLTextFieldType || mType == eHTMLTextPasswordFieldType;
-  }
-
-  bool IsPassword() const { return mType == eHTMLTextPasswordFieldType; }
-
-  bool IsText() const { return mGenericTypes & eText; }
-
-  bool IsTextLeaf() const { return mType == eTextLeafType; }
   TextLeafAccessible* AsTextLeaf();
 
-  bool IsXULLabel() const { return mType == eXULLabelType; }
   XULLabelAccessible* AsXULLabel();
 
-  bool IsXULListItem() const { return mType == eXULListItemType; }
-
-  bool IsXULTabpanels() const { return mType == eXULTabpanelsType; }
-
-  bool IsXULTooltip() const { return mType == eXULTooltipType; }
-
-  bool IsXULTree() const { return mType == eXULTreeType; }
   XULTreeAccessible* AsXULTree();
 
   //////////////////////////////////////////////////////////////////////////////
@@ -890,7 +815,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return true if the accessible has a numeric value.
    */
-  bool HasNumericValue() const;
+  virtual bool HasNumericValue() const override;
 
   /**
    * Return true if the accessible state change is processed by handling proper
