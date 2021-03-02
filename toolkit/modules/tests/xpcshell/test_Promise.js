@@ -982,10 +982,7 @@ tests.push(
     let shouldExitNestedEventLoop = false;
 
     function event_loop() {
-      Services.tm.spinEventLoopUntil(
-        "Test(test_Promise.js:make_promise_test)",
-        () => shouldExitNestedEventLoop
-      );
+      Services.tm.spinEventLoopUntil(() => shouldExitNestedEventLoop);
     }
 
     // I wish there was a way to cancel xpcshell do_timeout()s

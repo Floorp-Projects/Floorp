@@ -52,10 +52,7 @@ function promiseSpinningly(promise) {
   let tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
   // Keep waiting until the promise resolves.
-  tm.spinEventLoopUntil(
-    "Test(test_bookmark_tracker.js:promiseSpinningly)",
-    () => resolved
-  );
+  tm.spinEventLoopUntil(() => resolved);
   if (rerror) {
     throw rerror;
   }

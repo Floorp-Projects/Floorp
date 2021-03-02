@@ -236,7 +236,7 @@ function _do_main() {
 
   var tm = Cc["@mozilla.org/thread-manager;1"].getService();
 
-  tm.spinEventLoopUntil("Test(xpcshell/head.js:_do_main)", () => _quit);
+  tm.spinEventLoopUntil(() => _quit);
 
   tm.spinEventLoopUntilEmpty();
 }
@@ -489,7 +489,7 @@ function _initDebugging(port) {
 
   // spin an event loop until the debugger connects.
   const tm = Cc["@mozilla.org/thread-manager;1"].getService();
-  tm.spinEventLoopUntil("Test(xpcshell/head.js:_initDebugging)", () => {
+  tm.spinEventLoopUntil(() => {
     if (initialized) {
       return true;
     }
@@ -640,10 +640,7 @@ function _execute_test() {
   })()
     .catch(reportCleanupError)
     .then(() => (complete = true));
-  _Services.tm.spinEventLoopUntil(
-    "Test(xpcshel/head.js:_execute_test)",
-    () => complete
-  );
+  _Services.tm.spinEventLoopUntil(() => complete);
   if (cleanupStartTime) {
     ChromeUtils.addProfilerMarker(
       "xpcshell-test",
@@ -1719,10 +1716,7 @@ try {
       );
       complete = true;
     });
-    _Services.tm.spinEventLoopUntil(
-      "Test(xpcshell/head.js:run_next-Test)",
-      () => complete
-    );
+    _Services.tm.spinEventLoopUntil(() => complete);
   }
 } catch (e) {
   do_throw(e);

@@ -45,9 +45,7 @@ class SpinRunnable final : public Runnable {
   NS_IMETHODIMP Run() {
     nsCOMPtr<nsIThreadManager> threadMan =
         do_GetService("@mozilla.org/thread-manager;1");
-
-    mResult = threadMan->SpinEventLoopUntil(
-        "gtest TestThreadManager.cpp: SpinRunnable->Run()"_ns, mCondition);
+    mResult = threadMan->SpinEventLoopUntil(mCondition);
     return NS_OK;
   }
 

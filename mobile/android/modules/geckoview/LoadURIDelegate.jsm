@@ -52,7 +52,6 @@ const LoadURIDelegate = {
       }
     );
     Services.tm.spinEventLoopUntil(
-      "LoadURIDelegate.jsm:load",
       () => aWindow.closed || handled !== undefined
     );
 
@@ -93,7 +92,6 @@ const LoadURIDelegate = {
       }
     );
     Services.tm.spinEventLoopUntil(
-      "LoadURIDelegate.jsm:handleLoadError",
       () => aWindow.closed || errorPageURI !== undefined
     );
 
