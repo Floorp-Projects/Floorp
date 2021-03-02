@@ -1071,13 +1071,22 @@ class UrlbarView {
       item.appendChild(helpButton);
       item._elements.set("helpButton", helpButton);
       item._content.setAttribute("selectable", "true");
+
+      // Remove role=option on the row and set it on row-inner since the latter
+      // is the selectable logical row element when the help button is present.
+      // Since row-inner is not a child of the role=listbox element (the row
+      // container, this._rows), screen readers will not automatically recognize
+      // it as a listbox option.  To compensate, set role=presentation on the
+      // row so that screen readers ignore it.
+      item.setAttribute("role", "presentation");
+      item._content.setAttribute("role", "option");
     }
   }
 
   _createRowContentForTip(item) {
     // We use role="group" so screen readers will read the group's label when a
     // button inside it gets focus. (Screen readers don't do this for
-    // role="option".) We set aria-labelledby for the group in _updateIndices.
+    // role="option".) We set aria-labelledby for the group in _updateRowForTip.
     item._content.setAttribute("role", "group");
 
     let favicon = this._createElement("img");
@@ -1193,6 +1202,7 @@ class UrlbarView {
         this._createRowContent(item, result);
       }
     }
+    item._content.id = item.id + "-inner";
 
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
@@ -1422,6 +1432,8 @@ class UrlbarView {
 
     if (item._elements.has("helpButton")) {
       item.setAttribute("has-help", "true");
+      let helpButton = item._elements.get("helpButton");
+      helpButton.id = item.id + "-help";
     } else {
       item.removeAttribute("has-help");
     }
