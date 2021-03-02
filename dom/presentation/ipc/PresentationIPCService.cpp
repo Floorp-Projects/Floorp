@@ -248,14 +248,14 @@ PresentationIPCService::RegisterSessionListener(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
 
-  nsCOMPtr<nsIPresentationSessionListener> listener;
-  if (mSessionListeners.Get(aSessionId, getter_AddRefs(listener))) {
-    mSessionListeners.InsertOrUpdate(aSessionId, RefPtr{aListener});
-    return NS_OK;
-  }
+  bool hadEntry =
+      mSessionListeners.WithEntryHandle(aSessionId, [&](auto&& entry) {
+        const bool hadEntry = entry.HasEntry();
+        entry.InsertOrUpdate(RefPtr{aListener});
+        return hadEntry;
+      });
 
-  mSessionListeners.InsertOrUpdate(aSessionId, RefPtr{aListener});
-  if (sPresentationChild) {
+  if (!hadEntry && sPresentationChild) {
     Unused << NS_WARN_IF(!sPresentationChild->SendRegisterSessionHandler(
         nsString(aSessionId), aRole));
   }
