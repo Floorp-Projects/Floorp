@@ -4197,10 +4197,6 @@ nsresult QuotaManager::LoadQuota() {
 #endif
   }
 
-  if (mCacheUsable) {
-    QM_TRY(InvalidateCache(*mStorageConnection));
-  }
-
   recordQuotaInfoLoadTimeHelper->End();
 
   autoRemoveQuota.release();
@@ -6182,6 +6178,10 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
       /* aAvailableSpaceBytes */ diskSpaceAvailable + mTemporaryStorageUsage);
 
   CleanupTemporaryStorage();
+
+  if (mCacheUsable) {
+    QM_TRY(InvalidateCache(*mStorageConnection));
+  }
 
   return NS_OK;
 }
