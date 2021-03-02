@@ -46,6 +46,7 @@ linux64/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-plain/opt:
@@ -84,6 +85,7 @@ linux64-plain/opt:
             - linux64-node
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-sysroot
     optimization:
         skip-unless-expanded: null
 
@@ -130,6 +132,7 @@ linux64-fuzzing/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -178,6 +181,7 @@ linux64/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64/codeql-cpp:
@@ -229,6 +233,7 @@ linux64/codeql-cpp:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     notifications:
         subject: '{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} linux64 codeql-cpp status'
@@ -277,6 +282,7 @@ linux64-plain/debug:
             - linux64-node
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-sysroot
     optimization:
         skip-unless-expanded: null
 
@@ -330,6 +336,7 @@ linux64-devedition/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux/opt:
@@ -371,6 +378,7 @@ linux/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
 
 linux/debug:
@@ -413,6 +421,7 @@ linux/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
 
 linux-rusttests/opt:
@@ -455,6 +464,7 @@ linux-rusttests/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
     optimization:
         test-inclusive: [rusttests]
@@ -499,6 +509,7 @@ linux-rusttests/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
     optimization:
         test-inclusive: [rusttests]
@@ -550,6 +561,7 @@ linux-devedition/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
 
 linux-shippable/opt:
@@ -596,6 +608,7 @@ linux-shippable/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
 
 linux-reproduced/opt:
@@ -640,6 +653,7 @@ linux-reproduced/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
 
 linux64-reproduced/opt:
@@ -683,6 +697,7 @@ linux64-reproduced/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-asan/opt:
@@ -726,6 +741,7 @@ linux64-asan/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-tsan/opt:
@@ -768,6 +784,7 @@ linux64-tsan/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-tsan-fuzzing/opt:
@@ -813,6 +830,7 @@ linux64-tsan-fuzzing/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -861,6 +879,7 @@ linux64-asan-fuzzing/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -909,6 +928,7 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-fuzzing-ccov/opt:
@@ -951,6 +971,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -1007,6 +1028,7 @@ linux64-asan-reporter-shippable/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-asan/debug:
@@ -1049,6 +1071,7 @@ linux64-asan/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -1100,6 +1123,7 @@ linux64-shippable/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-noopt/debug:
@@ -1143,6 +1167,7 @@ linux64-noopt/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-rusttests/opt:
@@ -1184,6 +1209,7 @@ linux64-rusttests/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         test-inclusive: [rusttests]
@@ -1227,6 +1253,7 @@ linux64-rusttests/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         test-inclusive: [rusttests]
@@ -1276,6 +1303,7 @@ linux64-ccov/opt:
             - linux64-node
             - linux64-grcov
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-ccov/debug:
@@ -1318,6 +1346,7 @@ linux64-ccov/debug:
             - linux64-node
             - linux64-grcov
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-add-on-devel/opt:
@@ -1358,6 +1387,7 @@ linux64-add-on-devel/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
 
 linux64-aarch64/opt:
@@ -1448,6 +1478,7 @@ linux-gcp/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-backstop: null
@@ -1493,6 +1524,7 @@ linux-gcp/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux32-sysroot
             - wasi-sysroot
 
 linux64-gcp/debug:
@@ -1536,6 +1568,7 @@ linux64-gcp/debug:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-backstop: null
@@ -1580,4 +1613,5 @@ linux64-gcp/opt:
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
+            - linux64-sysroot
             - wasi-sysroot

@@ -50,6 +50,7 @@ jobs:
                 - linux64-rust
                 - linux64-cbindgen
                 - linux64-node
+                - linux64-sysroot
 
     linux64-haz/debug:
         description: "Browser Hazard Analysis Linux"
@@ -74,6 +75,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - linux64-lucetc
+                - linux64-sysroot
                 - wasi-sysroot
         optimization:
             skip-unless-backstop: null
