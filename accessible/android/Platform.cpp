@@ -25,7 +25,7 @@ void a11y::PlatformInit() {}
 
 void a11y::PlatformShutdown() { NS_IF_RELEASE(sStringBundle); }
 
-void a11y::ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces) {
+void a11y::ProxyCreated(RemoteAccessible* aProxy) {
   AccessibleWrap* wrapper = nullptr;
   if (aProxy->IsDoc()) {
     wrapper = new DocRemoteAccessibleWrap(aProxy->AsDoc());

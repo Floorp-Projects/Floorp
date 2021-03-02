@@ -7,6 +7,7 @@
 #ifndef mozilla_a11y_RemoteAccessibleBase_h
 #define mozilla_a11y_RemoteAccessibleBase_h
 
+#include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/Role.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
@@ -38,15 +39,15 @@ enum Interfaces {
 };
 
 template <class Derived>
-class RemoteAccessibleBase {
+class RemoteAccessibleBase : public Accessible {
  public:
-  ~RemoteAccessibleBase() { MOZ_ASSERT(!mWrapper); }
+  virtual ~RemoteAccessibleBase() { MOZ_ASSERT(!mWrapper); }
 
   void AddChildAt(uint32_t aIdx, Derived* aChild) {
     mChildren.InsertElementAt(aIdx, aChild);
   }
 
-  uint32_t ChildCount() const { return mChildren.Length(); }
+  virtual uint32_t ChildCount() const override { return mChildren.Length(); }
   Derived* RemoteChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
   Derived* RemoteFirstChild() const {
     return mChildren.Length() ? mChildren[0] : nullptr;
@@ -73,8 +74,24 @@ class RemoteAccessibleBase {
                : nullptr;
   }
 
+  // Accessible hierarchy method overrides
+
+  virtual Accessible* Parent() const override { return RemoteParent(); }
+
+  virtual Accessible* ChildAt(uint32_t aIndex) const override {
+    return RemoteChildAt(aIndex);
+  }
+
+  virtual Accessible* NextSibling() const override {
+    return RemoteNextSibling();
+  }
+
+  virtual Accessible* PrevSibling() const override {
+    return RemotePrevSibling();
+  }
+
   // XXX evaluate if this is fast enough.
-  int32_t IndexInParent() const {
+  virtual int32_t IndexInParent() const override {
     Derived* parent = RemoteParent();
     if (!parent) {
       return -1;
@@ -105,7 +122,7 @@ class RemoteAccessibleBase {
   /**
    * Get the role of the accessible we're proxying.
    */
-  role Role() const { return mRole; }
+  virtual role Role() const override { return mRole; }
 
   /**
    * Return true if this is an embedded object.
@@ -114,6 +131,29 @@ class RemoteAccessibleBase {
     role role = Role();
     return role != roles::TEXT_LEAF && role != roles::WHITESPACE &&
            role != roles::STATICTEXT;
+  }
+
+  virtual bool IsLink() const override {
+    if (IsHTMLLink()) {
+      // XXX: HTML links always return true for IsLink.
+      return true;
+    }
+
+    if (IsText()) {
+      return false;
+    }
+
+    if (Accessible* parent = Parent()) {
+      return parent->IsHyperText();
+    }
+
+    return false;
+  }
+
+  virtual bool HasNumericValue() const override {
+    // XXX: We combine the aria and native "has numeric value" field
+    // when we serialize the local accessible into eNumericValue.
+    return HasGenericType(eNumericValue);
   }
 
   /**
@@ -133,55 +173,30 @@ class RemoteAccessibleBase {
    */
   DocAccessibleParent* Document() const { return mDoc; }
 
-  /**
-   * Return true if this proxy is a DocAccessibleParent.
-   */
-  bool IsDoc() const { return mIsDoc; }
   DocAccessibleParent* AsDoc() const { return IsDoc() ? mDoc : nullptr; }
-
-  // XXX checking mRole alone may not result in same behavior as Accessibles
-  // due to ARIA roles. See bug 1210477.
-  inline bool IsTable() const {
-    return mRole == roles::TABLE || mRole == roles::MATHML_TABLE;
-  }
-  inline bool IsTableRow() const {
-    return (mRole == roles::ROW || mRole == roles::MATHML_TABLE_ROW ||
-            mRole == roles::MATHML_LABELED_ROW);
-  }
-  inline bool IsTableCell() const {
-    return (mRole == roles::CELL || mRole == roles::COLUMNHEADER ||
-            mRole == roles::ROWHEADER || mRole == roles::GRID_CELL ||
-            mRole == roles::MATHML_CELL);
-  }
 
  protected:
   RemoteAccessibleBase(uint64_t aID, Derived* aParent,
-                       DocAccessibleParent* aDoc, role aRole,
-                       uint32_t aInterfaces)
-      : mParent(aParent->ID()),
+                       DocAccessibleParent* aDoc, role aRole, AccType aType,
+                       AccGenericType aGenericTypes, uint8_t aRoleMapEntryIndex)
+      : Accessible(aType, aGenericTypes, aRoleMapEntryIndex),
+        mParent(aParent->ID()),
         mDoc(aDoc),
         mWrapper(0),
         mID(aID),
         mRole(aRole),
-        mOuterDoc(false),
-        mIsDoc(false),
-        mHasValue(aInterfaces & Interfaces::VALUE),
-        mIsHyperLink(aInterfaces & Interfaces::HYPERLINK),
-        mIsHyperText(aInterfaces & Interfaces::HYPERTEXT),
-        mIsSelection(aInterfaces & Interfaces::SELECTION) {}
+        mOuterDoc(false) {}
 
   explicit RemoteAccessibleBase(DocAccessibleParent* aThisAsDoc)
-      : mParent(kNoParent),
+      : Accessible(),
+        mParent(kNoParent),
         mDoc(aThisAsDoc),
         mWrapper(0),
         mID(0),
         mRole(roles::DOCUMENT),
-        mOuterDoc(false),
-        mIsDoc(true),
-        mHasValue(false),
-        mIsHyperLink(false),
-        mIsHyperText(false),
-        mIsSelection(false) {}
+        mOuterDoc(false) {
+    mGenericTypes = eDocument;
+  }
 
  protected:
   void SetParent(Derived* aParent);
@@ -204,13 +219,6 @@ class RemoteAccessibleBase {
 
  private:
   bool mOuterDoc : 1;
-
- public:
-  const bool mIsDoc : 1;
-  const bool mHasValue : 1;
-  const bool mIsHyperLink : 1;
-  const bool mIsHyperText : 1;
-  const bool mIsSelection : 1;
 };
 
 extern template class RemoteAccessibleBase<RemoteAccessible>;

@@ -185,16 +185,17 @@ xpcAccessibleGeneric* xpcAccessibleDocument::GetXPCAccessible(
 
   return mCache.LookupOrInsertWith(aProxy, [&]() -> xpcAccessibleGeneric* {
     // XXX support exposing optional interfaces.
+  // XXX support exposing optional interfaces.
     uint8_t interfaces = 0;
-    if (aProxy->mHasValue) {
+    if (aProxy->HasNumericValue()) {
       interfaces |= eValue;
     }
 
-    if (aProxy->mIsHyperLink) {
+    if (aProxy->IsLink()) {
       interfaces |= eHyperLink;
     }
 
-    if (aProxy->mIsHyperText) {
+    if (aProxy->IsHyperText()) {
       interfaces |= eText;
       return new xpcAccessibleHyperText(aProxy, interfaces);
     }

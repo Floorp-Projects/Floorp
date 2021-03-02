@@ -21,6 +21,9 @@ class Accessible {
  protected:
   Accessible();
 
+  Accessible(AccType aType, AccGenericType aGenericTypes,
+             uint8_t aRoleMapEntryIndex);
+
  public:
   virtual Accessible* Parent() const = 0;
 
@@ -181,6 +184,8 @@ class Accessible {
   uint32_t mType : kTypeBits;
   uint32_t mGenericTypes : kGenericTypesBits;
   uint8_t mRoleMapEntryIndex;
+
+  friend class DocAccessibleChildBase;
 };
 
 }  // namespace a11y

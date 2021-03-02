@@ -1002,45 +1002,50 @@ AtkObject* GetWrapperFor(AccessibleOrProxy aObj) {
   return AccessibleWrap::GetAtkObject(aObj.AsAccessible());
 }
 
-static uint16_t GetInterfacesForProxy(RemoteAccessible* aProxy,
-                                      uint32_t aInterfaces) {
+static uint16_t GetInterfacesForProxy(RemoteAccessible* aProxy) {
   uint16_t interfaces = 1 << MAI_INTERFACE_COMPONENT;
-  if (aInterfaces & Interfaces::HYPERTEXT) {
+  if (aProxy->IsHyperText()) {
     interfaces |= (1 << MAI_INTERFACE_HYPERTEXT) | (1 << MAI_INTERFACE_TEXT) |
                   (1 << MAI_INTERFACE_EDITABLE_TEXT);
   }
 
-  if (aInterfaces & Interfaces::HYPERLINK) {
+  if (aProxy->IsLink()) {
     interfaces |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
   }
 
-  if (aInterfaces & Interfaces::VALUE) interfaces |= 1 << MAI_INTERFACE_VALUE;
+  if (aProxy->HasNumericValue()) {
+    interfaces |= 1 << MAI_INTERFACE_VALUE;
+  }
 
-  if (aInterfaces & Interfaces::TABLE) interfaces |= 1 << MAI_INTERFACE_TABLE;
+  if (aProxy->IsTable()) {
+    interfaces |= 1 << MAI_INTERFACE_TABLE;
+  }
 
-  if (aInterfaces & Interfaces::TABLECELL) {
+  if (aProxy->IsTableCell()) {
     interfaces |= 1 << MAI_INTERFACE_TABLE_CELL;
   }
 
-  if (aInterfaces & Interfaces::IMAGE) interfaces |= 1 << MAI_INTERFACE_IMAGE;
+  if (aProxy->IsImage()) {
+    interfaces |= 1 << MAI_INTERFACE_IMAGE;
+  }
 
-  if (aInterfaces & Interfaces::DOCUMENT) {
+  if (aProxy->IsDoc()) {
     interfaces |= 1 << MAI_INTERFACE_DOCUMENT;
   }
 
-  if (aInterfaces & Interfaces::SELECTION) {
+  if (aProxy->IsSelect()) {
     interfaces |= 1 << MAI_INTERFACE_SELECTION;
   }
 
-  if (aInterfaces & Interfaces::ACTION) {
+  if (aProxy->IsActionable()) {
     interfaces |= 1 << MAI_INTERFACE_ACTION;
   }
 
   return interfaces;
 }
 
-void a11y::ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces) {
-  GType type = GetMaiAtkType(GetInterfacesForProxy(aProxy, aInterfaces));
+void a11y::ProxyCreated(RemoteAccessible* aProxy) {
+  GType type = GetMaiAtkType(GetInterfacesForProxy(aProxy));
   NS_ASSERTION(type, "why don't we have a type!");
 
   AtkObject* obj = reinterpret_cast<AtkObject*>(g_object_new(type, nullptr));

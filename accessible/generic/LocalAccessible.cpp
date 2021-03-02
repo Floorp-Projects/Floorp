@@ -116,7 +116,7 @@ LocalAccessible::LocalAccessible(nsIContent* aContent, DocAccessible* aDoc)
       mShowEventTarget(false),
       mHideEventTarget(false) {
   mBits.groupInfo = nullptr;
-  mInt.mIndexOfEmbeddedChild = -1;
+  mIndexOfEmbeddedChild = -1;
 }
 
 LocalAccessible::~LocalAccessible() {
@@ -2131,7 +2131,7 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
 void LocalAccessible::UnbindFromParent() {
   mParent = nullptr;
   mIndexInParent = -1;
-  mInt.mIndexOfEmbeddedChild = -1;
+  mIndexOfEmbeddedChild = -1;
   if (IsProxy()) MOZ_CRASH("this should never be called on proxy wrappers");
 
   delete mBits.groupInfo;
@@ -2283,7 +2283,7 @@ void LocalAccessible::RelocateChild(uint32_t aNewIndex,
 
   for (uint32_t idx = startIdx; idx <= endIdx; idx++) {
     mChildren[idx]->mIndexInParent = idx;
-    mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
+    mChildren[idx]->mIndexOfEmbeddedChild = -1;
   }
 
   for (uint32_t idx = 0; idx < mChildren.Length(); idx++) {

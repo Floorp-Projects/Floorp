@@ -132,11 +132,12 @@ uint32_t DocAccessibleParent::AddSubtree(
   }
 
   RemoteAccessible* newProxy = new RemoteAccessible(
-      newChild.ID(), aParent, this, newChild.Role(), newChild.Interfaces());
+      newChild.ID(), aParent, this, newChild.Role(), newChild.Type(),
+      newChild.GenericTypes(), newChild.RoleMapEntryIndex());
 
   aParent->AddChildAt(aIdxInParent, newProxy);
   mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
-  ProxyCreated(newProxy, newChild.Interfaces());
+  ProxyCreated(newProxy);
 
 #if defined(XP_WIN)
   WrapperFor(newProxy)->SetID(newChild.MsaaID());
@@ -588,7 +589,7 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
 #endif
       mPendingChildDocs.AppendElement(PendingChildDoc(aChildDoc, aParentID));
       if (aCreating) {
-        ProxyCreated(aChildDoc, Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
+        ProxyCreated(aChildDoc);
       }
       return IPC_OK();
     }
@@ -617,7 +618,7 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   aChildDoc->mParentDoc = mActorID;
 
   if (aCreating) {
-    ProxyCreated(aChildDoc, Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
+    ProxyCreated(aChildDoc);
   }
 
   if (aChildDoc->IsTopLevelInContentProcess()) {

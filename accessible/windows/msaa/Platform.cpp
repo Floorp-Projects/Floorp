@@ -68,17 +68,16 @@ void a11y::PlatformShutdown() {
   }
 }
 
-void a11y::ProxyCreated(RemoteAccessible* aProxy, uint32_t aInterfaces) {
+void a11y::ProxyCreated(RemoteAccessible* aProxy) {
   AccessibleWrap* wrapper = nullptr;
-  if (aInterfaces & Interfaces::DOCUMENT) {
+  if (aProxy->IsDoc()) {
     wrapper = new DocRemoteAccessibleWrap(aProxy);
-  } else if (aInterfaces & Interfaces::HYPERTEXT) {
+  } else if (aProxy->IsHyperText()) {
     wrapper = new HyperTextRemoteAccessibleWrap(aProxy);
   } else {
     wrapper = new RemoteAccessibleWrap(aProxy);
   }
 
-  wrapper->SetProxyInterfaces(aInterfaces);
   wrapper->AddRef();
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
 }

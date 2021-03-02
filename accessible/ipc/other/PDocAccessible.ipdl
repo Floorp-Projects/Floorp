@@ -14,6 +14,8 @@ include "mozilla/GfxMessageUtils.h";
 
 using nsIntRect from "nsRect.h";
 using mozilla::a11y::role from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
+using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 
@@ -25,7 +27,9 @@ struct AccessibleData
   uint64_t ID;
   role Role;
   uint32_t ChildrenCount;
-  uint32_t Interfaces;
+  AccType Type;
+  AccGenericType GenericTypes;
+  uint8_t RoleMapEntryIndex;
 };
 
 union OriginDocument
