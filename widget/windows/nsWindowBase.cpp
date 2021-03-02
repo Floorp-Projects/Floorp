@@ -109,6 +109,43 @@ void nsWindowBase::ChangedDPI() {
   }
 }
 
+static Result<POINTER_FLAGS, nsresult> PointerStateToFlag(
+    nsWindowBase::TouchPointerState aPointerState, bool isUpdate) {
+  bool hover = aPointerState & nsWindowBase::TOUCH_HOVER;
+  bool contact = aPointerState & nsWindowBase::TOUCH_CONTACT;
+  bool remove = aPointerState & nsWindowBase::TOUCH_REMOVE;
+  bool cancel = aPointerState & nsWindowBase::TOUCH_CANCEL;
+
+  POINTER_FLAGS flags;
+  if (isUpdate) {
+    // We know about this pointer, send an update
+    flags = POINTER_FLAG_UPDATE;
+    if (hover) {
+      flags |= POINTER_FLAG_INRANGE;
+    } else if (contact) {
+      flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_INRANGE;
+    } else if (remove) {
+      flags = POINTER_FLAG_UP;
+    }
+
+    if (cancel) {
+      flags |= POINTER_FLAG_CANCELED;
+    }
+  } else {
+    // Missing init state, error out
+    if (remove || cancel) {
+      return Err(NS_ERROR_INVALID_ARG);
+    }
+
+    // Create a new pointer
+    flags = POINTER_FLAG_INRANGE;
+    if (contact) {
+      flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_DOWN;
+    }
+  }
+  return flags;
+}
+
 nsresult nsWindowBase::SynthesizeNativeTouchPoint(
     uint32_t aPointerId, nsIWidget::TouchPointerState aPointerState,
     LayoutDeviceIntPoint aPoint, double aPointerPressure,
@@ -138,11 +175,6 @@ nsresult nsWindowBase::SynthesizeNativeTouchPoint(
     return NS_OK;
   }
 
-  bool hover = aPointerState & TOUCH_HOVER;
-  bool contact = aPointerState & TOUCH_CONTACT;
-  bool remove = aPointerState & TOUCH_REMOVE;
-  bool cancel = aPointerState & TOUCH_CANCEL;
-
   // win api expects a value from 0 to 1024. aPointerPressure is a value
   // from 0.0 to 1.0.
   uint32_t pressure = (uint32_t)ceil(aPointerPressure * 1024);
@@ -150,37 +182,20 @@ nsresult nsWindowBase::SynthesizeNativeTouchPoint(
   // If we already know about this pointer id get it's record
   return mActivePointers.WithEntryHandle(aPointerId, [&](auto&& entry) {
     POINTER_FLAGS flags;
-
-    // We know about this pointer, send an update
-    if (entry) {
-      flags = POINTER_FLAG_UPDATE;
-      if (hover) {
-        flags |= POINTER_FLAG_INRANGE;
-      } else if (contact) {
-        flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_INRANGE;
-      } else if (remove) {
-        flags = POINTER_FLAG_UP;
-        // Remove the pointer from our tracking list. This is UniquePtr wrapped,
-        // so shouldn't leak.
-        entry.Remove();
-      }
-
-      if (cancel) {
-        flags |= POINTER_FLAG_CANCELED;
-      }
+    // Can't use MOZ_TRY_VAR because it confuses WithEntryHandle
+    auto result = PointerStateToFlag(aPointerState, !!entry);
+    if (result.isOk()) {
+      flags = result.unwrap();
     } else {
-      // Missing init state, error out
-      if (remove || cancel) {
-        return NS_ERROR_INVALID_ARG;
-      }
+      return result.unwrapErr();
+    }
 
-      // Create a new pointer
-      flags = POINTER_FLAG_INRANGE;
-      if (contact) {
-        flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_DOWN;
-      }
-
+    if (!entry) {
       entry.Insert(MakeUnique<PointerInfo>(aPointerId, aPoint));
+    } else if (aPointerState & TOUCH_REMOVE) {
+      // Remove the pointer from our tracking list. This is UniquePtr wrapped,
+      // so shouldn't leak.
+      entry.Remove();
     }
 
     return !InjectTouchPoint(aPointerId, aPoint, flags, pressure,
