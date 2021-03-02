@@ -30,7 +30,7 @@ inline AutoKeepShapeCaches::~AutoKeepShapeCaches() {
 }
 
 inline StackBaseShape::StackBaseShape(const JSClass* clasp,
-                                      uint32_t objectFlags)
+                                      ObjectFlags objectFlags)
     : flags(objectFlags), clasp(clasp) {}
 
 MOZ_ALWAYS_INLINE Shape* Shape::search(JSContext* cx, jsid id) {

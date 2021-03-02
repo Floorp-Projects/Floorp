@@ -142,7 +142,7 @@ inline bool JSObject::isQualifiedVarObj() const {
   if (is<js::DebugEnvironmentProxy>()) {
     return as<js::DebugEnvironmentProxy>().environment().isQualifiedVarObj();
   }
-  bool rv = hasAllFlags(js::BaseShape::QUALIFIED_VAROBJ);
+  bool rv = hasFlag(js::ObjectFlag::QualifiedVarObj);
   MOZ_ASSERT_IF(rv, is<js::GlobalObject>() || is<js::CallObject>() ||
                         is<js::VarEnvironmentObject>() ||
                         is<js::ModuleEnvironmentObject>() ||
@@ -234,7 +234,7 @@ inline bool JSObject::nonProxyIsExtensible() const {
   MOZ_ASSERT(!uninlinedIsProxyObject());
 
   // [[Extensible]] for ordinary non-proxy objects is an object flag.
-  return !hasAllFlags(js::BaseShape::NOT_EXTENSIBLE);
+  return !hasFlag(js::ObjectFlag::NotExtensible);
 }
 
 inline bool JSObject::isBoundFunction() const {
@@ -242,11 +242,11 @@ inline bool JSObject::isBoundFunction() const {
 }
 
 inline bool JSObject::isDelegate() const {
-  return hasAllFlags(js::BaseShape::DELEGATE);
+  return hasFlag(js::ObjectFlag::Delegate);
 }
 
 inline bool JSObject::hasUncacheableProto() const {
-  return hasAllFlags(js::BaseShape::UNCACHEABLE_PROTO);
+  return hasFlag(js::ObjectFlag::UncacheableProto);
 }
 
 MOZ_ALWAYS_INLINE bool JSObject::maybeHasInterestingSymbolProperty() const {
@@ -258,7 +258,7 @@ MOZ_ALWAYS_INLINE bool JSObject::maybeHasInterestingSymbolProperty() const {
 
 inline bool JSObject::staticPrototypeIsImmutable() const {
   MOZ_ASSERT(hasStaticPrototype());
-  return hasAllFlags(js::BaseShape::IMMUTABLE_PROTOTYPE);
+  return hasFlag(js::ObjectFlag::ImmutablePrototype);
 }
 
 namespace js {
@@ -375,14 +375,14 @@ JSObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                         Handle<TaggedProto> proto,
                                         gc::AllocKind allocKind,
                                         NewObjectKind newKind,
-                                        uint32_t initialShapeFlags = 0);
+                                        ObjectFlags objectFlags = {});
 
 template <NewObjectKind NewKind>
 inline JSObject* NewObjectWithGivenTaggedProto(JSContext* cx,
                                                const JSClass* clasp,
                                                Handle<TaggedProto> proto) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-  return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, NewKind, 0);
+  return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, NewKind);
 }
 
 namespace detail {

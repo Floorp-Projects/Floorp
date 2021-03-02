@@ -236,9 +236,10 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
     return nullptr;
   }
 
-  RootedShape shape(
-      cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(proto),
-                                      FINALIZE_KIND, BaseShape::INDEXED));
+  constexpr ObjectFlags objectFlags = {ObjectFlag::Indexed};
+  RootedShape shape(cx,
+                    EmptyShape::getInitialShape(cx, clasp, TaggedProto(proto),
+                                                FINALIZE_KIND, objectFlags));
   if (!shape) {
     return nullptr;
   }

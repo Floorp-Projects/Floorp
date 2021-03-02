@@ -443,7 +443,7 @@ ModuleEnvironmentObject* ModuleEnvironmentObject::create(
   for (Shape::Range<NoGC> r(env->lastProperty()); !r.empty(); r.popFront()) {
     MOZ_ASSERT(!r.front().configurable());
   }
-  MOZ_ASSERT(env->lastProperty()->getObjectFlags() & BaseShape::NOT_EXTENSIBLE);
+  MOZ_ASSERT(env->lastProperty()->hasObjectFlag(ObjectFlag::NotExtensible));
   MOZ_ASSERT(!env->inDictionaryMode());
 #endif
 
@@ -1041,8 +1041,8 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createHollowForDebug(
     }
   }
 
-  if (!JSObject::setFlags(cx, env, BaseShape::NOT_EXTENSIBLE,
-                          JSObject::GENERATE_SHAPE)) {
+  if (!JSObject::setFlag(cx, env, ObjectFlag::NotExtensible,
+                         JSObject::GENERATE_SHAPE)) {
     return nullptr;
   }
 
@@ -1165,7 +1165,7 @@ size_t NamedLambdaObject::lambdaSlot() {
 RuntimeLexicalErrorObject* RuntimeLexicalErrorObject::create(
     JSContext* cx, HandleObject enclosing, unsigned errorNumber) {
   RootedShape shape(cx, EmptyEnvironmentShape(cx, &class_, JSSLOT_FREE(&class_),
-                                              /* baseShapeFlags = */ 0));
+                                              ObjectFlags()));
   if (!shape) {
     return nullptr;
   }
