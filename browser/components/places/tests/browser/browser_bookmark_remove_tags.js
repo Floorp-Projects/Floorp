@@ -107,7 +107,9 @@ add_task(async function test_remove_tags_from_Toolbar() {
       });
       await promisePopup;
 
-      let properties = document.getElementById("placesContext_show:info");
+      let properties = document.getElementById(
+        "placesContext_show_bookmark:info"
+      );
       EventUtils.synthesizeMouseAtCenter(properties, {});
     },
     async function test(dialogWin) {

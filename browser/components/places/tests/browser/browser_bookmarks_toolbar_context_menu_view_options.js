@@ -37,7 +37,7 @@ add_task(async function testPopup() {
     );
     ok(!bookmarksToolbar.collapsed, "Bookmarks toolbar should be visible");
 
-    // 1. Right-click on a bookmark and check that the submenu is not visible
+    // 1. Right-click on a bookmark and check that the submenu is visible
     let bookmarkItem = bookmarksToolbar.querySelector(
       `.bookmark-item[label="firefox"]`
     );
@@ -45,8 +45,8 @@ add_task(async function testPopup() {
     let contextMenu = document.getElementById("placesContext");
     let popup = await openContextMenu(contextMenu, bookmarkItem);
     ok(
-      popup.target.querySelector("#toggle_PersonalToolbar").hidden,
-      "Bookmarks toolbar submenu should not appear on a .bookmark-item"
+      !popup.target.querySelector("#toggle_PersonalToolbar").hidden,
+      "Bookmarks toolbar submenu should appear on a .bookmark-item"
     );
     contextMenu.hidePopup();
 
