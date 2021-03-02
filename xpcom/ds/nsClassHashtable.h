@@ -52,13 +52,6 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
   explicit nsClassHashtable(uint32_t aInitLength) : base_type(aInitLength) {}
 
   /**
-   * Looks up aKey in the hash table. If it doesn't exist a new object of
-   * KeyClass will be created (using the arguments provided) and then returned.
-   */
-  template <typename... Args>
-  UserDataType GetOrInsertNew(KeyType aKey, Args&&... aConstructionArgs);
-
-  /**
    * @copydoc nsBaseHashtable::Get
    * @param aData if the key doesn't exist, pData will be set to nullptr.
    */
@@ -89,19 +82,6 @@ inline void ImplCycleCollectionTraverse(
 //
 // nsClassHashtable definitions
 //
-
-template <class KeyClass, class T>
-template <typename... Args>
-T* nsClassHashtable<KeyClass, T>::GetOrInsertNew(KeyType aKey,
-                                                 Args&&... aConstructionArgs) {
-  return this
-      ->LookupOrInsertWith(std::move(aKey),
-                           [&] {
-                             return mozilla::MakeUnique<T>(
-                                 std::forward<Args>(aConstructionArgs)...);
-                           })
-      .get();
-}
 
 template <class KeyClass, class T>
 bool nsClassHashtable<KeyClass, T>::Get(KeyType aKey, T** aRetVal) const {
