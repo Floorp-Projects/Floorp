@@ -424,7 +424,6 @@ bitflags! {
 pub struct Texture {
     id: gl::GLuint,
     target: gl::GLuint,
-    layer_count: i32,
     format: ImageFormat,
     size: DeviceIntSize,
     filter: TextureFilter,
@@ -465,7 +464,7 @@ impl Texture {
     }
 
     pub fn get_layer_count(&self) -> i32 {
-        self.layer_count
+        1
     }
 
     pub fn get_format(&self) -> ImageFormat {
@@ -515,20 +514,13 @@ impl Texture {
         &mut self.flags
     }
 
-    /// Returns the number of bytes (generally in GPU memory) that each layer of
-    /// this texture consumes.
-    pub fn layer_size_in_bytes(&self) -> usize {
-        assert!(self.layer_count > 0 || self.size.width + self.size.height == 0);
+    /// Returns the number of bytes (generally in GPU memory) that this texture
+    /// consumes.
+    pub fn size_in_bytes(&self) -> usize {
         let bpp = self.format.bytes_per_pixel() as usize;
         let w = self.size.width as usize;
         let h = self.size.height as usize;
         bpp * w * h
-    }
-
-    /// Returns the number of bytes (generally in GPU memory) that this texture
-    /// consumes.
-    pub fn size_in_bytes(&self) -> usize {
-        self.layer_size_in_bytes() * (self.layer_count as usize)
     }
 
     #[cfg(feature = "replay")]
@@ -2390,7 +2382,6 @@ impl Device {
             id: self.gl.gen_textures(1)[0],
             target: get_gl_target(target),
             size: DeviceIntSize::new(width, height),
-            layer_count: 1, // TODO(nical)
             format,
             filter,
             active_swizzle: Cell::default(),
@@ -2498,7 +2489,6 @@ impl Device {
         debug_assert!(self.inside_frame);
         debug_assert!(dst.size.width >= src.size.width);
         debug_assert!(dst.size.height >= src.size.height);
-        debug_assert!(dst.layer_count >= src.layer_count);
 
         self.copy_texture_sub_region(
             src,
@@ -2511,7 +2501,7 @@ impl Device {
             0,
             src.size.width as _,
             src.size.height as _,
-            src.layer_count as _,
+            1,
         );
     }
 
@@ -2631,7 +2621,7 @@ impl Device {
 
         // Generate the FBOs.
         assert!(fbos.is_empty());
-        fbos.extend(self.gl.gen_framebuffers(texture.layer_count).into_iter().map(FBOId));
+        fbos.extend(self.gl.gen_framebuffers(1).into_iter().map(FBOId));
 
         // Bind the FBOs.
         let original_bound_fbo = self.bound_draw_fbo;
@@ -3150,7 +3140,7 @@ impl Device {
                     0,
                     texture.size.width as gl::GLint,
                     texture.size.height as gl::GLint,
-                    texture.layer_count as gl::GLint,
+                    1,
                     desc.external,
                     desc.pixel_type,
                     texels_to_u8_slice(pixels),
