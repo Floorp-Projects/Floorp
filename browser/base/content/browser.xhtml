@@ -150,8 +150,6 @@
       <menuitem id="context_duplicateTabs" data-lazy-l10n-id="duplicate-tabs"
                 oncommand="TabContextMenu.duplicateSelectedTabs();"/>
       <menuseparator/>
-      <menuitem id="context_selectAllTabs" data-lazy-l10n-id="select-all-tabs"
-                oncommand="gBrowser.selectAllTabs();"/>
       <menuitem id="context_bookmarkSelectedTabs"
                 hidden="true"
                 data-lazy-l10n-id="bookmark-selected-tabs"
@@ -159,12 +157,6 @@
       <menuitem id="context_bookmarkTab"
                 data-lazy-l10n-id="bookmark-tab"
                 oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
-      <menu id="context_reopenInContainer"
-            data-lazy-l10n-id="reopen-in-container"
-            hidden="true">
-        <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
-                   onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
-      </menu>
       <menu id="context_moveTabOptions"
             data-lazy-l10n-id="tab-context-move-tabs"
             data-l10n-args='{"tabCount": 1}'>
@@ -187,7 +179,19 @@
         <menupopup id="context_sendTabToDevicePopupMenu"
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
       </menu>
+      <menu id="context_reopenInContainer"
+            data-lazy-l10n-id="tab-context-open-in-container"
+            hidden="true">
+        <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
+                   onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
+      </menu>
+      <menuitem id="context_selectAllTabs" data-lazy-l10n-id="select-all-tabs"
+                oncommand="gBrowser.selectAllTabs();"/>
       <menuseparator/>
+      <menuitem id="context_closeTab"
+                data-lazy-l10n-id="tab-context-close-tabs"
+                data-l10n-args='{"tabCount": 1}'
+                oncommand="TabContextMenu.closeContextTabs();"/>
       <menu id="context_closeTabOptions"
             data-lazy-l10n-id="tab-context-close-multiple-tabs">
         <menupopup id="closeTabOptions">
@@ -200,13 +204,9 @@
         </menupopup>
       </menu>
       <menuitem id="context_undoCloseTab"
-                data-lazy-l10n-id="tab-context-undo-close-tabs"
+                data-lazy-l10n-id="tab-context-reopen-closed-tabs"
                 data-l10n-args='{"tabCount": 1}'
                 observes="History:UndoCloseTab"/>
-      <menuitem id="context_closeTab"
-                data-lazy-l10n-id="tab-context-close-tabs"
-                data-l10n-args='{"tabCount": 1}'
-                oncommand="TabContextMenu.closeContextTabs();"/>
     </menupopup>
 
     <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
@@ -478,7 +478,7 @@
                 data-lazy-l10n-id="toolbar-context-menu-select-all-tabs"/>
       <menuitem id="toolbar-context-undoCloseTab"
                 contexttype="tabbar"
-                data-lazy-l10n-id="toolbar-context-menu-undo-close-tabs"
+                data-lazy-l10n-id="toolbar-context-menu-reopen-closed-tabs"
                 observes="History:UndoCloseTab"/>
       <menuseparator id="toolbarItemsMenuSeparator"/>
       <menuseparator id="viewToolbarsMenuSeparator"/>
