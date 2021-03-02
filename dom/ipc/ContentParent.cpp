@@ -6859,7 +6859,8 @@ mozilla::ipc::IPCResult ContentParent::RecvRaiseWindow(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
-    const MaybeDiscarded<BrowsingContext>& aContext, bool aIsVisible) {
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aIsVisible,
+    uint64_t aActionId) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -6881,7 +6882,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
     ContentParent* cp = cpm->GetContentProcessById(
         ContentParentId(canonicalParent->OwnerProcessId()));
     if (!processes.Get(cp)) {
-      Unused << cp->SendAdjustWindowFocus(context, aIsVisible);
+      Unused << cp->SendAdjustWindowFocus(context, aIsVisible, aActionId);
       processes.InsertOrUpdate(cp, true);
     }
     context = canonicalParent;

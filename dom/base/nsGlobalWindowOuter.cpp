@@ -5084,8 +5084,6 @@ void nsGlobalWindowOuter::FocusOuter(CallerType aCallerType,
     if (!parent->IsInProcess()) {
       if (isActive) {
         fm->WindowRaised(this, aActionId);
-        // XXX we still need to notify framer about the focus moves to OOP
-        // iframe to generate corresponding blur event for bug 1677474.
       } else {
         ContentChild* contentChild = ContentChild::GetSingleton();
         MOZ_ASSERT(contentChild);
