@@ -28,6 +28,7 @@ class nsMenuObjectX {
   virtual ~nsMenuObjectX() {}
   virtual nsMenuObjectTypeX MenuObjectType() = 0;
   virtual void* NativeData() = 0;
+  nsIContent* Content() { return mContent; }
 
   /**
    * Called when an icon of a menu item somewhere in this menu has updated.
@@ -35,6 +36,9 @@ class nsMenuObjectX {
    * parent.
    */
   virtual void IconUpdated() {}
+
+ protected:
+  nsCOMPtr<nsIContent> mContent;
 };
 
 //

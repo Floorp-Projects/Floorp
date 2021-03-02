@@ -51,10 +51,20 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
 }
 
 nsMenuItemIconX::~nsMenuItemIconX() {
+  Destroy();
+  MOZ_COUNT_DTOR(nsMenuItemIconX);
+}
+
+// Called from mMenuObjectX's destructor, to prevent us from outliving it
+// (as might otherwise happen if calls to our imgINotificationObserver methods
+// are still outstanding).  mMenuObjectX owns our mNativeMenuItem.
+void nsMenuItemIconX::Destroy() {
   if (mIconLoader) {
     mIconLoader->Destroy();
+    mIconLoader = nullptr;
   }
-  MOZ_COUNT_DTOR(nsMenuItemIconX);
+  mMenuObject = nullptr;
+  mNativeMenuItem = nil;
 }
 
 nsresult nsMenuItemIconX::SetupIcon() {
@@ -71,7 +81,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item. An icon might have been set
     // earlier.  Clear it.
-    mNativeMenuItem.image = nil;
+    [mNativeMenuItem setImage:nil];
 
     return NS_OK;
   }
@@ -82,7 +92,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
   if (!mSetIcon) {
     // Load placeholder icon.
     NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
-    mNativeMenuItem.image = [MOZIconHelper placeholderIconWithSize:iconSize];
+    [mNativeMenuItem setImage:[MOZIconHelper placeholderIconWithSize:iconSize]];
   }
 
   rv = mIconLoader->LoadIcon(iconURI, mContent);
@@ -90,7 +100,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
     // been set.  Clear it.
-    mNativeMenuItem.image = nil;
+    [mNativeMenuItem setImage:nil];
   }
 
   mSetIcon = true;
@@ -201,7 +211,7 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
                                                      withSize:NSMakeSize(kIconSize, kIconSize)
                                                       subrect:mImageRegionRect
                                                   scaleFactor:0.0f];
-  mNativeMenuItem.image = image;
+  [mNativeMenuItem setImage:image];
   if (mMenuObject) {
     mMenuObject->IconUpdated();
   }
