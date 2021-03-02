@@ -331,7 +331,7 @@ void nsFrameLoaderOwner::AttachFrameLoader(nsFrameLoader* aFrameLoader) {
   mFrameLoaderList.insertBack(aFrameLoader);
 }
 
-void nsFrameLoaderOwner::DeattachFrameLoader(nsFrameLoader* aFrameLoader) {
+void nsFrameLoaderOwner::DetachFrameLoader(nsFrameLoader* aFrameLoader) {
   if (aFrameLoader->isInList()) {
     MOZ_ASSERT(mFrameLoaderList.contains(aFrameLoader));
     aFrameLoader->remove();
@@ -347,6 +347,6 @@ void nsFrameLoaderOwner::FrameLoaderDestroying(nsFrameLoader* aFrameLoader) {
       }
     }
   } else {
-    DeattachFrameLoader(aFrameLoader);
+    DetachFrameLoader(aFrameLoader);
   }
 }

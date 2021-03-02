@@ -83,7 +83,7 @@ class nsFrameLoaderOwner : public nsISupports {
   void ReplaceFrameLoader(nsFrameLoader* aNewFrameLoader);
 
   void AttachFrameLoader(nsFrameLoader* aFrameLoader);
-  void DeattachFrameLoader(nsFrameLoader* aFrameLoader);
+  void DetachFrameLoader(nsFrameLoader* aFrameLoader);
   void FrameLoaderDestroying(nsFrameLoader* aFrameLoader);
 
  private:
@@ -115,6 +115,9 @@ class nsFrameLoaderOwner : public nsISupports {
   virtual ~nsFrameLoaderOwner() = default;
   RefPtr<nsFrameLoader> mFrameLoader;
 
+  // The list contains all the nsFrameLoaders created for this owner or moved
+  // from another nsFrameLoaderOwner which haven't been destroyed yet.
+  // In particular it contains all the nsFrameLoaders which are in bfcache.
   mozilla::LinkedList<nsFrameLoader> mFrameLoaderList;
 };
 
