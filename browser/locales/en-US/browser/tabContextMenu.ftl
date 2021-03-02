@@ -48,8 +48,8 @@ bookmark-selected-tabs =
 bookmark-tab =
     .label = Bookmark Tab
     .accesskey = B
-reopen-in-container =
-    .label = Reopen in Container
+tab-context-open-in-container =
+    .label = Open in New Container
     .accesskey = e
 move-to-start =
     .label = Move to Start
@@ -72,13 +72,13 @@ tab-context-share-more =
 ## Variables:
 ##  $tabCount (Number): the number of tabs that are affected by the action.
 
-tab-context-undo-close-tabs =
+tab-context-reopen-closed-tabs =
     .label =
         { $tabCount ->
-            [1] Undo Close Tab
-           *[other] Undo Close Tabs
+            [1] Reopen Closed Tab
+           *[other] Reopen Closed Tabs
         }
-    .accesskey = U
+    .accesskey = o
 tab-context-close-tabs =
     .label =
         { $tabCount ->
