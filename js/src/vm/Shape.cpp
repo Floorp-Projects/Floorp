@@ -1490,7 +1490,7 @@ inline BaseShape::BaseShape(const StackBaseShape& base)
 void BaseShape::copyFromUnowned(BaseShape& dest, UnownedBaseShape& src) {
   dest.setHeaderPtr(src.clasp());
   dest.unowned_ = &src;
-  dest.flags = src.flags | OWNED_SHAPE;
+  dest.flags = src.flags;
 }
 
 inline void BaseShape::adoptUnowned(UnownedBaseShape* other) {
