@@ -143,6 +143,11 @@ RefPtr<GenericNonExclusivePromise> RDDProcessManager::LaunchRDDProcess() {
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
 
+        if (IsRDDProcessDestroyed()) {
+          return GenericNonExclusivePromise::CreateAndReject(
+              NS_ERROR_NOT_AVAILABLE, __func__);
+        }
+
         mRDDChild = mProcess->GetActor();
         mProcessToken = mProcess->GetProcessToken();
 
