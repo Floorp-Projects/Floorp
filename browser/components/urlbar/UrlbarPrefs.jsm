@@ -205,6 +205,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Remove redundant portions from URLs.
   ["trimURLs", true],
 
+  // If true, top sites may include sponsored ones.
+  ["sponsoredTopSites", false],
+
   // Results will include a built-in set of popular domains when this is true.
   ["usepreloadedtopurls.enabled", false],
 
