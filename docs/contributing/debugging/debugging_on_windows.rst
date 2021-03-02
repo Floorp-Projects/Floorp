@@ -368,8 +368,8 @@ Debugging minidumps
 
 See :ref:`debugging a minidump <Debugging A Minidump>`.
 
-Debugging tinderbox builds
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Debugging treeherder builds
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 See `Running Windows Debug Builds <https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Running_Windows_Debug_Builds>`__
 
