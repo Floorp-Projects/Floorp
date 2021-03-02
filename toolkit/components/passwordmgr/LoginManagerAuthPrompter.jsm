@@ -833,7 +833,10 @@ LoginManagerAuthPrompter.prototype = {
     this.promptAuthInternal(aChannel, aLevel, aAuthInfo)
       .then(ok => (result = ok))
       .finally(() => (closed = true));
-    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
+    Services.tm.spinEventLoopUntilOrShutdown(
+      "LoginManagerAuthPrompter.jsm:promptAuth",
+      () => closed
+    );
     return result;
   },
 
