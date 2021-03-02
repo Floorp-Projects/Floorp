@@ -1195,58 +1195,6 @@ void nsDocShell::FirePageHideNotificationInternal(
   }
 }
 
-void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
-  MOZ_ASSERT(mozilla::BFCacheInParent());
-
-  if (!mContentViewer) {
-    return;
-  }
-
-  // Emulate what non-SHIP BFCache does too. In pageshow case
-  // add and remove a request and before that call SetCurrentURI to get
-  // the location change notification.
-  // For pagehide, set mFiredUnloadEvent to true, so that unload doesn't fire.
-  nsCOMPtr<nsIContentViewer> contentViewer(mContentViewer);
-  if (aShow) {
-    mFiredUnloadEvent = false;
-    RefPtr<Document> doc = contentViewer->GetDocument();
-    if (doc) {
-      if (mBrowsingContext->IsTop()) {
-        doc->NotifyPossibleTitleChange(false);
-      }
-      if (mScriptGlobal && mScriptGlobal->GetCurrentInnerWindowInternal()) {
-        mScriptGlobal->GetCurrentInnerWindowInternal()->Thaw(false);
-      }
-      nsCOMPtr<nsIChannel> channel = doc->GetChannel();
-      if (channel) {
-        SetCurrentURI(doc->GetDocumentURI(), channel, true, 0);
-        mEODForCurrentDocument = false;
-        mIsRestoringDocument = true;
-        mLoadGroup->AddRequest(channel, nullptr);
-        mLoadGroup->RemoveRequest(channel, nullptr, NS_OK);
-        mIsRestoringDocument = false;
-      }
-      RefPtr<PresShell> presShell = GetPresShell();
-      if (presShell) {
-        presShell->Thaw(false);
-      }
-    }
-  } else if (!mFiredUnloadEvent) {
-    // XXXBFCache check again that the page can enter bfcache.
-    // XXXBFCache should mTiming->NotifyUnloadEventStart()/End() be called here?
-    mFiredUnloadEvent = true;
-    contentViewer->PageHide(false);
-
-    if (mScriptGlobal && mScriptGlobal->GetCurrentInnerWindowInternal()) {
-      mScriptGlobal->GetCurrentInnerWindowInternal()->Freeze(false);
-    }
-    RefPtr<PresShell> presShell = GetPresShell();
-    if (presShell) {
-      presShell->Freeze(false);
-    }
-  }
-}
-
 nsresult nsDocShell::Dispatch(TaskCategory aCategory,
                               already_AddRefed<nsIRunnable>&& aRunnable) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
@@ -3507,14 +3455,12 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
     } else {
       triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
     }
-    if (mozilla::SessionHistoryInParent()) {
-      mActiveEntry = MakeUnique<SessionHistoryInfo>(
-          uri, triggeringPrincipal, nullptr, nullptr, nullptr,
-          nsLiteralCString("text/html"));
-      mBrowsingContext->SetActiveSessionHistoryEntry(
-          Nothing(), mActiveEntry.get(), MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags),
-          /* aUpdatedCacheKey = */ 0);
-    }
+    mActiveEntry = MakeUnique<SessionHistoryInfo>(
+        uri, triggeringPrincipal, nullptr, nullptr, nullptr,
+        nsLiteralCString("text/html"));
+    mBrowsingContext->SetActiveSessionHistoryEntry(
+        Nothing(), mActiveEntry.get(), MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags),
+        /* aUpdatedCacheKey = */ 0);
     if (DisplayLoadError(rv, nullptr, PromiseFlatString(aURI).get(), nullptr) &&
         (loadFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
       return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
@@ -6950,7 +6896,6 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
   // Only save presentation for "normal" loads and link loads.  Anything else
   // probably wants to refetch the page, so caching the old presentation
   // would be incorrect.
-  // XXXBFCache in parent needs something like this!
   if (aLoadType != LOAD_NORMAL && aLoadType != LOAD_HISTORY &&
       aLoadType != LOAD_LINK && aLoadType != LOAD_STOP_CONTENT &&
       aLoadType != LOAD_STOP_CONTENT_AND_REPLACE &&
@@ -6991,7 +6936,7 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 
   uint16_t bfCacheCombo = 0;
   bool canSavePresentation =
-      doc->CanSavePresentation(aNewRequest, bfCacheCombo, true);
+      doc->CanSavePresentation(aNewRequest, bfCacheCombo);
   MOZ_ASSERT_IF(canSavePresentation, bfCacheCombo == 0);
   if (canSavePresentation && doc->IsTopLevelContentDocument()) {
     auto* browsingContextGroup = mBrowsingContext->Group();

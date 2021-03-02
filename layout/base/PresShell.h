@@ -743,7 +743,7 @@ class PresShell final : public nsStubDocumentObserver,
    * state.
    * XXX this should include image animations
    */
-  void Freeze(bool aIncludeSubDocuments = true);
+  void Freeze();
   bool IsFrozen() { return mFrozen; }
 
   /**
@@ -751,7 +751,7 @@ class PresShell final : public nsStubDocumentObserver,
    * presentations of subdocuments, then do a full invalidate of the content
    * area.
    */
-  void Thaw(bool aIncludeSubDocuments = true);
+  void Thaw();
 
   void FireOrClearDelayedEvents(bool aFireEvents);
 

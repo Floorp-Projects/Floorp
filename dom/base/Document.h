@@ -2319,8 +2319,8 @@ class Document : public nsINode,
 
   /**
    * Check whether it is safe to cache the presentation of this document
-   * and all of its subdocuments (depending on the 3rd param). This method
-   * checks the following conditions recursively:
+   * and all of its subdocuments. This method checks the following conditions
+   * recursively:
    *  - Some document types, such as plugin documents, cannot be safely cached.
    *  - If there are any pending requests, we don't allow the presentation
    *    to be cached.  Ideally these requests would be suspended and resumed,
@@ -2338,8 +2338,7 @@ class Document : public nsINode,
    * combination is when we try to BFCache aNewRequest
    */
   virtual bool CanSavePresentation(nsIRequest* aNewRequest,
-                                   uint16_t& aBFCacheCombo,
-                                   bool aIncludeSubdocuments);
+                                   uint16_t& aBFCacheCombo);
 
   virtual nsresult Init();
 

@@ -3749,13 +3749,6 @@
   mirror: once
   do_not_use_directly: true
 
-# If session history is stored in the parent process, enable bfcache for it.
-- name: fission.bfcacheInParent
-  type: bool
-  value: false
-  mirror: always
-  do_not_use_directly: true
-
 # Allow renaming of process names to the origin on nightly
 # Setting this pref creates a privacy leak, but helps greatly with
 # debugging
