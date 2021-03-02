@@ -5546,7 +5546,7 @@ impl Renderer {
 
         let rect = device_size_as_framebuffer_size(rect_size).into();
 
-        device.attach_read_texture(texture, 0);
+        device.attach_read_texture(texture);
         #[cfg(feature = "png")]
         {
             let mut png_data;
@@ -5663,7 +5663,7 @@ impl Renderer {
                                     ExternalImageType::Buffer => unreachable!(),
                                 };
                                 info!("\t\tnative texture of target {:?}", target);
-                                self.device.attach_read_texture_external(gl_id, target, 0);
+                                self.device.attach_read_texture_external(gl_id, target);
                                 let data = self.device.read_pixels(&def.descriptor);
                                 let short_path = format!("externals/t{}.raw", tex_id);
                                 (Some(data), e.insert(short_path).clone())
