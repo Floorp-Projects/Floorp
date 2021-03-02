@@ -363,7 +363,7 @@ void LexicalScopeNode::dumpImpl(ParserBase* parser, GenericPrinter& out,
   int nameIndent = indent + strlen(name) + 3;
   if (!isEmptyScope()) {
     LexicalScope::ParserData* bindings = scopeBindings();
-    for (uint32_t i = 0; i < bindings->slotInfo.length; i++) {
+    for (uint32_t i = 0; i < bindings->length; i++) {
       auto index = bindings->trailingNames[i].name();
       if (parser) {
         if (index == TaggedParserAtomIndex::WellKnown::empty()) {
@@ -374,7 +374,7 @@ void LexicalScopeNode::dumpImpl(ParserBase* parser, GenericPrinter& out,
       } else {
         DumpTaggedParserAtomIndexNoQuote(out, index, nullptr);
       }
-      if (i < bindings->slotInfo.length - 1) {
+      if (i < bindings->length - 1) {
         IndentNewLine(out, nameIndent);
       }
     }

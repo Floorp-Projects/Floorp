@@ -142,7 +142,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         data->slotInfo.letStart = global.let_start;
         data->slotInfo.constStart = global.const_start;
-        data->slotInfo.length = numBindings;
+        data->length = numBindings;
 
         if (!ScopeStencil::createForGlobalScope(
                 cx, compilationState, ScopeKind::Global, data, &index)) {
@@ -167,7 +167,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         // NOTE: data->slotInfo.nextFrameSlot is set in
         // ScopeStencil::createForVarScope.
 
-        data->slotInfo.length = numBindings;
+        data->length = numBindings;
 
         uint32_t firstFrameSlot = var.first_frame_slot;
         ScopeIndex enclosingIndex(var.enclosing);
@@ -196,7 +196,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         // ScopeStencil::createForLexicalScope.
 
         data->slotInfo.constStart = lexical.const_start;
-        data->slotInfo.length = numBindings;
+        data->length = numBindings;
 
         uint32_t firstFrameSlot = lexical.first_frame_slot;
         ScopeIndex enclosingIndex(lexical.enclosing);
@@ -229,7 +229,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         data->slotInfo.nonPositionalFormalStart =
             function.non_positional_formal_start;
         data->slotInfo.varStart = function.var_start;
-        data->slotInfo.length = numBindings;
+        data->length = numBindings;
 
         bool hasParameterExprs = function.has_parameter_exprs;
         bool needsEnvironment = function.non_positional_formal_start;

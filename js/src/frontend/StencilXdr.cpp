@@ -42,24 +42,30 @@ template <XDRMode mode, typename ScopeT>
   static_assert(CanCopyDataToDisk<ScopeDataT>::value,
                 "ScopeData cannot be bulk-copied to disk");
 
-  static_assert(offsetof(ScopeDataT, slotInfo) == 0,
-                "slotInfo should be the first field");
-  static_assert(offsetof(ScopeDataT, trailingNames) == sizeof(SlotInfo),
-                "trailingNames should be the second field");
+  // The layout is:
+  //   uint32_t length;
+  //   SlotInfo slotInfo;
+  //   AbstractTrailingNamesArray<TaggedParserAtomIndex> trailingNames;
+  static_assert(offsetof(ScopeDataT, length) == 0,
+                "length should be the first field");
+  static_assert(offsetof(ScopeDataT, slotInfo) == sizeof(uint32_t),
+                "slotInfo should be the second field");
+  static_assert(offsetof(ScopeDataT, trailingNames) ==
+                    sizeof(uint32_t) + sizeof(SlotInfo),
+                "trailingNames should be the third field");
 
   MOZ_TRY(xdr->align32());
 
-  const SlotInfo* slotInfo;
+  uint32_t length;
   if (mode == XDR_ENCODE) {
-    ScopeDataT* scopeData = static_cast<ScopeDataT*>(baseScopeData);
-    slotInfo = &scopeData->slotInfo;
+    length = baseScopeData->length;
   } else {
-    MOZ_TRY(xdr->peekData(&slotInfo));
+    MOZ_TRY(xdr->peekRawUint32(&length));
   }
 
   uint32_t totalLength =
-      sizeof(SlotInfo) +
-      sizeof(AbstractBindingName<TaggedParserAtomIndex>) * slotInfo->length;
+      sizeof(uint32_t) + sizeof(SlotInfo) +
+      sizeof(AbstractBindingName<TaggedParserAtomIndex>) * length;
   MOZ_TRY(xdr->borrowedData(&baseScopeData, totalLength));
 
   return Ok();

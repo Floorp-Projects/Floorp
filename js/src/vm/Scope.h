@@ -210,15 +210,18 @@ using BindingName = AbstractBindingName<JSAtom>;
 const size_t ScopeDataAlignBytes = size_t(1) << gc::CellFlagBitsReservedForGC;
 
 /**
- * Empty base class for scope {Runtime,Parser}Data classes to inherit from.
+ * Base class for scope {Runtime,Parser}Data classes to inherit from.
  *
- * Scope GC things store a pointer to these in their first word so they must be
- * suitably aligned to allow storing GC flags in the low bits.
+ * `js::Scope` stores a pointer to RuntimeData classes in their first word, so
+ * they must be suitably aligned to allow storing GC flags in the low bits.
  */
 template <typename NameT>
 class AbstractBaseScopeData {
  public:
   using NameType = NameT;
+
+  // The length of `trailingNames` field in subclasses.
+  uint32_t length = 0;
 };
 
 using BaseScopeData = AbstractBaseScopeData<JSAtom>;
@@ -506,7 +509,7 @@ struct ParserScopeData
   SlotInfo slotInfo;
   AbstractTrailingNamesArray<frontend::TaggedParserAtomIndex> trailingNames;
 
-  explicit ParserScopeData(size_t nameCount) : trailingNames(nameCount) {}
+  explicit ParserScopeData(size_t length) : trailingNames(length) {}
   ParserScopeData() = delete;
 };
 
@@ -548,7 +551,6 @@ class LexicalScope : public Scope {
     //   lets - [0, constStart)
     // consts - [constStart, length)
     uint32_t constStart = 0;
-    uint32_t length = 0;
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
@@ -556,7 +558,7 @@ class LexicalScope : public Scope {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
+    explicit RuntimeData(size_t length) : trailingNames(length) {}
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
@@ -677,7 +679,6 @@ class FunctionScope : public Scope {
     //               vars - [varStart, length)
     uint16_t nonPositionalFormalStart = 0;
     uint16_t varStart = 0;
-    uint32_t length = 0;
 
     bool hasParameterExprs() const { return flags & HasParameterExprsFlag; }
     void setHasParameterExprs() { flags |= HasParameterExprsFlag; }
@@ -685,14 +686,14 @@ class FunctionScope : public Scope {
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
       : public AbstractBaseScopeData<JSAtom> {
+    SlotInfo slotInfo;
     // The canonical function of the scope, as during a scope walk we
     // often query properties of the JSFunction (e.g., is the function an
     // arrow).
     HeapPtr<JSFunction*> canonicalFunction = {};
-    SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
+    explicit RuntimeData(size_t length) : trailingNames(length) {}
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
@@ -777,7 +778,6 @@ class VarScope : public Scope {
     // All bindings are vars.
     //
     //            vars - [0, length)
-    uint32_t length = 0;
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
@@ -785,7 +785,7 @@ class VarScope : public Scope {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
+    explicit RuntimeData(size_t length) : trailingNames(length) {}
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
@@ -864,7 +864,6 @@ class GlobalScope : public Scope {
     //          consts - [constStart, length)
     uint32_t letStart = 0;
     uint32_t constStart = 0;
-    uint32_t length = 0;
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
@@ -872,7 +871,7 @@ class GlobalScope : public Scope {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
+    explicit RuntimeData(size_t length) : trailingNames(length) {}
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
@@ -912,7 +911,7 @@ class GlobalScope : public Scope {
  public:
   bool isSyntactic() const { return kind() != ScopeKind::NonSyntactic; }
 
-  bool hasBindings() const { return data().slotInfo.length > 0; }
+  bool hasBindings() const { return data().length > 0; }
 };
 
 template <>
@@ -968,7 +967,6 @@ class EvalScope : public Scope {
     // on the BindingName.
     //
     //            vars - [0, length)
-    uint32_t length = 0;
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
@@ -976,7 +974,7 @@ class EvalScope : public Scope {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
+    explicit RuntimeData(size_t length) : trailingNames(length) {}
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
@@ -1019,7 +1017,7 @@ class EvalScope : public Scope {
 
   bool strict() const { return kind() == ScopeKind::StrictEval; }
 
-  bool hasBindings() const { return data().slotInfo.length > 0; }
+  bool hasBindings() const { return data().length > 0; }
 
   bool isNonGlobal() const {
     if (strict()) {
@@ -1065,17 +1063,16 @@ class ModuleScope : public Scope {
     uint32_t varStart = 0;
     uint32_t letStart = 0;
     uint32_t constStart = 0;
-    uint32_t length = 0;
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
       : public AbstractBaseScopeData<JSAtom> {
+    SlotInfo slotInfo;
     // The module of the scope.
     HeapPtr<ModuleObject*> module = {};
-    SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount);
+    explicit RuntimeData(size_t length);
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
@@ -1138,17 +1135,16 @@ class WasmInstanceScope : public Scope {
     // memories - [0, globalsStart)
     //  globals - [globalsStart, length)
     uint32_t globalsStart = 0;
-    uint32_t length = 0;
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
       : public AbstractBaseScopeData<JSAtom> {
+    SlotInfo slotInfo;
     // The wasm instance of the scope.
     HeapPtr<WasmInstanceObject*> instance = {};
-    SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount);
+    explicit RuntimeData(size_t length);
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
@@ -1177,7 +1173,7 @@ class WasmInstanceScope : public Scope {
 
   uint32_t globalsStart() const { return data().slotInfo.globalsStart; }
 
-  uint32_t namesCount() const { return data().slotInfo.length; }
+  uint32_t namesCount() const { return data().length; }
 };
 
 // Scope corresponding to the wasm function. A WasmFunctionScope is used by
@@ -1199,7 +1195,6 @@ class WasmFunctionScope : public Scope {
     // Bindings are the local variable names.
     //
     //    vars - [0, length)
-    uint32_t length = 0;
   };
 
   struct alignas(ScopeDataAlignBytes) RuntimeData
@@ -1207,7 +1202,7 @@ class WasmFunctionScope : public Scope {
     SlotInfo slotInfo;
     AbstractTrailingNamesArray<JSAtom> trailingNames;
 
-    explicit RuntimeData(size_t nameCount) : trailingNames(nameCount) {}
+    explicit RuntimeData(size_t length) : trailingNames(length) {}
     RuntimeData() = delete;
 
     void trace(JSTracer* trc);
