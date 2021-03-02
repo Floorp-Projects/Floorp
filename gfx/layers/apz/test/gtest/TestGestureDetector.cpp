@@ -60,7 +60,7 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
       CreateSingleTouchData(firstFingerId, focusX, focusY));
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, focusX, focusY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Spread fingers out to enter the pinch state
@@ -69,7 +69,7 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
       CreateSingleTouchData(firstFingerId, focusX - pinchLength, focusY));
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, focusX + pinchLength, focusY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Do the actual pinch of 1.25x
@@ -78,7 +78,7 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
   mti.mTouches.AppendElement(CreateSingleTouchData(
       secondFingerId, focusX + pinchLengthScaled, focusY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Verify that the zoom changed, just to make sure our code above did what it
@@ -92,7 +92,7 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(CreateSingleTouchData(
       secondFingerId, focusX + pinchLengthScaled, focusY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // ... and pan with the remaining finger. This pan just breaks through the
@@ -101,7 +101,7 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // This one does an actual pan of 20 pixels
@@ -109,14 +109,14 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Lift the remaining finger
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Verify that we scrolled
@@ -156,21 +156,21 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
       CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, touchX, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Start a pan, break through the threshold
   touchY += 40;
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, touchX, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Do an actual pan for a bit
   touchY += panDistance;
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, touchX, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Put a second finger down
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
@@ -178,33 +178,33 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
       CreateSingleTouchData(firstFingerId, touchX, touchY));
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, touchX + 10, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Lift the second finger
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, touchX + 10, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Bust through the threshold again
   touchY += 40;
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, touchX, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Do some more actual panning
   touchY += panDistance;
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, touchX, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Lift the first finger
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, touchX, touchY));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   // Verify that we scrolled
   FrameMetrics finalMetrics = apzc->GetFrameMetrics();
@@ -529,7 +529,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
         CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, mcc->Time());
     mti.mTouches.AppendElement(SingleTouchData(
         0, ParentLayerPoint(touchX, touchEndY), ScreenSize(0, 0), 0, 0));
-    result.mStatus = apzc->ReceiveInputEvent(mti, nullptr);
+    result = apzc->ReceiveInputEvent(mti);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.mStatus);
 
     EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap,
@@ -681,14 +681,14 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByPinch) {
                                              ScreenSize(0, 0), 0, 0));
   mti.mTouches.AppendElement(SingleTouchData(
       inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, mcc->Time());
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
                                              ScreenSize(0, 0), 0, 0));
   mti.mTouches.AppendElement(SingleTouchData(
       inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   apzc->AssertStateIsReset();
 }
@@ -707,21 +707,21 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByMultipleTouches) {
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
                                              ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
                                              ScreenSize(0, 0), 0, 0));
   mti.mTouches.AppendElement(SingleTouchData(
       inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, mcc->Time());
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
                                              ScreenSize(0, 0), 0, 0));
   mti.mTouches.AppendElement(SingleTouchData(
       inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti, nullptr);
+  apzc->ReceiveInputEvent(mti);
 
   apzc->AssertStateIsReset();
 }
