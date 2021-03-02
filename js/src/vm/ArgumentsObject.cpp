@@ -106,15 +106,14 @@ void ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame,
 }
 
 /* static */
-void ArgumentsObject::MaybeForwardToCallObject(jit::JitFrameLayout* frame,
-                                               HandleObject callObj,
+void ArgumentsObject::MaybeForwardToCallObject(JSFunction* callee,
+                                               JSObject* callObj,
                                                ArgumentsObject* obj,
                                                ArgumentsData* data) {
-  JSFunction* callee = jit::CalleeTokenToFunction(frame->calleeToken());
   JSScript* script = callee->nonLazyScript();
   if (callee->needsCallObject() && script->argumentsAliasesFormals()) {
     MOZ_ASSERT(callObj && callObj->is<CallObject>());
-    obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));
+    obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj));
     for (PositionalFormalParameterIter fi(script); fi; fi++) {
       if (fi.closedOver()) {
         data->args[fi.argumentSlot()] = MagicEnvSlotValue(fi.location().slot());
@@ -178,7 +177,8 @@ struct CopyJitFrameArgs {
    * call object is the canonical location for formals.
    */
   void maybeForwardToCallObject(ArgumentsObject* obj, ArgumentsData* data) {
-    ArgumentsObject::MaybeForwardToCallObject(frame_, callObj_, obj, data);
+    JSFunction* callee = jit::CalleeTokenToFunction(frame_->calleeToken());
+    ArgumentsObject::MaybeForwardToCallObject(callee, callObj_, obj, data);
   }
 };
 
@@ -216,6 +216,47 @@ struct CopyScriptFrameIterArgs {
       ArgumentsObject::MaybeForwardToCallObject(iter_.abstractFramePtr(), obj,
                                                 data);
     }
+  }
+};
+
+struct CopyInlinedArgs {
+  HandleValueArray args_;
+  HandleObject callObj_;
+  HandleFunction callee_;
+  uint32_t numActuals_;
+
+  CopyInlinedArgs(HandleValueArray args, HandleObject callObj,
+                  HandleFunction callee, uint32_t numActuals)
+      : args_(args),
+        callObj_(callObj),
+        callee_(callee),
+        numActuals_(numActuals) {}
+
+  void copyArgs(JSContext*, GCPtrValue* dstBase, unsigned totalArgs) const {
+    uint32_t numFormals = callee_->nargs();
+    MOZ_ASSERT(std::max(numActuals_, numFormals) == totalArgs);
+
+    // Copy actual arguments.
+    GCPtrValue* dst = dstBase;
+    for (uint32_t i = 0; i < numActuals_; i++) {
+      (dst++)->init(args_[i]);
+    }
+
+    // Fill in missing arguments with |undefined|.
+    if (numActuals_ < numFormals) {
+      GCPtrValue* dstEnd = dstBase + totalArgs;
+      while (dst != dstEnd) {
+        (dst++)->init(UndefinedValue());
+      }
+    }
+  }
+
+  /*
+   * If a call object exists and the arguments object aliases formals, the
+   * call object is the canonical location for formals.
+   */
+  void maybeForwardToCallObject(ArgumentsObject* obj, ArgumentsData* data) {
+    ArgumentsObject::MaybeForwardToCallObject(callee_, callObj_, obj, data);
   }
 };
 
@@ -381,6 +422,24 @@ ArgumentsObject* ArgumentsObject::createForIon(JSContext* cx,
       cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
   CopyJitFrameArgs copy(frame, callObj);
   return create(cx, callee, frame->numActualArgs(), copy);
+}
+
+/* static */
+ArgumentsObject* ArgumentsObject::createForInlinedIon(JSContext* cx,
+                                                      Value* args,
+                                                      HandleFunction callee,
+                                                      HandleObject scopeChain,
+                                                      uint32_t numActuals) {
+  MOZ_ASSERT(numActuals <= MaxInlinedArgs);
+
+  RootedExternalValueArray rootedArgs(cx, numActuals, args);
+  HandleValueArray argsArray =
+      HandleValueArray::fromMarkedLocation(numActuals, args);
+
+  RootedObject callObj(
+      cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
+  CopyInlinedArgs copy(argsArray, callObj, callee, numActuals);
+  return create(cx, callee, numActuals, copy);
 }
 
 /* static */

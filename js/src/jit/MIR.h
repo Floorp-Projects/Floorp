@@ -3118,6 +3118,35 @@ class MCreateArgumentsObject : public MUnaryInstruction,
   bool canRecoverOnBailout() const override { return true; }
 };
 
+// Eager initialization of arguments object for inlined function
+class MCreateInlinedArgumentsObject : public MVariadicInstruction,
+                                      public NoFloatPolicyAfter<0>::Data {
+  MCreateInlinedArgumentsObject() : MVariadicInstruction(classOpcode) {
+    setResultType(MIRType::Object);
+  }
+
+  static const size_t NumNonArgumentOperands = 2;
+
+ public:
+  INSTRUCTION_HEADER(CreateInlinedArgumentsObject)
+  static MCreateInlinedArgumentsObject* New(TempAllocator& alloc,
+                                            MDefinition* callObj,
+                                            MDefinition* callee,
+                                            MDefinitionVector& args);
+  NAMED_OPERANDS((0, getCallObject), (1, getCallee))
+
+  MDefinition* getArg(uint32_t idx) const {
+    return getOperand(idx + NumNonArgumentOperands);
+  }
+  uint32_t numActuals() const { return numOperands() - NumNonArgumentOperands; }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool possiblyCalls() const override { return true; }
+
+  // TODO: Recover on bailout
+};
+
 class MGetArgumentsObjectArg : public MUnaryInstruction,
                                public ObjectPolicy<0>::Data {
   size_t argno_;

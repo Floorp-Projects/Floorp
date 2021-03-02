@@ -5435,3 +5435,25 @@ bool MIonToWasmCall::isConsistentFloat32Use(MUse* use) const {
          wasm::ValType::F32;
 }
 #endif
+
+MCreateInlinedArgumentsObject* MCreateInlinedArgumentsObject::New(
+    TempAllocator& alloc, MDefinition* callObj, MDefinition* callee,
+    MDefinitionVector& args) {
+  MCreateInlinedArgumentsObject* ins =
+      new (alloc) MCreateInlinedArgumentsObject();
+
+  uint32_t argc = args.length();
+  MOZ_ASSERT(argc <= ArgumentsObject::MaxInlinedArgs);
+
+  if (!ins->init(alloc, argc + NumNonArgumentOperands)) {
+    return nullptr;
+  }
+
+  ins->initOperand(0, callObj);
+  ins->initOperand(1, callee);
+  for (uint32_t i = 0; i < argc; i++) {
+    ins->initOperand(i + NumNonArgumentOperands, args[i]);
+  }
+
+  return ins;
+}
