@@ -1270,6 +1270,12 @@ nsresult OpenRunnable::MainThreadRunInternal() {
 }
 
 void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
+  nsresult rv = mProxy->mXHR->CheckCurrentGlobalCorrectness();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv = rv;
+    return;
+  }
+
   Nullable<
       DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>
       payload;
