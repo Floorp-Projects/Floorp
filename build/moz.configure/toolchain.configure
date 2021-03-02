@@ -917,16 +917,34 @@ def provided_program(env_var, when=None):
     return provided
 
 
+option(
+    "--with-sysroot",
+    env="SYSROOT",
+    nargs=1,
+    when=target_is_linux,
+    help="Build using the given sysroot directory",
+)
+
+sysroot_input = depends("--with-sysroot", when=target_is_linux)(lambda x: x)
+bootstrap_sysroot = depends(target_is_linux, sysroot_input)(
+    lambda linux, input: linux and not input and input.origin == "default"
+)
+
 # We'll re-evaluate later, but for now, don't use the sysroot automatically
 # even if it exists, unless --enable-bootstrap was passed, or when building
 # on automation.
 @depends(
-    bootstrap_path("sysroot", context=target, when=target_is_linux),
+    sysroot_input,
+    bootstrap_path("sysroot", context=target, when=bootstrap_sysroot),
     "--enable-bootstrap",
     "MOZ_AUTOMATION",
 )
-def sysroot_path(path, bootstrap, automation):
-    if bootstrap or automation:
+def sysroot_path(sysroot_input, path, bootstrap, automation):
+    if sysroot_input:
+        path = sysroot_input[0]
+    elif sysroot_input is not None and sysroot_input.origin != "default":
+        return
+    if sysroot_input or bootstrap or automation:
         if path:
             log.info("Using sysroot in %s", path)
         return path
