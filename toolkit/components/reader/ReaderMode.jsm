@@ -76,11 +76,17 @@ var ReaderMode = {
 
   DEBUG: 0,
 
+  // For time spent telemetry
+  enterTime: undefined,
+  leaveTime: undefined,
+
   /**
    * Enter the reader mode by going forward one step in history if applicable,
    * if not, append the about:reader page in the history instead.
    */
   enterReaderMode(docShell, win) {
+    this.enterTime = Date.now();
+
     Services.telemetry.recordEvent("readermode", "view", "on", null, {
       subcategory: "feature",
     });
@@ -110,8 +116,22 @@ var ReaderMode = {
    * if not, append the original page in the history instead.
    */
   leaveReaderMode(docShell, win) {
+    this.leaveTime = Date.now();
+
+    // Measured in seconds (whole number)
+    let timeSpentInReaderMode = Math.floor(
+      (this.leaveTime - this.enterTime) / 1000
+    );
+
+    // Measured as percentage (whole number)
+    let scrollPosition = Math.floor(
+      ((win.scrollY + win.innerHeight) / win.document.body.clientHeight) * 100
+    );
+
     Services.telemetry.recordEvent("readermode", "view", "off", null, {
       subcategory: "feature",
+      reader_time: `${timeSpentInReaderMode}`,
+      scroll_position: `${scrollPosition}`,
     });
 
     let url = win.document.location.href;
