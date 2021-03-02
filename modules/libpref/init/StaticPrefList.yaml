@@ -3346,12 +3346,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Is support for Navigator.webdriver enabled?
-- name: dom.webdriver.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # In case Touch API is enabled, this pref controls whether to support
 # ontouch* event handlers, document.createTouch, document.createTouchList and
 # document.createEvent("TouchEvent").
@@ -4888,7 +4882,7 @@
 
 - name: gfx.webrender.software.d3d11.upload-mode
   type: RelaxedAtomicInt32
-  value: 4 
+  value: 4
   mirror: always
 
 # Whether to allow widgets that don't support acceleration to use WebRender
