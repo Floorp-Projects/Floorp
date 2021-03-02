@@ -1808,17 +1808,7 @@ def set_worker_type(config, tasks):
             if task.get("suite", "") in ["talos", "raptor"] and not task[
                 "build-platform"
             ].startswith("linux64-ccov"):
-                task["worker-type"] = "t-linux-talos"
-                # TODO: duplicate tasks for linux-1804 (remove March 1st)
-                task1804 = copy.deepcopy(task)
-                task1804["test-platform"] = test_platform.replace(
-                    "linux64", "linux1804-64"
-                )
-                task1804["treeherder-machine-platform"] = task1804[
-                    "treeherder-machine-platform"
-                ].replace("linux64", "linux1804-64")
-                task1804["worker-type"] = "t-linux-talos-1804"
-                yield task1804
+                task["worker-type"] = "t-linux-talos-1804"
             else:
                 task["worker-type"] = LINUX_WORKER_TYPES[task["instance-size"]]
         else:
