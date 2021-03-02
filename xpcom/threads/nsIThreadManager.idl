@@ -56,25 +56,10 @@ interface nsIThreadManager : nsISupports
 %}
 
   /**
-   * Create a new thread (a global, user PRThread).
-   *
-   * @param creationFlags
-   *   Reserved for future use.  Pass 0.
-   * @param stackSize
-   *   Number of bytes to reserve for the thread's stack. 0 means use platform
-   *   default.
-   *
-   * @returns
-   *   The newly created nsIThread object.
-   */
-  nsIThread newThread(in unsigned long creationFlags, [optional] in unsigned long stackSize);
-
-  /**
    * Create a new thread (a global, user PRThread) with the specified name.
    *
    * @param name
-   *   The name of the thread. Passing an empty name is equivalent to
-   *   calling newThread(0, stackSize), i.e. the thread will not be named.
+   *   The name of the thread. If it is empty the thread will not be named.
    * @param stackSize
    *   Number of bytes to reserve for the thread's stack. 0 means use platform
    *   default.

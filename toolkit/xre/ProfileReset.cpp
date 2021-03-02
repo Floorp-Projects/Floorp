@@ -124,9 +124,8 @@ nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
   if (NS_FAILED(rv)) return rv;
 
   // Create a new thread to do the bulk of profile cleanup to stay responsive.
-  nsCOMPtr<nsIThreadManager> tm = do_GetService(NS_THREADMANAGER_CONTRACTID);
   nsCOMPtr<nsIThread> cleanupThread;
-  rv = tm->NewThread(0, 0, getter_AddRefs(cleanupThread));
+  rv = NS_NewNamedThread("ResetCleanup", getter_AddRefs(cleanupThread));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIRunnable> runnable = new ProfileResetCleanupAsyncTask(
         profileDir, profileLocalDir, containerDest, leafName);

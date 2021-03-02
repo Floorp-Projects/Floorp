@@ -617,12 +617,6 @@ bool nsThreadManager::IsNSThread() const {
 }
 
 NS_IMETHODIMP
-nsThreadManager::NewThread(uint32_t aCreationFlags, uint32_t aStackSize,
-                           nsIThread** aResult) {
-  return NewNamedThread(""_ns, aStackSize, aResult);
-}
-
-NS_IMETHODIMP
 nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
                                 nsIThread** aResult) {
   // Note: can be called from arbitrary threads

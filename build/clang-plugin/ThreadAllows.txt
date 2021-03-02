@@ -63,6 +63,7 @@ RemoteLzyStream
 RWLockTester
 RacingServMan
 RemVidChild
+ResetCleanup
 Sandbox Testing
 SaveScripts
 Socket Thread
@@ -72,6 +73,7 @@ StressRunner
 SuicideManager
 SuicideThread
 TEQ AwaitIdle
+TelemetryModule
 Test Thread
 Test thread
 TestPipe
