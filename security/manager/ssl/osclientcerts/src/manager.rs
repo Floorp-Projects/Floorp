@@ -102,77 +102,81 @@ impl ManagerProxy {
         let (proxy_sender, manager_receiver) = channel();
         let (manager_sender, proxy_receiver) = channel();
         let thread_handle = thread::Builder::new()
-                            .name("osclientcert".into())
-                            .spawn(move || {
-            let mut real_manager = Manager::new();
-            loop {
-                let arguments = match manager_receiver.recv() {
-                    Ok(arguments) => arguments,
-                    Err(e) => {
-                        error!("error recv()ing arguments from ManagerProxy: {}", e);
-                        break;
+            .name("osclientcert".into())
+            .spawn(move || {
+                let mut real_manager = Manager::new();
+                loop {
+                    let arguments = match manager_receiver.recv() {
+                        Ok(arguments) => arguments,
+                        Err(e) => {
+                            error!("error recv()ing arguments from ManagerProxy: {}", e);
+                            break;
+                        }
+                    };
+                    let results = match arguments {
+                        ManagerArguments::OpenSession(slot_type) => {
+                            ManagerReturnValue::OpenSession(real_manager.open_session(slot_type))
+                        }
+                        ManagerArguments::CloseSession(session_handle) => {
+                            ManagerReturnValue::CloseSession(
+                                real_manager.close_session(session_handle),
+                            )
+                        }
+                        ManagerArguments::CloseAllSessions(slot_type) => {
+                            ManagerReturnValue::CloseAllSessions(
+                                real_manager.close_all_sessions(slot_type),
+                            )
+                        }
+                        ManagerArguments::StartSearch(session, attrs) => {
+                            ManagerReturnValue::StartSearch(
+                                real_manager.start_search(session, &attrs),
+                            )
+                        }
+                        ManagerArguments::Search(session, max_objects) => {
+                            ManagerReturnValue::Search(real_manager.search(session, max_objects))
+                        }
+                        ManagerArguments::ClearSearch(session) => {
+                            ManagerReturnValue::ClearSearch(real_manager.clear_search(session))
+                        }
+                        ManagerArguments::GetAttributes(object_handle, attr_types) => {
+                            ManagerReturnValue::GetAttributes(
+                                real_manager.get_attributes(object_handle, attr_types),
+                            )
+                        }
+                        ManagerArguments::StartSign(session, key_handle, params) => {
+                            ManagerReturnValue::StartSign(
+                                real_manager.start_sign(session, key_handle, params),
+                            )
+                        }
+                        ManagerArguments::GetSignatureLength(session, data) => {
+                            ManagerReturnValue::GetSignatureLength(
+                                real_manager.get_signature_length(session, &data),
+                            )
+                        }
+                        ManagerArguments::Sign(session, data) => {
+                            ManagerReturnValue::Sign(real_manager.sign(session, &data))
+                        }
+                        ManagerArguments::Stop => {
+                            debug!("ManagerArguments::Stop received - stopping Manager thread.");
+                            ManagerReturnValue::Stop(Ok(()))
+                        }
+                    };
+                    let stop_after_send = match &results {
+                        &ManagerReturnValue::Stop(_) => true,
+                        _ => false,
+                    };
+                    match manager_sender.send(results) {
+                        Ok(()) => {}
+                        Err(e) => {
+                            error!("error send()ing results from Manager: {}", e);
+                            break;
+                        }
                     }
-                };
-                let results = match arguments {
-                    ManagerArguments::OpenSession(slot_type) => {
-                        ManagerReturnValue::OpenSession(real_manager.open_session(slot_type))
-                    }
-                    ManagerArguments::CloseSession(session_handle) => {
-                        ManagerReturnValue::CloseSession(real_manager.close_session(session_handle))
-                    }
-                    ManagerArguments::CloseAllSessions(slot_type) => {
-                        ManagerReturnValue::CloseAllSessions(
-                            real_manager.close_all_sessions(slot_type),
-                        )
-                    }
-                    ManagerArguments::StartSearch(session, attrs) => {
-                        ManagerReturnValue::StartSearch(real_manager.start_search(session, &attrs))
-                    }
-                    ManagerArguments::Search(session, max_objects) => {
-                        ManagerReturnValue::Search(real_manager.search(session, max_objects))
-                    }
-                    ManagerArguments::ClearSearch(session) => {
-                        ManagerReturnValue::ClearSearch(real_manager.clear_search(session))
-                    }
-                    ManagerArguments::GetAttributes(object_handle, attr_types) => {
-                        ManagerReturnValue::GetAttributes(
-                            real_manager.get_attributes(object_handle, attr_types),
-                        )
-                    }
-                    ManagerArguments::StartSign(session, key_handle, params) => {
-                        ManagerReturnValue::StartSign(
-                            real_manager.start_sign(session, key_handle, params),
-                        )
-                    }
-                    ManagerArguments::GetSignatureLength(session, data) => {
-                        ManagerReturnValue::GetSignatureLength(
-                            real_manager.get_signature_length(session, &data),
-                        )
-                    }
-                    ManagerArguments::Sign(session, data) => {
-                        ManagerReturnValue::Sign(real_manager.sign(session, &data))
-                    }
-                    ManagerArguments::Stop => {
-                        debug!("ManagerArguments::Stop received - stopping Manager thread.");
-                        ManagerReturnValue::Stop(Ok(()))
-                    }
-                };
-                let stop_after_send = match &results {
-                    &ManagerReturnValue::Stop(_) => true,
-                    _ => false,
-                };
-                match manager_sender.send(results) {
-                    Ok(()) => {}
-                    Err(e) => {
-                        error!("error send()ing results from Manager: {}", e);
+                    if stop_after_send {
                         break;
                     }
                 }
-                if stop_after_send {
-                    break;
-                }
-            }
-        });
+            });
         match thread_handle {
             Ok(thread_handle) => Ok(ManagerProxy {
                 sender: proxy_sender,
