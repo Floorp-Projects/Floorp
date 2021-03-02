@@ -98,6 +98,109 @@ class GamepadStateBroadcaster::Impl {
     mBroadcastEventHandles.popBack();
   }
 
+  void AddGamepad(GamepadHandle aHandle, const char* aID,
+                  GamepadMappingType aMapping, GamepadHand aHand,
+                  uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
+                  uint32_t aNumLights, uint32_t aNumTouches) {
+    size_t lenId = strlen(aID);
+    MOZ_RELEASE_ASSERT(lenId <= kMaxGamepadIdLength);
+    MOZ_RELEASE_ASSERT(aNumButtons <= kMaxButtonsPerGamepad);
+    MOZ_RELEASE_ASSERT(aNumAxes <= kMaxAxesPerGamepad);
+    MOZ_RELEASE_ASSERT(aNumLights <= kMaxLightsPerGamepad);
+    MOZ_RELEASE_ASSERT(aNumTouches <= kMaxNumMultiTouches);
+
+    // We pass an empty handle as the first argument, which tells
+    // ModifyGamepadSlot to run the lambda on the first empty slot that's
+    // found.
+    //
+    // If there are no empty slots, the following lambda won't be run and
+    // the add will fail silently (which is preferable to crashing)
+    ModifyGamepadSlot(GamepadHandle{}, [&](GamepadSlot& slot) {
+      slot.handle = aHandle;
+      memcpy(&slot.props.id[0], aID, lenId);
+      slot.props.id[lenId] = 0;
+      slot.props.mapping = aMapping;
+      slot.props.hand = aHand;
+      slot.props.numButtons = aNumButtons;
+      slot.props.numAxes = aNumAxes;
+      slot.props.numHaptics = aNumHaptics;
+      slot.props.numLights = aNumLights;
+      slot.props.numTouches = aNumTouches;
+    });
+  }
+
+  void RemoveGamepad(GamepadHandle aHandle) {
+    // If the handle was never added, this function will do nothing
+    ModifyGamepadSlot(aHandle,
+                      [&](GamepadSlot& slot) { slot = GamepadSlot{}; });
+  }
+
+  void NewAxisMoveEvent(GamepadHandle aHandle, uint32_t aAxis, double aValue) {
+    MOZ_RELEASE_ASSERT(aAxis < kMaxAxesPerGamepad);
+
+    // If the handle was never added, this function will do nothing
+    ModifyGamepadSlot(aHandle, [&](GamepadSlot& slot) {
+      MOZ_ASSERT(aAxis < slot.props.numAxes);
+      slot.values.axes[aAxis] = aValue;
+    });
+  }
+
+  void NewButtonEvent(GamepadHandle aHandle, uint32_t aButton, bool aPressed,
+                      bool aTouched, double aValue) {
+    MOZ_RELEASE_ASSERT(aButton < kMaxButtonsPerGamepad);
+
+    // If the handle was never added, this function will do nothing
+    ModifyGamepadSlot(aHandle, [&](GamepadSlot& slot) {
+      MOZ_ASSERT(aButton < slot.props.numButtons);
+      slot.values.buttonValues[aButton] = aValue;
+      slot.values.buttonPressedBits[aButton] = aPressed;
+      slot.values.buttonTouchedBits[aButton] = aTouched;
+    });
+  }
+
+  void NewLightIndicatorTypeEvent(GamepadHandle aHandle, uint32_t aLight,
+                                  GamepadLightIndicatorType aType) {
+    MOZ_RELEASE_ASSERT(aLight < kMaxLightsPerGamepad);
+
+    // If the handle was never added, this function will do nothing
+    ModifyGamepadSlot(aHandle, [&](GamepadSlot& slot) {
+      MOZ_ASSERT(aLight < slot.props.numLights);
+      slot.values.lights[aLight] = aType;
+    });
+  }
+
+  void NewPoseEvent(GamepadHandle aHandle, const GamepadPoseState& aState) {
+    // If the handle was never added, this function will do nothing
+    ModifyGamepadSlot(aHandle,
+                      [&](GamepadSlot& slot) { slot.values.pose = aState; });
+  }
+
+  void NewMultiTouchEvent(GamepadHandle aHandle, uint32_t aTouchArrayIndex,
+                          const GamepadTouchState& aState) {
+    MOZ_RELEASE_ASSERT(aTouchArrayIndex < kMaxNumMultiTouches);
+
+    // If the handle was never added, this function will do nothing
+    ModifyGamepadSlot(aHandle, [&](GamepadSlot& slot) {
+      MOZ_ASSERT(aTouchArrayIndex < slot.props.numTouches);
+      slot.values.touches[aTouchArrayIndex] = aState;
+    });
+  }
+
+  void SendTestCommand(uint32_t aCommandId) {
+    mSharedState.RunWithLock([&](GamepadSystemState* p) {
+      // SECURITY BOUNDARY -- `GamepadSystemState* p` is a local copy of the
+      // shared memory (it is not a live copy), and we only write to it here.
+      // It is also only used for testing
+      p->testCommandId = aCommandId;
+      p->testCommandTrigger = !p->testCommandTrigger;
+
+      p->changeId = mChangeId;
+      ++mChangeId;
+    });
+
+    TriggerEvents();
+  }
+
   // Disallow copy/move
   Impl(const Impl&) = delete;
   Impl& operator=(const Impl&) = delete;
@@ -112,8 +215,44 @@ class GamepadStateBroadcaster::Impl {
   };
 
   explicit Impl(SharedState aSharedState)
-      : mSharedState(std::move(aSharedState)) {}
+      : mChangeId(1), mSharedState(std::move(aSharedState)) {}
 
+  void ModifyGamepadSlot(GamepadHandle aHandle,
+                         const std::function<void(GamepadSlot&)>& aFn) {
+    mSharedState.RunWithLock([&](GamepadSystemState* p) {
+      // SECURITY BOUNDARY -- `GamepadSystemState* p` is a local copy of the
+      // shared memory (it is not a live copy), so after this validation we can
+      // trust the values inside of it
+      ValidateGamepadSystemState(p);
+
+      GamepadSlot* foundSlot = nullptr;
+      for (auto& slot : p->gamepadSlots) {
+        if (slot.handle == aHandle) {
+          foundSlot = &slot;
+          break;
+        }
+      }
+
+      if (!foundSlot) {
+        return;
+      }
+
+      aFn(*foundSlot);
+
+      p->changeId = mChangeId;
+      ++mChangeId;
+    });
+
+    TriggerEvents();
+  }
+
+  void TriggerEvents() {
+    for (auto& x : mBroadcastEventHandles) {
+      MOZ_ALWAYS_TRUE(::SetEvent(x.eventHandle.Get()));
+    }
+  }
+
+  uint64_t mChangeId;
   SharedState mSharedState;
   Vector<BroadcastEventHandle> mBroadcastEventHandles;
 };
@@ -141,6 +280,49 @@ bool GamepadStateBroadcaster::AddReceiverAndGenerateRemoteInfo(
 void GamepadStateBroadcaster::RemoveReceiver(
     const mozilla::ipc::IProtocol* aActor) {
   mImpl->RemoveReceiver(aActor);
+}
+
+void GamepadStateBroadcaster::AddGamepad(
+    GamepadHandle aHandle, const char* aID, GamepadMappingType aMapping,
+    GamepadHand aHand, uint32_t aNumButtons, uint32_t aNumAxes,
+    uint32_t aNumHaptics, uint32_t aNumLights, uint32_t aNumTouches) {
+  mImpl->AddGamepad(aHandle, aID, aMapping, aHand, aNumButtons, aNumAxes,
+                    aNumHaptics, aNumLights, aNumTouches);
+}
+
+void GamepadStateBroadcaster::RemoveGamepad(GamepadHandle aHandle) {
+  mImpl->RemoveGamepad(aHandle);
+}
+
+void GamepadStateBroadcaster::NewAxisMoveEvent(GamepadHandle aHandle,
+                                               uint32_t aAxis, double aValue) {
+  mImpl->NewAxisMoveEvent(aHandle, aAxis, aValue);
+}
+
+void GamepadStateBroadcaster::NewButtonEvent(GamepadHandle aHandle,
+                                             uint32_t aButton, bool aPressed,
+                                             bool aTouched, double aValue) {
+  mImpl->NewButtonEvent(aHandle, aButton, aPressed, aTouched, aValue);
+}
+
+void GamepadStateBroadcaster::NewLightIndicatorTypeEvent(
+    GamepadHandle aHandle, uint32_t aLight, GamepadLightIndicatorType aType) {
+  mImpl->NewLightIndicatorTypeEvent(aHandle, aLight, aType);
+}
+
+void GamepadStateBroadcaster::NewPoseEvent(GamepadHandle aHandle,
+                                           const GamepadPoseState& aState) {
+  mImpl->NewPoseEvent(aHandle, aState);
+}
+
+void GamepadStateBroadcaster::NewMultiTouchEvent(
+    GamepadHandle aHandle, uint32_t aTouchArrayIndex,
+    const GamepadTouchState& aState) {
+  mImpl->NewMultiTouchEvent(aHandle, aTouchArrayIndex, aState);
+}
+
+void GamepadStateBroadcaster::SendTestCommand(uint32_t aCommandId) {
+  mImpl->SendTestCommand(aCommandId);
 }
 
 GamepadStateBroadcaster::GamepadStateBroadcaster(
