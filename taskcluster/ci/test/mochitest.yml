@@ -121,6 +121,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux.*64(-shippable)?/opt: ['fission', 'a11y-checks']
             linux.*64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     fission-run-on-projects:
         by-test-platform:
