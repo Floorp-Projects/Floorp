@@ -104,7 +104,7 @@ static void SwizzleDynamicIndexingMethods() {
 //
 
 nsMenuX::nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent)
-    : mParent(aParent), mMenuGroupOwner(aMenuGroupOwner) {
+    : mContent(aContent), mParent(aParent), mMenuGroupOwner(aMenuGroupOwner) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   MOZ_COUNT_CTOR(nsMenuX);
@@ -117,7 +117,6 @@ nsMenuX::nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
     nsMenuBarX::sNativeEventTarget = [[NativeMenuItemTarget alloc] init];
   }
 
-  mContent = aContent;
   if (mContent->IsElement()) {
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, mLabel);
   }
@@ -277,11 +276,15 @@ nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos) {
   }
 
   // Otherwise, traverse the array until we find the the item we're looking for.
-  nsMenuObjectX* item;
   uint32_t visibleNodeIndex = 0;
   for (uint32_t i = 0; i < count; i++) {
-    item = mMenuObjectsArray[i].get();
-    if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(item->Content())) {
+    nsMenuObjectX* item = mMenuObjectsArray[i].get();
+    MOZ_RELEASE_ASSERT(item->MenuObjectType() == eSubmenuObjectType ||
+                       item->MenuObjectType() == eMenuItemObjectType);
+    RefPtr<nsIContent> content = item->MenuObjectType() == eSubmenuObjectType
+                                     ? static_cast<nsMenuX*>(item)->Content()
+                                     : static_cast<nsMenuItemX*>(item)->Content();
+    if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
       if (aPos == visibleNodeIndex) {
         // we found the visible node we're looking for, return it
         return item;
