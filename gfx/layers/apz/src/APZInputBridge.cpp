@@ -162,7 +162,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
       UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
       ProcessUnhandledEvent(&aEvent.mRefPoint, &result.mTargetGuid,
                             &aEvent.mFocusSequenceNumber, &aEvent.mLayersId);
-      result.mStatus = nsEventStatus_eIgnore;
+      MOZ_ASSERT(result.mStatus == nsEventStatus_eIgnore);
       return result;
     }
     case eKeyboardEventClass: {
