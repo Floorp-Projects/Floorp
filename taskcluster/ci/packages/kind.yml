@@ -21,7 +21,7 @@ job-defaults:
     run-on-projects: []
     run:
         dist: jessie
-        snapshot: 20200422T205110Z
+        snapshot: 20210208T213147Z
 
 jobs:
     deb8-python3.6:
