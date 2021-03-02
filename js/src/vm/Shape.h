@@ -675,10 +675,7 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   friend struct StackShape;
 
   enum Flag {
-    /* Owned by the referring shape. */
-    OWNED_SHAPE = 0x1,
-
-    /* (0x2 and 0x4 are unused) */
+    /* (0x1, 0x2 and 0x4 are unused) */
 
     /*
      * Flags set which describe the referring object. Once set these cannot
@@ -733,13 +730,13 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   /* Not defined: BaseShapes must not be stack allocated. */
   ~BaseShape();
 
-  bool isOwned() const { return !!(flags & OWNED_SHAPE); }
+  bool isOwned() const { return unowned_ != nullptr; }
 
   static void copyFromUnowned(BaseShape& dest, UnownedBaseShape& src);
   inline void adoptUnowned(UnownedBaseShape* other);
 
   void setOwned(UnownedBaseShape* unowned) {
-    flags |= OWNED_SHAPE;
+    MOZ_ASSERT(unowned);
     unowned_ = unowned;
   }
 
