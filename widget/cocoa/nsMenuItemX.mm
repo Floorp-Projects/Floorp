@@ -28,12 +28,11 @@ using mozilla::dom::CallerType;
 
 nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
                          nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode)
-    : mType(aItemType), mMenuParent(aParent), mMenuGroupOwner(aMenuGroupOwner) {
+    : mContent(aNode), mType(aItemType), mMenuParent(aParent), mMenuGroupOwner(aMenuGroupOwner) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   MOZ_COUNT_CTOR(nsMenuItemX);
 
-  mContent = aNode;
   NS_ASSERTION(mMenuGroupOwner, "No menu owner given, must have one!");
 
   mMenuGroupOwner->RegisterForContentChanges(mContent, this);
