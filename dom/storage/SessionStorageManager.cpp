@@ -48,9 +48,10 @@ void RecvPropagateBackgroundSessionStorageManager(
   if (sManagers) {
     if (RefPtr<BackgroundSessionStorageManager> mgr =
             sManagers->Get(aCurrentTopContextId)) {
-      // Assuming the target top browsing context should haven't been
-      // registered yet.
-      MOZ_DIAGNOSTIC_ASSERT(!sManagers->Contains(aTargetTopContextId));
+      // Because of bfcache, we may re-register aTargetTopContextId in
+      // CanonicalBrowsingContext::ReplacedBy.
+      // XXXBFCache do we want to tweak this behavior and ensure this is
+      // called only once?
       sManagers->InsertOrUpdate(aTargetTopContextId, std::move(mgr));
     }
   }
