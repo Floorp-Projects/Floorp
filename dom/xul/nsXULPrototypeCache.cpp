@@ -176,7 +176,10 @@ nsresult nsXULPrototypeCache::PutStyleSheet(RefPtr<StyleSheet>&& aStyleSheet) {
 }
 
 JSScript* nsXULPrototypeCache::GetScript(nsIURI* aURI) {
-  return mScriptTable.Get(aURI);
+  if (auto* entry = mScriptTable.GetEntry(aURI)) {
+    return entry->mScript.get();
+  }
+  return nullptr;
 }
 
 nsresult nsXULPrototypeCache::PutScript(nsIURI* aURI,
@@ -194,7 +197,7 @@ nsresult nsXULPrototypeCache::PutScript(nsIURI* aURI,
   }
 #endif
 
-  mScriptTable.LookupOrInsert(aURI).set(aScriptObject);
+  mScriptTable.PutEntry(aURI)->mScript.set(aScriptObject);
 
   return NS_OK;
 }
@@ -470,9 +473,8 @@ void nsXULPrototypeCache::MarkInCCGeneration(uint32_t aGeneration) {
 }
 
 void nsXULPrototypeCache::MarkInGC(JSTracer* aTrc) {
-  for (auto iter = mScriptTable.Iter(); !iter.Done(); iter.Next()) {
-    JS::Heap<JSScript*>& script = iter.Data();
-    JS::TraceEdge(aTrc, &script, "nsXULPrototypeCache script");
+  for (auto& entry : mScriptTable) {
+    JS::TraceEdge(aTrc, &entry.mScript, "nsXULPrototypeCache script");
   }
 }
 
