@@ -84,6 +84,7 @@ To run it:
 
 :ref:`More information about Linux <Building Firefox On Linux>` / :ref:`More information about MacOS <Building Firefox On MacOS>`
 
+.. _write_a_patch:
 
 To write a patch
 ----------------

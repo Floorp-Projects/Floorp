@@ -25,3 +25,4 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    content/toolkit_widgets/index
    components/url-classifier/url-classifier/index
    components/extensions/webextensions/index
+   /extensions/spellcheck/index
