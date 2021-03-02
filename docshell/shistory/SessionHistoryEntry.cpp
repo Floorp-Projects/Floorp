@@ -9,6 +9,7 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsIHttpChannel.h"
+#include "nsIXULRuntime.h"
 #include "nsSHEntryShared.h"
 #include "nsSHistory.h"
 #include "nsStructuredCloneContainer.h"
@@ -387,20 +388,28 @@ void SessionHistoryEntry::RemoveLoadId(uint64_t aLoadId) {
 }
 
 SessionHistoryEntry::SessionHistoryEntry()
-    : mInfo(new SessionHistoryInfo()), mID(++gEntryID) {}
+    : mInfo(new SessionHistoryInfo()), mID(++gEntryID) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::SessionHistoryEntry(nsDocShellLoadState* aLoadState,
                                          nsIChannel* aChannel)
-    : mInfo(new SessionHistoryInfo(aLoadState, aChannel)), mID(++gEntryID) {}
+    : mInfo(new SessionHistoryInfo(aLoadState, aChannel)), mID(++gEntryID) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::SessionHistoryEntry(SessionHistoryInfo* aInfo)
-    : mInfo(MakeUnique<SessionHistoryInfo>(*aInfo)), mID(++gEntryID) {}
+    : mInfo(MakeUnique<SessionHistoryInfo>(*aInfo)), mID(++gEntryID) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::SessionHistoryEntry(const SessionHistoryEntry& aEntry)
     : mInfo(MakeUnique<SessionHistoryInfo>(*aEntry.mInfo)),
       mParent(aEntry.mParent),
       mID(aEntry.mID),
-      mBCHistoryLength(aEntry.mBCHistoryLength) {}
+      mBCHistoryLength(aEntry.mBCHistoryLength) {
+  MOZ_ASSERT(mozilla::SessionHistoryInParent());
+}
 
 SessionHistoryEntry::~SessionHistoryEntry() {
   // Null out the mParent pointers on all our kids.
