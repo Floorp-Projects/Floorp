@@ -9,6 +9,7 @@
 
 #include "mozilla/EventForwards.h"  // for WidgetInputEvent, nsEventStatus
 #include "mozilla/layers/APZPublicUtils.h"       // for APZWheelAction
+#include "mozilla/layers/LayersTypes.h"          // for ScrollDirections
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 #include "Units.h"                               // for LayoutDeviceIntPoint
 
@@ -24,7 +25,7 @@ class InputBlockState;
 struct ScrollableLayerGuid;
 struct TargetConfirmationFlags;
 
-enum class APZHandledResult : uint8_t {
+enum class APZHandledPlace : uint8_t {
   Unhandled = 0,         // we know for sure that the event will not be handled
                          // by either the root APZC or others
   HandledByRoot = 1,     // we know for sure that the event will be handled
@@ -34,6 +35,33 @@ enum class APZHandledResult : uint8_t {
                          // in a document
   Invalid = 3,
   Last = Invalid
+};
+
+struct APZHandledResult {
+  APZHandledPlace mPlace = APZHandledPlace::Invalid;
+  SideBits mScrollableDirections = SideBits::eNone;
+  ScrollDirections mOverscrollDirections = ScrollDirections();
+
+  APZHandledResult() = default;
+  APZHandledResult(APZHandledPlace aPlace,
+                   const AsyncPanZoomController* aTarget);
+  APZHandledResult(APZHandledPlace aPlace, SideBits aScrollableDirections,
+                   ScrollDirections aOverscrollDirections)
+      : mPlace(aPlace),
+        mScrollableDirections(aScrollableDirections),
+        mOverscrollDirections(aOverscrollDirections) {}
+
+  bool IsHandledByContent() const {
+    return mPlace == APZHandledPlace::HandledByContent;
+  }
+  bool IsHandledByRoot() const {
+    return mPlace == APZHandledPlace::HandledByRoot;
+  }
+  bool operator==(const APZHandledResult& aOther) const {
+    return mPlace == aOther.mPlace &&
+           mScrollableDirections == aOther.mScrollableDirections &&
+           mOverscrollDirections == aOther.mOverscrollDirections;
+  }
 };
 
 /**
