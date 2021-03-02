@@ -798,7 +798,7 @@ RemoteAccessible* RemoteAccessible::ChildAtPoint(
     }
     // We can't always use GetProxyFor because it can't cross document
     // boundaries.
-    if (proxy->ChildrenCount() == 1) {
+    if (proxy->ChildCount() == 1) {
       proxy = proxy->RemoteChildAt(0);
       if (proxy->IsDoc()) {
         // We're crossing into a child document.
