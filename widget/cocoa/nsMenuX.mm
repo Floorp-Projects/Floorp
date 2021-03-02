@@ -500,17 +500,8 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent) {
   }
 
   // Create the item.
-  nsMenuItemX* menuItem = new nsMenuItemX();
-  if (!menuItem) {
-    return;
-  }
-
-  nsresult rv = menuItem->Create(this, menuitemName, itemType, mMenuGroupOwner, inMenuItemContent);
-  if (NS_FAILED(rv)) {
-    delete menuItem;
-    return;
-  }
-
+  nsMenuItemX* menuItem =
+      new nsMenuItemX(this, menuitemName, itemType, mMenuGroupOwner, inMenuItemContent);
   AddMenuItem(menuItem);
 
   // This needs to happen after the nsIMenuItem object is inserted into

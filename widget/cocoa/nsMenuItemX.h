@@ -41,9 +41,10 @@ enum EMenuItemType {
 // Once instantiated, this object lives until its DOM node or its parent window
 // is destroyed. Do not hold references to this, they can become invalid any
 // time the DOM node can be destroyed.
-class nsMenuItemX : public nsMenuObjectX, public nsChangeObserver {
+class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
  public:
-  nsMenuItemX();
+  nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
+              nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
   virtual ~nsMenuItemX();
 
   NS_DECL_CHANGEOBSERVER
@@ -53,9 +54,6 @@ class nsMenuItemX : public nsMenuObjectX, public nsChangeObserver {
   nsMenuObjectTypeX MenuObjectType() override { return eMenuItemObjectType; }
 
   // nsMenuItemX
-  nsresult Create(nsMenuX* aParent, const nsString& aLabel,
-                  EMenuItemType aItemType, nsMenuGroupOwnerX* aMenuGroupOwner,
-                  nsIContent* aNode);
   nsresult SetChecked(bool aIsChecked);
   EMenuItemType GetMenuItemType();
   void DoCommand();
@@ -70,12 +68,12 @@ class nsMenuItemX : public nsMenuObjectX, public nsChangeObserver {
   EMenuItemType mType;
 
   // nsMenuItemX objects should always have a valid native menu item.
-  NSMenuItem* mNativeMenuItem;         // [strong]
-  nsMenuX* mMenuParent;                // [weak]
-  nsMenuGroupOwnerX* mMenuGroupOwner;  // [weak]
+  NSMenuItem* mNativeMenuItem = nil;             // [strong]
+  nsMenuX* mMenuParent = nullptr;                // [weak]
+  nsMenuGroupOwnerX* mMenuGroupOwner = nullptr;  // [weak]
   RefPtr<mozilla::dom::Element> mCommandElement;
   mozilla::UniquePtr<nsMenuItemIconX> mIcon;  // always non-null
-  bool mIsChecked;
+  bool mIsChecked = false;
 };
 
 #endif  // nsMenuItemX_h_
