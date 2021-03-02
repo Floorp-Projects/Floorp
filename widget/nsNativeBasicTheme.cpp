@@ -983,9 +983,9 @@ void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
                                                   DrawTarget& aDrawTarget,
                                                   const LayoutDeviceRect& aRect,
                                                   const EventStates& aState) {
-  const float kPolygonX[] = {-4.0f, -0.5f, 0.5f,  4.0f,  4.0f,
+  const float kPolygonX[] = {-4.0f, -0.5f, 0.5f, 4.0f,  4.0f,
                              3.0f,  0.0f,  0.0f, -3.0f, -4.0f};
-  const float kPolygonY[] = {-1, 3.0f, 3.0f, -1.0f, -2.0f,
+  const float kPolygonY[] = {-1,    3.0f, 3.0f, -1.0f, -2.0f,
                              -2.0f, 1.5f, 1.5f, -2.0f, -2.0f};
 
   const float kPolygonSize = kMinimumDropdownArrowButtonWidth;
@@ -1006,7 +1006,7 @@ void nsNativeBasicTheme::PaintSpinnerButton(nsIFrame* aFrame,
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
                        ColorPattern(ToDeviceColor(backgroundColor)));
 
-  const float kPolygonX[] = {-3.5f, -0.5f, 0.5f,  3.5f,  3.5f,
+  const float kPolygonX[] = {-3.5f, -0.5f, 0.5f, 3.5f,  3.5f,
                              2.5f,  0.0f,  0.0f, -2.5f, -3.5f};
   float polygonY[] = {-1.5f, 1.5f, 1.5f, -1.5f, -2.5f,
                       -2.5f, 0.0f, 0.0f, -2.5f, -2.5f};

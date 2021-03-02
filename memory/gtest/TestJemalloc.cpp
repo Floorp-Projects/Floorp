@@ -666,11 +666,11 @@ TEST(Jemalloc, GuardRegion)
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
-#  ifdef HAS_GDB_SLEEP_DURATION
+#ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
   unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
   _gdb_sleep_duration = 0;
-#  endif
+#endif
 
   arena_id_t arena = moz_create_arena();
   ASSERT_TRUE(arena != 0);
@@ -703,9 +703,9 @@ TEST(Jemalloc, GuardRegion)
 
   moz_dispose_arena(arena);
 
-#  ifdef HAS_GDB_SLEEP_DURATION
+#ifdef HAS_GDB_SLEEP_DURATION
   _gdb_sleep_duration = old_gdb_sleep_duration;
-#  endif
+#endif
 }
 
 TEST(Jemalloc, DisposeArena)
@@ -713,11 +713,11 @@ TEST(Jemalloc, DisposeArena)
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
-#  ifdef HAS_GDB_SLEEP_DURATION
+#ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
   unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
   _gdb_sleep_duration = 0;
-#  endif
+#endif
 
   arena_id_t arena = moz_create_arena();
   void* ptr = moz_arena_malloc(arena, 42);
@@ -735,12 +735,12 @@ TEST(Jemalloc, DisposeArena)
 
   arena = moz_create_arena();
   ptr = moz_arena_malloc(arena, stats.chunksize * 2);
-#  ifdef MOZ_DEBUG
+#ifdef MOZ_DEBUG
   // On debug builds, we do the expensive check that arenas are empty.
   ASSERT_DEATH_WRAP(moz_dispose_arena(arena), "");
   moz_arena_free(arena, ptr);
   moz_dispose_arena(arena);
-#  else
+#else
   // Currently, the allocator can't trivially check whether the arena is empty
   // of huge allocations, so disposing of it works.
   moz_dispose_arena(arena);
@@ -748,12 +748,12 @@ TEST(Jemalloc, DisposeArena)
   ASSERT_DEATH_WRAP(free(ptr), "");
   // Likewise for realloc
   ASSERT_DEATH_WRAP(ptr = realloc(ptr, stats.chunksize * 3), "");
-#  endif
+#endif
 
   // Using the arena after it's been disposed of is MOZ_CRASH-worthy.
   ASSERT_DEATH_WRAP(moz_arena_malloc(arena, 42), "");
 
-#  ifdef HAS_GDB_SLEEP_DURATION
+#ifdef HAS_GDB_SLEEP_DURATION
   _gdb_sleep_duration = old_gdb_sleep_duration;
-#  endif
+#endif
 }

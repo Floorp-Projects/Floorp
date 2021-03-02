@@ -214,8 +214,8 @@ nsresult DnsAndConnectSocket::SetupDnsFlags() {
     mBackupTransport.mDnsFlags |= nsISocketTransport::DISABLE_IPV6;
   }
   NS_ASSERTION(
-      !( mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
-           !( mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
+      !(mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
+          !(mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
       "Setting both RESOLVE_DISABLE_IPV6 and RESOLVE_DISABLE_IPV4");
   return NS_OK;
 }

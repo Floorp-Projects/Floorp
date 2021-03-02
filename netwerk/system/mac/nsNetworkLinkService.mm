@@ -141,7 +141,6 @@ void nsNetworkLinkService::GetDnsSuffixListInternal() {
         [self]() { self->NotifyObservers(NS_DNS_SUFFIX_LIST_UPDATED_TOPIC, nullptr); }));
   });
 
-
   nsTArray<nsCString> result;
 
   struct __res_state res;
@@ -676,13 +675,14 @@ void nsNetworkLinkService::DNSConfigChanged(uint32_t aDelayMs) {
     return;
   }
   if (aDelayMs) {
-     MOZ_ALWAYS_SUCCEEDS(
-      target->DelayedDispatch(NS_NewRunnableFunction("nsNetworkLinkService::GetDnsSuffixListInternal",
-                                              [self = RefPtr{this}]() { self->GetDnsSuffixListInternal(); }), aDelayMs));
+    MOZ_ALWAYS_SUCCEEDS(target->DelayedDispatch(
+        NS_NewRunnableFunction("nsNetworkLinkService::GetDnsSuffixListInternal",
+                               [self = RefPtr{this}]() { self->GetDnsSuffixListInternal(); }),
+        aDelayMs));
   } else {
-    MOZ_ALWAYS_SUCCEEDS(
-      target->Dispatch(NS_NewRunnableFunction("nsNetworkLinkService::GetDnsSuffixListInternal",
-                                              [self = RefPtr{this}]() { self->GetDnsSuffixListInternal(); })));
+    MOZ_ALWAYS_SUCCEEDS(target->Dispatch(
+        NS_NewRunnableFunction("nsNetworkLinkService::GetDnsSuffixListInternal",
+                               [self = RefPtr{this}]() { self->GetDnsSuffixListInternal(); })));
   }
 }
 

@@ -257,7 +257,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
   }                                                                        \
   bool GetEchConfigUsed() override {                                       \
     return (!fwdObject) ? false : (fwdObject)->GetEchConfigUsed();         \
-  }                                                                        \
+  }
 
 // ThrottleResponse deliberately ommited since we want different implementation
 // for h1 and h2 connections.

@@ -39,7 +39,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#define NOTIFY_PRESSHELL(notify_)                \
+#define NOTIFY_PRESSHELL(notify_)                            \
   if (PresShell* presShell = doc->GetObservingPresShell()) { \
     notify_(presShell);                                      \
   }
