@@ -2553,7 +2553,6 @@ impl Renderer {
         // the GL call if the requested target is already bound.
         let cache_draw_target = DrawTarget::from_texture(
             cache_texture,
-            0,
             false,
         );
 
@@ -2654,7 +2653,6 @@ impl Renderer {
 
             let read_target = DrawTarget::from_texture(
                 texture,
-                0,
                 false,
             );
 
@@ -3849,7 +3847,6 @@ impl Renderer {
 
         let draw_target = DrawTarget::from_texture(
             texture,
-            0,
             false,
         );
         self.device.bind_draw_target(draw_target);
@@ -4397,7 +4394,6 @@ impl Renderer {
 
                             DrawTarget::from_texture(
                                 texture,
-                                0,
                                 true,
                             )
                         }
@@ -4468,7 +4464,6 @@ impl Renderer {
 
                 let draw_target = DrawTarget::from_texture(
                     alpha_tex,
-                    0,
                     false,
                 );
 
@@ -4509,7 +4504,6 @@ impl Renderer {
 
                 let draw_target = DrawTarget::from_texture(
                     color_tex,
-                    0,
                     target.needs_depth(),
                 );
 
@@ -4807,7 +4801,6 @@ impl Renderer {
             read_target.to_framebuffer_rect(source_rect),
             DrawTarget::from_texture(
                 self.zoom_debug_texture.as_ref().unwrap(),
-                0,
                 false,
             ),
             texture_rect,
@@ -4818,7 +4811,6 @@ impl Renderer {
         self.device.blit_render_target(
             ReadTarget::from_texture(
                 self.zoom_debug_texture.as_ref().unwrap(),
-                0,
             ),
             texture_rect,
             read_target,
@@ -4932,7 +4924,7 @@ impl Renderer {
 
             // Blit the contents of the texture.
             let dest_rect = draw_target.to_framebuffer_rect(rect(x, image_y, size, size));
-            let read_target = ReadTarget::from_texture(texture, 0);
+            let read_target = ReadTarget::from_texture(texture);
 
             if surface_origin_is_top_left {
                 device.blit_render_target(
@@ -5179,7 +5171,6 @@ impl Renderer {
     fn clear_texture(&mut self, texture: &Texture, color: [f32; 4]) {
         self.device.bind_draw_target(DrawTarget::from_texture(
             &texture,
-            0,
             false,
         ));
         self.device.clear_target(Some(color), None, None);
