@@ -327,7 +327,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   bool HasModalDescendents() { return mNumModalDescendents > 0; }
   NSWindow* GetCocoaWindow() { return mWindow; }
 
-  void SetMenuBar(RefPtr<nsMenuBarX>&& aMenuBar);
+  void SetMenuBar(nsMenuBarX* aMenuBar);
   nsMenuBarX* GetMenuBar();
 
   virtual void SetInputContext(const InputContext& aContext,
