@@ -1650,14 +1650,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DRIVER_BETWEEN_INCLUSIVE, V(8, 17, 12, 5730), V(8, 17, 12, 6901),
         "FEATURE_FAILURE_BUG_1137716", "Nvidia driver > 8.17.12.6901");
 
-    /* Bug 1153381: WebGL issues with D3D11 ANGLE on Intel. These may be fixed
-     * by an ANGLE update. */
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::IntelGMAX4500HD,
-        nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_LESS_THAN,
-        GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_BUG_1153381");
-
     /* Bug 1336710: Crash in rx::Blit9::initialize. */
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::WindowsXP, DeviceFamily::IntelGMAX4500HD,
