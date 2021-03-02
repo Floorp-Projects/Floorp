@@ -67,6 +67,7 @@ jobs:
                 - linux64-dump-syms
                 - linux64-nasm
                 - linux64-node
+                - linux32-sysroot
 
     linux64-shippable/opt:
         description: "Linux64 Instrumented"
@@ -94,6 +95,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - linux64-lucetc
+                - linux64-sysroot
                 - wasi-sysroot
 
     macosx64-shippable/opt:

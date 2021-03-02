@@ -87,6 +87,7 @@ sm-smoosh-linux64/debug:
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-sysroot
     run-on-projects: ['mozilla-central']
 
 sm-smoosh-linux64/opt:
@@ -106,6 +107,7 @@ sm-smoosh-linux64/opt:
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-sysroot
     run-on-projects: ['mozilla-central']
 
 sm-nojit-linux64/opt:
@@ -130,6 +132,14 @@ sm-plain-linux32/debug:
     run:
         spidermonkey-variant: plaindebug
         spidermonkey-platform: linux
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux32-sysroot
 
 sm-arm-sim-linux32/debug:
     description: "Spidermonkey ARM sim"
@@ -142,6 +152,14 @@ sm-arm-sim-linux32/debug:
         docker-image: {in-tree: debian8-i386-build}
     run:
         spidermonkey-variant: arm-sim
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux32-sysroot
 
 sm-arm64-sim-linux64/debug:
     description: "Spidermonkey ARM64 sim"
@@ -171,6 +189,7 @@ sm-arm64-sim-cranelift-linux64/debug:
             - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-sysroot
     run-on-projects: ['mozilla-central']
 
 sm-asan-linux64/opt:
@@ -192,6 +211,7 @@ sm-asan-linux64/opt:
             - linux64-rust
             - linux64-dump-syms
             - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-compacting-linux64/debug:
     description: "Spidermonkey Compacting"
@@ -238,6 +258,7 @@ sm-tsan-linux64/opt:
             - linux64-rust-nightly
             - linux64-dump-syms
             - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-rootanalysis-linux64/debug:
     description: "Spidermonkey Root Analysis"
@@ -265,6 +286,7 @@ sm-nonunified-linux64/debug:
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-sysroot
 
 sm-fuzzing-linux64/opt:
     description: "Spidermonkey Fuzzing"
@@ -285,6 +307,7 @@ sm-fuzzing-linux64/opt:
             - linux64-rust
             - linux64-dump-syms
             - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-gdb-linux64/debug:
     description: "Spidermonkey GDB Pretty-printers"
