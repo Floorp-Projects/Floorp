@@ -29,6 +29,8 @@ status=0
     # MOZ_AUTOMATION enforces certain requirements that don't apply to
     # packaged builds. Unset it.
     unset MOZ_AUTOMATION
+    # Unsetting MOZ_AUTOMATION prevents this to be set automatically:
+    export SYSROOT=$MOZ_FETCHES_DIR/sysroot
 
     AUTOMATION=1 $PYTHON3 ./devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
 ) || status=$?
