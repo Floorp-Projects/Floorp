@@ -4911,58 +4911,55 @@ impl Renderer {
                 FramebufferIntSize::new(dimensions.width as i32, dimensions.height as i32),
             );
 
-            let layer_count = texture.get_layer_count() as usize;
-            for layer in 0 .. layer_count {
-                let x = fb_width - (spacing + size) * (i as i32 + 1);
+            let x = fb_width - (spacing + size) * (i as i32 + 1);
 
-                // If we have more targets than fit on one row in screen, just early exit.
-                if x > fb_width {
-                    return;
-                }
-
-                // Draw the info tag.
-                let tag_rect = rect(x, tag_y, size, tag_height);
-                let tag_color = select_color(texture);
-                device.clear_target(
-                    Some(tag_color),
-                    None,
-                    Some(draw_target.to_framebuffer_rect(tag_rect)),
-                );
-
-                // Draw the dimensions onto the tag.
-                let dim = texture.get_dimensions();
-                let text_rect = tag_rect.inflate(-text_margin, -text_margin);
-                debug_renderer.add_text(
-                    text_rect.min_x() as f32,
-                    text_rect.max_y() as f32, // Top-relative.
-                    &format!("{}x{}", dim.width, dim.height),
-                    ColorU::new(0, 0, 0, 255),
-                    Some(tag_rect.to_f32())
-                );
-
-                // Blit the contents of the layer.
-                let dest_rect = draw_target.to_framebuffer_rect(rect(x, image_y, size, size));
-                let read_target = ReadTarget::from_texture(texture, layer);
-
-                if surface_origin_is_top_left {
-                    device.blit_render_target(
-                        read_target,
-                        src_rect,
-                        *draw_target,
-                        dest_rect,
-                        TextureFilter::Linear,
-                    );
-                } else {
-                     // Invert y.
-                     device.blit_render_target_invert_y(
-                        read_target,
-                        src_rect,
-                        *draw_target,
-                        dest_rect,
-                    );
-                }
-                i += 1;
+            // If we have more targets than fit on one row in screen, just early exit.
+            if x > fb_width {
+                return;
             }
+
+            // Draw the info tag.
+            let tag_rect = rect(x, tag_y, size, tag_height);
+            let tag_color = select_color(texture);
+            device.clear_target(
+                Some(tag_color),
+                None,
+                Some(draw_target.to_framebuffer_rect(tag_rect)),
+            );
+
+            // Draw the dimensions onto the tag.
+            let dim = texture.get_dimensions();
+            let text_rect = tag_rect.inflate(-text_margin, -text_margin);
+            debug_renderer.add_text(
+                text_rect.min_x() as f32,
+                text_rect.max_y() as f32, // Top-relative.
+                &format!("{}x{}", dim.width, dim.height),
+                ColorU::new(0, 0, 0, 255),
+                Some(tag_rect.to_f32())
+            );
+
+            // Blit the contents of the texture.
+            let dest_rect = draw_target.to_framebuffer_rect(rect(x, image_y, size, size));
+            let read_target = ReadTarget::from_texture(texture, 0);
+
+            if surface_origin_is_top_left {
+                device.blit_render_target(
+                    read_target,
+                    src_rect,
+                    *draw_target,
+                    dest_rect,
+                    TextureFilter::Linear,
+                );
+            } else {
+                 // Invert y.
+                 device.blit_render_target_invert_y(
+                    read_target,
+                    src_rect,
+                    *draw_target,
+                    dest_rect,
+                );
+            }
+            i += 1;
         }
     }
 
