@@ -91,10 +91,17 @@ linux64-rust-cross-1.50:
             '--channel', '1.50.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
+            '--target', 'aarch64-apple-darwin',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',
+            '--target', 'armv7-linux-androideabi',
+            '--target', 'thumbv7neon-linux-androideabi',
+            '--target', 'aarch64-linux-android',
+            '--target', 'i686-linux-android',
+            '--target', 'x86_64-linux-android',
         ]
         toolchain-alias: linux64-rust-cross
 
