@@ -44,9 +44,9 @@ struct LoadingSessionHistoryInfo;
 class SessionHistoryEntry;
 class WindowGlobalParent;
 
-// RemotenessChangeState is passed through the methods to store the state
+// RemotenessChangeOptions is passed through the methods to store the state
 // of the possible remoteness change.
-struct RemotenessChangeState {
+struct RemotenessChangeOptions {
   nsCString mRemoteType;
   bool mReplaceBrowsingContext = false;
   uint64_t mSpecificGroupId = 0;
@@ -217,7 +217,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // the parent process, and the method will resolve with a null BrowserParent.
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
   RefPtr<RemotenessPromise> ChangeRemoteness(
-      const RemotenessChangeState& aState, uint64_t aPendingSwitchId);
+      const RemotenessChangeOptions& aOptions, uint64_t aPendingSwitchId);
 
   // Return a media controller from the top-level browsing context that can
   // control all media belonging to this browsing context tree. Return nullptr
@@ -256,7 +256,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // aNewContext is the newly created BrowsingContext that is replacing
   // us.
   void ReplacedBy(CanonicalBrowsingContext* aNewContext,
-                  const RemotenessChangeState& aState);
+                  const RemotenessChangeOptions& aRemotenessOptions);
 
   bool HasHistoryEntry(nsISHEntry* aEntry);
 
@@ -302,7 +302,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     PendingRemotenessChange(CanonicalBrowsingContext* aTarget,
                             RemotenessPromise::Private* aPromise,
                             uint64_t aPendingSwitchId,
-                            const RemotenessChangeState& aState);
+                            const RemotenessChangeOptions& aOptions);
 
     void Cancel(nsresult aRv);
 
@@ -321,7 +321,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     RefPtr<BrowsingContextGroup> mSpecificGroup;
 
     uint64_t mPendingSwitchId;
-    RemotenessChangeState mState;
+    RemotenessChangeOptions mOptions;
   };
 
   friend class net::DocumentLoadListener;

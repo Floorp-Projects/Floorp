@@ -20,7 +20,7 @@ class BrowserBridgeChild;
 class ContentParent;
 class Element;
 struct RemotenessOptions;
-struct RemotenessChangeState;
+struct RemotenessChangeOptions;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -75,7 +75,7 @@ class nsFrameLoaderOwner : public nsISupports {
   // disabled for this process switch.
   void ChangeRemotenessToProcess(
       mozilla::dom::ContentParent* aContentParent,
-      const mozilla::dom::RemotenessChangeState& aState,
+      const mozilla::dom::RemotenessChangeOptions& aOptions,
       mozilla::dom::BrowsingContextGroup* aGroup, mozilla::ErrorResult& rv);
 
   void SubframeCrashed();
@@ -102,12 +102,12 @@ class nsFrameLoaderOwner : public nsISupports {
   ChangeRemotenessContextType ShouldPreserveBrowsingContext(
       bool aIsRemote, bool aReplaceBrowsingContext);
 
-  void ChangeRemotenessCommon(const ChangeRemotenessContextType& aContextType,
-                              const mozilla::dom::RemotenessChangeState& aState,
-                              bool aSwitchingInProgressLoad, bool aIsRemote,
-                              mozilla::dom::BrowsingContextGroup* aGroup,
-                              std::function<void()>& aFrameLoaderInit,
-                              mozilla::ErrorResult& aRv);
+  void ChangeRemotenessCommon(
+      const ChangeRemotenessContextType& aContextType,
+      const mozilla::dom::RemotenessChangeOptions& aOptions,
+      bool aSwitchingInProgressLoad, bool aIsRemote,
+      mozilla::dom::BrowsingContextGroup* aGroup,
+      std::function<void()>& aFrameLoaderInit, mozilla::ErrorResult& aRv);
 
   void ChangeFrameLoaderCommon(mozilla::dom::Element* aOwner);
 
