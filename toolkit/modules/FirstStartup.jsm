@@ -56,7 +56,7 @@ var FirstStartup = {
       );
 
       this.elapsed = 0;
-      Services.tm.spinEventLoopUntil(() => {
+      Services.tm.spinEventLoopUntil("FirstStartup.jsm:init", () => {
         this.elapsed = Date.now() - startingTime;
         if (this.elapsed >= timeout) {
           this._state = this.TIMED_OUT;

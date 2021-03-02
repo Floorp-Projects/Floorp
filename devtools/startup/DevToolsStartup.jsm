@@ -1082,7 +1082,7 @@ DevToolsStartup.prototype = {
     if (pauseOnStartup) {
       // Spin the event loop until the debugger connects.
       const tm = Cc["@mozilla.org/thread-manager;1"].getService();
-      tm.spinEventLoopUntil(() => {
+      tm.spinEventLoopUntil("DevToolsStartup.jsm:handleDebuggerFlag", () => {
         return devtoolsThreadResumed;
       });
     }

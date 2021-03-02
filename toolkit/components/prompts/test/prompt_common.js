@@ -402,7 +402,10 @@ function PrompterProxy(chromeScript) {
             .then(val => {
               result = val;
             });
-          SpecialPowers.Services.tm.spinEventLoopUntil(() => result);
+          SpecialPowers.Services.tm.spinEventLoopUntil(
+            "Test(prompt_common.js:get)",
+            () => result
+          );
 
           for (let outParam of outParams) {
             // Copy the out or inout param value over the original
