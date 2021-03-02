@@ -709,8 +709,8 @@ struct nsTArray_RelocateUsingMemutils {
 };
 
 //
-// A template class that defines how to copy elements calling their constructors
-// and destructors appropriately.
+// A template class that defines how to relocate elements using the type's move
+// constructor and destructor appropriately.
 //
 template <class ElemType>
 struct nsTArray_RelocateUsingMoveConstructor {
@@ -730,53 +730,78 @@ struct nsTArray_RelocateUsingMoveConstructor {
         aElemSize);
   }
 
-  // These functions are defined by analogy with memmove and memcpy.
-  // What they actually do is slightly different: RelocateOverlappingRegion
-  // checks to see which direction the movement needs to take place,
-  // whether from back-to-front of the range to be moved or from
-  // front-to-back.  RelocateNonOverlappingRegion assumes that moving
-  // front-to-back is always valid.  So they're really more like
-  // std::move{_backward,} in that respect.  We keep these names because
-  // we think they read slightly better, and RelocateNonOverlappingRegion is
-  // only ever called on overlapping regions from RelocateOverlappingRegion.
+  // RelocateNonOverlappingRegion and RelocateOverlappingRegion are defined by
+  // analogy with memmove and memcpy that are used for relocation of
+  // trivially-relocatable types through nsTArray_RelocateUsingMemutils. What
+  // they actually do is slightly different: RelocateOverlappingRegion checks to
+  // see which direction the movement needs to take place, whether from
+  // back-to-front of the range to be moved or from front-to-back.
+  // RelocateNonOverlappingRegion assumes that relocating front-to-back is
+  // always valid.  They use RelocateRegionForward and RelocateRegionBackward,
+  // which are analogous to std::move and std::move_backward respectively,
+  // except they don't move-assign the destination from the source but
+  // move-construct the destination from the source and destroy the source.
   static void RelocateOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
                                         size_t aElemSize) {
-    ElemType* destElem = static_cast<ElemType*>(aDest);
-    ElemType* srcElem = static_cast<ElemType*>(aSrc);
-    ElemType* destElemEnd = destElem + aCount;
-    ElemType* srcElemEnd = srcElem + aCount;
-    if (destElem == srcElem) {
-      return;  // In practice, we don't do this.
+    ElemType* destBegin = static_cast<ElemType*>(aDest);
+    ElemType* srcBegin = static_cast<ElemType*>(aSrc);
+
+    // If destination and source are the same, this is a no-op.
+    // In practice, we don't do this.
+    if (destBegin == srcBegin) {
+      return;
     }
 
-    // Figure out whether to copy back-to-front or front-to-back.
-    if (srcElemEnd > destElem && srcElemEnd < destElemEnd) {
-      while (destElemEnd != destElem) {
-        --destElemEnd;
-        --srcElemEnd;
-        traits::Construct(destElemEnd, std::move(*srcElemEnd));
-        traits::Destruct(srcElemEnd);
-      }
+    ElemType* srcEnd = srcBegin + aCount;
+    ElemType* destEnd = destBegin + aCount;
+
+    // Figure out whether to relocate back-to-front or front-to-back.
+    if (srcEnd > destBegin && srcEnd < destEnd) {
+      RelocateRegionBackward(srcBegin, srcEnd, destEnd);
     } else {
-      RelocateNonOverlappingRegion(aDest, aSrc, aCount, aElemSize);
+      RelocateRegionForward(srcBegin, srcEnd, destBegin);
     }
   }
 
   static void RelocateNonOverlappingRegion(void* aDest, void* aSrc,
                                            size_t aCount, size_t aElemSize) {
-    ElemType* destElem = static_cast<ElemType*>(aDest);
-    ElemType* srcElem = static_cast<ElemType*>(aSrc);
-    ElemType* destElemEnd = destElem + aCount;
+    ElemType* destBegin = static_cast<ElemType*>(aDest);
+    ElemType* srcBegin = static_cast<ElemType*>(aSrc);
+    ElemType* srcEnd = srcBegin + aCount;
 #ifdef DEBUG
-    ElemType* srcElemEnd = srcElem + aCount;
-    MOZ_ASSERT(srcElemEnd <= destElem || srcElemEnd > destElemEnd);
+    ElemType* destEnd = destBegin + aCount;
+    MOZ_ASSERT(srcEnd <= destBegin || srcBegin >= destEnd);
 #endif
-    while (destElem != destElemEnd) {
-      traits::Construct(destElem, std::move(*srcElem));
-      traits::Destruct(srcElem);
+    RelocateRegionForward(srcBegin, srcEnd, destBegin);
+  }
+
+ private:
+  static void RelocateRegionForward(ElemType* srcBegin, ElemType* srcEnd,
+                                    ElemType* destBegin) {
+    ElemType* srcElem = srcBegin;
+    ElemType* destElem = destBegin;
+
+    while (srcElem != srcEnd) {
+      RelocateElement(srcElem, destElem);
       ++destElem;
       ++srcElem;
     }
+  }
+
+  static void RelocateRegionBackward(ElemType* srcBegin, ElemType* srcEnd,
+                                     ElemType* destEnd) {
+    ElemType* srcElem = srcEnd;
+    ElemType* destElem = destEnd;
+    while (srcElem != srcBegin) {
+      --destElem;
+      --srcElem;
+      RelocateElement(srcElem, destElem);
+    }
+  }
+
+  static void RelocateElement(ElemType* srcElem, ElemType* destElem) {
+    traits::Construct(destElem, std::move(*srcElem));
+    traits::Destruct(srcElem);
   }
 };
 
