@@ -78,6 +78,12 @@ class Accessible {
 
   bool IsCombobox() const { return HasGenericType(eCombobox); }
 
+  /**
+   * Return true if the used ARIA role (if any) allows the hypertext accessible
+   * to expose text interfaces.
+   */
+  bool IsTextRole();
+
   bool IsGenericHyperText() const { return mType == eHyperTextType; }
 
   bool IsHTMLBr() const { return mType == eHTMLBRType; }
