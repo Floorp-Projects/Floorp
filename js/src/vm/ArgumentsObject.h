@@ -235,6 +235,11 @@ class ArgumentsObject : public NativeObject {
                                               HandleFunction callee,
                                               HandleObject scopeChain,
                                               uint32_t numActuals);
+  static ArgumentsObject* createFromValueArray(JSContext* cx,
+                                               HandleValueArray argsArray,
+                                               HandleFunction callee,
+                                               HandleObject scopeChain,
+                                               uint32_t numActuals);
 
   /*
    * Allocate ArgumentsData and fill reserved slots after allocating an
