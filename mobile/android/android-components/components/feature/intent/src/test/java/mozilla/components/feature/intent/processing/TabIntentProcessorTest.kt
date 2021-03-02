@@ -103,6 +103,44 @@ class TabIntentProcessorTest {
     }
 
     @Test
+    fun `process ACTION MAIN Intent`() {
+        val engine = mock<Engine>()
+        val sessionManager = spy(SessionManager(engine))
+        val useCases = SessionUseCases(store, sessionManager)
+        val handler =
+            TabIntentProcessor(TabsUseCases(store, sessionManager), useCases.loadUrl, searchUseCases.newTabSearch)
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_MAIN)
+
+        val engineSession = mock<EngineSession>()
+        whenever(intent.dataString).thenReturn("")
+        handler.process(intent)
+        verify(engineSession, never()).loadUrl("")
+
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        handler.process(intent)
+
+        val sessionCaptor = argumentCaptor<Session>()
+        verify(sessionManager).add(sessionCaptor.capture(), eq(true), eq(null), eq(null), eq(null))
+        verify(store).dispatch(EngineAction.LoadUrlAction(
+            sessionCaptor.value.id, "http://mozilla.org", LoadUrlFlags.external())
+        )
+
+        // try to send a request to open a tab with the same url as before
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        handler.process(intent)
+        verify(sessionManager).select(any())
+        verify(sessionManager, never()).add(anyList())
+
+        assertEquals(sessionManager.sessions.size, 1)
+
+        val session = sessionManager.all[0]
+        assertNotNull(session)
+        assertEquals("http://mozilla.org", session.url)
+        assertEquals(Source.ACTION_VIEW, session.source)
+    }
+
+    @Test
     fun processNfcIntent() {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))

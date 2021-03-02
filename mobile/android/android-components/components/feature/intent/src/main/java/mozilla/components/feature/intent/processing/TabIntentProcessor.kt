@@ -6,6 +6,7 @@ package mozilla.components.feature.intent.processing
 
 import android.app.SearchManager
 import android.content.Intent
+import android.content.Intent.ACTION_MAIN
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.ACTION_VIEW
 import android.content.Intent.ACTION_SEARCH
@@ -108,7 +109,7 @@ class TabIntentProcessor(
     override fun process(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
         return when (safeIntent.action) {
-            ACTION_VIEW, ACTION_NDEF_DISCOVERED -> processViewIntent(safeIntent)
+            ACTION_VIEW, ACTION_MAIN, ACTION_NDEF_DISCOVERED -> processViewIntent(safeIntent)
             ACTION_SEND -> processSendIntent(safeIntent)
             ACTION_SEARCH, ACTION_WEB_SEARCH -> processSearchIntent(safeIntent)
             else -> false
