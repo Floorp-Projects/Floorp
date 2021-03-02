@@ -1337,14 +1337,18 @@ void gfxFcPlatformFontList::AddPatternToFontList(
     nsAutoCString keyName(aFamilyName);
     ToLowerCase(keyName);
 
-    aFontFamily =
-        static_cast<gfxFontconfigFontFamily*>(mFontFamilies.GetWeak(keyName));
-    if (!aFontFamily) {
-      FontVisibility visibility =
-          aAppFonts ? FontVisibility::Base : GetVisibilityForFamily(keyName);
-      aFontFamily = new gfxFontconfigFontFamily(aFamilyName, visibility);
-      mFontFamilies.InsertOrUpdate(keyName, RefPtr{aFontFamily});
-    }
+    aFontFamily = static_cast<gfxFontconfigFontFamily*>(
+        mFontFamilies
+            .LookupOrInsertWith(keyName,
+                                [&] {
+                                  FontVisibility visibility =
+                                      aAppFonts
+                                          ? FontVisibility::Base
+                                          : GetVisibilityForFamily(keyName);
+                                  return MakeRefPtr<gfxFontconfigFontFamily>(
+                                      aFamilyName, visibility);
+                                })
+            .get());
     // Record if the family contains fonts from the app font set
     // (in which case we won't rely on fontconfig's charmap, due to
     // bug 1276594).
@@ -1971,7 +1975,7 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
 
   // Because the FcConfigSubstitute call is quite expensive, we cache the
   // actual font families found via this process. So check the cache first:
-  if (auto* cachedFamilies = mFcSubstituteCache.GetValue(familyName)) {
+  if (auto cachedFamilies = mFcSubstituteCache.Lookup(familyName)) {
     if (cachedFamilies->IsEmpty()) {
       return false;
     }
@@ -2009,12 +2013,13 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
   }
 
   // Cache the resulting list, so we don't have to do this again.
-  mFcSubstituteCache.InsertOrUpdate(familyName, cachedFamilies);
+  const auto& insertedCachedFamilies =
+      mFcSubstituteCache.InsertOrUpdate(familyName, std::move(cachedFamilies));
 
-  if (cachedFamilies.IsEmpty()) {
+  if (insertedCachedFamilies.IsEmpty()) {
     return false;
   }
-  aOutput->AppendElements(cachedFamilies);
+  aOutput->AppendElements(insertedCachedFamilies);
   return true;
 }
 

@@ -224,17 +224,13 @@ bool gfxSVGGlyphs::GetGlyphExtents(uint32_t aGlyphId,
 }
 
 Element* gfxSVGGlyphs::GetGlyphElement(uint32_t aGlyphId) {
-  Element* elem;
-
-  if (!mGlyphIdMap.Get(aGlyphId, &elem)) {
-    elem = nullptr;
+  return mGlyphIdMap.LookupOrInsertWith(aGlyphId, [&] {
+    Element* elem = nullptr;
     if (gfxSVGGlyphsDocument* set = FindOrCreateGlyphsDocument(aGlyphId)) {
       elem = set->GetGlyphElement(aGlyphId);
     }
-    mGlyphIdMap.InsertOrUpdate(aGlyphId, elem);
-  }
-
-  return elem;
+    return elem;
+  });
 }
 
 bool gfxSVGGlyphs::HasSVGGlyph(uint32_t aGlyphId) {
