@@ -16,6 +16,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -180,6 +181,8 @@ class RuntimeService final : public nsIObserver {
   uint32_t ClampedHardwareConcurrency() const;
 
   void CrashIfHanging();
+
+  bool IsShuttingDown() const { return mShuttingDown; }
 
  private:
   RuntimeService();
