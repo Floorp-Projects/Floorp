@@ -115,13 +115,13 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
  protected:
   void ConstructNativeMenus();
   void ConstructFallbackNativeMenus();
-  nsresult InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex);
+  void InsertMenuAtIndex(mozilla::UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex);
   void RemoveMenuAtIndex(uint32_t aIndex);
   void HideItem(mozilla::dom::Document* inDoc, const nsAString& inID, nsIContent** outHiddenNode);
   void AquifyMenuBar();
   NSMenuItem* CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString& nodeID, SEL action, int tag,
                                       NativeMenuItemTarget* target);
-  nsresult CreateApplicationMenu(nsMenuX* inMenu);
+  void CreateApplicationMenu(nsMenuX* inMenu);
 
   nsTArray<mozilla::UniquePtr<nsMenuX>> mMenuArray;
   nsIWidget* mParentWindow;  // [weak]
