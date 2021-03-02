@@ -3785,8 +3785,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRaiseWindow(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvAdjustWindowFocus(
-    const MaybeDiscarded<BrowsingContext>& aContext, bool aCheckPermission,
-    bool aIsVisible) {
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aIsVisible) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
@@ -3795,7 +3794,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAdjustWindowFocus(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->AdjustWindowFocus(aContext.get(), aCheckPermission, aIsVisible);
+    fm->AdjustWindowFocus(aContext.get(), false, aIsVisible);
   }
   return IPC_OK();
 }
