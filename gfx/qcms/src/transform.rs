@@ -1337,7 +1337,7 @@ pub fn transform_create(
     debug_assert!(transform.transform_fn.is_some());
     Some(transform)
 }
- /// A transform from an input profile to an output one.
+/// A transform from an input profile to an output one.
 pub struct Transform {
     ty: DataType,
     xfm: Box<qcms_transform>,
@@ -1345,12 +1345,7 @@ pub struct Transform {
 
 impl Transform {
     /// Create a new transform from `input` to `output` for pixels of `DataType` `ty` with `intent`
-    pub fn new(
-        input: &Profile,
-        output: &Profile,
-        ty: DataType,
-        intent: Intent,
-    ) -> Option<Self> {
+    pub fn new(input: &Profile, output: &Profile, ty: DataType, intent: Intent) -> Option<Self> {
         transform_create(input, ty, output, ty, intent).map(|xfm| Transform { ty, xfm })
     }
 

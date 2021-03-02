@@ -177,13 +177,7 @@ mod gtest {
         unsafe { qcms_profile_precache_output_transform(&mut *other) };
 
         let transform = unsafe {
-            qcms_transform_create(
-                &mut *sRGB_profile,
-                RGB8,
-                &mut *other,
-                RGB8,
-                Perceptual,
-            )
+            qcms_transform_create(&mut *sRGB_profile, RGB8, &mut *other, RGB8, Perceptual)
         };
         let mut data: [u8; 120] = [0; 120];
 
@@ -210,13 +204,7 @@ mod gtest {
         unsafe { qcms_profile_precache_output_transform(&mut *other) };
 
         let transform = unsafe {
-            qcms_transform_create(
-                &mut *other,
-                GrayA8,
-                &mut *sRGB_profile,
-                RGBA8,
-                Perceptual,
-            )
+            qcms_transform_create(&mut *other, GrayA8, &mut *sRGB_profile, RGBA8, Perceptual)
         };
         assert!(!transform.is_null());
 
@@ -294,9 +282,8 @@ mod gtest {
         unsafe { qcms_profile_precache_output_transform(&mut *srgb_profile) };
 
         let intent = unsafe { qcms_profile_get_rendering_intent(&*profile) };
-        let transform = unsafe {
-            qcms_transform_create(&*profile, RGB8, &*srgb_profile, RGB8, intent)
-        };
+        let transform =
+            unsafe { qcms_transform_create(&*profile, RGB8, &*srgb_profile, RGB8, intent) };
 
         assert_ne!(transform, std::ptr::null_mut());
 
@@ -820,15 +807,7 @@ mod gtest {
         // manually edited using iccToXML/iccFromXML
         let output = profile_from_path("B2A0-ident.icc");
 
-        let transform = unsafe {
-            qcms_transform_create(
-                &*input,
-                RGB8,
-                &*output,
-                RGB8,
-                Perceptual,
-            )
-        };
+        let transform = unsafe { qcms_transform_create(&*input, RGB8, &*output, RGB8, Perceptual) };
         let src = [0u8, 60, 195];
         let mut dst = [0u8, 0, 0];
         unsafe {
@@ -893,9 +872,11 @@ mod gtest {
         let D65 = qcms_white_point_sRGB();
         let mut mem = std::ptr::null_mut();
         let mut size = 0;
-        unsafe { qcms_data_create_rgb_with_gamma(D65, Rec709Primaries, 2.2, &mut mem, &mut size); }
+        unsafe {
+            qcms_data_create_rgb_with_gamma(D65, Rec709Primaries, 2.2, &mut mem, &mut size);
+        }
         assert_ne!(size, 0);
-        unsafe { libc::free(mem) } ;
+        unsafe { libc::free(mem) };
     }
 }
 
@@ -905,13 +886,8 @@ mod test {
     fn identity() {
         let p1 = crate::Profile::new_sRGB();
         let p2 = crate::Profile::new_sRGB();
-        let xfm = crate::Transform::new(
-            &p1,
-            &p2,
-            crate::DataType::RGB8,
-            crate::Intent::default(),
-        )
-        .unwrap();
+        let xfm = crate::Transform::new(&p1, &p2, crate::DataType::RGB8, crate::Intent::default())
+            .unwrap();
         let mut data = [4, 30, 80];
         xfm.apply(&mut data);
         assert_eq!(data, [4, 30, 80]);
@@ -920,13 +896,8 @@ mod test {
     fn D50() {
         let p1 = crate::Profile::new_sRGB();
         let p2 = crate::Profile::new_XYZD50();
-        let xfm = crate::Transform::new(
-            &p1,
-            &p2,
-            crate::DataType::RGB8,
-            crate::Intent::default(),
-        )
-        .unwrap();
+        let xfm = crate::Transform::new(&p1, &p2, crate::DataType::RGB8, crate::Intent::default())
+            .unwrap();
         let mut data = [4, 30, 80];
         xfm.apply(&mut data);
         assert_eq!(data, [4, 4, 15]);
