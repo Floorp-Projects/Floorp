@@ -63,7 +63,9 @@ add_task(async function test_panelview_bookmarks_delete() {
     });
     observer.observe(list, { childList: true });
   });
-  let placesContextDelete = document.getElementById("placesContext_delete");
+  let placesContextDelete = document.getElementById(
+    "placesContext_deleteBookmark"
+  );
   EventUtils.synthesizeMouseAtCenter(placesContextDelete, {});
   await promise;
 

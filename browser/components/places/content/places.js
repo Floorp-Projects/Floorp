@@ -229,10 +229,12 @@ var PlacesOrganizer = {
       }
     }
 
-    // remove the "Properties" context-menu item, we've our own details pane
-    document
-      .getElementById("placesContext")
-      .removeChild(document.getElementById("placesContext_show:info"));
+    // remove the "Edit" and "Edit Bookmark" context-menu item, we're in our own details pane
+    let contextMenu = document.getElementById("placesContext");
+    contextMenu.removeChild(document.getElementById("placesContext_show:info"));
+    contextMenu.removeChild(
+      document.getElementById("placesContext_show_bookmark:info")
+    );
 
     if (!Services.policies.isAllowed("profileImport")) {
       document
