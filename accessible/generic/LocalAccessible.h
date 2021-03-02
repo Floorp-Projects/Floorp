@@ -641,7 +641,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return true if the accessible is hyper link accessible.
    */
-  virtual bool IsLink() const;
+  virtual bool IsLink() const override;
 
   /**
    * Return the start offset of the link within the parent accessible.
