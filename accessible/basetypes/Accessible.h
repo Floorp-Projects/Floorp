@@ -17,6 +17,9 @@ struct nsRoleMapEntry;
 namespace mozilla {
 namespace a11y {
 
+class LocalAccessible;
+class RemoteAccessible;
+
 class Accessible {
  protected:
   Accessible();
@@ -173,6 +176,14 @@ class Accessible {
   }
 
   virtual bool HasNumericValue() const = 0;
+
+  // Remote/Local types
+
+  virtual bool IsRemote() const = 0;
+  RemoteAccessible* AsRemote();
+
+  bool IsLocal() { return !IsRemote(); }
+  LocalAccessible* AsLocal();
 
  private:
   static const uint8_t kTypeBits = 6;
