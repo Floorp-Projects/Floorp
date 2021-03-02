@@ -2184,7 +2184,7 @@ RefPtr<VsyncChild> BrowserChild::GetVsyncChild() {
   // given platform. Note: this only makes sense if nsWindow returns a
   // window-specific VsyncSource.
 #if defined(MOZ_WAYLAND)
-  if (!IsWaylandDisabled() && !mVsyncChild) {
+  if (IsWaylandEnabled() && !mVsyncChild) {
     PVsyncChild* actor = SendPVsyncConstructor();
     mVsyncChild = static_cast<VsyncChild*>(actor);
   }

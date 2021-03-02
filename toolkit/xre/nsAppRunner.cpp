@@ -4157,7 +4157,12 @@ static void PR_CALLBACK ReadAheadDlls_ThreadStart(void* arg) {
 #endif
 
 #if defined(MOZ_WAYLAND)
-bool IsWaylandDisabled() {
+bool IsWaylandEnabled() {
+  const char* waylandDisplay = PR_GetEnv("WAYLAND_DISPLAY");
+  if (!waylandDisplay) {
+    return false;
+  }
+
   // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
   const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND");
   bool enableWayland = (waylandPref && *waylandPref);
@@ -4173,7 +4178,7 @@ bool IsWaylandDisabled() {
   if (enableWayland && gtk_check_version(3, 22, 0) != nullptr) {
     NS_WARNING("Running Wayland backen on Gtk3 < 3.22. Expect issues/glitches");
   }
-  return !enableWayland;
+  return enableWayland;
 }
 #endif
 
@@ -4362,13 +4367,13 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       saveDisplayArg = true;
     }
 
-    bool disableWayland = true;
+    bool waylandEnabled = false;
 #  if defined(MOZ_WAYLAND)
-    disableWayland = IsWaylandDisabled();
+    waylandEnabled = IsWaylandEnabled();
 #  endif
     // On Wayland disabled builds read X11 DISPLAY env exclusively
     // and don't care about different displays.
-    if (disableWayland && !display_name) {
+    if (!waylandEnabled && !display_name) {
       display_name = PR_GetEnv("DISPLAY");
       if (!display_name) {
         PR_fprintf(PR_STDERR,

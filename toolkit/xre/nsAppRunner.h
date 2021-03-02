@@ -167,7 +167,7 @@ void setASanReporterPath(nsIFile* aDir);
 #endif
 
 #ifdef MOZ_WAYLAND
-bool IsWaylandDisabled();
+bool IsWaylandEnabled();
 #endif
 
 #endif  // nsAppRunner_h__
