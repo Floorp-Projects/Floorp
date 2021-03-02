@@ -651,7 +651,6 @@ impl UploadTexturePool {
             // to copy the texture data. Instead, we should use glCopyImageSubData on some
             // platforms, and avoid creating the FBOs in that case.
             Some(RenderTargetInfo { has_depth: false }),
-            1,
         )
     }
 
