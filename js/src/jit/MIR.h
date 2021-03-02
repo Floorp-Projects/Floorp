@@ -3144,7 +3144,9 @@ class MCreateInlinedArgumentsObject : public MVariadicInstruction,
 
   bool possiblyCalls() const override { return true; }
 
-  // TODO: Recover on bailout
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
 };
 
 class MGetArgumentsObjectArg : public MUnaryInstruction,

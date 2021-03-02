@@ -56,83 +56,84 @@ namespace jit {
 // stored on the |SnapshotIterator|, by using the |storeInstructionResult|
 // method.
 
-#define RECOVER_OPCODE_LIST(_) \
-  _(ResumePoint)               \
-  _(BitNot)                    \
-  _(BitAnd)                    \
-  _(BitOr)                     \
-  _(BitXor)                    \
-  _(Lsh)                       \
-  _(Rsh)                       \
-  _(Ursh)                      \
-  _(SignExtendInt32)           \
-  _(Add)                       \
-  _(Sub)                       \
-  _(Mul)                       \
-  _(Div)                       \
-  _(Mod)                       \
-  _(Not)                       \
-  _(BigIntAdd)                 \
-  _(BigIntSub)                 \
-  _(BigIntMul)                 \
-  _(BigIntDiv)                 \
-  _(BigIntMod)                 \
-  _(BigIntPow)                 \
-  _(BigIntBitAnd)              \
-  _(BigIntBitOr)               \
-  _(BigIntBitXor)              \
-  _(BigIntLsh)                 \
-  _(BigIntRsh)                 \
-  _(BigIntIncrement)           \
-  _(BigIntDecrement)           \
-  _(BigIntNegate)              \
-  _(BigIntBitNot)              \
-  _(Concat)                    \
-  _(StringLength)              \
-  _(ArgumentsLength)           \
-  _(Floor)                     \
-  _(Ceil)                      \
-  _(Round)                     \
-  _(Trunc)                     \
-  _(CharCodeAt)                \
-  _(FromCharCode)              \
-  _(Pow)                       \
-  _(PowHalf)                   \
-  _(MinMax)                    \
-  _(Abs)                       \
-  _(Sqrt)                      \
-  _(Atan2)                     \
-  _(Hypot)                     \
-  _(NearbyInt)                 \
-  _(Sign)                      \
-  _(MathFunction)              \
-  _(Random)                    \
-  _(StringSplit)               \
-  _(NaNToZero)                 \
-  _(RegExpMatcher)             \
-  _(RegExpSearcher)            \
-  _(RegExpTester)              \
-  _(StringReplace)             \
-  _(TypeOf)                    \
-  _(ToDouble)                  \
-  _(ToFloat32)                 \
-  _(TruncateToInt32)           \
-  _(NewObject)                 \
-  _(NewTypedArray)             \
-  _(NewArray)                  \
-  _(NewIterator)               \
-  _(NewCallObject)             \
-  _(CreateThisWithTemplate)    \
-  _(Lambda)                    \
-  _(LambdaArrow)               \
-  _(FunctionWithProto)         \
-  _(ObjectState)               \
-  _(ArrayState)                \
-  _(SetArrayLength)            \
-  _(AtomicIsLockFree)          \
-  _(BigIntAsIntN)              \
-  _(BigIntAsUintN)             \
-  _(CreateArgumentsObject)     \
+#define RECOVER_OPCODE_LIST(_)    \
+  _(ResumePoint)                  \
+  _(BitNot)                       \
+  _(BitAnd)                       \
+  _(BitOr)                        \
+  _(BitXor)                       \
+  _(Lsh)                          \
+  _(Rsh)                          \
+  _(Ursh)                         \
+  _(SignExtendInt32)              \
+  _(Add)                          \
+  _(Sub)                          \
+  _(Mul)                          \
+  _(Div)                          \
+  _(Mod)                          \
+  _(Not)                          \
+  _(BigIntAdd)                    \
+  _(BigIntSub)                    \
+  _(BigIntMul)                    \
+  _(BigIntDiv)                    \
+  _(BigIntMod)                    \
+  _(BigIntPow)                    \
+  _(BigIntBitAnd)                 \
+  _(BigIntBitOr)                  \
+  _(BigIntBitXor)                 \
+  _(BigIntLsh)                    \
+  _(BigIntRsh)                    \
+  _(BigIntIncrement)              \
+  _(BigIntDecrement)              \
+  _(BigIntNegate)                 \
+  _(BigIntBitNot)                 \
+  _(Concat)                       \
+  _(StringLength)                 \
+  _(ArgumentsLength)              \
+  _(Floor)                        \
+  _(Ceil)                         \
+  _(Round)                        \
+  _(Trunc)                        \
+  _(CharCodeAt)                   \
+  _(FromCharCode)                 \
+  _(Pow)                          \
+  _(PowHalf)                      \
+  _(MinMax)                       \
+  _(Abs)                          \
+  _(Sqrt)                         \
+  _(Atan2)                        \
+  _(Hypot)                        \
+  _(NearbyInt)                    \
+  _(Sign)                         \
+  _(MathFunction)                 \
+  _(Random)                       \
+  _(StringSplit)                  \
+  _(NaNToZero)                    \
+  _(RegExpMatcher)                \
+  _(RegExpSearcher)               \
+  _(RegExpTester)                 \
+  _(StringReplace)                \
+  _(TypeOf)                       \
+  _(ToDouble)                     \
+  _(ToFloat32)                    \
+  _(TruncateToInt32)              \
+  _(NewObject)                    \
+  _(NewTypedArray)                \
+  _(NewArray)                     \
+  _(NewIterator)                  \
+  _(NewCallObject)                \
+  _(CreateThisWithTemplate)       \
+  _(Lambda)                       \
+  _(LambdaArrow)                  \
+  _(FunctionWithProto)            \
+  _(ObjectState)                  \
+  _(ArrayState)                   \
+  _(SetArrayLength)               \
+  _(AtomicIsLockFree)             \
+  _(BigIntAsIntN)                 \
+  _(BigIntAsUintN)                \
+  _(CreateArgumentsObject)        \
+  _(CreateInlinedArgumentsObject) \
   _(AssertRecoveredOnBailout)
 
 class RResumePoint;
@@ -874,6 +875,24 @@ class RBigIntAsUintN final : public RInstruction {
 class RCreateArgumentsObject final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(CreateArgumentsObject, 1)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RCreateInlinedArgumentsObject final : public RInstruction {
+ private:
+  uint32_t numActuals_;
+
+ public:
+  RINSTRUCTION_HEADER_(CreateInlinedArgumentsObject)
+
+  uint32_t numActuals() const { return numActuals_; }
+  uint32_t numOperands() const override {
+    // +1 for the callObj.
+    // +1 for the callee.
+    return numActuals() + 2;
+  }
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;
