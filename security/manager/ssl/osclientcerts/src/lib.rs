@@ -97,7 +97,11 @@ extern "C" fn C_Initialize(_pInitArgs: CK_C_INITIALIZE_ARGS_PTR) -> CK_RV {
     // logging has been initialized.
     let _ = env_logger::try_init();
     let mut manager_guard = try_to_get_manager_guard!();
-    match manager_guard.replace(ManagerProxy::new()) {
+    let manager_proxy = match ManagerProxy::new() {
+        Ok(p) => p,
+        Err(()) => return CKR_DEVICE_ERROR,
+    };
+    match manager_guard.replace(manager_proxy) {
         Some(_unexpected_previous_manager) => {
             #[cfg(target_os = "macos")]
             {
