@@ -472,8 +472,11 @@ partial interface Document {
   [ChromeOnly]
   attribute Node? popupNode;
 
+  // The JS debugger uses DOM mutation events to implement DOM mutation
+  // breakpoints. This is used to avoid logging a warning that the user
+  // cannot address and have no control over.
   [ChromeOnly]
-  attribute boolean devToolsWatchingDOMMutations;
+  attribute boolean dontWarnAboutMutationEventsAndAllowSlowDOMMutations;
 
   /**
    * These attributes correspond to rangeParent and rangeOffset. They will help

@@ -15,16 +15,12 @@ Services.scriptloader.loadSubScript(
 const DMB_TEST_URL =
   "http://example.com/browser/devtools/client/debugger/test/mochitest/examples/doc-dom-mutation.html";
 
-async function enableMutationBreakpoints() {
+add_task(async function() {
+  // Enable features
   await pushPref("devtools.debugger.features.dom-mutation-breakpoints", true);
   await pushPref("devtools.markup.mutationBreakpoints.enabled", true);
   await pushPref("devtools.debugger.dom-mutation-breakpoints-visible", true);
-}
 
-
-add_task(async function() {
-  // Enable features
-  await enableMutationBreakpoints();
   info("Switches over to the inspector pane");
 
   const { inspector, toolbox } = await openInspectorForURL(DMB_TEST_URL);
@@ -66,13 +62,6 @@ add_task(async function() {
   info("Changing attribute to trigger debugger pause");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.querySelector("#attribute").click();
-  });
-  await waitForPaused(dbg);
-  await resume(dbg);
-
-  info("Changing style to trigger debugger pause");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-    content.document.querySelector("#style-attribute").click();
   });
   await waitForPaused(dbg);
   await resume(dbg);
