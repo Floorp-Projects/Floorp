@@ -23,6 +23,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <utility>
@@ -1255,6 +1256,79 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool ComputeTier(JSContext* cx, const wasm::Code& code,
+                        HandleValue tierSelection, wasm::Tier* tier) {
+  *tier = code.stableTier();
+  if (!tierSelection.isUndefined() &&
+      !ConvertToTier(cx, tierSelection, code, tier)) {
+    JS_ReportErrorASCII(cx, "invalid tier");
+    return false;
+  }
+
+  if (!code.hasTier(*tier)) {
+    JS_ReportErrorASCII(cx, "function missing selected tier");
+    return false;
+  }
+
+  return true;
+}
+
+template <typename DisasmFunction>
+static bool DisassembleIt(JSContext* cx, bool asString, MutableHandleValue rval,
+                          DisasmFunction&& disassembleIt) {
+  if (asString) {
+    DisasmBuffer buf(cx);
+    disasmBuf.set(&buf);
+    auto onFinish = mozilla::MakeScopeExit([&] { disasmBuf.set(nullptr); });
+    disassembleIt(captureDisasmText);
+    if (buf.oom) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    JSString* sresult = buf.builder.finishString();
+    if (!sresult) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    rval.setString(sresult);
+    return true;
+  }
+
+  disassembleIt([](const char* text) { fprintf(stderr, "%s\n", text); });
+  return true;
+}
+
+static bool WasmDisassembleFunction(JSContext* cx, const HandleFunction& func,
+                                    HandleValue tierSelection, bool asString,
+                                    MutableHandleValue rval) {
+  wasm::Instance& instance = wasm::ExportedFunctionToInstance(func);
+  wasm::Tier tier;
+
+  if (!ComputeTier(cx, instance.code(), tierSelection, &tier)) {
+    return false;
+  }
+
+  uint32_t funcIndex = wasm::ExportedFunctionToFuncIndex(func);
+  return DisassembleIt(
+      cx, asString, rval, [&](void (*captureText)(const char*)) {
+        instance.disassembleExport(cx, funcIndex, tier, captureText);
+      });
+}
+
+static bool WasmDisassembleCode(JSContext* cx, const wasm::Code& code,
+                                HandleValue tierSelection, int kindSelection,
+                                bool asString, MutableHandleValue rval) {
+  wasm::Tier tier;
+  if (!ComputeTier(cx, code, tierSelection, &tier)) {
+    return false;
+  }
+
+  return DisassembleIt(cx, asString, rval,
+                       [&](void (*captureText)(const char*)) {
+                         code.disassemble(cx, tier, kindSelection, captureText);
+                       });
+}
+
 static bool WasmDisassemble(JSContext* cx, unsigned argc, Value* vp) {
   if (!cx->options().wasm()) {
     JS_ReportErrorASCII(cx, "wasm support unavailable");
@@ -1270,51 +1344,87 @@ static bool WasmDisassemble(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  bool asString = false;
+  RootedValue tierSelection(cx);
+  int kindSelection = (1 << wasm::CodeRange::Function);
+  if (args.length() > 1 && args[1].isObject()) {
+    RootedObject options(cx, &args[1].toObject());
+    RootedValue val(cx);
+
+    if (!JS_GetProperty(cx, options, "asString", &val)) {
+      return false;
+    }
+    asString = val.isBoolean() && val.toBoolean();
+
+    if (!JS_GetProperty(cx, options, "tier", &tierSelection)) {
+      return false;
+    }
+
+    if (!JS_GetProperty(cx, options, "kinds", &val)) {
+      return false;
+    }
+    if (val.isString() && val.toString()->hasLatin1Chars()) {
+      AutoStableStringChars stable(cx);
+      if (!stable.init(cx, val.toString())) {
+        return false;
+      }
+      const char* p = (const char*)(stable.latin1Chars());
+      const char* end = p + val.toString()->length();
+      int selection = 0;
+      for (;;) {
+        if (strncmp(p, "Function", 8) == 0) {
+          selection |= (1 << wasm::CodeRange::Function);
+          p += 8;
+        } else if (strncmp(p, "InterpEntry", 11) == 0) {
+          selection |= (1 << wasm::CodeRange::InterpEntry);
+          p += 11;
+        } else if (strncmp(p, "JitEntry", 8) == 0) {
+          selection |= (1 << wasm::CodeRange::JitEntry);
+          p += 8;
+        } else if (strncmp(p, "ImportInterpExit", 16) == 0) {
+          selection |= (1 << wasm::CodeRange::ImportInterpExit);
+          p += 16;
+        } else if (strncmp(p, "ImportJitExit", 13) == 0) {
+          selection |= (1 << wasm::CodeRange::ImportJitExit);
+          p += 13;
+        } else if (strncmp(p, "all", 3) == 0) {
+          selection = ~0;
+          p += 3;
+        } else {
+          break;
+        }
+        if (p == end || *p != ',') {
+          break;
+        }
+        p++;
+      }
+      if (p == end) {
+        kindSelection = selection;
+      } else {
+        JS_ReportErrorASCII(cx, "argument object has invalid `kinds`");
+        return false;
+      }
+    }
+  }
+
   RootedFunction func(cx, args[0].toObject().maybeUnwrapIf<JSFunction>());
-
-  if (!func || !wasm::IsWasmExportedFunction(func)) {
-    JS_ReportErrorASCII(cx, "argument is not an exported wasm function");
-    return false;
+  if (func && wasm::IsWasmExportedFunction(func)) {
+    return WasmDisassembleFunction(cx, func, tierSelection, asString,
+                                   args.rval());
   }
-
-  wasm::Instance& instance = wasm::ExportedFunctionToInstance(func);
-  uint32_t funcIndex = wasm::ExportedFunctionToFuncIndex(func);
-
-  wasm::Tier tier = instance.code().stableTier();
-
-  if (args.length() > 1 &&
-      !ConvertToTier(cx, args[1], instance.code(), &tier)) {
-    JS_ReportErrorASCII(cx, "invalid tier");
-    return false;
+  if (args[0].toObject().is<WasmModuleObject>()) {
+    return WasmDisassembleCode(
+        cx, args[0].toObject().as<WasmModuleObject>().module().code(),
+        tierSelection, kindSelection, asString, args.rval());
   }
-
-  if (!instance.code().hasTier(tier)) {
-    JS_ReportErrorASCII(cx, "function missing selected tier");
-    return false;
+  if (args[0].toObject().is<WasmInstanceObject>()) {
+    return WasmDisassembleCode(
+        cx, args[0].toObject().as<WasmInstanceObject>().instance().code(),
+        tierSelection, kindSelection, asString, args.rval());
   }
-
-  if (args.length() > 2 && args[2].isBoolean() && args[2].toBoolean()) {
-    DisasmBuffer buf(cx);
-    disasmBuf.set(&buf);
-    auto onFinish = mozilla::MakeScopeExit([&] { disasmBuf.set(nullptr); });
-    instance.disassembleExport(cx, funcIndex, tier, captureDisasmText);
-    if (buf.oom) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    JSString* sresult = buf.builder.finishString();
-    if (!sresult) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    args.rval().setString(sresult);
-    return true;
-  }
-
-  instance.disassembleExport(cx, funcIndex, tier, [](const char* text) {
-    fprintf(stderr, "%s\n", text);
-  });
-  return true;
+  JS_ReportErrorASCII(
+      cx, "argument is not an exported wasm function or a wasm module");
+  return false;
 }
 
 enum class Flag { Tier2Complete, Deserialized };
@@ -6879,11 +6989,22 @@ gc::ZealModeHelpText),
 "  until background compilation is complete."),
 
     JS_FN_HELP("wasmDis", WasmDisassemble, 1, 0,
-"wasmDis(function[, tier [, asString]])",
-"  Disassembles generated machine code from an exported WebAssembly function.\n"
-"  The tier is a string, 'stable', 'best', 'baseline', or 'ion'; the default is\n"
-"  'stable'.  If `asString` is present and is the value `true` then the output\n"
-"  is returned as a string; otherwise it is printed on stderr."),
+"wasmDis(wasmObject[, options])\n",
+"  Disassembles generated machine code from an exported WebAssembly function,\n"
+"  or from all the functions defined in the module or instance, exported and not.\n"
+"  The `options` is an object with the following optional keys:\n"
+"    asString: boolean - if true, return a string rather than printing on stderr,\n"
+"          the default is false.\n"
+"    tier: string - one of 'stable', 'best', 'baseline', or 'ion'; the default is\n"
+"          'stable'.\n"
+"    kinds: string - if set, and the wasmObject is a module or instance, a\n"
+"           comma-separated list of the following keys, the default is `Function`:\n"
+"      Function         - functions defined in the module\n"
+"      InterpEntry      - C++-to-wasm stubs\n"
+"      JitEntry         - jitted-js-to-wasm stubs\n"
+"      ImportInterpExit - wasm-to-C++ stubs\n"
+"      ImportJitExit    - wasm-to-jitted-JS stubs\n"
+"      all              - all kinds, including obscure ones\n"),
 
     JS_FN_HELP("wasmHasTier2CompilationCompleted", WasmHasTier2CompilationCompleted, 1, 0,
 "wasmHasTier2CompilationCompleted(module)",
