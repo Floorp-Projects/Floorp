@@ -10634,7 +10634,8 @@ void Document::CollectDescendantDocuments(
 }
 
 bool Document::CanSavePresentation(nsIRequest* aNewRequest,
-                                   uint16_t& aBFCacheCombo) {
+                                   uint16_t& aBFCacheCombo,
+                                   bool aIncludeSubdocuments) {
   bool ret = true;
 
   if (!IsBFCachingAllowed()) {
@@ -10763,16 +10764,16 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
     ret = false;
   }
 
-  if (mSubDocuments) {
+  if (aIncludeSubdocuments && mSubDocuments) {
     for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<SubDocMapEntry*>(iter.Get());
       Document* subdoc = entry->mSubDocument;
 
       uint16_t subDocBFCacheCombo = 0;
       // The aIgnoreRequest we were passed is only for us, so don't pass it on.
-      bool canCache =
-          subdoc ? subdoc->CanSavePresentation(nullptr, subDocBFCacheCombo)
-                 : false;
+      bool canCache = subdoc ? subdoc->CanSavePresentation(
+                                   nullptr, subDocBFCacheCombo, true)
+                             : false;
       if (!canCache) {
         MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
                 ("Save of %s blocked due to subdocument blocked", uri.get()));

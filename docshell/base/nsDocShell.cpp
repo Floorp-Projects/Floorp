@@ -6938,7 +6938,7 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 
   uint16_t bfCacheCombo = 0;
   bool canSavePresentation =
-      doc->CanSavePresentation(aNewRequest, bfCacheCombo);
+      doc->CanSavePresentation(aNewRequest, bfCacheCombo, true);
   MOZ_ASSERT_IF(canSavePresentation, bfCacheCombo == 0);
   if (canSavePresentation && doc->IsTopLevelContentDocument()) {
     auto* browsingContextGroup = mBrowsingContext->Group();
