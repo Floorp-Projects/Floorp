@@ -23,7 +23,6 @@ linux64-cbindgen:
     treeherder:
         symbol: TL(cbindgen)
     worker:
-        docker-image: {in-tree: deb10-toolchain-build}
         max-run-time: 1800
     run:
         arguments: ['x86_64-unknown-linux-gnu']
@@ -49,8 +48,6 @@ macosx64-cbindgen:
 macosx64-aarch64-cbindgen:
     treeherder:
         symbol: TM(cbindgen-arm64)
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run:
         arguments: ['aarch64-apple-darwin']
     fetches:

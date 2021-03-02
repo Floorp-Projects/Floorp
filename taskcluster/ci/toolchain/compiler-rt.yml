@@ -6,7 +6,6 @@ job-defaults:
     worker-type: b-linux
     worker:
         max-run-time: 1800
-        docker-image: {in-tree: deb10-toolchain-build}
 
 linux64-aarch64-compiler-rt-11:
     description: "linux aarch64 Compiler-rt for Clang 11 toolchain build"
