@@ -5183,16 +5183,14 @@ impl Renderer {
         }
     }
 
-    /// Clears all the layers of a texture with a given color.
+    /// Clears the texture with a given color.
     fn clear_texture(&mut self, texture: &Texture, color: [f32; 4]) {
-        for i in 0..texture.get_layer_count() {
-            self.device.bind_draw_target(DrawTarget::from_texture(
-                &texture,
-                i as usize,
-                false,
-            ));
-            self.device.clear_target(Some(color), None, None);
-        }
+        self.device.bind_draw_target(DrawTarget::from_texture(
+            &texture,
+            0,
+            false,
+        ));
+        self.device.clear_target(Some(color), None, None);
     }
 }
 
@@ -5476,11 +5474,10 @@ pub struct RenderResults {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainTexture {
     data: String,
-    size: (DeviceIntSize, i32),
+    size: DeviceIntSize,
     format: ImageFormat,
     filter: TextureFilter,
     has_depth: bool,
-    is_array: bool,
 }
 
 
@@ -5549,46 +5546,43 @@ impl Renderer {
 
         let mut file = fs::File::create(root.join(&short_path))
             .expect(&format!("Unable to create {}", short_path));
-        let bytes_per_layer = (rect_size.width * rect_size.height * bytes_per_pixel) as usize;
-        let mut data = vec![0; bytes_per_layer];
+        let bytes_per_texture = (rect_size.width * rect_size.height * bytes_per_pixel) as usize;
+        let mut data = vec![0; bytes_per_texture];
 
         //TODO: instead of reading from an FBO with `read_pixels*`, we could
         // read from textures directly with `get_tex_image*`.
 
-        for layer_id in 0 .. texture.get_layer_count() {
-            let rect = device_size_as_framebuffer_size(rect_size).into();
+        let rect = device_size_as_framebuffer_size(rect_size).into();
 
-            device.attach_read_texture(texture, layer_id);
-            #[cfg(feature = "png")]
-            {
-                let mut png_data;
-                let (data_ref, format) = match texture.get_format() {
-                    ImageFormat::RGBAF32 => {
-                        png_data = vec![0; (rect_size.width * rect_size.height * 4) as usize];
-                        device.read_pixels_into(rect, ImageFormat::RGBA8, &mut png_data);
-                        (&png_data, ImageFormat::RGBA8)
-                    }
-                    fm => (&data, fm),
-                };
-                CaptureConfig::save_png(
-                    root.join(format!("textures/{}-{}.png", name, layer_id)),
-                    rect_size, format,
-                    None,
-                    data_ref,
-                );
-            }
-            device.read_pixels_into(rect, read_format, &mut data);
-            file.write_all(&data)
-                .unwrap();
+        device.attach_read_texture(texture, 0);
+        #[cfg(feature = "png")]
+        {
+            let mut png_data;
+            let (data_ref, format) = match texture.get_format() {
+                ImageFormat::RGBAF32 => {
+                    png_data = vec![0; (rect_size.width * rect_size.height * 4) as usize];
+                    device.read_pixels_into(rect, ImageFormat::RGBA8, &mut png_data);
+                    (&png_data, ImageFormat::RGBA8)
+                }
+                fm => (&data, fm),
+            };
+            CaptureConfig::save_png(
+                root.join(format!("textures/{}-{}.png", name, 0)),
+                rect_size, format,
+                None,
+                data_ref,
+            );
         }
+        device.read_pixels_into(rect, read_format, &mut data);
+        file.write_all(&data)
+            .unwrap();
 
         PlainTexture {
             data: short_path,
-            size: (rect_size, texture.get_layer_count()),
+            size: rect_size,
             format: texture.get_format(),
             filter: texture.get_filter(),
             has_depth: texture.supports_depth(),
-            is_array: texture.is_array(),
         }
     }
 
@@ -5613,8 +5607,8 @@ impl Renderer {
         let texture = device.create_texture(
             target,
             plain.format,
-            plain.size.0.width,
-            plain.size.0.height,
+            plain.size.width,
+            plain.size.height,
             plain.filter,
             rt_info,
         );
@@ -5677,8 +5671,7 @@ impl Renderer {
                                     ExternalImageType::Buffer => unreachable!(),
                                 };
                                 info!("\t\tnative texture of target {:?}", target);
-                                let layer_index = 0; //TODO: what about layered textures?
-                                self.device.attach_read_texture_external(gl_id, target, layer_index);
+                                self.device.attach_read_texture_external(gl_id, target, 0);
                                 let data = self.device.read_pixels(&def.descriptor);
                                 let short_path = format!("externals/t{}.raw", tex_id);
                                 (Some(data), e.insert(short_path).clone())
@@ -5816,15 +5809,12 @@ impl Renderer {
                 let tid = match native_map.entry(plain_ext.data) {
                     Entry::Occupied(e) => e.get().clone(),
                     Entry::Vacant(e) => {
-                        //TODO: provide a way to query both the layer count and the filter from external images
-                        let (layer_count, filter) = (1, TextureFilter::Linear);
                         let plain_tex = PlainTexture {
                             data: e.key().clone(),
-                            size: (descriptor.size, layer_count),
+                            size: descriptor.size,
                             format: descriptor.format,
-                            filter,
+                            filter: TextureFilter::Linear,
                             has_depth: false,
-                            is_array: false,
                         };
                         let t = Self::load_texture(
                             target,
@@ -5856,11 +5846,7 @@ impl Renderer {
             }
             for (id, texture) in renderer.textures {
                 info!("\t{}", texture.data);
-                let target = if texture.is_array {
-                    panic!("Texture arrays aren't supported");
-                } else {
-                    ImageBufferKind::Texture2D
-                };
+                let target = ImageBufferKind::Texture2D;
                 let t = Self::load_texture(
                     target,
                     &texture,
