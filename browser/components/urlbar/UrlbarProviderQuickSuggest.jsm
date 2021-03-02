@@ -113,6 +113,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
 
     let payload = {
+      qsSuggestion: [suggestion.fullKeyword, UrlbarUtils.HIGHLIGHT.SUGGESTED],
       title: suggestion.title,
       url: suggestion.url,
       icon: suggestion.icon,
@@ -136,7 +137,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let result = new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
-      payload
+      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
     );
     result.suggestedIndex = UrlbarPrefs.get("quicksuggest.suggestedIndex");
     if (result.suggestedIndex == -1) {

@@ -1195,6 +1195,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       isSponsored: {
         type: "boolean",
       },
+      qsSuggestion: {
+        type: "string",
+      },
       sendAttributionRequest: {
         type: "boolean",
       },
