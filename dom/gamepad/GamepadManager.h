@@ -12,7 +12,6 @@
 // Needed for GamepadMappingType
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadHandle.h"
-#include "mozilla/dom/GamepadStateReceiver.h"
 #include <utility>
 
 class nsGlobalWindowInner;
@@ -84,8 +83,6 @@ class GamepadManager final : public nsIObserver {
                                                    nsIGlobalObject* aGlobal,
                                                    ErrorResult& aRv);
 
-  void SetupRemoteInfo(const GamepadStateBroadcastReceiverInfo& aReceiverInfo);
-
  protected:
   GamepadManager();
   ~GamepadManager() = default;
@@ -151,8 +148,6 @@ class GamepadManager final : public nsIObserver {
   // has been sent to that window.
   nsTArray<RefPtr<nsGlobalWindowInner>> mListeners;
   uint32_t mPromiseID;
-
-  Maybe<GamepadStateReceiver> mMaybeGamepadStateReceiver;
 };
 
 }  // namespace dom
