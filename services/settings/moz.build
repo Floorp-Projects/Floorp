@@ -33,3 +33,5 @@ XPCOM_MANIFESTS += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+
+SPHINX_TREES["/services/settings"] = "docs"

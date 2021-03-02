@@ -7,5 +7,5 @@ This is the nascent documentation of the Firefox services.
 .. toctree::
    :maxdepth: 2
 
-   common/index
+   settings/index
    sync/index
