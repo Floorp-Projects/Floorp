@@ -206,6 +206,19 @@ class HTMLEditUtils final {
   }
 
   /**
+   * IsSplittableNode() returns true if aContent can split.
+   */
+  static bool IsSplittableNode(const nsIContent& aContent) {
+    if (aContent.IsElement()) {
+      // XXX Perhaps, instead of using container, we should have "splittable"
+      //     information in the DB.  E.g., `<template>`, `<script>` elements
+      //     can have children, but shouldn't be split.
+      return HTMLEditUtils::IsContainerNode(aContent);
+    }
+    return aContent.IsText() && aContent.Length() > 0;
+  }
+
+  /**
    * See execCommand spec:
    * https://w3c.github.io/editing/execCommand.html#non-list-single-line-container
    * https://w3c.github.io/editing/execCommand.html#single-line-container
