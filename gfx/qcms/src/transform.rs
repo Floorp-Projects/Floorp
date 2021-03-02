@@ -582,7 +582,7 @@ unsafe fn qcms_transform_data_template_lut_precache<F: Format>(
     let input_gamma_table_g = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
     let input_gamma_table_b = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
 
-    let mat: *const [f32; 4] = (*transform).matrix.as_ptr();
+    let mat = &transform.matrix;
     let mut i: u32 = 0;
     while (i as usize) < length {
         let device_r: u8 = *src.add(F::kRIndex);
@@ -597,15 +597,9 @@ unsafe fn qcms_transform_data_template_lut_precache<F: Format>(
         let linear_r: f32 = *input_gamma_table_r.offset(device_r as isize);
         let linear_g: f32 = *input_gamma_table_g.offset(device_g as isize);
         let linear_b: f32 = *input_gamma_table_b.offset(device_b as isize);
-        let mut out_linear_r: f32 = (*mat.offset(0isize))[0] * linear_r
-            + (*mat.offset(1isize))[0] * linear_g
-            + (*mat.offset(2isize))[0] * linear_b;
-        let mut out_linear_g: f32 = (*mat.offset(0isize))[1] * linear_r
-            + (*mat.offset(1isize))[1] * linear_g
-            + (*mat.offset(2isize))[1] * linear_b;
-        let mut out_linear_b: f32 = (*mat.offset(0isize))[2] * linear_r
-            + (*mat.offset(1isize))[2] * linear_g
-            + (*mat.offset(2isize))[2] * linear_b;
+        let mut out_linear_r = mat[0][0] * linear_r + mat[1][0] * linear_g + mat[2][0] * linear_b;
+        let mut out_linear_g = mat[0][1] * linear_r + mat[1][1] * linear_g + mat[2][1] * linear_b;
+        let mut out_linear_b = mat[0][2] * linear_r + mat[1][2] * linear_g + mat[2][2] * linear_b;
         out_linear_r = clamp_float(out_linear_r);
         out_linear_g = clamp_float(out_linear_g);
         out_linear_b = clamp_float(out_linear_b);
@@ -915,7 +909,7 @@ unsafe fn qcms_transform_data_template_lut<F: Format>(
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
 
-    let mat: *const [f32; 4] = (*transform).matrix.as_ptr();
+    let mat = &transform.matrix;
     let mut i: u32 = 0;
     let input_gamma_table_r = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
     let input_gamma_table_g = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
@@ -933,15 +927,9 @@ unsafe fn qcms_transform_data_template_lut<F: Format>(
         let linear_r: f32 = *input_gamma_table_r.offset(device_r as isize);
         let linear_g: f32 = *input_gamma_table_g.offset(device_g as isize);
         let linear_b: f32 = *input_gamma_table_b.offset(device_b as isize);
-        let mut out_linear_r: f32 = (*mat.offset(0isize))[0] * linear_r
-            + (*mat.offset(1isize))[0] * linear_g
-            + (*mat.offset(2isize))[0] * linear_b;
-        let mut out_linear_g: f32 = (*mat.offset(0isize))[1] * linear_r
-            + (*mat.offset(1isize))[1] * linear_g
-            + (*mat.offset(2isize))[1] * linear_b;
-        let mut out_linear_b: f32 = (*mat.offset(0isize))[2] * linear_r
-            + (*mat.offset(1isize))[2] * linear_g
-            + (*mat.offset(2isize))[2] * linear_b;
+        let mut out_linear_r = mat[0][0] * linear_r + mat[1][0] * linear_g + mat[2][0] * linear_b;
+        let mut out_linear_g = mat[0][1] * linear_r + mat[1][1] * linear_g + mat[2][1] * linear_b;
+        let mut out_linear_b = mat[0][2] * linear_r + mat[1][2] * linear_g + mat[2][2] * linear_b;
         out_linear_r = clamp_float(out_linear_r);
         out_linear_g = clamp_float(out_linear_g);
         out_linear_b = clamp_float(out_linear_b);
