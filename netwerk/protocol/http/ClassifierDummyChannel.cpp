@@ -518,6 +518,16 @@ ClassifierDummyChannel::GetIsResolvedByTRR(bool* aResolvedByTRR) {
 }
 
 NS_IMETHODIMP
+ClassifierDummyChannel::GetIsOCSP(bool* value) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ClassifierDummyChannel::SetIsOCSP(bool value) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ClassifierDummyChannel::GetTlsFlags(uint32_t* aTlsFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

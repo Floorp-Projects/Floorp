@@ -323,6 +323,10 @@ OCSPRequest::Run() {
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
+  rv = internalChannel->SetIsOCSP(true);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
   nsCOMPtr<nsIHttpChannel> hchan = do_QueryInterface(channel);
   if (!hchan) {
     return NotifyDone(NS_ERROR_FAILURE, lock);

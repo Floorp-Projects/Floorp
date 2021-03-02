@@ -459,6 +459,22 @@ HttpBaseChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  if (!LoadIsOCSP()) {
+    return GetTRRModeImpl(aTRRMode);
+  }
+
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  nsIDNSService::ResolverMode trrMode = nsIDNSService::MODE_NATIVEONLY;
+  // If this is an OCSP channel, and the global TRR mode is TRR_ONLY (3)
+  // then we set the mode for this channel as TRR_DISABLED_MODE.
+  // We do this to prevent a TRR service channel's OCSP validation from
+  // blocking DNS resolution completely.
+  if (dns && NS_SUCCEEDED(dns->GetCurrentTrrMode(&trrMode)) &&
+      trrMode == nsIDNSService::MODE_TRRONLY) {
+    *aTRRMode = nsIRequest::TRR_DISABLED_MODE;
+    return NS_OK;
+  }
+
   return GetTRRModeImpl(aTRRMode);
 }
 
@@ -1823,22 +1839,21 @@ HttpBaseChannel::GetAllowSTS(bool* value) {
 NS_IMETHODIMP
 HttpBaseChannel::SetAllowSTS(bool value) {
   ENSURE_CALLED_BEFORE_CONNECT();
-
-  if (!value) {
-    // The only channels that are allowSTS == false are OCSPRequest
-    // If this is an OCSP channel, and the global TRR mode is TRR_ONLY (3)
-    // then we set the mode for this channel as TRR_FIRST.
-    // We do this to prevent a TRR service channel's OCSP validation from
-    // blocking DNS resolution completely.
-    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-    nsIDNSService::ResolverMode trrMode = nsIDNSService::MODE_NATIVEONLY;
-    if (dns && NS_SUCCEEDED(dns->GetCurrentTrrMode(&trrMode)) &&
-        trrMode == nsIDNSService::MODE_TRRONLY) {
-      SetTRRMode(nsIRequest::TRR_FIRST_MODE);
-    }
-  }
-
   StoreAllowSTS(value);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetIsOCSP(bool* value) {
+  NS_ENSURE_ARG_POINTER(value);
+  *value = LoadIsOCSP();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetIsOCSP(bool value) {
+  ENSURE_CALLED_BEFORE_CONNECT();
+  StoreIsOCSP(value);
   return NS_OK;
 }
 

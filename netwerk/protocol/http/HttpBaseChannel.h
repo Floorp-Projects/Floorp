@@ -273,6 +273,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetIsTRRServiceChannel(bool* aTRR) override;
   NS_IMETHOD SetIsTRRServiceChannel(bool aTRR) override;
   NS_IMETHOD GetIsResolvedByTRR(bool* aResolvedByTRR) override;
+  NS_IMETHOD GetIsOCSP(bool* value) override;
+  NS_IMETHOD SetIsOCSP(bool value) override;
   NS_IMETHOD GetTlsFlags(uint32_t* aTlsFlags) override;
   NS_IMETHOD SetTlsFlags(uint32_t aTlsFlags) override;
   NS_IMETHOD GetApiRedirectToURI(nsIURI** aApiRedirectToURI) override;
@@ -839,7 +841,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
     // Tainted origin flag of a request, specified by
     // WHATWG Fetch Standard 2.2.5.
-    (uint32_t, TaintedOriginFlag, 1)
+    (uint32_t, TaintedOriginFlag, 1),
+
+    // If the channel is being used to check OCSP
+    (uint32_t, IsOCSP, 1)
   ))
   // clang-format on
 
