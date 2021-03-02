@@ -750,8 +750,8 @@ fn modular_transform_create_input(input: &Profile) -> Option<Box<ModularTransfor
 fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform>> {
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
-    if out.B2A0.is_some() {
-        let lut_transform = modular_transform_create_lut(out.B2A0.as_deref().unwrap());
+    if let Some(B2A0) = &out.B2A0 {
+        let lut_transform = modular_transform_create_lut(B2A0);
         if lut_transform.is_none() {
             return None;
         } else {
@@ -767,14 +767,15 @@ fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform
         } else {
             append_transform(lut_transform_0, next_transform);
         }
-    } else if out.redTRC.is_some() && out.greenTRC.is_some() && out.blueTRC.is_some() {
+    } else if let (Some(redTRC), Some(greenTRC), Some(blueTRC)) =
+        (&out.redTRC, &out.greenTRC, &out.blueTRC)
+    {
         let mut transform = modular_transform_alloc();
-
         transform.matrix = build_colorant_matrix(out).invert();
         transform.transform_module_fn = Some(transform_module_matrix);
         next_transform = append_transform(Some(transform), next_transform);
-        transform = modular_transform_alloc();
 
+        transform = modular_transform_alloc();
         transform.matrix.m[0][0] = 1.999_969_5;
         transform.matrix.m[0][1] = 0.0;
         transform.matrix.m[0][2] = 0.0;
@@ -789,19 +790,11 @@ fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform
         next_transform = append_transform(Some(transform), next_transform);
 
         transform = modular_transform_alloc();
-
-        transform.output_gamma_lut_r = Some(build_output_lut(out.redTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_g = Some(build_output_lut(out.greenTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_b = Some(build_output_lut(out.blueTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_r = Some(build_output_lut(redTRC));
+        transform.output_gamma_lut_g = Some(build_output_lut(greenTRC));
+        transform.output_gamma_lut_b = Some(build_output_lut(blueTRC));
         transform.transform_module_fn = Some(transform_module_gamma_lut);
-        if transform.output_gamma_lut_r.is_none()
-            || transform.output_gamma_lut_g.is_none()
-            || transform.output_gamma_lut_b.is_none()
-        {
-            return None;
-        } else {
-            append_transform(Some(transform), next_transform);
-        }
+        append_transform(Some(transform), next_transform);
     } else {
         debug_assert!(false, "Unsupported output profile workflow.");
         return None;
