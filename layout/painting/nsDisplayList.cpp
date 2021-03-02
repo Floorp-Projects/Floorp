@@ -6327,9 +6327,14 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   if (IsScrollThumbLayer()) {
     params.prim_flags |= wr::PrimitiveFlags::IS_SCROLLBAR_THUMB;
   }
-  if (IsZoomingLayer()) {
-    params.reference_frame_kind = wr::WrReferenceFrameKind::Zoom;
+  if (IsZoomingLayer() ||
+      ((IsFixedPositionLayer() && HasDynamicToolbar()) ||
+       (IsStickyPositionLayer() && HasDynamicToolbar()) ||
+       (IsRootScrollbarContainer() && HasDynamicToolbar()))) {
+    params.is_2d_scale_translation = true;
+    params.should_snap = true;
   }
+
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
 

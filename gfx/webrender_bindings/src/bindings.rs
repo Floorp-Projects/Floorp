@@ -2428,7 +2428,6 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 pub enum WrReferenceFrameKind {
     Transform,
     Perspective,
-    Zoom,
 }
 
 #[repr(u8)]
@@ -2450,6 +2449,8 @@ pub struct WrStackingContextParams {
     pub computed_transform: *const WrComputedTransformData,
     pub transform_style: TransformStyle,
     pub reference_frame_kind: WrReferenceFrameKind,
+    pub is_2d_scale_translation: bool,
+    pub should_snap: bool,
     pub scrolling_relative_to: *const u64,
     pub prim_flags: PrimitiveFlags,
     pub mix_blend_mode: MixBlendMode,
@@ -2542,6 +2543,8 @@ pub extern "C" fn wr_dp_push_stacking_context(
     // This is resolved into proper `Maybe<WrSpatialId>` inside `WebRenderAPI::PushStackingContext`.
     let mut result = WrSpatialId { id: 0 };
     if let Some(transform_binding) = transform_binding {
+        let is_2d_scale_translation = params.is_2d_scale_translation;
+        let should_snap = params.should_snap;
         let scrolling_relative_to = match unsafe { params.scrolling_relative_to.as_ref() } {
             Some(scroll_id) => {
                 debug_assert_eq!(params.reference_frame_kind, WrReferenceFrameKind::Perspective);
@@ -2551,9 +2554,11 @@ pub extern "C" fn wr_dp_push_stacking_context(
         };
 
         let reference_frame_kind = match params.reference_frame_kind {
-            WrReferenceFrameKind::Transform => ReferenceFrameKind::Transform,
+            WrReferenceFrameKind::Transform => ReferenceFrameKind::Transform {
+                is_2d_scale_translation,
+                should_snap
+            },
             WrReferenceFrameKind::Perspective => ReferenceFrameKind::Perspective { scrolling_relative_to },
-            WrReferenceFrameKind::Zoom => ReferenceFrameKind::Zoom,
         };
         wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
             bounds.origin,

@@ -2033,7 +2033,10 @@ impl YamlFrameReader {
         let reference_frame_kind = if !yaml["perspective"].is_badvalue() {
             ReferenceFrameKind::Perspective { scrolling_relative_to: None }
         } else {
-            ReferenceFrameKind::Transform
+            ReferenceFrameKind::Transform {
+                is_2d_scale_translation: false,
+                should_snap: false,
+            }
         };
 
         let transform = yaml["transform"]

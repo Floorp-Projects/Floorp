@@ -925,7 +925,10 @@ impl<'a> SceneBuilder<'a> {
             iframe_pipeline_id,
             TransformStyle::Flat,
             PropertyBinding::Value(LayoutTransform::identity()),
-            ReferenceFrameKind::Transform,
+            ReferenceFrameKind::Transform {
+                is_2d_scale_translation: false,
+                should_snap: false
+            },
             bounds.origin.to_vector(),
         );
 
@@ -2240,7 +2243,10 @@ impl<'a> SceneBuilder<'a> {
             pipeline_id,
             TransformStyle::Flat,
             PropertyBinding::Value(LayoutTransform::identity()),
-            ReferenceFrameKind::Transform,
+            ReferenceFrameKind::Transform {
+                is_2d_scale_translation: false,
+                should_snap: false,
+            },
             LayoutVector2D::zero(),
         );
 

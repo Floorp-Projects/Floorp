@@ -64,6 +64,9 @@ const TOPMOST_SCROLL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(1);
 // a small epsilon so that we don't detect these frames as "real" scroll frames.
 const MIN_SCROLLABLE_AMOUNT: f32 = 0.01;
 
+// The minimum size for a scroll frame for it to be considered for a scroll root.
+const MIN_SCROLL_ROOT_SIZE: f32 = 128.0;
+
 impl SpatialNodeIndex {
     pub fn new(index: usize) -> Self {
         debug_assert!(index < ::std::u32::MAX as usize);
@@ -670,10 +673,10 @@ impl SpatialTree {
             match node.node_type {
                 SpatialNodeType::ReferenceFrame(ref info) => {
                     match info.kind {
-                        ReferenceFrameKind::Zoom => {
-                            // We can handle scroll nodes that pass through a zoom node
+                        ReferenceFrameKind::Transform { is_2d_scale_translation: true, .. } => {
+                            // We can handle scroll nodes that pass through a 2d scale/translation node
                         }
-                        ReferenceFrameKind::Transform |
+                        ReferenceFrameKind::Transform { is_2d_scale_translation: false, .. } |
                         ReferenceFrameKind::Perspective { .. } => {
                             // When a reference frame is encountered, forget any scroll roots
                             // we have encountered, as they may end up with a non-axis-aligned transform.
@@ -709,8 +712,8 @@ impl SpatialTree {
                                 // local-space, but makes for a reasonable estimate. The value
                                 // is arbitrary, but is generally small enough to ignore things
                                 // like scroll roots around text input elements.
-                                if info.viewport_rect.size.width > 128.0 &&
-                                   info.viewport_rect.size.height > 128.0 {
+                                if info.viewport_rect.size.width > MIN_SCROLL_ROOT_SIZE &&
+                                   info.viewport_rect.size.height > MIN_SCROLL_ROOT_SIZE {
                                     // If we've found a root that is scrollable, and a reasonable
                                     // size, select that as the current root for this node
                                     real_scroll_root = node_index;
@@ -820,7 +823,10 @@ fn add_reference_frame(
         parent,
         TransformStyle::Preserve3D,
         PropertyBinding::Value(transform),
-        ReferenceFrameKind::Transform,
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
         origin_in_parent_reference_frame,
         PipelineId::dummy(),
     )
@@ -1072,4 +1078,270 @@ fn test_is_ancestor1() {
     assert!(!st.is_ancestor(child1_1, child2));
     assert!(!st.is_ancestor(child2, child1_0));
     assert!(!st.is_ancestor(child2, child1_1));
+}
+
+/// Tests that we select the correct scroll root in the simple case.
+#[test]
+fn test_find_scroll_root_simple() {
+    let mut st = SpatialTree::new();
+
+    let root = st.add_reference_frame(
+        None,
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let scroll = st.add_scroll_frame(
+        root,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(800.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    assert_eq!(st.find_scroll_root(scroll), scroll);
+}
+
+/// Tests that we select the root scroll frame rather than the subframe if both are scrollable.
+#[test]
+fn test_find_scroll_root_sub_scroll_frame() {
+    let mut st = SpatialTree::new();
+
+    let root = st.add_reference_frame(
+        None,
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let root_scroll = st.add_scroll_frame(
+        root,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(800.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    let sub_scroll = st.add_scroll_frame(
+        root_scroll,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(800.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    assert_eq!(st.find_scroll_root(sub_scroll), root_scroll);
+}
+
+/// Tests that we select the sub scroll frame when the root scroll frame is not scrollable.
+#[test]
+fn test_find_scroll_root_not_scrollable() {
+    let mut st = SpatialTree::new();
+
+    let root = st.add_reference_frame(
+        None,
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let root_scroll = st.add_scroll_frame(
+        root,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(400.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    let sub_scroll = st.add_scroll_frame(
+        root_scroll,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(800.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
+}
+
+/// Tests that we select the sub scroll frame when the root scroll frame is too small.
+#[test]
+fn test_find_scroll_root_too_small() {
+    let mut st = SpatialTree::new();
+
+    let root = st.add_reference_frame(
+        None,
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let root_scroll = st.add_scroll_frame(
+        root,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(MIN_SCROLL_ROOT_SIZE, MIN_SCROLL_ROOT_SIZE)),
+        &LayoutSize::new(1000.0, 1000.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    let sub_scroll = st.add_scroll_frame(
+        root_scroll,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(800.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
+}
+
+/// Tests that we select the root scroll node, even if it is not scrollable,
+/// when encountering a non-axis-aligned transform.
+#[test]
+fn test_find_scroll_root_perspective() {
+    let mut st = SpatialTree::new();
+
+    let root = st.add_reference_frame(
+        None,
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let root_scroll = st.add_scroll_frame(
+        root,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(400.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    let perspective = st.add_reference_frame(
+        Some(root_scroll),
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Perspective {
+            scrolling_relative_to: None,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let sub_scroll = st.add_scroll_frame(
+        perspective,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(800.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    assert_eq!(st.find_scroll_root(sub_scroll), root_scroll);
+}
+
+/// Tests that encountering a 2D scale or translation transform does not prevent
+/// us from selecting the sub scroll frame if the root scroll frame is unscrollable.
+#[test]
+fn test_find_scroll_root_2d_scale() {
+    let mut st = SpatialTree::new();
+
+    let root = st.add_reference_frame(
+        None,
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: false,
+            should_snap: false,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let root_scroll = st.add_scroll_frame(
+        root,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(400.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    let scale = st.add_reference_frame(
+        Some(root_scroll),
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform {
+            is_2d_scale_translation: true,
+            should_snap: false,
+        },
+        LayoutVector2D::new(0.0, 0.0),
+        PipelineId::dummy(),
+    );
+
+    let sub_scroll = st.add_scroll_frame(
+        scale,
+        ExternalScrollId(1, PipelineId::dummy()),
+        PipelineId::dummy(),
+        &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
+        &LayoutSize::new(800.0, 400.0),
+        ScrollSensitivity::ScriptAndInputEvents,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 0.0),
+    );
+
+    assert_eq!(st.find_scroll_root(sub_scroll), sub_scroll);
 }
