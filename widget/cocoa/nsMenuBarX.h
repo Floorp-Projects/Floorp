@@ -117,8 +117,8 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   void ConstructFallbackNativeMenus();
   void InsertMenuAtIndex(mozilla::UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex);
   void RemoveMenuAtIndex(uint32_t aIndex);
-  void HideItem(mozilla::dom::Document* aDocument, const nsAString& aID,
-                nsIContent** aOutHiddenNode);
+  already_AddRefed<mozilla::dom::Element> HideItem(mozilla::dom::Document* aDocument,
+                                                   const nsAString& aID);
   void AquifyMenuBar();
   NSMenuItem* CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString& aNodeID, SEL aAction,
                                       int aTag, NativeMenuItemTarget* aTarget);
