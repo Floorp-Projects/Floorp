@@ -104,19 +104,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
  public:
   ipc::IPCResult RecvError(RawId aDeviceId, const nsACString& aMessage);
   ipc::IPCResult RecvDropAction(const ipc::ByteBuf& aByteBuf);
-  ipc::IPCResult RecvFreeAdapter(RawId id);
-  ipc::IPCResult RecvFreeDevice(RawId id);
-  ipc::IPCResult RecvFreePipelineLayout(RawId id);
-  ipc::IPCResult RecvFreeShaderModule(RawId id);
-  ipc::IPCResult RecvFreeBindGroupLayout(RawId id);
-  ipc::IPCResult RecvFreeBindGroup(RawId id);
-  ipc::IPCResult RecvFreeCommandBuffer(RawId id);
-  ipc::IPCResult RecvFreeRenderPipeline(RawId id);
-  ipc::IPCResult RecvFreeComputePipeline(RawId id);
-  ipc::IPCResult RecvFreeBuffer(RawId id);
-  ipc::IPCResult RecvFreeTexture(RawId id);
-  ipc::IPCResult RecvFreeTextureView(RawId id);
-  ipc::IPCResult RecvFreeSampler(RawId id);
 };
 
 }  // namespace webgpu

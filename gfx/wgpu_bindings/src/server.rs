@@ -639,3 +639,85 @@ pub extern "C" fn wgpu_server_render_pipeline_get_bind_group_layout(
         error_buf.init(err);
     }
 }
+
+/// Encode the freeing of the selected ID into a byte buf.
+#[no_mangle]
+pub extern "C" fn wgpu_server_adapter_free(id: id::AdapterId, drop_byte_buf: &mut ByteBuf) {
+    *drop_byte_buf = DropAction::Adapter(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_device_free(id: id::DeviceId, drop_byte_buf: &mut ByteBuf) {
+    *drop_byte_buf = DropAction::Device(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_shader_module_free(
+    id: id::ShaderModuleId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::ShaderModule(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_pipeline_layout_free(
+    id: id::PipelineLayoutId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::PipelineLayout(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_bind_group_layout_free(
+    id: id::BindGroupLayoutId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::BindGroupLayout(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_bind_group_free(id: id::BindGroupId, drop_byte_buf: &mut ByteBuf) {
+    *drop_byte_buf = DropAction::BindGroup(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_command_buffer_free(
+    id: id::CommandBufferId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::CommandBuffer(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_render_bundle_free(
+    id: id::RenderBundleId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::RenderBundle(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_render_pipeline_free(
+    id: id::RenderPipelineId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::RenderPipeline(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_compute_pipeline_free(
+    id: id::ComputePipelineId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::ComputePipeline(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_buffer_free(id: id::BufferId, drop_byte_buf: &mut ByteBuf) {
+    *drop_byte_buf = DropAction::Buffer(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_texture_free(id: id::TextureId, drop_byte_buf: &mut ByteBuf) {
+    *drop_byte_buf = DropAction::Texture(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_texture_view_free(
+    id: id::TextureViewId,
+    drop_byte_buf: &mut ByteBuf,
+) {
+    *drop_byte_buf = DropAction::TextureView(id).to_byte_buf();
+}
+#[no_mangle]
+pub extern "C" fn wgpu_server_sampler_free(id: id::SamplerId, drop_byte_buf: &mut ByteBuf) {
+    *drop_byte_buf = DropAction::Sampler(id).to_byte_buf();
+}
