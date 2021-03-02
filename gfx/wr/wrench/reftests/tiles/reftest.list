@@ -3,3 +3,4 @@
 # TODO: Fix rasterizer inaccuracies so this is the same regardless of tile size!
 !* prim-suite.yaml
 == mix-blend-clip.yaml mix-blend-clip-ref.yaml
+platform(linux) == tile-cache-raster-root.yaml tile-cache-raster-root.png
