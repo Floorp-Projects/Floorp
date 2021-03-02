@@ -9316,7 +9316,7 @@ static CallState FreezeSubDocument(Document& aDocument) {
   return CallState::Continue;
 }
 
-void PresShell::Freeze() {
+void PresShell::Freeze(bool aIncludeSubDocuments) {
   mUpdateApproximateFrameVisibilityEvent.Revoke();
 
   MaybeReleaseCapturingContent();
@@ -9327,7 +9327,7 @@ void PresShell::Freeze() {
 
   mPaintingSuppressed = true;
 
-  if (mDocument) {
+  if (aIncludeSubDocuments && mDocument) {
     mDocument->EnumerateSubDocuments(FreezeSubDocument);
   }
 
@@ -9370,14 +9370,14 @@ void PresShell::FireOrClearDelayedEvents(bool aFireEvents) {
   }
 }
 
-void PresShell::Thaw() {
+void PresShell::Thaw(bool aIncludeSubDocuments) {
   nsPresContext* presContext = GetPresContext();
   if (presContext &&
       presContext->RefreshDriver()->GetPresContext() == presContext) {
     presContext->RefreshDriver()->Thaw();
   }
 
-  if (mDocument) {
+  if (aIncludeSubDocuments && mDocument) {
     mDocument->EnumerateSubDocuments([](Document& aSubDoc) {
       if (PresShell* presShell = aSubDoc.GetPresShell()) {
         presShell->Thaw();
