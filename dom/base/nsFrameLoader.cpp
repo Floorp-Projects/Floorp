@@ -452,8 +452,8 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
 /* static */
 already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
     mozilla::dom::Element* aOwner, BrowsingContext* aContext,
-    BrowsingContextGroup* aSpecificGroup, bool aIsRemote, bool aNetworkCreated,
-    bool aPreserveContext) {
+    BrowsingContextGroup* aSpecificGroup, const RemotenessChangeState& aState,
+    bool aIsRemote, bool aNetworkCreated, bool aPreserveContext) {
   NS_ENSURE_TRUE(aOwner, nullptr);
 
 #ifdef DEBUG
@@ -473,7 +473,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
       MOZ_ASSERT(
           XRE_IsParentProcess(),
           "Recreating browing contexts only supported in the parent process");
-      aContext->Canonical()->ReplacedBy(context->Canonical());
+      aContext->Canonical()->ReplacedBy(context->Canonical(), aState);
     }
   }
   NS_ENSURE_TRUE(context, nullptr);

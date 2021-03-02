@@ -19,6 +19,7 @@ class BrowsingContextGroup;
 class BrowserBridgeChild;
 class ContentParent;
 struct RemotenessOptions;
+struct RemotenessChangeState;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -71,10 +72,10 @@ class nsFrameLoaderOwner : public nsISupports {
   //
   // If `aReplaceBrowsingContext` is set, BrowsingContext preservation will be
   // disabled for this process switch.
-  void ChangeRemotenessToProcess(mozilla::dom::ContentParent* aContentParent,
-                                 bool aReplaceBrowsingContext,
-                                 mozilla::dom::BrowsingContextGroup* aGroup,
-                                 mozilla::ErrorResult& rv);
+  void ChangeRemotenessToProcess(
+      mozilla::dom::ContentParent* aContentParent,
+      const mozilla::dom::RemotenessChangeState& aState,
+      mozilla::dom::BrowsingContextGroup* aGroup, mozilla::ErrorResult& rv);
 
   void SubframeCrashed();
 
@@ -95,6 +96,7 @@ class nsFrameLoaderOwner : public nsISupports {
       bool aIsRemote, bool aReplaceBrowsingContext);
 
   void ChangeRemotenessCommon(const ChangeRemotenessContextType& aContextType,
+                              const mozilla::dom::RemotenessChangeState& aState,
                               bool aSwitchingInProgressLoad, bool aIsRemote,
                               mozilla::dom::BrowsingContextGroup* aGroup,
                               std::function<void()>& aFrameLoaderInit,
