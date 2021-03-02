@@ -462,7 +462,7 @@ void GfxInfo::GetData() {
   mAdapterDescription.Assign(glRenderer);
 #ifdef MOZ_WAYLAND
   mIsWayland = gdk_display_get_default() &&
-               !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+               GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default());
   if (mIsWayland) {
     mIsWaylandDRM = GetDMABufDevice()->IsDMABufVAAPIEnabled() ||
                     GetDMABufDevice()->IsDMABufWebGLEnabled() ||
@@ -473,8 +473,8 @@ void GfxInfo::GetData() {
   // Make a best effort guess at whether or not we are using the XWayland compat
   // layer. For all intents and purposes, we should otherwise believe we are
   // using X11.
-  const char* windowEnv = getenv("XDG_SESSION_TYPE");
-  mIsXWayland = windowEnv && strcmp(windowEnv, "wayland") == 0;
+  const char* waylandDisplay = getenv("WAYLAND_DISPLAY");
+  mIsXWayland = !mIsWayland && waylandDisplay;
 
   // Make a best effort guess at the desktop environment in use. Sadly there
   // does not appear to be a standard way to do this, so we check a few

@@ -661,11 +661,11 @@ bool ContentChild::Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
   if (!gfxPlatform::IsHeadless()) {
     const char* display_name = PR_GetEnv("MOZ_GDK_DISPLAY");
     if (!display_name) {
-      bool waylandDisabled = true;
+      bool waylandEnabled = false;
 #  ifdef MOZ_WAYLAND
-      waylandDisabled = IsWaylandDisabled();
+      waylandEnabled = IsWaylandEnabled();
 #  endif
-      if (waylandDisabled) {
+      if (!waylandEnabled) {
         display_name = PR_GetEnv("DISPLAY");
       }
     }
