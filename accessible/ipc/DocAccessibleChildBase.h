@@ -58,7 +58,6 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   }
 
  protected:
-  static uint32_t InterfacesFor(LocalAccessible* aAcc);
   static void SerializeTree(LocalAccessible* aRoot,
                             nsTArray<AccessibleData>& aTree);
 

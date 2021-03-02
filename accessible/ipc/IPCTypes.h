@@ -8,6 +8,7 @@
 #define mozilla_a11y_IPCTypes_h
 
 #ifdef ACCESSIBILITY
+#  include "mozilla/a11y/AccTypes.h"
 #  include "mozilla/a11y/Role.h"
 #  include "ipc/EnumSerializer.h"
 
@@ -19,6 +20,18 @@ struct ParamTraits<mozilla::a11y::role>
                                                mozilla::a11y::role::NOTHING,
                                                mozilla::a11y::role::LAST_ROLE> {
 };
+
+template <>
+struct ParamTraits<mozilla::a11y::AccType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::a11y::AccType, mozilla::a11y::AccType::eNoType,
+          mozilla::a11y::AccType::eLastAccType> {};
+
+template <>
+struct ParamTraits<mozilla::a11y::AccGenericType>
+    : public BitFlagsEnumSerializer<
+          mozilla::a11y::AccGenericType,
+          mozilla::a11y::AccGenericType::eAllGenericTypes> {};
 
 }  // namespace IPC
 #else

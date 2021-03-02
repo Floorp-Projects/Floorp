@@ -13,38 +13,6 @@ namespace mozilla {
 namespace a11y {
 
 /* static */
-uint32_t DocAccessibleChildBase::InterfacesFor(LocalAccessible* aAcc) {
-  uint32_t interfaces = 0;
-  if (aAcc->IsHyperText() && aAcc->AsHyperText()->IsTextRole()) {
-    interfaces |= Interfaces::HYPERTEXT;
-  }
-
-  if (aAcc->IsLink()) interfaces |= Interfaces::HYPERLINK;
-
-  if (aAcc->HasNumericValue()) interfaces |= Interfaces::VALUE;
-
-  if (aAcc->IsImage()) interfaces |= Interfaces::IMAGE;
-
-  if (aAcc->IsTable()) {
-    interfaces |= Interfaces::TABLE;
-  }
-
-  if (aAcc->IsTableCell()) interfaces |= Interfaces::TABLECELL;
-
-  if (aAcc->IsDoc()) interfaces |= Interfaces::DOCUMENT;
-
-  if (aAcc->IsSelect()) {
-    interfaces |= Interfaces::SELECTION;
-  }
-
-  if (aAcc->ActionCount()) {
-    interfaces |= Interfaces::ACTION;
-  }
-
-  return interfaces;
-}
-
-/* static */
 void DocAccessibleChildBase::SerializeTree(LocalAccessible* aRoot,
                                            nsTArray<AccessibleData>& aTree) {
   uint64_t id = reinterpret_cast<uint64_t>(aRoot->UniqueID());
@@ -53,7 +21,6 @@ void DocAccessibleChildBase::SerializeTree(LocalAccessible* aRoot,
 #endif
   a11y::role role = aRoot->Role();
   uint32_t childCount = aRoot->ChildCount();
-  uint32_t interfaces = InterfacesFor(aRoot);
 
   // OuterDocAccessibles are special because we don't want to serialize the
   // child doc here, we'll call PDocAccessibleConstructor in
@@ -63,10 +30,23 @@ void DocAccessibleChildBase::SerializeTree(LocalAccessible* aRoot,
     childCount = 0;
   }
 
+  uint32_t genericTypes = aRoot->mGenericTypes;
+  if (aRoot->ARIAHasNumericValue()) {
+    // XXX: We need to do this because this requires a state check.
+    genericTypes |= eNumericValue;
+  }
+  if (aRoot->ActionCount()) {
+    genericTypes |= eActionable;
+  }
+
 #if defined(XP_WIN)
-  aTree.AppendElement(AccessibleData(id, msaaId, role, childCount, interfaces));
+  aTree.AppendElement(AccessibleData(
+      id, msaaId, role, childCount, static_cast<AccType>(aRoot->mType),
+      static_cast<AccGenericType>(genericTypes), aRoot->mRoleMapEntryIndex));
 #else
-  aTree.AppendElement(AccessibleData(id, role, childCount, interfaces));
+  aTree.AppendElement(AccessibleData(
+      id, role, childCount, static_cast<AccType>(aRoot->mType),
+      static_cast<AccGenericType>(genericTypes), aRoot->mRoleMapEntryIndex));
 #endif
 
   for (uint32_t i = 0; i < childCount; i++) {

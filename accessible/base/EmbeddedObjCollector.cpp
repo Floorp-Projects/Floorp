@@ -50,8 +50,8 @@ int32_t EmbeddedObjCollector::GetIndexAt(LocalAccessible* aAccessible) {
   if (aAccessible->mParent != mRoot) return -1;
 
   MOZ_ASSERT(!aAccessible->IsProxy());
-  if (aAccessible->mInt.mIndexOfEmbeddedChild != -1) {
-    return aAccessible->mInt.mIndexOfEmbeddedChild;
+  if (aAccessible->mIndexOfEmbeddedChild != -1) {
+    return aAccessible->mIndexOfEmbeddedChild;
   }
 
   return !aAccessible->IsText() ? EnsureNGetIndex(aAccessible) : -1;
@@ -59,6 +59,6 @@ int32_t EmbeddedObjCollector::GetIndexAt(LocalAccessible* aAccessible) {
 
 void EmbeddedObjCollector::AppendObject(LocalAccessible* aAccessible) {
   MOZ_ASSERT(!aAccessible->IsProxy());
-  aAccessible->mInt.mIndexOfEmbeddedChild = mObjects.Length();
+  aAccessible->mIndexOfEmbeddedChild = mObjects.Length();
   mObjects.AppendElement(aAccessible);
 }
