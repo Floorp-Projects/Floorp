@@ -8,7 +8,6 @@ job-defaults:
         local-toolchain: true
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: deb10-toolchain-build}
         max-run-time: 1800
     run:
         script: build-minidump-stackwalk.sh

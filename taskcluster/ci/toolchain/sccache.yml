@@ -21,7 +21,6 @@ linux64-sccache:
         symbol: TL(sccache)
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: deb10-toolchain-build}
         max-run-time: 1800
     run:
         toolchain-artifact: public/build/sccache.tar.xz

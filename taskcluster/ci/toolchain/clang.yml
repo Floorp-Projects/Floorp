@@ -15,8 +15,6 @@ linux64-clang-5.0:
     treeherder:
         symbol: TL(clang5.0)
     worker-type: b-linux-large
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run:
         script: build-clang.sh
         arguments:
@@ -36,8 +34,6 @@ linux64-clang-7:
     description: "Clang 7 toolchain build"
     treeherder:
         symbol: TL(clang7)
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run:
         using: toolchain-script
         script: build-clang.sh
@@ -58,8 +54,6 @@ linux64-clang-11-mingw-x86:
     description: "MinGW-Clang 11 x86 toolchain build"
     treeherder:
         symbol: TMW(clang-x86)
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run:
         script: build-clang-mingw.sh
         arguments:
@@ -86,8 +80,6 @@ linux64-clang-11-mingw-x64:
     treeherder:
         symbol: TMW(clang-x64)
         tier: 1
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run:
         script: build-clang-mingw.sh
         arguments:
@@ -113,8 +105,6 @@ linux64-clang-10:
     description: "Clang 10 toolchain build"
     treeherder:
         symbol: TL(clang10)
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run:
         using: toolchain-script
         script: build-clang.sh
@@ -138,8 +128,6 @@ linux64-clang-11:
         local-toolchain: true
     treeherder:
         symbol: TL(clang11)
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run-on-projects: [trunk]
     run:
         using: toolchain-script
@@ -163,8 +151,6 @@ linux64-clang-11-android-cross:
     description: "Clang 11 toolchain build"
     treeherder:
         symbol: TL(clang11-android)
-    worker:
-        docker-image: {in-tree: deb10-toolchain-build}
     run:
         using: toolchain-script
         script: build-clang.sh

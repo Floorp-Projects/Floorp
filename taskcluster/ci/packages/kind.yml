@@ -86,16 +86,6 @@ jobs:
                 sha256: ecfa7cbc93dc6a9749022ccd9538843f4a0e2e77a14bb2f87e325aaf3c36b519
             pre-build-command: apt-get install debhelper/buster-backports
 
-    deb8-ninja:
-        description: "Ninja backport for Debian jessie"
-        treeherder:
-            symbol: Deb8(ninja)
-        run:
-            using: debian-package
-            dsc:
-                url: http://snapshot.debian.org/archive/debian/20160209T042121Z/pool/main/n/ninja-build/ninja-build_1.6.0-1.dsc
-                sha256: 25cd62b011d669c31bcd51d36d454dd826bc50af6a3af8d87bcab8948ec21626
-
     deb8-mercurial:
         description: "Modern Mercurial for Debian jessie"
         treeherder:
