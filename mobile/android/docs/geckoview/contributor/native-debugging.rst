@@ -73,6 +73,7 @@ debugging.
    settings set target.inline-breakpoint-strategy always
    settings append target.exec-search-paths <PATH>/objdir-android-opt/toolkit/library/build
    settings append target.exec-search-paths <PATH>/objdir-android-opt/mozglue/build
+   settings append target.exec-search-paths <PATH>/objdir-android-opt/security
 
 Set up Android Studio to perform native debugging.
 ==================================================
