@@ -191,11 +191,17 @@ nsresult nsWindowBase::SynthesizeNativeTouchPoint(
     }
 
     if (!entry) {
-      entry.Insert(MakeUnique<PointerInfo>(aPointerId, aPoint));
-    } else if (aPointerState & TOUCH_REMOVE) {
-      // Remove the pointer from our tracking list. This is UniquePtr wrapped,
-      // so shouldn't leak.
-      entry.Remove();
+      entry.Insert(MakeUnique<PointerInfo>(aPointerId, aPoint,
+                                           PointerInfo::PointerType::TOUCH));
+    } else {
+      if (entry.Data()->mType != PointerInfo::PointerType::TOUCH) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (aPointerState & TOUCH_REMOVE) {
+        // Remove the pointer from our tracking list. This is UniquePtr wrapped,
+        // so shouldn't leak.
+        entry.Remove();
+      }
     }
 
     return !InjectTouchPoint(aPointerId, aPoint, flags, pressure,
@@ -213,7 +219,10 @@ nsresult nsWindowBase::ClearNativeTouchSequence(nsIObserver* aObserver) {
 
   // cancel all input points
   for (auto iter = mActivePointers.Iter(); !iter.Done(); iter.Next()) {
-    auto info = iter.UserData();
+    auto* info = iter.UserData();
+    if (info->mType != PointerInfo::PointerType::TOUCH) {
+      continue;
+    }
     InjectTouchPoint(info->mPointerId, info->mPosition, POINTER_FLAG_CANCELED);
     iter.Remove();
   }

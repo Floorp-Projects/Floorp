@@ -111,11 +111,17 @@ class nsWindowBase : public nsBaseWidget {
 
   class PointerInfo {
    public:
-    PointerInfo(int32_t aPointerId, LayoutDeviceIntPoint& aPoint)
-        : mPointerId(aPointerId), mPosition(aPoint) {}
+    enum class PointerType : uint8_t {
+      TOUCH,
+    };
+
+    PointerInfo(int32_t aPointerId, LayoutDeviceIntPoint& aPoint,
+                PointerType aType)
+        : mPointerId(aPointerId), mPosition(aPoint), mType(aType) {}
 
     int32_t mPointerId;
     LayoutDeviceIntPoint mPosition;
+    PointerType mType;
   };
 
   nsClassHashtable<nsUint32HashKey, PointerInfo> mActivePointers;
