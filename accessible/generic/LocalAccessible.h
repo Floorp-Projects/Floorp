@@ -904,6 +904,8 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   void MaybeFireFocusableStateChange(bool aPreviouslyFocusable);
 
+  virtual bool IsRemote() const override { return false; }
+
  protected:
   virtual ~LocalAccessible();
 
@@ -1118,6 +1120,13 @@ class LocalAccessible : public nsISupports, public Accessible {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(LocalAccessible, NS_ACCESSIBLE_IMPL_IID)
+
+////////////////////////////////////////////////////////////////////////////////
+// LocalAccessible downcasting method
+
+inline LocalAccessible* Accessible::AsLocal() {
+  return IsLocal() ? static_cast<LocalAccessible*>(this) : nullptr;
+}
 
 /**
  * Represent key binding associated with accessible (such as access key and
