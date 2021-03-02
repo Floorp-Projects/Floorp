@@ -61,12 +61,12 @@ function serveChangesEntries(serverTime, entries) {
     response.setStatusLine(null, 200, "OK");
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", new Date(serverTime).toUTCString());
+    const latest = entries[0]?.last_modified ?? 42;
     if (entries.length) {
-      const latest = entries[0].last_modified;
       response.setHeader("ETag", `"${latest}"`);
       response.setHeader("Last-Modified", new Date(latest).toGMTString());
     }
-    response.write(JSON.stringify({ data: entries }));
+    response.write(JSON.stringify({ timestamp: latest, changes: entries }));
   };
 }
 
@@ -86,7 +86,7 @@ add_task(clear_state);
 
 add_task(async function test_an_event_is_sent_on_start() {
   server.registerPathHandler(CHANGES_PATH, (request, response) => {
-    response.write(JSON.stringify({ data: [] }));
+    response.write(JSON.stringify({ timestamp: 42, changes: [] }));
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("ETag", '"42"');
     response.setHeader("Date", new Date().toUTCString());
@@ -263,16 +263,7 @@ add_task(async function test_check_up_to_date() {
   );
 
   const serverTime = 4000;
-  function server304(request, response) {
-    if (
-      request.hasHeader("if-none-match") &&
-      request.getHeader("if-none-match") == '"1100"'
-    ) {
-      response.setHeader("Date", new Date(serverTime).toUTCString());
-      response.setStatusLine(null, 304, "Service Not Modified");
-    }
-  }
-  server.registerPathHandler(CHANGES_PATH, server304);
+  server.registerPathHandler(CHANGES_PATH, serveChangesEntries(serverTime, []));
 
   Services.prefs.setCharPref(PREF_LAST_ETAG, '"1100"');
 
@@ -286,7 +277,7 @@ add_task(async function test_check_up_to_date() {
   };
   Services.obs.addObserver(observer, "remote-settings:changes-poll-end");
 
-  // If server has no change, a 304 is received, maybeSync() is not called.
+  // If server has no change, maybeSync() is not called.
   let maybeSyncCalled = false;
   const c = RemoteSettings("test-collection", {
     bucketName: "test-bucket",
@@ -322,10 +313,13 @@ add_task(async function test_expected_timestamp() {
         collection: "with-cache-busting",
       },
     ];
-    if (request.queryString == `_expected=${encodeURIComponent('"42"')}`) {
+    if (
+      request.queryString.includes(`_expected=${encodeURIComponent('"42"')}`)
+    ) {
       response.write(
         JSON.stringify({
-          data: entries,
+          timestamp: 1110,
+          changes: entries,
         })
       );
     }
@@ -352,7 +346,8 @@ add_task(async function test_client_last_check_is_saved() {
   server.registerPathHandler(CHANGES_PATH, (request, response) => {
     response.write(
       JSON.stringify({
-        data: [
+        timestamp: 42,
+        changes: [
           {
             id: "695c2407-de79-4408-91c7-70720dd59d78",
             last_modified: 1100,
@@ -512,20 +507,20 @@ add_task(async function test_success_with_partial_list() {
         collection: "poll-test-collection",
       },
     ];
-    if (request.queryString == `_since=${encodeURIComponent('"42"')}`) {
+    if (request.queryString.includes(`_since=${encodeURIComponent('"42"')}`)) {
       response.write(
         JSON.stringify({
-          data: entries.slice(0, 1),
+          timestamp: 43,
+          changes: entries.slice(0, 1),
         })
       );
-      response.setHeader("ETag", '"43"');
     } else {
       response.write(
         JSON.stringify({
-          data: entries,
+          timestamp: 42,
+          changes: entries,
         })
       );
-      response.setHeader("ETag", '"42"');
     }
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", new Date().toUTCString());
@@ -785,7 +780,7 @@ add_task(async function test_check_clockskew_is_updated() {
   function serverResponse(request, response) {
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", new Date(serverTime).toUTCString());
-    response.write(JSON.stringify({ data: [] }));
+    response.write(JSON.stringify({ timestamp: 42, changes: [] }));
     response.setStatusLine(null, 200, "OK");
   }
   server.registerPathHandler(CHANGES_PATH, serverResponse);
@@ -828,7 +823,7 @@ add_task(async function test_check_clockskew_takes_age_into_account() {
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", new Date(serverTime).toUTCString());
     response.setHeader("Age", `${ageCDNSeconds}`);
-    response.write(JSON.stringify({ data: [] }));
+    response.write(JSON.stringify({ timestamp: 42, changes: [] }));
     response.setStatusLine(null, 200, "OK");
   }
   server.registerPathHandler(CHANGES_PATH, serverResponse);
@@ -848,7 +843,7 @@ add_task(async function test_backoff() {
   function simulateBackoffResponse(request, response) {
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Backoff", "10");
-    response.write(JSON.stringify({ data: [] }));
+    response.write(JSON.stringify({ timestamp: 42, changes: [] }));
     response.setStatusLine(null, 200, "OK");
   }
   server.registerPathHandler(CHANGES_PATH, simulateBackoffResponse);
@@ -1023,7 +1018,7 @@ add_task(async function test_syncs_clients_with_local_dump() {
 add_task(clear_state);
 
 add_task(async function test_adding_client_resets_polling() {
-  function serve200or304(request, response) {
+  function serve200(request, response) {
     const entries = [
       {
         id: "aa71e6cc-9f37-447a-b6e0-c025e8eabd03",
@@ -1033,27 +1028,26 @@ add_task(async function test_adding_client_resets_polling() {
         collection: "a-collection",
       },
     ];
-    if (request.queryString == `_since=${encodeURIComponent('"42"')}`) {
+    if (request.queryString.includes("_since")) {
       response.write(
         JSON.stringify({
-          data: entries.slice(0, 1),
+          timestamp: 42,
+          changes: [],
         })
       );
-      response.setHeader("ETag", '"42"');
-      response.setStatusLine(null, 304, "Not Modified");
     } else {
       response.write(
         JSON.stringify({
-          data: entries,
+          timestamp: 42,
+          changes: entries,
         })
       );
-      response.setHeader("ETag", '"42"');
-      response.setStatusLine(null, 200, "OK");
     }
+    response.setStatusLine(null, 200, "OK");
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", new Date().toUTCString());
   }
-  server.registerPathHandler(CHANGES_PATH, serve200or304);
+  server.registerPathHandler(CHANGES_PATH, serve200);
 
   // Poll once, without any client for "a-collection"
   await RemoteSettings.pollChanges();
@@ -1095,7 +1089,7 @@ add_task(
       ];
       response.write(
         JSON.stringify({
-          data: entries,
+          changes: entries,
         })
       );
       response.setHeader("ETag", '"42"');

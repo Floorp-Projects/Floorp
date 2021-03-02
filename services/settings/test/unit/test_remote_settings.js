@@ -74,7 +74,7 @@ function run_test() {
 
   server.registerPathHandler("/v1/", handleResponse);
   server.registerPathHandler(
-    "/v1/buckets/monitor/collections/changes/records",
+    "/v1/buckets/monitor/collections/changes/changeset",
     handleResponse
   );
   server.registerPathHandler(
@@ -1069,7 +1069,7 @@ function getSampleResponse(req, port) {
         hello: "kinto",
       },
     },
-    "GET:/v1/buckets/monitor/collections/changes/records": {
+    "GET:/v1/buckets/monitor/collections/changes/changeset": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -1080,7 +1080,8 @@ function getSampleResponse(req, port) {
       ],
       status: { status: 200, statusText: "OK" },
       responseBody: {
-        data: [
+        timestamp: 5000,
+        changes: [
           {
             id: "4676f0c7-9757-4796-a0e8-b40a5a37a9c9",
             bucket: "main",
@@ -1263,7 +1264,7 @@ wNuvFqc=
         error: "Service Unavailable",
       },
     },
-    "GET:/v1/buckets/monitor/collections/changes/records?collection=password-fields&bucket=main": {
+    "GET:/v1/buckets/monitor/collections/changes/changeset?collection=password-fields&bucket=main&_expected=0": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -1274,7 +1275,8 @@ wNuvFqc=
       ],
       status: { status: 200, statusText: "OK" },
       responseBody: {
-        data: [
+        timestamp: 1338,
+        changes: [
           {
             id: "fe5758d0-c67a-42d0-bb4f-8f2d75106b65",
             bucket: "main",
@@ -1398,7 +1400,7 @@ wNuvFqc=
         ],
       },
     },
-    "GET:/v1/buckets/monitor/collections/changes/records?collection=no-mocked-responses&bucket=main": {
+    "GET:/v1/buckets/monitor/collections/changes/changeset?collection=no-mocked-responses&bucket=main&_expected=0": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
