@@ -73,9 +73,9 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   bool OnClose();
   void AddMenuItem(mozilla::UniquePtr<nsMenuItemX>&& aMenuItem);
   void AddMenu(mozilla::UniquePtr<nsMenuX>&& aMenu);
-  void LoadMenuItem(nsIContent* inMenuItemContent);
-  void LoadSubMenu(nsIContent* inMenuContent);
-  GeckoNSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
+  void LoadMenuItem(nsIContent* aMenuItemContent);
+  void LoadSubMenu(nsIContent* aMenuContent);
+  GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
 
   nsTArray<mozilla::UniquePtr<nsMenuObjectX>> mMenuObjectsArray;
   nsString mLabel;

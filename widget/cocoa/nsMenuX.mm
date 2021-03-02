@@ -435,11 +435,11 @@ nsresult nsMenuX::GetEnabled(bool* aIsEnabled) {
   return NS_OK;
 }
 
-GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle) {
+GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& aMenuTitle) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSString* title = [NSString stringWithCharacters:(UniChar*)menuTitle.get()
-                                            length:menuTitle.Length()];
+  NSString* title = [NSString stringWithCharacters:(UniChar*)aMenuTitle.get()
+                                            length:aMenuTitle.Length()];
   GeckoNSMenu* myMenu = [[GeckoNSMenu alloc] initWithTitle:title];
   myMenu.delegate = mMenuDelegate;
 
@@ -457,25 +457,25 @@ GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle) {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent) {
-  if (!inMenuItemContent) {
+void nsMenuX::LoadMenuItem(nsIContent* aMenuItemContent) {
+  if (!aMenuItemContent) {
     return;
   }
 
   nsAutoString menuitemName;
-  if (inMenuItemContent->IsElement()) {
-    inMenuItemContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuitemName);
+  if (aMenuItemContent->IsElement()) {
+    aMenuItemContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuitemName);
   }
 
   // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
 
   EMenuItemType itemType = eRegularMenuItemType;
-  if (inMenuItemContent->IsXULElement(nsGkAtoms::menuseparator)) {
+  if (aMenuItemContent->IsXULElement(nsGkAtoms::menuseparator)) {
     itemType = eSeparatorMenuItemType;
-  } else if (inMenuItemContent->IsElement()) {
+  } else if (aMenuItemContent->IsElement()) {
     static Element::AttrValuesArray strings[] = {nsGkAtoms::checkbox, nsGkAtoms::radio, nullptr};
-    switch (inMenuItemContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
-                                                            strings, eCaseMatters)) {
+    switch (aMenuItemContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+                                                           strings, eCaseMatters)) {
       case 0:
         itemType = eCheckboxMenuItemType;
         break;
@@ -486,11 +486,11 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent) {
   }
 
   AddMenuItem(
-      MakeUnique<nsMenuItemX>(this, menuitemName, itemType, mMenuGroupOwner, inMenuItemContent));
+      MakeUnique<nsMenuItemX>(this, menuitemName, itemType, mMenuGroupOwner, aMenuItemContent));
 }
 
-void nsMenuX::LoadSubMenu(nsIContent* inMenuContent) {
-  AddMenu(MakeUnique<nsMenuX>(this, mMenuGroupOwner, inMenuContent));
+void nsMenuX::LoadSubMenu(nsIContent* aMenuContent) {
+  AddMenu(MakeUnique<nsMenuX>(this, mMenuGroupOwner, aMenuContent));
 }
 
 // This menu is about to open. Returns TRUE if we should keep processing the event,
