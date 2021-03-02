@@ -180,16 +180,16 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString& eventName, bool* preventD
 
 // Walk the sibling list looking for nodes with the same name and
 // uncheck them all.
-void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent) {
+void nsMenuItemX::UncheckRadioSiblings(nsIContent* aCheckedContent) {
   nsAutoString myGroupName;
-  if (inCheckedContent->IsElement()) {
-    inCheckedContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
+  if (aCheckedContent->IsElement()) {
+    aCheckedContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
   }
   if (!myGroupName.Length()) {  // no groupname, nothing to do
     return;
   }
 
-  nsCOMPtr<nsIContent> parent = inCheckedContent->GetParent();
+  nsCOMPtr<nsIContent> parent = aCheckedContent->GetParent();
   if (!parent) {
     return;
   }
@@ -197,7 +197,7 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent) {
   // loop over siblings
   for (nsIContent* sibling = parent->GetFirstChild(); sibling;
        sibling = sibling->GetNextSibling()) {
-    if (sibling != inCheckedContent && sibling->IsElement()) {  // skip this node
+    if (sibling != aCheckedContent && sibling->IsElement()) {  // skip this node
       // if the current sibling is in the same group, clear it
       if (sibling->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, myGroupName,
                                             eCaseMatters)) {
