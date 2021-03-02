@@ -17,13 +17,13 @@ toolbar-context-menu-bookmark-selected-tabs =
 toolbar-context-menu-select-all-tabs =
     .label = Select All Tabs
     .accesskey = S
-toolbar-context-menu-undo-close-tabs =
+toolbar-context-menu-reopen-closed-tabs =
     .label =
         { $tabCount ->
-            [1] Undo Close Tab
-           *[other] Undo Close Tabs
+            [1] Reopen Closed Tab
+           *[other] Reopen Closed Tabs
         }
-    .accesskey = U
+    .accesskey = o
 
 toolbar-context-menu-manage-extension =
     .label = Manage Extension
