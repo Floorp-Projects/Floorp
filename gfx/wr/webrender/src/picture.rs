@@ -6027,19 +6027,29 @@ impl PicturePrimitive {
             let parent_device_pixel_scale = state.current_surface().device_pixel_scale;
             let surface_spatial_node_index = self.spatial_node_index;
 
-            // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
-            let has_svg_filter = if let PictureCompositeMode::SvgFilter(..) = composite_mode {
-                true
-            } else {
-                false
-            };
-
             let surface_to_parent_transform = frame_context.spatial_tree
                 .get_relative_transform(surface_spatial_node_index, parent_raster_node_index);
 
             // Check if there is perspective or if an SVG filter is applied, and thus whether a new
             // rasterization root should be established.
-            let establishes_raster_root = has_svg_filter || surface_to_parent_transform.is_perspective();
+            let establishes_raster_root = match composite_mode {
+                PictureCompositeMode::TileCache { .. } => {
+                    // Picture caches are special cased - they never need to establish a raster root. In future,
+                    // we will probably remove TileCache as a specific composite mode.
+                    false
+                }
+                PictureCompositeMode::SvgFilter(..) => {
+                    // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
+                    true
+                }
+                PictureCompositeMode::MixBlend(..) |
+                PictureCompositeMode::Filter(..) |
+                PictureCompositeMode::ComponentTransferFilter(..) |
+                PictureCompositeMode::Blit(..) => {
+                    // TODO(gw): As follow ups, individually move each of these composite modes to create raster roots.
+                    surface_to_parent_transform.is_perspective()
+                }
+            };
 
             let (raster_spatial_node_index, device_pixel_scale) = if establishes_raster_root {
                 // If a raster root is established, this surface should be scaled based on the scale factors of the surface raster to parent raster transform.
