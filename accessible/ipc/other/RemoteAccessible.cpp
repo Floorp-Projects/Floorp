@@ -777,7 +777,7 @@ RemoteAccessible* RemoteAccessible::FocusedChild() {
     // like a non-doc accessible and return its focused child, or null.
     // If the inner doc is OOP (fission), calling FocusedChild on the outer
     // doc would return null.
-    MOZ_ASSERT(ChildrenCount() == 1);
+    MOZ_ASSERT(ChildCount() == 1);
     RemoteAccessible* child = RemoteFirstChild();
     MOZ_ASSERT(child->IsDoc());
     return (child->State() & states::FOCUSED) ? child : nullptr;
@@ -813,7 +813,7 @@ RemoteAccessible* RemoteAccessible::ChildAtPoint(
   RemoteAccessible* target = this;
   do {
     if (target->mOuterDoc) {
-      MOZ_ASSERT(target->ChildrenCount() == 1);
+      MOZ_ASSERT(target->ChildCount() == 1);
       DocAccessibleParent* childDoc = target->RemoteChildAt(0)->AsDoc();
       MOZ_ASSERT(childDoc);
       if (childDoc->IsTopLevelInContentProcess()) {

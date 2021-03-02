@@ -51,7 +51,7 @@ class AccessibleOrProxy {
 
   uint32_t ChildCount() const {
     if (IsProxy()) {
-      return AsProxy()->ChildrenCount();
+      return AsProxy()->ChildCount();
     }
 
     if (RemoteChildDoc()) {
