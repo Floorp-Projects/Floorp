@@ -399,13 +399,12 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   return aPDM->AsyncCreateDecoder(aParams);
 }
 
-bool PDMFactory::SupportsMimeType(
-    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
+bool PDMFactory::SupportsMimeType(const nsACString& aMimeType) const {
   UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
   if (!trackInfo) {
     return false;
   }
-  return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
+  return Supports(SupportDecoderParams(*trackInfo), nullptr);
 }
 
 bool PDMFactory::Supports(const SupportDecoderParams& aParams,
@@ -665,38 +664,38 @@ PDMFactory::MediaCodecsSupported PDMFactory::Supported(bool aForceRefresh) {
     // available.
     // This logic will have to be revisited if a PDM supporting either codec
     // will be added in addition to the WMF and FFmpeg PDM (such as OpenH264)
-    if (pdm->SupportsMimeType("video/avc"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("video/avc"_ns)) {
       supported += MediaCodecs::H264;
     }
-    if (pdm->SupportsMimeType("video/vp9"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("video/vp9"_ns)) {
       supported += MediaCodecs::VP9;
     }
-    if (pdm->SupportsMimeType("video/vp8"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("video/vp8"_ns)) {
       supported += MediaCodecs::VP8;
     }
-    if (pdm->SupportsMimeType("video/av1"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("video/av1"_ns)) {
       supported += MediaCodecs::AV1;
     }
-    if (pdm->SupportsMimeType("video/theora"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("video/theora"_ns)) {
       supported += MediaCodecs::Theora;
     }
-    if (pdm->SupportsMimeType("audio/mp4a-latm"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("audio/mp4a-latm"_ns)) {
       supported += MediaCodecs::AAC;
     }
     // MP3 can be either decoded by ffvpx or WMF/FFmpeg
-    if (pdm->SupportsMimeType("audio/mpeg"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("audio/mpeg"_ns)) {
       supported += MediaCodecs::MP3;
     }
-    if (pdm->SupportsMimeType("audio/opus"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("audio/opus"_ns)) {
       supported += MediaCodecs::Opus;
     }
-    if (pdm->SupportsMimeType("audio/vorbis"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("audio/vorbis"_ns)) {
       supported += MediaCodecs::Vorbis;
     }
-    if (pdm->SupportsMimeType("audio/flac"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("audio/flac"_ns)) {
       supported += MediaCodecs::Flac;
     }
-    if (pdm->SupportsMimeType("audio/x-wav"_ns, nullptr)) {
+    if (pdm->SupportsMimeType("audio/x-wav"_ns)) {
       supported += MediaCodecs::Wave;
     }
     return supported;
