@@ -1519,6 +1519,7 @@ class RunProgram(MachCommandBase):
 settings set target.inline-breakpoint-strategy always
 settings append target.exec-search-paths {obj_xul}
 settings append target.exec-search-paths {obj_mozglue}
+settings append target.exec-search-paths {obj_nss}
 platform select remote-android
 platform connect {connect_url}
 process attach {continue_flag}-p {pid!s}
@@ -1526,6 +1527,7 @@ process attach {continue_flag}-p {pid!s}
 
             obj_xul = os.path.join(self.topobjdir, "toolkit", "library", "build")
             obj_mozglue = os.path.join(self.topobjdir, "mozglue", "build")
+            obj_nss = os.path.join(self.topobjdir, "security")
 
             if use_existing_process:
                 continue_flag = ""
@@ -1547,6 +1549,7 @@ process attach {continue_flag}-p {pid!s}
                         LLDBINIT.format(
                             obj_xul=obj_xul,
                             obj_mozglue=obj_mozglue,
+                            obj_nss=obj_nss,
                             connect_url=lldb_connect_url,
                             continue_flag=continue_flag,
                             pid=pid,
