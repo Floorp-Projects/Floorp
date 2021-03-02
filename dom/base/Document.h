@@ -3546,10 +3546,14 @@ class Document : public nsINode,
   void SetTooltipNode(nsINode* aNode) { /* do nothing */
   }
 
-  bool DevToolsWatchingDOMMutations() const {
-    return mDevToolsWatchingDOMMutations;
+  bool DontWarnAboutMutationEventsAndAllowSlowDOMMutations() {
+    return mDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
   }
-  void SetDevToolsWatchingDOMMutations(bool aValue);
+  void SetDontWarnAboutMutationEventsAndAllowSlowDOMMutations(
+      bool aDontWarnAboutMutationEventsAndAllowSlowDOMMutations) {
+    mDontWarnAboutMutationEventsAndAllowSlowDOMMutations =
+        aDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
+  }
 
   void MaybeWarnAboutZoom();
 
@@ -4319,6 +4323,13 @@ class Document : public nsINode,
 
   nsWeakPtr mDocumentLoadGroup;
 
+  bool mBlockAllMixedContent;
+  bool mBlockAllMixedContentPreloads;
+  bool mUpgradeInsecureRequests;
+  bool mUpgradeInsecurePreloads;
+
+  bool mDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
+
   WeakPtr<nsDocShell> mDocumentContainer;
 
   NotNull<const Encoding*> mCharacterSet;
@@ -4415,12 +4426,6 @@ class Document : public nsINode,
   // Permission Delegate Handler, lazily-initialized in
   // GetPermissionDelegateHandler
   RefPtr<PermissionDelegateHandler> mPermissionDelegateHandler;
-
-  bool mBlockAllMixedContent : 1;
-  bool mBlockAllMixedContentPreloads : 1;
-  bool mUpgradeInsecureRequests : 1;
-  bool mUpgradeInsecurePreloads : 1;
-  bool mDevToolsWatchingDOMMutations : 1;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;

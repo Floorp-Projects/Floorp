@@ -231,8 +231,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // list contains orphaned nodes that were so retained.
     this._retainedOrphans = new Set();
 
-    this.onSubtreeModified = this.onSubtreeModified.bind(this);
-    this.onSubtreeModified[EXCLUDED_LISTENER] = true;
+    this.onNodeInserted = this.onNodeInserted.bind(this);
+    this.onNodeInserted[EXCLUDED_LISTENER] = true;
     this.onNodeRemoved = this.onNodeRemoved.bind(this);
     this.onNodeRemoved[EXCLUDED_LISTENER] = true;
     this.onAttributeModified = this.onAttributeModified.bind(this);
@@ -2076,58 +2076,65 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   _updateDocumentMutationListeners(rawDoc) {
     const docMutationBreakpoints = this._mutationBreakpointsForDoc(rawDoc);
     if (!docMutationBreakpoints) {
-      rawDoc.devToolsWatchingDOMMutations = false;
       return;
     }
 
-    const anyBreakpoint =
-      docMutationBreakpoints.counts.subtree > 0 ||
-      docMutationBreakpoints.counts.removal > 0 ||
-      docMutationBreakpoints.counts.attribute > 0;
-
-    rawDoc.devToolsWatchingDOMMutations = anyBreakpoint;
+    const origFlag = rawDoc.dontWarnAboutMutationEventsAndAllowSlowDOMMutations;
+    rawDoc.dontWarnAboutMutationEventsAndAllowSlowDOMMutations = true;
 
     if (docMutationBreakpoints.counts.subtree > 0) {
-      this.chromeEventHandler.addEventListener(
-        "devtoolschildinserted",
-        this.onSubtreeModified,
+      eventListenerService.addSystemEventListener(
+        rawDoc,
+        "DOMNodeInserted",
+        this.onNodeInserted,
         true /* capture */
       );
     } else {
-      this.chromeEventHandler.removeEventListener(
-        "devtoolschildinserted",
-        this.onSubtreeModified,
+      eventListenerService.removeSystemEventListener(
+        rawDoc,
+        "DOMNodeInserted",
+        this.onNodeInserted,
         true /* capture */
       );
     }
 
-    if (anyBreakpoint) {
-      this.chromeEventHandler.addEventListener(
-        "devtoolschildremoved",
+    if (
+      docMutationBreakpoints.counts.subtree > 0 ||
+      docMutationBreakpoints.counts.removal > 0 ||
+      docMutationBreakpoints.counts.attribute > 0
+    ) {
+      eventListenerService.addSystemEventListener(
+        rawDoc,
+        "DOMNodeRemoved",
         this.onNodeRemoved,
         true /* capture */
       );
     } else {
-      this.chromeEventHandler.removeEventListener(
-        "devtoolschildremoved",
+      eventListenerService.removeSystemEventListener(
+        rawDoc,
+        "DOMNodeRemoved",
         this.onNodeRemoved,
         true /* capture */
       );
     }
 
     if (docMutationBreakpoints.counts.attribute > 0) {
-      this.chromeEventHandler.addEventListener(
-        "devtoolsattrmodified",
+      eventListenerService.addSystemEventListener(
+        rawDoc,
+        "DOMAttrModified",
         this.onAttributeModified,
         true /* capture */
       );
     } else {
-      this.chromeEventHandler.removeEventListener(
-        "devtoolsattrmodified",
+      eventListenerService.removeSystemEventListener(
+        rawDoc,
+        "DOMAttrModified",
         this.onAttributeModified,
         true /* capture */
       );
     }
+
+    rawDoc.dontWarnAboutMutationEventsAndAllowSlowDOMMutations = origFlag;
   },
 
   _breakOnMutation: function(mutationType, targetNode, ancestorNode, action) {
@@ -2165,15 +2172,20 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     );
   },
 
+  onNodeInserted: function(evt) {
+    this.onSubtreeModified(evt, "add");
+  },
+
   onNodeRemoved: function(evt) {
     const mutationBpInfo = this._breakpointInfoForNode(evt.target);
     const hasNodeRemovalEvent = mutationBpInfo?.removal;
 
     this._clearMutationBreakpointsFromSubtree(evt.target);
+
     if (hasNodeRemovalEvent) {
       this._breakOnMutation("nodeRemoved", evt.target);
     } else {
-      this.onSubtreeModified(evt);
+      this.onSubtreeModified(evt, "remove");
     }
   },
 
@@ -2184,8 +2196,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
   },
 
-  onSubtreeModified: function(evt) {
-    const action = evt.type === "devtoolschildinserted" ? "add" : "remove";
+  onSubtreeModified: function(evt, action) {
     let node = evt.target;
     while ((node = node.parentNode) !== null) {
       const mutationBpInfo = this._breakpointInfoForNode(node);
