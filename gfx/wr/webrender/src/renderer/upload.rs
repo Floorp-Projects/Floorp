@@ -435,14 +435,11 @@ fn copy_from_staging_to_cache(
             &batch_upload_textures[copy.src_texture_index],
             copy.src_offset.x as _,
             copy.src_offset.y as _,
-            0,
             dest_texture,
             copy.dest_offset.x as _,
             copy.dest_offset.y as _,
-            0,
             copy.size.width as _,
             copy.size.height as _,
-            1,
         );
     }
 }

@@ -239,19 +239,6 @@ impl CacheTextureId {
     pub const INVALID: CacheTextureId = CacheTextureId(!0);
 }
 
-/// Canonical type for texture layer indices.
-///
-/// WebRender is currently not very consistent about layer index types. Some
-/// places use i32 (since that's the type used in various OpenGL APIs), some
-/// places use u32 (since having it be signed is non-sensical, but the
-/// underlying graphics APIs generally operate on 32-bit integers) and some
-/// places use usize (since that's most natural in Rust).
-///
-/// Going forward, we aim to us usize throughout the codebase, since that allows
-/// operations like indexing without a cast, and convert to the required type in
-/// the device module when making calls into the platform layer.
-pub type LayerIndex = usize;
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

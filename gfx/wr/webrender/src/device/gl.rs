@@ -10,7 +10,7 @@ use api::units::*;
 use euclid::default::Transform3D;
 use gleam::gl;
 use crate::render_api::MemoryReport;
-use crate::internal_types::{FastHashMap, LayerIndex, RenderTargetInfo, Swizzle, SwizzleSettings};
+use crate::internal_types::{FastHashMap, RenderTargetInfo, Swizzle, SwizzleSettings};
 use crate::util::round_up_to_multiple;
 use crate::profiler;
 use log::Level;
@@ -2468,14 +2468,11 @@ impl Device {
             src,
             0,
             0,
-            0,
             dst,
-            0,
             0,
             0,
             src.size.width as _,
             src.size.height as _,
-            1,
         );
     }
 
@@ -2485,14 +2482,11 @@ impl Device {
         src_texture: &Texture,
         src_x: usize,
         src_y: usize,
-        src_z: LayerIndex,
         dest_texture: &Texture,
         dest_x: usize,
         dest_y: usize,
-        dest_z: LayerIndex,
         width: usize,
         height: usize,
-        depth: LayerIndex,
     ) {
         if self.capabilities.supports_copy_image_sub_data {
             assert_ne!(
@@ -2506,16 +2500,16 @@ impl Device {
                     0,
                     src_x as _,
                     src_y as _,
-                    src_z as _,
+                    0,
                     dest_texture.id,
                     dest_texture.target,
                     0,
                     dest_x as _,
                     dest_y as _,
-                    dest_z as _,
+                    0,
                     width as _,
                     height as _,
-                    depth as _,
+                    1,
                 );
             }
         } else {
