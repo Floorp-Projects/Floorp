@@ -241,7 +241,8 @@ static gboolean leave_notify_event_cb(GtkWidget* widget,
                                       GdkEventCrossing* event);
 static gboolean motion_notify_event_cb(GtkWidget* widget,
                                        GdkEventMotion* event);
-static gboolean button_press_event_cb(GtkWidget* widget, GdkEventButton* event);
+MOZ_CAN_RUN_SCRIPT static gboolean button_press_event_cb(GtkWidget* widget,
+                                                         GdkEventButton* event);
 static gboolean button_release_event_cb(GtkWidget* widget,
                                         GdkEventButton* event);
 static gboolean focus_in_event_cb(GtkWidget* widget, GdkEventFocus* event);
@@ -6453,13 +6454,46 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
 /* static */
 bool nsWindow::DragInProgress(void) {
   nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-
-  if (!dragService) return false;
+  if (!dragService) {
+    return false;
+  }
 
   nsCOMPtr<nsIDragSession> currentDragSession;
   dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
 
   return currentDragSession != nullptr;
+}
+
+// This is an ugly workaround for
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1622107
+// We try to detect when Wayland compositor / gtk fails to deliver
+// info about finished D&D operations and cancel it on our own.
+MOZ_CAN_RUN_SCRIPT static void WaylandDragWorkaround(GdkEventButton* aEvent) {
+  static int buttonPressCountWithDrag = 0;
+
+  // We track only left button state as Firefox performs D&D on left
+  // button only.
+  if (aEvent->button != 1 || aEvent->type != GDK_BUTTON_PRESS) {
+    return;
+  }
+
+  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+  if (!dragService) {
+    return;
+  }
+  nsCOMPtr<nsIDragSession> currentDragSession;
+  dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
+
+  if (currentDragSession != nullptr) {
+    buttonPressCountWithDrag++;
+    if (buttonPressCountWithDrag > 1) {
+      NS_WARNING(
+          "Quit unfinished Wayland Drag and Drop operation. Buggy Wayland "
+          "compositor?");
+      buttonPressCountWithDrag = 0;
+      dragService->EndDragSession(false, 0);
+    }
+  }
 }
 
 static bool is_mouse_in_window(GdkWindow* aWindow, gdouble aMouseX,
@@ -6901,6 +6935,10 @@ static gboolean button_press_event_cb(GtkWidget* widget,
   if (!window) return FALSE;
 
   window->OnButtonPressEvent(event);
+
+  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+    WaylandDragWorkaround(event);
+  }
 
   return TRUE;
 }
