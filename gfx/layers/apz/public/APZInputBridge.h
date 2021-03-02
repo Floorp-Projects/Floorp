@@ -19,7 +19,9 @@ class InputData;
 namespace layers {
 
 class APZInputBridgeParent;
+class AsyncPanZoomController;
 struct ScrollableLayerGuid;
+struct TargetConfirmationFlags;
 
 enum class APZHandledResult : uint8_t {
   Unhandled = 0,         // we know for sure that the event will not be handled
@@ -44,6 +46,13 @@ struct APZEventResult {
    */
   APZEventResult();
 
+  /**
+   * Creates a result with a status of eIgnore, no block ID, the guid of the
+   * given initial target, and an APZHandledResult if we are sure the event
+   * is not going to be dispatched to contents.
+   */
+  APZEventResult(const RefPtr<AsyncPanZoomController>& aInitialTarget,
+                 TargetConfirmationFlags aFlags);
   /**
    * A status flag indicated how APZ handled the event.
    * The interpretation of each value is as follows:
