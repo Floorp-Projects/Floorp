@@ -40,17 +40,6 @@ jobs:
         symbol: I(deb8-pkg)
         definition: debian-packages
         parent: debian8-raw
-    debian8-i386-raw:
-        symbol: I(deb8-32-raw)
-        definition: debian-raw
-        args:
-            BASE_IMAGE: i386/debian:jessie-20200422
-            DIST: jessie
-            SNAPSHOT: '20200422T205110Z'
-    debian8-i386-packages:
-        symbol: I(deb8-32-pkg)
-        definition: debian-packages
-        parent: debian8-i386-raw
     debian8-base:
         symbol: I(deb8-base)
         definition: debian-base
@@ -87,15 +76,6 @@ jobs:
             - deb8-valgrind
         args:
             ARCH: amd64
-    debian8-i386-build:
-        symbol: I(deb8-32)
-        parent: debian8-base
-        definition: debian-build
-        packages:
-            - deb8-valgrind
-            - deb8-32-xz-utils
-        args:
-            ARCH: i386
     debian8-mozjs-rust-build:
         symbol: I(deb8jsrs)
         parent: debian8-amd64-build

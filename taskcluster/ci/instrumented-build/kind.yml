@@ -48,8 +48,6 @@ jobs:
         treeherder:
             platform: linux32-shippable/opt
         worker-type: b-linux
-        worker:
-            docker-image: {in-tree: debian8-i386-build}
         run:
             config:
                 - builds/releng_base_firefox.py
