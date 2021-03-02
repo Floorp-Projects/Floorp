@@ -11,49 +11,28 @@ ARG TASKCLUSTER_ROOT_URL
 ARG DOCKER_IMAGE_PACKAGES
 RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES
 
-# %ARG ARCH
-RUN dpkg --add-architecture $ARCH
-
-# Ideally, we wouldn't need gcc-multilib and the extra linux-libc-dev,
-# but the latter is required to make the former installable, and the former
-# because of bug 1409276.
-# We exclude /usr/share/doc/*/changelog.Debian* files because they might differ
-# between i386 and amd64 variants of the packages we build on automation
-# because of dates stored in them by debchange (and both might end up installed
-# in some cases).
-# On Debian 7, pkg-config was not multiarch-aware, so we rely on the $ARCH
-# pkg-config being valid on the host. On more recent versions of Debian, we can
-# use pkg-config, which is multiarch-aware, but we also need dpkg-dev because
-# of https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=916772.
-#
-# We also need libstdc++ development files, but the exact version of libstdc++
-# that we need varies between debian versions.
+# binutils is needed for base toolchain builds. Ideally, it wouldn't be needed.
+# libc6-i386 and lib32gcc1 are needed for wine.
+# libdbus-glib-1-2 and libgtk-3-0 are needed to run xpcshell during the build.
+# lib32atomic1, lib32stdc++6 and lib32z1 are needed to run some 32-bits
+# spidermonkey tests.
 RUN apt-get update && \
     apt-get dist-upgrade && \
-    echo path-exclude=/usr/share/doc/*/changelog.Debian* > /etc/dpkg/dpkg.cfg.d/excludes && \
-    if grep -q ^8\\. /etc/debian_version; then \
-      PKG_CONFIG=pkg-config:$ARCH; \
-    else \
-      PKG_CONFIG="pkg-config dpkg-dev"; \
-    fi && \
-    if grep -q ^8\\. /etc/debian_version; then \
-      LIBSTDCXX=libstdc++-4.9-dev; \
-    elif grep -q ^9\\. /etc/debian_version; then \
-      LIBSTDCXX=libstdc++-6-dev; \
-    elif grep -q ^10\\. /etc/debian_version; then \
-      libstdcxx=libstdc++-8-dev; \
-      LIBSTDCXX="$libstdcxx $libstdcxx:$ARCH"; \
-    fi && \
     apt-get install \
-      autoconf2.13 \
-      automake \
+      binutils \
       bzip2 \
       curl \
       file \
       gawk \
-      gcc-multilib \
       gnupg \
       jq \
+      lib32atomic1 \
+      lib32gcc1 \
+      lib32stdc++6 \
+      lib32z1 \
+      libc6-i386 \
+      libdbus-glib-1-2 \
+      libgtk-3-0 \
       libucl1 \
       p7zip-full \
       procps \
@@ -71,21 +50,7 @@ RUN apt-get update && \
       x11-utils \
       xvfb \
       zip \
-      linux-libc-dev \
-      linux-libc-dev:$ARCH \
-      $PKG_CONFIG \
-      $LIBSTDCXX \
-      libdbus-glib-1-dev:$ARCH \
-      libdrm-dev:$ARCH \
-      libfontconfig1-dev:$ARCH \
-      libfreetype6-dev:$ARCH \
-      libgconf2-dev:$ARCH \
-      libgtk-3-dev:$ARCH \
-      libgtk2.0-dev:$ARCH \
-      libpango1.0-dev:$ARCH \
-      libpulse-dev:$ARCH \
-      libx11-xcb-dev:$ARCH \
-      libxt-dev:$ARCH
+      pkg-config
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include taskcluster/docker/recipes/xvfb.sh

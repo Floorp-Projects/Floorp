@@ -72,8 +72,6 @@ jobs:
         symbol: I(deb8)
         parent: debian8-base
         definition: debian-build
-        args:
-            ARCH: amd64
     debian8-mozjs-rust-build:
         symbol: I(deb8jsrs)
         parent: debian8-amd64-build
@@ -110,8 +108,6 @@ jobs:
         symbol: I(deb10)
         parent: debian10-base
         definition: debian-build
-        args:
-            ARCH: amd64
     debian10-test-iris:
         symbol: I(deb10-ti)
         parent: debian10-test
