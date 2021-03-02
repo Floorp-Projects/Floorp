@@ -287,9 +287,7 @@ void EventListenerManager::AddEventListenerInternal(
     mMayHaveMutationListeners = true;
     // Go from our target to the nearest enclosing DOM window.
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-      nsCOMPtr<Document> doc = window->GetExtantDoc();
-      if (doc &&
-          !(aFlags.mInSystemGroup && doc->DevToolsWatchingDOMMutations())) {
+      if (Document* doc = window->GetExtantDoc()) {
         doc->WarnOnceAbout(DeprecatedOperations::eMutationEvent);
       }
       // If aEventMessage is eLegacySubtreeModified, we need to listen all
