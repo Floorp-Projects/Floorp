@@ -15,6 +15,7 @@
 #include "nsHashPropertyBag.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsIXULRuntime.h"
 #include "nsIWritablePropertyBag.h"
 
 using namespace mozilla::dom;
@@ -177,7 +178,7 @@ IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
   // and cancel us when it's ready.
   // XXXBFCache This should be fixed in some better way.
   bool disconnectChildListeners = !aSwitchedProcess;
-  if (!disconnectChildListeners && StaticPrefs::fission_bfcacheInParent()) {
+  if (!disconnectChildListeners && mozilla::BFCacheInParent()) {
     nsDocShell* shell = GetDocShell();
     disconnectChildListeners = shell && shell->GetBrowsingContext() &&
                                shell->GetBrowsingContext()->IsTop();
