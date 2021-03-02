@@ -23,13 +23,13 @@ class APZCTreeManagerTester : public APZCTesterBase {
   APZCTreeManagerTester() : mLayersOnly(false) {}
 
   virtual void SetUp() {
+    APZCTesterBase::SetUp();
     if (mLayersOnly) {
       SCOPED_GFX_VAR_MAYBE_EMPLACE(mVarWebRender, UseWebRender, false);
       SCOPED_GFX_VAR_MAYBE_EMPLACE(mVarSoftwareWebRender, UseSoftwareWebRender,
                                    false);
     }
 
-    APZCTesterBase::SetUp();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
 
