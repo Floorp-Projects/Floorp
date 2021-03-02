@@ -4515,7 +4515,7 @@ engine_tab:
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/9366
     data_reviews:
-      - TBD
+      - https://github.com/mozilla-mobile/fenix/pull/17864
     data_sensitivity:
       - technical
     notification_emails:
