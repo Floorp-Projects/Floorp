@@ -2,10 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-fxa-toolbar-sync-syncing =
-    .label = Syncing…
-fxa-toolbar-sync-syncing-tabs =
-    .label = Syncing Tabs…
+fxa-toolbar-sync-syncing2 = Syncing…
 
 sync-disconnect-dialog-title = Disconnect { -sync-brand-short-name }?
 sync-disconnect-dialog-body = { -brand-product-name } will stop syncing your account but won’t delete any of your browsing data on this device.
