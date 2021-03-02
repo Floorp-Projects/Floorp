@@ -211,8 +211,10 @@ nsresult DnsAndConnectSocket::SetupDnsFlags() {
   mPrimaryTransport.mDnsFlags = dnsFlags;
   mBackupTransport.mDnsFlags = dnsFlags;
   if (disableIpv6ForBackup) {
-    mBackupTransport.mDnsFlags |= nsISocketTransport::DISABLE_IPV6;
+    mBackupTransport.mDnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
   }
+  LOG(("DnsAndConnectSocket::SetupDnsFlags flags=%u flagsBackup=%u [this=%p]",
+       mPrimaryTransport.mDnsFlags, mBackupTransport.mDnsFlags, this));
   NS_ASSERTION(
       !( mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
            !( mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
@@ -778,6 +780,7 @@ bool DnsAndConnectSocket::AcceptsTransaction(nsHttpTransaction* trans) {
 bool DnsAndConnectSocket::Claim() {
   if (mSpeculative) {
     mSpeculative = false;
+    mAllow1918 = true;
     uint32_t flags;
     if (mPrimaryTransport.mSocketTransport &&
         NS_SUCCEEDED(
