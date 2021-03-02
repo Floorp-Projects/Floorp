@@ -12,12 +12,18 @@ COPY setup_packages.sh /usr/local/sbin/
 # %ARG DIST
 # %ARG SNAPSHOT
 # Set apt sources list to a snapshot.
-RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-security_$DIST/updates; do \
-      if [ $s = "debian_jessie-backports" ]; then \
+RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-security_$DIST/updates debian-debug_$DIST-debug debian-debug_$DIST-proposed-updates-debug debian-debug_$DIST-backports-debug; do \
+      case "$s" in \
+      debian_jessie-backports) \
           echo "deb http://snapshot.debian.org/archive/debian-archive/20190328T105444Z/debian/ ${s#*_} main"; \
-      else \
+          ;; \
+      debian-debug_jessie*) \
+          : No debian-debug archive for Jessie; \
+          ;; \
+      *) \
           echo "deb http://snapshot.debian.org/archive/${s%_*}/$SNAPSHOT/ ${s#*_} main"; \
-      fi; \
+          ;; \
+      esac; \
     done > /etc/apt/sources.list && \
     ( echo 'quiet "true";'; \
       echo 'APT::Get::Assume-Yes "true";'; \
