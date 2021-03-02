@@ -162,7 +162,11 @@ class JSObject
   static bool setFlags(JSContext* cx, JS::HandleObject obj,
                        js::BaseShape::Flag flags,
                        GenerateShape generateShape = GENERATE_NONE);
-  inline bool hasAllFlags(js::BaseShape::Flag flags) const;
+
+  bool hasAllFlags(js::BaseShape::Flag flags) const {
+    MOZ_ASSERT(flags);
+    return shape()->hasAllObjectFlags(flags);
+  }
 
   // An object is a delegate if it is (or was) another object's prototype.
   // Optimization heuristics will make use of this flag.

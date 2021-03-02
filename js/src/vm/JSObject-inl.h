@@ -230,11 +230,6 @@ inline js::GlobalObject& JSObject::nonCCWGlobal() const {
   return *nonCCWRealm()->unsafeUnbarrieredMaybeGlobal();
 }
 
-inline bool JSObject::hasAllFlags(js::BaseShape::Flag flags) const {
-  MOZ_ASSERT(flags);
-  return shape()->hasAllObjectFlags(flags);
-}
-
 inline bool JSObject::nonProxyIsExtensible() const {
   MOZ_ASSERT(!uninlinedIsProxyObject());
 
