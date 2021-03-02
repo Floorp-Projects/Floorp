@@ -129,7 +129,16 @@ browsertime-tp6:
     run-visual-metrics: true
     mozharness:
         extra-options:
-            - --chimera
+            by-test-platform:
+                windows10.*shippable.*:
+                    - --chimera
+                    - --browsertime
+                    - --no-conditioned-profile
+                    - --browsertime-no-ffwindowrecorder
+                default:
+                    - --chimera
+                    - --browsertime
+                    - --no-conditioned-profile
 
 browsertime-benchmark:
     description: "Raptor (browsertime) Benchmark tests "
