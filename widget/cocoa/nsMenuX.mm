@@ -170,7 +170,7 @@ nsMenuX::~nsMenuX() {
 
   RemoveAll();
 
-  [mNativeMenu setDelegate:nil];
+  mNativeMenu.delegate = nil;
   [mNativeMenu release];
   [mMenuDelegate release];
   // autorelease the native menu item so that anything else happening to this
@@ -205,13 +205,13 @@ void nsMenuX::AddMenuItem(UniquePtr<nsMenuItemX>&& aMenuItem) {
   [mNativeMenu addItem:newNativeMenuItem];
 
   // set up target/action
-  [newNativeMenuItem setTarget:nsMenuBarX::sNativeEventTarget];
-  [newNativeMenuItem setAction:@selector(menuItemHit:)];
+  newNativeMenuItem.target = nsMenuBarX::sNativeEventTarget;
+  newNativeMenuItem.action = @selector(menuItemHit:);
 
   // set its command. we get the unique command id from the menubar
-  [newNativeMenuItem setTag:mMenuGroupOwner->RegisterForCommand(menuItem)];
+  newNativeMenuItem.tag = mMenuGroupOwner->RegisterForCommand(menuItem);
   MenuItemInfo* info = [[MenuItemInfo alloc] initWithMenuGroupOwner:mMenuGroupOwner];
-  [newNativeMenuItem setRepresentedObject:info];
+  newNativeMenuItem.representedObject = info;
   [info release];
 
   menuItem->SetupIcon();
@@ -237,7 +237,7 @@ void nsMenuX::AddMenu(UniquePtr<nsMenuX>&& aMenu) {
   NSMenuItem* newNativeMenuItem = menu->NativeMenuItem();
   if (newNativeMenuItem) {
     [mNativeMenu addItem:newNativeMenuItem];
-    [newNativeMenuItem setSubmenu:(NSMenu*)menu->NativeData()];
+    newNativeMenuItem.submenu = (NSMenu*)menu->NativeData();
   }
 
   menu->SetupIcon();
@@ -298,12 +298,12 @@ nsresult nsMenuX::RemoveAll() {
 
   if (mNativeMenu) {
     // clear command id's
-    int itemCount = [mNativeMenu numberOfItems];
+    int itemCount = mNativeMenu.numberOfItems;
     for (int i = 0; i < itemCount; i++) {
       mMenuGroupOwner->UnregisterCommand((uint32_t)[[mNativeMenu itemAtIndex:i] tag]);
     }
     // get rid of Cocoa menu items
-    for (int i = [mNativeMenu numberOfItems] - 1; i >= 0; i--) {
+    for (int i = mNativeMenu.numberOfItems - 1; i >= 0; i--) {
       [mNativeMenu removeItemAtIndex:i];
     }
   }
@@ -424,7 +424,7 @@ nsresult nsMenuX::SetEnabled(bool aIsEnabled) {
   if (aIsEnabled != mIsEnabled) {
     // we always want to rebuild when this changes
     mIsEnabled = aIsEnabled;
-    [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
+    mNativeMenuItem.enabled = mIsEnabled;
   }
   return NS_OK;
 }
@@ -441,11 +441,11 @@ GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle) {
   NSString* title = [NSString stringWithCharacters:(UniChar*)menuTitle.get()
                                             length:menuTitle.Length()];
   GeckoNSMenu* myMenu = [[GeckoNSMenu alloc] initWithTitle:title];
-  [myMenu setDelegate:mMenuDelegate];
+  myMenu.delegate = mMenuDelegate;
 
   // We don't want this menu to auto-enable menu items because then Cocoa
   // overrides our decisions and things get incorrectly enabled/disabled.
-  [myMenu setAutoenablesItems:NO];
+  myMenu.autoenablesItems = NO;
 
   // we used to install Carbon event handlers here, but since NSMenu* doesn't
   // create its underlying MenuRef until just before display, we delay until
@@ -621,7 +621,7 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
       // reuse the existing menu, to avoid rebuilding the root menu bar.
       NS_ASSERTION(mNativeMenu, "nsMenuX::AttributeChanged: invalid menu handle.");
       NSString* newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(mLabel);
-      [mNativeMenu setTitle:newCocoaLabelString];
+      mNativeMenu.title = newCocoaLabelString;
     } else if (parentType == eSubmenuObjectType) {
       static_cast<nsMenuX*>(mParent)->SetRebuild(true);
     } else if (parentType == eStandaloneNativeMenuObjectType) {
@@ -662,7 +662,7 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
         }
         NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
         [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
-        [mNativeMenuItem setSubmenu:mNativeMenu];
+        mNativeMenuItem.submenu = mNativeMenu;
         mVisible = true;
       }
     }
