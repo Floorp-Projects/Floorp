@@ -36,7 +36,6 @@ job-defaults:
             - intl/icu/**
             - js/moz.configure
             - js/public/**
-            - js/rust/**
             - js/src/**
             - layout/tools/reftest/reftest/**
             - Makefile.in
