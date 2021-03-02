@@ -382,9 +382,6 @@ void nsMenuX::MenuConstruct() {
   mDidFirePopupHiding = false;
   mDidFirePopupHidden = false;
 
-  // printf("nsMenuX::MenuConstruct called for %s = %d \n",
-  // NS_LossyConvertUTF16toASCII(mLabel).get(), mNativeMenu);
-
   // Retrieve our menupopup.
   nsCOMPtr<nsIContent> menuPopup = GetMenuPopupContent();
   if (!menuPopup) {
@@ -404,7 +401,6 @@ void nsMenuX::MenuConstruct() {
 
   gConstructingMenu = false;
   mNeedsRebuild = false;
-  // printf("Done building, mMenuObjectsArray.Count() = %d \n", mMenuObjectsArray.Count());
 }
 
 void nsMenuX::SetRebuild(bool aNeedsRebuild) {
@@ -463,8 +459,6 @@ void nsMenuX::LoadMenuItem(nsIContent* aMenuItemContent) {
   if (aMenuItemContent->IsElement()) {
     aMenuItemContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuitemName);
   }
-
-  // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
 
   EMenuItemType itemType = eRegularMenuItemType;
   if (aMenuItemContent->IsXULElement(nsGkAtoms::menuseparator)) {
