@@ -142,7 +142,7 @@ following ``run-using`` are available
   * ``mozharness``
   * ``mozharness-test``
   * ``run-task``
-  * ``spidermonkey`` or ``spidermonkey-package`` or ``spidermonkey-mozjs-crate``
+  * ``spidermonkey`` or ``spidermonkey-package``
   * ``debian-package``
   * ``toolchain-script``
   * ``always-optimized``

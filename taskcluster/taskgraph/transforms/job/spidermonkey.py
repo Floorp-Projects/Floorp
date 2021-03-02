@@ -25,7 +25,6 @@ sm_run_schema = Schema(
         Required("using"): Any(
             "spidermonkey",
             "spidermonkey-package",
-            "spidermonkey-mozjs-crate",
         ),
         # SPIDERMONKEY_VARIANT and SPIDERMONKEY_PLATFORM
         Required("spidermonkey-variant"): text_type,
@@ -43,7 +42,6 @@ sm_run_schema = Schema(
 
 @run_job_using("docker-worker", "spidermonkey", schema=sm_run_schema)
 @run_job_using("docker-worker", "spidermonkey-package", schema=sm_run_schema)
-@run_job_using("docker-worker", "spidermonkey-mozjs-crate", schema=sm_run_schema)
 def docker_worker_spidermonkey(config, job, taskdesc):
     run = job["run"]
 
@@ -67,8 +65,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
     script = "build-sm.sh"
     if run["using"] == "spidermonkey-package":
         script = "build-sm-package.sh"
-    elif run["using"] == "spidermonkey-mozjs-crate":
-        script = "build-sm-mozjs-crate.sh"
 
     run["using"] = "run-task"
     run["cwd"] = run["workdir"]
@@ -110,10 +106,6 @@ def generic_worker_spidermonkey(config, job, taskdesc):
         script = "build-sm-package.sh"
         # Don't allow untested configurations yet
         raise Exception("spidermonkey-package is not a supported configuration")
-    elif run["using"] == "spidermonkey-mozjs-crate":
-        script = "build-sm-mozjs-crate.sh"
-        # Don't allow untested configurations yet
-        raise Exception("spidermonkey-mozjs-crate is not a supported configuration")
 
     run["using"] = "run-task"
     run["command"] = [

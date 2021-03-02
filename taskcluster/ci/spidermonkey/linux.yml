@@ -23,18 +23,6 @@ sm-package-linux64/opt:
         using: spidermonkey-package
         spidermonkey-variant: plain
 
-sm-mozjs-sys-linux64/debug:
-    description: "Build js/src as the mozjs_sys Rust crate"
-    index:
-        job-name: sm-mozjs-sys-linux64-debug
-    treeherder:
-        platform: linux64/debug
-        symbol: SM(mozjs-crate)
-    run:
-        using: spidermonkey-mozjs-crate
-        spidermonkey-variant: plaindebug
-    run-on-projects: ['integration', 'release']
-
 sm-plain-linux64/debug:
     description: "Spidermonkey Plain"
     index:
