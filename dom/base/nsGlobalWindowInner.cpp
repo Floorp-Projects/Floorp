@@ -2419,11 +2419,13 @@ bool nsPIDOMWindowInner::IsSecureContext() const {
   return nsGlobalWindowInner::Cast(this)->IsSecureContext();
 }
 
-void nsPIDOMWindowInner::Suspend() {
-  nsGlobalWindowInner::Cast(this)->Suspend();
+void nsPIDOMWindowInner::Suspend(bool aIncludeSubWindows) {
+  nsGlobalWindowInner::Cast(this)->Suspend(aIncludeSubWindows);
 }
 
-void nsPIDOMWindowInner::Resume() { nsGlobalWindowInner::Cast(this)->Resume(); }
+void nsPIDOMWindowInner::Resume(bool aIncludeSubWindows) {
+  nsGlobalWindowInner::Cast(this)->Resume(aIncludeSubWindows);
+}
 
 void nsPIDOMWindowInner::SyncStateFromParentWindow() {
   nsGlobalWindowInner::Cast(this)->SyncStateFromParentWindow();
@@ -5441,7 +5443,7 @@ already_AddRefed<StorageEvent> nsGlobalWindowInner::CloneStorageEvent(
   return event.forget();
 }
 
-void nsGlobalWindowInner::Suspend() {
+void nsGlobalWindowInner::Suspend(bool aIncludeSubWindows) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // We can only safely suspend windows that are the current inner window.  If
@@ -5459,7 +5461,9 @@ void nsGlobalWindowInner::Suspend() {
 
   // All children are also suspended.  This ensure mSuspendDepth is
   // set properly and the timers are properly canceled for each child.
-  CallOnInProcessChildren(&nsGlobalWindowInner::Suspend);
+  if (aIncludeSubWindows) {
+    CallOnInProcessChildren(&nsGlobalWindowInner::Suspend, aIncludeSubWindows);
+  }
 
   mSuspendDepth += 1;
   if (mSuspendDepth != 1) {
@@ -5491,7 +5495,7 @@ void nsGlobalWindowInner::Suspend() {
   }
 }
 
-void nsGlobalWindowInner::Resume() {
+void nsGlobalWindowInner::Resume(bool aIncludeSubWindows) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // We can only safely resume a window if its the current inner window.  If
@@ -5506,7 +5510,9 @@ void nsGlobalWindowInner::Resume() {
 
   // Resume all children.  This restores timers recursively canceled
   // in Suspend() and ensures all children have the correct mSuspendDepth.
-  CallOnInProcessChildren(&nsGlobalWindowInner::Resume);
+  if (aIncludeSubWindows) {
+    CallOnInProcessChildren(&nsGlobalWindowInner::Resume, aIncludeSubWindows);
+  }
 
   if (mSuspendDepth == 0) {
     // Ignore if the window is not suspended.
@@ -5556,20 +5562,23 @@ bool nsGlobalWindowInner::IsSuspended() const {
   return mSuspendDepth != 0;
 }
 
-void nsGlobalWindowInner::Freeze() {
+void nsGlobalWindowInner::Freeze(bool aIncludeSubWindows) {
   MOZ_ASSERT(NS_IsMainThread());
-  Suspend();
-  FreezeInternal();
+  Suspend(aIncludeSubWindows);
+  FreezeInternal(aIncludeSubWindows);
 }
 
-void nsGlobalWindowInner::FreezeInternal() {
+void nsGlobalWindowInner::FreezeInternal(bool aIncludeSubWindows) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(IsCurrentInnerWindow());
   MOZ_DIAGNOSTIC_ASSERT(IsSuspended());
 
   HintIsLoading(false);
 
-  CallOnInProcessChildren(&nsGlobalWindowInner::FreezeInternal);
+  if (aIncludeSubWindows) {
+    CallOnInProcessChildren(&nsGlobalWindowInner::FreezeInternal,
+                            aIncludeSubWindows);
+  }
 
   mFreezeDepth += 1;
   MOZ_ASSERT(mSuspendDepth >= mFreezeDepth);
@@ -5592,18 +5601,21 @@ void nsGlobalWindowInner::FreezeInternal() {
   NotifyDOMWindowFrozen(this);
 }
 
-void nsGlobalWindowInner::Thaw() {
+void nsGlobalWindowInner::Thaw(bool aIncludeSubWindows) {
   MOZ_ASSERT(NS_IsMainThread());
-  ThawInternal();
-  Resume();
+  ThawInternal(aIncludeSubWindows);
+  Resume(aIncludeSubWindows);
 }
 
-void nsGlobalWindowInner::ThawInternal() {
+void nsGlobalWindowInner::ThawInternal(bool aIncludeSubWindows) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(IsCurrentInnerWindow());
   MOZ_DIAGNOSTIC_ASSERT(IsSuspended());
 
-  CallOnInProcessChildren(&nsGlobalWindowInner::ThawInternal);
+  if (aIncludeSubWindows) {
+    CallOnInProcessChildren(&nsGlobalWindowInner::ThawInternal,
+                            aIncludeSubWindows);
+  }
 
   MOZ_ASSERT(mFreezeDepth != 0);
   mFreezeDepth -= 1;
