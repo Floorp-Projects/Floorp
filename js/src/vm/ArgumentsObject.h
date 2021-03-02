@@ -175,6 +175,15 @@ class ArgumentsObject : public NativeObject {
   static_assert(ARGS_LENGTH_MAX <= (UINT32_MAX >> PACKED_BITS_COUNT),
                 "Max arguments length must fit in available bits");
 
+// Our ability to inline functions that use |arguments| is limited by
+// the number of registers available to represent Value operands to
+// CreateInlinedArgumentsObject.
+#if defined(JS_CODEGEN_X86)
+  static const uint32_t MaxInlinedArgs = 1;
+#else
+  static const uint32_t MaxInlinedArgs = 3;
+#endif
+
  protected:
   template <typename CopyArgs>
   static ArgumentsObject* create(JSContext* cx, HandleFunction callee,
@@ -218,9 +227,14 @@ class ArgumentsObject : public NativeObject {
                                            ScriptFrameIter& iter);
   static ArgumentsObject* createUnexpected(JSContext* cx,
                                            AbstractFramePtr frame);
+
   static ArgumentsObject* createForIon(JSContext* cx,
                                        jit::JitFrameLayout* frame,
                                        HandleObject scopeChain);
+  static ArgumentsObject* createForInlinedIon(JSContext* cx, Value* args,
+                                              HandleFunction callee,
+                                              HandleObject scopeChain,
+                                              uint32_t numActuals);
 
   /*
    * Allocate ArgumentsData and fill reserved slots after allocating an
@@ -454,8 +468,7 @@ class ArgumentsObject : public NativeObject {
   static void MaybeForwardToCallObject(AbstractFramePtr frame,
                                        ArgumentsObject* obj,
                                        ArgumentsData* data);
-  static void MaybeForwardToCallObject(jit::JitFrameLayout* frame,
-                                       HandleObject callObj,
+  static void MaybeForwardToCallObject(JSFunction* callee, JSObject* callObj,
                                        ArgumentsObject* obj,
                                        ArgumentsData* data);
 };

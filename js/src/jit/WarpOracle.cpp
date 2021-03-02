@@ -988,7 +988,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
 
   // Create a CompileInfo for the inlined script.
   jsbytecode* osrPc = nullptr;
-  bool needsArgsObj = false;
+  bool needsArgsObj = targetScript->needsArgsObj();
   CompileInfo* info = lifoAlloc->new_<CompileInfo>(
       mirGen_.runtime, targetScript, targetFunction, osrPc,
       info_->analysisMode(), needsArgsObj, inlineScriptTree);
