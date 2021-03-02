@@ -75,6 +75,10 @@ class DecoderDoctorDocumentWatcher : public nsITimerCallback, public nsINamed {
   void EnsureTimerIsStarted();
 
   void SynthesizeAnalysis();
+  // This is used for testing and will generate an analysis based on the value
+  // set in `media.decoder-doctor.testing.fake-error`.
+  void SynthesizeFakeAnalysis();
+  bool ShouldSynthesizeFakeAnalysis() const;
 
   // Raw pointer to a Document.
   // Must be non-null during construction.
@@ -572,6 +576,27 @@ static const char* GetLinkStatusString() {
 #endif
 }
 
+void DecoderDoctorDocumentWatcher::SynthesizeFakeAnalysis() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoCString errorType;
+  Preferences::GetCString("media.decoder-doctor.testing.fake-error", errorType);
+  MOZ_ASSERT(!errorType.IsEmpty());
+  for (const auto& id : sAllNotificationsAndReportStringIds) {
+    if (strcmp(id->mReportStringId, errorType.get()) == 0) {
+      if (id->mNotificationType ==
+          dom::DecoderDoctorNotificationType::Decode_error) {
+        ReportAnalysis(mDocument, *id, false /* isSolved */, u"*"_ns,
+                       NS_ERROR_DOM_MEDIA_DECODE_ERR, true /* IsDecodeError */);
+      } else {
+        ReportAnalysis(mDocument, *id, false /* isSolved */, u"*"_ns, NS_OK,
+                       false /* IsDecodeError */);
+      }
+      return;
+    }
+  }
+}
+
 void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -853,6 +878,15 @@ void DecoderDoctorDocumentWatcher::AddDiagnostics(
   EnsureTimerIsStarted();
 }
 
+bool DecoderDoctorDocumentWatcher::ShouldSynthesizeFakeAnalysis() const {
+  if (!StaticPrefs::media_decoder_doctor_testing()) {
+    return false;
+  }
+  nsAutoCString errorType;
+  Preferences::GetCString("media.decoder-doctor.testing.fake-error", errorType);
+  return !errorType.IsEmpty();
+}
+
 NS_IMETHODIMP
 DecoderDoctorDocumentWatcher::Notify(nsITimer* timer) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -869,7 +903,11 @@ DecoderDoctorDocumentWatcher::Notify(nsITimer* timer) {
     // We have new diagnostic data.
     mDiagnosticsHandled = mDiagnosticsSequence.Length();
 
-    SynthesizeAnalysis();
+    if (ShouldSynthesizeFakeAnalysis()) {
+      SynthesizeFakeAnalysis();
+    } else {
+      SynthesizeAnalysis();
+    }
 
     // Restart timer, to redo analysis or stop watching this document,
     // depending on whether anything new happens.
