@@ -121,10 +121,7 @@ function force_microtask_checkpoint() {
   Services.tm.dispatchToMainThread(() => {
     ran = true;
   });
-  Services.tm.spinEventLoopUntil(
-    "Test(test_promises_run_to_completion.js:force_microtask_checkpoint)",
-    () => ran
-  );
+  Services.tm.spinEventLoopUntil(() => ran);
 }
 
 add_test(test_promises_run_to_completion);

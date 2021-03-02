@@ -754,10 +754,7 @@ var MigrationUtils = Object.seal({
         done = true;
       });
 
-    Services.tm.spinEventLoopUntil(
-      "MigrationUtils.jsm:MU_spinResolve",
-      () => done || gForceExitSpinResolve
-    );
+    Services.tm.spinEventLoopUntil(() => done || gForceExitSpinResolve);
     if (!done) {
       throw new Error("Forcefully exited event loop.");
     } else if (error) {

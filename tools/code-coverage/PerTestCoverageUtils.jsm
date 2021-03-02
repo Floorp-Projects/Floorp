@@ -56,10 +56,7 @@ function awaitPromise(promise) {
       ret = v;
       complete = true;
     });
-  Services.tm.spinEventLoopUntil(
-    "PerTestCoverageUtils.jsm:awaitPromise",
-    () => complete
-  );
+  Services.tm.spinEventLoopUntil(() => complete);
   if (error) {
     throw new Error(error);
   }

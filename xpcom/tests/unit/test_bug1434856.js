@@ -22,8 +22,5 @@ function run_test() {
   };
 
   Services.tm.dispatchToMainThread(runnable);
-  Services.tm.spinEventLoopUntil(
-    "Test(test_bug1434856.js:run_test)",
-    () => complete
-  );
+  Services.tm.spinEventLoopUntil(() => complete);
 }

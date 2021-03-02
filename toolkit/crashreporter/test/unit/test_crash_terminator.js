@@ -27,10 +27,7 @@ function setup_crash() {
   terminator.observe(null, "terminator-test-xpcom-will-shutdown", null);
 
   dump("Waiting (actively) for the crash\n");
-  Services.tm.spinEventLoopUntil(
-    "Test(test_crash_terminator.js:setup_crash())",
-    () => false
-  );
+  Services.tm.spinEventLoopUntil(() => false);
 }
 
 function after_crash(mdump, extra) {
