@@ -525,7 +525,7 @@ parent:
                                      LayoutDeviceIntPoint aPoint,
                                      double aPointerPressure,
                                      uint32_t aPointerOrientation,
-                                     uint64_t aObserverId);    
+                                     uint64_t aObserverId);
     async SynthesizeNativeTouchPadPinch(TouchpadPinchPhase aEventPhase,
                                         float aScale,
                                         LayoutDeviceIntPoint aPoint,
@@ -534,6 +534,14 @@ parent:
                                    bool aLongTap,
                                    uint64_t aObserverId);
     async ClearNativeTouchSequence(uint64_t aObserverId);
+    async SynthesizeNativePenInput(uint32_t aPointerId,
+                                   TouchPointerState aPointerState,
+                                   LayoutDeviceIntPoint aPoint,
+                                   double aPressure,
+                                   uint32_t aRotation,
+                                   int32_t aTiltX,
+                                   int32_t aTiltY,
+                                   uint64_t aObserverId);
 
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
 

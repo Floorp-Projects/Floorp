@@ -623,7 +623,7 @@ interface nsIDOMWindowUtils : nsISupports {
   // input sequence. This may not cancel moz platform related events
   // that might get tirggered by input already delivered.
   const long TOUCH_CANCEL  = 0x08;
-  
+
   /**
    * Phase states for sendNativeTouchPadPinch.
    */
@@ -662,15 +662,15 @@ interface nsIDOMWindowUtils : nsISupports {
                             [optional] in nsIObserver aObserver);
   /**
    * These values indicate touchpad pinch phase states :
-   * PHASE_BEGIN 
+   * PHASE_BEGIN
    * PHASE_UPDATE
    * PHASE_END
    * Widget support: Linux GTK 3.18+.
    * @param aEventPhase The touchpad pinch phase using states listed above.
-   * @param aScale Events with PHASE_UPDATE will change the zoom level by 
+   * @param aScale Events with PHASE_UPDATE will change the zoom level by
    * the ratio between the scale of the current event and the scale of the last event.
    * @param aScreenX, aScreenY screen coords of the focus point of this event.
-   * @param aModifierFlags is expected to contain native modifier values. 
+   * @param aModifierFlags is expected to contain native modifier values.
    */
   void sendNativeTouchpadPinch(in unsigned long aEventPhase,
                                in float aScale,
@@ -704,6 +704,37 @@ interface nsIDOMWindowUtils : nsISupports {
   void sendNativeTouchTap(in long aScreenX,
                           in long aScreenY,
                           in boolean aLongTap,
+                          [optional] in nsIObserver aObserver);
+
+  /**
+   * Create a new or update an existing pen input on the digitizer.
+   *
+   * Widget support: Windows 10 1809+. Other widgets will throw.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "peninput"
+   * topic.
+   *
+   * @param aPointerId The touch point id to create or update.
+   * @param aPointerState one or more of the TOUCH_* listed above
+   * @param aScreenX x screen coord of this event
+   * @param aScreenY y screen coord of this event
+   * @param aPressure 0.0 -> 1.0 float val indicating pressure
+   * @param aRotation 0 -> 359 degree value indicating the rotation of the
+   * pointer. Use 0 for normal taps.
+   * @param aTiltX -90 -> 90 degree value indicating the tilt along the x-axis
+   * of the pointer. Use 0 for normal taps.
+   * @param aTiltY -90 -> 90 degree value indicating the tilt along the y-axis
+   * of the pointer. Use 0 for normal taps.
+   */
+  void sendNativePenInput(in unsigned long aPointerId,
+                          in unsigned long aPointerState,
+                          in long aScreenX,
+                          in long aScreenY,
+                          in double aPressure,
+                          in unsigned long aRotation,
+                          in long aTiltX,
+                          in long aTiltY,
                           [optional] in nsIObserver aObserver);
 
   /**

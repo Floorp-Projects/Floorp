@@ -1878,6 +1878,21 @@ mozilla::ipc::IPCResult BrowserParent::RecvClearNativeTouchSequence(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativePenInput(
+    const uint32_t& aPointerId, const TouchPointerState& aPointerState,
+    const LayoutDeviceIntPoint& aPoint, const double& aPressure,
+    const uint32_t& aRotation, const int32_t& aTiltX, const int32_t& aTiltY,
+    const uint64_t& aObserverId) {
+  AutoSynthesizedEventResponder responder(this, aObserverId, "peninput");
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->SynthesizeNativePenInput(aPointerId, aPointerState, aPoint,
+                                     aPressure, aRotation, aTiltX, aTiltY,
+                                     responder.GetObserver());
+  }
+  return IPC_OK();
+}
+
 void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return;
