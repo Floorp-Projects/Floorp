@@ -36,7 +36,8 @@
 namespace mozilla {
 namespace dom {
 class CanonicalBrowsingContext;
-}
+struct RemotenessChangeState;
+}  // namespace dom
 namespace net {
 using ChildEndpointPromise =
     MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
@@ -320,9 +321,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // and that the new remote type will be something other than NOT_REMOTE
   bool MaybeTriggerProcessSwitch(bool* aWillSwitchToRemote);
   void TriggerProcessSwitch(dom::CanonicalBrowsingContext* aContext,
-                            const nsCString& aRemoteType,
-                            bool aReplaceBrowsingContext,
-                            uint64_t aSpecificGroupId);
+                            const dom::RemotenessChangeState& aState);
 
   // A helper for TriggerRedirectToRealChannel that abstracts over
   // the same-process and cross-process switch cases and returns
