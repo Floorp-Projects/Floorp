@@ -10785,7 +10785,7 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
     }
   }
 
-  if (!StaticPrefs::fission_bfcacheInParent()) {
+  if (!mozilla::BFCacheInParent()) {
     // BFCache is currently not compatible with remote subframes (bug 1609324)
     if (RefPtr<BrowsingContext> browsingContext = GetBrowsingContext()) {
       for (auto& child : browsingContext->Children()) {
