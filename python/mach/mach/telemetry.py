@@ -122,7 +122,9 @@ def report_invocation_metrics(telemetry, command):
         # Without this information, we're unable to filter argv paths, so
         # we skip submitting them to telemetry.
         return
-    metrics.mach.argv.set(filter_args(command, sys.argv, instance))
+    metrics.mach.argv.set(
+        filter_args(command, sys.argv, instance.topsrcdir, instance.topobjdir)
+    )
 
 
 def is_applicable_telemetry_environment():
