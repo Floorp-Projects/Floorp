@@ -6396,9 +6396,10 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(
-      splitHeaderResult.Succeeded(),
-      "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
+  if (splitHeaderResult.Failed()) {
+    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
+    return NS_ERROR_FAILURE;
+  }
 
   // If the previous heading of split point is empty, put a padding <br>
   // element for empty last line into it.
