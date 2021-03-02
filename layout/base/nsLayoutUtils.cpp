@@ -4298,9 +4298,6 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
   nscoord h;
   if (!GetAbsoluteCoord(bSizeCoord, h) &&
       !GetPercentBSize(bSizeCoord, f, aHorizontalAxis, h)) {
-    NS_ASSERTION(bSizeCoord.IsAuto() || bSizeCoord.IsExtremumLength() ||
-                     bSizeCoord.HasPercent(),
-                 "unknown block-size unit");
     LayoutFrameType fType = f->Type();
     if (fType != LayoutFrameType::Viewport &&
         fType != LayoutFrameType::Canvas &&
@@ -4312,10 +4309,6 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
       // so I'll choose not to. -LDB
       return false;
     }
-
-    NS_ASSERTION(
-        bSizeCoord.IsAuto() || bSizeCoord.IsExtremumLength(),
-        "Unexpected block-size unit for viewport or canvas or page-content");
     // For the viewport, canvas, and page-content kids, the percentage
     // basis is just the parent block-size.
     h = f->BSize(wm);
@@ -4331,10 +4324,6 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
   if (GetAbsoluteCoord(maxBSizeCoord, maxh) ||
       GetPercentBSize(maxBSizeCoord, f, aHorizontalAxis, maxh)) {
     if (maxh < h) h = maxh;
-  } else {
-    NS_ASSERTION(maxBSizeCoord.IsNone() || maxBSizeCoord.IsExtremumLength() ||
-                     maxBSizeCoord.HasPercent(),
-                 "unknown max block-size unit");
   }
 
   const auto& minBSizeCoord = pos->MinBSize(wm);
@@ -4342,11 +4331,9 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
   nscoord minh;
   if (GetAbsoluteCoord(minBSizeCoord, minh) ||
       GetPercentBSize(minBSizeCoord, f, aHorizontalAxis, minh)) {
-    if (minh > h) h = minh;
-  } else {
-    NS_ASSERTION(minBSizeCoord.IsAuto() || minBSizeCoord.IsExtremumLength() ||
-                     minBSizeCoord.HasPercent(),
-                 "unknown min block-size unit");
+    if (minh > h) {
+      h = minh;
+    }
   }
 
   // If we're an abspos box, percentages in that case resolve against the
@@ -4497,7 +4484,7 @@ static nscoord GetDefiniteSizeTakenByBoxSizing(
 // (-moz-fit-content for width, and -moz-available) have no effect on
 // intrinsic widths.
 enum eWidthProperty { PROP_WIDTH, PROP_MAX_WIDTH, PROP_MIN_WIDTH };
-static bool GetIntrinsicCoord(StyleExtremumLength aStyle,
+static bool GetIntrinsicCoord(nsIFrame::ExtremumLength aStyle,
                               gfxContext* aRenderingContext, nsIFrame* aFrame,
                               Maybe<nscoord> aInlineSizeFromAspectRatio,
                               eWidthProperty aProperty, nscoord& aResult) {
@@ -4505,19 +4492,19 @@ static bool GetIntrinsicCoord(StyleExtremumLength aStyle,
                  aProperty == PROP_MIN_WIDTH,
              "unexpected property");
 
-  if (aStyle == StyleExtremumLength::MozAvailable) return false;
-  if (aStyle == StyleExtremumLength::MozFitContent) {
+  if (aStyle == nsIFrame::ExtremumLength::MozAvailable) return false;
+  if (aStyle == nsIFrame::ExtremumLength::MozFitContent) {
     if (aProperty == PROP_WIDTH) return false;  // handle like 'width: auto'
     if (aProperty == PROP_MAX_WIDTH)
       // constrain large 'width' values down to max-content
-      aStyle = StyleExtremumLength::MaxContent;
+      aStyle = nsIFrame::ExtremumLength::MaxContent;
     else
       // constrain small 'width' or 'max-width' values up to min-content
-      aStyle = StyleExtremumLength::MinContent;
+      aStyle = nsIFrame::ExtremumLength::MinContent;
   }
 
-  NS_ASSERTION(aStyle == StyleExtremumLength::MinContent ||
-                   aStyle == StyleExtremumLength::MaxContent,
+  NS_ASSERTION(aStyle == nsIFrame::ExtremumLength::MinContent ||
+                   aStyle == nsIFrame::ExtremumLength::MaxContent,
                "should have reduced everything remaining to one of these");
 
   // If aFrame is a container for font size inflation, then shrink
@@ -4526,7 +4513,7 @@ static bool GetIntrinsicCoord(StyleExtremumLength aStyle,
 
   if (aInlineSizeFromAspectRatio) {
     aResult = *aInlineSizeFromAspectRatio;
-  } else if (aStyle == StyleExtremumLength::MaxContent) {
+  } else if (aStyle == nsIFrame::ExtremumLength::MaxContent) {
     aResult = aFrame->GetPrefISize(aRenderingContext);
   } else {
     aResult = aFrame->GetMinISize(aRenderingContext);
@@ -4539,11 +4526,11 @@ static bool GetIntrinsicCoord(const SizeOrMaxSize& aStyle,
                               gfxContext* aRenderingContext, nsIFrame* aFrame,
                               Maybe<nscoord> aInlineSizeFromAspectRatio,
                               eWidthProperty aProperty, nscoord& aResult) {
-  if (!aStyle.IsExtremumLength()) {
+  auto length = nsIFrame::ToExtremumLength(aStyle);
+  if (!length) {
     return false;
   }
-
-  return GetIntrinsicCoord(aStyle.AsExtremumLength(), aRenderingContext, aFrame,
+  return GetIntrinsicCoord(*length, aRenderingContext, aFrame,
                            aInlineSizeFromAspectRatio, aProperty, aResult);
 }
 
@@ -4709,7 +4696,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
           ? styleMinISize
           : (horizontalAxis ? stylePos->mWidth : stylePos->mHeight);
   MOZ_ASSERT(!(aFlags & MIN_INTRINSIC_ISIZE) || styleISize.IsAuto() ||
-                 styleISize.IsExtremumLength(),
+                 nsIFrame::ToExtremumLength(styleISize),
              "should only use MIN_INTRINSIC_ISIZE for intrinsic values");
   StyleMaxSize styleMaxISize =
       horizontalAxis ? stylePos->mMaxWidth : stylePos->mMaxHeight;
@@ -4720,13 +4707,13 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
 
   auto resetIfKeywords = [](StyleSize& aSize, StyleSize& aMinSize,
                             StyleMaxSize& aMaxSize) {
-    if (aSize.IsExtremumLength()) {
+    if (!aSize.IsLengthPercentage()) {
       aSize = StyleSize::Auto();
     }
-    if (aMinSize.IsExtremumLength()) {
+    if (!aMinSize.IsLengthPercentage()) {
       aMinSize = StyleSize::Auto();
     }
-    if (aMaxSize.IsExtremumLength()) {
+    if (!aMaxSize.IsLengthPercentage()) {
       aMaxSize = StyleMaxSize::None();
     }
   };
@@ -4810,9 +4797,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   // don't even bother getting the frame's intrinsic width, because in
   // this case GetAbsoluteCoord(styleISize, w) will always succeed, so
   // we'll never need the intrinsic dimensions.
-  if (styleISize.IsExtremumLength() &&
-      (styleISize.AsExtremumLength() == StyleExtremumLength::MaxContent ||
-       styleISize.AsExtremumLength() == StyleExtremumLength::MinContent)) {
+  if (styleISize.IsMaxContent() || styleISize.IsMinContent()) {
     MOZ_ASSERT(isInlineAxis);
     // -moz-fit-content and -moz-available enumerated widths compute intrinsic
     // widths just like auto.
@@ -4971,11 +4956,14 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   // resolve the {min|max}-content size by the aspect-ratio and the block size.
   // If |aAxis| is not the inline axis of |aFrame|, {min|max}-content should
   // behaves as auto, so we don't need this.
+  //
+  // FIXME(emilio): For -moz-available it seems we shouldn't need this.
+  //
   // https://github.com/w3c/csswg-drafts/issues/5032
   // FIXME: Bug 1670151: Use GetAspectRatio() to cover replaced elements (and
   // then we can drop the check of eSupportsAspectRatio).
   const AspectRatio ar = stylePos->mAspectRatio.ToLayoutRatio();
-  if (isInlineAxis && styleISize.IsExtremumLength() && ar &&
+  if (isInlineAxis && ar && nsIFrame::ToExtremumLength(styleISize) &&
       aFrame->IsFrameOfType(nsIFrame::eSupportsAspectRatio) &&
       !inlineSizeFromAspectRatio) {
     // This 'B' in |styleBSize| means the block size of |aFrame|. We go into
@@ -5071,10 +5059,10 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
   // -moz-available for intrinsic size in block axis. Therefore, we reset them
   // if needed.
   if (aAxis != ourInlineAxis) {
-    if (size.IsExtremumLength()) {
+    if (size.BehavesLikeInitialValueOnBlockAxis()) {
       size = StyleSize::Auto();
     }
-    if (maxSize.IsExtremumLength()) {
+    if (maxSize.BehavesLikeInitialValueOnBlockAxis()) {
       maxSize = StyleMaxSize::None();
     }
   }
@@ -5086,7 +5074,7 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
       size = aAxis == eAxisHorizontal ? stylePos->mWidth : stylePos->mHeight;
       // This is same as above: keywords should behaves as property's initial
       // values in block axis.
-      if (aAxis != ourInlineAxis && size.IsExtremumLength()) {
+      if (aAxis != ourInlineAxis && size.BehavesLikeInitialValueOnBlockAxis()) {
         size = StyleSize::Auto();
       }
 
@@ -5107,7 +5095,7 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
     }
   } else if (GetAbsoluteCoord(size, minSize)) {
     fixedMinSize = &minSize;
-  } else if (!size.IsExtremumLength()) {
+  } else if (size.IsLengthPercentage()) {
     MOZ_ASSERT(size.HasPercent());
     minSize = 0;
     fixedMinSize = &minSize;

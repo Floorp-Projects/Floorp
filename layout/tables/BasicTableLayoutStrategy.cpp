@@ -140,38 +140,36 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
     prefCoord = std::max(c, minCoord);
   } else if (iSize.ConvertsToPercentage()) {
     prefPercent = iSize.ToPercentage();
-  } else if (iSize.IsExtremumLength() && aIsCell) {
-    switch (iSize.AsExtremumLength()) {
-      case StyleExtremumLength::MaxContent:
+  } else if (aIsCell) {
+    switch (iSize.tag) {
+      case StyleSize::Tag::MaxContent:
         // 'inline-size' only affects pref isize, not min
         // isize, so don't change anything
         break;
-      case StyleExtremumLength::MinContent:
+      case StyleSize::Tag::MinContent:
         prefCoord = minCoord;
         break;
-      case StyleExtremumLength::MozFitContent:
-      case StyleExtremumLength::MozAvailable:
+      case StyleSize::Tag::MozAvailable:
+      case StyleSize::Tag::MozFitContent:
+      case StyleSize::Tag::Auto:
+      case StyleSize::Tag::LengthPercentage:
         break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected enumerated value");
     }
   }
 
   StyleMaxSize maxISize = stylePos->MaxISize(aWM);
-  if (maxISize.IsExtremumLength()) {
-    if (!aIsCell ||
-        maxISize.AsExtremumLength() == StyleExtremumLength::MozAvailable) {
+  if (nsIFrame::ToExtremumLength(maxISize)) {
+    if (!aIsCell || maxISize.IsMozAvailable()) {
       maxISize = StyleMaxSize::None();
-    } else if (maxISize.AsExtremumLength() ==
-               StyleExtremumLength::MozFitContent) {
+    } else if (maxISize.IsMozFitContent()) {
       // for 'max-inline-size', '-moz-fit-content' is like 'max-content'
-      maxISize = StyleMaxSize::ExtremumLength(StyleExtremumLength::MaxContent);
+      maxISize = StyleMaxSize::MaxContent();
     }
   }
   // XXX To really implement 'max-inline-size' well, we'd need to store
   // it separately on the columns.
   const LogicalSize zeroSize(aWM);
-  if (maxISize.ConvertsToLength() || maxISize.IsExtremumLength()) {
+  if (maxISize.ConvertsToLength() || nsIFrame::ToExtremumLength(maxISize)) {
     nscoord c = aFrame
                     ->ComputeISizeValue(aRenderingContext, aWM, zeroSize,
                                         zeroSize, 0, maxISize)
@@ -186,17 +184,16 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
   }
 
   StyleSize minISize = stylePos->MinISize(aWM);
-  if (minISize.IsExtremumLength()) {
-    if (!aIsCell ||
-        minISize.AsExtremumLength() == StyleExtremumLength::MozAvailable) {
+  if (nsIFrame::ToExtremumLength(maxISize)) {
+    if (!aIsCell || minISize.IsMozAvailable()) {
       minISize = StyleSize::LengthPercentage(LengthPercentage::Zero());
-    } else if (minISize.AsExtremumLength() ==
-               StyleExtremumLength::MozFitContent) {
+    } else if (minISize.IsMozFitContent()) {
       // for 'min-inline-size', '-moz-fit-content' is like 'min-content'
-      minISize = StyleSize::ExtremumLength(StyleExtremumLength::MinContent);
+      minISize = StyleSize::MinContent();
     }
   }
-  if (minISize.ConvertsToLength() || minISize.IsExtremumLength()) {
+
+  if (minISize.ConvertsToLength() || nsIFrame::ToExtremumLength(minISize)) {
     nscoord c = aFrame
                     ->ComputeISizeValue(aRenderingContext, aWM, zeroSize,
                                         zeroSize, 0, minISize)
