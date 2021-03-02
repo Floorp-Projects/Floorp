@@ -312,7 +312,7 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   manager->SetTargetAPZC(inputBlockId, targets);
 }
 
-// Test that APZEventResult::mHandledResult is correctly
+// Test that APZEventResult::GetHandledResult() is correctly
 // populated.
 TEST_F(APZEventRegionsTesterLayersOnly, HandledByRootApzcFlag) {
   // Create simple layer tree containing a dispatch-to-content region
@@ -342,13 +342,13 @@ TEST_F(APZEventRegionsTesterLayersOnly, HandledByRootApzcFlag) {
   APZEventResult result =
       TouchDown(manager, ScreenIntPoint(50, 25), mcc->Time());
   TouchUp(manager, ScreenIntPoint(50, 25), mcc->Time());
-  EXPECT_EQ(result.mHandledResult, Some(APZHandledResult::HandledByRoot));
+  EXPECT_EQ(result.GetHandledResult(), Some(APZHandledResult::HandledByRoot));
 
   // Tap the bottom half and check that we report that we're not
   // sure whether the event was handled by the root APZC.
   result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
   TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
-  EXPECT_EQ(result.mHandledResult, Nothing());
+  EXPECT_EQ(result.GetHandledResult(), Nothing());
 
   // Register an input block callback that will tell us the
   // delayed answer.
@@ -374,7 +374,7 @@ TEST_F(APZEventRegionsTesterLayersOnly, HandledByRootApzcFlag) {
   // This time, we expect a delayed answer of `HandledByContent`.
   result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
   TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
-  EXPECT_EQ(result.mHandledResult, Nothing());
+  EXPECT_EQ(result.GetHandledResult(), Nothing());
   manager->AddInputBlockCallback(result.mInputBlockId,
                                  [&](uint64_t id, APZHandledResult answer) {
                                    EXPECT_EQ(id, result.mInputBlockId);
@@ -396,7 +396,7 @@ TEST_F(APZEventRegionsTesterLayersOnly, HandledByRootApzcFlag) {
   // This time, we expect a delayed answer of `Unhandled`.
   result = TouchDown(manager, ScreenIntPoint(50, 75), mcc->Time());
   TouchUp(manager, ScreenIntPoint(50, 75), mcc->Time());
-  EXPECT_EQ(result.mHandledResult, Nothing());
+  EXPECT_EQ(result.GetHandledResult(), Nothing());
   manager->AddInputBlockCallback(result.mInputBlockId,
                                  [&](uint64_t id, APZHandledResult answer) {
                                    EXPECT_EQ(id, result.mInputBlockId);

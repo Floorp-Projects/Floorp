@@ -738,7 +738,7 @@ void nsWindow::SendAnAPZEvent(InputData& aEvent) {
   if (mAPZC) {
     result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
   }
-  if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+  if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
     return;
   }
 

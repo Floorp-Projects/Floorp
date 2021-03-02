@@ -956,7 +956,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
   ScrollableLayerGuid targetGuid = aApzResult.mTargetGuid;
   uint64_t inputBlockId = aApzResult.mInputBlockId;
   InputAPZContext context(aApzResult.mTargetGuid, inputBlockId,
-                          aApzResult.mStatus);
+                          aApzResult.GetStatus());
 
   // Make a copy of the original event for the APZCCallbackHelper helpers that
   // we call later, because the event passed to DispatchEvent can get mutated in
@@ -992,7 +992,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
             inputBlockId);
       }
       mAPZEventState->ProcessTouchEvent(*touchEvent, targetGuid, inputBlockId,
-                                        aApzResult.mStatus, status,
+                                        aApzResult.GetStatus(), status,
                                         std::move(allowedTouchBehaviors));
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       MOZ_ASSERT(wheelEvent->mFlags.mHandledByAPZ);
@@ -1054,7 +1054,7 @@ class DispatchInputOnControllerThread : public Runnable {
 
   NS_IMETHOD Run() override {
     APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(mInput);
-    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
       return NS_OK;
     }
     RefPtr<Runnable> r = new DispatchEventOnMainThread<InputType, EventType>(
@@ -1076,7 +1076,7 @@ void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
 
     APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(aInput);
-    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
       return;
     }
 
@@ -1096,7 +1096,7 @@ void nsBaseWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
 
     APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(aInput);
-    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
       return;
     }
 
@@ -1115,7 +1115,7 @@ void nsBaseWidget::DispatchPinchGestureInput(PinchGestureInput& aInput) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
     APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(aInput);
 
-    if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
+    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
       return;
     }
     WidgetWheelEvent event = aInput.ToWidgetEvent(this);
@@ -1132,8 +1132,8 @@ nsEventStatus nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
   if (mAPZC) {
     if (APZThreadUtils::IsControllerThread()) {
       APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(*aEvent);
-      if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-        return result.mStatus;
+      if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
+        return result.GetStatus();
       }
       return ProcessUntransformedAPZEvent(aEvent, result);
     }

@@ -20,6 +20,7 @@ namespace layers {
 
 class APZInputBridgeParent;
 class AsyncPanZoomController;
+class InputBlockState;
 struct ScrollableLayerGuid;
 struct TargetConfirmationFlags;
 
@@ -53,6 +54,43 @@ struct APZEventResult {
    */
   APZEventResult(const RefPtr<AsyncPanZoomController>& aInitialTarget,
                  TargetConfirmationFlags aFlags);
+
+  void SetStatusAsConsumeNoDefault() {
+    mStatus = nsEventStatus_eConsumeNoDefault;
+  }
+
+  void SetStatusAsIgnore() { mStatus = nsEventStatus_eIgnore; }
+
+  // Set mStatus to nsEventStatus_eConsumeDoDefault and set mHandledResult
+  // depending on |aTarget|.
+  void SetStatusAsConsumeDoDefault(
+      const RefPtr<AsyncPanZoomController>& aTarget);
+  // Set mStatus to nsEventStatus_eConsumeDoDefault and set mHandledResult
+  // depending on |aBlock|'s target APZC.
+  void SetStatusAsConsumeDoDefault(const InputBlockState& aBlock);
+  // Smilar to above two functions, but we need to use this function if it's
+  // possible that the event needs to be handled as if it's consumed by the root
+  // APZC in the case where the target APZC area is covered by dynamic toolbar
+  // so that browser apps can move the toolbar corresponding to the event.
+  void SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
+      const InputBlockState& aBlock, TargetConfirmationFlags aFlags,
+      const AsyncPanZoomController& aTarget);
+
+  // DO NOT USE THIS UpdateStatus DIRECTLY. THIS FUNCTION IS ONLY FOR
+  // SERIALIZATION / DESERIALIZATION OF THIS STRUCT IN IPC.
+  void UpdateStatus(nsEventStatus aStatus) { mStatus = aStatus; }
+  nsEventStatus GetStatus() const { return mStatus; };
+
+  // DO NOT USE THIS UpdateHandledResult DIRECTLY. THIS FUNCTION IS ONLY FOR
+  // SERIALIZATION / DESERIALIZATION OF THIS STRUCT IN IPC.
+  void UpdateHandledResult(const Maybe<APZHandledResult>& aHandledResult) {
+    mHandledResult = aHandledResult;
+  }
+  const Maybe<APZHandledResult>& GetHandledResult() const {
+    return mHandledResult;
+  }
+
+ private:
   /**
    * A status flag indicated how APZ handled the event.
    * The interpretation of each value is as follows:
@@ -74,13 +112,7 @@ struct APZEventResult {
    *   CONSUMED when we are uncertain.
    */
   nsEventStatus mStatus;
-  /**
-   * The guid of the APZC initially targeted by this event.
-   * This will usually be the APZC that handles the event, but in cases
-   * where the event is dispatched to content, it may end up being
-   * handled by a different APZC.
-   */
-  ScrollableLayerGuid mTargetGuid;
+
   /**
    * This is:
    *  - set to HandledByRoot if we know for sure that the event will be handled
@@ -89,6 +121,15 @@ struct APZEventResult {
    *  - left empty if we are unsure.
    */
   Maybe<APZHandledResult> mHandledResult;
+
+ public:
+  /**
+   * The guid of the APZC initially targeted by this event.
+   * This will usually be the APZC that handles the event, but in cases
+   * where the event is dispatched to content, it may end up being
+   * handled by a different APZC.
+   */
+  ScrollableLayerGuid mTargetGuid;
   /**
    * If this event started or was added to an input block, the id of that
    * input block, otherwise InputBlockState::NO_BLOCK_ID.

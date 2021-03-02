@@ -1528,7 +1528,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
                              hit.mTargetApzc.get());
         }
 
-        if (result.mStatus == nsEventStatus_eConsumeDoDefault) {
+        if (result.GetStatus() == nsEventStatus_eConsumeDoDefault) {
           // This input event is part of a drag block, so whether or not it is
           // directed at a scrollbar depends on whether the drag block started
           // on a scrollbar.
@@ -1591,7 +1591,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           if (hit.mTargetApzc) {
             SynthesizePinchGestureFromMouseWheel(wheelInput, hit.mTargetApzc);
           }
-          result.mStatus = nsEventStatus_eConsumeNoDefault;
+          result.SetStatusAsConsumeNoDefault();
           return result;
         }
 
@@ -1833,8 +1833,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       // Any keyboard event that is dispatched to the input queue at this point
       // should have been consumed
-      MOZ_ASSERT(result.mStatus == nsEventStatus_eConsumeDoDefault ||
-                 result.mStatus == nsEventStatus_eConsumeNoDefault);
+      MOZ_ASSERT(result.GetStatus() == nsEventStatus_eConsumeDoDefault ||
+                 result.GetStatus() == nsEventStatus_eConsumeNoDefault);
 
       keyInput.mHandledByAPZ = true;
       focusSetter.MarkAsNonFocusChanging();
@@ -1938,7 +1938,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         mRetainedTouchIdentifier =
             mTouchBlockHitResult.mTargetApzc->GetLastTouchIdentifier();
       }
-      result.mStatus = nsEventStatus_eConsumeNoDefault;
+
+      result.SetStatusAsConsumeNoDefault();
       return result;
     }
 
@@ -2006,7 +2007,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         }
       }
       if (aInput.mTouches.IsEmpty()) {
-        result.mStatus = nsEventStatus_eConsumeNoDefault;
+        result.SetStatusAsConsumeNoDefault();
         return result;
       }
     }
@@ -2038,7 +2039,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         Maybe<ScreenIntPoint> untransformedScreenPoint =
             UntransformBy(outTransform, touchData.mScreenPoint);
         if (!untransformedScreenPoint) {
-          result.mStatus = nsEventStatus_eIgnore;
+          result.SetStatusAsIgnore();
           return result;
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
