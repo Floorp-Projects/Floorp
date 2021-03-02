@@ -43,6 +43,8 @@ class RemoteAccessibleBase : public Accessible {
  public:
   virtual ~RemoteAccessibleBase() { MOZ_ASSERT(!mWrapper); }
 
+  virtual bool IsRemote() const override { return true; }
+
   void AddChildAt(uint32_t aIdx, Derived* aChild) {
     mChildren.InsertElementAt(aIdx, aChild);
   }

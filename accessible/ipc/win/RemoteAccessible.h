@@ -57,6 +57,13 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
   bool mSafeToRecurse;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// RemoteAccessible downcasting method
+
+inline RemoteAccessible* Accessible::AsRemote() {
+  return IsRemote() ? static_cast<RemoteAccessible*>(this) : nullptr;
+}
+
 }  // namespace a11y
 }  // namespace mozilla
 
