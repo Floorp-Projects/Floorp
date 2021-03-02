@@ -670,9 +670,7 @@ nsresult HttpConnectionUDP::GetPeerAddr(NetAddr* addr) {
   }
 }
 
-bool HttpConnectionUDP::ResolvedByTRR() {
-  return mResolvedByTRR;
-}
+bool HttpConnectionUDP::ResolvedByTRR() { return mResolvedByTRR; }
 
 }  // namespace net
 }  // namespace mozilla

@@ -138,7 +138,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual bool GetEchConfigUsed() = 0;
 
  protected:
-
   // The capabailities associated with the most recent transaction
   uint32_t mTransactionCaps;
 

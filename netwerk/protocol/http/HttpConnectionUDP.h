@@ -116,6 +116,7 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   nsCOMPtr<nsINetAddr> mSelfAddr;
   nsCOMPtr<nsINetAddr> mPeerAddr;
   bool mResolvedByTRR = false;
+
  private:
   // Http3
   RefPtr<Http3Session> mHttp3Session;

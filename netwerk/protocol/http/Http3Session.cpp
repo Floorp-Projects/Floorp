@@ -488,8 +488,7 @@ nsresult Http3Session::ProcessEvents() {
         break;
       case Http3Event::Tag::ResumptionToken: {
         LOG(("Http3Session::ProcessEvents - ResumptionToken"));
-        if (StaticPrefs::network_http_http3_enable_0rtt() &&
-            !data.IsEmpty()) {
+        if (StaticPrefs::network_http_http3_enable_0rtt() && !data.IsEmpty()) {
           LOG(("Got a resumption token"));
           nsAutoCString peerId;
           mSocketControl->GetPeerId(peerId);
@@ -588,7 +587,8 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
       break;
     }
     MOZ_ASSERT(packetToSend.Length());
-    LOG(("Http3Session::ProcessOutput sending packet with %u bytes to %s "
+    LOG(
+        ("Http3Session::ProcessOutput sending packet with %u bytes to %s "
          "port=%d [this=%p].",
          (uint32_t)packetToSend.Length(),
          PromiseFlatCString(remoteAddrStr).get(), port, this));
