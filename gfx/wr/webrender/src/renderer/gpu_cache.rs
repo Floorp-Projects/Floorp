@@ -130,7 +130,6 @@ impl GpuCacheTexture {
             new_size.height,
             TextureFilter::Nearest,
             rt_info,
-            1,
         );
 
         // Copy the contents of the previous texture, if applicable.

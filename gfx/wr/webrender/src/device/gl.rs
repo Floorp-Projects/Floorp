@@ -2376,7 +2376,6 @@ impl Device {
         mut height: i32,
         filter: TextureFilter,
         render_target: Option<RenderTargetInfo>,
-        layer_count: i32,
     ) -> Texture {
         debug_assert!(self.inside_frame);
 
@@ -2391,7 +2390,7 @@ impl Device {
             id: self.gl.gen_textures(1)[0],
             target: get_gl_target(target),
             size: DeviceIntSize::new(width, height),
-            layer_count,
+            layer_count: 1, // TODO(nical)
             format,
             filter,
             active_swizzle: Cell::default(),
@@ -2410,12 +2409,6 @@ impl Device {
 
         // Allocate storage.
         let desc = self.gl_describe_format(texture.format);
-        let is_array = match texture.target {
-            gl::TEXTURE_2D_ARRAY => true,
-            gl::TEXTURE_2D | gl::TEXTURE_RECTANGLE | gl::TEXTURE_EXTERNAL_OES => false,
-            _ => panic!("BUG: Unexpected texture target!"),
-        };
-        assert!(is_array || texture.layer_count == 1);
 
         // Firefox doesn't use mipmaps, but Servo uses them for standalone image
         // textures images larger than 512 pixels. This is the only case where
@@ -2438,49 +2431,26 @@ impl Device {
             TexStorageUsage::NonBGRA8 => texture.format != ImageFormat::BGRA8,
             TexStorageUsage::Never => false,
         };
-        match (use_texture_storage, is_array) {
-            (true, true) =>
-                self.gl.tex_storage_3d(
-                    gl::TEXTURE_2D_ARRAY,
-                    mipmap_levels,
-                    desc.internal,
-                    texture.size.width as gl::GLint,
-                    texture.size.height as gl::GLint,
-                    texture.layer_count,
-                ),
-            (true, false) =>
-                self.gl.tex_storage_2d(
-                    texture.target,
-                    mipmap_levels,
-                    desc.internal,
-                    texture.size.width as gl::GLint,
-                    texture.size.height as gl::GLint,
-                ),
-            (false, true) =>
-                self.gl.tex_image_3d(
-                    gl::TEXTURE_2D_ARRAY,
-                    0,
-                    desc.internal as gl::GLint,
-                    texture.size.width as gl::GLint,
-                    texture.size.height as gl::GLint,
-                    texture.layer_count,
-                    0,
-                    desc.external,
-                    desc.pixel_type,
-                    None,
-                ),
-            (false, false) =>
-                self.gl.tex_image_2d(
-                    texture.target,
-                    0,
-                    desc.internal as gl::GLint,
-                    texture.size.width as gl::GLint,
-                    texture.size.height as gl::GLint,
-                    0,
-                    desc.external,
-                    desc.pixel_type,
-                    None,
-                ),
+        if use_texture_storage {
+            self.gl.tex_storage_2d(
+                texture.target,
+                mipmap_levels,
+                desc.internal,
+                texture.size.width as gl::GLint,
+                texture.size.height as gl::GLint,
+            );
+        } else {
+            self.gl.tex_image_2d(
+                texture.target,
+                0,
+                desc.internal as gl::GLint,
+                texture.size.width as gl::GLint,
+                texture.size.height as gl::GLint,
+                0,
+                desc.external,
+                desc.pixel_type,
+                None,
+            );            
         }
 
         // Set up FBOs, if required.
@@ -2489,28 +2459,6 @@ impl Device {
             if rt_info.has_depth {
                 self.init_fbos(&mut texture, true);
             }
-        }
-
-        // Set up intermediate buffer for blitting to texture, if required.
-        if texture.layer_count > 1 && !self.capabilities.supports_blit_to_texture_array {
-            let rbo = RBOId(self.gl.gen_renderbuffers(1)[0]);
-            let fbo = FBOId(self.gl.gen_framebuffers(1)[0]);
-            self.gl.bind_renderbuffer(gl::RENDERBUFFER, rbo.0);
-            self.gl.renderbuffer_storage(
-                gl::RENDERBUFFER,
-                self.matching_renderbuffer_format(texture.format),
-                texture.size.width as _,
-                texture.size.height as _
-            );
-
-            self.bind_draw_target_impl(fbo);
-            self.gl.framebuffer_renderbuffer(
-                gl::DRAW_FRAMEBUFFER,
-                gl::COLOR_ATTACHMENT0,
-                gl::RENDERBUFFER,
-                rbo.0
-            );
-            texture.blit_workaround_buffer = Some((rbo, fbo));
         }
 
         texture
@@ -4007,21 +3955,6 @@ impl Device {
                 read: gl::RG,
                 pixel_type: gl::UNSIGNED_SHORT,
             },
-        }
-    }
-
-    /// Returns a GL format matching an ImageFormat suitable for a renderbuffer.
-    fn matching_renderbuffer_format(&self, format: ImageFormat) -> gl::GLenum {
-        match format {
-            ImageFormat::R8 => gl::R8,
-            ImageFormat::R16 => gl::R16UI,
-            // BGRA8 renderbuffers are not supported, so use RGBA8.
-            ImageFormat::BGRA8 => gl::RGBA8,
-            ImageFormat::RGBAF32 => gl::RGBA32F,
-            ImageFormat::RG8 => gl::RG8,
-            ImageFormat::RG16 => gl::RG16,
-            ImageFormat::RGBAI32 => gl::RGBA32I,
-            ImageFormat::RGBA8 => gl::RGBA8,
         }
     }
 

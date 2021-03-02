@@ -257,7 +257,6 @@ impl AsyncScreenshotGrabber {
                 texture_size.height,
                 TextureFilter::Linear,
                 Some(RenderTargetInfo { has_depth: false }),
-                1,
             );
             if level == self.scaling_textures.len() {
                 self.scaling_textures.push(texture);

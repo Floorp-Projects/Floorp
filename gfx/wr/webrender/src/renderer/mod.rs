@@ -496,7 +496,6 @@ impl TextureResolver {
                 1,
                 TextureFilter::Linear,
                 None,
-                1,
             );
         device.upload_texture_immediate(
             &dummy_cache_texture,
@@ -1058,7 +1057,6 @@ impl Renderer {
                 8,
                 TextureFilter::Nearest,
                 None,
-                1,
             );
             device.upload_texture_immediate(&texture, &dither_matrix);
 
@@ -2375,7 +2373,6 @@ impl Renderer {
                             // This needs to be a render target because some render
                             // tasks get rendered into the texture cache.
                             Some(RenderTargetInfo { has_depth: info.has_depth }),
-                            1,
                         );
 
                         if info.is_shared_cache {
@@ -4806,7 +4803,6 @@ impl Renderer {
                 source_rect.size.height,
                 TextureFilter::Nearest,
                 Some(RenderTargetInfo { has_depth: false }),
-                1,
             );
 
             self.zoom_debug_texture = Some(texture);
@@ -5626,7 +5622,6 @@ impl Renderer {
             plain.size.0.height,
             plain.filter,
             rt_info,
-            plain.size.1,
         );
         device.upload_texture_immediate(&texture, &texels);
 
