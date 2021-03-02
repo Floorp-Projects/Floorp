@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryChecking.h"
 
+#include <algorithm>  // std::min
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -125,6 +126,10 @@ static inline void PoisonImpl(void* ptr, uint8_t value, size_t num) {
   // Unfortunately, this adds about 2% more overhead, so we can only enable
   // it in debug.
 #if defined(DEBUG)
+  if (!num) {
+    return;
+  }
+
   uintptr_t poison;
   memset(&poison, value, sizeof(poison));
 #  if defined(JS_PUNBOX64)
@@ -133,13 +138,25 @@ static inline void PoisonImpl(void* ptr, uint8_t value, size_t num) {
   JS::Value v = js::PoisonedObjectValue(poison);
 
 #  if defined(JS_NUNBOX32)
-  // On 32-bit arch, ptr may not be JS::Value-size aligned.
-  uintptr_t begin_count = uintptr_t(ptr) % sizeof(JS::Value);
+  // On 32-bit arch, `ptr` is 4 bytes aligned, and it's less than
+  // `sizeof(JS::Value)` == 8 bytes.
+  //
+  // `mozilla::PodSet` with `v` requires the pointer to be 8 bytes aligned if
+  // `value_count > 0`.
+  //
+  // If the pointer isn't 8 bytes aligned, fill the leading 1-4 bytes
+  // separately here, so that either the pointer is 8 bytes aligned, or
+  // we have no more bytes to fill.
+  uintptr_t begin_count = std::min(num, uintptr_t(ptr) % sizeof(JS::Value));
   if (begin_count) {
     uint8_t* begin = static_cast<uint8_t*>(ptr);
     mozilla::PodSet(begin, value, begin_count);
     ptr = begin + begin_count;
     num -= begin_count;
+
+    if (!num) {
+      return;
+    }
   }
 #  endif
 
