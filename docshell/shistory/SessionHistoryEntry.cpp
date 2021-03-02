@@ -15,6 +15,7 @@
 #include "nsStructuredCloneContainer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -1343,6 +1344,28 @@ void SessionHistoryEntry::ReplaceWith(const SessionHistoryEntry& aSource) {
 
 SHEntrySharedParentState* SessionHistoryEntry::SharedInfo() const {
   return static_cast<SHEntrySharedParentState*>(mInfo->mSharedState.Get());
+}
+
+void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
+  MOZ_ASSERT_IF(aFrameLoader, !SharedInfo()->mFrameLoader);
+  MOZ_RELEASE_ASSERT(StaticPrefs::fission_bfcacheInParent());
+  SharedInfo()->mFrameLoader = aFrameLoader;
+  if (aFrameLoader) {
+    // When a new frameloader is stored, try to evict some older
+    // frameloaders. Non-SHIP session history has a similar call in
+    // nsDocumentViewer::Show.
+    nsCOMPtr<nsISHistory> shistory;
+    GetShistory(getter_AddRefs(shistory));
+    if (shistory) {
+      int32_t index = 0;
+      shistory->GetIndex(&index);
+      shistory->EvictOutOfRangeContentViewers(index);
+    }
+  }
+}
+
+nsFrameLoader* SessionHistoryEntry::GetFrameLoader() {
+  return SharedInfo()->mFrameLoader;
 }
 
 void SessionHistoryEntry::SetInfo(SessionHistoryInfo* aInfo) {
