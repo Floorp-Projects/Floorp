@@ -360,8 +360,7 @@ uint32_t nsSHistory::CalcMaxTotalViewers() {
 // static
 void nsSHistory::UpdatePrefs() {
   Preferences::GetInt(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
-  if (mozilla::SessionHistoryInParent() &&
-      !StaticPrefs::fission_bfcacheInParent()) {
+  if (mozilla::SessionHistoryInParent() && !mozilla::BFCacheInParent()) {
     sHistoryMaxTotalViewers = 0;
     return;
   }
@@ -1189,9 +1188,7 @@ nsSHistory::EvictAllContentViewers() {
 
 /* static */
 void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
-  if (mozilla::SessionHistoryInParent() &&
-      StaticPrefs::fission_bfcacheInParent() &&
-      aLoadEntry.mBrowsingContext->IsTop()) {
+  if (mozilla::BFCacheInParent() && aLoadEntry.mBrowsingContext->IsTop()) {
     MOZ_ASSERT(XRE_IsParentProcess());
     RefPtr<nsDocShellLoadState> loadState = aLoadEntry.mLoadState;
     RefPtr<CanonicalBrowsingContext> canonicalBC =
@@ -1473,9 +1470,8 @@ class EntryAndDistance {
     if (she) {
       mFrameLoader = she->GetFrameLoader();
     }
-    NS_ASSERTION(
-        mViewer || (StaticPrefs::fission_bfcacheInParent() && mFrameLoader),
-        "Entry should have a content viewer or frame loader.");
+    NS_ASSERTION(mViewer || (mozilla::BFCacheInParent() && mFrameLoader),
+                 "Entry should have a content viewer or frame loader.");
   }
 
   bool operator<(const EntryAndDistance& aOther) const {
