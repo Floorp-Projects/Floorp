@@ -1976,16 +1976,25 @@ def coverage_cflags(target, c_compiler, vc_path, build_env):
             "-coverage-no-function-names-in-data",
         ]
 
+    exclude = []
     if target.os == "WINNT" and c_compiler.type == "clang-cl":
-        # The Visual Studio directory is the parent of the Visual C++ directory.
-        vs_path = os.path.dirname(vc_path)
+        # VS files
+        exclude.append("^.*[vV][sS]20[0-9]{2}.*$")
+        # Files in fetches directory.
+        exclude.append("^.*[\\\\/]fetches[\\\\/].*$")
+    elif target.os == "OSX":
+        # Files in fetches directory.
+        exclude.append("^.*/fetches/.*$")
+    elif target.os == "GNU":
+        # Files in fetches directory.
+        exclude.append("^.*/fetches/.*$")
+        # Files in /usr/
+        exclude.append("^/usr/.*$")
 
-        # We need to get the real path of Visual Studio, which can be in a
-        # symlinked directory (for example, on automation).
-        vs_path = os.path.realpath(vs_path)
-
+    if exclude:
+        exclude = ";".join(exclude)
         cflags += [
-            "-fprofile-exclude-files=^{}.*$".format(re.escape(vs_path)),
+            f"-fprofile-exclude-files={exclude}",
         ]
 
     response_file_path = os.path.join(build_env.topobjdir, "code_coverage_cflags")
