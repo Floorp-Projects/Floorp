@@ -241,6 +241,7 @@ class nsWindow final : public nsBaseWidget {
   bool GetCSDDecorationOffset(int* aDx, int* aDy);
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
   static nsWindow* GetFocusedWindow();
+  void WaylandDragWorkaround(GdkEventButton* aEvent);
 #endif
 
   RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() override;
