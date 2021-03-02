@@ -1626,10 +1626,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     options.mReplaceBrowsingContext = true;
   }
 
-  if (mozilla::SessionHistoryInParent() &&
-      StaticPrefs::fission_bfcacheInParent() &&
-      nsSHistory::GetMaxTotalViewers() > 0 && !parentWindow &&
-      !browsingContext->HadOriginalOpener() &&
+  if (mozilla::BFCacheInParent() && nsSHistory::GetMaxTotalViewers() > 0 &&
+      !parentWindow && !browsingContext->HadOriginalOpener() &&
       browsingContext->Group()->Toplevels().Length() == 1 &&
       !options.mRemoteType.IsEmpty() &&
       browsingContext->GetHasLoadedNonInitialDocument() &&
