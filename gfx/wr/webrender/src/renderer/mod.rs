@@ -658,13 +658,6 @@ impl BlendMode {
     }
 }
 
-#[derive(PartialEq)]
-struct TargetSelector {
-    size: DeviceIntSize,
-    num_layers: usize,
-    format: ImageFormat,
-}
-
 /// Information about the state of the debugging / profiler overlay in native compositing mode.
 struct DebugOverlayState {
     /// True if any of the current debug flags will result in drawing a debug overlay.
@@ -2556,9 +2549,8 @@ impl Renderer {
         };
 
         // Bind the FBO to blit the backdrop to.
-        // Called per-instance in case the layer (and therefore FBO)
-        // changes. The device will skip the GL call if the requested
-        // target is already bound.
+        // Called per-instance in case the FBO changes. The device will skip
+        // the GL call if the requested target is already bound.
         let cache_draw_target = DrawTarget::from_texture(
             cache_texture,
             0,
@@ -2615,7 +2607,7 @@ impl Renderer {
             );
         }
 
-        // Restore draw target to current pass render target + layer, and reset
+        // Restore draw target to current pass render target, and reset
         // the read target.
         self.device.bind_draw_target(draw_target);
         self.device.reset_read_target();
