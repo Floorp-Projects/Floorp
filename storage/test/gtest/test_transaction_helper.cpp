@@ -139,3 +139,38 @@ TEST(storage_transaction_helper, async_Commit)
 
   blocking_async_close(db);
 }
+
+TEST(storage_transaction_helper, Nesting)
+{
+  nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
+
+  {
+    mozStorageTransaction transaction(db, false);
+    do_check_true(has_transaction(db));
+    do_check_success(
+        db->ExecuteSimpleSQL("CREATE TABLE test (id INTEGER PRIMARY KEY)"_ns));
+
+    {
+      mozStorageTransaction nestedTransaction(db, false);
+      do_check_true(has_transaction(db));
+      do_check_success(db->ExecuteSimpleSQL(
+          "CREATE TABLE nested_test (id INTEGER PRIMARY KEY)"_ns));
+
+#ifndef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      do_check_true(transaction.Commit() == NS_ERROR_NOT_AVAILABLE);
+      do_check_true(transaction.Rollback() == NS_ERROR_NOT_AVAILABLE);
+#endif
+    }
+
+    bool exists = false;
+    do_check_success(db->TableExists("nested_test"_ns, &exists));
+    do_check_false(exists);
+
+    (void)transaction.Commit();
+  }
+  do_check_false(has_transaction(db));
+
+  bool exists = false;
+  do_check_success(db->TableExists("test"_ns, &exists));
+  do_check_true(exists);
+}
