@@ -636,7 +636,7 @@ xpcAccessible::GetDeepestChildAtPointInProcess(int32_t aX, int32_t aY,
     return NS_ERROR_FAILURE;
   }
 
-  NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->ChildAtPoint(
+  NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->LocalChildAtPoint(
                    aX, aY, Accessible::EWhichChildAtPoint::DeepestChild)));
   return NS_OK;
 }

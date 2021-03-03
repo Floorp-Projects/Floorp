@@ -151,7 +151,7 @@ role XULTreeAccessible::NativeRole() const {
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeAccessible: LocalAccessible implementation (DON'T put methods here)
 
-LocalAccessible* XULTreeAccessible::ChildAtPoint(
+LocalAccessible* XULTreeAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   nsIFrame* frame = GetFrame();
   if (!frame) return nullptr;
@@ -174,7 +174,7 @@ LocalAccessible* XULTreeAccessible::ChildAtPoint(
   // If we failed to find tree cell for the given point then it might be
   // tree columns.
   if (cellInfo.mRow == -1 || !cellInfo.mCol) {
-    return AccessibleWrap::ChildAtPoint(aX, aY, aWhichChild);
+    return AccessibleWrap::LocalChildAtPoint(aX, aY, aWhichChild);
   }
 
   LocalAccessible* child = GetTreeItemAccessible(cellInfo.mRow);

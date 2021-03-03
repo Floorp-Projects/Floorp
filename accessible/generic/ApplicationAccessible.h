@@ -46,7 +46,7 @@ class ApplicationAccessible : public AccessibleWrap {
   virtual uint64_t NativeState() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 
-  virtual LocalAccessible* ChildAtPoint(
+  virtual LocalAccessible* LocalChildAtPoint(
       int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
   virtual LocalAccessible* FocusedChild() override;
 

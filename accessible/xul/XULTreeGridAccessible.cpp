@@ -256,7 +256,7 @@ ENameValueFlag XULTreeGridRowAccessible::Name(nsString& aName) const {
   return eNameOK;
 }
 
-LocalAccessible* XULTreeGridRowAccessible::ChildAtPoint(
+LocalAccessible* XULTreeGridRowAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   nsIFrame* frame = GetFrame();
   if (!frame) return nullptr;
