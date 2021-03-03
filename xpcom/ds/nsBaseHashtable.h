@@ -767,7 +767,6 @@ class nsBaseHashtable
     typedef PLDHashTable::Iterator Base;
 
     explicit Iterator(nsBaseHashtable* aTable) : Base(&aTable->mTable) {}
-    Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
     ~Iterator() = default;
 
     KeyType Key() const { return static_cast<EntryType*>(Get())->GetKey(); }
@@ -776,11 +775,11 @@ class nsBaseHashtable
     }
     DataType& Data() const { return static_cast<EntryType*>(Get())->mData; }
 
-   private:
     Iterator() = delete;
     Iterator(const Iterator&) = delete;
+    Iterator(Iterator&& aOther) = delete;
     Iterator& operator=(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&&) = delete;
+    Iterator& operator=(Iterator&&) = delete;
   };
 
   Iterator Iter() { return Iterator(this); }
