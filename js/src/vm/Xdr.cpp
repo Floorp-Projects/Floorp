@@ -19,7 +19,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
-#include "frontend/CompilationStencil.h"  // frontend::{BaseCompilationStencil, CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, BorrowingCompilationStencil}
+#include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, BorrowingCompilationStencil}
 #include "frontend/ParserAtom.h"          // frontend::ParserAtom
 #include "js/BuildId.h"                   // JS::BuildIdCharVector
 #include "vm/JSContext.h"
@@ -291,7 +291,7 @@ static XDRResult XDRAtomCount(XDRState<mode>* xdr, uint32_t* atomCount) {
 
 template <XDRMode mode>
 static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
-                                    frontend::BaseCompilationStencil& stencil) {
+                                    frontend::CompilationStencil& stencil) {
   if (mode == XDR_ENCODE) {
     uint32_t atomVectorLength = stencil.parserAtomData.size();
     MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));

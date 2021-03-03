@@ -34,7 +34,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
-#include "frontend/CompilationStencil.h"  // frontend::BaseCompilationStencil
+#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "frontend/StencilXdr.h"  // frontend::StencilXdr::SharedData, CanCopyDataToDisk
@@ -3615,7 +3615,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 bool PrivateScriptData::InitFromStencil(
     JSContext* cx, js::HandleScript script,
     const js::frontend::CompilationInput& input,
-    const js::frontend::BaseCompilationStencil& stencil,
+    const js::frontend::CompilationStencil& stencil,
     js::frontend::CompilationGCOutput& gcOutput,
     const js::frontend::ScriptIndex scriptIndex) {
   js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
@@ -3709,7 +3709,7 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 /* static */
 bool JSScript::fullyInitFromStencil(
     JSContext* cx, const js::frontend::CompilationInput& input,
-    const js::frontend::BaseCompilationStencil& stencil,
+    const js::frontend::CompilationStencil& stencil,
     frontend::CompilationGCOutput& gcOutput, HandleScript script,
     const js::frontend::ScriptIndex scriptIndex) {
   MutableScriptFlags lazyMutableFlags;
@@ -3763,9 +3763,8 @@ bool JSScript::fullyInitFromStencil(
   // Note: These flags should already be correct when the BaseScript was
   // allocated.
   MOZ_ASSERT_IF(stencil.isInitialStencil(),
-                script->immutableFlags() == stencil.asCompilationStencil()
-                                                .scriptExtra[scriptIndex]
-                                                .immutableFlags);
+                script->immutableFlags() ==
+                    stencil.scriptExtra[scriptIndex].immutableFlags);
 
   // Create and initialize PrivateScriptData
   if (!PrivateScriptData::InitFromStencil(cx, script, input, stencil, gcOutput,
@@ -3778,9 +3777,8 @@ bool JSScript::fullyInitFromStencil(
   // away.
   if (script->useMemberInitializers()) {
     if (stencil.isInitialStencil()) {
-      MemberInitializers initializers(stencil.asCompilationStencil()
-                                          .scriptExtra[scriptIndex]
-                                          .memberInitializers());
+      MemberInitializers initializers(
+          stencil.scriptExtra[scriptIndex].memberInitializers());
       script->setMemberInitializers(initializers);
     } else {
       script->setMemberInitializers(lazyData.get()->getMemberInitializers());
