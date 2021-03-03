@@ -808,7 +808,7 @@ RemoteAccessible* RemoteAccessible::FocusedChild() {
   return useDoc ? useDoc->GetAccessible(resultID) : nullptr;
 }
 
-RemoteAccessible* RemoteAccessible::ChildAtPoint(
+Accessible* RemoteAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   RemoteAccessible* target = this;
   do {
