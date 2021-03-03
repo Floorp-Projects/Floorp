@@ -668,13 +668,18 @@ struct ExtensibleCompilationStencil {
 
   RefPtr<ScriptSource> source;
 
-  Vector<ScriptStencil, 0, js::SystemAllocPolicy> scriptData;
+  // NOTE: We reserve a modest amount of inline storage in order to reduce
+  //       allocations in the most common delazification cases. These common
+  //       cases have one script and scope, as well as a handful of gcthings.
+  //       For complex pages this covers about 75% of delazifications.
+
+  Vector<ScriptStencil, 1, js::SystemAllocPolicy> scriptData;
   Vector<ScriptStencilExtra, 0, js::SystemAllocPolicy> scriptExtra;
 
-  Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
+  Vector<TaggedScriptThingIndex, 8, js::SystemAllocPolicy> gcThingData;
 
-  Vector<ScopeStencil, 0, js::SystemAllocPolicy> scopeData;
-  Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
+  Vector<ScopeStencil, 1, js::SystemAllocPolicy> scopeData;
+  Vector<BaseParserScopeData*, 1, js::SystemAllocPolicy> scopeNames;
 
   Vector<RegExpStencil, 0, js::SystemAllocPolicy> regExpData;
   Vector<BigIntStencil, 0, js::SystemAllocPolicy> bigIntData;

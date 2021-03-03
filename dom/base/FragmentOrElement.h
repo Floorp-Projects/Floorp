@@ -19,7 +19,6 @@
 #include "nsCycleCollectionParticipant.h"  // NS_DECL_CYCLE_*
 #include "nsIContent.h"                    // base class
 #include "nsIHTMLCollection.h"
-#include "nsDataHashtable.h"
 
 class ContentUnbinder;
 class nsContentList;

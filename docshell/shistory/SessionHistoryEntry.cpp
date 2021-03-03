@@ -561,7 +561,6 @@ SessionHistoryEntry::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::GetContentViewer(nsIContentViewer** aContentViewer) {
-  NS_WARNING("This lives in the child process");
   *aContentViewer = nullptr;
   return NS_OK;
 }

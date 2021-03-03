@@ -8,6 +8,8 @@ const TEST_PAGE_URI =
 
 let gUpdateCount = 0;
 
+requestLongerTimeout(2);
+
 function initForBrowser(browser) {
   gUpdateCount = 0;
 
@@ -60,30 +62,49 @@ add_task(async function test_findmarks() {
 
   let endFn = initForBrowser(browser);
 
-  // For the first value, get the numbers and ensure that they are approximately
-  // in the right place. Later tests should give the same values.
-  await promiseFindFinished(gBrowser, "tex", true);
+  for (let step = 0; step < 3; step++) {
+    // If the document root or body is absolutely positioned, this can affect the scroll height.
+    await SpecialPowers.spawn(browser, [step], stepChild => {
+      let document = content.document;
+      let adjustments = [
+        () => {},
+        () => {
+          document.documentElement.style.position = "absolute;";
+        },
+        () => {
+          document.documentElement.style.position = "";
+          document.body.style.position = "absolute";
+        },
+      ];
 
-  // The exact values vary on each platform, so use a fuzzy match.
-  let scrollVar = scrollMaxY - 1670;
-  let values = await getMarks(browser, true);
-  SimpleTest.isfuzzy(values[0], 8, 3, "first value");
-  SimpleTest.isfuzzy(values[1], 1305 + scrollVar, 10, "second value");
-  SimpleTest.isfuzzy(values[2], 1650 + scrollVar, 10, "third value");
+      adjustments[stepChild]();
+    });
 
-  await doAndVerifyFind(browser, "text", true, [values[0], values[2]]);
-  await doAndVerifyFind(browser, "", true, []);
-  await doAndVerifyFind(browser, "isz", false, [], true); // marks should not be updated here
-  await doAndVerifyFind(browser, "tex", true, values);
-  await doAndVerifyFind(browser, "isz", true, []);
-  await doAndVerifyFind(browser, "tex", true, values);
+    // For the first value, get the numbers and ensure that they are approximately
+    // in the right place. Later tests should give the same values.
+    await promiseFindFinished(gBrowser, "tex", true);
 
-  let findbar = await gBrowser.getFindBar();
-  let closedPromise = BrowserTestUtils.waitForEvent(findbar, "findbarclose");
-  await EventUtils.synthesizeKey("KEY_Escape");
-  await closedPromise;
+    // The exact values vary on each platform, so use a fuzzy match.
+    let scrollVar = scrollMaxY - 1670;
+    let values = await getMarks(browser, true);
+    SimpleTest.isfuzzy(values[0], 8, 3, "first value");
+    SimpleTest.isfuzzy(values[1], 1305 + scrollVar, 10, "second value");
+    SimpleTest.isfuzzy(values[2], 1650 + scrollVar, 10, "third value");
 
-  await verifyFind(browser, "", true, []);
+    await doAndVerifyFind(browser, "text", true, [values[0], values[2]]);
+    await doAndVerifyFind(browser, "", true, []);
+    await doAndVerifyFind(browser, "isz", false, [], true); // marks should not be updated here
+    await doAndVerifyFind(browser, "tex", true, values);
+    await doAndVerifyFind(browser, "isz", true, []);
+    await doAndVerifyFind(browser, "tex", true, values);
+
+    let findbar = await gBrowser.getFindBar();
+    let closedPromise = BrowserTestUtils.waitForEvent(findbar, "findbarclose");
+    await EventUtils.synthesizeKey("KEY_Escape");
+    await closedPromise;
+
+    await verifyFind(browser, "", true, []);
+  }
 
   endFn();
 

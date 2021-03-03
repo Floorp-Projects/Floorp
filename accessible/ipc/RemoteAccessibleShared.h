@@ -247,8 +247,9 @@ double Step();
 
 void TakeFocus();
 RemoteAccessible* FocusedChild();
-RemoteAccessible* ChildAtPoint(int32_t aX, int32_t aY,
-                               LocalAccessible::EWhichChildAtPoint aWhichChild);
+virtual Accessible* ChildAtPoint(
+    int32_t aX, int32_t aY,
+    LocalAccessible::EWhichChildAtPoint aWhichChild) override;
 nsIntRect Bounds();
 nsIntRect BoundsInCSSPixels();
 

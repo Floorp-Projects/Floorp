@@ -616,19 +616,7 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
   GenerateCallablePrologue(masm, &offsets->uncheckedCallEntry);
   masm.bind(&functionBody);
 
-  // Tiering works as follows.  The Code owns a jumpTable, which has one
-  // pointer-sized element for each function up to the largest funcIndex in
-  // the module.  Each table element is an address into the Tier-1 or the
-  // Tier-2 function at that index; the elements are updated when Tier-2 code
-  // becomes available.  The Tier-1 function will unconditionally jump to this
-  // address.  The table elements are written racily but without tearing when
-  // Tier-2 compilation is finished.
-  //
-  // The address in the table is either to the instruction following the jump
-  // in Tier-1 code, or into the function prologue after the standard setup in
-  // Tier-2 code.  Effectively, Tier-1 code performs standard frame setup on
-  // behalf of whatever code it jumps to, and the target code allocates its
-  // own frame in whatever way it wants.
+  // See comment block in WasmCompile.cpp for an explanation tiering.
   if (tier1FuncIndex) {
     Register scratch = ABINonArgReg0;
     masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, jumpTable)), scratch);

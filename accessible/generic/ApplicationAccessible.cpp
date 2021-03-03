@@ -73,7 +73,7 @@ ApplicationAccessible::NativeAttributes() {
 
 GroupPos ApplicationAccessible::GroupPosition() { return GroupPos(); }
 
-LocalAccessible* ApplicationAccessible::ChildAtPoint(
+LocalAccessible* ApplicationAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   return nullptr;
 }

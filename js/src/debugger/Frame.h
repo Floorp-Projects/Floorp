@@ -178,7 +178,7 @@ class DebuggerFrame : public NativeObject {
       HandleDebuggerFrame frame);
   [[nodiscard]] static bool setOnStepHandler(JSContext* cx,
                                              HandleDebuggerFrame frame,
-                                             OnStepHandler* handler);
+                                             UniquePtr<OnStepHandler> handler);
 
   [[nodiscard]] static JS::Result<Completion> eval(
       JSContext* cx, HandleDebuggerFrame frame,
@@ -225,8 +225,9 @@ class DebuggerFrame : public NativeObject {
    * association while the call is on the stack, and the relationships are easy
    * to discern.
    */
-  [[nodiscard]] bool setGeneratorInfo(JSContext* cx,
-                                      Handle<AbstractGeneratorObject*> genObj);
+  [[nodiscard]] static bool setGeneratorInfo(
+      JSContext* cx, HandleDebuggerFrame frame,
+      Handle<AbstractGeneratorObject*> genObj);
 
   /*
    * Undo the effects of a prior call to setGenerator.
@@ -274,7 +275,8 @@ class DebuggerFrame : public NativeObject {
 
   [[nodiscard]] bool incrementStepperCounter(JSContext* cx,
                                              AbstractFramePtr referent);
-  [[nodiscard]] bool incrementStepperCounter(JSContext* cx, JSScript* script);
+  [[nodiscard]] bool incrementStepperCounter(JSContext* cx,
+                                             HandleScript script);
   void decrementStepperCounter(JSFreeOp* fop, JSScript* script);
   void decrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
 

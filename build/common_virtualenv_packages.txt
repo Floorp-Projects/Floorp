@@ -34,7 +34,8 @@ mozilla.pth:testing/web-platform/tests/tools/third_party/html5lib
 mozilla.pth:testing/web-platform/tests/tools/third_party/hyperframe
 mozilla.pth:testing/web-platform/tests/tools/third_party/pywebsocket3
 mozilla.pth:testing/web-platform/tests/tools/third_party/webencodings
-mozilla.pth:testing/web-platform/tests/tools/wptserve
+python3:mozilla.pth:testing/web-platform/tests/tools/wptserve
+python2:mozilla.pth:testing/web-platform/mozilla/tests/tools/wptserve_py2
 mozilla.pth:testing/web-platform/tests/tools/wptrunner
 mozilla.pth:testing/xpcshell
 mozilla.pth:third_party/python/appdirs

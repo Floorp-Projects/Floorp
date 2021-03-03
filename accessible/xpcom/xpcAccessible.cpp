@@ -606,7 +606,7 @@ xpcAccessible::GetChildAtPoint(int32_t aX, int32_t aY,
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(*aAccessible = ToXPC(IntlGeneric().ChildAtPoint(
-                   aX, aY, LocalAccessible::eDirectChild)));
+                   aX, aY, Accessible::EWhichChildAtPoint::DirectChild)));
 
   return NS_OK;
 }
@@ -620,7 +620,7 @@ xpcAccessible::GetDeepestChildAtPoint(int32_t aX, int32_t aY,
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(*aAccessible = ToXPC(IntlGeneric().ChildAtPoint(
-                   aX, aY, LocalAccessible::eDeepestChild)));
+                   aX, aY, Accessible::EWhichChildAtPoint::DeepestChild)));
 
   return NS_OK;
 }
@@ -636,8 +636,8 @@ xpcAccessible::GetDeepestChildAtPointInProcess(int32_t aX, int32_t aY,
     return NS_ERROR_FAILURE;
   }
 
-  NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->ChildAtPoint(
-                   aX, aY, LocalAccessible::eDeepestChild)));
+  NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->LocalChildAtPoint(
+                   aX, aY, Accessible::EWhichChildAtPoint::DeepestChild)));
   return NS_OK;
 }
 

@@ -78,7 +78,7 @@ void OuterDocAccessible::SendEmbedderAccessible(
 
 role OuterDocAccessible::NativeRole() const { return roles::INTERNAL_FRAME; }
 
-LocalAccessible* OuterDocAccessible::ChildAtPoint(
+LocalAccessible* OuterDocAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   nsIntRect docRect = Bounds();
   if (!docRect.Contains(aX, aY)) return nullptr;
@@ -88,7 +88,7 @@ LocalAccessible* OuterDocAccessible::ChildAtPoint(
   LocalAccessible* child = LocalChildAt(0);
   NS_ENSURE_TRUE(child, nullptr);
 
-  if (aWhichChild == eDeepestChild) {
+  if (aWhichChild == Accessible::EWhichChildAtPoint::DeepestChild) {
 #if defined(XP_WIN)
     // On Windows, OuterDocAccessible::GetChildAt can return a proxy wrapper
     // for a remote document. These aren't real Accessibles and
@@ -96,7 +96,8 @@ LocalAccessible* OuterDocAccessible::ChildAtPoint(
     // eDeepestChild). Calling ChildAtPoint on these will crash!
     return nullptr;
 #else
-    return child->ChildAtPoint(aX, aY, eDeepestChild);
+    return child->LocalChildAtPoint(
+        aX, aY, Accessible::EWhichChildAtPoint::DeepestChild);
 #endif  // defined(XP_WIN)
   }
   return child;
@@ -237,9 +238,47 @@ LocalAccessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
 
 #endif  // defined(XP_WIN)
 
+// Accessible
+
+Accessible* OuterDocAccessible::ChildAt(uint32_t aIndex) const {
+  LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
+  if (result || aIndex) {
+#if defined(XP_WIN)
+    // On Windows, AccessibleWrap::LocalChildAt can return a proxy wrapper
+    // for a remote document. These aren't real Accessibles so we skip this
+    // block and retrieve the remote child doc.
+    if (!result || !result->IsProxy()) {
+      return result;
+    }
+#else
+    return result;
+#endif  // defined(XP_WIN)
+  }
+
+  return RemoteChildDoc();
+}
+
+Accessible* OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                                             EWhichChildAtPoint aWhichChild) {
+  nsIntRect docRect = Bounds();
+  if (!docRect.Contains(aX, aY)) return nullptr;
+
+  // Always return the inner doc as direct child accessible unless bounds
+  // outside of it.
+  Accessible* child = ChildAt(0);
+  NS_ENSURE_TRUE(child, nullptr);
+
+  if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
+    return child->ChildAtPoint(aX, aY, EWhichChildAtPoint::DeepestChild);
+  }
+  return child;
+}
+
 DocAccessibleParent* OuterDocAccessible::RemoteChildDoc() const {
   dom::BrowserParent* tab = dom::BrowserParent::GetFrom(GetContent());
-  if (!tab) return nullptr;
+  if (!tab) {
+    return nullptr;
+  }
 
   return tab->GetTopLevelDocAccessible();
 }

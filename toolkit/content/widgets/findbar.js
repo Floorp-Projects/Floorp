@@ -419,9 +419,7 @@
       window.removeEventListener("unload", this.destroy);
       this._destroyed = true;
 
-      if (this.browser && this.browser.finder) {
-        this.browser.finder.destroy();
-      }
+      this.browser?._finder?.destroy();
 
       // Invoking this setter also removes the message listeners.
       this.browser = null;

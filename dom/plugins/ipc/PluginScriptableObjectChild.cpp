@@ -41,8 +41,7 @@ PluginScriptableObjectChild::IdentifierTable
 
 /* static */ PluginScriptableObjectChild::StoredIdentifier*
 PluginScriptableObjectChild::HashIdentifier(const nsCString& aIdentifier) {
-  return sIdentifiers.LookupOrInsertWith(
-      aIdentifier, [&] { return MakeRefPtr<StoredIdentifier>(aIdentifier); });
+  return sIdentifiers.GetOrInsertNew(aIdentifier, aIdentifier);
 }
 
 /* static */

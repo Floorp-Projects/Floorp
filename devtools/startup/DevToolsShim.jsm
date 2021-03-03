@@ -9,7 +9,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "DevtoolsStartup", () => {
+XPCOMUtils.defineLazyGetter(this, "DevToolsStartup", () => {
   return Cc["@mozilla.org/devtools/startup-clh;1"].getService(
     Ci.nsICommandLineHandler
   ).wrappedJSObject;
@@ -192,7 +192,7 @@ const DevToolsShim = {
   },
 
   isDevToolsUser() {
-    return DevtoolsStartup.isDevToolsUser();
+    return DevToolsStartup.isDevToolsUser();
   },
 
   /**
@@ -211,14 +211,14 @@ const DevToolsShim = {
   inspectA11Y: function(tab, domReference) {
     if (!this.isEnabled()) {
       if (!this.isDisabledByPolicy()) {
-        DevtoolsStartup.openInstallPage("ContextMenu");
+        DevToolsStartup.openInstallPage("ContextMenu");
       }
       return Promise.resolve();
     }
 
     // Record the timing at which this event started in order to compute later in
     // gDevTools.showToolbox, the complete time it takes to open the toolbox.
-    // i.e. especially take `DevtoolsStartup.initDevTools` into account.
+    // i.e. especially take `DevToolsStartup.initDevTools` into account.
     const startTime = Cu.now();
 
     this.initDevTools("ContextMenu");
@@ -241,14 +241,14 @@ const DevToolsShim = {
   inspectNode: function(tab, domReference) {
     if (!this.isEnabled()) {
       if (!this.isDisabledByPolicy()) {
-        DevtoolsStartup.openInstallPage("ContextMenu");
+        DevToolsStartup.openInstallPage("ContextMenu");
       }
       return Promise.resolve();
     }
 
     // Record the timing at which this event started in order to compute later in
     // gDevTools.showToolbox, the complete time it takes to open the toolbox.
-    // i.e. especially take `DevtoolsStartup.initDevTools` into account.
+    // i.e. especially take `DevToolsStartup.initDevTools` into account.
     const startTime = Cu.now();
 
     this.initDevTools("ContextMenu");
@@ -268,7 +268,7 @@ const DevToolsShim = {
   /**
    * Initialize DevTools via DevToolsStartup if needed. This method throws if DevTools are
    * not enabled.. If the entry point is supposed to trigger the onboarding, call it
-   * explicitly via DevtoolsStartup.openInstallPage().
+   * explicitly via DevToolsStartup.openInstallPage().
    *
    * @param {String} reason
    *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
@@ -301,7 +301,7 @@ const DevToolsShim = {
     }
 
     if (!this.isInitialized()) {
-      DevtoolsStartup.initDevTools(reason);
+      DevToolsStartup.initDevTools(reason);
     }
   },
 };

@@ -262,9 +262,7 @@ class RenderThread final {
   void ClearSharedSurfacePool();
 
   /// Can only be called from the render thread.
-  void HandleDeviceReset(const char* aWhere,
-                         layers::CompositorBridgeParent* aBridge,
-                         GLenum aReason);
+  void HandleDeviceReset(const char* aWhere, GLenum aReason);
   /// Can only be called from the render thread.
   bool IsHandlingDeviceReset();
   /// Can be called from any thread.

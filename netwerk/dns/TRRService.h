@@ -62,8 +62,7 @@ class TRRService : public TRRServiceBase,
   bool IsExcludedFromTRR(const nsACString& aHost);
 
   bool MaybeBootstrap(const nsACString& possible, nsACString& result);
-  enum TrrOkay { OKAY_NORMAL = 0, OKAY_TIMEOUT = 1, OKAY_BAD = 2 };
-  void TRRIsOkay(enum TrrOkay aReason);
+  void TRRIsOkay(nsresult aChannelStatus);
   bool ParentalControlEnabled() const { return mParentalControlEnabled; }
 
   nsresult DispatchTRRRequest(TRR* aTrrRequest);
@@ -146,15 +145,19 @@ class TRRService : public TRRServiceBase,
   };
 
   class ConfirmationContext {
+   public:
     static const size_t RESULTS_SIZE = 32;
 
-   public:
     Atomic<ConfirmationState, Relaxed> mState;
     RefPtr<TRR> mTask;
     nsCOMPtr<nsITimer> mTimer;
     uint32_t mRetryInterval = 125;  // milliseconds until retry
     // The number of TRR requests that failed in a row.
     Atomic<uint32_t, Relaxed> mTRRFailures;
+
+    // This buffer holds consecutive TRR failures reported by calling
+    // TRRIsOkay(). It is only meant for reporting event telemetry.
+    char mFailureReasons[RESULTS_SIZE] = {0};
 
     // The number of confirmation retries.
     uint32_t mAttemptCount = 0;
@@ -176,6 +179,10 @@ class TRRService : public TRRServiceBase,
 
     // What triggered the confirmation
     nsCString mTrigger;
+
+    // String representation of consecutive failed lookups that triggered
+    // confirmation.
+    nsCString mFailedLookups;
 
     // Called when a confirmation completes successfully or when the
     // confirmation context changes.

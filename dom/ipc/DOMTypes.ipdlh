@@ -259,6 +259,7 @@ struct DocShellLoadStateInit
   uint32_t InternalLoadFlags;
   bool FirstParty;
   bool HasValidUserGestureActivation;
+  bool AllowFocusMove;
   nsCString TypeHint;
   nsString FileName;
   bool IsFromProcessingFrameAttributes;

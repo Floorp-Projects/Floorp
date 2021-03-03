@@ -15,7 +15,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
 #include "nsCOMArray.h"

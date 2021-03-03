@@ -25,3 +25,15 @@ linux64-cctools-port-clang-11:
         toolchain:
             - linux64-clang-11
             - linux64-binutils
+
+linux64-cctools-port-clang-12:
+    treeherder:
+        symbol: TL(cctools-clang-12)
+    run:
+        script: build-cctools-port.sh
+        toolchain-artifact: public/build/cctools.tar.xz
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-clang-12
+            - linux64-binutils

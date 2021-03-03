@@ -267,7 +267,6 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
  protected:
   bool mHasOngoingUpdate;
-  bool mIsRemote;
   nsTArray<nsCOMPtr<nsISHEntry>> mEntries;  // entries are never null
  private:
   // Track all bfcache entries and evict on expiration.

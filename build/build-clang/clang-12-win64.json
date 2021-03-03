@@ -1,0 +1,18 @@
+{
+    "stages": "4",
+    "pgo" : true,
+    "build_libcxx": false,
+    "build_type": "Release",
+    "assertions": false,
+    "python_path": "c:/mozilla-build/python/python.exe",
+    "cc": "cl.exe",
+    "cxx": "cl.exe",
+    "ml": "ml64.exe",
+    "patches": [
+      "unpoison-thread-stacks_clang_10.patch",
+      "downgrade-mangling-error_clang_12.patch",
+      "bug47258-extract-symbols-mbcs.patch",
+      "revert-llvmorg-12-init-7827-g2a078c307204.patch",
+      "loosen-msvc-detection.patch"
+    ]
+}
