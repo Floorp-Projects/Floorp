@@ -397,13 +397,15 @@ void gfxConfigManager::ConfigureWebRender() {
 
       nsString adapter;
       mGfxInfo->GetAdapterDeviceID(adapter);
-      // Block partial present on Mali-T6xx and T7xx GPUs due to rendering
-      // issues. See bug 1680087.
+      // Block partial present on some devices due to rendering issues.
+      // On Mali-T6xx and T7xx GPUs due to bug 1680087.
+      // On Adreno 3xx GPUs due to bug 1695771.
       if (adapter.Find("Mali-T6", /*ignoreCase*/ true) >= 0 ||
-          adapter.Find("Mali-T7", /*ignoreCase*/ true) >= 0) {
-        mFeatureWrPartial->Disable(FeatureStatus::Blocked,
-                                   "Partial present blocked on Mali-Txxx",
-                                   "FEATURE_FAILURE_PARTIAL_PRESENT_MALI"_ns);
+          adapter.Find("Mali-T7", /*ignoreCase*/ true) >= 0 ||
+          adapter.Find("Adreno (TM) 3", /*ignoreCase*/ true) >= 0) {
+        mFeatureWrPartial->Disable(
+            FeatureStatus::Blocked, "Partial present blocked",
+            "FEATURE_FAILURE_PARTIAL_PRESENT_BLOCKED"_ns);
       }
     }
   }
