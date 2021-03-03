@@ -1594,8 +1594,7 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
                .get();
   }
 
-  RefPtr queue = data->mJobQueues.LookupOrInsertWith(
-      aScope, [] { return new ServiceWorkerJobQueue(); });
+  RefPtr queue = data->mJobQueues.GetOrInsertNew(aScope);
   return queue.forget();
 }
 
