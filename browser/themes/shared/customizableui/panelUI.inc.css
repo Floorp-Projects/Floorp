@@ -2059,6 +2059,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 @supports -moz-bool-pref("browser.proton.enabled") {
 .subviewbutton-back {
   transform: translateY(1px);
+  margin: 0 4px;
 }
 
 .subviewbutton-back:-moz-locale-dir(rtl) {
