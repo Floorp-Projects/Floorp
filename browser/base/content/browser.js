@@ -711,10 +711,21 @@ function updateFxaToolbarMenu(enable, isInitialUpdate = false) {
     "identity.fxaccounts.enabled",
     false
   );
+
   const mainWindowEl = document.documentElement;
   const fxaPanelEl = PanelMultiView.getViewNode(document, "PanelUI-fxa");
 
-  mainWindowEl.setAttribute("fxastatus", "not_configured");
+  // To minimize the toolbar button flickering or appearing/disappearing during startup,
+  // we use this pref to anticipate the likely FxA status.
+  const statusGuess = !!Services.prefs.getStringPref(
+    "identity.fxaccounts.account.device.name",
+    ""
+  );
+  mainWindowEl.setAttribute(
+    "fxastatus",
+    statusGuess ? "signed_in" : "not_configured"
+  );
+
   fxaPanelEl.addEventListener("ViewShowing", gSync.updateSendToDeviceTitle);
 
   Services.telemetry.setEventRecordingEnabled("fxa_app_menu", true);
