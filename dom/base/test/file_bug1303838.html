@@ -11,8 +11,10 @@ Tests for tab switching on link clicks.
   <a id="link-1" target="testTab" href="file_bug1303838_target_foo.html">Link 1</a><br>
   <a id="link-2" target="testTab" href="file_bug1303838_target_bar.html">Link 2</a><br>
   <a id="link-3" target="testTab" href="file_bug1303838_target_baz.html">Link 3</a><br>
-  <a id="link-4" href="#" onclick="window.open('file_bug1303838_target_foo.html', 'testTab'); return false;">Link 4</a><br>
-  <a id="link-5" target="testTab" href="file_bug1303838_target.html">Link 5</a><br>
+  <a id="link-4" href="#" onclick="testTab = window.open('file_bug1303838_target_foo.html', 'testTab'); return false;">Link 4</a><br>
+  <a id="link-5" href="#" onclick="testTab.location.href += '?1'; return false;">Link 5</a><br>
+  <a id="link-6" href="#" onclick="testTab.location.href += '#1'; return false;">Link 6</a><br>
+  <a id="link-7" target="testTab" href="file_bug1303838_target.html">Link 7</a><br>
   <a id="anchor-link-1" target="testTab" href="file_bug1303838_target.html#foo">Anchor Link 1</a><br>
   <a id="anchor-link-2" target="testTab" href="file_bug1303838_target.html#bar">Anchor Link 2</a><br>
   <a id="anchor-link-3" target="testTab" href="file_bug1303838_target.html#baz">Anchor Link 3</a><br>

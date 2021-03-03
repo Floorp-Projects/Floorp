@@ -33,27 +33,7 @@
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
-/* 0 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-Object.defineProperty(exports, "initSandbox", ({
-  enumerable: true,
-  get: function () {
-    return _initialization.initSandbox;
-  }
-}));
-
-var _initialization = __w_pdfjs_require__(1);
-
-const pdfjsVersion = '2.8.117';
-const pdfjsBuild = '3d80c21a8';
-
-/***/ }),
+/* 0 */,
 /* 1 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
@@ -517,6 +497,14 @@ class Field extends _pdf_object.PDFObject {
     }
   }
 
+  get bgColor() {
+    return this.fillColor;
+  }
+
+  set bgColor(color) {
+    this.fillColor = color;
+  }
+
   get numItems() {
     if (!this._isChoice) {
       throw new Error("Not a choice widget");
@@ -539,6 +527,14 @@ class Field extends _pdf_object.PDFObject {
     }
   }
 
+  get borderColor() {
+    return this.strokeColor;
+  }
+
+  set borderColor(color) {
+    this.strokeColor = color;
+  }
+
   get textColor() {
     return this._textColor;
   }
@@ -547,6 +543,14 @@ class Field extends _pdf_object.PDFObject {
     if (_color.Color._isValidColor(color)) {
       this._textColor = color;
     }
+  }
+
+  get fgColor() {
+    return this.textColor;
+  }
+
+  set fgColor(color) {
+    this.textColor = color;
   }
 
   get value() {
@@ -1745,7 +1749,7 @@ class AForm {
         return;
       }
 
-      event.value += cMask.subString(value.length);
+      event.value += cMask.substring(value.length);
       return;
     }
 
@@ -4630,10 +4634,29 @@ exports.Util = Util;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	// module exports must be returned from runtime so entry inlining is disabled
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	return __w_pdfjs_require__(0);
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
+var exports = __webpack_exports__;
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+Object.defineProperty(exports, "initSandbox", ({
+  enumerable: true,
+  get: function () {
+    return _initialization.initSandbox;
+  }
+}));
+
+var _initialization = __w_pdfjs_require__(1);
+
+const pdfjsVersion = '2.8.126';
+const pdfjsBuild = 'fafe03984';
+})();
+
+/******/ 	return __webpack_exports__;
 /******/ })()
 ;
 });

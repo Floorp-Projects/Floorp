@@ -6203,6 +6203,13 @@
   mirror: always
   rust: true
 
+# Is support for color-mix on content enabled?
+- name: layout.css.color-mix.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for DOMMatrix enabled?
 - name: layout.css.DOMMatrix.enabled
   type: RelaxedAtomicBool
@@ -9034,7 +9041,7 @@
 # Whether to record the telemetry event when a JAR channel is failed to load.
 - name: network.jar.record_failure_reason
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_OR_DEV_EDITION@
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -9087,7 +9094,7 @@
 
 - name: permissions.isolateBy.privateBrowsing
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -10565,6 +10572,8 @@
 #if defined(XP_LINUX) && defined(NIGHTLY_BUILD) && !defined(ANDROID)
   value: true
 #elif defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  value: true
+#elif defined(XP_WIN) && defined(NIGHTLY_BUILD)
   value: true
 #else
   value: false

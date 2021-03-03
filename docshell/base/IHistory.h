@@ -8,7 +8,6 @@
 #define mozilla_IHistory_h_
 
 #include "nsISupports.h"
-#include "nsDataHashtable.h"
 #include "nsURIHashKey.h"
 #include "nsTObserverArray.h"
 

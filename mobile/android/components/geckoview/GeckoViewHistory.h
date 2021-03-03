@@ -6,7 +6,6 @@
 #define GECKOVIEWHISTORY_H
 
 #include "mozilla/BaseHistory.h"
-#include "nsDataHashtable.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
 #include "nsINamed.h"

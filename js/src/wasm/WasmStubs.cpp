@@ -2831,8 +2831,8 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   masm.bind(&resumeCatch);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
                FramePointer);
-  masm.loadStackPtr(
-      Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
+  // Defer reloading stackPointer until just before the jump, so as to
+  // protect other live data on the stack.
 
   // When there is a catch handler, HandleThrow passes it the Value needed for
   // the handler's argument as well.
@@ -2846,6 +2846,10 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   Register obj = masm.extractObject(val, scratch2);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, target)),
                scratch);
+  // Now it's safe to reload stackPointer.
+  masm.loadStackPtr(Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
+  // This move must come after the SP is reloaded because WasmExceptionReg may
+  // alias ReturnReg.
   masm.movePtr(obj, WasmExceptionReg);
   masm.jump(scratch);
 
@@ -2964,8 +2968,8 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
   return true;
 }
 
-bool wasm::GenerateProvisionalJitEntryStub(MacroAssembler& masm,
-                                           Offsets* offsets) {
+bool wasm::GenerateProvisionalLazyJitEntryStub(MacroAssembler& masm,
+                                               Offsets* offsets) {
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
   offsets->begin = masm.currentOffset();

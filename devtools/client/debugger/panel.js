@@ -37,10 +37,11 @@ async function getNodeFront(gripOrFront, toolbox) {
 }
 
 class DebuggerPanel {
-  constructor(iframeWindow, toolbox) {
+  constructor(iframeWindow, toolbox, commands) {
     this.panelWin = iframeWindow;
     this.panelWin.L10N = L10N;
     this.toolbox = toolbox;
+    this.commands = commands;
   }
 
   async open() {

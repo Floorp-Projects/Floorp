@@ -50,9 +50,10 @@ const EVENTS = {
  * render Accessibility Tree of the current debugger target and the sidebar that
  * displays current relevant accessible details.
  */
-function AccessibilityPanel(iframeWindow, toolbox) {
+function AccessibilityPanel(iframeWindow, toolbox, commands) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
+  this._commands = commands;
 
   this.onTabNavigated = this.onTabNavigated.bind(this);
   this.onTargetUpdated = this.onTargetUpdated.bind(this);

@@ -686,7 +686,9 @@ class ImageSurfaceCache {
     AfterMaybeRemove();
   }
 
-  SurfaceTable::Iterator ConstIter() const { return mSurfaces.ConstIter(); }
+  SurfaceTable::ConstIterator ConstIter() const {
+    return mSurfaces.ConstIter();
+  }
   uint32_t Count() const { return mSurfaces.Count(); }
 
   void SetLocked(bool aLocked) { mLocked = aLocked; }

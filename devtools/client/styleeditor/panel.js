@@ -15,10 +15,11 @@ var {
   getString,
 } = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 
-var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
+var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox, commands) {
   EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
+  this._commands = commands;
   this._panelWin = panelWin;
   this._panelDoc = panelWin.document;
 

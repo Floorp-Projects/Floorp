@@ -6,15 +6,10 @@ let LOGIN_FILL_ITEMS = [
   null,
   "fill-login",
   null,
-  [
-    "fill-login-no-logins",
-    false,
-    "---",
-    null,
-    "fill-login-saved-passwords",
-    true,
-  ],
+  ["fill-login-no-logins", false],
   null,
+  "manage-saved-logins",
+  true,
 ];
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 let hasContainers =

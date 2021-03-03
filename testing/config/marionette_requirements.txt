@@ -1,6 +1,7 @@
 -r mozbase_requirements.txt
 
-../tools/wptserve
+../tools/wptserve_py2 ; python_version < '3'
+../tools/wptserve ; python_version >= '3'
 ../tools/wpt_third_party/certifi
 ../tools/wpt_third_party/enum ; python_version < '3'
 ../tools/wpt_third_party/h2

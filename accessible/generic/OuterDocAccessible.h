@@ -50,7 +50,7 @@ class OuterDocAccessible final : public AccessibleWrap {
   // LocalAccessible
   virtual void Shutdown() override;
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual LocalAccessible* ChildAtPoint(
+  virtual LocalAccessible* LocalChildAtPoint(
       int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
 
   virtual bool InsertChildAt(uint32_t aIdx, LocalAccessible* aChild) override;
@@ -61,6 +61,11 @@ class OuterDocAccessible final : public AccessibleWrap {
   virtual uint32_t ChildCount() const override;
   virtual LocalAccessible* LocalChildAt(uint32_t aIndex) const override;
 #endif  // defined(XP_WIN)
+
+  // Accessible
+  virtual Accessible* ChildAt(uint32_t aIndex) const override;
+  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
+                                   EWhichChildAtPoint aWhichChild) override;
 
  protected:
   virtual ~OuterDocAccessible() override;

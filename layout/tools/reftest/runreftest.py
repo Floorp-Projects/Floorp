@@ -46,7 +46,7 @@ from six.moves import range
 
 try:
     from marionette_driver.addons import Addons
-    from marionette_harness import Marionette
+    from marionette_driver.marionette import Marionette
 except ImportError as e:  # noqa
     # Defer ImportError until attempt to use Marionette.
     # Python 3 deletes the exception once the except block

@@ -25,6 +25,7 @@
 
 namespace js {
 
+class DebugScriptMap;
 class RegExpZone;
 class WeakRefObject;
 
@@ -219,7 +220,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // JSScript.
   js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
   js::UniquePtr<js::ScriptLCovMap> scriptLCovMap;
-  js::UniquePtr<js::DebugScriptMap> debugScriptMap;
+  js::MainThreadData<js::DebugScriptMap*> debugScriptMap;
 #ifdef MOZ_VTUNE
   js::UniquePtr<js::ScriptVTuneIdMap> scriptVTuneIdMap;
 #endif

@@ -151,6 +151,17 @@ struct PropertyKey {
     return PropertyKey::fromRawBits(size_t(str) | JSID_TYPE_STRING);
   }
 
+  // Internal API!
+  // All string PropertyKeys are actually atomized.
+  MOZ_ALWAYS_INLINE bool isAtom() const { return isString(); }
+
+  MOZ_ALWAYS_INLINE bool isAtom(JSAtom* atom) const {
+    MOZ_ASSERT(PropertyKey::isNonIntAtom(atom));
+    return isAtom() && toAtom() == atom;
+  }
+
+  MOZ_ALWAYS_INLINE JSAtom* toAtom() const { return (JSAtom*)toString(); }
+
  private:
   static bool isNonIntAtom(JSAtom* atom);
   static bool isNonIntAtom(JSString* atom);
@@ -321,6 +332,11 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   bool isWellKnownSymbol(JS::SymbolCode code) const {
     return id().isWellKnownSymbol(code);
   }
+
+  // Internal API
+  bool isAtom() const { return id().isAtom(); }
+  bool isAtom(JSAtom* atom) const { return id().isAtom(atom); }
+  JSAtom* toAtom() const { return id().toAtom(); }
 };
 
 }  // namespace js

@@ -306,6 +306,10 @@ main-context-menu-generate-new-password =
     .label = Use Generated Password…
     .accesskey = G
 
+main-context-menu-manage-logins =
+    .label = Manage Logins…
+    .accesskey = M
+
 main-context-menu-keyword =
     .label = Add a Keyword for this Search…
     .accesskey = K

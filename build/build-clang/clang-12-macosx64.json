@@ -1,0 +1,22 @@
+{
+    "stages": "1",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "osx_cross_compile": true,
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "{MOZ_FETCHES_DIR}/gcc",
+    "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",
+    "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang++",
+    "as": "{MOZ_FETCHES_DIR}/clang/bin/clang",
+    "ar": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ar",
+    "ranlib": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-ranlib",
+    "libtool": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-libtool",
+    "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang",
+    "patches": [
+      "static-llvm-symbolizer_clang_12.patch",
+      "compiler-rt-cross-compile.patch",
+      "revert-llvmorg-12-init-7827-g2a078c307204.patch",
+      "compiler-rt-no-codesign.patch"
+    ]
+}

@@ -256,17 +256,17 @@
                     label="&noLoginSuggestions.label;"
                     disabled="true"
                     hidden="true"/>
-          <menuseparator id="saved-logins-separator"/>
-          <menuitem id="fill-login-saved-passwords"
-                    label="&viewSavedLogins.label;"
-                    oncommand="gContextMenu.openPasswordManager();"/>
         </menupopup>
       </menu>
      <menuitem id="fill-login-generated-password"
                data-l10n-id="main-context-menu-generate-new-password"
                hidden="true"
                oncommand="gContextMenu.useGeneratedPassword();"/>
-      <menuseparator id="fill-login-and-generated-password-separator"/>
+     <menuitem id="manage-saved-logins"
+               data-l10n-id="main-context-menu-manage-logins"
+               hidden = "true"
+               oncommand="gContextMenu.openPasswordManager();"/>
+      <menuseparator id="passwordmgr-items-separator"/>
       <menuitem id="context-undo"
                 data-l10n-id="text-action-undo"
                 command="cmd_undo"/>

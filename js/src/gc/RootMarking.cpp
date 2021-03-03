@@ -449,9 +449,10 @@ class AssertNoRootsTracer final : public JS::CallbackTracer {
   }
 
  public:
+  // This skips tracking WeakMap entries because they are not roots.
   explicit AssertNoRootsTracer(JSRuntime* rt)
       : JS::CallbackTracer(rt, JS::TracerKind::Callback,
-                           JS::WeakMapTraceAction::TraceKeysAndValues) {}
+                           JS::WeakMapTraceAction::Skip) {}
 };
 #endif  // DEBUG
 

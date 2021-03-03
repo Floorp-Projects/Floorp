@@ -14,7 +14,6 @@
 #include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/LinkedList.h"
-#include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {

@@ -3429,6 +3429,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
       false
     );
     const resourcesInWatcher = {
+      Cache: isWatcherEnabled,
       localStorage: isWatcherEnabled,
       sessionStorage: isWatcherEnabled,
     };

@@ -179,10 +179,6 @@ using ScriptFinalWarmUpCountMap =
             DefaultHasher<BaseScript*>, SystemAllocPolicy>;
 #endif
 
-using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
-using DebugScriptMap = HashMap<BaseScript*, UniqueDebugScript,
-                               DefaultHasher<BaseScript*>, SystemAllocPolicy>;
-
 class ScriptSource;
 
 struct ScriptSourceChunk {

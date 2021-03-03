@@ -200,8 +200,11 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
 
 Zone::~Zone() {
   MOZ_ASSERT(helperThreadUse_ == HelperThreadUse::None);
-  MOZ_ASSERT(gcWeakMapList().isEmpty());
   MOZ_ASSERT_IF(regExps_.ref(), regExps().empty());
+
+  DebugAPI::deleteDebugScriptMap(debugScriptMap);
+
+  MOZ_ASSERT(gcWeakMapList().isEmpty());
 
   JSRuntime* rt = runtimeFromAnyThread();
   if (this == rt->gc.systemZone) {
@@ -806,6 +809,11 @@ void Zone::traceScriptTableRoots(JSTracer* trc) {
       MOZ_ASSERT(script == r.front().key(), "const_cast is only a work-around");
     }
   }
+
+  // Trace the debugger's DebugScript weak map.
+  if (debugScriptMap) {
+    DebugAPI::traceDebugScriptMap(trc, debugScriptMap);
+  }
 }
 
 void Zone::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
@@ -824,16 +832,6 @@ void Zone::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
 
   if (scriptLCovMap) {
     for (ScriptLCovMap::Enum e(*scriptLCovMap); !e.empty(); e.popFront()) {
-      BaseScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
-  }
-
-  if (debugScriptMap) {
-    for (DebugScriptMap::Enum e(*debugScriptMap); !e.empty(); e.popFront()) {
       BaseScript* script = e.front().key();
       if (!IsAboutToBeFinalizedUnbarriered(&script) &&
           script != e.front().key()) {
@@ -887,18 +885,6 @@ void Zone::checkScriptMapsAfterMovingGC() {
       MOZ_ASSERT(script->zone() == this);
       CheckGCThingAfterMovingGC(script);
       auto ptr = scriptLCovMap->lookup(script);
-      MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-    }
-  }
-
-  if (debugScriptMap) {
-    for (auto r = debugScriptMap->all(); !r.empty(); r.popFront()) {
-      BaseScript* script = r.front().key();
-      MOZ_ASSERT(script->zone() == this);
-      CheckGCThingAfterMovingGC(script);
-      DebugScript* ds = r.front().value().get();
-      DebugAPI::checkDebugScriptAfterMovingGC(ds);
-      auto ptr = debugScriptMap->lookup(script);
       MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
   }

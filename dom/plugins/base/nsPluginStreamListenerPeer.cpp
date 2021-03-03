@@ -24,7 +24,6 @@
 #include "nsNetUtil.h"
 #include "nsPluginNativeWindow.h"
 #include "nsPluginInstanceOwner.h"
-#include "nsDataHashtable.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ProfilerLabels.h"
 

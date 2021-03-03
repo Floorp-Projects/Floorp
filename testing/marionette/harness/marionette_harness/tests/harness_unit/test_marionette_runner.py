@@ -267,7 +267,11 @@ def test_load_testvars_throws_expected_errors(mach_parsed_kwargs):
         runner._load_testvars()
     assert "does not exist" in str(io_exc.value)
     with patch("os.path.exists", return_value=True):
-        with patch("__builtin__.open", mock_open(read_data="[not {valid JSON]")):
+        if PY2:
+            open_fn = "__builtin__.open"
+        else:
+            open_fn = "marionette_harness.runner.base.open"
+        with patch(open_fn, mock_open(read_data="[not {valid JSON]")):
             with pytest.raises(Exception) as json_exc:
                 runner._load_testvars()
     assert "not properly formatted" in str(json_exc.value)

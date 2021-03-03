@@ -52,7 +52,6 @@
 #include "mozilla/URLPreloader.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
-#include "nsDataHashtable.h"
 
 #include <new>  // for placement new
 
