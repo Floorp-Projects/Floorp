@@ -318,10 +318,10 @@ class GeckoInstance(object):
         }
 
         if self.gecko_log == "-":
-            if six.PY2:
-                process_args["stream"] = codecs.getwriter("utf-8")(sys.stdout)
-            else:
+            if hasattr(sys.stdout, "buffer"):
                 process_args["stream"] = codecs.getwriter("utf-8")(sys.stdout.buffer)
+            else:
+                process_args["stream"] = codecs.getwriter("utf-8")(sys.stdout)
         else:
             process_args["logfile"] = self.gecko_log
 
