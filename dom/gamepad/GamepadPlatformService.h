@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadHandle.h"
-#include "mozilla/dom/GamepadStateBroadcaster.h"
 
 #include <map>
 #include "mozilla/Mutex.h"
@@ -145,10 +144,6 @@ class GamepadPlatformService final {
   Mutex mMutex;
 
   std::map<GamepadHandle, GamepadAdded> mGamepadAdded;
-
-  // This variable may contain the shared-memory "GamepadStateBroadcaster" if
-  // it is available. If not, everything will just fall back to using IPDL
-  Maybe<GamepadStateBroadcaster> mMaybeGamepadStateBroadcaster;
 };
 
 }  // namespace dom

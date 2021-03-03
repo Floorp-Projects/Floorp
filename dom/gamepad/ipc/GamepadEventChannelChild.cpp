@@ -34,18 +34,6 @@ already_AddRefed<GamepadEventChannelChild> GamepadEventChannelChild::Create() {
       .forget();
 }
 
-mozilla::ipc::IPCResult GamepadEventChannelChild::RecvSetupSharedMemory(
-    const GamepadStateBroadcastReceiverInfo& aReceiverInfo) {
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "GamepadEventChannelChild::RecvSetupSharedMemory", [aReceiverInfo] {
-        RefPtr<GamepadManager> svc(GamepadManager::GetService());
-        if (svc) {
-          svc->SetupRemoteInfo(aReceiverInfo);
-        }
-      }));
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult GamepadEventChannelChild::RecvGamepadUpdate(
     const GamepadChangeEvent& aGamepadEvent) {
   DebugOnly<nsresult> rv =
