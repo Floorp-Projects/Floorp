@@ -1,0 +1,14 @@
+{
+    "stages": "2",
+    "build_libcxx": false,
+    "build_type": "Release",
+    "assertions": false,
+    "python_path": "c:/mozilla-build/python/python.exe",
+    "cc": "cl.exe",
+    "cxx": "cl.exe",
+    "ml": "ml64.exe",
+    "patches": [
+      "unpoison-thread-stacks_clang_10.patch",
+      "bug47258-extract-symbols-mbcs.patch"
+    ]
+}
