@@ -232,34 +232,30 @@ add_task(async function setup() {
  */
 add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
   await setAboutWelcomePref(true);
+  let updatePromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    slug: "mochitest-1-aboutwelcome",
+  });
+  ExperimentAPI._store.addExperiment({
+    slug: "mochitest-1-aboutwelcome",
+    branch: {
+      slug: "mochitest-1-aboutwelcome",
+      feature: {
+        enabled: false,
+        featureId: "aboutwelcome",
+        value: null,
+      },
+    },
+    active: true,
+  });
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-1-aboutwelcome", {
-      branches: [
-        {
-          slug: "mochitest-1-aboutwelcome",
-          feature: {
-            enabled: false,
-            featureId: "aboutwelcome",
-            value: null,
-          },
-        },
-      ],
-      active: true,
-    })
-  );
-
-  await enrollmentPromise;
+  await updatePromise;
+  ExperimentAPI._store._syncToChildren({ flush: true });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:welcome",
     true
   );
-
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(tab);
   });
@@ -275,7 +271,7 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
     ["div.onboardingContainer", "main.AW_STEP1"]
   );
 
-  await doExperimentCleanup();
+  ExperimentAPI._store._deleteForTests("mochitest-1-aboutwelcome");
   Assert.equal(ExperimentAPI._store.getAll().length, 0, "Cleanup done");
 });
 
@@ -284,27 +280,25 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
  */
 add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   await setAboutWelcomePref(true);
+  await setAboutWelcomeMultiStage({});
+  let updatePromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    slug: "mochitest-aboutwelcome",
+  });
+  ExperimentAPI._store.addExperiment({
+    slug: "mochitest-aboutwelcome",
+    branch: {
+      slug: "mochitest-aboutwelcome",
+      feature: {
+        enabled: true,
+        featureId: "aboutwelcome",
+        value: TEST_MULTISTAGE_CONTENT,
+      },
+    },
+    active: true,
+  });
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-aboutwelcome", {
-      branches: [
-        {
-          slug: "mochitest-aboutwelcome-branch",
-          feature: {
-            enabled: true,
-            featureId: "aboutwelcome",
-            value: TEST_MULTISTAGE_CONTENT,
-          },
-        },
-      ],
-      active: true,
-    })
-  );
-
-  await enrollmentPromise;
+  await updatePromise;
+  ExperimentAPI._store._syncToChildren({ flush: true });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -383,7 +377,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     ["div.onboardingContainer"]
   );
 
-  await doExperimentCleanup();
+  ExperimentAPI._store._deleteForTests("mochitest-aboutwelcome");
   Assert.equal(ExperimentAPI._store.getAll().length, 0, "Cleanup done");
 });
 

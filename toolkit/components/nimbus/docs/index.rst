@@ -13,4 +13,3 @@ Learn more
   :maxdepth: 2
 
   integration.md
-  testing.md
