@@ -742,17 +742,17 @@ GeolocationPermissionPrompt.prototype = {
 
   get message() {
     if (this.principal.schemeIs("file")) {
-      return gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
+      return gBrowserBundle.GetStringFromName("geolocation.shareWithFile4");
     }
 
     if (this.request.maybeUnsafePermissionDelegate) {
       return gBrowserBundle.formatStringFromName(
-        "geolocation.shareWithSiteUnsafeDelegation",
+        "geolocation.shareWithSiteUnsafeDelegation2",
         ["<>", "{}"]
       );
     }
 
-    return gBrowserBundle.formatStringFromName("geolocation.shareWithSite3", [
+    return gBrowserBundle.formatStringFromName("geolocation.shareWithSite4", [
       "<>",
     ]);
   },
@@ -760,18 +760,16 @@ GeolocationPermissionPrompt.prototype = {
   get promptActions() {
     return [
       {
-        label: gBrowserBundle.GetStringFromName("geolocation.allowLocation"),
+        label: gBrowserBundle.GetStringFromName("geolocation.allow"),
         accessKey: gBrowserBundle.GetStringFromName(
-          "geolocation.allowLocation.accesskey"
+          "geolocation.allow.accesskey"
         ),
         action: SitePermissions.ALLOW,
       },
       {
-        label: gBrowserBundle.GetStringFromName(
-          "geolocation.dontAllowLocation"
-        ),
+        label: gBrowserBundle.GetStringFromName("geolocation.block"),
         accessKey: gBrowserBundle.GetStringFromName(
-          "geolocation.dontAllowLocation.accesskey"
+          "geolocation.block.accesskey"
         ),
         action: SitePermissions.BLOCK,
       },
