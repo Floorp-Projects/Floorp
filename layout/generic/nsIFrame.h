@@ -2175,20 +2175,6 @@ class nsIFrame : public nsQueryFrame {
   HandlePress(nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
               nsEventStatus* aEventStatus);
 
-  /**
-   * MoveCaretToEventPoint() moves caret at the point of aMouseEvent.
-   *
-   * @param aPresContext        Must not be nullptr.
-   * @param aMouseEvent         Must not be nullptr, the message must be
-   *                            eMouseDown and its button must be primary or
-   *                            middle button.
-   * @param aEventStatus        [out] Must not be nullptr.  This method ignores
-   *                            its initial value, but callees may refer it.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult MoveCaretToEventPoint(
-      nsPresContext* aPresContext, mozilla::WidgetMouseEvent* aMouseEvent,
-      nsEventStatus* aEventStatus);
-
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD HandleMultiplePress(
       nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
       nsEventStatus* aEventStatus, bool aControlHeld);

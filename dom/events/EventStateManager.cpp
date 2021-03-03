@@ -3232,30 +3232,6 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
       }
 
-      // If MouseEvent::PreventClickEvent() was called by chrome script,
-      // we need to forget the clicking content and click count for the
-      // following eMouseUp event.
-      if (mouseEvent->mClickEventPrevented) {
-        RefPtr<EventStateManager> esm =
-            ESMFromContentOrThis(aOverrideClickTarget);
-        switch (mouseEvent->mButton) {
-          case MouseButton::ePrimary:
-            esm->mLastLeftMouseDownContent = nullptr;
-            esm->mLClickCount = 0;
-            break;
-          case MouseButton::eSecondary:
-            esm->mLastMiddleMouseDownContent = nullptr;
-            esm->mMClickCount = 0;
-            break;
-          case MouseButton::eMiddle:
-            esm->mLastRightMouseDownContent = nullptr;
-            esm->mRClickCount = 0;
-            break;
-          default:
-            break;
-        }
-      }
-
       nsCOMPtr<nsIContent> activeContent;
       // When content calls PreventDefault on pointerdown, we also call
       // PreventDefault on the subsequent mouse events to suppress default
@@ -4941,14 +4917,11 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
   switch (aEvent->mButton) {
     case MouseButton::ePrimary:
       if (aEvent->mMessage == eMouseDown) {
-        mLastLeftMouseDownContent =
-            !aEvent->mClickEventPrevented ? mouseContent : nullptr;
+        mLastLeftMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
         aEvent->mClickTarget =
-            !aEvent->mClickEventPrevented
-                ? nsContentUtils::GetCommonAncestorUnderInteractiveContent(
-                      mouseContent, mLastLeftMouseDownContent)
-                : nullptr;
+            nsContentUtils::GetCommonAncestorUnderInteractiveContent(
+                mouseContent, mLastLeftMouseDownContent);
         if (aEvent->mClickTarget) {
           aEvent->mClickCount = mLClickCount;
           mLClickCount = 0;
@@ -4961,14 +4934,11 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
 
     case MouseButton::eMiddle:
       if (aEvent->mMessage == eMouseDown) {
-        mLastMiddleMouseDownContent =
-            !aEvent->mClickEventPrevented ? mouseContent : nullptr;
+        mLastMiddleMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
         aEvent->mClickTarget =
-            !aEvent->mClickEventPrevented
-                ? nsContentUtils::GetCommonAncestorUnderInteractiveContent(
-                      mouseContent, mLastMiddleMouseDownContent)
-                : nullptr;
+            nsContentUtils::GetCommonAncestorUnderInteractiveContent(
+                mouseContent, mLastMiddleMouseDownContent);
         if (aEvent->mClickTarget) {
           aEvent->mClickCount = mMClickCount;
           mMClickCount = 0;
@@ -4981,14 +4951,11 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
 
     case MouseButton::eSecondary:
       if (aEvent->mMessage == eMouseDown) {
-        mLastRightMouseDownContent =
-            !aEvent->mClickEventPrevented ? mouseContent : nullptr;
+        mLastRightMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
         aEvent->mClickTarget =
-            !aEvent->mClickEventPrevented
-                ? nsContentUtils::GetCommonAncestorUnderInteractiveContent(
-                      mouseContent, mLastRightMouseDownContent)
-                : nullptr;
+            nsContentUtils::GetCommonAncestorUnderInteractiveContent(
+                mouseContent, mLastRightMouseDownContent);
         if (aEvent->mClickTarget) {
           aEvent->mClickCount = mRClickCount;
           mRClickCount = 0;
@@ -5017,10 +4984,6 @@ bool EventStateManager::EventCausesClickEvents(
   // If mouse is still over same element, clickcount will be > 1.
   // If it has moved it will be zero, so no click.
   if (!aMouseEvent.mClickCount || !aMouseEvent.mClickTarget) {
-    return false;
-  }
-  // If click event was explicitly prevented, we shouldn't dispatch it.
-  if (aMouseEvent.mClickEventPrevented) {
     return false;
   }
   // Check that the window isn't disabled before firing a click
@@ -5235,8 +5198,20 @@ nsresult EventStateManager::HandleMiddleClickPaste(
     }
   }
 
-  // Don't modify selection here because we've already set caret to the point
-  // at "mousedown" event.
+  // Move selection to the clicked point.
+  nsCOMPtr<nsIContent> container;
+  int32_t offset;
+  nsLayoutUtils::GetContainerAndOffsetAtEvent(
+      aPresShell, aMouseEvent, getter_AddRefs(container), &offset);
+  if (container) {
+    // XXX If readonly or disabled <input> or <textarea> in contenteditable
+    //     designMode editor is clicked, the point is in the editor.
+    //     However, outer HTMLEditor and Selection should handle it.
+    //     So, in such case, Selection::Collapse() will fail.
+    DebugOnly<nsresult> rv = selection->CollapseInLimiter(container, offset);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to collapse Selection at middle clicked");
+  }
 
   int32_t clipboardType = nsIClipboard::kGlobalClipboard;
   nsresult rv = NS_OK;

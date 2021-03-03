@@ -116,11 +116,5 @@ partial interface MouseEvent
                         optional float pressure = 0,
                         optional unsigned short inputSourceArg = 0);
 
-  /**
-   * preventClickEvent() prevents the following "click", "auxclick" and
-   * "dblclick" events of "mousedown" and "mouseup" events.
-   */
-  [ChromeOnly]
-  void preventClickEvent();
 };
 
