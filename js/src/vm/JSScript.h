@@ -1019,7 +1019,7 @@ class ScriptSource {
       UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
 
   [[nodiscard]] bool addDelazificationToIncrementalEncoding(
-      JSContext* cx, frontend::ExtensibleCompilationStencil& stencil);
+      JSContext* cx, const frontend::CompilationStencil& stencil);
 
   // Linearize the encoded content in the |buffer| provided as argument to
   // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
