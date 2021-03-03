@@ -306,6 +306,12 @@ class LocalAccessible : public nsISupports, public Accessible {
                                              EWhichChildAtPoint aWhichChild);
 
   /**
+   * Similar to LocalChildAtPoint but crosses process boundaries.
+   */
+  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
+                                   EWhichChildAtPoint aWhichChild) override;
+
+  /**
    * Return the focused child if any.
    */
   virtual LocalAccessible* FocusedChild();

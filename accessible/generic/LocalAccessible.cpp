@@ -472,6 +472,17 @@ LocalAccessible* LocalAccessible::FocusedChild() {
   return nullptr;
 }
 
+Accessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                                          EWhichChildAtPoint aWhichChild) {
+  Accessible* child = LocalChildAtPoint(aX, aY, aWhichChild);
+  if (aWhichChild != EWhichChildAtPoint::DirectChild && child &&
+      child->IsOuterDoc()) {
+    child = child->ChildAtPoint(aX, aY, aWhichChild);
+  }
+
+  return child;
+}
+
 LocalAccessible* LocalAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   // If we can't find the point in a child, we will return the fallback answer:

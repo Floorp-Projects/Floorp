@@ -60,6 +60,9 @@ class Accessible {
    */
   enum class EWhichChildAtPoint { DirectChild, DeepestChild };
 
+  virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
+                                   EWhichChildAtPoint aWhichChild) = 0;
+
   /**
    * Return ARIA role map if any.
    */
