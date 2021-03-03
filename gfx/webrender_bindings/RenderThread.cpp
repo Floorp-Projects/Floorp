@@ -802,9 +802,7 @@ static DeviceResetReason GLenumToResetReason(GLenum aReason) {
 }
 #endif
 
-void RenderThread::HandleDeviceReset(const char* aWhere,
-                                     layers::CompositorBridgeParent* aBridge,
-                                     GLenum aReason) {
+void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
   MOZ_ASSERT(IsInRenderThread());
 
   if (mHandlingDeviceReset) {
@@ -861,7 +859,7 @@ void RenderThread::SimulateDeviceReset() {
     // When this function is called GPUProcessManager::SimulateDeviceReset()
     // already triggers destroying all CompositorSessions before re-creating
     // them.
-    HandleDeviceReset("SimulateDeviceReset", nullptr, LOCAL_GL_NO_ERROR);
+    HandleDeviceReset("SimulateDeviceReset", LOCAL_GL_NO_ERROR);
   }
 }
 
