@@ -40,9 +40,6 @@ const ABOUT_BLANK = "about:blank";
 const SUGGESTIONS_PREF = "browser.search.suggest.enabled";
 const PRIVATE_SUGGESTIONS_PREF = "browser.search.suggest.enabled.private";
 
-const ONBOARDING_COUNT_PREF = "quicksuggest.onboardingCount";
-const ONBOARDING_MAX_COUNT_PREF = "quicksuggest.onboardingMaxCount";
-
 function sleep(ms) {
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -96,6 +93,9 @@ async function assertIsQuickSuggest({
     "Result action text"
   );
 
+  let helpButton = result.element.row._elements.get("helpButton");
+  Assert.ok(helpButton, "The help button should be present");
+
   return result;
 }
 
@@ -112,18 +112,6 @@ async function assertNoQuickSuggestResults() {
       `Result at index ${i} should not be a QuickSuggest result`
     );
   }
-}
-
-/**
- * Sets the onboarding-count pref to zero.
- */
-function resetOnboardingCount() {
-  UrlbarPrefs.clear(ONBOARDING_COUNT_PREF);
-  Assert.equal(
-    UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-    0,
-    "Sanity check: Initial onboarding count is zero"
-  );
 }
 
 add_task(async function init() {
@@ -241,207 +229,6 @@ add_task(async function test_suggestions_enabled_private() {
   await assertIsQuickSuggest({ index: -1, win });
   await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
-});
-
-// Starts an engagement with a query that doesn't trigger the Quick Suggest
-// result and then ends the engagement with a query that does trigger it.  The
-// onboarding count should be incremented.
-add_task(async function onboarding_endOfEngagement() {
-  await BrowserTestUtils.withNewTab("about:blank", async () => {
-    resetOnboardingCount();
-
-    // Start an engagement with a query that doesn't trigger the Quick Suggest
-    // result.
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "bogus",
-      fireInputEvent: true,
-    });
-    await assertNoQuickSuggestResults();
-    Assert.equal(
-      UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-      0,
-      "Onboarding count should remain zero"
-    );
-
-    // Continue the engagement with a query that does trigger the result.
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "frab",
-      fireInputEvent: true,
-    });
-    let result = await assertIsQuickSuggest();
-    let helpButton = result.element.row._elements.get("helpButton");
-    Assert.ok(helpButton, "The help button should be present");
-    Assert.equal(
-      UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-      0,
-      "Onboarding count should remain zero before engagement ends"
-    );
-
-    // Pick a result to end the engagement.  The onboarding count should be
-    // incremented.
-    await UrlbarTestUtils.promisePopupClose(window, () => {
-      EventUtils.synthesizeKey("KEY_Enter");
-    });
-    Assert.equal(
-      UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-      1,
-      "Onboarding count should be incremented after engagement ends"
-    );
-  });
-
-  await PlacesUtils.history.clear();
-});
-
-// Starts an engagement with a query that triggers the Quick Suggest result and
-// then ends the engagement with a query that doesn't trigger it.  The
-// onboarding count should not be incremented.
-add_task(async function onboarding_notEndOfEngagement() {
-  resetOnboardingCount();
-
-  // Start an engagement with a query that triggers the Quick Suggest result.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "frab",
-    fireInputEvent: true,
-  });
-  let result = await assertIsQuickSuggest({ index: 1 });
-  let helpButton = result.element.row._elements.get("helpButton");
-  Assert.ok(helpButton, "The help button should be present");
-  Assert.equal(
-    UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-    0,
-    "Onboarding count should remain zero"
-  );
-
-  // Continue the engagement with a query that doesn't trigger the result.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "bogus",
-    fireInputEvent: true,
-  });
-  await assertNoQuickSuggestResults();
-  Assert.equal(
-    UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-    0,
-    "Onboarding count should remain zero"
-  );
-
-  // End the engagement.  The onboarding count should remain zero.
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    gURLBar.blur();
-  });
-  Assert.equal(
-    UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-    0,
-    "Onboarding count should be remain zero after engagement ends"
-  );
-});
-
-// Starts an engagement with a query that triggers the Quick Suggest result but
-// abandons the engagement.  The onboarding count should not be incremented.
-add_task(async function onboarding_abandonment() {
-  resetOnboardingCount();
-
-  // Start an engagement with a query that triggers the Quick Suggest result.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "frab",
-    fireInputEvent: true,
-  });
-  let result = await assertIsQuickSuggest({ index: 1 });
-  let helpButton = result.element.row._elements.get("helpButton");
-  Assert.ok(helpButton, "The help button should be present");
-  Assert.equal(
-    UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-    0,
-    "Onboarding count should remain zero"
-  );
-
-  // Abandon the engagement.  The onboarding count should remain zero.
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    gURLBar.blur();
-  });
-  Assert.equal(
-    UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-    0,
-    "Onboarding count should be remain zero after abandoning engagement"
-  );
-});
-
-// Makes sure the onboarding help button appears the correct number of times.
-add_task(async function onboarding_maxCount() {
-  await BrowserTestUtils.withNewTab("about:blank", async () => {
-    resetOnboardingCount();
-
-    let maxCount = UrlbarPrefs.get(ONBOARDING_MAX_COUNT_PREF);
-    Assert.greater(
-      maxCount,
-      0,
-      "Sanity check: Default onboarding max count pref exists and is > 0"
-    );
-
-    // Complete maxCount engagements while showing a QuickSuggest result.
-    for (let count = 1; count <= maxCount; count++) {
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "frab",
-        fireInputEvent: true,
-      });
-      let result = await assertIsQuickSuggest();
-      let helpButton = result.element.row._elements.get("helpButton");
-      Assert.ok(helpButton, "The help button should be present");
-
-      await UrlbarTestUtils.promisePopupClose(window, () => {
-        EventUtils.synthesizeKey("KEY_Enter");
-      });
-      Assert.equal(
-        UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-        count,
-        "Onboarding count should be incremented after the engagement ends"
-      );
-
-      // Do another engagement without showing a QuickSuggest result.  The count
-      // should not be incremented.
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "bogus",
-        fireInputEvent: true,
-      });
-      await assertNoQuickSuggestResults();
-      await UrlbarTestUtils.promisePopupClose(window, () => {
-        EventUtils.synthesizeKey("KEY_Enter");
-      });
-      Assert.equal(
-        UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-        count,
-        "Onboarding count should remain the same after not showing a QS result"
-      );
-    }
-
-    // Do one more engagement.  Since the onboarding count has reached the max,
-    // the help button should be absent and the count shouldn't be incremented
-    // again.
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "frab",
-      fireInputEvent: true,
-    });
-    let result = await assertIsQuickSuggest();
-    let helpButton = result.element.row._elements.get("helpButton");
-    Assert.ok(!helpButton, "The help button should be absent");
-    await UrlbarTestUtils.promisePopupClose(window, () => {
-      EventUtils.synthesizeKey("KEY_Enter");
-    });
-    Assert.equal(
-      UrlbarPrefs.get(ONBOARDING_COUNT_PREF),
-      maxCount,
-      "Onboarding count should remain the max count"
-    );
-  });
-
-  await PlacesUtils.history.clear();
 });
 
 // Tests a non-sponsored result.
