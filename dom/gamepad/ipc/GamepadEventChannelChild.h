@@ -18,8 +18,6 @@ class GamepadEventChannelChild final : public PGamepadEventChannelChild {
 
   static already_AddRefed<GamepadEventChannelChild> Create();
 
-  mozilla::ipc::IPCResult RecvSetupSharedMemory(
-      const GamepadStateBroadcastReceiverInfo& aReceiverInfo);
   mozilla::ipc::IPCResult RecvGamepadUpdate(
       const GamepadChangeEvent& aGamepadEvent);
   mozilla::ipc::IPCResult RecvReplyGamepadPromise(const uint32_t& aPromiseID);
