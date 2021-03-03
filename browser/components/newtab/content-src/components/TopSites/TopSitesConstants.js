@@ -23,8 +23,6 @@ export const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = [
   "ShowPrivacyInfo",
 ];
 export const TOP_SITES_SPONSORED_POSITION_CONTEXT_MENU_OPTIONS = [
-  "PinTopSite",
-  "Separator",
   "OpenInNewWindow",
   "OpenInPrivateWindow",
   "Separator",
