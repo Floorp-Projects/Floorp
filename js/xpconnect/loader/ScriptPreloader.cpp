@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptPreloader-inl.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 
@@ -1209,6 +1210,17 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(
   JS::RootedScript script(cx);
   if (JS::DecodeScript(cx, options, Range(), &script) ==
       JS::TranscodeResult::Ok) {
+    // Lock the monitor here to avoid data races on mScript
+    // from other threads like the cache writing thread.
+    //
+    // It is possible that we could end up decoding the same
+    // script twice, because DecodeScript isn't being guarded
+    // by the monitor; however, to encourage off-thread decode
+    // to proceed for other scripts we don't hold the monitor
+    // while doing main thread decode, merely while updating
+    // mScript.
+    mCache.mMonitor.AssertNotCurrentThreadOwns();
+    MonitorAutoLock mal(mCache.mMonitor);
     mScript.Set(script);
 
     if (mCache.mSaveComplete) {
