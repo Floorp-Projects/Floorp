@@ -81,7 +81,7 @@ async function checkLoadSettingProperties(
     "engine2",
     "Should have loaded the correct second engine"
   );
-  Assert.equal(engines[1].alias, null, "Should have not set the alias");
+  Assert.equal(engines[1].alias, "", "Should have not set the alias");
   Assert.equal(engines[1].hidden, true, "Should have hidden the engine");
 
   // The extra engine is the second in the list.
@@ -255,7 +255,7 @@ add_task(async function test_settings_write_prevented_during_reload() {
 var EXPECTED_ENGINE = {
   engine: {
     name: "Test search engine",
-    alias: null,
+    alias: "",
     description: "A test search engine (based on Google search)",
     searchForm: "http://www.google.com/",
     wrappedJSObject: {

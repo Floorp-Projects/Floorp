@@ -113,7 +113,7 @@ interface nsISearchEngine : nsISupports
 
   /**
    * An optional shortcut alias for the engine.
-   * When non-null, this is a unique identifier.
+   * When not an empty string, this is a unique identifier.
    */
   attribute AString alias;
 
