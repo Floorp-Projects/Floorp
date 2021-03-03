@@ -57,6 +57,73 @@ Assert.equal(aboutPrincipal.originNoSuffix, "about:preferences");
 Assert.equal(aboutPrincipal.siteOrigin, "about:preferences^userContextId=66");
 Assert.equal(aboutPrincipal.siteOriginNoSuffix, "about:preferences");
 
+let viewSourceURI = Services.io.newURI(
+  "view-source:https://test1.test2.example.com"
+);
+let viewSourcePrincipal = scriptSecMan.createContentPrincipal(viewSourceURI, {
+  userContextId: 101,
+});
+Assert.ok(viewSourcePrincipal.isContentPrincipal);
+Assert.ok(viewSourcePrincipal.schemeIs("view-source"));
+Assert.equal(
+  viewSourcePrincipal.origin,
+  "https://test1.test2.example.com^userContextId=101"
+);
+Assert.equal(
+  viewSourcePrincipal.originNoSuffix,
+  "https://test1.test2.example.com"
+);
+Assert.equal(
+  viewSourcePrincipal.siteOrigin,
+  "https://example.com^userContextId=101"
+);
+Assert.equal(viewSourcePrincipal.siteOriginNoSuffix, "https://example.com");
+
+let mozExtensionURI = Services.io.newURI(
+  "moz-extension://924f966d-c93b-4fbf-968a-16608461663c/meh.txt"
+);
+let mozExtensionPrincipal = scriptSecMan.createContentPrincipal(
+  mozExtensionURI,
+  {
+    userContextId: 102,
+  }
+);
+Assert.ok(mozExtensionPrincipal.isContentPrincipal);
+Assert.ok(mozExtensionPrincipal.schemeIs("moz-extension"));
+Assert.equal(
+  mozExtensionPrincipal.origin,
+  "moz-extension://924f966d-c93b-4fbf-968a-16608461663c^userContextId=102"
+);
+Assert.equal(
+  mozExtensionPrincipal.originNoSuffix,
+  "moz-extension://924f966d-c93b-4fbf-968a-16608461663c"
+);
+Assert.equal(
+  mozExtensionPrincipal.siteOrigin,
+  "moz-extension://924f966d-c93b-4fbf-968a-16608461663c^userContextId=102"
+);
+Assert.equal(
+  mozExtensionPrincipal.siteOriginNoSuffix,
+  "moz-extension://924f966d-c93b-4fbf-968a-16608461663c"
+);
+
+let localhostURI = Services.io.newURI(" http://localhost:44203");
+let localhostPrincipal = scriptSecMan.createContentPrincipal(localhostURI, {
+  userContextId: 144,
+});
+Assert.ok(localhostPrincipal.isContentPrincipal);
+Assert.ok(localhostPrincipal.schemeIs("http"));
+Assert.equal(
+  localhostPrincipal.origin,
+  "http://localhost:44203^userContextId=144"
+);
+Assert.equal(localhostPrincipal.originNoSuffix, "http://localhost:44203");
+Assert.equal(
+  localhostPrincipal.siteOrigin,
+  "http://localhost^userContextId=144"
+);
+Assert.equal(localhostPrincipal.siteOriginNoSuffix, "http://localhost");
+
 // NullPrincipal checks
 let nullPrincipal = scriptSecMan.createNullPrincipal({ userContextId: 33 });
 Assert.ok(nullPrincipal.isNullPrincipal);
