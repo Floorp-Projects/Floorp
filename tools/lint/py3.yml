@@ -17,6 +17,7 @@ py3:
         - testing/mozharness
         - testing/tps
         - testing/web-platform/tests
+        - testing/web-platform/mozilla/tests/tools/wptserve_py2/
         - toolkit
         - xpcom/idl-parser
     extensions: ['py']
