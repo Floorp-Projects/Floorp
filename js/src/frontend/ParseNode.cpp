@@ -10,7 +10,6 @@
 
 #include "jsnum.h"
 
-#include "frontend/CompilationStencil.h"  // ExtensibleCompilationStencil
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/Parser.h"      // ParserBase
