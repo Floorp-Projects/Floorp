@@ -23,14 +23,27 @@ class Zone {
  public:
   Zone(js::LifoAlloc& alloc) : lifoAlloc_(alloc) {}
 
-  void* New(size_t size) {
+  template <typename T, typename... Args>
+  T* New(Args&&... args) {
     js::LifoAlloc::AutoFallibleScope fallible(&lifoAlloc_);
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
-    void* result = lifoAlloc_.alloc(size);
-    if (!result) {
-      oomUnsafe.crash("Irregexp Zone::new");
+    void* memory = lifoAlloc_.alloc(sizeof(T));
+    if (!memory) {
+      oomUnsafe.crash("Irregexp Zone::New");
     }
-    return result;
+    return new (memory) T(std::forward<Args>(args)...);
+  }
+
+  // Allocates uninitialized memory for 'length' number of T instances.
+  template <typename T>
+  T* NewArray(size_t length) {
+    js::LifoAlloc::AutoFallibleScope fallible(&lifoAlloc_);
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    void* memory = lifoAlloc_.alloc(length * sizeof(T));
+    if (!memory) {
+      oomUnsafe.crash("Irregexp Zone::New");
+    }
+    return static_cast<T*>(memory);
   }
 
   void DeleteAll() { lifoAlloc_.freeAll(); }
@@ -46,12 +59,15 @@ class Zone {
 };
 
 // Superclass for classes allocated in a Zone.
-// Origin:
-// https://github.com/v8/v8/blob/7b3332844212d78ee87a9426f3a6f7f781a8fbfa/src/zone/zone.h#L138-L155
+// Based on: https://github.com/v8/v8/blob/master/src/zone/zone.h
 class ZoneObject {
  public:
-  // Allocate a new ZoneObject of 'size' bytes in the Zone.
-  void* operator new(size_t size, Zone* zone) { return zone->New(size); }
+  // new (zone) SomeObject(...) was the old pattern.
+  // Delete the constructor to avoid using it accidentally.
+  void* operator new(size_t size, Zone* zone) = delete;
+
+  // Allow non-allocating placement new
+  void* operator new(size_t size, void* ptr) { return ptr; }
 
   // Ideally, the delete operator should be private instead of
   // public, but unfortunately the compiler sometimes synthesizes
@@ -70,28 +86,20 @@ class ZoneObject {
 // Zone. ZoneLists cannot be deleted individually; you can delete all
 // objects in the Zone by calling Zone::DeleteAll().
 // Used throughout irregexp.
-// Origin:
-// https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone.h#L173-L318
-// Inlines:
-// https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-list-inl.h#L17-L155
+// Based on: https://github.com/v8/v8/blob/master/src/zone/zone-list.h
 template <typename T>
-class ZoneList final {
+class ZoneList final : public ZoneObject {
  public:
   // Construct a new ZoneList with the given capacity; the length is
   // always zero. The capacity must be non-negative.
-  ZoneList(int capacity, Zone* zone) { Initialize(capacity, zone); }
-  // Construct a new ZoneList from a std::initializer_list
-  ZoneList(std::initializer_list<T> list, Zone* zone) {
-    Initialize(static_cast<int>(list.size()), zone);
-    for (auto& i : list) Add(i, zone);
+  ZoneList(int capacity, Zone* zone) : capacity_(capacity) {
+    data_ = (capacity_ > 0) ? zone->NewArray<T>(capacity_) : nullptr;
   }
   // Construct a new ZoneList by copying the elements of the given ZoneList.
-  ZoneList(const ZoneList<T>& other, Zone* zone) {
-    Initialize(other.length(), zone);
+  ZoneList(const ZoneList<T>& other, Zone* zone)
+      : ZoneList(other.length(), zone) {
     AddAll(other, zone);
   }
-
-  void* operator new(size_t size, Zone* zone) { return zone->New(size); }
 
   // Returns a reference to the element at index i. This reference is not safe
   // to use after operations that can change the list's backing store
@@ -120,13 +128,6 @@ class ZoneList final {
 
   Vector<const T> ToConstVector() const {
     return Vector<const T>(data_, length_);
-  }
-
-  inline void Initialize(int capacity, Zone* zone) {
-    MOZ_ASSERT(capacity >= 0);
-    data_ = (capacity > 0) ? NewData(capacity, zone) : nullptr;
-    capacity_ = capacity;
-    length_ = 0;
   }
 
   // Adds a copy of the given 'element' to the end of the list,
@@ -224,13 +225,9 @@ class ZoneList final {
   void operator delete(void* pointer, Zone* zone) { MOZ_CRASH("unreachable"); }
 
  private:
-  T* data_;
-  int capacity_;
-  int length_;
-
-  inline T* NewData(int n, Zone* zone) {
-    return static_cast<T*>(zone->New(n * sizeof(T)));
-  }
+  T* data_ = nullptr;
+  int capacity_ = 0;
+  int length_ = 0;
 
   // Increase the capacity of a full list, and add an element.
   // List must be full already.
@@ -249,7 +246,8 @@ class ZoneList final {
   // Resize the list.
   void Resize(int new_capacity, Zone* zone) {
     MOZ_ASSERT(length_ <= new_capacity);
-    T* new_data = NewData(new_capacity, zone);
+    static_assert(std::is_trivially_copyable<T>::value);
+    T* new_data = zone->NewArray<T>(new_capacity);
     if (length_ > 0) {
       memcpy(new_data, data_, length_ * sizeof(T));
     }
@@ -262,8 +260,7 @@ class ZoneList final {
   ZoneList(const ZoneList&) = delete;
 };
 
-// Origin:
-// https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-allocator.h#L14-L77
+// Based on: https://github.com/v8/v8/blob/master/src/zone/zone-allocator.h
 template <typename T>
 class ZoneAllocator {
  public:
@@ -286,7 +283,7 @@ class ZoneAllocator {
   template <typename U>
   friend class ZoneAllocator;
 
-  T* allocate(size_t n) { return static_cast<T*>(zone_->New(n * sizeof(T))); }
+  T* allocate(size_t n) { return zone_->NewArray<T>(n); }
   void deallocate(T* p, size_t) {}  // noop for zones
 
   bool operator==(ZoneAllocator const& other) const {
