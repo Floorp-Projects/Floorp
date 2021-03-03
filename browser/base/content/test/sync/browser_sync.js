@@ -37,6 +37,76 @@ add_task(async function test_ui_state_notification_calls_updateAllUI() {
   gSync.updateAllUI = updateAllUI;
 });
 
+add_task(async function test_navBar_button_visibility() {
+  const button = document.getElementById("fxa-toolbar-menu-button");
+  const protonEnabled = Services.prefs.getBoolPref(
+    "browser.proton.toolbar.enabled",
+    false
+  );
+  info("pref browser.proton.toolbar.enabled: " + protonEnabled);
+
+  ok(button.closest("#nav-bar"), "button is in the #nav-bar");
+
+  const state = {
+    status: UIState.STATUS_NOT_CONFIGURED,
+    syncEnabled: true,
+  };
+  gSync.updateAllUI(state);
+  is(
+    BrowserTestUtils.is_visible(button),
+    !protonEnabled,
+    "Check button visibility with STATUS_NOT_CONFIGURED"
+  );
+
+  state.status = UIState.STATUS_NOT_VERIFIED;
+  gSync.updateAllUI(state);
+  ok(
+    BrowserTestUtils.is_visible(button),
+    "Check button visibility with STATUS_NOT_VERIFIED"
+  );
+
+  state.status = UIState.STATUS_LOGIN_FAILED;
+  gSync.updateAllUI(state);
+  ok(
+    BrowserTestUtils.is_visible(button),
+    "Check button visibility with STATUS_LOGIN_FAILED"
+  );
+
+  state.status = UIState.STATUS_SIGNED_IN;
+  gSync.updateAllUI(state);
+  ok(
+    BrowserTestUtils.is_visible(button),
+    "Check button visibility with STATUS_SIGNED_IN"
+  );
+
+  state.syncEnabled = false;
+  gSync.updateAllUI(state);
+  is(
+    BrowserTestUtils.is_visible(button),
+    true,
+    "Check button visibility when signed in, but sync disabled"
+  );
+});
+
+add_task(async function setupForPanelTests() {
+  /* Proton hides the FxA toolbar button when in the nav-bar and unconfigured.
+     To test the panel in all states, we move it to the tabstrip toolbar where
+     it will always be visible.
+   */
+  CustomizableUI.addWidgetToArea(
+    "fxa-toolbar-menu-button",
+    CustomizableUI.AREA_TABSTRIP
+  );
+
+  // make sure it gets put back at the end of the tests
+  registerCleanupFunction(() => {
+    CustomizableUI.addWidgetToArea(
+      "fxa-toolbar-menu-button",
+      CustomizableUI.AREA_NAVBAR
+    );
+  });
+});
+
 add_task(async function test_ui_state_signedin() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 

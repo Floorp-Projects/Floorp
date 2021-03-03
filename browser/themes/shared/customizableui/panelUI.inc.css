@@ -926,6 +926,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   display: none;
 }
 
+/* Hide the FxA toolbar button when its in the nav-bar, until in use */
+@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+  :root[fxastatus="not_configured"] #nav-bar-customization-target > #fxa-toolbar-menu-button {
+    display: none;
+  }
+}
+
 #fxa-menu-avatar,
 #fxa-avatar-image,
 #PanelUI-fxa-menu-account-settings-button {
