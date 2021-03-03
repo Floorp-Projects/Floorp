@@ -1478,7 +1478,7 @@ struct BuiltinThunks {
   CodeRangeVector codeRanges;
   TypedNativeToCodeRangeMap typedNativeToCodeRange;
   SymbolicAddressToCodeRangeArray symbolicAddressToCodeRange;
-  uint32_t provisionalJitEntryOffset;
+  uint32_t provisionalLazyJitEntryOffset;
 
   BuiltinThunks() : codeBase(nullptr), codeSize(0) {}
 
@@ -1558,8 +1558,8 @@ bool wasm::EnsureBuiltinThunksInitialized() {
     }
   }
 
-  // Provisional JitEntry stub: This is a shared stub that can be installed in
-  // the jit-entry jump table.  It uses the JIT ABI and when invoked will
+  // Provisional lazy JitEntry stub: This is a shared stub that can be installed
+  // in the jit-entry jump table.  It uses the JIT ABI and when invoked will
   // retrieve (via TlsContext()) and invoke the context-appropriate
   // invoke-from-interpreter jit stub, thus serving as the initial, unoptimized
   // jit-entry stub for any exported wasm function that has a jit-entry.
@@ -1571,11 +1571,12 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   bool oldFlag = jitContext.setIsCompilingWasm(false);
 #endif
 
-  Offsets provisionalJitEntryOffsets;
-  if (!GenerateProvisionalJitEntryStub(masm, &provisionalJitEntryOffsets)) {
+  Offsets provisionalLazyJitEntryOffsets;
+  if (!GenerateProvisionalLazyJitEntryStub(masm,
+                                           &provisionalLazyJitEntryOffsets)) {
     return false;
   }
-  thunks->provisionalJitEntryOffset = provisionalJitEntryOffsets.begin;
+  thunks->provisionalLazyJitEntryOffset = provisionalLazyJitEntryOffsets.begin;
 
 #ifdef DEBUG
   jitContext.setIsCompilingWasm(oldFlag);
@@ -1642,11 +1643,11 @@ void* wasm::SymbolicAddressTarget(SymbolicAddress sym) {
   return thunks.codeBase + thunks.codeRanges[codeRangeIndex].begin();
 }
 
-void* wasm::ProvisionalJitEntryStub() {
+void* wasm::ProvisionalLazyJitEntryStub() {
   MOZ_ASSERT(builtinThunks);
 
   const BuiltinThunks& thunks = *builtinThunks;
-  return thunks.codeBase + thunks.provisionalJitEntryOffset;
+  return thunks.codeBase + thunks.provisionalLazyJitEntryOffset;
 }
 
 static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(

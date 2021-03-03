@@ -107,7 +107,7 @@ bool HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
 void* SymbolicAddressTarget(SymbolicAddress sym);
 
-void* ProvisionalJitEntryStub();
+void* ProvisionalLazyJitEntryStub();
 
 void* MaybeGetBuiltinThunk(JSFunction* f, const FuncType& funcType);
 
