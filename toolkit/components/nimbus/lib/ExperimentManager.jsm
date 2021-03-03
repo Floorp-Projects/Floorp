@@ -35,13 +35,10 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new Logger("ExperimentManager");
 });
 
-// This is included with event telemetry e.g. "enroll"
-// TODO: Add a new type called "messaging_study"
-const EVENT_TELEMETRY_STUDY_TYPE = "preference_study";
-// This is used by Telemetry.setExperimentActive
-const TELEMETRY_EXPERIMENT_TYPE_PREFIX = "normandy-";
-// Also included in telemetry
-const DEFAULT_EXPERIMENT_TYPE = "messaging_experiment";
+const TELEMETRY_EVENT_OBJECT = "nimbus_experiment";
+const TELEMETRY_EXPERIMENT_ACTIVE_PREFIX = "nimbus-";
+const TELEMETRY_DEFAULT_EXPERIMENT_TYPE = "nimbus";
+
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 /**
@@ -189,7 +186,7 @@ class _ExperimentManager {
     {
       slug,
       branches,
-      experimentType = DEFAULT_EXPERIMENT_TYPE,
+      experimentType = TELEMETRY_DEFAULT_EXPERIMENT_TYPE,
       userFacingName,
       userFacingDescription,
     },
@@ -288,7 +285,7 @@ class _ExperimentManager {
     this.store.updateExperiment(slug, { active: false });
 
     TelemetryEnvironment.setExperimentInactive(slug);
-    TelemetryEvents.sendEvent("unenroll", EVENT_TELEMETRY_STUDY_TYPE, slug, {
+    TelemetryEvents.sendEvent("unenroll", TELEMETRY_EVENT_OBJECT, slug, {
       reason,
       branch: experiment.branch.slug,
       enrollmentId:
@@ -318,7 +315,7 @@ class _ExperimentManager {
    * @param {string} reason
    */
   sendFailureTelemetry(eventName, slug, reason) {
-    TelemetryEvents.sendEvent(eventName, EVENT_TELEMETRY_STUDY_TYPE, slug, {
+    TelemetryEvents.sendEvent(eventName, TELEMETRY_EVENT_OBJECT, slug, {
       reason,
     });
   }
@@ -328,7 +325,7 @@ class _ExperimentManager {
    * @param {Enrollment} experiment
    */
   sendEnrollmentTelemetry({ slug, branch, experimentType, enrollmentId }) {
-    TelemetryEvents.sendEvent("enroll", EVENT_TELEMETRY_STUDY_TYPE, slug, {
+    TelemetryEvents.sendEvent("enroll", TELEMETRY_EVENT_OBJECT, slug, {
       experimentType,
       branch: branch.slug,
       enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
@@ -346,7 +343,7 @@ class _ExperimentManager {
       experiment.slug,
       experiment.branch.slug,
       {
-        type: `${TELEMETRY_EXPERIMENT_TYPE_PREFIX}${experiment.experimentType}`,
+        type: `${TELEMETRY_EXPERIMENT_ACTIVE_PREFIX}${experiment.experimentType}`,
         enrollmentId:
           experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       }

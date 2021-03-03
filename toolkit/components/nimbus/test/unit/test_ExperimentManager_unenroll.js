@@ -63,7 +63,7 @@ add_task(async function test_unenroll_opt_out() {
     TelemetryEvents.sendEvent.firstCall.args,
     [
       "unenroll",
-      "preference_study",
+      "nimbus_experiment",
       experiment.slug,
       {
         reason: "studies-opt-out",
@@ -108,7 +108,7 @@ add_task(async function test_send_unenroll_event() {
     TelemetryEvents.sendEvent.firstCall.args,
     [
       "unenroll",
-      "preference_study", // This needs to be updated eventually
+      "nimbus_experiment",
       "foo", // slug
       {
         reason: "some-reason",

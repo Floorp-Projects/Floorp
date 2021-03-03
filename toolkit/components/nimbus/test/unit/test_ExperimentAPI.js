@@ -40,6 +40,12 @@ add_task(async function test_getExperiment_fromChild_slug() {
     "should return an experiment by slug"
   );
 
+  Assert.deepEqual(
+    ExperimentAPI.getExperiment({ slug: "foo" }).branch,
+    expected.branch,
+    "should return the right branch by slug"
+  );
+
   sandbox.restore();
 });
 
@@ -154,6 +160,12 @@ add_task(async function test_getExperiment_feature() {
     ExperimentAPI.getExperiment({ featureId: "cfr" }).slug,
     expected.slug,
     "should return an experiment by featureId"
+  );
+
+  Assert.deepEqual(
+    ExperimentAPI.getExperiment({ featureId: "cfr" }).branch,
+    expected.branch,
+    "should return the right branch by featureId"
   );
 
   Assert.ok(exposureStub.notCalled, "Not called by default");
@@ -471,22 +483,4 @@ add_task(async function test_activateBranch_noActivationEvent() {
 
   Assert.equal(stub.callCount, 0, "Not called: sendExposureEvent is false");
   sandbox.restore();
-});
-
-add_task(function test_recordExposureEvent() {
-  Services.telemetry.clearScalars();
-
-  ExperimentAPI.recordExposureEvent({
-    featureId: "aboutwelcome",
-    experimentSlug: "my-xpcshell-experiment",
-    branchSlug: "treatment-a",
-  });
-
-  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
-  TelemetryTestUtils.assertKeyedScalar(
-    scalars,
-    "telemetry.event_counts",
-    "normandy#expose#feature_study",
-    1
-  );
 });
