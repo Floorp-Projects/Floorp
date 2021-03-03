@@ -2964,8 +2964,8 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
   return true;
 }
 
-bool wasm::GenerateProvisionalJitEntryStub(MacroAssembler& masm,
-                                           Offsets* offsets) {
+bool wasm::GenerateProvisionalLazyJitEntryStub(MacroAssembler& masm,
+                                               Offsets* offsets) {
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
   offsets->begin = masm.currentOffset();

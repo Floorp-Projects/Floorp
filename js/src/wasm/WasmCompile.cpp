@@ -155,6 +155,108 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   return target;
 }
 
+/*
+ * [SMDOC] Tiered wasm compilation.
+ *
+ * "Tiered compilation" refers to the mechanism where we first compile the code
+ * with a fast non-optimizing compiler so that we can start running the code
+ * quickly, while in the background recompiling the code with the slower
+ * optimizing compiler.  Code created by baseline is called "tier-1"; code
+ * created by the optimizing compiler is called "tier-2".  When the tier-2 code
+ * is ready, we "tier up" the code by creating paths from tier-1 code into their
+ * tier-2 counterparts; this patching is performed as the program is running.
+ *
+ * ## Selecting the compilation mode
+ *
+ * When wasm bytecode arrives, we choose the compilation strategy based on
+ * switches and on aspects of the code and the hardware.  If switches allow
+ * tiered compilation to happen (the normal case), the following logic applies.
+ *
+ * If the code is sufficiently large that tiered compilation would be beneficial
+ * but not so large that it might blow our compiled code budget and make
+ * compilation fail, we choose tiered compilation.  Otherwise we go straight to
+ * optimized code.
+ *
+ * The expected benefit of tiering is computed by TieringBeneficial(), below,
+ * based on various estimated parameters of the hardware: ratios of object code
+ * to byte code, speed of the system, number of cores.
+ *
+ * ## Mechanics of tiering up; patching
+ *
+ * Every time control enters a tier-1 function, the function prologue loads its
+ * tiering pointer from the tiering jump table (see JumpTable in WasmCode.h) and
+ * jumps to it.
+ *
+ * Initially, an entry in the tiering table points to the instruction inside the
+ * tier-1 function that follows the jump instruction (hence the jump is an
+ * expensive nop).  When the tier-2 compiler is finished, the table is patched
+ * racily to point into the tier-2 function at the correct prologue location
+ * (see loop near the end of Module::finishTier2()).  As tier-2 compilation is
+ * performed at most once per Module, there is at most one such racy overwrite
+ * per table element during the lifetime of the Module.
+ *
+ * The effect of the patching is to cause the tier-1 function to jump to its
+ * tier-2 counterpart whenever the tier-1 function is called subsequently.  That
+ * is, tier-1 code performs standard frame setup on behalf of whatever code it
+ * jumps to, and the target code (tier-1 or tier-2) allocates its own frame in
+ * whatever way it wants.
+ *
+ * The racy writing means that it is often nondeterministic whether tier-1 or
+ * tier-2 code is reached by any call during the tiering-up process; if F calls
+ * A and B in that order, it may reach tier-2 code for A and tier-1 code for B.
+ * If F is running concurrently on threads T1 and T2, T1 and T2 may see code
+ * from different tiers for either function.
+ *
+ * Note, tiering up also requires upgrading the jit-entry stubs so that they
+ * reference tier-2 code.  The mechanics of this upgrading are described at
+ * WasmInstanceObject::getExportedFunction().
+ *
+ * ## Current limitations of tiering
+ *
+ * Tiering is not always seamless.  Partly, it is possible for a program to get
+ * stuck in tier-1 code.  Partly, a function that has tiered up continues to
+ * force execution to go via tier-1 code to reach tier-2 code, paying for an
+ * additional jump and a slightly less optimized prologue than tier-2 code could
+ * have had on its own.
+ *
+ * Known tiering limitiations:
+ *
+ * - We can tier up only at function boundaries.  If a tier-1 function has a
+ *   long-running loop it will not tier up until it returns to its caller.  If
+ *   this loop never exits (a runloop in a worker, for example) then the
+ *   function will never tier up.
+ *
+ *   To do better, we need OSR.
+ *
+ * - Wasm Table entries are never patched during tier-up.  A Table of funcref
+ *   holds not a JSFunction pointer, but a (code*,Tls*) pair of pointers.  When
+ *   a table.set operation is performed, the JSFunction value is decomposed and
+ *   its code and Tls pointers are stored in the table; subsequently, when a
+ *   table.get operation is performed, the JSFunction value is reconstituted
+ *   from its code pointer using fairly elaborate machinery.  (The mechanics are
+ *   the same also for the reflected JS operations on a WebAssembly.Table.  For
+ *   everything, see WasmTable.{cpp,h}.)  The code pointer in the Table will
+ *   always be the code pointer belonging to the best tier that was active at
+ *   the time when that function was stored in that Table slot; in many cases,
+ *   it will be tier-1 code.  As a consequence, a call through a table will
+ *   first enter tier-1 code and then jump to tier-2 code.
+ *
+ *   To do better, we must update all the tables in the system when an instance
+ *   tiers up.  This is expected to be very hard.
+ *
+ * - Imported Wasm functions are never patched during tier-up.  Imports are held
+ *   in FuncImportTls values in the instance's Tls, and for a wasm callee,
+ *   what's stored is the raw code pointer into the best tier of the callee that
+ *   was active at the time the import was resolved.  That could be baseline
+ *   code, and if it is, the situation is as for Table entries: a call to an
+ *   import will always go via that import's tier-1 code, which will tier up
+ *   with an indirect jump.
+ *
+ *   To do better, we must update all the import tables in the system that
+ *   import functions from instances whose modules have tiered up.  This is
+ *   expected to be hard.
+ */
+
 // Classify the current system as one of a set of recognizable classes.  This
 // really needs to get our tier-1 systems right.
 //
