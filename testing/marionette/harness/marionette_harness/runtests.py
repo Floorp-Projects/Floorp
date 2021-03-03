@@ -68,6 +68,11 @@ class MarionetteHarness(object):
     def process_args(self):
         if self.args.get("pydebugger"):
             self._testcase_class.pydebugger = __import__(self.args["pydebugger"])
+        # Remove mozlog arguments from the return value since these aren't
+        # used directly by the rest of marionette
+        self.args = {
+            key: value for key, value in self.args.items() if not key.startswith("log_")
+        }
 
     def run(self):
         self.process_args()
