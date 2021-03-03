@@ -1962,11 +1962,11 @@ set_config("MOZ_CODE_COVERAGE", code_coverage)
 set_define("MOZ_CODE_COVERAGE", code_coverage)
 
 
-@depends(target, c_compiler, vc_path, check_build_environment, when=code_coverage)
+@depends(target, c_compiler, check_build_environment, when=code_coverage)
 @imports("os")
 @imports("re")
 @imports(_from="__builtin__", _import="open")
-def coverage_cflags(target, c_compiler, vc_path, build_env):
+def coverage_cflags(target, c_compiler, build_env):
     cflags = ["--coverage"]
 
     # clang 11 no longer accepts this flag (its behavior became the default)
