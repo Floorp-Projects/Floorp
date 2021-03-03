@@ -633,9 +633,11 @@ FinderHighlighter.prototype = {
 
         // No need to calculate the mark positions if there is no visible scrollbar.
         if (window.scrollMaxY > 0) {
-          let yAdj =
-            window.scrollMaxY /
-            window.document.documentElement.getBoundingClientRect().height;
+          // Use the body's scrollHeight if available.
+          let scrollElement =
+            window.document.body || window.document.documentElement;
+          let yAdj = window.scrollMaxY / scrollElement.scrollHeight;
+
           for (let r = 0; r < rangeCount; r++) {
             let rect = findSelection.getRangeAt(r).getBoundingClientRect();
             let yPos = Math.round((yStart + rect.y + rect.height / 2) * yAdj); // use the midpoint
