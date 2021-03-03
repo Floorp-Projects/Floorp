@@ -9,7 +9,7 @@
 
 #include "nsIAccessibleHyperLink.h"
 
-#include "AccessibleOrProxy.h"
+#include "mozilla/a11y/Accessible.h"
 
 class nsIAccessible;
 
@@ -39,7 +39,7 @@ class xpcAccessibleHyperLink : public nsIAccessibleHyperLink {
   xpcAccessibleHyperLink(const xpcAccessibleHyperLink&) = delete;
   xpcAccessibleHyperLink& operator=(const xpcAccessibleHyperLink&) = delete;
 
-  AccessibleOrProxy Intl();
+  Accessible* Intl();
 };
 
 }  // namespace a11y

@@ -15,17 +15,17 @@ xpcAccessibleValue::GetMaximumValue(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
+  if (Intl()->IsLocal() && Intl()->AsLocal()->IsDefunct()) {
     return NS_ERROR_FAILURE;
   }
 
   double value;
-  if (Intl().IsAccessible()) {
-    value = Intl().AsAccessible()->MaxValue();
+  if (Intl()->IsLocal()) {
+    value = Intl()->AsLocal()->MaxValue();
   } else {
-    value = Intl().AsProxy()->MaxValue();
+    value = Intl()->AsRemote()->MaxValue();
   }
 
   if (!IsNaN(value)) *aValue = value;
@@ -38,17 +38,17 @@ xpcAccessibleValue::GetMinimumValue(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
+  if (Intl()->IsLocal() && Intl()->AsLocal()->IsDefunct()) {
     return NS_ERROR_FAILURE;
   }
 
   double value;
-  if (Intl().IsAccessible()) {
-    value = Intl().AsAccessible()->MinValue();
+  if (Intl()->IsLocal()) {
+    value = Intl()->AsLocal()->MinValue();
   } else {
-    value = Intl().AsProxy()->MinValue();
+    value = Intl()->AsRemote()->MinValue();
   }
 
   if (!IsNaN(value)) *aValue = value;
@@ -61,17 +61,17 @@ xpcAccessibleValue::GetCurrentValue(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
+  if (Intl()->IsLocal() && Intl()->AsLocal()->IsDefunct()) {
     return NS_ERROR_FAILURE;
   }
 
   double value;
-  if (Intl().IsAccessible()) {
-    value = Intl().AsAccessible()->CurValue();
+  if (Intl()->IsLocal()) {
+    value = Intl()->AsLocal()->CurValue();
   } else {
-    value = Intl().AsProxy()->CurValue();
+    value = Intl()->AsRemote()->CurValue();
   }
 
   if (!IsNaN(value)) *aValue = value;
@@ -81,16 +81,16 @@ xpcAccessibleValue::GetCurrentValue(double* aValue) {
 
 NS_IMETHODIMP
 xpcAccessibleValue::SetCurrentValue(double aValue) {
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
+  if (Intl()->IsLocal() && Intl()->AsLocal()->IsDefunct()) {
     return NS_ERROR_FAILURE;
   }
 
-  if (Intl().IsAccessible()) {
-    Intl().AsAccessible()->SetCurValue(aValue);
+  if (Intl()->IsLocal()) {
+    Intl()->AsLocal()->SetCurValue(aValue);
   } else {
-    Intl().AsProxy()->SetCurValue(aValue);
+    Intl()->AsRemote()->SetCurValue(aValue);
   }
 
   return NS_OK;
@@ -101,17 +101,17 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue) {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct()) {
+  if (Intl()->IsLocal() && Intl()->AsLocal()->IsDefunct()) {
     return NS_ERROR_FAILURE;
   }
 
   double value;
-  if (Intl().IsAccessible()) {
-    value = Intl().AsAccessible()->Step();
+  if (Intl()->IsLocal()) {
+    value = Intl()->AsLocal()->Step();
   } else {
-    value = Intl().AsProxy()->Step();
+    value = Intl()->AsRemote()->Step();
   }
 
   if (!IsNaN(value)) *aValue = value;
