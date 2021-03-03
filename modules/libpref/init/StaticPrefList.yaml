@@ -4344,8 +4344,8 @@
   mirror: once
 
 # Whether to load fonts (e.g. Twemoji Mozilla) bundled with the application:
-#  -1 - Auto behavior based on OS version (currently, disables loading on Win8.1 or later,
-#       or on "low-memory" Android devices)
+#  -1 - Auto behavior based on OS version (currently, disables loading on
+#       "low-memory" Android devices)
 #   0 - Skip loading any bundled fonts
 #   1 - Always load bundled fonts
 - name: gfx.bundled-fonts.activate
