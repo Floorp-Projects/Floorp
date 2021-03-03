@@ -248,6 +248,8 @@ nsXMLContentSink::DidBuildModel(bool aTerminated) {
     return NS_OK;
   }
 
+  FlushTags();
+
   DidBuildModelImpl(aTerminated);
 
   if (mXSLTProcessor) {
