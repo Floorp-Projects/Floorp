@@ -14,7 +14,6 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsWeakReference.h"
 #include "nsNPAPIPluginStreamListener.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIInterfaceRequestor.h"

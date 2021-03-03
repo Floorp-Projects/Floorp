@@ -17,7 +17,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIObserverService.h"
 #include "nsITelemetry.h"

@@ -10,7 +10,6 @@
 #include "mozilla/glean/bindings/DistributionData.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
-#include "nsDataHashtable.h"
 #include "nsIGleanMetrics.h"
 #include "nsTArray.h"
 

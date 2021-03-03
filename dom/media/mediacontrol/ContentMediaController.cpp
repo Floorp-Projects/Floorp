@@ -11,7 +11,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#include "nsDataHashtable.h"
 #include "nsGlobalWindowOuter.h"
 
 namespace mozilla::dom {
