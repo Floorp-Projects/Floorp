@@ -61,14 +61,17 @@ async function checkFallbackDefaultRegion(private) {
 
   const observer = new SearchObserver(
     [
+      expectedDefaultNotification,
       // For hiding (removing) the engine.
       SearchUtils.MODIFIED_TYPE.CHANGED,
       SearchUtils.MODIFIED_TYPE.REMOVED,
-      expectedDefaultNotification,
     ],
     expectedDefaultNotification
   );
+
   await Services.search.removeEngine(otherEngine);
+
+  let notified = await observer.promise;
 
   Assert.ok(otherEngine.hidden, "Should have hidden the removed engine");
   Assert.equal(
@@ -76,7 +79,6 @@ async function checkFallbackDefaultRegion(private) {
     original.name,
     "Should have reverted to the default to the region default"
   );
-  let notified = await observer.promise;
   Assert.equal(
     notified.name,
     original.name,
@@ -110,21 +112,23 @@ async function checkFallbackFirstVisible(private) {
   const observer = new SearchObserver(
     private
       ? [
-          SearchUtils.MODIFIED_TYPE.DEFAULT,
+          expectedDefaultNotification,
           // For hiding (removing) the engine.
           SearchUtils.MODIFIED_TYPE.CHANGED,
           SearchUtils.MODIFIED_TYPE.REMOVED,
-          expectedDefaultNotification,
         ]
       : [
+          expectedDefaultNotification,
           // For hiding (removing) the engine.
           SearchUtils.MODIFIED_TYPE.CHANGED,
           SearchUtils.MODIFIED_TYPE.REMOVED,
-          expectedDefaultNotification,
         ],
     expectedDefaultNotification
   );
+
   await Services.search.removeEngine(otherEngine);
+
+  let notified = await observer.promise;
 
   Assert.equal(
     (await getDefault(private)).name,
@@ -134,7 +138,6 @@ async function checkFallbackFirstVisible(private) {
     visibleEngines[private ? 0 : 1].name,
     "Should have set the default engine to the first visible"
   );
-  let notified = await observer.promise;
   Assert.equal(
     notified.name,
     visibleEngines[private ? 0 : 1].name,
@@ -153,23 +156,30 @@ add_task(async function test_default_private_fallback_to_first_visible() {
 // Removing all visible engines affects both the default and private default
 // engines.
 add_task(async function test_default_fallback_when_no_others_visible() {
-  for (let engine of await Services.search.getVisibleEngines()) {
-    await Services.search.removeEngine(engine);
+  // Remove all but one of the visible engines.
+  let visibleEngines = await Services.search.getVisibleEngines();
+  for (let i = 0; i < visibleEngines.length - 1; i++) {
+    await Services.search.removeEngine(visibleEngines[i]);
   }
-  Assert.strictEqual(
-    (await Services.search.getVisibleEngines()).length,
-    0,
-    "Should have no visible engines left after removal"
-  );
 
   const observer = new SearchObserver(
     [
+      // Unhiding of the default.
       SearchUtils.MODIFIED_TYPE.CHANGED,
+      // Change of the default.
       SearchUtils.MODIFIED_TYPE.DEFAULT,
       SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE,
+      // Hiding the last engine.
+      SearchUtils.MODIFIED_TYPE.CHANGED,
+      SearchUtils.MODIFIED_TYPE.REMOVED,
     ],
-    SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
+    SearchUtils.MODIFIED_TYPE.DEFAULT
   );
+
+  // Now remove the last engine, which should set the new default.
+  await Services.search.removeEngine(visibleEngines[visibleEngines.length - 1]);
+
+  let notified = await observer.promise;
 
   Assert.equal(
     (await getDefault(false)).name,
@@ -181,8 +191,6 @@ add_task(async function test_default_fallback_when_no_others_visible() {
     originalDefault.name,
     "Should have changed the default private to be the same as the original default engine after removing all engines"
   );
-
-  let notified = await observer.promise;
   Assert.equal(
     notified.name,
     originalDefault.name,
@@ -216,7 +224,7 @@ async function checkNonBuiltinFallback(private) {
   await setDefault(private, addedEngine);
 
   const observer = new SearchObserver(
-    [SearchUtils.MODIFIED_TYPE.REMOVED, expectedDefaultNotification],
+    [expectedDefaultNotification, SearchUtils.MODIFIED_TYPE.REMOVED],
     expectedDefaultNotification
   );
 

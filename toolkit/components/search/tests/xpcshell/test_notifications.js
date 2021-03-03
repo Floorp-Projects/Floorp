@@ -105,7 +105,12 @@ add_task(
 );
 
 add_task(async function test_removeEngine() {
+  await Services.search.setDefault(engine);
+  await Services.search.setDefaultPrivate(engine);
+
   const removedObserver = new SearchObserver([
+    SearchUtils.MODIFIED_TYPE.DEFAULT,
+    SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE,
     SearchUtils.MODIFIED_TYPE.REMOVED,
   ]);
 
