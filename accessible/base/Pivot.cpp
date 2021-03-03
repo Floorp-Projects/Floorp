@@ -536,7 +536,7 @@ LocalAccessible* Pivot::PrevText(LocalAccessible* aAnchor,
 AccessibleOrProxy Pivot::AtPoint(int32_t aX, int32_t aY, PivotRule& aRule) {
   AccessibleOrProxy match = AccessibleOrProxy();
   AccessibleOrProxy child =
-      mRoot.ChildAtPoint(aX, aY, LocalAccessible::eDeepestChild);
+      mRoot.ChildAtPoint(aX, aY, Accessible::EWhichChildAtPoint::DeepestChild);
   while (!child.IsNull() && (mRoot != child)) {
     uint16_t filtered = aRule.Match(child);
 
