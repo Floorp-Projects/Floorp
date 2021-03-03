@@ -285,7 +285,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
       tmpPoint, nsCocoaUtils::GetBackingScaleFactor(mainView));
 
   AccessibleOrProxy child = mGeckoAccessible.ChildAtPoint(
-      geckoPoint.x, geckoPoint.y, LocalAccessible::eDeepestChild);
+      geckoPoint.x, geckoPoint.y, Accessible::EWhichChildAtPoint::DeepestChild);
 
   if (!child.IsNull()) {
     mozAccessible* nativeChild = GetNativeFromGeckoAccessible(child);

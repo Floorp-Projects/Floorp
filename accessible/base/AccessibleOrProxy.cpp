@@ -52,7 +52,7 @@ AccessibleOrProxy AccessibleOrProxy::Parent() const {
 }
 
 AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
-    int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
+    int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
   if (IsProxy()) {
     return AsProxy()->ChildAtPoint(aX, aY, aWhichChild);
   }
@@ -63,13 +63,14 @@ AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
     if (!docRect.Contains(aX, aY)) {
       return nullptr;
     }
-    if (aWhichChild == LocalAccessible::eDirectChild) {
+    if (aWhichChild == Accessible::EWhichChildAtPoint::DirectChild) {
       return childDoc;
     }
     return childDoc->ChildAtPoint(aX, aY, aWhichChild);
   }
   AccessibleOrProxy target = AsAccessible()->ChildAtPoint(aX, aY, aWhichChild);
-  if (target.IsNull() || aWhichChild == LocalAccessible::eDirectChild) {
+  if (target.IsNull() ||
+      aWhichChild == Accessible::EWhichChildAtPoint::DirectChild) {
     return target;
   }
   childDoc = target.RemoteChildDoc();
