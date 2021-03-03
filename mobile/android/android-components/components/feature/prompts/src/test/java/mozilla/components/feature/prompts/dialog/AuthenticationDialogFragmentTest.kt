@@ -11,7 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
-import mozilla.ext.appCompatContext
+import mozilla.components.support.test.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

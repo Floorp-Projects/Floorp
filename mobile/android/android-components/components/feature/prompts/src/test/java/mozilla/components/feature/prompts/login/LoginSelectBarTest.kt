@@ -12,9 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.R
+import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.ext.appCompatContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Text for the positive action button, that will take the user to the settings page -->
+    <string name="mozac_support_base_permissions_needed_positive_button">Go to settings</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="mozac_support_base_permissions_needed_negative_button">Dismiss</string>
+</resources>

@@ -24,9 +24,9 @@ import mozilla.components.feature.prompts.ext.year
 import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
+import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

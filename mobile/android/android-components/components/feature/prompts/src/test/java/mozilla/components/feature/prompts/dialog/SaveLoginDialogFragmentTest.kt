@@ -14,8 +14,8 @@ import junit.framework.TestCase
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
-import mozilla.ext.appCompatContext
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`

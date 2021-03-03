@@ -29,8 +29,8 @@ import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.newInstance
+import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

@@ -14,7 +14,7 @@ import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
-import mozilla.ext.appCompatContext
+import mozilla.components.support.test.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

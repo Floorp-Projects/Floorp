@@ -403,6 +403,7 @@ class DownloadsFeatureTest {
 
         verify(downloadManager, never()).download(any(), anyString())
         verify(feature).closeDownloadResponse("test-tab")
+        verify(feature).showPermissionDeniedDialog()
     }
 
     @Test
