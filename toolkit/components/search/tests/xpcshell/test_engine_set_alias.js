@@ -95,10 +95,50 @@ add_task(async function test_engine_set_alias_with_space() {
       },
     },
   ]);
-  Assert.equal(engine5.alias, null);
+  Assert.equal(engine5.alias, "");
   engine5.alias = "b";
   Assert.equal(engine5.alias, "b");
   engine5.alias = "  ";
-  Assert.equal(engine5.alias, null);
+  Assert.equal(engine5.alias, "");
   await Services.search.removeEngine(engine5);
+});
+
+add_task(async function test_engine_change_alias() {
+  let [engine6] = await addTestEngines([
+    {
+      name: "bacon",
+      details: {
+        alias: "",
+        description: "Search Bacon",
+        method: "GET",
+        template: "http://www.bacon.test/find",
+      },
+    },
+  ]);
+
+  let promise = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+
+  engine6.alias = "ba";
+
+  await promise;
+  Assert.equal(
+    engine6.alias,
+    "ba",
+    "Should have correctly notified and changed the alias."
+  );
+
+  let observed = false;
+  Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    observed = true;
+  }, SearchUtils.TOPIC_ENGINE_MODIFIED);
+
+  engine6.alias = "ba";
+
+  Assert.equal(engine6.alias, "ba", "Should have not changed the alias");
+  Assert.ok(!observed, "Should not have notified for no change in alias");
+
+  await Services.search.removeEngine(engine6);
 });

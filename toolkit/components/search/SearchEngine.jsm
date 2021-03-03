@@ -1246,7 +1246,7 @@ class SearchEngine {
    * @returns {string}
    */
   get alias() {
-    return this.getAttr("alias");
+    return this.getAttr("alias") || "";
   }
 
   /**
@@ -1255,9 +1255,11 @@ class SearchEngine {
    * @param {string} val
    */
   set alias(val) {
-    var value = val ? val.trim() : null;
-    this.setAttr("alias", value);
-    SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+    var value = val ? val.trim() : "";
+    if (value != this.alias) {
+      this.setAttr("alias", value);
+      SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+    }
   }
 
   /**
