@@ -60,6 +60,7 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
 
     internal inner class PromptCallback : Authenticator.Callback {
         override fun onAuthenticationError() {
+            fillResponse?.cancel()
             setResult(RESULT_CANCELED)
             finish()
         }

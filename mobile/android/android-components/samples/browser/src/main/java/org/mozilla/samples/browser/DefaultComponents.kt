@@ -81,6 +81,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.location.LocationService
 import org.mozilla.samples.browser.addons.AddonsActivity
+import org.mozilla.samples.browser.autofill.AutofillConfirmActivity
 import org.mozilla.samples.browser.autofill.AutofillUnlockActivity
 import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
@@ -104,7 +105,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             storage = DummyLoginsStorage(),
             publicSuffixList = publicSuffixList,
             unlockActivity = AutofillUnlockActivity::class.java,
-            applicationName = "Sample Browser"
+            confirmActivity = AutofillConfirmActivity::class.java,
+            applicationName = "Sample Browser",
+            httpClient = client
         )
     }
 

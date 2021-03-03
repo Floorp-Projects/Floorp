@@ -20,5 +20,10 @@ enum class Relation(val kindAndDetail: String) {
     /**
      * Requests the ability to handle all URLs from a given origin.
      */
-    HANDLE_ALL_URLS("delegate_permission/common.handle_all_urls")
+    HANDLE_ALL_URLS("delegate_permission/common.handle_all_urls"),
+
+    /**
+     * Grants the target permission to retrieve sign-in credentials stored for the source.
+     */
+    GET_LOGIN_CREDS("delegate_permission/common.get_login_creds")
 }

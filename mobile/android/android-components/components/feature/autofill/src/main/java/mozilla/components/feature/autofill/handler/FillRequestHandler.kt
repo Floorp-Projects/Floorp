@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.autofill.handler
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.assist.AssistStructure
 import android.content.Context
@@ -19,9 +20,11 @@ import androidx.annotation.RequiresApi
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.R
-import mozilla.components.feature.autofill.ext.getByStructure
 import mozilla.components.feature.autofill.structure.ParsedStructure
+import mozilla.components.feature.autofill.structure.getLookupDomain
 import mozilla.components.feature.autofill.structure.parseStructure
+
+internal const val EXTRA_LOGIN_ID = "loginId"
 
 /**
  * Class responsible for handling [FillRequest]s and returning [FillResponse]s.
@@ -43,15 +46,25 @@ internal class FillRequestHandler(
      * Handles a fill request for the given [AssistStructure] and returns a matching [FillResponse]
      * or `null` if the request could not be handled or the passed in [AssistStructure] is `null`.
      */
+    @SuppressLint("InlinedApi")
     @Suppress("ReturnCount")
-    suspend fun handle(structure: AssistStructure?, forceUnlock: Boolean = false): FillResponse? {
+    suspend fun handle(
+        structure: AssistStructure?,
+        forceUnlock: Boolean = false
+    ): FillResponse? {
         if (structure == null) {
             return null
         }
 
         val parsedStructure = parseStructure(context, structure) ?: return null
-        val logins = configuration.storage.getByStructure(configuration.publicSuffixList, parsedStructure)
+        val lookupDomain = parsedStructure.getLookupDomain(configuration.publicSuffixList)
+        val needsConfirmation = !configuration.verifier.hasCredentialRelationship(
+            context,
+            lookupDomain,
+            parsedStructure.packageName
+        )
 
+        val logins = configuration.storage.getByBaseDomain(lookupDomain)
         if (logins.isEmpty()) {
             return null
         }
@@ -59,8 +72,44 @@ internal class FillRequestHandler(
         return if (!configuration.lock.keepUnlocked() && !forceUnlock) {
             createAuthResponse(context, configuration, parsedStructure)
         } else {
-            createLoginsResponse(context, parsedStructure, logins)
+            createLoginsResponse(
+                context,
+                configuration,
+                parsedStructure,
+                logins,
+                needsConfirmation
+            )
         }
+    }
+
+    /**
+     * Handles a fill request for the given [AssistStructure] and returns only a [Dataset] for the
+     * given [loginId] -  or `null` if the request could not be handled or the passed in
+     * [AssistStructure] is `null`
+     */
+    @Suppress("ReturnCount")
+    suspend fun handleConfirmation(structure: AssistStructure?, loginId: String): Dataset? {
+        if (structure == null) {
+            return null
+        }
+
+        val parsedStructure = parseStructure(context, structure) ?: return null
+        val lookupDomain = parsedStructure.getLookupDomain(configuration.publicSuffixList)
+
+        val logins = configuration.storage.getByBaseDomain(lookupDomain)
+        if (logins.isEmpty()) {
+            return null
+        }
+
+        val login = logins.firstOrNull { login -> login.guid == loginId } ?: return null
+
+        return createDataSetResponse(
+            context,
+            configuration,
+            login,
+            parsedStructure,
+            needsConfirmation = false
+        )
     }
 }
 
@@ -98,39 +147,76 @@ private fun createAuthResponse(
 @RequiresApi(Build.VERSION_CODES.O)
 private fun createLoginsResponse(
     context: Context,
+    configuration: AutofillConfiguration,
     parsedStructure: ParsedStructure,
-    logins: List<Login>
+    logins: List<Login>,
+    needsConfirmation: Boolean
 ): FillResponse {
     val builder = FillResponse.Builder()
 
-    logins.forEach { login ->
-        val usernamePresentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
-        usernamePresentation.setTextViewText(android.R.id.text1, login.usernamePresentationOrFallback(context))
-        val passwordPresentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
-        passwordPresentation.setTextViewText(android.R.id.text1, login.passwordPresentation(context))
-
-        val dataset = Dataset.Builder()
-
-        parsedStructure.usernameId?.let { id ->
-            dataset.setValue(
-                id,
-                AutofillValue.forText(login.username),
-                usernamePresentation
-            )
-        }
-
-        parsedStructure.passwordId?.let { id ->
-            dataset.setValue(
-                id,
-                AutofillValue.forText(login.password),
-                passwordPresentation
-            )
-        }
-
-        builder.addDataset(dataset.build())
+    logins.forEachIndexed { index, login ->
+        val dataset = createDataSetResponse(
+            context,
+            configuration,
+            login,
+            parsedStructure,
+            needsConfirmation,
+            requestOffset = index
+        )
+        builder.addDataset(dataset)
     }
 
     return builder.build()
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Suppress("LongParameterList")
+private fun createDataSetResponse(
+    context: Context,
+    configuration: AutofillConfiguration,
+    login: Login,
+    parsedStructure: ParsedStructure,
+    needsConfirmation: Boolean,
+    requestOffset: Int = 0
+): Dataset {
+    val dataset = Dataset.Builder()
+
+    val usernamePresentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
+    usernamePresentation.setTextViewText(android.R.id.text1, login.usernamePresentationOrFallback(context))
+    val passwordPresentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1)
+    passwordPresentation.setTextViewText(android.R.id.text1, login.passwordPresentation(context))
+
+    parsedStructure.usernameId?.let { id ->
+        dataset.setValue(
+            id,
+            if (needsConfirmation) null else AutofillValue.forText(login.username),
+            usernamePresentation
+        )
+    }
+
+    parsedStructure.passwordId?.let { id ->
+        dataset.setValue(
+            id,
+            if (needsConfirmation) null else AutofillValue.forText(login.password),
+            passwordPresentation
+        )
+    }
+
+    if (needsConfirmation) {
+        val confirmIntent = Intent(context, configuration.confirmActivity)
+        confirmIntent.putExtra(EXTRA_LOGIN_ID, login.guid)
+
+        val intentSender: IntentSender = PendingIntent.getActivity(
+            context,
+            configuration.activityRequestCode + requestOffset,
+            confirmIntent,
+            PendingIntent.FLAG_CANCEL_CURRENT
+        ).intentSender
+
+        dataset.setAuthentication(intentSender)
+    }
+
+    return dataset.build()
 }
 
 private fun Login.usernamePresentationOrFallback(context: Context): String {
