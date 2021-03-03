@@ -356,13 +356,14 @@ checkbox:-moz-focusring {
 }
 
 /* Icon-only buttons */
-.devtools-button:hover:enabled::before,
+.devtools-button:hover::before,
 .devtools-button.checked::before {
   opacity: 1;
 }
 
 /* Button states */
 .devtools-button:disabled {
+  pointer-events: none;
   opacity: 0.5 !important;
 }
 
@@ -370,7 +371,7 @@ checkbox:-moz-focusring {
   background-color: var(--theme-toolbar-hover);
 }
 
-.devtools-button:empty:enabled:not([aria-expanded="true"]):hover {
+.devtools-button:empty:not([aria-expanded="true"]):hover {
   background: var(--toolbarbutton-hover-background);
 }
 
@@ -388,17 +389,17 @@ checkbox:-moz-focusring {
 
 /* Selectable button which is unchecked. */
 
-.devtools-button:enabled:not(:empty, .checked):hover,
-.devtools-button:empty:enabled:is(:hover:active,.checked),
+.devtools-button:not(:empty, .checked):hover,
+.devtools-button:empty:is(:hover:active,.checked),
 .devtools-button[aria-haspopup="menu"][aria-expanded="true"] {
   background-color: var(--toolbarbutton-hover-background);
 }
 
-.devtools-button:enabled:not(:empty, .checked):hover:active {
+.devtools-button:not(:empty, .checked):hover:active {
   background-color: var(--theme-selection-background-hover);
 }
 
-.devtools-button:enabled:not(:empty, .checked):focus {
+.devtools-button:not(:empty, .checked):focus {
   background-color: var(--toolbarbutton-focus-background);
   color: var(--toolbarbutton-focus-color);
 }
