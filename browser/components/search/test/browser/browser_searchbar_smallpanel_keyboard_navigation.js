@@ -1,14 +1,13 @@
 // Tests that keyboard navigation in the search panel works as designed.
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const oneOffsContainer = searchPopup.searchOneOffsContainer;
 
 const kValues = ["foo1", "foo2", "foo3"];
 
 function getOpenSearchItems() {
   let os = [];
 
-  let addEngineList = oneOffsContainer.querySelector(".search-add-engines");
+  let addEngineList = searchPopup.querySelector(".search-add-engines");
   for (
     let item = addEngineList.firstElementChild;
     item;
@@ -386,8 +385,11 @@ add_task(async function test_open_search() {
     "Should show the small popup"
   );
 
-  let engines = getOpenSearchItems();
-  is(engines.length, 3, "the opensearch.html page exposes 3 engines");
+  let engines;
+  await TestUtils.waitForCondition(() => {
+    engines = getOpenSearchItems();
+    return engines.length == 3;
+  }, "Should expose three engines");
 
   // Check that there's initially no selection.
   is(searchPopup.selectedIndex, -1, "no suggestion should be selected");
