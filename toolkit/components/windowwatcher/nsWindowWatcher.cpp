@@ -1163,6 +1163,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     loadState = new nsDocShellLoadState(uriToLoad);
 
     loadState->SetSourceBrowsingContext(parentBC);
+    loadState->SetAllowFocusMove(true);
     loadState->SetHasValidUserGestureActivation(
         context && context->HasValidTransientUserGestureActivation());
     if (parentBC) {
