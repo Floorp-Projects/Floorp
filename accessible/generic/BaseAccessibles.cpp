@@ -28,8 +28,8 @@ LeafAccessible::LeafAccessible(nsIContent* aContent, DocAccessible* aDoc)
 ////////////////////////////////////////////////////////////////////////////////
 // LeafAccessible: LocalAccessible public
 
-LocalAccessible* LeafAccessible::ChildAtPoint(int32_t aX, int32_t aY,
-                                              EWhichChildAtPoint aWhichChild) {
+LocalAccessible* LeafAccessible::LocalChildAtPoint(
+    int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   // Don't walk into leaf accessibles.
   return this;
 }

@@ -2074,7 +2074,7 @@ void HyperTextAccessible::RangeByChild(LocalAccessible* aChild,
 void HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
                                        a11y::TextRange& aRange) const {
   LocalAccessible* child =
-      mDoc->ChildAtPoint(aX, aY, EWhichChildAtPoint::DeepestChild);
+      mDoc->LocalChildAtPoint(aX, aY, EWhichChildAtPoint::DeepestChild);
   if (!child) return;
 
   LocalAccessible* parent = nullptr;

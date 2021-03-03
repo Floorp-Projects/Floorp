@@ -78,7 +78,7 @@ void OuterDocAccessible::SendEmbedderAccessible(
 
 role OuterDocAccessible::NativeRole() const { return roles::INTERNAL_FRAME; }
 
-LocalAccessible* OuterDocAccessible::ChildAtPoint(
+LocalAccessible* OuterDocAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   nsIntRect docRect = Bounds();
   if (!docRect.Contains(aX, aY)) return nullptr;
@@ -96,8 +96,8 @@ LocalAccessible* OuterDocAccessible::ChildAtPoint(
     // eDeepestChild). Calling ChildAtPoint on these will crash!
     return nullptr;
 #else
-    return child->ChildAtPoint(aX, aY,
-                               Accessible::EWhichChildAtPoint::DeepestChild);
+    return child->LocalChildAtPoint(
+        aX, aY, Accessible::EWhichChildAtPoint::DeepestChild);
 #endif  // defined(XP_WIN)
   }
   return child;

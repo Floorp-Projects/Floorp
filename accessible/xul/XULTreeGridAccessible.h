@@ -80,7 +80,7 @@ class XULTreeGridRowAccessible final : public XULTreeItemAccessibleBase {
   virtual void Shutdown() override;
   virtual a11y::role NativeRole() const override;
   virtual ENameValueFlag Name(nsString& aName) const override;
-  virtual LocalAccessible* ChildAtPoint(
+  virtual LocalAccessible* LocalChildAtPoint(
       int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
 
   virtual LocalAccessible* LocalChildAt(uint32_t aIndex) const override;

@@ -302,8 +302,8 @@ class LocalAccessible : public nsISupports, public Accessible {
    * @param  aWhichChild  [in] flag points if deepest or direct child
    *                        should be returned
    */
-  virtual LocalAccessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                        EWhichChildAtPoint aWhichChild);
+  virtual LocalAccessible* LocalChildAtPoint(int32_t aX, int32_t aY,
+                                             EWhichChildAtPoint aWhichChild);
 
   /**
    * Return the focused child if any.

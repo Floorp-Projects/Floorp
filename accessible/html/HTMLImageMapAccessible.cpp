@@ -145,7 +145,7 @@ void HTMLAreaAccessible::Description(nsString& aDescription) {
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLAreaAccessible: LocalAccessible public
 
-LocalAccessible* HTMLAreaAccessible::ChildAtPoint(
+LocalAccessible* HTMLAreaAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   // Don't walk into area accessibles.
   return this;
