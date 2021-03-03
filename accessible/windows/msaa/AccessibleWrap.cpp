@@ -954,7 +954,8 @@ AccessibleWrap::accHitTest(
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  LocalAccessible* accessible = ChildAtPoint(xLeft, yTop, eDirectChild);
+  LocalAccessible* accessible =
+      LocalChildAtPoint(xLeft, yTop, Accessible::EWhichChildAtPoint::DirectChild);
 
   // if we got a child
   if (accessible) {

@@ -68,7 +68,8 @@ AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
     }
     return childDoc->ChildAtPoint(aX, aY, aWhichChild);
   }
-  AccessibleOrProxy target = AsAccessible()->ChildAtPoint(aX, aY, aWhichChild);
+  AccessibleOrProxy target =
+      AsAccessible()->LocalChildAtPoint(aX, aY, aWhichChild);
   if (target.IsNull() ||
       aWhichChild == Accessible::EWhichChildAtPoint::DirectChild) {
     return target;
