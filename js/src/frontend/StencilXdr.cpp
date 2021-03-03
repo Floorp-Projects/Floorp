@@ -566,9 +566,7 @@ template XDRResult XDRBaseCompilationStencil(XDRState<XDR_DECODE>* xdr,
 template <XDRMode mode>
 XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
                                 CompilationStencil& stencil) {
-  if (stencil.asmJS) {
-    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
-  }
+  MOZ_ASSERT(!stencil.asmJS);
 
   if (mode == XDR_DECODE) {
     stencil.hasExternalDependency = true;
@@ -601,5 +599,31 @@ template XDRResult XDRCompilationStencil(XDRState<XDR_ENCODE>* xdr,
 
 template XDRResult XDRCompilationStencil(XDRState<XDR_DECODE>* xdr,
                                          CompilationStencil& stencil);
+
+template <XDRMode mode>
+XDRResult XDRCheckCompilationStencil(XDRState<mode>* xdr,
+                                     CompilationStencil& stencil) {
+  if (stencil.asmJS) {
+    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
+  }
+
+  return Ok();
+}
+
+template XDRResult XDRCheckCompilationStencil(XDRState<XDR_ENCODE>* xdr,
+                                              CompilationStencil& stencil);
+
+template <XDRMode mode>
+XDRResult XDRCheckCompilationStencil(XDRState<mode>* xdr,
+                                     ExtensibleCompilationStencil& stencil) {
+  if (stencil.asmJS) {
+    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
+  }
+
+  return Ok();
+}
+
+template XDRResult XDRCheckCompilationStencil(
+    XDRState<XDR_ENCODE>* xdr, ExtensibleCompilationStencil& stencil);
 
 }  // namespace js

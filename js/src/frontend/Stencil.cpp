@@ -1490,7 +1490,7 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
   if (succeededOut) {
     *succeededOut = false;
   }
-  XDRIncrementalStencilEncoder encoder(cx);
+  XDRStencilEncoder encoder(cx, buf);
 
   XDRResult res =
       encoder.codeStencil(input, const_cast<CompilationStencil&>(*this));
@@ -1501,14 +1501,6 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
     }
     MOZ_ASSERT(res.unwrapErr() == JS::TranscodeResult::Throw);
 
-    return false;
-  }
-
-  // Linearize the encoder, return empty buffer on failure.
-  res = encoder.linearize(buf, source.get());
-  if (res.isErr()) {
-    MOZ_ASSERT(cx->isThrowingOutOfMemory());
-    buf.clear();
     return false;
   }
 
@@ -1528,7 +1520,7 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
   MOZ_ASSERT(parserAtomData.empty());
   XDRStencilDecoder decoder(cx, &input.options, range);
 
-  XDRResult res = decoder.codeStencils(input, *this);
+  XDRResult res = decoder.codeStencil(input, *this);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       return true;
@@ -3605,12 +3597,8 @@ JS::TranscodeResult JS::EncodeStencil(JSContext* cx,
                                       RefPtr<JS::Stencil> stencil,
                                       TranscodeBuffer& buffer) {
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  XDRIncrementalStencilEncoder encoder(cx);
+  XDRStencilEncoder encoder(cx, buffer);
   XDRResult res = encoder.codeStencil(input.get(), *stencil);
-  if (res.isErr()) {
-    return res.unwrapErr();
-  }
-  res = encoder.linearize(buffer, stencil->source.get());
   if (res.isErr()) {
     return res.unwrapErr();
   }
@@ -3631,7 +3619,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
     return TranscodeResult::Throw;
   }
   XDRStencilDecoder decoder(cx, &options, range);
-  XDRResult res = decoder.codeStencils(input.get(), *stencil);
+  XDRResult res = decoder.codeStencil(input.get(), *stencil);
   if (res.isErr()) {
     return res.unwrapErr();
   }
