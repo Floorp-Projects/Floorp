@@ -5831,7 +5831,6 @@ exports.CSS_PROPERTIES = {
       "sw-resize",
       "text",
       "unset",
-      "url",
       "vertical-text",
       "w-resize",
       "wait",
