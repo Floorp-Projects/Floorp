@@ -54,6 +54,7 @@ test-info-fission:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-sysroot
     run:
         using: run-task
         cwd: '{checkout}'
@@ -80,6 +81,7 @@ test-info-xorigin:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-sysroot
     run:
         using: run-task
         cwd: '{checkout}'
@@ -106,6 +108,7 @@ test-info-disabled-by-os:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-sysroot
     run:
         using: run-task
         cwd: '{checkout}'
@@ -136,6 +139,7 @@ test-info-all:
             - linux64-cbindgen
             - linux64-nasm
             - linux64-node
+            - linux64-sysroot
     run:
         using: run-task
         cwd: '{checkout}'
