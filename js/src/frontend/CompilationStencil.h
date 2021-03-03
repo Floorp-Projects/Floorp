@@ -51,6 +51,7 @@ namespace frontend {
 struct CompilationInput;
 struct CompilationStencil;
 struct CompilationGCOutput;
+struct StencilDelazificationSet;
 class ScriptStencilIterable;
 
 // ScopeContext hold information derivied from the scope and environment chains
@@ -165,7 +166,7 @@ struct CompilationAtomCache {
   using AtomCacheVector = JS::GCVector<JSAtom*, 0, js::SystemAllocPolicy>;
 
  private:
-  // Atoms lowered into or converted from CompilationStencil.parserAtomData.
+  // Atoms lowered into or converted from BaseCompilationStencil.parserAtomData.
   //
   // This field is here instead of in CompilationGCOutput because atoms lowered
   // from JSAtom is part of input (enclosing scope bindings, lazy function name,
@@ -215,7 +216,7 @@ struct CompilationInput {
   //  * If the target is Global, null.
   //  * If the target is SelfHosting, an empty global scope.
   //    This scope is also used for EmptyGlobalScopeType in
-  //    CompilationStencil.gcThings.
+  //    BaseCompilationStencil.gcThings.
   //    See the comment in initForSelfHostingGlobal.
   //  * If the target is StandaloneFunction, an empty global scope.
   //  * If the target is StandaloneFunctionInNonSyntacticScope, the non-null
@@ -246,7 +247,7 @@ struct CompilationInput {
     }
 
     // This enclosing scope is also recorded as EmptyGlobalScopeType in
-    // CompilationStencil.gcThings even though corresponding ScopeStencil
+    // BaseCompilationStencil.gcThings even though corresponding ScopeStencil
     // isn't generated.
     //
     // Store the enclosing scope here in order to access it from
@@ -370,7 +371,7 @@ struct SharedDataContainer {
   uintptr_t data_ = 0;
 
  public:
-  // Defaults to SingleSharedData.
+  // Defaults to SingleSharedData for delazification vector.
   SharedDataContainer() = default;
 
   SharedDataContainer(const SharedDataContainer&) = delete;
@@ -388,13 +389,9 @@ struct SharedDataContainer {
 
   ~SharedDataContainer();
 
-  [[nodiscard]] bool initVector(JSContext* cx);
-  [[nodiscard]] bool initMap(JSContext* cx);
+  bool initVector(JSContext* cx);
+  bool initMap(JSContext* cx);
 
- private:
-  [[nodiscard]] bool convertFromSingleToMap(JSContext* cx);
-
- public:
   bool isEmpty() const { return (data_) == SingleTag; }
   bool isSingle() const { return (data_ & TagMask) == SingleTag; }
   bool isVector() const { return (data_ & TagMask) == VectorTag; }
@@ -433,22 +430,15 @@ struct SharedDataContainer {
     return reinterpret_cast<SharedDataContainer*>(data_ & ~TagMask);
   }
 
-  [[nodiscard]] bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
-                                       size_t allScriptCount);
+  bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
+                         size_t allScriptCount);
 
   // Returns index-th script's shared data, or nullptr if it doesn't have.
   js::SharedImmutableScriptData* get(ScriptIndex index) const;
 
   // Add data for index-th script and share it with VM.
-  [[nodiscard]] bool addAndShare(JSContext* cx, ScriptIndex index,
-                                 js::SharedImmutableScriptData* data);
-
-  // Add data for index-th script without sharing it with VM.
-  // The data should already be shared with VM.
-  //
-  // The data is supposed to be added from delazification.
-  [[nodiscard]] bool addExtraWithoutShare(JSContext* cx, ScriptIndex index,
-                                          js::SharedImmutableScriptData* data);
+  bool addAndShare(JSContext* cx, ScriptIndex index,
+                   js::SharedImmutableScriptData* data);
 
   // Dynamic memory associated with this container. Does not include the
   // SharedImmutableScriptData since we are not the unique owner of it.
@@ -470,28 +460,8 @@ struct SharedDataContainer {
 #endif
 };
 
-struct ExtensibleCompilationStencil;
-
-// The top level struct of stencil specialized for non-extensible case.
-// Used as the compilation output, and also XDR decode output.
-//
-// In XDR decode output case, the span and not-owning pointer fields point
-// the internal LifoAlloc and the external XDR buffer.
-//
-// In BorrowingCompilationStencil usage, span and not-owning pointer fields
-// point the ExtensibleCompilationStencil and its LifoAlloc.
-//
-// The dependent XDR buffer or ExtensibleCompilationStencil must be kept
-// alive manually.
-struct CompilationStencil {
-  static constexpr ScriptIndex TopLevelIndex = ScriptIndex(0);
-
-  static constexpr size_t LifoAllocChunkSize = 512;
-
-  // Set to true if any pointer/span contains external data instead of
-  // LifoAlloc or owned memory.
-  bool hasExternalDependency = false;
-
+// The top level struct of stencil.
+struct BaseCompilationStencil {
   // FunctionKey is an encoded position of a function within the source text
   // that is reproducible.
   using FunctionKey = uint32_t;
@@ -501,11 +471,6 @@ struct CompilationStencil {
   // reserved for the top-level script. This top-level may or may not be a
   // function.
   mozilla::Span<ScriptStencil> scriptData;
-
-  // Immutable data computed during initial compilation and never updated during
-  // delazification.
-  mozilla::Span<ScriptStencilExtra> scriptExtra;
-
   mozilla::Span<TaggedScriptThingIndex> gcThingData;
 
   // scopeData and scopeNames have the same size, and i-th scopeNames contains
@@ -532,6 +497,59 @@ struct CompilationStencil {
   // function in the source text.
   FunctionKey functionKey = NullFunctionKey;
 
+  // End of fields.
+
+  BaseCompilationStencil() = default;
+
+  static FunctionKey toFunctionKey(const SourceExtent& extent) {
+    // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
+    // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
+    auto result = extent.sourceStart + 1;
+    MOZ_ASSERT(result != NullFunctionKey);
+    return result;
+  }
+
+  bool isInitialStencil() const { return functionKey == NullFunctionKey; }
+
+  inline CompilationStencil& asCompilationStencil();
+  inline const CompilationStencil& asCompilationStencil() const;
+
+  // Size of dynamic allocations. Note that data in Spans are not owned by us
+  // and instead accounted for in by their backing storage (eg LifoAlloc or XDR
+  // buffer).
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return sharedData.sizeOfExcludingThis(mallocSizeOf);
+  }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump() const;
+  void dump(js::JSONPrinter& json) const;
+  void dumpFields(js::JSONPrinter& json) const;
+
+  void dumpAtom(TaggedParserAtomIndex index) const;
+#endif
+};
+
+// The top level struct of stencil specialized for non-extensible case.
+// Used as the compilation output, and also XDR decode output.
+//
+// In XDR decode output case, the span and not-owning pointer fields point
+// the internal LifoAlloc and the external XDR buffer.
+//
+// In BorrowingCompilationStencil usage, span and not-owning pointer fields
+// point the ExtensibleCompilationStencil and its LifoAlloc.
+//
+// The dependent XDR buffer or ExtensibleCompilationStencil must be kept
+// alive manually.
+struct CompilationStencil : public BaseCompilationStencil {
+  static constexpr ScriptIndex TopLevelIndex = ScriptIndex(0);
+
+  static constexpr size_t LifoAllocChunkSize = 512;
+
+  // Set to true if any pointer/span contains external data instead of
+  // LifoAlloc or owned memory.
+  bool hasExternalDependency = false;
+
   // The lifetime of this CompilationStencil may be managed by stack allocation,
   // UniquePtr<T>, or RefPtr<T>. If a RefPtr is used, this ref-count will track
   // the lifetime, otherwise it is ignored.
@@ -554,9 +572,17 @@ struct CompilationStencil {
   // Module metadata if this is a module compile.
   RefPtr<StencilModuleMetadata> moduleMetadata;
 
+  // Immutable data computed during initial compilation and never updated during
+  // delazification.
+  mozilla::Span<ScriptStencilExtra> scriptExtra;
+
   // AsmJS modules generated by parsing. These scripts are never lazy and
   // therefore only generated during initial parse.
   RefPtr<StencilAsmJSContainer> asmJS;
+
+  // A series of delazifications may also be associated with this stencil. They
+  // contain bytecode, scopes, etc generated by delazification.
+  UniquePtr<StencilDelazificationSet> delazificationSet;
 
   // End of fields.
 
@@ -564,27 +590,19 @@ struct CompilationStencil {
   explicit CompilationStencil(ScriptSource* source)
       : alloc(LifoAllocChunkSize), source(source) {}
 
-  static FunctionKey toFunctionKey(const SourceExtent& extent) {
-    // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
-    // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
-    auto result = extent.sourceStart + 1;
-    MOZ_ASSERT(result != NullFunctionKey);
-    return result;
-  }
-
-  bool isInitialStencil() const { return functionKey == NullFunctionKey; }
-
-  [[nodiscard]] static bool instantiateStencilAfterPreparation(
-      JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-      CompilationGCOutput& gcOutput);
+  [[nodiscard]] static bool instantiateBaseStencilAfterPreparation(
+      JSContext* cx, CompilationInput& input,
+      const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool prepareForInstantiate(
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-      CompilationGCOutput& gcOutput);
+      CompilationGCOutput& gcOutput,
+      CompilationGCOutput* gcOutputForDelazification = nullptr);
 
   [[nodiscard]] static bool instantiateStencils(
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-      CompilationGCOutput& gcOutput);
+      CompilationGCOutput& gcOutput,
+      CompilationGCOutput* gcOutputForDelazification = nullptr);
 
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
                                        JS::TranscodeBuffer& buf,
@@ -600,7 +618,7 @@ struct CompilationStencil {
   CompilationStencil& operator=(CompilationStencil&&) = delete;
 
   static inline ScriptStencilIterable functionScriptStencils(
-      const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
+      const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   void setFunctionKey(BaseScript* lazy) {
     functionKey = toFunctionKey(lazy->extent());
@@ -611,9 +629,6 @@ struct CompilationStencil {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
-  // Steal ExtensibleCompilationStencil content.
-  [[nodiscard]] bool steal(JSContext* cx, ExtensibleCompilationStencil&& other);
-
 #ifdef DEBUG
   void assertNoExternalDependency() const;
 #endif
@@ -622,22 +637,33 @@ struct CompilationStencil {
   void dump() const;
   void dump(js::JSONPrinter& json) const;
   void dumpFields(js::JSONPrinter& json) const;
-
-  void dumpAtom(TaggedParserAtomIndex index) const;
 #endif
 };
 
-// The top level struct of stencil specialized for extensible case.
-// Used as the temporary storage during compilation, an the compilation output.
+inline CompilationStencil& BaseCompilationStencil::asCompilationStencil() {
+  MOZ_ASSERT(isInitialStencil(),
+             "cast from BaseCompilationStencil to CompilationStencil is "
+             "allowed only for initial stencil");
+  return *static_cast<CompilationStencil*>(this);
+}
+
+inline const CompilationStencil& BaseCompilationStencil::asCompilationStencil()
+    const {
+  MOZ_ASSERT(isInitialStencil(),
+             "cast from BaseCompilationStencil to CompilationStencil is "
+             "allowed only for initial stencil");
+  return *static_cast<const CompilationStencil*>(this);
+}
+
+// Temporary space to accumulate stencil data.
+// Copied to BaseCompilationStencil/CompilationStencil by `finish` method.
 //
-// All not-owning pointer fields point the internal LifoAlloc.
-//
-// See CompilationStencil for each field's description.
+// See BaseCompilationStencil/CompilationStencil for each field's description.
 struct ExtensibleCompilationStencil {
-  using FunctionKey = CompilationStencil::FunctionKey;
+  using FunctionKey = BaseCompilationStencil::FunctionKey;
 
   // Data pointed by other fields are allocated in this LifoAlloc,
-  // and moved to `CompilationStencil.alloc`.
+  // and moved to `BaseCompilationStencil.alloc`.
   LifoAlloc alloc;
 
   RefPtr<ScriptSource> source;
@@ -668,7 +694,7 @@ struct ExtensibleCompilationStencil {
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
 
-  FunctionKey functionKey = CompilationStencil::NullFunctionKey;
+  FunctionKey functionKey = BaseCompilationStencil::NullFunctionKey;
 
   ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
 
@@ -718,15 +744,14 @@ struct ExtensibleCompilationStencil {
   }
 
   void setFunctionKey(BaseScript* lazy) {
-    functionKey = CompilationStencil::toFunctionKey(lazy->extent());
+    functionKey = BaseCompilationStencil::toFunctionKey(lazy->extent());
   }
 
   bool isInitialStencil() const {
-    return functionKey == CompilationStencil::NullFunctionKey;
+    return functionKey == BaseCompilationStencil::NullFunctionKey;
   }
 
-  // Steal CompilationStencil content.
-  [[nodiscard]] bool steal(JSContext* cx, CompilationStencil&& other);
+  [[nodiscard]] bool finish(JSContext* cx, CompilationStencil& stencil);
 
   inline size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
@@ -800,6 +825,32 @@ class MOZ_STACK_CLASS BorrowingCompilationStencil : public CompilationStencil {
       ExtensibleCompilationStencil& extensibleStencil);
 };
 
+// A set of stencils generated by delazifying functions. This should only be
+// used by a CompilationStencil that owns this. This is primarily used for
+// bytecode caching with XDR.
+struct StencilDelazificationSet {
+  Vector<BaseCompilationStencil, 0, js::SystemAllocPolicy> delazifications;
+  Vector<ScriptIndex, 0, js::SystemAllocPolicy> delazificationIndices;
+
+  size_t maxScriptDataLength = 0;
+  size_t maxScopeDataLength = 0;
+  size_t maxParserAtomDataLength = 0;
+
+  bool hasDelazificationIndices() {
+    MOZ_ASSERT(!delazifications.empty());
+    return !delazificationIndices.empty();
+  }
+
+  [[nodiscard]] bool buildDelazificationIndices(
+      JSContext* cx, const CompilationStencil& stencil);
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) +
+           delazifications.sizeOfExcludingThis(mallocSizeOf) +
+           delazificationIndices.sizeOfExcludingThis(mallocSizeOf);
+  }
+};
+
 // Size of dynamic data. Ignores Spans (unless their contents are in the
 // LifoAlloc) and RefPtrs since we are not the unique owner.
 inline size_t CompilationStencil::sizeOfExcludingThis(
@@ -807,9 +858,13 @@ inline size_t CompilationStencil::sizeOfExcludingThis(
   size_t moduleMetadataSize =
       moduleMetadata ? moduleMetadata->sizeOfIncludingThis(mallocSizeOf) : 0;
   size_t asmJSSize = asmJS ? asmJS->sizeOfIncludingThis(mallocSizeOf) : 0;
+  size_t delazificationSetSize =
+      delazificationSet ? delazificationSet->sizeOfIncludingThis(mallocSizeOf)
+                        : 0;
 
   return alloc.sizeOfExcludingThis(mallocSizeOf) + moduleMetadataSize +
-         asmJSSize + sharedData.sizeOfExcludingThis(mallocSizeOf);
+         asmJSSize + delazificationSetSize +
+         BaseCompilationStencil::sizeOfExcludingThis(mallocSizeOf);
 }
 
 inline size_t ExtensibleCompilationStencil::sizeOfExcludingThis(
@@ -904,17 +959,17 @@ class ScriptStencilIterable {
 
   class Iterator {
     size_t index_ = 0;
-    const CompilationStencil& stencil_;
+    const BaseCompilationStencil& stencil_;
     CompilationGCOutput& gcOutput_;
 
-    Iterator(const CompilationStencil& stencil, CompilationGCOutput& gcOutput,
-             size_t index)
+    Iterator(const BaseCompilationStencil& stencil,
+             CompilationGCOutput& gcOutput, size_t index)
         : index_(index), stencil_(stencil), gcOutput_(gcOutput) {
       MOZ_ASSERT(index == stencil.scriptData.size());
     }
 
    public:
-    explicit Iterator(const CompilationStencil& stencil,
+    explicit Iterator(const BaseCompilationStencil& stencil,
                       CompilationGCOutput& gcOutput)
         : stencil_(stencil), gcOutput_(gcOutput) {
       skipTopLevelNonFunction();
@@ -956,22 +1011,22 @@ class ScriptStencilIterable {
       const ScriptStencil& script = stencil_.scriptData[index];
       const ScriptStencilExtra* scriptExtra = nullptr;
       if (stencil_.isInitialStencil()) {
-        scriptExtra = &stencil_.scriptExtra[index];
+        scriptExtra = &stencil_.asCompilationStencil().scriptExtra[index];
       }
       return ScriptAndFunction(script, scriptExtra, gcOutput_.functions[index],
                                index);
     }
 
-    static Iterator end(const CompilationStencil& stencil,
+    static Iterator end(const BaseCompilationStencil& stencil,
                         CompilationGCOutput& gcOutput) {
       return Iterator(stencil, gcOutput, stencil.scriptData.size());
     }
   };
 
-  const CompilationStencil& stencil_;
+  const BaseCompilationStencil& stencil_;
   CompilationGCOutput& gcOutput_;
 
-  explicit ScriptStencilIterable(const CompilationStencil& stencil,
+  explicit ScriptStencilIterable(const BaseCompilationStencil& stencil,
                                  CompilationGCOutput& gcOutput)
       : stencil_(stencil), gcOutput_(gcOutput) {}
 
@@ -981,55 +1036,9 @@ class ScriptStencilIterable {
 };
 
 inline ScriptStencilIterable CompilationStencil::functionScriptStencils(
-    const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
+    const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   return ScriptStencilIterable(stencil, gcOutput);
 }
-
-// Merge CompilationStencil for delazification into initial
-// ExtensibleCompilationStencil.
-struct CompilationStencilMerger {
- private:
-  using FunctionKey = ExtensibleCompilationStencil::FunctionKey;
-
-  // The stencil for the initial compilation.
-  // Delazifications are merged into this.
-  //
-  // If any failure happens during merge operation, this field is reset to
-  // nullptr.
-  UniquePtr<ExtensibleCompilationStencil> initial_;
-
-  // A Map from function key to the ScriptIndex in the initial stencil.
-  using FunctionKeyToScriptIndexMap =
-      HashMap<FunctionKey, ScriptIndex, mozilla::DefaultHasher<FunctionKey>,
-              js::SystemAllocPolicy>;
-  FunctionKeyToScriptIndexMap functionKeyToInitialScriptIndex_;
-
-  [[nodiscard]] bool buildFunctionKeyToIndex(JSContext* cx);
-
-  ScriptIndex getInitialScriptIndexFor(
-      const CompilationStencil& delazification) const;
-
-  // A map from delazification's ParserAtomIndex to
-  // initial's TaggedParserAtomIndex
-  using AtomIndexMap = Vector<TaggedParserAtomIndex, 0, js::SystemAllocPolicy>;
-
-  [[nodiscard]] bool buildAtomIndexMap(JSContext* cx,
-                                       const CompilationStencil& delazification,
-                                       AtomIndexMap& atomIndexMap);
-
- public:
-  CompilationStencilMerger() = default;
-
-  // Set the initial stencil and prepare for merging.
-  [[nodiscard]] bool setInitial(
-      JSContext* cx, UniquePtr<ExtensibleCompilationStencil>&& initial);
-
-  // Merge the delazification stencil into the initial stencil.
-  [[nodiscard]] bool addDelazification(
-      JSContext* cx, const CompilationStencil& delazification);
-
-  ExtensibleCompilationStencil& getResult() const { return *initial_; }
-};
 
 }  // namespace frontend
 }  // namespace js

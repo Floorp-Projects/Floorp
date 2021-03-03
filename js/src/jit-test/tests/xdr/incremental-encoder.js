@@ -12,6 +12,7 @@ test = `
 `;
 evalWithCache(test, {
   incremental: true,
+  assertEqBytecode: true,
   assertEqResult : true
 });
 
@@ -23,6 +24,7 @@ test = `
 `;
 evalWithCache(test, {
   incremental: true,
+  assertEqBytecode: true,
   assertEqResult : true
 });
 
@@ -34,6 +36,7 @@ test = `
 `;
 evalWithCache(test, {
   incremental: true,
+  assertEqBytecode: true,
   assertEqResult : true
 });
 
@@ -46,6 +49,7 @@ test = `
 `;
 evalWithCache(test, {
   incremental: true,
+  assertEqBytecode: true,
   assertEqResult : true
 });
 
