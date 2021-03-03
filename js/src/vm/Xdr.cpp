@@ -452,7 +452,7 @@ XDRResult XDRIncrementalStencilEncoder::setInitial(
 }
 
 XDRResult XDRIncrementalStencilEncoder::addDelazification(
-    const frontend::ExtensibleCompilationStencil& delazification) {
+    const frontend::CompilationStencil& delazification) {
 #ifdef DEBUG
   auto sanityCheck = mozilla::MakeScopeExit(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
