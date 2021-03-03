@@ -34,17 +34,23 @@ COMMON_FEATURES="native-zlib"
 case "$(uname -s)" in
 Linux)
     export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
-    if [ "$TARGET" == "x86_64-apple-darwin" ]; then
+    case "$TARGET" in
+    *-apple-darwin)
         export PATH="$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
         export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
         export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
-        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX10.12.sdk"
+        if test "$TARGET" = "aarch64-apple-darwin"; then
+            export SDK_VER=11.0
+        fi
+        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk"
         cargo build --features "all $COMMON_FEATURES" --verbose --release --target $TARGET
-    else
+        ;;
+    *)
         export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot"
         export RUSTFLAGS="-C linker=$CC -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot"
         cargo build --features "all dist-server openssl/vendored $COMMON_FEATURES" --verbose --release
-    fi
+        ;;
+    esac
 
     ;;
 MINGW*)
