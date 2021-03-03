@@ -263,7 +263,6 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
 nsSHistory::nsSHistory(BrowsingContext* aRootBC)
     : mRootBC(aRootBC),
       mHasOngoingUpdate(false),
-      mIsRemote(false),
       mIndex(-1),
       mRequestedIndex(-1),
       mRootDocShellID(aRootBC->GetHistoryID()) {
@@ -1510,12 +1509,6 @@ void nsSHistory::GloballyEvictContentViewers() {
   nsTArray<EntryAndDistance> entries;
 
   for (auto shist : gSHistoryList) {
-    // FIXME Bug 1546348: Make global eviction work for session history in the
-    //       parent and remove mIsRemote.
-    if (shist->mIsRemote) {
-      continue;
-    }
-
     // Maintain a list of the entries which have viewers and belong to
     // this particular shist object.  We'll add this list to the global list,
     // |entries|, eventually.
