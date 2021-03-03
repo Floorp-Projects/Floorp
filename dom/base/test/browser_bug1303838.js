@@ -117,7 +117,30 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
+  // Location APIs shouldn't steal focus.
   await waitForTestReady(loadDivertedInBackground, tab);
+  await clickLink(
+    withFrame,
+    "#link-5",
+    tab.linkedBrowser,
+    testTab.linkedBrowser,
+    /* awaitTabSwitch = */ false
+  );
+  is(gBrowser.tabs.length, 3, "check tabs.length");
+  is(gBrowser.selectedTab, tab, "check selectedTab");
+
+  await waitForTestReady(/* diverted = */ true, tab);
+  await clickLink(
+    withFrame,
+    "#link-6",
+    tab.linkedBrowser,
+    testTab.linkedBrowser,
+    /* awaitTabSwitch = */ false
+  );
+  is(gBrowser.tabs.length, 3, "check tabs.length");
+  is(gBrowser.selectedTab, tab, "check selectedTab");
+
+  await waitForTestReady(/* diverted = */ true, tab);
   let loaded = BrowserTestUtils.browserLoaded(
     testTab.linkedBrowser,
     true,
@@ -125,7 +148,7 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
   );
   await clickLink(
     withFrame,
-    "#link-5",
+    "#link-7",
     tab.linkedBrowser,
     testTab.linkedBrowser,
     !loadDivertedInBackground,
