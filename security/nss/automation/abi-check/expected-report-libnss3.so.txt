@@ -1,5 +1,0 @@
-
-2 Added functions:
-
-  'function SECStatus PK11_HPKE_ExportContext(const HpkeContext*, PK11SymKey*, SECItem**)'    {PK11_HPKE_ExportContext@@NSS_3.62}
-  'function HpkeContext* PK11_HPKE_ImportContext(const SECItem*, PK11SymKey*)'    {PK11_HPKE_ImportContext@@NSS_3.62}
