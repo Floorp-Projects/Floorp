@@ -88,15 +88,10 @@ add_task(async function test_password_input() {
     [
       "fill-login",
       null,
-      [
-        "fill-login-no-logins",
-        false,
-        "---",
-        null,
-        "fill-login-saved-passwords",
-        true,
-      ],
+      ["fill-login-no-logins", false],
       null,
+      "manage-saved-logins",
+      true,
       "---",
       null,
       "context-undo",
