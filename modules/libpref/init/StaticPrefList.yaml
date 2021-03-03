@@ -6203,6 +6203,13 @@
   mirror: always
   rust: true
 
+# Is support for color-mix on content enabled?
+- name: layout.css.color-mix.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for DOMMatrix enabled?
 - name: layout.css.DOMMatrix.enabled
   type: RelaxedAtomicBool
