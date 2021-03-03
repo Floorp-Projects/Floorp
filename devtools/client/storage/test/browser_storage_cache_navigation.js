@@ -64,6 +64,6 @@ function checkCacheData(url, status) {
   is(
     gUI.table.items.get(url)?.status,
     status,
-    `Table row has an entry for: ${name} with status: ${status}`
+    `Table row has an entry for: ${url} with status: ${status}`
   );
 }
