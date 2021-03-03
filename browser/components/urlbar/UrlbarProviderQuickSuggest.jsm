@@ -25,11 +25,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // These prefs are relative to the `browser.urlbar` branch.
 const EXPERIMENT_PREF = "quicksuggest.enabled";
 const SUGGEST_PREF = "suggest.quicksuggest";
-const ONBOARDING_COUNT_PREF = "quicksuggest.onboardingCount";
-const ONBOARDING_MAX_COUNT_PREF = "quicksuggest.onboardingMaxCount";
 
 const NONSPONSORED_ACTION_TEXT = "Firefox Suggests";
-const ONBOARDING_TEXT = "Learn more about Firefox Suggests";
+const HELP_TITLE = "Learn more about Firefox Suggests";
 
 const TELEMETRY_SCALAR_IMPRESSION =
   "contextual.services.quicksuggest.impression";
@@ -133,16 +131,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       sponsoredBlockId: suggestion.block_id,
       sponsoredAdvertiser: suggestion.advertiser,
       isSponsored: true,
+      helpUrl: this.helpUrl,
+      helpTitle: HELP_TITLE,
     };
 
     if (!suggestion.isSponsored) {
       payload.sponsoredText = NONSPONSORED_ACTION_TEXT;
-    }
-
-    // Show the help button if we haven't reached the max onboarding count yet.
-    if (this._onboardingCount < this._onboardingMaxCount) {
-      payload.helpUrl = this.helpUrl;
-      payload.helpTitle = ONBOARDING_TEXT;
     }
 
     let result = new UrlbarResult(
@@ -182,8 +176,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
     this._addedResultInLastQuery = false;
 
-    // Per spec, we update the onboarding count and telemetry only when the user
-    // picks a result, i.e., when `state` is "engagement".
+    // Per spec, we update telemetry only when the user picks a result, i.e.,
+    // when `state` is "engagement".
     if (state != "engagement") {
       return;
     }
@@ -194,11 +188,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     if (!lastResult?.payload.isSponsored) {
       Cu.reportError(`Last result is not a quick suggest`);
       return;
-    }
-
-    // Increment the onboarding count.
-    if (this._onboardingCount < this._onboardingMaxCount) {
-      this._onboardingCount++;
     }
 
     // Record telemetry.  We want to record the 1-based index of the result, so
@@ -308,18 +297,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   // This is intended for tests and allows them to set a different help URL.
   _helpUrl = undefined;
-
-  get _onboardingCount() {
-    return UrlbarPrefs.get(ONBOARDING_COUNT_PREF);
-  }
-
-  set _onboardingCount(value) {
-    UrlbarPrefs.set(ONBOARDING_COUNT_PREF, value);
-  }
-
-  get _onboardingMaxCount() {
-    return UrlbarPrefs.get(ONBOARDING_MAX_COUNT_PREF);
-  }
 }
 
 var UrlbarProviderQuickSuggest = new ProviderQuickSuggest();
