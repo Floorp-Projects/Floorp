@@ -31,7 +31,7 @@ class ImportRowProcessor {
   uniqueLoginIdentifiers = new Set();
   originToRows = new Map();
   summary = [];
-  mandatoryFields = ["origin", "username", "password"];
+  mandatoryFields = ["origin", "password"];
 
   /**
    * Validates if the login data contains a GUID that was already found in a previous row in the current import.
