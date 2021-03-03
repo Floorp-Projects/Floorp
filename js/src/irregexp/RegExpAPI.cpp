@@ -44,7 +44,7 @@ using mozilla::Some;
 using frontend::DummyTokenStream;
 using frontend::TokenStreamAnyChars;
 
-using v8::internal::DisallowHeapAllocation;
+using v8::internal::DisallowGarbageCollection;
 using v8::internal::FlatStringReader;
 using v8::internal::HandleScope;
 using v8::internal::InputOutputData;
@@ -110,6 +110,10 @@ static uint32_t ErrorNumber(RegExpError err) {
       // and off in the middle of a regular expression. Unless it
       // becomes standardized, SM does not support this feature.
       MOZ_CRASH("Mode modifiers not supported");
+    case RegExpError::kNotLinear:
+      // V8 has an experimental non-backtracking engine. We do not
+      // support it yet.
+      MOZ_CRASH("Non-backtracking execution not supported");
     case RegExpError::kTooManyCaptures:
       return JSMSG_TOO_MANY_PARENS;
     case RegExpError::kInvalidCaptureGroupName:
@@ -278,7 +282,7 @@ static bool CheckPatternSyntaxImpl(JSContext* cx, FlatStringReader* pattern,
   Zone zone(allocScope.alloc());
 
   HandleScope handleScope(cx->isolate);
-  DisallowHeapAllocation no_gc;
+  DisallowGarbageCollection no_gc;
   return RegExpParser::VerifyRegExpSyntax(cx->isolate, &zone, pattern, flags,
                                           result, no_gc);
 }
