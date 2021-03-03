@@ -242,7 +242,7 @@ template <typename Unit>
           return false;
         }
 
-        if (!stencil->steal(cx, std::move(*extensibleStencil))) {
+        if (!extensibleStencil->finish(cx, *stencil)) {
           return false;
         }
 
@@ -303,7 +303,7 @@ template <typename Unit>
       return false;
     }
 
-    if (!stencil->steal(cx, std::move(compiler.stencil()))) {
+    if (!compiler.stencil().finish(cx, *stencil)) {
       return false;
     }
 
@@ -376,15 +376,16 @@ frontend::CompileGlobalScriptToExtensibleStencil(
                                                     scopeKind);
 }
 
-bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
-                                   const CompilationStencil& stencil,
-                                   CompilationGCOutput& gcOutput) {
+bool frontend::InstantiateStencils(
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
+    CompilationGCOutput& gcOutput,
+    CompilationGCOutput* gcOutputForDelazification /* = nullptr */) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!CompilationStencil::instantiateStencils(cx, input, stencil,
-                                                 gcOutput)) {
+    if (!CompilationStencil::instantiateStencils(cx, input, stencil, gcOutput,
+                                                 gcOutputForDelazification)) {
       return false;
     }
   }
@@ -403,15 +404,15 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
 
   return true;
 }
-
-bool frontend::PrepareForInstantiate(JSContext* cx, CompilationInput& input,
-                                     const CompilationStencil& stencil,
-                                     CompilationGCOutput& gcOutput) {
+bool frontend::PrepareForInstantiate(
+    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
+    CompilationGCOutput& gcOutput,
+    CompilationGCOutput* gcOutputForDelazification) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return CompilationStencil::prepareForInstantiate(cx, input, stencil,
-                                                   gcOutput);
+  return CompilationStencil::prepareForInstantiate(cx, input, stencil, gcOutput,
+                                                   gcOutputForDelazification);
 }
 
 template <typename Unit>
@@ -913,7 +914,7 @@ template <typename Unit>
       return false;
     }
 
-    if (!stencil->steal(cx, std::move(compiler.stencil()))) {
+    if (!compiler.stencil().finish(cx, *stencil)) {
       return false;
     }
 
@@ -1088,25 +1089,22 @@ static bool CompileLazyFunctionImpl(JSContext* cx, CompilationInput& input,
       static_cast<uint32_t>(input.lazy->immutableFlags());
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  {
-    BorrowingCompilationStencil borrowingStencil(compilationState);
-    if (!CompilationStencil::instantiateStencils(cx, input, borrowingStencil,
-                                                 gcOutput.get())) {
+  BorrowingCompilationStencil borrowingStencil(compilationState);
+  if (!CompilationStencil::instantiateStencils(cx, input, borrowingStencil,
+                                               gcOutput.get())) {
+    return false;
+  }
+
+  MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
+  MOZ_ASSERT(gcOutput.get().script->outermostScope()->hasOnChain(
+                 ScopeKind::NonSyntactic) ==
+             gcOutput.get().script->immutableFlags().hasFlag(
+                 JSScript::ImmutableFlags::HasNonSyntacticScope));
+
+  if (input.source->hasEncoder()) {
+    MOZ_ASSERT(!js::UseOffThreadParseGlobal());
+    if (!input.source->xdrEncodeFunctionStencil(cx, borrowingStencil)) {
       return false;
-    }
-
-    MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
-    MOZ_ASSERT(gcOutput.get().script->outermostScope()->hasOnChain(
-                   ScopeKind::NonSyntactic) ==
-               gcOutput.get().script->immutableFlags().hasFlag(
-                   JSScript::ImmutableFlags::HasNonSyntacticScope));
-
-    if (input.source->hasEncoder()) {
-      MOZ_ASSERT(!js::UseOffThreadParseGlobal());
-      if (!input.source->addDelazificationToIncrementalEncoding(
-              cx, borrowingStencil)) {
-        return false;
-      }
     }
   }
 
