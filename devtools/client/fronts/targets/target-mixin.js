@@ -47,7 +47,7 @@ function TargetMixin(parentClass) {
 
       // This flag will be set to true from:
       // - TabDescriptorFront getTarget(), for local tab targets
-      // - targetFromURL(), for local targets (about:debugging)
+      // - descriptorFromURL(), for local targets (about:debugging)
       // - initToolbox(), for some test-only targets
       this.shouldCloseClient = false;
 
