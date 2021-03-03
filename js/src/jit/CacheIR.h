@@ -1252,7 +1252,7 @@ class MOZ_RAII IRGenerator {
                                                   const Value& expandoVal,
                                                   JSObject* expandoObj);
 
-  void emitIdGuard(ValOperandId valId, jsid id);
+  void emitIdGuard(ValOperandId valId, HandleValue idVal, jsid id);
 
   OperandId emitNumericGuard(ValOperandId valId, Scalar::Type type);
 

@@ -1640,7 +1640,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvChildAtPoint(
   if (acc && !acc->IsDefunct()) {
     int32_t x = aX;
     int32_t y = aY;
-    LocalAccessible* result = acc->ChildAtPoint(
+    LocalAccessible* result = acc->LocalChildAtPoint(
         x, y, static_cast<LocalAccessible::EWhichChildAtPoint>(aWhich));
     if (result) {
       // LocalAccessible::ChildAtPoint can return a LocalAccessible from a

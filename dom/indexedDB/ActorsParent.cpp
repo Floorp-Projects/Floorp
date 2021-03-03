@@ -668,9 +668,7 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
     // currently too full.
     IDB_TRY(
         ToResult(aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns))
-            .mapErr([](const nsresult rv) {
-              return rv == NS_ERROR_FILE_TOO_BIG ? NS_OK : rv;
-            }));
+            .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG, Ok>));
   }
 #endif  // IDB_MOBILE
 

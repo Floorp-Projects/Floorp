@@ -472,8 +472,19 @@ LocalAccessible* LocalAccessible::FocusedChild() {
   return nullptr;
 }
 
-LocalAccessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,
-                                               EWhichChildAtPoint aWhichChild) {
+Accessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                                          EWhichChildAtPoint aWhichChild) {
+  Accessible* child = LocalChildAtPoint(aX, aY, aWhichChild);
+  if (aWhichChild != EWhichChildAtPoint::DirectChild && child &&
+      child->IsOuterDoc()) {
+    child = child->ChildAtPoint(aX, aY, aWhichChild);
+  }
+
+  return child;
+}
+
+LocalAccessible* LocalAccessible::LocalChildAtPoint(
+    int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
   // If we can't find the point in a child, we will return the fallback answer:
   // we return |this| if the point is within it, otherwise nullptr.
   LocalAccessible* fallbackAnswer = nullptr;
@@ -566,7 +577,9 @@ LocalAccessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 
     // If we landed on a legitimate child of |this|, and we want the direct
     // child, return it here.
-    if (parent == this && aWhichChild == eDirectChild) return child;
+    if (parent == this && aWhichChild == EWhichChildAtPoint::DirectChild) {
+      return child;
+    }
 
     child = parent;
   }
@@ -583,8 +596,9 @@ LocalAccessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,
     nsIntRect childRect = child->Bounds();
     if (childRect.Contains(aX, aY) &&
         (child->State() & states::INVISIBLE) == 0) {
-      if (aWhichChild == eDeepestChild) {
-        return child->ChildAtPoint(aX, aY, eDeepestChild);
+      if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
+        return child->LocalChildAtPoint(aX, aY,
+                                        EWhichChildAtPoint::DeepestChild);
       }
 
       return child;

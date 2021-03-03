@@ -9,10 +9,11 @@ const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "StorageUI", "devtools/client/storage/ui", true);
 
 class StoragePanel {
-  constructor(panelWin, toolbox) {
+  constructor(panelWin, toolbox, commands) {
     EventEmitter.decorate(this);
 
     this._toolbox = toolbox;
+    this._commands = commands;
     this._panelWin = panelWin;
 
     this.destroy = this.destroy.bind(this);
@@ -26,7 +27,7 @@ class StoragePanel {
    * open is effectively an asynchronous constructor
    */
   async open() {
-    this.UI = new StorageUI(this._panelWin, this._toolbox);
+    this.UI = new StorageUI(this._panelWin, this._toolbox, this._commands);
 
     await this.UI.init();
 

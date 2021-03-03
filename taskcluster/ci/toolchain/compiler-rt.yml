@@ -6,20 +6,21 @@ job-defaults:
     worker-type: b-linux
     worker:
         max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-compiler-rt.sh
+        toolchain-artifact: public/build/compiler-rt.tar.zst
 
 linux64-aarch64-compiler-rt-11:
     description: "linux aarch64 Compiler-rt for Clang 11 toolchain build"
     treeherder:
         symbol: TL(aarch64-crt)
     run:
-        using: toolchain-script
-        script: build-compiler-rt.sh
         arguments:
             - aarch64-unknown-linux-gnu
             - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
         resources:
             - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
-        toolchain-artifact: public/build/compiler-rt.tar.zst
     fetches:
         fetch:
             - clang-11
@@ -33,11 +34,8 @@ macosx64-x64-compiler-rt-11:
     treeherder:
         symbol: TM(x64-crt)
     run:
-        using: toolchain-script
-        script: build-compiler-rt.sh
         arguments:
             - x86_64-apple-darwin
-        toolchain-artifact: public/build/compiler-rt.tar.zst
     fetches:
         fetch:
             - clang-11
@@ -51,15 +49,60 @@ macosx64-aarch64-compiler-rt-11:
     treeherder:
         symbol: TM(aarch64-crt)
     run:
-        using: toolchain-script
-        script: build-compiler-rt.sh
         arguments:
             - aarch64-apple-darwin
-        toolchain-artifact: public/build/compiler-rt.tar.zst
     fetches:
         fetch:
             - clang-11
         toolchain:
             - linux64-cctools-port-clang-11
             - linux64-clang-11
+            - macosx64-sdk-11.0
+
+linux64-aarch64-compiler-rt-12:
+    description: "Linux aarch64 Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TL(aarch64-crt-12)
+    run:
+        arguments:
+            - aarch64-unknown-linux-gnu
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+        resources:
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+    fetches:
+        fetch:
+            - clang-12
+        toolchain:
+            - linux64-binutils
+            - linux64-clang-12
+            - linux64-aarch64-sysroot
+
+macosx64-x64-compiler-rt-12:
+    description: "macOS x64 Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TM(x64-crt-12)
+    run:
+        arguments:
+            - x86_64-apple-darwin
+    fetches:
+        fetch:
+            - clang-12
+        toolchain:
+            - linux64-cctools-port-clang-12
+            - linux64-clang-12
+            - macosx64-sdk-10.12
+
+macosx64-aarch64-compiler-rt-12:
+    description: "macOS aarch64 Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TM(aarch64-crt-12)
+    run:
+        arguments:
+            - aarch64-apple-darwin
+    fetches:
+        fetch:
+            - clang-12
+        toolchain:
+            - linux64-cctools-port-clang-12
+            - linux64-clang-12
             - macosx64-sdk-11.0

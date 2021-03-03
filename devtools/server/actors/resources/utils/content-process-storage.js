@@ -47,6 +47,11 @@ class ContentProcessStorage {
     this.storageActor = storageActor;
     this.actor = new ActorConstructor(storageActor);
 
+    // Some storage types require to prelist their stores
+    if (typeof this.actor.preListStores === "function") {
+      await this.actor.preListStores();
+    }
+
     // We have to manage the actor manually, because ResourceWatcher doesn't
     // use the protocol.js specification.
     // resource-available-form is typed as "json"

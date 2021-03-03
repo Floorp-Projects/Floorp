@@ -142,10 +142,11 @@ const TELEMETRY_SCALAR_NODE_SELECTION_COUNT =
  *      Fired when the stylesheet source links have been updated (when switching
  *      to source-mapped files)
  */
-function Inspector(toolbox) {
+function Inspector(toolbox, commands) {
   EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
+  this._commands = commands;
   this.panelDoc = window.document;
   this.panelWin = window;
   this.panelWin.inspector = this;
@@ -282,6 +283,10 @@ Inspector.prototype = {
 
   get toolbox() {
     return this._toolbox;
+  },
+
+  get commands() {
+    return this._commands;
   },
 
   /**

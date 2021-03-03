@@ -31,7 +31,7 @@ class LeafAccessible : public AccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(LeafAccessible, AccessibleWrap)
 
   // LocalAccessible
-  virtual LocalAccessible* ChildAtPoint(
+  virtual LocalAccessible* LocalChildAtPoint(
       int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
   bool InsertChildAt(uint32_t aIndex, LocalAccessible* aChild) final;
   bool RemoveChild(LocalAccessible* aChild) final;

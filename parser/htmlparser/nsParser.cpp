@@ -23,7 +23,6 @@
 #include "nsIFragmentContentSink.h"
 #include "nsStreamUtils.h"
 #include "nsHTMLTokenizer.h"
-#include "nsDataHashtable.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsMimeTypes.h"
 #include "mozilla/CondVar.h"

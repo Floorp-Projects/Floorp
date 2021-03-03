@@ -59,7 +59,7 @@ from mozgeckoprofiler import symbolicate_profile_json, view_gecko_profile
 
 try:
     from marionette_driver.addons import Addons
-    from marionette_harness import Marionette
+    from marionette_driver.marionette import Marionette
 except ImportError as e:  # noqa
     # Defer ImportError until attempt to use Marionette
     def reraise(*args, **kwargs):

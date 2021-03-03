@@ -24,7 +24,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["about-compat"] += [
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["data"] += [
     "data/injections.js",
-    "data/picture_in_picture_overrides.js",
     "data/shims.js",
     "data/ua_overrides.js",
 ]
@@ -38,8 +37,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["experiment-apis"] += [
     "experiment-apis/experiments.json",
     "experiment-apis/matchPatterns.js",
     "experiment-apis/matchPatterns.json",
-    "experiment-apis/pictureInPicture.js",
-    "experiment-apis/pictureInPicture.json",
     "experiment-apis/sharedPreferences.js",
     "experiment-apis/sharedPreferences.json",
     "experiment-apis/systemManufacturer.js",
@@ -108,7 +105,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["lib"] += [
     "lib/intervention_helpers.js",
     "lib/messaging_helper.js",
     "lib/module_shim.js",
-    "lib/picture_in_picture_overrides.js",
     "lib/shim_messaging_helper.js",
     "lib/shims.js",
     "lib/ua_overrides.js",

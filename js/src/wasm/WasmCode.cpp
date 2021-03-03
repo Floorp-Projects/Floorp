@@ -809,8 +809,9 @@ bool LazyStubTier::createOne(uint32_t funcExportIndex,
     return false;
   }
 
-  // This happens on the executing thread (called via GetInterpEntry), so no
-  // need to flush the icaches on all the threads.
+  // This happens on the executing thread (when createOne is called from
+  // GetInterpEntryAndEnsureStubs), so no need to flush the icaches on all the
+  // threads.
   bool flushAllThreadIcaches = false;
 
   size_t stubSegmentIndex;

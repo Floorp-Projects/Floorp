@@ -172,6 +172,12 @@ ARCHIVE_FILES = {
         },
         {
             "source": buildconfig.topsrcdir,
+            "base": "testing/web-platform/mozilla/tests/tools/wptserve_py2",
+            "pattern": "**",
+            "dest": "tools/wptserve_py2",
+        },
+        {
+            "source": buildconfig.topsrcdir,
             "base": "testing/web-platform/tests/tools/wptserve",
             "pattern": "**",
             "dest": "tools/wptserve",
@@ -577,7 +583,6 @@ ARCHIVE_FILES = {
             "base": "testing",
             "pattern": "web-platform/tests/**",
             "ignore": [
-                "web-platform/tests/tools/wptserve",
                 "web-platform/tests/tools/wpt_third_party",
             ],
         },

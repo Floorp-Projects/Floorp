@@ -18,6 +18,7 @@ namespace js {
 // active Debuggers.
 
 class AbstractGeneratorObject;
+class DebugScriptMap;
 class PromiseObject;
 
 /**
@@ -101,8 +102,8 @@ class DebugAPI {
   // Trace all debugger-owned GC things unconditionally, during a moving GC.
   static void traceAllForMovingGC(JSTracer* trc);
 
-  // Trace debugging information for a JSScript.
-  static void traceDebugScript(JSTracer* trc, JSScript* script);
+  // Trace the debug script map.  Called as part of tracing a zone's roots.
+  static void traceDebugScriptMap(JSTracer* trc, DebugScriptMap* map);
 
   static void traceFromRealm(JSTracer* trc, Realm* realm);
 
@@ -115,8 +116,11 @@ class DebugAPI {
   // Add sweep group edges due to the presence of any debuggers.
   [[nodiscard]] static bool findSweepGroupEdges(JSRuntime* rt);
 
-  // Destroy the debugging information associated with a script.
-  static void destroyDebugScript(JSFreeOp* fop, JSScript* script);
+  // Remove the debugging information associated with a script.
+  static void removeDebugScript(JSFreeOp* fop, JSScript* script);
+
+  // Delete a Zone's debug script map. Called when a zone is destroyed.
+  static void deleteDebugScriptMap(DebugScriptMap* map);
 
   // Validate the debugging information in a script after a moving GC>
 #ifdef JSGC_HASH_TABLE_CHECKS

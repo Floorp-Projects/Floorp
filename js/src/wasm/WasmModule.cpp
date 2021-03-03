@@ -125,6 +125,8 @@ bool Module::finishTier2(const LinkData& linkData2,
   // extant tier1 lazy stubs (otherwise, tiering would break the assumption
   // that any extant exported wasm function has had a lazy entry stub already
   // compiled for it).
+  //
+  // Also see doc block for stubs in WasmJS.cpp.
   {
     // We need to prevent new tier1 stubs generation until we've committed
     // the newer tier2 stubs, otherwise we might not generate one tier2
@@ -166,7 +168,9 @@ bool Module::finishTier2(const LinkData& linkData2,
     stubs2->setJitEntries(stub2Index, code());
   }
 
-  // And we update the jump vector.
+  // And we update the jump vectors with pointers to tier-2 functions and eager
+  // stubs.  Callers will continue to invoke tier-1 code until, suddenly, they
+  // will invoke tier-2 code.  This is benign.
 
   uint8_t* base = code().segment(Tier::Optimized).base();
   for (const CodeRange& cr : metadata(Tier::Optimized).codeRanges) {

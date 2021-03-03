@@ -118,7 +118,7 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
   }
 
   AccessibleOrProxy accAtPoint =
-      acc.ChildAtPoint(aX, aY, LocalAccessible::eDeepestChild);
+      acc.ChildAtPoint(aX, aY, Accessible::EWhichChildAtPoint::DeepestChild);
   if (accAtPoint.IsNull()) {
     return nullptr;
   }

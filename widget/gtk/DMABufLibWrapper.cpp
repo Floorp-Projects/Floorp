@@ -63,6 +63,7 @@ bool nsGbmLib::IsAvailable() {
 
 bool nsGbmLib::Load() {
   if (!sGbmLibHandle && !sLibLoaded) {
+    LOGDMABUF(("Loading DMABuf system library %s ...\n", GBMLIB_NAME));
     sLibLoaded = true;
 
     sGbmLibHandle = dlopen(GBMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
@@ -188,6 +189,8 @@ nsDMABufDevice::~nsDMABufDevice() {
 }
 
 bool nsDMABufDevice::Configure() {
+  LOGDMABUF(("nsDMABufDevice::Configure()"));
+
   bool isDMABufUsed = (
 #ifdef NIGHTLY_BUILD
       StaticPrefs::widget_dmabuf_textures_enabled() ||
@@ -211,6 +214,7 @@ bool nsDMABufDevice::Configure() {
   if (drm_render_node.IsEmpty()) {
     drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
     if (drm_render_node.IsEmpty()) {
+      LOGDMABUF(("Failed: We're missing DRM render device!\n"));
       return false;
     }
   }
@@ -230,7 +234,7 @@ bool nsDMABufDevice::Configure() {
     return false;
   }
 
-  LOGDMABUF(("GBM device initialized"));
+  LOGDMABUF(("DMABuf is enabled, using drm node %s", drm_render_node.get()));
   return true;
 }
 
@@ -248,11 +252,23 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() {
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
+  LOGDMABUF(
+      ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d DMABufEnabled %d  "
+       "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d "
+       "!XRE_IsRDDProcess %d\n",
+       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
+       StaticPrefs::media_ffmpeg_vaapi_enabled(),
+       gfx::gfxVars::CanUseHardwareVideoDecoding(), !XRE_IsRDDProcess()));
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::media_ffmpeg_vaapi_enabled() &&
          gfx::gfxVars::CanUseHardwareVideoDecoding() && !XRE_IsRDDProcess();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
+  LOGDMABUF(
+      ("nsDMABufDevice::IsDMABufWebGLEnabled: EGL %d DMABufEnabled %d  "
+       "widget_dmabuf_webgl_enabled %d\n",
+       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
+       StaticPrefs::widget_dmabuf_webgl_enabled()));
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::widget_dmabuf_webgl_enabled();
 }

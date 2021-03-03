@@ -614,8 +614,37 @@ class CodeTier {
                      size_t* data) const;
 };
 
-// Jump tables to take tiering into account, when calling either from wasm to
-// wasm (through rabaldr) or from jit to wasm (jit entry).
+// Jump tables that implement function tiering and fast js-to-wasm calls.
+//
+// There is one JumpTable object per Code object, holding two jump tables: the
+// tiering jump table and the jit-entry jump table.  The JumpTable is not
+// serialized with its Code, but is a run-time entity only.  At run-time it is
+// shared across threads with its owning Code (and the Module that owns the
+// Code).  Values in the JumpTable /must/ /always/ be JSContext-agnostic and
+// Instance-agnostic, because of this sharing.
+//
+// Both jump tables have a number of entries equal to the number of functions in
+// their Module, including imports.  In the tiering table, the elements
+// corresponding to the Module's imported functions are unused; in the jit-entry
+// table, the elements corresponding to the Module's non-exported functions are
+// unused.  (Functions can be exported explicitly via the exports section or
+// implicitly via a mention of their indices outside function bodies.)  See
+// comments at JumpTables::init() and WasmInstanceObject::getExportedFunction().
+// The entries are void*.  Unused entries are null.
+//
+// The tiering jump table.
+//
+// This table holds code pointers that are used by baseline functions to enter
+// optimized code.  See the large comment block in WasmCompile.cpp for
+// information about how tiering works.
+//
+// The jit-entry jump table.
+//
+// The jit-entry jump table entry for a function holds a stub that allows Jitted
+// JS code to call wasm using the JS JIT ABI.  See large comment block at
+// WasmInstanceObject::getExportedFunction() for more about exported functions
+// and stubs and the lifecycle of the entries in the jit-entry table - there are
+// complex invariants.
 
 class JumpTables {
   using TablePointer = mozilla::UniquePtr<void*[], JS::FreePolicy>;

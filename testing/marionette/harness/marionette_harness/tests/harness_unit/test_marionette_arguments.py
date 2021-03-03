@@ -19,7 +19,7 @@ def test_parse_arg_socket_timeout(socket_timeout):
         try:
             float(value)
             return True
-        except:
+        except ValueError:
             return False
 
     if not _is_float_convertible(socket_timeout):

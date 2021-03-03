@@ -54,7 +54,7 @@ add_task(async function test_hidden_by_prefs() {
       );
       let fillLoginItem = document.getElementById("fill-login");
       let generatedPasswordSeparator = document.getElementById(
-        "fill-login-and-generated-password-separator"
+        "passwordmgr-items-separator"
       );
 
       ok(
@@ -94,7 +94,7 @@ add_task(async function test_fill_hidden_by_login_saving_disabled() {
       );
       let fillLoginItem = document.getElementById("fill-login");
       let generatedPasswordSeparator = document.getElementById(
-        "fill-login-and-generated-password-separator"
+        "passwordmgr-items-separator"
       );
 
       ok(
@@ -139,7 +139,7 @@ add_task(async function test_fill_hidden_by_locked_master_password() {
       );
       let fillLoginItem = document.getElementById("fill-login");
       let generatedPasswordSeparator = document.getElementById(
-        "fill-login-and-generated-password-separator"
+        "passwordmgr-items-separator"
       );
 
       ok(

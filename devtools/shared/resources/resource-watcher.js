@@ -976,11 +976,11 @@ const LegacyListeners = {
   [ResourceWatcher.TYPES
     .COOKIE]: require("devtools/shared/resources/legacy-listeners/cookie"),
   [ResourceWatcher.TYPES
+    .CACHE_STORAGE]: require("devtools/shared/resources/legacy-listeners/cache-storage"),
+  [ResourceWatcher.TYPES
     .LOCAL_STORAGE]: require("devtools/shared/resources/legacy-listeners/local-storage"),
   [ResourceWatcher.TYPES
     .SESSION_STORAGE]: require("devtools/shared/resources/legacy-listeners/session-storage"),
-  [ResourceWatcher.TYPES
-    .CACHE_STORAGE]: require("devtools/shared/resources/legacy-listeners/cache-storage"),
   [ResourceWatcher.TYPES
     .EXTENSION_STORAGE]: require("devtools/shared/resources/legacy-listeners/extension-storage"),
   [ResourceWatcher.TYPES
@@ -1004,6 +1004,8 @@ const ResourceTransformers = {
     .CONSOLE_MESSAGE]: require("devtools/shared/resources/transformers/console-messages"),
   [ResourceWatcher.TYPES
     .ERROR_MESSAGE]: require("devtools/shared/resources/transformers/error-messages"),
+  [ResourceWatcher.TYPES
+    .CACHE_STORAGE]: require("devtools/shared/resources/transformers/storage-cache.js"),
   [ResourceWatcher.TYPES
     .LOCAL_STORAGE]: require("devtools/shared/resources/transformers/storage-local-storage.js"),
   [ResourceWatcher.TYPES
