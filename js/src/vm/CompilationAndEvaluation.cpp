@@ -99,27 +99,29 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     return nullptr;
   }
 
-  RootedScript script(cx);
-  {
-    frontend::BorrowingCompilationStencil borrowingStencil(*stencil);
+  frontend::BorrowingCompilationStencil borrowingStencil(*stencil);
 
-    Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-    if (!frontend::InstantiateStencils(cx, input.get(), borrowingStencil,
-                                       gcOutput.get())) {
-      return nullptr;
-    }
+  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
+  if (!frontend::InstantiateStencils(cx, input.get(), borrowingStencil,
+                                     gcOutput.get())) {
+    return nullptr;
+  }
 
-    script = gcOutput.get().script;
-    if (!script) {
-      return nullptr;
-    }
+  RootedScript script(cx, gcOutput.get().script);
+  if (!script) {
+    return nullptr;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
-  if (!script->scriptSource()->startIncrementalEncoding(cx, options,
-                                                        std::move(stencil))) {
+
+  UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
+
+  if (!borrowingStencil.source->xdrEncodeInitialStencil(
+          cx, input.get(), borrowingStencil, xdrEncoder)) {
     return nullptr;
   }
+
+  script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
 
   return script;
 }
