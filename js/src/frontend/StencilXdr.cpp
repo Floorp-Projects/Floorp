@@ -14,7 +14,7 @@
 #include <type_traits>  // std::has_unique_object_representations
 #include <utility>      // std::forward
 
-#include "frontend/CompilationStencil.h"  // CompilationStencil
+#include "frontend/CompilationStencil.h"  // BaseCompilationStencil
 #include "frontend/ScriptIndex.h"         // ScriptIndex
 #include "vm/JSScript.h"                  // js::CheckCompileOptionsMatch
 #include "vm/Scope.h"                     // SizeOfParserScopeData
@@ -412,33 +412,41 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
 }
 
 template <XDRMode mode>
-XDRResult XDRCompilationStencilSpanSize(
+XDRResult XDRBaseCompilationStencilSpanSize(
     XDRState<mode>* xdr, uint32_t* scriptSize, uint32_t* gcThingSize,
-    uint32_t* scopeSize, uint32_t* scriptExtraSize, uint32_t* regExpSize,
-    uint32_t* bigIntSize, uint32_t* objLiteralSize) {
+    uint32_t* scopeSize, uint32_t* regExpSize, uint32_t* bigIntSize,
+    uint32_t* objLiteralSize) {
   // Compress the series of span sizes, to avoid consuming extra space for
   // unused/small span sizes.
   // There will be align32 shortly after this section, so try to make the
   // padding smaller.
 
   enum XDRSpanSizeKind {
-    // All of the size values fit in 1 byte each. The entire section takes 7
-    // bytes, and expect no padding.
+    // The scriptSize, gcThingSize, and scopeSize fit in 1 byte, and others have
+    // a value of 0. The entire section takes 4 bytes, and expect no padding.
+    Base8Kind,
+
+    // All of the size values can fit in 1 byte each. The entire section takes 7
+    // bytes, and expect 1 byte padding.
     All8Kind,
 
-    // Other cases. All of the size values fit in 4 bytes each. Expect 3 bytes
-    // padding for `sizeKind`.
+    // Other. This case is less than 1% in practice and indicates the stencil is
+    // already quite large, so don't try to compress. Expect 3 bytes padding for
+    // `sizeKind`.
     All32Kind,
   };
 
   uint8_t sizeKind = All32Kind;
   if (mode == XDR_ENCODE) {
-    uint32_t mask = (*scriptSize) | (*gcThingSize) | (*scopeSize) |
-                    (*scriptExtraSize) | (*regExpSize) | (*bigIntSize) |
-                    (*objLiteralSize);
+    uint32_t mask_base = (*scriptSize) | (*gcThingSize) | (*scopeSize);
+    uint32_t mask_ext = (*regExpSize) | (*bigIntSize) | (*objLiteralSize);
 
-    if (mask <= 0xff) {
-      sizeKind = All8Kind;
+    if (mask_base <= 0xff) {
+      if (mask_ext == 0x00) {
+        sizeKind = Base8Kind;
+      } else if (mask_ext <= 0xFF) {
+        sizeKind = All8Kind;
+      }
     }
   }
   MOZ_TRY(xdr->codeUint8(&sizeKind));
@@ -447,7 +455,6 @@ XDRResult XDRCompilationStencilSpanSize(
     MOZ_TRY(xdr->codeUint32(scriptSize));
     MOZ_TRY(xdr->codeUint32(gcThingSize));
     MOZ_TRY(xdr->codeUint32(scopeSize));
-    MOZ_TRY(xdr->codeUint32(scriptExtraSize));
     MOZ_TRY(xdr->codeUint32(regExpSize));
     MOZ_TRY(xdr->codeUint32(bigIntSize));
     MOZ_TRY(xdr->codeUint32(objLiteralSize));
@@ -455,7 +462,6 @@ XDRResult XDRCompilationStencilSpanSize(
     uint8_t scriptSize8 = 0;
     uint8_t gcThingSize8 = 0;
     uint8_t scopeSize8 = 0;
-    uint8_t scriptExtraSize8 = 0;
     uint8_t regExpSize8 = 0;
     uint8_t bigIntSize8 = 0;
     uint8_t objLiteralSize8 = 0;
@@ -464,7 +470,6 @@ XDRResult XDRCompilationStencilSpanSize(
       scriptSize8 = uint8_t(*scriptSize);
       gcThingSize8 = uint8_t(*gcThingSize);
       scopeSize8 = uint8_t(*scopeSize);
-      scriptExtraSize8 = uint8_t(*scriptExtraSize);
       regExpSize8 = uint8_t(*regExpSize);
       bigIntSize8 = uint8_t(*bigIntSize);
       objLiteralSize8 = uint8_t(*objLiteralSize);
@@ -473,16 +478,21 @@ XDRResult XDRCompilationStencilSpanSize(
     MOZ_TRY(xdr->codeUint8(&scriptSize8));
     MOZ_TRY(xdr->codeUint8(&gcThingSize8));
     MOZ_TRY(xdr->codeUint8(&scopeSize8));
-    MOZ_TRY(xdr->codeUint8(&scriptExtraSize8));
-    MOZ_TRY(xdr->codeUint8(&regExpSize8));
-    MOZ_TRY(xdr->codeUint8(&bigIntSize8));
-    MOZ_TRY(xdr->codeUint8(&objLiteralSize8));
+
+    if (sizeKind == All8Kind) {
+      MOZ_TRY(xdr->codeUint8(&regExpSize8));
+      MOZ_TRY(xdr->codeUint8(&bigIntSize8));
+      MOZ_TRY(xdr->codeUint8(&objLiteralSize8));
+    } else {
+      MOZ_ASSERT(regExpSize8 == 0);
+      MOZ_ASSERT(bigIntSize8 == 0);
+      MOZ_ASSERT(objLiteralSize8 == 0);
+    }
 
     if (mode == XDR_DECODE) {
       *scriptSize = scriptSize8;
       *gcThingSize = gcThingSize8;
       *scopeSize = scopeSize8;
-      *scriptExtraSize = scriptExtraSize8;
       *regExpSize = regExpSize8;
       *bigIntSize = bigIntSize8;
       *objLiteralSize = objLiteralSize8;
@@ -493,17 +503,11 @@ XDRResult XDRCompilationStencilSpanSize(
 }
 
 template <XDRMode mode>
-XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
-                                CompilationStencil& stencil) {
-  MOZ_ASSERT(!stencil.asmJS);
-
-  if (mode == XDR_DECODE) {
-    stencil.hasExternalDependency = true;
-  }
-
+XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
+                                    BaseCompilationStencil& stencil) {
   MOZ_TRY(xdr->codeUint32(&stencil.functionKey));
 
-  uint32_t scriptSize, gcThingSize, scopeSize, scriptExtraSize;
+  uint32_t scriptSize, gcThingSize, scopeSize;
   uint32_t regExpSize, bigIntSize, objLiteralSize;
   if (mode == XDR_ENCODE) {
     scriptSize = stencil.scriptData.size();
@@ -511,15 +515,13 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
     scopeSize = stencil.scopeData.size();
     MOZ_ASSERT(scopeSize == stencil.scopeNames.size());
 
-    scriptExtraSize = stencil.scriptExtra.size();
-
     regExpSize = stencil.regExpData.size();
     bigIntSize = stencil.bigIntData.size();
     objLiteralSize = stencil.objLiteralData.size();
   }
-  MOZ_TRY(XDRCompilationStencilSpanSize(
-      xdr, &scriptSize, &gcThingSize, &scopeSize, &scriptExtraSize, &regExpSize,
-      &bigIntSize, &objLiteralSize));
+  MOZ_TRY(XDRBaseCompilationStencilSpanSize(xdr, &scriptSize, &gcThingSize,
+                                            &scopeSize, &regExpSize,
+                                            &bigIntSize, &objLiteralSize));
 
   // All of the vector-indexed data elements referenced by the
   // main script tree must be materialized first.
@@ -549,9 +551,32 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   MOZ_TRY(XDRSpanContent(xdr, stencil.gcThingData, gcThingSize));
 
   // Now serialize the vector of ScriptStencils.
+
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptData, scriptSize));
 
-  MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra, scriptExtraSize));
+  return Ok();
+}
+
+template XDRResult XDRBaseCompilationStencil(XDRState<XDR_ENCODE>* xdr,
+                                             BaseCompilationStencil& stencil);
+
+template XDRResult XDRBaseCompilationStencil(XDRState<XDR_DECODE>* xdr,
+                                             BaseCompilationStencil& stencil);
+
+template <XDRMode mode>
+XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
+                                CompilationStencil& stencil) {
+  if (stencil.asmJS) {
+    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
+  }
+
+  if (mode == XDR_DECODE) {
+    stencil.hasExternalDependency = true;
+  }
+
+  MOZ_TRY(XDRBaseCompilationStencil(xdr, stencil));
+
+  MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra));
 
   // We don't support coding non-initial CompilationStencil.
   MOZ_ASSERT(stencil.isInitialStencil());
@@ -576,31 +601,5 @@ template XDRResult XDRCompilationStencil(XDRState<XDR_ENCODE>* xdr,
 
 template XDRResult XDRCompilationStencil(XDRState<XDR_DECODE>* xdr,
                                          CompilationStencil& stencil);
-
-template <XDRMode mode>
-XDRResult XDRCheckCompilationStencil(XDRState<mode>* xdr,
-                                     CompilationStencil& stencil) {
-  if (stencil.asmJS) {
-    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
-  }
-
-  return Ok();
-}
-
-template XDRResult XDRCheckCompilationStencil(XDRState<XDR_ENCODE>* xdr,
-                                              CompilationStencil& stencil);
-
-template <XDRMode mode>
-XDRResult XDRCheckCompilationStencil(XDRState<mode>* xdr,
-                                     ExtensibleCompilationStencil& stencil) {
-  if (stencil.asmJS) {
-    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
-  }
-
-  return Ok();
-}
-
-template XDRResult XDRCheckCompilationStencil(
-    XDRState<XDR_ENCODE>* xdr, ExtensibleCompilationStencil& stencil);
 
 }  // namespace js
