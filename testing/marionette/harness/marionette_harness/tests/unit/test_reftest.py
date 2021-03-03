@@ -14,6 +14,7 @@ class TestReftest(MarionetteTestCase):
 
         self.original_window = self.marionette.current_window_handle
 
+        self.marionette.set_pref("marionette.log.truncate", False)
         self.marionette.set_pref("dom.send_after_paint_to_content", True)
 
     def tearDown(self):
@@ -27,6 +28,7 @@ class TestReftest(MarionetteTestCase):
         self.marionette.switch_to_window(self.original_window)
 
         self.marionette.clear_pref("dom.send_after_paint_to_content")
+        self.marionette.clear_pref("marionette.log.truncate")
 
         super(TestReftest, self).tearDown()
 
