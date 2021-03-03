@@ -96,7 +96,8 @@ browsertime-tp6:
     fission-tier: 2
     fission-run-on-projects:
         by-test-platform:
-            windows7.*: []
+            (linux|windows|macos)(?!.*shippable).*: []
+            windows7.*shippable.*: []
             windows10.*shippable[^-qr].*: []
             default: ["mozilla-central"]
     run-on-projects:
