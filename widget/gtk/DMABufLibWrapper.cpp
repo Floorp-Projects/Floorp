@@ -63,6 +63,7 @@ bool nsGbmLib::IsAvailable() {
 
 bool nsGbmLib::Load() {
   if (!sGbmLibHandle && !sLibLoaded) {
+    LOGDMABUF(("Loading DMABuf system library %s ...\n", GBMLIB_NAME));
     sLibLoaded = true;
 
     sGbmLibHandle = dlopen(GBMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
@@ -188,6 +189,8 @@ nsDMABufDevice::~nsDMABufDevice() {
 }
 
 bool nsDMABufDevice::Configure() {
+  LOGDMABUF(("nsDMABufDevice::Configure()"));
+
   bool isDMABufUsed = (
 #ifdef NIGHTLY_BUILD
       StaticPrefs::widget_dmabuf_textures_enabled() ||
@@ -211,6 +214,7 @@ bool nsDMABufDevice::Configure() {
   if (drm_render_node.IsEmpty()) {
     drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
     if (drm_render_node.IsEmpty()) {
+      LOGDMABUF(("Failed: We're missing DRM render device!\n"));
       return false;
     }
   }
@@ -260,6 +264,11 @@ bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
          gfx::gfxVars::CanUseHardwareVideoDecoding() && !XRE_IsRDDProcess();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
+  LOGDMABUF(
+      ("nsDMABufDevice::IsDMABufWebGLEnabled: EGL %d DMABufEnabled %d  "
+       "widget_dmabuf_webgl_enabled %d\n",
+       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
+       StaticPrefs::widget_dmabuf_webgl_enabled()));
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::widget_dmabuf_webgl_enabled();
 }
