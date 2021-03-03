@@ -26,6 +26,11 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+});
+
 Preferences.addAll([
   { id: "browser.search.suggest.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.searches", type: "bool" },
@@ -261,7 +266,7 @@ var gSearchPane = {
     // The experiment is enabled.
     document
       .getElementById("showQuickSuggestLearnMore")
-      .setAttribute("href", UrlbarPrefs.get("quicksuggest.helpURL"));
+      .setAttribute("href", UrlbarProviderQuickSuggest.helpUrl);
     container.removeAttribute("hidden");
     if (desc.dataset.l10nId) {
       desc.dataset.l10nIdOriginal = desc.dataset.l10nId;
