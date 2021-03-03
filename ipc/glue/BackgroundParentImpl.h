@@ -328,9 +328,6 @@ class BackgroundParentImpl : public PBackgroundParent,
   already_AddRefed<PGamepadEventChannelParent> AllocPGamepadEventChannelParent()
       override;
 
-  mozilla::ipc::IPCResult RecvPGamepadEventChannelConstructor(
-      PGamepadEventChannelParent* actor) override;
-
   already_AddRefed<PGamepadTestChannelParent> AllocPGamepadTestChannelParent()
       override;
 

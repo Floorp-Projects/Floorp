@@ -1166,16 +1166,6 @@ BackgroundParentImpl::AllocPGamepadEventChannelParent() {
   return dom::GamepadEventChannelParent::Create();
 }
 
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPGamepadEventChannelConstructor(
-    PGamepadEventChannelParent* actor) {
-  if (!static_cast<mozilla::dom::GamepadEventChannelParent*>(actor)
-           ->ActorInit()) {
-    return IPC_FAIL(this, "ActorInit failed");
-  }
-  return IPC_OK();
-}
-
 already_AddRefed<dom::PGamepadTestChannelParent>
 BackgroundParentImpl::AllocPGamepadTestChannelParent() {
   return dom::GamepadTestChannelParent::Create();
