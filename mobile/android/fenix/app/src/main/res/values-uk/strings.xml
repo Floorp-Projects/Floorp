@@ -1090,7 +1090,7 @@
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Видалити дані перегляду</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title_2">Відкрити вкладки</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Відкриті вкладки</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Вкладок: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
