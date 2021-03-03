@@ -238,6 +238,8 @@ LocalAccessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
 
 #endif  // defined(XP_WIN)
 
+// Accessible
+
 Accessible* OuterDocAccessible::ChildAt(uint32_t aIndex) const {
   LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
   if (result || aIndex) {
@@ -254,6 +256,22 @@ Accessible* OuterDocAccessible::ChildAt(uint32_t aIndex) const {
   }
 
   return RemoteChildDoc();
+}
+
+Accessible* OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                                             EWhichChildAtPoint aWhichChild) {
+  nsIntRect docRect = Bounds();
+  if (!docRect.Contains(aX, aY)) return nullptr;
+
+  // Always return the inner doc as direct child accessible unless bounds
+  // outside of it.
+  Accessible* child = ChildAt(0);
+  NS_ENSURE_TRUE(child, nullptr);
+
+  if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
+    return child->ChildAtPoint(aX, aY, EWhichChildAtPoint::DeepestChild);
+  }
+  return child;
 }
 
 DocAccessibleParent* OuterDocAccessible::RemoteChildDoc() const {
