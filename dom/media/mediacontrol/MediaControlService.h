@@ -11,7 +11,6 @@
 #include "MediaController.h"
 #include "MediaControlKeyManager.h"
 #include "mozilla/dom/MediaControllerBinding.h"
-#include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 

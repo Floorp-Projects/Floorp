@@ -5,7 +5,6 @@
 
 #include "nsHTMLTags.h"
 #include "nsCRT.h"
-#include "nsDataHashtable.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"

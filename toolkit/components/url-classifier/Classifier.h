@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIFile.h"
-#include "nsDataHashtable.h"
 
 class nsIThread;
 

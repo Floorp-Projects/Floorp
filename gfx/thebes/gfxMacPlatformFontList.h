@@ -10,7 +10,6 @@
 
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
 
 #include "gfxPlatformFontList.h"

@@ -23,7 +23,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Atomics.h"
 #include "nsTArray.h"
-#include "nsDataHashtable.h"
 
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
