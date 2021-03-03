@@ -147,6 +147,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.CSS_CHANGE]: hasBrowserElement,
           [Resources.TYPES.CSS_MESSAGE]: hasBrowserElement,
           [Resources.TYPES.DOCUMENT_EVENT]: hasBrowserElement,
+          [Resources.TYPES.CACHE_STORAGE]: hasBrowserElement,
           [Resources.TYPES.ERROR_MESSAGE]: hasBrowserElement,
           [Resources.TYPES.LOCAL_STORAGE]: hasBrowserElement,
           [Resources.TYPES.SESSION_STORAGE]: hasBrowserElement,

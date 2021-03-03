@@ -19,6 +19,7 @@ DevToolsModules(
     "network-events.js",
     "platform-messages.js",
     "sources.js",
+    "storage-cache.js",
     "storage-local-storage.js",
     "storage-session-storage.js",
     "stylesheets.js",
