@@ -3045,21 +3045,21 @@ bool CompilationStencilMerger::buildFunctionKeyToIndex(JSContext* cx) {
 }
 
 ScriptIndex CompilationStencilMerger::getInitialScriptIndexFor(
-    const ExtensibleCompilationStencil& delazification) const {
+    const CompilationStencil& delazification) const {
   auto p = functionKeyToInitialScriptIndex_.lookup(delazification.functionKey);
   MOZ_ASSERT(p);
   return p->value();
 }
 
 bool CompilationStencilMerger::buildAtomIndexMap(
-    JSContext* cx, const ExtensibleCompilationStencil& delazification,
+    JSContext* cx, const CompilationStencil& delazification,
     AtomIndexMap& atomIndexMap) {
-  uint32_t atomCount = delazification.parserAtoms.entries().length();
+  uint32_t atomCount = delazification.parserAtomData.size();
   if (!atomIndexMap.reserve(atomCount)) {
     ReportOutOfMemory(cx);
     return false;
   }
-  for (const auto& atom : delazification.parserAtoms.entries()) {
+  for (const auto& atom : delazification.parserAtomData) {
     auto mappedIndex = initial_->parserAtoms.internExternalParserAtom(cx, atom);
     if (!mappedIndex) {
       return false;
@@ -3158,7 +3158,7 @@ static void MergeScriptStencil(ScriptStencil& dest, const ScriptStencil& src,
 }
 
 bool CompilationStencilMerger::addDelazification(
-    JSContext* cx, const ExtensibleCompilationStencil& delazification) {
+    JSContext* cx, const CompilationStencil& delazification) {
   MOZ_ASSERT(initial_);
 
   auto delazifiedFunctionIndex = getInitialScriptIndexFor(delazification);
@@ -3253,7 +3253,8 @@ bool CompilationStencilMerger::addDelazification(
   };
 
   // Append gcThingData, with mapping TaggedScriptThingIndex.
-  if (!initial_->gcThingData.appendAll(delazification.gcThingData)) {
+  if (!initial_->gcThingData.append(delazification.gcThingData.data(),
+                                    delazification.gcThingData.size())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -3280,7 +3281,8 @@ bool CompilationStencilMerger::addDelazification(
   }
 
   // Append regExpData, with mapping RegExpStencil.atom_.
-  if (!initial_->regExpData.appendAll(delazification.regExpData)) {
+  if (!initial_->regExpData.append(delazification.regExpData.data(),
+                                   delazification.regExpData.size())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -3291,7 +3293,7 @@ bool CompilationStencilMerger::addDelazification(
 
   // Append bigIntData, with copying BigIntStencil.source_.
   if (!initial_->bigIntData.reserve(bigIntOffset +
-                                    delazification.bigIntData.length())) {
+                                    delazification.bigIntData.size())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -3304,8 +3306,8 @@ bool CompilationStencilMerger::addDelazification(
 
   // Append objLiteralData, with copying ObjLiteralStencil.code_, and mapping
   // TaggedParserAtomIndex in it.
-  if (!initial_->objLiteralData.reserve(
-          objLiteralOffset + delazification.objLiteralData.length())) {
+  if (!initial_->objLiteralData.reserve(objLiteralOffset +
+                                        delazification.objLiteralData.size())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -3329,16 +3331,16 @@ bool CompilationStencilMerger::addDelazification(
   // And append scopeNames, with copying the entire data, and mapping
   // trailingNames.
   if (!initial_->scopeData.reserve(scopeOffset +
-                                   delazification.scopeData.length())) {
+                                   delazification.scopeData.size())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
   if (!initial_->scopeNames.reserve(scopeOffset +
-                                    delazification.scopeNames.length())) {
+                                    delazification.scopeNames.size())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
-  for (size_t i = 0; i < delazification.scopeData.length(); i++) {
+  for (size_t i = 0; i < delazification.scopeData.size(); i++) {
     const auto& srcData = delazification.scopeData[i];
     const auto* srcNames = delazification.scopeNames[i];
 
@@ -3382,12 +3384,13 @@ bool CompilationStencilMerger::addDelazification(
   //
   // NOTE: Currently we don't delazify inner functions.
   if (!initial_->sharedData.addExtraWithoutShare(
-          cx, delazifiedFunctionIndex, delazification.sharedData.asSingle())) {
+          cx, delazifiedFunctionIndex,
+          delazification.sharedData.get(CompilationStencil::TopLevelIndex))) {
     return false;
   }
 
   // Update scriptData, with mapping indices in ScriptStencil fields.
-  for (uint32_t i = 0; i < delazification.scriptData.length(); i++) {
+  for (uint32_t i = 0; i < delazification.scriptData.size(); i++) {
     auto destIndex = mapScriptIndex(ScriptIndex(i));
     MergeScriptStencil(initial_->scriptData[destIndex],
                        delazification.scriptData[i], mapGCThingIndex,

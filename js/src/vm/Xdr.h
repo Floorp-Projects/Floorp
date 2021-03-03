@@ -638,7 +638,7 @@ class XDRIncrementalStencilEncoder : public XDREncoder {
       const JS::ReadOnlyCompileOptions& options,
       UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
   XDRResult addDelazification(
-      const frontend::ExtensibleCompilationStencil& delazification);
+      const frontend::CompilationStencil& delazification);
 
  private:
   void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }
