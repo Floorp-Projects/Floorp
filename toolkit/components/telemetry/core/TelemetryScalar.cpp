@@ -4008,7 +4008,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
     StaticMutexAutoLock lock(gTelemetryScalarsMutex);
 
     for (auto iter = scalarsToUpdate.ConstIter(); !iter.Done(); iter.Next()) {
-      PersistedScalarArray& processScalars = iter.Data();
+      const PersistedScalarArray& processScalars = iter.Data();
       for (PersistedScalarArray::size_type i = 0; i < processScalars.Length();
            i++) {
         mozilla::Unused << internal_UpdateScalar(
@@ -4182,7 +4182,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
     StaticMutexAutoLock lock(gTelemetryScalarsMutex);
 
     for (auto iter = scalarsToUpdate.ConstIter(); !iter.Done(); iter.Next()) {
-      PersistedKeyedScalarArray& processScalars = iter.Data();
+      const PersistedKeyedScalarArray& processScalars = iter.Data();
       for (PersistedKeyedScalarArray::size_type i = 0;
            i < processScalars.Length(); i++) {
         mozilla::Unused << internal_UpdateKeyedScalar(

@@ -237,7 +237,7 @@ nsresult SubstitutingProtocolHandler::CollectSubstitutions(
     nsTArray<SubstitutionMapping>& aMappings) {
   AutoReadLock lock(mSubstitutionsLock);
   for (auto iter = mSubstitutions.ConstIter(); !iter.Done(); iter.Next()) {
-    SubstitutionEntry& entry = iter.Data();
+    const SubstitutionEntry& entry = iter.Data();
     nsCOMPtr<nsIURI> uri = entry.baseURI;
     SerializedURI serialized;
     if (uri) {

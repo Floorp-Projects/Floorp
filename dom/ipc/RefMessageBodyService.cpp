@@ -129,7 +129,7 @@ void RefMessageBodyService::ForgetPort(const nsID& aPortID) {
     return;
   }
 
-  for (auto iter = sService->mMessages.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = sService->mMessages.Iter(); !iter.Done(); iter.Next()) {
     if (iter.UserData()->PortID() == aPortID) {
       iter.Remove();
     }
