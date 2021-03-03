@@ -47,6 +47,15 @@ raptor_description_schema = Schema(
             "subtest",
             test_description_schema["run-on-projects"],
         ),
+        Optional("fission-run-on-projects"): optionally_keyed_by(
+            "app",
+            "pageload",
+            "test-name",
+            "raptor-test",
+            "subtest",
+            "test-platform",
+            test_description_schema["fission-run-on-projects"],
+        ),
         Optional("webrender-run-on-projects"): optionally_keyed_by(
             "app",
             "pageload",

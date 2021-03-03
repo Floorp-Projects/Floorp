@@ -417,7 +417,7 @@ test_description_schema = Schema(
         # tasks will ignore `run_on_projects` and non-Fission tasks will ignore
         # `fission-run-on-projects`.
         Optional("fission-run-on-projects"): optionally_keyed_by(
-            "test-platform", Any([text_type], "built-projects")
+            "test-name", "test-platform", Any([text_type], "built-projects")
         ),
         # the sheriffing tier for this task (default: set based on test platform)
         Optional("tier"): optionally_keyed_by("test-platform", Any(int, "default")),
