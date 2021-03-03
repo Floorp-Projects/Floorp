@@ -30,7 +30,7 @@ class BufferedZoneList {
   void Add(T* value, Zone* zone) {
     if (last_ != nullptr) {
       if (list_ == nullptr) {
-        list_ = new (zone) ZoneList<T*>(initial_size, zone);
+        list_ = zone->New<ZoneList<T*>>(initial_size, zone);
       }
       list_->Add(last_, zone);
     }
@@ -79,7 +79,7 @@ class BufferedZoneList {
 
   ZoneList<T*>* GetList(Zone* zone) {
     if (list_ == nullptr) {
-      list_ = new (zone) ZoneList<T*>(initial_size, zone);
+      list_ = zone->New<ZoneList<T*>>(initial_size, zone);
     }
     if (last_ != nullptr) {
       list_->Add(last_, zone);
@@ -156,13 +156,15 @@ class V8_EXPORT_PRIVATE RegExpParser {
 
   static bool ParseRegExp(Isolate* isolate, Zone* zone, FlatStringReader* input,
                           JSRegExp::Flags flags, RegExpCompileData* result);
+
+  // Used by the SpiderMonkey embedding of irregexp.
   static bool VerifyRegExpSyntax(Isolate* isolate, Zone* zone,
                                  FlatStringReader* input, JSRegExp::Flags flags,
                                  RegExpCompileData* result,
-                                 const DisallowHeapAllocation& no_gc);
+                                 const DisallowGarbageCollection& nogc);
 
  private:
-  bool Parse(RegExpCompileData* result, const DisallowHeapAllocation&);
+  bool Parse(RegExpCompileData* result, const DisallowGarbageCollection&);
 
   RegExpTree* ParsePattern();
   RegExpTree* ParseDisjunction();
@@ -247,7 +249,7 @@ class V8_EXPORT_PRIVATE RegExpParser {
                       const ZoneVector<uc16>* capture_name,
                       JSRegExp::Flags flags, Zone* zone)
         : previous_state_(previous_state),
-          builder_(new (zone) RegExpBuilder(zone, flags)),
+          builder_(zone->New<RegExpBuilder>(zone, flags)),
           group_type_(group_type),
           lookaround_type_(lookaround_type),
           disjunction_capture_index_(disjunction_capture_index),

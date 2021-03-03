@@ -118,6 +118,8 @@ uint32_t LoadPacked24Unsigned(int32_t bytecode_and_packed_arg) {
 class BacktrackStack {
  public:
   BacktrackStack() = default;
+  BacktrackStack(const BacktrackStack&) = delete;
+  BacktrackStack& operator=(const BacktrackStack&) = delete;
 
   V8_WARN_UNUSED_RESULT bool push(int v) {
     data_.emplace_back(v);
@@ -150,8 +152,6 @@ class BacktrackStack {
 
   static constexpr int kMaxSize =
       RegExpStack::kMaximumStackSize / sizeof(ValueT);
-
-  DISALLOW_COPY_AND_ASSIGN(BacktrackStack);
 };
 
 // Registers used during interpreter execution. These consist of output
@@ -200,8 +200,8 @@ IrregexpInterpreter::Result ThrowStackOverflow(Isolate* isolate,
                                                RegExp::CallOrigin call_origin) {
   CHECK(call_origin == RegExp::CallOrigin::kFromRuntime);
   // We abort interpreter execution after the stack overflow is thrown, and thus
-  // allow allocation here despite the outer DisallowHeapAllocationScope.
-  AllowHeapAllocation yes_gc;
+  // allow allocation here despite the outer DisallowGarbageCollectionScope.
+  AllowGarbageCollection yes_gc;
   isolate->StackOverflow();
   return IrregexpInterpreter::EXCEPTION;
 }
@@ -223,7 +223,7 @@ void UpdateCodeAndSubjectReferences(
     Handle<String> subject_string, ByteArray* code_array_out,
     const byte** code_base_out, const byte** pc_out, String* subject_string_out,
     Vector<const Char>* subject_string_vector_out) {
-  DisallowHeapAllocation no_gc;
+  DisallowGarbageCollection no_gc;
 
   if (*code_base_out != code_array->GetDataStartAddress()) {
     *code_array_out = *code_array;
@@ -245,7 +245,7 @@ IrregexpInterpreter::Result HandleInterrupts(
     Isolate* isolate, RegExp::CallOrigin call_origin, ByteArray* code_array_out,
     String* subject_string_out, const byte** code_base_out,
     Vector<const Char>* subject_string_vector_out, const byte** pc_out) {
-  DisallowHeapAllocation no_gc;
+  DisallowGarbageCollection no_gc;
 
   StackLimitCheck check(isolate);
   bool js_has_overflowed = check.JsHasOverflowed();
@@ -275,7 +275,7 @@ IrregexpInterpreter::Result HandleInterrupts(
           String::IsOneByteRepresentationUnderneath(*subject_string_out);
       Object result;
       {
-        AllowHeapAllocation yes_gc;
+        AllowGarbageCollection yes_gc;
         result = isolate->stack_guard()->HandleInterrupts();
       }
       if (result.IsException(isolate)) {
@@ -377,7 +377,7 @@ IrregexpInterpreter::Result RawMatch(
     int output_register_count, int total_register_count, int current,
     uint32_t current_char, RegExp::CallOrigin call_origin,
     const uint32_t backtrack_limit) {
-  DisallowHeapAllocation no_gc;
+  DisallowGarbageCollection no_gc;
 
 #if V8_USE_COMPUTED_GOTO
 
@@ -514,8 +514,8 @@ IrregexpInterpreter::Result RawMatch(
     BYTECODE(POP_BT) {
       STATIC_ASSERT(JSRegExp::kNoBacktrackLimit == 0);
       if (++backtrack_count == backtrack_limit) {
-        // Exceeded limits are treated as a failed match.
-        return IrregexpInterpreter::FAILURE;
+        int return_code = LoadPacked24Signed(insn);
+        return static_cast<IrregexpInterpreter::Result>(return_code);
       }
 
       IrregexpInterpreter::Result return_code =
@@ -792,7 +792,7 @@ IrregexpInterpreter::Result RawMatch(
       int len = registers[LoadPacked24Unsigned(insn) + 1] - from;
       if (from >= 0 && len > 0) {
         if (current + len > subject.length() ||
-            CompareChars(&subject[from], &subject[current], len) != 0) {
+            !CompareCharsEqual(&subject[from], &subject[current], len)) {
           SET_PC_FROM_OFFSET(Load32Aligned(pc + 4));
           DISPATCH();
         }
@@ -806,7 +806,7 @@ IrregexpInterpreter::Result RawMatch(
       int len = registers[LoadPacked24Unsigned(insn) + 1] - from;
       if (from >= 0 && len > 0) {
         if (current - len < 0 ||
-            CompareChars(&subject[from], &subject[current - len], len) != 0) {
+            !CompareCharsEqual(&subject[from], &subject[current - len], len)) {
           SET_PC_FROM_OFFSET(Load32Aligned(pc + 4));
           DISPATCH();
         }
@@ -1071,7 +1071,7 @@ IrregexpInterpreter::Result IrregexpInterpreter::MatchInternal(
   //    aborts afterwards, and thus possible-moved objects are never used.
   // 2. When handling interrupts. We manually relocate unhandlified references
   //    after interrupts have run.
-  DisallowHeapAllocation no_gc;
+  DisallowGarbageCollection no_gc;
 
   uc16 previous_char = '\n';
   String::FlatContent subject_content = subject_string.GetFlatContent(no_gc);
@@ -1105,8 +1105,10 @@ IrregexpInterpreter::Result IrregexpInterpreter::MatchForCallFromJs(
   DCHECK_NOT_NULL(output_registers);
   DCHECK(call_origin == RegExp::CallOrigin::kFromJs);
 
-  DisallowHeapAllocation no_gc;
+  DisallowGarbageCollection no_gc;
   DisallowJavascriptExecution no_js(isolate);
+  DisallowHandleAllocation no_handles;
+  DisallowHandleDereference no_deref;
 
   String subject_string = String::cast(Object(subject));
   JSRegExp regexp_obj = JSRegExp::cast(Object(regexp));
