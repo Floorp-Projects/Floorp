@@ -105,8 +105,13 @@ bool nsSystemAlertsService::IsActiveListener(const nsAString& aAlertName,
 
 void nsSystemAlertsService::AddListener(const nsAString& aAlertName,
                                         nsAlertsIconListener* aListener) {
-  RefPtr<nsAlertsIconListener> oldListener = mActiveListeners.Get(aAlertName);
-  mActiveListeners.InsertOrUpdate(aAlertName, aListener);
+  const auto oldListener =
+      mActiveListeners.WithEntryHandle(aAlertName, [&](auto&& entry) {
+        RefPtr<nsAlertsIconListener> oldListener =
+            entry ? entry.Data() : nullptr;
+        entry.InsertOrUpdate(aListener);
+        return oldListener;
+      });
   if (oldListener) {
     // If an alert with this name already exists, close it.
     oldListener->Close();
@@ -115,9 +120,10 @@ void nsSystemAlertsService::AddListener(const nsAString& aAlertName,
 
 void nsSystemAlertsService::RemoveListener(const nsAString& aAlertName,
                                            nsAlertsIconListener* aListener) {
-  if (IsActiveListener(aAlertName, aListener)) {
+  auto entry = mActiveListeners.Lookup(aAlertName);
+  if (entry && entry.Data() == aListener) {
     // The alert may have been replaced; only remove it from the active
     // listeners map if it's the same.
-    mActiveListeners.Remove(aAlertName);
+    entry.Remove();
   }
 }
