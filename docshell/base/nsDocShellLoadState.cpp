@@ -57,6 +57,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mLoadFlags = aLoadState.LoadFlags();
   mFirstParty = aLoadState.FirstParty();
   mHasValidUserGestureActivation = aLoadState.HasValidUserGestureActivation();
+  mAllowFocusMove = aLoadState.AllowFocusMove();
   mTypeHint = aLoadState.TypeHint();
   mFileName = aLoadState.FileName();
   mIsFromProcessingFrameAttributes =
@@ -114,6 +115,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mLoadFlags(aOther.mLoadFlags),
       mFirstParty(aOther.mFirstParty),
       mHasValidUserGestureActivation(aOther.mHasValidUserGestureActivation),
+      mAllowFocusMove(aOther.mAllowFocusMove),
       mTypeHint(aOther.mTypeHint),
       mFileName(aOther.mFileName),
       mIsFromProcessingFrameAttributes(aOther.mIsFromProcessingFrameAttributes),
@@ -146,6 +148,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mLoadFlags(0),
       mFirstParty(false),
       mHasValidUserGestureActivation(false),
+      mAllowFocusMove(false),
       mTypeHint(VoidCString()),
       mFileName(VoidString()),
       mIsFromProcessingFrameAttributes(false),
@@ -924,6 +927,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.LoadFlags() = mLoadFlags;
   loadState.FirstParty() = mFirstParty;
   loadState.HasValidUserGestureActivation() = mHasValidUserGestureActivation;
+  loadState.AllowFocusMove() = mAllowFocusMove;
   loadState.TypeHint() = mTypeHint;
   loadState.FileName() = mFileName;
   loadState.IsFromProcessingFrameAttributes() =

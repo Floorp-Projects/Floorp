@@ -9104,6 +9104,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
 static bool NavigationShouldTakeFocus(nsDocShell* aDocShell,
                                       nsDocShellLoadState* aLoadState) {
+  if (!aLoadState->AllowFocusMove()) {
+    return false;
+  }
+
   const auto& sourceBC = aLoadState->SourceBrowsingContext();
   if (!sourceBC || !sourceBC->IsActive()) {
     // If the navigation didn't come from a foreground tab, then we don't steal
@@ -12819,6 +12823,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   aLoadState->SetTypeHint(NS_ConvertUTF16toUTF8(typeHint));
   aLoadState->SetLoadType(loadType);
   aLoadState->SetSourceBrowsingContext(mBrowsingContext);
+  aLoadState->SetAllowFocusMove(true);
   aLoadState->SetHasValidUserGestureActivation(
       context && context->HasValidTransientUserGestureActivation());
 
