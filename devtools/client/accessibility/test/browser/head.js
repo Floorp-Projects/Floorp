@@ -802,7 +802,7 @@ function addA11yPanelTestsTask(tests, uri, msg, options) {
  *         Resolves when the toolbox and tab have been destroyed and closed.
  */
 async function closeTabToolboxAccessibility(tab = gBrowser.selectedTab) {
-  if (TabTargetFactory.isKnownTab(tab)) {
+  if (TabDescriptorFactory.isKnownTab(tab)) {
     await gDevTools.closeToolboxForTab(tab);
   }
 

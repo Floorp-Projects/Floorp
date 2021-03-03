@@ -7,8 +7,8 @@
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const {
-  TabTargetFactory,
-} = require("devtools/client/framework/tab-target-factory");
+  TabDescriptorFactory,
+} = require("devtools/client/framework/tab-descriptor-factory");
 
 /**
  * Retrieve the most recent chrome window.
@@ -63,7 +63,7 @@ exports.openContentLink = async function(url, options = {}) {
   }
   if (!options.triggeringPrincipal && top.gBrowser) {
     const tab = top.gBrowser.selectedTab;
-    if (TabTargetFactory.isKnownTab(tab)) {
+    if (TabDescriptorFactory.isKnownTab(tab)) {
       options.triggeringPrincipal = tab.linkedBrowser.contentPrincipal;
       options.csp = tab.linkedBrowser.csp;
     }
