@@ -660,6 +660,7 @@ impl<'a> SceneBuilder<'a> {
                             info.stacking_context.clip_id,
                             info.stacking_context.raster_space,
                             info.stacking_context.flags,
+                            bc.pipeline_id,
                         );
 
                         self.rf_mapper.push_offset(info.origin.to_vector());
@@ -1737,6 +1738,7 @@ impl<'a> SceneBuilder<'a> {
         clip_id: Option<ClipId>,
         requested_raster_space: RasterSpace,
         flags: StackingContextFlags,
+        pipeline_id: PipelineId,
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
 
@@ -1844,7 +1846,7 @@ impl<'a> SceneBuilder<'a> {
         }
 
         let mut sc_info = StackingContextInfo {
-            pop_clip_root: false,
+            pop_hit_testing_clip: false,
             pop_stacking_context: false,
             pop_containing_block: false,
             set_tile_cache_barrier,
@@ -1856,31 +1858,36 @@ impl<'a> SceneBuilder<'a> {
             self.containing_block_stack.push(spatial_node_index);
         }
 
-        // This muct be built before the push_clip_root logic below
-        let clip_chain_id = match clip_id {
-            Some(clip_id) => self.clip_store.get_or_build_clip_chain_id(clip_id),
-            None => ClipChainId::NONE,
+        // If this stacking context is redundant, we don't care about getting a clip-chain for it.
+        // However, if we _do_ have a clip, we must build it here before the `push_clip_root`
+        // calls below, to ensure we get the clips for drawing this stacking context itself.
+        let clip_chain_id = if is_redundant {
+            ClipChainId::NONE
+        }  else {
+            // Get a clip-chain for this stacking context - even if the stacking context
+            // itself has no clips, it's possible that there are clips to collect from
+            // the previous clip-chain builder.
+            let clip_id = clip_id.unwrap_or(ClipId::root(pipeline_id));
+            self.clip_store.get_or_build_clip_chain_id(clip_id)
         };
 
-        // If this has a valid clip, it will create a new clip root
+        // If this has a valid clip, register with the hit-testing scene
         if let Some(clip_id) = clip_id {
-            sc_info.pop_clip_root = true;
-
-            // If this stacking context is redundant (prims will be pushed into
-            // the parent during pop) but it has a valid clip, then we need to
-            // add that clip to the current clip chain builder, so it's correctly
-            // applied to any primitives within this redundant stacking context.
-            // For the normal case, we start a new clip root, knowing that the
-            // clip on this stacking context will be pushed onto the stack during
-            // frame building.
-            if is_redundant {
-                self.clip_store.push_clip_root(Some(clip_id), true);
-            } else {
-                self.clip_store.push_clip_root(None, false);
-            }
-
-            // Push this clip id into the hit-testing scene for child primitives
             self.hit_testing_scene.push_clip(clip_id);
+            sc_info.pop_hit_testing_clip = true;
+        }
+
+        // If this stacking context is redundant (prims will be pushed into
+        // the parent during pop) but it has a valid clip, then we need to
+        // add that clip to the current clip chain builder, so it's correctly
+        // applied to any primitives within this redundant stacking context.
+        // For the normal case, we start a new clip root, knowing that the
+        // clip on this stacking context will be pushed onto the stack during
+        // frame building.
+        if is_redundant {
+            self.clip_store.push_clip_root(clip_id, true);
+        } else {
+            self.clip_store.push_clip_root(None, false);
         }
 
         // If not redundant, create a stacking context to hold primitive clusters
@@ -1916,6 +1923,9 @@ impl<'a> SceneBuilder<'a> {
         // Pop off current raster space (pushed unconditionally in push_stacking_context)
         self.raster_space_stack.pop().unwrap();
 
+        // Pop off clip builder root (pushed unconditionally in push_stacking_context)
+        self.clip_store.pop_clip_root();
+
         // If the stacking context formed a containing block, pop off the stack
         if info.pop_containing_block {
             self.containing_block_stack.pop().unwrap();
@@ -1926,8 +1936,7 @@ impl<'a> SceneBuilder<'a> {
         }
 
         // If the stacking context established a clip root, pop off the stack
-        if info.pop_clip_root {
-            self.clip_store.pop_clip_root();
+        if info.pop_hit_testing_clip {
             self.hit_testing_scene.pop_clip();
         }
 
@@ -3590,8 +3599,8 @@ struct ExtendedPrimitiveInstance {
 /// Internal tracking information about the currently pushed stacking context.
 /// Used to track what operations need to happen when a stacking context is popped.
 struct StackingContextInfo {
-    /// If true, pop an entry from the clip root stack.
-    pop_clip_root: bool,
+    /// If true, pop an entry from the hit-testing scene.
+    pop_hit_testing_clip: bool,
     /// If true, pop and entry from the containing block stack.
     pop_containing_block: bool,
     /// If true, pop an entry from the flattened stacking context stack.
