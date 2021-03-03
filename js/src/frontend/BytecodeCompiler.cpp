@@ -242,7 +242,7 @@ template <typename Unit>
           return false;
         }
 
-        if (!extensibleStencil->finish(cx, *stencil)) {
+        if (!stencil->steal(cx, std::move(*extensibleStencil))) {
           return false;
         }
 
@@ -303,7 +303,7 @@ template <typename Unit>
       return false;
     }
 
-    if (!compiler.stencil().finish(cx, *stencil)) {
+    if (!stencil->steal(cx, std::move(compiler.stencil()))) {
       return false;
     }
 
@@ -914,7 +914,7 @@ template <typename Unit>
       return false;
     }
 
-    if (!compiler.stencil().finish(cx, *stencil)) {
+    if (!stencil->steal(cx, std::move(compiler.stencil()))) {
       return false;
     }
 
