@@ -4,9 +4,10 @@
 
 "use strict";
 
-function NetMonitorPanel(iframeWindow, toolbox) {
+function NetMonitorPanel(iframeWindow, toolbox, commands) {
   this.panelWin = iframeWindow;
   this.toolbox = toolbox;
+  this.commands = commands;
 }
 
 NetMonitorPanel.prototype = {

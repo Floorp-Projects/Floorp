@@ -125,8 +125,8 @@ Tools.options = {
     return true;
   },
 
-  build: function(iframeWindow, toolbox) {
-    return new OptionsPanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new OptionsPanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -162,8 +162,8 @@ Tools.inspector = {
     return target.hasActor("inspector");
   },
 
-  build: function(iframeWindow, toolbox) {
-    return new InspectorPanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new InspectorPanel(iframeWindow, toolbox, commands);
   },
 };
 Tools.webConsole = {
@@ -197,8 +197,8 @@ Tools.webConsole = {
   isTargetSupported: function() {
     return true;
   },
-  build: function(iframeWindow, toolbox) {
-    return new WebConsolePanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new WebConsolePanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -221,8 +221,8 @@ Tools.jsdebugger = {
   isTargetSupported: function() {
     return true;
   },
-  build: function(iframeWindow, toolbox) {
-    return new DebuggerPanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new DebuggerPanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -246,8 +246,8 @@ Tools.styleEditor = {
     return target.hasActor("styleSheets");
   },
 
-  build: function(iframeWindow, toolbox) {
-    return new StyleEditorPanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new StyleEditorPanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -274,8 +274,8 @@ function switchPerformancePanel() {
   ) {
     Tools.performance.url =
       "chrome://devtools/content/performance-new/index.xhtml";
-    Tools.performance.build = function(frame, target) {
-      return new NewPerformancePanel(frame, target);
+    Tools.performance.build = function(frame, toolbox, commands) {
+      return new NewPerformancePanel(frame, toolbox, commands);
     };
     Tools.performance.isTargetSupported = function(target) {
       // Only use the new performance panel on local tab toolboxes, as they are guaranteed
@@ -287,8 +287,8 @@ function switchPerformancePanel() {
     };
   } else {
     Tools.performance.url = "chrome://devtools/content/performance/index.xhtml";
-    Tools.performance.build = function(frame, target) {
-      return new PerformancePanel(frame, target);
+    Tools.performance.build = function(frame, toolbox, commands) {
+      return new PerformancePanel(frame, toolbox, commands);
     };
     Tools.performance.isTargetSupported = function(target) {
       return target.hasActor("performance");
@@ -327,8 +327,8 @@ Tools.memory = {
     return !target.isAddon && !target.isWorkerTarget;
   },
 
-  build: function(frame, target) {
-    return new MemoryPanel(frame, target);
+  build: function(frame, toolbox, commands) {
+    return new MemoryPanel(frame, toolbox, commands);
   },
 };
 
@@ -354,8 +354,8 @@ Tools.netMonitor = {
     return target.getTrait("networkMonitor") && !target.isWorkerTarget;
   },
 
-  build: function(iframeWindow, toolbox) {
-    return new NetMonitorPanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new NetMonitorPanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -381,8 +381,8 @@ Tools.storage = {
     return target.hasActor("storage");
   },
 
-  build: function(iframeWindow, toolbox) {
-    return new StoragePanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new StoragePanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -408,8 +408,8 @@ Tools.dom = {
     return true;
   },
 
-  build: function(iframeWindow, toolbox) {
-    return new DomPanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new DomPanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -435,8 +435,8 @@ Tools.accessibility = {
     return target.hasActor("accessibility");
   },
 
-  build(iframeWindow, toolbox) {
-    return new AccessibilityPanel(iframeWindow, toolbox);
+  build(iframeWindow, toolbox, commands) {
+    return new AccessibilityPanel(iframeWindow, toolbox, commands);
   },
 };
 
@@ -455,8 +455,8 @@ Tools.application = {
     return target.hasActor("manifest");
   },
 
-  build: function(iframeWindow, toolbox) {
-    return new ApplicationPanel(iframeWindow, toolbox);
+  build: function(iframeWindow, toolbox, commands) {
+    return new ApplicationPanel(iframeWindow, toolbox, commands);
   },
 };
 

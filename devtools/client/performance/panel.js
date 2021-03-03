@@ -5,9 +5,10 @@
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
-function PerformancePanel(iframeWindow, toolbox) {
+function PerformancePanel(iframeWindow, toolbox, commands) {
   this.panelWin = iframeWindow;
   this.toolbox = toolbox;
+  this.commands = commands;
   this._targetAvailablePromise = Promise.resolve();
 
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
