@@ -50,7 +50,6 @@ namespace frontend {
 
 struct CompilationStencil;
 struct CompilationAtomCache;
-struct BaseCompilationStencil;
 struct CompilationGCOutput;
 struct CompilationStencilMerger;
 class RegExpStencil;
@@ -119,21 +118,7 @@ using ParserBindingIter = AbstractBindingIter<TaggedParserAtomIndex>;
 // we then package up into the `CompilationStencil` type. This contains a series
 // of vectors segregated by stencil type for fast processing. Delazifying a
 // function will generate its bytecode but some fields remain unchanged from the
-// initial lazy parse. We use a base class to capture fields that are meaningful
-// for both the initial lazy and delazification parse.
-//
-//  struct BaseCompilationStencil {
-//      FunctionKey                     functionKey;
-//      Span<ScriptStencil>             scriptData;
-//      Span<ScopeStencil>              scopeData;
-//      ...
-//  }
-//
-//  struct CompilationStencil : BaseCompilationStencil {
-//      LifoAlloc                       alloc;
-//      Span<ScriptStencilExtra>        scriptExtra;
-//      ...
-//  }
+// initial lazy parse.
 //
 // When we delazify a function that was lazily parsed, we generate a new Stencil
 // at the point too. These delazifications can be merged into the Stencil of
@@ -158,7 +143,7 @@ using RegExpIndex = TypedIndex<RegExpStencil>;
 using BigIntIndex = TypedIndex<BigIntStencil>;
 using ObjLiteralIndex = TypedIndex<ObjLiteralStencil>;
 
-// Index into {ExtensibleCompilationStencil,BaseCompilationStencil}.gcThingData.
+// Index into {ExtensibleCompilationStencil,CompilationStencil}.gcThingData.
 class CompilationGCThingType {};
 using CompilationGCThingIndex = TypedIndex<CompilationGCThingType>;
 
@@ -190,16 +175,15 @@ class RegExpStencil {
                              const CompilationAtomCache& atomCache) const;
 
   // This is used by `Reflect.parse` when we need the RegExpObject but are not
-  // doing a complete instantiation of the BaseCompilationStencil.
+  // doing a complete instantiation of the CompilationStencil.
   RegExpObject* createRegExpAndEnsureAtom(
       JSContext* cx, ParserAtomsTable& parserAtoms,
       CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
-  void dump(JSONPrinter& json, const BaseCompilationStencil* stencil) const;
-  void dumpFields(JSONPrinter& json,
-                  const BaseCompilationStencil* stencil) const;
+  void dump(JSONPrinter& json, const CompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json, const CompilationStencil* stencil) const;
 #endif
 };
 
@@ -398,9 +382,9 @@ class ScopeStencil {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
   void dump(JSONPrinter& json, const BaseParserScopeData* baseScopeData,
-            const BaseCompilationStencil* stencil) const;
+            const CompilationStencil* stencil) const;
   void dumpFields(JSONPrinter& json, const BaseParserScopeData* baseScopeData,
-                  const BaseCompilationStencil* stencil) const;
+                  const CompilationStencil* stencil) const;
 #endif
 
  private:
@@ -609,9 +593,8 @@ class StencilModuleMetadata
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
-  void dump(JSONPrinter& json, const BaseCompilationStencil* stencil) const;
-  void dumpFields(JSONPrinter& json,
-                  const BaseCompilationStencil* stencil) const;
+  void dump(JSONPrinter& json, const CompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json, const CompilationStencil* stencil) const;
 #endif
 };
 
@@ -760,7 +743,7 @@ class ScriptStencil {
   //   * lazy Function (cannot be asm.js module)
 
   // GCThings are stored into
-  // {ExtensibleCompilationStencil,BaseCompilationStencil}.gcThingData,
+  // {ExtensibleCompilationStencil,CompilationStencil}.gcThingData,
   // in [gcThingsOffset, gcThingsOffset + gcThingsLength) range.
   CompilationGCThingIndex gcThingsOffset;
   uint32_t gcThingsLength = 0;
@@ -798,7 +781,7 @@ class ScriptStencil {
   static constexpr uint16_t AllowRelazifyFlag = 1 << 1;
 
   // Set if this is non-lazy script and shared data is created.
-  // The shared data is stored into BaseCompilationStencil.sharedData.
+  // The shared data is stored into CompilationStencil.sharedData.
   static constexpr uint16_t HasSharedDataFlag = 1 << 2;
 
   // True if this script is lazy function and has enclosing scope.
@@ -821,7 +804,7 @@ class ScriptStencil {
   bool hasGCThings() const { return gcThingsLength; }
 
   mozilla::Span<TaggedScriptThingIndex> gcthings(
-      const BaseCompilationStencil& stencil) const;
+      const CompilationStencil& stencil) const;
 
   bool wasEmittedByEnclosingScript() const {
     return flags_ & WasEmittedByEnclosingScriptFlag;
@@ -866,9 +849,8 @@ class ScriptStencil {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
-  void dump(JSONPrinter& json, const BaseCompilationStencil* stencil) const;
-  void dumpFields(JSONPrinter& json,
-                  const BaseCompilationStencil* stencil) const;
+  void dump(JSONPrinter& json, const CompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json, const CompilationStencil* stencil) const;
 #endif
 };
 
@@ -922,11 +904,11 @@ class ScriptStencilExtra {
 #if defined(DEBUG) || defined(JS_JITSPEW)
 void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
                                TaggedParserAtomIndex taggedIndex,
-                               const BaseCompilationStencil* stencil);
+                               const CompilationStencil* stencil);
 
 void DumpTaggedParserAtomIndexNoQuote(GenericPrinter& out,
                                       TaggedParserAtomIndex taggedIndex,
-                                      const BaseCompilationStencil* stencil);
+                                      const CompilationStencil* stencil);
 #endif
 
 } /* namespace frontend */
