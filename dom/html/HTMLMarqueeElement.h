@@ -17,6 +17,8 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   explicit HTMLMarqueeElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
       : nsGenericHTMLElement(std::move(aNodeInfo)) {}
 
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLMarqueeElement, marquee);
+
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
 
