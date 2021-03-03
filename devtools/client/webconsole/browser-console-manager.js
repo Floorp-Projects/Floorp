@@ -62,7 +62,8 @@ class BrowserConsoleManager {
    *         A promise object for the opening of the new BrowserConsole instance.
    */
   async openBrowserConsole(target, win) {
-    const hud = new BrowserConsole(target, win, win);
+    const commands = await target.descriptorFront.getCommands();
+    const hud = new BrowserConsole(target, commands, win, win);
     this._browserConsole = hud;
     await hud.init();
     return hud;

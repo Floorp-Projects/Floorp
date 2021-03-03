@@ -17,9 +17,10 @@ loader.lazyRequireGetter(
  * This object represents DOM panel. It's responsibility is to
  * render Document Object Model of the current debugger target.
  */
-function DomPanel(iframeWindow, toolbox) {
+function DomPanel(iframeWindow, toolbox, commands) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
+  this._commands = commands;
 
   this.onTabNavigated = this.onTabNavigated.bind(this);
   this.onTargetAvailable = this.onTargetAvailable.bind(this);
