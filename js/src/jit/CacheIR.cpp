@@ -315,25 +315,26 @@ static ProxyStubType GetProxyStubType(JSContext* cx, HandleObject obj,
   return ProxyStubType::DOMUnshadowed;
 }
 
-static bool ValueToNameOrSymbolId(JSContext* cx, HandleValue idval,
+static bool ValueToNameOrSymbolId(JSContext* cx, HandleValue idVal,
                                   MutableHandleId id, bool* nameOrSymbol) {
   *nameOrSymbol = false;
 
-  if (!idval.isString() && !idval.isSymbol()) {
+  if (!idVal.isString() && !idVal.isSymbol() && !idVal.isUndefined() &&
+      !idVal.isNull()) {
     return true;
   }
 
-  if (!PrimitiveValueToId<CanGC>(cx, idval, id)) {
+  if (!PrimitiveValueToId<CanGC>(cx, idVal, id)) {
     return false;
   }
 
-  if (!JSID_IS_STRING(id) && !JSID_IS_SYMBOL(id)) {
+  if (!id.isAtom() && !id.isSymbol()) {
     id.set(JSID_VOID);
     return true;
   }
 
   uint32_t dummy;
-  if (JSID_IS_STRING(id) && JSID_TO_ATOM(id)->isIndex(&dummy)) {
+  if (id.isAtom() && id.toAtom()->isIndex(&dummy)) {
     id.set(JSID_VOID);
     return true;
   }
@@ -2647,14 +2648,24 @@ void GetPropIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-void IRGenerator::emitIdGuard(ValOperandId valId, jsid id) {
-  if (JSID_IS_SYMBOL(id)) {
+void IRGenerator::emitIdGuard(ValOperandId valId, HandleValue idVal, jsid id) {
+  if (id.isSymbol()) {
+    MOZ_ASSERT(idVal.toSymbol() == id.toSymbol());
     SymbolOperandId symId = writer.guardToSymbol(valId);
-    writer.guardSpecificSymbol(symId, JSID_TO_SYMBOL(id));
+    writer.guardSpecificSymbol(symId, id.toSymbol());
   } else {
-    MOZ_ASSERT(JSID_IS_ATOM(id));
-    StringOperandId strId = writer.guardToString(valId);
-    writer.guardSpecificAtom(strId, JSID_TO_ATOM(id));
+    MOZ_ASSERT(id.isAtom());
+    if (idVal.isUndefined()) {
+      MOZ_ASSERT(id.isAtom(cx_->names().undefined));
+      writer.guardIsUndefined(valId);
+    } else if (idVal.isNull()) {
+      MOZ_ASSERT(id.isAtom(cx_->names().null));
+      writer.guardIsNull(valId);
+    } else {
+      MOZ_ASSERT(idVal.isString());
+      StringOperandId strId = writer.guardToString(valId);
+      writer.guardSpecificAtom(strId, id.toAtom());
+    }
   }
 }
 
@@ -2668,7 +2679,7 @@ void GetPropIRGenerator::maybeEmitIdGuard(jsid id) {
 
   MOZ_ASSERT(cacheKind_ == CacheKind::GetElem ||
              cacheKind_ == CacheKind::GetElemSuper);
-  emitIdGuard(getElemKeyValueId(), id);
+  emitIdGuard(getElemKeyValueId(), idVal_, id);
 }
 
 void SetPropIRGenerator::maybeEmitIdGuard(jsid id) {
@@ -2679,7 +2690,7 @@ void SetPropIRGenerator::maybeEmitIdGuard(jsid id) {
   }
 
   MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
-  emitIdGuard(setElemKeyValueId(), id);
+  emitIdGuard(setElemKeyValueId(), idVal_, id);
 }
 
 GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, HandleScript script,
@@ -3249,7 +3260,7 @@ AttachDecision HasPropIRGenerator::tryAttachNative(JSObject* obj,
   }
 
   Maybe<ObjOperandId> tempId;
-  emitIdGuard(keyId, key);
+  emitIdGuard(keyId, idVal_, key);
   EmitReadSlotGuard(writer, obj, holder, objId, &tempId);
   writer.loadBooleanResult(true);
   writer.returnFromIC();
@@ -3284,7 +3295,7 @@ AttachDecision HasPropIRGenerator::tryAttachSlotDoesNotExist(
     JSObject* obj, ObjOperandId objId, jsid key, ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
-  emitIdGuard(keyId, key);
+  emitIdGuard(keyId, idVal_, key);
   if (hasOwn) {
     TestMatchingReceiver(writer, obj, objId);
   } else {
@@ -3451,7 +3462,7 @@ AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(JSObject* obj,
   }
 
   Maybe<ObjOperandId> tempId;
-  emitIdGuard(keyId, key);
+  emitIdGuard(keyId, idVal_, key);
   EmitReadSlotGuard(writer, obj, obj, objId, &tempId);
   writer.loadBooleanResult(hasOwn);
   writer.returnFromIC();
