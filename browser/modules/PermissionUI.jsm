@@ -1199,24 +1199,18 @@ MIDIPermissionPrompt.prototype = {
     let message;
     if (this.principal.schemeIs("file")) {
       if (this.isSysexPerm) {
-        message = gBrowserBundle.formatStringFromName(
-          "midi.shareSysexWithFile.message"
-        );
+        message = gBrowserBundle.GetStringFromName("midi.shareSysexWithFile");
       } else {
-        message = gBrowserBundle.formatStringFromName(
-          "midi.shareWithFile.message"
-        );
+        message = gBrowserBundle.GetStringFromName("midi.shareWithFile");
       }
     } else if (this.isSysexPerm) {
-      message = gBrowserBundle.formatStringFromName(
-        "midi.shareSysexWithSite.message",
-        ["<>"]
-      );
+      message = gBrowserBundle.formatStringFromName("midi.shareSysexWithSite", [
+        "<>",
+      ]);
     } else {
-      message = gBrowserBundle.formatStringFromName(
-        "midi.shareWithSite.message",
-        ["<>"]
-      );
+      message = gBrowserBundle.formatStringFromName("midi.shareWithSite", [
+        "<>",
+      ]);
     }
     return message;
   },
@@ -1224,13 +1218,13 @@ MIDIPermissionPrompt.prototype = {
   get promptActions() {
     return [
       {
-        label: gBrowserBundle.GetStringFromName("midi.Allow.label"),
-        accessKey: gBrowserBundle.GetStringFromName("midi.Allow.accesskey"),
+        label: gBrowserBundle.GetStringFromName("midi.allow.label"),
+        accessKey: gBrowserBundle.GetStringFromName("midi.allow.accesskey"),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
       },
       {
-        label: gBrowserBundle.GetStringFromName("midi.DontAllow.label"),
-        accessKey: gBrowserBundle.GetStringFromName("midi.DontAllow.accesskey"),
+        label: gBrowserBundle.GetStringFromName("midi.block.label"),
+        accessKey: gBrowserBundle.GetStringFromName("midi.block.accesskey"),
         action: Ci.nsIPermissionManager.DENY_ACTION,
       },
     ];
