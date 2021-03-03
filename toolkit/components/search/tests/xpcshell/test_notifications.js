@@ -8,51 +8,6 @@ let originalDefaultEngine;
 
 SearchTestUtils.initXPCShellAddonManager(this);
 
-/**
- * A simple observer to ensure we get only the expected notifications.
- */
-class SearchObserver {
-  constructor(expectedNotifications, returnAddedEngine = false) {
-    this.observer = this.observer.bind(this);
-    this.deferred = PromiseUtils.defer();
-    this.expectedNotifications = expectedNotifications;
-    this.returnAddedEngine = returnAddedEngine;
-
-    Services.obs.addObserver(this.observer, SearchUtils.TOPIC_ENGINE_MODIFIED);
-  }
-
-  get promise() {
-    return this.deferred.promise;
-  }
-
-  observer(subject, topic, data) {
-    Assert.greater(
-      this.expectedNotifications.length,
-      0,
-      "Should be expecting a notification"
-    );
-    Assert.equal(
-      data,
-      this.expectedNotifications[0],
-      "Should have received the next expected notification"
-    );
-
-    if (this.returnAddedEngine && data == SearchUtils.MODIFIED_TYPE.ADDED) {
-      this.addedEngine = subject.QueryInterface(Ci.nsISearchEngine);
-    }
-
-    this.expectedNotifications.shift();
-
-    if (!this.expectedNotifications.length) {
-      this.deferred.resolve(this.addedEngine);
-      Services.obs.removeObserver(
-        this.observer,
-        SearchUtils.TOPIC_ENGINE_MODIFIED
-      );
-    }
-  }
-}
-
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   useHttpServer();
@@ -79,7 +34,7 @@ add_task(async function test_addingEngine_opensearch() {
       // Engine was added to the store by the search service.
       SearchUtils.MODIFIED_TYPE.ADDED,
     ],
-    true
+    SearchUtils.MODIFIED_TYPE.ADDED
   );
 
   await Services.search.addOpenSearchEngine(gDataUrl + "engine.xml", null);
@@ -97,7 +52,7 @@ add_task(async function test_addingEngine_webExtension() {
       // Engine was added to the store by the search service.
       SearchUtils.MODIFIED_TYPE.ADDED,
     ],
-    true
+    SearchUtils.MODIFIED_TYPE.ADDED
   );
 
   let extension = await SearchTestUtils.installSearchExtension({
