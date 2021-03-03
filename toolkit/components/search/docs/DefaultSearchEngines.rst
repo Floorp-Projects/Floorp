@@ -2,6 +2,9 @@
 Default Search Engines
 ======================
 
+Default Engine
+==============
+
 The search service specifies default search engines via the `configuration
 schema`_.
 
@@ -19,9 +22,23 @@ The default engine may change when:
   provided engines.
 * The user installs an add-on which supplies a different engine and allows the
   different engine to be set as default.
+* The user or Firefox (e.g. via blocklist) causes the default engine to be removed.
+
+When the Default Engine is Removed
+==================================
+
+If the default engine is removed by the user, or by Firefox in the case of a
+blocklist or for some other region, the new default engine is chosen by the
+following process.
+
+* If the default engine specified by the configuration for the user's region and locale
+  is visible, then it will be selected as default.
+* If there is another engine visible, fall back to the first visible engine.
+* If there are no other visible engines, unhide the region/locale default engine
+  from the configuration and set it as default.
 
 Add-ons and App-provided Engines
---------------------------------
+================================
 
 An add-on may set the name of the search provider in the manifest.json to be
 the name of an app-provided engine. In this case:
