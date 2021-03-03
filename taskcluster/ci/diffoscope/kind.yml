@@ -27,7 +27,7 @@ job-defaults:
         --no-default-limits
         --max-page-size 100000000
         --max-page-diff-block-lines 10000
-        --exclude-directory-metadata
+        --exclude-directory-metadata=yes
         --exclude-command .--line-numbers
 
 jobs:
