@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   _ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
@@ -66,6 +67,45 @@ const ExperimentFakes = {
     }
 
     return new Promise(resolve => ExperimentAPI.on("update", options, resolve));
+  },
+  enrollmentHelper(recipe = {}, { manager = ExperimentManager } = {}) {
+    let enrollmentPromise = new Promise(resolve =>
+      manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
+        if (experiment.active) {
+          resolve(experiment);
+        }
+      })
+    );
+    let unenrollCompleted = slug =>
+      new Promise(resolve =>
+        manager.store.on(`update:${slug}`, (event, experiment) => {
+          if (!experiment.active) {
+            // Removes recipe from file storage which
+            // (normally the users archive of past experiments)
+            manager.store._deleteForTests(recipe.slug);
+            resolve();
+          }
+        })
+      );
+    let doExperimentCleanup = async () => {
+      for (let experiment of manager.store.getAllActive()) {
+        let promise = unenrollCompleted(experiment.slug);
+        manager.unenroll(experiment.slug, "cleanup");
+        await promise;
+      }
+      if (manager.store.getAllActive().length) {
+        throw new Error("Cleanup failed");
+      }
+    };
+
+    if (recipe.slug) {
+      if (!manager.store._isReady) {
+        throw new Error("Manager store not ready, call `manager.onStartup`");
+      }
+      manager.enroll(recipe);
+    }
+
+    return { enrollmentPromise, doExperimentCleanup };
   },
   childStore() {
     return new ExperimentStore("FakeStore", { isParent: false });

@@ -18,76 +18,83 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
-let rsClient;
+function getRecipe(slug) {
+  return ExperimentFakes.recipe(slug, {
+    bucketConfig: {
+      start: 0,
+      // Make sure the experiment enrolls
+      count: 10000,
+      total: 10000,
+      namespace: "mochitest",
+      randomizationUnit: "normandy_id",
+    },
+    targeting: "true",
+  });
+}
 
 add_task(async function setup() {
+  let rsClient = RemoteSettings("nimbus-desktop-experiments");
+
+  await rsClient.db.importChanges(
+    {},
+    42,
+    [getRecipe("foo" + Math.random()), getRecipe("bar" + Math.random())],
+    {
+      clear: true,
+    }
+  );
+
+  registerCleanupFunction(async () => {
+    await rsClient.db.clear();
+  });
+});
+
+async function setup() {
+  let sandbox = sinon.createSandbox();
+  // We want to prevent this because it would start a recipe
+  // update as soon as we turn on the optoutstudies pref
+  sandbox.stub(RemoteSettingsExperimentLoader, "setTimer");
+  sandbox.stub(RemoteSettingsExperimentLoader, "onEnabledPrefChange");
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["messaging-system.log", "all"],
       ["app.shield.optoutstudies.enabled", true],
     ],
   });
-  rsClient = RemoteSettings("nimbus-desktop-experiments");
 
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
-    await rsClient.db.clear();
+    sandbox.restore();
   });
-});
+}
 
 add_task(async function test_double_feature_enrollment() {
+  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
+  RemoteSettingsExperimentLoader.uninit();
+  await doExperimentCleanup();
+  await setup();
   let sandbox = sinon.createSandbox();
-  // We want to prevent this because it would start a recipe
-  // update outside of our asserts
-  sandbox.stub(RemoteSettingsExperimentLoader, "setTimer");
   let sendFailureTelemetryStub = sandbox.stub(
     ExperimentManager,
     "sendFailureTelemetry"
   );
-
-  for (let experiment of ExperimentManager.store.getAllActive()) {
-    ExperimentManager.unenroll(experiment.slug, "cleanup");
-    ExperimentManager.store._deleteForTests(experiment.slug);
-  }
-  await BrowserTestUtils.waitForCondition(
-    () => ExperimentManager.store.getAllActive().length === 0
-  );
-
-  const recipe1 = ExperimentFakes.recipe("foo" + Date.now(), {
-    bucketConfig: {
-      start: 0,
-      // Make sure the experiment enrolls
-      count: 10000,
-      total: 10000,
-      namespace: "mochitest",
-      randomizationUnit: "normandy_id",
-    },
-  });
-  const recipe2 = ExperimentFakes.recipe("foo" + Date.now(), {
-    bucketConfig: {
-      start: 0,
-      // Make sure the experiment enrolls
-      count: 10000,
-      total: 10000,
-      namespace: "mochitest",
-      randomizationUnit: "normandy_id",
-    },
+  let enrolledPromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    featureId: "test-feature",
   });
 
-  await rsClient.db.importChanges({}, 42, [recipe1, recipe2], {
-    clear: true,
-  });
+  Assert.ok(ExperimentManager.store.getAllActive().length === 0, "Clean state");
 
-  RemoteSettingsExperimentLoader.uninit();
-  let enrolledPromise = new Promise(resolve =>
-    ExperimentManager.store.on("update:test-feature", resolve)
-  );
   await RemoteSettingsExperimentLoader.init();
+
   await enrolledPromise;
 
   Assert.ok(
@@ -95,19 +102,18 @@ add_task(async function test_double_feature_enrollment() {
     "It should initialize and process the recipes"
   );
 
-  BrowserTestUtils.waitForCondition(
-    () => sendFailureTelemetryStub.calledOnce,
+  Assert.equal(
+    ExperimentManager.store.getAllActive().length,
+    1,
+    "1 active experiment"
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => sendFailureTelemetryStub.callCount,
     "Expected to fail one of the recipes"
   );
 
-  for (let experiment of ExperimentManager.store.getAllActive()) {
-    ExperimentManager.unenroll(experiment.slug, "cleanup");
-    ExperimentManager.store._deleteForTests(experiment.slug);
-  }
-  await BrowserTestUtils.waitForCondition(
-    () => ExperimentManager.store.getAllActive().length === 0
-  );
+  await doExperimentCleanup();
   await SpecialPowers.popPrefEnv();
-  await rsClient.db.clear();
   sandbox.restore();
 });
