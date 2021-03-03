@@ -10566,6 +10566,8 @@
   value: true
 #elif defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
   value: true
+#elif defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  value: true
 #else
   value: false
 #endif
