@@ -1089,10 +1089,12 @@ static bool CompileLazyFunctionImpl(JSContext* cx, CompilationInput& input,
       static_cast<uint32_t>(input.lazy->immutableFlags());
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  BorrowingCompilationStencil borrowingStencil(compilationState);
-  if (!CompilationStencil::instantiateStencils(cx, input, borrowingStencil,
-                                               gcOutput.get())) {
-    return false;
+  {
+    BorrowingCompilationStencil borrowingStencil(compilationState);
+    if (!CompilationStencil::instantiateStencils(cx, input, borrowingStencil,
+                                                 gcOutput.get())) {
+      return false;
+    }
   }
 
   MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
@@ -1103,7 +1105,8 @@ static bool CompileLazyFunctionImpl(JSContext* cx, CompilationInput& input,
 
   if (input.source->hasEncoder()) {
     MOZ_ASSERT(!js::UseOffThreadParseGlobal());
-    if (!input.source->xdrEncodeFunctionStencil(cx, borrowingStencil)) {
+    if (!input.source->addDelazificationToIncrementalEncoding(
+            cx, compilationState)) {
       return false;
     }
   }
