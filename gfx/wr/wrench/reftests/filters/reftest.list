@@ -66,3 +66,4 @@ platform(linux,mac) == backdrop-filter-perspective.yaml backdrop-filter-perspect
 platform(linux,max) == svg-filter-offset.yaml svg-filter-offset-ref.yaml
 skip_on(android,device) == fuzzy(1,100) svg-filter-composite.yaml svg-filter-composite-ref.yaml
 skip_on(android,device) == filter-mix-blend-scaling.yaml filter-mix-blend-scaling-ref.yaml
+platform(linux) == blend-clipped-raster-root.yaml blend-clipped-raster-root.png
