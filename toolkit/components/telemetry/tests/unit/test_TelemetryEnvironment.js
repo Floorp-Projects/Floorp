@@ -2717,3 +2717,21 @@ add_task(async function test_environmentShutdown() {
     "test_environmentShutdownChange"
   );
 });
+
+add_task(async function test_environmentDidntChange() {
+  // Clean the environment and check that it's reporting the correct info.
+  await TelemetryEnvironment.testCleanRestart().onInitialized();
+  let data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+
+  const LISTENER_NAME = "test_environmentDidntChange";
+  TelemetryEnvironment.registerChangeListener(LISTENER_NAME, () => {
+    Assert.ok(false, "The environment didn't actually change.");
+  });
+
+  // Don't actually change the environment, but notify of a compositor abort.
+  const COMPOSITOR_ABORTED_TOPIC = "compositor:process-aborted";
+  Services.obs.notifyObservers(null, COMPOSITOR_ABORTED_TOPIC);
+
+  TelemetryEnvironment.unregisterChangeListener(LISTENER_NAME);
+});
