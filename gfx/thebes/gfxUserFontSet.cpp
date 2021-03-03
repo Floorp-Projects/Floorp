@@ -1018,8 +1018,7 @@ gfxUserFontFamily* gfxUserFontSet::GetFamily(const nsACString& aFamilyName) {
   nsAutoCString key(aFamilyName);
   ToLowerCase(key);
 
-  return mFontFamilies.LookupOrInsertWith(
-      key, [&] { return MakeRefPtr<gfxUserFontFamily>(aFamilyName); });
+  return mFontFamilies.GetOrInsertNew(key, aFamilyName);
 }
 
 void gfxUserFontSet::ForgetLocalFaces() {
