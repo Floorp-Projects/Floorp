@@ -251,4 +251,23 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
   return mBase->GetQuotaObjects(aDatabaseQuotaObject, aJournalQuotaObject);
 }
 
+mozilla::storage::SQLiteMutex& Connection::GetSharedDBMutex() {
+  return mBase->GetSharedDBMutex();
+}
+
+uint32_t Connection::GetTransactionNestingLevel(
+    const mozilla::storage::SQLiteMutexAutoLock& aProofOfLock) {
+  return mBase->GetTransactionNestingLevel(aProofOfLock);
+}
+
+uint32_t Connection::IncreaseTransactionNestingLevel(
+    const mozilla::storage::SQLiteMutexAutoLock& aProofOfLock) {
+  return mBase->IncreaseTransactionNestingLevel(aProofOfLock);
+}
+
+uint32_t Connection::DecreaseTransactionNestingLevel(
+    const mozilla::storage::SQLiteMutexAutoLock& aProofOfLock) {
+  return mBase->DecreaseTransactionNestingLevel(aProofOfLock);
+}
+
 }  // namespace mozilla::dom::cache
