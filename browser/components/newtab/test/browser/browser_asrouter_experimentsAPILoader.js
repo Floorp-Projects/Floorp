@@ -239,7 +239,7 @@ add_task(async function test_exposure_ping() {
   TelemetryTestUtils.assertKeyedScalar(
     scalars,
     "telemetry.event_counts",
-    "normandy#expose#feature_study",
+    "normandy#expose#nimbus_experiment",
     1
   );
 

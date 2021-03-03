@@ -208,7 +208,7 @@ class StudyList extends React.Component {
               translations,
             });
           }
-          if (study.type === "messaging_experiment") {
+          if (study.type === "nimbus") {
             return r(MessagingSystemListItem, {
               key: study.slug,
               study,
@@ -234,7 +234,7 @@ class StudyList extends React.Component {
               translations,
             });
           }
-          if (study.experimentType === "messaging_experiment") {
+          if (study.experimentType === "nimbus") {
             return r(MessagingSystemListItem, {
               key: study.slug,
               study,
@@ -273,11 +273,11 @@ class MessagingSystemListItem extends React.Component {
     const { study, translations } = this.props;
     const userFacingName = study.userFacingName || study.slug;
     const userFacingDescription =
-      study.userFacingDescription || "Messaging System experiment.";
+      study.userFacingDescription || "Nimbus experiment.";
     return r(
       "li",
       {
-        className: classnames("study messaging-system", {
+        className: classnames("study nimbus", {
           disabled: !study.active,
         }),
         "data-study-slug": study.slug, // used to identify this row in tests
