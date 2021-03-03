@@ -109,6 +109,7 @@ void GamepadManager::BeginShutdown() {
   mShuttingDown = true;
   StopMonitoring();
   if (mMaybeGamepadStateReceiver) {
+    mMaybeGamepadStateReceiver->StopMonitoringThread();
     mMaybeGamepadStateReceiver = Nothing{};
   }
   // Don't let windows call back to unregister during shutdown
@@ -667,5 +668,19 @@ already_AddRefed<Promise> GamepadManager::SetLightIndicatorColor(
 void GamepadManager::SetupRemoteInfo(
     const GamepadStateBroadcastReceiverInfo& aReceiverInfo) {
   mMaybeGamepadStateReceiver = GamepadStateReceiver::Create(aReceiverInfo);
+
+  if (mMaybeGamepadStateReceiver) {
+    RefPtr<GamepadManager> thisRefPtr(this);
+    bool threadStarted = mMaybeGamepadStateReceiver->StartMonitoringThread(
+        [thisRefPtr](const GamepadChangeEvent& e) {
+          NS_DispatchToMainThread(NS_NewRunnableFunction(
+              "GamepadStateReceiver::MonitoringThread",
+              [thisRefPtr, e] { thisRefPtr->Update(e); }));
+        });
+
+    if (!threadStarted) {
+      mMaybeGamepadStateReceiver = Nothing{};
+    }
+  }
 }
 }  // namespace mozilla::dom

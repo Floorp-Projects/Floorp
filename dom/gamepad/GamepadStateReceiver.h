@@ -38,6 +38,9 @@ class IProtocol;
 
 namespace mozilla::dom {
 
+class GamepadChangeEvent;
+class GamepadTestHelper;
+
 // IPDL structure that knows how to initialize a receiver
 class GamepadStateBroadcastReceiverInfo;
 
@@ -54,6 +57,12 @@ class GamepadStateBroadcastReceiverInfo;
 //   Maybe<GamepadStateReceiver> maybeReceiver =
 //       GamepadStateReceiver::Create(aReceiverInfo);
 //   MOZ_ASSERT(maybeReceiver);
+//
+//   // This thread will probably be running async, so be sure to capture by
+//   // value and not reference on most things
+//   maybeReceiver->StartMonitoringThread([=](const GamepadChangeEvent& e) {
+//     this->handleEvent(e);
+//   });
 // }
 //
 class GamepadStateReceiver {
@@ -65,6 +74,23 @@ class GamepadStateReceiver {
   // to this function in the remote process.
   static Maybe<GamepadStateReceiver> Create(
       const GamepadStateBroadcastReceiverInfo& aReceiverInfo);
+
+  // Start a thread that monitors the shared memory for changes
+  //
+  // The thread will call `aFn` with an event generated for each gamepad
+  // value that has changed since the last time it checked. Note that this
+  // means that multiple changes to the same value will appear as a single
+  // change if they happen quickly enough. This generally doesn't matter for
+  // gamepads.
+  bool StartMonitoringThread(
+      const std::function<void(const GamepadChangeEvent&)>& aFn);
+
+  // Stop the monitoring thread
+  //
+  // If the broadcaster continues sending messages after this is called, they
+  // will be missed. It is okay to restart the monitoring thread and even
+  // to pass in a different function.
+  void StopMonitoringThread();
 
   // Allow move
   GamepadStateReceiver(GamepadStateReceiver&& aOther);
@@ -83,6 +109,11 @@ class GamepadStateReceiver {
   explicit GamepadStateReceiver(UniquePtr<Impl> aImpl);
 
   UniquePtr<Impl> mImpl;
+
+  friend class GamepadTestHelper;
+  bool StartMonitoringThreadForTesting(
+      const std::function<void(const GamepadChangeEvent&)>& aMonitorFn,
+      const std::function<void(uint32_t)>& aTestCommandFn);
 };
 
 }  // namespace mozilla::dom
