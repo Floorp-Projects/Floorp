@@ -79,6 +79,7 @@ class DebugScript;
 
 namespace frontend {
 struct CompilationStencil;
+struct BaseCompilationStencil;
 struct CompilationGCOutput;
 }  // namespace frontend
 
@@ -1018,13 +1019,40 @@ class ScriptSource {
   // Return wether an XDR encoder is present or not.
   bool hasEncoder() const { return bool(xdrEncoder_); }
 
-  [[nodiscard]] bool startIncrementalEncoding(
-      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-      UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
+  // Create a new XDR encoder, and encode the stencil for the initial
+  // compilation. The created XDR encoder isn't stored into `xdrEncoder_`
+  // field. Caller is responsible for calling `setIncrementalEncoder` after
+  // instantiating stencil (so, corresponding canonical ScriptSourceObject
+  // gets created).
+  bool xdrEncodeInitialStencil(
+      JSContext* cx, frontend::CompilationInput& input,
+      const frontend::CompilationStencil& stencil,
+      UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
 
-  [[nodiscard]] bool addDelazificationToIncrementalEncoding(
-      JSContext* cx, const frontend::CompilationStencil& stencil);
+  // Create a new XDR encoder, and encode the stencils.
+  // The created XDR encoder isn't stored into `xdrEncoder_` field.
+  // Caller is responsible for calling `setIncrementalEncoder` after
+  // instantiating stencil (so, corresponding canonical ScriptSourceObject
+  // gets created).
+  bool xdrEncodeStencils(JSContext* cx, frontend::CompilationInput& input,
+                         const frontend::CompilationStencil& stencil,
+                         UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
 
+  void setIncrementalEncoder(XDRIncrementalStencilEncoder* xdrEncoder);
+
+  // Encode a delazified function's stencil.  In case of errors, the XDR
+  // encoder is freed.
+  bool xdrEncodeFunctionStencil(
+      JSContext* cx, const frontend::BaseCompilationStencil& stencil);
+
+ private:
+  // Encode a delazified function's stencil.  In case of errors, the passed
+  // XDR encoder is freed.
+  bool xdrEncodeFunctionStencilWith(
+      JSContext* cx, const frontend::BaseCompilationStencil& stencil,
+      UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
+
+ public:
   // Linearize the encoded content in the |buffer| provided as argument to
   // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
   // |buffer| is considered undefined.
@@ -1329,11 +1357,12 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
                     js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
-  static bool InitFromStencil(JSContext* cx, js::HandleScript script,
-                              const js::frontend::CompilationInput& input,
-                              const js::frontend::CompilationStencil& stencil,
-                              js::frontend::CompilationGCOutput& gcOutput,
-                              const js::frontend::ScriptIndex scriptIndex);
+  static bool InitFromStencil(
+      JSContext* cx, js::HandleScript script,
+      const js::frontend::CompilationInput& input,
+      const js::frontend::BaseCompilationStencil& stencil,
+      js::frontend::CompilationGCOutput& gcOutput,
+      const js::frontend::ScriptIndex scriptIndex);
 
   void trace(JSTracer* trc);
 
@@ -1841,7 +1870,7 @@ class JSScript : public js::BaseScript {
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
       const js::frontend::CompilationInput& input,
-      const js::frontend::CompilationStencil& stencil,
+      const js::frontend::BaseCompilationStencil& stencil,
       js::frontend::CompilationGCOutput& gcOutput,
       const js::frontend::ScriptIndex scriptIndex);
 
@@ -1869,7 +1898,7 @@ class JSScript : public js::BaseScript {
  public:
   static bool fullyInitFromStencil(
       JSContext* cx, const js::frontend::CompilationInput& input,
-      const js::frontend::CompilationStencil& stencil,
+      const js::frontend::BaseCompilationStencil& stencil,
       js::frontend::CompilationGCOutput& gcOutput, js::HandleScript script,
       const js::frontend::ScriptIndex scriptIndex);
 
