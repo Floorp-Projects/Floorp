@@ -629,7 +629,7 @@ decorate_task(
   }
 );
 
-add_task(async function test_messaging_system_about_studies() {
+add_task(async function test_nimbus_about_studies() {
   const recipe = ExperimentFakes.recipe("about-studies-foo");
   await ExperimentManager.enroll(recipe);
   await BrowserTestUtils.withNewTab(
@@ -637,8 +637,7 @@ add_task(async function test_messaging_system_about_studies() {
     async browser => {
       const name = await SpecialPowers.spawn(browser, [], async () => {
         await ContentTaskUtils.waitForCondition(
-          () =>
-            content.document.querySelector(".messaging-system .remove-button"),
+          () => content.document.querySelector(".nimbus .remove-button"),
           "waiting for page/experiment to load"
         );
         return content.document.querySelector(".study-name").innerText;
@@ -657,7 +656,7 @@ add_task(async function test_messaging_system_about_studies() {
     async browser => {
       const name = await SpecialPowers.spawn(browser, [], async () => {
         await ContentTaskUtils.waitForCondition(
-          () => content.document.querySelector(".messaging-system.disabled"),
+          () => content.document.querySelector(".nimbus.disabled"),
           "waiting for experiment to become disabled"
         );
         return content.document.querySelector(".study-name").innerText;
