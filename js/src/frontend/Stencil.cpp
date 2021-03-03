@@ -6,16 +6,18 @@
 
 #include "frontend/Stencil.h"
 
+#include "mozilla/AlreadyAddRefed.h"        // already_AddRefed
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/PodOperations.h"          // mozilla::PodCopy
 #include "mozilla/RefPtr.h"                 // RefPtr
+#include "mozilla/ScopeExit.h"              // mozilla::ScopeExit
 #include "mozilla/Sprintf.h"                // SprintfLiteral
 
 #include "ds/LifoAlloc.h"                  // LifoAlloc
 #include "frontend/AbstractScopePtr.h"     // ScopeIndex
 #include "frontend/BytecodeCompilation.h"  // CanLazilyParse
 #include "frontend/BytecodeSection.h"      // EmitScriptThingsVector
-#include "frontend/CompilationStencil.h"  // CompilationStencil, ExtensibleCompilationStencil, CompilationGCOutput
+#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationState, ExtensibleCompilationStencil, CompilationGCOutput, CompilationStencilMerger
 #include "frontend/SharedContext.h"
 #include "gc/AllocKind.h"               // gc::AllocKind
 #include "gc/Rooting.h"                 // RootedAtom
@@ -1697,6 +1699,24 @@ js::SharedImmutableScriptData* SharedDataContainer::get(
   return asBorrow()->get(index);
 }
 
+bool SharedDataContainer::convertFromSingleToMap(JSContext* cx) {
+  MOZ_ASSERT(isSingle());
+
+  // Use a temporary container so that on OOM we do not break the stencil.
+  SharedDataContainer other;
+  if (!other.initMap(cx)) {
+    return false;
+  }
+
+  if (!other.asMap()->putNew(CompilationStencil::TopLevelIndex, asSingle())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  std::swap(data_, other.data_);
+  return true;
+}
+
 bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
                                       js::SharedImmutableScriptData* data) {
   MOZ_ASSERT(!isBorrow());
@@ -1725,6 +1745,32 @@ bool SharedDataContainer::addAndShare(JSContext* cx, ScriptIndex index,
   auto p = map.lookup(index);
   MOZ_ASSERT(p);
   return SharedImmutableScriptData::shareScriptData(cx, p->value());
+}
+
+bool SharedDataContainer::addExtraWithoutShare(
+    JSContext* cx, ScriptIndex index, js::SharedImmutableScriptData* data) {
+  MOZ_ASSERT(!isEmpty());
+
+  if (isSingle()) {
+    if (!convertFromSingleToMap(cx)) {
+      return false;
+    }
+  }
+
+  if (isVector()) {
+    // SharedDataContainer::prepareStorageFor allocates space for all scripts.
+    (*asVector())[index] = data;
+    return true;
+  }
+
+  MOZ_ASSERT(isMap());
+  // SharedDataContainer::prepareStorageFor doesn't allocate space for
+  // delazification, and this can fail.
+  if (!asMap()->putNew(index, data)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  return true;
 }
 
 #ifdef DEBUG
@@ -3136,6 +3182,395 @@ void CompilationState::rewind(const CompilationState::RewindToken& pos) {
     MOZ_ASSERT(asmJS->moduleMap.count() == pos.asmJSCount);
   }
   scriptData.shrinkTo(pos.scriptDataLength);
+}
+
+bool CompilationStencilMerger::buildFunctionKeyToIndex(JSContext* cx) {
+  if (!functionKeyToInitialScriptIndex_.reserve(initial_->scriptExtra.length() -
+                                                1)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 1; i < initial_->scriptExtra.length(); i++) {
+    const auto& extra = initial_->scriptExtra[i];
+    auto key = BaseCompilationStencil::toFunctionKey(extra.extent);
+
+    // There can be multiple ScriptStencilExtra with same extent if
+    // the function is parsed multiple times because of rewind for
+    // arrow function, and in that case the last one's index should be used.
+    // Overwrite with the last one.
+    //
+    // Already reserved above, but OOMTest can hit failure mode in
+    // HashTable::add.
+    if (!functionKeyToInitialScriptIndex_.put(key, ScriptIndex(i))) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+ScriptIndex CompilationStencilMerger::getInitialScriptIndexFor(
+    const ExtensibleCompilationStencil& delazification) const {
+  auto p = functionKeyToInitialScriptIndex_.lookup(delazification.functionKey);
+  MOZ_ASSERT(p);
+  return p->value();
+}
+
+bool CompilationStencilMerger::buildAtomIndexMap(
+    JSContext* cx, const ExtensibleCompilationStencil& delazification,
+    AtomIndexMap& atomIndexMap) {
+  uint32_t atomCount = delazification.parserAtoms.entries().length();
+  if (!atomIndexMap.reserve(atomCount)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  for (const auto& atom : delazification.parserAtoms.entries()) {
+    auto mappedIndex = initial_->parserAtoms.internExternalParserAtom(cx, atom);
+    if (!mappedIndex) {
+      return false;
+    }
+    if (atom->isUsedByStencil()) {
+      initial_->parserAtoms.markUsedByStencil(mappedIndex);
+    }
+    atomIndexMap.infallibleAppend(mappedIndex);
+  }
+  return true;
+}
+
+bool CompilationStencilMerger::setInitial(
+    JSContext* cx, UniquePtr<ExtensibleCompilationStencil>&& initial) {
+  MOZ_ASSERT(!initial_);
+
+  initial_ = std::move(initial);
+
+  return buildFunctionKeyToIndex(cx);
+}
+
+template <typename GCThingIndexMapFunc, typename AtomIndexMapFunc,
+          typename ScopeIndexMapFunc>
+static void MergeScriptStencil(ScriptStencil& dest, const ScriptStencil& src,
+                               GCThingIndexMapFunc mapGCThingIndex,
+                               AtomIndexMapFunc mapAtomIndex,
+                               ScopeIndexMapFunc mapScopeIndex,
+                               bool isTopLevel) {
+  // If this function was lazy, all inner functions should have been lazy.
+  MOZ_ASSERT(!dest.hasSharedData());
+
+  // If the inner lazy function is skipped, gcThingsLength is empty.
+  if (src.gcThingsLength) {
+    dest.gcThingsOffset = mapGCThingIndex(src.gcThingsOffset);
+    dest.gcThingsLength = src.gcThingsLength;
+  }
+
+  if (src.functionAtom) {
+    dest.functionAtom = mapAtomIndex(src.functionAtom);
+  }
+
+  if (!dest.hasLazyFunctionEnclosingScopeIndex() &&
+      src.hasLazyFunctionEnclosingScopeIndex()) {
+    // Both enclosing function and this function were lazy, and
+    // now enclosing function is non-lazy and this function is still lazy.
+    dest.setLazyFunctionEnclosingScopeIndex(
+        mapScopeIndex(src.lazyFunctionEnclosingScopeIndex()));
+  } else if (dest.hasLazyFunctionEnclosingScopeIndex() &&
+             !src.hasLazyFunctionEnclosingScopeIndex()) {
+    // The enclosing function was non-lazy and this function was lazy, and
+    // now this function is non-lazy.
+    dest.resetHasLazyFunctionEnclosingScopeIndexAfterStencilMerge();
+  } else {
+    // The enclosing function is still lazy.
+    MOZ_ASSERT(!dest.hasLazyFunctionEnclosingScopeIndex());
+    MOZ_ASSERT(!src.hasLazyFunctionEnclosingScopeIndex());
+  }
+
+#ifdef DEBUG
+  uint16_t BASESCRIPT = uint16_t(FunctionFlags::Flags::BASESCRIPT);
+  uint16_t HAS_INFERRED_NAME =
+      uint16_t(FunctionFlags::Flags::HAS_INFERRED_NAME);
+  uint16_t HAS_GUESSED_ATOM = uint16_t(FunctionFlags::Flags::HAS_GUESSED_ATOM);
+  uint16_t acceptableDifferenceForLazy = HAS_INFERRED_NAME | HAS_GUESSED_ATOM;
+  uint16_t acceptableDifferenceForNonLazy =
+      BASESCRIPT | HAS_INFERRED_NAME | HAS_GUESSED_ATOM;
+
+  MOZ_ASSERT_IF(
+      isTopLevel,
+      (dest.functionFlags.toRaw() | acceptableDifferenceForNonLazy) ==
+          (src.functionFlags.toRaw() | acceptableDifferenceForNonLazy));
+
+  // NOTE: Currently we don't delazify inner functions.
+  MOZ_ASSERT_IF(!isTopLevel,
+                (dest.functionFlags.toRaw() | acceptableDifferenceForLazy) ==
+                    (src.functionFlags.toRaw() | acceptableDifferenceForLazy));
+#endif  // DEBUG
+  dest.functionFlags = src.functionFlags;
+
+  // Other flags.
+
+  if (src.wasEmittedByEnclosingScript()) {
+    // NOTE: the top-level function of the delazification have
+    //       src.wasEmittedByEnclosingScript() == false, and that shouldn't
+    //       be copied.
+    dest.setWasEmittedByEnclosingScript();
+  }
+
+  if (src.allowRelazify()) {
+    dest.setAllowRelazify();
+  }
+
+  if (src.hasSharedData()) {
+    dest.setHasSharedData();
+  }
+}
+
+bool CompilationStencilMerger::addDelazification(
+    JSContext* cx, const ExtensibleCompilationStencil& delazification) {
+  MOZ_ASSERT(initial_);
+
+  auto delazifiedFunctionIndex = getInitialScriptIndexFor(delazification);
+  auto& destFun = initial_->scriptData[delazifiedFunctionIndex];
+
+  if (destFun.hasSharedData()) {
+    // If the function was already non-lazy, it means the following happened.
+    //   1. this function is lazily parsed
+    //   2. incremental encoding is started
+    //   3. this function is delazified, and encoded
+    //   4. incremental encoding is finished
+    //   5. decoded and merged
+    //   6. incremental encoding is started
+    //      here, this function is encoded as non-lazy
+    //   7. this function is relazified
+    //   8. this function is delazified, and encoded
+    //   9. incremental encoding is finished
+    //  10. decoded and merged
+    //
+    // This shouldn't happen in wild, but can happen in testcase that uses
+    // JS::DecodeScriptAndStartIncrementalEncoding at steps 5-6
+    // (this may change in future).
+    //
+    // Encoding same function's delazification again shouldn't happen.
+    return true;
+  }
+
+  // If any failure happens, the initial stencil is left in the broken state.
+  // Immediately discard it.
+  auto failureCase = mozilla::MakeScopeExit([&] { initial_.reset(); });
+
+  mozilla::Maybe<ScopeIndex> functionEnclosingScope;
+  if (destFun.hasLazyFunctionEnclosingScopeIndex()) {
+    // lazyFunctionEnclosingScopeIndex_ can be Nothing if this is
+    // top-level function.
+    functionEnclosingScope =
+        mozilla::Some(destFun.lazyFunctionEnclosingScopeIndex());
+  }
+
+  // A map from ParserAtomIndex in delazification to TaggedParserAtomIndex
+  // in initial_.
+  AtomIndexMap atomIndexMap;
+  if (!buildAtomIndexMap(cx, delazification, atomIndexMap)) {
+    return false;
+  }
+  auto mapAtomIndex = [&](TaggedParserAtomIndex index) {
+    if (index.isParserAtomIndex()) {
+      return atomIndexMap[index.toParserAtomIndex()];
+    }
+
+    return index;
+  };
+
+  size_t gcThingOffset = initial_->gcThingData.length();
+  size_t regExpOffset = initial_->regExpData.length();
+  size_t bigIntOffset = initial_->bigIntData.length();
+  size_t objLiteralOffset = initial_->objLiteralData.length();
+  size_t scopeOffset = initial_->scopeData.length();
+
+  // Map delazification's ScriptIndex to initial's ScriptIndex.
+  //
+  // The lazy function's gcthings list stores inner function's ScriptIndex.
+  // The n-th gcthing holds the ScriptIndex of the (n+1)-th script in
+  // delazification.
+  //
+  // NOTE: Currently we don't delazify inner functions.
+  auto lazyFunctionGCThingsOffset = destFun.gcThingsOffset;
+  auto mapScriptIndex = [&](ScriptIndex index) {
+    if (index == CompilationStencil::TopLevelIndex) {
+      return delazifiedFunctionIndex;
+    }
+
+    return initial_->gcThingData[lazyFunctionGCThingsOffset + index.index - 1]
+        .toFunction();
+  };
+
+  // Map other delazification's indices into initial's indices.
+  auto mapGCThingIndex = [&](CompilationGCThingIndex offset) {
+    return CompilationGCThingIndex(gcThingOffset + offset.index);
+  };
+  auto mapRegExpIndex = [&](RegExpIndex index) {
+    return RegExpIndex(regExpOffset + index.index);
+  };
+  auto mapBigIntIndex = [&](BigIntIndex index) {
+    return BigIntIndex(bigIntOffset + index.index);
+  };
+  auto mapObjLiteralIndex = [&](ObjLiteralIndex index) {
+    return ObjLiteralIndex(objLiteralOffset + index.index);
+  };
+  auto mapScopeIndex = [&](ScopeIndex index) {
+    return ScopeIndex(scopeOffset + index.index);
+  };
+
+  // Append gcThingData, with mapping TaggedScriptThingIndex.
+  if (!initial_->gcThingData.appendAll(delazification.gcThingData)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (size_t i = gcThingOffset; i < initial_->gcThingData.length(); i++) {
+    auto& index = initial_->gcThingData[i];
+    if (index.isNull()) {
+      // Nothing to do.
+    } else if (index.isAtom()) {
+      index = TaggedScriptThingIndex(mapAtomIndex(index.toAtom()));
+    } else if (index.isBigInt()) {
+      index = TaggedScriptThingIndex(mapBigIntIndex(index.toBigInt()));
+    } else if (index.isObjLiteral()) {
+      index = TaggedScriptThingIndex(mapObjLiteralIndex(index.toObjLiteral()));
+    } else if (index.isRegExp()) {
+      index = TaggedScriptThingIndex(mapRegExpIndex(index.toRegExp()));
+    } else if (index.isScope()) {
+      index = TaggedScriptThingIndex(mapScopeIndex(index.toScope()));
+    } else if (index.isFunction()) {
+      index = TaggedScriptThingIndex(mapScriptIndex(index.toFunction()));
+    } else {
+      MOZ_ASSERT(index.isEmptyGlobalScope());
+      // Nothing to do
+    }
+  }
+
+  // Append regExpData, with mapping RegExpStencil.atom_.
+  if (!initial_->regExpData.appendAll(delazification.regExpData)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (size_t i = regExpOffset; i < initial_->regExpData.length(); i++) {
+    auto& data = initial_->regExpData[i];
+    data.atom_ = mapAtomIndex(data.atom_);
+  }
+
+  // Append bigIntData, with copying BigIntStencil.source_.
+  if (!initial_->bigIntData.reserve(bigIntOffset +
+                                    delazification.bigIntData.length())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (const auto& data : delazification.bigIntData) {
+    initial_->bigIntData.infallibleEmplaceBack();
+    if (!initial_->bigIntData.back().init(cx, initial_->alloc, data.source())) {
+      return false;
+    }
+  }
+
+  // Append objLiteralData, with copying ObjLiteralStencil.code_, and mapping
+  // TaggedParserAtomIndex in it.
+  if (!initial_->objLiteralData.reserve(
+          objLiteralOffset + delazification.objLiteralData.length())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (const auto& data : delazification.objLiteralData) {
+    size_t length = data.code().size();
+    auto* code = initial_->alloc.newArrayUninitialized<uint8_t>(length);
+    if (!code) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    memcpy(code, data.code().data(), length);
+
+    ObjLiteralModifier modifier(mozilla::Span(code, length));
+    modifier.mapAtom(mapAtomIndex);
+
+    initial_->objLiteralData.infallibleEmplaceBack(code, length, data.flags(),
+                                                   data.propertyCount());
+  }
+
+  // Append scopeData, with mapping indices in ScopeStencil fields.
+  // And append scopeNames, with copying the entire data, and mapping
+  // trailingNames.
+  if (!initial_->scopeData.reserve(scopeOffset +
+                                   delazification.scopeData.length())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  if (!initial_->scopeNames.reserve(scopeOffset +
+                                    delazification.scopeNames.length())) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (size_t i = 0; i < delazification.scopeData.length(); i++) {
+    const auto& srcData = delazification.scopeData[i];
+    const auto* srcNames = delazification.scopeNames[i];
+
+    mozilla::Maybe<ScriptIndex> functionIndex = mozilla::Nothing();
+    if (srcData.isFunction()) {
+      // Inner functions should be in the same order as initial, beginning from
+      // the delazification's index.
+      functionIndex = mozilla::Some(mapScriptIndex(srcData.functionIndex()));
+    }
+
+    BaseParserScopeData* destNames = nullptr;
+    if (srcNames) {
+      destNames = CopyScopeData(cx, initial_->alloc, srcData.kind(), srcNames);
+      if (!destNames) {
+        return false;
+      }
+      auto trailingNames =
+          GetParserScopeDataTrailingNames(srcData.kind(), destNames);
+      for (auto& name : trailingNames) {
+        if (name.name()) {
+          name.updateNameAfterStencilMerge(mapAtomIndex(name.name()));
+        }
+      }
+    }
+
+    initial_->scopeData.infallibleEmplaceBack(
+        srcData.kind(),
+        srcData.hasEnclosing()
+            ? mozilla::Some(mapScopeIndex(srcData.enclosing()))
+            : functionEnclosingScope,
+        srcData.firstFrameSlot(),
+        srcData.hasEnvironmentShape()
+            ? mozilla::Some(srcData.numEnvironmentSlots())
+            : mozilla::Nothing(),
+        functionIndex, srcData.isArrow());
+
+    initial_->scopeNames.infallibleEmplaceBack(destNames);
+  }
+
+  // Add delazified function's shared data.
+  //
+  // NOTE: Currently we don't delazify inner functions.
+  if (!initial_->sharedData.addExtraWithoutShare(
+          cx, delazifiedFunctionIndex, delazification.sharedData.asSingle())) {
+    return false;
+  }
+
+  // Update scriptData, with mapping indices in ScriptStencil fields.
+  for (uint32_t i = 0; i < delazification.scriptData.length(); i++) {
+    auto destIndex = mapScriptIndex(ScriptIndex(i));
+    MergeScriptStencil(initial_->scriptData[destIndex],
+                       delazification.scriptData[i], mapGCThingIndex,
+                       mapAtomIndex, mapScopeIndex,
+                       i == CompilationStencil::TopLevelIndex);
+  }
+
+  // Function shouldn't be a module.
+  MOZ_ASSERT(!delazification.moduleMetadata);
+
+  // asm.js shouldn't appear inside delazification, given asm.js forces
+  // full-parse.
+  MOZ_ASSERT(!delazification.asmJS);
+
+  failureCase.release();
+  return true;
 }
 
 void JS::StencilAddRef(JS::Stencil* stencil) { stencil->refCount++; }
