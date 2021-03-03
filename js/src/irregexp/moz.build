@@ -12,6 +12,8 @@ LOCAL_INCLUDES += ["!..", ".."]
 include("../js-config.mozbuild")
 include("../js-cxxflags.mozbuild")
 
+CXXFLAGS += ["-Wno-error=type-limits"]
+
 UNIFIED_SOURCES += [
     "imported/regexp-ast.cc",
     "imported/regexp-bytecode-generator.cc",
