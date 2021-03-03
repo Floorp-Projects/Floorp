@@ -229,16 +229,18 @@ static constexpr int kRegExpBytecodeLengths[] = {
 };
 
 inline constexpr int RegExpBytecodeLength(int bytecode) {
+  CONSTEXPR_DCHECK(base::IsInRange(bytecode, 0, kRegExpBytecodeCount - 1));
   return kRegExpBytecodeLengths[bytecode];
 }
 
-static const char* const kRegExpBytecodeNames[] = {
+static constexpr const char* const kRegExpBytecodeNames[] = {
 #define DECLARE_BYTECODE_NAME(name, ...) #name,
     BYTECODE_ITERATOR(DECLARE_BYTECODE_NAME)
 #undef DECLARE_BYTECODE_NAME
 };
 
-inline const char* RegExpBytecodeName(int bytecode) {
+inline constexpr const char* RegExpBytecodeName(int bytecode) {
+  CONSTEXPR_DCHECK(base::IsInRange(bytecode, 0, kRegExpBytecodeCount - 1));
   return kRegExpBytecodeNames[bytecode];
 }
 
