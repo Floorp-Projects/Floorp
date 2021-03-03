@@ -2109,6 +2109,7 @@ network.dns:
     objects: ["context"]
     bug_numbers:
       - 1691408
+      - 1694949
     description: >
       This telemetry records the status of the TRR confirmation across.
       The value of the event is one of:
@@ -2136,6 +2137,9 @@ network.dns:
         String representation of the last 32 confirmation results.
         Example: nnnnnnttttttttt indicates a number of network (n) failures
         followed by timeouts (t).
+      failedLookups: >
+        When the trigger is failed-lookups, this contains the string
+        representation of the failures that triggered the confirmation.
       networkID: >
         The network ID for the recorded confirmation attempts
       captivePortal: >

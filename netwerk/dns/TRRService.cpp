@@ -920,27 +920,73 @@ TRRService::Notify(nsITimer* aTimer) {
   return NS_OK;
 }
 
-void TRRService::TRRIsOkay(enum TrrOkay aReason) {
+static char StatusToChar(nsresult aLookupStatus, nsresult aChannelStatus) {
+  // If the resolution fails in the TRR channel then we'll have a failed
+  // aChannelStatus. Otherwise, we parse the response - if it's not a valid DNS
+  // packet or doesn't contain the correct responses aLookupStatus will be a
+  // failure code.
+  if (aChannelStatus == NS_OK) {
+    // Return + if confirmation was OK, or - if confirmation failed
+    return aLookupStatus == NS_OK ? '+' : '-';
+  }
+
+  if (nsCOMPtr<nsIIOService> ios = do_GetIOService()) {
+    bool hasConnectiviy = true;
+    ios->GetConnectivity(&hasConnectiviy);
+    if (!hasConnectiviy) {
+      // Browser has no active network interfaces = is offline.
+      return 'o';
+    }
+  }
+
+  switch (aChannelStatus) {
+    case NS_ERROR_NET_TIMEOUT_EXTERNAL:
+      // TRR timeout expired
+      return 't';
+    case NS_ERROR_UNKNOWN_HOST:
+      // TRRServiceChannel failed to due to unresolved host
+      return 'd';
+    default:
+      break;
+  }
+
+  // The error is a network error
+  if (NS_ERROR_GET_MODULE(aChannelStatus) == NS_ERROR_MODULE_NETWORK) {
+    return 'n';
+  }
+
+  // Some other kind of failure.
+  return '?';
+}
+
+void TRRService::TRRIsOkay(nsresult aChannelStatus) {
   MOZ_ASSERT_IF(XRE_IsParentProcess(), NS_IsMainThread() || IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   Telemetry::AccumulateCategoricalKeyed(
       AutoDetectedKey(),
-      aReason == OKAY_NORMAL
+      NS_SUCCEEDED(aChannelStatus)
           ? Telemetry::LABELS_DNS_TRR_SUCCESS2::Fine
-          : (aReason == OKAY_TIMEOUT
+          : (aChannelStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL
                  ? Telemetry::LABELS_DNS_TRR_SUCCESS2::Timeout
                  : Telemetry::LABELS_DNS_TRR_SUCCESS2::Bad));
-  if (aReason == OKAY_NORMAL) {
+  if (NS_SUCCEEDED(aChannelStatus)) {
     mConfirmation.mTRRFailures = 0;
   } else if ((mMode == nsIDNSService::MODE_TRRFIRST) &&
              (mConfirmation.mState == CONFIRM_OK)) {
     // only count failures while in OK state
+    mConfirmation.mFailureReasons[mConfirmation.mTRRFailures %
+                                  ConfirmationContext::RESULTS_SIZE] =
+        StatusToChar(NS_OK, aChannelStatus);
     uint32_t fails = ++mConfirmation.mTRRFailures;
+
     if (fails >= StaticPrefs::network_trr_max_fails()) {
       LOG(("TRRService goes FAILED after %u failures in a row\n", fails));
       mConfirmation.mState = CONFIRM_FAILED;
       mConfirmation.mTrigger.Assign("failed-lookups");
+      mConfirmation.mFailedLookups =
+          nsDependentCSubstring(mConfirmation.mFailureReasons,
+                                fails % ConfirmationContext::RESULTS_SIZE);
       // Fire off a timer and start re-trying the NS domain again
       NS_NewTimerWithCallback(getter_AddRefs(mConfirmation.mTimer), this,
                               mConfirmation.mRetryInterval,
@@ -959,6 +1005,7 @@ void TRRService::ConfirmationContext::RecordEvent(const char* aReason) {
     mFirstRequestTime = TimeStamp();
     mContextChangeReason.Assign(aReason);
     mTrigger.Truncate();
+    mFailedLookups.Truncate();
 
     mRetryInterval = StaticPrefs::network_trr_retry_timeout_ms();
   };
@@ -1012,6 +1059,11 @@ void TRRService::ConfirmationContext::RecordEvent(const char* aReason) {
                                  nsPrintfCString("%i", mCaptivePortalStatus)},
   });
 
+  if (mTrigger.Equals("failed-lookups"_ns)) {
+    extra.ref().AppendElement(
+        Telemetry::EventExtraEntry{"failedLookups"_ns, mFailedLookups});
+  }
+
   ConfirmationState state = mState;
   Telemetry::RecordEvent(eventType, mozilla::Some(nsPrintfCString("%u", state)),
                          extra);
@@ -1021,33 +1073,8 @@ void TRRService::ConfirmationContext::RecordEvent(const char* aReason) {
 
 void TRRService::ConfirmationContext::RequestCompleted(
     nsresult aLookupStatus, nsresult aChannelStatus) {
-  auto statusToChar = [aLookupStatus, aChannelStatus]() -> char {
-    if (aChannelStatus == NS_OK) {
-      // Return + if confirmation was OK, or - if confirmation failed
-      return aLookupStatus == NS_OK ? '+' : '-';
-    }
-
-    switch (aChannelStatus) {
-      case NS_ERROR_NET_TIMEOUT_EXTERNAL:
-        // TRR timeout expired
-        return 't';
-      case NS_ERROR_UNKNOWN_HOST:
-        // TRRServiceChannel failed to due to unresolved host
-        return 'd';
-      default:
-        break;
-    }
-
-    // The error is a network error
-    if (NS_ERROR_GET_MODULE(aChannelStatus) == NS_ERROR_MODULE_NETWORK) {
-      return 'n';
-    }
-
-    // Some other kind of failure.
-    return '?';
-  };
-
-  mResults[mAttemptCount % RESULTS_SIZE] = statusToChar();
+  mResults[mAttemptCount % RESULTS_SIZE] =
+      StatusToChar(aLookupStatus, aChannelStatus);
   mAttemptCount++;
 }
 
