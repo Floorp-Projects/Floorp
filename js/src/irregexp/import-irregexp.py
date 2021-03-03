@@ -95,6 +95,7 @@ def copy_and_update_includes(src_path, dst_path):
 
 def import_from(srcdir, dstdir):
     excluded = [
+        "DIR_METADATA",
         "OWNERS",
         "regexp.cc",
         "regexp-utils.cc",
