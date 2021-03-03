@@ -129,24 +129,15 @@ using ParserBindingIter = AbstractBindingIter<TaggedParserAtomIndex>;
 //      ...
 //  }
 //
-//  struct StencilDelazificationSet {
-//      Span<BaseCompilationStencil>    delazifications;
-//      ...
-//  }
-//
 //  struct CompilationStencil : BaseCompilationStencil {
 //      LifoAlloc                       alloc;
-//      CompilationInput                input;
 //      Span<ScriptStencilExtra>        scriptExtra;
-//      StencilDelazifcationSet*        delazificationSet;
 //      ...
 //  }
 //
 // When we delazify a function that was lazily parsed, we generate a new Stencil
-// at the point too. These delazifications can be cached as well. When loading
-// back from a cache we group these together in a `StencilDelazificationSet`
-// structure that hangs off the `CompilationStencil`. This delazification data
-// is only meaningful if we also have the initial parse stencil.
+// at the point too. These delazifications can be merged into the Stencil of
+// the initial parse.
 //
 //
 // CompilationGCOutput
