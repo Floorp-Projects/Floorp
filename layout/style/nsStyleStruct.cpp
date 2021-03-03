@@ -3055,13 +3055,10 @@ void nsStyleUI::TriggerImageLoads(Document& aDocument,
                                    : Span<const StyleCursorImage>();
   for (size_t i = 0; i < cursorImages.Length(); ++i) {
     auto& cursor = cursorImages[i];
-
-    if (!cursor.url.IsImageResolved()) {
-      const auto* oldCursor =
-          oldCursorImages.Length() > i ? &oldCursorImages[i] : nullptr;
-      const_cast<StyleComputedImageUrl&>(cursor.url)
-          .ResolveImage(aDocument, oldCursor ? &oldCursor->url : nullptr);
-    }
+    const auto* oldCursorImage =
+        oldCursorImages.Length() > i ? &oldCursorImages[i].image : nullptr;
+    const_cast<StyleCursorImage&>(cursor).image.ResolveImage(aDocument,
+                                                             oldCursorImage);
   }
 }
 
