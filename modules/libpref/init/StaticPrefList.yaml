@@ -9087,7 +9087,7 @@
 
 - name: permissions.isolateBy.privateBrowsing
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
