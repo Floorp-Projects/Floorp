@@ -65,6 +65,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
+   * @returns {string} The help URL for the Quick Suggest feature.
+   */
+  get helpUrl() {
+    return (
+      this._helpUrl ||
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        "sponsored-search"
+    );
+  }
+
+  /**
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
@@ -130,7 +141,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Show the help button if we haven't reached the max onboarding count yet.
     if (this._onboardingCount < this._onboardingMaxCount) {
-      payload.helpUrl = UrlbarPrefs.get("quicksuggest.helpURL");
+      payload.helpUrl = this.helpUrl;
       payload.helpTitle = ONBOARDING_TEXT;
     }
 
@@ -294,6 +305,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   // Whether we added a result during the most recent query.
   _addedResultInLastQuery = false;
+
+  // This is intended for tests and allows them to set a different help URL.
+  _helpUrl = undefined;
 
   get _onboardingCount() {
     return UrlbarPrefs.get(ONBOARDING_COUNT_PREF);
