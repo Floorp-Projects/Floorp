@@ -53,6 +53,8 @@ add_task(async function basic_install_test() {
   let params = engine.getSubmission("test").uri.query.split("&");
   Assert.ok(params.includes("version=1.0"), "Correct version installed");
 
+  await Services.search.setDefault(engine);
+
   let promiseChanged = TestUtils.topicObserved(
     "browser-search-engine-modified",
     (eng, verb) => verb == "engine-changed"
@@ -67,6 +69,12 @@ add_task(async function basic_install_test() {
 
   params = engine.getSubmission("test").uri.query.split("&");
   Assert.ok(params.includes("version=2.0"), "Correct version installed");
+
+  Assert.equal(
+    Services.search.defaultEngine.name,
+    "Example",
+    "Should have retained the same default engine"
+  );
 
   await extension.unload();
   await promiseAfterSettings();

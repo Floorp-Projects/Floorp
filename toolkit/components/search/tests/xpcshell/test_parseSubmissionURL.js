@@ -13,11 +13,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_parseSubmissionURL() {
-  // Hide the default engines to prevent them from being used in the search.
-  for (let engine of await Services.search.getEngines()) {
-    await Services.search.removeEngine(engine);
-  }
-
   let [engine1, engine2, engine3, engine4] = await addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
     { name: "Test search engine (fr)", xmlFileName: "engine-fr.xml" },
@@ -54,6 +49,13 @@ add_task(async function test_parseSubmissionURL() {
       },
     },
   ]);
+
+  await Services.search.setDefault(engine1);
+
+  // Hide the default engines to prevent them from being used in the search.
+  for (let engine of await Services.search.getAppProvidedEngines()) {
+    await Services.search.removeEngine(engine);
+  }
 
   // Test the first engine, whose URLs use UTF-8 encoding.
   let url = "http://www.google.com/search?foo=bar&q=caff%C3%A8";

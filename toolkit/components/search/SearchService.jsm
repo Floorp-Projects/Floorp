@@ -1919,7 +1919,10 @@ SearchService.prototype = {
     }
 
     if (engineToRemove == this.defaultEngine) {
-      this._currentEngine = null;
+      this._findAndSetNewDefaultEngine({
+        privateMode: false,
+        excludeEngineName: engineToRemove.name,
+      });
     }
 
     // Bug 1575649 - We can't just check the default private engine here when
@@ -1931,7 +1934,10 @@ SearchService.prototype = {
       this._separatePrivateDefault &&
       engineToRemove == this.defaultPrivateEngine
     ) {
-      this._currentPrivateEngine = null;
+      this._findAndSetNewDefaultEngine({
+        privateMode: true,
+        excludeEngineName: engineToRemove.name,
+      });
     }
 
     if (engineToRemove._isAppProvided) {
@@ -2060,6 +2066,77 @@ SearchService.prototype = {
   },
 
   /**
+   * Helper function to find a new default engine and set it. This could
+   * be used if there is not default set yet, or if the current default is
+   * being removed.
+   *
+   * The new default will be chosen from (in order):
+   *
+   * - Existing default from configuration, if it is not hidden.
+   * - The first non-hidden engine.
+   * - If all other engines are hidden, unhide the default from the configuration.
+   *
+   * @param {boolean} privateMode
+   *   If true, returns the default engine for private browsing mode, otherwise
+   *   the default engine for the normal mode. Note, this function does not
+   *   check the "separatePrivateDefault" preference - that is up to the caller.
+   * @param {string} [excludeEngineName]
+   *   Exclude the given engine name from the search for a new engine. This is
+   *   typically used when removing engines to ensure we do not try to reselect
+   *   the same engine again.
+   * @returns {nsISearchEngine|null}
+   *   The appropriate search engine, or null if one could not be determined.
+   */
+  _findAndSetNewDefaultEngine({ privateMode, excludeEngineName = "" }) {
+    const currentEngineProp = privateMode
+      ? "_currentPrivateEngine"
+      : "_currentEngine";
+
+    // First to the original default engine...
+    let newDefault = privateMode
+      ? this.originalPrivateDefaultEngine
+      : this.originalDefaultEngine;
+
+    if (
+      !newDefault ||
+      newDefault.hidden ||
+      newDefault.name == excludeEngineName
+    ) {
+      // then to the first visible engine that isn't excluded...
+      let firstVisible = this._getSortedEngines(false).find(
+        e => e.name != excludeEngineName
+      );
+      if (firstVisible) {
+        newDefault = firstVisible;
+        // and finally as a last resort we unhide the original default engine,
+        // even if the name is the same as the excluded one (should never happen).
+      } else if (newDefault) {
+        if (newDefault.name == excludeEngineName) {
+          logConsole.error(
+            "Could not find an engine to fallback to, using the same engine."
+          );
+        }
+        newDefault.hidden = false;
+      }
+    }
+    if (!newDefault) {
+      return null;
+    }
+
+    // If the current engine wasn't set or was hidden, we used a fallback
+    // to pick a new current engine. As soon as we return it, this new
+    // current engine will become user-visible, so we should persist it.
+    // by calling the setter.
+    if (privateMode) {
+      this.defaultPrivateEngine = newDefault;
+    } else {
+      this.defaultEngine = newDefault;
+    }
+
+    return this[currentEngineProp];
+  },
+
+  /**
    * Helper function to get the current default engine.
    *
    * @param {boolean} privateMode
@@ -2071,68 +2148,39 @@ SearchService.prototype = {
    */
   _getEngineDefault(privateMode) {
     this._ensureInitialized();
-    const currentEngine = privateMode
+    const currentEngineProp = privateMode
       ? "_currentPrivateEngine"
       : "_currentEngine";
-    if (!this[currentEngine]) {
-      const attributeName = privateMode ? "private" : "current";
-      let name = this._settings.getAttribute(attributeName);
-      let engine = this.getEngineByName(name);
-      if (
-        engine &&
-        (engine.isAppProvided ||
-          this._settings.getVerifiedAttribute(attributeName))
-      ) {
-        // If the current engine is a default one, we can relax the
-        // verification hash check to reduce the annoyance for users who
-        // backup/sync their profile in custom ways.
-        this[currentEngine] = engine;
-      }
-      if (!name) {
-        this[currentEngine] = privateMode
-          ? this.originalPrivateDefaultEngine
-          : this.originalDefaultEngine;
-      }
+
+    if (this[currentEngineProp] && !this[currentEngineProp].hidden) {
+      return this[currentEngineProp];
     }
 
-    // If the current engine is not set or hidden, we fallback...
-    if (!this[currentEngine] || this[currentEngine].hidden) {
-      // first to the original default engine
-      let originalDefault = privateMode
+    // No default loaded, so find it from settings.
+    const attributeName = privateMode ? "private" : "current";
+    let name = this._settings.getAttribute(attributeName);
+    let engine = this.getEngineByName(name);
+    if (
+      engine &&
+      (engine.isAppProvided ||
+        this._settings.getVerifiedAttribute(attributeName))
+    ) {
+      // If the current engine is a default one, we can relax the
+      // verification hash check to reduce the annoyance for users who
+      // backup/sync their profile in custom ways.
+      this[currentEngineProp] = engine;
+    }
+    if (!name) {
+      this[currentEngineProp] = privateMode
         ? this.originalPrivateDefaultEngine
         : this.originalDefaultEngine;
-      if (!originalDefault || originalDefault.hidden) {
-        // then to the first visible engine
-        let firstVisible = this._getSortedEngines(false)[0];
-        if (firstVisible && !firstVisible.hidden) {
-          if (privateMode) {
-            this.defaultPrivateEngine = firstVisible;
-          } else {
-            this.defaultEngine = firstVisible;
-          }
-          return firstVisible;
-        }
-        // and finally as a last resort we unhide the original default engine.
-        if (originalDefault) {
-          originalDefault.hidden = false;
-        }
-      }
-      if (!originalDefault) {
-        return null;
-      }
-
-      // If the current engine wasn't set or was hidden, we used a fallback
-      // to pick a new current engine. As soon as we return it, this new
-      // current engine will become user-visible, so we should persist it.
-      // by calling the setter.
-      if (privateMode) {
-        this.defaultPrivateEngine = originalDefault;
-      } else {
-        this.defaultEngine = originalDefault;
-      }
     }
 
-    return this[currentEngine];
+    if (this[currentEngineProp] && !this[currentEngineProp].hidden) {
+      return this[currentEngineProp];
+    }
+    // No default in settings or it is hidden, so find the new default.
+    return this._findAndSetNewDefaultEngine({ privateMode });
   },
 
   /**

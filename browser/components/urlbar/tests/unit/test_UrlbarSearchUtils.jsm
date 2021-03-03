@@ -52,6 +52,7 @@ add_task(async function hide_search_engine_nomatch() {
     await UrlbarSearchUtils.enginesForDomainPrefix(token)
   )[0];
   Assert.ok(matchedEngine2);
+  await Services.search.setDefault(engine);
 });
 
 add_task(async function onlyEnabled_option_nomatch() {
@@ -62,16 +63,12 @@ add_task(async function onlyEnabled_option_nomatch() {
   let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
     onlyEnabled: true,
   });
-  Assert.ok(
-    !matchedEngines.length || matchedEngines[0].getResultDomain() != domain
-  );
+  Assert.notEqual(matchedEngines[0].getResultDomain(), domain);
   Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
   matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
     onlyEnabled: true,
   });
-  Assert.ok(
-    matchedEngines.length && matchedEngines[0].getResultDomain() == domain
-  );
+  Assert.equal(matchedEngines[0].getResultDomain(), domain);
 });
 
 add_task(async function add_search_engine_match() {
