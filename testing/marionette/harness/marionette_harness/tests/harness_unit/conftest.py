@@ -102,7 +102,7 @@ def mock_httpd(request):
 @pytest.fixture
 def mock_marionette(request):
     """ Mock marionette instance """
-    marionette = MagicMock(spec=Marionette())
+    marionette = MagicMock(spec=dir(Marionette()))
     if "has_crashed" in request.funcargnames:
         marionette.check_for_crash.return_value = request.getfuncargvalue("has_crashed")
     return marionette
