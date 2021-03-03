@@ -1369,9 +1369,10 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     if (status != PR_SUCCESS)
         return SECFailure;
 
-    /* Not all tokens have profile objects or even recognize what profile
-     * objects are it's OK for pk11_ReadProfileList to fail */
-    (void)pk11_ReadProfileList(slot);
+    rv = pk11_ReadProfileList(slot);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
 
     if (!(slot->isInternal) && (slot->hasRandom)) {
         /* if this slot has a random number generater, use it to add entropy
