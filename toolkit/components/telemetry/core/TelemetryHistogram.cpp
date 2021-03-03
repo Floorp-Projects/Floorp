@@ -1094,7 +1094,7 @@ nsresult internal_ReflectKeyedHistogram(
     const KeyedHistogramSnapshotData& aSnapshot, const HistogramInfo& info,
     JSContext* aCx, JS::Handle<JSObject*> aObj) {
   for (auto iter = aSnapshot.ConstIter(); !iter.Done(); iter.Next()) {
-    HistogramSnapshotData& keyData = iter.Data();
+    const HistogramSnapshotData& keyData = iter.Data();
 
     JS::RootedObject histogramSnapshot(aCx, JS_NewPlainObject(aCx));
     if (!histogramSnapshot) {
@@ -3264,7 +3264,7 @@ nsresult TelemetryHistogram::SerializeKeyedHistograms(
 
       // Each key is a new object with a "sum" and a "counts" property.
       for (auto iter = hData.data.ConstIter(); !iter.Done(); iter.Next()) {
-        HistogramSnapshotData& keyData = iter.Data();
+        const HistogramSnapshotData& keyData = iter.Data();
         aWriter.StartObjectProperty(PromiseFlatCString(iter.Key()));
         internal_ReflectHistogramToJSON(keyData, aWriter);
         aWriter.EndObject();
