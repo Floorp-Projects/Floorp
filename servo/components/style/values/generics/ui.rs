@@ -61,14 +61,15 @@ impl<Image: ToCss> ToCss for Cursor<Image> {
     Debug,
     MallocSizeOf,
     PartialEq,
+    SpecifiedValueInfo,
     ToComputedValue,
     ToResolvedValue,
     ToShmem,
 )]
 #[repr(C)]
-pub struct GenericCursorImage<Image, Number> {
+pub struct GenericCursorImage<ImageUrl, Number> {
     /// The url to parse images from.
-    pub image: Image,
+    pub url: ImageUrl,
     /// Whether the image has a hotspot or not.
     pub has_hotspot: bool,
     /// The x coordinate.
@@ -79,12 +80,12 @@ pub struct GenericCursorImage<Image, Number> {
 
 pub use self::GenericCursorImage as CursorImage;
 
-impl<Image: ToCss, Number: ToCss> ToCss for CursorImage<Image, Number> {
+impl<ImageUrl: ToCss, Number: ToCss> ToCss for CursorImage<ImageUrl, Number> {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: Write,
     {
-        self.image.to_css(dest)?;
+        self.url.to_css(dest)?;
         if self.has_hotspot {
             dest.write_str(" ")?;
             self.hotspot_x.to_css(dest)?;
