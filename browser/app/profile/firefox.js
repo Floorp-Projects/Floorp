@@ -336,10 +336,6 @@ pref("browser.urlbar.suggest.quicksuggest",         true);
 // Whether the QuickSuggest experiment is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);
 
-// How many times to show the QuickSuggest onboarding help button.
-pref("browser.urlbar.quicksuggest.onboardingCount", 0);
-pref("browser.urlbar.quicksuggest.onboardingMaxCount", 5);
-
 // Whether to show search suggestions before general results like history and
 // bookmarks.
 pref("browser.urlbar.showSearchSuggestionsFirst", true);
