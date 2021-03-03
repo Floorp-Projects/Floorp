@@ -73,13 +73,12 @@ const url = new window.URL(href);
 // is running in standalone.
 if (window.location.protocol === "chrome:" && url.search.length > 1) {
   const {
-    descriptorFromURL,
-  } = require("devtools/client/framework/descriptor-from-url");
+    targetFromURL,
+  } = require("devtools/client/framework/target-from-url");
 
   (async function() {
     try {
-      const descriptor = await descriptorFromURL(url);
-      const target = await descriptor.getTarget();
+      const target = await targetFromURL(url);
       // Create a fake toolbox object
       const toolbox = {
         target,
