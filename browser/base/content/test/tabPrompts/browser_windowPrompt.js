@@ -24,6 +24,10 @@ add_task(async function test_check_window_modal_prompt_service() {
     "Some title",
     "Title should be correct."
   );
+  ok(
+    !dialogWin.document.getElementById("infoTitle").hidden,
+    "Title should be shown."
+  );
   is(
     dialogWin.document.getElementById("infoBody").textContent,
     "some message",

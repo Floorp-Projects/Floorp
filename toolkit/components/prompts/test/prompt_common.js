@@ -21,6 +21,10 @@ var tabSubDialogsEnabled = SpecialPowers.Services.prefs.getBoolPref(
   "prompts.tabChromePromptSubDialog",
   false
 );
+var contentSubDialogsEnabled = SpecialPowers.Services.prefs.getBoolPref(
+  "prompts.contentPromptSubDialog",
+  false
+);
 var isSelectDialog = false;
 var isOSX = "nsILocalFileMac" in SpecialPowers.Ci;
 var isE10S = SpecialPowers.Services.appinfo.processType == 2;
@@ -196,12 +200,22 @@ function checkPromptState(promptState, expectedState) {
   info(`checkPromptState: Expected: ${expectedState.msg}`);
   // XXX check title? OS X has title in content
   is(promptState.msg, expectedState.msg, "Checking expected message");
-  if (
+
+  // OS X: We don't show the title on prompts opened with tab modal prompt.
+  let isOldContentPromptOnOSX =
     isOSX &&
-    (modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW ||
+    contentSubDialogsEnabled &&
+    modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT;
+
+  if (
+    !isOldContentPromptOnOSX &&
+    (isOSX ||
       (tabSubDialogsEnabled && modalType === Ci.nsIPrompt.MODAL_TYPE_TAB))
   ) {
-    ok(!promptState.titleHidden, "Checking title always visible on OS X");
+    ok(
+      !promptState.titleHidden,
+      "Checking title always visible on OS X or when opened with tabdialog"
+    );
   } else {
     is(
       promptState.titleHidden,
