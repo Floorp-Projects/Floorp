@@ -711,6 +711,16 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
+    if (
+      urlOverride &&
+      result.type != UrlbarUtils.RESULT_TYPE.TIP &&
+      where == "current"
+    ) {
+      // Open non-tip help links in a new tab unless the user held a modifier.
+      // TODO (bug 1696232): Do this for tip help links, too.
+      where = "tab";
+    }
+
     let selIndex = result.rowIndex;
     if (!result.payload.providesSearchMode) {
       this.view.close(/* elementPicked */ true);
