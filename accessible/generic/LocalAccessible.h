@@ -295,11 +295,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual mozilla::a11y::GroupPos GroupPosition();
 
   /**
-   * Used by ChildAtPoint() method to get direct or deepest child at point.
-   */
-  enum EWhichChildAtPoint { eDirectChild, eDeepestChild };
-
-  /**
    * Return direct or deepest child at the given point.
    *
    * @param  aX           [in] x coordinate relative screen

@@ -56,6 +56,11 @@ class Accessible {
   }
 
   /**
+   * Used by ChildAtPoint() method to get direct or deepest child at point.
+   */
+  enum class EWhichChildAtPoint { DirectChild, DeepestChild };
+
+  /**
    * Return ARIA role map if any.
    */
   const nsRoleMapEntry* ARIARoleMap() const;

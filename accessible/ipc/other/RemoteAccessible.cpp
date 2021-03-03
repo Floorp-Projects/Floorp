@@ -819,7 +819,7 @@ RemoteAccessible* RemoteAccessible::ChildAtPoint(
       if (childDoc->IsTopLevelInContentProcess()) {
         // This is an OOP iframe. Remote calls can only work within their
         // process, so they stop at OOP iframes.
-        if (aWhichChild == LocalAccessible::eDirectChild) {
+        if (aWhichChild == Accessible::EWhichChildAtPoint::DirectChild) {
           // Return the child document if it's within the bounds of the iframe.
           nsIntRect docRect = target->Bounds();
           if (docRect.Contains(aX, aY)) {
@@ -840,7 +840,7 @@ RemoteAccessible* RemoteAccessible::ChildAtPoint(
     auto useDoc = static_cast<DocAccessibleParent*>(resultDoc);
     target = resultDoc ? useDoc->GetAccessible(resultID) : nullptr;
   } while (target && target->mOuterDoc &&
-           aWhichChild == LocalAccessible::eDeepestChild);
+           aWhichChild == Accessible::EWhichChildAtPoint::DeepestChild);
   return target;
 }
 

@@ -88,7 +88,7 @@ LocalAccessible* OuterDocAccessible::ChildAtPoint(
   LocalAccessible* child = LocalChildAt(0);
   NS_ENSURE_TRUE(child, nullptr);
 
-  if (aWhichChild == eDeepestChild) {
+  if (aWhichChild == Accessible::EWhichChildAtPoint::DeepestChild) {
 #if defined(XP_WIN)
     // On Windows, OuterDocAccessible::GetChildAt can return a proxy wrapper
     // for a remote document. These aren't real Accessibles and
@@ -96,7 +96,8 @@ LocalAccessible* OuterDocAccessible::ChildAtPoint(
     // eDeepestChild). Calling ChildAtPoint on these will crash!
     return nullptr;
 #else
-    return child->ChildAtPoint(aX, aY, eDeepestChild);
+    return child->ChildAtPoint(aX, aY,
+                               Accessible::EWhichChildAtPoint::DeepestChild);
 #endif  // defined(XP_WIN)
   }
   return child;
