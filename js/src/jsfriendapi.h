@@ -594,17 +594,13 @@ static MOZ_ALWAYS_INLINE void SET_JITINFO(JSFunction* func,
 
 // All strings stored in jsids are atomized, but are not necessarily property
 // names.
-static MOZ_ALWAYS_INLINE bool JSID_IS_ATOM(jsid id) {
-  return JSID_IS_STRING(id);
-}
+static MOZ_ALWAYS_INLINE bool JSID_IS_ATOM(jsid id) { return id.isAtom(); }
 
 static MOZ_ALWAYS_INLINE bool JSID_IS_ATOM(jsid id, JSAtom* atom) {
-  return id == JS::PropertyKey::fromNonIntAtom(atom);
+  return id.isAtom(atom);
 }
 
-static MOZ_ALWAYS_INLINE JSAtom* JSID_TO_ATOM(jsid id) {
-  return (JSAtom*)JSID_TO_STRING(id);
-}
+static MOZ_ALWAYS_INLINE JSAtom* JSID_TO_ATOM(jsid id) { return id.toAtom(); }
 
 static_assert(sizeof(jsid) == sizeof(void*));
 
