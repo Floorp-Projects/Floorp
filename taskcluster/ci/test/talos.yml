@@ -46,9 +46,12 @@ job-defaults:
                     (linux|windows10|macos)(?!.*shippable).*: []
                     default: ['mozilla-beta', 'trunk']
     fission-run-on-projects:
-        by-test-platform:
-            (linux64|windows10-64|macosx1014-64)-shippable-qr/opt: ['mozilla-central']
-            default: []
+        by-test-name:
+            talos-.*-profiling: []
+            default:
+                by-test-platform:
+                    (linux64|windows10-64|macosx1014-64)-shippable-qr/opt: ['mozilla-central']
+                    default: []
 
 talos-bcv:
     description: "Talos basic compositor video"
