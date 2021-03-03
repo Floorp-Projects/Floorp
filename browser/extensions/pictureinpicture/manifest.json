@@ -1,0 +1,48 @@
+{
+    "manifest_version": 2,
+    "name": "Picture-In-Picture",
+    "description": "Fixes for web compatibility with Picture-in-Picture",
+    "version": "1.0.0",
+  
+    "applications": {
+      "gecko": {
+        "id": "pictureinpicture@mozilla.org",
+        "strict_min_version": "88.0a1"
+      }
+    },
+  
+    "experiment_apis": {
+      "aboutConfigPipPrefs": {
+        "schema": "experiment-apis/aboutConfigPipPrefs.json",
+        "parent": {
+          "scopes": ["addon_parent"],
+          "script": "experiment-apis/aboutConfigPipPrefs.js",
+          "paths": [["aboutConfigPipPrefs"]]
+        }
+      },
+      "pictureInPictureChild": {
+        "schema": "experiment-apis/pictureInPicture.json",
+        "child": {
+          "scopes": ["addon_child"],
+          "script": "experiment-apis/pictureInPicture.js",
+          "paths": [["pictureInPictureChild"]]
+        }
+      },
+      "pictureInPictureParent": {
+        "schema": "experiment-apis/pictureInPicture.json",
+        "parent": {
+          "scopes": ["addon_parent"],
+          "script": "experiment-apis/pictureInPicture.js",
+          "paths": [["pictureInPictureParent"]]
+        }
+      }
+    },
+  
+    "background": {
+      "scripts": [
+        "data/picture_in_picture_overrides.js",
+        "lib/picture_in_picture_overrides.js",
+        "run.js"
+      ]
+    }
+  }
