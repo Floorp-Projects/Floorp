@@ -62,6 +62,9 @@ class OuterDocAccessible final : public AccessibleWrap {
   virtual LocalAccessible* LocalChildAt(uint32_t aIndex) const override;
 #endif  // defined(XP_WIN)
 
+  // Accessible
+  virtual Accessible* ChildAt(uint32_t aIndex) const override;
+
  protected:
   virtual ~OuterDocAccessible() override;
 };

@@ -237,9 +237,29 @@ LocalAccessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
 
 #endif  // defined(XP_WIN)
 
+Accessible* OuterDocAccessible::ChildAt(uint32_t aIndex) const {
+  LocalAccessible* result = AccessibleWrap::LocalChildAt(aIndex);
+  if (result || aIndex) {
+#if defined(XP_WIN)
+    // On Windows, AccessibleWrap::LocalChildAt can return a proxy wrapper
+    // for a remote document. These aren't real Accessibles so we skip this
+    // block and retrieve the remote child doc.
+    if (!result || !result->IsProxy()) {
+      return result;
+    }
+#else
+    return result;
+#endif  // defined(XP_WIN)
+  }
+
+  return RemoteChildDoc();
+}
+
 DocAccessibleParent* OuterDocAccessible::RemoteChildDoc() const {
   dom::BrowserParent* tab = dom::BrowserParent::GetFrom(GetContent());
-  if (!tab) return nullptr;
+  if (!tab) {
+    return nullptr;
+  }
 
   return tab->GetTopLevelDocAccessible();
 }
