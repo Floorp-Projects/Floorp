@@ -7500,7 +7500,7 @@ var IndexedDBPromptHelper = {
     var message;
     var responseTopic;
     if (topic == this._permissionsPrompt) {
-      message = gNavigatorBundle.getFormattedString("offlineApps.available2", [
+      message = gNavigatorBundle.getFormattedString("offlineApps.available3", [
         host,
       ]);
       responseTopic = this._permissionsResponse;
@@ -7509,10 +7509,8 @@ var IndexedDBPromptHelper = {
     var observer = request.responseObserver;
 
     var mainAction = {
-      label: gNavigatorBundle.getString("offlineApps.allowStoring.label"),
-      accessKey: gNavigatorBundle.getString(
-        "offlineApps.allowStoring.accesskey"
-      ),
+      label: gNavigatorBundle.getString("offlineApps.allow.label"),
+      accessKey: gNavigatorBundle.getString("offlineApps.allow.accesskey"),
       callback() {
         observer.observe(
           null,
@@ -7524,10 +7522,8 @@ var IndexedDBPromptHelper = {
 
     var secondaryActions = [
       {
-        label: gNavigatorBundle.getString("offlineApps.dontAllow.label"),
-        accessKey: gNavigatorBundle.getString(
-          "offlineApps.dontAllow.accesskey"
-        ),
+        label: gNavigatorBundle.getString("offlineApps.block.label"),
+        accessKey: gNavigatorBundle.getString("offlineApps.block.accesskey"),
         callback() {
           observer.observe(
             null,
