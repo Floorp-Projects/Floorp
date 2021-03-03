@@ -472,6 +472,8 @@ class Connection final : public mozIStorageConnection,
   const ConnectionOperation mSupportedOperations;
 
   nsresult synchronousClose();
+
+  uint32_t mTransactionNestingLevel;
 };
 
 /**

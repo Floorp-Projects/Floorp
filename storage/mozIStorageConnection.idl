@@ -7,17 +7,20 @@
 #include "mozIStorageAsyncConnection.idl"
 
 %{C++
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 class QuotaObject;
 }
-}
+
+namespace mozilla::storage {
+class SQLiteMutex;
+class SQLiteMutexAutoLock;
 }
 
 %}
 
 [ptr] native QuotaObject(mozilla::dom::quota::QuotaObject);
+native SQLiteMutex(mozilla::storage::SQLiteMutex&);
+native SQLiteMutexAutoLock(const mozilla::storage::SQLiteMutexAutoLock&);
 
 interface mozIStorageAggregateFunction;
 interface mozIStorageCompletionCallback;
@@ -41,7 +44,7 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(4aa2ac47-8d24-4004-9b31-ec0bd85f0cc3)]
+[scriptable, builtinclass, uuid(4aa2ac47-8d24-4004-9b31-ec0bd85f0cc3)]
 interface mozIStorageConnection : mozIStorageAsyncConnection {
   /**
    * Closes a database connection.  Callers must finalize all statements created
@@ -256,4 +259,25 @@ interface mozIStorageConnection : mozIStorageAsyncConnection {
    */
   [noscript] void getQuotaObjects(out QuotaObject aDatabaseQuotaObject,
                                   out QuotaObject aJournalQuotaObject);
+
+  /**
+   * The mutex used for protection of operations (BEGIN/COMMIT/ROLLBACK) in
+   * mozStorageTransaction. The lock must be held in a way that spans whole
+   * operation, not just when accessing the nesting level.
+   */
+  [notxpcom, nostdcall] readonly attribute SQLiteMutex sharedDBMutex;
+
+  /**
+   * Helper methods for managing the transaction nesting level. The methods
+   * must be called with a proof of lock. Currently only used by
+   * mozStorageTransaction.
+   */
+  [notxpcom, nostdcall] unsigned long getTransactionNestingLevel(
+      in SQLiteMutexAutoLock aProofOfLock);
+
+  [notxpcom, nostdcall] unsigned long increaseTransactionNestingLevel(
+      in SQLiteMutexAutoLock aProofOfLock);
+
+  [notxpcom, nostdcall] unsigned long decreaseTransactionNestingLevel(
+      in SQLiteMutexAutoLock aProofOfLock);
 };

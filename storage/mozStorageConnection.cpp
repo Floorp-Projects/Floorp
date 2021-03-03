@@ -444,7 +444,8 @@ Connection::Connection(Service* aService, int aFlags,
       mFlags(aFlags),
       mIgnoreLockingMode(aIgnoreLockingMode),
       mStorageService(aService),
-      mSupportedOperations(aSupportedOperations) {
+      mSupportedOperations(aSupportedOperations),
+      mTransactionNestingLevel(0) {
   MOZ_ASSERT(!mIgnoreLockingMode || mFlags & SQLITE_OPEN_READONLY,
              "Can't ignore locking for a non-readonly connection!");
   mStorageService->registerConnection(this);
@@ -2342,6 +2343,23 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
   databaseQuotaObject.forget(aDatabaseQuotaObject);
   journalQuotaObject.forget(aJournalQuotaObject);
   return NS_OK;
+}
+
+SQLiteMutex& Connection::GetSharedDBMutex() { return sharedDBMutex; }
+
+uint32_t Connection::GetTransactionNestingLevel(
+    const mozilla::storage::SQLiteMutexAutoLock& aProofOfLock) {
+  return mTransactionNestingLevel;
+}
+
+uint32_t Connection::IncreaseTransactionNestingLevel(
+    const mozilla::storage::SQLiteMutexAutoLock& aProofOfLock) {
+  return ++mTransactionNestingLevel;
+}
+
+uint32_t Connection::DecreaseTransactionNestingLevel(
+    const mozilla::storage::SQLiteMutexAutoLock& aProofOfLock) {
+  return --mTransactionNestingLevel;
 }
 
 }  // namespace mozilla::storage
