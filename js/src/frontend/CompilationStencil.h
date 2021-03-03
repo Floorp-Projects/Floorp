@@ -389,9 +389,13 @@ struct SharedDataContainer {
 
   ~SharedDataContainer();
 
-  bool initVector(JSContext* cx);
-  bool initMap(JSContext* cx);
+  [[nodiscard]] bool initVector(JSContext* cx);
+  [[nodiscard]] bool initMap(JSContext* cx);
 
+ private:
+  [[nodiscard]] bool convertFromSingleToMap(JSContext* cx);
+
+ public:
   bool isEmpty() const { return (data_) == SingleTag; }
   bool isSingle() const { return (data_ & TagMask) == SingleTag; }
   bool isVector() const { return (data_ & TagMask) == VectorTag; }
@@ -430,15 +434,22 @@ struct SharedDataContainer {
     return reinterpret_cast<SharedDataContainer*>(data_ & ~TagMask);
   }
 
-  bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
-                         size_t allScriptCount);
+  [[nodiscard]] bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
+                                       size_t allScriptCount);
 
   // Returns index-th script's shared data, or nullptr if it doesn't have.
   js::SharedImmutableScriptData* get(ScriptIndex index) const;
 
   // Add data for index-th script and share it with VM.
-  bool addAndShare(JSContext* cx, ScriptIndex index,
-                   js::SharedImmutableScriptData* data);
+  [[nodiscard]] bool addAndShare(JSContext* cx, ScriptIndex index,
+                                 js::SharedImmutableScriptData* data);
+
+  // Add data for index-th script without sharing it with VM.
+  // The data should already be shared with VM.
+  //
+  // The data is supposed to be added from delazification.
+  [[nodiscard]] bool addExtraWithoutShare(JSContext* cx, ScriptIndex index,
+                                          js::SharedImmutableScriptData* data);
 
   // Dynamic memory associated with this container. Does not include the
   // SharedImmutableScriptData since we are not the unique owner of it.
@@ -1040,6 +1051,52 @@ inline ScriptStencilIterable CompilationStencil::functionScriptStencils(
     const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   return ScriptStencilIterable(stencil, gcOutput);
 }
+
+// Merge ExtensibleCompilationStencil for delazification into initial
+// ExtensibleCompilationStencil.
+struct CompilationStencilMerger {
+ private:
+  using FunctionKey = ExtensibleCompilationStencil::FunctionKey;
+
+  // The stencil for the initial compilation.
+  // Delazifications are merged into this.
+  //
+  // If any failure happens during merge operation, this field is reset to
+  // nullptr.
+  UniquePtr<ExtensibleCompilationStencil> initial_;
+
+  // A Map from function key to the ScriptIndex in the initial stencil.
+  using FunctionKeyToScriptIndexMap =
+      HashMap<FunctionKey, ScriptIndex, mozilla::DefaultHasher<FunctionKey>,
+              js::SystemAllocPolicy>;
+  FunctionKeyToScriptIndexMap functionKeyToInitialScriptIndex_;
+
+  [[nodiscard]] bool buildFunctionKeyToIndex(JSContext* cx);
+
+  ScriptIndex getInitialScriptIndexFor(
+      const ExtensibleCompilationStencil& delazification) const;
+
+  // A map from delazification's ParserAtomIndex to
+  // initial's TaggedParserAtomIndex
+  using AtomIndexMap = Vector<TaggedParserAtomIndex, 0, js::SystemAllocPolicy>;
+
+  [[nodiscard]] bool buildAtomIndexMap(
+      JSContext* cx, const ExtensibleCompilationStencil& delazification,
+      AtomIndexMap& atomIndexMap);
+
+ public:
+  CompilationStencilMerger() = default;
+
+  // Set the initial stencil and prepare for merging.
+  [[nodiscard]] bool setInitial(
+      JSContext* cx, UniquePtr<ExtensibleCompilationStencil>&& initial);
+
+  // Merge the delazification stencil into the initial stencil.
+  [[nodiscard]] bool addDelazification(
+      JSContext* cx, const ExtensibleCompilationStencil& delazification);
+
+  ExtensibleCompilationStencil& getResult() const { return *initial_; }
+};
 
 }  // namespace frontend
 }  // namespace js
