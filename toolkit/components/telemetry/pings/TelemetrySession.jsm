@@ -315,6 +315,10 @@ var TelemetrySession = Object.freeze({
   sendDailyPing() {
     return Impl._sendDailyPing();
   },
+
+  testOnEnvironmentChange(...args) {
+    return Impl._onEnvironmentChange(...args);
+  },
 });
 
 var Impl = {
