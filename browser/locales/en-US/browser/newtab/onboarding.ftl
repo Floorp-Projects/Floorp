@@ -61,7 +61,7 @@ onboarding-welcome-steps-indicator =
 # automatically added to the text inside it. "look" should stay inside the span.
 onboarding-multistage-theme-header = Choose a <span data-l10n-name="zap">look</span>
 onboarding-multistage-theme-subtitle = Personalize { -brand-short-name } with a theme.
-onboarding-multistage-theme-primary-button-label = Save Theme
+onboarding-multistage-theme-primary-button-label2 = Done
 onboarding-multistage-theme-secondary-button-label = Not now
 
 # Automatic theme uses operating system color settings

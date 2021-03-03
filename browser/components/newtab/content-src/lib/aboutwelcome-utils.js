@@ -221,7 +221,7 @@ export const DEFAULT_WELCOME_CONTENT = {
         },
         primary_button: {
           label: {
-            string_id: "onboarding-multistage-theme-primary-button-label",
+            string_id: "onboarding-multistage-theme-primary-button-label2",
           },
           action: {
             navigate: true,
