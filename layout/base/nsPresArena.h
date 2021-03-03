@@ -17,7 +17,6 @@
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
 #include "nscore.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"

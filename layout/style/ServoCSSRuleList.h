@@ -11,7 +11,6 @@
 
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/dom/CSSRuleList.h"
-#include "nsDataHashtable.h"
 
 namespace mozilla {
 

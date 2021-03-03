@@ -8,7 +8,6 @@
 #define mozilla_net_CookieJarSettings_h
 
 #include "nsICookieJarSettings.h"
-#include "nsDataHashtable.h"
 #include "nsTArray.h"
 
 #define COOKIEJARSETTINGS_CONTRACTID "@mozilla.org/cookieJarSettings;1"

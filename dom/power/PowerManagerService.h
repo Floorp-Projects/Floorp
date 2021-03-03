@@ -7,7 +7,6 @@
 #define mozilla_dom_power_PowerManagerService_h
 
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsIDOMWakeLockListener.h"

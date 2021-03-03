@@ -14,7 +14,6 @@
 #include "mozilla/dom/DeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/HalSensor.h"
-#include "nsDataHashtable.h"
 
 class nsIDOMWindow;
 
