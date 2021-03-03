@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/GamepadEventChannelParent.h"
 #include "mozilla/dom/GamepadMonitoring.h"
+#include "mozilla/dom/GamepadStateBroadcastReceiverInfo.h"
 #include "mozilla/dom/GamepadTestChannelParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Mutex.h"
@@ -81,7 +82,8 @@ void GamepadMonitoringState::Set(bool aIsMonitoring) {
 
 GamepadPlatformService::GamepadPlatformService()
     : mNextGamepadHandleValue(1),
-      mMutex("mozilla::dom::GamepadPlatformService") {}
+      mMutex("mozilla::dom::GamepadPlatformService"),
+      mMaybeGamepadStateBroadcaster(GamepadStateBroadcaster::Create()) {}
 
 GamepadPlatformService::~GamepadPlatformService() { Cleanup(); }
 
@@ -255,6 +257,15 @@ void GamepadPlatformService::AddChannelParent(
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(!mChannelParents.Contains(aParent));
 
+  // If we have working shared memory, attempt to set that up with the
+  // remote process
+  GamepadStateBroadcastReceiverInfo receiverInfo{};
+  if (mMaybeGamepadStateBroadcaster &&
+      mMaybeGamepadStateBroadcaster->AddReceiverAndGenerateRemoteInfo(
+          aParent, &receiverInfo)) {
+    Unused << aParent->SendSetupSharedMemory(receiverInfo);
+  }
+
   // We use mutex here to prevent race condition with monitor thread
   {
     MutexAutoLock autoLock(mMutex);
@@ -296,6 +307,11 @@ void GamepadPlatformService::RemoveChannelParent(
   GamepadMonitoringState::GetSingleton().Set(false);
 
   StopGamepadMonitoring();
+
+  if (mMaybeGamepadStateBroadcaster) {
+    mMaybeGamepadStateBroadcaster->RemoveReceiver(aParent);
+  }
+
   ResetGamepadIndexes();
   MaybeShutdown();
 }
