@@ -77,6 +77,7 @@ class TabDrawerRobot {
     fun verifyPrivateModeSelected() = assertPrivateModeSelected()
     fun verifyNormalModeSelected() = assertNormalModeSelected()
     fun verifyNewTabButton() = assertNewTabButton()
+    fun verifySelectTabsButton() = assertSelectTabsButton()
     fun verifyTabTrayOverflowMenu(visibility: Boolean) = assertTabTrayOverflowButton(visibility)
 
     fun verifyTabTrayIsClosed() = assertTabTrayDoesNotExist()
@@ -389,6 +390,10 @@ private fun assertNoTabsOpenedText() =
 
 private fun assertNewTabButton() =
     onView(withId(R.id.new_tab_button))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun assertSelectTabsButton() =
+    onView(withText("Select tabs"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertNormalModeSelected() =

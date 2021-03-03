@@ -1056,6 +1056,33 @@ class SmokeTest {
     }
 
     @Test
+    fun selectTabsButtonVisibilityTest() {
+        homeScreen {
+        }.dismissOnboarding()
+
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+        }.toggleToPrivateTabs {
+        }.openNewTab {
+        }.dismissSearchBar { }
+
+        homeScreen {
+        }.openTabDrawer {
+        }.toggleToNormalTabs {
+            verifySelectTabsButton()
+        }
+    }
+
+    @Test
     fun privateTabsTrayWithOpenedTabTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 

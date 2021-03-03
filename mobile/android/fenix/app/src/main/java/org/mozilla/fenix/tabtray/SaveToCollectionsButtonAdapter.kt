@@ -23,7 +23,7 @@ import org.mozilla.fenix.tabtray.SaveToCollectionsButtonAdapter.ViewHolder
  */
 class SaveToCollectionsButtonAdapter(
     private val interactor: TabTrayInteractor,
-    private val isPrivate: Boolean = false
+    private val isPrivate: () -> Boolean = { false }
 ) : ListAdapter<Item, ViewHolder>(DiffCallback) {
 
     init {
@@ -66,7 +66,7 @@ class SaveToCollectionsButtonAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.itemView.isVisible = !isPrivate &&
+        holder.itemView.isVisible = !isPrivate() &&
                 interactor.onModeRequested() is TabTrayDialogFragmentState.Mode.Normal
     }
 

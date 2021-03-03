@@ -92,7 +92,8 @@ class TabTrayView(
     private var multiselectMenu: BrowserMenu? = null
 
     private var tabsTouchHelper: TabsTouchHelper
-    private val collectionsButtonAdapter = SaveToCollectionsButtonAdapter(interactor, isPrivate)
+    private val collectionsButtonAdapter =
+        SaveToCollectionsButtonAdapter(interactor) { isPrivateModeSelected }
 
     private var hasLoaded = false
 
