@@ -4,6 +4,7 @@
 include protocol PBackground;
 include "mozilla/dom/GamepadMessageUtils.h";
 include GamepadEventTypes;
+include GamepadStateBroadcastReceiverInfo;
 
 using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
 
@@ -22,6 +23,7 @@ refcounted protocol PGamepadEventChannel {
                                         uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint32_t aPromiseID);
 
   child:
+    async SetupSharedMemory(GamepadStateBroadcastReceiverInfo aReceiverInfo);
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
     async ReplyGamepadPromise(uint32_t aPromiseID);
 };
