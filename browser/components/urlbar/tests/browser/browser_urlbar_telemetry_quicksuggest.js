@@ -11,6 +11,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
@@ -59,7 +61,6 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [EXPERIMENT_PREF, true],
-      ["browser.urlbar.quicksuggest.helpURL", TEST_HELP_URL],
       ["browser.urlbar.suggest.searches", true],
     ],
   });
@@ -75,6 +76,8 @@ add_task(async function init() {
   await UrlbarQuickSuggest.init();
   await UrlbarQuickSuggest._processSuggestionsJSON(TEST_DATA);
 
+  UrlbarProviderQuickSuggest._helpUrl = TEST_HELP_URL;
+
   // Enable local telemetry recording for the duration of the test.
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
@@ -86,6 +89,7 @@ add_task(async function init() {
     Services.search.setDefault(oldDefaultEngine);
     await Services.search.removeEngine(engine);
     Services.telemetry.canRecordExtended = oldCanRecord;
+    delete UrlbarProviderQuickSuggest._helpUrl;
   });
 });
 
