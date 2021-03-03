@@ -363,13 +363,18 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   mExtraData->AppendElements(*aConfig.mExtraData);
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
-  mUseDMABufSurfaces = widget::GetDMABufDevice()->IsDMABufVAAPIEnabled() &&
-                       mImageAllocator &&
-                       (mImageAllocator->GetCompositorBackendType() ==
-                        layers::LayersBackend::LAYERS_WR);
-
+  mUseDMABufSurfaces = widget::GetDMABufDevice()->IsDMABufVAAPIEnabled();
   if (!mUseDMABufSurfaces) {
-    FFMPEG_LOG("DMA-Buf/VA-API can't be used, WebRender/DMA-Buf is disabled");
+    FFMPEG_LOG("DMABuf/VA-API is disabled.");
+  }
+
+  if (mUseDMABufSurfaces) {
+    mUseDMABufSurfaces =
+        mImageAllocator && (mImageAllocator->GetCompositorBackendType() ==
+                            layers::LayersBackend::LAYERS_WR);
+    if (!mUseDMABufSurfaces) {
+      FFMPEG_LOG("WebRender is disabled.");
+    }
   }
 #endif
 }

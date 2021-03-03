@@ -230,7 +230,7 @@ bool nsDMABufDevice::Configure() {
     return false;
   }
 
-  LOGDMABUF(("GBM device initialized"));
+  LOGDMABUF(("DMABuf is enabled, using drm node %s", drm_render_node.get()));
   return true;
 }
 
@@ -248,6 +248,13 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() {
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
+  LOGDMABUF(
+      ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d DMABufEnabled %d  "
+       "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d "
+       "!XRE_IsRDDProcess %d\n",
+       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
+       StaticPrefs::media_ffmpeg_vaapi_enabled(),
+       gfx::gfxVars::CanUseHardwareVideoDecoding(), !XRE_IsRDDProcess()));
   return gfx::gfxVars::UseEGL() && IsDMABufEnabled() &&
          StaticPrefs::media_ffmpeg_vaapi_enabled() &&
          gfx::gfxVars::CanUseHardwareVideoDecoding() && !XRE_IsRDDProcess();
