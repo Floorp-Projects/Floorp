@@ -255,8 +255,11 @@ async function doPickTest({ pickHelpButton, useKeyboard }) {
     }
 
     // Pick the result.  The appropriate URL should load.
+    let loadPromise = pickHelpButton
+      ? BrowserTestUtils.waitForNewTab(gBrowser)
+      : BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     await Promise.all([
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser),
+      loadPromise,
       UrlbarTestUtils.promisePopupClose(window, () => {
         if (useKeyboard) {
           EventUtils.synthesizeKey("KEY_Enter");
@@ -271,6 +274,9 @@ async function doPickTest({ pickHelpButton, useKeyboard }) {
       "Expected URL should have loaded"
     );
 
+    if (pickHelpButton) {
+      BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    }
     UrlbarProvidersManager.unregisterProvider(provider);
   });
 }
