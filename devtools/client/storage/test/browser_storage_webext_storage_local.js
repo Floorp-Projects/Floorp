@@ -23,7 +23,7 @@ const { Toolbox } = require("devtools/client/framework/toolbox");
 
 /**
  * Initialize and connect a DevToolsServer and DevToolsClient. Note: This test
- * does not use TabDescriptorFactory, so it has to set up the DevToolsServer and
+ * does not use TabTargetFactory, so it has to set up the DevToolsServer and
  * DevToolsClient on its own.
  * @return {Promise} Resolves with an instance of the DevToolsClient class
  */
@@ -43,17 +43,23 @@ async function setupLocalDevToolsServerAndClient() {
  * @return {Promise} Resolves with a web extension actor target object and the toolbox
  * and storage objects when the toolbox has been setup
  */
-async function setupExtensionDebuggingToolbox(id) {
+async function setupExtensionDebuggingToolbox(id, options = {}) {
+  const { openToolbox = false } = options;
+
   const client = await setupLocalDevToolsServerAndClient();
-  const descriptor = await client.mainRoot.getAddon({ id });
-
-  const { toolbox, storage } = await openStoragePanel({
-    descriptor,
-    hostType: Toolbox.HostType.WINDOW,
-  });
-
-  const target = toolbox.target;
+  const front = await client.mainRoot.getAddon({ id });
+  const target = await front.getTarget();
   target.shouldCloseClient = true;
+
+  let toolbox;
+  let storage;
+  if (openToolbox) {
+    const res = await openStoragePanel({
+      target,
+      hostType: Toolbox.HostType.WINDOW,
+    });
+    ({ toolbox, storage } = res);
+  }
 
   return { target, toolbox, storage };
 }
