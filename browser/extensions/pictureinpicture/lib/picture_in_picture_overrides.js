@@ -15,12 +15,12 @@ class PictureInPictureOverrides {
   }
 
   async _checkGlobalPref() {
-    await browser.aboutConfigPrefs.getPref(this.pref).then(value => {
+    await browser.aboutConfigPipPrefs.getPref(this.pref).then(value => {
       if (value === false) {
         this._enabled = false;
       } else {
         if (value === undefined) {
-          browser.aboutConfigPrefs.setPref(this.pref, true);
+          browser.aboutConfigPipPrefs.setPref(this.pref, true);
         }
         this._enabled = true;
       }
@@ -28,7 +28,7 @@ class PictureInPictureOverrides {
   }
 
   async _checkSpecificOverridePref(id, pref) {
-    const isDisabled = await browser.aboutConfigPrefs.getPref(pref);
+    const isDisabled = await browser.aboutConfigPipPrefs.getPref(pref);
     if (isDisabled === true) {
       this._prefEnabledOverrides.delete(id);
     } else {
@@ -41,7 +41,10 @@ class PictureInPictureOverrides {
       await this._checkGlobalPref();
       this._onAvailableOverridesChanged();
     };
-    browser.aboutConfigPrefs.onPrefChange.addListener(checkGlobal, this.pref);
+    browser.aboutConfigPipPrefs.onPrefChange.addListener(
+      checkGlobal,
+      this.pref
+    );
 
     const bootupPrefCheckPromises = [this._checkGlobalPref()];
 
@@ -51,7 +54,7 @@ class PictureInPictureOverrides {
         await this._checkSpecificOverridePref(id, pref);
         this._onAvailableOverridesChanged();
       };
-      browser.aboutConfigPrefs.onPrefChange.addListener(checkSingle, pref);
+      browser.aboutConfigPipPrefs.onPrefChange.addListener(checkSingle, pref);
       bootupPrefCheckPromises.push(this._checkSpecificOverridePref(id, pref));
     }
 
