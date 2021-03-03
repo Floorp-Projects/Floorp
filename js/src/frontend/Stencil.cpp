@@ -3025,6 +3025,11 @@ void CompilationState::rewind(const CompilationState::RewindToken& pos) {
     }
     MOZ_ASSERT(asmJS->moduleMap.count() == pos.asmJSCount);
   }
+  // scriptExtra is empty for delazification.
+  if (scriptExtra.length()) {
+    MOZ_ASSERT(scriptExtra.length() == scriptData.length());
+    scriptExtra.shrinkTo(pos.scriptDataLength);
+  }
   scriptData.shrinkTo(pos.scriptDataLength);
 }
 
