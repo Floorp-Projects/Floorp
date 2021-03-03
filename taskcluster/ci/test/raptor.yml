@@ -328,6 +328,7 @@ raptor-unity-webgl-firefox:
         by-test-platform:
             (linux|windows|macos)(?!.*shippable).*: []
             default: ["autoland"]
+    fission-run-on-projects: []
     tier: 3
     mozharness:
         extra-options:
