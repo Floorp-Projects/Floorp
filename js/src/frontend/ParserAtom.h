@@ -598,6 +598,10 @@ class ParserAtomsTable {
                                         InflatedChar16Sequence<SeqCharT> seq,
                                         uint32_t length);
 
+  template <typename AtomCharT>
+  TaggedParserAtomIndex internExternalParserAtomImpl(JSContext* cx,
+                                                     const ParserAtom* atom);
+
  public:
   TaggedParserAtomIndex internAscii(JSContext* cx, const char* asciiPtr,
                                     uint32_t length);
@@ -616,6 +620,11 @@ class ParserAtomsTable {
   TaggedParserAtomIndex internJSAtom(JSContext* cx,
                                      CompilationAtomCache& atomCache,
                                      JSAtom* atom);
+
+  TaggedParserAtomIndex internExternalParserAtom(JSContext* cx,
+                                                 const ParserAtom* atom);
+
+  bool addPlaceholder(JSContext* cx);
 
  private:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
