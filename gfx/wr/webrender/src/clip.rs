@@ -220,7 +220,9 @@ impl ClipChainBuilder {
                 )
             }
             None => {
-                ClipChainId::NONE
+                // Even if the clip id is None, it's possible that there were parent clips in the builder
+                // that need to be applied and set as the root of this clip-chain builder.
+                parent_clip_chain_id
             }
         };
 
