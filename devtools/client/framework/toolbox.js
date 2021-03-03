@@ -237,6 +237,7 @@ function Toolbox(
   this.telemetry = new Telemetry();
 
   this.descriptorFront = descriptorFront;
+
   this.targetList = new TargetList(descriptorFront);
   this.targetList.on(
     "target-thread-wrong-order-on-resume",
@@ -777,6 +778,12 @@ Toolbox.prototype = {
           this._URL
         );
       });
+
+      // This attribute is meant to be a public attribute on the Toolbox object
+      // It exposes commands modules listed in devtools/shared/commands/index.js
+      // which are an abstraction on top of RDP methods.
+      // See devtools/shared/commands/README.md
+      this.commands = await this.descriptorFront.getCommands();
 
       // Optimization: fire up a few other things before waiting on
       // the iframe being ready (makes startup faster)
@@ -2479,7 +2486,7 @@ Toolbox.prototype = {
         // be fired with the panel as an argument. However, in order to keep
         // backward compatibility with existing extensions do a check
         // for a promise return value.
-        let built = definition.build(iframe.contentWindow, this);
+        let built = definition.build(iframe.contentWindow, this, this.commands);
 
         if (!(typeof built.then == "function")) {
           const panel = built;

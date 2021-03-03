@@ -8,9 +8,10 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { Cu } = require("chrome");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 
-function MemoryPanel(iframeWindow, toolbox) {
+function MemoryPanel(iframeWindow, toolbox, commands) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
+  this._commands = commands;
 
   const { BrowserLoader } = Cu.import(
     "resource://devtools/client/shared/browser-loader.js"

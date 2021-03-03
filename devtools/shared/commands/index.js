@@ -1,0 +1,48 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+// List of all command modules
+// (please try to keep the list alphabetically sorted)
+/*eslint sort-keys: "error"*/
+const Commands = {};
+
+/**
+ * For a given descriptor and its related Targets, already initialized,
+ * return the dictionary with all command instances.
+ * This dictionary is lazy and commands will be loaded and instanciated on-demand.
+ */
+async function createCommandsDictionary(descriptorFront) {
+  // Bug 1675763: Watcher actor is not available in all situations yet.
+  let watcherFront;
+  const supportsWatcher = descriptorFront.traits?.watcher;
+  if (supportsWatcher) {
+    watcherFront = await descriptorFront.getWatcher();
+  }
+  const dictionary = {};
+  for (const name in Commands) {
+    loader.lazyGetter(dictionary, name, () => {
+      const Constructor = require(Commands[name])[name];
+      return new Constructor({
+        // Commands can use other commands
+        commands: dictionary,
+
+        // The context to inspect identified by this descriptor
+        descriptorFront,
+
+        // The front for the Watcher Actor, related to the given descriptor
+        // This is a key actor to watch for targets and resources and pull global actors running in the parent process
+        watcherFront,
+
+        // From here, we could pass DevToolsClient, or any useful protocol classes...
+        // so that we abstract where and how to fetch all necessary interfaces
+        // and avoid having to know that you might pull the client via descriptorFront.client
+      });
+    });
+  }
+
+  return dictionary;
+}
+exports.createCommandsDictionary = createCommandsDictionary;
