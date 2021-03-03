@@ -351,7 +351,7 @@ class FunctionBox : public SuspendableContext {
   // Any update after the copy should be synced to the ScriptStencil.
   TaggedParserAtomIndex atom_;
 
-  // Index into BaseCompilationStencil::scriptData.
+  // Index into CompilationStencil::scriptData.
   ScriptIndex funcDataIndex_ = ScriptIndex(-1);
 
   // See: FunctionFlags
