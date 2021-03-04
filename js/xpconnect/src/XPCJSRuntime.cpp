@@ -86,6 +86,7 @@
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
+using mozilla::dom::AutoEntryScript;
 using mozilla::dom::PerThreadAtomCache;
 
 /***************************************************************************/

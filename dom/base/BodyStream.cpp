@@ -6,7 +6,6 @@
 
 #include "BodyStream.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerCommon.h"

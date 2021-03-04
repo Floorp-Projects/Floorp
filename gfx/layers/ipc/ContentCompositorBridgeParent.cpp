@@ -41,7 +41,6 @@
 #include "mozilla/Telemetry.h"
 #ifdef MOZ_GECKO_PROFILER
 #  include "mozilla/BaseProfilerMarkerTypes.h"
-#  include "GeckoProfiler.h"
 #endif
 
 namespace mozilla {
