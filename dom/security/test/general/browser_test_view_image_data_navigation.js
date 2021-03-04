@@ -50,10 +50,10 @@ add_task(async function test_right_click_open_bg_image() {
       true
     );
 
-    // simulate right-click->view-bg-image
+    // simulate right-click->view-image
     BrowserTestUtils.waitForEvent(document, "popupshown", false, event => {
       // These are operations that must be executed synchronously with the event.
-      document.getElementById("context-viewbgimage").doCommand();
+      document.getElementById("context-viewimage").doCommand();
       event.target.hidePopup();
       return true;
     });
@@ -67,7 +67,7 @@ add_task(async function test_right_click_open_bg_image() {
     let spec = gBrowser.selectedBrowser.currentURI.spec;
     ok(
       spec.startsWith("data:image/svg+xml;"),
-      "data:image/svg navigation allowed through right-click view-bg-image"
+      "data:image/svg navigation allowed through right-click view-image with background image"
     );
   });
 });

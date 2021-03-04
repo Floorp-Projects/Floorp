@@ -236,11 +236,6 @@
         <menupopup id="context-sendpagetodevice-popup"
                    onpopupshowing="(() => { gSync.populateSendTabToDevicesMenu(event.target, gBrowser.currentURI.spec, gBrowser.contentTitle); })()"/>
       </menu>
-      <menuseparator id="context-sep-viewbgimage"/>
-      <menuitem id="context-viewbgimage"
-                data-l10n-id="main-context-menu-view-background-image"
-                oncommand="gContextMenu.viewBGImage(event);"
-                onclick="checkForMiddleClick(this, event);"/>
       <menu id="fill-login"
             label="&fillLoginMenu.label;"
             label-login="&fillLoginMenu.label;"
