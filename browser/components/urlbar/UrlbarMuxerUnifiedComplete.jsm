@@ -453,10 +453,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // suggestions or the heuristic.
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-      result.payload.lowerCaseSuggestion &&
-      state.suggestions.has(result.payload.lowerCaseSuggestion)
+      result.payload.lowerCaseSuggestion
     ) {
-      return false;
+      let suggestion = result.payload.lowerCaseSuggestion.trim();
+      if (!suggestion || state.suggestions.has(suggestion)) {
+        return false;
+      }
     }
 
     // Discard tail suggestions if appropriate.
@@ -476,14 +478,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     ) {
       let submission = Services.search.parseSubmissionURL(result.payload.url);
       if (submission) {
-        let resultQuery = submission.terms.toLocaleLowerCase();
+        let resultQuery = submission.terms.trim().toLocaleLowerCase();
         if (state.suggestions.has(resultQuery)) {
           // If the result's URL is the same as a brand new SERP URL created
           // from the query string modulo certain URL params, then treat the
           // result as a dupe and discard it.
           let [newSerpURL] = UrlbarUtils.getSearchQueryUrl(
             submission.engine,
-            resultQuery
+            submission.terms
           );
           if (
             UrlbarSearchUtils.serpsAreEquivalent(result.payload.url, newSerpURL)
@@ -595,7 +597,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
         result.payload.query
       ) {
-        state.suggestions.add(result.payload.query.toLocaleLowerCase());
+        let query = result.payload.query.trim().toLocaleLowerCase();
+        if (query) {
+          state.suggestions.add(query);
+        }
       }
     }
 
@@ -616,7 +621,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
       result.payload.lowerCaseSuggestion
     ) {
-      state.suggestions.add(result.payload.lowerCaseSuggestion);
+      let suggestion = result.payload.lowerCaseSuggestion.trim();
+      if (suggestion) {
+        state.suggestions.add(suggestion);
+      }
     }
 
     // Avoid multiple tab-to-search results.
