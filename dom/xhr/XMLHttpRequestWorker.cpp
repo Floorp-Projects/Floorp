@@ -1872,11 +1872,6 @@ XMLHttpRequestUpload* XMLHttpRequestWorker::GetUpload(ErrorResult& aRv) {
 
   if (!mUpload) {
     mUpload = new XMLHttpRequestUpload(this);
-
-    if (!mUpload) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
   }
 
   return mUpload;
