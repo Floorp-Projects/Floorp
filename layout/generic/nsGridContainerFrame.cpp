@@ -3875,8 +3875,7 @@ nsContainerFrame* NS_NewGridContainerFrame(PresShell* aPresShell,
 // ===========================================
 
 /*static*/ const nsRect& nsGridContainerFrame::GridItemCB(nsIFrame* aChild) {
-  MOZ_ASSERT(aChild->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
-             aChild->IsAbsolutelyPositioned());
+  MOZ_ASSERT(aChild->IsAbsolutelyPositioned());
   nsRect* cb = aChild->GetProperty(GridItemContainingBlockRect());
   MOZ_ASSERT(cb,
              "this method must only be called on grid items, and the grid "
