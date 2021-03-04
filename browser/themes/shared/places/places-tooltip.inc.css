@@ -35,6 +35,17 @@
   font-size: 1.1em;
 }
 
+#places-tooltip-insecure-icon {
+  /* Using the same broken-lock icon as the main identity-block styles. */
+  list-style-image: url(chrome://global/skin/icons/connection-mixed-active-loaded.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 1em;
+  height: 1em;
+  margin-inline-start: 0;
+  margin-inline-end: .2em;
+}
+
 .places-tooltip-uri {
   color: var(--panel-description-color);
 }
