@@ -2723,7 +2723,7 @@ bool ScriptSource::startIncrementalEncoding(
 }
 
 bool ScriptSource::addDelazificationToIncrementalEncoding(
-    JSContext* cx, frontend::ExtensibleCompilationStencil& stencil) {
+    JSContext* cx, const frontend::CompilationStencil& stencil) {
   MOZ_ASSERT(hasEncoder());
   AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
   auto failureCase =
