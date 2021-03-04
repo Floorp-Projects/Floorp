@@ -3716,13 +3716,9 @@ bool JSScript::fullyInitFromStencil(
   // A holder for the lazy PrivateScriptData that we must keep around in case
   // this process fails and we must return the script to its original state.
   //
-  // This is initialized by BaseScript::swapData() which will run incremental
-  // pre-barriers for us. On successful conversion to non-lazy script, the old
-  // script data here will be released by the UniquePtr.
-  //
-  // TODO: This will trigger the ClearEdgesTraces on cleanup. We should
-  // investigate if this is still necessary if swapData() already ran
-  // pre-barriers for us.
+  // This is initialized by BaseScript::swapData() which will run pre-barriers
+  // for us. On successful conversion to non-lazy script, the old script data
+  // here will be released by the UniquePtr.
   Rooted<UniquePtr<PrivateScriptData>> lazyData(cx);
 
 #ifndef JS_CODEGEN_NONE
