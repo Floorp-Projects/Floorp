@@ -7626,8 +7626,7 @@ nsIFrame* nsIFrame::GetContainingBlock(
   // still be in-flow.  So we have to check to make sure that the frame
   // is really out-of-flow too.
   nsIFrame* f;
-  if (IsAbsolutelyPositioned(aStyleDisplay) &&
-      HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+  if (IsAbsolutelyPositioned(aStyleDisplay)) {
     f = GetParent();  // the parent is always the containing block
   } else {
     f = GetNearestBlockContainer(GetParent());

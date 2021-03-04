@@ -2779,8 +2779,7 @@ void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
       for (nsIFrame* a = subtreeRoot; a && !FRAME_IS_REFLOW_ROOT(a);
            a = a->GetParent()) {
         a->MarkIntrinsicISizesDirty();
-        if (a->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
-            a->IsAbsolutelyPositioned()) {
+        if (a->IsAbsolutelyPositioned()) {
           // If we get here, 'a' is abspos, so its subtree's intrinsic sizing
           // has no effect on its ancestors' intrinsic sizing. So, don't loop
           // upwards any further.

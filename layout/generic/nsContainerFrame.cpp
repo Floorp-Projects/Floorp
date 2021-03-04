@@ -2793,9 +2793,7 @@ bool nsContainerFrame::ShouldAvoidBreakInside(
   const auto* disp = StyleDisplay();
   return !aReflowInput.mFlags.mIsTopOfPage &&
          StyleBreakWithin::Avoid == disp->mBreakInside &&
-         !(HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
-           IsAbsolutelyPositioned(disp)) &&
-         !GetPrevInFlow();
+         !IsAbsolutelyPositioned(disp) && !GetPrevInFlow();
 }
 
 void nsContainerFrame::ConsiderChildOverflow(OverflowAreas& aOverflowAreas,

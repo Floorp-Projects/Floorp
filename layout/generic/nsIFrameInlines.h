@@ -71,13 +71,14 @@ bool nsIFrame::IsStickyPositioned() const {
 
 bool nsIFrame::IsAbsolutelyPositioned(
     const nsStyleDisplay* aStyleDisplay) const {
-  const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-  return disp->IsAbsolutelyPositioned(this);
+  return HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
+         StyleDisplayWithOptionalParam(aStyleDisplay)
+             ->IsAbsolutelyPositioned(this);
 }
 
 inline bool nsIFrame::IsTrueOverflowContainer() const {
   return HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER) &&
-         !(HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) && IsAbsolutelyPositioned());
+         !IsAbsolutelyPositioned();
   // XXXfr This check isn't quite correct, because it doesn't handle cases
   //      where the out-of-flow has overflow.. but that's rare.
   //      We'll need to revisit the way abspos continuations are handled later
