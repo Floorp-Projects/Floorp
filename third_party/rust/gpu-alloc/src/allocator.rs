@@ -130,10 +130,7 @@ where
         &mut self,
         device: &impl MemoryDevice<M>,
         request: Request,
-    ) -> Result<MemoryBlock<M>, AllocationError>
-    where
-        M: Clone,
-    {
+    ) -> Result<MemoryBlock<M>, AllocationError> {
         self.alloc_internal(device, request, None)
     }
 
@@ -153,10 +150,7 @@ where
         device: &impl MemoryDevice<M>,
         request: Request,
         dedicated: Dedicated,
-    ) -> Result<MemoryBlock<M>, AllocationError>
-    where
-        M: Clone,
-    {
+    ) -> Result<MemoryBlock<M>, AllocationError> {
         self.alloc_internal(device, request, Some(dedicated))
     }
 
@@ -165,10 +159,7 @@ where
         device: &impl MemoryDevice<M>,
         mut request: Request,
         dedicated: Option<Dedicated>,
-    ) -> Result<MemoryBlock<M>, AllocationError>
-    where
-        M: Clone,
-    {
+    ) -> Result<MemoryBlock<M>, AllocationError> {
         enum Strategy {
             Linear,
             Buddy,
@@ -258,10 +249,6 @@ where
 
             match strategy {
                 Strategy::Dedicated => {
-                    if heap.budget() < request.size {
-                        continue;
-                    }
-
                     #[cfg(feature = "tracing")]
                     tracing::debug!(
                         "Allocating memory object `{}@{:?}`",
@@ -275,13 +262,12 @@ where
                             heap.alloc(request.size);
 
                             return Ok(MemoryBlock::new(
-                                memory,
                                 index,
                                 memory_type.props,
                                 0,
                                 request.size,
                                 atom_mask,
-                                MemoryBlockFlavor::Dedicated,
+                                MemoryBlockFlavor::Dedicated { memory },
                             ));
                         }
                         Err(OutOfMemory::OutOfDeviceMemory) => continue,
@@ -319,7 +305,6 @@ where
                     match result {
                         Ok(block) => {
                             return Ok(MemoryBlock::new(
-                                block.memory,
                                 index,
                                 memory_type.props,
                                 block.offset,
@@ -328,6 +313,7 @@ where
                                 MemoryBlockFlavor::Linear {
                                     chunk: block.chunk,
                                     ptr: block.ptr,
+                                    memory: block.memory,
                                 },
                             ))
                         }
@@ -375,7 +361,6 @@ where
                     match result {
                         Ok(block) => {
                             return Ok(MemoryBlock::new(
-                                block.memory,
                                 index,
                                 memory_type.props,
                                 block.offset,
@@ -385,6 +370,7 @@ where
                                     chunk: block.chunk,
                                     ptr: block.ptr,
                                     index: block.index,
+                                    memory: block.memory,
                                 },
                             ))
                         }
@@ -411,15 +397,15 @@ where
         let memory_type = block.memory_type();
         let offset = block.offset();
         let size = block.size();
-        let (memory, flavor) = block.deallocate();
+        let flavor = block.deallocate();
         match flavor {
-            MemoryBlockFlavor::Dedicated => {
+            MemoryBlockFlavor::Dedicated { memory } => {
                 let heap = self.memory_types[memory_type as usize].heap;
                 device.deallocate_memory(memory);
                 self.allocations_remains += 1;
                 self.memory_heaps[heap as usize].dealloc(size);
             }
-            MemoryBlockFlavor::Linear { chunk, ptr } => {
+            MemoryBlockFlavor::Linear { chunk, ptr, memory } => {
                 let heap = self.memory_types[memory_type as usize].heap;
                 let heap = &mut self.memory_heaps[heap as usize];
 
@@ -440,7 +426,12 @@ where
                     &mut self.allocations_remains,
                 );
             }
-            MemoryBlockFlavor::Buddy { chunk, ptr, index } => {
+            MemoryBlockFlavor::Buddy {
+                chunk,
+                ptr,
+                index,
+                memory,
+            } => {
                 let memory_type = memory_type;
                 let heap = self.memory_types[memory_type as usize].heap;
                 let heap = &mut self.memory_heaps[heap as usize];

@@ -1,7 +1,14 @@
-use crate::{window::FramebufferCachePtr, Backend, RawDevice};
+use crate::{Backend, RawDevice, ROUGH_MAX_ATTACHMENT_COUNT};
 use ash::{version::DeviceV1_0, vk};
-use hal::{device::OutOfMemory, image::SubresourceRange, pso};
-use std::{borrow::Borrow, sync::Arc};
+use hal::{
+    device::OutOfMemory,
+    image::{Extent, SubresourceRange},
+    pso,
+};
+use inplace_it::inplace_or_alloc_from_iter;
+use parking_lot::Mutex;
+use smallvec::SmallVec;
+use std::{collections::HashMap, sync::Arc};
 
 #[derive(Debug, Hash)]
 pub struct Semaphore(pub vk::Semaphore);
@@ -45,17 +52,10 @@ pub struct Image {
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
-pub enum ImageViewOwner {
-    User,
-    Surface(FramebufferCachePtr),
-}
-
-#[derive(Debug, Hash, PartialEq, Eq)]
 pub struct ImageView {
     pub(crate) image: vk::Image,
-    pub(crate) view: vk::ImageView,
+    pub(crate) raw: vk::ImageView,
     pub(crate) range: SubresourceRange,
-    pub(crate) owner: ImageViewOwner,
 }
 
 #[derive(Debug, Hash)]
@@ -64,25 +64,33 @@ pub struct Sampler(pub vk::Sampler);
 #[derive(Debug, Hash)]
 pub struct RenderPass {
     pub raw: vk::RenderPass,
-    pub clear_attachments_mask: u64,
+    pub attachment_count: usize,
 }
 
-#[derive(Debug, Hash)]
-pub struct Framebuffer {
-    pub(crate) raw: vk::Framebuffer,
-    pub(crate) owned: bool,
+pub type FramebufferKey = SmallVec<[vk::ImageView; ROUGH_MAX_ATTACHMENT_COUNT]>;
+
+#[derive(Debug)]
+pub enum Framebuffer {
+    ImageLess(vk::Framebuffer),
+    Legacy {
+        name: String,
+        map: Mutex<HashMap<FramebufferKey, vk::Framebuffer>>,
+        extent: Extent,
+    },
 }
+
+pub(crate) type SortedBindings = Arc<Vec<pso::DescriptorSetLayoutBinding>>;
 
 #[derive(Debug)]
 pub struct DescriptorSetLayout {
     pub(crate) raw: vk::DescriptorSetLayout,
-    pub(crate) bindings: Arc<Vec<pso::DescriptorSetLayoutBinding>>,
+    pub(crate) bindings: SortedBindings,
 }
 
 #[derive(Debug)]
 pub struct DescriptorSet {
     pub(crate) raw: vk::DescriptorSet,
-    pub(crate) bindings: Arc<Vec<pso::DescriptorSetLayoutBinding>>,
+    pub(crate) bindings: SortedBindings,
 }
 
 #[derive(Debug, Hash)]
@@ -102,30 +110,38 @@ pub struct ShaderModule {
 
 #[derive(Debug)]
 pub struct DescriptorPool {
-    pub(crate) raw: vk::DescriptorPool,
-    pub(crate) device: Arc<RawDevice>,
+    raw: vk::DescriptorPool,
+    device: Arc<RawDevice>,
     /// This vec only exists to re-use allocations when `DescriptorSet`s are freed.
-    pub(crate) set_free_vec: Vec<vk::DescriptorSet>,
+    temp_raw_sets: Vec<vk::DescriptorSet>,
+    /// This vec only exists for collecting the layouts when allocating new sets.
+    temp_raw_layouts: Vec<vk::DescriptorSetLayout>,
+    /// This vec only exists for collecting the bindings when allocating new sets.
+    temp_layout_bindings: Vec<SortedBindings>,
+}
+
+impl DescriptorPool {
+    pub(crate) fn new(raw: vk::DescriptorPool, device: &Arc<RawDevice>) -> Self {
+        DescriptorPool {
+            raw,
+            device: Arc::clone(device),
+            temp_raw_sets: Vec::new(),
+            temp_raw_layouts: Vec::new(),
+            temp_layout_bindings: Vec::new(),
+        }
+    }
+
+    pub(crate) fn finish(self) -> vk::DescriptorPool {
+        self.raw
+    }
 }
 
 impl pso::DescriptorPool<Backend> for DescriptorPool {
-    unsafe fn allocate<I, E>(
+    unsafe fn allocate_one(
         &mut self,
-        layout_iter: I,
-        list: &mut E,
-    ) -> Result<(), pso::AllocationError>
-    where
-        I: IntoIterator,
-        I::Item: Borrow<DescriptorSetLayout>,
-        E: Extend<DescriptorSet>,
-    {
-        let mut raw_layouts = Vec::new();
-        let mut layout_bindings = Vec::new();
-        for layout in layout_iter {
-            raw_layouts.push(layout.borrow().raw);
-            layout_bindings.push(layout.borrow().bindings.clone());
-        }
-
+        layout: &DescriptorSetLayout,
+    ) -> Result<DescriptorSet, pso::AllocationError> {
+        let raw_layouts = [layout.raw];
         let info = vk::DescriptorSetAllocateInfo::builder()
             .descriptor_pool(self.raw)
             .set_layouts(&raw_layouts);
@@ -133,10 +149,50 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         self.device
             .raw
             .allocate_descriptor_sets(&info)
+            //Note: https://github.com/MaikKlein/ash/issues/358
+            .map(|mut sets| DescriptorSet {
+                raw: sets.pop().unwrap(),
+                bindings: Arc::clone(&layout.bindings),
+            })
+            .map_err(|err| match err {
+                vk::Result::ERROR_OUT_OF_HOST_MEMORY => {
+                    pso::AllocationError::OutOfMemory(OutOfMemory::Host)
+                }
+                vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => {
+                    pso::AllocationError::OutOfMemory(OutOfMemory::Device)
+                }
+                vk::Result::ERROR_OUT_OF_POOL_MEMORY => pso::AllocationError::OutOfPoolMemory,
+                _ => pso::AllocationError::FragmentedPool,
+            })
+    }
+
+    unsafe fn allocate<'a, I, E>(
+        &mut self,
+        layouts: I,
+        list: &mut E,
+    ) -> Result<(), pso::AllocationError>
+    where
+        I: Iterator<Item = &'a DescriptorSetLayout>,
+        E: Extend<DescriptorSet>,
+    {
+        self.temp_raw_layouts.clear();
+        self.temp_layout_bindings.clear();
+        for layout in layouts {
+            self.temp_raw_layouts.push(layout.raw);
+            self.temp_layout_bindings.push(Arc::clone(&layout.bindings));
+        }
+
+        let info = vk::DescriptorSetAllocateInfo::builder()
+            .descriptor_pool(self.raw)
+            .set_layouts(&self.temp_raw_layouts);
+
+        self.device
+            .raw
+            .allocate_descriptor_sets(&info)
             .map(|sets| {
                 list.extend(
                     sets.into_iter()
-                        .zip(layout_bindings)
+                        .zip(self.temp_layout_bindings.drain(..))
                         .map(|(raw, bindings)| DescriptorSet { raw, bindings }),
                 )
             })
@@ -154,14 +210,12 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
 
     unsafe fn free<I>(&mut self, descriptor_sets: I)
     where
-        I: IntoIterator<Item = DescriptorSet>,
+        I: Iterator<Item = DescriptorSet>,
     {
-        self.set_free_vec.clear();
-        self.set_free_vec
-            .extend(descriptor_sets.into_iter().map(|d| d.raw));
-        self.device
-            .raw
-            .free_descriptor_sets(self.raw, &self.set_free_vec);
+        let sets_iter = descriptor_sets.map(|d| d.raw);
+        inplace_or_alloc_from_iter(sets_iter, |sets| {
+            self.device.raw.free_descriptor_sets(self.raw, sets);
+        })
     }
 
     unsafe fn reset(&mut self) {

@@ -18,7 +18,7 @@ First add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rspirv_headers = "1.4"
+spirv_headers = "1.5"
 ```
 
 Then add to your crate root:

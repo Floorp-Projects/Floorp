@@ -60,12 +60,12 @@ impl<T> Slab<T> {
         }
     }
 
-    // pub fn get(&self, index: usize) -> &T {
-    //     match self.entries.get(index) {
-    //         Some(Entry::Occupied(value)) => value,
-    //         _ => panic!("Invalid index"),
-    //     }
-    // }
+    pub fn get(&self, index: usize) -> &T {
+        match self.entries.get(index) {
+            Some(Entry::Occupied(value)) => value,
+            _ => panic!("Invalid index"),
+        }
+    }
 
     pub fn get_mut(&mut self, index: usize) -> &mut T {
         match self.entries.get_mut(index) {

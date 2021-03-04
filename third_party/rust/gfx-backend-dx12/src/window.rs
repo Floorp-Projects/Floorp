@@ -59,7 +59,7 @@ impl Surface {
                 expected_index,
                 image.index
             );
-            return Err(w::PresentError::OutOfDate);
+            return Err(w::OutOfDate.into());
         }
 
         let (interval, flags) = match present.mode {
@@ -171,7 +171,7 @@ impl w::PresentationSurface<Backend> for Surface {
         &mut self,
         device: &Device,
         config: w::SwapchainConfig,
-    ) -> Result<(), w::CreationError> {
+    ) -> Result<(), w::SwapchainError> {
         assert!(i::Usage::COLOR_ATTACHMENT.contains(config.image_usage));
 
         let swapchain = match self.presentation.take() {
@@ -198,7 +198,7 @@ impl w::PresentationSurface<Backend> for Surface {
                 );
                 if result != winerror::S_OK {
                     error!("ResizeBuffers failed with 0x{:x}", result as u32);
-                    return Err(w::CreationError::WindowInUse(hal::device::WindowInUse));
+                    return Err(w::SwapchainError::WindowInUse);
                 }
                 inner
             }
@@ -340,7 +340,7 @@ impl Swapchain {
                 Err(w::AcquireError::DeviceLost(hal::device::DeviceLost))
             }
             winbase::WAIT_OBJECT_0 => Ok(()),
-            winerror::WAIT_TIMEOUT => Err(w::AcquireError::Timeout),
+            winerror::WAIT_TIMEOUT => Err(w::AcquireError::NotReady { timeout: true }),
             hr => panic!("Unexpected wait status 0x{:X}", hr),
         }
     }

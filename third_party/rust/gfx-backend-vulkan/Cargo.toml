@@ -1,6 +1,6 @@
 [package]
 name = "gfx-backend-vulkan"
-version = "0.6.5"
+version = "0.7.0"
 description = "Vulkan API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"
@@ -14,7 +14,7 @@ edition = "2018"
 
 [features]
 default = []
-use-rtld-next = ["shared_library"]
+use-rtld-next = ["libc"]
 
 [lib]
 name = "gfx_backend_vulkan"
@@ -23,13 +23,19 @@ name = "gfx_backend_vulkan"
 arrayvec = "0.5"
 byteorder = "1"
 log = { version = "0.4" }
-lazy_static = "1"
-shared_library = { version = "0.1.9", optional = true }
+libc = { version = "0.2", optional = true }
 ash = "0.31"
-hal = { path = "../../hal", version = "0.6", package = "gfx-hal" }
+hal = { path = "../../hal", version = "0.7", package = "gfx-hal" }
+parking_lot = "0.11"
 smallvec = "1.0"
 raw-window-handle = "0.3"
-inplace_it = "0.3.2"
+inplace_it = "0.3.3"
+
+[dependencies.naga]
+git = "https://github.com/gfx-rs/naga"
+tag = "gfx-12"
+features = ["spv-out"]
+optional = true
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["libloaderapi", "windef", "winuser"] }

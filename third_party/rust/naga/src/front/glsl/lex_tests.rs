@@ -2,8 +2,10 @@ use super::{lex::Lexer, parser::Token::*, token::TokenMetadata};
 
 #[test]
 fn tokens() {
+    let defines = crate::FastHashMap::default();
+
     // line comments
-    let mut lex = Lexer::new("void main // myfunction\n//()\n{}");
+    let mut lex = Lexer::new("void main // myfunction\n//()\n{}", &defines);
     assert_eq!(
         lex.next().unwrap(),
         Void(TokenMetadata {
@@ -38,7 +40,7 @@ fn tokens() {
     assert_eq!(lex.next(), None);
 
     // multi line comment
-    let mut lex = Lexer::new("void main /* comment [] {}\n/**\n{}*/{}");
+    let mut lex = Lexer::new("void main /* comment [] {}\n/**\n{}*/{}", &defines);
     assert_eq!(
         lex.next().unwrap(),
         Void(TokenMetadata {
@@ -73,7 +75,7 @@ fn tokens() {
     assert_eq!(lex.next(), None);
 
     // identifiers
-    let mut lex = Lexer::new("id123_OK 92No æNoø No¾ No好");
+    let mut lex = Lexer::new("id123_OK 92No æNoø No¾ No好", &defines);
     assert_eq!(
         lex.next().unwrap(),
         Identifier((
@@ -177,7 +179,7 @@ fn tokens() {
     assert_eq!(lex.next(), None);
 
     // version
-    let mut lex = Lexer::new("#version 890 core");
+    let mut lex = Lexer::new("#version 890 core", &defines);
     assert_eq!(
         lex.next().unwrap(),
         Version(TokenMetadata {
@@ -208,7 +210,10 @@ fn tokens() {
     assert_eq!(lex.next(), None);
 
     // operators
-    let mut lex = Lexer::new("+ - * | & % / += -= *= |= &= %= /= ++ -- || && ^^");
+    let mut lex = Lexer::new(
+        "+ - * | & % / += -= *= |= &= %= /= ++ -- || && ^^",
+        &defines,
+    );
     assert_eq!(
         lex.next().unwrap(),
         Plus(TokenMetadata {
@@ -341,6 +346,124 @@ fn tokens() {
             line: 0,
             chars: 47..49
         })
+    );
+    assert_eq!(lex.next(), None);
+
+    // float constants
+    let mut lex = Lexer::new("120.0 130.0lf 140.0Lf 150.0LF", &defines);
+    assert_eq!(
+        lex.next().unwrap(),
+        FloatConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 0..5
+            },
+            120.0,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        DoubleConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 6..13
+            },
+            130.0,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        DoubleConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 14..21
+            },
+            140.0,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        DoubleConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 22..29
+            },
+            150.0,
+        ))
+    );
+    assert_eq!(lex.next(), None);
+
+    // Integer constants
+    let mut lex = Lexer::new("120 130u 140U 150 0x1f 0xf2U 0xF1u", &defines);
+    assert_eq!(
+        lex.next().unwrap(),
+        IntConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 0..3
+            },
+            120,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        UintConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 4..8
+            },
+            130,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        UintConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 9..13
+            },
+            140,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        IntConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 14..17
+            },
+            150,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        IntConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 18..22
+            },
+            31,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        UintConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 23..28
+            },
+            242,
+        ))
+    );
+    assert_eq!(
+        lex.next().unwrap(),
+        UintConstant((
+            TokenMetadata {
+                line: 0,
+                chars: 29..34
+            },
+            241,
+        ))
     );
     assert_eq!(lex.next(), None);
 }

@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "inplace_it"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Dmitry Demin <shepardiwe@gmail.com>"]
 description = "Place small arrays on the stack with a low-cost!"
 readme = "README.md"

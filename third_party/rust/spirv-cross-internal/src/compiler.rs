@@ -154,6 +154,7 @@ impl spirv::Type {
             B::ControlPointArray => ControlPointArray,
             B::AccelerationStructure => AccelerationStructure,
             B::RayQuery => RayQuery,
+            B::Interpolant => Interpolant,
         }
     }
 }

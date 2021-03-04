@@ -67,6 +67,7 @@ pub struct ResourceBinding {
     pub buffer_id: u32,
     pub texture_id: u32,
     pub sampler_id: u32,
+    pub count: u32,
 }
 
 /// Location of a sampler binding to override
@@ -238,6 +239,7 @@ pub enum Platform {
 
 /// A MSL shader model version.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum Version {
     V1_0,
     V1_1,
@@ -245,6 +247,7 @@ pub enum Version {
     V2_0,
     V2_1,
     V2_2,
+    V2_3,
 }
 
 impl Version {
@@ -257,6 +260,7 @@ impl Version {
             V2_0 => 20000,
             V2_1 => 20100,
             V2_2 => 20200,
+            V2_3 => 20300,
         }
     }
 }
@@ -436,6 +440,7 @@ impl spirv::Compile<Target> for spirv::Ast<Target> {
                     msl_buffer: res.buffer_id,
                     msl_texture: res.texture_id,
                     msl_sampler: res.sampler_id,
+                    count: res.count,
                 }
             }),
         );

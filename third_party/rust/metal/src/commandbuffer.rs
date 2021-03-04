@@ -126,4 +126,22 @@ impl CommandBufferRef {
     ) -> &ComputeCommandEncoderRef {
         unsafe { msg_send![self, computeCommandEncoderWithDispatchType: ty] }
     }
+
+    pub fn encode_signal_event(&self, event: &EventRef, new_value: u64) {
+        unsafe {
+            msg_send![self,
+                encodeSignalEvent: event
+                value: new_value
+            ]
+        }
+    }
+
+    pub fn encode_wait_for_event(&self, event: &EventRef, value: u64) {
+        unsafe {
+            msg_send![self,
+                encodeWaitForEvent: event
+                value: value
+            ]
+        }
+    }
 }

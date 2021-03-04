@@ -15,12 +15,13 @@
 namespace mozilla {
 namespace dom {
 class Promise;
+enum class GPUTextureFormat : uint8_t;
 }  // namespace dom
 namespace layers {
 class WebRenderLocalCanvasData;
 };
 namespace webgpu {
-class Device;
+class Adapter;
 class SwapChain;
 class Texture;
 
@@ -97,6 +98,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   bool IsContextCleanForFrameCapture() override { return false; }
 
  public:
+  dom::GPUTextureFormat GetSwapChainPreferredFormat(Adapter& aAdapter) const;
   RefPtr<SwapChain> ConfigureSwapChain(const dom::GPUSwapChainDescriptor& aDesc,
                                        ErrorResult& aRv);
 

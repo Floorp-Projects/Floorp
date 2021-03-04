@@ -1,6 +1,6 @@
 [package]
 name = "gfx-backend-metal"
-version = "0.6.0"
+version = "0.7.0"
 description = "Metal API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"
@@ -16,36 +16,45 @@ edition = "2018"
 default = []
 auto-capture = []
 signpost = []
+cross = ["spirv_cross", "auxil", "naga/spv-out"]
 
 [lib]
 name = "gfx_backend_metal"
 
 [dependencies]
-auxil = { path = "../../auxil/auxil", version = "0.5", package = "gfx-auxil", features = ["spirv_cross"] }
-hal = { path = "../../hal", version = "0.6", package = "gfx-hal" }
+hal = { package = "gfx-hal", path = "../../hal", version = "0.7" }
 range-alloc = { path = "../../auxil/range-alloc", version = "0.1" }
 arrayvec = "0.5"
 bitflags = "1.0"
 copyless = "0.1.4"
+fxhash = "0.2.1"
 log = { version = "0.4" }
 dispatch = { version = "0.2", optional = true }
-metal = { version = "0.20", features = ["private"] }
+metal = { git = "https://github.com/gfx-rs/metal-rs", rev="439c986eb7a9b91e88b61def2daa66e4043fcbef", features = ["private"] }
 foreign-types = "0.3"
 objc = "0.2.5"
 block = "0.1"
 cocoa-foundation = "0.1"
-spirv_cross = { version = "0.22", features = ["msl"] }
 parking_lot = "0.11"
 storage-map = "0.3"
-lazy_static = "1"
 raw-window-handle = "0.3"
 
-[dependencies.naga]
-#path = "../../../../naga"
-git = "https://github.com/gfx-rs/naga"
-rev = "0893d912be268298ae2ed784beb541a23b9d6b31"
-features = ["spv-in", "msl-out"]
+[dependencies.auxil]
+package = "gfx-auxil"
+path = "../../auxil/auxil"
+version = "0.8"
+features = ["spirv_cross"]
 optional = true
+
+[dependencies.spirv_cross]
+version = "0.23"
+features = ["msl"]
+optional = true
+
+[dependencies.naga]
+git = "https://github.com/gfx-rs/naga"
+tag = "gfx-12"
+features = ["spv-in", "msl-out"]
 
 # This forces docs.rs to build the crate on mac, otherwise the build fails
 # and we get no docs at all.

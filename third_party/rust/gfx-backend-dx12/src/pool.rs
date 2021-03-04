@@ -113,7 +113,7 @@ impl pool::CommandPool<Backend> for CommandPool {
 
     unsafe fn free<I>(&mut self, cbufs: I)
     where
-        I: IntoIterator<Item = CommandBuffer>,
+        I: Iterator<Item = CommandBuffer>,
     {
         let mut allocators = self.pool_shared.allocators.lock();
         let mut lists = self.pool_shared.lists.lock();

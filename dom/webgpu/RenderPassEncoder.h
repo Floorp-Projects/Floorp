@@ -59,7 +59,9 @@ class RenderPassEncoder final : public ObjectBase,
   void SetBindGroup(uint32_t aSlot, const BindGroup& aBindGroup,
                     const dom::Sequence<uint32_t>& aDynamicOffsets);
   void SetPipeline(const RenderPipeline& aPipeline);
-  void SetIndexBuffer(const Buffer& aBuffer, uint64_t aOffset, uint64_t aSize);
+  void SetIndexBuffer(const Buffer& aBuffer,
+                      const dom::GPUIndexFormat& aIndexFormat, uint64_t aOffset,
+                      uint64_t aSize);
   void SetVertexBuffer(uint32_t aSlot, const Buffer& aBuffer, uint64_t aOffset,
                        uint64_t aSize);
   void Draw(uint32_t aVertexCount, uint32_t aInstanceCount,

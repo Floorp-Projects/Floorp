@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Arm Limited
+ * Copyright 2018-2021 Arm Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,6 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/*
+ * At your option, you may choose to accept this material under either:
+ *  1. The Apache License, Version 2.0, found at <http://www.apache.org/licenses/LICENSE-2.0>, or
+ *  2. The MIT License, found at <http://opensource.org/licenses/MIT>.
+ * SPDX-License-Identifier: Apache-2.0 OR MIT.
  */
 
 #include "spirv_cross_parsed_ir.hpp"
@@ -228,6 +235,11 @@ bool ParsedIR::is_globally_reserved_identifier(std::string &str, bool allow_rese
 	return is_reserved_identifier(str, false, allow_reserved_prefixes);
 }
 
+uint32_t ParsedIR::get_spirv_version() const
+{
+	return spirv[1];
+}
+
 static string make_unreserved_identifier(const string &name)
 {
 	if (is_reserved_prefix(name))
@@ -388,6 +400,10 @@ void ParsedIR::set_decoration(ID id, Decoration decoration, uint32_t argument)
 		dec.xfb_stride = argument;
 		break;
 
+	case DecorationStream:
+		dec.stream = argument;
+		break;
+
 	case DecorationArrayStride:
 		dec.array_stride = argument;
 		break;
@@ -467,6 +483,10 @@ void ParsedIR::set_member_decoration(TypeID id, uint32_t index, Decoration decor
 		dec.xfb_stride = argument;
 		break;
 
+	case DecorationStream:
+		dec.stream = argument;
+		break;
+
 	case DecorationSpecId:
 		dec.spec_id = argument;
 		break;
@@ -518,6 +538,17 @@ void ParsedIR::mark_used_as_array_length(ID id)
 	}
 }
 
+Bitset ParsedIR::get_buffer_block_type_flags(const SPIRType &type) const
+{
+	if (type.member_types.empty())
+		return {};
+
+	Bitset all_members_flags = get_member_decoration_bitset(type.self, 0);
+	for (uint32_t i = 1; i < uint32_t(type.member_types.size()); i++)
+		all_members_flags.merge_and(get_member_decoration_bitset(type.self, i));
+	return all_members_flags;
+}
+
 Bitset ParsedIR::get_buffer_block_flags(const SPIRVariable &var) const
 {
 	auto &type = get<SPIRType>(var.basetype);
@@ -534,10 +565,7 @@ Bitset ParsedIR::get_buffer_block_flags(const SPIRVariable &var) const
 	if (type.member_types.empty())
 		return base_flags;
 
-	Bitset all_members_flags = get_member_decoration_bitset(type.self, 0);
-	for (uint32_t i = 1; i < uint32_t(type.member_types.size()); i++)
-		all_members_flags.merge_and(get_member_decoration_bitset(type.self, i));
-
+	auto all_members_flags = get_buffer_block_type_flags(type);
 	base_flags.merge_or(all_members_flags);
 	return base_flags;
 }
@@ -584,6 +612,8 @@ uint32_t ParsedIR::get_decoration(ID id, Decoration decoration) const
 		return dec.xfb_buffer;
 	case DecorationXfbStride:
 		return dec.xfb_stride;
+	case DecorationStream:
+		return dec.stream;
 	case DecorationBinding:
 		return dec.binding;
 	case DecorationDescriptorSet:
@@ -654,6 +684,10 @@ void ParsedIR::unset_decoration(ID id, Decoration decoration)
 
 	case DecorationXfbStride:
 		dec.xfb_stride = 0;
+		break;
+
+	case DecorationStream:
+		dec.stream = 0;
 		break;
 
 	case DecorationBinding:
@@ -730,6 +764,8 @@ uint32_t ParsedIR::get_member_decoration(TypeID id, uint32_t index, Decoration d
 		return dec.xfb_buffer;
 	case DecorationXfbStride:
 		return dec.xfb_stride;
+	case DecorationStream:
+		return dec.stream;
 	case DecorationSpecId:
 		return dec.spec_id;
 	case DecorationIndex:
@@ -824,6 +860,10 @@ void ParsedIR::unset_member_decoration(TypeID id, uint32_t index, Decoration dec
 
 	case DecorationXfbStride:
 		dec.xfb_stride = 0;
+		break;
+
+	case DecorationStream:
+		dec.stream = 0;
 		break;
 
 	case DecorationSpecId:

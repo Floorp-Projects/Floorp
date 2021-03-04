@@ -59,10 +59,32 @@ static Maybe<uint8_t> GetBytesPerBlock(dom::GPUTextureFormat format) {
     case dom::GPUTextureFormat::Rgba32sint:
     case dom::GPUTextureFormat::Rgba32float:
       return Some<uint8_t>(16u);
+    case dom::GPUTextureFormat::Stencil8:
+      return Some<uint8_t>(1u);
+    case dom::GPUTextureFormat::Depth16unorm:
+      return Some<uint8_t>(2u);
     case dom::GPUTextureFormat::Depth32float:
       return Some<uint8_t>(4u);
+    case dom::GPUTextureFormat::Bc1_rgba_unorm:
+    case dom::GPUTextureFormat::Bc1_rgba_unorm_srgb:
+    case dom::GPUTextureFormat::Bc4_r_unorm:
+    case dom::GPUTextureFormat::Bc4_r_snorm:
+      return Some<uint8_t>(8u);
+    case dom::GPUTextureFormat::Bc2_rgba_unorm:
+    case dom::GPUTextureFormat::Bc2_rgba_unorm_srgb:
+    case dom::GPUTextureFormat::Bc3_rgba_unorm:
+    case dom::GPUTextureFormat::Bc3_rgba_unorm_srgb:
+    case dom::GPUTextureFormat::Bc5_rg_unorm:
+    case dom::GPUTextureFormat::Bc5_rg_snorm:
+    case dom::GPUTextureFormat::Bc6h_rgb_ufloat:
+    case dom::GPUTextureFormat::Bc6h_rgb_float:
+    case dom::GPUTextureFormat::Bc7_rgba_unorm:
+    case dom::GPUTextureFormat::Bc7_rgba_unorm_srgb:
+      return Some<uint8_t>(16u);
     case dom::GPUTextureFormat::Depth24plus:
     case dom::GPUTextureFormat::Depth24plus_stencil8:
+    case dom::GPUTextureFormat::Depth24unorm_stencil8:
+    case dom::GPUTextureFormat::Depth32float_stencil8:
     case dom::GPUTextureFormat::EndGuard_:
       return Nothing();
   }

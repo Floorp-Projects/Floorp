@@ -3,7 +3,6 @@ use crate::{
     SamplerPtr, TexturePtr,
 };
 
-use auxil::ShaderStage;
 use hal;
 use metal;
 
@@ -64,28 +63,28 @@ pub enum RenderCommand<R: Resources> {
     SetRasterizerState(RasterizerState),
     SetVisibilityResult(metal::MTLVisibilityResultMode, hal::buffer::Offset),
     BindBuffer {
-        stage: ShaderStage,
+        stage: naga::ShaderStage,
         index: ResourceIndex,
         buffer: BufferPtr,
         offset: hal::buffer::Offset,
     },
     BindBuffers {
-        stage: ShaderStage,
+        stage: naga::ShaderStage,
         index: ResourceIndex,
         buffers: R::BufferArray,
     },
     BindBufferData {
-        stage: ShaderStage,
+        stage: naga::ShaderStage,
         index: ResourceIndex,
         words: R::Data,
     },
     BindTextures {
-        stage: ShaderStage,
+        stage: naga::ShaderStage,
         index: ResourceIndex,
         textures: R::TextureArray,
     },
     BindSamplers {
-        stage: ShaderStage,
+        stage: naga::ShaderStage,
         index: ResourceIndex,
         samplers: R::SamplerArray,
     },

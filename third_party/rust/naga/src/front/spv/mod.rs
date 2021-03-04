@@ -15,8 +15,7 @@ mod convert;
 mod error;
 mod flow;
 mod function;
-#[cfg(all(test, feature = "serialize"))]
-mod rosetta;
+mod image;
 
 use convert::*;
 use error::Error;
@@ -33,8 +32,15 @@ use std::{convert::TryInto, num::NonZeroU32, path::PathBuf};
 
 pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::Shader,
+    spirv::Capability::ClipDistance,
     spirv::Capability::CullDistance,
+    spirv::Capability::ImageQuery,
+    spirv::Capability::Image1D,
+    spirv::Capability::ImageCubeArray,
+    spirv::Capability::ImageMSArray,
     spirv::Capability::StorageImageExtendedFormats,
+    spirv::Capability::Sampled1D,
+    spirv::Capability::SampledCubeArray,
 ];
 pub const SUPPORTED_EXTENSIONS: &[&str] = &[];
 pub const SUPPORTED_EXT_SETS: &[&str] = &["GLSL.std.450"];
@@ -54,14 +60,39 @@ impl Instruction {
         }
     }
 
-    fn expect_at_least(self, count: u16) -> Result<(), Error> {
-        if self.wc >= count {
-            Ok(())
-        } else {
-            Err(Error::InvalidOperandCount(self.op, self.wc))
+    fn expect_at_least(self, count: u16) -> Result<u16, Error> {
+        self.wc
+            .checked_sub(count)
+            .ok_or(Error::InvalidOperandCount(self.op, self.wc))
+    }
+}
+
+impl crate::Expression {
+    fn as_global_var(&self) -> Result<Handle<crate::GlobalVariable>, Error> {
+        match *self {
+            crate::Expression::GlobalVariable(handle) => Ok(handle),
+            _ => Err(Error::InvalidGlobalVar(self.clone())),
         }
     }
 }
+
+impl crate::TypeInner {
+    fn can_comparison_sample(&self) -> bool {
+        match *self {
+            crate::TypeInner::Image {
+                class:
+                    crate::ImageClass::Sampled {
+                        kind: crate::ScalarKind::Float,
+                        multi: false,
+                    },
+                ..
+            } => true,
+            crate::TypeInner::Sampler { .. } => true,
+            _ => false,
+        }
+    }
+}
+
 /// OpPhi instruction.
 #[derive(Clone, Default, Debug)]
 struct PhiInstruction {
@@ -100,22 +131,6 @@ impl<T> LookupHelper for FastHashMap<spirv::Word, T> {
     }
 }
 
-//TODO: this method may need to be gone, depending on whether
-// WGSL allows treating images and samplers as expressions and pass them around.
-fn reach_global_type(
-    mut expr_handle: Handle<crate::Expression>,
-    expressions: &Arena<crate::Expression>,
-    globals: &Arena<crate::GlobalVariable>,
-) -> Option<Handle<crate::Type>> {
-    loop {
-        expr_handle = match expressions[expr_handle] {
-            crate::Expression::Load { pointer } => pointer,
-            crate::Expression::GlobalVariable(var) => return Some(globals[var].ty),
-            _ => return None,
-        };
-    }
-}
-
 fn check_sample_coordinates(
     ty: &crate::Type,
     expect_kind: crate::ScalarKind,
@@ -140,9 +155,20 @@ fn check_sample_coordinates(
     }
 }
 
+impl crate::ImageDimension {
+    fn required_coordinate_size(&self) -> Option<crate::VectorSize> {
+        match *self {
+            crate::ImageDimension::D1 => None,
+            crate::ImageDimension::D2 => Some(crate::VectorSize::Bi),
+            crate::ImageDimension::D3 => Some(crate::VectorSize::Tri),
+            crate::ImageDimension::Cube => Some(crate::VectorSize::Tri),
+        }
+    }
+}
+
 type MemberIndex = u32;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 struct Block {
     buffer: bool,
 }
@@ -155,16 +181,25 @@ bitflags::bitflags! {
     }
 }
 
+#[derive(Debug)]
+enum Majority {
+    Column,
+    Row,
+}
+
 #[derive(Debug, Default)]
 struct Decoration {
     name: Option<String>,
-    built_in: Option<crate::BuiltIn>,
+    built_in: Option<spirv::Word>,
     location: Option<spirv::Word>,
     desc_set: Option<spirv::Word>,
     desc_index: Option<spirv::Word>,
+    specialization: Option<spirv::Word>,
     block: Option<Block>,
     offset: Option<spirv::Word>,
     array_stride: Option<NonZeroU32>,
+    matrix_stride: Option<NonZeroU32>,
+    matrix_major: Option<Majority>,
     interpolation: Option<crate::Interpolation>,
     flags: DecorationFlags,
 }
@@ -177,7 +212,7 @@ impl Decoration {
         }
     }
 
-    fn get_binding(&self) -> Option<crate::Binding> {
+    fn get_binding(&self, is_output: bool) -> Option<crate::Binding> {
         //TODO: validate this better
         match *self {
             Decoration {
@@ -186,7 +221,13 @@ impl Decoration {
                 desc_set: None,
                 desc_index: None,
                 ..
-            } => Some(crate::Binding::BuiltIn(built_in)),
+            } => match map_builtin(built_in, is_output) {
+                Ok(built_in) => Some(crate::Binding::BuiltIn(built_in)),
+                Err(e) => {
+                    log::warn!("{:?}", e);
+                    None
+                }
+            },
             Decoration {
                 built_in: None,
                 location: Some(loc),
@@ -203,42 +244,6 @@ impl Decoration {
             } => Some(crate::Binding::Resource { group, binding }),
             _ => None,
         }
-    }
-
-    fn get_origin(&self) -> Result<crate::MemberOrigin, Error> {
-        match *self {
-            Decoration {
-                location: Some(_), ..
-            }
-            | Decoration {
-                desc_set: Some(_), ..
-            }
-            | Decoration {
-                desc_index: Some(_),
-                ..
-            } => Err(Error::MissingDecoration(spirv::Decoration::Offset)),
-            Decoration {
-                built_in: Some(built_in),
-                offset: None,
-                ..
-            } => Ok(crate::MemberOrigin::BuiltIn(built_in)),
-            Decoration {
-                built_in: None,
-                offset: Some(offset),
-                ..
-            } => Ok(crate::MemberOrigin::Offset(offset)),
-            _ => Ok(crate::MemberOrigin::Empty),
-        }
-    }
-}
-
-bitflags::bitflags! {
-    /// Flags describing sampling method.
-    pub struct SamplingFlags: u32 {
-        /// Regular sampling.
-        const REGULAR = 0x1;
-        /// Comparison sampling.
-        const COMPARISON = 0x2;
     }
 }
 
@@ -283,22 +288,6 @@ struct LookupExpression {
 }
 
 #[derive(Clone, Debug)]
-struct LookupSampledImage {
-    image: Handle<crate::Expression>,
-    sampler: Handle<crate::Expression>,
-}
-#[derive(Clone, Debug)]
-enum DeferredSource {
-    EntryPoint(crate::ShaderStage, String),
-    Function(Handle<crate::Function>),
-}
-struct DeferredFunctionCall {
-    source: DeferredSource,
-    expr_handle: Handle<crate::Expression>,
-    dst_id: spirv::Word,
-}
-
-#[derive(Clone, Debug)]
 pub struct Assignment {
     to: Handle<crate::Expression>,
     value: Handle<crate::Expression>,
@@ -317,20 +306,23 @@ pub struct Parser<I> {
     future_decor: FastHashMap<spirv::Word, Decoration>,
     future_member_decor: FastHashMap<(spirv::Word, MemberIndex), Decoration>,
     lookup_member_type_id: FastHashMap<(Handle<crate::Type>, MemberIndex), spirv::Word>,
-    handle_sampling: FastHashMap<Handle<crate::Type>, SamplingFlags>,
+    handle_sampling: FastHashMap<Handle<crate::GlobalVariable>, image::SamplingFlags>,
     lookup_type: FastHashMap<spirv::Word, LookupType>,
-    lookup_void_type: FastHashSet<spirv::Word>,
+    lookup_void_type: Option<spirv::Word>,
     lookup_storage_buffer_types: FastHashSet<Handle<crate::Type>>,
     // Lookup for samplers and sampled images, storing flags on how they are used.
     lookup_constant: FastHashMap<spirv::Word, LookupConstant>,
     lookup_variable: FastHashMap<spirv::Word, LookupVariable>,
     lookup_expression: FastHashMap<spirv::Word, LookupExpression>,
-    lookup_sampled_image: FastHashMap<spirv::Word, LookupSampledImage>,
+    lookup_sampled_image: FastHashMap<spirv::Word, image::LookupSampledImage>,
     lookup_function_type: FastHashMap<spirv::Word, LookupFunctionType>,
     lookup_function: FastHashMap<spirv::Word, Handle<crate::Function>>,
     lookup_entry_point: FastHashMap<spirv::Word, EntryPoint>,
-    deferred_function_calls: Vec<DeferredFunctionCall>,
+    //Note: the key here is fully artificial, has nothing to do with the module
+    deferred_function_calls: FastHashMap<Handle<crate::Function>, spirv::Word>,
+    dummy_functions: Arena<crate::Function>,
     options: Options,
+    index_constants: Vec<Handle<crate::Constant>>,
 }
 
 impl<I: Iterator<Item = u32>> Parser<I> {
@@ -345,7 +337,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             handle_sampling: FastHashMap::default(),
             lookup_member_type_id: FastHashMap::default(),
             lookup_type: FastHashMap::default(),
-            lookup_void_type: FastHashSet::default(),
+            lookup_void_type: None,
             lookup_storage_buffer_types: FastHashSet::default(),
             lookup_constant: FastHashMap::default(),
             lookup_variable: FastHashMap::default(),
@@ -354,8 +346,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             lookup_function_type: FastHashMap::default(),
             lookup_function: FastHashMap::default(),
             lookup_entry_point: FastHashMap::default(),
-            deferred_function_calls: Vec::new(),
+            deferred_function_calls: FastHashMap::default(),
+            dummy_functions: Arena::new(),
             options: options.clone(),
+            index_constants: Vec::new(),
         }
     }
 
@@ -405,11 +399,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         match dec_typed {
             spirv::Decoration::BuiltIn => {
                 inst.expect(base_words + 2)?;
-                let raw = self.next()?;
-                match map_builtin(raw) {
-                    Ok(built_in) => dec.built_in = Some(built_in),
-                    Err(_e) => log::warn!("Unsupported builtin {}", raw),
-                };
+                dec.built_in = Some(self.next()?);
             }
             spirv::Decoration::Location => {
                 inst.expect(base_words + 2)?;
@@ -437,6 +427,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 inst.expect(base_words + 2)?;
                 dec.array_stride = NonZeroU32::new(self.next()?);
             }
+            spirv::Decoration::MatrixStride => {
+                inst.expect(base_words + 2)?;
+                dec.matrix_stride = NonZeroU32::new(self.next()?);
+            }
             spirv::Decoration::NoPerspective => {
                 dec.interpolation = Some(crate::Interpolation::Linear);
             }
@@ -457,6 +451,15 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             }
             spirv::Decoration::NonWritable => {
                 dec.flags |= DecorationFlags::NON_WRITABLE;
+            }
+            spirv::Decoration::ColMajor => {
+                dec.matrix_major = Some(Majority::Column);
+            }
+            spirv::Decoration::RowMajor => {
+                dec.matrix_major = Some(Majority::Row);
+            }
+            spirv::Decoration::SpecId => {
+                dec.specialization = Some(self.next()?);
             }
             other => {
                 log::warn!("Unknown decoration {:?}", other);
@@ -521,6 +524,62 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         Ok(())
     }
 
+    fn insert_composite(
+        &self,
+        root_expr: Handle<crate::Expression>,
+        root_type_id: spirv::Word,
+        object_expr: Handle<crate::Expression>,
+        selections: &[spirv::Word],
+        type_arena: &Arena<crate::Type>,
+        expressions: &mut Arena<crate::Expression>,
+    ) -> Result<Handle<crate::Expression>, Error> {
+        let selection = match selections.first() {
+            Some(&index) => index,
+            None => return Ok(object_expr),
+        };
+        let root_lookup = self.lookup_type.lookup(root_type_id)?;
+        let (count, child_type_id) = match type_arena[root_lookup.handle].inner {
+            crate::TypeInner::Struct { ref members, .. } => {
+                let child_type_id = *self
+                    .lookup_member_type_id
+                    .get(&(root_lookup.handle, selection))
+                    .ok_or(Error::InvalidAccessType(root_type_id))?;
+                (members.len(), child_type_id)
+            }
+            // crate::TypeInner::Array //TODO?
+            crate::TypeInner::Vector { size, .. }
+            | crate::TypeInner::Matrix { columns: size, .. } => {
+                let child_type_id = root_lookup
+                    .base_id
+                    .ok_or(Error::InvalidAccessType(root_type_id))?;
+                (size as usize, child_type_id)
+            }
+            _ => return Err(Error::InvalidAccessType(root_type_id)),
+        };
+
+        let mut components = Vec::with_capacity(count);
+        for index in 0..count as u32 {
+            let expr = expressions.append(crate::Expression::AccessIndex {
+                base: root_expr,
+                index,
+            });
+            components.push(expr);
+        }
+        components[selection as usize] = self.insert_composite(
+            components[selection as usize],
+            child_type_id,
+            object_expr,
+            &selections[1..],
+            type_arena,
+            expressions,
+        )?;
+
+        Ok(expressions.append(crate::Expression::Compose {
+            ty: root_lookup.handle,
+            components,
+        }))
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn next_block(
         &mut self,
@@ -530,9 +589,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         type_arena: &Arena<crate::Type>,
         const_arena: &Arena<crate::Constant>,
         global_arena: &Arena<crate::GlobalVariable>,
-        local_function_calls: &mut FastHashMap<Handle<crate::Expression>, spirv::Word>,
     ) -> Result<ControlFlowNode, Error> {
-        let mut assignments = Vec::new();
+        let mut block = Vec::new();
         let mut phis = Vec::new();
         let mut merge = None;
         let terminator = loop {
@@ -541,6 +599,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             log::debug!("\t\t{:?} [{}]", inst.op, inst.wc);
 
             match inst.op {
+                Op::Undef => {
+                    inst.expect(3)?;
+                    let _result_type_id = self.next()?;
+                    let _result_id = self.next()?;
+                    //TODO?
+                }
                 Op::Variable => {
                     inst.expect_at_least(4)?;
                     let result_type_id = self.next()?;
@@ -601,8 +665,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         },
                     );
 
-                    let mut phi = PhiInstruction::default();
-                    phi.id = result_id;
+                    let mut phi = PhiInstruction {
+                        id: result_id,
+                        ..Default::default()
+                    };
                     for _ in 0..(inst.wc - 3) / 2 {
                         phi.variables.push((self.next()?, self.next()?));
                     }
@@ -649,14 +715,22 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                                 let index = match expressions[index_expr.handle] {
                                     crate::Expression::Constant(const_handle) => {
                                         match const_arena[const_handle].inner {
-                                            crate::ConstantInner::Uint(v) => v as u32,
-                                            crate::ConstantInner::Sint(v) => v as u32,
+                                            crate::ConstantInner::Scalar {
+                                                width: 4,
+                                                value: crate::ScalarValue::Uint(v),
+                                            } => v as u32,
+                                            crate::ConstantInner::Scalar {
+                                                width: 4,
+                                                value: crate::ScalarValue::Sint(v),
+                                            } => v as u32,
                                             _ => {
-                                                return Err(Error::InvalidAccess(index_expr.handle))
+                                                return Err(Error::InvalidAccess(
+                                                    crate::Expression::Constant(const_handle),
+                                                ))
                                             }
                                         }
                                     }
-                                    _ => return Err(Error::InvalidAccess(index_expr.handle)),
+                                    ref other => return Err(Error::InvalidAccess(other.clone())),
                                 };
                                 AccessExpression {
                                     base_handle: expressions.append(
@@ -692,19 +766,110 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     };
                     self.lookup_expression.insert(result_id, lookup_expression);
                 }
+                Op::VectorExtractDynamic => {
+                    inst.expect(5)?;
+                    let result_type_id = self.next()?;
+                    let id = self.next()?;
+                    let composite_id = self.next()?;
+                    let index_id = self.next()?;
+
+                    let root_lexp = self.lookup_expression.lookup(composite_id)?;
+                    let root_type_lookup = self.lookup_type.lookup(root_lexp.type_id)?;
+                    let index_lexp = self.lookup_expression.lookup(index_id)?;
+
+                    let num_components = match type_arena[root_type_lookup.handle].inner {
+                        crate::TypeInner::Vector { size, .. } => size as usize,
+                        _ => return Err(Error::InvalidVectorType(root_type_lookup.handle)),
+                    };
+
+                    let mut index_expr =
+                        expressions.append(crate::Expression::Constant(self.index_constants[0]));
+                    let mut handle = expressions.append(crate::Expression::Access {
+                        base: root_lexp.handle,
+                        index: index_expr,
+                    });
+                    for &index in self.index_constants[1..num_components].iter() {
+                        index_expr = expressions.append(crate::Expression::Constant(index));
+                        let access_expr = expressions.append(crate::Expression::Access {
+                            base: root_lexp.handle,
+                            index: index_expr,
+                        });
+                        let cond = expressions.append(crate::Expression::Binary {
+                            op: crate::BinaryOperator::Equal,
+                            left: index_expr,
+                            right: index_lexp.handle,
+                        });
+                        handle = expressions.append(crate::Expression::Select {
+                            condition: cond,
+                            accept: access_expr,
+                            reject: handle,
+                        });
+                    }
+
+                    self.lookup_expression.insert(
+                        id,
+                        LookupExpression {
+                            handle,
+                            type_id: result_type_id,
+                        },
+                    );
+                }
+                Op::VectorInsertDynamic => {
+                    inst.expect(6)?;
+                    let result_type_id = self.next()?;
+                    let id = self.next()?;
+                    let composite_id = self.next()?;
+                    let object_id = self.next()?;
+                    let index_id = self.next()?;
+
+                    let object_lexp = self.lookup_expression.lookup(object_id)?;
+                    let root_lexp = self.lookup_expression.lookup(composite_id)?;
+                    let root_type_lookup = self.lookup_type.lookup(root_lexp.type_id)?;
+                    let index_lexp = self.lookup_expression.lookup(index_id)?;
+
+                    let num_components = match type_arena[root_type_lookup.handle].inner {
+                        crate::TypeInner::Vector { size, .. } => size as usize,
+                        _ => return Err(Error::InvalidVectorType(root_type_lookup.handle)),
+                    };
+                    let mut components = Vec::with_capacity(num_components);
+                    for &index in self.index_constants[..num_components].iter() {
+                        let index_expr = expressions.append(crate::Expression::Constant(index));
+                        let access_expr = expressions.append(crate::Expression::Access {
+                            base: root_lexp.handle,
+                            index: index_expr,
+                        });
+                        let cond = expressions.append(crate::Expression::Binary {
+                            op: crate::BinaryOperator::Equal,
+                            left: index_expr,
+                            right: index_lexp.handle,
+                        });
+                        let handle = expressions.append(crate::Expression::Select {
+                            condition: cond,
+                            accept: object_lexp.handle,
+                            reject: access_expr,
+                        });
+                        components.push(handle);
+                    }
+                    let handle = expressions.append(crate::Expression::Compose {
+                        ty: root_type_lookup.handle,
+                        components,
+                    });
+
+                    self.lookup_expression.insert(
+                        id,
+                        LookupExpression {
+                            handle,
+                            type_id: result_type_id,
+                        },
+                    );
+                }
                 Op::CompositeExtract => {
                     inst.expect_at_least(4)?;
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let base_id = self.next()?;
                     log::trace!("\t\t\tlooking up expr {:?}", base_id);
-                    let mut lexp = {
-                        let expr = self.lookup_expression.lookup(base_id)?;
-                        LookupExpression {
-                            handle: expr.handle,
-                            type_id: expr.type_id,
-                        }
-                    };
+                    let mut lexp = self.lookup_expression.lookup(base_id)?.clone();
                     for _ in 4..inst.wc {
                         let index = self.next()?;
                         log::trace!("\t\t\tlooking up type {:?}", lexp.type_id);
@@ -734,6 +899,36 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         result_id,
                         LookupExpression {
                             handle: lexp.handle,
+                            type_id: result_type_id,
+                        },
+                    );
+                }
+                Op::CompositeInsert => {
+                    inst.expect_at_least(5)?;
+                    let result_type_id = self.next()?;
+                    let id = self.next()?;
+                    let object_id = self.next()?;
+                    let composite_id = self.next()?;
+                    let mut selections = Vec::with_capacity(inst.wc as usize - 5);
+                    for _ in 5..inst.wc {
+                        selections.push(self.next()?);
+                    }
+
+                    let object_lexp = self.lookup_expression.lookup(object_id)?.clone();
+                    let root_lexp = self.lookup_expression.lookup(composite_id)?.clone();
+                    let handle = self.insert_composite(
+                        root_lexp.handle,
+                        result_type_id,
+                        object_lexp.handle,
+                        &selections,
+                        type_arena,
+                        expressions,
+                    )?;
+
+                    self.lookup_expression.insert(
+                        id,
+                        LookupExpression {
+                            handle,
                             type_id: result_type_id,
                         },
                     );
@@ -789,8 +984,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     }
                     let base_expr = self.lookup_expression.lookup(pointer_id)?;
                     let value_expr = self.lookup_expression.lookup(value_id)?;
-                    assignments.push(Assignment {
-                        to: base_expr.handle,
+                    block.push(crate::Statement::Store {
+                        pointer: base_expr.handle,
                         value: value_expr.handle,
                     });
                 }
@@ -815,7 +1010,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     inst.expect(5)?;
                     self.parse_expr_binary_op(expressions, crate::BinaryOperator::Divide)?;
                 }
-                Op::UMod | Op::FMod | Op::SRem | Op::FRem => {
+                Op::SMod | Op::UMod | Op::FMod | Op::SRem | Op::FRem => {
                     inst.expect(5)?;
                     self.parse_expr_binary_op(expressions, crate::BinaryOperator::Modulo)?;
                 }
@@ -833,7 +1028,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let result_id = self.next()?;
                     let matrix_id = self.next()?;
                     let matrix_lexp = self.lookup_expression.lookup(matrix_id)?;
-                    let expr = crate::Expression::Transpose(matrix_lexp.handle);
+                    let expr = crate::Expression::Math {
+                        fun: crate::MathFunction::Transpose,
+                        arg: matrix_lexp.handle,
+                        arg1: None,
+                        arg2: None,
+                    };
                     self.lookup_expression.insert(
                         result_id,
                         LookupExpression {
@@ -850,7 +1050,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let right_id = self.next()?;
                     let left_lexp = self.lookup_expression.lookup(left_id)?;
                     let right_lexp = self.lookup_expression.lookup(right_id)?;
-                    let expr = crate::Expression::DotProduct(left_lexp.handle, right_lexp.handle);
+                    let expr = crate::Expression::Math {
+                        fun: crate::MathFunction::Dot,
+                        arg: left_lexp.handle,
+                        arg1: Some(right_lexp.handle),
+                        arg2: None,
+                    };
                     self.lookup_expression.insert(
                         result_id,
                         LookupExpression {
@@ -891,182 +1096,55 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     self.parse_expr_binary_op(expressions, crate::BinaryOperator::ShiftLeft)?;
                 }
                 // Sampling
+                Op::Image => {
+                    inst.expect(4)?;
+                    self.parse_image_uncouple()?;
+                }
                 Op::SampledImage => {
                     inst.expect(5)?;
-                    let _result_type_id = self.next()?;
-                    let result_id = self.next()?;
-                    let image_id = self.next()?;
-                    let sampler_id = self.next()?;
-                    let image_lexp = self.lookup_expression.lookup(image_id)?;
-                    let sampler_lexp = self.lookup_expression.lookup(sampler_id)?;
-                    //TODO: compare the result type
-                    self.lookup_sampled_image.insert(
-                        result_id,
-                        LookupSampledImage {
-                            image: image_lexp.handle,
-                            sampler: sampler_lexp.handle,
-                        },
-                    );
+                    self.parse_image_couple()?;
                 }
-                Op::ImageSampleImplicitLod | Op::ImageSampleExplicitLod => {
-                    inst.expect_at_least(5)?;
-                    let result_type_id = self.next()?;
-                    let result_id = self.next()?;
-                    let sampled_image_id = self.next()?;
-                    let coordinate_id = self.next()?;
-                    let si_lexp = self.lookup_sampled_image.lookup(sampled_image_id)?.clone();
-                    let coord_lexp = self.lookup_expression.lookup(coordinate_id)?.clone();
-                    let coord_type_handle = self.lookup_type.lookup(coord_lexp.type_id)?.handle;
-
-                    let sampler_type_handle =
-                        reach_global_type(si_lexp.sampler, &expressions, global_arena)
-                            .ok_or(Error::InvalidSamplerExpression(si_lexp.sampler))?;
-                    let image_type_handle =
-                        reach_global_type(si_lexp.image, &expressions, global_arena)
-                            .ok_or(Error::InvalidImageExpression(si_lexp.image))?;
-                    log::debug!(
-                        "\t\t\tImage {:?} with sampler {:?}",
-                        image_type_handle,
-                        sampler_type_handle
-                    );
-                    *self.handle_sampling.get_mut(&sampler_type_handle).unwrap() |=
-                        SamplingFlags::REGULAR;
-                    *self.handle_sampling.get_mut(&image_type_handle).unwrap() |=
-                        SamplingFlags::REGULAR;
-                    match type_arena[sampler_type_handle].inner {
-                        crate::TypeInner::Sampler { comparison: false } => (),
-                        _ => return Err(Error::InvalidSampleSampler(sampler_type_handle)),
-                    };
-                    match type_arena[image_type_handle].inner {
-                        //TODO: compare the result type
-                        crate::TypeInner::Image {
-                            dim,
-                            arrayed,
-                            class:
-                                crate::ImageClass::Sampled {
-                                    kind: _,
-                                    multi: false,
-                                },
-                        } => {
-                            if !check_sample_coordinates(
-                                &type_arena[coord_type_handle],
-                                crate::ScalarKind::Float,
-                                dim,
-                                arrayed,
-                            ) {
-                                return Err(Error::InvalidSampleCoordinates(coord_type_handle));
-                            }
-                        }
-                        _ => return Err(Error::InvalidSampleImage(image_type_handle)),
-                    };
-
-                    let mut level = crate::SampleLevel::Auto;
-                    let mut base_wc = 5;
-                    if base_wc < inst.wc {
-                        let image_ops = self.next()?;
-                        base_wc += 1;
-                        let mask = spirv::ImageOperands::from_bits_truncate(image_ops);
-                        if mask.contains(spirv::ImageOperands::BIAS) {
-                            let bias_expr = self.next()?;
-                            let bias_handle = self.lookup_expression.lookup(bias_expr)?.handle;
-                            level = crate::SampleLevel::Bias(bias_handle);
-                            base_wc += 1;
-                        }
-                        if mask.contains(spirv::ImageOperands::LOD) {
-                            let lod_expr = self.next()?;
-                            let lod_handle = self.lookup_expression.lookup(lod_expr)?.handle;
-                            level = crate::SampleLevel::Exact(lod_handle);
-                            base_wc += 1;
-                        }
-                        for _ in base_wc..inst.wc {
-                            self.next()?;
-                        }
-                    }
-
-                    let expr = crate::Expression::ImageSample {
-                        image: si_lexp.image,
-                        sampler: si_lexp.sampler,
-                        coordinate: coord_lexp.handle,
-                        level,
-                        depth_ref: None,
-                    };
-                    self.lookup_expression.insert(
-                        result_id,
-                        LookupExpression {
-                            handle: expressions.append(expr),
-                            type_id: result_type_id,
-                        },
-                    );
+                Op::ImageWrite => {
+                    let extra = inst.expect_at_least(4)?;
+                    let stmt =
+                        self.parse_image_write(extra, type_arena, global_arena, expressions)?;
+                    block.push(stmt);
                 }
-                Op::ImageSampleDrefImplicitLod => {
-                    inst.expect_at_least(6)?;
-                    let result_type_id = self.next()?;
-                    let result_id = self.next()?;
-                    let sampled_image_id = self.next()?;
-                    let coordinate_id = self.next()?;
-                    let dref_id = self.next()?;
-
-                    let si_lexp = self.lookup_sampled_image.lookup(sampled_image_id)?;
-                    let coord_lexp = self.lookup_expression.lookup(coordinate_id)?;
-                    let coord_type_handle = self.lookup_type.lookup(coord_lexp.type_id)?.handle;
-                    let sampler_type_handle =
-                        reach_global_type(si_lexp.sampler, &expressions, global_arena)
-                            .ok_or(Error::InvalidSamplerExpression(si_lexp.sampler))?;
-                    let image_type_handle =
-                        reach_global_type(si_lexp.image, &expressions, global_arena)
-                            .ok_or(Error::InvalidImageExpression(si_lexp.image))?;
-                    *self.handle_sampling.get_mut(&sampler_type_handle).unwrap() |=
-                        SamplingFlags::COMPARISON;
-                    *self.handle_sampling.get_mut(&image_type_handle).unwrap() |=
-                        SamplingFlags::COMPARISON;
-                    match type_arena[sampler_type_handle].inner {
-                        crate::TypeInner::Sampler { comparison: true } => (),
-                        _ => return Err(Error::InvalidSampleSampler(sampler_type_handle)),
-                    };
-                    match type_arena[image_type_handle].inner {
-                        //TODO: compare the result type
-                        crate::TypeInner::Image {
-                            dim,
-                            arrayed,
-                            class: crate::ImageClass::Depth,
-                        } => {
-                            if !check_sample_coordinates(
-                                &type_arena[coord_type_handle],
-                                crate::ScalarKind::Float,
-                                dim,
-                                arrayed,
-                            ) {
-                                return Err(Error::InvalidSampleCoordinates(coord_type_handle));
-                            }
-                        }
-                        _ => return Err(Error::InvalidSampleImage(image_type_handle)),
-                    };
-
-                    let dref_lexp = self.lookup_expression.lookup(dref_id)?;
-                    let dref_type_handle = self.lookup_type.lookup(dref_lexp.type_id)?.handle;
-                    match type_arena[dref_type_handle].inner {
-                        crate::TypeInner::Scalar {
-                            kind: crate::ScalarKind::Float,
-                            width: _,
-                        } => (),
-                        _ => return Err(Error::InvalidDepthReference(dref_type_handle)),
-                    }
-
-                    let expr = crate::Expression::ImageSample {
-                        image: si_lexp.image,
-                        sampler: si_lexp.sampler,
-                        coordinate: coord_lexp.handle,
-                        level: crate::SampleLevel::Auto,
-                        depth_ref: Some(dref_lexp.handle),
-                    };
-                    self.lookup_expression.insert(
-                        result_id,
-                        LookupExpression {
-                            handle: expressions.append(expr),
-                            type_id: result_type_id,
-                        },
-                    );
+                Op::ImageFetch | Op::ImageRead => {
+                    let extra = inst.expect_at_least(5)?;
+                    self.parse_image_load(extra, type_arena, global_arena, expressions)?;
                 }
+                Op::ImageSampleImplicitLod
+                | Op::ImageSampleExplicitLod
+                | Op::ImageSampleProjImplicitLod
+                | Op::ImageSampleProjExplicitLod => {
+                    let extra = inst.expect_at_least(5)?;
+                    self.parse_image_sample(extra, type_arena, global_arena, expressions)?;
+                }
+                Op::ImageSampleDrefImplicitLod
+                | Op::ImageSampleDrefExplicitLod
+                | Op::ImageSampleProjDrefImplicitLod
+                | Op::ImageSampleProjDrefExplicitLod => {
+                    let extra = inst.expect_at_least(6)?;
+                    self.parse_image_sample_dref(extra, type_arena, global_arena, expressions)?;
+                }
+                Op::ImageQuerySize => {
+                    inst.expect(4)?;
+                    self.parse_image_query_size(false, expressions)?;
+                }
+                Op::ImageQuerySizeLod => {
+                    inst.expect(5)?;
+                    self.parse_image_query_size(true, expressions)?;
+                }
+                Op::ImageQueryLevels => {
+                    inst.expect(4)?;
+                    self.parse_image_query_other(crate::ImageQuery::NumLevels, expressions)?;
+                }
+                Op::ImageQuerySamples => {
+                    inst.expect(4)?;
+                    self.parse_image_query_other(crate::ImageQuery::NumSamples, expressions)?;
+                }
+                // other ops
                 Op::Select => {
                     inst.expect(6)?;
                     let result_type_id = self.next()?;
@@ -1185,22 +1263,34 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         let arg_id = self.next()?;
                         arguments.push(self.lookup_expression.lookup(arg_id)?.handle);
                     }
-                    let expr = crate::Expression::Call {
-                        // will be replaced by `Local()` after all the functions are parsed
-                        origin: crate::FunctionOrigin::External(String::new()),
-                        arguments,
-                    };
-                    let expr_handle = expressions.append(expr);
-                    local_function_calls.insert(expr_handle, func_id);
-                    self.lookup_expression.insert(
-                        result_id,
-                        LookupExpression {
-                            handle: expr_handle,
-                            type_id: result_type_id,
-                        },
-                    );
+
+                    // We just need an unique handle here, nothing more.
+                    let function = self.dummy_functions.append(crate::Function::default());
+                    self.deferred_function_calls.insert(function, func_id);
+
+                    if self.lookup_void_type == Some(result_type_id) {
+                        block.push(crate::Statement::Call {
+                            function,
+                            arguments,
+                        });
+                    } else {
+                        let expr_handle = expressions.append(crate::Expression::Call {
+                            function,
+                            arguments,
+                        });
+                        self.lookup_expression.insert(
+                            result_id,
+                            LookupExpression {
+                                handle: expr_handle,
+                                type_id: result_type_id,
+                            },
+                        );
+                    }
                 }
                 Op::ExtInst => {
+                    use crate::MathFunction as Mf;
+                    use spirv::GLOp as Glo;
+
                     let base_wc = 5;
                     inst.expect_at_least(base_wc)?;
                     let result_type_id = self.next()?;
@@ -1210,106 +1300,76 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         return Err(Error::UnsupportedExtInstSet(set_id));
                     }
                     let inst_id = self.next()?;
-                    let name = match spirv::GLOp::from_u32(inst_id) {
-                        Some(spirv::GLOp::FAbs) | Some(spirv::GLOp::SAbs) => {
-                            inst.expect(base_wc + 1)?;
-                            "abs"
-                        }
-                        Some(spirv::GLOp::FSign) | Some(spirv::GLOp::SSign) => {
-                            inst.expect(base_wc + 1)?;
-                            "sign"
-                        }
-                        Some(spirv::GLOp::Floor) => {
-                            inst.expect(base_wc + 1)?;
-                            "floor"
-                        }
-                        Some(spirv::GLOp::Ceil) => {
-                            inst.expect(base_wc + 1)?;
-                            "ceil"
-                        }
-                        Some(spirv::GLOp::Fract) => {
-                            inst.expect(base_wc + 1)?;
-                            "fract"
-                        }
-                        Some(spirv::GLOp::Sin) => {
-                            inst.expect(base_wc + 1)?;
-                            "sin"
-                        }
-                        Some(spirv::GLOp::Cos) => {
-                            inst.expect(base_wc + 1)?;
-                            "cos"
-                        }
-                        Some(spirv::GLOp::Tan) => {
-                            inst.expect(base_wc + 1)?;
-                            "tan"
-                        }
-                        Some(spirv::GLOp::Atan2) => {
-                            inst.expect(base_wc + 2)?;
-                            "atan2"
-                        }
-                        Some(spirv::GLOp::Pow) => {
-                            inst.expect(base_wc + 2)?;
-                            "pow"
-                        }
-                        Some(spirv::GLOp::MatrixInverse) => {
-                            inst.expect(base_wc + 1)?;
-                            "inverse"
-                        }
-                        Some(spirv::GLOp::FMix) => {
-                            inst.expect(base_wc + 3)?;
-                            "mix"
-                        }
-                        Some(spirv::GLOp::Step) => {
-                            inst.expect(base_wc + 2)?;
-                            "step"
-                        }
-                        Some(spirv::GLOp::SmoothStep) => {
-                            inst.expect(base_wc + 3)?;
-                            "smoothstep"
-                        }
-                        Some(spirv::GLOp::FMin) => {
-                            inst.expect(base_wc + 2)?;
-                            "min"
-                        }
-                        Some(spirv::GLOp::FMax) => {
-                            inst.expect(base_wc + 2)?;
-                            "max"
-                        }
-                        Some(spirv::GLOp::FClamp) => {
-                            inst.expect(base_wc + 3)?;
-                            "clamp"
-                        }
-                        Some(spirv::GLOp::Length) => {
-                            inst.expect(base_wc + 1)?;
-                            "length"
-                        }
-                        Some(spirv::GLOp::Distance) => {
-                            inst.expect(base_wc + 2)?;
-                            "distance"
-                        }
-                        Some(spirv::GLOp::Cross) => {
-                            inst.expect(base_wc + 2)?;
-                            "cross"
-                        }
-                        Some(spirv::GLOp::Normalize) => {
-                            inst.expect(base_wc + 1)?;
-                            "normalize"
-                        }
-                        Some(spirv::GLOp::Reflect) => {
-                            inst.expect(base_wc + 2)?;
-                            "reflect"
-                        }
+                    let gl_op = Glo::from_u32(inst_id).ok_or(Error::UnsupportedExtInst(inst_id))?;
+                    let fun = match gl_op {
+                        Glo::Round => Mf::Round,
+                        Glo::Trunc => Mf::Trunc,
+                        Glo::FAbs | Glo::SAbs => Mf::Abs,
+                        Glo::FSign | Glo::SSign => Mf::Sign,
+                        Glo::Floor => Mf::Floor,
+                        Glo::Ceil => Mf::Ceil,
+                        Glo::Fract => Mf::Fract,
+                        Glo::Sin => Mf::Sin,
+                        Glo::Cos => Mf::Cos,
+                        Glo::Tan => Mf::Tan,
+                        Glo::Asin => Mf::Asin,
+                        Glo::Acos => Mf::Acos,
+                        Glo::Atan => Mf::Atan,
+                        Glo::Sinh => Mf::Sinh,
+                        Glo::Cosh => Mf::Cosh,
+                        Glo::Tanh => Mf::Tanh,
+                        Glo::Atan2 => Mf::Atan2,
+                        Glo::Pow => Mf::Pow,
+                        Glo::Exp => Mf::Exp,
+                        Glo::Log => Mf::Log,
+                        Glo::Exp2 => Mf::Exp2,
+                        Glo::Log2 => Mf::Log2,
+                        Glo::Sqrt => Mf::Sqrt,
+                        Glo::InverseSqrt => Mf::InverseSqrt,
+                        Glo::Determinant => Mf::Determinant,
+                        Glo::Modf => Mf::Modf,
+                        Glo::FMin | Glo::UMin | Glo::SMin | Glo::NMin => Mf::Min,
+                        Glo::FMax | Glo::UMax | Glo::SMax | Glo::NMax => Mf::Max,
+                        Glo::FClamp | Glo::UClamp | Glo::SClamp | Glo::NClamp => Mf::Clamp,
+                        Glo::FMix => Mf::Mix,
+                        Glo::Step => Mf::Step,
+                        Glo::SmoothStep => Mf::SmoothStep,
+                        Glo::Fma => Mf::Fma,
+                        Glo::Frexp => Mf::Frexp, //TODO: FrexpStruct?
+                        Glo::Ldexp => Mf::Ldexp,
+                        Glo::Length => Mf::Length,
+                        Glo::Distance => Mf::Distance,
+                        Glo::Cross => Mf::Cross,
+                        Glo::Normalize => Mf::Normalize,
+                        Glo::FaceForward => Mf::FaceForward,
+                        Glo::Reflect => Mf::Reflect,
                         _ => return Err(Error::UnsupportedExtInst(inst_id)),
                     };
 
-                    let mut arguments = Vec::with_capacity((inst.wc - base_wc) as usize);
-                    for _ in 0..arguments.capacity() {
+                    let arg_count = fun.argument_count();
+                    inst.expect(base_wc + arg_count as u16)?;
+                    let arg = {
                         let arg_id = self.next()?;
-                        arguments.push(self.lookup_expression.lookup(arg_id)?.handle);
-                    }
-                    let expr = crate::Expression::Call {
-                        origin: crate::FunctionOrigin::External(name.to_string()),
-                        arguments,
+                        self.lookup_expression.lookup(arg_id)?.handle
+                    };
+                    let arg1 = if arg_count > 1 {
+                        let arg_id = self.next()?;
+                        Some(self.lookup_expression.lookup(arg_id)?.handle)
+                    } else {
+                        None
+                    };
+                    let arg2 = if arg_count > 2 {
+                        let arg_id = self.next()?;
+                        Some(self.lookup_expression.lookup(arg_id)?.handle)
+                    } else {
+                        None
+                    };
+
+                    let expr = crate::Expression::Math {
+                        fun,
+                        arg,
+                        arg1,
+                        arg2,
                     };
                     self.lookup_expression.insert(
                         result_id,
@@ -1324,9 +1384,37 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     inst.expect(4)?;
                     self.parse_expr_unary_op(expressions, crate::UnaryOperator::Not)?;
                 }
+                Op::LogicalOr => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::LogicalOr)?;
+                }
+                Op::LogicalAnd => {
+                    inst.expect(5)?;
+                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::LogicalAnd)?;
+                }
                 op if inst.op >= Op::IEqual && inst.op <= Op::FUnordGreaterThanEqual => {
                     inst.expect(5)?;
                     self.parse_expr_binary_op(expressions, map_binary_operator(op)?)?;
+                }
+                op if inst.op >= Op::Any && inst.op <= Op::IsNormal => {
+                    inst.expect(4)?;
+                    let result_type_id = self.next()?;
+                    let result_id = self.next()?;
+                    let arg_id = self.next()?;
+
+                    let arg_lexp = self.lookup_expression.lookup(arg_id)?;
+
+                    let expr = crate::Expression::Relational {
+                        fun: map_relational_fun(op)?,
+                        argument: arg_lexp.handle,
+                    };
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: expressions.append(expr),
+                            type_id: result_type_id,
+                        },
+                    );
                 }
                 Op::Kill => {
                     inst.expect(1)?;
@@ -1418,14 +1506,6 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             }
         };
 
-        let mut block = Vec::new();
-        for assignment in assignments.iter() {
-            block.push(crate::Statement::Store {
-                pointer: assignment.to,
-                value: assignment.value,
-            });
-        }
-
         Ok(ControlFlowNode {
             id: block_id,
             ty: None,
@@ -1477,17 +1557,97 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         }
     }
 
+    fn patch_function_call_statements(
+        &self,
+        statements: &mut [crate::Statement],
+    ) -> Result<(), Error> {
+        use crate::Statement as S;
+        for statement in statements.iter_mut() {
+            match *statement {
+                S::Block(ref mut block) => {
+                    self.patch_function_call_statements(block)?;
+                }
+                S::If {
+                    condition: _,
+                    ref mut accept,
+                    ref mut reject,
+                } => {
+                    self.patch_function_call_statements(accept)?;
+                    self.patch_function_call_statements(reject)?;
+                }
+                S::Switch {
+                    selector: _,
+                    ref mut cases,
+                    ref mut default,
+                } => {
+                    for case in cases.iter_mut() {
+                        self.patch_function_call_statements(&mut case.body)?;
+                    }
+                    self.patch_function_call_statements(default)?;
+                }
+                S::Loop {
+                    ref mut body,
+                    ref mut continuing,
+                } => {
+                    self.patch_function_call_statements(body)?;
+                    self.patch_function_call_statements(continuing)?;
+                }
+                S::Break
+                | S::Continue
+                | S::Return { .. }
+                | S::Kill
+                | S::Store { .. }
+                | S::ImageStore { .. } => {}
+                S::Call {
+                    ref mut function, ..
+                } => {
+                    let fun_id = self.deferred_function_calls[function];
+                    *function = *self.lookup_function.lookup(fun_id)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn patch_function_calls(&self, fun: &mut crate::Function) -> Result<(), Error> {
+        for (_, expr) in fun.expressions.iter_mut() {
+            if let crate::Expression::Call {
+                ref mut function, ..
+            } = *expr
+            {
+                let fun_id = self.deferred_function_calls[function];
+                *function = *self.lookup_function.lookup(fun_id)?;
+            }
+        }
+        self.patch_function_call_statements(&mut fun.body)?;
+        Ok(())
+    }
+
     pub fn parse(mut self) -> Result<crate::Module, Error> {
         let mut module = {
             if self.next()? != spirv::MAGIC_NUMBER {
                 return Err(Error::InvalidHeader);
             }
-            let _version_raw = self.next()?.to_le_bytes();
-            let _generator = self.next()?;
+            let version_raw = self.next()?;
+            let generator = self.next()?;
             let _bound = self.next()?;
             let _schema = self.next()?;
-            crate::Module::generate_empty()
+            log::info!("Generated by {} version {:x}", generator, version_raw);
+            crate::Module::default()
         };
+
+        self.index_constants.clear();
+        for i in 0..4 {
+            let handle = module.constants.append(crate::Constant {
+                name: None,
+                specialization: None,
+                inner: crate::ConstantInner::Scalar {
+                    width: 4,
+                    value: crate::ScalarValue::Uint(i),
+                },
+            });
+            self.index_constants.push(handle);
+        }
 
         while let Ok(inst) = self.next_inst() {
             use spirv::Op;
@@ -1499,6 +1659,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 Op::MemoryModel => self.parse_memory_model(inst),
                 Op::EntryPoint => self.parse_entry_point(inst),
                 Op::ExecutionMode => self.parse_execution_mode(inst),
+                Op::String => self.parse_string(inst),
                 Op::Source => self.parse_source(inst),
                 Op::SourceExtension => self.parse_source_extension(inst),
                 Op::Name => self.parse_name(inst),
@@ -1521,53 +1682,27 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 Op::TypeSampler => self.parse_type_sampler(inst, &mut module),
                 Op::Constant | Op::SpecConstant => self.parse_constant(inst, &mut module),
                 Op::ConstantComposite => self.parse_composite_constant(inst, &mut module),
+                Op::ConstantNull | Op::Undef => self.parse_null_constant(inst, &mut module),
+                Op::ConstantTrue => self.parse_bool_constant(inst, true, &mut module),
+                Op::ConstantFalse => self.parse_bool_constant(inst, false, &mut module),
                 Op::Variable => self.parse_global_variable(inst, &mut module),
-                Op::Function => self.parse_function(inst, &mut module),
+                Op::Function => {
+                    self.switch(ModuleState::Function, inst.op)?;
+                    inst.expect(5)?;
+                    self.parse_function(&mut module)
+                }
                 _ => Err(Error::UnsupportedInstruction(self.state, inst.op)), //TODO
             }?;
         }
 
         // Check all the images and samplers to have consistent comparison property.
         for (handle, flags) in self.handle_sampling.drain() {
-            if !flags.contains(SamplingFlags::COMPARISON) {
-                continue;
-            }
-            if flags == SamplingFlags::all() {
+            if !image::patch_comparison_type(
+                flags,
+                module.global_variables.get_mut(handle),
+                &mut module.types,
+            ) {
                 return Err(Error::InconsistentComparisonSampling(handle));
-            }
-            let ty = module.types.get_mut(handle);
-            match ty.inner {
-                crate::TypeInner::Sampler { ref mut comparison } => {
-                    #[allow(clippy::panic)]
-                    {
-                        assert!(!*comparison)
-                    };
-                    *comparison = true;
-                }
-                _ => {
-                    return Err(Error::UnexpectedComparisonType(handle));
-                }
-            }
-        }
-
-        for dfc in self.deferred_function_calls.drain(..) {
-            let dst_handle = *self.lookup_function.lookup(dfc.dst_id)?;
-            let fun = match dfc.source {
-                DeferredSource::Function(fun_handle) => module.functions.get_mut(fun_handle),
-                DeferredSource::EntryPoint(stage, name) => {
-                    &mut module
-                        .entry_points
-                        .get_mut(&(stage, name))
-                        .unwrap()
-                        .function
-                }
-            };
-            match *fun.expressions.get_mut(dfc.expr_handle) {
-                crate::Expression::Call {
-                    ref mut origin,
-                    arguments: _,
-                } => *origin = crate::FunctionOrigin::Local(dst_handle),
-                _ => unreachable!(),
             }
         }
 
@@ -1711,6 +1846,13 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         Ok(())
     }
 
+    fn parse_string(&mut self, inst: Instruction) -> Result<(), Error> {
+        self.switch(ModuleState::Source, inst.op)?;
+        inst.expect_at_least(3)?;
+        let (_name, _) = self.next_string(inst.wc - 1)?;
+        Ok(())
+    }
+
     fn parse_source(&mut self, inst: Instruction) -> Result<(), Error> {
         self.switch(ModuleState::Source, inst.op)?;
         for _ in 1..inst.wc {
@@ -1784,7 +1926,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         self.switch(ModuleState::Type, inst.op)?;
         inst.expect(2)?;
         let id = self.next()?;
-        self.lookup_void_type.insert(id);
+        self.lookup_void_type = Some(id);
         Ok(())
     }
 
@@ -1913,20 +2055,45 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let id = self.next()?;
         let vector_type_id = self.next()?;
         let num_columns = self.next()?;
+        let decor = self.future_decor.remove(&id);
+
         let vector_type_lookup = self.lookup_type.lookup(vector_type_id)?;
         let inner = match module.types[vector_type_lookup.handle].inner {
-            crate::TypeInner::Vector { size, width, .. } => crate::TypeInner::Matrix {
-                columns: map_vector_size(num_columns)?,
-                rows: size,
-                width,
-            },
+            crate::TypeInner::Vector { size, width, .. } => {
+                if let Some(Decoration {
+                    matrix_stride: Some(stride),
+                    ..
+                }) = decor
+                {
+                    if stride.get() != (size as u32) * (width as u32) {
+                        return Err(Error::UnsupportedMatrixStride(stride.get()));
+                    }
+                }
+                crate::TypeInner::Matrix {
+                    columns: map_vector_size(num_columns)?,
+                    rows: size,
+                    width,
+                }
+            }
             _ => return Err(Error::InvalidInnerType(vector_type_id)),
         };
+
+        if let Some(Decoration {
+            matrix_major: Some(ref major),
+            ..
+        }) = decor
+        {
+            match *major {
+                Majority::Column => (),
+                Majority::Row => return Err(Error::UnsupportedRowMajorMatrix),
+            }
+        }
+
         self.lookup_type.insert(
             id,
             LookupType {
                 handle: module.types.append(crate::Type {
-                    name: self.future_decor.remove(&id).and_then(|dec| dec.name),
+                    name: decor.and_then(|dec| dec.name),
                     inner,
                 }),
                 base_id: Some(vector_type_id),
@@ -2035,15 +2202,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         inst.expect_at_least(2)?;
         let id = self.next()?;
         let parent_decor = self.future_decor.remove(&id);
-        let is_buffer_block = parent_decor
-            .as_ref()
-            .map_or(false, |decor| match decor.block {
-                Some(Block { buffer }) => buffer,
-                _ => false,
-            });
+        let block_decor = parent_decor.as_ref().and_then(|decor| decor.block.clone());
 
         let mut members = Vec::with_capacity(inst.wc as usize - 2);
         let mut member_type_ids = Vec::with_capacity(members.capacity());
+        let mut host_shared = false;
         for i in 0..u32::from(inst.wc) - 2 {
             let type_id = self.next()?;
             member_type_ids.push(type_id);
@@ -2052,20 +2215,25 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 .future_member_decor
                 .remove(&(id, i))
                 .unwrap_or_default();
-            let origin = decor.get_origin()?;
+            // this is a bit of a hack
+            host_shared |= decor.offset.is_some();
             members.push(crate::StructMember {
                 name: decor.name,
-                origin,
+                span: None, //TODO
                 ty,
             });
         }
-        let inner = crate::TypeInner::Struct { members };
+
+        let inner = crate::TypeInner::Struct {
+            block: block_decor.is_some() || host_shared,
+            members,
+        };
         let ty_handle = module.types.append(crate::Type {
             name: parent_decor.and_then(|dec| dec.name),
             inner,
         });
 
-        if is_buffer_block {
+        if block_decor == Some(Block { buffer: true }) {
             self.lookup_storage_buffer_types.insert(ty_handle);
         }
         for (i, type_id) in member_type_ids.into_iter().enumerate() {
@@ -2099,34 +2267,46 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let _is_sampled = self.next()?;
         let format = self.next()?;
 
+        let dim = map_image_dim(dim)?;
+        let decor = self.future_decor.remove(&id).unwrap_or_default();
+
+        // ensure there is a type for texture coordinate without extra components
+        module.types.fetch_or_append(crate::Type {
+            name: None,
+            inner: {
+                let kind = crate::ScalarKind::Float;
+                let width = 4;
+                match dim.required_coordinate_size() {
+                    None => crate::TypeInner::Scalar { kind, width },
+                    Some(size) => crate::TypeInner::Vector { size, kind, width },
+                }
+            },
+        });
+
         let base_handle = self.lookup_type.lookup(sample_type_id)?.handle;
         let kind = module.types[base_handle]
             .inner
             .scalar_kind()
             .ok_or(Error::InvalidImageBaseType(base_handle))?;
 
-        let class = if format != 0 {
-            crate::ImageClass::Storage(map_image_format(format)?)
-        } else {
-            crate::ImageClass::Sampled {
-                kind,
-                multi: is_msaa,
-            }
-        };
-
-        let decor = self.future_decor.remove(&id).unwrap_or_default();
-
         let inner = crate::TypeInner::Image {
-            class,
-            dim: map_image_dim(dim)?,
+            class: if format != 0 {
+                crate::ImageClass::Storage(map_image_format(format)?)
+            } else {
+                crate::ImageClass::Sampled {
+                    kind,
+                    multi: is_msaa,
+                }
+            },
+            dim,
             arrayed: is_array,
         };
+
         let handle = module.types.append(crate::Type {
             name: decor.name,
             inner,
         });
-        log::debug!("\t\ttracking {:?} for sampling properties", handle);
-        self.handle_sampling.insert(handle, SamplingFlags::empty());
+
         self.lookup_type.insert(
             id,
             LookupType {
@@ -2161,15 +2341,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         inst.expect(2)?;
         let id = self.next()?;
         let decor = self.future_decor.remove(&id).unwrap_or_default();
-        // The comparison bit is temporary, will be overwritten based on the
-        // accumulated sampling flags at the end.
-        let inner = crate::TypeInner::Sampler { comparison: false };
         let handle = module.types.append(crate::Type {
             name: decor.name,
-            inner,
+            inner: crate::TypeInner::Sampler { comparison: false },
         });
-        log::debug!("\t\ttracking {:?} for sampling properties", handle);
-        self.handle_sampling.insert(handle, SamplingFlags::empty());
         self.lookup_type.insert(
             id,
             LookupType {
@@ -2191,6 +2366,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let id = self.next()?;
         let type_lookup = self.lookup_type.lookup(type_id)?;
         let ty = type_lookup.handle;
+
         let inner = match module.types[ty].inner {
             crate::TypeInner::Scalar {
                 kind: crate::ScalarKind::Uint,
@@ -2203,7 +2379,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 } else {
                     0
                 };
-                crate::ConstantInner::Uint((u64::from(high) << 32) | u64::from(low))
+                crate::ConstantInner::Scalar {
+                    width,
+                    value: crate::ScalarValue::Uint((u64::from(high) << 32) | u64::from(low)),
+                }
             }
             crate::TypeInner::Scalar {
                 kind: crate::ScalarKind::Sint,
@@ -2219,7 +2398,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     }
                     Ordering::Equal => 0,
                 };
-                crate::ConstantInner::Sint(((u64::from(high) << 32) | u64::from(low)) as i64)
+                crate::ConstantInner::Scalar {
+                    width,
+                    value: crate::ScalarValue::Sint(
+                        ((u64::from(high) << 32) | u64::from(low)) as i64,
+                    ),
+                }
             }
             crate::TypeInner::Scalar {
                 kind: crate::ScalarKind::Float,
@@ -2235,18 +2419,23 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     }
                     _ => return Err(Error::InvalidTypeWidth(u32::from(width))),
                 };
-                crate::ConstantInner::Float(extended)
+                crate::ConstantInner::Scalar {
+                    width,
+                    value: crate::ScalarValue::Float(extended),
+                }
             }
             _ => return Err(Error::UnsupportedType(type_lookup.handle)),
         };
+
+        let decor = self.future_decor.remove(&id).unwrap_or_default();
+
         self.lookup_constant.insert(
             id,
             LookupConstant {
                 handle: module.constants.append(crate::Constant {
-                    name: self.future_decor.remove(&id).and_then(|dec| dec.name),
-                    specialization: None, //TODO
+                    specialization: decor.specialization,
+                    name: decor.name,
                     inner,
-                    ty,
                 }),
                 type_id,
             },
@@ -2264,15 +2453,13 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let type_id = self.next()?;
         let type_lookup = self.lookup_type.lookup(type_id)?;
         let ty = type_lookup.handle;
-
         let id = self.next()?;
 
-        let constituents_count = inst.wc - 3;
-        let mut constituents = Vec::with_capacity(constituents_count as usize);
-        for _ in 0..constituents_count {
-            let constituent_id = self.next()?;
-            let constant = self.lookup_constant.lookup(constituent_id)?;
-            constituents.push(constant.handle);
+        let mut components = Vec::with_capacity(inst.wc as usize - 3);
+        for _ in 0..components.capacity() {
+            let component_id = self.next()?;
+            let constant = self.lookup_constant.lookup(component_id)?;
+            components.push(constant.handle);
         }
 
         self.lookup_constant.insert(
@@ -2281,13 +2468,94 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 handle: module.constants.append(crate::Constant {
                     name: self.future_decor.remove(&id).and_then(|dec| dec.name),
                     specialization: None,
-                    inner: crate::ConstantInner::Composite(constituents),
-                    ty,
+                    inner: crate::ConstantInner::Composite { ty, components },
                 }),
                 type_id,
             },
         );
+        Ok(())
+    }
 
+    fn parse_null_constant(
+        &mut self,
+        inst: Instruction,
+        module: &mut crate::Module,
+    ) -> Result<(), Error> {
+        self.switch(ModuleState::Type, inst.op)?;
+        inst.expect(3)?;
+        let type_id = self.next()?;
+        let id = self.next()?;
+        let type_lookup = self.lookup_type.lookup(type_id)?;
+        let ty = type_lookup.handle;
+
+        fn make_scalar_inner(kind: crate::ScalarKind, width: crate::Bytes) -> crate::ConstantInner {
+            crate::ConstantInner::Scalar {
+                width,
+                value: match kind {
+                    crate::ScalarKind::Uint => crate::ScalarValue::Uint(0),
+                    crate::ScalarKind::Sint => crate::ScalarValue::Sint(0),
+                    crate::ScalarKind::Float => crate::ScalarValue::Float(0.0),
+                    crate::ScalarKind::Bool => crate::ScalarValue::Bool(false),
+                },
+            }
+        }
+
+        let inner = match module.types[ty].inner {
+            crate::TypeInner::Scalar { kind, width } => make_scalar_inner(kind, width),
+            crate::TypeInner::Vector { size, kind, width } => {
+                let mut components = Vec::with_capacity(size as usize);
+                for _ in 0..size as usize {
+                    components.push(module.constants.fetch_or_append(crate::Constant {
+                        name: None,
+                        specialization: None,
+                        inner: make_scalar_inner(kind, width),
+                    }));
+                }
+                crate::ConstantInner::Composite { ty, components }
+            }
+            //TODO: handle matrices, arrays, and structures
+            _ => return Err(Error::UnsupportedType(type_lookup.handle)),
+        };
+
+        self.lookup_constant.insert(
+            id,
+            LookupConstant {
+                handle: module.constants.append(crate::Constant {
+                    name: self.future_decor.remove(&id).and_then(|dec| dec.name),
+                    specialization: None, //TODO
+                    inner,
+                }),
+                type_id,
+            },
+        );
+        Ok(())
+    }
+
+    fn parse_bool_constant(
+        &mut self,
+        inst: Instruction,
+        value: bool,
+        module: &mut crate::Module,
+    ) -> Result<(), Error> {
+        self.switch(ModuleState::Type, inst.op)?;
+        inst.expect(3)?;
+        let type_id = self.next()?;
+        let id = self.next()?;
+
+        self.lookup_constant.insert(
+            id,
+            LookupConstant {
+                handle: module.constants.append(crate::Constant {
+                    name: self.future_decor.remove(&id).and_then(|dec| dec.name),
+                    specialization: None, //TODO
+                    inner: crate::ConstantInner::Scalar {
+                        width: 1,
+                        value: crate::ScalarValue::Bool(value),
+                    },
+                }),
+                type_id,
+            },
+        );
         Ok(())
     }
 
@@ -2310,10 +2578,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             None
         };
         let lookup_type = self.lookup_type.lookup(type_id)?;
-        let dec = self
-            .future_decor
-            .remove(&id)
-            .ok_or(Error::InvalidBinding(id))?;
+        let dec = self.future_decor.remove(&id).unwrap_or_default();
 
         let class = {
             use spirv::StorageClass as Sc;
@@ -2340,12 +2605,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             }
         };
 
-        let binding = match (class, &module.types[lookup_type.handle].inner) {
-            (crate::StorageClass::Input, &crate::TypeInner::Struct { .. })
-            | (crate::StorageClass::Output, &crate::TypeInner::Struct { .. }) => None,
-            _ => Some(dec.get_binding().ok_or(Error::InvalidBinding(id))?),
-        };
-        let is_storage = match module.types[lookup_type.handle].inner {
+        let ty_inner = &module.types[lookup_type.handle].inner;
+        let is_storage = match *ty_inner {
             crate::TypeInner::Struct { .. } => class == crate::StorageClass::Storage,
             crate::TypeInner::Image {
                 class: crate::ImageClass::Storage(_),
@@ -2367,22 +2628,57 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             crate::StorageAccess::empty()
         };
 
+        let binding = dec.get_binding(class == crate::StorageClass::Output);
+        let ty = match binding {
+            // SPIR-V only cares about some of the built-in types being integer.
+            // Naga requires them to be strictly unsigned, so we have to patch it.
+            Some(crate::Binding::BuiltIn(built_in)) => {
+                let scalar_kind = ty_inner.scalar_kind();
+                let needs_uint = match built_in {
+                    crate::BuiltIn::BaseInstance
+                    | crate::BuiltIn::BaseVertex
+                    | crate::BuiltIn::InstanceIndex
+                    | crate::BuiltIn::SampleIndex
+                    | crate::BuiltIn::VertexIndex => true,
+                    _ => false,
+                };
+                if needs_uint && scalar_kind == Some(crate::ScalarKind::Sint) {
+                    log::warn!("Treating {:?} as unsigned", built_in);
+                    module.types.fetch_or_append(crate::Type {
+                        name: None,
+                        inner: crate::TypeInner::Scalar {
+                            kind: crate::ScalarKind::Uint,
+                            width: 4,
+                        },
+                    })
+                } else {
+                    lookup_type.handle
+                }
+            }
+            _ => lookup_type.handle,
+        };
+
         let var = crate::GlobalVariable {
             name: dec.name,
             class,
             binding,
-            ty: lookup_type.handle,
+            ty,
             init,
             interpolation: dec.interpolation,
             storage_access,
         };
-        self.lookup_variable.insert(
-            id,
-            LookupVariable {
-                handle: module.global_variables.append(var),
-                type_id,
-            },
-        );
+        let handle = module.global_variables.append(var);
+        self.lookup_variable
+            .insert(id, LookupVariable { handle, type_id });
+
+        if module.types[lookup_type.handle]
+            .inner
+            .can_comparison_sample()
+        {
+            log::debug!("\t\ttracking {:?} for sampling properties", handle);
+            self.handle_sampling
+                .insert(handle, image::SamplingFlags::empty());
+        }
         Ok(())
     }
 }
