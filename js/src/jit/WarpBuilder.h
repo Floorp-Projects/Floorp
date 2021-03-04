@@ -276,7 +276,7 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
 
   [[nodiscard]] bool buildEnvironmentChain();
   MInstruction* buildNamedLambdaEnv(MDefinition* callee, MDefinition* env,
-                                    LexicalEnvironmentObject* templateObj);
+                                    NamedLambdaObject* templateObj);
   MInstruction* buildCallObject(MDefinition* callee, MDefinition* env,
                                 CallObject* templateObj);
   MInstruction* buildLoadSlot(MDefinition* obj, uint32_t numFixedSlots,

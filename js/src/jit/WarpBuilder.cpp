@@ -325,9 +325,9 @@ bool WarpBuilder::buildInline() {
   return true;
 }
 
-MInstruction* WarpBuilder::buildNamedLambdaEnv(
-    MDefinition* callee, MDefinition* env,
-    LexicalEnvironmentObject* templateObj) {
+MInstruction* WarpBuilder::buildNamedLambdaEnv(MDefinition* callee,
+                                               MDefinition* env,
+                                               NamedLambdaObject* templateObj) {
   MOZ_ASSERT(!templateObj->hasDynamicSlots());
 
   MInstruction* namedLambda = MNewNamedLambdaObject::New(alloc(), templateObj);
@@ -420,7 +420,7 @@ bool WarpBuilder::buildEnvironmentChain() {
         MDefinition* callee = getCallee();
         MInstruction* envDef = MFunctionEnvironment::New(alloc(), callee);
         current->add(envDef);
-        if (LexicalEnvironmentObject* obj = env.namedLambdaTemplate) {
+        if (NamedLambdaObject* obj = env.namedLambdaTemplate) {
           envDef = buildNamedLambdaEnv(callee, envDef, obj);
         }
         if (CallObject* obj = env.callObjectTemplate) {
