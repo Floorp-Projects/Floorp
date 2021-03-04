@@ -985,7 +985,7 @@ inline ScriptStencilIterable CompilationStencil::functionScriptStencils(
   return ScriptStencilIterable(stencil, gcOutput);
 }
 
-// Merge ExtensibleCompilationStencil for delazification into initial
+// Merge CompilationStencil for delazification into initial
 // ExtensibleCompilationStencil.
 struct CompilationStencilMerger {
  private:
@@ -1007,15 +1007,15 @@ struct CompilationStencilMerger {
   [[nodiscard]] bool buildFunctionKeyToIndex(JSContext* cx);
 
   ScriptIndex getInitialScriptIndexFor(
-      const ExtensibleCompilationStencil& delazification) const;
+      const CompilationStencil& delazification) const;
 
   // A map from delazification's ParserAtomIndex to
   // initial's TaggedParserAtomIndex
   using AtomIndexMap = Vector<TaggedParserAtomIndex, 0, js::SystemAllocPolicy>;
 
-  [[nodiscard]] bool buildAtomIndexMap(
-      JSContext* cx, const ExtensibleCompilationStencil& delazification,
-      AtomIndexMap& atomIndexMap);
+  [[nodiscard]] bool buildAtomIndexMap(JSContext* cx,
+                                       const CompilationStencil& delazification,
+                                       AtomIndexMap& atomIndexMap);
 
  public:
   CompilationStencilMerger() = default;
@@ -1026,7 +1026,7 @@ struct CompilationStencilMerger {
 
   // Merge the delazification stencil into the initial stencil.
   [[nodiscard]] bool addDelazification(
-      JSContext* cx, const ExtensibleCompilationStencil& delazification);
+      JSContext* cx, const CompilationStencil& delazification);
 
   ExtensibleCompilationStencil& getResult() const { return *initial_; }
 };

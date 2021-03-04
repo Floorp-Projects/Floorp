@@ -1094,19 +1094,19 @@ static bool CompileLazyFunctionImpl(JSContext* cx, CompilationInput& input,
                                                  gcOutput.get())) {
       return false;
     }
-  }
 
-  MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
-  MOZ_ASSERT(gcOutput.get().script->outermostScope()->hasOnChain(
-                 ScopeKind::NonSyntactic) ==
-             gcOutput.get().script->immutableFlags().hasFlag(
-                 JSScript::ImmutableFlags::HasNonSyntacticScope));
+    MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
+    MOZ_ASSERT(gcOutput.get().script->outermostScope()->hasOnChain(
+                   ScopeKind::NonSyntactic) ==
+               gcOutput.get().script->immutableFlags().hasFlag(
+                   JSScript::ImmutableFlags::HasNonSyntacticScope));
 
-  if (input.source->hasEncoder()) {
-    MOZ_ASSERT(!js::UseOffThreadParseGlobal());
-    if (!input.source->addDelazificationToIncrementalEncoding(
-            cx, compilationState)) {
-      return false;
+    if (input.source->hasEncoder()) {
+      MOZ_ASSERT(!js::UseOffThreadParseGlobal());
+      if (!input.source->addDelazificationToIncrementalEncoding(
+              cx, borrowingStencil)) {
+        return false;
+      }
     }
   }
 
