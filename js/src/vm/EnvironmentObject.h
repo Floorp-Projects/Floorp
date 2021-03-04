@@ -84,7 +84,9 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *    |   |   |   +--NamedLambdaObject             Environment for `(function f(){...})`
  *    |   |   |   |                                    containing only a binding for `f`
  *    |   |   |   +--GlobalLexicalEnvironmentObject
- *    |   |   |                                    Top-level let/const/class in scripts
+ *    |   |   |   |                                Top-level let/const/class in scripts
+ *    |   |   |   +--NonSyntacticLexicalEnvironmentObject
+ *    |   |   |                                    See "Non-syntactic environments" below
  *    |   |   +--VarEnvironmentObject          See VarScope in Scope.h.
  *    |   |   |
  *    |   |   +--WithEnvironmentObject         Presents object properties as bindings
@@ -166,11 +168,11 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *
  *    Does not hold 'let' or 'const' bindings.
  *
- * 3. LexicalEnvironmentObject
+ * 3. NonSyntacticLexicalEnvironmentObject
  *
  *    Each non-syntactic object used as a qualified variables object needs to
- *    enclose a non-syntactic LexicalEnvironmentObject to hold 'let' and
- *    'const' bindings. There is a bijection per realm between the non-syntactic
+ *    enclose a non-syntactic lexical environment to hold 'let' and 'const'
+ *    bindings. There is a bijection per realm between the non-syntactic
  *    variables objects and their non-syntactic LexicalEnvironmentObjects.
  *
  *    Does not hold 'var' bindings.
@@ -192,7 +194,7 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   NonSyntacticVariablesObject
  *       |
- *   LexicalEnvironmentObject[this=nsvo]
+ *   NonSyntacticLexicalEnvironmentObject[this=nsvo]
  *
  * B.1 Subscript loading
  *
@@ -205,7 +207,7 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   WithEnvironmentObject wrapping target
  *       |
- *   LexicalEnvironmentObject[this=target]
+ *   NonSyntacticLexicalEnvironmentObject[this=target]
  *
  * B.2 Subscript loading (Shared-global JSM)
  *
@@ -219,13 +221,13 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   NonSyntacticVariablesObject
  *       |
- *   LexicalEnvironmentObject[this=nsvo]
+ *   NonSyntacticLexicalEnvironmentObject[this=nsvo]
  *       |
  *   WithEnvironmentObject wrapping target
  *       |
- *   LexicalEnvironmentObject[this=target]
+ *   NonSyntacticLexicalEnvironmentObject[this=target]
  *
- * D. Frame scripts
+ * C. Frame scripts
  *
  * XUL frame scripts are loaded in the same global as components, with a
  * NonSyntacticVariablesObject as a "polluting global", and a with environment
@@ -240,7 +242,7 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   WithEnvironmentObject wrapping messageManager
  *       |
- *   LexicalEnvironmentObject[this=messageManager]
+ *   NonSyntacticLexicalEnvironmentObject[this=messageManager]
  *
  * D. XBL and DOM event handlers
  *
@@ -254,7 +256,7 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   WithEnvironmentObject wrapping e0
  *       |
- *   LexicalEnvironmentObject
+ *   NonSyntacticLexicalEnvironmentObject
  *
  */
 // clang-format on
@@ -557,9 +559,6 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   static LexicalEnvironmentObject* createForFrame(JSContext* cx,
                                                   Handle<LexicalScope*> scope,
                                                   AbstractFramePtr frame);
-  static LexicalEnvironmentObject* createNonSyntactic(JSContext* cx,
-                                                      HandleObject enclosing,
-                                                      HandleObject thisv);
   static LexicalEnvironmentObject* createHollowForDebug(
       JSContext* cx, Handle<LexicalScope*> scope);
 
@@ -630,6 +629,14 @@ class GlobalLexicalEnvironmentObject : public LexicalEnvironmentObject {
   static constexpr size_t offsetOfThisValueSlot() {
     return getFixedSlotOffset(THIS_VALUE_OR_SCOPE_SLOT);
   }
+};
+
+// Non-standard. See "Non-syntactic Environments" above.
+class NonSyntacticLexicalEnvironmentObject : public LexicalEnvironmentObject {
+ public:
+  static NonSyntacticLexicalEnvironmentObject* create(JSContext* cx,
+                                                      HandleObject enclosing,
+                                                      HandleObject thisv);
 };
 
 // A non-syntactic dynamic scope object that captures non-lexical
@@ -1105,6 +1112,12 @@ template <>
 inline bool JSObject::is<js::GlobalLexicalEnvironmentObject>() const {
   return is<js::LexicalEnvironmentObject>() &&
          as<js::LexicalEnvironmentObject>().isGlobal();
+}
+
+template <>
+inline bool JSObject::is<js::NonSyntacticLexicalEnvironmentObject>() const {
+  return is<js::LexicalEnvironmentObject>() &&
+         !as<js::LexicalEnvironmentObject>().isSyntactic();
 }
 
 template <>
