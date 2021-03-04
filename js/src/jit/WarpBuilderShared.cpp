@@ -53,80 +53,12 @@ void WarpBuilderShared::pushConstant(const Value& v) {
 
 MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
                                    WrappedFunction* target, bool isDOMCall) {
-  MOZ_ASSERT(callInfo.argFormat() == CallInfo::ArgFormat::Standard);
-  MOZ_ASSERT_IF(needsThisCheck, !target);
-  MOZ_ASSERT_IF(isDOMCall, target->jitInfo()->type() == JSJitInfo::Method);
+  auto addUndefined = [this]() -> MConstant* {
+    return constant(UndefinedValue());
+  };
 
-  DOMObjectKind objKind = DOMObjectKind::Unknown;
-  if (isDOMCall) {
-    const JSClass* clasp = callInfo.thisArg()->toGuardToClass()->getClass();
-    MOZ_ASSERT(clasp->isDOMClass());
-    if (clasp->isNativeObject()) {
-      objKind = DOMObjectKind::Native;
-    } else {
-      MOZ_ASSERT(clasp->isProxyObject());
-      objKind = DOMObjectKind::Proxy;
-    }
-  }
-
-  uint32_t targetArgs = callInfo.argc();
-
-  // Collect number of missing arguments provided that the target is
-  // scripted. Native functions are passed an explicit 'argc' parameter.
-  if (target && target->hasJitEntry()) {
-    targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
-  }
-
-  MCall* call =
-      MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
-                 callInfo.argc(), callInfo.constructing(),
-                 callInfo.ignoresReturnValue(), isDOMCall, objKind);
-  if (!call) {
-    return nullptr;
-  }
-
-  if (callInfo.constructing()) {
-    // Note: setThis should have been done by the caller of makeCall.
-    if (needsThisCheck) {
-      call->setNeedsThisCheck();
-    }
-
-    // Pass |new.target|
-    call->addArg(targetArgs + 1, callInfo.getNewTarget());
-  }
-
-  // Explicitly pad any missing arguments with |undefined|.
-  // This permits skipping the argumentsRectifier.
-  MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(), target->hasJitEntry());
-  for (uint32_t i = targetArgs; i > callInfo.argc(); i--) {
-    MConstant* undef = constant(UndefinedValue());
-    if (!alloc().ensureBallast()) {
-      return nullptr;
-    }
-    call->addArg(i, undef);
-  }
-
-  // Add explicit arguments.
-  // Skip addArg(0) because it is reserved for |this|.
-  for (int32_t i = callInfo.argc() - 1; i >= 0; i--) {
-    call->addArg(i + 1, callInfo.getArg(i));
-  }
-
-  if (isDOMCall) {
-    // Now that we've told it about all the args, compute whether it's movable
-    call->computeMovable();
-  }
-
-  // Pass |this| and callee.
-  call->addArg(0, callInfo.thisArg());
-  call->initCallee(callInfo.callee());
-
-  if (target) {
-    // The callee must be a JSFunction so we don't need a Class check.
-    call->disableClassCheck();
-  }
-
-  return call;
+  return MakeCall(alloc(), addUndefined, callInfo, needsThisCheck, target,
+                  isDOMCall);
 }
 
 MInstruction* WarpBuilderShared::makeSpreadCall(CallInfo& callInfo,
