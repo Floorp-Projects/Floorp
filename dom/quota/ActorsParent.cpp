@@ -360,10 +360,9 @@ Result<int32_t, nsresult> LoadCacheVersion(mozIStorageConnection& aConnection) {
   QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
 }
 
-nsresult SaveCacheVersion(mozIStorageConnection* aConnection,
+nsresult SaveCacheVersion(mozIStorageConnection& aConnection,
                           int32_t aVersion) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
 
   QM_TRY_INSPECT(
       const auto& stmt,
@@ -378,44 +377,43 @@ nsresult SaveCacheVersion(mozIStorageConnection* aConnection,
   return NS_OK;
 }
 
-nsresult CreateCacheTables(mozIStorageConnection* aConnection) {
+nsresult CreateCacheTables(mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
 
   // Table `cache`
   QM_TRY(
-      aConnection->ExecuteSimpleSQL("CREATE TABLE cache"
-                                    "( valid INTEGER NOT NULL DEFAULT 0"
-                                    ", build_id TEXT NOT NULL DEFAULT ''"
-                                    ");"_ns));
+      aConnection.ExecuteSimpleSQL("CREATE TABLE cache"
+                                   "( valid INTEGER NOT NULL DEFAULT 0"
+                                   ", build_id TEXT NOT NULL DEFAULT ''"
+                                   ");"_ns));
 
   // Table `repository`
   QM_TRY(
-      aConnection->ExecuteSimpleSQL("CREATE TABLE repository"
-                                    "( id INTEGER PRIMARY KEY"
-                                    ", name TEXT NOT NULL"
-                                    ");"_ns));
+      aConnection.ExecuteSimpleSQL("CREATE TABLE repository"
+                                   "( id INTEGER PRIMARY KEY"
+                                   ", name TEXT NOT NULL"
+                                   ");"_ns));
 
   // Table `origin`
   QM_TRY(
-      aConnection->ExecuteSimpleSQL("CREATE TABLE origin"
-                                    "( repository_id INTEGER NOT NULL"
-                                    ", suffix TEXT"
-                                    ", group_ TEXT NOT NULL"
-                                    ", origin TEXT NOT NULL"
-                                    ", client_usages TEXT NOT NULL"
-                                    ", usage INTEGER NOT NULL"
-                                    ", last_access_time INTEGER NOT NULL"
-                                    ", accessed INTEGER NOT NULL"
-                                    ", persisted INTEGER NOT NULL"
-                                    ", PRIMARY KEY (repository_id, origin)"
-                                    ", FOREIGN KEY (repository_id) "
-                                    "REFERENCES repository(id) "
-                                    ");"_ns));
+      aConnection.ExecuteSimpleSQL("CREATE TABLE origin"
+                                   "( repository_id INTEGER NOT NULL"
+                                   ", suffix TEXT"
+                                   ", group_ TEXT NOT NULL"
+                                   ", origin TEXT NOT NULL"
+                                   ", client_usages TEXT NOT NULL"
+                                   ", usage INTEGER NOT NULL"
+                                   ", last_access_time INTEGER NOT NULL"
+                                   ", accessed INTEGER NOT NULL"
+                                   ", persisted INTEGER NOT NULL"
+                                   ", PRIMARY KEY (repository_id, origin)"
+                                   ", FOREIGN KEY (repository_id) "
+                                   "REFERENCES repository(id) "
+                                   ");"_ns));
 
 #ifdef DEBUG
   {
-    QM_TRY_INSPECT(const int32_t& cacheVersion, LoadCacheVersion(*aConnection));
+    QM_TRY_INSPECT(const int32_t& cacheVersion, LoadCacheVersion(aConnection));
     MOZ_ASSERT(cacheVersion == 0);
   }
 #endif
@@ -452,19 +450,17 @@ nsresult InvalidateCache(mozIStorageConnection& aConnection) {
   return NS_OK;
 }
 
-// XXX Convert aConnection to a reference.
-nsresult UpgradeCacheFrom1To2(mozIStorageConnection* aConnection) {
+nsresult UpgradeCacheFrom1To2(mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
 
-  QM_TRY(aConnection->ExecuteSimpleSQL(
+  QM_TRY(aConnection.ExecuteSimpleSQL(
       "ALTER TABLE origin ADD COLUMN suffix TEXT"_ns));
 
-  QM_TRY(InvalidateCache(*aConnection));
+  QM_TRY(InvalidateCache(aConnection));
 
 #ifdef DEBUG
   {
-    QM_TRY_INSPECT(const int32_t& cacheVersion, LoadCacheVersion(*aConnection));
+    QM_TRY_INSPECT(const int32_t& cacheVersion, LoadCacheVersion(aConnection));
 
     MOZ_ASSERT(cacheVersion == 1);
   }
@@ -492,7 +488,7 @@ Result<bool, nsresult> MaybeCreateOrUpgradeCache(
     QM_TRY(transaction.Start());
 
     if (newCache) {
-      QM_TRY(CreateCacheTables(&aConnection));
+      QM_TRY(CreateCacheTables(aConnection));
 
 #ifdef DEBUG
       {
@@ -533,7 +529,7 @@ Result<bool, nsresult> MaybeCreateOrUpgradeCache(
 
       while (cacheVersion != kCacheVersion) {
         if (cacheVersion == 1) {
-          QM_TRY(UpgradeCacheFrom1To2(&aConnection));
+          QM_TRY(UpgradeCacheFrom1To2(aConnection));
         } else {
           QM_FAIL(Err(NS_ERROR_FAILURE), []() {
             QM_WARNING(
