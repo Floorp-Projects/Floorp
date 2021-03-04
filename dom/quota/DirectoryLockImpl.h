@@ -22,6 +22,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   const NotNull<RefPtr<QuotaManager>> mQuotaManager;
 
   const Nullable<PersistenceType> mPersistenceType;
+  const nsCString mSuffix;
   const nsCString mGroup;
   const OriginScope mOriginScope;
   const Nullable<Client::Type> mClientType;
@@ -49,7 +50,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
  public:
   DirectoryLockImpl(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                     const Nullable<PersistenceType>& aPersistenceType,
-                    const nsACString& aGroup, const OriginScope& aOriginScope,
+                    const nsACString& aSuffix, const nsACString& aGroup,
+                    const OriginScope& aOriginScope,
                     const Nullable<Client::Type>& aClientType, bool aExclusive,
                     bool aInternal,
                     ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag);
@@ -61,7 +63,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
       bool aExclusive) {
     return Create(std::move(aQuotaManager),
                   Nullable<PersistenceType>(aPersistenceType),
-                  aOriginMetadata.mGroup,
+                  aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
                   OriginScope::FromOrigin(aOriginMetadata.mOrigin),
                   Nullable<Client::Type>(aClientType), aExclusive, false,
                   ShouldUpdateLockIdTableFlag::Yes);
@@ -76,7 +78,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
     return Create(std::move(aQuotaManager),
                   Nullable<PersistenceType>(aPersistenceType),
-                  aOriginMetadata.mGroup,
+                  aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
                   OriginScope::FromOrigin(aOriginMetadata.mOrigin),
                   Nullable<Client::Type>(),
                   /* aExclusive */ true, /* aInternal */ true,
@@ -88,7 +90,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive) {
-    return Create(std::move(aQuotaManager), aPersistenceType, ""_ns,
+    return Create(std::move(aQuotaManager), aPersistenceType, ""_ns, ""_ns,
                   aOriginScope, aClientType, aExclusive, true,
                   ShouldUpdateLockIdTableFlag::Yes);
   }
@@ -189,10 +191,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   quota::OriginMetadata OriginMetadata() const override {
     MOZ_DIAGNOSTIC_ASSERT(!mGroup.IsEmpty());
 
-    // We pass empty suffix to OringinMetadata for now (it's safe because it
-    // isn't used at the moment).
-    // XXX Add mSuffix to DirectoryLockImpl and use it here.
-    return quota::OriginMetadata{""_ns, mGroup, nsCString(Origin())};
+    return quota::OriginMetadata{mSuffix, mGroup, nsCString(Origin())};
   }
 
   const nsACString& Origin() const override {
@@ -229,7 +228,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   static RefPtr<DirectoryLockImpl> Create(
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       const Nullable<PersistenceType>& aPersistenceType,
-      const nsACString& aGroup, const OriginScope& aOriginScope,
+      const nsACString& aSuffix, const nsACString& aGroup,
+      const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive,
       bool aInternal,
       ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag) {
@@ -243,8 +243,9 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
     MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
 
     return MakeRefPtr<DirectoryLockImpl>(
-        std::move(aQuotaManager), aPersistenceType, aGroup, aOriginScope,
-        aClientType, aExclusive, aInternal, aShouldUpdateLockIdTableFlag);
+        std::move(aQuotaManager), aPersistenceType, aSuffix, aGroup,
+        aOriginScope, aClientType, aExclusive, aInternal,
+        aShouldUpdateLockIdTableFlag);
   }
 };
 
