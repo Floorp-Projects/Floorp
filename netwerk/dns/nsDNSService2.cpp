@@ -520,6 +520,7 @@ size_t nsDNSAsyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
 NS_IMETHODIMP
 nsDNSAsyncRequest::Cancel(nsresult reason) {
   NS_ENSURE_ARG(NS_FAILED(reason));
+  MOZ_DIAGNOSTIC_ASSERT(mResolver, "mResolver should not be null");
   mResolver->DetachCallback(mHost, mTrrServer, mType, mOriginAttributes, mFlags,
                             mAF, this, reason);
   return NS_OK;
@@ -830,10 +831,10 @@ nsDNSService::Shutdown() {
   RefPtr<nsHostResolver> res;
   {
     MutexAutoLock lock(mLock);
-    res = mResolver;
-    mResolver = nullptr;
+    res = std::move(mResolver);
   }
   if (res) {
+    // Shutdown outside lock.
     res->Shutdown();
   }
 
@@ -889,6 +890,11 @@ bool nsDNSService::DNSForbiddenByActiveProxy(const nsACString& aHostname,
     }
   }
   return false;
+}
+
+already_AddRefed<nsHostResolver> nsDNSService::GetResolverLocked() {
+  MutexAutoLock lock(mLock);
+  return do_AddRef(mResolver);
 }
 
 nsresult nsDNSService::PreprocessHostname(bool aLocalDomain,
@@ -1255,19 +1261,21 @@ NS_IMETHODIMP
 nsDNSService::Observe(nsISupports* subject, const char* topic,
                       const char16_t* data) {
   bool flushCache = false;
+  RefPtr<nsHostResolver> resolver = GetResolverLocked();
+
   if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
     nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
-    if (mResolver && !strcmp(converted.get(), NS_NETWORK_LINK_DATA_CHANGED)) {
+    if (!strcmp(converted.get(), NS_NETWORK_LINK_DATA_CHANGED)) {
       flushCache = true;
     }
   } else if (!strcmp(topic, "last-pb-context-exited")) {
     flushCache = true;
   } else if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     ReadPrefs(NS_ConvertUTF16toUTF8(data).get());
-    NS_ENSURE_TRUE(mResolver, NS_ERROR_NOT_INITIALIZED);
-    if (mResolverPrefsUpdated && mResolver) {
-      mResolver->SetCacheLimits(mResCacheEntries, mResCacheExpiration,
-                                mResCacheGrace);
+    NS_ENSURE_TRUE(resolver, NS_ERROR_NOT_INITIALIZED);
+    if (mResolverPrefsUpdated && resolver) {
+      resolver->SetCacheLimits(mResCacheEntries, mResCacheExpiration,
+                               mResCacheGrace);
     }
   } else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Shutdown();
@@ -1275,8 +1283,8 @@ nsDNSService::Observe(nsISupports* subject, const char* topic,
     mODoHActivated = u"true"_ns.Equals(data);
   }
 
-  if (flushCache && mResolver) {
-    mResolver->FlushCache(false);
+  if (flushCache && resolver) {
+    resolver->FlushCache(false);
     return NS_OK;
   }
 
@@ -1346,15 +1354,17 @@ uint16_t nsDNSService::GetAFForLookup(const nsACString& host, uint32_t flags) {
 NS_IMETHODIMP
 nsDNSService::GetDNSCacheEntries(
     nsTArray<mozilla::net::DNSCacheEntries>* args) {
-  NS_ENSURE_TRUE(mResolver, NS_ERROR_NOT_INITIALIZED);
-  mResolver->GetDNSCacheEntries(args);
+  RefPtr<nsHostResolver> resolver = GetResolverLocked();
+  NS_ENSURE_TRUE(resolver, NS_ERROR_NOT_INITIALIZED);
+  resolver->GetDNSCacheEntries(args);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDNSService::ClearCache(bool aTrrToo) {
-  NS_ENSURE_TRUE(mResolver, NS_ERROR_NOT_INITIALIZED);
-  mResolver->FlushCache(aTrrToo);
+  RefPtr<nsHostResolver> resolver = GetResolverLocked();
+  NS_ENSURE_TRUE(resolver, NS_ERROR_NOT_INITIALIZED);
+  resolver->FlushCache(aTrrToo);
   return NS_OK;
 }
 
