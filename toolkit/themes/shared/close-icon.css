@@ -6,24 +6,26 @@
   appearance: none;
   -moz-context-properties: fill, fill-opacity;
   list-style-image: url(chrome://global/skin/icons/close.svg);
+  border-radius: 2px;
   color: inherit !important;
   fill: currentColor;
-  fill-opacity: 0;
+  padding: 2px;
+  width: 20px;
+  height: 20px;
 }
 
 .close-icon:hover {
-  fill-opacity: 0.1;
+  background-color: color-mix(in srgb, transparent 10%, currentColor);
 }
 
 .close-icon:hover:active {
-  fill-opacity: 0.2;
+  background-color: color-mix(in srgb, transparent 20%, currentColor);
 }
 
 .close-icon > .button-icon,
 .close-icon > .button-box > .button-icon,
 .close-icon > .toolbarbutton-icon {
-  width: 20px;
-  height: 20px;
+  margin: 0;
 }
 
 .close-icon > .button-box > .button-text,

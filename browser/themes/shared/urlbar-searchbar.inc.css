@@ -414,13 +414,12 @@
 #urlbar-search-mode-indicator-close {
   display: none;
   background: url(chrome://global/skin/icons/close.svg) no-repeat center;
-  background-size: 100% 16px;
+  background-size: 14px 14px;
   width: 16px;
   height: 100%;
   margin-inline-start: -16px;
-  -moz-context-properties: fill, fill-opacity, stroke-opacity;
-  fill-opacity: 0;
-  stroke-opacity: 0.6;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0.6;
   /* fill and background-color should match the urlbar focused color and
      background. */
   fill: FieldText;
@@ -436,7 +435,7 @@
 
 @media (prefers-contrast) {
   #urlbar-search-mode-indicator-close {
-    stroke-opacity: 1.0;
+    fill-opacity: 1.0;
   }
 }
 
