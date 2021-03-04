@@ -26,7 +26,7 @@ The ``get()`` method returns the list of entries for a specific key. Each entry 
       ]
     */
 
-    for(const entry of data) {
+    for (const entry of data) {
       // Do something with entry...
       // await InternalAPI.load(entry.id, entry.label, entry.weight);
     });
@@ -46,7 +46,7 @@ This behaviour can be disabled using the ``syncIfEmpty`` option.
 
 .. important::
 
-    If the implicit synchronization fails (e.g network is not available) then errors are silent and an empty list is returned. :ref:`Uptake Telemetry <services/settings/uptake-telemetry>` status is sent though.
+    If the implicit synchronization fails (e.g network is not available) then errors are silent and **an empty list is returned**. :ref:`Uptake Telemetry <services/settings/uptake-telemetry>` status is sent though.
 
 
 Options
@@ -63,8 +63,8 @@ Options
           order: "-weight"
         });
 
-* ``syncIfEmpty``: implicit synchronization if local data is empty (default: ``true``).
-  Set it to ``false`` if your use-case can tolerate an empty list until the first synchronization happens.
+* ``syncIfEmpty``: if ``true`` and no local data is present, then look for a packaged dump to load. If none, then pull records from network.
+  Set it to ``false`` to skip loading of packaged dump and network activity. Use this only if your use-case can tolerate an empty list until the first synchronization happens (default: ``true``).
 
     .. code-block:: js
 
@@ -79,7 +79,7 @@ Events
 
 The ``on()`` function registers handlers to be triggered when events occur.
 
-The ``sync`` event allows to be notified when the remote settings are changed on the server side. Your handler is given an ``event`` object that contains a ``data`` attribute that has information about the changes:
+The ``"sync"`` event allows to be notified when the remote settings are changed on the server side. Your handler is given an ``event`` object that contains a ``data`` attribute that has information about the changes:
 
 - ``current``: current list of entries (after changes were applied);
 - ``created``, ``updated``, ``deleted``: list of entries that were created/updated/deleted respectively.
@@ -88,7 +88,7 @@ The ``sync`` event allows to be notified when the remote settings are changed on
 
     RemoteSettings("a-key").on("sync", event => {
       const { data: { current } } = event;
-      for(const entry of current) {
+      for (const entry of current) {
         // Do something with entry...
         // await InternalAPI.reload(entry.id, entry.label, entry.weight);
       }
@@ -97,6 +97,7 @@ The ``sync`` event allows to be notified when the remote settings are changed on
 .. note::
 
     Currently, the synchronization of remote settings is triggered via push notifications, and also by its own timer every 24H (see the preference ``services.settings.poll_interval`` ).
+
 
 File attachments
 ----------------
@@ -171,7 +172,6 @@ The provided helper will:
     A ``downloadAsBytes()`` method returning an ``ArrayBuffer`` is also available, if writing the attachment into the user profile is not necessary.
 
 
-
 .. _services/initial-data:
 
 Initial data
@@ -238,6 +238,42 @@ To package an attachment for consumers of the `download()` method:
    This file may become optional in a future update, see `Bug 1640059 <https://bugzilla.mozilla.org/show_bug.cgi?id=1640059>`_.
 
 
+Synchronization Process
+=======================
+
+The synchronization process consists in pulling the recent changes, merging them with the local data, and verifying the integrity of the result.
+
+.. image:: synchronization-flow.svg
+
+.. Source of diagram
+.. https://mermaid-js.github.io/mermaid-live-editor/
+..
+.. graph TD
+..     0[Sync] --> pull;
+..     pull[Pull changes] --> merge[Merge with local]
+..     merge --> valid{Is signature valid?};
+..     valid -->|Yes| Success;
+..     valid -->|No| retried{Retried?};
+..     retried --> |Yes| validchanges{Valid without changes?};
+..     retried --> |No| valid2{Valid without changes?};
+..     validchanges -->|Yes| restoredata[Restore previous data];
+..     validchanges -->|No| clear[Clear local];
+..     restore --> Failure;
+..     valid2 --> |No| clear2[Clear local];
+..     valid2 --> |Yes| Retry;
+..     Retry --> |Retry| pull;
+..     clear2 --> Retry;
+..     clear --> restore[Restore packaged dump];
+..     restoredata --> Failure;
+..     style 0 fill:#00ff00;
+..     style Success fill:#00ff00;
+..     style Failure fill:#ff0000;
+
+.. important::
+
+    As shown above, we can end-up in situations where synchronization fails and will leave the local DB in an empty state.
+
+
 Targets and A/B testing
 =======================
 
@@ -247,7 +283,8 @@ From the client API standpoint, this is completely transparent: the ``.get()`` m
 
 .. note::
 
-    The remote settings targets follow the same approach as the :ref:`Normandy recipe client <components/normandy>` (ie. JEXL filter expressions),
+    The remote settings targets follow the same approach as the :ref:`Normandy recipe client <components/normandy>` (ie. JEXL filter expressions).
+
 
 .. _services/settings/uptake-telemetry:
 
