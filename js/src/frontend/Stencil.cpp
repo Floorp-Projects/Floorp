@@ -1253,12 +1253,11 @@ static void FunctionsFromExistingLazy(CompilationInput& input,
 }
 
 /* static */
-bool CompilationStencil::instantiateStencils(
-    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-    CompilationGCOutput& gcOutput,
-    CompilationGCOutput* gcOutputForDelazification) {
-  if (!prepareForInstantiate(cx, input, stencil, gcOutput,
-                             gcOutputForDelazification)) {
+bool CompilationStencil::instantiateStencils(JSContext* cx,
+                                             CompilationInput& input,
+                                             const CompilationStencil& stencil,
+                                             CompilationGCOutput& gcOutput) {
+  if (!prepareForInstantiate(cx, input, stencil, gcOutput)) {
     return false;
   }
 
@@ -1356,8 +1355,7 @@ bool CompilationStencil::instantiateBaseStencilAfterPreparation(
 /* static */
 bool CompilationStencil::prepareForInstantiate(
     JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-    CompilationGCOutput& gcOutput,
-    CompilationGCOutput* gcOutputForDelazification) {
+    CompilationGCOutput& gcOutput) {
   // Reserve the `gcOutput` vectors.
   if (!gcOutput.ensureReserved(cx, stencil.scriptData.size(),
                                stencil.scopeData.size())) {

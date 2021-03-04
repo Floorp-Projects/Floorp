@@ -604,13 +604,11 @@ struct CompilationStencil : public BaseCompilationStencil {
 
   [[nodiscard]] static bool prepareForInstantiate(
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-      CompilationGCOutput& gcOutput,
-      CompilationGCOutput* gcOutputForDelazification = nullptr);
+      CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool instantiateStencils(
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-      CompilationGCOutput& gcOutput,
-      CompilationGCOutput* gcOutputForDelazification = nullptr);
+      CompilationGCOutput& gcOutput);
 
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
                                        JS::TranscodeBuffer& buf,
