@@ -341,8 +341,7 @@ nsEventStatus nsMenuX::MenuOpened() {
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShown, nullptr, WidgetMouseEvent::eReal);
 
-  nsCOMPtr<nsIContent> popupContent;
-  GetMenuPopupContent(getter_AddRefs(popupContent));
+  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
@@ -367,8 +366,7 @@ void nsMenuX::MenuClosed() {
     nsEventStatus status = nsEventStatus_eIgnore;
     WidgetMouseEvent event(true, eXULPopupHidden, nullptr, WidgetMouseEvent::eReal);
 
-    nsCOMPtr<nsIContent> popupContent;
-    GetMenuPopupContent(getter_AddRefs(popupContent));
+    nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
     nsIContent* dispatchTo = popupContent ? popupContent : mContent;
     EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
@@ -388,8 +386,7 @@ void nsMenuX::MenuConstruct() {
   // NS_LossyConvertUTF16toASCII(mLabel).get(), mNativeMenu);
 
   // Retrieve our menupopup.
-  nsCOMPtr<nsIContent> menuPopup;
-  GetMenuPopupContent(getter_AddRefs(menuPopup));
+  nsCOMPtr<nsIContent> menuPopup = GetMenuPopupContent();
   if (!menuPopup) {
     gConstructingMenu = false;
     return;
@@ -499,8 +496,7 @@ bool nsMenuX::OnOpen() {
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShowing, nullptr, WidgetMouseEvent::eReal);
 
-  nsCOMPtr<nsIContent> popupContent;
-  GetMenuPopupContent(getter_AddRefs(popupContent));
+  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
 
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
@@ -515,7 +511,7 @@ bool nsMenuX::OnOpen() {
 
   // Get new popup content first since it might have changed as a result of the
   // eXULPopupShowing event above.
-  GetMenuPopupContent(getter_AddRefs(popupContent));
+  popupContent = GetMenuPopupContent();
   if (!popupContent) {
     return true;
   }
@@ -538,8 +534,7 @@ bool nsMenuX::OnClose() {
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupHiding, nullptr, WidgetMouseEvent::eReal);
 
-  nsCOMPtr<nsIContent> popupContent;
-  GetMenuPopupContent(getter_AddRefs(popupContent));
+  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
 
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
@@ -557,26 +552,22 @@ bool nsMenuX::OnClose() {
 // Find the |menupopup| child in the |popup| representing this menu. It should be one
 // of a very few children so we won't be iterating over a bazillion menu items to find
 // it (so the strcmp won't kill us).
-void nsMenuX::GetMenuPopupContent(nsIContent** aResult) {
-  if (!aResult) {
-    return;
-  }
-  *aResult = nullptr;
-
+already_AddRefed<nsIContent> nsMenuX::GetMenuPopupContent() {
   // Check to see if we are a "menupopup" node (if we are a native menu).
   if (mContent->IsXULElement(nsGkAtoms::menupopup)) {
-    NS_ADDREF(*aResult = mContent);
-    return;
+    return do_AddRef(mContent);
   }
 
   // Otherwise check our child nodes.
 
-  for (nsIContent* child = mContent->GetFirstChild(); child; child = child->GetNextSibling()) {
+  for (RefPtr<nsIContent> child = mContent->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
     if (child->IsXULElement(nsGkAtoms::menupopup)) {
-      NS_ADDREF(*aResult = child);
-      return;
+      return child.forget();
     }
   }
+
+  return nullptr;
 }
 
 NSMenuItem* nsMenuX::NativeMenuItem() { return mNativeMenuItem; }
