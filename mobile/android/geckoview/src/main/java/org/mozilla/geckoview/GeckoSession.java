@@ -2576,7 +2576,12 @@ public class GeckoSession {
      * Set the media callback handler.
      * This will replace the current handler.
      * @param delegate An implementation of MediaDelegate.
+     *
+     * @deprecated This API has been replaced by the
+     *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
+     *             and will be removed in GeckoView 91.
      */
+    @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
     @AnyThread
     public void setMediaDelegate(final @Nullable MediaDelegate delegate) {
         mMediaHandler.setDelegate(delegate, this);
@@ -2585,7 +2590,12 @@ public class GeckoSession {
     /**
      * Get the Media callback handler.
      * @return The current Media callback handler.
+     *
+     * @deprecated This API has been replaced by the
+     *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
+     *             and will be removed in GeckoView 91.
      */
+    @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
     @AnyThread
     public @Nullable MediaDelegate getMediaDelegate() {
         return mMediaHandler.getDelegate();
@@ -5963,7 +5973,12 @@ public class GeckoSession {
 
     /**
      * GeckoSession applications implement this interface to handle media events.
+     *
+     * @deprecated This API has been replaced by the
+     *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
+     *             and will be removed in GeckoView 91.
      */
+    @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
     public interface MediaDelegate {
 
         class RecordingDevice {
@@ -6046,7 +6061,12 @@ public class GeckoSession {
          * An HTMLMediaElement has been created.
          * @param session Session instance.
          * @param element The media element that was just created.
+         *
+         * @deprecated This API has been replaced by the
+         *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
+         *             and will be removed in GeckoView 91.
          */
+        @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
         @UiThread
         default void onMediaAdd(@NonNull GeckoSession session, @NonNull MediaElement element) {}
 
@@ -6054,7 +6074,12 @@ public class GeckoSession {
          * An HTMLMediaElement has been unloaded.
          * @param session Session instance.
          * @param element The media element that was unloaded.
+         *
+         * @deprecated This API has been replaced by the
+         *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
+         *             and will be removed in GeckoView 91.
          */
+        @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
         @UiThread
         default void onMediaRemove(@NonNull GeckoSession session, @NonNull MediaElement element) {}
 
