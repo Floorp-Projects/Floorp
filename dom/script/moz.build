@@ -18,6 +18,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    "AutoEntryScript.h",
     "LoadedScript.h",
     "ScriptDecoding.h",
     "ScriptElement.h",
@@ -28,6 +29,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "AutoEntryScript.cpp",
     "LoadedScript.cpp",
     "ModuleLoadRequest.cpp",
     "nsIScriptElement.cpp",
