@@ -80,6 +80,7 @@
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
+using mozilla::dom::AutoEntryScript;
 
 // The watchdog thread loop is pretty trivial, and should not require much stack
 // space to do its job. So only give it 32KiB or the platform minimum.
