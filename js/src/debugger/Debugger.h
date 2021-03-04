@@ -424,10 +424,12 @@ class MOZ_RAII EvalOptions {
 };
 
 /*
- * Env is the type of what ES5 calls "lexical environments" (runtime activations
- * of lexical scopes). This is currently just JSObject, and is implemented by
- * CallObject, LexicalEnvironmentObject, and WithEnvironmentObject, among
- * others--but environments and objects are really two different concepts.
+ * Env is the type of what ECMA-262 calls "lexical environments" (the records
+ * that represent scopes and bindings). See vm/EnvironmentObject.h.
+ *
+ * This is JSObject rather than js::EnvironmentObject because GlobalObject and
+ * some proxies, despite not being in the EnvironmentObject class hierarchy,
+ * can be in environment chains.
  */
 using Env = JSObject;
 
