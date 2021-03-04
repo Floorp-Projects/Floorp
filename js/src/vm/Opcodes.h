@@ -3055,7 +3055,7 @@
      * Push a lexical environment onto the environment chain.
      *
      * The `LexicalScope` indicated by `lexicalScopeIndex` determines the shape
-     * of the new `LexicalEnvironmentObject`. All bindings in the new
+     * of the new `BlockLexicalEnvironmentObject`. All bindings in the new
      * environment are marked as uninitialized.
      *
      * Implements: [Evaluation of *Block*][1], steps 1-4.
@@ -3130,7 +3130,7 @@
      * fresh lexical environment for every iteration of a for-in/of loop whose
      * loop-head has a (captured) lexical declaration.
      *
-     * The current environment must be a LexicalEnvironmentObject.
+     * The current environment must be a BlockLexicalEnvironmentObject.
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3157,9 +3157,9 @@
      * Push a var environment onto the environment chain.
      *
      * Like `JSOp::PushLexicalEnv`, but pushes a `VarEnvironmentObject` rather
-     * than a `LexicalEnvironmentObject`. The difference is that non-strict
-     * direct `eval` can add bindings to a var environment; see `VarScope` in
-     * Scope.h.
+     * than a `BlockLexicalEnvironmentObject`. The difference is that
+     * non-strict direct `eval` can add bindings to a var environment; see
+     * `VarScope` in Scope.h.
      *
      * See `JSOp::PushLexicalEnv` for the fine print.
      *
