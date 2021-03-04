@@ -4,10 +4,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
        <menubar id="main-menubar"
-                onpopupshowing="if (event.target.parentNode.parentNode == this &amp;&amp;
-                                    !('@mozilla.org/widget/nativemenuservice;1' in Cc))
+# On macOS, we don't track whether activation of the native menubar happened
+# with the keyboard.
+#ifndef XP_MACOSX
+                onpopupshowing="if (event.target.parentNode.parentNode == this)
                                   this.setAttribute('openedwithkey',
-                                                    event.target.parentNode.openedWithKey);">
+                                                    event.target.parentNode.openedWithKey);"
+#endif
+                >
             <menu id="file-menu" data-l10n-id="menu-file">
               <menupopup id="menu_FilePopup"
                          onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');
