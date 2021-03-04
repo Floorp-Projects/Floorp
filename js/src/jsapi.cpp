@@ -1249,7 +1249,14 @@ extern JS_PUBLIC_API bool JS_HasExtensibleLexicalEnvironment(JSObject* obj) {
 }
 
 extern JS_PUBLIC_API JSObject* JS_ExtensibleLexicalEnvironment(JSObject* obj) {
-  return ExtensibleLexicalEnvironmentObject::forVarEnvironment(obj);
+  JSObject* lexical = nullptr;
+  if (obj->is<GlobalObject>()) {
+    lexical = JS_GlobalLexicalEnvironment(obj);
+  } else {
+    lexical = ObjectRealm::get(obj).getNonSyntacticLexicalEnvironment(obj);
+  }
+  MOZ_ASSERT(lexical);
+  return lexical;
 }
 
 JS_PUBLIC_API JSObject* JS::CurrentGlobalOrNull(JSContext* cx) {

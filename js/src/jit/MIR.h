@@ -9784,7 +9784,7 @@ class MFunctionEnvironment : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// Allocate a new BlockLexicalEnvironmentObject.
+// Allocate a new LexicalEnvironmentObject.
 class MNewLexicalEnvironmentObject : public MUnaryInstruction,
                                      public SingleObjectPolicy::Data {
   CompilerGCPointer<LexicalScope*> scope_;
@@ -9804,7 +9804,7 @@ class MNewLexicalEnvironmentObject : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// Allocate a new BlockLexicalEnvironmentObject from an existing one.
+// Allocate a new LexicalEnvironmentObject from existing one
 class MCopyLexicalEnvironmentObject : public MUnaryInstruction,
                                       public SingleObjectPolicy::Data {
   bool copySlots_;
@@ -10936,9 +10936,9 @@ class MPostWriteElementBarrier
 };
 
 class MNewNamedLambdaObject : public MNullaryInstruction {
-  CompilerGCPointer<NamedLambdaObject*> templateObj_;
+  CompilerGCPointer<LexicalEnvironmentObject*> templateObj_;
 
-  explicit MNewNamedLambdaObject(NamedLambdaObject* templateObj)
+  explicit MNewNamedLambdaObject(LexicalEnvironmentObject* templateObj)
       : MNullaryInstruction(classOpcode), templateObj_(templateObj) {
     setResultType(MIRType::Object);
   }
@@ -10947,7 +10947,7 @@ class MNewNamedLambdaObject : public MNullaryInstruction {
   INSTRUCTION_HEADER(NewNamedLambdaObject)
   TRIVIAL_NEW_WRAPPERS
 
-  NamedLambdaObject* templateObj() { return templateObj_; }
+  LexicalEnvironmentObject* templateObj() { return templateObj_; }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 

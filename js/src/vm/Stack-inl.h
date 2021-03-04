@@ -39,7 +39,7 @@ inline GlobalObject& InterpreterFrame::global() const {
   return script()->global();
 }
 
-inline ExtensibleLexicalEnvironmentObject&
+inline LexicalEnvironmentObject&
 InterpreterFrame::extensibleLexicalEnvironment() const {
   return NearestEnclosingExtensibleLexicalEnvironment(environmentChain());
 }
@@ -162,10 +162,9 @@ inline void InterpreterFrame::popOffEnvironmentChain() {
 }
 
 inline void InterpreterFrame::replaceInnermostEnvironment(
-    BlockLexicalEnvironmentObject& env) {
-  MOZ_ASSERT(
-      env.enclosingEnvironment() ==
-      envChain_->as<BlockLexicalEnvironmentObject>().enclosingEnvironment());
+    EnvironmentObject& env) {
+  MOZ_ASSERT(env.enclosingEnvironment() ==
+             envChain_->as<EnvironmentObject>().enclosingEnvironment());
   envChain_ = &env;
 }
 

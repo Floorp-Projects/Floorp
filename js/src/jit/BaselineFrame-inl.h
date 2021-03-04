@@ -53,8 +53,8 @@ inline bool BaselineFrame::saveGeneratorSlots(JSContext* cx, unsigned nslots,
 
 inline bool BaselineFrame::pushLexicalEnvironment(JSContext* cx,
                                                   Handle<LexicalScope*> scope) {
-  BlockLexicalEnvironmentObject* env =
-      BlockLexicalEnvironmentObject::createForFrame(cx, scope, this);
+  LexicalEnvironmentObject* env =
+      LexicalEnvironmentObject::createForFrame(cx, scope, this);
   if (!env) {
     return false;
   }
@@ -64,10 +64,10 @@ inline bool BaselineFrame::pushLexicalEnvironment(JSContext* cx,
 }
 
 inline bool BaselineFrame::freshenLexicalEnvironment(JSContext* cx) {
-  Rooted<BlockLexicalEnvironmentObject*> current(
-      cx, &envChain_->as<BlockLexicalEnvironmentObject>());
-  BlockLexicalEnvironmentObject* clone =
-      BlockLexicalEnvironmentObject::clone(cx, current);
+  Rooted<LexicalEnvironmentObject*> current(
+      cx, &envChain_->as<LexicalEnvironmentObject>());
+  LexicalEnvironmentObject* clone =
+      LexicalEnvironmentObject::clone(cx, current);
   if (!clone) {
     return false;
   }
@@ -77,10 +77,10 @@ inline bool BaselineFrame::freshenLexicalEnvironment(JSContext* cx) {
 }
 
 inline bool BaselineFrame::recreateLexicalEnvironment(JSContext* cx) {
-  Rooted<BlockLexicalEnvironmentObject*> current(
-      cx, &envChain_->as<BlockLexicalEnvironmentObject>());
-  BlockLexicalEnvironmentObject* clone =
-      BlockLexicalEnvironmentObject::recreate(cx, current);
+  Rooted<LexicalEnvironmentObject*> current(
+      cx, &envChain_->as<LexicalEnvironmentObject>());
+  LexicalEnvironmentObject* clone =
+      LexicalEnvironmentObject::recreate(cx, current);
   if (!clone) {
     return false;
   }
