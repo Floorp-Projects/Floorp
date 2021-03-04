@@ -1,46 +1,17 @@
-use std::{
-    borrow::Borrow,
-    fmt, hash,
-    os::raw::c_void,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::{borrow::Borrow, fmt, os::raw::c_void, sync::Arc, time::Instant};
 
 use ash::{extensions::khr, version::DeviceV1_0 as _, vk};
 use hal::{format::Format, window as w};
-use smallvec::SmallVec;
 
-use crate::{conv, info, native};
 use crate::{
-    Backend, Device, Instance, PhysicalDevice, QueueFamily, RawDevice, RawInstance, VK_ENTRY,
+    conv, info, native, Backend, Device, Instance, PhysicalDevice, QueueFamily, RawDevice,
+    RawInstance,
 };
-
-#[derive(Debug, Default)]
-pub struct FramebufferCache {
-    // We expect exactly one framebuffer per frame, but can support more.
-    pub framebuffers: SmallVec<[vk::Framebuffer; 1]>,
-}
-
-#[derive(Debug, Default)]
-pub struct FramebufferCachePtr(pub Arc<Mutex<FramebufferCache>>);
-
-impl hash::Hash for FramebufferCachePtr {
-    fn hash<H: hash::Hasher>(&self, hasher: &mut H) {
-        (self.0.as_ref() as *const Mutex<FramebufferCache>).hash(hasher)
-    }
-}
-impl PartialEq for FramebufferCachePtr {
-    fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
-    }
-}
-impl Eq for FramebufferCachePtr {}
 
 #[derive(Debug)]
 struct SurfaceFrame {
     image: vk::Image,
     view: vk::ImageView,
-    framebuffers: FramebufferCachePtr,
 }
 
 #[derive(Debug)]
@@ -59,9 +30,6 @@ impl SurfaceSwapchain {
         device.destroy_semaphore(self.semaphore.0, None);
         for frame in self.frames {
             device.destroy_image_view(frame.view, None);
-            for framebuffer in frame.framebuffers.0.lock().unwrap().framebuffers.drain(..) {
-                device.destroy_framebuffer(framebuffer, None);
-            }
         }
         self.swapchain
     }
@@ -89,16 +57,12 @@ pub struct RawSurface {
 impl Instance {
     #[cfg(all(unix, not(target_os = "android"), not(target_os = "macos")))]
     pub fn create_surface_from_xlib(&self, dpy: *mut vk::Display, window: vk::Window) -> Surface {
-        let entry = VK_ENTRY
-            .as_ref()
-            .expect("Unable to load Vulkan entry points");
-
         if !self.extensions.contains(&khr::XlibSurface::name()) {
             panic!("Vulkan driver does not support VK_KHR_XLIB_SURFACE");
         }
 
         let surface = {
-            let xlib_loader = khr::XlibSurface::new(entry, &self.raw.inner);
+            let xlib_loader = khr::XlibSurface::new(&self.entry, &self.raw.inner);
             let info = vk::XlibSurfaceCreateInfoKHR::builder()
                 .flags(vk::XlibSurfaceCreateFlagsKHR::empty())
                 .window(window)
@@ -117,16 +81,12 @@ impl Instance {
         connection: *mut vk::xcb_connection_t,
         window: vk::xcb_window_t,
     ) -> Surface {
-        let entry = VK_ENTRY
-            .as_ref()
-            .expect("Unable to load Vulkan entry points");
-
         if !self.extensions.contains(&khr::XcbSurface::name()) {
             panic!("Vulkan driver does not support VK_KHR_XCB_SURFACE");
         }
 
         let surface = {
-            let xcb_loader = khr::XcbSurface::new(entry, &self.raw.inner);
+            let xcb_loader = khr::XcbSurface::new(&self.entry, &self.raw.inner);
             let info = vk::XcbSurfaceCreateInfoKHR::builder()
                 .flags(vk::XcbSurfaceCreateFlagsKHR::empty())
                 .window(window)
@@ -145,16 +105,12 @@ impl Instance {
         display: *mut c_void,
         surface: *mut c_void,
     ) -> Surface {
-        let entry = VK_ENTRY
-            .as_ref()
-            .expect("Unable to load Vulkan entry points");
-
         if !self.extensions.contains(&khr::WaylandSurface::name()) {
             panic!("Vulkan driver does not support VK_KHR_WAYLAND_SURFACE");
         }
 
         let surface = {
-            let w_loader = khr::WaylandSurface::new(entry, &self.raw.inner);
+            let w_loader = khr::WaylandSurface::new(&self.entry, &self.raw.inner);
             let info = vk::WaylandSurfaceCreateInfoKHR::builder()
                 .flags(vk::WaylandSurfaceCreateFlagsKHR::empty())
                 .display(display)
@@ -168,17 +124,13 @@ impl Instance {
 
     #[cfg(target_os = "android")]
     pub fn create_surface_android(&self, window: *const c_void) -> Surface {
-        let entry = VK_ENTRY
-            .as_ref()
-            .expect("Unable to load Vulkan entry points");
-
         let surface = {
-            let loader = khr::AndroidSurface::new(entry, &self.raw.inner);
+            let a_loader = khr::AndroidSurface::new(&self.entry, &self.raw.inner);
             let info = vk::AndroidSurfaceCreateInfoKHR::builder()
                 .flags(vk::AndroidSurfaceCreateFlagsKHR::empty())
                 .window(window as *mut _);
 
-            unsafe { loader.create_android_surface(&info, None) }.expect("AndroidSurface failed")
+            unsafe { a_loader.create_android_surface(&info, None) }.expect("AndroidSurface failed")
         };
 
         self.create_surface_from_vk_surface_khr(surface)
@@ -186,10 +138,6 @@ impl Instance {
 
     #[cfg(windows)]
     pub fn create_surface_from_hwnd(&self, hinstance: *mut c_void, hwnd: *mut c_void) -> Surface {
-        let entry = VK_ENTRY
-            .as_ref()
-            .expect("Unable to load Vulkan entry points");
-
         if !self.extensions.contains(&khr::Win32Surface::name()) {
             panic!("Vulkan driver does not support VK_KHR_WIN32_SURFACE");
         }
@@ -199,7 +147,7 @@ impl Instance {
                 .flags(vk::Win32SurfaceCreateFlagsKHR::empty())
                 .hinstance(hinstance)
                 .hwnd(hwnd);
-            let win32_loader = khr::Win32Surface::new(entry, &self.raw.inner);
+            let win32_loader = khr::Win32Surface::new(&self.entry, &self.raw.inner);
             unsafe {
                 win32_loader
                     .create_win32_surface(&info, None)
@@ -243,16 +191,12 @@ impl Instance {
             }
         }
 
-        let entry = VK_ENTRY
-            .as_ref()
-            .expect("Unable to load Vulkan entry points");
-
         if !self.extensions.contains(&mvk::MacOSSurface::name()) {
             panic!("Vulkan driver does not support VK_MVK_MACOS_SURFACE");
         }
 
         let surface = {
-            let mac_os_loader = mvk::MacOSSurface::new(entry, &self.raw.inner);
+            let mac_os_loader = mvk::MacOSSurface::new(&self.entry, &self.raw.inner);
             let mut info = vk::MacOSSurfaceCreateInfoMVK::builder()
                 .flags(vk::MacOSSurfaceCreateFlagsMVK::empty());
             if let Some(view) = unsafe { view.as_ref() } {
@@ -270,11 +214,7 @@ impl Instance {
     }
 
     pub fn create_surface_from_vk_surface_khr(&self, surface: vk::SurfaceKHR) -> Surface {
-        let entry = VK_ENTRY
-            .as_ref()
-            .expect("Unable to load Vulkan entry points");
-
-        let functor = khr::Surface::new(entry, &self.raw.inner);
+        let functor = khr::Surface::new(&self.entry, &self.raw.inner);
 
         let raw = Arc::new(RawSurface {
             handle: surface,
@@ -415,7 +355,7 @@ impl w::PresentationSurface<Backend> for Surface {
         &mut self,
         device: &Device,
         config: w::SwapchainConfig,
-    ) -> Result<(), w::CreationError> {
+    ) -> Result<(), w::SwapchainError> {
         use hal::device::Device as _;
 
         let format = config.format;
@@ -448,8 +388,7 @@ impl w::PresentationSurface<Backend> for Surface {
                         .unwrap();
                     SurfaceFrame {
                         image: view.image,
-                        view: view.view,
-                        framebuffers: Default::default(),
+                        view: view.raw,
                     }
                 })
                 .collect(),
@@ -481,11 +420,6 @@ impl w::PresentationSurface<Backend> for Surface {
             Ok(()) => {
                 ssc.device.raw.reset_fences(fences).unwrap();
                 let frame = &ssc.frames[index as usize];
-                // We have just waited for the frame to be fully available on CPU.
-                // All the associated framebuffers are expected to be destroyed by now.
-                for framebuffer in frame.framebuffers.0.lock().unwrap().framebuffers.drain(..) {
-                    ssc.device.raw.destroy_framebuffer(framebuffer, None);
-                }
                 let image = Self::SwapchainImage {
                     index,
                     image: native::Image {
@@ -496,33 +430,24 @@ impl w::PresentationSurface<Backend> for Surface {
                     },
                     view: native::ImageView {
                         image: frame.image,
-                        view: frame.view,
+                        raw: frame.view,
                         range: hal::image::SubresourceRange {
                             aspects: hal::format::Aspects::COLOR,
                             ..Default::default()
                         },
-                        owner: native::ImageViewOwner::Surface(FramebufferCachePtr(Arc::clone(
-                            &frame.framebuffers.0,
-                        ))),
                     },
                 };
                 Ok((image, suboptimal))
             }
-            Err(vk::Result::NOT_READY) => Err(w::AcquireError::NotReady),
-            Err(vk::Result::TIMEOUT) => Err(w::AcquireError::Timeout),
-            Err(vk::Result::ERROR_OUT_OF_DATE_KHR) => Err(w::AcquireError::OutOfDate),
-            Err(vk::Result::ERROR_SURFACE_LOST_KHR) => {
-                Err(w::AcquireError::SurfaceLost(hal::device::SurfaceLost))
+            Err(vk::Result::NOT_READY) => Err(w::AcquireError::NotReady { timeout: false }),
+            Err(vk::Result::TIMEOUT) => Err(w::AcquireError::NotReady { timeout: true }),
+            Err(vk::Result::ERROR_OUT_OF_DATE_KHR) => Err(w::OutOfDate.into()),
+            Err(vk::Result::ERROR_SURFACE_LOST_KHR) => Err(w::SurfaceLost.into()),
+            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(hal::device::OutOfMemory::Host.into()),
+            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => {
+                Err(hal::device::OutOfMemory::Device.into())
             }
-            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => {
-                Err(w::AcquireError::OutOfMemory(hal::device::OutOfMemory::Host))
-            }
-            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(w::AcquireError::OutOfMemory(
-                hal::device::OutOfMemory::Device,
-            )),
-            Err(vk::Result::ERROR_DEVICE_LOST) => {
-                Err(w::AcquireError::DeviceLost(hal::device::DeviceLost))
-            }
+            Err(vk::Result::ERROR_DEVICE_LOST) => Err(hal::device::DeviceLost.into()),
             _ => unreachable!(),
         }
     }
@@ -559,25 +484,19 @@ impl Swapchain {
         match index {
             // special case for Intel Vulkan returning bizzare values (ugh)
             Ok((i, _)) if self.vendor_id == info::intel::VENDOR && i > 0x100 => {
-                Err(w::AcquireError::OutOfDate)
+                Err(w::OutOfDate.into())
             }
             Ok((i, true)) => Ok((i, Some(w::Suboptimal))),
             Ok((i, false)) => Ok((i, None)),
-            Err(vk::Result::NOT_READY) => Err(w::AcquireError::NotReady),
-            Err(vk::Result::TIMEOUT) => Err(w::AcquireError::Timeout),
-            Err(vk::Result::ERROR_OUT_OF_DATE_KHR) => Err(w::AcquireError::OutOfDate),
-            Err(vk::Result::ERROR_SURFACE_LOST_KHR) => {
-                Err(w::AcquireError::SurfaceLost(hal::device::SurfaceLost))
+            Err(vk::Result::NOT_READY) => Err(w::AcquireError::NotReady { timeout: false }),
+            Err(vk::Result::TIMEOUT) => Err(w::AcquireError::NotReady { timeout: true }),
+            Err(vk::Result::ERROR_OUT_OF_DATE_KHR) => Err(w::OutOfDate.into()),
+            Err(vk::Result::ERROR_SURFACE_LOST_KHR) => Err(w::SurfaceLost.into()),
+            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => Err(hal::device::OutOfMemory::Host.into()),
+            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => {
+                Err(hal::device::OutOfMemory::Device.into())
             }
-            Err(vk::Result::ERROR_OUT_OF_HOST_MEMORY) => {
-                Err(w::AcquireError::OutOfMemory(hal::device::OutOfMemory::Host))
-            }
-            Err(vk::Result::ERROR_OUT_OF_DEVICE_MEMORY) => Err(w::AcquireError::OutOfMemory(
-                hal::device::OutOfMemory::Device,
-            )),
-            Err(vk::Result::ERROR_DEVICE_LOST) => {
-                Err(w::AcquireError::DeviceLost(hal::device::DeviceLost))
-            }
+            Err(vk::Result::ERROR_DEVICE_LOST) => Err(hal::device::DeviceLost.into()),
             _ => panic!("Failed to acquire image."),
         }
     }

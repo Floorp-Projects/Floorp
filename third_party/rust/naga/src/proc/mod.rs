@@ -1,17 +1,18 @@
 //! Module processing functionality.
 
-#[cfg(feature = "petgraph")]
-mod call_graph;
+pub mod analyzer;
 mod interface;
+mod layouter;
 mod namer;
+mod terminator;
 mod typifier;
 mod validator;
 
-#[cfg(feature = "petgraph")]
-pub use call_graph::{CallGraph, CallGraphBuilder};
 pub use interface::{Interface, Visitor};
+pub use layouter::{Alignment, Layouter};
 pub use namer::{EntryPointIndex, NameKey, Namer};
-pub use typifier::{check_constant_type, ResolveContext, ResolveError, Typifier};
+pub use terminator::ensure_block_returns;
+pub use typifier::{ResolveContext, ResolveError, Typifier, TypifyError};
 pub use validator::{ValidationError, Validator};
 
 impl From<super::StorageFormat> for super::ScalarKind {
@@ -54,7 +55,18 @@ impl From<super::StorageFormat> for super::ScalarKind {
     }
 }
 
-impl crate::TypeInner {
+impl super::ScalarValue {
+    pub fn scalar_kind(&self) -> super::ScalarKind {
+        match *self {
+            Self::Uint(_) => super::ScalarKind::Uint,
+            Self::Sint(_) => super::ScalarKind::Sint,
+            Self::Float(_) => super::ScalarKind::Float,
+            Self::Bool(_) => super::ScalarKind::Bool,
+        }
+    }
+}
+
+impl super::TypeInner {
     pub fn scalar_kind(&self) -> Option<super::ScalarKind> {
         match *self {
             super::TypeInner::Scalar { kind, .. } | super::TypeInner::Vector { kind, .. } => {
@@ -62,6 +74,67 @@ impl crate::TypeInner {
             }
             super::TypeInner::Matrix { .. } => Some(super::ScalarKind::Float),
             _ => None,
+        }
+    }
+}
+
+impl super::MathFunction {
+    pub fn argument_count(&self) -> usize {
+        match *self {
+            // comparison
+            Self::Abs => 1,
+            Self::Min => 2,
+            Self::Max => 2,
+            Self::Clamp => 3,
+            // trigonometry
+            Self::Cos => 1,
+            Self::Cosh => 1,
+            Self::Sin => 1,
+            Self::Sinh => 1,
+            Self::Tan => 1,
+            Self::Tanh => 1,
+            Self::Acos => 1,
+            Self::Asin => 1,
+            Self::Atan => 1,
+            Self::Atan2 => 2,
+            // decomposition
+            Self::Ceil => 1,
+            Self::Floor => 1,
+            Self::Round => 1,
+            Self::Fract => 1,
+            Self::Trunc => 1,
+            Self::Modf => 2,
+            Self::Frexp => 2,
+            Self::Ldexp => 2,
+            // exponent
+            Self::Exp => 1,
+            Self::Exp2 => 1,
+            Self::Log => 1,
+            Self::Log2 => 1,
+            Self::Pow => 2,
+            // geometry
+            Self::Dot => 2,
+            Self::Outer => 2,
+            Self::Cross => 2,
+            Self::Distance => 2,
+            Self::Length => 1,
+            Self::Normalize => 1,
+            Self::FaceForward => 3,
+            Self::Reflect => 2,
+            // computational
+            Self::Sign => 1,
+            Self::Fma => 3,
+            Self::Mix => 3,
+            Self::Step => 2,
+            Self::SmoothStep => 3,
+            Self::Sqrt => 1,
+            Self::InverseSqrt => 1,
+            Self::Inverse => 1,
+            Self::Transpose => 1,
+            Self::Determinant => 1,
+            // bits
+            Self::CountOneBits => 1,
+            Self::ReverseBits => 1,
         }
     }
 }

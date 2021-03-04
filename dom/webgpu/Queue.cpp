@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "Queue.h"
 
 #include "CommandBuffer.h"
@@ -36,20 +37,36 @@ void Queue::Submit(
 }
 
 void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
-                        const dom::ArrayBuffer& aData, uint64_t aDataOffset,
+                        const dom::ArrayBufferViewOrArrayBuffer& aData,
+                        uint64_t aDataOffset,
                         const dom::Optional<uint64_t>& aSize,
                         ErrorResult& aRv) {
-  aData.ComputeState();
-  const auto checkedSize =
-      aSize.WasPassed() ? CheckedInt<size_t>(aSize.Value())
-                        : CheckedInt<size_t>(aData.Length()) - aDataOffset;
+  uint64_t length = 0;
+  uint8_t* data = nullptr;
+  if (aData.IsArrayBufferView()) {
+    const auto& view = aData.GetAsArrayBufferView();
+    view.ComputeState();
+    length = view.Length();
+    data = view.Data();
+  }
+  if (aData.IsArrayBuffer()) {
+    const auto& ab = aData.GetAsArrayBuffer();
+    ab.ComputeState();
+    length = ab.Length();
+    data = ab.Data();
+  }
+  MOZ_ASSERT(data != nullptr);
+
+  const auto checkedSize = aSize.WasPassed()
+                               ? CheckedInt<size_t>(aSize.Value())
+                               : CheckedInt<size_t>(length) - aDataOffset;
   if (!checkedSize.isValid()) {
     aRv.ThrowRangeError("Mapped size is too large");
     return;
   }
 
   const auto& size = checkedSize.value();
-  if (aDataOffset + size > aData.Length()) {
+  if (aDataOffset + size > length) {
     aRv.ThrowAbortError(nsPrintfCString("Wrong data size %" PRIuPTR, size));
     return;
   }
@@ -62,13 +79,13 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     return;
   }
 
-  memcpy(shmem.get<uint8_t>(), aData.Data() + aDataOffset, size);
+  memcpy(shmem.get<uint8_t>(), data + aDataOffset, size);
   mBridge->SendQueueWriteBuffer(mId, aBuffer.mId, aBufferOffset,
                                 std::move(shmem));
 }
 
 void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
-                         const dom::ArrayBuffer& aData,
+                         const dom::ArrayBufferViewOrArrayBuffer& aData,
                          const dom::GPUTextureDataLayout& aDataLayout,
                          const dom::GPUExtent3D& aSize, ErrorResult& aRv) {
   ffi::WGPUTextureCopyView copyView = {};
@@ -79,21 +96,37 @@ void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
   ffi::WGPUExtent3d extent = {};
   CommandEncoder::ConvertExtent3DToFFI(aSize, &extent);
 
+  uint64_t availableSize = 0;
+  uint8_t* data = nullptr;
+  if (aData.IsArrayBufferView()) {
+    const auto& view = aData.GetAsArrayBufferView();
+    view.ComputeState();
+    availableSize = view.Length();
+    data = view.Data();
+  }
+  if (aData.IsArrayBuffer()) {
+    const auto& ab = aData.GetAsArrayBuffer();
+    ab.ComputeState();
+    availableSize = ab.Length();
+    data = ab.Data();
+  }
+  MOZ_ASSERT(data != nullptr);
+
   const auto bpb = aDestination.mTexture->mBytesPerBlock;
   if (!bpb) {
     aRv.ThrowAbortError(nsPrintfCString("Invalid texture format"));
     return;
   }
-  if (extent.width == 0 || extent.height == 0 || extent.depth == 0) {
+  if (extent.width == 0 || extent.height == 0 ||
+      extent.depth_or_array_layers == 0) {
     aRv.ThrowAbortError(nsPrintfCString("Invalid copy size"));
     return;
   }
 
   // TODO: support block-compressed formats
-  aData.ComputeState();
-  const auto fullRows =
-      (CheckedInt<size_t>(extent.depth - 1) * aDataLayout.mRowsPerImage +
-       extent.height - 1);
+  const auto fullRows = (CheckedInt<size_t>(extent.depth_or_array_layers - 1) *
+                             aDataLayout.mRowsPerImage +
+                         extent.height - 1);
   const auto checkedSize = fullRows * aDataLayout.mBytesPerRow +
                            CheckedInt<size_t>(extent.width) * bpb.value();
   if (!checkedSize.isValid()) {
@@ -102,7 +135,6 @@ void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
   }
 
   const auto& size = checkedSize.value();
-  auto availableSize = aData.Length();
   if (availableSize < aDataLayout.mOffset ||
       size > (availableSize - aDataLayout.mOffset)) {
     aRv.ThrowAbortError(nsPrintfCString("Wrong data size %" PRIuPTR, size));
@@ -117,7 +149,7 @@ void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
     return;
   }
 
-  memcpy(shmem.get<uint8_t>(), aData.Data() + aDataLayout.mOffset, size);
+  memcpy(shmem.get<uint8_t>(), data + aDataLayout.mOffset, size);
   mBridge->SendQueueWriteTexture(mId, copyView, std::move(shmem), dataLayout,
                                  extent);
 }

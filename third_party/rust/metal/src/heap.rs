@@ -9,6 +9,16 @@ use super::*;
 
 use cocoa_foundation::foundation::NSUInteger;
 
+/// Only available on macos(10.15), ios(13.0)
+#[repr(u64)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum MTLHeapType {
+    Automatic = 0,
+    Placement = 1,
+    /// Only available on macos(11.0), macCatalyst(14.0)
+    Sparse = 2,
+}
+
 pub enum MTLHeap {}
 
 foreign_obj_type! {
@@ -18,12 +28,40 @@ foreign_obj_type! {
 }
 
 impl HeapRef {
+    pub fn device(&self) -> &DeviceRef {
+        unsafe { msg_send![self, device] }
+    }
+
+    pub fn label(&self) -> &str {
+        unsafe {
+            let label = msg_send![self, label];
+            crate::nsstring_as_str(label)
+        }
+    }
+
+    pub fn set_label(&self, label: &str) {
+        unsafe {
+            let nslabel = crate::nsstring_from_str(label);
+            let () = msg_send![self, setLabel: nslabel];
+        }
+    }
+
     pub fn cpu_cache_mode(&self) -> MTLCPUCacheMode {
         unsafe { msg_send![self, cpuCacheMode] }
     }
 
     pub fn storage_mode(&self) -> MTLStorageMode {
         unsafe { msg_send![self, storageMode] }
+    }
+
+    /// Only available on macos(10.15), ios(13.0)
+    pub fn hazard_tracking_mode(&self) -> MTLHazardTrackingMode {
+        unsafe { msg_send![self, hazardTrackingMode] }
+    }
+
+    /// Only available on macos(10.15), ios(13.0)
+    pub fn resource_options(&self) -> MTLResourceOptions {
+        unsafe { msg_send![self, resourceOptions] }
     }
 
     pub fn set_purgeable_state(&self, state: MTLPurgeableState) -> MTLPurgeableState {
@@ -38,7 +76,17 @@ impl HeapRef {
         unsafe { msg_send![self, usedSize] }
     }
 
-    pub fn max_available_size(&self, alignment: NSUInteger) -> NSUInteger {
+    /// Only available on macos(10.15), ios(13.0)
+    pub fn heap_type(&self) -> MTLHeapType {
+        unsafe { msg_send![self, type] }
+    }
+
+    /// Only available on macos(10.13), ios(11.0)
+    pub fn current_allocated_size(&self) -> NSUInteger {
+        unsafe { msg_send![self, currentAllocatedSize] }
+    }
+
+    pub fn max_available_size_with_alignment(&self, alignment: NSUInteger) -> NSUInteger {
         unsafe { msg_send![self, maxAvailableSizeWithAlignment: alignment] }
     }
 
@@ -57,6 +105,42 @@ impl HeapRef {
     pub fn new_texture(&self, descriptor: &TextureDescriptorRef) -> Option<Texture> {
         unsafe {
             let ptr: *mut MTLTexture = msg_send![self, newTextureWithDescriptor: descriptor];
+            if !ptr.is_null() {
+                Some(Texture::from_ptr(ptr))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Only available on macOS 10.15+ & iOS 13.0+
+    pub fn new_buffer_with_offset(
+        &self,
+        length: u64,
+        options: MTLResourceOptions,
+        offset: u64,
+    ) -> Option<Buffer> {
+        unsafe {
+            let ptr: *mut MTLBuffer = msg_send![self, newBufferWithLength:length
+                                                                  options:options
+                                                                  offset:offset];
+            if !ptr.is_null() {
+                Some(Buffer::from_ptr(ptr))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Only available on macOS 10.15+ & iOS 13.0+
+    pub fn new_texture_with_offset(
+        &self,
+        descriptor: &TextureDescriptorRef,
+        offset: u64,
+    ) -> Option<Texture> {
+        unsafe {
+            let ptr: *mut MTLTexture = msg_send![self, newTextureWithDescriptor:descriptor
+                                                                         offset:offset];
             if !ptr.is_null() {
                 Some(Texture::from_ptr(ptr))
             } else {
@@ -106,5 +190,20 @@ impl HeapDescriptorRef {
 
     pub fn set_size(&self, size: NSUInteger) {
         unsafe { msg_send![self, setSize: size] }
+    }
+
+    /// Only available on macos(10.15), ios(13.0)
+    pub fn hazard_tracking_mode(&self) -> MTLHazardTrackingMode {
+        unsafe { msg_send![self, hazardTrackingMode] }
+    }
+
+    /// Only available on macos(10.15), ios(13.0)
+    pub fn resource_options(&self) -> MTLResourceOptions {
+        unsafe { msg_send![self, resourceOptions] }
+    }
+
+    /// Only available on macos(10.15), ios(13.0)
+    pub fn heap_type(&self) -> MTLHeapType {
+        unsafe { msg_send![self, type] }
     }
 }

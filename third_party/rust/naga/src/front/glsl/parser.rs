@@ -1,18 +1,21 @@
-#![allow(clippy::panic)]
+#![allow(clippy::panic, clippy::needless_lifetimes)]
 use pomelo::pomelo;
-
 pomelo! {
     //%verbose;
     %include {
         use super::super::{error::ErrorKind, token::*, ast::*};
-        use crate::{proc::Typifier, Arena, BinaryOperator, Binding, Block, Constant,
-            ConstantInner, EntryPoint, Expression, FallThrough, FastHashMap, Function, GlobalVariable, Handle, Interpolation,
-            LocalVariable, MemberOrigin, SampleLevel, ScalarKind, Statement, StorageAccess,
-            StorageClass, StructMember, Type, TypeInner, UnaryOperator};
+        use crate::{
+            Arena, BinaryOperator, Binding, Block, Constant,
+            ConstantInner, Expression,
+            Function, GlobalVariable, Handle, Interpolation,
+            LocalVariable, ScalarValue, ScalarKind,
+            Statement, StorageAccess, StorageClass, StructMember,
+            SwitchCase, Type, TypeInner, UnaryOperator, FunctionArgument
+        };
     }
     %token #[derive(Debug)] #[cfg_attr(test, derive(PartialEq))] pub enum Token {};
-    %parser pub struct Parser<'a> {};
-    %extra_argument &'a mut Program;
+    %parser pub struct Parser<'a, 'b> {};
+    %extra_argument &'a mut Program<'b>;
     %extra_token TokenMetadata;
     %error ErrorKind;
     %syntax_error {
@@ -44,6 +47,7 @@ pomelo! {
     %type function_prototype Function;
     %type function_declarator Function;
     %type function_header Function;
+    %type function_header_with_parameters (Function, Vec<FunctionArgument>);
     %type function_definition Function;
 
     // statements
@@ -57,8 +61,8 @@ pomelo! {
     %type jump_statement Statement;
     %type iteration_statement Statement;
     %type selection_statement Statement;
-    %type switch_statement_list Vec<(Option<i32>, Block, Option<FallThrough>)>;
-    %type switch_statement (Option<i32>, Block, Option<FallThrough>);
+    %type switch_statement_list Vec<(Option<i32>, Block, bool)>;
+    %type switch_statement (Option<i32>, Block, bool);
     %type for_init_statement Statement;
     %type for_rest_statement (Option<ExpressionRule>, Option<ExpressionRule>);
     %type condition_opt Option<ExpressionRule>;
@@ -76,6 +80,10 @@ pomelo! {
     %type function_call_header_with_parameters FunctionCall;
     %type function_call_header FunctionCall;
     %type function_identifier FunctionCallKind;
+
+    %type parameter_declarator FunctionArgument;
+    %type parameter_declaration FunctionArgument;
+    %type parameter_type_specifier Handle<Type>;
 
     %type multiplicative_expression ExpressionRule;
     %type additive_expression ExpressionRule;
@@ -101,12 +109,12 @@ pomelo! {
     %type declaration Option<VarDeclaration>;
     %type init_declarator_list VarDeclaration;
     %type single_declaration VarDeclaration;
-    %type layout_qualifier Binding;
+    %type layout_qualifier StructLayout;
     %type layout_qualifier_id_list Vec<(String, u32)>;
     %type layout_qualifier_id (String, u32);
     %type type_qualifier Vec<TypeQualifier>;
     %type single_type_qualifier TypeQualifier;
-    %type storage_qualifier StorageClass;
+    %type storage_qualifier StorageQualifier;
     %type interpolation_qualifier Interpolation;
     %type Interpolation Interpolation;
 
@@ -160,61 +168,70 @@ pomelo! {
 
     primary_expression ::= variable_identifier;
     primary_expression ::= IntConstant(i) {
-        let ty = extra.module.types.fetch_or_append(Type {
-            name: None,
-            inner: TypeInner::Scalar {
-                kind: ScalarKind::Sint,
-                width: 4,
-            }
-        });
         let ch = extra.module.constants.fetch_or_append(Constant {
             name: None,
             specialization: None,
-            ty,
-            inner: ConstantInner::Sint(i.1)
+            inner: ConstantInner::Scalar {
+                width: 4,
+                value: ScalarValue::Sint(i.1),
+            },
         });
         ExpressionRule::from_expression(
             extra.context.expressions.append(Expression::Constant(ch))
         )
     }
-    // primary_expression ::= UintConstant;
-    primary_expression ::= FloatConstant(f) {
-        let ty = extra.module.types.fetch_or_append(Type {
-            name: None,
-            inner: TypeInner::Scalar {
-                kind: ScalarKind::Float,
-                width: 4,
-            }
-        });
+    primary_expression ::= UintConstant(i) {
         let ch = extra.module.constants.fetch_or_append(Constant {
             name: None,
             specialization: None,
-            ty,
-            inner: ConstantInner::Float(f.1 as f64)
+            inner: ConstantInner::Scalar {
+                width: 4,
+                value: ScalarValue::Uint(i.1),
+            },
+        });
+        ExpressionRule::from_expression(
+            extra.context.expressions.append(Expression::Constant(ch))
+        )
+    }
+    primary_expression ::= FloatConstant(f) {
+        let ch = extra.module.constants.fetch_or_append(Constant {
+            name: None,
+            specialization: None,
+            inner: ConstantInner::Scalar {
+                width: 4,
+                value: ScalarValue::Float(f.1 as f64),
+            },
         });
         ExpressionRule::from_expression(
             extra.context.expressions.append(Expression::Constant(ch))
         )
     }
     primary_expression ::= BoolConstant(b) {
-        let ty = extra.module.types.fetch_or_append(Type {
-            name: None,
-            inner: TypeInner::Scalar {
-                kind: ScalarKind::Bool,
-                width: 4,
-            }
-        });
         let ch = extra.module.constants.fetch_or_append(Constant {
             name: None,
             specialization: None,
-            ty,
-            inner: ConstantInner::Bool(b.1)
+            inner: ConstantInner::Scalar {
+                width: 1,
+                value: ScalarValue::Bool(b.1)
+            },
         });
         ExpressionRule::from_expression(
             extra.context.expressions.append(Expression::Constant(ch))
         )
     }
-    // primary_expression ::= DoubleConstant;
+    primary_expression ::= DoubleConstant(f) {
+        let ch = extra.module.constants.fetch_or_append(Constant {
+            name: None,
+            specialization: None,
+            inner: ConstantInner::Scalar {
+                width: 8,
+                value: ScalarValue::Float(f.1),
+            },
+        });
+        ExpressionRule::from_expression(
+            extra.context.expressions.append(Expression::Constant(ch))
+        )
+    }
     primary_expression ::= LeftParen expression(e) RightParen {
         e
     }
@@ -242,61 +259,7 @@ pomelo! {
     integer_expression ::= expression;
 
     function_call ::= function_call_or_method(fc) {
-        match fc.kind {
-            FunctionCallKind::TypeConstructor(ty) => {
-                let h = if fc.args.len() == 1 {
-                    let kind = extra.module.types[ty].inner
-                        .scalar_kind()
-                        .ok_or(ErrorKind::SemanticError("Can only cast to scalar or vector"))?;
-                    extra.context.expressions.append(Expression::As {
-                        kind,
-                        expr: fc.args[0].expression,
-                        convert: true,
-                    })
-                } else {
-                    extra.context.expressions.append(Expression::Compose {
-                        ty,
-                        components: fc.args.iter().map(|a| a.expression).collect(),
-                    })
-                };
-                ExpressionRule {
-                    expression: h,
-                    statements: fc.args.into_iter().map(|a| a.statements).flatten().collect(),
-                    sampler: None
-                }
-            }
-            FunctionCallKind::Function(name) => {
-                match name.as_str() {
-                    "sampler2D" => {
-                        //TODO: check args len
-                        ExpressionRule{
-                            expression: fc.args[0].expression,
-                            sampler: Some(fc.args[1].expression),
-                            statements: fc.args.into_iter().map(|a| a.statements).flatten().collect(),
-                        }
-                    }
-                    "texture" => {
-                        //TODO: check args len
-                        if let Some(sampler) = fc.args[0].sampler {
-                            ExpressionRule{
-                                expression: extra.context.expressions.append(Expression::ImageSample {
-                                    image: fc.args[0].expression,
-                                    sampler,
-                                    coordinate: fc.args[1].expression,
-                                    level: SampleLevel::Auto,
-                                    depth_ref: None,
-                                }),
-                                sampler: None,
-                                statements: fc.args.into_iter().map(|a| a.statements).flatten().collect(),
-                            }
-                        } else {
-                            return Err(ErrorKind::SemanticError("Bad call to texture"));
-                        }
-                    }
-                    _ => { return Err(ErrorKind::NotImplemented("Function call")); }
-                }
-            }
-        }
+       extra.function_call(fc)?
     }
     function_call_or_method ::= function_call_generic;
     function_call_generic ::= function_call_header_with_parameters(h) RightParen {
@@ -356,15 +319,27 @@ pomelo! {
         //TODO
         return Err(ErrorKind::NotImplemented("--pre"))
     }
-    unary_expression ::= unary_operator unary_expression {
-        //TODO
-        return Err(ErrorKind::NotImplemented("unary_op"))
+    unary_expression ::= Plus unary_expression(tgt) {
+        tgt
+    }
+    unary_expression ::= Dash unary_expression(tgt) {
+        extra.unary_expr(UnaryOperator::Negate, &tgt)
+    }
+    unary_expression ::= Bang unary_expression(tgt) {
+        if let TypeInner::Scalar { kind: ScalarKind::Bool, .. } = extra.resolve_type(tgt.expression)? {
+            extra.unary_expr(UnaryOperator::Not, &tgt)
+        } else {
+            return Err(ErrorKind::SemanticError("Cannot apply '!' to non bool type".into()))
+        }
+    }
+    unary_expression ::= Tilde unary_expression(tgt) {
+        if extra.resolve_type(tgt.expression)?.scalar_kind() != Some(ScalarKind::Bool) {
+            extra.unary_expr(UnaryOperator::Not, &tgt)
+        } else {
+            return Err(ErrorKind::SemanticError("Cannot apply '~' to type".into()))
+        }
     }
 
-    unary_operator ::= Plus;
-    unary_operator ::= Dash;
-    unary_operator ::= Bang;
-    unary_operator ::= Tilde;
     multiplicative_expression ::= unary_expression;
     multiplicative_expression ::= multiplicative_expression(left) Star unary_expression(right) {
         extra.binary_expr(BinaryOperator::Multiply, &left, &right)
@@ -404,10 +379,10 @@ pomelo! {
     }
     equality_expression ::= relational_expression;
     equality_expression ::= equality_expression(left) EqOp relational_expression(right) {
-        extra.binary_expr(BinaryOperator::Equal, &left, &right)
+        extra.equality_expr(true, &left, &right)?
     }
     equality_expression ::= equality_expression(left) NeOp relational_expression(right) {
-        extra.binary_expr(BinaryOperator::NotEqual, &left, &right)
+        extra.equality_expr(false, &left, &right)?
     }
     and_expression ::= equality_expression;
     and_expression ::= and_expression(left) Ampersand equality_expression(right) {
@@ -536,14 +511,16 @@ pomelo! {
         if i.1 == "gl_PerVertex" {
             None
         } else {
+            let block = !t.is_empty();
             Some(VarDeclaration {
                 type_qualifiers: t,
                 ids_initializers: vec![(None, None)],
                 ty: extra.module.types.fetch_or_append(Type{
                     name: Some(i.1),
                     inner: TypeInner::Struct {
-                        members: sdl
-                    }
+                        block,
+                        members: sdl,
+                    },
                 }),
             })
         }
@@ -551,14 +528,16 @@ pomelo! {
 
     declaration ::= type_qualifier(t) Identifier(i1) LeftBrace
         struct_declaration_list(sdl) RightBrace Identifier(i2) Semicolon {
+        let block = !t.is_empty();
         Some(VarDeclaration {
             type_qualifiers: t,
             ids_initializers: vec![(Some(i2.1), None)],
             ty: extra.module.types.fetch_or_append(Type{
                 name: Some(i1.1),
                 inner: TypeInner::Struct {
-                    members: sdl
-                }
+                    block,
+                    members: sdl,
+                },
             }),
         })
     }
@@ -579,7 +558,7 @@ pomelo! {
     }
 
     single_declaration ::= fully_specified_type(t) {
-        let ty = t.1.ok_or(ErrorKind::SemanticError("Empty type for declaration"))?;
+        let ty = t.1.ok_or_else(||ErrorKind::SemanticError("Empty type for declaration".into()))?;
 
         VarDeclaration {
             type_qualifiers: t.0,
@@ -588,7 +567,7 @@ pomelo! {
         }
     }
     single_declaration ::= fully_specified_type(t) Identifier(i) {
-        let ty = t.1.ok_or(ErrorKind::SemanticError("Empty type for declaration"))?;
+        let ty = t.1.ok_or_else(|| ErrorKind::SemanticError("Empty type for declaration".into()))?;
 
         VarDeclaration {
             type_qualifiers: t.0,
@@ -599,7 +578,7 @@ pomelo! {
     // single_declaration ::= fully_specified_type Identifier array_specifier;
     // single_declaration ::= fully_specified_type Identifier array_specifier Equal initializer;
     single_declaration ::= fully_specified_type(t) Identifier(i) Equal initializer(init) {
-        let ty = t.1.ok_or(ErrorKind::SemanticError("Empty type for declaration"))?;
+        let ty = t.1.ok_or_else(|| ErrorKind::SemanticError("Empty type for declaration".into()))?;
 
         VarDeclaration {
             type_qualifiers: t.0,
@@ -621,14 +600,16 @@ pomelo! {
 
     layout_qualifier ::= Layout LeftParen layout_qualifier_id_list(l) RightParen {
         if let Some(&(_, loc)) = l.iter().find(|&q| q.0.as_str() == "location") {
-            Binding::Location(loc)
+            StructLayout::Binding(Binding::Location(loc))
         } else if let Some(&(_, binding)) = l.iter().find(|&q| q.0.as_str() == "binding") {
             let group = if let Some(&(_, set)) = l.iter().find(|&q| q.0.as_str() == "set") {
                 set
             } else {
                 0
             };
-            Binding::Resource{ group, binding }
+            StructLayout::Binding(Binding::Resource{ group, binding })
+        } else if l.iter().any(|q| q.0.as_str() == "push_constant") {
+            StructLayout::PushConstant
         } else {
             return Err(ErrorKind::NotImplemented("unsupported layout qualifier(s)"));
         }
@@ -660,10 +641,13 @@ pomelo! {
     }
 
     single_type_qualifier ::= storage_qualifier(s) {
-        TypeQualifier::StorageClass(s)
+        TypeQualifier::StorageQualifier(s)
     }
     single_type_qualifier ::= layout_qualifier(l) {
-        TypeQualifier::Binding(l)
+        match l {
+            StructLayout::Binding(b) => TypeQualifier::Binding(b),
+            StructLayout::PushConstant => TypeQualifier::StorageQualifier(StorageQualifier::StorageClass(StorageClass::PushConstant)),
+        }
     }
     // single_type_qualifier ::= precision_qualifier;
     single_type_qualifier ::= interpolation_qualifier(i) {
@@ -672,19 +656,21 @@ pomelo! {
     // single_type_qualifier ::= invariant_qualifier;
     // single_type_qualifier ::= precise_qualifier;
 
-    // storage_qualifier ::= Const
+    storage_qualifier ::= Const {
+        StorageQualifier::Const
+    }
     // storage_qualifier ::= InOut;
     storage_qualifier ::= In {
-        StorageClass::Input
+        StorageQualifier::StorageClass(StorageClass::Input)
     }
     storage_qualifier ::= Out {
-        StorageClass::Output
+        StorageQualifier::StorageClass(StorageClass::Output)
     }
     // storage_qualifier ::= Centroid;
     // storage_qualifier ::= Patch;
     // storage_qualifier ::= Sample;
     storage_qualifier ::= Uniform {
-        StorageClass::Uniform
+        StorageQualifier::StorageClass(StorageClass::Uniform)
     }
     //TODO: other storage qualifiers
 
@@ -715,7 +701,8 @@ pomelo! {
         Type{
             name: Some(i.1),
             inner: TypeInner::Struct {
-                members: vec![]
+                block: false,
+                members: vec![],
             }
         }
     }
@@ -733,11 +720,11 @@ pomelo! {
         if let Some(ty) = t {
             sdl.iter().map(|name| StructMember {
                 name: Some(name.clone()),
-                origin: MemberOrigin::Empty,
+                span: None,
                 ty,
             }).collect()
         } else {
-            return Err(ErrorKind::SemanticError("Struct member can't be void"))
+            return Err(ErrorKind::SemanticError("Struct member can't be void".into()))
         }
     }
     //struct_declaration ::= type_qualifier type_specifier struct_declarator_list Semicolon;
@@ -768,7 +755,7 @@ pomelo! {
         // local variables
         if let Some(d) = d {
             for (id, initializer) in d.ids_initializers {
-                let id = id.ok_or(ErrorKind::SemanticError("local var must be named"))?;
+                let id = id.ok_or_else(|| ErrorKind::SemanticError("Local var must be named".into()))?;
                 // check if already declared in current scope
                 #[cfg(feature = "glsl-validate")]
                 {
@@ -842,12 +829,16 @@ pomelo! {
 
     selection_statement ::= Switch LeftParen expression(e) RightParen LeftBrace switch_statement_list(ls) RightBrace {
         let mut default = Vec::new();
-        let mut cases = FastHashMap::default();
-        for (v, s, ft) in ls {
-            if let Some(v) = v {
-                cases.insert(v, (s, ft));
+        let mut cases = Vec::new();
+        for (v, body, fall_through) in ls {
+            if let Some(value) = v {
+                cases.push(SwitchCase {
+                    value,
+                    body,
+                    fall_through,
+                });
             } else {
-                default.extend_from_slice(&s);
+                default.extend_from_slice(&body);
             }
         }
         Statement::Switch {
@@ -865,18 +856,18 @@ pomelo! {
         ssl
     }
     switch_statement ::= Case IntConstant(v) Colon statement_list(sl) {
-        let fallthrough = match sl.last() {
-            Some(Statement::Break) => None,
-            _ => Some(FallThrough),
+        let fall_through = match sl.last() {
+            Some(&Statement::Break) => false,
+            _ => true,
         };
-        (Some(v.1 as i32), sl, fallthrough)
+        (Some(v.1 as i32), sl, fall_through)
     }
     switch_statement ::= Default Colon statement_list(sl) {
-        let fallthrough = match sl.last() {
-            Some(Statement::Break) => Some(FallThrough),
-            _ => None,
+        let fall_through = match sl.last() {
+            Some(&Statement::Break) => true,
+            _ => false,
         };
-        (None, sl, fallthrough)
+        (None, sl, fall_through)
     }
 
     iteration_statement ::= While LeftParen expression(e) RightParen compound_statement_no_new_scope(sl) {
@@ -972,7 +963,11 @@ pomelo! {
     }
 
     statement_list ::= statement(s) {
-        vec![s]
+        //TODO: catch this earlier and don't populate the statements
+        match s {
+            Statement::Block(ref block) if block.is_empty() => vec![],
+            _ => vec![s],
+        }
     }
     statement_list ::= statement_list(mut ss) statement(s) { ss.push(s); ss }
 
@@ -990,46 +985,51 @@ pomelo! {
 
     // function
     function_prototype ::= function_declarator(f) RightParen {
-        // prelude, add global var expressions
-        for (var_handle, var) in extra.module.global_variables.iter() {
-            if let Some(name) = var.name.as_ref() {
-                let exp = extra.context.expressions.append(
-                    Expression::GlobalVariable(var_handle)
-                );
-                extra.context.lookup_global_var_exps.insert(name.clone(), exp);
-            } else {
-                let ty = &extra.module.types[var.ty];
-                // anonymous structs
-                if let TypeInner::Struct { members } = &ty.inner {
-                    let base = extra.context.expressions.append(
-                        Expression::GlobalVariable(var_handle)
-                    );
-                    for (idx, member) in members.iter().enumerate() {
-                        if let Some(name) = member.name.as_ref() {
-                            let exp = extra.context.expressions.append(
-                                Expression::AccessIndex{
-                                    base,
-                                    index: idx as u32,
-                                }
-                            );
-                            extra.context.lookup_global_var_exps.insert(name.clone(), exp);
-                        }
-                    }
-                }
-            }
-        }
+        extra.add_function_prelude();
         f
     }
     function_declarator ::= function_header;
+    function_declarator ::= function_header_with_parameters((f, args)) {
+        for (pos, arg) in args.into_iter().enumerate() {
+            if let Some(name) = arg.name.clone() {
+                let exp = extra.context.expressions.append(Expression::FunctionArgument(pos as u32));
+                extra.context.add_local_var(name, exp);
+            }
+            extra.context.arguments.push(arg);
+        }
+        f
+    }
     function_header ::= fully_specified_type(t) Identifier(n) LeftParen {
         Function {
             name: Some(n.1),
             arguments: vec![],
             return_type: t.1,
-            global_usage: vec![],
             local_variables: Arena::<LocalVariable>::new(),
             expressions: Arena::<Expression>::new(),
             body: vec![],
+        }
+    }
+    function_header_with_parameters ::= function_header(h) parameter_declaration(p) {
+        (h, vec![p])
+    }
+    function_header_with_parameters ::= function_header_with_parameters((h, mut args)) Comma parameter_declaration(p) {
+        args.push(p);
+        (h, args)
+    }
+    parameter_declarator ::= parameter_type_specifier(ty) Identifier(n) {
+        FunctionArgument { name: Some(n.1), ty }
+    }
+    // parameter_declarator ::= type_specifier(ty) Identifier(ident) array_specifier;
+    parameter_declaration ::= parameter_declarator;
+    parameter_declaration ::= parameter_type_specifier(ty) {
+        FunctionArgument { name: None, ty }
+    }
+
+    parameter_type_specifier ::= type_specifier(t) {
+        if let Some(ty) = t {
+            ty
+        } else {
+            return Err(ErrorKind::SemanticError("Function parameter can't be void".into()))
         }
     }
 
@@ -1062,69 +1062,84 @@ pomelo! {
     translation_unit ::= translation_unit external_declaration;
 
     external_declaration ::= function_definition(f) {
-        if f.name == extra.entry {
-            let name = extra.entry.take().unwrap();
-            extra.module.entry_points.insert(
-                (extra.shader_stage, name),
-                EntryPoint {
-                    early_depth_test: None,
-                    workgroup_size: [0; 3], //TODO
-                    function: f,
-                },
-            );
-        } else {
-            let name = f.name.clone().unwrap();
-            let handle = extra.module.functions.append(f);
-            extra.lookup_function.insert(name, handle);
-        }
+        extra.declare_function(f)?
     }
     external_declaration ::= declaration(d) {
         if let Some(d) = d {
-            let class = d.type_qualifiers.iter().find_map(|tq| {
-                if let TypeQualifier::StorageClass(sc) = tq { Some(*sc) } else { None }
-            }).ok_or(ErrorKind::SemanticError("Missing storage class for global var"))?;
+            // TODO: handle multiple storage qualifiers
+            let storage = d.type_qualifiers.iter().find_map(|tq| {
+                if let TypeQualifier::StorageQualifier(sc) = tq { Some(*sc) } else { None }
+            }).unwrap_or(StorageQualifier::StorageClass(StorageClass::Private));
 
-            let binding = d.type_qualifiers.iter().find_map(|tq| {
-                if let TypeQualifier::Binding(b) = tq { Some(b.clone()) } else { None }
-            });
+            match storage {
+                StorageQualifier::StorageClass(storage_class) => {
+                    // TODO: Check that the storage qualifiers allow for the bindings
+                    let binding = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::Binding(b) = tq { Some(b.clone()) } else { None }
+                    });
 
-            let interpolation = d.type_qualifiers.iter().find_map(|tq| {
-                if let TypeQualifier::Interpolation(i) = tq { Some(*i) } else { None }
-            });
+                    let interpolation = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::Interpolation(i) = tq { Some(*i) } else { None }
+                    });
 
-            for (id, initializer) in d.ids_initializers {
-                let h = extra.module.global_variables.fetch_or_append(
-                    GlobalVariable {
-                        name: id.clone(),
-                        class,
-                        binding: binding.clone(),
-                        ty: d.ty,
-                        init: None,
-                        interpolation,
-                        storage_access: StorageAccess::empty(), //TODO
-                    },
-                );
-                if let Some(id) = id {
-                    extra.lookup_global_variables.insert(id, h);
+                    for (id, initializer) in d.ids_initializers {
+                        let init = initializer.map(|init| extra.solve_constant(init.expression)).transpose()?;
+
+                        // use StorageClass::Handle for texture and sampler uniforms
+                        let class = if storage_class == StorageClass::Uniform {
+                            match extra.module.types[d.ty].inner {
+                                TypeInner::Image{..} | TypeInner::Sampler{..} => StorageClass::Handle,
+                                _ => storage_class,
+                            }
+                        } else {
+                            storage_class
+                        };
+
+                        let h = extra.module.global_variables.fetch_or_append(
+                            GlobalVariable {
+                                name: id.clone(),
+                                class,
+                                binding: binding.clone(),
+                                ty: d.ty,
+                                init,
+                                interpolation,
+                                storage_access: StorageAccess::empty(), //TODO
+                            },
+                        );
+                        if let Some(id) = id {
+                            extra.lookup_global_variables.insert(id, h);
+                        }
+                    }
+                }
+                StorageQualifier::Const => {
+                    for (id, initializer) in d.ids_initializers {
+                        if let Some(init) = initializer {
+                            let constant = extra.solve_constant(init.expression)?;
+                            let inner = extra.module.constants[constant].inner.clone();
+
+                            let h = extra.module.constants.fetch_or_append(
+                                Constant {
+                                    name: id.clone(),
+                                    specialization: None, // TODO
+                                    inner
+                                },
+                            );
+                            if let Some(id) = id {
+                                extra.lookup_constants.insert(id.clone(), h);
+                                let expr = extra.context.expressions.append(Expression::Constant(h));
+                                extra.context.lookup_constant_exps.insert(id, expr);
+                            }
+                        } else {
+                            return Err(ErrorKind::SemanticError("Constants must have an initializer".into()))
+                        }
+                    }
                 }
             }
         }
     }
 
-    function_definition ::= function_prototype(mut f) compound_statement_no_new_scope(mut cs) {
-        std::mem::swap(&mut f.expressions, &mut extra.context.expressions);
-        std::mem::swap(&mut f.local_variables, &mut extra.context.local_variables);
-        extra.context.clear_scopes();
-        extra.context.lookup_global_var_exps.clear();
-        extra.context.typifier = Typifier::new();
-        // make sure function ends with return
-        match cs.last() {
-            Some(Statement::Return {..}) => {}
-            _ => {cs.push(Statement::Return { value:None });}
-        }
-        f.body = cs;
-        f.fill_global_use(&extra.module.global_variables);
-        f
+    function_definition ::= function_prototype(f) compound_statement_no_new_scope(cs) {
+        extra.function_definition(f, cs)
     };
 }
 

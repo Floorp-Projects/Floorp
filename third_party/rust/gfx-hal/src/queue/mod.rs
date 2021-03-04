@@ -4,7 +4,7 @@
 //! submitted commands buffers.
 //!
 //! There are different types of queues, which can only handle associated command buffers.
-//! `CommandQueue<B, C>` has the capability defined by `C`: graphics, compute and transfer.
+//! `Queue<B, C>` has the capability defined by `C`: graphics, compute and transfer.
 
 pub mod family;
 
@@ -14,7 +14,7 @@ use crate::{
     window::{PresentError, PresentationSurface, Suboptimal},
     Backend,
 };
-use std::{any::Any, borrow::Borrow, fmt, iter};
+use std::{any::Any, fmt};
 
 pub use self::family::{QueueFamily, QueueFamilyId, QueueGroup};
 
@@ -57,19 +57,6 @@ impl QueueType {
 /// `1.0` (high).
 pub type QueuePriority = f32;
 
-/// Submission information for a [command queue][CommandQueue].
-///
-/// The submission is sent to the device through the [`submit`][CommandQueue::submit] method.
-#[derive(Debug)]
-pub struct Submission<Ic, Iw, Is> {
-    /// Command buffers to submit.
-    pub command_buffers: Ic,
-    /// Semaphores to wait being signalled before submission.
-    pub wait_semaphores: Iw,
-    /// Semaphores to signal after all command buffers in the submission have finished execution.
-    pub signal_semaphores: Is,
-}
-
 /// Abstraction for an internal GPU execution engine.
 ///
 /// Commands are executed on the the device by submitting
@@ -77,13 +64,15 @@ pub struct Submission<Ic, Iw, Is> {
 ///
 /// Queues can also be used for presenting to a surface
 /// (that is, flip the front buffer with the next one in the chain).
-pub trait CommandQueue<B: Backend>: fmt::Debug + Any + Send + Sync {
+pub trait Queue<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Submit command buffers to queue for execution.
     ///
     /// # Arguments
     ///
-    /// * `submission` - information about which command buffers to submit,
-    ///   as well as what semaphores to wait for or to signal when done.
+    /// * `command_buffers` - command buffers to submit.
+    /// * `wait_semaphores` - semaphores to wait being signalled before submission.
+    /// * `signal_semaphores` - semaphores to signal after all command buffers
+    ///   in the submission have finished execution.
     /// * `fence` - must be in unsignaled state, and will be signaled after
     ///   all command buffers in the submission have finished execution.
     ///
@@ -93,47 +82,33 @@ pub trait CommandQueue<B: Backend>: fmt::Debug + Any + Send + Sync {
     ///
     /// For example, trying to submit compute commands to a graphics queue
     /// will result in undefined behavior.
-    unsafe fn submit<'a, T, Ic, S, Iw, Is>(
-        &mut self,
-        submission: Submission<Ic, Iw, Is>,
-        fence: Option<&B::Fence>,
-    ) where
-        T: 'a + Borrow<B::CommandBuffer>,
-        Ic: IntoIterator<Item = &'a T>,
-        S: 'a + Borrow<B::Semaphore>,
-        Iw: IntoIterator<Item = (&'a S, pso::PipelineStage)>,
-        Is: IntoIterator<Item = &'a S>;
-
-    /// Simplified version of `submit` that doesn't expect any semaphores.
-    unsafe fn submit_without_semaphores<'a, T, Ic>(
+    unsafe fn submit<'a, Ic, Iw, Is>(
         &mut self,
         command_buffers: Ic,
-        fence: Option<&B::Fence>,
+        wait_semaphores: Iw,
+        signal_semaphores: Is,
+        fence: Option<&mut B::Fence>,
     ) where
-        T: 'a + Borrow<B::CommandBuffer>,
-        Ic: IntoIterator<Item = &'a T>,
-    {
-        let submission = Submission {
-            command_buffers,
-            wait_semaphores: iter::empty(),
-            signal_semaphores: iter::empty(),
-        };
-        self.submit::<_, _, B::Semaphore, _, _>(submission, fence)
-    }
+        Ic: Iterator<Item = &'a B::CommandBuffer>,
+        Iw: Iterator<Item = (&'a B::Semaphore, pso::PipelineStage)>,
+        Is: Iterator<Item = &'a B::Semaphore>;
 
     /// Present a swapchain image directly to a surface, after waiting on `wait_semaphore`.
     ///
     /// # Safety
     ///
-    /// Unsafe for the same reasons as [`submit`][CommandQueue::submit].
+    /// Unsafe for the same reasons as [`submit`][Queue::submit].
     /// No checks are performed to verify that this queue supports present operations.
     unsafe fn present(
         &mut self,
         surface: &mut B::Surface,
         image: <B::Surface as PresentationSurface<B>>::SwapchainImage,
-        wait_semaphore: Option<&B::Semaphore>,
+        wait_semaphore: Option<&mut B::Semaphore>,
     ) -> Result<Option<Suboptimal>, PresentError>;
 
     /// Wait for the queue to be idle.
-    fn wait_idle(&self) -> Result<(), OutOfMemory>;
+    fn wait_idle(&mut self) -> Result<(), OutOfMemory>;
+
+    /// The amount of nanoseconds that causes a timestamp query value to increment by one.
+    fn timestamp_period(&self) -> f32;
 }

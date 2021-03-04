@@ -1,6 +1,6 @@
 use super::*;
 
-use cocoa_foundation::foundation::{NSRange, NSUInteger};
+use cocoa_foundation::foundation::NSUInteger;
 
 bitflags! {
     #[allow(non_upper_case_globals)]
@@ -109,7 +109,7 @@ impl IndirectCommandBufferRef {
         unsafe { msg_send![self, indirectComputeCommandAtIndex: index] }
     }
 
-    pub fn reset_with_range(&self, range: NSRange) {
+    pub fn reset_with_range(&self, range: crate::NSRange) {
         unsafe { msg_send![self, resetWithRange: range] }
     }
 }

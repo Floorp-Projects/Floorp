@@ -1,13 +1,19 @@
 use {
-    crate::{align_down, align_up, error::AllocationError, heap::Heap, MemoryBounds},
-    alloc::collections::VecDeque,
+    crate::{
+        align_down, align_up,
+        error::AllocationError,
+        heap::Heap,
+        util::{arc_unwrap, is_arc_unique},
+        MemoryBounds,
+    },
+    alloc::{collections::VecDeque, sync::Arc},
     core::{convert::TryFrom as _, ptr::NonNull},
     gpu_alloc_types::{AllocationFlags, DeviceMapError, MemoryDevice, MemoryPropertyFlags},
 };
 
 #[derive(Debug)]
 pub(crate) struct LinearBlock<M> {
-    pub memory: M,
+    pub memory: Arc<M>,
     pub ptr: Option<NonNull<u8>>,
     pub offset: u64,
     pub size: u64,
@@ -19,27 +25,22 @@ unsafe impl<M> Send for LinearBlock<M> where M: Send {}
 
 #[derive(Debug)]
 struct Chunk<M> {
-    memory: M,
+    memory: Arc<M>,
     offset: u64,
-    allocated: u64,
     ptr: Option<NonNull<u8>>,
 }
 
 impl<M> Chunk<M> {
     fn exhaust(self) -> ExhaustedChunk<M> {
-        debug_assert_ne!(self.allocated, 0, "Unused chunk cannot be exhaused");
-
         ExhaustedChunk {
             memory: self.memory,
-            allocated: self.allocated,
         }
     }
 }
 
 #[derive(Debug)]
 struct ExhaustedChunk<M> {
-    memory: M,
-    allocated: u64,
+    memory: Arc<M>,
 }
 
 #[derive(Debug)]
@@ -88,10 +89,7 @@ where
         flags: AllocationFlags,
         heap: &mut Heap,
         allocations_remains: &mut u32,
-    ) -> Result<LinearBlock<M>, AllocationError>
-    where
-        M: Clone,
-    {
+    ) -> Result<LinearBlock<M>, AllocationError> {
         debug_assert!(
             self.chunk_size >= size,
             "GpuAllocator must not request allocations equal or greater to chunks size"
@@ -125,13 +123,14 @@ where
                     return Err(AllocationError::TooManyObjects);
                 }
 
-                let memory = device.allocate_memory(self.chunk_size, self.memory_type, flags)?;
+                let mut memory =
+                    device.allocate_memory(self.chunk_size, self.memory_type, flags)?;
 
                 *allocations_remains -= 1;
                 heap.alloc(self.chunk_size);
 
                 let ptr = if host_visible {
-                    match device.map_memory(&memory, 0, self.chunk_size) {
+                    match device.map_memory(&mut memory, 0, self.chunk_size) {
                         Ok(ptr) => Some(ptr),
                         Err(DeviceMapError::MapFailed) => {
                             #[cfg(feature = "tracing")]
@@ -155,10 +154,11 @@ where
                     None
                 };
 
+                let memory = Arc::new(memory);
+
                 let ready = ready.get_or_insert(Chunk {
                     ptr,
                     memory,
-                    allocated: 0,
                     offset: 0,
                 });
 
@@ -198,18 +198,19 @@ where
                     let chunk = self.ready.as_mut().expect(
                         "Chunk index is out of bounds. Probably incorrect allocator instance",
                     );
-                    chunk.allocated -= 1;
-                    if chunk.allocated == 0 {
+                    drop(block);
+
+                    if is_arc_unique(&mut chunk.memory) {
                         // Reuse chunk.
                         chunk.offset = 0;
                     }
                 } else {
-                    let chunk = &mut self.exhausted[chunk_offset].as_mut().expect("Chunk index points to deallocated chunk. Probably incorrect allocator instance");
-                    chunk.allocated -= 1;
+                    let chunk = self.exhausted[chunk_offset].as_mut().expect("Chunk index points to deallocated chunk. Probably incorrect allocator instance");
+                    drop(block);
 
-                    if chunk.allocated == 0 {
+                    if is_arc_unique(&mut chunk.memory) {
                         let memory = self.exhausted[chunk_offset].take().unwrap().memory;
-                        drop(block);
+                        let memory = arc_unwrap(memory);
                         device.deallocate_memory(memory);
                         *allocations_remains += 1;
                         heap.dealloc(self.chunk_size);
@@ -231,12 +232,21 @@ where
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, device)))]
     pub unsafe fn cleanup(&mut self, device: &impl MemoryDevice<M>) {
-        if let Some(chunk) = self.ready.take() {
-            assert_eq!(
-                chunk.allocated, 0,
+        if let Some(mut chunk) = self.ready.take() {
+            debug_assert!(
+                is_arc_unique(&mut chunk.memory),
                 "All blocks must be deallocated before cleanup"
             );
-            device.deallocate_memory(chunk.memory);
+
+            match Arc::try_unwrap(chunk.memory) {
+                Ok(memory) => device.deallocate_memory(memory),
+                #[cfg(feature = "tracing")]
+                Err(_) => {
+                    tracing::error!("Cleanup before all memory blocks are deallocated");
+                }
+                #[cfg(not(feature = "tracing"))]
+                _ => {}
+            }
         }
 
         assert!(
@@ -256,10 +266,7 @@ where
         exhausted: u64,
         size: u64,
         align_mask: u64,
-    ) -> LinearBlock<M>
-    where
-        M: Clone,
-    {
+    ) -> LinearBlock<M> {
         debug_assert!(
             fits(chunk_size, chunk.offset, size, align_mask),
             "Must be checked in caller"
@@ -268,15 +275,15 @@ where
         let offset =
             align_up(chunk.offset, align_mask).expect("Chunk must be checked to fit allocation");
 
-        chunk.offset = offset + size;
-        chunk.allocated += 1;
-
         debug_assert!(
             offset
                 .checked_add(size)
                 .map_or(false, |end| end <= chunk_size),
             "Offset + size is not in chunk bounds"
         );
+
+        chunk.offset = offset + size;
+
         LinearBlock {
             memory: chunk.memory.clone(),
             ptr: chunk

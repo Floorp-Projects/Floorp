@@ -5,19 +5,22 @@
 pub type Word = u32;
 pub const MAGIC_NUMBER: u32 = 0x07230203;
 pub const MAJOR_VERSION: u8 = 1u8;
-pub const MINOR_VERSION: u8 = 4u8;
-pub const REVISION: u8 = 1u8;
-bitflags! { # [ doc = "SPIR-V operand kind: [ImageOperands](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_image_operands_a_image_operands)" ] pub struct ImageOperands : u32 { const NONE = 0u32 ; const BIAS = 1u32 ; const LOD = 2u32 ; const GRAD = 4u32 ; const CONST_OFFSET = 8u32 ; const OFFSET = 16u32 ; const CONST_OFFSETS = 32u32 ; const SAMPLE = 64u32 ; const MIN_LOD = 128u32 ; const MAKE_TEXEL_AVAILABLE_KHR = 256u32 ; const MAKE_TEXEL_VISIBLE_KHR = 512u32 ; const NON_PRIVATE_TEXEL_KHR = 1024u32 ; const VOLATILE_TEXEL_KHR = 2048u32 ; const SIGN_EXTEND = 4096u32 ; const ZERO_EXTEND = 8192u32 ; } }
-bitflags! { # [ doc = "SPIR-V operand kind: [FPFastMathMode](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_fp_fast_math_mode_a_fp_fast_math_mode)" ] pub struct FPFastMathMode : u32 { const NONE = 0u32 ; const NOT_NAN = 1u32 ; const NOT_INF = 2u32 ; const NSZ = 4u32 ; const ALLOW_RECIP = 8u32 ; const FAST = 16u32 ; } }
-bitflags! { # [ doc = "SPIR-V operand kind: [SelectionControl](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_selection_control_a_selection_control)" ] pub struct SelectionControl : u32 { const NONE = 0u32 ; const FLATTEN = 1u32 ; const DONT_FLATTEN = 2u32 ; } }
-bitflags! { # [ doc = "SPIR-V operand kind: [LoopControl](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_loop_control_a_loop_control)" ] pub struct LoopControl : u32 { const NONE = 0u32 ; const UNROLL = 1u32 ; const DONT_UNROLL = 2u32 ; const DEPENDENCY_INFINITE = 4u32 ; const DEPENDENCY_LENGTH = 8u32 ; const MIN_ITERATIONS = 16u32 ; const MAX_ITERATIONS = 32u32 ; const ITERATION_MULTIPLE = 64u32 ; const PEEL_COUNT = 128u32 ; const PARTIAL_COUNT = 256u32 ; } }
-bitflags! { # [ doc = "SPIR-V operand kind: [FunctionControl](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_function_control_a_function_control)" ] pub struct FunctionControl : u32 { const NONE = 0u32 ; const INLINE = 1u32 ; const DONT_INLINE = 2u32 ; const PURE = 4u32 ; const CONST = 8u32 ; } }
-bitflags! { # [ doc = "SPIR-V operand kind: [MemorySemantics](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_memory_semantics_a_memory_semantics)" ] pub struct MemorySemantics : u32 { const RELAXED = 0u32 ; const NONE = 0u32 ; const ACQUIRE = 2u32 ; const RELEASE = 4u32 ; const ACQUIRE_RELEASE = 8u32 ; const SEQUENTIALLY_CONSISTENT = 16u32 ; const UNIFORM_MEMORY = 64u32 ; const SUBGROUP_MEMORY = 128u32 ; const WORKGROUP_MEMORY = 256u32 ; const CROSS_WORKGROUP_MEMORY = 512u32 ; const ATOMIC_COUNTER_MEMORY = 1024u32 ; const IMAGE_MEMORY = 2048u32 ; const OUTPUT_MEMORY_KHR = 4096u32 ; const MAKE_AVAILABLE_KHR = 8192u32 ; const MAKE_VISIBLE_KHR = 16384u32 ; } }
-bitflags! { # [ doc = "SPIR-V operand kind: [MemoryAccess](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_memory_access_a_memory_access)" ] pub struct MemoryAccess : u32 { const NONE = 0u32 ; const VOLATILE = 1u32 ; const ALIGNED = 2u32 ; const NONTEMPORAL = 4u32 ; const MAKE_POINTER_AVAILABLE_KHR = 8u32 ; const MAKE_POINTER_VISIBLE_KHR = 16u32 ; const NON_PRIVATE_POINTER_KHR = 32u32 ; } }
-bitflags! { # [ doc = "SPIR-V operand kind: [KernelProfilingInfo](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_kernel_profiling_info_a_kernel_profiling_info)" ] pub struct KernelProfilingInfo : u32 { const NONE = 0u32 ; const CMD_EXEC_TIME = 1u32 ; } }
+pub const MINOR_VERSION: u8 = 5u8;
+pub const REVISION: u8 = 3u8;
+bitflags! { # [ doc = "SPIR-V operand kind: [ImageOperands](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_image_operands_a_image_operands)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct ImageOperands : u32 { const NONE = 0u32 ; const BIAS = 1u32 ; const LOD = 2u32 ; const GRAD = 4u32 ; const CONST_OFFSET = 8u32 ; const OFFSET = 16u32 ; const CONST_OFFSETS = 32u32 ; const SAMPLE = 64u32 ; const MIN_LOD = 128u32 ; const MAKE_TEXEL_AVAILABLE = 256u32 ; const MAKE_TEXEL_AVAILABLE_KHR = 256u32 ; const MAKE_TEXEL_VISIBLE = 512u32 ; const MAKE_TEXEL_VISIBLE_KHR = 512u32 ; const NON_PRIVATE_TEXEL = 1024u32 ; const NON_PRIVATE_TEXEL_KHR = 1024u32 ; const VOLATILE_TEXEL = 2048u32 ; const VOLATILE_TEXEL_KHR = 2048u32 ; const SIGN_EXTEND = 4096u32 ; const ZERO_EXTEND = 8192u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [FPFastMathMode](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_fp_fast_math_mode_a_fp_fast_math_mode)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct FPFastMathMode : u32 { const NONE = 0u32 ; const NOT_NAN = 1u32 ; const NOT_INF = 2u32 ; const NSZ = 4u32 ; const ALLOW_RECIP = 8u32 ; const FAST = 16u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [SelectionControl](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_selection_control_a_selection_control)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct SelectionControl : u32 { const NONE = 0u32 ; const FLATTEN = 1u32 ; const DONT_FLATTEN = 2u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [LoopControl](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_loop_control_a_loop_control)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct LoopControl : u32 { const NONE = 0u32 ; const UNROLL = 1u32 ; const DONT_UNROLL = 2u32 ; const DEPENDENCY_INFINITE = 4u32 ; const DEPENDENCY_LENGTH = 8u32 ; const MIN_ITERATIONS = 16u32 ; const MAX_ITERATIONS = 32u32 ; const ITERATION_MULTIPLE = 64u32 ; const PEEL_COUNT = 128u32 ; const PARTIAL_COUNT = 256u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [FunctionControl](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_function_control_a_function_control)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct FunctionControl : u32 { const NONE = 0u32 ; const INLINE = 1u32 ; const DONT_INLINE = 2u32 ; const PURE = 4u32 ; const CONST = 8u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [MemorySemantics](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_memory_semantics_a_memory_semantics)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct MemorySemantics : u32 { const RELAXED = 0u32 ; const NONE = 0u32 ; const ACQUIRE = 2u32 ; const RELEASE = 4u32 ; const ACQUIRE_RELEASE = 8u32 ; const SEQUENTIALLY_CONSISTENT = 16u32 ; const UNIFORM_MEMORY = 64u32 ; const SUBGROUP_MEMORY = 128u32 ; const WORKGROUP_MEMORY = 256u32 ; const CROSS_WORKGROUP_MEMORY = 512u32 ; const ATOMIC_COUNTER_MEMORY = 1024u32 ; const IMAGE_MEMORY = 2048u32 ; const OUTPUT_MEMORY = 4096u32 ; const OUTPUT_MEMORY_KHR = 4096u32 ; const MAKE_AVAILABLE = 8192u32 ; const MAKE_AVAILABLE_KHR = 8192u32 ; const MAKE_VISIBLE = 16384u32 ; const MAKE_VISIBLE_KHR = 16384u32 ; const VOLATILE = 32768u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [MemoryAccess](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_memory_access_a_memory_access)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct MemoryAccess : u32 { const NONE = 0u32 ; const VOLATILE = 1u32 ; const ALIGNED = 2u32 ; const NONTEMPORAL = 4u32 ; const MAKE_POINTER_AVAILABLE = 8u32 ; const MAKE_POINTER_AVAILABLE_KHR = 8u32 ; const MAKE_POINTER_VISIBLE = 16u32 ; const MAKE_POINTER_VISIBLE_KHR = 16u32 ; const NON_PRIVATE_POINTER = 32u32 ; const NON_PRIVATE_POINTER_KHR = 32u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [KernelProfilingInfo](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_kernel_profiling_info_a_kernel_profiling_info)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct KernelProfilingInfo : u32 { const NONE = 0u32 ; const CMD_EXEC_TIME = 1u32 ; } }
+bitflags! { # [ doc = "SPIR-V operand kind: [RayFlags](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_ray_flags_a_ray_flags)" ] # [ cfg_attr ( feature = "serialize" , derive ( serde :: Serialize ) ) ] # [ cfg_attr ( feature = "deserialize" , derive ( serde :: Deserialize ) ) ] pub struct RayFlags : u32 { const NONE_KHR = 0u32 ; const OPAQUE_KHR = 1u32 ; const NO_OPAQUE_KHR = 2u32 ; const TERMINATE_ON_FIRST_HIT_KHR = 4u32 ; const SKIP_CLOSEST_HIT_SHADER_KHR = 8u32 ; const CULL_BACK_FACING_TRIANGLES_KHR = 16u32 ; const CULL_FRONT_FACING_TRIANGLES_KHR = 32u32 ; const CULL_OPAQUE_KHR = 64u32 ; const CULL_NO_OPAQUE_KHR = 128u32 ; const SKIP_TRIANGLES_KHR = 256u32 ; const SKIP_AAB_BS_KHR = 512u32 ; } }
 #[doc = "/// SPIR-V operand kind: [SourceLanguage](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_source_language_a_source_language)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum SourceLanguage {
     Unknown = 0u32,
     ESSL = 1u32,
@@ -59,6 +62,8 @@ impl num_traits::FromPrimitive for SourceLanguage {
 #[doc = "/// SPIR-V operand kind: [ExecutionModel](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_execution_model_a_execution_model)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum ExecutionModel {
     Vertex = 0u32,
     TessellationControl = 1u32,
@@ -78,6 +83,12 @@ pub enum ExecutionModel {
 }
 #[allow(non_upper_case_globals)]
 impl ExecutionModel {
+    pub const RayGenerationKHR: ExecutionModel = ExecutionModel::RayGenerationNV;
+    pub const IntersectionKHR: ExecutionModel = ExecutionModel::IntersectionNV;
+    pub const AnyHitKHR: ExecutionModel = ExecutionModel::AnyHitNV;
+    pub const ClosestHitKHR: ExecutionModel = ExecutionModel::ClosestHitNV;
+    pub const MissKHR: ExecutionModel = ExecutionModel::MissNV;
+    pub const CallableKHR: ExecutionModel = ExecutionModel::CallableNV;
     pub fn required_capabilities(self) -> &'static [Capability] {
         match self {
             ExecutionModel::Geometry => &[Capability::Geometry],
@@ -88,7 +99,10 @@ impl ExecutionModel {
             | ExecutionModel::AnyHitNV
             | ExecutionModel::ClosestHitNV
             | ExecutionModel::MissNV
-            | ExecutionModel::CallableNV => &[Capability::RayTracingNV],
+            | ExecutionModel::CallableNV => &[
+                Capability::RayTracingNV,
+                Capability::RayTracingProvisionalKHR,
+            ],
             ExecutionModel::Vertex | ExecutionModel::Fragment | ExecutionModel::GLCompute => {
                 &[Capability::Shader]
             }
@@ -127,20 +141,24 @@ impl num_traits::FromPrimitive for ExecutionModel {
 #[doc = "/// SPIR-V operand kind: [AddressingModel](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_addressing_model_a_addressing_model)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum AddressingModel {
     Logical = 0u32,
     Physical32 = 1u32,
     Physical64 = 2u32,
-    PhysicalStorageBuffer64EXT = 5348u32,
+    PhysicalStorageBuffer64 = 5348u32,
 }
 #[allow(non_upper_case_globals)]
 impl AddressingModel {
+    pub const PhysicalStorageBuffer64EXT: AddressingModel =
+        AddressingModel::PhysicalStorageBuffer64;
     pub fn required_capabilities(self) -> &'static [Capability] {
         match self {
             AddressingModel::Logical => &[],
             AddressingModel::Physical32 | AddressingModel::Physical64 => &[Capability::Addresses],
-            AddressingModel::PhysicalStorageBuffer64EXT => {
-                &[Capability::PhysicalStorageBufferAddressesEXT]
+            AddressingModel::PhysicalStorageBuffer64 => {
+                &[Capability::PhysicalStorageBufferAddresses]
             }
         }
     }
@@ -152,7 +170,7 @@ impl num_traits::FromPrimitive for AddressingModel {
             0u32 => AddressingModel::Logical,
             1u32 => AddressingModel::Physical32,
             2u32 => AddressingModel::Physical64,
-            5348u32 => AddressingModel::PhysicalStorageBuffer64EXT,
+            5348u32 => AddressingModel::PhysicalStorageBuffer64,
             _ => return None,
         })
     }
@@ -163,19 +181,22 @@ impl num_traits::FromPrimitive for AddressingModel {
 #[doc = "/// SPIR-V operand kind: [MemoryModel](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_memory_model_a_memory_model)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum MemoryModel {
     Simple = 0u32,
     GLSL450 = 1u32,
     OpenCL = 2u32,
-    VulkanKHR = 3u32,
+    Vulkan = 3u32,
 }
 #[allow(non_upper_case_globals)]
 impl MemoryModel {
+    pub const VulkanKHR: MemoryModel = MemoryModel::Vulkan;
     pub fn required_capabilities(self) -> &'static [Capability] {
         match self {
             MemoryModel::OpenCL => &[Capability::Kernel],
             MemoryModel::Simple | MemoryModel::GLSL450 => &[Capability::Shader],
-            MemoryModel::VulkanKHR => &[Capability::VulkanMemoryModelKHR],
+            MemoryModel::Vulkan => &[Capability::VulkanMemoryModel],
         }
     }
 }
@@ -186,7 +207,7 @@ impl num_traits::FromPrimitive for MemoryModel {
             0u32 => MemoryModel::Simple,
             1u32 => MemoryModel::GLSL450,
             2u32 => MemoryModel::OpenCL,
-            3u32 => MemoryModel::VulkanKHR,
+            3u32 => MemoryModel::Vulkan,
             _ => return None,
         })
     }
@@ -197,6 +218,8 @@ impl num_traits::FromPrimitive for MemoryModel {
 #[doc = "/// SPIR-V operand kind: [ExecutionMode](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_execution_mode_a_execution_mode)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum ExecutionMode {
     Invocations = 0u32,
     SpacingEqual = 1u32,
@@ -248,6 +271,12 @@ pub enum ExecutionMode {
     DerivativeGroupQuadsNV = 5289u32,
     DerivativeGroupLinearNV = 5290u32,
     OutputTrianglesNV = 5298u32,
+    PixelInterlockOrderedEXT = 5366u32,
+    PixelInterlockUnorderedEXT = 5367u32,
+    SampleInterlockOrderedEXT = 5368u32,
+    SampleInterlockUnorderedEXT = 5369u32,
+    ShadingRateInterlockOrderedEXT = 5370u32,
+    ShadingRateInterlockUnorderedEXT = 5371u32,
 }
 #[allow(non_upper_case_globals)]
 impl ExecutionMode {
@@ -258,6 +287,17 @@ impl ExecutionMode {
             ExecutionMode::DerivativeGroupQuadsNV => &[Capability::ComputeDerivativeGroupQuadsNV],
             ExecutionMode::DenormFlushToZero => &[Capability::DenormFlushToZero],
             ExecutionMode::DenormPreserve => &[Capability::DenormPreserve],
+            ExecutionMode::PixelInterlockOrderedEXT | ExecutionMode::PixelInterlockUnorderedEXT => {
+                &[Capability::FragmentShaderPixelInterlockEXT]
+            }
+            ExecutionMode::SampleInterlockOrderedEXT
+            | ExecutionMode::SampleInterlockUnorderedEXT => {
+                &[Capability::FragmentShaderSampleInterlockEXT]
+            }
+            ExecutionMode::ShadingRateInterlockOrderedEXT
+            | ExecutionMode::ShadingRateInterlockUnorderedEXT => {
+                &[Capability::FragmentShaderShadingRateInterlockEXT]
+            }
             ExecutionMode::Invocations
             | ExecutionMode::InputPoints
             | ExecutionMode::InputLines
@@ -363,6 +403,12 @@ impl num_traits::FromPrimitive for ExecutionMode {
             5289u32 => ExecutionMode::DerivativeGroupQuadsNV,
             5290u32 => ExecutionMode::DerivativeGroupLinearNV,
             5298u32 => ExecutionMode::OutputTrianglesNV,
+            5366u32 => ExecutionMode::PixelInterlockOrderedEXT,
+            5367u32 => ExecutionMode::PixelInterlockUnorderedEXT,
+            5368u32 => ExecutionMode::SampleInterlockOrderedEXT,
+            5369u32 => ExecutionMode::SampleInterlockUnorderedEXT,
+            5370u32 => ExecutionMode::ShadingRateInterlockOrderedEXT,
+            5371u32 => ExecutionMode::ShadingRateInterlockUnorderedEXT,
             _ => return None,
         })
     }
@@ -373,6 +419,8 @@ impl num_traits::FromPrimitive for ExecutionMode {
 #[doc = "/// SPIR-V operand kind: [StorageClass](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_storage_class_a_storage_class)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum StorageClass {
     UniformConstant = 0u32,
     Input = 1u32,
@@ -393,10 +441,17 @@ pub enum StorageClass {
     HitAttributeNV = 5339u32,
     IncomingRayPayloadNV = 5342u32,
     ShaderRecordBufferNV = 5343u32,
-    PhysicalStorageBufferEXT = 5349u32,
+    PhysicalStorageBuffer = 5349u32,
 }
 #[allow(non_upper_case_globals)]
 impl StorageClass {
+    pub const CallableDataKHR: StorageClass = StorageClass::CallableDataNV;
+    pub const IncomingCallableDataKHR: StorageClass = StorageClass::IncomingCallableDataNV;
+    pub const RayPayloadKHR: StorageClass = StorageClass::RayPayloadNV;
+    pub const HitAttributeKHR: StorageClass = StorageClass::HitAttributeNV;
+    pub const IncomingRayPayloadKHR: StorageClass = StorageClass::IncomingRayPayloadNV;
+    pub const ShaderRecordBufferKHR: StorageClass = StorageClass::ShaderRecordBufferNV;
+    pub const PhysicalStorageBufferEXT: StorageClass = StorageClass::PhysicalStorageBuffer;
     pub fn required_capabilities(self) -> &'static [Capability] {
         match self {
             StorageClass::UniformConstant
@@ -407,15 +462,16 @@ impl StorageClass {
             | StorageClass::Image => &[],
             StorageClass::AtomicCounter => &[Capability::AtomicStorage],
             StorageClass::Generic => &[Capability::GenericPointer],
-            StorageClass::PhysicalStorageBufferEXT => {
-                &[Capability::PhysicalStorageBufferAddressesEXT]
-            }
+            StorageClass::PhysicalStorageBuffer => &[Capability::PhysicalStorageBufferAddresses],
             StorageClass::CallableDataNV
             | StorageClass::IncomingCallableDataNV
             | StorageClass::RayPayloadNV
             | StorageClass::HitAttributeNV
             | StorageClass::IncomingRayPayloadNV
-            | StorageClass::ShaderRecordBufferNV => &[Capability::RayTracingNV],
+            | StorageClass::ShaderRecordBufferNV => &[
+                Capability::RayTracingNV,
+                Capability::RayTracingProvisionalKHR,
+            ],
             StorageClass::Uniform
             | StorageClass::Output
             | StorageClass::Private
@@ -447,7 +503,7 @@ impl num_traits::FromPrimitive for StorageClass {
             5339u32 => StorageClass::HitAttributeNV,
             5342u32 => StorageClass::IncomingRayPayloadNV,
             5343u32 => StorageClass::ShaderRecordBufferNV,
-            5349u32 => StorageClass::PhysicalStorageBufferEXT,
+            5349u32 => StorageClass::PhysicalStorageBuffer,
             _ => return None,
         })
     }
@@ -458,6 +514,8 @@ impl num_traits::FromPrimitive for StorageClass {
 #[doc = "/// SPIR-V operand kind: [Dim](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_dim_a_dim)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum Dim {
     Dim1D = 0u32,
     Dim2D = 1u32,
@@ -506,6 +564,8 @@ impl num_traits::FromPrimitive for Dim {
 #[doc = "/// SPIR-V operand kind: [SamplerAddressingMode](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_sampler_addressing_mode_a_sampler_addressing_mode)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum SamplerAddressingMode {
     None = 0u32,
     ClampToEdge = 1u32,
@@ -544,6 +604,8 @@ impl num_traits::FromPrimitive for SamplerAddressingMode {
 #[doc = "/// SPIR-V operand kind: [SamplerFilterMode](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_sampler_filter_mode_a_sampler_filter_mode)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum SamplerFilterMode {
     Nearest = 0u32,
     Linear = 1u32,
@@ -572,6 +634,8 @@ impl num_traits::FromPrimitive for SamplerFilterMode {
 #[doc = "/// SPIR-V operand kind: [ImageFormat](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_image_format_a_image_format)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum ImageFormat {
     Unknown = 0u32,
     Rgba32f = 1u32,
@@ -715,6 +779,8 @@ impl num_traits::FromPrimitive for ImageFormat {
 #[doc = "/// SPIR-V operand kind: [ImageChannelOrder](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_image_channel_order_a_image_channel_order)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum ImageChannelOrder {
     R = 0u32,
     A = 1u32,
@@ -798,6 +864,8 @@ impl num_traits::FromPrimitive for ImageChannelOrder {
 #[doc = "/// SPIR-V operand kind: [ImageChannelDataType](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_image_channel_data_type_a_image_channel_data_type)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum ImageChannelDataType {
     SnormInt8 = 0u32,
     SnormInt16 = 1u32,
@@ -872,6 +940,8 @@ impl num_traits::FromPrimitive for ImageChannelDataType {
 #[doc = "/// SPIR-V operand kind: [FPRoundingMode](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_fp_rounding_mode_a_fp_rounding_mode)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum FPRoundingMode {
     RTE = 0u32,
     RTZ = 1u32,
@@ -907,6 +977,8 @@ impl num_traits::FromPrimitive for FPRoundingMode {
 #[doc = "/// SPIR-V operand kind: [LinkageType](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_linkage_type_a_linkage_type)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum LinkageType {
     Export = 0u32,
     Import = 1u32,
@@ -935,6 +1007,8 @@ impl num_traits::FromPrimitive for LinkageType {
 #[doc = "/// SPIR-V operand kind: [AccessQualifier](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_access_qualifier_a_access_qualifier)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum AccessQualifier {
     ReadOnly = 0u32,
     WriteOnly = 1u32,
@@ -967,6 +1041,8 @@ impl num_traits::FromPrimitive for AccessQualifier {
 #[doc = "/// SPIR-V operand kind: [FunctionParameterAttribute](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_function_parameter_attribute_a_function_parameter_attribute)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum FunctionParameterAttribute {
     Zext = 0u32,
     Sext = 1u32,
@@ -1014,6 +1090,8 @@ impl num_traits::FromPrimitive for FunctionParameterAttribute {
 #[doc = "/// SPIR-V operand kind: [Decoration](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_decoration_a_decoration)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum Decoration {
     RelaxedPrecision = 0u32,
     SpecId = 1u32,
@@ -1073,14 +1151,18 @@ pub enum Decoration {
     PerViewNV = 5272u32,
     PerTaskNV = 5273u32,
     PerVertexNV = 5285u32,
-    NonUniformEXT = 5300u32,
+    NonUniform = 5300u32,
+    RestrictPointer = 5355u32,
+    AliasedPointer = 5356u32,
     CounterBuffer = 5634u32,
     UserSemantic = 5635u32,
-    RestrictPointerEXT = 5355u32,
-    AliasedPointerEXT = 5356u32,
+    UserTypeGOOGLE = 5636u32,
 }
 #[allow(non_upper_case_globals)]
 impl Decoration {
+    pub const NonUniformEXT: Decoration = Decoration::NonUniform;
+    pub const RestrictPointerEXT: Decoration = Decoration::RestrictPointer;
+    pub const AliasedPointerEXT: Decoration = Decoration::AliasedPointer;
     pub const HlslCounterBufferGOOGLE: Decoration = Decoration::CounterBuffer;
     pub const HlslSemanticGOOGLE: Decoration = Decoration::UserSemantic;
     pub fn required_capabilities(self) -> &'static [Capability] {
@@ -1097,7 +1179,8 @@ impl Decoration {
             | Decoration::NoUnsignedWrap
             | Decoration::ExplicitInterpAMD
             | Decoration::CounterBuffer
-            | Decoration::UserSemantic => &[],
+            | Decoration::UserSemantic
+            | Decoration::UserTypeGOOGLE => &[],
             Decoration::MaxByteOffset | Decoration::MaxByteOffsetId => &[Capability::Addresses],
             Decoration::PerVertexNV => &[Capability::FragmentBarycentricNV],
             Decoration::PassthroughNV => &[Capability::GeometryShaderPassthroughNV],
@@ -1117,8 +1200,8 @@ impl Decoration {
             Decoration::PerPrimitiveNV | Decoration::PerViewNV | Decoration::PerTaskNV => {
                 &[Capability::MeshShadingNV]
             }
-            Decoration::RestrictPointerEXT | Decoration::AliasedPointerEXT => {
-                &[Capability::PhysicalStorageBufferAddressesEXT]
+            Decoration::RestrictPointer | Decoration::AliasedPointer => {
+                &[Capability::PhysicalStorageBufferAddresses]
             }
             Decoration::OverrideCoverageNV => &[Capability::SampleMaskOverrideCoverageNV],
             Decoration::Sample => &[Capability::SampleRateShading],
@@ -1142,7 +1225,7 @@ impl Decoration {
             | Decoration::Offset
             | Decoration::NoContraction => &[Capability::Shader],
             Decoration::SpecId => &[Capability::Shader, Capability::Kernel],
-            Decoration::NonUniformEXT => &[Capability::ShaderNonUniformEXT],
+            Decoration::NonUniform => &[Capability::ShaderNonUniform],
             Decoration::SecondaryViewportRelativeNV => &[Capability::ShaderStereoViewNV],
             Decoration::ViewportRelativeNV => &[Capability::ShaderViewportMaskNV],
             Decoration::Patch => &[Capability::Tessellation],
@@ -1212,11 +1295,12 @@ impl num_traits::FromPrimitive for Decoration {
             5272u32 => Decoration::PerViewNV,
             5273u32 => Decoration::PerTaskNV,
             5285u32 => Decoration::PerVertexNV,
-            5300u32 => Decoration::NonUniformEXT,
+            5300u32 => Decoration::NonUniform,
+            5355u32 => Decoration::RestrictPointer,
+            5356u32 => Decoration::AliasedPointer,
             5634u32 => Decoration::CounterBuffer,
             5635u32 => Decoration::UserSemantic,
-            5355u32 => Decoration::RestrictPointerEXT,
-            5356u32 => Decoration::AliasedPointerEXT,
+            5636u32 => Decoration::UserTypeGOOGLE,
             _ => return None,
         })
     }
@@ -1227,6 +1311,8 @@ impl num_traits::FromPrimitive for Decoration {
 #[doc = "/// SPIR-V operand kind: [BuiltIn](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_built_in_a_built_in)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum BuiltIn {
     Position = 0u32,
     PointSize = 1u32,
@@ -1319,6 +1405,11 @@ pub enum BuiltIn {
     HitTNV = 5332u32,
     HitKindNV = 5333u32,
     IncomingRayFlagsNV = 5351u32,
+    RayGeometryIndexKHR = 5352u32,
+    WarpsPerSMNV = 5374u32,
+    SMCountNV = 5375u32,
+    WarpIDNV = 5376u32,
+    SMIDNV = 5377u32,
 }
 #[allow(non_upper_case_globals)]
 impl BuiltIn {
@@ -1329,6 +1420,20 @@ impl BuiltIn {
     pub const SubgroupLtMaskKHR: BuiltIn = BuiltIn::SubgroupLtMask;
     pub const FragmentSizeNV: BuiltIn = BuiltIn::FragSizeEXT;
     pub const InvocationsPerPixelNV: BuiltIn = BuiltIn::FragInvocationCountEXT;
+    pub const LaunchIdKHR: BuiltIn = BuiltIn::LaunchIdNV;
+    pub const LaunchSizeKHR: BuiltIn = BuiltIn::LaunchSizeNV;
+    pub const WorldRayOriginKHR: BuiltIn = BuiltIn::WorldRayOriginNV;
+    pub const WorldRayDirectionKHR: BuiltIn = BuiltIn::WorldRayDirectionNV;
+    pub const ObjectRayOriginKHR: BuiltIn = BuiltIn::ObjectRayOriginNV;
+    pub const ObjectRayDirectionKHR: BuiltIn = BuiltIn::ObjectRayDirectionNV;
+    pub const RayTminKHR: BuiltIn = BuiltIn::RayTminNV;
+    pub const RayTmaxKHR: BuiltIn = BuiltIn::RayTmaxNV;
+    pub const InstanceCustomIndexKHR: BuiltIn = BuiltIn::InstanceCustomIndexNV;
+    pub const ObjectToWorldKHR: BuiltIn = BuiltIn::ObjectToWorldNV;
+    pub const WorldToObjectKHR: BuiltIn = BuiltIn::WorldToObjectNV;
+    pub const HitTKHR: BuiltIn = BuiltIn::HitTNV;
+    pub const HitKindKHR: BuiltIn = BuiltIn::HitKindNV;
+    pub const IncomingRayFlagsKHR: BuiltIn = BuiltIn::IncomingRayFlagsNV;
     pub fn required_capabilities(self) -> &'static [Capability] {
         match self {
             BuiltIn::NumWorkgroups
@@ -1356,12 +1461,17 @@ impl BuiltIn {
                 &[Capability::FragmentDensityEXT, Capability::ShadingRateNV]
             }
             BuiltIn::FullyCoveredEXT => &[Capability::FragmentFullyCoveredEXT],
-            BuiltIn::Layer => &[Capability::Geometry],
+            BuiltIn::Layer => &[
+                Capability::Geometry,
+                Capability::ShaderLayer,
+                Capability::ShaderViewportIndexLayerEXT,
+            ],
             BuiltIn::InvocationId => &[Capability::Geometry, Capability::Tessellation],
             BuiltIn::PrimitiveId => &[
                 Capability::Geometry,
                 Capability::Tessellation,
                 Capability::RayTracingNV,
+                Capability::RayTracingProvisionalKHR,
             ],
             BuiltIn::WorkDim
             | BuiltIn::GlobalSize
@@ -1387,7 +1497,11 @@ impl BuiltIn {
             | BuiltIn::MeshViewCountNV
             | BuiltIn::MeshViewIndicesNV => &[Capability::MeshShadingNV],
             BuiltIn::ViewIndex => &[Capability::MultiView],
-            BuiltIn::ViewportIndex => &[Capability::MultiViewport],
+            BuiltIn::ViewportIndex => &[
+                Capability::MultiViewport,
+                Capability::ShaderViewportIndex,
+                Capability::ShaderViewportIndexLayerEXT,
+            ],
             BuiltIn::PositionPerViewNV | BuiltIn::ViewportMaskPerViewNV => {
                 &[Capability::PerViewAttributesNV, Capability::MeshShadingNV]
             }
@@ -1404,7 +1518,11 @@ impl BuiltIn {
             | BuiltIn::WorldToObjectNV
             | BuiltIn::HitTNV
             | BuiltIn::HitKindNV
-            | BuiltIn::IncomingRayFlagsNV => &[Capability::RayTracingNV],
+            | BuiltIn::IncomingRayFlagsNV => &[
+                Capability::RayTracingNV,
+                Capability::RayTracingProvisionalKHR,
+            ],
+            BuiltIn::RayGeometryIndexKHR => &[Capability::RayTracingProvisionalKHR],
             BuiltIn::SampleId | BuiltIn::SamplePosition => &[Capability::SampleRateShading],
             BuiltIn::Position
             | BuiltIn::PointSize
@@ -1418,6 +1536,9 @@ impl BuiltIn {
             | BuiltIn::HelperInvocation
             | BuiltIn::VertexIndex
             | BuiltIn::InstanceIndex => &[Capability::Shader],
+            BuiltIn::WarpsPerSMNV | BuiltIn::SMCountNV | BuiltIn::WarpIDNV | BuiltIn::SMIDNV => {
+                &[Capability::ShaderSMBuiltinsNV]
+            }
             BuiltIn::SecondaryPositionNV | BuiltIn::SecondaryViewportMaskNV => {
                 &[Capability::ShaderStereoViewNV]
             }
@@ -1535,6 +1656,11 @@ impl num_traits::FromPrimitive for BuiltIn {
             5332u32 => BuiltIn::HitTNV,
             5333u32 => BuiltIn::HitKindNV,
             5351u32 => BuiltIn::IncomingRayFlagsNV,
+            5352u32 => BuiltIn::RayGeometryIndexKHR,
+            5374u32 => BuiltIn::WarpsPerSMNV,
+            5375u32 => BuiltIn::SMCountNV,
+            5376u32 => BuiltIn::WarpIDNV,
+            5377u32 => BuiltIn::SMIDNV,
             _ => return None,
         })
     }
@@ -1545,16 +1671,20 @@ impl num_traits::FromPrimitive for BuiltIn {
 #[doc = "/// SPIR-V operand kind: [Scope](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_scope_a_scope)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum Scope {
     CrossDevice = 0u32,
     Device = 1u32,
     Workgroup = 2u32,
     Subgroup = 3u32,
     Invocation = 4u32,
-    QueueFamilyKHR = 5u32,
+    QueueFamily = 5u32,
+    ShaderCallKHR = 6u32,
 }
 #[allow(non_upper_case_globals)]
 impl Scope {
+    pub const QueueFamilyKHR: Scope = Scope::QueueFamily;
     pub fn required_capabilities(self) -> &'static [Capability] {
         match self {
             Scope::CrossDevice
@@ -1562,7 +1692,8 @@ impl Scope {
             | Scope::Workgroup
             | Scope::Subgroup
             | Scope::Invocation => &[],
-            Scope::QueueFamilyKHR => &[Capability::VulkanMemoryModelKHR],
+            Scope::ShaderCallKHR => &[Capability::RayTracingProvisionalKHR],
+            Scope::QueueFamily => &[Capability::VulkanMemoryModel],
         }
     }
 }
@@ -1575,7 +1706,8 @@ impl num_traits::FromPrimitive for Scope {
             2u32 => Scope::Workgroup,
             3u32 => Scope::Subgroup,
             4u32 => Scope::Invocation,
-            5u32 => Scope::QueueFamilyKHR,
+            5u32 => Scope::QueueFamily,
+            6u32 => Scope::ShaderCallKHR,
             _ => return None,
         })
     }
@@ -1586,6 +1718,8 @@ impl num_traits::FromPrimitive for Scope {
 #[doc = "/// SPIR-V operand kind: [GroupOperation](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_group_operation_a_group_operation)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum GroupOperation {
     Reduce = 0u32,
     InclusiveScan = 1u32,
@@ -1636,6 +1770,8 @@ impl num_traits::FromPrimitive for GroupOperation {
 #[doc = "/// SPIR-V operand kind: [KernelEnqueueFlags](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_kernel_enqueue_flags_a_kernel_enqueue_flags)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum KernelEnqueueFlags {
     NoWait = 0u32,
     WaitKernel = 1u32,
@@ -1668,6 +1804,8 @@ impl num_traits::FromPrimitive for KernelEnqueueFlags {
 #[doc = "/// SPIR-V operand kind: [Capability](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_capability_a_capability)"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum Capability {
     Matrix = 0u32,
     Shader = 1u32,
@@ -1736,6 +1874,8 @@ pub enum Capability {
     GroupNonUniformShuffleRelative = 66u32,
     GroupNonUniformClustered = 67u32,
     GroupNonUniformQuad = 68u32,
+    ShaderLayer = 69u32,
+    ShaderViewportIndex = 70u32,
     SubgroupBallotKHR = 4423u32,
     DrawParameters = 4427u32,
     SubgroupVoteKHR = 4431u32,
@@ -1757,11 +1897,14 @@ pub enum Capability {
     SignedZeroInfNanPreserve = 4466u32,
     RoundingModeRTE = 4467u32,
     RoundingModeRTZ = 4468u32,
+    RayQueryProvisionalKHR = 4471u32,
+    RayTraversalPrimitiveCullingProvisionalKHR = 4478u32,
     Float16ImageAMD = 5008u32,
     ImageGatherBiasLodAMD = 5009u32,
     FragmentMaskAMD = 5010u32,
     StencilExportEXT = 5013u32,
     ImageReadWriteLodAMD = 5015u32,
+    ShaderClockKHR = 5055u32,
     SampleMaskOverrideCoverageNV = 5249u32,
     GeometryShaderPassthroughNV = 5251u32,
     ShaderViewportIndexLayerEXT = 5254u32,
@@ -1770,36 +1913,43 @@ pub enum Capability {
     PerViewAttributesNV = 5260u32,
     FragmentFullyCoveredEXT = 5265u32,
     MeshShadingNV = 5266u32,
-    ShaderNonUniformEXT = 5301u32,
-    RuntimeDescriptorArrayEXT = 5302u32,
-    InputAttachmentArrayDynamicIndexingEXT = 5303u32,
-    UniformTexelBufferArrayDynamicIndexingEXT = 5304u32,
-    StorageTexelBufferArrayDynamicIndexingEXT = 5305u32,
-    UniformBufferArrayNonUniformIndexingEXT = 5306u32,
-    SampledImageArrayNonUniformIndexingEXT = 5307u32,
-    StorageBufferArrayNonUniformIndexingEXT = 5308u32,
-    StorageImageArrayNonUniformIndexingEXT = 5309u32,
-    InputAttachmentArrayNonUniformIndexingEXT = 5310u32,
-    UniformTexelBufferArrayNonUniformIndexingEXT = 5311u32,
-    StorageTexelBufferArrayNonUniformIndexingEXT = 5312u32,
+    ImageFootprintNV = 5282u32,
+    FragmentBarycentricNV = 5284u32,
+    ComputeDerivativeGroupQuadsNV = 5288u32,
+    FragmentDensityEXT = 5291u32,
+    GroupNonUniformPartitionedNV = 5297u32,
+    ShaderNonUniform = 5301u32,
+    RuntimeDescriptorArray = 5302u32,
+    InputAttachmentArrayDynamicIndexing = 5303u32,
+    UniformTexelBufferArrayDynamicIndexing = 5304u32,
+    StorageTexelBufferArrayDynamicIndexing = 5305u32,
+    UniformBufferArrayNonUniformIndexing = 5306u32,
+    SampledImageArrayNonUniformIndexing = 5307u32,
+    StorageBufferArrayNonUniformIndexing = 5308u32,
+    StorageImageArrayNonUniformIndexing = 5309u32,
+    InputAttachmentArrayNonUniformIndexing = 5310u32,
+    UniformTexelBufferArrayNonUniformIndexing = 5311u32,
+    StorageTexelBufferArrayNonUniformIndexing = 5312u32,
     RayTracingNV = 5340u32,
+    VulkanMemoryModel = 5345u32,
+    VulkanMemoryModelDeviceScope = 5346u32,
+    PhysicalStorageBufferAddresses = 5347u32,
+    ComputeDerivativeGroupLinearNV = 5350u32,
+    RayTracingProvisionalKHR = 5353u32,
+    CooperativeMatrixNV = 5357u32,
+    FragmentShaderSampleInterlockEXT = 5363u32,
+    FragmentShaderShadingRateInterlockEXT = 5372u32,
+    ShaderSMBuiltinsNV = 5373u32,
+    FragmentShaderPixelInterlockEXT = 5378u32,
+    DemoteToHelperInvocationEXT = 5379u32,
     SubgroupShuffleINTEL = 5568u32,
     SubgroupBufferBlockIOINTEL = 5569u32,
     SubgroupImageBlockIOINTEL = 5570u32,
     SubgroupImageMediaBlockIOINTEL = 5579u32,
+    IntegerFunctions2INTEL = 5584u32,
     SubgroupAvcMotionEstimationINTEL = 5696u32,
     SubgroupAvcMotionEstimationIntraINTEL = 5697u32,
     SubgroupAvcMotionEstimationChromaINTEL = 5698u32,
-    GroupNonUniformPartitionedNV = 5297u32,
-    VulkanMemoryModelKHR = 5345u32,
-    VulkanMemoryModelDeviceScopeKHR = 5346u32,
-    ImageFootprintNV = 5282u32,
-    FragmentBarycentricNV = 5284u32,
-    ComputeDerivativeGroupQuadsNV = 5288u32,
-    ComputeDerivativeGroupLinearNV = 5350u32,
-    FragmentDensityEXT = 5291u32,
-    PhysicalStorageBufferAddressesEXT = 5347u32,
-    CooperativeMatrixNV = 5357u32,
 }
 #[allow(non_upper_case_globals)]
 impl Capability {
@@ -1807,6 +1957,33 @@ impl Capability {
     pub const StorageUniform16: Capability = Capability::UniformAndStorageBuffer16BitAccess;
     pub const ShaderViewportIndexLayerNV: Capability = Capability::ShaderViewportIndexLayerEXT;
     pub const ShadingRateNV: Capability = Capability::FragmentDensityEXT;
+    pub const ShaderNonUniformEXT: Capability = Capability::ShaderNonUniform;
+    pub const RuntimeDescriptorArrayEXT: Capability = Capability::RuntimeDescriptorArray;
+    pub const InputAttachmentArrayDynamicIndexingEXT: Capability =
+        Capability::InputAttachmentArrayDynamicIndexing;
+    pub const UniformTexelBufferArrayDynamicIndexingEXT: Capability =
+        Capability::UniformTexelBufferArrayDynamicIndexing;
+    pub const StorageTexelBufferArrayDynamicIndexingEXT: Capability =
+        Capability::StorageTexelBufferArrayDynamicIndexing;
+    pub const UniformBufferArrayNonUniformIndexingEXT: Capability =
+        Capability::UniformBufferArrayNonUniformIndexing;
+    pub const SampledImageArrayNonUniformIndexingEXT: Capability =
+        Capability::SampledImageArrayNonUniformIndexing;
+    pub const StorageBufferArrayNonUniformIndexingEXT: Capability =
+        Capability::StorageBufferArrayNonUniformIndexing;
+    pub const StorageImageArrayNonUniformIndexingEXT: Capability =
+        Capability::StorageImageArrayNonUniformIndexing;
+    pub const InputAttachmentArrayNonUniformIndexingEXT: Capability =
+        Capability::InputAttachmentArrayNonUniformIndexing;
+    pub const UniformTexelBufferArrayNonUniformIndexingEXT: Capability =
+        Capability::UniformTexelBufferArrayNonUniformIndexing;
+    pub const StorageTexelBufferArrayNonUniformIndexingEXT: Capability =
+        Capability::StorageTexelBufferArrayNonUniformIndexing;
+    pub const VulkanMemoryModelKHR: Capability = Capability::VulkanMemoryModel;
+    pub const VulkanMemoryModelDeviceScopeKHR: Capability =
+        Capability::VulkanMemoryModelDeviceScope;
+    pub const PhysicalStorageBufferAddressesEXT: Capability =
+        Capability::PhysicalStorageBufferAddresses;
     pub fn required_capabilities(self) -> &'static [Capability] {
         match self {
             Capability::Matrix
@@ -1822,6 +1999,8 @@ impl Capability {
             | Capability::Sampled1D
             | Capability::SampledBuffer
             | Capability::GroupNonUniform
+            | Capability::ShaderLayer
+            | Capability::ShaderViewportIndex
             | Capability::SubgroupBallotKHR
             | Capability::SubgroupVoteKHR
             | Capability::StorageBuffer16BitAccess
@@ -1837,20 +2016,20 @@ impl Capability {
             | Capability::SignedZeroInfNanPreserve
             | Capability::RoundingModeRTE
             | Capability::RoundingModeRTZ
+            | Capability::ImageFootprintNV
+            | Capability::FragmentBarycentricNV
+            | Capability::ComputeDerivativeGroupQuadsNV
+            | Capability::GroupNonUniformPartitionedNV
+            | Capability::VulkanMemoryModel
+            | Capability::VulkanMemoryModelDeviceScope
+            | Capability::ComputeDerivativeGroupLinearNV
             | Capability::SubgroupShuffleINTEL
             | Capability::SubgroupBufferBlockIOINTEL
             | Capability::SubgroupImageBlockIOINTEL
             | Capability::SubgroupImageMediaBlockIOINTEL
             | Capability::SubgroupAvcMotionEstimationINTEL
             | Capability::SubgroupAvcMotionEstimationIntraINTEL
-            | Capability::SubgroupAvcMotionEstimationChromaINTEL
-            | Capability::GroupNonUniformPartitionedNV
-            | Capability::VulkanMemoryModelKHR
-            | Capability::VulkanMemoryModelDeviceScopeKHR
-            | Capability::ImageFootprintNV
-            | Capability::FragmentBarycentricNV
-            | Capability::ComputeDerivativeGroupQuadsNV
-            | Capability::ComputeDerivativeGroupLinearNV => &[],
+            | Capability::SubgroupAvcMotionEstimationChromaINTEL => &[],
             Capability::GenericPointer => &[Capability::Addresses],
             Capability::SubgroupDispatch => &[Capability::DeviceEnqueue],
             Capability::GeometryPointSize
@@ -1865,13 +2044,13 @@ impl Capability {
             | Capability::GroupNonUniformClustered
             | Capability::GroupNonUniformQuad => &[Capability::GroupNonUniform],
             Capability::ImageReadWrite | Capability::ImageMipmap => &[Capability::ImageBasic],
-            Capability::StorageTexelBufferArrayDynamicIndexingEXT => &[Capability::ImageBuffer],
-            Capability::StorageTexelBufferArrayNonUniformIndexingEXT => {
-                &[Capability::ImageBuffer, Capability::ShaderNonUniformEXT]
+            Capability::StorageTexelBufferArrayDynamicIndexing => &[Capability::ImageBuffer],
+            Capability::StorageTexelBufferArrayNonUniformIndexing => {
+                &[Capability::ImageBuffer, Capability::ShaderNonUniform]
             }
-            Capability::InputAttachmentArrayDynamicIndexingEXT => &[Capability::InputAttachment],
-            Capability::InputAttachmentArrayNonUniformIndexingEXT => {
-                &[Capability::InputAttachment, Capability::ShaderNonUniformEXT]
+            Capability::InputAttachmentArrayDynamicIndexing => &[Capability::InputAttachment],
+            Capability::InputAttachmentArrayNonUniformIndexing => {
+                &[Capability::InputAttachment, Capability::ShaderNonUniform]
             }
             Capability::Int64Atomics => &[Capability::Int64],
             Capability::Vector16
@@ -1885,13 +2064,17 @@ impl Capability {
             Capability::PerViewAttributesNV => &[Capability::MultiView],
             Capability::ShaderViewportIndexLayerEXT => &[Capability::MultiViewport],
             Capability::PipeStorage => &[Capability::Pipes],
+            Capability::RayTraversalPrimitiveCullingProvisionalKHR => &[
+                Capability::RayQueryProvisionalKHR,
+                Capability::RayTracingProvisionalKHR,
+            ],
             Capability::SampleMaskOverrideCoverageNV => &[Capability::SampleRateShading],
             Capability::Image1D => &[Capability::Sampled1D],
-            Capability::ImageBuffer | Capability::UniformTexelBufferArrayDynamicIndexingEXT => {
+            Capability::ImageBuffer | Capability::UniformTexelBufferArrayDynamicIndexing => {
                 &[Capability::SampledBuffer]
             }
-            Capability::UniformTexelBufferArrayNonUniformIndexingEXT => {
-                &[Capability::SampledBuffer, Capability::ShaderNonUniformEXT]
+            Capability::UniformTexelBufferArrayNonUniformIndexing => {
+                &[Capability::SampledBuffer, Capability::ShaderNonUniform]
             }
             Capability::ImageCubeArray => &[Capability::SampledCubeArray],
             Capability::ImageRect => &[Capability::SampledRect],
@@ -1923,25 +2106,32 @@ impl Capability {
             | Capability::DrawParameters
             | Capability::MultiView
             | Capability::VariablePointersStorageBuffer
+            | Capability::RayQueryProvisionalKHR
             | Capability::Float16ImageAMD
             | Capability::ImageGatherBiasLodAMD
             | Capability::FragmentMaskAMD
             | Capability::StencilExportEXT
             | Capability::ImageReadWriteLodAMD
+            | Capability::ShaderClockKHR
             | Capability::FragmentFullyCoveredEXT
             | Capability::MeshShadingNV
-            | Capability::ShaderNonUniformEXT
-            | Capability::RuntimeDescriptorArrayEXT
-            | Capability::RayTracingNV
             | Capability::FragmentDensityEXT
-            | Capability::PhysicalStorageBufferAddressesEXT
-            | Capability::CooperativeMatrixNV => &[Capability::Shader],
-            Capability::UniformBufferArrayNonUniformIndexingEXT
-            | Capability::SampledImageArrayNonUniformIndexingEXT
-            | Capability::StorageBufferArrayNonUniformIndexingEXT
-            | Capability::StorageImageArrayNonUniformIndexingEXT => {
-                &[Capability::ShaderNonUniformEXT]
-            }
+            | Capability::ShaderNonUniform
+            | Capability::RuntimeDescriptorArray
+            | Capability::RayTracingNV
+            | Capability::PhysicalStorageBufferAddresses
+            | Capability::RayTracingProvisionalKHR
+            | Capability::CooperativeMatrixNV
+            | Capability::FragmentShaderSampleInterlockEXT
+            | Capability::FragmentShaderShadingRateInterlockEXT
+            | Capability::ShaderSMBuiltinsNV
+            | Capability::FragmentShaderPixelInterlockEXT
+            | Capability::DemoteToHelperInvocationEXT
+            | Capability::IntegerFunctions2INTEL => &[Capability::Shader],
+            Capability::UniformBufferArrayNonUniformIndexing
+            | Capability::SampledImageArrayNonUniformIndexing
+            | Capability::StorageBufferArrayNonUniformIndexing
+            | Capability::StorageImageArrayNonUniformIndexing => &[Capability::ShaderNonUniform],
             Capability::ShaderViewportMaskNV => &[Capability::ShaderViewportIndexLayerNV],
             Capability::ShaderStereoViewNV => &[Capability::ShaderViewportMaskNV],
             Capability::UniformAndStorageBuffer16BitAccess => &[
@@ -2025,6 +2215,8 @@ impl num_traits::FromPrimitive for Capability {
             66u32 => Capability::GroupNonUniformShuffleRelative,
             67u32 => Capability::GroupNonUniformClustered,
             68u32 => Capability::GroupNonUniformQuad,
+            69u32 => Capability::ShaderLayer,
+            70u32 => Capability::ShaderViewportIndex,
             4423u32 => Capability::SubgroupBallotKHR,
             4427u32 => Capability::DrawParameters,
             4431u32 => Capability::SubgroupVoteKHR,
@@ -2046,11 +2238,14 @@ impl num_traits::FromPrimitive for Capability {
             4466u32 => Capability::SignedZeroInfNanPreserve,
             4467u32 => Capability::RoundingModeRTE,
             4468u32 => Capability::RoundingModeRTZ,
+            4471u32 => Capability::RayQueryProvisionalKHR,
+            4478u32 => Capability::RayTraversalPrimitiveCullingProvisionalKHR,
             5008u32 => Capability::Float16ImageAMD,
             5009u32 => Capability::ImageGatherBiasLodAMD,
             5010u32 => Capability::FragmentMaskAMD,
             5013u32 => Capability::StencilExportEXT,
             5015u32 => Capability::ImageReadWriteLodAMD,
+            5055u32 => Capability::ShaderClockKHR,
             5249u32 => Capability::SampleMaskOverrideCoverageNV,
             5251u32 => Capability::GeometryShaderPassthroughNV,
             5254u32 => Capability::ShaderViewportIndexLayerEXT,
@@ -2059,36 +2254,145 @@ impl num_traits::FromPrimitive for Capability {
             5260u32 => Capability::PerViewAttributesNV,
             5265u32 => Capability::FragmentFullyCoveredEXT,
             5266u32 => Capability::MeshShadingNV,
-            5301u32 => Capability::ShaderNonUniformEXT,
-            5302u32 => Capability::RuntimeDescriptorArrayEXT,
-            5303u32 => Capability::InputAttachmentArrayDynamicIndexingEXT,
-            5304u32 => Capability::UniformTexelBufferArrayDynamicIndexingEXT,
-            5305u32 => Capability::StorageTexelBufferArrayDynamicIndexingEXT,
-            5306u32 => Capability::UniformBufferArrayNonUniformIndexingEXT,
-            5307u32 => Capability::SampledImageArrayNonUniformIndexingEXT,
-            5308u32 => Capability::StorageBufferArrayNonUniformIndexingEXT,
-            5309u32 => Capability::StorageImageArrayNonUniformIndexingEXT,
-            5310u32 => Capability::InputAttachmentArrayNonUniformIndexingEXT,
-            5311u32 => Capability::UniformTexelBufferArrayNonUniformIndexingEXT,
-            5312u32 => Capability::StorageTexelBufferArrayNonUniformIndexingEXT,
+            5282u32 => Capability::ImageFootprintNV,
+            5284u32 => Capability::FragmentBarycentricNV,
+            5288u32 => Capability::ComputeDerivativeGroupQuadsNV,
+            5291u32 => Capability::FragmentDensityEXT,
+            5297u32 => Capability::GroupNonUniformPartitionedNV,
+            5301u32 => Capability::ShaderNonUniform,
+            5302u32 => Capability::RuntimeDescriptorArray,
+            5303u32 => Capability::InputAttachmentArrayDynamicIndexing,
+            5304u32 => Capability::UniformTexelBufferArrayDynamicIndexing,
+            5305u32 => Capability::StorageTexelBufferArrayDynamicIndexing,
+            5306u32 => Capability::UniformBufferArrayNonUniformIndexing,
+            5307u32 => Capability::SampledImageArrayNonUniformIndexing,
+            5308u32 => Capability::StorageBufferArrayNonUniformIndexing,
+            5309u32 => Capability::StorageImageArrayNonUniformIndexing,
+            5310u32 => Capability::InputAttachmentArrayNonUniformIndexing,
+            5311u32 => Capability::UniformTexelBufferArrayNonUniformIndexing,
+            5312u32 => Capability::StorageTexelBufferArrayNonUniformIndexing,
             5340u32 => Capability::RayTracingNV,
+            5345u32 => Capability::VulkanMemoryModel,
+            5346u32 => Capability::VulkanMemoryModelDeviceScope,
+            5347u32 => Capability::PhysicalStorageBufferAddresses,
+            5350u32 => Capability::ComputeDerivativeGroupLinearNV,
+            5353u32 => Capability::RayTracingProvisionalKHR,
+            5357u32 => Capability::CooperativeMatrixNV,
+            5363u32 => Capability::FragmentShaderSampleInterlockEXT,
+            5372u32 => Capability::FragmentShaderShadingRateInterlockEXT,
+            5373u32 => Capability::ShaderSMBuiltinsNV,
+            5378u32 => Capability::FragmentShaderPixelInterlockEXT,
+            5379u32 => Capability::DemoteToHelperInvocationEXT,
             5568u32 => Capability::SubgroupShuffleINTEL,
             5569u32 => Capability::SubgroupBufferBlockIOINTEL,
             5570u32 => Capability::SubgroupImageBlockIOINTEL,
             5579u32 => Capability::SubgroupImageMediaBlockIOINTEL,
+            5584u32 => Capability::IntegerFunctions2INTEL,
             5696u32 => Capability::SubgroupAvcMotionEstimationINTEL,
             5697u32 => Capability::SubgroupAvcMotionEstimationIntraINTEL,
             5698u32 => Capability::SubgroupAvcMotionEstimationChromaINTEL,
-            5297u32 => Capability::GroupNonUniformPartitionedNV,
-            5345u32 => Capability::VulkanMemoryModelKHR,
-            5346u32 => Capability::VulkanMemoryModelDeviceScopeKHR,
-            5282u32 => Capability::ImageFootprintNV,
-            5284u32 => Capability::FragmentBarycentricNV,
-            5288u32 => Capability::ComputeDerivativeGroupQuadsNV,
-            5350u32 => Capability::ComputeDerivativeGroupLinearNV,
-            5291u32 => Capability::FragmentDensityEXT,
-            5347u32 => Capability::PhysicalStorageBufferAddressesEXT,
-            5357u32 => Capability::CooperativeMatrixNV,
+            _ => return None,
+        })
+    }
+    fn from_u64(n: u64) -> Option<Self> {
+        Self::from_i64(n as i64)
+    }
+}
+#[doc = "/// SPIR-V operand kind: [RayQueryIntersection](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_ray_query_intersection_a_ray_query_intersection)"]
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+pub enum RayQueryIntersection {
+    RayQueryCandidateIntersectionKHR = 0u32,
+    RayQueryCommittedIntersectionKHR = 1u32,
+}
+#[allow(non_upper_case_globals)]
+impl RayQueryIntersection {
+    pub fn required_capabilities(self) -> &'static [Capability] {
+        match self {
+            RayQueryIntersection::RayQueryCandidateIntersectionKHR
+            | RayQueryIntersection::RayQueryCommittedIntersectionKHR => {
+                &[Capability::RayQueryProvisionalKHR]
+            }
+        }
+    }
+}
+impl num_traits::FromPrimitive for RayQueryIntersection {
+    #[allow(trivial_numeric_casts)]
+    fn from_i64(n: i64) -> Option<Self> {
+        Some(match n as u32 {
+            0u32 => RayQueryIntersection::RayQueryCandidateIntersectionKHR,
+            1u32 => RayQueryIntersection::RayQueryCommittedIntersectionKHR,
+            _ => return None,
+        })
+    }
+    fn from_u64(n: u64) -> Option<Self> {
+        Self::from_i64(n as i64)
+    }
+}
+#[doc = "/// SPIR-V operand kind: [RayQueryCommittedIntersectionType](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_ray_query_committed_intersection_type_a_ray_query_committed_intersection_type)"]
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+pub enum RayQueryCommittedIntersectionType {
+    RayQueryCommittedIntersectionNoneKHR = 0u32,
+    RayQueryCommittedIntersectionTriangleKHR = 1u32,
+    RayQueryCommittedIntersectionGeneratedKHR = 2u32,
+}
+#[allow(non_upper_case_globals)]
+impl RayQueryCommittedIntersectionType {
+    pub fn required_capabilities(self) -> &'static [Capability] {
+        match self {
+            RayQueryCommittedIntersectionType::RayQueryCommittedIntersectionNoneKHR
+            | RayQueryCommittedIntersectionType::RayQueryCommittedIntersectionTriangleKHR
+            | RayQueryCommittedIntersectionType::RayQueryCommittedIntersectionGeneratedKHR => {
+                &[Capability::RayQueryProvisionalKHR]
+            }
+        }
+    }
+}
+impl num_traits::FromPrimitive for RayQueryCommittedIntersectionType {
+    #[allow(trivial_numeric_casts)]
+    fn from_i64(n: i64) -> Option<Self> {
+        Some(match n as u32 {
+            0u32 => RayQueryCommittedIntersectionType::RayQueryCommittedIntersectionNoneKHR,
+            1u32 => RayQueryCommittedIntersectionType::RayQueryCommittedIntersectionTriangleKHR,
+            2u32 => RayQueryCommittedIntersectionType::RayQueryCommittedIntersectionGeneratedKHR,
+            _ => return None,
+        })
+    }
+    fn from_u64(n: u64) -> Option<Self> {
+        Self::from_i64(n as i64)
+    }
+}
+#[doc = "/// SPIR-V operand kind: [RayQueryCandidateIntersectionType](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_ray_query_candidate_intersection_type_a_ray_query_candidate_intersection_type)"]
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+pub enum RayQueryCandidateIntersectionType {
+    RayQueryCandidateIntersectionTriangleKHR = 0u32,
+    RayQueryCandidateIntersectionAABBKHR = 1u32,
+}
+#[allow(non_upper_case_globals)]
+impl RayQueryCandidateIntersectionType {
+    pub fn required_capabilities(self) -> &'static [Capability] {
+        match self {
+            RayQueryCandidateIntersectionType::RayQueryCandidateIntersectionTriangleKHR
+            | RayQueryCandidateIntersectionType::RayQueryCandidateIntersectionAABBKHR => {
+                &[Capability::RayQueryProvisionalKHR]
+            }
+        }
+    }
+}
+impl num_traits::FromPrimitive for RayQueryCandidateIntersectionType {
+    #[allow(trivial_numeric_casts)]
+    fn from_i64(n: i64) -> Option<Self> {
+        Some(match n as u32 {
+            0u32 => RayQueryCandidateIntersectionType::RayQueryCandidateIntersectionTriangleKHR,
+            1u32 => RayQueryCandidateIntersectionType::RayQueryCandidateIntersectionAABBKHR,
             _ => return None,
         })
     }
@@ -2099,6 +2403,8 @@ impl num_traits::FromPrimitive for Capability {
 #[doc = "SPIR-V [instructions](https://www.khronos.org/registry/spir-v/specs/unified1/SPIRV.html#_a_id_instructions_a_instructions) opcodes"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum Op {
     Nop = 0u32,
     Undef = 1u32,
@@ -2450,6 +2756,13 @@ pub enum Op {
     SubgroupAnyKHR = 4429u32,
     SubgroupAllEqualKHR = 4430u32,
     SubgroupReadInvocationKHR = 4432u32,
+    TypeRayQueryProvisionalKHR = 4472u32,
+    RayQueryInitializeKHR = 4473u32,
+    RayQueryTerminateKHR = 4474u32,
+    RayQueryGenerateIntersectionKHR = 4475u32,
+    RayQueryConfirmIntersectionKHR = 4476u32,
+    RayQueryProceedKHR = 4477u32,
+    RayQueryGetIntersectionTypeKHR = 4479u32,
     GroupIAddNonUniformAMD = 5000u32,
     GroupFAddNonUniformAMD = 5001u32,
     GroupFMinNonUniformAMD = 5002u32,
@@ -2460,6 +2773,7 @@ pub enum Op {
     GroupSMaxNonUniformAMD = 5007u32,
     FragmentMaskFetchAMD = 5011u32,
     FragmentFetchAMD = 5012u32,
+    ReadClockKHR = 5056u32,
     ImageSampleFootprintNV = 5283u32,
     GroupNonUniformPartitionNV = 5296u32,
     WritePackedPrimitiveIndices4x8NV = 5299u32,
@@ -2474,6 +2788,10 @@ pub enum Op {
     CooperativeMatrixStoreNV = 5360u32,
     CooperativeMatrixMulAddNV = 5361u32,
     CooperativeMatrixLengthNV = 5362u32,
+    BeginInvocationInterlockEXT = 5364u32,
+    EndInvocationInterlockEXT = 5365u32,
+    DemoteToHelperInvocationEXT = 5380u32,
+    IsHelperInvocationEXT = 5381u32,
     SubgroupShuffleINTEL = 5571u32,
     SubgroupShuffleDownINTEL = 5572u32,
     SubgroupShuffleUpINTEL = 5573u32,
@@ -2484,6 +2802,20 @@ pub enum Op {
     SubgroupImageBlockWriteINTEL = 5578u32,
     SubgroupImageMediaBlockReadINTEL = 5580u32,
     SubgroupImageMediaBlockWriteINTEL = 5581u32,
+    UCountLeadingZerosINTEL = 5585u32,
+    UCountTrailingZerosINTEL = 5586u32,
+    AbsISubINTEL = 5587u32,
+    AbsUSubINTEL = 5588u32,
+    IAddSatINTEL = 5589u32,
+    UAddSatINTEL = 5590u32,
+    IAverageINTEL = 5591u32,
+    UAverageINTEL = 5592u32,
+    IAverageRoundedINTEL = 5593u32,
+    UAverageRoundedINTEL = 5594u32,
+    ISubSatINTEL = 5595u32,
+    USubSatINTEL = 5596u32,
+    IMul32x16INTEL = 5597u32,
+    UMul32x16INTEL = 5598u32,
     DecorateString = 5632u32,
     MemberDecorateString = 5633u32,
     VmeImageINTEL = 5699u32,
@@ -2604,9 +2936,32 @@ pub enum Op {
     SubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL = 5814u32,
     SubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL = 5815u32,
     SubgroupAvcSicGetInterRawSadsINTEL = 5816u32,
+    RayQueryGetRayTMinKHR = 6016u32,
+    RayQueryGetRayFlagsKHR = 6017u32,
+    RayQueryGetIntersectionTKHR = 6018u32,
+    RayQueryGetIntersectionInstanceCustomIndexKHR = 6019u32,
+    RayQueryGetIntersectionInstanceIdKHR = 6020u32,
+    RayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR = 6021u32,
+    RayQueryGetIntersectionGeometryIndexKHR = 6022u32,
+    RayQueryGetIntersectionPrimitiveIndexKHR = 6023u32,
+    RayQueryGetIntersectionBarycentricsKHR = 6024u32,
+    RayQueryGetIntersectionFrontFaceKHR = 6025u32,
+    RayQueryGetIntersectionCandidateAABBOpaqueKHR = 6026u32,
+    RayQueryGetIntersectionObjectRayDirectionKHR = 6027u32,
+    RayQueryGetIntersectionObjectRayOriginKHR = 6028u32,
+    RayQueryGetWorldRayDirectionKHR = 6029u32,
+    RayQueryGetWorldRayOriginKHR = 6030u32,
+    RayQueryGetIntersectionObjectToWorldKHR = 6031u32,
+    RayQueryGetIntersectionWorldToObjectKHR = 6032u32,
 }
 #[allow(non_upper_case_globals)]
 impl Op {
+    pub const ReportIntersectionKHR: Op = Op::ReportIntersectionNV;
+    pub const IgnoreIntersectionKHR: Op = Op::IgnoreIntersectionNV;
+    pub const TerminateRayKHR: Op = Op::TerminateRayNV;
+    pub const TraceRayKHR: Op = Op::TraceNV;
+    pub const TypeAccelerationStructureKHR: Op = Op::TypeAccelerationStructureNV;
+    pub const ExecuteCallableKHR: Op = Op::ExecuteCallableNV;
     pub const DecorateStringGOOGLE: Op = Op::DecorateString;
     pub const MemberDecorateStringGOOGLE: Op = Op::MemberDecorateString;
 }
@@ -2964,6 +3319,13 @@ impl num_traits::FromPrimitive for Op {
             4429u32 => Op::SubgroupAnyKHR,
             4430u32 => Op::SubgroupAllEqualKHR,
             4432u32 => Op::SubgroupReadInvocationKHR,
+            4472u32 => Op::TypeRayQueryProvisionalKHR,
+            4473u32 => Op::RayQueryInitializeKHR,
+            4474u32 => Op::RayQueryTerminateKHR,
+            4475u32 => Op::RayQueryGenerateIntersectionKHR,
+            4476u32 => Op::RayQueryConfirmIntersectionKHR,
+            4477u32 => Op::RayQueryProceedKHR,
+            4479u32 => Op::RayQueryGetIntersectionTypeKHR,
             5000u32 => Op::GroupIAddNonUniformAMD,
             5001u32 => Op::GroupFAddNonUniformAMD,
             5002u32 => Op::GroupFMinNonUniformAMD,
@@ -2974,6 +3336,7 @@ impl num_traits::FromPrimitive for Op {
             5007u32 => Op::GroupSMaxNonUniformAMD,
             5011u32 => Op::FragmentMaskFetchAMD,
             5012u32 => Op::FragmentFetchAMD,
+            5056u32 => Op::ReadClockKHR,
             5283u32 => Op::ImageSampleFootprintNV,
             5296u32 => Op::GroupNonUniformPartitionNV,
             5299u32 => Op::WritePackedPrimitiveIndices4x8NV,
@@ -2988,6 +3351,10 @@ impl num_traits::FromPrimitive for Op {
             5360u32 => Op::CooperativeMatrixStoreNV,
             5361u32 => Op::CooperativeMatrixMulAddNV,
             5362u32 => Op::CooperativeMatrixLengthNV,
+            5364u32 => Op::BeginInvocationInterlockEXT,
+            5365u32 => Op::EndInvocationInterlockEXT,
+            5380u32 => Op::DemoteToHelperInvocationEXT,
+            5381u32 => Op::IsHelperInvocationEXT,
             5571u32 => Op::SubgroupShuffleINTEL,
             5572u32 => Op::SubgroupShuffleDownINTEL,
             5573u32 => Op::SubgroupShuffleUpINTEL,
@@ -2998,6 +3365,20 @@ impl num_traits::FromPrimitive for Op {
             5578u32 => Op::SubgroupImageBlockWriteINTEL,
             5580u32 => Op::SubgroupImageMediaBlockReadINTEL,
             5581u32 => Op::SubgroupImageMediaBlockWriteINTEL,
+            5585u32 => Op::UCountLeadingZerosINTEL,
+            5586u32 => Op::UCountTrailingZerosINTEL,
+            5587u32 => Op::AbsISubINTEL,
+            5588u32 => Op::AbsUSubINTEL,
+            5589u32 => Op::IAddSatINTEL,
+            5590u32 => Op::UAddSatINTEL,
+            5591u32 => Op::IAverageINTEL,
+            5592u32 => Op::UAverageINTEL,
+            5593u32 => Op::IAverageRoundedINTEL,
+            5594u32 => Op::UAverageRoundedINTEL,
+            5595u32 => Op::ISubSatINTEL,
+            5596u32 => Op::USubSatINTEL,
+            5597u32 => Op::IMul32x16INTEL,
+            5598u32 => Op::UMul32x16INTEL,
             5632u32 => Op::DecorateString,
             5633u32 => Op::MemberDecorateString,
             5699u32 => Op::VmeImageINTEL,
@@ -3118,6 +3499,23 @@ impl num_traits::FromPrimitive for Op {
             5814u32 => Op::SubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL,
             5815u32 => Op::SubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL,
             5816u32 => Op::SubgroupAvcSicGetInterRawSadsINTEL,
+            6016u32 => Op::RayQueryGetRayTMinKHR,
+            6017u32 => Op::RayQueryGetRayFlagsKHR,
+            6018u32 => Op::RayQueryGetIntersectionTKHR,
+            6019u32 => Op::RayQueryGetIntersectionInstanceCustomIndexKHR,
+            6020u32 => Op::RayQueryGetIntersectionInstanceIdKHR,
+            6021u32 => Op::RayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR,
+            6022u32 => Op::RayQueryGetIntersectionGeometryIndexKHR,
+            6023u32 => Op::RayQueryGetIntersectionPrimitiveIndexKHR,
+            6024u32 => Op::RayQueryGetIntersectionBarycentricsKHR,
+            6025u32 => Op::RayQueryGetIntersectionFrontFaceKHR,
+            6026u32 => Op::RayQueryGetIntersectionCandidateAABBOpaqueKHR,
+            6027u32 => Op::RayQueryGetIntersectionObjectRayDirectionKHR,
+            6028u32 => Op::RayQueryGetIntersectionObjectRayOriginKHR,
+            6029u32 => Op::RayQueryGetWorldRayDirectionKHR,
+            6030u32 => Op::RayQueryGetWorldRayOriginKHR,
+            6031u32 => Op::RayQueryGetIntersectionObjectToWorldKHR,
+            6032u32 => Op::RayQueryGetIntersectionWorldToObjectKHR,
             _ => return None,
         })
     }
@@ -3128,6 +3526,8 @@ impl num_traits::FromPrimitive for Op {
 #[doc = "[GLSL.std.450](https://www.khronos.org/registry/spir-v/specs/unified1/GLSL.std.450.html) extended instruction opcode"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum GLOp {
     Round = 1u32,
     RoundEven = 2u32,
@@ -3306,6 +3706,8 @@ impl num_traits::FromPrimitive for GLOp {
 #[doc = "[OpenCL.std](https://www.khronos.org/registry/spir-v/specs/unified1/OpenCL.ExtendedInstructionSet.100.html) extended instruction opcode"]
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum CLOp {
     acos = 0u32,
     acosh = 1u32,

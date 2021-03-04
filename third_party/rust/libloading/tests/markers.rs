@@ -4,6 +4,23 @@ extern crate libloading;
 fn assert_send<T: Send>() {}
 #[cfg(test)]
 fn assert_sync<T: Sync>() {}
+#[cfg(test)]
+fn assert_display<T: std::fmt::Display>() {}
+
+#[test]
+fn check_error_send() {
+    assert_send::<libloading::Error>();
+}
+
+#[test]
+fn check_error_sync() {
+    assert_sync::<libloading::Error>();
+}
+
+#[test]
+fn check_error_display() {
+    assert_display::<libloading::Error>();
+}
 
 #[test]
 fn check_library_send() {

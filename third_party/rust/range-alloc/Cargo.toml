@@ -1,6 +1,6 @@
 [package]
 name = "range-alloc"
-version = "0.1.1"
+version = "0.1.2"
 description = "Generic range allocator used by gfx-rs backends"
 homepage = "https://github.com/gfx-rs/gfx"
 repository = "https://github.com/gfx-rs/gfx"

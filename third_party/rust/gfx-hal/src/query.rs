@@ -5,37 +5,20 @@
 //! providing a mechanism for the command buffer to record data about its operation
 //! as it is running.
 
-use crate::device::OutOfMemory;
-use crate::Backend;
+use crate::{device::OutOfMemory, Backend};
 
 /// A query identifier.
 pub type Id = u32;
 
 /// Query creation error.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum CreationError {
     /// Out of either host or device memory.
-    OutOfMemory(OutOfMemory),
-
+    #[error(transparent)]
+    OutOfMemory(#[from] OutOfMemory),
     /// Query type unsupported.
+    #[error("Unsupported type: {0:?}")]
     Unsupported(Type),
-}
-
-impl From<OutOfMemory> for CreationError {
-    fn from(error: OutOfMemory) -> Self {
-        CreationError::OutOfMemory(error)
-    }
-}
-
-impl std::fmt::Display for CreationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CreationError::OutOfMemory(err) => write!(fmt, "Failed to create query: {}", err),
-            CreationError::Unsupported(ty) => {
-                write!(fmt, "Failed to create query: Unsupported type: {:?}", ty)
-            }
-        }
-    }
 }
 
 /// A `Query` object has a particular identifier and saves its results to a given `QueryPool`.

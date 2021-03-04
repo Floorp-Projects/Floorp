@@ -1,27 +1,29 @@
 use crate::arena::{Arena, Handle};
+use bit_set::BitSet;
 
 pub struct Interface<'a, T> {
+    pub visitor: T,
     pub expressions: &'a Arena<crate::Expression>,
     pub local_variables: &'a Arena<crate::LocalVariable>,
-    pub visitor: T,
+    pub mask: &'a mut BitSet,
 }
 
 pub trait Visitor {
-    fn visit_expr(&mut self, _: &crate::Expression) {}
-    fn visit_lhs_expr(&mut self, _: &crate::Expression) {}
+    fn visit_expr(&mut self, _: Handle<crate::Expression>, _: &crate::Expression) {}
+    fn visit_lhs_expr(&mut self, _: Handle<crate::Expression>, _: &crate::Expression) {}
     fn visit_fun(&mut self, _: Handle<crate::Function>) {}
 }
 
-impl<'a, T> Interface<'a, T>
-where
-    T: Visitor,
-{
-    fn traverse_expr(&mut self, handle: Handle<crate::Expression>) {
+impl<'a, T: Visitor> Interface<'a, T> {
+    pub fn traverse_expr(&mut self, handle: Handle<crate::Expression>) {
         use crate::Expression as E;
 
+        if !self.mask.insert(handle.index()) {
+            return;
+        }
         let expr = &self.expressions[handle];
 
-        self.visitor.visit_expr(expr);
+        self.visitor.visit_expr(handle, expr);
 
         match *expr {
             E::Access { base, index } => {
@@ -45,16 +47,25 @@ where
                 image,
                 sampler,
                 coordinate,
+                array_index,
+                offset: _,
                 level,
                 depth_ref,
             } => {
                 self.traverse_expr(image);
                 self.traverse_expr(sampler);
                 self.traverse_expr(coordinate);
+                if let Some(layer) = array_index {
+                    self.traverse_expr(layer);
+                }
                 match level {
                     crate::SampleLevel::Auto | crate::SampleLevel::Zero => (),
                     crate::SampleLevel::Exact(h) | crate::SampleLevel::Bias(h) => {
-                        self.traverse_expr(h)
+                        self.traverse_expr(h);
+                    }
+                    crate::SampleLevel::Gradient { x, y } => {
+                        self.traverse_expr(x);
+                        self.traverse_expr(y);
                     }
                 }
                 if let Some(dref) = depth_ref {
@@ -64,12 +75,26 @@ where
             E::ImageLoad {
                 image,
                 coordinate,
+                array_index,
                 index,
             } => {
                 self.traverse_expr(image);
                 self.traverse_expr(coordinate);
+                if let Some(layer) = array_index {
+                    self.traverse_expr(layer);
+                }
                 if let Some(index) = index {
                     self.traverse_expr(index);
+                }
+            }
+            E::ImageQuery { image, query } => {
+                self.traverse_expr(image);
+                match query {
+                    crate::ImageQuery::Size { level: Some(expr) } => self.traverse_expr(expr),
+                    crate::ImageQuery::Size { .. }
+                    | crate::ImageQuery::NumLevels
+                    | crate::ImageQuery::NumLayers
+                    | crate::ImageQuery::NumSamples => (),
                 }
             }
             E::Unary { expr, .. } => {
@@ -88,36 +113,34 @@ where
                 self.traverse_expr(accept);
                 self.traverse_expr(reject);
             }
-            E::Intrinsic { argument, .. } => {
+            E::Derivative { expr, .. } => {
+                self.traverse_expr(expr);
+            }
+            E::Relational { argument, .. } => {
                 self.traverse_expr(argument);
             }
-            E::Transpose(matrix) => {
-                self.traverse_expr(matrix);
-            }
-            E::DotProduct(left, right) => {
-                self.traverse_expr(left);
-                self.traverse_expr(right);
-            }
-            E::CrossProduct(left, right) => {
-                self.traverse_expr(left);
-                self.traverse_expr(right);
+            E::Math {
+                arg, arg1, arg2, ..
+            } => {
+                self.traverse_expr(arg);
+                if let Some(arg) = arg1 {
+                    self.traverse_expr(arg);
+                }
+                if let Some(arg) = arg2 {
+                    self.traverse_expr(arg);
+                }
             }
             E::As { expr, .. } => {
                 self.traverse_expr(expr);
             }
-            E::Derivative { expr, .. } => {
-                self.traverse_expr(expr);
-            }
             E::Call {
-                ref origin,
+                function,
                 ref arguments,
             } => {
                 for &argument in arguments {
                     self.traverse_expr(argument);
                 }
-                if let crate::FunctionOrigin::Local(fun) = *origin {
-                    self.visitor.visit_fun(fun);
-                }
+                self.visitor.visit_fun(function);
             }
             E::ArrayLength(expr) => {
                 self.traverse_expr(expr);
@@ -148,8 +171,8 @@ where
                     ref default,
                 } => {
                     self.traverse_expr(selector);
-                    for &(ref case, _) in cases.values() {
-                        self.traverse(case);
+                    for case in cases.iter() {
+                        self.traverse(&case.body);
                     }
                     self.traverse(default);
                 }
@@ -179,112 +202,32 @@ where
                             _ => break,
                         }
                     }
-                    self.visitor.visit_lhs_expr(&self.expressions[left]);
+                    self.visitor.visit_lhs_expr(left, &self.expressions[left]);
                     self.traverse_expr(value);
+                }
+                S::ImageStore {
+                    image,
+                    coordinate,
+                    array_index,
+                    value,
+                } => {
+                    self.visitor.visit_lhs_expr(image, &self.expressions[image]);
+                    self.traverse_expr(coordinate);
+                    if let Some(expr) = array_index {
+                        self.traverse_expr(expr);
+                    }
+                    self.traverse_expr(value);
+                }
+                S::Call {
+                    function,
+                    ref arguments,
+                } => {
+                    for &argument in arguments {
+                        self.traverse_expr(argument);
+                    }
+                    self.visitor.visit_fun(function);
                 }
             }
         }
-    }
-}
-
-struct GlobalUseVisitor<'a>(&'a mut [crate::GlobalUse]);
-
-impl Visitor for GlobalUseVisitor<'_> {
-    fn visit_expr(&mut self, expr: &crate::Expression) {
-        if let crate::Expression::GlobalVariable(handle) = expr {
-            self.0[handle.index()] |= crate::GlobalUse::LOAD;
-        }
-    }
-
-    fn visit_lhs_expr(&mut self, expr: &crate::Expression) {
-        if let crate::Expression::GlobalVariable(handle) = expr {
-            self.0[handle.index()] |= crate::GlobalUse::STORE;
-        }
-    }
-}
-
-impl crate::Function {
-    pub fn fill_global_use(&mut self, globals: &Arena<crate::GlobalVariable>) {
-        self.global_usage.clear();
-        self.global_usage
-            .resize(globals.len(), crate::GlobalUse::empty());
-
-        let mut io = Interface {
-            expressions: &self.expressions,
-            local_variables: &self.local_variables,
-            visitor: GlobalUseVisitor(&mut self.global_usage),
-        };
-        io.traverse(&self.body);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        Arena, Expression, GlobalUse, GlobalVariable, Handle, Statement, StorageAccess,
-        StorageClass,
-    };
-
-    #[test]
-    fn global_use_scan() {
-        let test_global = GlobalVariable {
-            name: None,
-            class: StorageClass::Uniform,
-            binding: None,
-            ty: Handle::new(std::num::NonZeroU32::new(1).unwrap()),
-            init: None,
-            interpolation: None,
-            storage_access: StorageAccess::empty(),
-        };
-        let mut test_globals = Arena::new();
-
-        let global_1 = test_globals.append(test_global.clone());
-        let global_2 = test_globals.append(test_global.clone());
-        let global_3 = test_globals.append(test_global.clone());
-        let global_4 = test_globals.append(test_global);
-
-        let mut expressions = Arena::new();
-        let global_1_expr = expressions.append(Expression::GlobalVariable(global_1));
-        let global_2_expr = expressions.append(Expression::GlobalVariable(global_2));
-        let global_3_expr = expressions.append(Expression::GlobalVariable(global_3));
-        let global_4_expr = expressions.append(Expression::GlobalVariable(global_4));
-
-        let test_body = vec![
-            Statement::Return {
-                value: Some(global_1_expr),
-            },
-            Statement::Store {
-                pointer: global_2_expr,
-                value: global_1_expr,
-            },
-            Statement::Store {
-                pointer: expressions.append(Expression::Access {
-                    base: global_3_expr,
-                    index: global_4_expr,
-                }),
-                value: global_1_expr,
-            },
-        ];
-
-        let mut function = crate::Function {
-            name: None,
-            arguments: Vec::new(),
-            return_type: None,
-            local_variables: Arena::new(),
-            expressions,
-            global_usage: Vec::new(),
-            body: test_body,
-        };
-        function.fill_global_use(&test_globals);
-
-        assert_eq!(
-            &function.global_usage,
-            &[
-                GlobalUse::LOAD,
-                GlobalUse::STORE,
-                GlobalUse::STORE,
-                GlobalUse::LOAD,
-            ],
-        )
     }
 }
