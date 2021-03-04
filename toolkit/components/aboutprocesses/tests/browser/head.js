@@ -38,27 +38,40 @@ const CPU_REGEXP = /(\~0%|idle|[0-9.,]+%|[?]) \(([0-9.,]+) ?(ns|µs|ms|s|m|h|d)\
 //Example: "13% (4,470ms)"
 
 // Wait for `about:processes` to be updated.
-function promiseAboutProcessesUpdated({
+async function promiseAboutProcessesUpdated({
   doc,
   tbody,
   force,
   tabAboutProcesses,
 }) {
-  let result = new Promise(resolve => {
+  let startTime = performance.now();
+  let mutationPromise = new Promise(resolve => {
     let observer = new doc.ownerGlobal.MutationObserver(() => {
-      info("Observed about:processes refresh");
+      info("Observed about:processes tbody childList change");
       observer.disconnect();
       resolve();
     });
     observer.observe(tbody, { childList: true });
   });
+
   if (force) {
-    SpecialPowers.spawn(tabAboutProcesses.linkedBrowser, [], async () => {
+    await SpecialPowers.spawn(tabAboutProcesses.linkedBrowser, [], async () => {
       info("Forcing about:processes refresh");
       content.Control.update(/* force = */ true);
     });
   }
-  return result;
+
+  await mutationPromise;
+
+  // Fluent will update the visible table content during the next
+  // refresh driver tick, wait for it.
+  await new Promise(doc.defaultView.requestAnimationFrame);
+
+  ChromeUtils.addProfilerMarker(
+    "promiseAboutProcessesUpdated",
+    { startTime, category: "Test" },
+    force ? "force" : undefined
+  );
 }
 
 function promiseProcessDied({ childID }) {
@@ -461,8 +474,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         // Let's stop spamming as soon as we can.
         return;
       }
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(resolve => setTimeout(resolve, 300));
+
       Services.obs.notifyObservers(
         {
           childID: hungChildID,
@@ -472,20 +484,19 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         },
         "process-hang-report"
       );
+
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
   };
   fakeProcessHangMonitor();
 
-  // Give about:processes a little time to appear and be populated.
-  await TestUtils.waitForCondition(
-    () => tbody.childElementCount,
-    "The table should be populated",
-    /* interval = */ 300
-  );
-  await TestUtils.waitForCondition(
-    () => !!tbody.getElementsByClassName("hung").length,
-    "The hung process should appear",
-    /* interval = */ 300
+  // about:processes will take a little time to appear and be populated.
+  await promiseAboutProcessesUpdated({ doc, tbody, tabAboutProcesses });
+  Assert.ok(tbody.childElementCount, "The table should be populated");
+  Assert.ok(
+    !!tbody.getElementsByClassName("hung").length,
+    "The hung process should appear"
   );
 
   info("Looking at the contents of about:processes");
@@ -589,20 +600,17 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       // until all the threads are properly displayed.
       await promiseAboutProcessesUpdated({ doc, tbody, tabAboutProcesses });
       let numberOfThreadsFound = 0;
-      await TestUtils.waitForCondition(
-        () => {
-          numberOfThreadsFound = 0;
-          for (
-            let threadRow = threads.row.nextSibling;
-            threadRow && threadRow.classList.contains("thread");
-            threadRow = threadRow.nextSibling
-          ) {
-            numberOfThreadsFound++;
-          }
-          return numberOfThreadsFound == numberOfThreads;
-        },
-        `We should see ${numberOfThreads} threads, found ${numberOfThreadsFound}`,
-        /* interval = */ 300
+      for (
+        let threadRow = threads.row.nextSibling;
+        threadRow && threadRow.classList.contains("thread");
+        threadRow = threadRow.nextSibling
+      ) {
+        numberOfThreadsFound++;
+      }
+      Assert.equal(
+        numberOfThreadsFound,
+        numberOfThreads,
+        `We should see ${numberOfThreads} threads, found ${numberOfThreadsFound}`
       );
       for (
         let threadRow = threads.row.nextSibling;
@@ -618,12 +626,12 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         let tidContent = document.l10n.getAttributes(children[0].children[0])
           .args.tid;
 
-        info("Sanity checks: tid");
+        // Sanity checks: tid
         let tid = Number.parseInt(tidContent);
         Assert.notEqual(tid, 0, "The tid should be set");
         Assert.equal(tid, threadRow.thread.tid, "Displayed tid is correct");
 
-        info("Sanity checks: CPU (per thread)");
+        // Sanity checks: CPU (per thread)
         testCpu(
           cpuContent,
           threadRow.thread.totalCpu,
@@ -632,33 +640,32 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         );
       }
     }
+  }
 
-    // Testing subframes.
-    info("Testing subframes");
-    let foundAtLeastOneInProcessSubframe = false;
-    for (let row of doc.getElementsByClassName("window")) {
-      let subframe = row.win;
-      if (subframe.tab) {
-        continue;
-      }
-      let url = document.l10n.getAttributes(row.children[0].children[0]).args
-        .url;
-      Assert.equal(url, subframe.documentURI.spec);
-      if (!subframe.isProcessRoot) {
-        foundAtLeastOneInProcessSubframe = true;
-      }
+  // Testing subframes.
+  info("Testing subframes");
+  let foundAtLeastOneInProcessSubframe = false;
+  for (let row of doc.getElementsByClassName("window")) {
+    let subframe = row.win;
+    if (subframe.tab) {
+      continue;
     }
-    if (showAllFrames) {
-      Assert.ok(
-        foundAtLeastOneInProcessSubframe,
-        "Found at least one about:blank in-process subframe"
-      );
-    } else {
-      Assert.ok(
-        !foundAtLeastOneInProcessSubframe,
-        "We shouldn't have any about:blank in-process subframe"
-      );
+    let url = document.l10n.getAttributes(row.children[0].children[0]).args.url;
+    Assert.equal(url, subframe.documentURI.spec);
+    if (!subframe.isProcessRoot) {
+      foundAtLeastOneInProcessSubframe = true;
     }
+  }
+  if (showAllFrames) {
+    Assert.ok(
+      foundAtLeastOneInProcessSubframe,
+      "Found at least one about:blank in-process subframe"
+    );
+  } else {
+    Assert.ok(
+      !foundAtLeastOneInProcessSubframe,
+      "We shouldn't have any about:blank in-process subframe"
+    );
   }
 
   await promiseAboutProcessesUpdated({
@@ -697,22 +704,16 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
 
   info("Waiting for tab switch");
   await whenTabSwitchedToWeb;
-  await TestUtils.waitForCondition(
-    () =>
-      gBrowser.selectedTab.linkedBrowser.currentURI.spec ==
-      tabHung.linkedBrowser.currentURI.spec,
+  Assert.equal(
+    gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+    tabHung.linkedBrowser.currentURI.spec,
     "We should have focused the hung tab"
   );
-  gBrowser.selectedTab = tabAboutProcesses;
+
+  await BrowserTestUtils.switchTab(gBrowser, tabAboutProcesses);
 
   info("Double-clicking on the extensions process");
-  let whenTabSwitchedToAddons = BrowserTestUtils.switchTab(gBrowser, () => {
-    // We pass a function to use `BrowserTestUtils.switchTab` not in its
-    // role as a tab switcher but rather in its role as a function that
-    // waits until something else has switched the tab.
-    // We'll actually cause tab switching below, by doucle-clicking
-    // in `about:processes`.
-  });
+  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
   await SpecialPowers.spawn(tabAboutProcesses.linkedBrowser, [], async () => {
     let extensionsRow = content.document.getElementsByClassName(
       "extensions"
@@ -725,10 +726,11 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     });
     extensionsRow.dispatchEvent(evt);
   });
-  info("Waiting for tab switch");
-  await whenTabSwitchedToAddons;
-  await TestUtils.waitForCondition(
-    () => gBrowser.selectedTab.linkedBrowser.currentURI.spec == "about:addons",
+  info("Waiting for about:addons to open");
+  await tabPromise;
+  Assert.equal(
+    gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+    "about:addons",
     "We should now see the addon tab"
   );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -830,8 +832,8 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       : []),
   ]) {
     // Tab shouldn't show up anymore in about:processes
-    await TestUtils.waitForCondition(
-      () => !findTabRowByName(doc, origin),
+    Assert.ok(
+      !findTabRowByName(doc, origin),
       `Tab for ${origin} shouldn't show up anymore in about:processes`
     );
     // ...and should be unloaded.
@@ -882,8 +884,8 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
       "http://example.net", // tabCloseProcess*
       "https://example.org", // tabCloseTogether*
     ]) {
-      await TestUtils.waitForCondition(
-        () => !findProcessRowByOrigin(doc, origin),
+      Assert.ok(
+        !findProcessRowByOrigin(doc, origin),
         `Process ${origin} should disappear from about:processes`
       );
     }
