@@ -30,6 +30,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsCOMPtr.h"
