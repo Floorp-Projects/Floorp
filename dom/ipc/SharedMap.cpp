@@ -143,8 +143,8 @@ const nsTArray<SharedMap::Entry*>& SharedMap::EntryArray() const {
 
     mEntryArray.emplace(mEntries.Count());
     auto& array = mEntryArray.ref();
-    for (auto& entry : IterHash(mEntries)) {
-      array.AppendElement(entry);
+    for (auto& entry : mEntries) {
+      array.AppendElement(entry.GetWeak());
     }
   }
 
@@ -286,11 +286,11 @@ Result<Ok, nsresult> WritableSharedMap::Serialize() {
   size_t headerSize = sizeof(count);
   size_t blobCount = 0;
 
-  for (auto& entry : IterHash(mEntries)) {
-    headerSize += entry->HeaderSize();
-    blobCount += entry->BlobCount();
+  for (const auto& entry : mEntries) {
+    headerSize += entry.GetData()->HeaderSize();
+    blobCount += entry.GetData()->BlobCount();
 
-    dataSize += entry->Size();
+    dataSize += entry.GetData()->Size();
     AlignTo(&dataSize, kStructuredCloneAlign);
   }
 
@@ -310,18 +310,18 @@ Result<Ok, nsresult> WritableSharedMap::Serialize() {
   // as indexes into our blobs array.
   nsTArray<RefPtr<BlobImpl>> blobImpls(blobCount);
 
-  for (auto& entry : IterHash(mEntries)) {
+  for (auto& entry : mEntries) {
     AlignTo(&offset, kStructuredCloneAlign);
 
     size_t blobOffset = blobImpls.Length();
-    if (entry->BlobCount()) {
-      blobImpls.AppendElements(entry->Blobs());
+    if (entry.GetData()->BlobCount()) {
+      blobImpls.AppendElements(entry.GetData()->Blobs());
     }
 
-    entry->ExtractData(&ptr[offset], offset, blobOffset);
-    entry->Code(header);
+    entry.GetData()->ExtractData(&ptr[offset], offset, blobOffset);
+    entry.GetData()->Code(header);
 
-    offset += entry->Size();
+    offset += entry.GetData()->Size();
   }
 
   mBlobImpls = std::move(blobImpls);

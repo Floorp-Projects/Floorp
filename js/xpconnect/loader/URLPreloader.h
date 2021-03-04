@@ -185,7 +185,7 @@ class URLPreloader final : public nsIObserver, public nsIMemoryReporter {
       }
     }
 
-    const char* TypeString() {
+    const char* TypeString() const {
       switch (mType) {
         case TypeAppJar:
           return "AppJar";
