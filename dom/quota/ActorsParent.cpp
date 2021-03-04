@@ -9186,11 +9186,8 @@ nsresult PersistedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("PersistedOp::DoDirectoryWork", OTHER);
 
-  // We pass empty suffix to OringinMetadata for now (it's safe because it
-  // isn't used at the moment).
-  // XXX Add mSuffix to PersistedOp and use it here.
   Nullable<bool> persisted = aQuotaManager.OriginPersisted(
-      OriginMetadata{""_ns, mGroup, nsCString{mOriginScope.GetOrigin()}});
+      OriginMetadata{mSuffix, mGroup, nsCString{mOriginScope.GetOrigin()}});
 
   if (!persisted.IsNull()) {
     mPersisted = persisted.Value();
