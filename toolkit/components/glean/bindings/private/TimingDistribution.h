@@ -28,7 +28,13 @@ class TimingDistributionMetric {
    *
    * @returns A unique TimerId for the new timer
    */
-  TimerId Start() const { return fog_timing_distribution_start(mId); }
+  TimerId Start() const {
+#ifdef MOZ_GLEAN_ANDROID
+    return 0;
+#else
+    return fog_timing_distribution_start(mId);
+#endif
+  }
 
   /*
    * Stops tracking time for the provided metric and associated timer id.
@@ -41,7 +47,9 @@ class TimingDistributionMetric {
    *            concurrent timing of events associated with different ids.
    */
   void StopAndAccumulate(TimerId&& aId) const {
+#ifndef MOZ_GLEAN_ANDROID
     fog_timing_distribution_stop_and_accumulate(mId, aId);
+#endif
   }
 
   /*
@@ -50,7 +58,11 @@ class TimingDistributionMetric {
    *
    * @param aId The TimerId whose `Start` you wish to abort.
    */
-  void Cancel(TimerId&& aId) const { fog_timing_distribution_cancel(mId, aId); }
+  void Cancel(TimerId&& aId) const {
+#ifndef MOZ_GLEAN_ANDROID
+    fog_timing_distribution_cancel(mId, aId);
+#endif
+  }
 
   /**
    * **Test-only API**
@@ -71,6 +83,10 @@ class TimingDistributionMetric {
    */
   Maybe<DistributionData> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+    return Nothing();
+#else
     if (!fog_timing_distribution_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
@@ -83,6 +99,7 @@ class TimingDistributionMetric {
       ret.values.InsertOrUpdate(buckets[i], counts[i]);
     }
     return Some(std::move(ret));
+#endif
   }
 
  private:

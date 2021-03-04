@@ -28,26 +28,46 @@ already_AddRefed<FOG> FOG::GetSingleton() {
   return do_AddRef(gFOG);
 }
 
-void FOG::Shutdown() { glean::impl::fog_shutdown(); }
+void FOG::Shutdown() {
+#ifndef MOZ_GLEAN_ANDROID
+  glean::impl::fog_shutdown();
+#endif
+}
 
 NS_IMETHODIMP
 FOG::InitializeFOG(const nsACString& aDataPathOverride) {
+#ifdef MOZ_GLEAN_ANDROID
+  return NS_OK;
+#else
   return glean::impl::fog_init(&aDataPathOverride);
+#endif
 }
 
 NS_IMETHODIMP
 FOG::SetLogPings(bool aEnableLogPings) {
+#ifdef MOZ_GLEAN_ANDROID
+  return NS_OK;
+#else
   return glean::impl::fog_set_log_pings(aEnableLogPings);
+#endif
 }
 
 NS_IMETHODIMP
 FOG::SetTagPings(const nsACString& aDebugTag) {
+#ifdef MOZ_GLEAN_ANDROID
+  return NS_OK;
+#else
   return glean::impl::fog_set_debug_view_tag(&aDebugTag);
+#endif
 }
 
 NS_IMETHODIMP
 FOG::SendPing(const nsACString& aPingName) {
+#ifdef MOZ_GLEAN_ANDROID
+  return NS_OK;
+#else
   return glean::impl::fog_submit_ping(&aPingName);
+#endif
 }
 
 NS_IMPL_ISUPPORTS(FOG, nsIFOG)

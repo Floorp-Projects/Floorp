@@ -57,7 +57,12 @@ static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId,
     {% for (type_name, subtype_name), (type_id, original_type) in metric_type_ids.items() %}
     {% if subtype_name|length > 0 %}
     case {{ type_id }}: { /* {{ original_type }} */
-      return MakeAndAddRef<{{subtype_name}}>(impl::fog_{{original_type}}_get(aParentMetricId, &aLabel));
+#ifdef MOZ_GLEAN_ANDROID
+      auto id = 0;
+#else
+      auto id = impl::fog_{{original_type}}_get(aParentMetricId, &aLabel);
+#endif
+      return MakeAndAddRef<{{subtype_name}}>(id);
     }
     {% endif %}
     {% endfor %}

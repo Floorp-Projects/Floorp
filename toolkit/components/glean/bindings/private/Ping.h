@@ -41,7 +41,11 @@ class Ping {
    *                  Must match one of the configured `reason_codes`.
    */
   void Submit(const nsACString& aReason = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+#else
     fog_submit_ping_by_id(mId, &aReason);
+#endif
   }
 
  private:
