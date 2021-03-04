@@ -129,7 +129,7 @@ async function runTests() {
           `${aDescription}"beforeinput" event at ${aTestData.action} must be trusted`);
         is(aEvent.target, eventTarget,
           `${aDescription}"beforeinput" event at ${aTestData.action} is fired on unexpected element: ${aEvent.target.tagName}`);
-        ok(aEvent instanceof InputEvent,
+        is(aEvent.constructor.name, "InputEvent",
           `${aDescription}"beforeinput" event at ${aTestData.action} should be dispatched with InputEvent interface`);
         ok(aEvent.bubbles,
           `${aDescription}"beforeinput" event at ${aTestData.action} must be bubbles`);
@@ -148,7 +148,7 @@ async function runTests() {
           `${aDescription}"input" event at ${aTestData.action} must be trusted`);
         is(aEvent.target, eventTarget,
           `${aDescription}"input" event at ${aTestData.action} is fired on unexpected element: ${aEvent.target.tagName}`);
-        ok(aEvent instanceof InputEvent,
+        is(aEvent.constructor.name, "InputEvent",
           `${aDescription}"input" event at ${aTestData.action} should be dispatched with InputEvent interface`);
         ok(!aEvent.cancelable,
           `${aDescription}"input" event at ${aTestData.action} must not be cancelable`);
