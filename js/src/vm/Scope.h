@@ -812,7 +812,7 @@ inline bool Scope::is<VarScope>() const {
 // There are 2 kinds of GlobalScopes.
 //
 // Global
-//   Corresponds to a GlobalObject and its global LexicalEnvironmentObject on
+//   Corresponds to a GlobalObject and its GlobalLexicalEnvironmentObject on
 //   the environment chain.
 //
 // NonSyntactic
