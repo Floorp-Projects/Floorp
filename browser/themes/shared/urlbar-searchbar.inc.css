@@ -7,7 +7,7 @@
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarMarginInline 5px
-%define urlbarSearchButtonWidth calc(16px + 2 * @identityBoxPaddingInline@)
+%define urlbarSearchButtonWidth calc(16px + 2 * var(--identity-box-padding-inline))
 
 :root {
   /* 28x28 box - 16x16 image = 12x12 padding, 6 on each side */
@@ -17,12 +17,14 @@
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 :root {
   --toolbar-field-focus-border-color: -moz-accent-color;
+  --urlbar-container-padding: 0;
 }
 } /*** END !proton ***/
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 :root {
   --toolbar-field-focus-border-color: var(--focus-outline-color);
+  --urlbar-container-padding: 2px;
 }
 /* Override this value in the default dark theme. This value should be moved
     to default-theme/manifest.json when the Proton prefs are removed. */
@@ -242,6 +244,7 @@
 #urlbar-input-container {
   /* Match urlbar-background's border. */
   border: 1px solid transparent;
+  padding: var(--urlbar-container-padding);
 }
 
 #urlbar-container[breakout] {
@@ -309,8 +312,8 @@
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
   height: var(--urlbar-toolbar-height);
-  padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
-  padding-inline: @urlbarMarginInline@;
+  padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
+  padding-inline: calc(@urlbarMarginInline@ + var(--urlbar-container-padding));
 }
 } /*** END proton ***/
 
@@ -612,12 +615,19 @@
 .urlbar-icon {
   width: 28px;
   height: 28px;
-  padding: var(--urlbar-icon-padding);
+  padding-inline: var(--urlbar-icon-padding);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
   color: inherit;
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+.urlbar-icon,
+.urlbar-icon-wrapper {
+  border-radius: var(--toolbarbutton-border-radius);
+}
+} /*** END proton ***/
 
 .urlbar-page-action[disabled] {
   fill-opacity: 0.3;
