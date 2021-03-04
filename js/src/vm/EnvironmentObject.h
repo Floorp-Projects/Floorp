@@ -1134,6 +1134,13 @@ inline bool JSObject::is<js::NonSyntacticLexicalEnvironmentObject>() const {
 }
 
 template <>
+inline bool JSObject::is<js::NamedLambdaObject>() const {
+  return is<js::LexicalEnvironmentObject>() &&
+         !is<js::ExtensibleLexicalEnvironmentObject>() &&
+         as<js::LexicalEnvironmentObject>().scope().isNamedLambda();
+}
+
+template <>
 bool JSObject::is<js::DebugEnvironmentProxy>() const;
 
 namespace js {
@@ -1208,15 +1215,14 @@ inline bool IsFrameInitialEnvironment(AbstractFramePtr frame,
   }
 
   // For named lambda frames without CallObjects (i.e., no binding in the
-  // body of the function was closed over), the LexicalEnvironmentObject
+  // body of the function was closed over), the NamedLambdaObject
   // corresponding to the named lambda scope is the initial environment.
   if constexpr (std::is_same_v<SpecificEnvironment, NamedLambdaObject>) {
     if (frame.isFunctionFrame() &&
         frame.callee()->needsNamedLambdaEnvironment() &&
         !frame.callee()->needsCallObject()) {
       LexicalScope* namedLambdaScope = frame.script()->maybeNamedLambdaScope();
-      return &env.template as<LexicalEnvironmentObject>().scope() ==
-             namedLambdaScope;
+      return &env.scope() == namedLambdaScope;
     }
   }
 

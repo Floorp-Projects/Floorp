@@ -21,8 +21,8 @@ namespace js {
 
 class ArgumentsObject;
 class CallObject;
-class LexicalEnvironmentObject;
 class ModuleEnvironmentObject;
+class NamedLambdaObject;
 
 namespace jit {
 
@@ -464,11 +464,11 @@ struct NoEnvironment {};
 using ConstantObjectEnvironment = WarpGCPtr<JSObject*>;
 struct FunctionEnvironment {
   WarpGCPtr<CallObject*> callObjectTemplate;
-  WarpGCPtr<LexicalEnvironmentObject*> namedLambdaTemplate;
+  WarpGCPtr<NamedLambdaObject*> namedLambdaTemplate;
 
  public:
   FunctionEnvironment(CallObject* callObjectTemplate,
-                      LexicalEnvironmentObject* namedLambdaTemplate)
+                      NamedLambdaObject* namedLambdaTemplate)
       : callObjectTemplate(callObjectTemplate),
         namedLambdaTemplate(namedLambdaTemplate) {}
 };
