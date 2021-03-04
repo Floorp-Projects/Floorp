@@ -83,10 +83,12 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *    |   |   |   |
  *    |   |   |   +--NamedLambdaObject             Environment for `(function f(){...})`
  *    |   |   |   |                                    containing only a binding for `f`
- *    |   |   |   +--GlobalLexicalEnvironmentObject
- *    |   |   |   |                                Top-level let/const/class in scripts
- *    |   |   |   +--NonSyntacticLexicalEnvironmentObject
- *    |   |   |                                    See "Non-syntactic environments" below
+ *    |   |   |   +--ExtensibleLexicalEnvironmentObject
+ *    |   |   |       |
+ *    |   |   |       +--GlobalLexicalEnvironmentObject
+ *    |   |   |       |                                Top-level let/const/class in scripts
+ *    |   |   |       +--NonSyntacticLexicalEnvironmentObject
+ *    |   |   |                                        See "Non-syntactic environments" below
  *    |   |   +--VarEnvironmentObject          See VarScope in Scope.h.
  *    |   |   |
  *    |   |   +--WithEnvironmentObject         Presents object properties as bindings
@@ -534,12 +536,6 @@ class LexicalEnvironmentObject : public EnvironmentObject {
                                                         HandleObject enclosing,
                                                         gc::InitialHeap heap);
 
-  void initThisObject(JSObject* obj) {
-    MOZ_ASSERT(isGlobal() || !isSyntactic());
-    JSObject* thisObj = GetThisObject(obj);
-    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*thisObj));
-  }
-
  private:
   void initScopeUnchecked(LexicalScope* scope) {
     initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, PrivateGCThingValue(scope));
@@ -590,10 +586,6 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   // Is this a syntactic (i.e. corresponds to a source text) lexical
   // environment?
   bool isSyntactic() const { return !isExtensible() || isGlobal(); }
-
-  // For extensible lexical environments, the 'this' object for its
-  // scope. Otherwise asserts.
-  JSObject* thisObject() const;
 };
 
 class NamedLambdaObject : public LexicalEnvironmentObject {
@@ -613,9 +605,23 @@ class NamedLambdaObject : public LexicalEnvironmentObject {
   static size_t lambdaSlot();
 };
 
+// Global and non-syntactic lexical environments are extensible.
+class ExtensibleLexicalEnvironmentObject : public LexicalEnvironmentObject {
+ public:
+  JSObject* thisObject() const;
+
+ protected:
+  void initThisObject(JSObject* obj) {
+    MOZ_ASSERT(isGlobal() || !isSyntactic());
+    JSObject* thisObj = GetThisObject(obj);
+    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*thisObj));
+  }
+};
+
 // The global lexical environment, where global let/const/class bindings are
 // added.
-class GlobalLexicalEnvironmentObject : public LexicalEnvironmentObject {
+class GlobalLexicalEnvironmentObject
+    : public ExtensibleLexicalEnvironmentObject {
  public:
   static GlobalLexicalEnvironmentObject* create(JSContext* cx,
                                                 Handle<GlobalObject*> global);
@@ -632,7 +638,8 @@ class GlobalLexicalEnvironmentObject : public LexicalEnvironmentObject {
 };
 
 // Non-standard. See "Non-syntactic Environments" above.
-class NonSyntacticLexicalEnvironmentObject : public LexicalEnvironmentObject {
+class NonSyntacticLexicalEnvironmentObject
+    : public ExtensibleLexicalEnvironmentObject {
  public:
   static NonSyntacticLexicalEnvironmentObject* create(JSContext* cx,
                                                       HandleObject enclosing,
@@ -1109,6 +1116,12 @@ inline bool JSObject::is<js::EnvironmentObject>() const {
 }
 
 template <>
+inline bool JSObject::is<js::ExtensibleLexicalEnvironmentObject>() const {
+  return is<js::LexicalEnvironmentObject>() &&
+         as<js::LexicalEnvironmentObject>().isExtensible();
+}
+
+template <>
 inline bool JSObject::is<js::GlobalLexicalEnvironmentObject>() const {
   return is<js::LexicalEnvironmentObject>() &&
          as<js::LexicalEnvironmentObject>().isGlobal();
@@ -1146,8 +1159,7 @@ inline bool IsSyntacticEnvironment(JSObject* env) {
 }
 
 inline bool IsExtensibleLexicalEnvironment(JSObject* env) {
-  return env->is<LexicalEnvironmentObject>() &&
-         env->as<LexicalEnvironmentObject>().isExtensible();
+  return env->is<ExtensibleLexicalEnvironmentObject>();
 }
 
 inline bool IsGlobalLexicalEnvironment(JSObject* env) {
@@ -1227,22 +1239,19 @@ ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
     JSContext* cx, AbstractGeneratorObject& genObj, JSScript* script,
     MutableHandleValue res);
 
-[[nodiscard]] bool CheckVarNameConflict(
-    JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
-    HandlePropertyName name);
-
 [[nodiscard]] bool CheckCanDeclareGlobalBinding(JSContext* cx,
                                                 Handle<GlobalObject*> global,
                                                 HandlePropertyName name,
                                                 bool isFunction);
 
 [[nodiscard]] bool CheckLexicalNameConflict(
-    JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
+    JSContext* cx, Handle<ExtensibleLexicalEnvironmentObject*> lexicalEnv,
     HandleObject varObj, HandlePropertyName name);
 
 [[nodiscard]] bool CheckGlobalDeclarationConflicts(
     JSContext* cx, HandleScript script,
-    Handle<LexicalEnvironmentObject*> lexicalEnv, HandleObject varObj);
+    Handle<ExtensibleLexicalEnvironmentObject*> lexicalEnv,
+    HandleObject varObj);
 
 [[nodiscard]] bool GlobalOrEvalDeclInstantiation(JSContext* cx,
                                                  HandleObject envChain,

@@ -311,10 +311,9 @@ inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
   return ok && result.checkStrictModeError(cx, env, id, strict);
 }
 
-inline void InitGlobalLexicalOperation(JSContext* cx,
-                                       LexicalEnvironmentObject* lexicalEnv,
-                                       JSScript* script, jsbytecode* pc,
-                                       HandleValue value) {
+inline void InitGlobalLexicalOperation(
+    JSContext* cx, ExtensibleLexicalEnvironmentObject* lexicalEnv,
+    JSScript* script, jsbytecode* pc, HandleValue value) {
   MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
                 lexicalEnv == &cx->global()->lexicalEnvironment());
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitGLexical);

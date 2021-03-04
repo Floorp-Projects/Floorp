@@ -3604,7 +3604,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(InitAliasedLexical)
 
     CASE(InitGLexical) {
-      LexicalEnvironmentObject* lexicalEnv;
+      ExtensibleLexicalEnvironmentObject* lexicalEnv;
       if (script->hasNonSyntacticScope()) {
         lexicalEnv = &REGS.fp()->extensibleLexicalEnvironment();
       } else {

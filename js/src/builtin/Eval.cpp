@@ -381,12 +381,11 @@ bool js::IsAnyBuiltinEval(JSFunction* fun) {
   return fun->maybeNative() == IndirectEval;
 }
 
-static bool ExecuteInExtensibleLexicalEnvironment(JSContext* cx,
-                                                  HandleScript scriptArg,
-                                                  HandleObject env) {
+static bool ExecuteInExtensibleLexicalEnvironment(
+    JSContext* cx, HandleScript scriptArg,
+    Handle<ExtensibleLexicalEnvironmentObject*> env) {
   CHECK_THREAD(cx);
   cx->check(env);
-  MOZ_ASSERT(IsExtensibleLexicalEnvironment(env));
   MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
   RootedScript script(cx, scriptArg);
@@ -426,17 +425,18 @@ JS_FRIEND_API bool js::ExecuteInFrameScriptEnvironment(
   // callers try to bind methods from the message manager in their scope chain
   // to |this|, and will fail if it is not bound to a message manager.
   ObjectRealm& realm = ObjectRealm::get(varEnv);
-  env =
-      realm.getOrCreateNonSyntacticLexicalEnvironment(cx, env, varEnv, objArg);
-  if (!env) {
+  Rooted<NonSyntacticLexicalEnvironmentObject*> lexicalEnv(
+      cx,
+      realm.getOrCreateNonSyntacticLexicalEnvironment(cx, env, varEnv, objArg));
+  if (!lexicalEnv) {
     return false;
   }
 
-  if (!ExecuteInExtensibleLexicalEnvironment(cx, scriptArg, env)) {
+  if (!ExecuteInExtensibleLexicalEnvironment(cx, scriptArg, lexicalEnv)) {
     return false;
   }
 
-  envArg.set(env);
+  envArg.set(lexicalEnv);
   return true;
 }
 
@@ -472,7 +472,10 @@ JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
       ObjectRealm::get(varEnv).getNonSyntacticLexicalEnvironment(varEnv));
   MOZ_DIAGNOSTIC_ASSERT(scriptArg->noScriptRval());
 
-  RootedObject env(cx, JS_ExtensibleLexicalEnvironment(varEnv));
+  Rooted<ExtensibleLexicalEnvironmentObject*> env(cx);
+  if (auto* envPtr = JS_ExtensibleLexicalEnvironment(varEnv)) {
+    env = &envPtr->as<ExtensibleLexicalEnvironmentObject>();
+  }
 
   // If the Gecko subscript loader specifies target objects, we need to add
   // them to the environment. These are added after the NSVO environment.
@@ -488,18 +491,19 @@ JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
     //  (*) This environment intercepts JSOp::GlobalThis.
 
     // Wrap the target objects in WithEnvironments.
-    if (!js::CreateObjectsForEnvironmentChain(cx, targetObj, env, &env)) {
+    RootedObject envChain(cx);
+    if (!js::CreateObjectsForEnvironmentChain(cx, targetObj, env, &envChain)) {
       return false;
     }
 
     // See CreateNonSyntacticEnvironmentChain
-    if (!JSObject::setQualifiedVarObj(cx, env)) {
+    if (!JSObject::setQualifiedVarObj(cx, envChain)) {
       return false;
     }
 
-    // Create an extensible LexicalEnvironmentObject for target object
-    env = ObjectRealm::get(env).getOrCreateNonSyntacticLexicalEnvironment(cx,
-                                                                          env);
+    // Create an extensible lexical environment for the target object.
+    env = ObjectRealm::get(envChain).getOrCreateNonSyntacticLexicalEnvironment(
+        cx, envChain);
     if (!env) {
       return false;
     }
