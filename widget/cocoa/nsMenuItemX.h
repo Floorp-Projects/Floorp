@@ -74,8 +74,7 @@ class nsMenuItemX : public nsMenuObjectX, public nsChangeObserver {
   nsMenuX* mMenuParent;                // [weak]
   nsMenuGroupOwnerX* mMenuGroupOwner;  // [weak]
   RefPtr<mozilla::dom::Element> mCommandElement;
-  // The icon object should never outlive its creating nsMenuItemX object.
-  RefPtr<nsMenuItemIconX> mIcon;
+  mozilla::UniquePtr<nsMenuItemIconX> mIcon;  // always non-null
   bool mIsChecked;
 };
 

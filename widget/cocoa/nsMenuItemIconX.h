@@ -21,15 +21,11 @@ class nsMenuObjectX;
 
 #import <Cocoa/Cocoa.h>
 
-class nsMenuItemIconX : public mozilla::widget::IconLoader::Listener {
+class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
  public:
   nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
                   NSMenuItem* aNativeMenuItem);
-
-  NS_INLINE_DECL_REFCOUNTING(nsMenuItemIconX)
-
- private:
-  virtual ~nsMenuItemIconX();
+  ~nsMenuItemIconX();
 
  public:
   // SetupIcon succeeds if it was able to set up the icon, or if there should
@@ -38,12 +34,6 @@ class nsMenuItemIconX : public mozilla::widget::IconLoader::Listener {
 
   // GetIconURI fails if the item should not have any icon.
   nsresult GetIconURI(nsIURI** aIconURI);
-
-  // Unless we take precautions, we may outlive the object that created us
-  // (mMenuObject, which owns our native menu item (mNativeMenuItem)).
-  // Destroy() should be called from mMenuObject's destructor to prevent
-  // this from happening.  See bug 499600.
-  void Destroy();
 
   // Implements this method for mozilla::widget::IconLoader::Listener.
   // Called once the icon load is complete.
