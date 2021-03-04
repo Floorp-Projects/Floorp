@@ -376,16 +376,15 @@ frontend::CompileGlobalScriptToExtensibleStencil(
                                                     scopeKind);
 }
 
-bool frontend::InstantiateStencils(
-    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-    CompilationGCOutput& gcOutput,
-    CompilationGCOutput* gcOutputForDelazification /* = nullptr */) {
+bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
+                                   const CompilationStencil& stencil,
+                                   CompilationGCOutput& gcOutput) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!CompilationStencil::instantiateStencils(cx, input, stencil, gcOutput,
-                                                 gcOutputForDelazification)) {
+    if (!CompilationStencil::instantiateStencils(cx, input, stencil,
+                                                 gcOutput)) {
       return false;
     }
   }
@@ -404,15 +403,15 @@ bool frontend::InstantiateStencils(
 
   return true;
 }
-bool frontend::PrepareForInstantiate(
-    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-    CompilationGCOutput& gcOutput,
-    CompilationGCOutput* gcOutputForDelazification) {
+
+bool frontend::PrepareForInstantiate(JSContext* cx, CompilationInput& input,
+                                     const CompilationStencil& stencil,
+                                     CompilationGCOutput& gcOutput) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return CompilationStencil::prepareForInstantiate(cx, input, stencil, gcOutput,
-                                                   gcOutputForDelazification);
+  return CompilationStencil::prepareForInstantiate(cx, input, stencil,
+                                                   gcOutput);
 }
 
 template <typename Unit>
