@@ -83,9 +83,6 @@ nsMacShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers) {
   }
 
   if (aClaimAllTypes) {
-    if (::LSSetDefaultHandlerForURLScheme(CFSTR("ftp"), firefoxID) != noErr) {
-      return NS_ERROR_FAILURE;
-    }
     if (::LSSetDefaultRoleHandlerForContentType(kUTTypeHTML, kLSRolesAll,
                                                 firefoxID) != noErr) {
       return NS_ERROR_FAILURE;

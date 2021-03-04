@@ -54,7 +54,6 @@ static const ProtocolAssociation appProtocols[] = {
     // clang-format off
   { "http",   true     },
   { "https",  true     },
-  { "ftp",    false },
   { "chrome", false }
     // clang-format on
 };
