@@ -42,6 +42,7 @@ toolkit.jar:
   skin/classic/global/icons/searchfield-cancel.svg         (../../shared/icons/searchfield-cancel.svg)
   skin/classic/global/pictureinpicture/close-pip.svg       (../../shared/pictureinpicture/close-pip.svg)
   skin/classic/global/icons/columnpicker.svg               (../../shared/icons/columnpicker.svg)
+  skin/classic/global/icons/critical.svg                   (../../shared/icons/critical.svg)
   skin/classic/global/icons/delete.svg                     (../../shared/icons/delete.svg)
   skin/classic/global/icons/document.svg                   (../../shared/icons/document.svg)
   skin/classic/global/icons/edit.svg                       (../../shared/icons/edit.svg)
