@@ -725,7 +725,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public static String getDefaultUserAgent();
     method @AnyThread @NonNull public SessionFinder getFinder();
     method @AnyThread @Nullable public GeckoSession.HistoryDelegate getHistoryDelegate();
-    method @AnyThread @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
+    method @AnyThread @Deprecated @DeprecationSchedule(version=91,id="media-element") @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
     method @AnyThread @Nullable public MediaSession.Delegate getMediaSessionDelegate();
     method @Nullable @UiThread public GeckoSession.NavigationDelegate getNavigationDelegate();
     method @NonNull @UiThread public OverscrollEdgeEffect getOverscrollEdgeEffect();
@@ -760,7 +760,7 @@ package org.mozilla.geckoview {
     method @UiThread public void setContentDelegate(@Nullable GeckoSession.ContentDelegate);
     method @AnyThread public void setFocused(boolean);
     method @AnyThread public void setHistoryDelegate(@Nullable GeckoSession.HistoryDelegate);
-    method @AnyThread public void setMediaDelegate(@Nullable GeckoSession.MediaDelegate);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=91,id="media-element") public void setMediaDelegate(@Nullable GeckoSession.MediaDelegate);
     method @AnyThread public void setMediaSessionDelegate(@Nullable MediaSession.Delegate);
     method @UiThread public void setNavigationDelegate(@Nullable GeckoSession.NavigationDelegate);
     method @UiThread public void setPermissionDelegate(@Nullable GeckoSession.PermissionDelegate);
@@ -868,9 +868,9 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoSession.Loader uri(@NonNull Uri);
   }
 
-  public static interface GeckoSession.MediaDelegate {
-    method @UiThread default public void onMediaAdd(@NonNull GeckoSession, @NonNull MediaElement);
-    method @UiThread default public void onMediaRemove(@NonNull GeckoSession, @NonNull MediaElement);
+  @Deprecated @DeprecationSchedule(version=91,id="media-element") public static interface GeckoSession.MediaDelegate {
+    method @Deprecated @DeprecationSchedule(version=91,id="media-element") @UiThread default public void onMediaAdd(@NonNull GeckoSession, @NonNull MediaElement);
+    method @Deprecated @DeprecationSchedule(version=91,id="media-element") @UiThread default public void onMediaRemove(@NonNull GeckoSession, @NonNull MediaElement);
     method @UiThread default public void onRecordingStatusChanged(@NonNull GeckoSession, @NonNull GeckoSession.MediaDelegate.RecordingDevice[]);
   }
 
@@ -1354,7 +1354,7 @@ package org.mozilla.geckoview {
     ctor public ImageProcessingException(String);
   }
 
-  @AnyThread public class MediaElement {
+  @Deprecated @DeprecationSchedule(version=91,id="media-element") @AnyThread public class MediaElement {
     method @Nullable public MediaElement.Delegate getDelegate();
     method public void pause();
     method public void play();
