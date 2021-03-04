@@ -162,16 +162,11 @@ void RenderPassEncoder::SetPipeline(const RenderPipeline& aPipeline) {
   }
 }
 
-void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer,
-                                       const dom::GPUIndexFormat& aIndexFormat,
-                                       uint64_t aOffset, uint64_t aSize) {
+void RenderPassEncoder::SetIndexBuffer(const Buffer& aBuffer, uint64_t aOffset,
+                                       uint64_t aSize) {
   if (mValid) {
     mUsedBuffers.AppendElement(&aBuffer);
-    const auto iformat = aIndexFormat == dom::GPUIndexFormat::Uint32
-                             ? ffi::WGPUIndexFormat_Uint32
-                             : ffi::WGPUIndexFormat_Uint16;
-    ffi::wgpu_render_pass_set_index_buffer(mPass, aBuffer.mId, iformat, aOffset,
-                                           aSize);
+    ffi::wgpu_render_pass_set_index_buffer(mPass, aBuffer.mId, aOffset, aSize);
   }
 }
 

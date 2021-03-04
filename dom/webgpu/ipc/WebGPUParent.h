@@ -26,7 +26,7 @@ class WebGPUParent final : public PWebGPUParent {
       const nsTArray<RawId>& aTargetIds,
       InstanceRequestAdapterResolver&& resolver);
   ipc::IPCResult RecvAdapterRequestDevice(RawId aSelfId,
-                                          const ipc::ByteBuf& aByteBuf,
+                                          const dom::GPUDeviceDescriptor& aDesc,
                                           RawId aNewId);
   ipc::IPCResult RecvAdapterDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceDestroy(RawId aSelfId);

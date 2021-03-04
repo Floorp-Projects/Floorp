@@ -13,9 +13,7 @@ use ast::Program;
 
 use lex::Lexer;
 mod error;
-pub use error::ParseError;
-mod constants;
-mod functions;
+use error::ParseError;
 mod parser;
 #[cfg(test)]
 mod parser_tests;
@@ -23,16 +21,19 @@ mod token;
 mod types;
 mod variables;
 
-pub struct Options {
-    pub entry_points: FastHashMap<String, ShaderStage>,
-    pub defines: FastHashMap<String, String>,
-}
+pub fn parse_str(
+    source: &str,
+    entry: &str,
+    stage: ShaderStage,
+    defines: FastHashMap<String, String>,
+) -> Result<Module, ParseError> {
+    let mut program = Program::new(stage, entry);
 
-pub fn parse_str(source: &str, options: &Options) -> Result<Module, ParseError> {
-    let mut program = Program::new(&options.entry_points);
+    let mut lex = Lexer::new(source);
+    lex.pp.defines = defines;
 
-    let lex = Lexer::new(source, &options.defines);
     let mut parser = parser::Parser::new(&mut program);
+
     for token in lex {
         parser.parse(token)?;
     }

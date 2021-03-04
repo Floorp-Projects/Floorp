@@ -1,8 +1,7 @@
 use super::parser::Token;
 use super::token::TokenMetadata;
-use std::{borrow::Cow, fmt, io};
+use std::{fmt, io};
 
-//TODO: use `thiserror`
 #[derive(Debug)]
 pub enum ErrorKind {
     EndOfFile,
@@ -18,10 +17,11 @@ pub enum ErrorKind {
     UnknownField(TokenMetadata, String),
     #[cfg(feature = "glsl-validate")]
     VariableAlreadyDeclared(String),
+    #[cfg(feature = "glsl-validate")]
+    VariableNotAvailable(String),
     ExpectedConstant,
-    SemanticError(Cow<'static, str>),
+    SemanticError(&'static str),
     PreprocessorError(String),
-    WrongNumberArgs(String, usize, usize),
 }
 
 impl fmt::Display for ErrorKind {
@@ -46,14 +46,15 @@ impl fmt::Display for ErrorKind {
             ErrorKind::UnknownField(meta, val) => write!(f, "Unknown field {} at {:?}", val, meta),
             #[cfg(feature = "glsl-validate")]
             ErrorKind::VariableAlreadyDeclared(val) => {
-                write!(f, "Variable {} already declared in current scope", val)
+                write!(f, "Variable {} already decalred in current scope", val)
+            }
+            #[cfg(feature = "glsl-validate")]
+            ErrorKind::VariableNotAvailable(val) => {
+                write!(f, "Variable {} not available in this stage", val)
             }
             ErrorKind::ExpectedConstant => write!(f, "Expected constant"),
             ErrorKind::SemanticError(msg) => write!(f, "Semantic error: {}", msg),
             ErrorKind::PreprocessorError(val) => write!(f, "Preprocessor error: {}", val),
-            ErrorKind::WrongNumberArgs(fun, expected, actual) => {
-                write!(f, "{} requires {} args, got {}", fun, expected, actual)
-            }
         }
     }
 }

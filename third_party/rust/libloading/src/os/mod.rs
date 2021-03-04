@@ -1,4 +1,4 @@
-//! Unsafe but flexible platform specific bindings to dynamic library loading facilities.
+//! Unsafe, platform specific bindings to dynamic library loading facilities.
 //!
 //! These modules expose more extensive, powerful, less principled bindings to the dynamic
 //! library loading facilities. Use of these bindings come at the cost of less (in most cases,
@@ -16,12 +16,30 @@
 //! use libloading::os::windows::*;
 //! ```
 
-/// UNIX implementation of dynamic library loading.
-#[cfg(any(unix, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(unix)))]
-pub mod unix;
+macro_rules! unix {
+    ($item: item) => {
+        /// UNIX implementation of dynamic library loading.
+        ///
+        /// This module should be expanded with more UNIX-specific functionality in the future.
+        $item
+    }
+}
 
-/// Windows implementation of dynamic library loading.
-#[cfg(any(windows, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(windows)))]
-pub mod windows;
+macro_rules! windows {
+    ($item: item) => {
+        /// Windows implementation of dynamic library loading.
+        ///
+        /// This module should be expanded with more Windows-specific functionality in the future.
+        $item
+    }
+}
+
+#[cfg(unix)]
+unix!(pub mod unix;);
+#[cfg(unix)]
+windows!(pub mod windows {});
+
+#[cfg(windows)]
+windows!(pub mod windows;);
+#[cfg(windows)]
+unix!(pub mod unix {});

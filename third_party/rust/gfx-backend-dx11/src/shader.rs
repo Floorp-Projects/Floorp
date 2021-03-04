@@ -9,29 +9,27 @@ use winapi::{
 use wio::com::ComPtr;
 
 use auxil::{spirv_cross_specialize_ast, ShaderStage};
-use hal::pso;
+use hal::{device, pso};
 
 use crate::{conv, Backend, PipelineLayout};
 
 /// Emit error during shader module creation. Used if we don't expect an error
 /// but might panic due to an exception in SPIRV-Cross.
-fn gen_unexpected_error(err: SpirvErrorCode) -> pso::CreationError {
+fn gen_unexpected_error(err: SpirvErrorCode) -> device::ShaderError {
     let msg = match err {
         SpirvErrorCode::CompilationError(msg) => msg,
         SpirvErrorCode::Unhandled => "Unexpected error".into(),
     };
-    error!("SPIR-V unexpected error {:?}", msg);
-    pso::CreationError::Other
+    device::ShaderError::CompilationFailed(msg)
 }
 
 /// Emit error during shader module creation. Used if we execute an query command.
-fn gen_query_error(err: SpirvErrorCode) -> pso::CreationError {
+fn gen_query_error(err: SpirvErrorCode) -> device::ShaderError {
     let msg = match err {
         SpirvErrorCode::CompilationError(msg) => msg,
         SpirvErrorCode::Unhandled => "Unknown query error".into(),
     };
-    error!("SPIR-V query error {:?}", msg);
-    pso::CreationError::Other
+    device::ShaderError::CompilationFailed(msg)
 }
 
 /// Introspects the input attributes of given SPIR-V shader and returns an optional vertex semantic remapping.
@@ -47,7 +45,7 @@ fn gen_query_error(err: SpirvErrorCode) -> pso::CreationError {
 /// This workaround also exists under the same name in the DX12 backend.
 pub(crate) fn introspect_spirv_vertex_semantic_remapping(
     raw_data: &[u32],
-) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, pso::CreationError> {
+) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, device::ShaderError> {
     // This is inefficient as we already parse it once before. This is a temporary workaround only called
     // on vertex shaders. If this becomes permanent or shows up in profiles, deduplicate these as first course of action.
     let ast = parse_spirv(raw_data)?;
@@ -76,21 +74,19 @@ pub(crate) fn introspect_spirv_vertex_semantic_remapping(
             {
                 for col in 0..columns {
                     if let Some(_) = map.insert(idx + col, Some((idx, col))) {
-                        error!(
+                        return Err(device::ShaderError::CompilationFailed(format!(
                             "Shader has overlapping input attachments at location {}",
                             idx
-                        );
-                        return Err(pso::CreationError::Other);
+                        )));
                     }
                 }
             }
             _ => {
                 if let Some(_) = map.insert(idx, None) {
-                    error!(
+                    return Err(device::ShaderError::CompilationFailed(format!(
                         "Shader has overlapping input attachments at location {}",
                         idx
-                    );
-                    return Err(pso::CreationError::Other);
+                    )));
                 }
             }
         }
@@ -105,10 +101,9 @@ pub(crate) fn compile_spirv_entrypoint(
     source: &pso::EntryPoint<Backend>,
     layout: &PipelineLayout,
     features: &hal::Features,
-) -> Result<Option<ComPtr<d3dcommon::ID3DBlob>>, pso::CreationError> {
+) -> Result<Option<ComPtr<d3dcommon::ID3DBlob>>, device::ShaderError> {
     let mut ast = parse_spirv(raw_data)?;
-    spirv_cross_specialize_ast(&mut ast, &source.specialization)
-        .map_err(pso::CreationError::InvalidSpecialization)?;
+    spirv_cross_specialize_ast(&mut ast, &source.specialization)?;
 
     patch_spirv_resources(&mut ast, stage, layout)?;
     let shader_model = hlsl::ShaderModel::V5_0;
@@ -126,8 +121,22 @@ pub(crate) fn compile_spirv_entrypoint(
         .get_cleansed_entry_point_name(source.entry, conv::map_stage(stage))
         .map_err(gen_query_error)?;
 
-    let shader = compile_hlsl_shader(stage, shader_model, &real_name, shader_code.as_bytes())?;
-    Ok(Some(unsafe { ComPtr::from_raw(shader) }))
+    // TODO: opt: don't query *all* entry points.
+    let entry_points = ast.get_entry_points().map_err(gen_query_error)?;
+    entry_points
+        .iter()
+        .find(|entry_point| entry_point.name == real_name)
+        .ok_or(device::ShaderError::MissingEntryPoint(source.entry.into()))
+        .and_then(|entry_point| {
+            let stage = conv::map_execution_model(entry_point.execution_model);
+            let shader = compile_hlsl_shader(
+                stage,
+                shader_model,
+                &entry_point.name,
+                shader_code.as_bytes(),
+            )?;
+            Ok(Some(unsafe { ComPtr::from_raw(shader) }))
+        })
 }
 
 pub(crate) fn compile_hlsl_shader(
@@ -135,7 +144,7 @@ pub(crate) fn compile_hlsl_shader(
     shader_model: hlsl::ShaderModel,
     entry: &str,
     code: &[u8],
-) -> Result<*mut d3dcommon::ID3DBlob, pso::CreationError> {
+) -> Result<*mut d3dcommon::ID3DBlob, device::ShaderError> {
     let stage_str = {
         let stage = match stage {
             ShaderStage::Vertex => "vs",
@@ -183,34 +192,30 @@ pub(crate) fn compile_hlsl_shader(
             let slice = slice::from_raw_parts(pointer as *const u8, size as usize);
             String::from_utf8_lossy(slice).into_owned()
         };
-        error!("D3DCompile error {:x}: {}", hr, message);
-        Err(pso::CreationError::Other)
+
+        Err(device::ShaderError::CompilationFailed(message))
     } else {
         Ok(blob)
     }
 }
 
-fn parse_spirv(raw_data: &[u32]) -> Result<spirv::Ast<hlsl::Target>, pso::CreationError> {
+fn parse_spirv(raw_data: &[u32]) -> Result<spirv::Ast<hlsl::Target>, device::ShaderError> {
     let module = spirv::Module::from_words(raw_data);
 
-    match spirv::Ast::parse(&module) {
-        Ok(ast) => Ok(ast),
-        Err(err) => {
-            let msg = match err {
-                SpirvErrorCode::CompilationError(msg) => msg,
-                SpirvErrorCode::Unhandled => "Unknown parsing error".into(),
-            };
-            error!("SPIR-V parsing failed: {:?}", msg);
-            Err(pso::CreationError::Other)
-        }
-    }
+    spirv::Ast::parse(&module).map_err(|err| {
+        let msg = match err {
+            SpirvErrorCode::CompilationError(msg) => msg,
+            SpirvErrorCode::Unhandled => "Unknown parsing error".into(),
+        };
+        device::ShaderError::CompilationFailed(msg)
+    })
 }
 
 fn patch_spirv_resources(
     ast: &mut spirv::Ast<hlsl::Target>,
     stage: ShaderStage,
     layout: &PipelineLayout,
-) -> Result<(), pso::CreationError> {
+) -> Result<(), device::ShaderError> {
     // we remap all `layout(binding = n, set = n)` to a flat space which we get from our
     // `PipelineLayout` which knows of all descriptor set layouts
 
@@ -222,10 +227,10 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        if let Some((_content, res_index)) = layout.sets[set].find_register(stage, binding) {
-            ast.set_decoration(image.id, spirv::Decoration::Binding, res_index.t as u32)
-                .map_err(gen_unexpected_error)?;
-        }
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
+
+        ast.set_decoration(image.id, spirv::Decoration::Binding, res_index.t as u32)
+            .map_err(gen_unexpected_error)?;
     }
 
     for uniform_buffer in &shader_resources.uniform_buffers {
@@ -235,14 +240,14 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(uniform_buffer.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        if let Some((_content, res_index)) = layout.sets[set].find_register(stage, binding) {
-            ast.set_decoration(
-                uniform_buffer.id,
-                spirv::Decoration::Binding,
-                res_index.c as u32,
-            )
-            .map_err(gen_unexpected_error)?;
-        }
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
+
+        ast.set_decoration(
+            uniform_buffer.id,
+            spirv::Decoration::Binding,
+            res_index.c as u32,
+        )
+        .map_err(gen_unexpected_error)?;
     }
 
     for storage_buffer in &shader_resources.storage_buffers {
@@ -262,11 +267,7 @@ fn patch_spirv_resources(
         };
 
         let (_content, res_index) = if read_only {
-            if let Some((_content, res_index)) = layout.sets[set].find_register(stage, binding) {
-                (_content, res_index)
-            } else {
-                continue;
-            }
+            layout.sets[set].find_register(stage, binding)
         } else {
             layout.sets[set].find_uav_register(stage, binding)
         };
@@ -318,10 +319,10 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(sampler.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        if let Some((_content, res_index)) = layout.sets[set].find_register(stage, binding) {
-            ast.set_decoration(sampler.id, spirv::Decoration::Binding, res_index.s as u32)
-                .map_err(gen_unexpected_error)?;
-        }
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
+
+        ast.set_decoration(sampler.id, spirv::Decoration::Binding, res_index.s as u32)
+            .map_err(gen_unexpected_error)?;
     }
 
     for image in &shader_resources.sampled_images {
@@ -331,10 +332,10 @@ fn patch_spirv_resources(
         let binding = ast
             .get_decoration(image.id, spirv::Decoration::Binding)
             .map_err(gen_query_error)?;
-        if let Some((_content, res_index)) = layout.sets[set].find_register(stage, binding) {
-            ast.set_decoration(image.id, spirv::Decoration::Binding, res_index.t as u32)
-                .map_err(gen_unexpected_error)?;
-        }
+        let (_content, res_index) = layout.sets[set].find_register(stage, binding);
+
+        ast.set_decoration(image.id, spirv::Decoration::Binding, res_index.t as u32)
+            .map_err(gen_unexpected_error)?;
     }
 
     assert!(
@@ -366,7 +367,7 @@ fn translate_spirv(
     stage: ShaderStage,
     features: &hal::Features,
     entry_point: &str,
-) -> Result<String, pso::CreationError> {
+) -> Result<String, device::ShaderError> {
     let mut compile_options = hlsl::CompilerOptions::default();
     compile_options.shader_model = shader_model;
     compile_options.vertex.invert_y = !features.contains(hal::Features::NDC_Y_UP);
@@ -399,7 +400,6 @@ fn translate_spirv(
             SpirvErrorCode::CompilationError(msg) => msg,
             SpirvErrorCode::Unhandled => "Unknown compile error".into(),
         };
-        error!("SPIR-V compile failed: {:?}", msg);
-        pso::CreationError::Other
+        device::ShaderError::CompilationFailed(msg)
     })
 }

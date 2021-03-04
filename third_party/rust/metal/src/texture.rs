@@ -7,7 +7,7 @@
 
 use super::*;
 
-use cocoa_foundation::foundation::NSUInteger;
+use cocoa_foundation::foundation::{NSRange, NSUInteger};
 use objc::runtime::{NO, YES};
 
 #[repr(u64)]
@@ -98,16 +98,6 @@ impl TextureDescriptorRef {
 
     pub fn set_mipmap_level_count(&self, count: NSUInteger) {
         unsafe { msg_send![self, setMipmapLevelCount: count] }
-    }
-
-    pub fn set_mipmap_level_count_for_size(&self, size: MTLSize) {
-        let MTLSize {
-            width,
-            height,
-            depth,
-        } = size;
-        let count = (width.max(height).max(depth) as f64).log2().ceil() as u64;
-        self.set_mipmap_level_count(count);
     }
 
     pub fn sample_count(&self) -> NSUInteger {
@@ -321,8 +311,8 @@ impl TextureRef {
         &self,
         pixel_format: MTLPixelFormat,
         texture_type: MTLTextureType,
-        mipmap_levels: crate::NSRange,
-        slices: crate::NSRange,
+        mipmap_levels: NSRange,
+        slices: NSRange,
     ) -> Texture {
         unsafe {
             msg_send![self, newTextureViewWithPixelFormat:pixel_format

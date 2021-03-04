@@ -3,13 +3,19 @@ mod instructions;
 mod layout;
 mod writer;
 
-pub use spirv::Capability;
-pub use writer::{Error, Writer};
+#[cfg(test)]
+mod test_framework;
 
-use spirv::Word;
+#[cfg(test)]
+mod layout_tests;
+
+pub use writer::Writer;
+
+use spirv::*;
 
 bitflags::bitflags! {
     pub struct WriterFlags: u32 {
+        const NONE = 0x0;
         const DEBUG = 0x1;
     }
 }
@@ -37,41 +43,10 @@ struct LogicalLayout {
     function_definitions: Vec<Word>,
 }
 
-struct Instruction {
-    op: spirv::Op,
+pub(self) struct Instruction {
+    op: Op,
     wc: u32,
     type_id: Option<Word>,
     result_id: Option<Word>,
     operands: Vec<Word>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Options {
-    /// (Major, Minor) target version of the SPIR-V.
-    pub lang_version: (u8, u8),
-    /// Configuration flags for the writer.
-    pub flags: WriterFlags,
-    /// Set of SPIR-V capabilities.
-    pub capabilities: crate::FastHashSet<Capability>,
-}
-
-impl Default for Options {
-    fn default() -> Self {
-        Options {
-            lang_version: (1, 0),
-            flags: WriterFlags::empty(),
-            capabilities: Default::default(),
-        }
-    }
-}
-
-pub fn write_vec(
-    module: &crate::Module,
-    analysis: &crate::proc::analyzer::Analysis,
-    options: &Options,
-) -> Result<Vec<u32>, Error> {
-    let mut words = Vec::new();
-    let mut w = Writer::new(options)?;
-    w.write(module, analysis, &mut words)?;
-    Ok(words)
 }

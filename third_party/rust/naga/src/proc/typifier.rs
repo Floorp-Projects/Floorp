@@ -30,13 +30,12 @@ impl Clone for Resolution {
                     width,
                 },
                 #[allow(clippy::panic)]
-                _ => panic!("Unexpected clone type: {:?}", v),
+                _ => panic!("Unepxected clone type: {:?}", v),
             }),
         }
     }
 }
 
-/// Helper processor that derives the types of all expressions.
 #[derive(Debug)]
 pub struct Typifier {
     resolutions: Vec<Resolution>,
@@ -61,10 +60,6 @@ pub enum ResolveError {
         right: String,
     },
 }
-
-#[derive(Clone, Debug, Error, PartialEq)]
-#[error("Type resolution of {0:?} failed")]
-pub struct TypifyError(Handle<crate::Expression>, #[source] ResolveError);
 
 pub struct ResolveContext<'a> {
     pub constants: &'a Arena<crate::Constant>,
@@ -99,10 +94,10 @@ impl Typifier {
     pub fn get_handle(
         &self,
         expr_handle: Handle<crate::Expression>,
-    ) -> Result<Handle<crate::Type>, &crate::TypeInner> {
+    ) -> Option<Handle<crate::Type>> {
         match self.resolutions[expr_handle.index()] {
-            Resolution::Handle(ty_handle) => Ok(ty_handle),
-            Resolution::Value(ref inner) => Err(inner),
+            Resolution::Handle(ty_handle) => Some(ty_handle),
+            Resolution::Value(_) => None,
         }
     }
 
@@ -158,10 +153,7 @@ impl Typifier {
                     })
                 }
                 crate::TypeInner::Array { base, .. } => Resolution::Handle(base),
-                crate::TypeInner::Struct {
-                    block: _,
-                    ref members,
-                } => {
+                crate::TypeInner::Struct { ref members } => {
                     let member = members
                         .get(index as usize)
                         .ok_or(ResolveError::InvalidAccessIndex)?;
@@ -174,15 +166,7 @@ impl Typifier {
                     })
                 }
             },
-            crate::Expression::Constant(h) => match ctx.constants[h].inner {
-                crate::ConstantInner::Scalar { width, ref value } => {
-                    Resolution::Value(crate::TypeInner::Scalar {
-                        kind: value.scalar_kind(),
-                        width,
-                    })
-                }
-                crate::ConstantInner::Composite { ty, components: _ } => Resolution::Handle(ty),
-            },
+            crate::Expression::Constant(h) => Resolution::Handle(ctx.constants[h].ty),
             crate::Expression::Compose { ty, .. } => Resolution::Handle(ty),
             crate::Expression::FunctionArgument(index) => {
                 Resolution::Handle(ctx.arguments[index as usize].ty)
@@ -210,35 +194,6 @@ impl Typifier {
                 }),
                 _ => unreachable!(),
             },
-            crate::Expression::ImageQuery { image, query } => Resolution::Value(match query {
-                crate::ImageQuery::Size { level: _ } => match *self.get(image, types) {
-                    crate::TypeInner::Image { dim, .. } => match dim {
-                        crate::ImageDimension::D1 => crate::TypeInner::Scalar {
-                            kind: crate::ScalarKind::Sint,
-                            width: 4,
-                        },
-                        crate::ImageDimension::D2 => crate::TypeInner::Vector {
-                            size: crate::VectorSize::Bi,
-                            kind: crate::ScalarKind::Sint,
-                            width: 4,
-                        },
-                        crate::ImageDimension::D3 | crate::ImageDimension::Cube => {
-                            crate::TypeInner::Vector {
-                                size: crate::VectorSize::Tri,
-                                kind: crate::ScalarKind::Sint,
-                                width: 4,
-                            }
-                        }
-                    },
-                    _ => unreachable!(),
-                },
-                crate::ImageQuery::NumLevels
-                | crate::ImageQuery::NumLayers
-                | crate::ImageQuery::NumSamples => crate::TypeInner::Scalar {
-                    kind: crate::ScalarKind::Sint,
-                    width: 4,
-                },
-            }),
             crate::Expression::Unary { expr, .. } => self.resolutions[expr.index()].clone(),
             crate::Expression::Binary { op, left, right } => match op {
                 crate::BinaryOperator::Add
@@ -250,38 +205,30 @@ impl Typifier {
                     let ty_right = self.get(right, types);
                     if ty_left == ty_right {
                         self.resolutions[left.index()].clone()
-                    } else if let crate::TypeInner::Scalar { .. } = *ty_left {
-                        self.resolutions[right.index()].clone()
                     } else if let crate::TypeInner::Scalar { .. } = *ty_right {
                         self.resolutions[left.index()].clone()
-                    } else if let crate::TypeInner::Matrix {
-                        columns: _,
-                        rows,
-                        width,
-                    } = *ty_left
-                    {
-                        Resolution::Value(crate::TypeInner::Vector {
-                            size: rows,
-                            kind: crate::ScalarKind::Float,
-                            width,
-                        })
-                    } else if let crate::TypeInner::Matrix {
-                        columns,
-                        rows: _,
-                        width,
-                    } = *ty_right
-                    {
-                        Resolution::Value(crate::TypeInner::Vector {
-                            size: columns,
-                            kind: crate::ScalarKind::Float,
-                            width,
-                        })
                     } else {
-                        return Err(ResolveError::IncompatibleOperands {
-                            op: "x".to_string(),
-                            left: format!("{:?}", ty_left),
-                            right: format!("{:?}", ty_right),
-                        });
+                        match *ty_left {
+                            crate::TypeInner::Scalar { .. } => {
+                                self.resolutions[right.index()].clone()
+                            }
+                            crate::TypeInner::Matrix {
+                                columns,
+                                rows: _,
+                                width,
+                            } => Resolution::Value(crate::TypeInner::Vector {
+                                size: columns,
+                                kind: crate::ScalarKind::Float,
+                                width,
+                            }),
+                            _ => {
+                                return Err(ResolveError::IncompatibleOperands {
+                                    op: "x".to_string(),
+                                    left: format!("{:?}", ty_left),
+                                    right: format!("{:?}", ty_right),
+                                })
+                            }
+                        }
                     }
                 }
                 crate::BinaryOperator::Equal
@@ -291,23 +238,7 @@ impl Typifier {
                 | crate::BinaryOperator::Greater
                 | crate::BinaryOperator::GreaterEqual
                 | crate::BinaryOperator::LogicalAnd
-                | crate::BinaryOperator::LogicalOr => {
-                    let kind = crate::ScalarKind::Bool;
-                    let width = 1;
-                    let inner = match *self.get(left, types) {
-                        crate::TypeInner::Scalar { .. } => crate::TypeInner::Scalar { kind, width },
-                        crate::TypeInner::Vector { size, .. } => {
-                            crate::TypeInner::Vector { size, kind, width }
-                        }
-                        ref other => {
-                            return Err(ResolveError::IncompatibleOperand {
-                                op: "logical".to_string(),
-                                operand: format!("{:?}", other),
-                            })
-                        }
-                    };
-                    Resolution::Value(inner)
-                }
+                | crate::BinaryOperator::LogicalOr => self.resolutions[left.index()].clone(),
                 crate::BinaryOperator::And
                 | crate::BinaryOperator::ExclusiveOr
                 | crate::BinaryOperator::InclusiveOr
@@ -315,156 +246,38 @@ impl Typifier {
                 | crate::BinaryOperator::ShiftRight => self.resolutions[left.index()].clone(),
             },
             crate::Expression::Select { accept, .. } => self.resolutions[accept.index()].clone(),
-            crate::Expression::Derivative { axis: _, expr } => {
-                self.resolutions[expr.index()].clone()
-            }
-            crate::Expression::Relational { .. } => Resolution::Value(crate::TypeInner::Scalar {
-                kind: crate::ScalarKind::Bool,
-                width: 4,
-            }),
-            crate::Expression::Math {
-                fun,
-                arg,
-                arg1,
-                arg2: _,
-            } => {
-                use crate::MathFunction as Mf;
-                match fun {
-                    // comparison
-                    Mf::Abs |
-                    Mf::Min |
-                    Mf::Max |
-                    Mf::Clamp |
-                    // trigonometry
-                    Mf::Cos |
-                    Mf::Cosh |
-                    Mf::Sin |
-                    Mf::Sinh |
-                    Mf::Tan |
-                    Mf::Tanh |
-                    Mf::Acos |
-                    Mf::Asin |
-                    Mf::Atan |
-                    Mf::Atan2 |
-                    // decomposition
-                    Mf::Ceil |
-                    Mf::Floor |
-                    Mf::Round |
-                    Mf::Fract |
-                    Mf::Trunc |
-                    Mf::Modf |
-                    Mf::Frexp |
-                    Mf::Ldexp |
-                    // exponent
-                    Mf::Exp |
-                    Mf::Exp2 |
-                    Mf::Log |
-                    Mf::Log2 |
-                    Mf::Pow => self.resolutions[arg.index()].clone(),
-                    // geometry
-                    Mf::Dot => match *self.get(arg, types) {
-                        crate::TypeInner::Vector {
-                            kind,
-                            size: _,
-                            width,
-                        } => Resolution::Value(crate::TypeInner::Scalar { kind, width }),
-                        ref other => {
-                            return Err(ResolveError::IncompatibleOperand {
-                                op: "dot product".to_string(),
-                                operand: format!("{:?}", other),
-                            })
-                        }
-                    },
-                    Mf::Outer => {
-                        let arg1 = arg1.ok_or_else(|| ResolveError::IncompatibleOperand {
-                            op: "outer product".to_string(),
-                            operand: "".to_string(),
-                        })?;
-                        match (self.get(arg, types), self.get(arg1,types)) {
-                            (&crate::TypeInner::Vector {kind: _, size: columns,width}, &crate::TypeInner::Vector{ size: rows, .. }) => Resolution::Value(crate::TypeInner::Matrix { columns, rows, width }),
-                            (left, right) => {
-                                return Err(ResolveError::IncompatibleOperands {
-                                    op: "outer product".to_string(),
-                                    left: format!("{:?}", left),
-                                    right: format!("{:?}", right),
-                                })
-                            }
-                        }
-                    },
-                    Mf::Cross => self.resolutions[arg.index()].clone(),
-                    Mf::Distance |
-                    Mf::Length => match *self.get(arg, types) {
-                        crate::TypeInner::Scalar {width,kind} |
-                        crate::TypeInner::Vector {width,kind,size:_} => Resolution::Value(crate::TypeInner::Scalar { kind, width }),
-                        ref other => {
-                            return Err(ResolveError::IncompatibleOperand {
-                                op: format!("{:?}", fun),
-                                operand: format!("{:?}", other),
-                            })
-                        }
-                    },
-                    Mf::Normalize |
-                    Mf::FaceForward |
-                    Mf::Reflect => self.resolutions[arg.index()].clone(),
-                    // computational
-                    Mf::Sign |
-                    Mf::Fma |
-                    Mf::Mix |
-                    Mf::Step |
-                    Mf::SmoothStep |
-                    Mf::Sqrt |
-                    Mf::InverseSqrt => self.resolutions[arg.index()].clone(),
-                    Mf::Transpose => match *self.get(arg, types) {
-                        crate::TypeInner::Matrix {
-                            columns,
-                            rows,
-                            width,
-                        } => Resolution::Value(crate::TypeInner::Matrix {
-                            columns: rows,
-                            rows: columns,
-                            width,
-                        }),
-                        ref other => {
-                            return Err(ResolveError::IncompatibleOperand {
-                                op: "transpose".to_string(),
-                                operand: format!("{:?}", other),
-                            })
-                        }
-                    },
-                    Mf::Inverse => match *self.get(arg, types) {
-                        crate::TypeInner::Matrix {
-                            columns,
-                            rows,
-                            width,
-                        } if columns == rows => Resolution::Value(crate::TypeInner::Matrix {
-                            columns,
-                            rows,
-                            width,
-                        }),
-                        ref other => {
-                            return Err(ResolveError::IncompatibleOperand {
-                                op: "inverse".to_string(),
-                                operand: format!("{:?}", other),
-                            })
-                        }
-                    },
-                    Mf::Determinant => match *self.get(arg, types) {
-                        crate::TypeInner::Matrix {
-                            width,
-                            ..
-                        } => Resolution::Value(crate::TypeInner::Scalar { kind: crate::ScalarKind::Float, width }),
-                        ref other => {
-                            return Err(ResolveError::IncompatibleOperand {
-                                op: "determinant".to_string(),
-                                operand: format!("{:?}", other),
-                            })
-                        }
-                    },
-                    // bits
-                    Mf::CountOneBits |
-                    Mf::ReverseBits => self.resolutions[arg.index()].clone(),
+            crate::Expression::Intrinsic { .. } => unimplemented!(),
+            crate::Expression::Transpose(expr) => match *self.get(expr, types) {
+                crate::TypeInner::Matrix {
+                    columns,
+                    rows,
+                    width,
+                } => Resolution::Value(crate::TypeInner::Matrix {
+                    columns: rows,
+                    rows: columns,
+                    width,
+                }),
+                ref other => {
+                    return Err(ResolveError::IncompatibleOperand {
+                        op: "transpose".to_string(),
+                        operand: format!("{:?}", other),
+                    })
                 }
-            }
+            },
+            crate::Expression::DotProduct(left_expr, _) => match *self.get(left_expr, types) {
+                crate::TypeInner::Vector {
+                    kind,
+                    size: _,
+                    width,
+                } => Resolution::Value(crate::TypeInner::Scalar { kind, width }),
+                ref other => {
+                    return Err(ResolveError::IncompatibleOperand {
+                        op: "dot product".to_string(),
+                        operand: format!("{:?}", other),
+                    })
+                }
+            },
+            crate::Expression::CrossProduct(_, _) => unimplemented!(),
             crate::Expression::As {
                 expr,
                 kind,
@@ -485,11 +298,45 @@ impl Typifier {
                     })
                 }
             },
+            crate::Expression::Derivative { .. } => unimplemented!(),
             crate::Expression::Call {
-                function,
+                origin: crate::FunctionOrigin::External(ref name),
+                ref arguments,
+            } => match name.as_str() {
+                "distance" | "length" => match *self.get(arguments[0], types) {
+                    crate::TypeInner::Vector { kind, width, .. }
+                    | crate::TypeInner::Scalar { kind, width } => {
+                        Resolution::Value(crate::TypeInner::Scalar { kind, width })
+                    }
+                    ref other => {
+                        return Err(ResolveError::IncompatibleOperand {
+                            op: name.clone(),
+                            operand: format!("{:?}", other),
+                        })
+                    }
+                },
+                "dot" => match *self.get(arguments[0], types) {
+                    crate::TypeInner::Vector { kind, width, .. } => {
+                        Resolution::Value(crate::TypeInner::Scalar { kind, width })
+                    }
+                    ref other => {
+                        return Err(ResolveError::IncompatibleOperand {
+                            op: name.clone(),
+                            operand: format!("{:?}", other),
+                        })
+                    }
+                },
+                //Note: `cross` is here too, we still need to figure out what to do with it
+                "abs" | "atan2" | "cos" | "sin" | "floor" | "inverse" | "normalize" | "min"
+                | "max" | "reflect" | "pow" | "clamp" | "fclamp" | "mix" | "step"
+                | "smoothstep" | "cross" => self.resolutions[arguments[0].index()].clone(),
+                _ => return Err(ResolveError::FunctionNotDefined { name: name.clone() }),
+            },
+            crate::Expression::Call {
+                origin: crate::FunctionOrigin::Local(handle),
                 arguments: _,
             } => {
-                let ty = ctx.functions[function]
+                let ty = ctx.functions[handle]
                     .return_type
                     .ok_or(ResolveError::FunctionReturnsVoid)?;
                 Resolution::Handle(ty)
@@ -531,14 +378,47 @@ impl Typifier {
         expressions: &Arena<crate::Expression>,
         types: &Arena<crate::Type>,
         ctx: &ResolveContext,
-    ) -> Result<(), TypifyError> {
+    ) -> Result<(), ResolveError> {
         self.clear();
-        for (handle, expr) in expressions.iter() {
-            let resolution = self
-                .resolve_impl(expr, types, ctx)
-                .map_err(|err| TypifyError(handle, err))?;
+        for (_, expr) in expressions.iter() {
+            let resolution = self.resolve_impl(expr, types, ctx)?;
             self.resolutions.push(resolution);
         }
         Ok(())
+    }
+}
+
+pub fn check_constant_type(inner: &crate::ConstantInner, type_inner: &crate::TypeInner) -> bool {
+    match (inner, type_inner) {
+        (
+            crate::ConstantInner::Sint(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Sint,
+                width: _,
+            },
+        ) => true,
+        (
+            crate::ConstantInner::Uint(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Uint,
+                width: _,
+            },
+        ) => true,
+        (
+            crate::ConstantInner::Float(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Float,
+                width: _,
+            },
+        ) => true,
+        (
+            crate::ConstantInner::Bool(_),
+            crate::TypeInner::Scalar {
+                kind: crate::ScalarKind::Bool,
+                width: _,
+            },
+        ) => true,
+        (crate::ConstantInner::Composite(_inner), _) => true, // TODO recursively check composite types
+        (_, _) => false,
     }
 }

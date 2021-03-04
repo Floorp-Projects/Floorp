@@ -31,7 +31,6 @@ mod heap;
 mod linear;
 mod slab;
 mod usage;
-mod util;
 
 pub use {
     self::{allocator::*, block::MemoryBlock, config::*, error::*, usage::*},

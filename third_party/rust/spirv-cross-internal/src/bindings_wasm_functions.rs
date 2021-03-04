@@ -152,8 +152,11 @@ extern "C" {
     ) -> u32;
 
     #[wasm_bindgen(js_namespace = sc_internal)]
-    fn _sc_internal_compiler_set_entry_point(compiler: u32, name: u32, execution_model: u32)
-        -> u32;
+    fn _sc_internal_compiler_set_entry_point(
+        compiler: u32,
+        name: u32,
+        execution_model: u32,
+    ) -> u32;
 
     #[wasm_bindgen(js_namespace = sc_internal)]
     fn _sc_internal_compiler_compile(compiler: u32, shader: u32) -> u32;
