@@ -14,12 +14,14 @@ namespace mozilla::dom::quota {
 
 DirectoryLockImpl::DirectoryLockImpl(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
-    const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
+    const Nullable<PersistenceType>& aPersistenceType,
+    const nsACString& aSuffix, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
     const bool aExclusive, const bool aInternal,
     const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag)
     : mQuotaManager(std::move(aQuotaManager)),
       mPersistenceType(aPersistenceType),
+      mSuffix(aSuffix),
       mGroup(aGroup),
       mOriginScope(aOriginScope),
       mClientType(aClientType),
@@ -209,7 +211,8 @@ RefPtr<ClientDirectoryLock> DirectoryLockImpl::Specialize(
 
   RefPtr<DirectoryLockImpl> lock = Create(
       mQuotaManager, Nullable<PersistenceType>(aPersistenceType),
-      aOriginMetadata.mGroup, OriginScope::FromOrigin(aOriginMetadata.mOrigin),
+      aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
+      OriginScope::FromOrigin(aOriginMetadata.mOrigin),
       Nullable<Client::Type>(aClientType),
       /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes);
   if (NS_WARN_IF(!Overlaps(*lock))) {
