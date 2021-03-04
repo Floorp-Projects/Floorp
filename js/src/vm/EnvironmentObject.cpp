@@ -936,15 +936,15 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::create(
+BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::create(
     JSContext* cx, Handle<LexicalScope*> scope, HandleObject enclosing,
     gc::InitialHeap heap) {
   cx->check(enclosing);
   MOZ_ASSERT(scope->hasEnvironment());
 
   RootedShape shape(cx, scope->environmentShape());
-  LexicalEnvironmentObject* env =
-      createTemplateObject(cx, shape, enclosing, heap);
+  auto* env = static_cast<BlockLexicalEnvironmentObject*>(
+      createTemplateObject(cx, shape, enclosing, heap));
   if (!env) {
     return nullptr;
   }
@@ -956,12 +956,12 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::create(
     env->initSlot(slot, MagicValue(JS_UNINITIALIZED_LEXICAL));
   }
 
-  env->initScopeUnchecked(scope);
+  env->initScope(scope);
   return env;
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::createForFrame(
+BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::createForFrame(
     JSContext* cx, Handle<LexicalScope*> scope, AbstractFramePtr frame) {
   RootedObject enclosing(cx, frame.environmentChain());
   return create(cx, scope, enclosing, gc::DefaultHeap);
@@ -1012,7 +1012,8 @@ NonSyntacticLexicalEnvironmentObject::create(JSContext* cx,
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::createHollowForDebug(
+BlockLexicalEnvironmentObject*
+BlockLexicalEnvironmentObject::createHollowForDebug(
     JSContext* cx, Handle<LexicalScope*> scope) {
   MOZ_ASSERT(!scope->hasEnvironment());
 
@@ -1046,16 +1047,17 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createHollowForDebug(
     return nullptr;
   }
 
-  env->initScopeUnchecked(scope);
-  return env;
+  auto blockEnv = &env->as<BlockLexicalEnvironmentObject>();
+  blockEnv->initScope(scope);
+  return blockEnv;
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::clone(
-    JSContext* cx, Handle<LexicalEnvironmentObject*> env) {
+BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::clone(
+    JSContext* cx, Handle<BlockLexicalEnvironmentObject*> env) {
   Rooted<LexicalScope*> scope(cx, &env->scope());
   RootedObject enclosing(cx, &env->enclosingEnvironment());
-  Rooted<LexicalEnvironmentObject*> copy(
+  Rooted<BlockLexicalEnvironmentObject*> copy(
       cx, create(cx, scope, enclosing, gc::DefaultHeap));
   if (!copy) {
     return nullptr;
@@ -1072,8 +1074,8 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::clone(
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::recreate(
-    JSContext* cx, Handle<LexicalEnvironmentObject*> env) {
+BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::recreate(
+    JSContext* cx, Handle<BlockLexicalEnvironmentObject*> env) {
   Rooted<LexicalScope*> scope(cx, &env->scope());
   RootedObject enclosing(cx, &env->enclosingEnvironment());
   return create(cx, scope, enclosing, gc::DefaultHeap);
@@ -1129,7 +1131,7 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
   MOZ_ASSERT(bi.done());
 #endif
 
-  LexicalEnvironmentObject* obj = LexicalEnvironmentObject::create(
+  BlockLexicalEnvironmentObject* obj = BlockLexicalEnvironmentObject::create(
       cx, scope.as<LexicalScope>(), enclosing, heap);
   if (!obj) {
     return nullptr;
@@ -1304,12 +1306,12 @@ void EnvironmentIter::settle() {
       !frame_.hasInitialEnvironment()) {
     // Skip until we're at the enclosing scope of the script.
     while (si_.scope() != frame_.script()->enclosingScope()) {
-      if (env_->is<LexicalEnvironmentObject>() &&
-          !env_->as<LexicalEnvironmentObject>().isExtensible() &&
-          &env_->as<LexicalEnvironmentObject>().scope() == si_.scope()) {
+      if (env_->is<BlockLexicalEnvironmentObject>() &&
+          &env_->as<BlockLexicalEnvironmentObject>().scope() == si_.scope()) {
         MOZ_ASSERT(si_.kind() == ScopeKind::NamedLambda ||
                    si_.kind() == ScopeKind::StrictNamedLambda);
-        env_ = &env_->as<EnvironmentObject>().enclosingEnvironment();
+        env_ =
+            &env_->as<BlockLexicalEnvironmentObject>().enclosingEnvironment();
       }
       incrementScopeIter();
     }
@@ -1330,7 +1332,7 @@ void EnvironmentIter::settle() {
     if (hasSyntacticEnvironment()) {
       Scope* scope = si_.scope();
       if (scope->is<LexicalScope>()) {
-        MOZ_ASSERT(scope == &env_->as<LexicalEnvironmentObject>().scope());
+        MOZ_ASSERT(scope == &env_->as<BlockLexicalEnvironmentObject>().scope());
       } else if (scope->is<FunctionScope>()) {
         MOZ_ASSERT(scope->as<FunctionScope>().script() ==
                    env_->as<CallObject>()
@@ -1449,7 +1451,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
   /*
    * This function handles access to unaliased locals/formals. Since they
    * are unaliased, the values of these variables are not stored in the
-   * slots of the normal CallObject and LexicalEnvironmentObject
+   * slots of the normal CallObject and BlockLexicalEnvironmentObject
    * environments and thus must be recovered from somewhere else:
    *  + if the invocation for which the env was created is still executing,
    *    there is a JS frame live on the stack holding the values;
@@ -1789,8 +1791,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
   }
 
   static bool isNonExtensibleLexicalEnvironment(const JSObject& env) {
-    return env.is<LexicalEnvironmentObject>() &&
-           !env.as<LexicalEnvironmentObject>().isExtensible();
+    return env.is<BlockLexicalEnvironmentObject>();
   }
 
   static Scope* getEnvironmentScope(const JSObject& env) {
@@ -1803,7 +1804,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       return script ? script->bodyScope() : nullptr;
     }
     if (isNonExtensibleLexicalEnvironment(env)) {
-      return &env.as<LexicalEnvironmentObject>().scope();
+      return &env.as<BlockLexicalEnvironmentObject>().scope();
     }
     if (env.is<VarEnvironmentObject>()) {
       return &env.as<VarEnvironmentObject>().scope();
@@ -2489,8 +2490,8 @@ bool DebugEnvironmentProxy::isOptimizedOut() const {
   }
 
   if (e.is<LexicalEnvironmentObject>()) {
-    return !e.as<LexicalEnvironmentObject>().isExtensible() &&
-           !e.as<LexicalEnvironmentObject>().scope().hasEnvironment();
+    return e.is<BlockLexicalEnvironmentObject>() &&
+           !e.as<BlockLexicalEnvironmentObject>().scope().hasEnvironment();
   }
 
   if (e.is<CallObject>()) {
@@ -2749,9 +2750,9 @@ void DebugEnvironments::takeFrameSnapshot(
     uint32_t frameSlotStart;
     uint32_t frameSlotEnd;
 
-    if (debugEnv->environment().is<LexicalEnvironmentObject>()) {
+    if (debugEnv->environment().is<BlockLexicalEnvironmentObject>()) {
       LexicalScope* scope =
-          &debugEnv->environment().as<LexicalEnvironmentObject>().scope();
+          &debugEnv->environment().as<BlockLexicalEnvironmentObject>().scope();
       frameSlotStart = scope->firstFrameSlot();
       frameSlotEnd = scope->nextFrameSlot();
     } else if (debugEnv->environment().is<VarEnvironmentObject>()) {
@@ -2892,7 +2893,7 @@ void DebugEnvironments::onPopGeneric(JSContext* cx, const EnvironmentIter& ei) {
 }
 
 void DebugEnvironments::onPopLexical(JSContext* cx, const EnvironmentIter& ei) {
-  onPopGeneric<LexicalEnvironmentObject, LexicalScope>(cx, ei);
+  onPopGeneric<BlockLexicalEnvironmentObject, LexicalScope>(cx, ei);
 }
 
 void DebugEnvironments::onPopVar(JSContext* cx, const EnvironmentIter& ei) {
@@ -3138,8 +3139,9 @@ static DebugEnvironmentProxy* GetDebugEnvironmentForMissing(
     debugEnv = DebugEnvironmentProxy::create(cx, *callobj, enclosingDebug);
   } else if (ei.scope().is<LexicalScope>()) {
     Rooted<LexicalScope*> lexicalScope(cx, &ei.scope().as<LexicalScope>());
-    Rooted<LexicalEnvironmentObject*> env(
-        cx, LexicalEnvironmentObject::createHollowForDebug(cx, lexicalScope));
+    Rooted<BlockLexicalEnvironmentObject*> env(
+        cx,
+        BlockLexicalEnvironmentObject::createHollowForDebug(cx, lexicalScope));
     if (!env) {
       return nullptr;
     }
@@ -3811,8 +3813,9 @@ static MOZ_MUST_USE bool CheckVarNameConflictsInEnv(JSContext* cx,
     return true;
   }
 
-  if (env->isSyntactic() && !env->isGlobal() &&
-      env->scope().kind() == ScopeKind::SimpleCatch) {
+  if (env->is<BlockLexicalEnvironmentObject>() &&
+      env->as<BlockLexicalEnvironmentObject>().scope().kind() ==
+          ScopeKind::SimpleCatch) {
     // Annex B.3.5 allows redeclaring simple (non-destructured) catch parameters
     // with var declarations.
     return true;

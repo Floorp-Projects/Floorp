@@ -162,9 +162,10 @@ inline void InterpreterFrame::popOffEnvironmentChain() {
 }
 
 inline void InterpreterFrame::replaceInnermostEnvironment(
-    EnvironmentObject& env) {
-  MOZ_ASSERT(env.enclosingEnvironment() ==
-             envChain_->as<EnvironmentObject>().enclosingEnvironment());
+    BlockLexicalEnvironmentObject& env) {
+  MOZ_ASSERT(
+      env.enclosingEnvironment() ==
+      envChain_->as<BlockLexicalEnvironmentObject>().enclosingEnvironment());
   envChain_ = &env;
 }
 
