@@ -79,10 +79,12 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *    |   |   |
  *    |   |   +--ModuleEnvironmentObject       Module top-level environment
  *    |   |   |
- *    |   |   +--LexicalEnvironmentObject      Lexical (block) environment
+ *    |   |   +--LexicalEnvironmentObject
  *    |   |   |   |
- *    |   |   |   +--NamedLambdaObject             Environment for `(function f(){...})`
- *    |   |   |   |                                    containing only a binding for `f`
+ *    |   |   |   +--BlockLexicalEnvironmentObject     Blocks and such: syntactic, non-extensible
+ *    |   |   |   |   |
+ *    |   |   |   |   +--NamedLambdaObject                 Environment for `(function f(){...})`
+ *    |   |   |   |                                        containing only a binding for `f`
  *    |   |   |   +--ExtensibleLexicalEnvironmentObject
  *    |   |   |       |
  *    |   |   |       +--GlobalLexicalEnvironmentObject
@@ -95,8 +97,8 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *    |   |   |
  *    |   |   +--NonSyntacticVariablesObject   See "Non-syntactic environments" below
  *    |   |
- *    |   +--GlobalObject                  The global environment
- *    |
+ *    |   +--GlobalObject                  The global environment (dynamically presents its
+ *    |                                    properties as bindings)
  *    +--ProxyObject
  *        |
  *        +--DebugEnvironmentProxy         Environment for debugger eval-in-frame
@@ -128,10 +130,11 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * necessary to maintain invariants about the environment chain: non-syntactic
  * environments may not occur in arbitrary positions in the chain.
  *
- * CallObject, ModuleEnvironmentObject, and LexicalEnvironmentObject always
- * represent syntactic environments. (CallObject is considered syntactic even
- * when it's used as the scope of strict eval code.) WithEnvironmentObject is
- * syntactic when it's used to represent the scope of a `with` block.
+ * CallObject, ModuleEnvironmentObject, BlockLexicalEnvironmentObject, and
+ * GlobalLexicalEnvironmentObject always represent syntactic
+ * environments. (CallObject is considered syntactic even when it's used as the
+ * scope of strict eval code.) WithEnvironmentObject is syntactic when it's
+ * used to represent the scope of a `with` block.
  *
  *
  * Non-syntactic Environments
@@ -515,6 +518,9 @@ class WasmFunctionCallObject : public EnvironmentObject {
   }
 };
 
+// Abstract base class for environments that can contain let/const bindings,
+// plus a few other kinds of environments, such as `catch` blocks, that have
+// similar behavior.
 class LexicalEnvironmentObject : public EnvironmentObject {
  protected:
   // Global and non-syntactic lexical environments need to store a 'this'
@@ -536,46 +542,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
                                                         HandleObject enclosing,
                                                         gc::InitialHeap heap);
 
- private:
-  void initScopeUnchecked(LexicalScope* scope) {
-    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, PrivateGCThingValue(scope));
-  }
-
-  void initScope(LexicalScope* scope) {
-    MOZ_ASSERT(!isGlobal());
-    MOZ_ASSERT(isSyntactic());
-    initScopeUnchecked(scope);
-  }
-
  public:
-  static LexicalEnvironmentObject* create(JSContext* cx,
-                                          Handle<LexicalScope*> scope,
-                                          HandleObject enclosing,
-                                          gc::InitialHeap heap);
-  static LexicalEnvironmentObject* createForFrame(JSContext* cx,
-                                                  Handle<LexicalScope*> scope,
-                                                  AbstractFramePtr frame);
-  static LexicalEnvironmentObject* createHollowForDebug(
-      JSContext* cx, Handle<LexicalScope*> scope);
-
-  // Create a new LexicalEnvironmentObject with the same enclosing env and
-  // variable values as this.
-  static LexicalEnvironmentObject* clone(JSContext* cx,
-                                         Handle<LexicalEnvironmentObject*> env);
-
-  // Create a new LexicalEnvironmentObject with the same enclosing env as
-  // this, with all variables uninitialized.
-  static LexicalEnvironmentObject* recreate(
-      JSContext* cx, Handle<LexicalEnvironmentObject*> env);
-
-  // For non-extensible lexical environments, the LexicalScope that created
-  // this environment. Otherwise asserts.
-  LexicalScope& scope() const {
-    Value v = getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT);
-    MOZ_ASSERT(!isExtensible() && v.isPrivateGCThing());
-    return *static_cast<LexicalScope*>(v.toGCThing());
-  }
-
   // Is this the global lexical scope?
   bool isGlobal() const { return enclosingEnvironment().is<GlobalObject>(); }
 
@@ -588,7 +555,49 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   bool isSyntactic() const { return !isExtensible() || isGlobal(); }
 };
 
-class NamedLambdaObject : public LexicalEnvironmentObject {
+// A non-extensible lexical environment.
+//
+// Used for blocks (ScopeKind::Lexical) and several other scope kinds,
+// including Catch, NamedLambda, FunctionLexical, and ClassBody.
+class BlockLexicalEnvironmentObject : public LexicalEnvironmentObject {
+ public:
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
+
+  static BlockLexicalEnvironmentObject* create(JSContext* cx,
+                                               Handle<LexicalScope*> scope,
+                                               HandleObject enclosing,
+                                               gc::InitialHeap heap);
+
+  static BlockLexicalEnvironmentObject* createForFrame(
+      JSContext* cx, Handle<LexicalScope*> scope, AbstractFramePtr frame);
+
+  static BlockLexicalEnvironmentObject* createHollowForDebug(
+      JSContext* cx, Handle<LexicalScope*> scope);
+
+  // Create a new BlockLexicalEnvironmentObject with the same enclosing env and
+  // variable values as this.
+  static BlockLexicalEnvironmentObject* clone(
+      JSContext* cx, Handle<BlockLexicalEnvironmentObject*> env);
+
+  // Create a new BlockLexicalEnvironmentObject with the same enclosing env as
+  // this, with all variables uninitialized.
+  static BlockLexicalEnvironmentObject* recreate(
+      JSContext* cx, Handle<BlockLexicalEnvironmentObject*> env);
+
+  // The LexicalScope that created this environment.
+  LexicalScope& scope() const {
+    Value v = getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT);
+    MOZ_ASSERT(!isExtensible() && v.isPrivateGCThing());
+    return *static_cast<LexicalScope*>(v.toGCThing());
+  }
+
+ private:
+  void initScope(LexicalScope* scope) {
+    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, PrivateGCThingValue(scope));
+  }
+};
+
+class NamedLambdaObject : public BlockLexicalEnvironmentObject {
   static NamedLambdaObject* create(JSContext* cx, HandleFunction callee,
                                    HandleFunction replacement,
                                    HandleObject enclosing,
@@ -1116,6 +1125,12 @@ inline bool JSObject::is<js::EnvironmentObject>() const {
 }
 
 template <>
+inline bool JSObject::is<js::BlockLexicalEnvironmentObject>() const {
+  return is<js::LexicalEnvironmentObject>() &&
+         !as<js::LexicalEnvironmentObject>().isExtensible();
+}
+
+template <>
 inline bool JSObject::is<js::ExtensibleLexicalEnvironmentObject>() const {
   return is<js::LexicalEnvironmentObject>() &&
          as<js::LexicalEnvironmentObject>().isExtensible();
@@ -1135,9 +1150,8 @@ inline bool JSObject::is<js::NonSyntacticLexicalEnvironmentObject>() const {
 
 template <>
 inline bool JSObject::is<js::NamedLambdaObject>() const {
-  return is<js::LexicalEnvironmentObject>() &&
-         !is<js::ExtensibleLexicalEnvironmentObject>() &&
-         as<js::LexicalEnvironmentObject>().scope().isNamedLambda();
+  return is<js::BlockLexicalEnvironmentObject>() &&
+         as<js::BlockLexicalEnvironmentObject>().scope().isNamedLambda();
 }
 
 template <>

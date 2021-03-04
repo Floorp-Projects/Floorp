@@ -111,9 +111,10 @@ static inline void AssertScopeMatchesEnvironment(Scope* scope,
         case ScopeKind::StrictNamedLambda:
         case ScopeKind::FunctionLexical:
         case ScopeKind::ClassBody:
-          MOZ_ASSERT(&env->as<LexicalEnvironmentObject>().scope() ==
+          MOZ_ASSERT(&env->as<BlockLexicalEnvironmentObject>().scope() ==
                      si.scope());
-          env = &env->as<LexicalEnvironmentObject>().enclosingEnvironment();
+          env =
+              &env->as<BlockLexicalEnvironmentObject>().enclosingEnvironment();
           break;
 
         case ScopeKind::With:
@@ -262,8 +263,8 @@ bool InterpreterFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
 
 bool InterpreterFrame::pushLexicalEnvironment(JSContext* cx,
                                               Handle<LexicalScope*> scope) {
-  LexicalEnvironmentObject* env =
-      LexicalEnvironmentObject::createForFrame(cx, scope, this);
+  BlockLexicalEnvironmentObject* env =
+      BlockLexicalEnvironmentObject::createForFrame(cx, scope, this);
   if (!env) {
     return false;
   }
@@ -273,9 +274,10 @@ bool InterpreterFrame::pushLexicalEnvironment(JSContext* cx,
 }
 
 bool InterpreterFrame::freshenLexicalEnvironment(JSContext* cx) {
-  Rooted<LexicalEnvironmentObject*> env(
-      cx, &envChain_->as<LexicalEnvironmentObject>());
-  LexicalEnvironmentObject* fresh = LexicalEnvironmentObject::clone(cx, env);
+  Rooted<BlockLexicalEnvironmentObject*> env(
+      cx, &envChain_->as<BlockLexicalEnvironmentObject>());
+  BlockLexicalEnvironmentObject* fresh =
+      BlockLexicalEnvironmentObject::clone(cx, env);
   if (!fresh) {
     return false;
   }
@@ -285,9 +287,10 @@ bool InterpreterFrame::freshenLexicalEnvironment(JSContext* cx) {
 }
 
 bool InterpreterFrame::recreateLexicalEnvironment(JSContext* cx) {
-  Rooted<LexicalEnvironmentObject*> env(
-      cx, &envChain_->as<LexicalEnvironmentObject>());
-  LexicalEnvironmentObject* fresh = LexicalEnvironmentObject::recreate(cx, env);
+  Rooted<BlockLexicalEnvironmentObject*> env(
+      cx, &envChain_->as<BlockLexicalEnvironmentObject>());
+  BlockLexicalEnvironmentObject* fresh =
+      BlockLexicalEnvironmentObject::recreate(cx, env);
   if (!fresh) {
     return false;
   }
