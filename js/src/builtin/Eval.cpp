@@ -472,10 +472,8 @@ JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
       ObjectRealm::get(varEnv).getNonSyntacticLexicalEnvironment(varEnv));
   MOZ_DIAGNOSTIC_ASSERT(scriptArg->noScriptRval());
 
-  Rooted<ExtensibleLexicalEnvironmentObject*> env(cx);
-  if (auto* envPtr = JS_ExtensibleLexicalEnvironment(varEnv)) {
-    env = &envPtr->as<ExtensibleLexicalEnvironmentObject>();
-  }
+  Rooted<ExtensibleLexicalEnvironmentObject*> env(
+      cx, ExtensibleLexicalEnvironmentObject::forVarEnvironment(varEnv));
 
   // If the Gecko subscript loader specifies target objects, we need to add
   // them to the environment. These are added after the NSVO environment.

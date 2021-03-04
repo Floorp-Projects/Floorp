@@ -619,6 +619,11 @@ class ExtensibleLexicalEnvironmentObject : public LexicalEnvironmentObject {
  public:
   JSObject* thisObject() const;
 
+  // For a given global object or JSMEnvironment `obj`, return the associated
+  // global lexical or non-syntactic lexical environment, where top-level `let`
+  // bindings are added.
+  static ExtensibleLexicalEnvironmentObject* forVarEnvironment(JSObject* obj);
+
  protected:
   void initThisObject(JSObject* obj) {
     MOZ_ASSERT(isGlobal() || !isSyntactic());
