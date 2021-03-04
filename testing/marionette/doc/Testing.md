@@ -103,8 +103,9 @@ start Fennec for you:
 
     % ./mach marionette-test --emulator --app='fennec' --address=127.0.0.1:2828
 
-To connect to an already-running Fennec in an already running emulator or on a device, you will need to enable Marionette manually by setting the browser preference
-`marionette.enabled` set to true in the Fennec profile.
+To connect to an already-running Fennec in an emulator or on a device,
+you will need to have it started with the `-marionette` command line argument,
+or by setting the environment variable `MOZ_MARIONETTE=1` for the process.
 
 Make sure port 2828 is forwarded:
 
@@ -122,8 +123,8 @@ starting Fennec with the correct prefs. (You may need to run
     % ./mach marionette-test --emulator --app='fennec' --address=127.0.0.1:2828 --startup-timeout=300
 
 If you need to troubleshoot the Marionette connection, the most basic check is
-to start Fennec, make sure the `marionette.enabled` browser preference is
-true and port 2828 is forwarded, then see if you get any response from
+to start Fennec with `-marionette` or the environment variable `MOZ_MARIONETTE=1`,
+make sure that the port 2828 is forwarded, and then see if you get any response from
 Marionette when you connect manually:
 
     % telnet 127.0.0.1:2828

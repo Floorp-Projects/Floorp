@@ -5,19 +5,6 @@ There are a couple of preferences associated with the Gecko remote
 protocol:
 
 
-`marionette.enabled`
---------------------
-
-Starts and stops the Marionette server.  This will cause a TCP
-server to bind to the port defined by `marionette.port`.
-
-If Gecko has not been started with the `-marionette` flag or the
-`MOZ_MARIONETTE` environment variable, changing this preference
-will have no effect.  For Marionette to be enabled, either one of
-these options _must_ be given to Firefox or Fennec for Marionette
-to start.
-
-
 `marionette.debugging.clicktostart`
 -----------------------------------
 
