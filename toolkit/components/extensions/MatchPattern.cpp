@@ -642,10 +642,17 @@ void MatchGlob::Init(JSContext* aCx, const nsAString& aGlob,
   nsAutoString escaped;
   escaped.Append('^');
 
+  // For any continuous string of * (and ? if aAllowQuestion) wildcards, only
+  // emit the first *, later ones are redundant, and can hang regex matching.
+  bool emittedFirstStar = false;
+
   for (uint32_t i = 0; i < mGlob.Length(); i++) {
     auto c = mGlob[i];
     if (c == '*') {
-      escaped.AppendLiteral(".*");
+      if (!emittedFirstStar) {
+        escaped.AppendLiteral(".*");
+        emittedFirstStar = true;
+      }
     } else if (c == '?' && aAllowQuestion) {
       escaped.Append('.');
     } else {
@@ -653,6 +660,9 @@ void MatchGlob::Init(JSContext* aCx, const nsAString& aGlob,
         escaped.Append('\\');
       }
       escaped.Append(c);
+
+      // String of wildcards broken by a non-wildcard char, reset tracking flag.
+      emittedFirstStar = false;
     }
   }
 
