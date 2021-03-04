@@ -111,10 +111,11 @@ class AppLinksFeatureTest {
         val intent: Intent = mock()
         val appIntent = AppIntentState(intentUrl, intent)
         store.dispatch(ContentAction.UpdateAppIntentAction(tab.id, appIntent)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
 
         val tabWithPendingAppIntent = store.state.findTab(tab.id)!!
         assertNotNull(tabWithPendingAppIntent.content.appIntent)
+
+        testDispatcher.advanceUntilIdle()
         verify(feature).handleAppIntent(tabWithPendingAppIntent, intentUrl, intent)
 
         store.waitUntilIdle()
