@@ -2435,6 +2435,12 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
     }
+
+    if (saveIncrementalBytecode && assertEqBytecode) {
+      JS_ReportErrorASCII(
+          cx, "saveIncrementalBytecode cannot be used with assertEqBytecode.");
+      return false;
+    }
   }
 
   if (envChain.length() != 0) {
