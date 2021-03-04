@@ -85,8 +85,6 @@ class GeckoInstance(object):
         # that may cause unexpected test timeouts.
         "idle.lastDailyNotification": -1,
         "javascript.options.showInConsole": True,
-        # (deprecated and can be removed when Firefox 60 ships)
-        "marionette.defaultPrefs.enabled": True,
         # Disable recommended automation prefs in CI
         "marionette.prefs.recommended": False,
         # Disable download and usage of OpenH264, and Widevine plugins

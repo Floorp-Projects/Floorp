@@ -129,20 +129,6 @@ class MarionetteBranch extends Branch {
   }
 
   /**
-   * The `marionette.enabled` preference.  When it returns true,
-   * this signifies that the Marionette server is running.
-   *
-   * @return {boolean}
-   */
-  get enabled() {
-    return this.get("enabled", false);
-  }
-
-  set enabled(isEnabled) {
-    this.set("enabled", isEnabled);
-  }
-
-  /**
    * The `marionette.debugging.clicktostart` preference delays
    * server startup until a modal dialogue has been clicked to allow
    * time for user to set breakpoints in the Browser Toolbox.

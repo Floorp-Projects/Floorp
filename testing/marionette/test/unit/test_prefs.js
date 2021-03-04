@@ -108,7 +108,6 @@ add_test(function test_EnvironmentPrefs_from() {
 });
 
 add_test(function test_MarionettePrefs_getters() {
-  equal(false, MarionettePrefs.enabled);
   equal(false, MarionettePrefs.clickToStart);
   equal(false, MarionettePrefs.contentListener);
   equal(2828, MarionettePrefs.port);
