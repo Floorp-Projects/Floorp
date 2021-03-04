@@ -26,44 +26,14 @@ using namespace mozilla;
 using mozilla::dom::Event;
 using mozilla::dom::CallerType;
 
-nsMenuItemX::nsMenuItemX() {
-  mType = eRegularMenuItemType;
-  mNativeMenuItem = nil;
-  mMenuParent = nullptr;
-  mMenuGroupOwner = nullptr;
-  mIsChecked = false;
+nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
+                         nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode)
+    : mType(aItemType), mMenuParent(aParent), mMenuGroupOwner(aMenuGroupOwner) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   MOZ_COUNT_CTOR(nsMenuItemX);
-}
 
-nsMenuItemX::~nsMenuItemX() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // autorelease the native menu item so that anything else happening to this
-  // object happens before the native menu item actually dies
-  [mNativeMenuItem autorelease];
-
-  if (mContent) {
-    mMenuGroupOwner->UnregisterForContentChanges(mContent);
-  }
-  if (mCommandElement) {
-    mMenuGroupOwner->UnregisterForContentChanges(mCommandElement);
-  }
-
-  MOZ_COUNT_DTOR(nsMenuItemX);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
-                             nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mType = aItemType;
-  mMenuParent = aParent;
   mContent = aNode;
-
-  mMenuGroupOwner = aMenuGroupOwner;
   NS_ASSERTION(mMenuGroupOwner, "No menu owner given, must have one!");
 
   mMenuGroupOwner->RegisterForContentChanges(mContent, this);
@@ -120,7 +90,24 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
   mIcon = MakeUnique<nsMenuItemIconX>(this, mContent, mNativeMenuItem);
 
-  return NS_OK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+nsMenuItemX::~nsMenuItemX() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // autorelease the native menu item so that anything else happening to this
+  // object happens before the native menu item actually dies
+  [mNativeMenuItem autorelease];
+
+  if (mContent) {
+    mMenuGroupOwner->UnregisterForContentChanges(mContent);
+  }
+  if (mCommandElement) {
+    mMenuGroupOwner->UnregisterForContentChanges(mCommandElement);
+  }
+
+  MOZ_COUNT_DTOR(nsMenuItemX);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -369,7 +356,4 @@ void nsMenuItemX::ObserveContentInserted(dom::Document* aDocument, nsIContent* a
   }
 }
 
-void nsMenuItemX::SetupIcon() {
-  MOZ_RELEASE_ASSERT(mIcon, "should have been created by nsMenuItemX::Create");
-  mIcon->SetupIcon();
-}
+void nsMenuItemX::SetupIcon() { mIcon->SetupIcon(); }
