@@ -475,19 +475,14 @@ bool nsMenuBarX::PerformKeyEquivalent(NSEvent* aEvent) {
   return [mNativeMenu performSuperKeyEquivalent:aEvent];
 }
 
-// Hide the item in the menu by setting the 'hidden' attribute. Returns it in |aOutHiddenNode| so
-// the caller can hang onto it if they so choose. It is acceptable to pass nsull
-// for |aOutHiddenNode| if the caller doesn't care about the hidden node.
-void nsMenuBarX::HideItem(mozilla::dom::Document* aDocument, const nsAString& aID,
-                          nsIContent** aOutHiddenNode) {
-  nsCOMPtr<Element> menuElement = aDocument->GetElementById(aID);
+// Hide the item in the menu by setting the 'hidden' attribute. Returns it so
+// the caller can hang onto it if they so choose.
+RefPtr<Element> nsMenuBarX::HideItem(mozilla::dom::Document* aDocument, const nsAString& aID) {
+  RefPtr<Element> menuElement = aDocument->GetElementById(aID);
   if (menuElement) {
     menuElement->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, u"true"_ns, false);
-    if (aOutHiddenNode) {
-      *aOutHiddenNode = menuElement.get();
-      NS_IF_ADDREF(*aOutHiddenNode);
-    }
   }
+  return menuElement;
 }
 
 // Do what is necessary to conform to the Aqua guidelines for menus.
@@ -495,33 +490,33 @@ void nsMenuBarX::AquifyMenuBar() {
   RefPtr<mozilla::dom::Document> domDoc = mContent->GetComposedDoc();
   if (domDoc) {
     // remove the "About..." item and its separator
-    HideItem(domDoc, u"aboutSeparator"_ns, nullptr);
-    HideItem(domDoc, u"aboutName"_ns, getter_AddRefs(mAboutItemContent));
+    HideItem(domDoc, u"aboutSeparator"_ns);
+    mAboutItemContent = HideItem(domDoc, u"aboutName"_ns);
     if (!sAboutItemContent) {
       sAboutItemContent = mAboutItemContent;
     }
 
     // remove quit item and its separator
-    HideItem(domDoc, u"menu_FileQuitSeparator"_ns, nullptr);
-    HideItem(domDoc, u"menu_FileQuitItem"_ns, getter_AddRefs(mQuitItemContent));
+    HideItem(domDoc, u"menu_FileQuitSeparator"_ns);
+    mQuitItemContent = HideItem(domDoc, u"menu_FileQuitItem"_ns);
     if (!sQuitItemContent) {
       sQuitItemContent = mQuitItemContent;
     }
 
     // remove prefs item and its separator, but save off the pref content node
     // so we can invoke its command later.
-    HideItem(domDoc, u"menu_PrefsSeparator"_ns, nullptr);
-    HideItem(domDoc, u"menu_preferences"_ns, getter_AddRefs(mPrefItemContent));
+    HideItem(domDoc, u"menu_PrefsSeparator"_ns);
+    mPrefItemContent = HideItem(domDoc, u"menu_preferences"_ns);
     if (!sPrefItemContent) {
       sPrefItemContent = mPrefItemContent;
     }
 
     // hide items that we use for the Application menu
-    HideItem(domDoc, u"menu_mac_services"_ns, nullptr);
-    HideItem(domDoc, u"menu_mac_hide_app"_ns, nullptr);
-    HideItem(domDoc, u"menu_mac_hide_others"_ns, nullptr);
-    HideItem(domDoc, u"menu_mac_show_all"_ns, nullptr);
-    HideItem(domDoc, u"menu_mac_touch_bar"_ns, nullptr);
+    HideItem(domDoc, u"menu_mac_services"_ns);
+    HideItem(domDoc, u"menu_mac_hide_app"_ns);
+    HideItem(domDoc, u"menu_mac_hide_others"_ns);
+    HideItem(domDoc, u"menu_mac_show_all"_ns);
+    HideItem(domDoc, u"menu_mac_touch_bar"_ns);
   }
 }
 

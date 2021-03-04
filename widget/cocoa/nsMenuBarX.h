@@ -85,9 +85,9 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
 
   // The following content nodes have been removed from the menu system.
   // We save them here for use in command handling.
-  nsCOMPtr<nsIContent> mAboutItemContent;
-  nsCOMPtr<nsIContent> mPrefItemContent;
-  nsCOMPtr<nsIContent> mQuitItemContent;
+  RefPtr<nsIContent> mAboutItemContent;
+  RefPtr<nsIContent> mPrefItemContent;
+  RefPtr<nsIContent> mQuitItemContent;
 
   // nsChangeObserver
   NS_DECL_CHANGEOBSERVER
@@ -117,8 +117,7 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   void ConstructFallbackNativeMenus();
   void InsertMenuAtIndex(mozilla::UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex);
   void RemoveMenuAtIndex(uint32_t aIndex);
-  void HideItem(mozilla::dom::Document* aDocument, const nsAString& aID,
-                nsIContent** aOutHiddenNode);
+  RefPtr<mozilla::dom::Element> HideItem(mozilla::dom::Document* aDocument, const nsAString& aID);
   void AquifyMenuBar();
   NSMenuItem* CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString& aNodeID, SEL aAction,
                                       int aTag, NativeMenuItemTarget* aTarget);
