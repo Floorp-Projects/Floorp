@@ -1030,7 +1030,8 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
     // See if we can place the frame. If we can't fit it, then we
     // return now.
     bool optionalBreakAfterFits;
-    NS_ASSERTION(isText || !reflowInputHolder->IsFloating(),
+    NS_ASSERTION(isText || !reflowInputHolder->mStyleDisplay->IsFloating(
+                               reflowInputHolder->mFrame),
                  "How'd we get a floated inline frame? "
                  "The frame ctor should've dealt with this.");
     if (CanPlaceFrame(pfd, notSafeToBreak, continuingTextRun,
@@ -1100,7 +1101,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
 
 void nsLineLayout::AllowForStartMargin(PerFrameData* pfd,
                                        ReflowInput& aReflowInput) {
-  NS_ASSERTION(!aReflowInput.IsFloating(),
+  NS_ASSERTION(!aReflowInput.mStyleDisplay->IsFloating(aReflowInput.mFrame),
                "How'd we get a floated inline frame? "
                "The frame ctor should've dealt with this.");
 

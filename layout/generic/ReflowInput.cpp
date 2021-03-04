@@ -2068,10 +2068,10 @@ void ReflowInput::InitConstraints(
     nsPresContext* aPresContext, const Maybe<LogicalSize>& aContainingBlockSize,
     const Maybe<LogicalMargin>& aBorder, const Maybe<LogicalMargin>& aPadding,
     LayoutFrameType aFrameType) {
-  MOZ_ASSERT(
-      !IsFloating() || (mStyleDisplay->mDisplay != StyleDisplay::MozBox &&
-                        mStyleDisplay->mDisplay != StyleDisplay::MozInlineBox),
-      "Please don't try to float a -moz-box or a -moz-inline-box");
+  MOZ_ASSERT(!mStyleDisplay->IsFloating(mFrame) ||
+                 (mStyleDisplay->mDisplay != StyleDisplay::MozBox &&
+                  mStyleDisplay->mDisplay != StyleDisplay::MozInlineBox),
+             "Please don't try to float a -moz-box or a -moz-inline-box");
 
   WritingMode wm = GetWritingMode();
   LogicalSize cbSize = aContainingBlockSize.valueOr(
@@ -2896,10 +2896,6 @@ void ReflowInput::ComputeMinMaxValues(const LogicalSize& aCBSize) {
   if (ComputedMinBSize() > ComputedMaxBSize()) {
     ComputedMaxBSize() = ComputedMinBSize();
   }
-}
-
-bool ReflowInput::IsFloating() const {
-  return mStyleDisplay->IsFloating(mFrame);
 }
 
 bool ReflowInput::IsInternalTableFrame() const {

@@ -407,8 +407,6 @@ struct ReflowInput : public SizeComputationInput {
   const nsStylePadding* mStylePadding = nullptr;
   const nsStyleText* mStyleText = nullptr;
 
-  bool IsFloating() const;
-
   // a frame (e.g. nsTableCellFrame) which may need to generate a special
   // reflow for percent bsize calculations
   nsIPercentBSizeObserver* mPercentBSizeObserver = nullptr;
