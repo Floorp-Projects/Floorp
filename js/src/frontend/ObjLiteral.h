@@ -111,7 +111,7 @@ class JSONPrinter;
 
 namespace frontend {
 struct CompilationAtomCache;
-struct BaseCompilationStencil;
+struct CompilationStencil;
 class StencilXDR;
 }  // namespace frontend
 
@@ -380,9 +380,9 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
   void dump(JSONPrinter& json,
-            const frontend::BaseCompilationStencil* stencil) const;
+            const frontend::CompilationStencil* stencil) const;
   void dumpFields(JSONPrinter& json,
-                  const frontend::BaseCompilationStencil* stencil) const;
+                  const frontend::CompilationStencil* stencil) const;
 #endif
 
  private:
@@ -686,9 +686,9 @@ class ObjLiteralStencil {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
   void dump(JSONPrinter& json,
-            const frontend::BaseCompilationStencil* stencil) const;
+            const frontend::CompilationStencil* stencil) const;
   void dumpFields(JSONPrinter& json,
-                  const frontend::BaseCompilationStencil* stencil) const;
+                  const frontend::CompilationStencil* stencil) const;
 
 #endif
 };
