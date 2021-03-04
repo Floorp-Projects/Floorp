@@ -8,11 +8,12 @@
 #define DOM_QUOTA_ORIGINMETADATA_H_
 
 #include <utility>
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "nsString.h"
 
 namespace mozilla::dom::quota {
 
-struct OriginMetadata {
+struct PrincipalMetadata {
   nsCString mSuffix;
   nsCString mGroup;
   nsCString mOrigin;
@@ -20,12 +21,29 @@ struct OriginMetadata {
   // These explicit constructors exist to prevent accidental aggregate
   // initialization which could for example initialize mSuffix as group and
   // mGroup as origin (if only two string arguments are used).
-  OriginMetadata() = default;
+  PrincipalMetadata() = default;
 
-  OriginMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin)
+  PrincipalMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin)
       : mSuffix{std::move(aSuffix)},
         mGroup{std::move(aGroup)},
         mOrigin{std::move(aOrigin)} {}
+};
+
+struct OriginMetadata : public PrincipalMetadata {
+  PersistenceType mPersistenceType;
+
+  OriginMetadata() = default;
+
+  OriginMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin,
+                 PersistenceType aPersistenceType)
+      : PrincipalMetadata(std::move(aSuffix), std::move(aGroup),
+                          std::move(aOrigin)),
+        mPersistenceType(aPersistenceType) {}
+
+  OriginMetadata(PrincipalMetadata&& aPrincipalMetadata,
+                 PersistenceType aPersistenceType)
+      : PrincipalMetadata(std::move(aPrincipalMetadata)),
+        mPersistenceType(aPersistenceType) {}
 };
 
 }  // namespace mozilla::dom::quota

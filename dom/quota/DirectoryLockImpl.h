@@ -191,7 +191,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   quota::OriginMetadata OriginMetadata() const override {
     MOZ_DIAGNOSTIC_ASSERT(!mGroup.IsEmpty());
 
-    return quota::OriginMetadata{mSuffix, mGroup, nsCString(Origin())};
+    return quota::OriginMetadata{mSuffix, mGroup, nsCString(Origin()),
+                                 GetPersistenceType()};
   }
 
   const nsACString& Origin() const override {

@@ -375,7 +375,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   uint64_t GetGroupUsage(const nsACString& aGroup);
 
-  uint64_t GetOriginUsage(const OriginMetadata& aOriginMetadata);
+  uint64_t GetOriginUsage(const PrincipalMetadata& aPrincipalMetadata);
 
   void NotifyStoragePressure(uint64_t aUsage);
 
@@ -392,13 +392,13 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static bool IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo);
 
-  static OriginMetadata GetInfoFromValidatedPrincipalInfo(
+  static PrincipalMetadata GetInfoFromValidatedPrincipalInfo(
       const PrincipalInfo& aPrincipalInfo);
 
   static nsAutoCString GetOriginFromValidatedPrincipalInfo(
       const PrincipalInfo& aPrincipalInfo);
 
-  static Result<OriginMetadata, nsresult> GetInfoFromPrincipal(
+  static Result<PrincipalMetadata, nsresult> GetInfoFromPrincipal(
       nsIPrincipal* aPrincipal);
 
   static Result<nsAutoCString, nsresult> GetOriginFromPrincipal(
@@ -409,7 +409,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static nsLiteralCString GetOriginForChrome();
 
-  static OriginMetadata GetInfoForChrome();
+  static PrincipalMetadata GetInfoForChrome();
 
   static bool IsOriginInternal(const nsACString& aOrigin);
 
