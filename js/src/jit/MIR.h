@@ -3172,6 +3172,8 @@ class MGetInlinedArgument : public MVariadicInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 class MGetArgumentsObjectArg : public MUnaryInstruction,
