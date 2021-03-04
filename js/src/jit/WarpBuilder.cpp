@@ -1771,8 +1771,7 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
   bool constructing = IsConstructOp(op);
   bool ignoresReturnValue = (op == JSOp::CallIgnoresRv || loc.resultIsPopped());
 
-  CallInfo callInfo(alloc(), loc.toRawBytecode(), constructing,
-                    ignoresReturnValue);
+  CallInfo callInfo(alloc(), constructing, ignoresReturnValue);
   if (!callInfo.init(current, argc)) {
     return false;
   }
@@ -2827,8 +2826,7 @@ bool WarpBuilder::build_FunWithProto(BytecodeLocation loc) {
 
 bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
   bool constructing = false;
-  CallInfo callInfo(alloc(), loc.toRawBytecode(), constructing,
-                    loc.resultIsPopped());
+  CallInfo callInfo(alloc(), constructing, loc.resultIsPopped());
   callInfo.initForSpreadCall(current);
 
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
@@ -3118,9 +3116,8 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
 
   if (const auto* inliningSnapshot = getOpSnapshot<WarpInlinedCall>(loc)) {
     // The CallInfo will be initialized by the transpiler.
-    jsbytecode* pc = loc.toRawBytecode();
-    bool ignoresRval = BytecodeIsPopped(pc);
-    CallInfo callInfo(alloc(), pc, /*constructing =*/false, ignoresRval);
+    bool ignoresRval = BytecodeIsPopped(loc.toRawBytecode());
+    CallInfo callInfo(alloc(), /*constructing =*/false, ignoresRval);
     callInfo.markAsInlined();
 
     if (!TranspileCacheIRToMIR(this, loc, inliningSnapshot->cacheIRSnapshot(),

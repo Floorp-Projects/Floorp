@@ -41,7 +41,6 @@ class MOZ_STACK_CLASS CallInfo {
 
   bool inlined_ = false;
   bool setter_ = false;
-  bool apply_;
 
  public:
   // For some argument formats (normal calls, FunCall, FunApplyArgs in an
@@ -58,12 +57,11 @@ class MOZ_STACK_CLASS CallInfo {
   ArgFormat argFormat_ = ArgFormat::Standard;
 
  public:
-  CallInfo(TempAllocator& alloc, jsbytecode* pc, bool constructing,
-           bool ignoresReturnValue)
+  CallInfo(TempAllocator& alloc, bool constructing, bool ignoresReturnValue,
+           jsbytecode* pc = nullptr)
       : args_(alloc),
         constructing_(constructing),
-        ignoresReturnValue_(ignoresReturnValue),
-        apply_(JSOp(*pc) == JSOp::FunApply) {}
+        ignoresReturnValue_(ignoresReturnValue) {}
 
   [[nodiscard]] bool init(MBasicBlock* current, uint32_t argc) {
     MOZ_ASSERT(args_.empty());
@@ -124,19 +122,23 @@ class MOZ_STACK_CLASS CallInfo {
     MOZ_ALWAYS_TRUE(args_.append(rhs));
   }
 
+  void initForApplyInlinedArgs(MDefinition* callee, MDefinition* thisVal,
+                               uint32_t numActuals) {
+    MOZ_ASSERT(args_.empty());
+    MOZ_ASSERT(!constructing_);
+
+    setCallee(callee);
+    setThis(thisVal);
+
+    MOZ_ASSERT(numActuals <= ArgumentsObject::MaxInlinedArgs);
+    static_assert(ArgumentsObject::MaxInlinedArgs <= decltype(args_)::InlineLength,
+                  "Actual arguments can be infallibly stored inline");
+    MOZ_ALWAYS_TRUE(args_.reserve(numActuals));
+  }
+
   void popCallStack(MBasicBlock* current) { current->popn(numFormals()); }
 
   [[nodiscard]] bool pushCallStack(MBasicBlock* current) {
-    // Ensure sufficient space in the slots: needed for inlining from FunApply.
-    if (apply_) {
-      uint32_t depth = current->stackDepth() + numFormals();
-      if (depth > current->nslots()) {
-        if (!current->increaseSlots(depth - current->nslots())) {
-          return false;
-        }
-      }
-    }
-
     current->push(callee());
     current->push(thisArg());
 
@@ -170,6 +172,11 @@ class MOZ_STACK_CLASS CallInfo {
   MDefinition* getArg(uint32_t i) const {
     MOZ_ASSERT(i < argc());
     return args_[i];
+  }
+
+  void initArg(uint32_t i, MDefinition* def) {
+    MOZ_ASSERT(i == argc());
+    args_.infallibleAppend(def);
   }
 
   void setArg(uint32_t i, MDefinition* def) {
@@ -234,11 +241,95 @@ class MOZ_STACK_CLASS CallInfo {
 
   MDefinition* arrayArg() const {
     MOZ_ASSERT(argFormat_ == ArgFormat::Array);
-    MOZ_ASSERT_IF(!apply_, argc() == 1 + uint32_t(constructing_));
-    MOZ_ASSERT_IF(apply_, argc() == 2 && !constructing_);
+    // The array argument for a spread call or FunApply is always the last
+    // argument, unless the spread call is constructing, in which case the
+    // last argument is NewTarget, and the array argument is second-last.
     return getArg(argc() - 1 - constructing_);
   }
 };
+
+template <typename Undef>
+MCall* MakeCall(TempAllocator& alloc, Undef addUndefined, CallInfo& callInfo,
+                bool needsThisCheck, WrappedFunction* target, bool isDOMCall) {
+  MOZ_ASSERT(callInfo.argFormat() == CallInfo::ArgFormat::Standard);
+  MOZ_ASSERT_IF(needsThisCheck, !target);
+  MOZ_ASSERT_IF(isDOMCall, target->jitInfo()->type() == JSJitInfo::Method);
+
+  DOMObjectKind objKind = DOMObjectKind::Unknown;
+  if (isDOMCall) {
+    const JSClass* clasp = callInfo.thisArg()->toGuardToClass()->getClass();
+    MOZ_ASSERT(clasp->isDOMClass());
+    if (clasp->isNativeObject()) {
+      objKind = DOMObjectKind::Native;
+    } else {
+      MOZ_ASSERT(clasp->isProxyObject());
+      objKind = DOMObjectKind::Proxy;
+    }
+  }
+
+  uint32_t targetArgs = callInfo.argc();
+
+  // Collect number of missing arguments provided that the target is
+  // scripted. Native functions are passed an explicit 'argc' parameter.
+  if (target && target->hasJitEntry()) {
+    targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
+  }
+
+  MCall* call =
+      MCall::New(alloc, target, targetArgs + 1 + callInfo.constructing(),
+                 callInfo.argc(), callInfo.constructing(),
+                 callInfo.ignoresReturnValue(), isDOMCall, objKind);
+  if (!call) {
+    return nullptr;
+  }
+
+  if (callInfo.constructing()) {
+    // Note: setThis should have been done by the caller of makeCall.
+    if (needsThisCheck) {
+      call->setNeedsThisCheck();
+    }
+
+    // Pass |new.target|
+    call->addArg(targetArgs + 1, callInfo.getNewTarget());
+  }
+
+  // Explicitly pad any missing arguments with |undefined|.
+  // This permits skipping the argumentsRectifier.
+  MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(), target->hasJitEntry());
+
+  MConstant* undef = nullptr;
+  for (uint32_t i = targetArgs; i > callInfo.argc(); i--) {
+    if (!undef) {
+      undef = addUndefined();
+    }
+    if (!alloc.ensureBallast()) {
+      return nullptr;
+    }
+    call->addArg(i, undef);
+  }
+
+  // Add explicit arguments.
+  // Skip addArg(0) because it is reserved for |this|.
+  for (int32_t i = callInfo.argc() - 1; i >= 0; i--) {
+    call->addArg(i + 1, callInfo.getArg(i));
+  }
+
+  if (isDOMCall) {
+    // Now that we've told it about all the args, compute whether it's movable
+    call->computeMovable();
+  }
+
+  // Pass |this| and callee.
+  call->addArg(0, callInfo.thisArg());
+  call->initCallee(callInfo.callee());
+
+  if (target) {
+    // The callee must be a JSFunction so we don't need a Class check.
+    call->disableClassCheck();
+  }
+
+  return call;
+}
 
 // Base class for code sharing between WarpBuilder and WarpCacheIRTranspiler.
 // Because this code is used by WarpCacheIRTranspiler we should

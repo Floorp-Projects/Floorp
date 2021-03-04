@@ -13,6 +13,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
+#include "jit/WarpBuilderShared.h"
 #include "vm/ArgumentsObject.h"
 
 #include "vm/JSObject-inl.h"
@@ -1292,12 +1293,12 @@ bool ArgumentsReplacer::escapes(MInstruction* ins) {
       // This is a replaceable consumer.
       case MDefinition::Opcode::ArgumentsObjectLength:
       case MDefinition::Opcode::GetArgumentsObjectArg:
+      case MDefinition::Opcode::ApplyArgsObj:
         break;
 
       // This is a replaceable consumer that is not yet supported
       // for |arguments| of inlined functions.
       case MDefinition::Opcode::LoadArgumentsObjectArg:
-      case MDefinition::Opcode::ApplyArgsObj:
         if (!args_->isCreateArgumentsObject()) {
           return true;
         }
@@ -1511,26 +1512,52 @@ void ArgumentsReplacer::visitApplyArgsObj(MApplyArgsObj* ins) {
     return;
   }
 
-  // TODO: Support inlined arguments.
-  MOZ_ASSERT(!isInlinedArguments());
+  MInstruction* newIns;
+  if (isInlinedArguments()) {
+    auto* actualArgs = args_->toCreateInlinedArgumentsObject();
+    CallInfo callInfo(alloc(), /*constructing=*/false,
+                      ins->ignoresReturnValue());
 
-  auto* numArgs = MArgumentsLength::New(alloc());
-  ins->block()->insertBefore(ins, numArgs);
+    callInfo.initForApplyInlinedArgs(ins->getFunction(), ins->getThis(),
+                                     actualArgs->numActuals());
+    for (uint32_t i = 0; i < actualArgs->numActuals(); i++) {
+      callInfo.initArg(i, actualArgs->getArg(i));
+    }
 
-  // TODO: Should we rename MApplyArgs?
-  auto* apply = MApplyArgs::New(alloc(), ins->getSingleTarget(),
-                                ins->getFunction(), numArgs, ins->getThis());
-  if (!ins->maybeCrossRealm()) {
-    apply->setNotCrossRealm();
+    auto addUndefined = [this, &ins]() -> MConstant* {
+      MConstant* undef = MConstant::New(alloc(), UndefinedValue());
+      ins->block()->insertBefore(ins, undef);
+      return undef;
+    };
+
+    bool needsThisCheck = false;
+    bool isDOMCall = false;
+    auto* call = MakeCall(alloc(), addUndefined, callInfo, needsThisCheck,
+                          ins->getSingleTarget(), isDOMCall);
+    if (!ins->maybeCrossRealm()) {
+      call->setNotCrossRealm();
+    }
+    newIns = call;
+  } else {
+    auto* numArgs = MArgumentsLength::New(alloc());
+    ins->block()->insertBefore(ins, numArgs);
+
+    // TODO: Should we rename MApplyArgs?
+    auto* apply = MApplyArgs::New(alloc(), ins->getSingleTarget(),
+                                  ins->getFunction(), numArgs, ins->getThis());
+    if (!ins->maybeCrossRealm()) {
+      apply->setNotCrossRealm();
+    }
+    if (ins->ignoresReturnValue()) {
+      apply->setIgnoresReturnValue();
+    }
+    newIns = apply;
   }
-  if (ins->ignoresReturnValue()) {
-    apply->setIgnoresReturnValue();
-  }
 
-  ins->block()->insertBefore(ins, apply);
-  ins->replaceAllUsesWith(apply);
+  ins->block()->insertBefore(ins, newIns);
+  ins->replaceAllUsesWith(newIns);
 
-  apply->stealResumePoint(ins);
+  newIns->stealResumePoint(ins);
   ins->block()->discard(ins);
 }
 
