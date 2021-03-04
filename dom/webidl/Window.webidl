@@ -704,12 +704,10 @@ partial interface Window {
   [ChromeOnly]
   readonly attribute boolean isChromeWindow;
 
-#ifdef MOZ_GLEAN
   [ChromeOnly]
   readonly attribute GleanImpl Glean;
   [ChromeOnly]
   readonly attribute GleanPingsImpl GleanPings;
-#endif
 };
 
 partial interface Window {

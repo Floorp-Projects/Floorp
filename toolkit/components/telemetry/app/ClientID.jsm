@@ -14,9 +14,7 @@ const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-if (AppConstants.MOZ_GLEAN) {
-  Cu.importGlobalProperties(["Glean"]);
-}
+Cu.importGlobalProperties(["Glean"]);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "ClientID::";
@@ -479,9 +477,7 @@ var ClientIDImpl = {
 
     this._clientID = id;
 
-    if (AppConstants.MOZ_GLEAN) {
-      Glean.fogValidation.legacyTelemetryClientId.set(this._clientID);
-    }
+    Glean.fogValidation.legacyTelemetryClientId.set(this._clientID);
 
     this._clientIDHash = null;
     Services.prefs.setStringPref(PREF_CACHED_CLIENTID, this._clientID);

@@ -33,9 +33,7 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { SearchTestUtils } = ChromeUtils.import(
   "resource://testing-common/SearchTestUtils.jsm"
 );
-if (AppConstants.MOZ_GLEAN) {
-  Cu.importGlobalProperties(["Glean"]);
-}
+Cu.importGlobalProperties(["Glean"]);
 
 // AttributionCode is only needed for Firefox
 ChromeUtils.defineModuleGetter(
@@ -1069,11 +1067,9 @@ add_task(async function setup() {
   spoofGfxAdapter();
   do_get_profile();
 
-  if (AppConstants.MOZ_GLEAN) {
-    // We need to ensure FOG is initialized, otherwise we will panic trying to get test values.
-    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-    FOG.initializeFOG();
-  }
+  // We need to ensure FOG is initialized, otherwise we will panic trying to get test values.
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.initializeFOG();
 
   // The system add-on must be installed before AddonManager is started.
   const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
@@ -2526,20 +2522,19 @@ if (gIsWindows) {
       checkString(data.system.hdd[k].revision);
       checkString(data.system.hdd[k].type);
     }
-    if (AppConstants.MOZ_GLEAN) {
-      if (data.system.hdd.profile.type == "SSD") {
-        Assert.equal(
-          true,
-          Glean.fogValidation.profileDiskIsSsd.testGetValue(),
-          "SSDness should be recorded in Glean"
-        );
-      } else {
-        Assert.equal(
-          false,
-          Glean.fogValidation.profileDiskIsSsd.testGetValue(),
-          "nonSSDness should be recorded in Glean"
-        );
-      }
+
+    if (data.system.hdd.profile.type == "SSD") {
+      Assert.equal(
+        true,
+        Glean.fogValidation.profileDiskIsSsd.testGetValue(),
+        "SSDness should be recorded in Glean"
+      );
+    } else {
+      Assert.equal(
+        false,
+        Glean.fogValidation.profileDiskIsSsd.testGetValue(),
+        "nonSSDness should be recorded in Glean"
+      );
     }
   });
 

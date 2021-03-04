@@ -76,10 +76,8 @@
 #include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "mozilla/dom/nsCSPContext.h"
-#ifdef MOZ_GLEAN
-#  include "mozilla/glean/bindings/Glean.h"
-#  include "mozilla/glean/bindings/GleanPings.h"
-#endif
+#include "mozilla/glean/bindings/Glean.h"
+#include "mozilla/glean/bindings/GleanPings.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DeferredFinalize.h"
 #include "mozilla/ExtensionPolicyService.h"
@@ -915,12 +913,10 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       indexedDB = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "isSecureContext")) {
       isSecureContext = true;
-#ifdef MOZ_GLEAN
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Glean")) {
       glean = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "GleanPings")) {
       gleanPings = true;
-#endif
 #ifdef MOZ_WEBRTC
     } else if (JS_LinearStringEqualsLiteral(nameStr, "rtcIdentityProvider")) {
       rtcIdentityProvider = true;
@@ -1086,12 +1082,10 @@ bool xpc::GlobalProperties::DefineInXPCComponents(JSContext* cx,
   if (indexedDB && !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
     return false;
 
-#ifdef MOZ_GLEAN
   if (glean && !mozilla::glean::Glean::DefineGlean(cx, obj)) return false;
   if (gleanPings && !mozilla::glean::GleanPings::DefineGleanPings(cx, obj)) {
     return false;
   }
-#endif
 
   return Define(cx, obj);
 }

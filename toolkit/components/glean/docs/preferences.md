@@ -25,15 +25,14 @@ Defaults to 0.
 
 ## Defines
 
-`MOZ_GLEAN`
+`MOZ_GLEAN_ANDROID`
 
-If unset, Glean and FOG are not included in the build.
-Only unset on Android at the moment.
-This define will likely be removed after we sort out how Android and Geckoview will work
+If set, recording Glean metrics are a no-op. Glean will not be initialized.
+Only set on Android.
+This define will be removed after we sort out how Android and Geckoview will work
 (see [bug 1670261](https://bugzilla.mozilla.org/show_bug.cgi?id=1670261)).
-It can be queried in C++ via `#ifdef MOZ_GLEAN`,
-in JS via `AppConstants.MOZ_GLEAN`,
-and Rust via the `gkrust/glean` feature.
+It can be queried in C++ via `#ifndef MOZ_GLEAN_ANDROID`,
+and in JS via `AppConstants.MOZ_GLEAN_ANDROID`.
 
 `MOZILLA_OFFICIAL`
 

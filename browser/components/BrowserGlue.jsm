@@ -2516,12 +2516,10 @@ BrowserGlue.prototype = {
       // pre-init buffer.
       {
         task: () => {
-          if (AppConstants.MOZ_GLEAN) {
-            let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(
-              Ci.nsIFOG
-            );
-            FOG.initializeFOG();
-          }
+          let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(
+            Ci.nsIFOG
+          );
+          FOG.initializeFOG();
         },
       },
 

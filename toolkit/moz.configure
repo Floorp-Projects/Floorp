@@ -2303,13 +2303,12 @@ set_define("MOZ_NEW_NOTIFICATION_STORE", True, when=new_notification_store)
 
 
 @depends(target)
-def glean(target):
-    if target.os != "Android":
-        return True
+def glean_android(target):
+    return target.os == "Android"
 
 
-set_config("MOZ_GLEAN", True, when=glean)
-set_define("MOZ_GLEAN", True, when=glean)
+set_config("MOZ_GLEAN_ANDROID", True, when=glean_android)
+set_define("MOZ_GLEAN_ANDROID", True, when=glean_android)
 
 
 # New Firefox Accounts client implemented in Rust

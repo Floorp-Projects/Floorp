@@ -88,11 +88,10 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesObservers.webidl",
     ]
 
-if CONFIG["MOZ_GLEAN"]:
-    WEBIDL_FILES += [
-        "Glean.webidl",
-        "GleanPings.webidl",
-    ]
+WEBIDL_FILES += [
+    "Glean.webidl",
+    "GleanPings.webidl",
+]
 
 WEBIDL_FILES += [
     "PrioEncoder.webidl",

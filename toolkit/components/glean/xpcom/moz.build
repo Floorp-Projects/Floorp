@@ -4,25 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_GLEAN"]:
-    FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = "xul"
 
-    EXPORTS.mozilla += [
-        "FOG.h",
-    ]
+EXPORTS.mozilla += [
+    "FOG.h",
+]
 
-    UNIFIED_SOURCES += [
-        "FOG.cpp",
-    ]
+UNIFIED_SOURCES += [
+    "FOG.cpp",
+]
 
-    XPCOM_MANIFESTS += ["components.conf"]
+XPCOM_MANIFESTS += ["components.conf"]
 
-    XPIDL_MODULE = "fog"
+XPIDL_MODULE = "fog"
 
-    XPIDL_SOURCES += [
-        "nsIFOG.idl",
-        "nsIGleanMetrics.idl",
-    ]
+XPIDL_SOURCES += [
+    "nsIFOG.idl",
+    "nsIGleanMetrics.idl",
+]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")

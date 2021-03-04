@@ -18,9 +18,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
 #include "mozilla/ContentBlocking.h"
-#ifdef MOZ_GLEAN
-#  include "mozilla/FOGIPC.h"
-#endif
+#include "mozilla/FOGIPC.h"
 #include "GMPServiceChild.h"
 #include "Geolocation.h"
 #include "imgLoader.h"
@@ -4506,9 +4504,7 @@ ContentChild* ContentChild::AsContentChild() { return this; }
 JSActorManager* ContentChild::AsJSActorManager() { return this; }
 
 IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
-#ifdef MOZ_GLEAN
   glean::FlushFOGData(std::move(aResolver));
-#endif
   return IPC_OK();
 }
 

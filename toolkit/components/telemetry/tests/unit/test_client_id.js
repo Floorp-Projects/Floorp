@@ -3,9 +3,7 @@
 
 "use strict";
 
-if (AppConstants.MOZ_GLEAN) {
-  Cu.importGlobalProperties(["Glean"]);
-}
+Cu.importGlobalProperties(["Glean"]);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
@@ -29,11 +27,9 @@ function run_test() {
     "state.json"
   );
 
-  if (AppConstants.MOZ_GLEAN) {
-    // We need to ensure FOG is initialized, otherwise operations will be stuck in the pre-init queue.
-    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-    FOG.initializeFOG();
-  }
+  // We need to ensure FOG is initialized, otherwise operations will be stuck in the pre-init queue.
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.initializeFOG();
 
   Services.prefs.setBoolPref(
     "toolkit.telemetry.testing.overrideProductsCheck",
@@ -88,7 +84,7 @@ add_task(async function test_client_id() {
   let clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
@@ -110,7 +106,7 @@ add_task(async function test_client_id() {
   clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
@@ -130,7 +126,7 @@ add_task(async function test_client_id() {
     clientID = await ClientID.getClientID();
     Assert.equal(typeof clientID, "string");
     Assert.ok(uuidRegex.test(clientID));
-    if (AppConstants.MOZ_GLEAN) {
+    if (!AppConstants.MOZ_GLEAN_ANDROID) {
       Assert.equal(
         Glean.fogValidation.legacyTelemetryClientId.testGetValue(
           "fog-validation"
@@ -149,7 +145,7 @@ add_task(async function test_client_id() {
   await CommonUtils.writeJSON({ clientID: validClientID }, drsPath);
   clientID = await ClientID.getClientID();
   Assert.equal(clientID, validClientID);
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
@@ -165,7 +161,7 @@ add_task(async function test_client_id() {
   await ClientID._reset();
   clientID = await ClientID.getClientID();
   Assert.equal(clientID, validClientID);
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
@@ -210,7 +206,7 @@ add_task(async function test_setCanaryClientIDs() {
   await ClientID.setCanaryClientIDs();
   let clientID = await ClientID.getClientID();
   Assert.equal(KNOWN_UUID, clientID);
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
@@ -226,7 +222,7 @@ add_task(async function test_resetEcosystemClientID() {
   let firstClientID = await ClientID.getClientID();
   let firstEcosystemClientID = await ClientID.getEcosystemClientID();
   Assert.ok(firstClientID);
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
@@ -268,7 +264,7 @@ add_task(async function test_removeClientIDs() {
   Assert.equal(typeof firstEcosystemClientID, "string");
   Assert.ok(uuidRegex.test(firstClientID));
   Assert.ok(uuidRegex.test(firstEcosystemClientID));
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
@@ -360,7 +356,7 @@ add_task(async function test_removeParallelGet() {
     otherClientID,
     "Getting the client ID in parallel to a reset should give the same id."
   );
-  if (AppConstants.MOZ_GLEAN) {
+  if (!AppConstants.MOZ_GLEAN_ANDROID) {
     Assert.equal(
       Glean.fogValidation.legacyTelemetryClientId.testGetValue(
         "fog-validation"
