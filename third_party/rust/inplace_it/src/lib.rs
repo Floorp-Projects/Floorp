@@ -24,7 +24,7 @@
 //!             // Let's initialize memory
 //!             // Note that borrowed_uninit_guard will be consumed (destroyed to produce initialized memory guard)
 //!             let init_guard = borrowed_uninit_guard.init(|index| index as u16 + 1);
-//!             // Memory not contains elements [1, 2, ..., 160]
+//!             // Memory now contains elements [1, 2, ..., 160]
 //!             // Lets check it. Sum of [1, 2, ..., 160] = 12880
 //!             let sum: u16 = init_guard.iter().sum();
 //!             assert_eq!(sum, 12880);
@@ -33,7 +33,7 @@
 //!         {
 //!             // If you don't want to reuse memory, you can init new guard directly
 //!             let init_guard = uninit_guard.init(|index| index as u16 * 2);
-//!             // Memory not contains elements [0, 2, 4, ..., 318]
+//!             // Memory now contains elements [0, 2, 4, ..., 318]
 //!             // Lets check it. Sum of [0, 2, 4, ..., 318] = 25440
 //!             let sum: u16 = init_guard.iter().sum();
 //!             assert_eq!(sum, 25440);

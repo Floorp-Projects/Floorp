@@ -1,11 +1,8 @@
-use ash::version::DeviceV1_0;
-use ash::vk;
+use ash::{version::DeviceV1_0, vk};
 use smallvec::SmallVec;
 use std::sync::Arc;
 
-use crate::command::CommandBuffer;
-use crate::conv;
-use crate::{Backend, RawDevice};
+use crate::{command::CommandBuffer, conv, Backend, RawDevice};
 use hal::{command, pool};
 
 #[derive(Debug)]
@@ -51,10 +48,9 @@ impl pool::CommandPool<Backend> for RawCommandPool {
 
     unsafe fn free<I>(&mut self, cbufs: I)
     where
-        I: IntoIterator<Item = CommandBuffer>,
+        I: Iterator<Item = CommandBuffer>,
     {
-        let buffers: SmallVec<[vk::CommandBuffer; 16]> =
-            cbufs.into_iter().map(|buffer| buffer.raw).collect();
+        let buffers: SmallVec<[vk::CommandBuffer; 16]> = cbufs.map(|buffer| buffer.raw).collect();
         self.device.raw.free_command_buffers(self.raw, &buffers);
     }
 }

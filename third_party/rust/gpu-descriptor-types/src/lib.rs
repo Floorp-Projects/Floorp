@@ -1,3 +1,5 @@
+#![no_std]
+
 mod device;
 mod types;
 

@@ -136,6 +136,7 @@ where
             Some(Range { ref start, .. }) if *start > self.initial_range.start => {
                 Some(self.initial_range.start..*start)
             }
+            None => Some(self.initial_range.clone()),
             _ => None,
         };
 
@@ -183,10 +184,12 @@ mod tests {
         let mut alloc = RangeAllocator::new(0..10);
         // Test if an allocation works
         assert_eq!(alloc.allocate_range(4), Ok(0..4));
+        assert!(alloc.allocated_ranges().eq(std::iter::once(0..4)));
         // Free the prior allocation
         alloc.free_range(0..4);
         // Make sure the free actually worked
         assert_eq!(alloc.free_ranges, vec![0..10]);
+        assert!(alloc.allocated_ranges().eq(std::iter::empty()));
     }
 
     #[test]
@@ -194,6 +197,7 @@ mod tests {
         let mut alloc = RangeAllocator::new(0..10);
         // Test if the allocator runs out of space correctly
         assert_eq!(alloc.allocate_range(10), Ok(0..10));
+        assert!(alloc.allocated_ranges().eq(std::iter::once(0..10)));
         assert!(alloc.allocate_range(4).is_err());
         alloc.free_range(0..10);
     }
@@ -207,6 +211,10 @@ mod tests {
         assert_eq!(alloc.allocate_range(3), Ok(6..9));
         alloc.free_range(3..6);
         assert_eq!(alloc.free_ranges, vec![3..6, 9..10]);
+        assert_eq!(
+            alloc.allocated_ranges().collect::<Vec<Range<i32>>>(),
+            vec![0..3, 6..9]
+        );
         // Now request space that the middle block can fill, but the end one can't.
         assert_eq!(alloc.allocate_range(3), Ok(3..6));
     }
@@ -226,6 +234,7 @@ mod tests {
         assert_eq!(alloc.allocate_range(10), Ok(80..90));
         assert_eq!(alloc.allocate_range(10), Ok(90..100));
         assert_eq!(alloc.free_ranges, vec![]);
+        assert!(alloc.allocated_ranges().eq(std::iter::once(0..100)));
         alloc.free_range(10..20);
         alloc.free_range(30..40);
         alloc.free_range(50..60);
@@ -235,6 +244,10 @@ mod tests {
         assert_eq!(
             alloc.free_ranges,
             vec![10..20, 30..40, 50..60, 70..80, 90..100]
+        );
+        assert_eq!(
+            alloc.allocated_ranges().collect::<Vec<Range<i32>>>(),
+            vec![0..10, 20..30, 40..50, 60..70, 80..90]
         );
         // Fragment the memory on purpose a bit.
         assert_eq!(alloc.allocate_range(6), Ok(10..16));
@@ -247,6 +260,10 @@ mod tests {
             alloc.free_ranges,
             vec![16..20, 36..40, 56..60, 76..80, 96..100]
         );
+        assert_eq!(
+            alloc.allocated_ranges().collect::<Vec<Range<i32>>>(),
+            vec![0..16, 20..36, 40..56, 60..76, 80..96]
+        );
         // Fill up the fragmentation
         assert_eq!(alloc.allocate_range(4), Ok(16..20));
         assert_eq!(alloc.allocate_range(4), Ok(36..40));
@@ -255,6 +272,7 @@ mod tests {
         assert_eq!(alloc.allocate_range(4), Ok(96..100));
         // Check that nothing is free.
         assert_eq!(alloc.free_ranges, vec![]);
+        assert!(alloc.allocated_ranges().eq(std::iter::once(0..100)));
     }
 
     #[test]
@@ -267,6 +285,10 @@ mod tests {
         assert_eq!(alloc.allocate_range(3), Ok(6..9));
         alloc.free_range(3..6);
         assert_eq!(alloc.free_ranges, vec![3..6, 9..10]);
+        assert_eq!(
+            alloc.allocated_ranges().collect::<Vec<Range<i32>>>(),
+            vec![0..3, 6..9]
+        );
         // Now request space that can be filled by 3..6 but should be filled by 9..10
         // because 9..10 is a perfect fit.
         assert_eq!(alloc.allocate_range(1), Ok(9..10));
@@ -282,5 +304,6 @@ mod tests {
         alloc.free_range(6..9);
         alloc.free_range(3..6);
         assert_eq!(alloc.free_ranges, vec![0..9]);
+        assert!(alloc.allocated_ranges().eq(std::iter::empty()));
     }
 }

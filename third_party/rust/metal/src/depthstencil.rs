@@ -5,6 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use crate::DeviceRef;
 use objc::runtime::{NO, YES};
 
 #[repr(u64)]
@@ -155,6 +156,20 @@ impl DepthStencilDescriptorRef {
     pub fn set_back_face_stencil(&self, descriptor: Option<&StencilDescriptorRef>) {
         unsafe { msg_send![self, setBackFaceStencil: descriptor] }
     }
+
+    pub fn label(&self) -> &str {
+        unsafe {
+            let label = msg_send![self, label];
+            crate::nsstring_as_str(label)
+        }
+    }
+
+    pub fn set_label(&self, label: &str) {
+        unsafe {
+            let nslabel = crate::nsstring_from_str(label);
+            let () = msg_send![self, setLabel: nslabel];
+        }
+    }
 }
 
 pub enum MTLDepthStencilState {}
@@ -163,4 +178,17 @@ foreign_obj_type! {
     type CType = MTLDepthStencilState;
     pub struct DepthStencilState;
     pub struct DepthStencilStateRef;
+}
+
+impl DepthStencilStateRef {
+    pub fn device(&self) -> &DeviceRef {
+        unsafe { msg_send![self, device] }
+    }
+
+    pub fn label(&self) -> &str {
+        unsafe {
+            let label = msg_send![self, label];
+            crate::nsstring_as_str(label)
+        }
+    }
 }

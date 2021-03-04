@@ -109,7 +109,7 @@ pub enum MTLDataType {
     RGB9E5Float = 77,
 }
 
-#[repr(u32)]
+#[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLArgumentType {
@@ -121,7 +121,7 @@ pub enum MTLArgumentType {
     Imageblock = 17,
 }
 
-#[repr(u32)]
+#[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLArgumentAccess {

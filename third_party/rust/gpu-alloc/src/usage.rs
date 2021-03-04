@@ -126,28 +126,42 @@ fn one_usage(usage: UsageFlags, memory_types: &[MemoryType]) -> MemoryForOneUsag
 fn compatible(usage: UsageFlags, flags: MemoryPropertyFlags) -> bool {
     type Flags = MemoryPropertyFlags;
     if flags.contains(Flags::LAZILY_ALLOCATED) || flags.contains(Flags::PROTECTED) {
+        // Unsupported
         false
     } else if usage.intersects(UsageFlags::HOST_ACCESS | UsageFlags::UPLOAD | UsageFlags::DOWNLOAD)
     {
+        // Requires HOST_VISIBLE
         flags.contains(Flags::HOST_VISIBLE)
     } else {
         true
     }
 }
 
+/// Returns priority of memory with specified flags for specified usage.
+/// Lesser value returned = more prioritized.
 fn priority(usage: UsageFlags, flags: MemoryPropertyFlags) -> u32 {
     type Flags = MemoryPropertyFlags;
 
+    // Higly prefer device local memory when `FAST_DEVICE_ACCESS` usage is specified
+    // or usage is empty.
     let device_local: bool = flags.contains(Flags::DEVICE_LOCAL)
         ^ (usage.is_empty() || usage.contains(UsageFlags::FAST_DEVICE_ACCESS));
 
-    let host_visible: bool = flags.contains(Flags::HOST_VISIBLE)
-        && !usage.intersects(UsageFlags::HOST_ACCESS | UsageFlags::UPLOAD | UsageFlags::DOWNLOAD);
+    assert!(
+        flags.contains(Flags::HOST_VISIBLE)
+            || !usage
+                .intersects(UsageFlags::HOST_ACCESS | UsageFlags::UPLOAD | UsageFlags::DOWNLOAD)
+    );
 
+    // Prefer cached memory for downloads.
+    // Or non-cached if downloads are not expected.
     let cached: bool = flags.contains(Flags::HOST_CACHED) ^ usage.contains(UsageFlags::DOWNLOAD);
 
+    // Prefer coherent for both uploads and downloads.
+    // Prefer non-coherent if neither flags is set.
     let coherent: bool = flags.contains(Flags::HOST_COHERENT)
         ^ (usage.intersects(UsageFlags::UPLOAD | UsageFlags::DOWNLOAD));
 
-    device_local as u32 * 8 + host_visible as u32 * 4 + cached as u32 * 2 + coherent as u32
+    // Each boolean is false if flags are prefered.
+    device_local as u32 * 4 + cached as u32 * 2 + coherent as u32
 }

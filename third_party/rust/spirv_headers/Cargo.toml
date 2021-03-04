@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "spirv_headers"
-version = "1.4.2"
+version = "1.5.0"
 authors = ["Lei Zhang <antiagainst@gmail.com>"]
 description = "Rust definition of SPIR-V structs and enums"
 documentation = "https://docs.rs/spirv_headers"
@@ -29,3 +29,12 @@ version = "1"
 
 [dependencies.num-traits]
 version = "0.2"
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+optional = true
+
+[features]
+deserialize = ["serde"]
+serialize = ["serde"]

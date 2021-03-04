@@ -15,12 +15,16 @@ use std::ffi::CStr;
 
 #[cfg(target_arch="x86")]
 fn load_ordinal_lib() -> Library {
-    Library::new("tests/nagisa32.dll").expect("nagisa32.dll")
+    unsafe {
+        Library::new("tests/nagisa32.dll").expect("nagisa32.dll")
+    }
 }
 
 #[cfg(target_arch="x86_64")]
 fn load_ordinal_lib() -> Library {
-    Library::new("tests/nagisa64.dll").expect("nagisa64.dll")
+    unsafe {
+        Library::new("tests/nagisa64.dll").expect("nagisa64.dll")
+    }
 }
 
 #[cfg(any(target_arch="x86", target_arch="x86_64"))]
@@ -47,10 +51,14 @@ fn test_ordinal_missing_fails() {
 
 #[test]
 fn test_new_kernel23() {
-    Library::new("kernel23").err().unwrap();
+    unsafe {
+        Library::new("kernel23").err().unwrap();
+    }
 }
 
 #[test]
 fn test_new_kernel32_no_ext() {
-    Library::new("kernel32").unwrap();
+    unsafe {
+        Library::new("kernel32").unwrap();
+    }
 }

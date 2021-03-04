@@ -5,6 +5,7 @@ pub type EntryPointIndex = u16;
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub enum NameKey {
+    Constant(Handle<crate::Constant>),
     GlobalVariable(Handle<crate::GlobalVariable>),
     Type(Handle<crate::Type>),
     StructMember(Handle<crate::Type>, u32),
@@ -17,6 +18,7 @@ pub enum NameKey {
 
 /// This processor assigns names to all the things in a module
 /// that may need identifiers in a textual backend.
+#[derive(Default)]
 pub struct Namer {
     unique: FastHashMap<String, u32>,
 }
@@ -37,7 +39,7 @@ impl Namer {
         base
     }
 
-    fn call(&mut self, label_raw: &str) -> String {
+    pub fn call(&mut self, label_raw: &str) -> String {
         let base = Self::sanitize(label_raw);
         match self.unique.entry(base) {
             Entry::Occupied(mut e) => {
@@ -59,53 +61,107 @@ impl Namer {
         })
     }
 
-    pub fn process(
+    pub fn reset(
+        &mut self,
         module: &crate::Module,
         reserved: &[&str],
         output: &mut FastHashMap<NameKey, String>,
     ) {
-        let mut this = Namer {
-            unique: reserved
-                .iter()
-                .map(|string| (string.to_string(), 0))
-                .collect(),
-        };
-
-        for (handle, var) in module.global_variables.iter() {
-            let name = this.call_or(&var.name, "global");
-            output.insert(NameKey::GlobalVariable(handle), name);
-        }
+        self.unique.clear();
+        self.unique
+            .extend(reserved.iter().map(|string| (string.to_string(), 0)));
+        let mut temp = String::new();
 
         for (ty_handle, ty) in module.types.iter() {
-            let ty_name = this.call_or(&ty.name, "type");
+            let ty_name = self.call_or(&ty.name, "type");
             output.insert(NameKey::Type(ty_handle), ty_name);
 
-            if let crate::TypeInner::Struct { ref members } = ty.inner {
+            if let crate::TypeInner::Struct {
+                block: _,
+                ref members,
+            } = ty.inner
+            {
                 for (index, member) in members.iter().enumerate() {
-                    let name = this.call_or(&member.name, "member");
+                    let name = self.call_or(&member.name, "member");
                     output.insert(NameKey::StructMember(ty_handle, index as u32), name);
                 }
             }
         }
 
+        for (handle, var) in module.global_variables.iter() {
+            let name = self.call_or(&var.name, "global");
+            output.insert(NameKey::GlobalVariable(handle), name);
+        }
+
+        for (handle, constant) in module.constants.iter() {
+            let label = match constant.name {
+                Some(ref name) => name,
+                None => {
+                    use std::fmt::Write;
+                    // Try to be more descriptive about the constant values
+                    temp.clear();
+                    match constant.inner {
+                        crate::ConstantInner::Scalar {
+                            width: _,
+                            value: crate::ScalarValue::Sint(v),
+                        } => write!(temp, "const_{}i", v),
+                        crate::ConstantInner::Scalar {
+                            width: _,
+                            value: crate::ScalarValue::Uint(v),
+                        } => write!(temp, "const_{}u", v),
+                        crate::ConstantInner::Scalar {
+                            width: _,
+                            value: crate::ScalarValue::Float(v),
+                        } => {
+                            let abs = v.abs();
+                            write!(
+                                temp,
+                                "const_{}{}",
+                                if v < 0.0 { "n" } else { "" },
+                                abs.trunc(),
+                            )
+                            .unwrap();
+                            let fract = abs.fract();
+                            if fract == 0.0 {
+                                write!(temp, "f")
+                            } else {
+                                write!(temp, "_{:02}f", (fract * 100.0) as i8)
+                            }
+                        }
+                        crate::ConstantInner::Scalar {
+                            width: _,
+                            value: crate::ScalarValue::Bool(v),
+                        } => write!(temp, "const_{}", v),
+                        crate::ConstantInner::Composite { ty, components: _ } => {
+                            write!(temp, "const_{}", output[&NameKey::Type(ty)])
+                        }
+                    }
+                    .unwrap();
+                    &temp
+                }
+            };
+            let name = self.call(label);
+            output.insert(NameKey::Constant(handle), name);
+        }
+
         for (fun_handle, fun) in module.functions.iter() {
-            let fun_name = this.call_or(&fun.name, "function");
+            let fun_name = self.call_or(&fun.name, "function");
             output.insert(NameKey::Function(fun_handle), fun_name);
             for (index, arg) in fun.arguments.iter().enumerate() {
-                let name = this.call_or(&arg.name, "param");
+                let name = self.call_or(&arg.name, "param");
                 output.insert(NameKey::FunctionArgument(fun_handle, index as u32), name);
             }
             for (handle, var) in fun.local_variables.iter() {
-                let name = this.call_or(&var.name, "local");
+                let name = self.call_or(&var.name, "local");
                 output.insert(NameKey::FunctionLocal(fun_handle, handle), name);
             }
         }
 
         for (ep_index, (&(_, ref base_name), ep)) in module.entry_points.iter().enumerate() {
-            let ep_name = this.call(base_name);
+            let ep_name = self.call(base_name);
             output.insert(NameKey::EntryPoint(ep_index as _), ep_name);
             for (handle, var) in ep.function.local_variables.iter() {
-                let name = this.call_or(&var.name, "local");
+                let name = self.call_or(&var.name, "local");
                 output.insert(NameKey::EntryPointLocal(ep_index as _, handle), name);
             }
         }

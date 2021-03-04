@@ -7,6 +7,7 @@ pub fn map_storage_class(word: &str) -> Result<crate::StorageClass, Error<'_>> {
         "private" => Ok(crate::StorageClass::Private),
         "uniform" => Ok(crate::StorageClass::Uniform),
         "storage" => Ok(crate::StorageClass::Storage),
+        "push_constant" => Ok(crate::StorageClass::PushConstant),
         _ => Err(Error::UnknownStorageClass(word)),
     }
 }
@@ -15,16 +16,21 @@ pub fn map_built_in(word: &str) -> Result<crate::BuiltIn, Error<'_>> {
     Ok(match word {
         // vertex
         "position" => crate::BuiltIn::Position,
-        "vertex_idx" => crate::BuiltIn::VertexIndex,
-        "instance_idx" => crate::BuiltIn::InstanceIndex,
+        "vertex_index" => crate::BuiltIn::VertexIndex,
+        "instance_index" => crate::BuiltIn::InstanceIndex,
         // fragment
         "front_facing" => crate::BuiltIn::FrontFacing,
         "frag_coord" => crate::BuiltIn::FragCoord,
         "frag_depth" => crate::BuiltIn::FragDepth,
+        "sample_index" => crate::BuiltIn::SampleIndex,
+        "sample_mask_in" => crate::BuiltIn::SampleMaskIn,
+        "sample_mask_out" => crate::BuiltIn::SampleMaskOut,
         // compute
         "global_invocation_id" => crate::BuiltIn::GlobalInvocationId,
         "local_invocation_id" => crate::BuiltIn::LocalInvocationId,
-        "local_invocation_idx" => crate::BuiltIn::LocalInvocationIndex,
+        "local_invocation_index" => crate::BuiltIn::LocalInvocationIndex,
+        "workgroup_id" => crate::BuiltIn::WorkGroupId,
+        "workgroup_size" => crate::BuiltIn::WorkGroupSize,
         _ => return Err(Error::UnknownBuiltin(word)),
     })
 }
@@ -93,25 +99,98 @@ pub fn get_scalar_type(word: &str) -> Option<(crate::ScalarKind, crate::Bytes)> 
         "f32" => Some((crate::ScalarKind::Float, 4)),
         "i32" => Some((crate::ScalarKind::Sint, 4)),
         "u32" => Some((crate::ScalarKind::Uint, 4)),
+        "bool" => Some((crate::ScalarKind::Bool, 1)),
         _ => None,
     }
 }
 
-pub fn get_intrinsic(word: &str) -> Option<crate::IntrinsicFunction> {
-    match word {
-        "any" => Some(crate::IntrinsicFunction::Any),
-        "all" => Some(crate::IntrinsicFunction::All),
-        "is_nan" => Some(crate::IntrinsicFunction::IsNan),
-        "is_inf" => Some(crate::IntrinsicFunction::IsInf),
-        "is_normal" => Some(crate::IntrinsicFunction::IsNormal),
-        _ => None,
-    }
-}
-pub fn get_derivative(word: &str) -> Option<crate::DerivativeAxis> {
+pub fn map_derivative_axis(word: &str) -> Option<crate::DerivativeAxis> {
     match word {
         "dpdx" => Some(crate::DerivativeAxis::X),
         "dpdy" => Some(crate::DerivativeAxis::Y),
         "dwidth" => Some(crate::DerivativeAxis::Width),
         _ => None,
+    }
+}
+
+pub fn map_relational_fun(word: &str) -> Option<crate::RelationalFunction> {
+    match word {
+        "any" => Some(crate::RelationalFunction::Any),
+        "all" => Some(crate::RelationalFunction::All),
+        "isFinite" => Some(crate::RelationalFunction::IsFinite),
+        "isInf" => Some(crate::RelationalFunction::IsInf),
+        "isNan" => Some(crate::RelationalFunction::IsNan),
+        "isNormal" => Some(crate::RelationalFunction::IsNormal),
+        _ => None,
+    }
+}
+
+pub fn map_standard_fun(word: &str) -> Option<crate::MathFunction> {
+    use crate::MathFunction as Mf;
+    Some(match word {
+        // comparison
+        "abs" => Mf::Abs,
+        "min" => Mf::Min,
+        "max" => Mf::Max,
+        "clamp" => Mf::Clamp,
+        // trigonometry
+        "cos" => Mf::Cos,
+        "cosh" => Mf::Cosh,
+        "sin" => Mf::Sin,
+        "sinh" => Mf::Sinh,
+        "tan" => Mf::Tan,
+        "tanh" => Mf::Tanh,
+        "acos" => Mf::Acos,
+        "asin" => Mf::Asin,
+        "atan" => Mf::Atan,
+        "atan2" => Mf::Atan2,
+        // decomposition
+        "ceil" => Mf::Ceil,
+        "floor" => Mf::Floor,
+        "round" => Mf::Round,
+        "fract" => Mf::Fract,
+        "trunc" => Mf::Trunc,
+        "modf" => Mf::Modf,
+        "frexp" => Mf::Frexp,
+        "ldexp" => Mf::Ldexp,
+        // exponent
+        "exp" => Mf::Exp,
+        "exp2" => Mf::Exp2,
+        "log" => Mf::Log,
+        "log2" => Mf::Log2,
+        "pow" => Mf::Pow,
+        // geometry
+        "dot" => Mf::Dot,
+        "outerProduct" => Mf::Outer,
+        "cross" => Mf::Cross,
+        "distance" => Mf::Distance,
+        "length" => Mf::Length,
+        "normalize" => Mf::Normalize,
+        "faceForward" => Mf::FaceForward,
+        "reflect" => Mf::Reflect,
+        // computational
+        "sign" => Mf::Sign,
+        "fma" => Mf::Fma,
+        "mix" => Mf::Mix,
+        "step" => Mf::Step,
+        "smoothStep" => Mf::SmoothStep,
+        "sqrt" => Mf::Sqrt,
+        "inverseSqrt" => Mf::InverseSqrt,
+        "transpose" => Mf::Transpose,
+        "determinant" => Mf::Determinant,
+        // bits
+        "countOneBits" => Mf::CountOneBits,
+        "reverseBits" => Mf::ReverseBits,
+        _ => return None,
+    })
+}
+
+pub fn map_conservative_depth(word: &str) -> Result<crate::ConservativeDepth, Error<'_>> {
+    use crate::ConservativeDepth as Cd;
+    match word {
+        "greater_equal" => Ok(Cd::GreaterEqual),
+        "less_equal" => Ok(Cd::LessEqual),
+        "unchanged" => Ok(Cd::Unchanged),
+        _ => Err(Error::UnknownConservativeDepth(word)),
     }
 }

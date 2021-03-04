@@ -14,7 +14,11 @@ the output struct. If there is a structure in the outputs, and it contains any b
 we move them up to the root output structure that we define ourselves.
 !*/
 
-use crate::{arena::Handle, proc::ResolveError, FastHashMap};
+use crate::{
+    arena::Handle,
+    proc::{analyzer::Analysis, TypifyError},
+    FastHashMap,
+};
 use std::{
     io::{Error as IoError, Write},
     string::FromUtf8Error,
@@ -52,45 +56,28 @@ enum ResolvedBinding {
 
 // Note: some of these should be removed in favor of proper IR validation.
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    IO(IoError),
-    Utf8(FromUtf8Error),
-    Type(ResolveError),
-    UnexpectedLocation,
-    MissingBinding(Handle<crate::GlobalVariable>),
+    #[error(transparent)]
+    IO(#[from] IoError),
+    #[error(transparent)]
+    Utf8(#[from] FromUtf8Error),
+    #[error(transparent)]
+    Type(#[from] TypifyError),
+    #[error("bind source for {0:?} is missing from the map")]
     MissingBindTarget(BindSource),
-    InvalidImageAccess(crate::StorageAccess),
-    MutabilityViolation(Handle<crate::GlobalVariable>),
-    BadName(String),
-    UnexpectedGlobalType(Handle<crate::Type>),
+    #[error("bind target {0:?} is empty")]
     UnimplementedBindTarget(BindTarget),
+    #[error("composing of {0:?} is not implemented yet")]
     UnsupportedCompose(Handle<crate::Type>),
+    #[error("operation {0:?} is not implemented yet")]
     UnsupportedBinaryOp(crate::BinaryOperator),
-    UnexpectedSampleLevel(crate::SampleLevel),
+    #[error("standard function '{0}' is not implemented yet")]
     UnsupportedCall(String),
-    UnsupportedDynamicArrayLength,
-    UnableToReturnValue(Handle<crate::Expression>),
-    /// The source IR is not valid.
+    #[error("feature '{0}' is not implemented yet")]
+    FeatureNotImplemented(String),
+    #[error("module is not valid")]
     Validation,
-}
-
-impl From<IoError> for Error {
-    fn from(e: IoError) -> Self {
-        Error::IO(e)
-    }
-}
-
-impl From<FromUtf8Error> for Error {
-    fn from(e: FromUtf8Error) -> Self {
-        Error::Utf8(e)
-    }
-}
-
-impl From<ResolveError> for Error {
-    fn from(e: ResolveError) -> Self {
-        Error::Type(e)
-    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -101,26 +88,39 @@ enum LocationMode {
     Uniform,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct Options {
     /// (Major, Minor) target version of the Metal Shading Language.
     pub lang_version: (u8, u8),
-    /// Make it possible to link different stages via SPIRV-Cross.
-    pub spirv_cross_compatibility: bool,
     /// Binding model mapping to Metal.
     pub binding_map: BindingMap,
+    /// Make it possible to link different stages via SPIRV-Cross.
+    pub spirv_cross_compatibility: bool,
+    /// Don't panic on missing bindings, instead generate invalid MSL.
+    pub fake_missing_bindings: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Options {
+            lang_version: (1, 0),
+            binding_map: BindingMap::default(),
+            spirv_cross_compatibility: false,
+            fake_missing_bindings: false,
+        }
+    }
 }
 
 impl Options {
     fn resolve_binding(
         &self,
         stage: crate::ShaderStage,
-        binding: &crate::Binding,
+        var: &crate::GlobalVariable,
         mode: LocationMode,
     ) -> Result<ResolvedBinding, Error> {
-        match *binding {
-            crate::Binding::BuiltIn(built_in) => Ok(ResolvedBinding::BuiltIn(built_in)),
-            crate::Binding::Location(index) => match mode {
+        match var.binding {
+            Some(crate::Binding::BuiltIn(built_in)) => Ok(ResolvedBinding::BuiltIn(built_in)),
+            Some(crate::Binding::Location(index)) => match mode {
                 LocationMode::VertexInput => Ok(ResolvedBinding::Attribute(index)),
                 LocationMode::FragmentOutput => Ok(ResolvedBinding::Color(index)),
                 LocationMode::Intermediate => Ok(ResolvedBinding::User {
@@ -131,19 +131,32 @@ impl Options {
                     },
                     index,
                 }),
-                LocationMode::Uniform => Err(Error::UnexpectedLocation),
+                LocationMode::Uniform => {
+                    log::error!(
+                        "Unexpected Binding::Location({}) for the Uniform mode",
+                        index
+                    );
+                    Err(Error::Validation)
+                }
             },
-            crate::Binding::Resource { group, binding } => {
+            Some(crate::Binding::Resource { group, binding }) => {
                 let source = BindSource {
                     stage,
                     group,
                     binding,
                 };
-                self.binding_map
-                    .get(&source)
-                    .cloned()
-                    .map(ResolvedBinding::Resource)
-                    .ok_or(Error::MissingBindTarget(source))
+                match self.binding_map.get(&source) {
+                    Some(target) => Ok(ResolvedBinding::Resource(target.clone())),
+                    None if self.fake_missing_bindings => Ok(ResolvedBinding::User {
+                        prefix: "fake",
+                        index: 0,
+                    }),
+                    None => Err(Error::MissingBindTarget(source)),
+                }
+            }
+            None => {
+                log::error!("Missing binding for {:?}", var.name);
+                Err(Error::Validation)
             }
         }
     }
@@ -168,11 +181,14 @@ impl ResolvedBinding {
                     Bi::FragDepth => "depth(any)",
                     Bi::FrontFacing => "front_facing",
                     Bi::SampleIndex => "sample_id",
+                    Bi::SampleMaskIn => "sample_mask",
+                    Bi::SampleMaskOut => "sample_mask",
                     // compute
                     Bi::GlobalInvocationId => "thread_position_in_grid",
                     Bi::LocalInvocationId => "thread_position_in_threadgroup",
                     Bi::LocalInvocationIndex => "thread_index_in_threadgroup",
                     Bi::WorkGroupId => "threadgroup_position_in_grid",
+                    Bi::WorkGroupSize => "dispatch_threads_per_threadgroup",
                 };
                 Ok(write!(out, "{}", name)?)
             }
@@ -204,8 +220,21 @@ impl ResolvedBinding {
     }
 }
 
-pub fn write_string(module: &crate::Module, options: &Options) -> Result<String, Error> {
+/// Information about a translated module that is required
+/// for the use of the result.
+pub struct TranslationInfo {
+    /// Mapping of the entry point names. Each item in the array
+    /// corresponds to an entry point in `module.entry_points.iter()`.
+    pub entry_point_names: Vec<String>,
+}
+
+pub fn write_string(
+    module: &crate::Module,
+    analysis: &Analysis,
+    options: &Options,
+) -> Result<(String, TranslationInfo), Error> {
     let mut w = writer::Writer::new(Vec::new());
-    w.write(module, options)?;
-    Ok(String::from_utf8(w.finish())?)
+    let info = w.write(module, analysis, options)?;
+    let string = String::from_utf8(w.finish())?;
+    Ok((string, info))
 }

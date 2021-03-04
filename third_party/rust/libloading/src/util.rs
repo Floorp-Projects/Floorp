@@ -7,7 +7,7 @@ use crate::Error;
 /// Checks for last byte and avoids allocating if it is zero.
 ///
 /// Non-last null bytes still result in an error.
-pub(crate) fn cstr_cow_from_bytes<'a>(slice: &'a [u8]) -> Result<Cow<'a, CStr>, Error> {
+pub(crate) fn cstr_cow_from_bytes(slice: &[u8]) -> Result<Cow<'_, CStr>, Error> {
     static ZERO: raw::c_char = 0;
     Ok(match slice.last() {
         // Slice out of 0 elements
