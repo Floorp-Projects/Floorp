@@ -78,8 +78,8 @@ const sandboxScript = function(shadowRoot) {
 SpecialPowers.Cu.evalInSandbox("this.script = " + sandboxScript.toString(), sandbox);
 sandbox.script(div.shadowRoot);
 
-ok(window.spanElementFromUAWidget instanceof HTMLSpanElement, "<span> exposed");
-ok(window.divElementFromUAWidget instanceof HTMLDivElement, "<div> exposed");
+ok(SpecialPowers.call_Instanceof(window.spanElementFromUAWidget, HTMLSpanElement), "<span> exposed");
+ok(SpecialPowers.call_Instanceof(window.divElementFromUAWidget, HTMLDivElement), "<div> exposed");
 
 try {
   window.spanElementFromUAWidget.textContent;
