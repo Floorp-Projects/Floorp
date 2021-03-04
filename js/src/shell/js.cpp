@@ -2333,25 +2333,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    if (!JS_GetProperty(cx, opts, "global", &v)) {
-      return false;
-    }
-    if (!v.isUndefined()) {
-      if (v.isObject()) {
-        global = js::CheckedUnwrapDynamic(&v.toObject(), cx,
-                                          /* stopAtWindowProxy = */ false);
-        if (!global) {
-          return false;
-        }
-      }
-      if (!global || !(JS::GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
-        JS_ReportErrorNumberASCII(
-            cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-            "\"global\" passed to evaluate()", "not a global object");
-        return false;
-      }
-    }
-
     if (!JS_GetProperty(cx, opts, "catchTermination", &v)) {
       return false;
     }
@@ -2606,6 +2587,46 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         saveCacheKind = BytecodeCacheKind::Stencil;
       } else {
         saveCacheKind = BytecodeCacheKind::Script;
+      }
+    }
+
+    // NOTE: Check custom "global" after handling all CompileOption-related
+    //       properties.
+    if (!JS_GetProperty(cx, opts, "global", &v)) {
+      return false;
+    }
+    if (!v.isUndefined()) {
+      if (v.isObject()) {
+        global = js::CheckedUnwrapDynamic(&v.toObject(), cx,
+                                          /* stopAtWindowProxy = */ false);
+        if (!global) {
+          return false;
+        }
+      }
+      if (!global || !(JS::GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
+        JS_ReportErrorNumberASCII(
+            cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "\"global\" passed to evaluate()", "not a global object");
+        return false;
+      }
+
+      // Validate the consistency between the passed CompileOptions and
+      // global's option.
+      {
+        JSAutoRealm ar(cx, global);
+        JS::CompileOptions globalOptions(cx);
+
+        // If the passed global discards source, delazification isn't allowed.
+        // The CompileOption should discard source as well.
+        if (globalOptions.discardSource && !options.discardSource) {
+          JS_ReportErrorASCII(cx, "discardSource option mismatch");
+          return false;
+        }
+        if (globalOptions.instrumentationKinds !=
+            options.instrumentationKinds) {
+          JS_ReportErrorASCII(cx, "instrumentationKinds mismatch");
+          return false;
+        }
       }
     }
   }
