@@ -5,7 +5,6 @@
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.MediaElement
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
 import org.mozilla.geckoview.test.util.Callbacks
@@ -25,18 +24,19 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TEST_ENDPOINT
 @RunWith(AndroidJUnit4::class)
 @TimeoutMillis(45000)
 @MediumTest
+@Suppress("DEPRECATION")
 class MediaElementTest : BaseSessionTest() {
 
-    interface MediaElementDelegate : MediaElement.Delegate {
-        override fun onPlaybackStateChange(mediaElement: MediaElement, mediaState: Int) {}
-        override fun onReadyStateChange(mediaElement: MediaElement, readyState: Int) {}
-        override fun onMetadataChange(mediaElement: MediaElement, metaData: MediaElement.Metadata) {}
-        override fun onLoadProgress(mediaElement: MediaElement, progressInfo: MediaElement.LoadProgressInfo) {}
-        override fun onVolumeChange(mediaElement: MediaElement, volume: Double, muted: Boolean) {}
-        override fun onTimeChange(mediaElement: MediaElement, time: Double) {}
-        override fun onPlaybackRateChange(mediaElement: MediaElement, rate: Double) {}
-        override fun onFullscreenChange(mediaElement: MediaElement, fullscreen: Boolean) {}
-        override fun onError(mediaElement: MediaElement, errorCode: Int) {}
+    interface MediaElementDelegate : org.mozilla.geckoview.MediaElement.Delegate {
+        override fun onPlaybackStateChange(mediaElement: org.mozilla.geckoview.MediaElement, mediaState: Int) {}
+        override fun onReadyStateChange(mediaElement: org.mozilla.geckoview.MediaElement, readyState: Int) {}
+        override fun onMetadataChange(mediaElement: org.mozilla.geckoview.MediaElement, metaData: org.mozilla.geckoview.MediaElement.Metadata) {}
+        override fun onLoadProgress(mediaElement: org.mozilla.geckoview.MediaElement, progressInfo: org.mozilla.geckoview.MediaElement.LoadProgressInfo) {}
+        override fun onVolumeChange(mediaElement: org.mozilla.geckoview.MediaElement, volume: Double, muted: Boolean) {}
+        override fun onTimeChange(mediaElement: org.mozilla.geckoview.MediaElement, time: Double) {}
+        override fun onPlaybackRateChange(mediaElement: org.mozilla.geckoview.MediaElement, rate: Double) {}
+        override fun onFullscreenChange(mediaElement: org.mozilla.geckoview.MediaElement, fullscreen: Boolean) {}
+        override fun onError(mediaElement: org.mozilla.geckoview.MediaElement, errorCode: Int) {}
     }
 
     private fun setupPrefs() {
@@ -51,7 +51,7 @@ class MediaElementTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(path)
         sessionRule.waitUntilCalled(object : Callbacks.MediaDelegate {
             @AssertCalled
-            override fun onMediaAdd(session: GeckoSession, element: MediaElement) {
+            override fun onMediaAdd(session: GeckoSession, element: org.mozilla.geckoview.MediaElement) {
                 sessionRule.addExternalDelegateUntilTestEnd(
                         MediaElementDelegate::class,
                         element::setDelegate,
@@ -66,13 +66,13 @@ class MediaElementTest : BaseSessionTest() {
         setupDelegate(path)
     }
 
-    private fun waitUntilState(waitState: Int = MediaElement.MEDIA_READY_STATE_HAVE_ENOUGH_DATA): MediaElement {
+    private fun waitUntilState(waitState: Int = org.mozilla.geckoview.MediaElement.MEDIA_READY_STATE_HAVE_ENOUGH_DATA): org.mozilla.geckoview.MediaElement {
         var ready = false
-        var result: MediaElement? = null
+        var result: org.mozilla.geckoview.MediaElement? = null
         while (!ready) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
                 @AssertCalled
-                override fun onReadyStateChange(mediaElement: MediaElement, readyState: Int) {
+                override fun onReadyStateChange(mediaElement: org.mozilla.geckoview.MediaElement, readyState: Int) {
                     if (readyState == waitState) {
                         ready = true
                         result = mediaElement
@@ -86,22 +86,22 @@ class MediaElementTest : BaseSessionTest() {
         return result!!
     }
 
-    private fun waitUntilVideoReady(path: String, waitState: Int = MediaElement.MEDIA_READY_STATE_HAVE_ENOUGH_DATA): MediaElement {
+    private fun waitUntilVideoReady(path: String, waitState: Int = org.mozilla.geckoview.MediaElement.MEDIA_READY_STATE_HAVE_ENOUGH_DATA): org.mozilla.geckoview.MediaElement {
         setupPrefsAndDelegates(path)
         return waitUntilState(waitState)
     }
 
-    private fun waitUntilVideoReadyNoPrefs(path: String, waitState: Int = MediaElement.MEDIA_READY_STATE_HAVE_ENOUGH_DATA): MediaElement {
+    private fun waitUntilVideoReadyNoPrefs(path: String, waitState: Int = org.mozilla.geckoview.MediaElement.MEDIA_READY_STATE_HAVE_ENOUGH_DATA): org.mozilla.geckoview.MediaElement {
         setupDelegate(path)
         return waitUntilState(waitState)
     }
 
-    private fun waitForPlaybackStateChange(waitState: Int, lambda: (element: MediaElement, state: Int) -> Unit = { _: MediaElement, _: Int -> }) {
+    private fun waitForPlaybackStateChange(waitState: Int, lambda: (element: org.mozilla.geckoview.MediaElement, state: Int) -> Unit = { _: org.mozilla.geckoview.MediaElement, _: Int -> }) {
         var waiting = true
         while (waiting) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
                 @AssertCalled
-                override fun onPlaybackStateChange(mediaElement: MediaElement, mediaState: Int) {
+                override fun onPlaybackStateChange(mediaElement: org.mozilla.geckoview.MediaElement, mediaState: Int) {
                     if (mediaState == waitState) {
                         waiting = false
                         lambda(mediaElement, mediaState)
@@ -111,13 +111,13 @@ class MediaElementTest : BaseSessionTest() {
         }
     }
 
-    private fun waitForMetadata(path: String): MediaElement.Metadata? {
+    private fun waitForMetadata(path: String): org.mozilla.geckoview.MediaElement.Metadata? {
         setupPrefsAndDelegates(path)
-        var meta: MediaElement.Metadata? = null
+        var meta: org.mozilla.geckoview.MediaElement.Metadata? = null
         while (meta == null) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
                 @AssertCalled
-                override fun onMetadataChange(mediaElement: MediaElement, metaData: MediaElement.Metadata) {
+                override fun onMetadataChange(mediaElement: org.mozilla.geckoview.MediaElement, metaData: org.mozilla.geckoview.MediaElement.Metadata) {
                     meta = metaData
                 }
             })
@@ -128,24 +128,24 @@ class MediaElementTest : BaseSessionTest() {
     private fun playMedia(path: String) {
         val mediaElement = waitUntilVideoReady(path)
         mediaElement.play()
-        waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAY)
-        waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAYING)
+        waitForPlaybackStateChange(org.mozilla.geckoview.MediaElement.MEDIA_STATE_PLAY)
+        waitForPlaybackStateChange(org.mozilla.geckoview.MediaElement.MEDIA_STATE_PLAYING)
     }
 
     private fun playMediaFromScript(path: String) {
         waitUntilVideoReady(path)
         mainSession.evaluateJS("document.querySelector('video').play()")
-        waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAY)
-        waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAYING)
+        waitForPlaybackStateChange(org.mozilla.geckoview.MediaElement.MEDIA_STATE_PLAY)
+        waitForPlaybackStateChange(org.mozilla.geckoview.MediaElement.MEDIA_STATE_PLAYING)
     }
 
     private fun pauseMedia(path: String) {
         val mediaElement = waitUntilVideoReady(path)
         mediaElement.play()
-        waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PLAYING) { element: MediaElement, _: Int ->
+        waitForPlaybackStateChange(org.mozilla.geckoview.MediaElement.MEDIA_STATE_PLAYING) { element: org.mozilla.geckoview.MediaElement, _: Int ->
             element.pause()
         }
-        waitForPlaybackStateChange(MediaElement.MEDIA_STATE_PAUSE)
+        waitForPlaybackStateChange(org.mozilla.geckoview.MediaElement.MEDIA_STATE_PAUSE)
     }
 
     private fun timeMedia(path: String, limit: Double) {
@@ -155,7 +155,7 @@ class MediaElementTest : BaseSessionTest() {
         while (waiting) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
                 @AssertCalled
-                override fun onTimeChange(mediaElement: MediaElement, time: Double) {
+                override fun onTimeChange(mediaElement: org.mozilla.geckoview.MediaElement, time: Double) {
                     if (time > limit) {
                         waiting = false
                     }
@@ -173,8 +173,8 @@ class MediaElementTest : BaseSessionTest() {
         while (waiting) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
                 @AssertCalled
-                override fun onPlaybackStateChange(mediaElement: MediaElement, mediaState: Int) {
-                    if (mediaState == MediaElement.MEDIA_STATE_SEEKING) {
+                override fun onPlaybackStateChange(mediaElement: org.mozilla.geckoview.MediaElement, mediaState: Int) {
+                    if (mediaState == org.mozilla.geckoview.MediaElement.MEDIA_STATE_SEEKING) {
                         waiting = false
                     }
                 }
@@ -184,7 +184,7 @@ class MediaElementTest : BaseSessionTest() {
         while (waiting) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
                 @AssertCalled
-                override fun onTimeChange(mediaElement: MediaElement, time: Double) {
+                override fun onTimeChange(mediaElement: org.mozilla.geckoview.MediaElement, time: Double) {
                     if (time >= seek) {
                         waiting = false
                     }
@@ -193,8 +193,8 @@ class MediaElementTest : BaseSessionTest() {
         }
         sessionRule.waitUntilCalled(object : MediaElementDelegate {
             @AssertCalled
-            override fun onPlaybackStateChange(mediaElement: MediaElement, mediaState: Int) {
-                assertThat("Done seeking", mediaState, equalTo(MediaElement.MEDIA_STATE_SEEKED))
+            override fun onPlaybackStateChange(mediaElement: org.mozilla.geckoview.MediaElement, mediaState: Int) {
+                assertThat("Done seeking", mediaState, equalTo(org.mozilla.geckoview.MediaElement.MEDIA_STATE_SEEKED))
             }
         })
     }
@@ -206,7 +206,7 @@ class MediaElementTest : BaseSessionTest() {
         while (waiting) {
             sessionRule.waitUntilCalled(object : MediaElementDelegate {
                 @AssertCalled
-                override fun onFullscreenChange(mediaElement: MediaElement, fullscreen: Boolean) {
+                override fun onFullscreenChange(mediaElement: org.mozilla.geckoview.MediaElement, fullscreen: Boolean) {
                     if (fullscreen) {
                         waiting = false
                     }
@@ -308,7 +308,7 @@ class MediaElementTest : BaseSessionTest() {
     private fun waitForVolumeChange(volumeLevel: Double, isMuted: Boolean) {
         sessionRule.waitUntilCalled(object : MediaElementDelegate {
             @AssertCalled
-            override fun onVolumeChange(mediaElement: MediaElement, volume: Double, muted: Boolean) {
+            override fun onVolumeChange(mediaElement: org.mozilla.geckoview.MediaElement, volume: Double, muted: Boolean) {
                 assertThat("Volume was set", volume, closeTo(volumeLevel, 0.0001))
                 assertThat("Not muted", muted, equalTo(isMuted))
             }
@@ -406,8 +406,8 @@ class MediaElementTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
         sessionRule.waitUntilCalled(object : MediaElementDelegate {
             @AssertCalled
-            override fun onError(mediaElement: MediaElement, errorCode: Int) {
-                assertThat("Got media error", errorCode, equalTo(MediaElement.MEDIA_ERROR_NETWORK_NO_SOURCE))
+            override fun onError(mediaElement: org.mozilla.geckoview.MediaElement, errorCode: Int) {
+                assertThat("Got media error", errorCode, equalTo(org.mozilla.geckoview.MediaElement.MEDIA_ERROR_NETWORK_NO_SOURCE))
             }
         })
     }
