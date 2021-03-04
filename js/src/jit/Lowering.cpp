@@ -296,6 +296,29 @@ void LIRGenerator::visitCreateInlinedArgumentsObject(
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitGetInlinedArgument(MGetInlinedArgument* ins) {
+  LAllocation index = useRegisterAtStart(ins->index());
+  uint32_t numActuals = ins->numActuals();
+  uint32_t numOperands =
+      numActuals * BOX_PIECES + LGetInlinedArgument::NumNonArgumentOperands;
+
+  auto* lir = allocateVariadic<LGetInlinedArgument>(numOperands);
+  if (!lir) {
+    abort(AbortReason::Alloc, "OOM: LIRGenerator::visitGetInlinedArgument");
+    return;
+  }
+
+  lir->setOperand(LGetInlinedArgument::Index, index);
+  for (uint32_t i = 0; i < numActuals; i++) {
+    MDefinition* arg = ins->getArg(i);
+    uint32_t index = LGetInlinedArgument::ArgIndex(i);
+    lir->setBoxOperand(index, useBoxOrTypedOrConstant(arg,
+                                                      /*useConstant = */ true,
+                                                      /*useAtStart = */ true));
+  }
+  defineBox(lir, ins);
+}
+
 void LIRGenerator::visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins) {
   LAllocation argsObj = useRegister(ins->getArgsObject());
   LGetArgumentsObjectArg* lir =

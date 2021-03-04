@@ -1294,14 +1294,7 @@ bool ArgumentsReplacer::escapes(MInstruction* ins) {
       case MDefinition::Opcode::ArgumentsObjectLength:
       case MDefinition::Opcode::GetArgumentsObjectArg:
       case MDefinition::Opcode::ApplyArgsObj:
-        break;
-
-      // This is a replaceable consumer that is not yet supported
-      // for |arguments| of inlined functions.
       case MDefinition::Opcode::LoadArgumentsObjectArg:
-        if (!args_->isCreateArgumentsObject()) {
-          return true;
-        }
         break;
 
       // This instruction is a no-op used to test that scalar replacement
@@ -1457,27 +1450,41 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
     return;
   }
 
-  // TODO: Support inlined arguments.
-  MOZ_ASSERT(!isInlinedArguments());
-
   MDefinition* index = ins->index();
 
-  // Insert bounds check.
-  auto* length = MArgumentsLength::New(alloc());
-  ins->block()->insertBefore(ins, length);
+  MInstruction* loadArg;
+  if (isInlinedArguments()) {
+    auto* actualArgs = args_->toCreateInlinedArgumentsObject();
 
-  MInstruction* check = MBoundsCheck::New(alloc(), index, length);
-  ins->block()->insertBefore(ins, check);
+    // TODO: optimize for constant indices.
 
-  // TODO: Set special bailout kind?
-  check->setBailoutKind(ins->bailoutKind());
+    // Insert bounds check.
+    auto* length =
+        MConstant::New(alloc(), Int32Value(actualArgs->numActuals()));
+    ins->block()->insertBefore(ins, length);
 
-  if (JitOptions.spectreIndexMasking) {
-    check = MSpectreMaskIndex::New(alloc(), check, length);
+    MInstruction* check = MBoundsCheck::New(alloc(), index, length);
+    check->setBailoutKind(ins->bailoutKind());
     ins->block()->insertBefore(ins, check);
-  }
 
-  auto* loadArg = MGetFrameArgument::New(alloc(), check);
+    loadArg = MGetInlinedArgument::New(alloc(), check, actualArgs);
+  } else {
+    // Insert bounds check.
+    auto* length = MArgumentsLength::New(alloc());
+    ins->block()->insertBefore(ins, length);
+
+    MInstruction* check = MBoundsCheck::New(alloc(), index, length);
+    ins->block()->insertBefore(ins, check);
+
+    check->setBailoutKind(ins->bailoutKind());
+
+    if (JitOptions.spectreIndexMasking) {
+      check = MSpectreMaskIndex::New(alloc(), check, length);
+      ins->block()->insertBefore(ins, check);
+    }
+
+    loadArg = MGetFrameArgument::New(alloc(), check);
+  }
   ins->block()->insertBefore(ins, loadArg);
   ins->replaceAllUsesWith(loadArg);
 
