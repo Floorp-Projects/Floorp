@@ -587,7 +587,6 @@ void ParseTask::trace(JSTracer* trc) {
   }
 
   gcOutput_.trace(trc);
-  gcOutputForDelazification_.trace(trc);
 }
 
 size_t ParseTask::sizeOfExcludingThis(
@@ -607,8 +606,7 @@ size_t ParseTask::sizeOfExcludingThis(
          scripts.sizeOfExcludingThis(mallocSizeOf) +
          sourceObjects.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
          stencilSize + extensibleStencilSize +
-         gcOutput_.sizeOfExcludingThis(mallocSizeOf) +
-         gcOutputForDelazification_.sizeOfExcludingThis(mallocSizeOf);
+         gcOutput_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
@@ -721,13 +719,12 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
 
   bool result;
   if (stencil_) {
-    result = frontend::InstantiateStencils(
-        cx, *stencilInput_, *stencil_, gcOutput_, &gcOutputForDelazification_);
+    result =
+        frontend::InstantiateStencils(cx, *stencilInput_, *stencil_, gcOutput_);
   } else {
     frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
-    result =
-        frontend::InstantiateStencils(cx, *stencilInput_, borrowingStencil,
-                                      gcOutput_, &gcOutputForDelazification_);
+    result = frontend::InstantiateStencils(cx, *stencilInput_, borrowingStencil,
+                                           gcOutput_);
   }
 
   // Whatever happens to the top-level script compilation (even if it fails),
@@ -831,8 +828,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     }
 
     if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
-                                         gcOutput_,
-                                         &gcOutputForDelazification_)) {
+                                         gcOutput_)) {
       stencil_.reset();
     }
 
