@@ -17,7 +17,6 @@ impl spirv::Target for Target {
 /// A HLSL shader model version.
 #[allow(non_snake_case, non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-#[non_exhaustive]
 pub enum ShaderModel {
     V3_0,
     V4_0,

@@ -7,6 +7,7 @@ use crate::{
 use hal::{format, image, window as w};
 
 use crate::CGRect;
+use metal::{CGFloat, CGSize, CoreAnimationDrawable};
 use objc::rc::autoreleasepool;
 use objc::runtime::Object;
 use parking_lot::Mutex;
@@ -18,7 +19,7 @@ use std::thread;
 #[derive(Debug)]
 pub struct Surface {
     view: Option<NonNull<Object>>,
-    render_layer: Mutex<metal::MetalLayer>,
+    render_layer: Mutex<metal::CoreAnimationLayer>,
     swapchain_format: metal::MTLPixelFormat,
     swapchain_format_desc: format::FormatDesc,
     main_thread_id: thread::ThreadId,
@@ -28,7 +29,7 @@ unsafe impl Send for Surface {}
 unsafe impl Sync for Surface {}
 
 impl Surface {
-    pub fn new(view: Option<NonNull<Object>>, layer: metal::MetalLayer) -> Self {
+    pub fn new(view: Option<NonNull<Object>>, layer: metal::CoreAnimationLayer) -> Self {
         Surface {
             view,
             render_layer: Mutex::new(layer),
@@ -67,14 +68,7 @@ impl Surface {
             caps.has_version_at_least(11, 0)
         };
         let can_set_display_sync = is_mac && caps.has_version_at_least(10, 13);
-        let drawable_size =
-            metal::CGSize::new(config.extent.width as f64, config.extent.height as f64);
-
-        match config.composite_alpha_mode {
-            w::CompositeAlphaMode::OPAQUE => render_layer.set_opaque(true),
-            w::CompositeAlphaMode::POSTMULTIPLIED => render_layer.set_opaque(false),
-            _ => (),
-        }
+        let drawable_size = CGSize::new(config.extent.width as f64, config.extent.height as f64);
 
         let device_raw = shared.device.lock();
         unsafe {
@@ -110,7 +104,7 @@ impl Surface {
     }
 
     fn dimensions(&self) -> w::Extent2D {
-        let (size, scale): (metal::CGSize, metal::CGFloat) = match self.view {
+        let (size, scale): (CGSize, CGFloat) = match self.view {
             Some(view) if !cfg!(target_os = "macos") => unsafe {
                 let bounds: CGRect = msg_send![view.as_ptr(), bounds];
                 let window: Option<NonNull<Object>> = msg_send![view.as_ptr(), window];
@@ -121,7 +115,7 @@ impl Surface {
                     Some(screen) => {
                         let screen_space: *mut Object = msg_send![screen.as_ptr(), coordinateSpace];
                         let rect: CGRect = msg_send![view.as_ptr(), convertRect:bounds toCoordinateSpace:screen_space];
-                        let scale_factor: metal::CGFloat = msg_send![screen.as_ptr(), nativeScale];
+                        let scale_factor: CGFloat = msg_send![screen.as_ptr(), nativeScale];
                         (rect.size, scale_factor)
                     }
                     None => (bounds.size, 1.0),
@@ -131,7 +125,7 @@ impl Surface {
                 let render_layer_borrow = self.render_layer.lock();
                 let render_layer = render_layer_borrow.as_ref();
                 let bounds: CGRect = msg_send![render_layer, bounds];
-                let contents_scale: metal::CGFloat = msg_send![render_layer, contentsScale];
+                let contents_scale: CGFloat = msg_send![render_layer, contentsScale];
                 (bounds.size, contents_scale)
             },
         };
@@ -142,18 +136,30 @@ impl Surface {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum AcquireMode {
+    Wait,
+    Oldest,
+}
+
+impl Default for AcquireMode {
+    fn default() -> Self {
+        AcquireMode::Oldest
+    }
+}
+
 #[derive(Debug)]
 pub struct SwapchainImage {
     image: native::Image,
     view: native::ImageView,
-    drawable: metal::MetalDrawable,
+    drawable: metal::CoreAnimationDrawable,
 }
 
 unsafe impl Send for SwapchainImage {}
 unsafe impl Sync for SwapchainImage {}
 
 impl SwapchainImage {
-    pub(crate) fn into_drawable(self) -> metal::MetalDrawable {
+    pub(crate) fn into_drawable(self) -> CoreAnimationDrawable {
         self.drawable
     }
 }
@@ -197,9 +203,7 @@ impl w::Surface<Backend> for Surface {
             } else {
                 w::PresentMode::FIFO
             },
-            composite_alpha_modes: w::CompositeAlphaMode::OPAQUE
-                | w::CompositeAlphaMode::POSTMULTIPLIED
-                | w::CompositeAlphaMode::INHERIT,
+            composite_alpha_modes: w::CompositeAlphaMode::OPAQUE, //TODO
             //Note: this is hardcoded in `CAMetalLayer` documentation
             image_count: if can_set_maximum_drawables_count {
                 2..=3
@@ -217,10 +221,10 @@ impl w::Surface<Backend> for Surface {
                 height: 4096,
             },
             max_image_layers: 1,
-            usage: image::Usage::COLOR_ATTACHMENT,
-            //| image::Usage::SAMPLED
-            //| image::Usage::TRANSFER_SRC
-            //| image::Usage::TRANSFER_DST,
+            usage: image::Usage::COLOR_ATTACHMENT
+                | image::Usage::SAMPLED
+                | image::Usage::TRANSFER_SRC
+                | image::Usage::TRANSFER_DST,
         }
     }
 
@@ -240,7 +244,7 @@ impl w::PresentationSurface<Backend> for Surface {
         &mut self,
         device: &Device,
         config: w::SwapchainConfig,
-    ) -> Result<(), w::SwapchainError> {
+    ) -> Result<(), w::CreationError> {
         assert!(image::Usage::COLOR_ATTACHMENT.contains(config.image_usage));
         self.swapchain_format = self.configure(&device.shared, &config);
         Ok(())

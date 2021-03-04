@@ -20,6 +20,10 @@ impl Heap {
         self.size
     }
 
+    pub(crate) fn budget(&mut self) -> u64 {
+        self.size - self.used
+    }
+
     pub(crate) fn alloc(&mut self, size: u64) {
         self.used += size;
         self.allocated += u128::from(size);

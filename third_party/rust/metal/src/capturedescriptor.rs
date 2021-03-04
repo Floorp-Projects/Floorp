@@ -28,7 +28,7 @@ foreign_obj_type! {
 }
 
 impl CaptureDescriptor {
-    pub fn new() -> Self {
+    pub fn new() -> CaptureDescriptor {
         unsafe {
             let class = class!(MTLCaptureDescriptor);
             msg_send![class, new]

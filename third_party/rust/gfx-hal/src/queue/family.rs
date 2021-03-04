@@ -1,8 +1,10 @@
 //! Queue family and groups.
 
-use crate::{queue::QueueType, Backend};
+use crate::queue::QueueType;
+use crate::Backend;
 
-use std::{any::Any, fmt::Debug};
+use std::any::Any;
+use std::fmt::Debug;
 
 /// General information about a queue family, available upon adapter discovery.
 ///
@@ -32,7 +34,7 @@ pub struct QueueGroup<B: Backend> {
     /// Family index for the queues in this group.
     pub family: QueueFamilyId,
     /// List of queues.
-    pub queues: Vec<B::Queue>,
+    pub queues: Vec<B::CommandQueue>,
 }
 
 impl<B: Backend> QueueGroup<B> {
@@ -47,7 +49,7 @@ impl<B: Backend> QueueGroup<B> {
     /// Add a command queue to the group.
     ///
     /// The queue needs to be created from this queue family.
-    pub fn add_queue(&mut self, queue: B::Queue) {
+    pub fn add_queue(&mut self, queue: B::CommandQueue) {
         self.queues.push(queue);
     }
 }

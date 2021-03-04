@@ -13,7 +13,7 @@ use winapi::{
     Interface,
 };
 
-use std::{cmp, fmt, iter, mem, ops::Range, ptr, sync::Arc};
+use std::{borrow::Borrow, cmp, fmt, iter, mem, ops::Range, ptr, sync::Arc};
 
 use crate::{
     conv, descriptors_cpu, device, internal, pool::PoolShared, resource as r, validate_line_width,
@@ -48,18 +48,17 @@ fn up_align(x: u32, alignment: u32) -> u32 {
 }
 
 #[derive(Clone, Debug)]
-struct AttachmentInfo {
+struct AttachmentClear {
     subpass_id: Option<pass::SubpassId>,
-    view: r::ImageView,
-    clear_value: Option<com::ClearValue>,
+    value: Option<com::ClearValue>,
     stencil_value: Option<u32>,
 }
 
 pub struct RenderPassCache {
     render_pass: r::RenderPass,
+    framebuffer: r::Framebuffer,
     target_rect: d3d12::D3D12_RECT,
-    attachments: Vec<AttachmentInfo>,
-    num_layers: image::Layer,
+    attachment_clears: Vec<AttachmentClear>,
     has_name: bool,
 }
 
@@ -196,22 +195,25 @@ struct PipelineCache {
 }
 
 impl PipelineCache {
-    fn bind_descriptor_sets<'a, J>(
+    fn bind_descriptor_sets<'a, S, J>(
         &mut self,
         layout: &r::PipelineLayout,
         first_set: usize,
-        sets: &[&r::DescriptorSet],
+        sets: &[S],
         offsets: J,
     ) -> [native::DescriptorHeap; 2]
     where
-        J: Iterator<Item = com::DescriptorSetOffset>,
+        S: Borrow<r::DescriptorSet>,
+        J: IntoIterator,
+        J::Item: Borrow<com::DescriptorSetOffset>,
     {
-        let mut offsets = offsets.map(|offset| offset as u64);
+        let mut offsets = offsets.into_iter().map(|offset| *offset.borrow() as u64);
 
         // 'Global' GPU descriptor heaps.
         // All descriptors live in the same heaps.
         let (srv_cbv_uav_start, sampler_start, heap_srv_cbv_uav, heap_sampler) =
-            if let Some(set) = sets.first() {
+            if let Some(set_0) = sets.first() {
+                let set = set_0.borrow();
                 (
                     set.srv_cbv_uav_gpu_start().ptr,
                     set.sampler_gpu_start().ptr,
@@ -225,7 +227,8 @@ impl PipelineCache {
         self.srv_cbv_uav_start = srv_cbv_uav_start;
         self.sampler_start = sampler_start;
 
-        for (&set, element) in sets.iter().zip(layout.elements[first_set..].iter()) {
+        for (set, element) in sets.iter().zip(layout.elements[first_set..].iter()) {
+            let set = set.borrow();
             let mut root_offset = element.table.offset;
 
             // Bind CBV/SRC/UAV descriptor tables
@@ -240,7 +243,7 @@ impl PipelineCache {
             }
 
             // Bind Sampler descriptor tables.
-            if let Some(gpu) = set.first_gpu_sampler {
+            if let Some(gpu) = set.first_gpu_sampler.get() {
                 assert!(element.table.ty.contains(r::SAMPLERS));
 
                 // Cast is safe as offset **must** be in u32 range. Unable to
@@ -256,7 +259,8 @@ impl PipelineCache {
             //       Requires changes then in the descriptor update process.
             for binding in &set.binding_infos {
                 // It's not valid to modify the descriptor sets during recording -> access if safe.
-                for descriptor in binding.dynamic_descriptors.iter() {
+                let dynamic_descriptors = unsafe { &*binding.dynamic_descriptors.get() };
+                for descriptor in dynamic_descriptors {
                     let gpu_offset = descriptor.gpu_buffer_location + offsets.next().unwrap();
                     self.user_data.set_descriptor_cbv(root_offset, gpu_offset);
                     root_offset += 2;
@@ -445,8 +449,6 @@ pub struct CommandBuffer {
 
     /// Temporary transition barriers.
     barriers: Vec<d3d12::D3D12_RESOURCE_BARRIER>,
-    /// Name of the underlying raw `GraphicsCommandList` object.
-    pub(crate) raw_name: Vec<u16>,
 }
 
 impl fmt::Debug for CommandBuffer {
@@ -494,7 +496,6 @@ impl CommandBuffer {
             retained_resources: Vec::new(),
             temp_marker: Vec::new(),
             barriers: Vec::new(),
-            raw_name: Vec::new(),
         }
     }
 
@@ -581,8 +582,7 @@ impl CommandBuffer {
             };
 
             *resource_barrier.u.Transition_mut() = d3d12::D3D12_RESOURCE_TRANSITION_BARRIER {
-                pResource: state.attachments[barrier.attachment_id]
-                    .view
+                pResource: state.framebuffer.attachments[barrier.attachment_id]
                     .resource
                     .as_mut_ptr(),
                 Subresource: d3d12::D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
@@ -604,11 +604,10 @@ impl CommandBuffer {
         let color_views = subpass
             .color_attachments
             .iter()
-            .map(|&(id, _)| state.attachments[id].view.handle_rtv.raw().unwrap())
+            .map(|&(id, _)| state.framebuffer.attachments[id].handle_rtv.raw().unwrap())
             .collect::<Vec<_>>();
         let ds_view = match subpass.depth_stencil_attachment {
-            Some((id, _)) => state.attachments[id]
-                .view
+            Some((id, _)) => state.framebuffer.attachments[id]
                 .handle_dsv
                 .as_ref()
                 .map(|handle| &handle.raw)
@@ -626,18 +625,23 @@ impl CommandBuffer {
         }
 
         // performs clears for all the attachments first used in this subpass
-        for at in state.attachments.iter() {
-            if at.subpass_id != Some(self.cur_subpass) {
+        for (view, clear) in state
+            .framebuffer
+            .attachments
+            .iter()
+            .zip(state.attachment_clears.iter())
+        {
+            if clear.subpass_id != Some(self.cur_subpass) {
                 continue;
             }
 
-            if let (Some(rtv), Some(cv)) = (at.view.handle_rtv.raw(), at.clear_value) {
+            if let (Some(rtv), Some(cv)) = (view.handle_rtv.raw(), clear.value) {
                 self.clear_render_target_view(rtv, unsafe { cv.color }, &[state.target_rect]);
             }
 
-            if let Some(handle) = at.view.handle_dsv {
-                let depth = at.clear_value.map(|cv| unsafe { cv.depth_stencil.depth });
-                let stencil = at.stencil_value;
+            if let Some(handle) = view.handle_dsv {
+                let depth = clear.value.map(|cv| unsafe { cv.depth_stencil.depth });
+                let stencil = clear.stencil_value;
 
                 if depth.is_some() || stencil.is_some() {
                     self.clear_depth_stencil_view(handle.raw, depth, stencil, &[state.target_rect]);
@@ -648,6 +652,7 @@ impl CommandBuffer {
 
     fn resolve_attachments(&self) {
         let state = self.pass_cache.as_ref().unwrap();
+        let framebuffer = &state.framebuffer;
         let subpass = &state.render_pass.subpasses[self.cur_subpass as usize];
 
         for (&(src_attachment, _), &(dst_attachment, _)) in subpass
@@ -659,11 +664,11 @@ impl CommandBuffer {
                 continue;
             }
 
-            let resolve_src = &state.attachments[src_attachment].view;
-            let resolve_dst = &state.attachments[dst_attachment].view;
+            let resolve_src = state.framebuffer.attachments[src_attachment];
+            let resolve_dst = state.framebuffer.attachments[dst_attachment];
 
             // The number of layers of the render area are given on framebuffer creation.
-            for l in 0..state.num_layers {
+            for l in 0..framebuffer.layers {
                 // Attachtments only have a single mip level by specification.
                 let subresource_src = resolve_src.calc_subresource(
                     resolve_src.mip_levels.0 as _,
@@ -851,7 +856,7 @@ impl CommandBuffer {
         )
     }
 
-    fn split_buffer_copy(copies: &mut Vec<Copy>, r: com::BufferImageCopy, image: &r::ImageBound) {
+    fn split_buffer_copy(copies: &mut Vec<Copy>, r: &com::BufferImageCopy, image: &r::ImageBound) {
         let buffer_width = if r.buffer_width == 0 {
             r.image_extent.width
         } else {
@@ -1200,10 +1205,6 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         assert_eq!(self.raw, native::GraphicsCommandList::null());
         self.allocator = Some(allocator);
         self.raw = list;
-
-        if !self.raw_name.is_empty() {
-            self.raw.SetName(self.raw_name.as_ptr());
-        }
     }
 
     unsafe fn finish(&mut self) {
@@ -1219,10 +1220,6 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             self.raw.close();
         }
         if self.phase != Phase::Initial {
-            // Reset the name so it won't get used later for an unnamed `CommandBuffer`.
-            const EMPTY_NAME: u16 = 0;
-            self.raw.SetName(&EMPTY_NAME);
-
             self.pool_shared.release_list(self.raw);
             self.raw = native::GraphicsCommandList::null();
         }
@@ -1255,16 +1252,18 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         }
     }
 
-    unsafe fn begin_render_pass<'a, T>(
+    unsafe fn begin_render_pass<T>(
         &mut self,
         render_pass: &r::RenderPass,
         framebuffer: &r::Framebuffer,
         target_rect: pso::Rect,
-        attachment_infos: T,
+        clear_values: T,
         _first_subpass: com::SubpassContents,
     ) where
-        T: Iterator<Item = com::RenderAttachmentInfo<'a, Backend>>,
+        T: IntoIterator,
+        T::Item: Borrow<com::ClearValue>,
     {
+        assert_eq!(framebuffer.attachments.len(), render_pass.attachments.len());
         // Make sure that no subpass works with Present as intermediate layout.
         // This wouldn't make much sense, and proceeding with this constraint
         // allows the state transitions generated from subpass dependencies
@@ -1283,12 +1282,14 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         }
 
         self.barriers.clear();
-        let mut attachments = Vec::new();
-        for (i, (info, attachment)) in attachment_infos
+        let mut clear_iter = clear_values.into_iter();
+        let mut attachment_clears = Vec::new();
+        for (i, (view, attachment)) in framebuffer
+            .attachments
+            .iter()
             .zip(render_pass.attachments.iter())
             .enumerate()
         {
-            let view = info.image_view.clone();
             // for swapchain views, we consider the initial layout to always be `General`
             let pass_start_state =
                 conv::map_image_resource_state(image::Access::empty(), attachment.layouts.start);
@@ -1302,20 +1303,26 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 self.barriers.push(Self::transition_barrier(barrier));
             }
 
-            attachments.push(AttachmentInfo {
+            let cv = if attachment.has_clears() {
+                Some(*clear_iter.next().unwrap().borrow())
+            } else {
+                None
+            };
+
+            attachment_clears.push(AttachmentClear {
                 subpass_id: render_pass
                     .subpasses
                     .iter()
                     .position(|sp| sp.is_using(i))
                     .map(|i| i as pass::SubpassId),
-                view,
-                clear_value: if attachment.ops.load == pass::AttachmentLoadOp::Clear {
-                    Some(info.clear_value)
+                value: if attachment.ops.load == pass::AttachmentLoadOp::Clear {
+                    assert!(cv.is_some());
+                    cv
                 } else {
                     None
                 },
                 stencil_value: if attachment.stencil_ops.load == pass::AttachmentLoadOp::Clear {
-                    Some(info.clear_value.depth_stencil.stencil)
+                    Some(cv.unwrap().depth_stencil.stencil)
                 } else {
                     None
                 },
@@ -1325,9 +1332,9 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
         self.pass_cache = Some(RenderPassCache {
             render_pass: render_pass.clone(),
+            framebuffer: framebuffer.clone(),
             target_rect: get_rect(&target_rect),
-            attachments,
-            num_layers: framebuffer.layers,
+            attachment_clears,
             has_name: !render_pass.raw_name.is_empty(),
         });
         self.cur_subpass = 0;
@@ -1353,13 +1360,18 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
         let pc = self.pass_cache.take().unwrap();
         self.barriers.clear();
-        for (at, attachment) in pc.attachments.iter().zip(pc.render_pass.attachments.iter()) {
+        for (view, attachment) in pc
+            .framebuffer
+            .attachments
+            .iter()
+            .zip(pc.render_pass.attachments.iter())
+        {
             // for swapchain views, we consider the initial layout to always be `General`
             let pass_end_state =
                 conv::map_image_resource_state(image::Access::empty(), attachment.layouts.end);
-            if at.view.is_swapchain() && pass_end_state != d3d12::D3D12_RESOURCE_STATE_COMMON {
+            if view.is_swapchain() && pass_end_state != d3d12::D3D12_RESOURCE_STATE_COMMON {
                 let barrier = d3d12::D3D12_RESOURCE_TRANSITION_BARRIER {
-                    pResource: at.view.resource.as_mut_ptr(),
+                    pResource: view.resource.as_mut_ptr(),
                     Subresource: d3d12::D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
                     StateBefore: pass_end_state,
                     StateAfter: d3d12::D3D12_RESOURCE_STATE_COMMON,
@@ -1380,13 +1392,14 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _dependencies: memory::Dependencies,
         barriers: T,
     ) where
-        T: Iterator<Item = memory::Barrier<'a, Backend>>,
+        T: IntoIterator,
+        T::Item: Borrow<memory::Barrier<'a, Backend>>,
     {
         self.barriers.clear();
 
         // transition barriers
         for barrier in barriers {
-            match barrier {
+            match *barrier.borrow() {
                 memory::Barrier::AllBuffers(_) | memory::Barrier::AllImages(_) => {
                     // Aliasing barrier with NULL resource is the closest we can get to
                     // a global memory barrier in Vulkan.
@@ -1509,12 +1522,14 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         value: com::ClearValue,
         subresource_ranges: T,
     ) where
-        T: Iterator<Item = image::SubresourceRange>,
+        T: IntoIterator,
+        T::Item: Borrow<image::SubresourceRange>,
     {
         let image = image.expect_bound();
         let base_state = conv::map_image_resource_state(image::Access::TRANSFER_WRITE, layout);
 
-        for sub in subresource_ranges {
+        for subresource_range in subresource_ranges {
+            let sub = subresource_range.borrow();
             if sub.level_start != 0 || image.mip_levels != 1 {
                 warn!("Clearing non-zero mipmap levels is not supported yet");
             }
@@ -1525,7 +1540,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             };
 
             self.barriers.clear();
-            self.fill_texture_barries(image, base_state..target_state, &sub);
+            self.fill_texture_barries(image, base_state..target_state, sub);
             self.flush_barriers();
 
             for rel_layer in 0..sub.resolve_layer_count(image.kind.num_layers()) {
@@ -1556,8 +1571,10 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn clear_attachments<T, U>(&mut self, clears: T, rects: U)
     where
-        T: Iterator<Item = com::AttachmentClear>,
-        U: Iterator<Item = pso::ClearRect>,
+        T: IntoIterator,
+        T::Item: Borrow<com::AttachmentClear>,
+        U: IntoIterator,
+        U::Item: Borrow<pso::ClearRect>,
     {
         let pass_cache = match self.pass_cache {
             Some(ref cache) => cache,
@@ -1565,16 +1582,19 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         };
         let sub_pass = &pass_cache.render_pass.subpasses[self.cur_subpass as usize];
 
-        let clear_rects: SmallVec<[pso::ClearRect; 4]> = rects.collect();
+        let clear_rects: SmallVec<[pso::ClearRect; 4]> = rects
+            .into_iter()
+            .map(|rect| rect.borrow().clone())
+            .collect();
 
         let device = self.shared.service_pipes.device;
 
         for clear in clears {
-            match clear {
+            match *clear.borrow() {
                 com::AttachmentClear::Color { index, value } => {
                     let attachment = {
                         let rtv_id = sub_pass.color_attachments[index];
-                        &pass_cache.attachments[rtv_id.0].view
+                        pass_cache.framebuffer.attachments[rtv_id.0]
                     };
 
                     let mut rtv_pool = descriptors_cpu::HeapLinear::new(
@@ -1608,7 +1628,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 com::AttachmentClear::DepthStencil { depth, stencil } => {
                     let attachment = {
                         let dsv_id = sub_pass.depth_stencil_attachment.unwrap();
-                        &pass_cache.attachments[dsv_id.0].view
+                        pass_cache.framebuffer.attachments[dsv_id.0]
                     };
 
                     let mut dsv_pool = descriptors_cpu::HeapLinear::new(
@@ -1651,7 +1671,8 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _dst_layout: image::Layout,
         regions: T,
     ) where
-        T: Iterator<Item = com::ImageResolve>,
+        T: IntoIterator,
+        T::Item: Borrow<com::ImageResolve>,
     {
         let src = src.expect_bound();
         let dst = dst.expect_bound();
@@ -1670,7 +1691,8 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             self.raw.ResourceBarrier(1, &transition_barrier);
         }
 
-        for r in regions {
+        for region in regions {
+            let r = region.borrow();
             for layer in 0..r.extent.depth as u32 {
                 self.raw.ResolveSubresource(
                     src.resource.as_mut_ptr(),
@@ -1712,7 +1734,8 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         filter: image::Filter,
         regions: T,
     ) where
-        T: Iterator<Item = com::ImageBlit>,
+        T: IntoIterator,
+        T::Item: Borrow<com::ImageBlit>,
     {
         let device = self.shared.service_pipes.device.clone();
         let src = src.expect_bound();
@@ -1763,11 +1786,13 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             rtv: d3d12::D3D12_CPU_DESCRIPTOR_HANDLE,
             viewport: d3d12::D3D12_VIEWPORT,
             data: internal::BlitData,
-        }
+        };
         let mut instances = FastHashMap::<internal::BlitKey, Vec<Instance>>::default();
         let mut barriers = Vec::new();
 
-        for r in regions {
+        for region in regions {
+            let r = region.borrow();
+
             let first_layer = r.dst_subresource.layers.start;
             let num_layers = r.dst_subresource.layers.end - first_layer;
 
@@ -1948,9 +1973,10 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         );
     }
 
-    unsafe fn bind_vertex_buffers<'a, T>(&mut self, first_binding: pso::BufferIndex, buffers: T)
+    unsafe fn bind_vertex_buffers<I, T>(&mut self, first_binding: pso::BufferIndex, buffers: I)
     where
-        T: Iterator<Item = (&'a r::Buffer, buffer::SubRange)>,
+        I: IntoIterator<Item = (T, buffer::SubRange)>,
+        T: Borrow<r::Buffer>,
     {
         assert!(first_binding as usize <= MAX_VERTEX_BUFFERS);
 
@@ -1958,7 +1984,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .iter_mut()
             .zip(buffers)
         {
-            let b = buffer.expect_bound();
+            let b = buffer.borrow().expect_bound();
             let base = (*b.resource).GetGPUVirtualAddress();
             view.BufferLocation = base + sub.offset;
             view.SizeInBytes = sub.size_to(b.requirements.size) as u32;
@@ -1968,17 +1994,25 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn set_viewports<T>(&mut self, first_viewport: u32, viewports: T)
     where
-        T: Iterator<Item = pso::Viewport>,
+        T: IntoIterator,
+        T::Item: Borrow<pso::Viewport>,
     {
-        for (i, vp) in viewports.enumerate() {
-            let viewport = d3d12::D3D12_VIEWPORT {
-                TopLeftX: vp.rect.x as _,
-                TopLeftY: vp.rect.y as _,
-                Width: vp.rect.w as _,
-                Height: vp.rect.h as _,
-                MinDepth: vp.depth.start,
-                MaxDepth: vp.depth.end,
-            };
+        let viewports = viewports
+            .into_iter()
+            .map(|viewport| {
+                let viewport = viewport.borrow();
+                d3d12::D3D12_VIEWPORT {
+                    TopLeftX: viewport.rect.x as _,
+                    TopLeftY: viewport.rect.y as _,
+                    Width: viewport.rect.w as _,
+                    Height: viewport.rect.h as _,
+                    MinDepth: viewport.depth.start,
+                    MaxDepth: viewport.depth.end,
+                }
+            })
+            .enumerate();
+
+        for (i, viewport) in viewports {
             if i + first_viewport as usize >= self.viewport_cache.len() {
                 self.viewport_cache.push(viewport);
             } else {
@@ -1992,10 +2026,15 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn set_scissors<T>(&mut self, first_scissor: u32, scissors: T)
     where
-        T: Iterator<Item = pso::Rect>,
+        T: IntoIterator,
+        T::Item: Borrow<pso::Rect>,
     {
-        for (i, r) in scissors.enumerate() {
-            let rect = get_rect(&r);
+        let rects = scissors
+            .into_iter()
+            .map(|rect| get_rect(rect.borrow()))
+            .enumerate();
+
+        for (i, rect) in rects {
             if i + first_scissor as usize >= self.scissor_cache.len() {
                 self.scissor_cache.push(rect);
             } else {
@@ -2076,10 +2115,10 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         self.set_vertex_buffers();
 
         if let Some(ref vp) = pipeline.baked_states.viewport {
-            self.set_viewports(0, iter::once(vp.clone()));
+            self.set_viewports(0, iter::once(vp));
         }
         if let Some(ref rect) = pipeline.baked_states.scissor {
-            self.set_scissors(0, iter::once(rect.clone()));
+            self.set_scissors(0, iter::once(rect));
         }
         if let Some(color) = pipeline.baked_states.blend_color {
             self.set_blend_constants(color);
@@ -2096,17 +2135,21 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         sets: I,
         offsets: J,
     ) where
-        I: Iterator<Item = &'a r::DescriptorSet>,
-        J: Iterator<Item = com::DescriptorSetOffset>,
+        I: IntoIterator,
+        I::Item: Borrow<r::DescriptorSet>,
+        J: IntoIterator,
+        J::Item: Borrow<com::DescriptorSetOffset>,
     {
-        let set_array = sets.collect::<ArrayVec<[_; MAX_DESCRIPTOR_SETS]>>();
+        let set_array = sets
+            .into_iter()
+            .collect::<ArrayVec<[_; MAX_DESCRIPTOR_SETS]>>();
         self.active_descriptor_heaps = self
             .gr_pipeline
             .bind_descriptor_sets(layout, first_set, &set_array, offsets);
         self.bind_descriptor_heaps();
 
         for (i, set) in set_array.into_iter().enumerate() {
-            self.mark_bound_descriptor(first_set + i, set);
+            self.mark_bound_descriptor(first_set + i, set.borrow());
         }
     }
 
@@ -2128,24 +2171,28 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         self.comp_pipeline.pipeline = Some((pipeline.raw, Arc::clone(&pipeline.shared)));
     }
 
-    unsafe fn bind_compute_descriptor_sets<'a, I, J>(
+    unsafe fn bind_compute_descriptor_sets<I, J>(
         &mut self,
         layout: &r::PipelineLayout,
         first_set: usize,
         sets: I,
         offsets: J,
     ) where
-        I: Iterator<Item = &'a r::DescriptorSet>,
-        J: Iterator<Item = com::DescriptorSetOffset>,
+        I: IntoIterator,
+        I::Item: Borrow<r::DescriptorSet>,
+        J: IntoIterator,
+        J::Item: Borrow<com::DescriptorSetOffset>,
     {
-        let set_array = sets.collect::<ArrayVec<[_; MAX_DESCRIPTOR_SETS]>>();
+        let set_array = sets
+            .into_iter()
+            .collect::<ArrayVec<[_; MAX_DESCRIPTOR_SETS]>>();
         self.active_descriptor_heaps = self
             .comp_pipeline
             .bind_descriptor_sets(layout, first_set, &set_array, offsets);
         self.bind_descriptor_heaps();
 
         for (i, set) in set_array.into_iter().enumerate() {
-            self.mark_bound_descriptor(first_set + i, set);
+            self.mark_bound_descriptor(first_set + i, set.borrow());
         }
     }
 
@@ -2242,7 +2289,8 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn copy_buffer<T>(&mut self, src: &r::Buffer, dst: &r::Buffer, regions: T)
     where
-        T: Iterator<Item = com::BufferCopy>,
+        T: IntoIterator,
+        T::Item: Borrow<com::BufferCopy>,
     {
         let src = src.expect_bound();
         let dst = dst.expect_bound();
@@ -2259,6 +2307,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         // TODO: Optimization: Copy whole resource if possible
         // copy each region
         for region in regions {
+            let region = region.borrow();
             self.raw.CopyBufferRegion(
                 dst.resource.as_mut_ptr(),
                 region.dst as _,
@@ -2279,7 +2328,8 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _: image::Layout,
         regions: T,
     ) where
-        T: Iterator<Item = com::ImageCopy>,
+        T: IntoIterator,
+        T::Item: Borrow<com::ImageCopy>,
     {
         let src = src.expect_bound();
         let dst = dst.expect_bound();
@@ -2349,7 +2399,8 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             self.raw.ResourceBarrier(1, &barrier as *const _);
         }
 
-        for r in regions {
+        for region in regions {
+            let r = region.borrow();
             debug_assert_eq!(
                 r.src_subresource.layers.len(),
                 r.dst_subresource.layers.len()
@@ -2407,13 +2458,15 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _: image::Layout,
         regions: T,
     ) where
-        T: Iterator<Item = com::BufferImageCopy>,
+        T: IntoIterator,
+        T::Item: Borrow<com::BufferImageCopy>,
     {
         let buffer = buffer.expect_bound();
         let image = image.expect_bound();
         assert!(self.copies.is_empty());
 
-        for r in regions {
+        for region in regions {
+            let r = region.borrow();
             Self::split_buffer_copy(&mut self.copies, r, image);
         }
 
@@ -2471,13 +2524,15 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         buffer: &r::Buffer,
         regions: T,
     ) where
-        T: Iterator<Item = com::BufferImageCopy>,
+        T: IntoIterator,
+        T::Item: Borrow<com::BufferImageCopy>,
     {
         let image = image.expect_bound();
         let buffer = buffer.expect_bound();
         assert!(self.copies.is_empty());
 
-        for r in regions {
+        for region in regions {
+            let r = region.borrow();
             Self::split_buffer_copy(&mut self.copies, r, image);
         }
 
@@ -2559,7 +2614,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         buffer: &r::Buffer,
         offset: buffer::Offset,
         draw_count: DrawCount,
-        stride: buffer::Stride,
+        stride: u32,
     ) {
         assert_eq!(stride, 16);
         let buffer = buffer.expect_bound();
@@ -2579,7 +2634,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         buffer: &r::Buffer,
         offset: buffer::Offset,
         draw_count: DrawCount,
-        stride: buffer::Stride,
+        stride: u32,
     ) {
         assert_eq!(stride, 20);
         let buffer = buffer.expect_bound();
@@ -2603,7 +2658,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _: &r::Buffer,
         _: buffer::Offset,
         _: hal::DrawCount,
-        _: buffer::Stride,
+        _: u32,
     ) {
         unimplemented!()
     }
@@ -2615,7 +2670,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _: &r::Buffer,
         _: buffer::Offset,
         _: DrawCount,
-        _: buffer::Stride,
+        _: u32,
     ) {
         unimplemented!()
     }
@@ -2627,7 +2682,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         count_buffer: &r::Buffer,
         count_buffer_offset: buffer::Offset,
         max_draw_count: DrawCount,
-        stride: buffer::Stride,
+        stride: u32,
     ) {
         assert_eq!(stride, 16);
         let buffer = buffer.expect_bound();
@@ -2650,7 +2705,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         count_buffer: &r::Buffer,
         count_buffer_offset: buffer::Offset,
         max_draw_count: DrawCount,
-        stride: buffer::Stride,
+        stride: u32,
     ) {
         assert_eq!(stride, 20);
         let buffer = buffer.expect_bound();
@@ -2676,15 +2731,17 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
     unsafe fn wait_events<'a, I, J>(&mut self, _: I, _: Range<pso::PipelineStage>, _: J)
     where
-        I: Iterator<Item = &'a ()>,
-        J: Iterator<Item = memory::Barrier<'a, Backend>>,
+        I: IntoIterator,
+        I::Item: Borrow<()>,
+        J: IntoIterator,
+        J::Item: Borrow<memory::Barrier<'a, Backend>>,
     {
         unimplemented!()
     }
 
     unsafe fn begin_query(&mut self, query: query::Query<Backend>, flags: query::ControlFlags) {
         let query_ty = match query.pool.ty {
-            query::Type::Occlusion => {
+            native::QueryHeapType::Occlusion => {
                 if flags.contains(query::ControlFlags::PRECISE) {
                     self.occlusion_query = Some(OcclusionQuery::Precise(query.id));
                     d3d12::D3D12_QUERY_TYPE_OCCLUSION
@@ -2695,11 +2752,12 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                     d3d12::D3D12_QUERY_TYPE_BINARY_OCCLUSION
                 }
             }
-            query::Type::Timestamp => panic!("Timestap queries are issued via "),
-            query::Type::PipelineStatistics(_) => {
+            native::QueryHeapType::Timestamp => panic!("Timestap queries are issued via "),
+            native::QueryHeapType::PipelineStatistics => {
                 self.pipeline_stats_query = Some(query.id);
                 d3d12::D3D12_QUERY_TYPE_PIPELINE_STATISTICS
             }
+            _ => unreachable!(),
         };
 
         self.raw
@@ -2709,15 +2767,19 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
     unsafe fn end_query(&mut self, query: query::Query<Backend>) {
         let id = query.id;
         let query_ty = match query.pool.ty {
-            query::Type::Occlusion if self.occlusion_query == Some(OcclusionQuery::Precise(id)) => {
+            native::QueryHeapType::Occlusion
+                if self.occlusion_query == Some(OcclusionQuery::Precise(id)) =>
+            {
                 self.occlusion_query = None;
                 d3d12::D3D12_QUERY_TYPE_OCCLUSION
             }
-            query::Type::Occlusion if self.occlusion_query == Some(OcclusionQuery::Binary(id)) => {
+            native::QueryHeapType::Occlusion
+                if self.occlusion_query == Some(OcclusionQuery::Binary(id)) =>
+            {
                 self.occlusion_query = None;
                 d3d12::D3D12_QUERY_TYPE_BINARY_OCCLUSION
             }
-            query::Type::PipelineStatistics(_) if self.pipeline_stats_query == Some(id) => {
+            native::QueryHeapType::PipelineStatistics if self.pipeline_stats_query == Some(id) => {
                 self.pipeline_stats_query = None;
                 d3d12::D3D12_QUERY_TYPE_PIPELINE_STATISTICS
             }
@@ -2742,7 +2804,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         _queries: Range<query::Id>,
         _buffer: &r::Buffer,
         _offset: buffer::Offset,
-        _stride: buffer::Stride,
+        _stride: buffer::Offset,
         _flags: query::ResultFlags,
     ) {
         unimplemented!()
@@ -2781,9 +2843,10 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .set_constants(offset as usize / 4, constants);
     }
 
-    unsafe fn execute_commands<'a, T>(&mut self, cmd_buffers: T)
+    unsafe fn execute_commands<'a, T, I>(&mut self, cmd_buffers: I)
     where
-        T: Iterator<Item = &'a CommandBuffer>,
+        T: 'a + Borrow<CommandBuffer>,
+        I: IntoIterator<Item = &'a T>,
     {
         for _cmd_buf in cmd_buffers {
             error!("TODO: execute_commands");

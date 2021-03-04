@@ -342,7 +342,6 @@ pub struct ShaderResources {
 }
 
 #[derive(Debug, Clone)]
-#[non_exhaustive]
 pub enum Type {
     // TODO: Add missing fields to relevant variants from SPIRType
     Unknown,
@@ -423,7 +422,6 @@ pub enum Type {
     ControlPointArray,
     AccelerationStructure,
     RayQuery,
-    Interpolant,
 }
 
 /// A SPIR-V shader module.

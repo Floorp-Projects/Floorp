@@ -1,11 +1,11 @@
-use crate::D3DResult;
-use std::{
-    fmt,
-    hash::{Hash, Hasher},
-    ops::Deref,
-    ptr,
-};
-use winapi::{ctypes::c_void, um::unknwnbase::IUnknown, Interface};
+use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::ops::Deref;
+use std::ptr;
+use winapi::ctypes::c_void;
+use winapi::um::unknwnbase::IUnknown;
+use winapi::Interface;
+use D3DResult;
 
 #[repr(transparent)]
 pub struct WeakPtr<T>(*mut T);

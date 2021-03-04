@@ -66,11 +66,6 @@ bool CanvasContext::UpdateWebRenderCanvasData(
   return true;
 }
 
-dom::GPUTextureFormat CanvasContext::GetSwapChainPreferredFormat(
-    Adapter&) const {
-  return dom::GPUTextureFormat::Bgra8unorm;
-}
-
 RefPtr<SwapChain> CanvasContext::ConfigureSwapChain(
     const dom::GPUSwapChainDescriptor& aDesc, ErrorResult& aRv) {
   Cleanup();
@@ -91,7 +86,7 @@ RefPtr<SwapChain> CanvasContext::ConfigureSwapChain(
   dom::GPUExtent3DDict extent;
   extent.mWidth = mWidth;
   extent.mHeight = mHeight;
-  extent.mDepthOrArrayLayers = 1;
+  extent.mDepth = 1;
   mSwapChain = new SwapChain(aDesc, extent, mExternalImageId, format);
 
   // Force a new frame to be built, which will execute the

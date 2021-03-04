@@ -191,7 +191,7 @@ impl FlowGraph {
 
     /// Removes OpPhi instructions from the control flow graph and turns them into ordinary variables.
     ///
-    /// Phi instructions are not supported inside Naga nor do they exist as instructions on CPUs. It is necessary
+    /// Phi instructions are not supported inside Naga nor do they exist as instructions on CPUs. It is neccessary
     /// to remove them and turn into ordinary variables before converting to Naga's IR and shader code.
     pub(super) fn remove_phi_instructions(
         &mut self,
@@ -250,6 +250,7 @@ impl FlowGraph {
                             accept: self.naga_traverse(true_node_index, Some(merge_node_index))?,
                             reject: self.naga_traverse(false_node_index, Some(merge_node_index))?,
                         });
+                        result.extend(self.naga_traverse(merge_node_index, stop_node_index)?);
                     } else {
                         result.push(crate::Statement::If {
                             condition,
@@ -257,11 +258,9 @@ impl FlowGraph {
                                 self.block_to_node[&true_id],
                                 Some(merge_node_index),
                             )?,
-                            reject: vec![],
+                            reject: self.naga_traverse(merge_node_index, stop_node_index)?,
                         });
                     }
-
-                    result.extend(self.naga_traverse(merge_node_index, stop_node_index)?);
 
                     Ok(result)
                 }
@@ -272,29 +271,35 @@ impl FlowGraph {
                 } => {
                     let merge_node_index = self.block_to_node[&node.merge.unwrap().merge_block_id];
                     let mut result = node.block.clone();
-                    let mut cases = Vec::with_capacity(targets.len());
+
+                    let mut cases = FastHashMap::default();
 
                     for i in 0..targets.len() {
                         let left_target_node_index = self.block_to_node[&targets[i].1];
 
-                        let fall_through = if i < targets.len() - 1 {
+                        let fallthrough: Option<crate::FallThrough> = if i < targets.len() - 1 {
                             let right_target_node_index = self.block_to_node[&targets[i + 1].1];
-                            has_path_connecting(
+                            if has_path_connecting(
                                 &self.flow,
                                 left_target_node_index,
                                 right_target_node_index,
                                 None,
-                            )
+                            ) {
+                                Some(crate::FallThrough {})
+                            } else {
+                                None
+                            }
                         } else {
-                            false
+                            None
                         };
 
-                        cases.push(crate::SwitchCase {
-                            value: targets[i].0,
-                            body: self
-                                .naga_traverse(left_target_node_index, Some(merge_node_index))?,
-                            fall_through,
-                        });
+                        cases.insert(
+                            targets[i].0,
+                            (
+                                self.naga_traverse(left_target_node_index, Some(merge_node_index))?,
+                                fallthrough,
+                            ),
+                        );
                     }
 
                     result.push(crate::Statement::Switch {

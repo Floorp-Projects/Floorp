@@ -1,16 +1,16 @@
 use {
     crate::{
         align_up, error::AllocationError, heap::Heap, slab::Slab, unreachable_unchecked,
-        util::try_arc_unwrap, MemoryBounds,
+        MemoryBounds,
     },
-    alloc::{sync::Arc, vec::Vec},
+    alloc::vec::Vec,
     core::{convert::TryFrom as _, mem::replace, ptr::NonNull},
     gpu_alloc_types::{AllocationFlags, DeviceMapError, MemoryDevice, MemoryPropertyFlags},
 };
 
 #[derive(Debug)]
 pub(crate) struct BuddyBlock<M> {
-    pub memory: Arc<M>,
+    pub memory: M,
     pub ptr: Option<NonNull<u8>>,
     pub size: u64,
     pub chunk: usize,
@@ -262,7 +262,7 @@ impl Size {
 
 #[derive(Debug)]
 struct Chunk<M> {
-    memory: Arc<M>,
+    memory: M,
     ptr: Option<NonNull<u8>>,
     size: u64,
 }
@@ -323,7 +323,10 @@ where
         flags: AllocationFlags,
         heap: &mut Heap,
         allocations_remains: &mut u32,
-    ) -> Result<BuddyBlock<M>, AllocationError> {
+    ) -> Result<BuddyBlock<M>, AllocationError>
+    where
+        M: Clone,
+    {
         let align_mask = align_mask | self.atom_mask;
 
         let size = align_up(size, align_mask)
@@ -359,12 +362,12 @@ where
                 }
 
                 let chunk_size = self.minimal_size << (candidate_size_index + 1);
-                let mut memory = device.allocate_memory(chunk_size, self.memory_type, flags)?;
+                let memory = device.allocate_memory(chunk_size, self.memory_type, flags)?;
                 *allocations_remains -= 1;
                 heap.alloc(chunk_size);
 
                 let ptr = if host_visible {
-                    match device.map_memory(&mut memory, 0, chunk_size) {
+                    match device.map_memory(&memory, 0, chunk_size) {
                         Ok(ptr) => Some(ptr),
                         Err(DeviceMapError::OutOfDeviceMemory) => {
                             return Err(AllocationError::OutOfDeviceMemory)
@@ -378,7 +381,7 @@ where
                 };
 
                 let chunk = self.chunks.insert(Chunk {
-                    memory: Arc::new(memory),
+                    memory,
                     ptr,
                     size: chunk_size,
                 });
@@ -443,17 +446,11 @@ where
                 }
                 Release::Chunk(chunk) => {
                     debug_assert_eq!(chunk, block.chunk);
-                    debug_assert_eq!(
-                        self.chunks.get(chunk).size,
-                        self.minimal_size << (release_size_index + 1)
-                    );
                     let chunk = self.chunks.remove(chunk);
+                    debug_assert_eq!(chunk.size, self.minimal_size << (release_size_index + 1));
+
                     drop(block);
-
-                    let memory = try_arc_unwrap(chunk.memory)
-                        .expect("Memory shared after last block deallocated");
-
-                    device.deallocate_memory(memory);
+                    device.deallocate_memory(chunk.memory);
                     *allocations_remains += 1;
                     heap.dealloc(chunk.size);
 

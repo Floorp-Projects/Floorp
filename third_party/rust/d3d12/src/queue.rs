@@ -1,5 +1,8 @@
-use crate::{com::WeakPtr, sync::Fence, CommandList, HRESULT};
+use crate::CommandList;
+use com::WeakPtr;
+use sync::Fence;
 use winapi::um::d3d12;
+use HRESULT;
 
 #[repr(u32)]
 pub enum Priority {
