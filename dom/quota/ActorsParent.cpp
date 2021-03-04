@@ -8466,10 +8466,7 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("GetOriginUsageOp::DoDirectoryWork", OTHER);
 
-  // We pass empty suffix to OringinMetadata for now (it's safe because it
-  // isn't used at the moment).
-  // XXX Add mSuffix to GetOriginUsageOp and use it here.
-  const OriginMetadata originMetadata = {""_ns, mGroup,
+  const OriginMetadata originMetadata = {mSuffix, mGroup,
                                          nsCString{mOriginScope.GetOrigin()}};
 
   if (mFromMemory) {
