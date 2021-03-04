@@ -176,7 +176,33 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.restart(in_app=True, clean=True)
 
     def test_in_app_restart(self):
-        self.marionette.restart(in_app=True)
+        details = self.marionette.restart(in_app=True)
+
+        self.assertFalse(details["forced"], "Expected non-forced shutdown")
+
+        self.assertEqual(self.marionette.profile, self.profile)
+        self.assertNotEqual(self.marionette.session_id, self.session_id)
+
+        self.assertNotEqual(self.marionette.process_id, self.pid)
+
+        self.assertNotEqual(
+            self.marionette.get_pref("startup.homepage_welcome_url"), "about:about"
+        )
+
+    def test_in_app_restart_component_prevents_shutdown(self):
+        with self.marionette.using_context("chrome"):
+            self.marionette.execute_script(
+                """
+                Services.obs.addObserver(subject => {
+                  let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+                  cancelQuit.data = true;
+                }, "quit-application-requested");
+                """
+            )
+
+        details = self.marionette.restart(in_app=True)
+
+        self.assertTrue(details["forced"], "Expected forced shutdown")
 
         self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
@@ -267,7 +293,37 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.quit(clean=True)
 
     def test_in_app_quit(self):
-        self.marionette.quit(in_app=True)
+        details = self.marionette.quit(in_app=True)
+
+        self.assertFalse(details["forced"], "Expected non-forced shutdown")
+
+        self.assertEqual(self.marionette.session, None)
+        with self.assertRaisesRegexp(
+            errors.InvalidSessionIdException, "Please start a session"
+        ):
+            self.marionette.get_url()
+
+        self.marionette.start_session()
+        self.assertEqual(self.marionette.profile, self.profile)
+        self.assertNotEqual(self.marionette.session_id, self.session_id)
+        self.assertNotEqual(
+            self.marionette.get_pref("startup.homepage_welcome_url"), "about:about"
+        )
+
+    def test_in_app_quit_component_prevents_shutdown(self):
+        with self.marionette.using_context("chrome"):
+            self.marionette.execute_script(
+                """
+                Services.obs.addObserver(subject => {
+                  let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+                  cancelQuit.data = true;
+                }, "quit-application-requested");
+                """
+            )
+
+        details = self.marionette.quit(in_app=True)
+
+        self.assertTrue(details["forced"], "Expected forced shutdown")
 
         self.assertEqual(self.marionette.session, None)
         with self.assertRaisesRegexp(
