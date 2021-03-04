@@ -16,33 +16,12 @@ async function changeAndVerifyPref(tab, newConfigValue) {
     }
   );
 
-  // On Windows, we really need to wait for the change to finish being
-  // written to the disk before we go to verify anything. Unfortunately, it
-  // would be difficult to check for quick changes to the attributes of the
-  // about:preferences controls (to wait for the controls to be disabled and
-  // re-enabled). So instead, just start the verification by asking the
-  // Application Update Service for the value of app.update.auto. It already
-  // serializes reads and writes to the app update config file, so this will not
-  // resolve until the file write is complete.
   let configValueRead = await UpdateUtils.getAppUpdateAutoEnabled();
   is(
     configValueRead,
     newConfigValue,
     "Value returned should have matched the expected value"
   );
-
-  // Only Windows currently has the update configuration JSON file.
-  if (AppConstants.platform == "win") {
-    let configFile = getUpdateDirFile(FILE_UPDATE_CONFIG_JSON);
-    let decoder = new TextDecoder();
-    let fileContents = await OS.File.read(configFile.path);
-    let saveObject = JSON.parse(decoder.decode(fileContents));
-    is(
-      saveObject["app.update.auto"],
-      newConfigValue,
-      "Value in file should match expected"
-    );
-  }
 
   await SpecialPowers.spawn(
     tab.linkedBrowser,
