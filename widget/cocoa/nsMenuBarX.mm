@@ -201,12 +201,12 @@ void nsMenuBarX::ConstructFallbackNativeMenus() {
   if (!mApplicationMenuDelegate) {
     mApplicationMenuDelegate = [[ApplicationMenuDelegate alloc] initWithApplicationMenu:this];
   }
-  [sApplicationMenu setDelegate:mApplicationMenuDelegate];
+  sApplicationMenu.delegate = mApplicationMenuDelegate;
   NSMenuItem* quitMenuItem = [[[NSMenuItem alloc] initWithTitle:labelStr
                                                          action:@selector(menuItemHit:)
                                                   keyEquivalent:keyStr] autorelease];
-  [quitMenuItem setTarget:nsMenuBarX::sNativeEventTarget];
-  [quitMenuItem setTag:eCommand_ID_Quit];
+  quitMenuItem.target = nsMenuBarX::sNativeEventTarget;
+  quitMenuItem.tag = eCommand_ID_Quit;
   [sApplicationMenu addItem:quitMenuItem];
   sApplicationMenuIsFallback = YES;
 
@@ -218,8 +218,7 @@ uint32_t nsMenuBarX::GetMenuCount() { return mMenuArray.Length(); }
 bool nsMenuBarX::MenuContainsAppMenu() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  return ([mNativeMenu numberOfItems] > 0 &&
-          [[mNativeMenu itemAtIndex:0] submenu] == sApplicationMenu);
+  return (mNativeMenu.numberOfItems > 0 && [mNativeMenu itemAtIndex:0].submenu == sApplicationMenu);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -237,10 +236,10 @@ void nsMenuBarX::InsertMenuAtIndex(UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex) 
     CreateApplicationMenu(aMenu.get());
 
     // Hook the new Application menu up to the menu bar.
-    NSMenu* mainMenu = [NSApp mainMenu];
-    NS_ASSERTION([mainMenu numberOfItems] > 0,
+    NSMenu* mainMenu = NSApp.mainMenu;
+    NS_ASSERTION(mainMenu.numberOfItems > 0,
                  "Main menu does not have any items, something is terribly wrong!");
-    [[mainMenu itemAtIndex:0] setSubmenu:sApplicationMenu];
+    [mainMenu itemAtIndex:0].submenu = sApplicationMenu;
   }
 
   // add menu to array that owns our menus
@@ -305,7 +304,7 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
   NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
-  unsigned int indexCount = [indexes count];
+  unsigned int indexCount = indexes.count;
   if (indexCount == 0) {
     return;
   }
@@ -405,7 +404,7 @@ void nsMenuBarX::SetSystemHelpMenu() {
   if (xulHelpMenu) {
     NSMenu* helpMenu = (NSMenu*)xulHelpMenu->NativeData();
     if (helpMenu) {
-      [NSApp setHelpMenu:helpMenu];
+      NSApp.helpMenu = helpMenu;
     }
   }
 
@@ -421,8 +420,8 @@ nsresult nsMenuBarX::Paint() {
 
   // We have to keep the same menu item for the Application menu so we keep
   // passing it along.
-  NSMenu* outgoingMenu = [NSApp mainMenu];
-  NS_ASSERTION([outgoingMenu numberOfItems] > 0,
+  NSMenu* outgoingMenu = NSApp.mainMenu;
+  NS_ASSERTION(outgoingMenu.numberOfItems > 0,
                "Main menu does not have any items, something is terribly wrong!");
 
   NSMenuItem* appMenuItem = [[outgoingMenu itemAtIndex:0] retain];
@@ -431,7 +430,7 @@ nsresult nsMenuBarX::Paint() {
   [appMenuItem release];
 
   // Set menu bar and event target.
-  [NSApp setMainMenu:mNativeMenu];
+  NSApp.mainMenu = mNativeMenu;
   SetSystemHelpMenu();
   nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
@@ -588,12 +587,12 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
                                                        action:action
                                                 keyEquivalent:keyEquiv];
 
-  [newMenuItem setTag:tag];
-  [newMenuItem setTarget:target];
-  [newMenuItem setKeyEquivalentModifierMask:macKeyModifiers];
+  newMenuItem.tag = tag;
+  newMenuItem.target = target;
+  newMenuItem.keyEquivalentModifierMask = macKeyModifiers;
 
   MenuItemInfo* info = [[MenuItemInfo alloc] initWithMenuGroupOwner:this];
-  [newMenuItem setRepresentedObject:info];
+  newMenuItem.representedObject = info;
   [info release];
 
   return newMenuItem;
@@ -608,7 +607,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
   // At this point, the application menu is the application menu from
   // the nib in cocoa widgets. We do not have a way to create an application
   // menu manually, so we grab the one from the nib and use that.
-  sApplicationMenu = [[[[NSApp mainMenu] itemAtIndex:0] submenu] retain];
+  sApplicationMenu = [[NSApp.mainMenu itemAtIndex:0].submenu retain];
 
   /*
     We support the following menu items here:
@@ -649,7 +648,7 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
     if (!mApplicationMenuDelegate) {
       mApplicationMenuDelegate = [[ApplicationMenuDelegate alloc] initWithApplicationMenu:this];
     }
-    [sApplicationMenu setDelegate:mApplicationMenuDelegate];
+    sApplicationMenu.delegate = mApplicationMenuDelegate;
 
     // This code reads attributes we are going to care about from the DOM elements
 
@@ -692,8 +691,8 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
 
       // set this menu item up as the Mac OS X Services menu
       NSMenu* servicesMenu = [[GeckoServicesNSMenu alloc] initWithTitle:@""];
-      [itemBeingAdded setSubmenu:servicesMenu];
-      [NSApp setServicesMenu:servicesMenu];
+      itemBeingAdded.submenu = servicesMenu;
+      NSApp.servicesMenu = servicesMenu;
 
       [itemBeingAdded release];
       itemBeingAdded = nil;
@@ -783,8 +782,8 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
       NSMenuItem* defaultQuitItem = [[[NSMenuItem alloc] initWithTitle:@"Quit"
                                                                 action:@selector(menuItemHit:)
                                                          keyEquivalent:@"q"] autorelease];
-      [defaultQuitItem setTarget:nsMenuBarX::sNativeEventTarget];
-      [defaultQuitItem setTag:eCommand_ID_Quit];
+      defaultQuitItem.target = nsMenuBarX::sNativeEventTarget;
+      defaultQuitItem.tag = eCommand_ID_Quit;
       [sApplicationMenu addItem:defaultQuitItem];
     }
   }
@@ -816,11 +815,11 @@ static BOOL gMenuItemsExecuteCommands = YES;
   //
   // There is no case in which we'd need to do anything or return YES
   // when we have no items so we can just do this check first.
-  if ([self numberOfItems] <= 0) {
+  if (self.numberOfItems <= 0) {
     return NO;
   }
 
-  NSWindow* keyWindow = [NSApp keyWindow];
+  NSWindow* keyWindow = NSApp.keyWindow;
 
   // If there is no key window then just behave normally. This
   // probably means that this menu is associated with Gecko's
@@ -829,7 +828,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
     return [super performKeyEquivalent:theEvent];
   }
 
-  NSResponder* firstResponder = [keyWindow firstResponder];
+  NSResponder* firstResponder = keyWindow.firstResponder;
 
   gMenuItemsExecuteCommands = NO;
   [super performKeyEquivalent:theEvent];
@@ -838,7 +837,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
   // Return YES if we invoked a command and there is now no key window or we changed
   // the first responder. In this case we do not want to propagate the event because
   // we don't want it handled again.
-  if (![NSApp keyWindow] || [[NSApp keyWindow] firstResponder] != firstResponder) {
+  if (!NSApp.keyWindow || NSApp.keyWindow.firstResponder != firstResponder) {
     return YES;
   }
 
@@ -871,7 +870,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
   MenuItemInfo* info = [sender representedObject];
 
   if (info) {
-    menuGroupOwner = [info menuGroupOwner];
+    menuGroupOwner = info.menuGroupOwner;
     if (!menuGroupOwner) {
       return;
     }
@@ -953,7 +952,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 @implementation GeckoServicesNSMenuItem
 
 - (id)target {
-  id realTarget = [super target];
+  id realTarget = super.target;
   if (gMenuItemsExecuteCommands) {
     return realTarget;
   }
@@ -961,7 +960,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 }
 
 - (SEL)action {
-  SEL realAction = [super action];
+  SEL realAction = super.action;
   if (gMenuItemsExecuteCommands) {
     return realAction;
   }

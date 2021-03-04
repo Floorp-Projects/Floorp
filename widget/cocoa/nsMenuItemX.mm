@@ -80,7 +80,7 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType
                                                  action:nil
                                           keyEquivalent:@""];
 
-    [mNativeMenuItem setEnabled:(BOOL)isEnabled];
+    mNativeMenuItem.enabled = isEnabled;
 
     SetChecked(mContent->IsElement() &&
                mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
@@ -123,11 +123,7 @@ nsresult nsMenuItemX::SetChecked(bool aIsChecked) {
                                  mIsChecked ? u"true"_ns : u"false"_ns, true);
 
   // update native menu item
-  if (mIsChecked) {
-    [mNativeMenuItem setState:NSOnState];
-  } else {
-    [mNativeMenuItem setState:NSOffState];
-  }
+  mNativeMenuItem.state = mIsChecked ? NSOnState : NSOffState;
 
   return NS_OK;
 
@@ -242,14 +238,14 @@ void nsMenuItemX::SetKeyEquiv() {
       uint8_t modifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
 
       unsigned int macModifiers = nsMenuUtilsX::MacModifiersForGeckoModifiers(modifiers);
-      [mNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
+      mNativeMenuItem.keyEquivalentModifierMask = macModifiers;
 
       NSString* keyEquivalent = [[NSString stringWithCharacters:(unichar*)keyChar.get()
                                                          length:keyChar.Length()] lowercaseString];
       if ([keyEquivalent isEqualToString:@" "]) {
-        [mNativeMenuItem setKeyEquivalent:@""];
+        mNativeMenuItem.keyEquivalent = @"";
       } else {
-        [mNativeMenuItem setKeyEquivalent:keyEquivalent];
+        mNativeMenuItem.keyEquivalent = keyEquivalent;
       }
 
       return;
@@ -257,7 +253,7 @@ void nsMenuItemX::SetKeyEquiv() {
   }
 
   // if the key was removed, clear the key
-  [mNativeMenuItem setKeyEquivalent:@""];
+  mNativeMenuItem.keyEquivalent = @"";
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -292,12 +288,8 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
     } else if (aAttribute == nsGkAtoms::image) {
       SetupIcon();
     } else if (aAttribute == nsGkAtoms::disabled) {
-      if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                             nsGkAtoms::_true, eCaseMatters)) {
-        [mNativeMenuItem setEnabled:NO];
-      } else {
-        [mNativeMenuItem setEnabled:YES];
-      }
+      mNativeMenuItem.enabled = !aContent->AsElement()->AttrValueIs(
+          kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
     }
   } else if (aContent == mCommandElement) {
     // the only thing that really matters when the menu isn't showing is the
@@ -318,12 +310,8 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
         }
       }
       // now we sync our native menu item with the command DOM node
-      if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                             nsGkAtoms::_true, eCaseMatters)) {
-        [mNativeMenuItem setEnabled:NO];
-      } else {
-        [mNativeMenuItem setEnabled:YES];
-      }
+      mNativeMenuItem.enabled = !aContent->AsElement()->AttrValueIs(
+          kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
     }
   }
 

@@ -100,8 +100,8 @@ nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
 
   // We can't perform an action on an item with a submenu, that will raise
   // an obj-c exception.
-  if (item && ![item hasSubmenu]) {
-    NSMenu* parent = [item menu];
+  if (item && !item.hasSubmenu) {
+    NSMenu* parent = item.menu;
     if (parent) {
       // NSLog(@"Performing action for native menu item titled: %@\n",
       //       [[currentSubmenu itemAtIndex:targetIndex] title]);
@@ -126,8 +126,8 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
-  NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
-  unsigned int indexCount = [indexes count];
+  NSArray<NSString*>* indexes = [locationString componentsSeparatedByString:@"|"];
+  unsigned int indexCount = indexes.count;
   if (indexCount == 0) {
     return NS_OK;
   }
@@ -136,7 +136,7 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
 
   // now find the correct submenu
   for (unsigned int i = 1; currentMenu && i < indexCount; i++) {
-    int targetIndex = [[indexes objectAtIndex:i] intValue];
+    int targetIndex = [indexes objectAtIndex:i].intValue;
     int visible = 0;
     uint32_t length = currentMenu->GetItemCount();
     for (unsigned int j = 0; j < length; j++) {
@@ -166,11 +166,11 @@ void nsStandaloneNativeMenu::IconUpdated() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mContainerStatusBarItem) {
-    NSImage* menuImage = [mMenu->NativeMenuItem() image];
+    NSImage* menuImage = mMenu->NativeMenuItem().image;
     if (menuImage) {
-      [menuImage setTemplate:true];
+      [menuImage setTemplate:YES];
     }
-    [mContainerStatusBarItem setImage:menuImage];
+    mContainerStatusBarItem.image = menuImage;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
