@@ -7,7 +7,6 @@
 #include "Worklet.h"
 #include "WorkletThread.h"
 
-#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/WorkletBinding.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
 #include "mozilla/dom/BlobBinding.h"
