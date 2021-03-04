@@ -876,9 +876,6 @@ NS_IMETHODIMP
 BlobURLProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                    nsIChannel** aResult) {
   auto channel = MakeRefPtr<BlobURLChannel>(aURI, aLoadInfo);
-  if (!channel) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
   channel.forget(aResult);
   return NS_OK;
 }
