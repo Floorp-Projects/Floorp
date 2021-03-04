@@ -26,6 +26,19 @@ const breakpointListSpec = generateActorSpec({
         location: Arg(0, "json"),
       },
     },
+
+    setXHRBreakpoint: {
+      request: {
+        path: Arg(0, "string"),
+        method: Arg(1, "string"),
+      },
+    },
+    removeXHRBreakpoint: {
+      request: {
+        path: Arg(0, "string"),
+        method: Arg(1, "string"),
+      },
+    },
   },
 });
 

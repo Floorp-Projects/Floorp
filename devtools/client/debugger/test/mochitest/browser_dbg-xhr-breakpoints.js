@@ -3,6 +3,48 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 add_task(async function() {
+  info("Test XHR requests done very early during page load");
+
+  const dbg = await initDebugger("doc-xhr.html", "fetch.js");
+
+  await addXHRBreakpoint(dbg, "doc", "GET");
+
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [EXAMPLE_REMOTE_URL + "doc-early-xhr.html"],
+    (remoteUrl) => {
+      const firstIframe = content.document.createElement("iframe");
+      content.document.body.append(firstIframe);
+      firstIframe.src = remoteUrl;
+    }
+  );
+
+  await waitForPaused(dbg);
+  assertPausedLocation(dbg);
+  await resume(dbg);
+
+  await dbg.actions.removeXHRBreakpoint(0);
+
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [EXAMPLE_REMOTE_URL + "doc-early-xhr.html"],
+    (remoteUrl) => {
+      const secondIframe = content.document.createElement("iframe");
+      content.document.body.append(secondIframe);
+      secondIframe.src = remoteUrl;
+    }
+  );
+
+  // Wait for some time, in order to wait for it to be paused
+  // in case we regress
+  await waitForTime(1000);
+
+  assertNotPaused(dbg);
+});
+
+add_task(async function() {
+  info("Test simple XHR breakpoints set before doing the request");
+
   const dbg = await initDebugger("doc-xhr.html", "fetch.js");
 
   await addXHRBreakpoint(dbg, "doc", "GET");
@@ -16,6 +58,8 @@ add_task(async function() {
   await invokeInTab("main", "doc-xhr.html");
   assertNotPaused(dbg);
 
+
+  info("Test that we do not pause on different method type");
   await addXHRBreakpoint(dbg, "doc", "POST");
   await invokeInTab("main", "doc-xhr.html");
   assertNotPaused(dbg);
@@ -23,6 +67,7 @@ add_task(async function() {
 
 // Tests the "pause on any URL" checkbox works properly
 add_task(async function() {
+  info("Test 'pause on any URL'");
   const dbg = await initDebugger("doc-xhr.html", "fetch.js");
 
   // Enable pause on any URL
@@ -51,6 +96,7 @@ add_task(async function() {
 
 // Tests removal works properly
 add_task(async function() {
+  info("Assert the frontend state when removing breakpoints");
   const dbg = await initDebugger("doc-xhr.html");
 
   const pauseOnAnyCheckbox = getXHRBreakpointCheckbox(dbg);

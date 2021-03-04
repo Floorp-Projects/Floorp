@@ -10,7 +10,7 @@ const {
   WatchedDataHelpers,
 } = require("devtools/server/actors/watcher/WatchedDataHelpers.jsm");
 const { SUPPORTED_DATA } = WatchedDataHelpers;
-const { BREAKPOINTS } = SUPPORTED_DATA;
+const { BREAKPOINTS, XHR_BREAKPOINTS } = SUPPORTED_DATA;
 
 /**
  * This actor manages the breakpoints list.
@@ -39,6 +39,32 @@ const BreakpointListActor = ActorClassWithSpec(breakpointListSpec, {
   removeBreakpoint(location, options) {
     return this.watcherActor.removeDataEntry(BREAKPOINTS, [
       { location, options },
+    ]);
+  },
+
+  /**
+   * Request to break on next XHR or Fetch request for a given URL and HTTP Method.
+   *
+   * @param {String} path
+   *                 If empty, will pause on regardless or the request's URL.
+   *                 Otherwise, will pause on any request whose URL includes this string.
+   *                 This is not specific to URL's path. It can match the URL origin.
+   * @param {String} method
+   *                 If set to "ANY", will pause regardless of which method is used.
+   *                 Otherwise, should be set to any valid HTTP Method (GET, POST, ...)
+   */
+  setXHRBreakpoint(path, method) {
+    return this.watcherActor.addDataEntry(XHR_BREAKPOINTS, [{ path, method }]);
+  },
+
+  /**
+   * Stop breakpoint on requests we ask to break on via setXHRBreakpoint.
+   *
+   * See setXHRBreakpoint for arguments definition.
+   */
+  removeXHRBreakpoint(path, method) {
+    return this.watcherActor.removeDataEntry(XHR_BREAKPOINTS, [
+      { path, method },
     ]);
   },
 });

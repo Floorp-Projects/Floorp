@@ -169,6 +169,11 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         // When removing this trait, consumers should still check that the Watcher is
         // available.
         "target-configuration": true,
+        // @backward-compat { version 88 } Watcher now supports setting the XHR via
+        // the BreakpointListActor.
+        // When removing this trait, consumers should still check that the Watcher is
+        // available.
+        "set-xhr-breakpoints": true,
       },
     };
   },
