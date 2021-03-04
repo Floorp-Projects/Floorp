@@ -15,6 +15,7 @@
 #include "mozilla/dom/AudioNode.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/Blob.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/VideoStreamTrack.h"
