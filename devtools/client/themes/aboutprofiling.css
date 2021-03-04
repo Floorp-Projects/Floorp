@@ -24,6 +24,8 @@ h2 {
   line-height: normal;
 }
 
+/* Intro */
+
 .perf-intro-row {
   margin: 1.7em 0;
   display: flex;
@@ -42,11 +44,35 @@ h2 {
   opacity: 0.5;
 }
 
+/* Shared rules */
+
+.perf-toggle-label {
+  padding: 7px 0;
+  display: flex;
+  max-width: max-content;
+}
+
+.perf-toggle-text-label {
+  height: 26px; /* checkbox/radio height + their margin-block */
+  display: flex;
+  align-items: center;
+}
+
+.perf-toggle-description {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--in-content-deemphasized-text);
+}
+
+/* Presets section */
+
 .perf-presets {
   margin: 2em 0;
   border-bottom: 1px solid var(--in-content-border-color);
   padding-bottom: 1em;
 }
+
+/* Features and settings */
 
 .perf-settings-row {
   display: flex;
@@ -86,13 +112,8 @@ h2 {
   flex: 1;
 }
 
-.perf-settings-feature-label {
-  display: block;
-  margin: 1.3em 0;
-}
-
 .perf-settings-thread-label {
-  margin: 12px 0;
+  margin-block: 12px;
 }
 
 .perf-settings-text-label {
@@ -100,39 +121,32 @@ h2 {
 }
 
 .perf-settings-text-input {
-  width: calc(100% - 4px);
+  width: 100%;
   box-sizing: border-box;
 }
 
-.perf-settings-feature-title {
-  font-size: 13px;
-  margin-block: 0.2em 0;
-  margin-inline: 30px 0;
-  line-height: 1.6;
-  opacity: 0.8;
+#perftools-settings-thread-text {
+  margin-inline: 0;
 }
 
-.perf-settings-subtext {
-  font-weight: bold;
+.perf-settings-checkbox-label-disabled > .perf-settings-feature-text {
+  /* The checkboxes already get their opacity set to 0.5 in common.inc.css,
+     so only target the text. The descriptions get their text deemphasized,
+     so set a value a bit higher than 0.5 to compensate for that. */
+  opacity: 0.65;
 }
 
-.perf-settings-checkbox-label {
-  max-width: max-content;
-}
-
-.perf-settings-checkbox-label-disabled {
-  opacity: 0.8;
-}
+/* Local build section */
 
 .perf-settings-dir-list {
   box-sizing: border-box;
   width: 100%;
   height: 100px;
   border: 1px solid var(--in-content-border-color);
+  margin: 0;
   padding: 0;
   overflow-y: auto;
   background-color: var(--in-content-box-background);
-  color: inherit !important;
 }
 
 .perf-settings-dir-list:hover {
@@ -140,50 +154,30 @@ h2 {
 }
 
 .pref-settings-dir-list-item {
+  display: flex;
   padding: 3px 5px;
 }
 
 .pref-settings-dir-list-item::before {
   content: url(chrome://devtools/skin/images/folder.svg);
-  display: inline-block;
+  display: inline-flex;
+  align-self: center;
   width: 12px;
   height: 12px;
-  margin-inline-end: 4px;
-  vertical-align: -2px;
+  margin-inline-end: 5px;
   -moz-context-properties: fill;
-  fill: var(--in-content-page-color);
+  fill: currentColor;
 }
 
 .perf-settings-dir-list-button-group {
-  padding: 4px 2px;
+  padding-block: 4px;
 }
 
-.perf-settings-dir-list-button-group input[type=button] {
-  margin-inline-start: 0;
+.perf-settings-dir-list-button-group > button {
+  margin-inline: 0 8px;
 }
 
-.perf-presets-input-container {
-  height: 26px;
-}
-
-.pref-preset-text-label {
-  height: 26px;
-  display: flex;
-  align-items: center;
-}
-
-.perf-presets-description {
-  font-size: 13px;
-  color: var(--in-content-deemphasized-text);
-  margin: 2px 0;
-}
-
-.perf-presets-label {
-  padding: 7px 0;
-  display: flex;
-  align-items: start;
-  max-width: max-content;
-}
+/* Back button */
 
 .perf-back {
   margin-block-end: 13px;
