@@ -10,7 +10,6 @@
 #include "chrome/common/ipc_channel.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FunctionRef.h"
-#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ClonedErrorHolder.h"
 #include "mozilla/dom/ClonedErrorHolderBinding.h"
 #include "mozilla/dom/DOMException.h"

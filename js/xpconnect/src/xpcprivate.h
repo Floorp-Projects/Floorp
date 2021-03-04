@@ -161,7 +161,6 @@
 
 namespace mozilla {
 namespace dom {
-class AutoEntryScript;
 class Exception;
 }  // namespace dom
 }  // namespace mozilla
