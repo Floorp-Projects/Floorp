@@ -24,33 +24,46 @@
 
   --identity-box-padding-inline: 6px;
   --identity-box-margin-inline: 4px;
+  --identity-box-label-opacity: .8;
+  --urlbar-box-bg-overlay: hsla(0,0%,70%,.2);
+  --urlbar-box-unfocused-bg-overlay: hsla(0,0%,100%,.7);
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
   :root {
     --focus-outline-width: 0;
     --identity-box-margin-inline: 3px;
+    --identity-box-label-opacity: .6;
   }
 }
 
 /*** END !proton ***/
 
 @supports -moz-bool-pref("browser.proton.enabled") {
+:root {
+  --focus-outline-width: 2px;
+  --focus-outline-color: currentColor;
+  --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
+}
+
+@media not (prefers-contrast) {
   :root {
-    --focus-outline-width: 2px;
-    --focus-outline-color: currentColor;
-    --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
+    --focus-outline-color: #0061E0;
   }
 
-  @media not (prefers-contrast) {
-    :root {
-      --focus-outline-color: #0061E0;
-    }
-
-    :root:-moz-lwtheme-brighttext {
-      --focus-outline-color: #00DDFF;
-    }
+  :root:-moz-lwtheme-brighttext {
+    --focus-outline-color: #00DDFF;
   }
+}
+
+:root[lwt-toolbar-field-brighttext] {
+  --urlbar-box-unfocused-bg-overlay: var(--urlbar-box-bg-overlay);
+}
+@media (prefers-contrast) {
+  :root {
+    --urlbar-box-unfocused-bg-overlay: var(--urlbar-box-bg-overlay)
+  }
+}
 } /*** END proton ***/
 
 :root[extradragspace][tabsintitlebar]:not([inFullscreen]) {

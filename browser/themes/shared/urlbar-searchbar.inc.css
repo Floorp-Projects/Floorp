@@ -380,11 +380,13 @@
 /* Urlbar search mode indicator */
 #urlbar-search-mode-indicator {
   display: none;
+  background-color: var(--urlbar-box-bg-overlay);
   margin-inline-end: 8px;
   align-items: center;
   border-radius: var(--toolbarbutton-border-radius);
   padding-inline: 8px 3px;
 }
+
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 #urlbar-search-mode-indicator {
   -moz-outline-radius: 2px;
@@ -395,17 +397,17 @@
   border-radius: 0;
   padding-inline: 0;
 }
-} /*** END !proton ***/
-
-#urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-search-mode-indicator {
-  display: inline-flex;
-}
 
 /* Invert the colors in the search mode indicator in dark mode. */
 :root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator {
   background-color: #0060df;
   outline-color: #d6ebff;
   color: #d6ebff;
+}
+} /*** END !proton ***/
+
+#urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-search-mode-indicator {
+  display: inline-flex;
 }
 
 /* Use system colors for low/high contrast mode */
@@ -419,10 +421,12 @@
 
 #urlbar-search-mode-indicator-title {
   padding-inline: 0 4px;
+  opacity: var(--identity-box-label-opacity);
 }
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 #urlbar-search-mode-indicator-title {
   padding-inline: 5px;
+  opacity: 1;
 }
 } /*** END !proton ***/
 
@@ -433,7 +437,8 @@
   height: 100%;
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0.6;
-  fill: FieldText;
+  stroke-opacity: var(--identity-box-label-opacity);
+  fill: var(--lwt-toolbar-field-focus-color);
 }
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
@@ -453,6 +458,11 @@
   #urlbar-search-mode-indicator-close {
     fill-opacity: 1.0;
   }
+  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  #urlbar-search-mode-indicator-close {
+    fill: HighlightText;
+  }
+  } /*** END proton ***/
 }
 
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
@@ -464,9 +474,7 @@
 }
 
 #urlbar-search-mode-indicator-close:-moz-lwtheme {
-  /* fill and background-color should match the urlbar focused color and
-     background. */
-  fill: var(--lwt-toolbar-field-focus-color);
+  /* Background-color should match the urlbar background. */
   background-color: var(--lwt-toolbar-field-focus);
 }
 

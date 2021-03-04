@@ -28,6 +28,7 @@
   --arrowpanel-dimmed-further: hsla(0,0%,80%,.5);
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
+  --urlbar-box-unfocused-bg-overlay: var(--urlbar-box-bg-overlay);
   --urlbar-separator-color: ThreeDShadow;
 
   --chrome-content-separator-color: ThreeDShadow;
