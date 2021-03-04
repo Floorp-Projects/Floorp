@@ -59,6 +59,7 @@ EXPORTS += [
     "nsGkAtoms.h",
     "nsHashKeys.h",
     "nsHashPropertyBag.h",
+    "nsHashtablesFwd.h",
     "nsInterfaceHashtable.h",
     "nsMathUtils.h",
     "nsPersistentProperties.h",
