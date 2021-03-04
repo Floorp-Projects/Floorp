@@ -461,10 +461,12 @@ interface nsIUpdateSyncManager : nsISupports
 
   /**
    * Should only be used for testing.
-   * Closes and reopens the lock file, possibly under a different name if the
-   * path hash has changed (which should only happen if a test is forcing it).
+   *
+   * Closes and reopens the lock file, possibly under a different name if a
+   * parameter is given (or the path hash has changed, which should only happen
+   * if a test is forcing it).
    */
-  void resetLock();
+  void resetLock([optional] in nsIFile anAppFile);
 };
 
 /**
