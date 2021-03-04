@@ -837,13 +837,16 @@ static JSObject* CreateInterfaceObject(
 
   if (DOMIfaceAndProtoJSClass::FromJSClass(constructorClass)
           ->wantsInterfaceHasInstance) {
-    JS::Rooted<jsid> hasInstanceId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                           cx, JS::SymbolCode::hasInstance)));
-    if (!JS_DefineFunctionById(
-            cx, constructor, hasInstanceId, InterfaceHasInstance, 1,
-            // Flags match those of Function[Symbol.hasInstance]
-            JSPROP_READONLY | JSPROP_PERMANENT)) {
-      return nullptr;
+    if (isChrome ||
+        StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled()) {
+      JS::Rooted<jsid> hasInstanceId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
+                                             cx, JS::SymbolCode::hasInstance)));
+      if (!JS_DefineFunctionById(
+              cx, constructor, hasInstanceId, InterfaceHasInstance, 1,
+              // Flags match those of Function[Symbol.hasInstance]
+              JSPROP_READONLY | JSPROP_PERMANENT)) {
+        return nullptr;
+      }
     }
 
     if (isChrome && !JS_DefineFunction(cx, constructor, "isInstance",
