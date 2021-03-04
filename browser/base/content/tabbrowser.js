@@ -5321,7 +5321,12 @@
       let title = event.target.querySelector(".places-tooltip-title");
       title.value = label;
       let url = event.target.querySelector(".places-tooltip-uri");
-      url.value = tab.linkedBrowser?.currentURI?.spec;
+      url.value = tab.linkedBrowser?.currentURI?.spec.replace(
+        /^https:\/\//,
+        ""
+      );
+      let icon = event.target.querySelector("#places-tooltip-insecure-icon");
+      icon.hidden = !url.value.startsWith("http://");
     },
 
     handleEvent(aEvent) {

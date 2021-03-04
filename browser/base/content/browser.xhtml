@@ -622,7 +622,10 @@
              onpopupshowing="gBrowser.createTooltip(event);">
       <vbox class="places-tooltip-box" flex="1">
         <description crop="center" class="tooltip-label places-tooltip-title"/>
-        <description crop="center" class="tooltip-label places-tooltip-uri uri-element"/>
+        <hbox>
+          <image id="places-tooltip-insecure-icon"></image>
+          <description crop="center" class="tooltip-label places-tooltip-uri uri-element"/>
+        </hbox>
       </vbox>
     </tooltip>
 
