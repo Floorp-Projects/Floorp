@@ -4636,11 +4636,7 @@
 
 - name: gfx.webrender.enable-capture
   type: bool
-#ifdef NIGHTLY_BUILD
-  value: true
-#else
   value: false
-#endif
   mirror: once
 
 - name: gfx.webrender.dl.dump-parent
