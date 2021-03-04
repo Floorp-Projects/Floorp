@@ -71,7 +71,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item. An icon might have been set
     // earlier.  Clear it.
-    [mNativeMenuItem setImage:nil];
+    mNativeMenuItem.image = nil;
 
     return NS_OK;
   }
@@ -82,7 +82,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
   if (!mSetIcon) {
     // Load placeholder icon.
     NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
-    [mNativeMenuItem setImage:[MOZIconHelper placeholderIconWithSize:iconSize]];
+    mNativeMenuItem.image = [MOZIconHelper placeholderIconWithSize:iconSize];
   }
 
   rv = mIconLoader->LoadIcon(iconURI, mContent);
@@ -90,7 +90,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
     // been set.  Clear it.
-    [mNativeMenuItem setImage:nil];
+    mNativeMenuItem.image = nil;
   }
 
   mSetIcon = true;
@@ -201,7 +201,7 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
                                                      withSize:NSMakeSize(kIconSize, kIconSize)
                                                       subrect:mImageRegionRect
                                                   scaleFactor:0.0f];
-  [mNativeMenuItem setImage:image];
+  mNativeMenuItem.image = image;
   if (mMenuObject) {
     mMenuObject->IconUpdated();
   }
