@@ -202,7 +202,7 @@ function addLevels(walker, buf, indent) {
       // In the case of template elements, children do not get inserted as
       // children of the template element, instead they are inserted
       // as children of the template content (which is a document fragment).
-      if (walker.currentNode instanceof HTMLTemplateElement) {
+      if (walker.currentNode.constructor.name === "HTMLTemplateElement") {
         buf += indent + "  content\n";
         // Walk through the template content.
         var templateWalker = createFragmentWalker(walker.currentNode.content);
