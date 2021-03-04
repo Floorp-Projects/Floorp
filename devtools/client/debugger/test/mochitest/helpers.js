@@ -588,6 +588,9 @@ async function clearDebuggerPreferences(prefs = []) {
  */
 
 async function initDebugger(url, ...sources) {
+  // We depend on EXAMPLE_URLs origin to do cross origin/process iframes via
+  // EXAMPLE_REMOTE_URL. If the top level document origin changes,
+  // we may break this. So be careful if you want to change EXAMPLE_URL.
   return initDebuggerWithAbsoluteURL(EXAMPLE_URL + url, ...sources);
 }
 

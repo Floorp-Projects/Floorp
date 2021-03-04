@@ -137,12 +137,28 @@ async function sourceContents({ actor, thread }) {
   return { source, contentType };
 }
 
-function setXHRBreakpoint(path, method) {
-  return currentThreadFront().setXHRBreakpoint(path, method);
+async function setXHRBreakpoint(path, method) {
+  const hasWatcherSupport = targetList.hasTargetWatcherSupport(
+    "set-xhr-breakpoints"
+  );
+  if (!hasWatcherSupport) {
+    // Without watcher support, forward setXHRBreakpoint to all threads.
+    return forEachThread(thread => thread.setXHRBreakpoint(path, method));
+  }
+  const breakpointsFront = await targetList.watcherFront.getBreakpointListActor();
+  await breakpointsFront.setXHRBreakpoint(path, method);
 }
 
-function removeXHRBreakpoint(path, method) {
-  return currentThreadFront().removeXHRBreakpoint(path, method);
+async function removeXHRBreakpoint(path, method) {
+  const hasWatcherSupport = targetList.hasTargetWatcherSupport(
+    "set-xhr-breakpoints"
+  );
+  if (!hasWatcherSupport) {
+    // Without watcher support, forward setXHRBreakpoint to all threads.
+    return forEachThread(thread => thread.removeXHRBreakpoint(path, method));
+  }
+  const breakpointsFront = await targetList.watcherFront.getBreakpointListActor();
+  await breakpointsFront.removeXHRBreakpoint(path, method);
 }
 
 export function toggleJavaScriptEnabled(enabled) {
