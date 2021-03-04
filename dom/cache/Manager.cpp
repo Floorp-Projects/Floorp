@@ -98,6 +98,8 @@ class SetupAction final : public SyncDBAction {
       mozStorageTransaction trans(aConn, false,
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+      CACHE_TRY(trans.Start());
+
       // Clean up orphaned Cache objects
       CACHE_TRY_INSPECT(const auto& orphanedCacheIdList,
                         db::FindOrphanedCacheIds(*aConn));
@@ -540,6 +542,8 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    CACHE_TRY(trans.Start());
+
     CACHE_TRY_UNWRAP(mDeletionInfo, db::DeleteCacheId(*aConn, mCacheId));
 
     CACHE_TRY(MaybeUpdatePaddingFile(
@@ -847,6 +851,8 @@ class Manager::CachePutAllAction final : public DBAction {
     mozStorageTransaction trans(mConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    CACHE_TRY(trans.Start(), QM_VOID);
+
     const nsresult rv = [this, &trans]() -> nsresult {
       CACHE_TRY(CollectEachInRange(mList, [this](Entry& e) -> nsresult {
         if (e.mRequestStream) {
@@ -1105,6 +1111,8 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    CACHE_TRY(trans.Start());
+
     CACHE_TRY_UNWRAP(
         auto maybeDeletionInfo,
         db::CacheDelete(*aConn, mCacheId, mArgs.request(), mArgs.params()));
@@ -1326,6 +1334,8 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    CACHE_TRY(trans.Start());
+
     // Look for existing cache
     CACHE_TRY_INSPECT(const auto& maybeCacheId,
                       db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
@@ -1376,6 +1386,8 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
       mozIStorageConnection* aConn) override {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    CACHE_TRY(trans.Start());
 
     CACHE_TRY_INSPECT(const auto& maybeCacheId,
                       db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));

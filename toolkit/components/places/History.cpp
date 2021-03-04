@@ -819,6 +819,9 @@ class InsertVisitedURIs final : public Runnable {
     mozStorageTransaction transaction(
         mDBConn, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    // XXX Handle the error, bug 1696133.
+    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
+
     const VisitData* lastFetchedPlace = nullptr;
     uint32_t lastFetchedVisitCount = 0;
     bool shouldChunkNotifications = mPlaces.Length() > NOTIFY_VISITS_CHUNK_SIZE;

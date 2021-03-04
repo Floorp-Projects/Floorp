@@ -928,6 +928,8 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
     mozStorageTransaction transaction(
         connection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    IDB_TRY(transaction.Start());
+
     if (newDatabase) {
       IDB_TRY(CreateTables(*connection));
 
@@ -12344,6 +12346,8 @@ nsresult FileManager::InitDirectory(nsIFile& aDirectory, nsIFile& aDatabaseFile,
 
       mozStorageTransaction transaction(connection.get(), false);
 
+      IDB_TRY(transaction.Start())
+
       IDB_TRY(connection->ExecuteSimpleSQL(
           "CREATE VIRTUAL TABLE fs USING filesystem;"_ns));
 
@@ -14092,6 +14096,8 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
   // sure everything gets rolled back when we leave.
   mozStorageTransaction transaction(&aConnection,
                                     /* aCommitOnComplete */ false);
+
+  IDB_TRY(transaction.Start())
 
   // Check to see when we last vacuumed this database.
   IDB_TRY_INSPECT(const auto& stmt,

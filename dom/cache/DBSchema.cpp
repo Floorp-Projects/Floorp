@@ -457,6 +457,8 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
   mozStorageTransaction trans(&aConn, false,
                               mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+  CACHE_TRY(trans.Start());
+
   const bool migrating = schemaVersion != 0;
 
   if (migrating) {
