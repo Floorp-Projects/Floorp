@@ -33,6 +33,11 @@
 .places-tooltip-title {
   font-weight: 600;
   font-size: 1.1em;
+
+  /* Clip after 2 lines, this should ideally use a different method like -webkit-line-clamp or
+     overflow: hidden; to get ellipsis support but XUL tooltip sizing makes that difficult. */
+  max-height: 2.5em;
+  overflow-y: clip;
 }
 
 #places-tooltip-insecure-icon {
