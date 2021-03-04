@@ -92,9 +92,11 @@
 }
 } /*** END !proton ***/
 
+#identity-box[pageproxystate="valid"].notSecureText #identity-icon-label,
 #identity-box[pageproxystate="valid"].chromeUI #identity-icon-label,
+#identity-box[pageproxystate="valid"].extensionPage #identity-icon-label,
 .urlbar-label {
-  opacity: .6;
+  opacity: var(--identity-box-label-opacity);
 }
 
 #identity-icon-label {
@@ -118,6 +120,22 @@
   padding-inline: 8px;
   border-radius: var(--toolbarbutton-border-radius);
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+#identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
+#identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
+#identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
+#urlbar-label-box {
+  background-color: var(--urlbar-box-bg-overlay);
+}
+
+#urlbar:not([focused="true"]) #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
+#urlbar:not([focused="true"]) #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
+#urlbar:not([focused="true"]) #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
+#urlbar:not([focused="true"]) #urlbar-label-box {
+  background-color: var(--urlbar-box-unfocused-bg-overlay);
+}
+} /*** END proton ***/
 
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 #identity-box[pageproxystate="valid"].notSecureText,
