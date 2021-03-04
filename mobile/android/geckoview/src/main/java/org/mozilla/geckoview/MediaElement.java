@@ -21,7 +21,12 @@ import java.util.Locale;
 /**
  * GeckoSession applications can use this class to handle media events
  * and control the HTMLMediaElement externally.
+ *
+ * @deprecated This API has been replaced by the
+ *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
+ *             and will be removed in GeckoView 91.
  **/
+@Deprecated @DeprecationSchedule(version = 91, id = "media-element")
 @AnyThread
 public class MediaElement {
     @Retention(RetentionPolicy.SOURCE)

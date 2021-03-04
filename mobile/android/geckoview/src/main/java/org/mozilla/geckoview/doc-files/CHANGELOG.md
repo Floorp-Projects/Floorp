@@ -28,6 +28,9 @@ exclude: true
   because the event was consumed in the web site (e.g. in canvas like
   web apps).
   ([bug 1678505]({{bugzilla}}1678505)).
+- ⚠️ Deprecate the [`MediaElement`][65.11] API to be removed in v91.
+  Please use [`MediaSession`][81.6] for media events and control.
+  ([bug 1693584]({{bugzilla}}1693584)).
 
 [88.1]: {{javadoc_uri}}/WebExtension.Download.html#update-org.mozilla.geckoview.WebExtension.Download.Info-
 [88.2]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForDetailResult
@@ -918,4 +921,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 5d8a7b8b9a5722ee3dc7997e8f6f0a4b217a7036
+[api-version]: f97675adf85a37a764245f17806897b796d4a546
