@@ -1126,7 +1126,7 @@ TestArray.addTest(
 
     return Promise.all([p1, p2, p3]).then(complete(that, keys => {
       return keys.every(key => {
-        if (key instanceof CryptoKey) {
+        if (key instanceof frames[0].CryptoKey) {
           return checkPrototypes(key, "CryptoKey");
         }
 
