@@ -498,7 +498,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     // DevEdition/Nightly.
     bool xpinstallSignatures;
     Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
-    if (xpinstallSignatures) {
+    if (!xpinstallSignatures) {
       sJSHacksPresent = true;
     }
 
@@ -1022,7 +1022,7 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     // DevEdition/Nightly.
     bool xpinstallSignatures;
     Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
-    if (xpinstallSignatures) {
+    if (!xpinstallSignatures) {
       sJSHacksPresent = true;
     }
 
