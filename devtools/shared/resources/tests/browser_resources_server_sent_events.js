@@ -2,37 +2,52 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-
 // Test the ResourceWatcher API around SERVER SENT EVENTS.
 
 const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
+const targets = {
+  TOP_LEVEL_DOCUMENT: "top-level-document",
+  IN_PROCESS_IFRAME: "in-process-frame",
+  OUT_PROCESS_IFRAME: "out-process-frame",
+};
+
 add_task(async function() {
+  info("Testing the top-level document");
+  await testServerSentEventResources(targets.TOP_LEVEL_DOCUMENT);
+  info("Testing the in-process iframe");
+  await testServerSentEventResources(targets.IN_PROCESS_IFRAME);
+  info("Testing the out-of-process iframe");
+  await testServerSentEventResources(targets.OUT_PROCESS_IFRAME);
+});
+
+async function testServerSentEventResources(target) {
   const tab = await addTab(URL_ROOT + "sse_frontend.html");
 
   const { client, resourceWatcher, targetList } = await initResourceWatcher(
     tab
   );
 
-  info("Check available resources");
   const availableResources = [];
+
+  function onResourceAvailable(resources) {
+    availableResources.push(...resources);
+  }
+
   await resourceWatcher.watchResources(
     [ResourceWatcher.TYPES.SERVER_SENT_EVENT],
-    {
-      onAvailable: resources => availableResources.push(...resources),
-    }
+    { onAvailable: onResourceAvailable }
   );
 
-  info("Check resource of opening websocket");
-  await ContentTask.spawn(tab.linkedBrowser, [], async () => {
-    await content.wrappedJSObject.openConnection();
-  });
+  openConnectionInContext(tab, target);
 
+  info("Check available resources");
   // We expect only 2 resources
   await waitUntil(() => availableResources.length === 2);
 
+  info("Check resource details");
   // To make sure the channel id are the same
   const httpChannelId = availableResources[0].httpChannelId;
 
@@ -55,9 +70,15 @@ add_task(async function() {
     httpChannelId,
   });
 
+  await resourceWatcher.unwatchResources(
+    [ResourceWatcher.TYPES.SERVER_SENT_EVENT],
+    { onAvailable: onResourceAvailable }
+  );
+
   await targetList.destroy();
   await client.close();
-});
+  BrowserTestUtils.removeTab(tab);
+}
 
 function assertResource(resource, expected) {
   is(
@@ -67,4 +88,21 @@ function assertResource(resource, expected) {
   );
 
   checkObject(resource, expected);
+}
+
+async function openConnectionInContext(tab, target) {
+  let browsingContext = tab.linkedBrowser.browsingContext;
+  if (target !== targets.TOP_LEVEL_DOCUMENT) {
+    browsingContext = await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [target],
+      async _target => {
+        const iframe = content.document.getElementById(_target);
+        return iframe.browsingContext;
+      }
+    );
+  }
+  await SpecialPowers.spawn(browsingContext, [], async () => {
+    await content.wrappedJSObject.openConnection();
+  });
 }

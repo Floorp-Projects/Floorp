@@ -18,6 +18,7 @@ DevToolsModules(
     "network-events-stacktraces.js",
     "network-events.js",
     "platform-messages.js",
+    "server-sent-events.js",
     "sources.js",
     "storage-cache.js",
     "storage-local-storage.js",

@@ -158,6 +158,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
             enableServerWatcher && hasBrowserElement,
           [Resources.TYPES.SOURCE]: hasBrowserElement,
           [Resources.TYPES.THREAD_STATE]: hasBrowserElement,
+          [Resources.TYPES.SERVER_SENT_EVENT]: hasBrowserElement,
         },
         // @backward-compat { version 85 } When removing this trait, consumers using
         // the TargetList to retrieve the Breakpoints front should still be careful to check
