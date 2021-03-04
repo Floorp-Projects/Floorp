@@ -4769,3 +4769,104 @@ awesomebar:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+
+android_keystore_experiment:
+  experiment_failure:
+    type: event
+    description: |
+      Records an instance of an unexpected failure during the experiment
+    extra_keys:
+      failure_exception:
+        description: |
+          Exception class associated with an unexpected failure of this
+          experiment, not caught by the other failure handlers.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17869
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-09-01"
+  get_failure:
+    type: event
+    description: |
+      Unexpected failure when trying to read from secure prefs.
+    extra_keys:
+      failure_exception:
+        description: |
+          Exception class associated with an unexpected failure of this
+          experiment.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17869
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-09-01"
+  get_result:
+    type: event
+    description: |
+      Success when trying to read from secure prefs.
+    extra_keys:
+      result:
+        description: |
+          Result code identifying whether the read operation returned the
+          expected value or not.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17869
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-09-01"
+  write_failure:
+    type: event
+    description: |
+      Unexpected failure when trying to write to secure prefs.
+    extra_keys:
+      failure_exception:
+        description: |
+          Exception class associated with an unexpected failure of this
+          experiment.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17869
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-09-01"
+  write_success:
+    type: event
+    description: |
+      Success in writing to secure prefs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17869
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-09-01"
+  reset:
+    type: event
+    description: |
+      An experiment failed, and was reset to run again in the future from a
+      blank state.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17869
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18333#pullrequestreview-612447395
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-09-01"

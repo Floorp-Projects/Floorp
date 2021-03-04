@@ -9,6 +9,7 @@ import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Addons
+import org.mozilla.fenix.GleanMetrics.AndroidKeystoreExperiment
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Collections
@@ -232,6 +233,25 @@ sealed class Event {
         override val extras: Map<TopSites.swipeCarouselKeys, String>?
             get() = hashMapOf(TopSites.swipeCarouselKeys.page to page.toString())
     }
+
+    data class SecurePrefsExperimentFailure(val failureException: String) : Event() {
+        override val extras =
+            mapOf(AndroidKeystoreExperiment.experimentFailureKeys.failureException to failureException)
+    }
+    data class SecurePrefsGetFailure(val failureException: String) : Event() {
+        override val extras =
+            mapOf(AndroidKeystoreExperiment.getFailureKeys.failureException to failureException)
+    }
+    data class SecurePrefsGetSuccess(val successCode: String) : Event() {
+        override val extras =
+            mapOf(AndroidKeystoreExperiment.getResultKeys.result to successCode)
+    }
+    data class SecurePrefsWriteFailure(val failureException: String) : Event() {
+        override val extras =
+            mapOf(AndroidKeystoreExperiment.writeFailureKeys.failureException to failureException)
+    }
+    object SecurePrefsWriteSuccess : Event()
+    object SecurePrefsReset : Event()
 
     data class TopSiteLongPress(val type: TopSite.Type) : Event() {
         override val extras: Map<TopSites.longPressKeys, String>?

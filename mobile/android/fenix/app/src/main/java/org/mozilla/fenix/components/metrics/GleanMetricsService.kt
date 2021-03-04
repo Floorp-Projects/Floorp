@@ -14,6 +14,7 @@ import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.AboutPage
 import org.mozilla.fenix.GleanMetrics.Addons
+import org.mozilla.fenix.GleanMetrics.AndroidKeystoreExperiment
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
@@ -786,6 +787,29 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.OpenedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
             { Awesomebar.openedTabSuggestionClicked.record(it) }
+        )
+
+        is Event.SecurePrefsExperimentFailure -> EventWrapper(
+            { AndroidKeystoreExperiment.experimentFailure.record(it) },
+            { AndroidKeystoreExperiment.experimentFailureKeys.valueOf(it) }
+        )
+        is Event.SecurePrefsGetFailure -> EventWrapper(
+            { AndroidKeystoreExperiment.getFailure.record(it) },
+            { AndroidKeystoreExperiment.getFailureKeys.valueOf(it) }
+        )
+        is Event.SecurePrefsGetSuccess -> EventWrapper(
+            { AndroidKeystoreExperiment.getResult.record(it) },
+            { AndroidKeystoreExperiment.getResultKeys.valueOf(it) }
+        )
+        is Event.SecurePrefsWriteFailure -> EventWrapper(
+            { AndroidKeystoreExperiment.writeFailure.record(it) },
+            { AndroidKeystoreExperiment.writeFailureKeys.valueOf(it) }
+        )
+        is Event.SecurePrefsWriteSuccess -> EventWrapper<NoExtraKeys>(
+            { AndroidKeystoreExperiment.writeSuccess.record(it) }
+        )
+        is Event.SecurePrefsReset -> EventWrapper<NoExtraKeys>(
+            { AndroidKeystoreExperiment.reset.record(it) }
         )
 
         // Don't record other events in Glean:
