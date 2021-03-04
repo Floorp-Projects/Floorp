@@ -3351,7 +3351,9 @@
 
       // Guarantee that _clearMultiSelectionLocked lock gets released.
       try {
-        let tabsWithBeforeUnload = [];
+        let tabsWithBeforeUnloadPrompt = [];
+        let tabsWithoutBeforeUnload = [];
+        let beforeUnloadPromises = [];
         let lastToClose;
         let aParams = { animate, prewarmed: true };
 
@@ -3363,12 +3365,77 @@
               this._getSwitcher().warmupTab(toBlurTo);
             }
           } else if (this._hasBeforeUnload(tab)) {
-            tabsWithBeforeUnload.push(tab);
+            TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", tab);
+            // We need to block while calling permitUnload() because it
+            // processes the event queue and may lead to another removeTab()
+            // call before permitUnload() returns.
+            tab._pendingPermitUnload = true;
+            beforeUnloadPromises.push(
+              // To save time, we first run the beforeunload event listeners in all
+              // content processes in parallel. Tabs that would have shown a prompt
+              // will be handled again later.
+              tab.linkedBrowser.asyncPermitUnload("dontUnload").then(
+                ({ permitUnload }) => {
+                  tab._pendingPermitUnload = false;
+                  TelemetryStopwatch.finish(
+                    "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS",
+                    tab
+                  );
+                  if (tab.closing) {
+                    // The tab was closed by the user while we were in permitUnload, don't
+                    // attempt to close it a second time.
+                  } else if (permitUnload) {
+                    // OK to close without prompting, do it immediately.
+                    this.removeTab(tab, {
+                      animate,
+                      prewarmed: true,
+                      skipPermitUnload: true,
+                    });
+                  } else {
+                    // We will need to prompt, queue it so it happens sequentially.
+                    tabsWithBeforeUnloadPrompt.push(tab);
+                  }
+                },
+                err => {
+                  console.log("error while calling asyncPermitUnload", err);
+                  tab._pendingPermitUnload = false;
+                  TelemetryStopwatch.finish(
+                    "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS",
+                    tab
+                  );
+                }
+              )
+            );
           } else {
-            this.removeTab(tab, aParams);
+            tabsWithoutBeforeUnload.push(tab);
           }
         }
-        for (let tab of tabsWithBeforeUnload) {
+        // Now that all the beforeunload IPCs have been sent to content processes,
+        // we can queue unload messages for all the tabs without beforeunload listeners.
+        // Doing this first would cause content process main threads to be busy and delay
+        // beforeunload responses, which would be user-visible.
+        for (let tab of tabsWithoutBeforeUnload) {
+          this.removeTab(tab, aParams);
+        }
+
+        // Wait for all the beforeunload events to have been processed by content processes.
+        // The permitUnload() promise will, alas, not call its resolution
+        // callbacks after the browser window the promise lives in has closed,
+        // so we have to check for that case explicitly.
+        let done = false;
+        Promise.all(beforeUnloadPromises).then(() => {
+          done = true;
+        });
+        Services.tm.spinEventLoopUntilOrShutdown(
+          "tabbrowser.js:removeTabs",
+          () => done || window.closed
+        );
+        if (!done) {
+          return;
+        }
+
+        // Now run again sequentially the beforeunload listeners that will result in a prompt.
+        for (let tab of tabsWithBeforeUnloadPrompt) {
           this.removeTab(tab, aParams);
         }
 
