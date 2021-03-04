@@ -69,9 +69,8 @@
 }
 
 .dismiss-icon {
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: currentColor;
-  fill-opacity: 0;
 }
 
 .warning-icon {
