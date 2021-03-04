@@ -8,8 +8,12 @@ self.addEventListener("activate", function(e) {
 
 self.addEventListener("push", async function(e) {
   const clients = await self.clients.matchAll();
+  let text = "";
+  if (e.data) {
+    text = e.data.text();
+  }
   clients.forEach(function(client) {
-    client.postMessage({ type: "push", payload: e.data.text() });
+    client.postMessage({ type: "push", payload: text });
   });
 
   try {

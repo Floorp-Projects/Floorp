@@ -153,6 +153,17 @@ class WebPushTest : BaseSessionTest() {
         assertThat("Push data should match", p.value as String, equalTo(testPayload))
     }
 
+    @Test
+    fun pushEventWithoutData() {
+        subscribe()
+
+        val p = mainSession.evaluatePromiseJS("window.doWaitForPushEvent()")
+
+        sessionRule.runtime.webPushController.onPushEvent(delegate!!.storedSubscription!!.scope, null)
+
+        assertThat("Push data should be empty", p.value as String, equalTo(""))
+    }
+
     private fun sendNotification() {
         val notificationResult = GeckoResult<Void>()
         val runtime = sessionRule.runtime
