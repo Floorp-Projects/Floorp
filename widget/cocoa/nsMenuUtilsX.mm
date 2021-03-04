@@ -179,12 +179,12 @@ NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent) {
-  return inContent->IsElement() &&
-         (inContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
-                                              nsGkAtoms::_true, eCaseMatters) ||
-          inContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::collapsed,
-                                              nsGkAtoms::_true, eCaseMatters));
+bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* aContent) {
+  return aContent->IsElement() &&
+         (aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden, nsGkAtoms::_true,
+                                             eCaseMatters) ||
+          aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::collapsed,
+                                             nsGkAtoms::_true, eCaseMatters));
 }
 
 // Determines how many items are visible among the siblings in a menu that are
