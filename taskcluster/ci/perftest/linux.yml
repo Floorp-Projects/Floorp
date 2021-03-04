@@ -14,9 +14,9 @@ job-defaults:
             - artifact: target.perftests.tests.tar.gz
             - artifact: target.xpcshell.tests.tar.gz
             - artifact: target.tar.bz2
-    platform: linux64-shippable/opt
+    platform: linux1804-64-shippable/opt
     require-build:
-        linux64-shippable/opt: build-linux64-shippable/opt
+        linux1804-64-shippable/opt: build-linux64-shippable/opt
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
 
