@@ -50,6 +50,11 @@ PersistenceType PersistenceTypeFromStorageType(StorageType aStorageType);
 Maybe<PersistenceType> PersistenceTypeFromInt32(int32_t aInt32,
                                                 const fallible_t&);
 
+// aFile is expected to be a repository directory (not some file or directory
+// within that).
+Maybe<PersistenceType> PersistenceTypeFromFile(nsIFile& aFile,
+                                               const fallible_t&);
+
 inline PersistenceType ComplementaryPersistenceType(
     const PersistenceType aPersistenceType) {
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT ||

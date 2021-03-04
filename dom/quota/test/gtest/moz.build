@@ -8,6 +8,7 @@ UNIFIED_SOURCES = [
     "TestCheckedUnsafePtr.cpp",
     "TestEncryptedStream.cpp",
     "TestFlatten.cpp",
+    "TestPersistenceType.cpp",
     "TestQuotaCommon.cpp",
     "TestQuotaManager.cpp",
     "TestUsageInfo.cpp",
