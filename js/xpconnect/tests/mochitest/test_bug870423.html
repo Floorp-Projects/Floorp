@@ -13,7 +13,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870423
   /** Test for cross-scope instanceof. **/
   SimpleTest.waitForExplicitFinish();
 
-  function go() {
+  async function go() {
+    await SpecialPowers.pushPrefEnv({ set: [["dom.webidl.crosscontext_hasinstance.enabled", false]] });
+
     var sowin = $('soifr').contentWindow;
     var xowin = $('xoifr').contentWindow;
     var xosswin = $('xossifr').contentWindow;
@@ -23,21 +25,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870423
     check(window, sowin, 'Window', function(win) { return win; });
     check(window, sowin, 'Location', function(win) { return win.location; });
 
-    ok(xowin instanceof Window, "Cross-origin instanceof should work");
-    ok(xowin.location instanceof Location, "Cross-origin instanceof should work");
+    ok(!(xowin instanceof Window), "Cross-origin instanceof should fail");
+    ok(!(xowin.location instanceof Location), "Cross-origin instanceof should fail");
 
     // cross-origin same-site.
-    ok(xosswin instanceof Window, "Cross-origin instanceof should work");
-    ok(xosswin.location instanceof Location, "Cross-origin instanceof should work");
+    ok(!(xosswin instanceof Window), "Cross-origin instanceof should fail");
+    ok(!(xosswin.location instanceof Location), "Cross-origin instanceof should fail");
 
     SimpleTest.finish();
   }
 
   function check(win1, win2, constructorName, getInstance) {
-    ok(getInstance(win1) instanceof win2[constructorName],
-       "Cross-Scope instanceof works: " + constructorName + ", " + win1.location + ", " + win2.location);
-    ok(getInstance(win2) instanceof win1[constructorName],
-       "Cross-Scope instanceof works: " + constructorName + ", " + win2.location + ", " + win1.location);
+    ok(!(getInstance(win1) instanceof win2[constructorName]),
+       "Cross-Scope instanceof fails: " + constructorName + ", " + win1.location + ", " + win2.location);
+    ok(!(getInstance(win2) instanceof win1[constructorName]),
+       "Cross-Scope instanceof fails: " + constructorName + ", " + win2.location + ", " + win1.location);
   }
 
   </script>
