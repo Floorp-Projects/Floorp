@@ -2130,13 +2130,12 @@ void nsCocoaWindow::ResumeCompositor() {
   Unused << bc->SetExplicitActive(ExplicitActiveStatus::Active);
 }
 
-void nsCocoaWindow::SetMenuBar(nsMenuBarX* aMenuBar) {
-  if (mMenuBar) mMenuBar->SetParent(nullptr);
+void nsCocoaWindow::SetMenuBar(RefPtr<nsMenuBarX>&& aMenuBar) {
   if (!mWindow) {
     mMenuBar = nullptr;
     return;
   }
-  mMenuBar = aMenuBar;
+  mMenuBar = std::move(aMenuBar);
 
   // Only paint for active windows, or paint the hidden window menu bar if no
   // other menu bar has been painted yet so that some reasonable menu bar is
