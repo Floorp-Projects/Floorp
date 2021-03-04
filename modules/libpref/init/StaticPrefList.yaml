@@ -10569,15 +10569,7 @@
 # entry in python/mozbuild/mozbuild/mozinfo.py
 - name: widget.non-native-theme.enabled
   type: RelaxedAtomicBool
-#if defined(XP_LINUX) && defined(NIGHTLY_BUILD) && !defined(ANDROID)
-  value: true
-#elif defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
-  value: true
-#elif defined(XP_WIN) && defined(NIGHTLY_BUILD)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # The size in CSS pixels at full zoom of the minimum scrollbar width.
