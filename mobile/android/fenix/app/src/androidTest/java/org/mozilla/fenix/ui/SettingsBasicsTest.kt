@@ -10,6 +10,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
@@ -105,6 +106,7 @@ class SettingsBasicsTest {
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun toggleShowVisitedSitesAndBookmarks() {
         // Bookmarks a few websites, toggles the history and bookmarks setting to off, then verifies if the visited and bookmarked websites do not show in the suggestions.
         val page1 = getGenericAsset(mockWebServer, 1)

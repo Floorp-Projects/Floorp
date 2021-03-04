@@ -322,6 +322,7 @@ class SmokeTest {
 
     @Test
     // Verifies the Bookmark button in a tab's 3 dot menu
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun mainMenuBookmarkButtonTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -979,6 +980,7 @@ class SmokeTest {
 
     @Test
     // Verifies that deleting a Bookmarks folder also removes the item from inside it.
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17799")
     fun deleteNonEmptyBookmarkFolderTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
