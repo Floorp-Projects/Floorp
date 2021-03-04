@@ -2038,9 +2038,10 @@ bool js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name,
     } else if (env->is<LexicalEnvironmentObject>() &&
                !prop.shape()->writable()) {
       // Assigning to a named lambda callee name is a no-op in sloppy mode.
-      if (!(env->is<BlockLexicalEnvironmentObject>() &&
-            env->as<BlockLexicalEnvironmentObject>().scope().kind() ==
-                ScopeKind::NamedLambda)) {
+      Rooted<LexicalEnvironmentObject*> lexicalEnv(
+          cx, &env->as<LexicalEnvironmentObject>());
+      if (lexicalEnv->isExtensible() ||
+          lexicalEnv->scope().kind() != ScopeKind::NamedLambda) {
         MOZ_ASSERT(name != cx->names().dotThis);
         env =
             RuntimeLexicalErrorObject::create(cx, env, JSMSG_BAD_CONST_ASSIGN);
@@ -2948,7 +2949,8 @@ JSObject* js::GetThisObject(JSObject* obj) {
 }
 
 JSObject* js::GetThisObjectOfLexical(JSObject* env) {
-  return env->as<ExtensibleLexicalEnvironmentObject>().thisObject();
+  MOZ_ASSERT(IsExtensibleLexicalEnvironment(env));
+  return env->as<LexicalEnvironmentObject>().thisObject();
 }
 
 JSObject* js::GetThisObjectOfWith(JSObject* env) {

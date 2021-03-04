@@ -97,7 +97,7 @@ struct TypeToDataType<NamedLambdaObject*> {
   static const DataType result = Type_Object;
 };
 template <>
-struct TypeToDataType<BlockLexicalEnvironmentObject*> {
+struct TypeToDataType<LexicalEnvironmentObject*> {
   static const DataType result = Type_Object;
 };
 template <>
@@ -1366,14 +1366,14 @@ bool NewArgumentsObject(JSContext* cx, BaselineFrame* frame,
 
 JSObject* CopyLexicalEnvironmentObject(JSContext* cx, HandleObject env,
                                        bool copySlots) {
-  Handle<BlockLexicalEnvironmentObject*> lexicalEnv =
-      env.as<BlockLexicalEnvironmentObject>();
+  Handle<LexicalEnvironmentObject*> lexicalEnv =
+      env.as<LexicalEnvironmentObject>();
 
   if (copySlots) {
-    return BlockLexicalEnvironmentObject::clone(cx, lexicalEnv);
+    return LexicalEnvironmentObject::clone(cx, lexicalEnv);
   }
 
-  return BlockLexicalEnvironmentObject::recreate(cx, lexicalEnv);
+  return LexicalEnvironmentObject::recreate(cx, lexicalEnv);
 }
 
 JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
@@ -1465,14 +1465,14 @@ bool PushLexicalEnv(JSContext* cx, BaselineFrame* frame,
 }
 
 bool PopLexicalEnv(JSContext* cx, BaselineFrame* frame) {
-  frame->popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
+  frame->popOffEnvironmentChain<LexicalEnvironmentObject>();
   return true;
 }
 
 bool DebugLeaveThenPopLexicalEnv(JSContext* cx, BaselineFrame* frame,
                                  jsbytecode* pc) {
   MOZ_ALWAYS_TRUE(DebugLeaveLexicalEnv(cx, frame, pc));
-  frame->popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
+  frame->popOffEnvironmentChain<LexicalEnvironmentObject>();
   return true;
 }
 

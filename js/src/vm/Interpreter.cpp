@@ -963,8 +963,7 @@ static void PopEnvironment(JSContext* cx, EnvironmentIter& ei) {
         DebugEnvironments::onPopLexical(cx, ei);
       }
       if (ei.scope().hasEnvironment()) {
-        ei.initialFrame()
-            .popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
+        ei.initialFrame().popOffEnvironmentChain<LexicalEnvironmentObject>();
       }
       break;
     case ScopeKind::With:
@@ -3605,7 +3604,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(InitAliasedLexical)
 
     CASE(InitGLexical) {
-      ExtensibleLexicalEnvironmentObject* lexicalEnv;
+      LexicalEnvironmentObject* lexicalEnv;
       if (script->hasNonSyntacticScope()) {
         lexicalEnv = &REGS.fp()->extensibleLexicalEnvironment();
       } else {
@@ -4050,7 +4049,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       // Pop block from scope chain.
-      REGS.fp()->popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
+      REGS.fp()->popOffEnvironmentChain<LexicalEnvironmentObject>();
     }
     END_CASE(PopLexicalEnv)
 

@@ -280,12 +280,12 @@ AbortReasonOr<WarpEnvironment> WarpScriptOracle::createEnvironment() {
     callObjectTemplate = &templateEnv->as<CallObject>();
   }
 
-  NamedLambdaObject* namedLambdaTemplate = nullptr;
+  LexicalEnvironmentObject* namedLambdaTemplate = nullptr;
   if (fun->needsNamedLambdaEnvironment()) {
     if (callObjectTemplate) {
       templateEnv = templateEnv->enclosingEnvironment();
     }
-    namedLambdaTemplate = &templateEnv->as<NamedLambdaObject>();
+    namedLambdaTemplate = &templateEnv->as<LexicalEnvironmentObject>();
   }
 
   return WarpEnvironment(

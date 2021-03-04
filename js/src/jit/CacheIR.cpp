@@ -2718,7 +2718,7 @@ AttachDecision GetNameIRGenerator::tryAttachStub() {
 }
 
 bool CanAttachGlobalName(JSContext* cx,
-                         Handle<GlobalLexicalEnvironmentObject*> globalLexical,
+                         Handle<LexicalEnvironmentObject*> globalLexical,
                          HandleId id, MutableHandleNativeObject holder,
                          MutableHandleShape shape) {
   // The property must be found, and it must be found as a normal data property.
@@ -2756,8 +2756,9 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  Handle<GlobalLexicalEnvironmentObject*> globalLexical =
-      env_.as<GlobalLexicalEnvironmentObject>();
+  Handle<LexicalEnvironmentObject*> globalLexical =
+      env_.as<LexicalEnvironmentObject>();
+  MOZ_ASSERT(globalLexical->isGlobal());
 
   RootedNativeObject holder(cx_);
   RootedShape shape(cx_);
@@ -2819,8 +2820,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  Handle<GlobalLexicalEnvironmentObject*> globalLexical =
-      env_.as<GlobalLexicalEnvironmentObject>();
+  Handle<LexicalEnvironmentObject*> globalLexical =
+      env_.as<LexicalEnvironmentObject>();
   MOZ_ASSERT(globalLexical->isGlobal());
 
   RootedNativeObject holder(cx_);
@@ -2993,8 +2994,8 @@ AttachDecision BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  Handle<GlobalLexicalEnvironmentObject*> globalLexical =
-      env_.as<GlobalLexicalEnvironmentObject>();
+  Handle<LexicalEnvironmentObject*> globalLexical =
+      env_.as<LexicalEnvironmentObject>();
   MOZ_ASSERT(globalLexical->isGlobal());
 
   JSObject* result = nullptr;
@@ -3645,7 +3646,8 @@ static bool IsGlobalLexicalSetGName(JSOp op, NativeObject* obj,
     return false;
   }
 
-  if (!obj->is<GlobalLexicalEnvironmentObject>()) {
+  if (!obj->is<LexicalEnvironmentObject>() ||
+      !obj->as<LexicalEnvironmentObject>().isGlobal()) {
     return false;
   }
 

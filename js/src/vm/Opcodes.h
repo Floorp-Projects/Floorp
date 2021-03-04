@@ -3055,7 +3055,7 @@
      * Push a lexical environment onto the environment chain.
      *
      * The `LexicalScope` indicated by `lexicalScopeIndex` determines the shape
-     * of the new `BlockLexicalEnvironmentObject`. All bindings in the new
+     * of the new `LexicalEnvironmentObject`. All bindings in the new
      * environment are marked as uninitialized.
      *
      * Implements: [Evaluation of *Block*][1], steps 1-4.
@@ -3125,12 +3125,12 @@
      */ \
     MACRO(DebugLeaveLexicalEnv, debug_leave_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Replace the current block on the environment chain with a fresh block
+     * Recreate the current block on the environment chain with a fresh block
      * with uninitialized bindings. This implements the behavior of inducing a
      * fresh lexical environment for every iteration of a for-in/of loop whose
-     * loop-head declares lexical variables that may be captured.
+     * loop-head has a (captured) lexical declaration.
      *
-     * The current environment must be a BlockLexicalEnvironmentObject.
+     * The current environment must be a LexicalEnvironmentObject.
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3139,9 +3139,13 @@
      */ \
     MACRO(RecreateLexicalEnv, recreate_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Like `JSOp::RecreateLexicalEnv`, but the values of all the bindings are
-     * copied from the old block to the new one. This is used for C-style
-     * `for(let ...; ...; ...)` loops.
+     * Replace the current block on the environment chain with a fresh block
+     * that copies all the bindings in the block. This implements the behavior
+     * of inducing a fresh lexical environment for every iteration of a
+     * `for(let ...; ...; ...)` loop, if any declarations induced by such a
+     * loop are captured within the loop.
+     *
+     * The current environment must be a LexicalEnvironmentObject.
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3153,9 +3157,9 @@
      * Push a var environment onto the environment chain.
      *
      * Like `JSOp::PushLexicalEnv`, but pushes a `VarEnvironmentObject` rather
-     * than a `BlockLexicalEnvironmentObject`. The difference is that
-     * non-strict direct `eval` can add bindings to a var environment; see
-     * `VarScope` in Scope.h.
+     * than a `LexicalEnvironmentObject`. The difference is that non-strict
+     * direct `eval` can add bindings to a var environment; see `VarScope` in
+     * Scope.h.
      *
      * See `JSOp::PushLexicalEnv` for the fine print.
      *

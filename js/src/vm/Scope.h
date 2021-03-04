@@ -393,11 +393,6 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
 
   ScopeKind kind() const { return kind_; }
 
-  bool isNamedLambda() const {
-    return kind() == ScopeKind::NamedLambda ||
-           kind() == ScopeKind::StrictNamedLambda;
-  }
-
   Shape* environmentShape() const { return environmentShape_; }
 
   Scope* enclosing() const { return enclosingScope_; }
@@ -811,7 +806,7 @@ inline bool Scope::is<VarScope>() const {
 // There are 2 kinds of GlobalScopes.
 //
 // Global
-//   Corresponds to a GlobalObject and its GlobalLexicalEnvironmentObject on
+//   Corresponds to a GlobalObject and its global LexicalEnvironmentObject on
 //   the environment chain.
 //
 // NonSyntactic

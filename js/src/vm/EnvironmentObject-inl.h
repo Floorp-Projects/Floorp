@@ -13,14 +13,14 @@
 
 namespace js {
 
-inline ExtensibleLexicalEnvironmentObject&
-NearestEnclosingExtensibleLexicalEnvironment(JSObject* env) {
+inline LexicalEnvironmentObject& NearestEnclosingExtensibleLexicalEnvironment(
+    JSObject* env) {
   MOZ_ASSERT(env);
-  while (!env->is<ExtensibleLexicalEnvironmentObject>()) {
+  while (!IsExtensibleLexicalEnvironment(env)) {
     env = env->enclosingEnvironment();
     MOZ_ASSERT(env);
   }
-  return env->as<ExtensibleLexicalEnvironmentObject>();
+  return env->as<LexicalEnvironmentObject>();
 }
 
 // Returns the innermost "qualified var object" on the environment chain.
