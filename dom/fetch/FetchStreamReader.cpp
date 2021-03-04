@@ -8,6 +8,7 @@
 #include "InternalResponse.h"
 #include "js/Stream.h"
 #include "mozilla/ConsoleReportCollector.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
