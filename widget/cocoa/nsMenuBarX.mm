@@ -156,15 +156,8 @@ void nsMenuBarX::ConstructNativeMenus() {
   for (nsIContent* menuContent = mContent->GetFirstChild(); menuContent;
        menuContent = menuContent->GetNextSibling()) {
     if (menuContent->IsXULElement(nsGkAtoms::menu)) {
-      nsMenuX* newMenu = new nsMenuX();
-      if (newMenu) {
-        nsresult rv = newMenu->Create(this, this, menuContent->AsElement());
-        if (NS_SUCCEEDED(rv)) {
-          InsertMenuAtIndex(newMenu, GetMenuCount());
-        } else {
-          delete newMenu;
-        }
-      }
+      nsMenuX* newMenu = new nsMenuX(this, this, menuContent->AsElement());
+      InsertMenuAtIndex(newMenu, GetMenuCount());
     }
   }
 }
@@ -304,15 +297,8 @@ void nsMenuBarX::ObserveContentRemoved(mozilla::dom::Document* aDocument, nsICon
 
 void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument, nsIContent* aContainer,
                                         nsIContent* aChild) {
-  nsMenuX* newMenu = new nsMenuX();
-  if (newMenu) {
-    nsresult rv = newMenu->Create(this, this, aChild);
-    if (NS_SUCCEEDED(rv)) {
-      InsertMenuAtIndex(newMenu, aContainer->ComputeIndexOf(aChild));
-    } else {
-      delete newMenu;
-    }
-  }
+  nsMenuX* newMenu = new nsMenuX(this, this, aChild);
+  InsertMenuAtIndex(newMenu, aContainer->ComputeIndexOf(aChild));
 }
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {

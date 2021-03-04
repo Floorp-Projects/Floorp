@@ -32,9 +32,9 @@ class nsIWidget;
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuX : public nsMenuObjectX, public nsChangeObserver {
+class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
  public:
-  nsMenuX();
+  nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent);
   virtual ~nsMenuX();
 
   // If > 0, the OS is indexing all the app's menus (triggered by opening
@@ -79,19 +79,19 @@ class nsMenuX : public nsMenuObjectX, public nsChangeObserver {
 
   nsTArray<mozilla::UniquePtr<nsMenuObjectX>> mMenuObjectsArray;
   nsString mLabel;
-  uint32_t mVisibleItemsCount;         // cache
-  nsMenuObjectX* mParent;              // [weak]
-  nsMenuGroupOwnerX* mMenuGroupOwner;  // [weak]
+  uint32_t mVisibleItemsCount = 0;               // cache
+  nsMenuObjectX* mParent = nullptr;              // [weak]
+  nsMenuGroupOwnerX* mMenuGroupOwner = nullptr;  // [weak]
   mozilla::UniquePtr<nsMenuItemIconX> mIcon;
-  GeckoNSMenu* mNativeMenu;     // [strong]
-  MenuDelegate* mMenuDelegate;  // [strong]
+  GeckoNSMenu* mNativeMenu = nil;     // [strong]
+  MenuDelegate* mMenuDelegate = nil;  // [strong]
   // nsMenuX objects should always have a valid native menu item.
-  NSMenuItem* mNativeMenuItem;  // [strong]
-  bool mIsEnabled;
-  bool mDestroyHandlerCalled;
-  bool mNeedsRebuild;
-  bool mConstructed;
-  bool mVisible;
+  NSMenuItem* mNativeMenuItem = nil;  // [strong]
+  bool mIsEnabled = true;
+  bool mDestroyHandlerCalled = false;
+  bool mNeedsRebuild = true;
+  bool mConstructed = false;
+  bool mVisible = true;
 };
 
 #endif  // nsMenuX_h_
