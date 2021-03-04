@@ -530,6 +530,8 @@ struct BaseCompilationStencil {
 #endif
 };
 
+struct ExtensibleCompilationStencil;
+
 // The top level struct of stencil specialized for non-extensible case.
 // Used as the compilation output, and also XDR decode output.
 //
@@ -628,6 +630,9 @@ struct CompilationStencil : public BaseCompilationStencil {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
+
+  // Steal ExtensibleCompilationStencil content.
+  [[nodiscard]] bool steal(JSContext* cx, ExtensibleCompilationStencil&& other);
 
 #ifdef DEBUG
   void assertNoExternalDependency() const;
@@ -751,7 +756,8 @@ struct ExtensibleCompilationStencil {
     return functionKey == BaseCompilationStencil::NullFunctionKey;
   }
 
-  [[nodiscard]] bool finish(JSContext* cx, CompilationStencil& stencil);
+  // Steal CompilationStencil content.
+  [[nodiscard]] bool steal(JSContext* cx, CompilationStencil&& other);
 
   inline size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {

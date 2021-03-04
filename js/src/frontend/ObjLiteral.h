@@ -608,6 +608,10 @@ class ObjLiteralStencil {
   JSObject* create(JSContext* cx,
                    const frontend::CompilationAtomCache& atomCache) const;
 
+  mozilla::Span<const uint8_t> code() const { return code_; }
+  ObjLiteralFlags flags() const { return flags_; }
+  uint32_t propertyCount() const { return propertyCount_; }
+
 #ifdef DEBUG
   bool isContainedIn(const LifoAlloc& alloc) const;
 #endif

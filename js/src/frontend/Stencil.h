@@ -223,7 +223,7 @@ class BigIntStencil {
   BigIntStencil() = default;
 
   [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
-                          const Vector<char16_t, 32>& buf);
+                          const mozilla::Span<const char16_t> buf);
 
   BigInt* createBigInt(JSContext* cx) const {
     mozilla::Range<const char16_t> source(source_.data(), source_.size());
@@ -234,6 +234,8 @@ class BigIntStencil {
     mozilla::Range<const char16_t> source(source_.data(), source_.size());
     return js::BigIntLiteralIsZero(source);
   }
+
+  mozilla::Span<const char16_t> source() const { return source_; }
 
 #ifdef DEBUG
   bool isContainedIn(const LifoAlloc& alloc) const;
