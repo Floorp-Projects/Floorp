@@ -1414,7 +1414,10 @@ nsresult StorageDBThread::PendingOperations::Execute(StorageDBThread* aThread) {
 
   mozStorageTransaction transaction(aThread->mWorkerConnection, false);
 
-  nsresult rv;
+  nsresult rv = transaction.Start();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   for (uint32_t i = 0; i < mExecList.Length(); ++i) {
     const auto& task = mExecList[i];

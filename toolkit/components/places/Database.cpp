@@ -700,6 +700,8 @@ nsresult Database::EnsureFaviconsDatabaseAttached(
     // We are going to update the database, so everything from now on should be
     // in a transaction for performances.
     mozStorageTransaction transaction(conn, false);
+    // XXX Handle the error, bug 1696133.
+    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
     rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ICONS_ICONURLHASH);
@@ -892,6 +894,9 @@ nsresult Database::TryToCloneTablesFromCorruptDatabase(
 
   mozStorageTransaction transaction(conn, false);
 
+  // XXX Handle the error, bug 1696133.
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
+
   // Copy the schema version.
   nsCOMPtr<mozIStorageStatement> stmt;
   (void)conn->CreateStatement("PRAGMA corrupt.user_version"_ns,
@@ -1082,6 +1087,9 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
   // We are going to update the database, so everything from now on should be in
   // a transaction for performances.
   mozStorageTransaction transaction(mMainConn, false);
+
+  // XXX Handle the error, bug 1696133.
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   if (databaseInitialized) {
     // Migration How-to:
