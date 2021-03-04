@@ -113,6 +113,17 @@ nsresult nsXMLContentSink::Init(Document* aDoc, nsIURI* aURI,
   return NS_OK;
 }
 
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    nsXMLContentSink::StackNode& aField, const char* aName,
+    uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aField.mContent, aName, aFlags);
+}
+
+inline void ImplCycleCollectionUnlink(nsXMLContentSink::StackNode& aField) {
+  ImplCycleCollectionUnlink(aField.mContent);
+}
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
@@ -123,19 +134,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsContentSink)
 NS_IMPL_ADDREF_INHERITED(nsXMLContentSink, nsContentSink)
 NS_IMPL_RELEASE_INHERITED(nsXMLContentSink, nsContentSink)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLContentSink)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLContentSink,
-                                                  nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentHead)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastTextNode)
-  for (uint32_t i = 0, count = tmp->mContentStack.Length(); i < count; i++) {
-    const StackNode& node = tmp->mContentStack.ElementAt(i);
-    cb.NoteXPCOMChild(node.mContent);
-  }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentChildren)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsXMLContentSink, nsContentSink,
+                                   mCurrentHead, mDocElement, mLastTextNode,
+                                   mContentStack, mDocumentChildren)
 
 // nsIContentSink
 NS_IMETHODIMP
@@ -779,7 +780,7 @@ nsIContent* nsXMLContentSink::GetCurrentContent() {
   return GetCurrentStackNode()->mContent;
 }
 
-StackNode* nsXMLContentSink::GetCurrentStackNode() {
+nsXMLContentSink::StackNode* nsXMLContentSink::GetCurrentStackNode() {
   int32_t count = mContentStack.Length();
   return count != 0 ? &mContentStack[count - 1] : nullptr;
 }
