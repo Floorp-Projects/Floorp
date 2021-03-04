@@ -54,7 +54,7 @@ addTest(async function testPermissionDenied() {
   });
   registerPopupEventHandler("popupshown", function() {
     ok(true, "prompt shown");
-    triggerSecondaryCommand(this, 1);
+    triggerSecondaryCommand(this, /* remember = */ true);
   });
   registerPopupEventHandler("popuphidden", function() {
     ok(true, "prompt hidden");
