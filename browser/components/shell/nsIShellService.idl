@@ -27,7 +27,7 @@ interface nsIShellService : nsISupports
    * Registers Firefox as the "Default Browser."
    *
    * @param aClaimAllTypes Register Firefox as the handler for
-   *                       additional protocols (ftp, chrome etc)
+   *                       additional protocols (chrome etc)
    *                       and web documents (.html, .xhtml etc).
    * @param aForAllUsers   Whether or not Firefox should attempt
    *                       to become the default browser for all
