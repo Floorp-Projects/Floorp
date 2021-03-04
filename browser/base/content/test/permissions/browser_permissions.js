@@ -100,31 +100,25 @@ add_task(async function testIdentityIcon() {
     );
 
     ok(
-      gPermissionPanel._identityPermissionBox.hasAttribute(
-        "hasGrantedPermissions"
-      ),
+      gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
       "identity-box signals granted permissions"
     );
 
     PermissionTestUtils.remove(gBrowser.currentURI, "geo");
 
     ok(
-      !gPermissionPanel._identityPermissionBox.hasAttribute(
-        "hasGrantedPermissions"
-      ),
+      !gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
       "identity-box doesn't signal granted permissions"
     );
 
     PermissionTestUtils.add(
       gBrowser.currentURI,
-      "camera",
-      Services.perms.DENY_ACTION
+      "not-a-site-permission",
+      Services.perms.ALLOW_ACTION
     );
 
     ok(
-      !gPermissionPanel._identityPermissionBox.hasAttribute(
-        "hasGrantedPermissions"
-      ),
+      !gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
       "identity-box doesn't signal granted permissions"
     );
 
@@ -135,14 +129,36 @@ add_task(async function testIdentityIcon() {
     );
 
     ok(
-      gPermissionPanel._identityPermissionBox.hasAttribute(
-        "hasGrantedPermissions"
-      ),
+      gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
       "identity-box signals granted permissions"
     );
 
+    PermissionTestUtils.remove(gBrowser.currentURI, "cookie");
+
+    PermissionTestUtils.add(
+      gBrowser.currentURI,
+      "cookie",
+      Ci.nsICookiePermission.ACCESS_DENY
+    );
+
+    ok(
+      gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
+      "identity-box signals granted permissions"
+    );
+
+    PermissionTestUtils.add(
+      gBrowser.currentURI,
+      "cookie",
+      Ci.nsICookiePermission.ACCESS_DEFAULT
+    );
+
+    ok(
+      !gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
+      "identity-box doesn't signal granted permissions"
+    );
+
     PermissionTestUtils.remove(gBrowser.currentURI, "geo");
-    PermissionTestUtils.remove(gBrowser.currentURI, "camera");
+    PermissionTestUtils.remove(gBrowser.currentURI, "not-a-site-permission");
     PermissionTestUtils.remove(gBrowser.currentURI, "cookie");
   });
 });
