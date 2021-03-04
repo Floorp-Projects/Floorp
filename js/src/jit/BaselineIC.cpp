@@ -1639,7 +1639,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     }
   } else if (op == JSOp::InitGLexical) {
     RootedValue v(cx, rhs);
-    LexicalEnvironmentObject* lexicalEnv;
+    ExtensibleLexicalEnvironmentObject* lexicalEnv;
     if (script->hasNonSyntacticScope()) {
       lexicalEnv = &NearestEnclosingExtensibleLexicalEnvironment(
           frame->environmentChain());

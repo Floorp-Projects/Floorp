@@ -39,7 +39,7 @@ inline GlobalObject& InterpreterFrame::global() const {
   return script()->global();
 }
 
-inline LexicalEnvironmentObject&
+inline ExtensibleLexicalEnvironmentObject&
 InterpreterFrame::extensibleLexicalEnvironment() const {
   return NearestEnclosingExtensibleLexicalEnvironment(environmentChain());
 }
