@@ -248,8 +248,9 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
   // Per ES5, indirect eval runs in the global scope. (eval is specified this
   // way so that the compiler can make assumptions about what bindings may or
   // may not exist in the current frame if it doesn't see 'eval'.)
-  MOZ_ASSERT_IF(evalType != DIRECT_EVAL,
-                cx->global() == &env->as<LexicalEnvironmentObject>().global());
+  MOZ_ASSERT_IF(
+      evalType != DIRECT_EVAL,
+      cx->global() == &env->as<GlobalLexicalEnvironmentObject>().global());
 
   RootedLinearString linearStr(cx, str->ensureLinear(cx));
   if (!linearStr) {
@@ -478,7 +479,7 @@ JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
   if (!targetObj.empty()) {
     // The environment chain will be as follows:
     //      GlobalObject / BackstagePass
-    //      LexicalEnvironmentObject[this=global]
+    //      GlobalLexicalEnvironmentObject[this=global]
     //      NonSyntacticVariablesObject (the JSMEnvironment)
     //      LexicalEnvironmentObject[this=nsvo]
     //      WithEnvironmentObject[target=targetObj]
