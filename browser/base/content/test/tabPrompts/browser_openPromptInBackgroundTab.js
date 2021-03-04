@@ -101,9 +101,7 @@ add_task(async function test_old_modal_ui() {
 
   // Check if the identity icon signals granted permission.
   ok(
-    gPermissionPanel._identityPermissionBox.hasAttribute(
-      "hasGrantedPermissions"
-    ),
+    gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
     "identity-box signals granted permissions"
   );
 
@@ -230,9 +228,7 @@ add_task(async function test_new_modal_ui() {
 
   // Check if the identity icon signals granted permission.
   ok(
-    gPermissionPanel._identityPermissionBox.hasAttribute(
-      "hasGrantedPermissions"
-    ),
+    gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions"),
     "identity-permission-box signals granted permissions"
   );
 
