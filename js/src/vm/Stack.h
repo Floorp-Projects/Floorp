@@ -33,9 +33,9 @@ class InterpreterRegs;
 class CallObject;
 class FrameIter;
 class EnvironmentObject;
+class ExtensibleLexicalEnvironmentObject;
 class GeckoProfilerRuntime;
 class InterpreterFrame;
-class LexicalEnvironmentObject;
 class EnvironmentIter;
 class EnvironmentCoordinate;
 
@@ -516,7 +516,8 @@ class InterpreterFrame {
   inline EnvironmentObject& aliasedEnvironment(EnvironmentCoordinate ec) const;
   inline GlobalObject& global() const;
   inline CallObject& callObj() const;
-  inline LexicalEnvironmentObject& extensibleLexicalEnvironment() const;
+  inline ExtensibleLexicalEnvironmentObject& extensibleLexicalEnvironment()
+      const;
 
   template <typename SpecificEnvironment>
   inline void pushOnEnvironmentChain(SpecificEnvironment& env);
