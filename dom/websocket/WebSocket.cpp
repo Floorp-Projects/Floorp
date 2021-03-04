@@ -203,8 +203,9 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   // - the script file name, UTF8 encoded.
   // - source code line number and column number where the Web Socket object
   //   was constructed.
-  // - the ID of the inner window where the script lives. Note that this may not
-  //   be the same as the Web Socket owner window.
+  // - the ID of the Web Socket owner window. Note that this may not
+  //   be the same as the inner window where the script lives.
+  //   e.g within iframes
   // These attributes are used for error reporting.
   nsCString mScriptFile;
   uint32_t mScriptLine;
@@ -1159,7 +1160,7 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
 
     uint64_t windowID = 0;
     if (WindowContext* wc = aWindow->GetWindowContext()) {
-      windowID = wc->TopWindowContext()->InnerWindowId();
+      windowID = wc->InnerWindowId();
     }
 
     mErrorCode = mImpl->AsyncOpen(principal, windowID, nullptr, ""_ns,
@@ -1374,7 +1375,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
 
     uint64_t windowID = 0;
     if (WindowContext* wc = ownerWindow->GetWindowContext()) {
-      windowID = wc->TopWindowContext()->InnerWindowId();
+      windowID = wc->InnerWindowId();
     }
 
     aRv = webSocket->mImpl->AsyncOpen(principal, windowID, aTransportProvider,
@@ -1521,7 +1522,9 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   // inner-windowID. This can happen in sharedWorkers and ServiceWorkers or in
   // DedicateWorkers created by JSM.
   if (aCx) {
-    mInnerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(aCx);
+    if (nsPIDOMWindowInner* ownerWindow = mWebSocket->GetOwner()) {
+      mInnerWindowID = ownerWindow->WindowID();
+    }
   }
 
   mPrivateBrowsing = !!aPrincipal->OriginAttributesRef().mPrivateBrowsingId;
