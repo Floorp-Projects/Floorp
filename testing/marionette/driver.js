@@ -2844,10 +2844,11 @@ GeckoDriver.prototype.acceptConnections = function(cmd) {
  *     Constant name of masks to pass to |Services.startup.quit|.
  *     If empty or undefined, |nsIAppStartup.eAttemptQuit| is used.
  *
- * @return {string}
- *     Explaining the reason why the application quit.  This can be
- *     in response to a normal shutdown or restart, yielding "shutdown"
- *     or "restart", respectively.
+ * @return {Object<string,boolean>}
+ *     Dictionary containing information that explains the shutdown reason.
+ *     The value for `cause` contains the shutdown kind like "shutdown" or
+ *     "restart", while `forced` will indicate if it was a normal or forced
+ *     shutdown of the application.
  *
  * @throws {InvalidArgumentError}
  *     If <var>flags</var> contains unknown or incompatible flags,
@@ -2885,11 +2886,25 @@ GeckoDriver.prototype.quit = async function(cmd) {
   this._server.acceptConnections = false;
   this.deleteSession();
 
+  // Notify all windows that an application quit has been requested.
+  const cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+    Ci.nsISupportsPRBool
+  );
+  Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
+
+  // If the shutdown of the application is prevented force quit it instead.
+  if (cancelQuit.data) {
+    mode |= Ci.nsIAppStartup.eForceQuit;
+  }
+
   // delay response until the application is about to quit
   let quitApplication = waitForObserverTopic("quit-application");
   Services.startup.quit(mode);
 
-  return { cause: (await quitApplication).data };
+  return {
+    cause: (await quitApplication).data,
+    forced: cancelQuit.data,
+  };
 };
 
 GeckoDriver.prototype.installAddon = function(cmd) {

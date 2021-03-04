@@ -927,7 +927,10 @@ class Marionette(object):
         :throws InvalidArgumentException: If there are multiple
             `shutdown_flags` ending with `"Quit"`.
 
-        :returns: The cause of shutdown.
+        :returns: A dictionary containing details of the application shutdown.
+                  The `cause` property reflects the reason, and `forced` indicates
+                  that something prevented the shutdown and the application had
+                  to be forced to shutdown.
         """
 
         # The vast majority of this function was implemented inside
@@ -941,29 +944,11 @@ class Marionette(object):
         if not any(flag.endswith("Quit") for flag in flags):
             flags = flags | set(("eForceQuit",))
 
-        # Trigger a quit-application-requested observer notification
-        # so that components can safely shutdown before quitting the
-        # application.
-        with self.using_context("chrome"):
-            canceled = self.execute_script(
-                """
-                Components.utils.import("resource://gre/modules/Services.jsm");
-                let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
-                    .createInstance(Components.interfaces.nsISupportsPRBool);
-                Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
-                return cancelQuit.data;
-                """
-            )
-            if canceled:
-                raise errors.MarionetteException(
-                    "Something cancelled the quit application request"
-                )
-
         body = None
         if len(flags) > 0:
             body = {"flags": list(flags)}
 
-        return self._send_message("Marionette:Quit", body, key="cause")
+        return self._send_message("Marionette:Quit", body)
 
     @do_process_check
     def quit(self, clean=False, in_app=False, callback=None):
@@ -981,13 +966,18 @@ class Marionette(object):
                        by killing the process.
         :param callback: If provided and `in_app` is True, the callback will
                          be used to trigger the shutdown.
+
+        :returns: A dictionary containing details of the application shutdown.
+                  The `cause` property reflects the reason, and `forced` indicates
+                  that something prevented the shutdown and the application had
+                  to be forced to shutdown.
         """
         if not self.instance:
             raise errors.MarionetteException(
                 "quit() can only be called " "on Gecko instances launched by Marionette"
             )
 
-        cause = None
+        quit_details = {"cause": "shutdown", "forced": False}
         if in_app:
             if callback is not None and not callable(callback):
                 raise ValueError(
@@ -1002,7 +992,7 @@ class Marionette(object):
                 if callback is not None:
                     callback()
                 else:
-                    cause = self._request_in_app_shutdown()
+                    quit_details = self._request_in_app_shutdown()
 
             except IOError:
                 # A possible IOError should be ignored at this point, given that
@@ -1025,11 +1015,15 @@ class Marionette(object):
             self.delete_session(send_request=False)
             self.instance.close(clean=clean)
 
-        if cause not in (None, "shutdown"):
+            quit_details["forced"] = True
+
+        if quit_details.get("cause") not in (None, "shutdown"):
             raise errors.MarionetteException(
                 "Unexpected shutdown reason '{}' for "
-                "quitting the process.".format(cause)
+                "quitting the process.".format(quit_details["cause"])
             )
+
+        return quit_details
 
     @do_process_check
     def restart(self, clean=False, in_app=False, callback=None):
@@ -1045,6 +1039,11 @@ class Marionette(object):
                        by killing the process.
         :param callback: If provided and `in_app` is True, the callback will be
                          used to trigger the restart.
+
+        :returns: A dictionary containing details of the application restart.
+                  The `cause` property reflects the reason, and `forced` indicates
+                  that something prevented the shutdown and the application had
+                  to be forced to shutdown.
         """
         if not self.instance:
             raise errors.MarionetteException(
@@ -1053,7 +1052,7 @@ class Marionette(object):
             )
         context = self._send_message("Marionette:GetContext", key="value")
 
-        cause = None
+        restart_details = {"cause": "restart", "forced": False}
         if in_app:
             if clean:
                 raise ValueError(
@@ -1073,7 +1072,7 @@ class Marionette(object):
                 if callback is not None:
                     callback()
                 else:
-                    cause = self._request_in_app_shutdown("eRestart")
+                    restart_details = self._request_in_app_shutdown("eRestart")
 
             except IOError:
                 # A possible IOError should be ignored at this point, given that
@@ -1118,10 +1117,12 @@ class Marionette(object):
             self.instance.restart(clean=clean)
             self.raise_for_port(timeout=self.DEFAULT_STARTUP_TIMEOUT)
 
-        if cause not in (None, "restart"):
+            restart_details["forced"] = True
+
+        if restart_details.get("cause") not in (None, "restart"):
             raise errors.MarionetteException(
                 "Unexpected shutdown reason '{}' for "
-                "restarting the process".format(cause)
+                "restarting the process".format(restart_details["cause"])
             )
 
         self.start_session()
@@ -1133,6 +1134,8 @@ class Marionette(object):
             # As long as mozprocess cannot track that behavior (bug 1284864) we assist by
             # informing about the new process id.
             self.instance.runner.process_handler.check_for_detached(self.process_id)
+
+        return restart_details
 
     def absolute_url(self, relative_url):
         """
