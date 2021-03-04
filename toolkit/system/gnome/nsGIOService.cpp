@@ -289,7 +289,6 @@ nsGIOMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes) {
   *aSchemes = nullptr;
 
   RefPtr<GIOUTF8StringEnumerator> array = new GIOUTF8StringEnumerator();
-  NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
   GVfs* gvfs = g_vfs_get_default();
 
@@ -513,7 +512,6 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
 #endif
   if (app_info) {
     nsGIOMimeApp* mozApp = new nsGIOMimeApp(app_info);
-    NS_ENSURE_TRUE(mozApp, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(*aApp = mozApp);
   } else {
     g_free(content_type);
@@ -671,7 +669,6 @@ nsGIOService::FindAppFromCommand(nsACString const& aCmd,
   g_list_free(apps);
   if (app_info) {
     nsGIOMimeApp* app = new nsGIOMimeApp(app_info);
-    NS_ENSURE_TRUE(app, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(*aAppInfo = app);
     return NS_OK;
   }
@@ -722,7 +719,6 @@ nsGIOService::CreateAppFromCommand(nsACString const& cmd,
   g_free(executableWithFullPath);
 
   nsGIOMimeApp* mozApp = new nsGIOMimeApp(app_info);
-  NS_ENSURE_TRUE(mozApp, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*appInfo = mozApp);
   return NS_OK;
 }
