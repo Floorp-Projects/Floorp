@@ -27,6 +27,7 @@ class DatetimeMetric {
    * @param amount The date value to set.
    */
   void Set(const PRExplodedTime* aValue = nullptr) const {
+#ifndef MOZ_GLEAN_ANDROID
     PRExplodedTime exploded;
     if (!aValue) {
       PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &exploded);
@@ -39,6 +40,7 @@ class DatetimeMetric {
     fog_datetime_set(mId, exploded.tm_year, exploded.tm_month + 1,
                      exploded.tm_mday, exploded.tm_hour, exploded.tm_min,
                      exploded.tm_sec, exploded.tm_usec * 1000, offset);
+#endif
   }
 
   /**
@@ -60,12 +62,17 @@ class DatetimeMetric {
    */
   Maybe<nsCString> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+    return Nothing();
+#else
     if (!fog_datetime_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
     nsCString ret;
     fog_datetime_test_get_value(mId, &aPingName, &ret);
     return Some(ret);
+#endif
   }
 
  private:

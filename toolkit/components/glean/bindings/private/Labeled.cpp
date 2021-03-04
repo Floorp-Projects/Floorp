@@ -17,19 +17,31 @@ namespace mozilla::glean {
 namespace impl {
 template <>
 BooleanMetric Labeled<BooleanMetric>::Get(const nsACString& aLabel) const {
+#ifdef MOZ_GLEAN_ANDROID
+  auto submetricId = 0;
+#else
   auto submetricId = fog_labeled_boolean_get(mId, &aLabel);
+#endif
   return BooleanMetric(submetricId);
 }
 
 template <>
 CounterMetric Labeled<CounterMetric>::Get(const nsACString& aLabel) const {
+#ifdef MOZ_GLEAN_ANDROID
+  auto submetricId = 0;
+#else
   auto submetricId = fog_labeled_counter_get(mId, &aLabel);
+#endif
   return CounterMetric(submetricId);
 }
 
 template <>
 StringMetric Labeled<StringMetric>::Get(const nsACString& aLabel) const {
+#ifdef MOZ_GLEAN_ANDROID
+  auto submetricId = 0;
+#else
   auto submetricId = fog_labeled_string_get(mId, &aLabel);
+#endif
   return StringMetric(submetricId);
 }
 }  // namespace impl

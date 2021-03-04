@@ -31,7 +31,9 @@ class MemoryDistributionMetric {
    * InvalidValue error is recorded.
    */
   void Accumulate(uint64_t aSample) const {
+#ifndef MOZ_GLEAN_ANDROID
     fog_memory_distribution_accumulate(mId, aSample);
+#endif
   }
 
   /**
@@ -53,6 +55,10 @@ class MemoryDistributionMetric {
    */
   Maybe<DistributionData> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+    return Nothing();
+#else
     if (!fog_memory_distribution_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
@@ -65,6 +71,7 @@ class MemoryDistributionMetric {
       ret.values.InsertOrUpdate(buckets[i], counts[i]);
     }
     return Some(std::move(ret));
+#endif
   }
 
  private:
