@@ -42,7 +42,7 @@ function run() {
       mql: subwin.matchMedia(str),
       notifyCount: 0,
       listener: function(event) {
-                  ok(event instanceof MediaQueryListEvent,
+                  ok(event instanceof subwin.MediaQueryListEvent,
                      "correct argument to listener: " + obj.str);
                   is(event.media, obj.mql.media,
                      "correct media in the event: " + obj.str);

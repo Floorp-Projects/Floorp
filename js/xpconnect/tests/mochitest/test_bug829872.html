@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829872
     is(elem.contentDocument, null, "null cross-origin contentDocument for " + desc);
     ok(await SpecialPowers.spawn(elem, [], () => this.content.eval('frameElement === null;')),
        "null cross-origin frameElement for " + desc);
-    if (!(elem instanceof HTMLFrameElement))
+    if (!(elem instanceof elem.ownerDocument.defaultView.HTMLFrameElement))
       is(elem.getSVGDocument(), null, "null cross-origin getSVGDocument() for " + desc);
   }
 

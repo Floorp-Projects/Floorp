@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=511084
   /** Test for Bug 511084 **/
   var doc = frames[0].document;
   doc.replaceChild(doc.createElement("iframe"), doc.documentElement);
-  ok(frames[0][0] instanceof Window,
+  ok(frames[0][0] instanceof frames[0][0].Window,
      "Should have a subframe window for a root iframe");
   </script>
 </pre>
