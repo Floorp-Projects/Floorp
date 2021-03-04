@@ -71,7 +71,7 @@ function preferenceExperimentFactory(args) {
 }
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(Uptake, "reportRecipe"),
   async function run_without_errors(reportRecipe) {
     const action = new PreferenceExperimentAction();
@@ -85,7 +85,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(Uptake, "reportRecipe"),
   withStub(Uptake, "reportAction"),
   withPrefEnv({ set: [["app.shield.optoutstudies.enabled", false]] }),
@@ -120,7 +120,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "start"),
   PreferenceExperiments.withMockExperiments([]),
   async function enroll_user_if_never_been_in_experiment(startStub) {
@@ -183,7 +183,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "markLastSeen"),
   PreferenceExperiments.withMockExperiments([{ slug: "test", expired: false }]),
   async function markSeen_if_experiment_active(markLastSeenStub) {
@@ -200,7 +200,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "markLastSeen"),
   PreferenceExperiments.withMockExperiments([{ slug: "test", expired: true }]),
   async function dont_markSeen_if_experiment_expired(markLastSeenStub) {
@@ -217,7 +217,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "start"),
   async function do_nothing_if_enrollment_paused(startStub) {
     const action = new PreferenceExperimentAction();
@@ -233,7 +233,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "stop"),
   PreferenceExperiments.withMockExperiments([
     { slug: "seen", expired: false, actionName: "PreferenceExperimentAction" },
@@ -266,7 +266,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "stop"),
   PreferenceExperiments.withMockExperiments([
     {
@@ -298,7 +298,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "start"),
   withStub(Uptake, "reportRecipe"),
   PreferenceExperiments.withMockExperiments([
@@ -341,7 +341,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "start"),
   PreferenceExperiments.withMockExperiments([]),
   async function experimentType_with_isHighPopulation_false(startStub) {
@@ -358,7 +358,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(PreferenceExperiments, "start"),
   PreferenceExperiments.withMockExperiments([]),
   async function experimentType_with_isHighPopulation_true(startStub) {
@@ -375,7 +375,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(Sampling, "ratioSample"),
   async function chooseBranch_uses_ratioSample(ratioSampleStub) {
     ratioSampleStub.returns(Promise.resolve(1));
@@ -415,8 +415,8 @@ decorate_task(
 );
 
 decorate_task(
-  withStudiesEnabled,
-  withMockPreferences,
+  withStudiesEnabled(),
+  withMockPreferences(),
   PreferenceExperiments.withMockExperiments([]),
   async function integration_test_enroll_and_unenroll(prefs) {
     prefs.set("fake.preference", "oldvalue", "user");
@@ -493,7 +493,7 @@ decorate_task(
 
 // Check that the appropriate set of suitabilities are considered temporary errors
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   async function test_temporary_errors_set_deadline() {
     let suitabilities = [
       {
@@ -575,7 +575,7 @@ decorate_task(
 
 // Check that if there is an existing deadline, temporary errors don't overwrite it
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   PreferenceExperiments.withMockExperiments([]),
   async function test_temporary_errors_dont_overwrite_deadline() {
     let temporaryFailureSuitabilities = [
@@ -618,7 +618,7 @@ decorate_task(
 
 // Check that if the deadline is past, temporary errors end the experiment.
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   async function test_temporary_errors_hit_deadline() {
     let temporaryFailureSuitabilities = [
       BaseAction.suitability.SIGNATURE_ERROR,
@@ -661,7 +661,7 @@ decorate_task(
 
 // Check that non-temporary-error suitabilities clear the temporary deadline
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   PreferenceExperiments.withMockExperiments([]),
   async function test_non_temporary_error_clears_temporary_error_deadline() {
     let suitabilitiesThatShouldClearDeadline = [
@@ -706,7 +706,7 @@ decorate_task(
 
 // Check that invalid deadlines are reset
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   PreferenceExperiments.withMockExperiments([]),
   async function test_non_temporary_error_clears_temporary_error_deadline() {
     let temporaryFailureSuitabilities = [

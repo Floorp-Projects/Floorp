@@ -18,15 +18,15 @@ const { NormandyTestUtils } = ChromeUtils.import(
 
 // Test that a simple recipe enrolls as expected
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
+  withMockNormandyApi(),
   withStub(TelemetryEnvironment, "setExperimentActive"),
-  withSendEventSpy,
+  withSendEventSpy(),
   async function simple_recipe_enrollment(
     mockApi,
     setExperimentActiveStub,
-    sendEventStub
+    sendEventSpy
   ) {
     const recipe = {
       id: 1,
@@ -80,7 +80,7 @@ decorate_task(
       "enrollmentId should be a UUID"
     );
 
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       ["enroll", "addon_rollout", recipe.arguments.slug],
     ]);
     ok(
@@ -97,11 +97,11 @@ decorate_task(
 
 // Test that a rollout can update the addon
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
-  withSendEventSpy,
-  async function update_rollout(mockApi, sendEventStub) {
+  withMockNormandyApi(),
+  withSendEventSpy(),
+  async function update_rollout(mockApi, sendEventSpy) {
     // first enrollment
     const recipe = {
       id: 1,
@@ -177,7 +177,7 @@ decorate_task(
       "enrollmentId should be a UUID"
     );
 
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       ["enroll", "addon_rollout", "test-rollout"],
       ["update", "addon_rollout", "test-rollout"],
     ]);
@@ -189,11 +189,11 @@ decorate_task(
 
 // Re-running a recipe does nothing
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
-  withSendEventSpy,
-  async function rerun_recipe(mockApi, sendEventStub) {
+  withMockNormandyApi(),
+  withSendEventSpy(),
+  async function rerun_recipe(mockApi, sendEventSpy) {
     const recipe = {
       id: 1,
       arguments: {
@@ -256,7 +256,7 @@ decorate_task(
       "Enrollment ID should be a UUID"
     );
 
-    sendEventStub.assertEvents([["enroll", "addon_rollout", "test-rollout"]]);
+    sendEventSpy.assertEvents([["enroll", "addon_rollout", "test-rollout"]]);
 
     // Cleanup
     await addon.uninstall();
@@ -265,11 +265,11 @@ decorate_task(
 
 // Conflicting rollouts
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
-  withSendEventSpy,
-  async function conflicting_rollout(mockApi, sendEventStub) {
+  withMockNormandyApi(),
+  withSendEventSpy(),
+  async function conflicting_rollout(mockApi, sendEventSpy) {
     const recipe = {
       id: 1,
       arguments: {
@@ -339,7 +339,7 @@ decorate_task(
     );
     ok(NormandyTestUtils.isUuid(rollouts[0].enrollmentId));
 
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       [
         "enroll",
         "addon_rollout",
@@ -361,11 +361,11 @@ decorate_task(
 
 // Add-on ID changed
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
-  withSendEventSpy,
-  async function enroll_failed_addon_id_changed(mockApi, sendEventStub) {
+  withMockNormandyApi(),
+  withSendEventSpy(),
+  async function enroll_failed_addon_id_changed(mockApi, sendEventSpy) {
     const recipe = {
       id: 1,
       arguments: {
@@ -436,7 +436,7 @@ decorate_task(
       "enrollment ID should be a UUID"
     );
 
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       ["enroll", "addon_rollout", "test-rollout"],
       [
         "updateFailed",
@@ -453,11 +453,11 @@ decorate_task(
 
 // Add-on upgrade required
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
-  withSendEventSpy,
-  async function enroll_failed_upgrade_required(mockApi, sendEventStub) {
+  withMockNormandyApi(),
+  withSendEventSpy(),
+  async function enroll_failed_upgrade_required(mockApi, sendEventSpy) {
     const recipe = {
       id: 1,
       arguments: {
@@ -527,7 +527,7 @@ decorate_task(
       "enrollment ID should be a UUID"
     );
 
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       ["enroll", "addon_rollout", "test-rollout"],
       [
         "updateFailed",

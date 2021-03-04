@@ -25,16 +25,18 @@ const experimentPref2 = "test.initExperimentPrefs2";
 const experimentPref3 = "test.initExperimentPrefs3";
 const experimentPref4 = "test.initExperimentPrefs4";
 
-function withStubInits(testFunction) {
-  return decorate(
-    withStub(AddonRollouts, "init"),
-    withStub(AddonStudies, "init"),
-    withStub(PreferenceRollouts, "init"),
-    withStub(PreferenceExperiments, "init"),
-    withStub(RecipeRunner, "init"),
-    withStub(TelemetryEvents, "init"),
-    () => testFunction()
-  );
+function withStubInits() {
+  return function(testFunction) {
+    return decorate(
+      withStub(AddonRollouts, "init"),
+      withStub(AddonStudies, "init"),
+      withStub(PreferenceRollouts, "init"),
+      withStub(PreferenceExperiments, "init"),
+      withStub(RecipeRunner, "init"),
+      withStub(TelemetryEvents, "init"),
+      () => testFunction()
+    );
+  };
 }
 
 decorate_task(
@@ -205,7 +207,7 @@ decorate_task(
   }
 );
 
-decorate_task(withStubInits, async function testStartup() {
+decorate_task(withStubInits(), async function testStartup() {
   const initObserved = TestUtils.topicObserved("shield-init-complete");
   await Normandy.finishInit();
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
@@ -217,7 +219,7 @@ decorate_task(withStubInits, async function testStartup() {
   await initObserved;
 });
 
-decorate_task(withStubInits, async function testStartupPrefInitFail() {
+decorate_task(withStubInits(), async function testStartupPrefInitFail() {
   PreferenceExperiments.init.rejects();
 
   await Normandy.finishInit();
@@ -232,23 +234,26 @@ decorate_task(withStubInits, async function testStartupPrefInitFail() {
   ok(PreferenceRollouts.init.called, "startup calls PreferenceRollouts.init");
 });
 
-decorate_task(withStubInits, async function testStartupAddonStudiesInitFail() {
-  AddonStudies.init.rejects();
+decorate_task(
+  withStubInits(),
+  async function testStartupAddonStudiesInitFail() {
+    AddonStudies.init.rejects();
 
-  await Normandy.finishInit();
-  ok(AddonStudies.init.called, "startup calls AddonStudies.init");
-  ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
-  ok(
-    PreferenceExperiments.init.called,
-    "startup calls PreferenceExperiments.init"
-  );
-  ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
-  ok(TelemetryEvents.init.called, "startup calls TelemetryEvents.init");
-  ok(PreferenceRollouts.init.called, "startup calls PreferenceRollouts.init");
-});
+    await Normandy.finishInit();
+    ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
+    ok(
+      PreferenceExperiments.init.called,
+      "startup calls PreferenceExperiments.init"
+    );
+    ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+    ok(TelemetryEvents.init.called, "startup calls TelemetryEvents.init");
+    ok(PreferenceRollouts.init.called, "startup calls PreferenceRollouts.init");
+  }
+);
 
 decorate_task(
-  withStubInits,
+  withStubInits(),
   async function testStartupTelemetryEventsInitFail() {
     TelemetryEvents.init.throws();
 
@@ -266,7 +271,7 @@ decorate_task(
 );
 
 decorate_task(
-  withStubInits,
+  withStubInits(),
   async function testStartupPreferenceRolloutsInitFail() {
     PreferenceRollouts.init.throws();
 
@@ -294,7 +299,7 @@ decorate_task(
     factories.addonStudyFactory({ slug: "test-study" }),
   ]),
   PreferenceRollouts.withTestMock(),
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   async function disablingTelemetryClearsEnrollmentIds(
     [prefExperiment],
     [addonStudy]

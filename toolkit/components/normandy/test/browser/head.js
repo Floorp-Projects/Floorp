@@ -135,31 +135,33 @@ this.withInstalledWebExtension = function(
   };
 };
 
-this.withMockNormandyApi = function(testFunction) {
-  return async function inner(...args) {
-    const mockApi = {
-      actions: [],
-      recipes: [],
-      implementations: {},
-      extensionDetails: {},
+this.withMockNormandyApi = function() {
+  return function(testFunction) {
+    return async function inner(...args) {
+      const mockApi = {
+        actions: [],
+        recipes: [],
+        implementations: {},
+        extensionDetails: {},
+      };
+
+      // Use callsFake instead of resolves so that the current values in mockApi are used.
+      mockApi.fetchExtensionDetails = sinon
+        .stub(NormandyApi, "fetchExtensionDetails")
+        .callsFake(async extensionId => {
+          const details = mockApi.extensionDetails[extensionId];
+          if (!details) {
+            throw new Error(`Missing extension details for ${extensionId}`);
+          }
+          return details;
+        });
+
+      try {
+        await testFunction(...args, mockApi);
+      } finally {
+        mockApi.fetchExtensionDetails.restore();
+      }
     };
-
-    // Use callsFake instead of resolves so that the current values in mockApi are used.
-    mockApi.fetchExtensionDetails = sinon
-      .stub(NormandyApi, "fetchExtensionDetails")
-      .callsFake(async extensionId => {
-        const details = mockApi.extensionDetails[extensionId];
-        if (!details) {
-          throw new Error(`Missing extension details for ${extensionId}`);
-        }
-        return details;
-      });
-
-    try {
-      await testFunction(...args, mockApi);
-    } finally {
-      mockApi.fetchExtensionDetails.restore();
-    }
   };
 };
 
@@ -168,14 +170,16 @@ const preferenceBranches = {
   default: new Preferences({ defaultBranch: true }),
 };
 
-this.withMockPreferences = function(testFunction) {
-  return async function inner(...args) {
-    const prefManager = new MockPreferences();
-    try {
-      await testFunction(...args, prefManager);
-    } finally {
-      prefManager.cleanup();
-    }
+this.withMockPreferences = function() {
+  return function(testFunction) {
+    return async function inner(...args) {
+      const prefManager = new MockPreferences();
+      try {
+        await testFunction(...args, prefManager);
+      } finally {
+        prefManager.cleanup();
+      }
+    };
   };
 };
 
@@ -248,16 +252,18 @@ this.withPrefEnv = function(inPrefs) {
   };
 };
 
-this.withStudiesEnabled = function(testFunc) {
-  return async function inner(...args) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["app.shield.optoutstudies.enabled", true]],
-    });
-    try {
-      await testFunc(...args);
-    } finally {
-      await SpecialPowers.popPrefEnv();
-    }
+this.withStudiesEnabled = function() {
+  return function(testFunc) {
+    return async function inner(...args) {
+      await SpecialPowers.pushPrefEnv({
+        set: [["app.shield.optoutstudies.enabled", true]],
+      });
+      try {
+        await testFunc(...args);
+      } finally {
+        await SpecialPowers.popPrefEnv();
+      }
+    };
   };
 };
 
@@ -295,8 +301,8 @@ this.decorate = function(...args) {
  * @param {[Function]} args
  * @example
  *   decorate_task(
- *     withMockPreferences,
- *     withMockNormandyApi,
+ *     withMockPreferences(),
+ *     withMockNormandyApi(),
  *     async function myTest(mockPreferences, mockApi) {
  *       // Do a test
  *     }
@@ -306,10 +312,11 @@ this.decorate_task = function(...args) {
   return add_task(decorate(...args));
 };
 
-this.withStub = function(...stubArgs) {
+this.withStub = function(object, method, { returnValue } = {}) {
   return function wrapper(testFunction) {
     return async function wrappedTestFunction(...args) {
-      const stub = sinon.stub(...stubArgs);
+      const stub = sinon.stub(object, method);
+      stub.returnValue = returnValue;
       try {
         await testFunction(...args, stub);
       } finally {
@@ -339,24 +346,26 @@ this.studyEndObserved = function(recipeId) {
   );
 };
 
-this.withSendEventSpy = function(testFunction) {
-  return async function wrappedTestFunction(...args) {
-    const spy = sinon.spy(TelemetryEvents, "sendEvent");
-    spy.assertEvents = expected => {
-      expected = expected.map(event => ["normandy"].concat(event));
-      TelemetryTestUtils.assertEvents(
-        expected,
-        { category: "normandy" },
-        { clear: false }
-      );
+this.withSendEventSpy = function() {
+  return function(testFunction) {
+    return async function wrappedTestFunction(...args) {
+      const spy = sinon.spy(TelemetryEvents, "sendEvent");
+      spy.assertEvents = expected => {
+        expected = expected.map(event => ["normandy"].concat(event));
+        TelemetryTestUtils.assertEvents(
+          expected,
+          { category: "normandy" },
+          { clear: false }
+        );
+      };
+      Services.telemetry.clearEvents();
+      try {
+        await testFunction(...args, spy);
+      } finally {
+        spy.restore();
+        Assert.ok(!spy.threw(), "Telemetry events should not fail");
+      }
     };
-    Services.telemetry.clearEvents();
-    try {
-      await testFunction(...args, spy);
-    } finally {
-      spy.restore();
-      Assert.ok(!spy.threw(), "Telemetry events should not fail");
-    }
   };
 };
 
