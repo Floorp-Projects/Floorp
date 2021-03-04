@@ -10999,9 +10999,11 @@ virtueeldomein.nl
 cleverapps.io
 
 // Clerk : https://www.clerk.dev
-// Submitted by Colin Sidoti <colin@clerk.dev>
+// Submitted by Colin Sidoti <systems@clerk.dev>
 *.lcl.dev
+*.lclstage.dev
 *.stg.dev
+*.stgstage.dev
 
 // Clic2000 : https://clic2000.fr
 // Submitted by Mathilde Blanchemanche <mathilde@clic2000.fr>
@@ -11936,7 +11938,7 @@ glitch.me
 lolipop.io
 
 // GOV.UK Platform as a Service : https://www.cloud.service.gov.uk/
-// Submitted by Tom Whitwell <tom.whitwell@digital.cabinet-office.gov.uk>
+// Submitted by Tom Whitwell <gov-uk-paas-support@digital.cabinet-office.gov.uk>
 cloudapps.digital
 london.cloudapps.digital
 
@@ -13004,6 +13006,10 @@ qualifioapp.com
 // Submitted by Dani Biro <dani@pymet.com>
 qbuser.com
 
+// Rad Web Hosting: https://radwebhosting.com
+// Submitted by Scott Claeys <s.claeys@radwebhosting.com>
+cloudsite.builders
+
 // Redstar Consultants : https://www.redstarconsultants.com/
 // Submitted by Jons Slemmer <jons@redstarconsultants.com>
 instantcloud.cn
@@ -13103,6 +13109,7 @@ schokokeks.net
 // Scottish Government: https://www.gov.scot
 // Submitted by Martin Ellis <martin.ellis@gov.scot>
 gov.scot
+service.gov.scot
 
 // Scry Security : http://www.scrysec.com
 // Submitted by Shante Adam <shante@skyhat.io>
@@ -13184,6 +13191,10 @@ small-web.org
 // Snowplow Analytics : https://snowplowanalytics.com/
 // Submitted by Ian Streeter <ian@snowplowanalytics.com>
 try-snowplow.com
+
+// SourceHut : https://sourcehut.org
+// Submitted by Drew DeVault <sir@cmpwn.com>
+srht.site
 
 // Stackhero : https://www.stackhero.io
 // Submitted by Adrien Gillon <adrien+public-suffix-list@stackhero.io>
