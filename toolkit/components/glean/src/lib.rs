@@ -17,6 +17,15 @@
 //! [privacy-policy]: https://www.mozilla.org/privacy/
 //! [docs]: https://firefox-source-docs.mozilla.org/toolkit/components/glean/
 
+// Skip everything on Android.
+//
+// FOG is disabled on Android until we enable it in GeckoView.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1670261.
+//
+// This also ensures no one will actually be able to use the Rust API,
+// because that will fail the build.
+#![cfg(not(target_os = "android"))]
+
 // No one is currently using the Glean SDK, so let's export it, so we know it gets
 // compiled.
 pub extern crate fog;
