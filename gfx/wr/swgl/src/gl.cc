@@ -313,7 +313,6 @@ struct Buffer {
 
 struct Framebuffer {
   GLuint color_attachment = 0;
-  GLint layer = 0;
   GLuint depth_attachment = 0;
 };
 
@@ -347,7 +346,6 @@ struct Texture {
   GLenum internal_format = 0;
   int width = 0;
   int height = 0;
-  int depth = 0;
   char* buf = nullptr;
   size_t buf_size = 0;
   uint32_t buf_stride = 0;
@@ -460,7 +458,7 @@ struct Texture {
       // the current stride, to hopefully avoid reallocations when size would
       // otherwise change too much...
       size_t max_stride = max(buf_stride, aligned_stride(buf_bpp * min_width));
-      size_t size = max_stride * max(height, min_height) * max(depth, 1);
+      size_t size = max_stride * max(height, min_height);
       if ((!buf && size > 0) || size > buf_size) {
         // Allocate with a SIMD register-sized tail of padding at the end so we
         // can safely read or write past the end of the texture with SIMD ops.
@@ -521,19 +519,19 @@ struct Texture {
   }
 
   // Get a pointer for sampling at the given offset
-  char* sample_ptr(int x, int y, int z = 0) const {
-    return buf + (height * z + y) * stride() + x * bpp();
+  char* sample_ptr(int x, int y) const {
+    return buf + y * stride() + x * bpp();
   }
 
   // Get a pointer for sampling the requested region and limit to the provided
   // sampling bounds
-  char* sample_ptr(const IntRect& req, const IntRect& bounds, int z,
+  char* sample_ptr(const IntRect& req, const IntRect& bounds,
                    bool invertY = false) const {
     // Offset the sample pointer by the clamped bounds
     int x = req.x0 + bounds.x0;
     // Invert the Y offset if necessary
     int y = invertY ? req.y1 - 1 - bounds.y0 : req.y0 + bounds.y0;
-    return sample_ptr(x, y, z);
+    return sample_ptr(x, y);
   }
 };
 
@@ -746,14 +744,10 @@ struct Context {
 
   struct TextureUnit {
     GLuint texture_2d_binding = 0;
-    GLuint texture_3d_binding = 0;
-    GLuint texture_2d_array_binding = 0;
     GLuint texture_rectangle_binding = 0;
 
     void unlink(GLuint n) {
       ::unlink(texture_2d_binding, n);
-      ::unlink(texture_3d_binding, n);
-      ::unlink(texture_2d_array_binding, n);
       ::unlink(texture_rectangle_binding, n);
     }
   };
@@ -787,10 +781,6 @@ struct Context {
         return vertex_arrays[current_vertex_array].element_array_buffer_binding;
       case GL_TEXTURE_2D:
         return texture_units[active_texture_unit].texture_2d_binding;
-      case GL_TEXTURE_2D_ARRAY:
-        return texture_units[active_texture_unit].texture_2d_array_binding;
-      case GL_TEXTURE_3D:
-        return texture_units[active_texture_unit].texture_3d_binding;
       case GL_TEXTURE_RECTANGLE:
         return texture_units[active_texture_unit].texture_rectangle_binding;
       case GL_TIME_ELAPSED:
@@ -818,10 +808,6 @@ struct Context {
     return textures[texture_units[unit].texture_2d_binding];
   }
 
-  Texture& get_texture(sampler2DArray, int unit) {
-    return textures[texture_units[unit].texture_2d_array_binding];
-  }
-
   Texture& get_texture(sampler2DRect, int unit) {
     return textures[texture_units[unit].texture_rectangle_binding];
   }
@@ -841,12 +827,6 @@ static FragmentShaderImpl* fragment_shader = nullptr;
 static BlendKey blend_key = BLEND_KEY_NONE;
 
 static void prepare_texture(Texture& t, const IntRect* skip = nullptr);
-
-template <typename S>
-static inline void init_depth(S* s, Texture& t) {
-  s->depth = max(t.depth, 1);
-  s->height_stride = s->stride * t.height;
-}
 
 template <typename S>
 static inline void init_filter(S* s, Texture& t) {
@@ -895,12 +875,6 @@ static inline void null_filter(S* s) {
 }
 
 template <typename S>
-static inline void null_depth(S* s) {
-  s->depth = 1;
-  s->height_stride = s->stride;
-}
-
-template <typename S>
 S* lookup_sampler(S* s, int texture) {
   Texture& t = ctx->get_texture(s, texture);
   if (!t.buf) {
@@ -920,21 +894,6 @@ S* lookup_isampler(S* s, int texture) {
     null_sampler(s);
   } else {
     init_sampler(s, t);
-  }
-  return s;
-}
-
-template <typename S>
-S* lookup_sampler_array(S* s, int texture) {
-  Texture& t = ctx->get_texture(s, texture);
-  if (!t.buf) {
-    null_sampler(s);
-    null_depth(s);
-    null_filter(s);
-  } else {
-    init_sampler(s, t);
-    init_depth(s, t);
-    init_filter(s, t);
   }
   return s;
 }
@@ -1147,7 +1106,7 @@ void GetIntegerv(GLenum pname, GLint* params) {
       params[0] = 1 << 15;
       break;
     case GL_MAX_ARRAY_TEXTURE_LAYERS:
-      params[0] = 1 << 15;
+      params[0] = 0;
       break;
     case GL_READ_FRAMEBUFFER_BINDING:
       params[0] = ctx->read_framebuffer_binding;
@@ -1614,24 +1573,6 @@ static GLenum remap_internal_format(GLenum format) {
   }
 }
 
-void TexStorage3D(GLenum target, GLint levels, GLenum internal_format,
-                  GLsizei width, GLsizei height, GLsizei depth) {
-  assert(levels == 1);
-  Texture& t = ctx->textures[ctx->get_binding(target)];
-  internal_format = remap_internal_format(internal_format);
-  bool changed = false;
-  if (t.width != width || t.height != height || t.depth != depth ||
-      t.internal_format != internal_format) {
-    changed = true;
-    t.internal_format = internal_format;
-    t.width = width;
-    t.height = height;
-    t.depth = depth;
-  }
-  t.disable_delayed_clear();
-  t.allocate(changed);
-}
-
 }  // extern "C"
 
 static bool format_requires_conversion(GLenum external_format,
@@ -1691,13 +1632,12 @@ static void set_tex_storage(Texture& t, GLenum external_format, GLsizei width,
                             GLsizei min_height = 0) {
   GLenum internal_format = remap_internal_format(external_format);
   bool changed = false;
-  if (t.width != width || t.height != height || t.depth != 0 ||
+  if (t.width != width || t.height != height ||
       t.internal_format != internal_format) {
     changed = true;
     t.internal_format = internal_format;
     t.width = width;
     t.height = height;
-    t.depth = 0;
   }
   // If we are changed from an internally managed buffer to an externally
   // supplied one or vice versa, ensure that we clean up old buffer state.
@@ -1822,51 +1762,6 @@ void TexImage2D(GLenum target, GLint level, GLint internal_format,
   TexSubImage2D(target, 0, 0, 0, width, height, format, ty, data);
 }
 
-void TexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                   GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                   GLenum format, GLenum ty, void* data) {
-  if (level != 0) {
-    assert(false);
-    return;
-  }
-  data = get_pixel_unpack_buffer_data(data);
-  if (!data) return;
-  Texture& t = ctx->textures[ctx->get_binding(target)];
-  prepare_texture(t);
-  assert(ctx->unpack_row_length == 0 || ctx->unpack_row_length >= width);
-  GLsizei row_length =
-      ctx->unpack_row_length != 0 ? ctx->unpack_row_length : width;
-  assert(t.internal_format == internal_format_for_data(format, ty));
-  int src_bpp = format_requires_conversion(format, t.internal_format)
-                    ? bytes_for_internal_format(format)
-                    : t.bpp();
-  if (!src_bpp || !t.buf) return;
-  const uint8_t* src = (const uint8_t*)data;
-  assert(xoffset + width <= t.width);
-  assert(yoffset + height <= t.height);
-  assert(zoffset + depth <= t.depth);
-  size_t dest_stride = t.stride();
-  size_t src_stride = row_length * src_bpp;
-  for (int z = 0; z < depth; z++) {
-    convert_copy(format, t.internal_format,
-                 (uint8_t*)t.sample_ptr(xoffset, yoffset, zoffset + z),
-                 dest_stride, src, src_stride, width, height);
-    src += src_stride * height;
-  }
-}
-
-void TexImage3D(GLenum target, GLint level, GLint internal_format,
-                GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                GLenum format, GLenum ty, void* data) {
-  if (level != 0) {
-    assert(false);
-    return;
-  }
-  assert(border == 0);
-  TexStorage3D(target, 1, internal_format, width, height, depth);
-  TexSubImage3D(target, 0, 0, 0, 0, width, height, depth, format, ty, data);
-}
-
 void GenerateMipmap(UNUSED GLenum target) {
   // TODO: support mipmaps
 }
@@ -1920,9 +1815,7 @@ void GenRenderbuffers(int n, GLuint* result) {
 void Renderbuffer::on_erase() {
   for (auto* fb : ctx->framebuffers) {
     if (fb) {
-      if (unlink(fb->color_attachment, texture)) {
-        fb->layer = 0;
-      }
+      unlink(fb->color_attachment, texture);
       unlink(fb->depth_attachment, texture);
     }
   }
@@ -2113,24 +2006,7 @@ void FramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
   Framebuffer& fb = ctx->framebuffers[ctx->get_binding(target)];
   if (attachment == GL_COLOR_ATTACHMENT0) {
     fb.color_attachment = texture;
-    fb.layer = 0;
   } else if (attachment == GL_DEPTH_ATTACHMENT) {
-    fb.depth_attachment = texture;
-  } else {
-    assert(0);
-  }
-}
-
-void FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture,
-                             GLint level, GLint layer) {
-  assert(target == GL_READ_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER);
-  assert(level == 0);
-  Framebuffer& fb = ctx->framebuffers[ctx->get_binding(target)];
-  if (attachment == GL_COLOR_ATTACHMENT0) {
-    fb.color_attachment = texture;
-    fb.layer = layer;
-  } else if (attachment == GL_DEPTH_ATTACHMENT) {
-    assert(layer == 0);
     fb.depth_attachment = texture;
   } else {
     assert(0);
@@ -2145,7 +2021,6 @@ void FramebufferRenderbuffer(GLenum target, GLenum attachment,
   Renderbuffer& rb = ctx->renderbuffers[renderbuffer];
   if (attachment == GL_COLOR_ATTACHMENT0) {
     fb.color_attachment = rb.texture;
-    fb.layer = 0;
   } else if (attachment == GL_DEPTH_ATTACHMENT) {
     fb.depth_attachment = rb.texture;
   } else {
@@ -2208,8 +2083,8 @@ static inline void clear_row(T* buf, size_t len, T value, uint32_t chunk) {
 }
 
 template <typename T>
-static void clear_buffer(Texture& t, T value, int layer, IntRect bb,
-                         int skip_start = 0, int skip_end = 0) {
+static void clear_buffer(Texture& t, T value, IntRect bb, int skip_start = 0,
+                         int skip_end = 0) {
   if (!t.buf) return;
   skip_start = max(skip_start, bb.x0);
   skip_end = max(skip_end, skip_start);
@@ -2221,7 +2096,7 @@ static void clear_buffer(Texture& t, T value, int layer, IntRect bb,
     bb.x1 += (stride / sizeof(T)) * (bb.height() - 1);
     bb.y1 = bb.y0 + 1;
   }
-  T* buf = (T*)t.sample_ptr(bb.x0, bb.y0, layer);
+  T* buf = (T*)t.sample_ptr(bb.x0, bb.y0);
   uint32_t chunk = clear_chunk(value);
   for (int rows = bb.height(); rows > 0; rows--) {
     if (bb.x0 < skip_start) {
@@ -2279,7 +2154,7 @@ static void force_clear(Texture& t, const IntRect* skip = nullptr) {
       while (mask) {
         int count = __builtin_ctz(mask);
         if (count > 0) {
-          clear_buffer<T>(t, t.clear_val, 0,
+          clear_buffer<T>(t, t.clear_val,
                           IntRect{0, start, t.width, start + count}, skip_start,
                           skip_end);
           t.delay_clear -= count;
@@ -2292,7 +2167,7 @@ static void force_clear(Texture& t, const IntRect* skip = nullptr) {
       }
       int count = (i + 1) * 32 - start;
       if (count > 0) {
-        clear_buffer<T>(t, t.clear_val, 0,
+        clear_buffer<T>(t, t.clear_val,
                         IntRect{0, start, t.width, start + count}, skip_start,
                         skip_end);
         t.delay_clear -= count;
@@ -2324,18 +2199,13 @@ static void prepare_texture(Texture& t, const IntRect* skip) {
 // Setup a clear on a texture. This may either force an immediate clear or
 // potentially punt to a delayed clear, if applicable.
 template <typename T>
-static void request_clear(Texture& t, int layer, T value,
-                          const IntRect& scissor) {
+static void request_clear(Texture& t, T value, const IntRect& scissor) {
   // If the clear would require a scissor, force clear anything outside
   // the scissor, and then immediately clear anything inside the scissor.
   if (!scissor.contains(t.offset_bounds())) {
     IntRect skip = scissor - t.offset;
     force_clear<T>(t, &skip);
-    clear_buffer<T>(t, value, layer, skip.intersection(t.bounds()));
-  } else if (t.depth > 1) {
-    // Delayed clear is not supported on texture arrays.
-    t.disable_delayed_clear();
-    clear_buffer<T>(t, value, layer, t.bounds());
+    clear_buffer<T>(t, value, skip.intersection(t.bounds()));
   } else {
     // Do delayed clear for 2D texture without scissor.
     t.enable_delayed_clear(value);
@@ -2343,11 +2213,10 @@ static void request_clear(Texture& t, int layer, T value,
 }
 
 template <typename T>
-static inline void request_clear(Texture& t, int layer, T value) {
+static inline void request_clear(Texture& t, T value) {
   // If scissoring is enabled, use the scissor rect. Otherwise, just scissor to
   // the entire texture bounds.
-  request_clear(t, layer, value,
-                ctx->scissortest ? ctx->scissor : t.offset_bounds());
+  request_clear(t, value, ctx->scissortest ? ctx->scissor : t.offset_bounds());
 }
 
 extern "C" {
@@ -2357,7 +2226,6 @@ void InitDefaultFramebuffer(int x, int y, int width, int height, int stride,
   Framebuffer& fb = ctx->framebuffers[0];
   if (!fb.color_attachment) {
     GenTextures(1, &fb.color_attachment);
-    fb.layer = 0;
   }
   // If the dimensions or buffer properties changed, we need to reallocate
   // the underlying storage for the color buffer texture.
@@ -2387,7 +2255,7 @@ void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
   *width = colortex.width;
   *height = colortex.height;
   *stride = colortex.stride();
-  return colortex.buf ? colortex.sample_ptr(0, 0, fb->layer) : nullptr;
+  return colortex.buf ? colortex.sample_ptr(0, 0) : nullptr;
 }
 
 void SetTextureBuffer(GLuint texid, GLenum internal_format, GLsizei width,
@@ -2416,16 +2284,10 @@ void ClearTexSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset,
   }
   Texture& t = ctx->textures[texture];
   assert(!t.locked);
-  if (zoffset < 0) {
-    depth += zoffset;
-    zoffset = 0;
-  }
-  if (zoffset + depth > max(t.depth, 1)) {
-    depth = max(t.depth, 1) - zoffset;
-  }
   if (width <= 0 || height <= 0 || depth <= 0) {
     return;
   }
+  assert(zoffset == 0 && depth == 1);
   IntRect scissor = {xoffset, yoffset, xoffset + width, yoffset + height};
   if (t.internal_format == GL_DEPTH_COMPONENT16) {
     uint16_t value = 0xFFFF;
@@ -2450,7 +2312,6 @@ void ClearTexSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset,
         assert(false);
         break;
     }
-    assert(zoffset == 0 && depth == 1);
     if (t.cleared() && !scissor.contains(t.offset_bounds())) {
       // If we need to scissor the clear and the depth buffer was already
       // initialized, then just fill runs for that scissor area.
@@ -2515,27 +2376,25 @@ void ClearTexSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset,
       break;
   }
 
-  for (int layer = zoffset; layer < zoffset + depth; layer++) {
     switch (t.internal_format) {
       case GL_RGBA8:
         // Clear color needs to swizzle to BGRA.
-        request_clear<uint32_t>(t, layer,
+        request_clear<uint32_t>(t,
                                 (color & 0xFF00FF00) |
                                     ((color << 16) & 0xFF0000) |
                                     ((color >> 16) & 0xFF),
                                 scissor);
         break;
       case GL_R8:
-        request_clear<uint8_t>(t, layer, uint8_t(color & 0xFF), scissor);
+        request_clear<uint8_t>(t, uint8_t(color & 0xFF), scissor);
         break;
       case GL_RG8:
-        request_clear<uint16_t>(t, layer, uint16_t(color & 0xFFFF), scissor);
+        request_clear<uint16_t>(t, uint16_t(color & 0xFFFF), scissor);
         break;
       default:
         assert(false);
         break;
     }
-  }
 }
 
 void ClearTexImage(GLuint texture, GLint level, GLenum format, GLenum type,
@@ -2543,7 +2402,7 @@ void ClearTexImage(GLuint texture, GLint level, GLenum format, GLenum type,
   Texture& t = ctx->textures[texture];
   IntRect scissor = t.offset_bounds();
   ClearTexSubImage(texture, level, scissor.x0, scissor.y0, 0, scissor.width(),
-                   scissor.height(), max(t.depth, 1), format, type, data);
+                   scissor.height(), 1, format, type, data);
 }
 
 void Clear(GLbitfield mask) {
@@ -2553,7 +2412,7 @@ void Clear(GLbitfield mask) {
     IntRect scissor = ctx->scissortest
                           ? ctx->scissor.intersection(t.offset_bounds())
                           : t.offset_bounds();
-    ClearTexSubImage(fb.color_attachment, 0, scissor.x0, scissor.y0, fb.layer,
+    ClearTexSubImage(fb.color_attachment, 0, scissor.x0, scissor.y0, 0,
                      scissor.width(), scissor.height(), 1, GL_RGBA, GL_FLOAT,
                      ctx->clearcolor);
   }
@@ -2577,7 +2436,7 @@ void ClearColorRect(GLuint fbo, GLint xoffset, GLint yoffset, GLsizei width,
   IntRect scissor =
       IntRect{xoffset, yoffset, xoffset + width, yoffset + height}.intersection(
           t.offset_bounds());
-  ClearTexSubImage(fb.color_attachment, 0, scissor.x0, scissor.y0, fb.layer,
+  ClearTexSubImage(fb.color_attachment, 0, scissor.x0, scissor.y0, 0,
                    scissor.width(), scissor.height(), 1, GL_RGBA, GL_FLOAT,
                    color);
 }
@@ -2653,8 +2512,7 @@ void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
     return;
   }
   convert_copy(format, t.internal_format, dest, destStride,
-               (const uint8_t*)t.sample_ptr(x, y, fb->layer), t.stride(), width,
-               height);
+               (const uint8_t*)t.sample_ptr(x, y), t.stride(), width, height);
 }
 
 void CopyImageSubData(GLuint srcName, GLenum srcTarget, UNUSED GLint srcLevel,
@@ -2663,6 +2521,7 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, UNUSED GLint srcLevel,
                       GLint dstY, GLint dstZ, GLsizei srcWidth,
                       GLsizei srcHeight, GLsizei srcDepth) {
   assert(srcLevel == 0 && dstLevel == 0);
+  assert(srcZ == 0 && srcDepth == 1 && dstZ == 0);
   if (srcTarget == GL_RENDERBUFFER) {
     Renderbuffer& rb = ctx->renderbuffers[srcName];
     srcName = rb.texture;
@@ -2682,36 +2541,20 @@ void CopyImageSubData(GLuint srcName, GLenum srcTarget, UNUSED GLint srcLevel,
   assert(srctex.internal_format == dsttex.internal_format);
   assert(srcWidth >= 0);
   assert(srcHeight >= 0);
-  assert(srcDepth >= 0);
   assert(srcX + srcWidth <= srctex.width);
   assert(srcY + srcHeight <= srctex.height);
-  assert(srcZ + srcDepth <= max(srctex.depth, 1));
   assert(dstX + srcWidth <= dsttex.width);
   assert(dstY + srcHeight <= dsttex.height);
-  assert(dstZ + srcDepth <= max(dsttex.depth, 1));
   int bpp = srctex.bpp();
   int src_stride = srctex.stride();
   int dest_stride = dsttex.stride();
-  for (int z = 0; z < srcDepth; z++) {
-    char* dest = dsttex.sample_ptr(dstX, dstY, dstZ + z);
-    char* src = srctex.sample_ptr(srcX, srcY, srcZ + z);
-    for (int y = 0; y < srcHeight; y++) {
-      memcpy(dest, src, srcWidth * bpp);
-      dest += dest_stride;
-      src += src_stride;
-    }
+  char* dest = dsttex.sample_ptr(dstX, dstY);
+  char* src = srctex.sample_ptr(srcX, srcY);
+  for (int y = 0; y < srcHeight; y++) {
+    memcpy(dest, src, srcWidth * bpp);
+    dest += dest_stride;
+    src += src_stride;
   }
-}
-
-void CopyTexSubImage3D(GLenum target, UNUSED GLint level, GLint xoffset,
-                       GLint yoffset, GLint zoffset, GLint x, GLint y,
-                       GLsizei width, GLsizei height) {
-  assert(level == 0);
-  Framebuffer* fb = get_framebuffer(GL_READ_FRAMEBUFFER);
-  if (!fb) return;
-  CopyImageSubData(fb->color_attachment, GL_TEXTURE_3D, 0, x, y, fb->layer,
-                   ctx->get_binding(target), GL_TEXTURE_3D, 0, xoffset, yoffset,
-                   zoffset, width, height, 1);
 }
 
 void CopyTexSubImage2D(GLenum target, UNUSED GLint level, GLint xoffset,
@@ -2720,9 +2563,9 @@ void CopyTexSubImage2D(GLenum target, UNUSED GLint level, GLint xoffset,
   assert(level == 0);
   Framebuffer* fb = get_framebuffer(GL_READ_FRAMEBUFFER);
   if (!fb) return;
-  CopyImageSubData(fb->color_attachment, GL_TEXTURE_2D_ARRAY, 0, x, y,
-                   fb->layer, ctx->get_binding(target), GL_TEXTURE_2D_ARRAY, 0,
-                   xoffset, yoffset, 0, width, height, 1);
+  CopyImageSubData(fb->color_attachment, GL_TEXTURE_2D, 0, x, y, 0,
+                   ctx->get_binding(target), GL_TEXTURE_2D, 0, xoffset, yoffset,
+                   0, width, height, 1);
 }
 
 }  // extern "C"
@@ -2810,12 +2653,12 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     case GL_UNSIGNED_SHORT:
       assert(mode == GL_TRIANGLES);
       draw_elements<uint16_t>(count, instancecount, offset, v, colortex,
-                              fb.layer, depthtex);
+                              depthtex);
       break;
     case GL_UNSIGNED_INT:
       assert(mode == GL_TRIANGLES);
       draw_elements<uint32_t>(count, instancecount, offset, v, colortex,
-                              fb.layer, depthtex);
+                              depthtex);
       break;
     case GL_NONE:
       // Non-standard GL extension - if element type is GL_NONE, then we don't
@@ -2825,13 +2668,13 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
           case GL_LINES:
             for (GLsizei i = 0; i + 2 <= count; i += 2) {
               vertex_shader->load_attribs(v.attribs, offset + i, instance, 2);
-              draw_quad(2, colortex, fb.layer, depthtex);
+              draw_quad(2, colortex, depthtex);
             }
             break;
           case GL_TRIANGLES:
             for (GLsizei i = 0; i + 3 <= count; i += 3) {
               vertex_shader->load_attribs(v.attribs, offset + i, instance, 3);
-              draw_quad(3, colortex, fb.layer, depthtex);
+              draw_quad(3, colortex, depthtex);
             }
             break;
           default:
