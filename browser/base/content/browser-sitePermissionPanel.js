@@ -125,8 +125,7 @@ var gPermissionPanel = {
    * state.
    */
   hidePermissionIcons() {
-    this._identityPermissionBox.removeAttribute("hasGrantedPermissions");
-    this._identityPermissionBox.removeAttribute("hasPermissionIcon");
+    this._identityPermissionBox.removeAttribute("hasPermissions");
   },
 
   /**
@@ -142,25 +141,25 @@ var gPermissionPanel = {
     }
 
     // keeps track if we should show an indicator that there are active permissions
-    let hasGrantedPermissions = false;
-    let hasPermissionIcon = false;
+    let hasPermissions = false;
 
     // show permission icons
     let permissions = SitePermissions.getAllForBrowser(
       gBrowser.selectedBrowser
     );
     for (let permission of permissions) {
-      if (
-        permission.state == SitePermissions.BLOCK ||
-        permission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL
-      ) {
-        let icon = permissionAnchors[permission.id];
-        if (icon) {
-          icon.setAttribute("showing", "true");
-          hasPermissionIcon = true;
+      if (permission.state != SitePermissions.UNKNOWN) {
+        hasPermissions = true;
+
+        if (
+          permission.state == SitePermissions.BLOCK ||
+          permission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL
+        ) {
+          let icon = permissionAnchors[permission.id];
+          if (icon) {
+            icon.setAttribute("showing", "true");
+          }
         }
-      } else if (permission.state != SitePermissions.UNKNOWN) {
-        hasGrantedPermissions = true;
       }
     }
 
@@ -169,16 +168,12 @@ var gPermissionPanel = {
     if (gBrowser.selectedBrowser.popupBlocker.getBlockedPopupCount()) {
       let icon = permissionAnchors.popup;
       icon.setAttribute("showing", "true");
-      hasPermissionIcon = true;
+      hasPermissions = true;
     }
 
     this._identityPermissionBox.toggleAttribute(
-      "hasGrantedPermissions",
-      hasGrantedPermissions
-    );
-    this._identityPermissionBox.toggleAttribute(
-      "hasPermissionIcon",
-      hasPermissionIcon
+      "hasPermissions",
+      hasPermissions
     );
   },
 
