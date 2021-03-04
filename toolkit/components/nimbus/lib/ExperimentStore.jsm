@@ -179,8 +179,8 @@ class ExperimentStore extends SharedDataMap {
       );
     }
     this.set(experiment.slug, experiment);
-    this._emitExperimentUpdates(experiment);
     this._updateSyncStore(experiment);
+    this._emitExperimentUpdates(experiment);
   }
 
   /**
