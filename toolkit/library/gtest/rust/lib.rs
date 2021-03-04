@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 extern crate bench_collections_gtest;
-#[cfg(feature = "fog-gtest")]
 extern crate fog_gtest;
 #[cfg(feature = "libfuzzer")]
 extern crate gecko_fuzz_targets;

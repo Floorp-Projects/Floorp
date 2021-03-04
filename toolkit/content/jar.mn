@@ -25,7 +25,7 @@ toolkit.jar:
    content/global/aboutwebrtc/aboutWebrtc.html (aboutwebrtc/aboutWebrtc.html)
    content/global/aboutSupport.js
 *  content/global/aboutSupport.xhtml
-#ifdef MOZ_GLEAN
+#ifndef MOZ_GLEAN_ANDROID
    content/global/aboutGlean.js
    content/global/aboutGlean.html
    content/global/aboutGlean.css
