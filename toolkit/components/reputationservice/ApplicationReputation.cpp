@@ -1977,7 +1977,6 @@ nsresult ApplicationReputationService::QueryReputationInternal(
 
   // Create a new pending lookup and start the call chain.
   RefPtr<PendingLookup> lookup(new PendingLookup(aQuery, aCallback));
-  NS_ENSURE_STATE(lookup);
 
   // Add an observer for shutdown
   nsCOMPtr<nsIObserverService> observerService =
