@@ -621,6 +621,27 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
     return ContinueOnBeforeConnect(aShouldUpgrade, aStatus);
   }
 
+  auto shouldSkipUpgradeWithHTTPSRR = [&]() -> bool {
+    if (LoadBeConservative()) {
+      return true;
+    }
+
+    // Skip upgrading channel triggered by system unless it is a top-level
+    // load.
+    if (mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
+        mLoadInfo->GetExternalContentPolicyType() !=
+            ExtContentPolicy::TYPE_DOCUMENT) {
+      return true;
+    }
+
+    return false;
+  };
+
+  if (shouldSkipUpgradeWithHTTPSRR()) {
+    StoreUseHTTPSSVC(false);
+    return ContinueOnBeforeConnect(aShouldUpgrade, aStatus);
+  }
+
   if (mHTTPSSVCRecord.isSome()) {
     LOG((
         "nsHttpChannel::MaybeUseHTTPSRRForUpgrade [%p] mHTTPSSVCRecord is some",
