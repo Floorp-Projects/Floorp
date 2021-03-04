@@ -37,7 +37,6 @@ DEFAULT_PREFS = {
     "focusmanager.testmode": True,
     "marionette.defaultPrefs.port": 2828,
     "marionette.port": 2828,
-    "marionette.enabled": True,
     "marionette.log.level": "Trace",
     "marionette.log.truncate": False,
     "marionette.contentListener": False,
