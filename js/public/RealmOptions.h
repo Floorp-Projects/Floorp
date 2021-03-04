@@ -300,6 +300,12 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   }
 
+  bool disableLazyParsing() const { return disableLazyParsing_; }
+  RealmBehaviors& setDisableLazyParsing(bool flag) {
+    disableLazyParsing_ = flag;
+    return *this;
+  }
+
   bool clampAndJitterTime() const { return clampAndJitterTime_; }
   RealmBehaviors& setClampAndJitterTime(bool flag) {
     clampAndJitterTime_ = flag;
@@ -340,6 +346,7 @@ class JS_PUBLIC_API RealmBehaviors {
 
  private:
   bool discardSource_ = false;
+  bool disableLazyParsing_ = false;
   bool clampAndJitterTime_ = true;
   bool isNonLive_ = false;
 };
