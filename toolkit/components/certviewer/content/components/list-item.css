@@ -36,8 +36,8 @@ a {
 
 .export {
   position: absolute;
-  top: 0.3em;
   inset-inline-end: 2em;
+  align-self: center;
   font-size: 1em;
 }
 
