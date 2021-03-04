@@ -30,7 +30,7 @@
           wait(5000, new Error("Timeout")));
       await haveEvent(recorder, "stop",
           wait(5000, new Error("Timeout")));
-      is(error.name, "UnknownError",
+      is(error.name, "NotSupportedError",
           "Multiple audio tracks should be rejected");
       for (let t of stream.getTracks()) {
         stream.removeTrack(t);
@@ -52,7 +52,7 @@
           wait(5000, new Error("Timeout")));
       await haveEvent(recorder, "stop",
           wait(5000, new Error("Timeout")));
-      is(error.name, "UnknownError",
+      is(error.name, "NotSupportedError",
           "Multiple video tracks should be rejected");
       for (let t of stream.getTracks()) {
         stream.removeTrack(t);

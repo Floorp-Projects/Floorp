@@ -678,7 +678,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                                         document,
                                         nsContentUtils::eDOM_PROPERTIES,
                                         "MediaRecorderMultiTracksNotSupported");
-        DoSessionEndTask(NS_ERROR_ABORT);
+        if (!mRecorder->mOtherDomException) {
+          mRecorder->mOtherDomException = DOMException::Create(
+              NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+              "MediaRecorder does not support recording multiple tracks of the "
+              "same kind"_ns);
+        }
+        DoSessionEndTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
         return;
       }
 
