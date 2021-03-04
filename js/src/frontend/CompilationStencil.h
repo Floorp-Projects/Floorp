@@ -787,6 +787,8 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
                                      size_t length,
                                      TaggedScriptThingIndex** cursor);
 
+  bool appendScriptStencilAndData(JSContext* cx);
+
   bool appendGCThings(JSContext* cx, ScriptIndex scriptIndex,
                       mozilla::Span<const TaggedScriptThingIndex> things);
 };
