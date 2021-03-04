@@ -30,6 +30,8 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
+
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
 NSMenu* sApplicationMenu = nil;
@@ -156,8 +158,7 @@ void nsMenuBarX::ConstructNativeMenus() {
   for (nsIContent* menuContent = mContent->GetFirstChild(); menuContent;
        menuContent = menuContent->GetNextSibling()) {
     if (menuContent->IsXULElement(nsGkAtoms::menu)) {
-      nsMenuX* newMenu = new nsMenuX(this, this, menuContent->AsElement());
-      InsertMenuAtIndex(newMenu, GetMenuCount());
+      InsertMenuAtIndex(MakeUnique<nsMenuX>(this, this, menuContent->AsElement()), GetMenuCount());
     }
   }
 }
@@ -223,7 +224,7 @@ bool nsMenuBarX::MenuContainsAppMenu() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
+void nsMenuBarX::InsertMenuAtIndex(UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // If we've only yet created a fallback global Application menu (using
@@ -233,9 +234,7 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
   }
   // If we haven't created a global Application menu yet, do it.
   if (!sApplicationMenu) {
-    nsresult rv = NS_OK;  // avoid warning about rv being unused
-    rv = CreateApplicationMenu(aMenu);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create Application menu");
+    CreateApplicationMenu(aMenu.get());
 
     // Hook the new Application menu up to the menu bar.
     NSMenu* mainMenu = [NSApp mainMenu];
@@ -245,19 +244,18 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
   }
 
   // add menu to array that owns our menus
-  mMenuArray.InsertElementAt(aIndex, aMenu);
+  nsMenuX* menu = aMenu.get();
+  mMenuArray.InsertElementAt(aIndex, std::move(aMenu));
 
   // hook up submenus
-  nsIContent* menuContent = aMenu->Content();
+  nsIContent* menuContent = menu->Content();
   if (menuContent->GetChildCount() > 0 && !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, aMenu);
+    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, menu);
     if (MenuContainsAppMenu()) {
       insertionIndex++;
     }
-    [mNativeMenu insertItem:aMenu->NativeMenuItem() atIndex:insertionIndex];
+    [mNativeMenu insertItem:menu->NativeMenuItem() atIndex:insertionIndex];
   }
-
-  return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -297,8 +295,7 @@ void nsMenuBarX::ObserveContentRemoved(mozilla::dom::Document* aDocument, nsICon
 
 void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument, nsIContent* aContainer,
                                         nsIContent* aChild) {
-  nsMenuX* newMenu = new nsMenuX(this, this, aChild);
-  InsertMenuAtIndex(newMenu, aContainer->ComputeIndexOf(aChild));
+  InsertMenuAtIndex(MakeUnique<nsMenuX>(this, this, aChild), aContainer->ComputeIndexOf(aChild));
 }
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {
@@ -605,7 +602,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
 }
 
 // build the Application menu shared by all menu bars
-nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
+void nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // At this point, the application menu is the application menu from
@@ -791,8 +788,6 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
       [sApplicationMenu addItem:defaultQuitItem];
     }
   }
-
-  return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
