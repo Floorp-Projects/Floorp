@@ -530,6 +530,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
     mozStorageTransaction transaction(
         connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    LS_TRY(transaction.Start())
+
     if (newDatabase) {
       LS_TRY(CreateTables(connection));
 
@@ -6892,6 +6894,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     mozStorageTransaction transaction(
         connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    LS_TRY(transaction.Start())
 
     {
       nsCOMPtr<mozIStorageFunction> function = new CompressFunction();

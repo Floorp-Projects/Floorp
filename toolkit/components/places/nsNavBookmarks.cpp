@@ -381,6 +381,9 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
 
   mozStorageTransaction transaction(mDB->MainConn(), false);
 
+  // XXX Handle the error, bug 1696133.
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
+
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   int64_t placeId;
@@ -484,6 +487,9 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   mozStorageTransaction transaction(mDB->MainConn(), false);
+
+  // XXX Handle the error, bug 1696133.
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   if (bookmark.type == TYPE_FOLDER) {
     // Remove all of the folder's children.
@@ -611,6 +617,9 @@ nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aTitle,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mozStorageTransaction transaction(mDB->MainConn(), false);
+
+  // XXX Handle the error, bug 1696133.
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   if (aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
       aIndex >= folderCount) {
@@ -771,6 +780,9 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
 
   // Delete items from the database now.
   mozStorageTransaction transaction(mDB->MainConn(), false);
+
+  // XXX Handle the error, bug 1696133.
+  Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
   nsCOMPtr<mozIStorageStatement> deleteStatement =
       mDB->GetStatement(nsLiteralCString("DELETE FROM moz_bookmarks "
@@ -1077,6 +1089,9 @@ nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified,
     // non-tags.
     mozStorageTransaction transaction(mDB->MainConn(), false);
 
+    // XXX Handle the error, bug 1696133.
+    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
+
     rv = SetItemDateInternal(LAST_MODIFIED, syncChangeDelta, bookmark.id,
                              bookmark.lastModified);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1280,6 +1295,9 @@ nsNavBookmarks::SetItemTitle(int64_t aItemId, const nsACString& aTitle,
     // for all tagged bookmarks. We use a separate code path to avoid a
     // transaction for non-tags.
     mozStorageTransaction transaction(mDB->MainConn(), false);
+
+    // XXX Handle the error, bug 1696133.
+    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
 
     rv = SetItemTitleInternal(bookmark, title, syncChangeDelta);
     NS_ENSURE_SUCCESS(rv, rv);

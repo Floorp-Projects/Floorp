@@ -273,6 +273,9 @@ class FixAndDecayFrecencyRunnable final : public Runnable {
     mozStorageTransaction transaction(
         mDB->MainConn(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    // XXX Handle the error, bug 1696133.
+    Unused << NS_WARN_IF(NS_FAILED(transaction.Start()));
+
     if (NS_WARN_IF(NS_FAILED(DecayFrecencies()))) {
       mDecayReason = mozIStorageStatementCallback::REASON_ERROR;
     }

@@ -466,6 +466,8 @@ Result<bool, nsresult> MaybeCreateOrUpgradeCache(
     mozStorageTransaction transaction(
         &aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    QM_TRY(transaction.Start());
+
     if (newCache) {
       QM_TRY(CreateCacheTables(&aConnection));
 
@@ -541,6 +543,7 @@ nsresult InvalidateCache(mozIStorageConnection& aConnection) {
     mozStorageTransaction transaction(
         &aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    QM_TRY(transaction.Start());
     QM_TRY(aConnection.ExecuteSimpleSQL(kDeleteCacheQuery));
     QM_TRY(aConnection.ExecuteSimpleSQL(kSetInvalidFlagQuery));
     QM_TRY(transaction.Commit());
@@ -4215,6 +4218,8 @@ void QuotaManager::UnloadQuota() {
   mozStorageTransaction transaction(
       mStorageConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+  QM_TRY(transaction.Start(), QM_VOID);
+
   QM_TRY(mStorageConnection->ExecuteSimpleSQL("DELETE FROM origin;"_ns),
          QM_VOID);
 
@@ -5705,6 +5710,8 @@ nsresult QuotaManager::MaybeCreateOrUpgradeStorage(
 
     mozStorageTransaction transaction(
         &aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    QM_TRY(transaction.Start());
 
     // An upgrade method can upgrade the database, the storage or both.
     // The upgrade loop below can only be avoided when there's no database and

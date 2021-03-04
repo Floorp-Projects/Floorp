@@ -281,6 +281,9 @@ namespace StorageDBUpdater {
 nsresult CreateCurrentSchema(mozIStorageConnection* aConnection) {
   mozStorageTransaction transaction(aConnection, false);
 
+  nsresult rv = transaction.Start();
+  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   {
     int32_t schemaVer;
@@ -299,7 +302,7 @@ nsresult CreateCurrentSchema(mozIStorageConnection* aConnection) {
   }
 #endif
 
-  nsresult rv = CreateCurrentSchemaOnEmptyTableInternal(aConnection);
+  rv = CreateCurrentSchemaOnEmptyTableInternal(aConnection);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -309,9 +312,10 @@ nsresult CreateCurrentSchema(mozIStorageConnection* aConnection) {
 }
 
 nsresult Update(mozIStorageConnection* aWorkerConnection) {
-  nsresult rv;
-
   mozStorageTransaction transaction(aWorkerConnection, false);
+
+  nsresult rv = transaction.Start();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   bool doVacuum = false;
 

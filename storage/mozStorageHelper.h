@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ScopeExit.h"
 
 #include "mozilla/storage/SQLiteMutex.h"
 #include "mozIStorageConnection.h"
@@ -65,51 +66,12 @@ class mozStorageTransaction {
       int32_t aType = mozIStorageConnection::TRANSACTION_DEFAULT,
       bool aAsyncCommit = false)
       : mConnection(aConnection),
+        mType(aType),
         mNestingLevel(0),
         mHasTransaction(false),
         mCommitOnComplete(aCommitOnComplete),
         mCompleted(false),
-        mAsyncCommit(aAsyncCommit) {
-    if (mConnection) {
-      SQLiteMutexAutoLock lock(mConnection->GetSharedDBMutex());
-
-      // We nee to speculatively set the nesting level to be able to decide
-      // if this is a top level transaction and to be able to generate the
-      // savepoint name.
-      TransactionStarted(lock);
-
-      nsAutoCString query;
-
-      if (TopLevelTransaction(lock)) {
-        query.Assign("BEGIN");
-        int32_t type = aType;
-        if (type == mozIStorageConnection::TRANSACTION_DEFAULT) {
-          MOZ_ALWAYS_SUCCEEDS(mConnection->GetDefaultTransactionType(&type));
-        }
-        switch (type) {
-          case mozIStorageConnection::TRANSACTION_IMMEDIATE:
-            query.AppendLiteral(" IMMEDIATE");
-            break;
-          case mozIStorageConnection::TRANSACTION_EXCLUSIVE:
-            query.AppendLiteral(" EXCLUSIVE");
-            break;
-          case mozIStorageConnection::TRANSACTION_DEFERRED:
-            query.AppendLiteral(" DEFERRED");
-            break;
-          default:
-            MOZ_ASSERT(false, "Unknown transaction type");
-        }
-      } else {
-        query.Assign("SAVEPOINT sp"_ns + IntToCString(mNestingLevel));
-      }
-
-      // If the query fails to execute we need to revert the speculatively set
-      // nesting level on the connection.
-      if (NS_FAILED(mConnection->ExecuteSimpleSQL(query))) {
-        TransactionFinished(lock);
-      }
-    }
-  }
+        mAsyncCommit(aAsyncCommit) {}
 
   ~mozStorageTransaction() {
     if (mConnection && mHasTransaction && !mCompleted) {
@@ -126,11 +88,76 @@ class mozStorageTransaction {
   }
 
   /**
+   * Starts the transaction.
+   */
+  nsresult Start() {
+    // XXX We should probably get rid of mHasTransaction and use mConnection
+    // for checking if a transaction has been started. However, we need to
+    // first stop supporting null mConnection and also move aConnection from
+    // the constructor to Start.
+    MOZ_DIAGNOSTIC_ASSERT(!mHasTransaction);
+
+    // XXX We should probably stop supporting null mConnection.
+
+    // XXX We should probably get rid of mCompleted and allow to start the
+    // transaction again if it was already committed or rolled back.
+    if (!mConnection || mCompleted) {
+      return NS_OK;
+    }
+
+    SQLiteMutexAutoLock lock(mConnection->GetSharedDBMutex());
+
+    // We nee to speculatively set the nesting level to be able to decide
+    // if this is a top level transaction and to be able to generate the
+    // savepoint name.
+    TransactionStarted(lock);
+
+    // If there's a failure we need to revert the speculatively set nesting
+    // level on the connection.
+    auto autoFinishTransaction =
+        mozilla::MakeScopeExit([&] { TransactionFinished(lock); });
+
+    nsAutoCString query;
+
+    if (TopLevelTransaction(lock)) {
+      query.Assign("BEGIN");
+      int32_t type = mType;
+      if (type == mozIStorageConnection::TRANSACTION_DEFAULT) {
+        MOZ_ALWAYS_SUCCEEDS(mConnection->GetDefaultTransactionType(&type));
+      }
+      switch (type) {
+        case mozIStorageConnection::TRANSACTION_IMMEDIATE:
+          query.AppendLiteral(" IMMEDIATE");
+          break;
+        case mozIStorageConnection::TRANSACTION_EXCLUSIVE:
+          query.AppendLiteral(" EXCLUSIVE");
+          break;
+        case mozIStorageConnection::TRANSACTION_DEFERRED:
+          query.AppendLiteral(" DEFERRED");
+          break;
+        default:
+          MOZ_ASSERT(false, "Unknown transaction type");
+      }
+    } else {
+      query.Assign("SAVEPOINT sp"_ns + IntToCString(mNestingLevel));
+    }
+
+    nsresult rv = mConnection->ExecuteSimpleSQL(query);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    autoFinishTransaction.release();
+
+    return NS_OK;
+  }
+
+  /**
    * Commits the transaction if one is in progress. If one is not in progress,
    * this is a NOP since the actual owner of the transaction outside of our
    * scope is in charge of finally committing or rolling back the transaction.
    */
   nsresult Commit() {
+    // XXX Assert instead of returning NS_OK if the transaction hasn't been
+    // started.
     if (!mConnection || mCompleted || !mHasTransaction) return NS_OK;
 
     SQLiteMutexAutoLock lock(mConnection->GetSharedDBMutex());
@@ -162,11 +189,11 @@ class mozStorageTransaction {
                                          IntToCString(mNestingLevel));
     }
 
-    if (NS_SUCCEEDED(rv)) {
-      TransactionFinished(lock);
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return rv;
+    TransactionFinished(lock);
+
+    return NS_OK;
   }
 
   /**
@@ -175,6 +202,8 @@ class mozStorageTransaction {
    * of our scope is in charge of finally rolling back the transaction.
    */
   nsresult Rollback() {
+    // XXX Assert instead of returning NS_OK if the transaction hasn't been
+    // started.
     if (!mConnection || mCompleted || !mHasTransaction) return NS_OK;
 
     SQLiteMutexAutoLock lock(mConnection->GetSharedDBMutex());
@@ -205,11 +234,11 @@ class mozStorageTransaction {
           nestingLevelCString);
     }
 
-    if (NS_SUCCEEDED(rv)) {
-      TransactionFinished(lock);
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return rv;
+    TransactionFinished(lock);
+
+    return NS_OK;
   }
 
  protected:
@@ -248,6 +277,7 @@ class mozStorageTransaction {
   }
 
   nsCOMPtr<mozIStorageConnection> mConnection;
+  int32_t mType;
   uint32_t mNestingLevel;
   bool mHasTransaction;
   bool mCommitOnComplete;
