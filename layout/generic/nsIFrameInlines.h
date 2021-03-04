@@ -51,7 +51,10 @@ bool nsIFrame::IsTableCaption() const {
              mozilla::PseudoStyleType::tableWrapper;
 }
 
-bool nsIFrame::IsFloating() const { return StyleDisplay()->IsFloating(this); }
+bool nsIFrame::IsFloating() const {
+  return HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
+         StyleDisplay()->IsFloating(this);
+}
 
 bool nsIFrame::IsAbsPosContainingBlock() const {
   return StyleDisplay()->IsAbsPosContainingBlock(this);

@@ -6448,7 +6448,7 @@ static bool FindLineFor(nsIFrame* aChild, const nsFrameList& aFrameList,
 void nsBlockFrame::StealFrame(nsIFrame* aChild) {
   MOZ_ASSERT(aChild->GetParent() == this);
 
-  if (aChild->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) && aChild->IsFloating()) {
+  if (aChild->IsFloating()) {
     RemoveFloat(aChild);
     return;
   }
