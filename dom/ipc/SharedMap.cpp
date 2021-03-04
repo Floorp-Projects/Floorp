@@ -10,7 +10,6 @@
 #include "MemMapSnapshot.h"
 #include "ScriptPreloader-inl.h"
 
-#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
