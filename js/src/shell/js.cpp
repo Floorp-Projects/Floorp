@@ -5470,12 +5470,7 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
   // Emplace the top-level stencil.
   MOZ_ASSERT(compilationState.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
-  if (!compilationState.scriptData.emplaceBack()) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!compilationState.scriptExtra.emplaceBack()) {
-    ReportOutOfMemory(cx);
+  if (!compilationState.appendScriptStencilAndData(cx)) {
     return false;
   }
 

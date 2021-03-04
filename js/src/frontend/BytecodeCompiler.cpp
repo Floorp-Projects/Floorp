@@ -692,12 +692,7 @@ bool frontend::ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
-  if (!compilationState_.scriptData.emplaceBack()) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!compilationState_.scriptExtra.emplaceBack()) {
-    ReportOutOfMemory(cx);
+  if (!compilationState_.appendScriptStencilAndData(cx)) {
     return false;
   }
 
@@ -746,12 +741,7 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
-  if (!compilationState_.scriptData.emplaceBack()) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!compilationState_.scriptExtra.emplaceBack()) {
-    ReportOutOfMemory(cx);
+  if (!compilationState_.appendScriptStencilAndData(cx)) {
     return false;
   }
 
