@@ -383,6 +383,12 @@ void LogError(const nsLiteralCString& aModule, const nsACString& aExpr,
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
       }
 
+      // The sequence number is currently per-process, and we don't record the
+      // thread id. This is ok as long as we only record during storage
+      // initialization, and that happens (mostly) from a single thread. It's
+      // safe even if errors from multiple threads are interleaved, but the data
+      // will be hard to analyze then. In that case, we should record a pair of
+      // thread id and thread-local sequence number.
       static Atomic<int32_t> sSequenceNumber{0};
 
       res.AppendElement(
