@@ -885,12 +885,6 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   transform: rotate(180deg);
 }
 
-/* Pocket */
-:root[pocketdisabled=true] #context-pocket,
-:root[pocketdisabled=true] #context-savelinktopocket {
-  display: none;
-}
-
 /*  Full Screen UI */
 
 #fullscr-toggler {
