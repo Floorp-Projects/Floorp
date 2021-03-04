@@ -358,7 +358,7 @@ var ExtensionsUI = {
       collapseOrigins: true,
     });
     strings.addonName = info.addon.name;
-    strings.learnMore = bundle.GetStringFromName("webextPerms.learnMore");
+    strings.learnMore = bundle.GetStringFromName("webextPerms.learnMore2");
     return strings;
   },
 
