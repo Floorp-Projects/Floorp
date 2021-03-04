@@ -895,11 +895,9 @@ class GroupInfo final {
   friend class QuotaObject;
 
  public:
-  GroupInfo(GroupInfoPair* aGroupInfoPair, PersistenceType aPersistenceType,
-            const nsACString& aGroup)
+  GroupInfo(GroupInfoPair* aGroupInfoPair, PersistenceType aPersistenceType)
       : mGroupInfoPair(aGroupInfoPair),
         mPersistenceType(aPersistenceType),
-        mGroup(aGroup),
         mUsage(0) {
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
@@ -934,8 +932,6 @@ class GroupInfo final {
 
   GroupInfoPair* mGroupInfoPair;
   PersistenceType mPersistenceType;
-  // XXX mGroup should be moved to GroupInfoPair.
-  nsCString mGroup;
   uint64_t mUsage;
 };
 
@@ -943,13 +939,16 @@ class GroupInfo final {
 // (besides two GroupInfo objects).
 class GroupInfoPair {
  public:
-  explicit GroupInfoPair(const nsACString& aSuffix) : mSuffix(aSuffix) {
+  GroupInfoPair(const nsACString& aSuffix, const nsACString& aGroup)
+      : mSuffix(aSuffix), mGroup(aGroup) {
     MOZ_COUNT_CTOR(GroupInfoPair);
   }
 
   MOZ_COUNTED_DTOR(GroupInfoPair)
 
   const nsCString& Suffix() const { return mSuffix; }
+
+  const nsCString& Group() const { return mGroup; }
 
   RefPtr<GroupInfo> LockedGetGroupInfo(PersistenceType aPersistenceType) {
     AssertCurrentThreadOwnsQuotaMutex();
@@ -988,6 +987,7 @@ class GroupInfoPair {
       PersistenceType aPersistenceType);
 
   const nsCString mSuffix;
+  const nsCString mGroup;
   RefPtr<GroupInfo> mTemporaryStorageGroupInfo;
   RefPtr<GroupInfo> mDefaultStorageGroupInfo;
 };
@@ -3490,7 +3490,8 @@ uint64_t QuotaManager::CollectOriginsForEviction(
       auto lock = DirectoryLockImpl::CreateForEviction(
           WrapNotNullUnchecked(this), originInfo->mGroupInfo->mPersistenceType,
           OriginMetadata{originInfo->mGroupInfo->mGroupInfoPair->Suffix(),
-                         originInfo->mGroupInfo->mGroup, originInfo->mOrigin});
+                         originInfo->mGroupInfo->mGroupInfoPair->Group(),
+                         originInfo->mOrigin});
 
       lock->AcquireImmediately();
 
@@ -6698,11 +6699,12 @@ already_AddRefed<GroupInfo> QuotaManager::LockedGetOrCreateGroupInfo(
   mQuotaMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-  GroupInfoPair* const pair = mGroupInfoPairs.GetOrInsertNew(aGroup, aSuffix);
+  GroupInfoPair* const pair =
+      mGroupInfoPairs.GetOrInsertNew(aGroup, aSuffix, aGroup);
 
   RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (!groupInfo) {
-    groupInfo = new GroupInfo(pair, aPersistenceType, aGroup);
+    groupInfo = new GroupInfo(pair, aPersistenceType);
     pair->LockedSetGroupInfo(aPersistenceType, groupInfo);
   }
 
@@ -6889,7 +6891,8 @@ void QuotaManager::ClearOrigins(
       LockedRemoveQuotaForOrigin(
           doomedOriginInfo->mGroupInfo->mPersistenceType,
           {doomedOriginInfo->mGroupInfo->mGroupInfoPair->Suffix(),
-           doomedOriginInfo->mGroupInfo->mGroup, doomedOriginInfo->mOrigin});
+           doomedOriginInfo->mGroupInfo->mGroupInfoPair->Group(),
+           doomedOriginInfo->mOrigin});
     }
   }
 
@@ -7081,7 +7084,8 @@ nsresult OriginInfo::LockedBindToStatement(
 
   QM_TRY(aStatement->BindUTF8StringByName(
       "suffix"_ns, mGroupInfo->mGroupInfoPair->Suffix()));
-  QM_TRY(aStatement->BindUTF8StringByName("group_"_ns, mGroupInfo->mGroup));
+  QM_TRY(aStatement->BindUTF8StringByName("group_"_ns,
+                                          mGroupInfo->mGroupInfoPair->Group()));
   QM_TRY(aStatement->BindUTF8StringByName("origin"_ns, mOrigin));
 
   nsCString clientUsagesText;
