@@ -380,17 +380,20 @@
 /* Urlbar search mode indicator */
 #urlbar-search-mode-indicator {
   display: none;
-  -moz-outline-radius: 2px;
   margin-inline-end: 8px;
   align-items: center;
+  border-radius: var(--toolbarbutton-border-radius);
+  padding-inline: 8px 3px;
+}
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-search-mode-indicator {
+  -moz-outline-radius: 2px;
+  min-width: 16px; /* So the close button never causes motion */
   background-color: #d6ebff;
   outline: 1px solid #0060df; /* Blue 60 */
   color: #0060df; /* Blue 60 */
-}
-
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
-#urlbar-search-mode-indicator {
-  min-width: 16px; /* So the close button never causes motion */
+  border-radius: 0;
+  padding-inline: 0;
 }
 } /*** END !proton ***/
 
@@ -415,8 +418,13 @@
 }
 
 #urlbar-search-mode-indicator-title {
+  padding-inline: 0 4px;
+}
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-search-mode-indicator-title {
   padding-inline: 5px;
 }
+} /*** END !proton ***/
 
 #urlbar-search-mode-indicator-close {
   background: url(chrome://global/skin/icons/close.svg) no-repeat center;
