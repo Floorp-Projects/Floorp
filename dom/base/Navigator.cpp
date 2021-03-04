@@ -71,7 +71,9 @@
 #include "nsICookieManager.h"
 #include "nsICookieService.h"
 #include "nsIHttpChannel.h"
-#include "nsIMarionette.h"
+#ifdef ENABLE_MARIONETTE
+#  include "nsIMarionette.h"
+#endif
 #include "nsStreamUtils.h"
 #include "WidgetUtils.h"
 #include "nsIScriptError.h"
@@ -2164,10 +2166,12 @@ webgpu::Instance* Navigator::Gpu() {
 bool Navigator::Webdriver() {
   bool marionetteRunning = false;
 
+#ifdef ENABLE_MARIONETTE
   nsCOMPtr<nsIMarionette> marionette = do_GetService(NS_MARIONETTE_CONTRACTID);
   if (marionette) {
     marionette->GetRunning(&marionetteRunning);
   }
+#endif
 
   return marionetteRunning;
 }

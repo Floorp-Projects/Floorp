@@ -1098,7 +1098,7 @@ def marionette(value):
 
 
 set_config("ENABLE_MARIONETTE", marionette)
-
+set_define("ENABLE_MARIONETTE", marionette)
 
 # geckodriver WebDriver implementation
 # ==============================================================
