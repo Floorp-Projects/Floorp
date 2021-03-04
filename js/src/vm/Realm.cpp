@@ -186,7 +186,7 @@ void js::DtoaCache::checkCacheAfterMovingGC() {
 
 #endif  // JSGC_HASH_TABLE_CHECKS
 
-LexicalEnvironmentObject*
+NonSyntacticLexicalEnvironmentObject*
 ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
                                                        HandleObject enclosing,
                                                        HandleObject key,
@@ -208,7 +208,7 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
     MOZ_ASSERT(key->is<NonSyntacticVariablesObject>() ||
                !key->is<EnvironmentObject>());
     lexicalEnv =
-        LexicalEnvironmentObject::createNonSyntactic(cx, enclosing, thisv);
+        NonSyntacticLexicalEnvironmentObject::create(cx, enclosing, thisv);
     if (!lexicalEnv) {
       return nullptr;
     }
@@ -217,10 +217,10 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
     }
   }
 
-  return &lexicalEnv->as<LexicalEnvironmentObject>();
+  return &lexicalEnv->as<NonSyntacticLexicalEnvironmentObject>();
 }
 
-LexicalEnvironmentObject*
+NonSyntacticLexicalEnvironmentObject*
 ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
                                                        HandleObject enclosing) {
   // If a wrapped WithEnvironmentObject was passed in, unwrap it, as we may
@@ -244,8 +244,8 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
                                                    /*thisv = */ key);
 }
 
-LexicalEnvironmentObject* ObjectRealm::getNonSyntacticLexicalEnvironment(
-    JSObject* key) const {
+NonSyntacticLexicalEnvironmentObject*
+ObjectRealm::getNonSyntacticLexicalEnvironment(JSObject* key) const {
   MOZ_ASSERT(&ObjectRealm::get(key) == this);
 
   if (!nonSyntacticLexicalEnvironments_) {
@@ -261,7 +261,7 @@ LexicalEnvironmentObject* ObjectRealm::getNonSyntacticLexicalEnvironment(
   if (!lexicalEnv) {
     return nullptr;
   }
-  return &lexicalEnv->as<LexicalEnvironmentObject>();
+  return &lexicalEnv->as<NonSyntacticLexicalEnvironmentObject>();
 }
 
 bool Realm::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name) {

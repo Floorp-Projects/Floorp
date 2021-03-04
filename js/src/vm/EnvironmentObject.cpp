@@ -988,8 +988,10 @@ GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::createNonSyntactic(
-    JSContext* cx, HandleObject enclosing, HandleObject thisv) {
+NonSyntacticLexicalEnvironmentObject*
+NonSyntacticLexicalEnvironmentObject::create(JSContext* cx,
+                                             HandleObject enclosing,
+                                             HandleObject thisv) {
   MOZ_ASSERT(enclosing);
   MOZ_ASSERT(!IsSyntacticEnvironment(enclosing));
 
@@ -998,9 +1000,8 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createNonSyntactic(
     return nullptr;
   }
 
-  LexicalEnvironmentObject* env =
-      LexicalEnvironmentObject::createTemplateObject(cx, shape, enclosing,
-                                                     gc::TenuredHeap);
+  auto* env = static_cast<NonSyntacticLexicalEnvironmentObject*>(
+      createTemplateObject(cx, shape, enclosing, gc::TenuredHeap));
   if (!env) {
     return nullptr;
   }
@@ -1351,8 +1352,8 @@ void EnvironmentIter::settle() {
       if (env_->is<LexicalEnvironmentObject>()) {
         // The global lexical environment still encloses non-syntactic
         // environment objects.
-        MOZ_ASSERT(!env_->as<LexicalEnvironmentObject>().isSyntactic() ||
-                   env_->as<LexicalEnvironmentObject>().isGlobal());
+        MOZ_ASSERT(env_->is<NonSyntacticLexicalEnvironmentObject>() ||
+                   env_->is<GlobalLexicalEnvironmentObject>());
       } else if (env_->is<WithEnvironmentObject>()) {
         MOZ_ASSERT(!env_->as<WithEnvironmentObject>().isSyntactic());
       } else {
@@ -1375,10 +1376,9 @@ JSObject& EnvironmentIter::enclosingEnvironment() const {
 }
 
 bool EnvironmentIter::hasNonSyntacticEnvironmentObject() const {
-  // The case we're worrying about here is a NonSyntactic static scope
-  // which has 0+ corresponding non-syntactic WithEnvironmentObject
-  // scopes, a NonSyntacticVariablesObject, or a non-syntactic
-  // LexicalEnvironmentObject.
+  // The case we're worrying about here is a NonSyntactic static scope which
+  // has 0+ corresponding non-syntactic WithEnvironmentObject scopes, a
+  // NonSyntacticVariablesObject, or a NonSyntacticLexicalEnvironmentObject.
   if (si_.kind() == ScopeKind::NonSyntactic) {
     MOZ_ASSERT_IF(env_->is<WithEnvironmentObject>(),
                   !env_->as<WithEnvironmentObject>().isSyntactic());
