@@ -3960,9 +3960,10 @@ void CodeGenerator::visitNewLexicalEnvironmentObject(
   pushArg(ToRegister(lir->enclosing()));
   pushArg(ImmGCPtr(lir->mir()->scope()));
 
-  using Fn = LexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>,
-                                           HandleObject, gc::InitialHeap);
-  callVM<Fn, LexicalEnvironmentObject::create>(lir);
+  using Fn =
+      BlockLexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>,
+                                         HandleObject, gc::InitialHeap);
+  callVM<Fn, BlockLexicalEnvironmentObject::create>(lir);
 }
 
 void CodeGenerator::visitCopyLexicalEnvironmentObject(
