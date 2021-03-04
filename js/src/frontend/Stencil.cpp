@@ -2985,6 +2985,25 @@ bool CompilationState::allocateGCThingsUninitialized(
   return true;
 }
 
+bool CompilationState::appendScriptStencilAndData(JSContext* cx) {
+  if (!scriptData.emplaceBack()) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+
+  if (isInitialStencil()) {
+    if (!scriptExtra.emplaceBack()) {
+      scriptData.popBack();
+      MOZ_ASSERT(scriptData.length() == scriptExtra.length());
+
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool CompilationState::appendGCThings(
     JSContext* cx, ScriptIndex scriptIndex,
     mozilla::Span<const TaggedScriptThingIndex> things) {
@@ -3024,6 +3043,11 @@ void CompilationState::rewind(const CompilationState::RewindToken& pos) {
       asmJS->moduleMap.remove(ScriptIndex(i));
     }
     MOZ_ASSERT(asmJS->moduleMap.count() == pos.asmJSCount);
+  }
+  // scriptExtra is empty for delazification.
+  if (scriptExtra.length()) {
+    MOZ_ASSERT(scriptExtra.length() == scriptData.length());
+    scriptExtra.shrinkTo(pos.scriptDataLength);
   }
   scriptData.shrinkTo(pos.scriptDataLength);
 }

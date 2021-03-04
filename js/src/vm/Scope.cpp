@@ -1993,6 +1993,10 @@ template <typename... Args>
     return false;
   }
   if (!compilationState.scopeNames.append(data)) {
+    compilationState.scopeData.popBack();
+    MOZ_ASSERT(compilationState.scopeData.length() ==
+               compilationState.scopeNames.length());
+
     js::ReportOutOfMemory(cx);
     return false;
   }

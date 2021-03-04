@@ -267,19 +267,11 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     ReportAllocationOverflow(cx_);
     return nullptr;
   }
-  if (!compilationState_.scriptData.emplaceBack()) {
-    js::ReportOutOfMemory(cx_);
+  if (!compilationState_.appendScriptStencilAndData(cx_)) {
     return nullptr;
   }
 
-  bool isInitialStencil = this->compilationState_.isInitialStencil();
-
-  if (isInitialStencil) {
-    if (!compilationState_.scriptExtra.emplaceBack()) {
-      js::ReportOutOfMemory(cx_);
-      return nullptr;
-    }
-  }
+  bool isInitialStencil = compilationState_.isInitialStencil();
 
   // This source extent will be further filled in during the remainder of parse.
   SourceExtent extent;
