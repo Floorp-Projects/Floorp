@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
 import org.junit.Before
@@ -15,6 +16,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.robots.clickRateButtonGooglePlay
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.mDevice
 
 /**
  *  Tests for verifying the main three dot menu options
@@ -65,8 +67,10 @@ class SettingsAboutTest {
         }.openSettings {
             clickRateButtonGooglePlay()
             verifyGooglePlayRedirect()
+            // press back to return to the app, or accept ToS if still visible
+            mDevice.pressBack()
+            dismissGooglePlayToS()
         }
-
     }
 
     @Test
@@ -77,5 +81,11 @@ class SettingsAboutTest {
         }.openAboutFirefoxPreview {
             verifyAboutFirefoxPreview()
         }
+    }
+}
+
+private fun dismissGooglePlayToS() {
+    if (mDevice.findObject(UiSelector().textContains("Terms of Service")).exists()) {
+        mDevice.findObject(UiSelector().textContains("ACCEPT")).click()
     }
 }
