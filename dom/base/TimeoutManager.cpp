@@ -25,6 +25,10 @@
 #include "mozilla/net/WebSocketEventService.h"
 #include "mozilla/MediaManager.h"
 
+#if MOZ_GECKO_PROFILER
+#  include "GeckoProfiler.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 

@@ -18,6 +18,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"

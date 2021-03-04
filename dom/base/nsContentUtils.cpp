@@ -126,6 +126,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/AncestorIterator.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/AutocompleteInfoBinding.h"
 #include "mozilla/dom/AutoSuppressEventHandlingAndSuspend.h"
 #include "mozilla/dom/BindingDeclarations.h"
