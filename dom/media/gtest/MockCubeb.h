@@ -42,7 +42,6 @@ struct cubeb_ops {
   void (*stream_destroy)(cubeb_stream* stream);
   int (*stream_start)(cubeb_stream* stream);
   int (*stream_stop)(cubeb_stream* stream);
-  int (*stream_reset_default_device)(cubeb_stream* stream);
   int (*stream_get_position)(cubeb_stream* stream, uint64_t* position);
   int (*stream_get_latency)(cubeb_stream* stream, uint32_t* latency);
   int (*stream_get_input_latency)(cubeb_stream* stream, uint32_t* latency);
@@ -110,7 +109,6 @@ cubeb_ops const mock_ops = {
     /*.stream_destroy =*/cubeb_mock_stream_destroy,
     /*.stream_start =*/cubeb_mock_stream_start,
     /*.stream_stop =*/cubeb_mock_stream_stop,
-    /*.stream_reset_default_device =*/NULL,
     /*.stream_get_position =*/NULL,
     /*.stream_get_latency =*/NULL,
     /*.stream_get_input_latency =*/NULL,
