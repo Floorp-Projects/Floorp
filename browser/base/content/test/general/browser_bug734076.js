@@ -19,7 +19,7 @@ add_task(async function() {
 
   let tests = [
     {
-      name: "view background image",
+      name: "view image with background image",
       url: "http://mochi.test:8888/",
       element: "body",
       go() {
@@ -31,7 +31,7 @@ add_task(async function() {
             contentBody.style.backgroundImage =
               "url('" + arg.writeDomainURL + "')";
 
-            return "context-viewbgimage";
+            return "context-viewimage";
           }
         );
       },
@@ -41,7 +41,7 @@ add_task(async function() {
         ) {
           Assert.ok(
             !content.document.body.textContent,
-            "no domain was inherited for view background image"
+            "no domain was inherited for view image with background image"
           );
         });
       },
