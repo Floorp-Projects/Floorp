@@ -202,7 +202,11 @@ function getTargetRect(aTarget) {
   // If the target is the root content window, its origin relative
   // to the visual viewport is (0, 0).
   if (aTarget instanceof Window) {
-    // FIXME: Assert that it's not an iframe window.
+    return rect;
+  }
+  if (aTarget.Window && aTarget instanceof aTarget.Window) {
+    // iframe window
+    // FIXME: Compute proper rect against the root content window
     return rect;
   }
 
