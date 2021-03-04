@@ -6,6 +6,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsStandaloneNativeMenu.h"
+#include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsIMutationObserver.h"
 #include "nsGkAtoms.h"
@@ -144,7 +145,12 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
       if (!targetMenu) {
         return NS_OK;
       }
-      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(targetMenu->Content())) {
+      MOZ_RELEASE_ASSERT(targetMenu->MenuObjectType() == eSubmenuObjectType ||
+                         targetMenu->MenuObjectType() == eMenuItemObjectType);
+      RefPtr<nsIContent> content = targetMenu->MenuObjectType() == eSubmenuObjectType
+                                       ? static_cast<nsMenuX*>(targetMenu)->Content()
+                                       : static_cast<nsMenuItemX*>(targetMenu)->Content();
+      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
         visible++;
         if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
           currentMenu = static_cast<nsMenuX*>(targetMenu);
