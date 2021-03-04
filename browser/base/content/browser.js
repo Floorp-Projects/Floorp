@@ -271,7 +271,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
     "@mozilla.org/network/serialization-helper;1",
     "nsISerializationHelper",
   ],
-  Marionette: ["@mozilla.org/remote/marionette;1", "nsIMarionette"],
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
@@ -283,6 +282,17 @@ if (AppConstants.MOZ_CRASHREPORTER) {
     "@mozilla.org/xre/app-info;1",
     "nsICrashReporter"
   );
+}
+
+if ("@mozilla.org/remote/marionette;1" in Cc) {
+  XPCOMUtils.defineLazyServiceGetter(
+    this,
+    "Marionette",
+    "@mozilla.org/remote/marionette;1",
+    "nsIMarionette"
+  );
+} else {
+  this.Marionette = { running: false };
 }
 
 if (AppConstants.ENABLE_REMOTE_AGENT) {
