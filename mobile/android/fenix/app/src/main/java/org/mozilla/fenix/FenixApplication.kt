@@ -39,6 +39,7 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.utils.logElapsedTime
 import mozilla.components.support.webextensions.WebExtensionSupport
+import org.mozilla.fenix.GleanMetrics.GleanBuildInfo
 import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
@@ -111,7 +112,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 httpClient = ConceptFetchHttpUploader(
                     lazy(LazyThreadSafetyMode.NONE) { components.core.client }
                 )),
-            uploadEnabled = telemetryEnabled
+            uploadEnabled = telemetryEnabled,
+            buildInfo = GleanBuildInfo.buildInfo
         )
     }
 

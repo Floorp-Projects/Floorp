@@ -27,6 +27,7 @@ import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.GleanBuildInfo
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityTestRule
@@ -85,9 +86,10 @@ class BaselinePingTest {
             // we need to do this on the main thread, as the Glean SDK requires it.
             GlobalScope.launch(Dispatchers.Main.immediate) {
                 Glean.initialize(
-                    ApplicationProvider.getApplicationContext(),
-                    true,
-                    Configuration(httpClient = httpClient)
+                    applicationContext = ApplicationProvider.getApplicationContext(),
+                    uploadEnabled = true,
+                    configuration = Configuration(httpClient = httpClient),
+                    buildInfo = GleanBuildInfo.buildInfo
                 )
             }
         }
