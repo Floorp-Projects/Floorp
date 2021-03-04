@@ -210,8 +210,8 @@ static void TraceOp(JSTracer* trc, void* data) {
 }  // anonymous namespace
 
 void ScriptPreloader::Trace(JSTracer* trc) {
-  for (auto& script : IterHash(mScripts)) {
-    script->mScript.Trace(trc);
+  for (auto& script : mScripts) {
+    script.GetData()->mScript.Trace(trc);
   }
 }
 
@@ -284,9 +284,7 @@ void ScriptPreloader::InvalidateCache() {
     MOZ_ASSERT(mParsingSources.empty());
     MOZ_ASSERT(mPendingScripts.isEmpty());
 
-    for (auto& script : IterHash(mScripts)) {
-      script.Remove();
-    }
+    mScripts.Clear();
 
     // If we've already finished saving the cache at this point, start a new
     // delayed save operation. This will write out an empty cache file in place
