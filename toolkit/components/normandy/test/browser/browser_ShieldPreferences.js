@@ -20,7 +20,7 @@ const {
 ShieldPreferences.init();
 
 decorate_task(
-  withMockPreferences,
+  withMockPreferences(),
   AddonStudies.withStudies([
     addonStudyFactory({ active: true }),
     addonStudyFactory({ active: true }),
@@ -47,7 +47,7 @@ decorate_task(
 );
 
 decorate_task(
-  withMockPreferences,
+  withMockPreferences(),
   PreferenceExperiments.withMockExperiments([
     preferenceStudyFactory({ active: true }),
     preferenceStudyFactory({ active: true }),

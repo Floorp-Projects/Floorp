@@ -13,7 +13,7 @@ const { _ExperimentManager, ExperimentManager } = ChromeUtils.import(
 );
 
 decorate_task(
-  withStudiesEnabled,
+  withStudiesEnabled(),
   withStub(Uptake, "reportRecipe"),
   async function arguments_are_validated(reportRecipe) {
     const action = new MessagingExperimentAction();

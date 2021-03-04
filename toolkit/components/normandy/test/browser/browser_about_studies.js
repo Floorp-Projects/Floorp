@@ -21,15 +21,19 @@ const {
   preferenceStudyFactory,
 } = NormandyTestUtils.factories;
 
-function withAboutStudies(testFunc) {
-  return async (...args) =>
-    BrowserTestUtils.withNewTab("about:studies", async browser =>
-      testFunc(...args, browser)
-    );
+function withAboutStudies() {
+  return function(testFunc) {
+    return async (...args) =>
+      BrowserTestUtils.withNewTab("about:studies", async browser =>
+        testFunc(...args, browser)
+      );
+  };
 }
 
 // Test that the code renders at all
-decorate_task(withAboutStudies, async function testAboutStudiesWorks(browser) {
+decorate_task(withAboutStudies(), async function testAboutStudiesWorks(
+  browser
+) {
   const appFound = await SpecialPowers.spawn(
     browser,
     [],
@@ -43,7 +47,7 @@ decorate_task(
   withPrefEnv({
     set: [["app.normandy.shieldLearnMoreUrl", "http://test/%OS%/"]],
   }),
-  withAboutStudies,
+  withAboutStudies(),
   async function testLearnMore(browser) {
     SpecialPowers.spawn(browser, [], async () => {
       const doc = content.document;
@@ -65,7 +69,9 @@ decorate_task(
 );
 
 // Test that jumping to preferences worked as expected
-decorate_task(withAboutStudies, async function testUpdatePreferences(browser) {
+decorate_task(withAboutStudies(), async function testUpdatePreferences(
+  browser
+) {
   let loadPromise = BrowserTestUtils.firstBrowserLoaded(window);
 
   // We have to use gBrowser instead of browser in most spots since we're
@@ -140,7 +146,7 @@ decorate_task(
       expired: false,
     }),
   ]),
-  withAboutStudies,
+  withAboutStudies(),
   async function testStudyListing(addonStudies, prefStudies, browser) {
     await SpecialPowers.spawn(
       browser,
@@ -281,7 +287,7 @@ decorate_task(
 // Test that a message is shown when no studies have been run
 decorate_task(
   AddonStudies.withStudies([]),
-  withAboutStudies,
+  withAboutStudies(),
   async function testStudyListingNoStudies(studies, browser) {
     await SpecialPowers.spawn(browser, [], async () => {
       const doc = content.document;
@@ -301,7 +307,7 @@ decorate_task(
 
 // Test that the message shown when studies are disabled and studies exist
 decorate_task(
-  withAboutStudies,
+  withAboutStudies(),
   AddonStudies.withStudies([
     addonStudyFactory({
       userFacingName: "A Fake Add-on Study",
@@ -355,7 +361,7 @@ decorate_task(
       ["app.shield.optoutstudies.enabled", false],
     ],
   }),
-  withAboutStudies,
+  withAboutStudies(),
   AddonStudies.withStudies([]),
   PreferenceExperiments.withMockExperiments([]),
   async function testStudyListingStudiesOptOut(browser) {
@@ -401,7 +407,7 @@ decorate_task(
       expired: false,
     }),
   ]),
-  withAboutStudies,
+  withAboutStudies(),
   async function testStudyListing([addonStudy], [prefStudy], browser) {
     // The content page has already loaded. Disabling the studies here shouldn't
     // affect it, since it doesn't live-update.
@@ -497,7 +503,7 @@ decorate_task(
       expired: false,
     }),
   ]),
-  withAboutStudies,
+  withAboutStudies(),
   async function testOtherTabsUpdated([addonStudy], [prefStudy], browser) {
     // Ensure that both our studies are active in the current tab.
     await SpecialPowers.spawn(
