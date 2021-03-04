@@ -24,8 +24,16 @@ class nsBaseHashtable;
 template <class KeyClass, class T>
 class nsClassHashtable;
 
+/**
+ * templated hashtable class maps keys to simple datatypes.
+ * See nsBaseHashtable for complete declaration
+ * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
+ *   for a complete specification.
+ * @param DataType the simple datatype being wrapped
+ * @see nsInterfaceHashtable, nsClassHashtable
+ */
 template <class KeyClass, class DataType>
-class nsDataHashtable;
+using nsDataHashtable = nsBaseHashtable<KeyClass, DataType, DataType>;
 
 template <class KeyClass, class Interface>
 class nsInterfaceHashtable;
