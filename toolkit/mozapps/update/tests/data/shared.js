@@ -75,6 +75,7 @@ const DIR_UPDATED =
 const FILE_ACTIVE_UPDATE_XML = "active-update.xml";
 const FILE_ACTIVE_UPDATE_XML_TMP = "active-update.xml.tmp";
 const FILE_APPLICATION_INI = "application.ini";
+const FILE_BACKUP_UPDATE_CONFIG_JSON = "backup-update-config.json";
 const FILE_BACKUP_UPDATE_LOG = "backup-update.log";
 const FILE_BT_RESULT = "bt.result";
 const FILE_LAST_UPDATE_LOG = "last-update.log";
@@ -452,6 +453,7 @@ function getUpdateDirFile(aLeafName) {
     case FILE_ACTIVE_UPDATE_XML:
     case FILE_ACTIVE_UPDATE_XML_TMP:
     case FILE_UPDATE_CONFIG_JSON:
+    case FILE_BACKUP_UPDATE_CONFIG_JSON:
     case FILE_UPDATE_TEST:
     case FILE_UPDATES_XML:
     case FILE_UPDATES_XML_TMP:
