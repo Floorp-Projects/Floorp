@@ -754,6 +754,10 @@ nsresult nsThreadManager::SpinEventLoopUntilInternal(
     const nsACString& aVeryGoodReasonToDoThis,
     nsINestedEventLoopCondition* aCondition, bool aCheckingShutdown) {
   AutoNestedEventLoopAnnotation annotation(aVeryGoodReasonToDoThis);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
+      "nsThreadManager::SpinEventLoop", OTHER, aVeryGoodReasonToDoThis);
+  AUTO_PROFILER_MARKER_TEXT("SpinEventLoop", OTHER, MarkerStack::Capture(),
+                            aVeryGoodReasonToDoThis);
 
   // XXX: We would want to AssertIsOnMainThread(); but that breaks some GTest.
   nsCOMPtr<nsINestedEventLoopCondition> condition(aCondition);
