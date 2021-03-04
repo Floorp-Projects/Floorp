@@ -26,12 +26,13 @@ NS_IMETHODIMP_(MozExternalRefCountType) xpcAccessibleDocument::Release(void) {
   NS_LOG_RELEASE(this, r, "xpcAccessibleDocument");
 
   // The only reference to the xpcAccessibleDocument is in DocManager's cache.
-  if (r == 1 && !!mIntl && mCache.Count() == 0) {
-    if (mIntl->IsLocal()) {
-      GetAccService()->RemoveFromXPCDocumentCache(mIntl->AsLocal()->AsDoc());
+  if (r == 1 && !mIntl.IsNull() && mCache.Count() == 0) {
+    if (mIntl.IsAccessible()) {
+      GetAccService()->RemoveFromXPCDocumentCache(
+          mIntl.AsAccessible()->AsDoc());
     } else {
       GetAccService()->RemoveFromRemoteXPCDocumentCache(
-          mIntl->AsRemote()->AsDoc());
+          mIntl.AsProxy()->AsDoc());
     }
   }
   return r;
@@ -146,16 +147,9 @@ xpcAccessibleDocument::GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor) {
 // xpcAccessibleDocument
 
 xpcAccessibleGeneric* xpcAccessibleDocument::GetAccessible(
-    Accessible* aAccessible) {
-  if (aAccessible->IsLocal() &&
-      ToXPCDocument(aAccessible->AsLocal()->Document()) != this) {
-    NS_ERROR(
-        "This XPCOM document is not related with given internal accessible!");
-    return nullptr;
-  }
-
-  if (aAccessible->IsRemote() &&
-      ToXPCDocument(aAccessible->AsRemote()->Document()) != this) {
+    LocalAccessible* aAccessible) {
+  MOZ_ASSERT(!mRemote);
+  if (ToXPCDocument(aAccessible->Document()) != this) {
     NS_ERROR(
         "This XPCOM document is not related with given internal accessible!");
     return nullptr;
@@ -181,10 +175,52 @@ xpcAccessibleGeneric* xpcAccessibleDocument::GetAccessible(
   });
 }
 
+xpcAccessibleGeneric* xpcAccessibleDocument::GetXPCAccessible(
+    RemoteAccessible* aProxy) {
+  MOZ_ASSERT(mRemote);
+  MOZ_ASSERT(aProxy->Document() == mIntl.AsProxy());
+  if (aProxy->IsDoc()) {
+    return this;
+  }
+
+  return mCache.LookupOrInsertWith(aProxy, [&]() -> xpcAccessibleGeneric* {
+    // XXX support exposing optional interfaces.
+  // XXX support exposing optional interfaces.
+    uint8_t interfaces = 0;
+    if (aProxy->HasNumericValue()) {
+      interfaces |= eValue;
+    }
+
+    if (aProxy->IsLink()) {
+      interfaces |= eHyperLink;
+    }
+
+    if (aProxy->IsHyperText()) {
+      interfaces |= eText;
+      return new xpcAccessibleHyperText(aProxy, interfaces);
+    }
+
+    return new xpcAccessibleGeneric(aProxy, interfaces);
+  });
+}
+
 void xpcAccessibleDocument::Shutdown() {
   for (auto iter = mCache.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->Shutdown();
     iter.Remove();
   }
   xpcAccessibleGeneric::Shutdown();
+}
+
+xpcAccessibleGeneric* a11y::ToXPC(AccessibleOrProxy aAcc) {
+  if (aAcc.IsNull()) {
+    return nullptr;
+  }
+
+  if (aAcc.IsAccessible()) {
+    return ToXPC(aAcc.AsAccessible());
+  }
+
+  xpcAccessibleDocument* doc = ToXPCDocument(aAcc.AsProxy()->Document());
+  return doc->GetXPCAccessible(aAcc.AsProxy());
 }

@@ -807,7 +807,7 @@ xpcAccessibleGeneric* DocAccessibleParent::GetXPCAccessible(
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
   MOZ_ASSERT(doc);
 
-  return doc->GetAccessible(aProxy);
+  return doc->GetXPCAccessible(aProxy);
 }
 
 #if defined(XP_WIN)

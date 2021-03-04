@@ -17,8 +17,11 @@ namespace a11y {
 class xpcAccessibleImage : public xpcAccessibleGeneric,
                            public nsIAccessibleImage {
  public:
-  explicit xpcAccessibleImage(Accessible* aIntl)
+  explicit xpcAccessibleImage(LocalAccessible* aIntl)
       : xpcAccessibleGeneric(aIntl) {}
+
+  xpcAccessibleImage(RemoteAccessible* aProxy, uint32_t aInterfaces)
+      : xpcAccessibleGeneric(aProxy, aInterfaces) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -31,7 +34,7 @@ class xpcAccessibleImage : public xpcAccessibleGeneric,
 
  private:
   ImageAccessible* Intl() {
-    return mIntl->IsLocal() ? mIntl->AsLocal()->AsImage() : nullptr;
+    return mIntl.IsAccessible() ? mIntl.AsAccessible()->AsImage() : nullptr;
   }
 
   xpcAccessibleImage(const xpcAccessibleImage&) = delete;
