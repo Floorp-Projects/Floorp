@@ -1083,24 +1083,11 @@ PersistentStoragePermissionPrompt.prototype = {
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "storage-permissions";
-    let options = {
+    return {
       learnMoreURL,
       displayURI: false,
       name: this.getPrincipalName(),
-      checkbox: {
-        show:
-          !this.principal.schemeIs("file") &&
-          !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal),
-      },
     };
-
-    if (options.checkbox.show) {
-      options.checkbox.label = gBrowserBundle.GetStringFromName(
-        "persistentStorage.remember"
-      );
-    }
-
-    return options;
   },
 
   get notificationID() {
@@ -1113,7 +1100,7 @@ PersistentStoragePermissionPrompt.prototype = {
 
   get message() {
     return gBrowserBundle.formatStringFromName(
-      "persistentStorage.allowWithSite2",
+      "persistentStorage.allowWithSite",
       ["<>"]
     );
   },
@@ -1130,12 +1117,22 @@ PersistentStoragePermissionPrompt.prototype = {
       },
       {
         label: gBrowserBundle.GetStringFromName(
-          "persistentStorage.block.label"
+          "persistentStorage.notNow.label"
         ),
         accessKey: gBrowserBundle.GetStringFromName(
-          "persistentStorage.block.accesskey"
+          "persistentStorage.notNow.accesskey"
+        ),
+        action: Ci.nsIPermissionManager.DENY_ACTION,
+      },
+      {
+        label: gBrowserBundle.GetStringFromName(
+          "persistentStorage.neverAllow.label"
+        ),
+        accessKey: gBrowserBundle.GetStringFromName(
+          "persistentStorage.neverAllow.accesskey"
         ),
         action: SitePermissions.BLOCK,
+        scope: SitePermissions.SCOPE_PERSISTENT,
       },
     ];
   },
