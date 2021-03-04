@@ -5319,7 +5319,7 @@
       }
 
       let title = event.target.querySelector(".places-tooltip-title");
-      title.value = label;
+      title.textContent = label;
       let url = event.target.querySelector(".places-tooltip-uri");
       url.value = tab.linkedBrowser?.currentURI?.spec.replace(
         /^https:\/\//,
