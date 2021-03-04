@@ -131,7 +131,7 @@ browsertime-tp6:
     mozharness:
         extra-options:
             by-test-platform:
-                windows10.*shippable.*:
+                windows10.*shippable.*-qr.*:
                     - --chimera
                     - --browsertime
                     - --no-conditioned-profile
