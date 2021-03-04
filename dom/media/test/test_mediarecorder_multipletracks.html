@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that MediaRecorder fires an error event when started with >1 track of a kind</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/media/webrtc/tests/mochitests/head.js"></script>
+</head>
+<body>
+<script class="testbody">
+"use strict";
+
+(async () => {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("Failure timeouts");
+
+  try {
+    const stream = new MediaStream;
+    const recorder = new MediaRecorder(stream);
+
+    {
+      info("Testing with two audio tracks");
+      const ac = new AudioContext;
+      const track = ac.createMediaStreamDestination().stream.getTracks()[0];
+      stream.addTrack(track);
+      stream.addTrack(track.clone());
+      recorder.start();
+      await haveEvent(recorder, "start",
+          wait(5000, new Error("Timeout")));
+      const {error} = await haveEvent(recorder, "error",
+          wait(5000, new Error("Timeout")));
+      await haveEvent(recorder, "stop",
+          wait(5000, new Error("Timeout")));
+      is(error.name, "UnknownError",
+          "Multiple audio tracks should be rejected");
+      for (let t of stream.getTracks()) {
+        stream.removeTrack(t);
+        t.stop();
+      }
+    }
+
+    {
+      info("Testing with two video tracks");
+      const canvas = document.createElement("canvas");
+      canvas.getContext("2d");
+      const track = canvas.captureStream().getTracks()[0];
+      stream.addTrack(track);
+      stream.addTrack(track.clone());
+      recorder.start();
+      await haveEvent(recorder, "start",
+          wait(5000, new Error("Timeout")));
+      const {error} = await haveEvent(recorder, "error",
+          wait(5000, new Error("Timeout")));
+      await haveEvent(recorder, "stop",
+          wait(5000, new Error("Timeout")));
+      is(error.name, "UnknownError",
+          "Multiple video tracks should be rejected");
+      for (let t of stream.getTracks()) {
+        stream.removeTrack(t);
+        t.stop();
+      }
+    }
+  } catch(e) {
+    ok(false, `${e}\n${e.stack}`);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+</script>
+</body>
+</html>
