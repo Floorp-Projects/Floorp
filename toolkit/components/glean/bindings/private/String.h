@@ -28,7 +28,11 @@ class StringMetric {
    *
    * @param aValue The string to set the metric to.
    */
-  void Set(const nsACString& aValue) const { fog_string_set(mId, &aValue); }
+  void Set(const nsACString& aValue) const {
+#ifndef MOZ_GLEAN_ANDROID
+    fog_string_set(mId, &aValue);
+#endif
+  }
 
   /**
    * **Test-only API**
@@ -49,12 +53,17 @@ class StringMetric {
    */
   Maybe<nsCString> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+    return Nothing();
+#else
     if (!fog_string_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
     nsCString ret;
     fog_string_test_get_value(mId, &aPingName, &ret);
     return Some(ret);
+#endif
   }
 
  private:

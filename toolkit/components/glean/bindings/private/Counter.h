@@ -24,7 +24,11 @@ class CounterMetric {
    *
    * @param aAmount The amount to increase by. Should be positive.
    */
-  void Add(int32_t aAmount = 1) const { fog_counter_add(mId, aAmount); }
+  void Add(int32_t aAmount = 1) const {
+#ifndef MOZ_GLEAN_ANDROID
+    fog_counter_add(mId, aAmount);
+#endif
+  }
 
   /**
    * **Test-only API**
@@ -44,10 +48,15 @@ class CounterMetric {
    * @return value of the stored metric, or Nothing() if there is no value.
    */
   Maybe<int32_t> TestGetValue(const nsACString& aPingName = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+    return Nothing();
+#else
     if (!fog_counter_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
     return Some(fog_counter_test_get_value(mId, &aPingName));
+#endif
   }
 
  private:

@@ -99,13 +99,28 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
 static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel) {
   switch (aParentTypeId) {
     case 2: { /* labeled_boolean */
-      return MakeAndAddRef<GleanBoolean>(impl::fog_labeled_boolean_get(aParentMetricId, &aLabel));
+#ifdef MOZ_GLEAN_ANDROID
+      auto id = 0;
+#else
+      auto id = impl::fog_labeled_boolean_get(aParentMetricId, &aLabel);
+#endif
+      return MakeAndAddRef<GleanBoolean>(id);
     }
     case 4: { /* labeled_counter */
-      return MakeAndAddRef<GleanCounter>(impl::fog_labeled_counter_get(aParentMetricId, &aLabel));
+#ifdef MOZ_GLEAN_ANDROID
+      auto id = 0;
+#else
+      auto id = impl::fog_labeled_counter_get(aParentMetricId, &aLabel);
+#endif
+      return MakeAndAddRef<GleanCounter>(id);
     }
     case 6: { /* labeled_string */
-      return MakeAndAddRef<GleanString>(impl::fog_labeled_string_get(aParentMetricId, &aLabel));
+#ifdef MOZ_GLEAN_ANDROID
+      auto id = 0;
+#else
+      auto id = impl::fog_labeled_string_get(aParentMetricId, &aLabel);
+#endif
+      return MakeAndAddRef<GleanString>(id);
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("Invalid type ID for submetric.");

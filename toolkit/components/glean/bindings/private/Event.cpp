@@ -20,6 +20,9 @@ NS_IMPL_ISUPPORTS_CI(GleanEvent, nsIGleanEvent)
 
 NS_IMETHODIMP
 GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
+#ifdef MOZ_GLEAN_ANDROID
+  return NS_OK;
+#else
   if (aExtra.isNullOrUndefined()) {
     mEvent.Record();
     return NS_OK;
@@ -73,6 +76,7 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
   // map, not a `T->string` map the C++ API expects.
   impl::fog_event_record_str(mEvent.mId, &extraKeys, &extraValues);
   return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP

@@ -48,6 +48,7 @@ class EventMetric {
    *                an error is report and no event is recorded.
    */
   void Record(const Span<const Tuple<T, nsCString>>& aExtras = {}) const {
+#ifndef MOZ_GLEAN_ANDROID
     static_assert(sizeof(T) <= sizeof(int32_t),
                   "Extra keys need to fit into 32 bits");
 
@@ -59,6 +60,7 @@ class EventMetric {
     }
 
     fog_event_record(mId, &extraKeys, &extraValues);
+#endif
   }
 
   /**
@@ -80,6 +82,10 @@ class EventMetric {
    */
   Maybe<nsTArray<RecordedEvent>> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+    return Nothing();
+#else
     if (!fog_event_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
@@ -87,6 +93,7 @@ class EventMetric {
     // TODO(bug 1678567): Implement this.
     nsTArray<RecordedEvent> empty;
     return Some(std::move(empty));
+#endif
   }
 
  private:

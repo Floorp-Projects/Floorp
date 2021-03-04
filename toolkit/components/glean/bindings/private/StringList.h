@@ -29,7 +29,9 @@ class StringListMetric {
    * @param aValue The string to add.
    */
   void Add(const nsACString& aValue) const {
+#ifndef MOZ_GLEAN_ANDROID
     fog_string_list_add(mId, &aValue);
+#endif
   }
 
   /*
@@ -43,7 +45,9 @@ class StringListMetric {
    * @param aValue The list of strings to set the metric to.
    */
   void Set(const nsTArray<nsCString>& aValue) const {
+#ifndef MOZ_GLEAN_ANDROID
     fog_string_list_set(mId, &aValue);
+#endif
   }
 
   /**
@@ -65,12 +69,17 @@ class StringListMetric {
    */
   Maybe<nsTArray<nsCString>> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
+#ifdef MOZ_GLEAN_ANDROID
+    Unused << mId;
+    return Nothing();
+#else
     if (!fog_string_list_test_has_value(mId, &aPingName)) {
       return Nothing();
     }
     nsTArray<nsCString> ret;
     fog_string_list_test_get_value(mId, &aPingName, &ret);
     return Some(std::move(ret));
+#endif
   }
 
  private:
