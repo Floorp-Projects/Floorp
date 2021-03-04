@@ -5734,7 +5734,7 @@ static JS::TranscodeResult DecodeStencil(JSContext* cx,
     return JS::TranscodeResult::Throw;
   }
 
-  XDRResult res = decoder.codeStencils(input, stencil);
+  XDRResult res = decoder.codeStencil(input, stencil);
   if (res.isErr()) {
     return res.unwrapErr();
   }
@@ -5812,12 +5812,6 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     return res;
   }
 
-  UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
-  if (!stencil.source->xdrEncodeStencils(cx, input.get(), stencil,
-                                         xdrEncoder)) {
-    return JS::TranscodeResult::Throw;
-  }
-
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
   if (!frontend::InstantiateStencils(cx, input.get(), stencil, gcOutput.get(),
@@ -5826,8 +5820,21 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
   }
 
   MOZ_ASSERT(gcOutput.get().script);
-  gcOutput.get().script->scriptSource()->setIncrementalEncoder(
-      xdrEncoder.release());
+
+  auto initial =
+      js::MakeUnique<frontend::ExtensibleCompilationStencil>(cx, input.get());
+  if (!initial) {
+    ReportOutOfMemory(cx);
+    return JS::TranscodeResult::Throw;
+  }
+  if (!initial->steal(cx, std::move(stencil))) {
+    return JS::TranscodeResult::Throw;
+  }
+
+  if (!gcOutput.get().script->scriptSource()->startIncrementalEncoding(
+          cx, options, std::move(initial))) {
+    return JS::TranscodeResult::Throw;
+  }
 
   scriptp.set(gcOutput.get().script);
 

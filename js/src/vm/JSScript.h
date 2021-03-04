@@ -1015,40 +1015,13 @@ class ScriptSource {
   // Return wether an XDR encoder is present or not.
   bool hasEncoder() const { return bool(xdrEncoder_); }
 
-  // Create a new XDR encoder, and encode the stencil for the initial
-  // compilation. The created XDR encoder isn't stored into `xdrEncoder_`
-  // field. Caller is responsible for calling `setIncrementalEncoder` after
-  // instantiating stencil (so, corresponding canonical ScriptSourceObject
-  // gets created).
-  bool xdrEncodeInitialStencil(
-      JSContext* cx, frontend::CompilationInput& input,
-      const frontend::CompilationStencil& stencil,
-      UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
+  [[nodiscard]] bool startIncrementalEncoding(
+      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+      UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
 
-  // Create a new XDR encoder, and encode the stencils.
-  // The created XDR encoder isn't stored into `xdrEncoder_` field.
-  // Caller is responsible for calling `setIncrementalEncoder` after
-  // instantiating stencil (so, corresponding canonical ScriptSourceObject
-  // gets created).
-  bool xdrEncodeStencils(JSContext* cx, frontend::CompilationInput& input,
-                         const frontend::CompilationStencil& stencil,
-                         UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
+  [[nodiscard]] bool addDelazificationToIncrementalEncoding(
+      JSContext* cx, frontend::ExtensibleCompilationStencil& stencil);
 
-  void setIncrementalEncoder(XDRIncrementalStencilEncoder* xdrEncoder);
-
-  // Encode a delazified function's stencil.  In case of errors, the XDR
-  // encoder is freed.
-  bool xdrEncodeFunctionStencil(
-      JSContext* cx, const frontend::BaseCompilationStencil& stencil);
-
- private:
-  // Encode a delazified function's stencil.  In case of errors, the passed
-  // XDR encoder is freed.
-  bool xdrEncodeFunctionStencilWith(
-      JSContext* cx, const frontend::BaseCompilationStencil& stencil,
-      UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
-
- public:
   // Linearize the encoded content in the |buffer| provided as argument to
   // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
   // |buffer| is considered undefined.
