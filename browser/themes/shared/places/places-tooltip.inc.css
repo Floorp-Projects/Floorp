@@ -6,7 +6,7 @@
    on extra theming and proton variables that would need to be
    injected into the sidebar. */
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.places-tooltip.enabled") {
 .places-tooltip {
   appearance: none;
   background: transparent;
