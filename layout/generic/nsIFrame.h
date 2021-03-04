@@ -1285,6 +1285,11 @@ class nsIFrame : public nsQueryFrame {
   nsRect GetNormalRect() const;
 
   /**
+   * Returns frame's rect as required by the GetBoundingClientRect() DOM API.
+   */
+  nsRect GetBoundingClientRect();
+
+  /**
    * Return frame's position without relative positioning.
    * If aHasProperty is provided, returns whether the normal position
    * was stored in a frame property.

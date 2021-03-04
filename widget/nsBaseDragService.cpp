@@ -724,9 +724,8 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
       // otherwise, there was no region so just set the rectangle to
       // the size of the primary frame of the content.
       nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
-      nsIFrame* frame = content->GetPrimaryFrame();
-      if (frame) {
-        presLayoutRect = frame->GetRect();
+      if (nsIFrame* frame = content->GetPrimaryFrame()) {
+        presLayoutRect = frame->GetBoundingClientRect();
       }
     }
 
