@@ -66,6 +66,7 @@ EXPORTS += [
     "nsPointerHashKeys.h",
     "nsProperties.h",
     "nsQuickSort.h",
+    "nsRefCountedHashtable.h",
     "nsRefPtrHashtable.h",
     "nsSimpleEnumerator.h",
     "nsStaticAtomUtils.h",

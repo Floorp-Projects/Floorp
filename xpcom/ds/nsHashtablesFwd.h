@@ -11,6 +11,12 @@
 
 struct PLDHashEntryHdr;
 
+template <class T>
+class MOZ_IS_REFPTR nsCOMPtr;
+
+template <class T>
+class MOZ_IS_REFPTR RefPtr;
+
 template <class EntryType>
 class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable;
 
@@ -35,10 +41,30 @@ class nsClassHashtable;
 template <class KeyClass, class DataType>
 using nsDataHashtable = nsBaseHashtable<KeyClass, DataType, DataType>;
 
-template <class KeyClass, class Interface>
-class nsInterfaceHashtable;
-
 template <class KeyClass, class PtrType>
-class nsRefPtrHashtable;
+class nsRefCountedHashtable;
+
+/**
+ * templated hashtable class maps keys to interface pointers.
+ * See nsBaseHashtable for complete declaration.
+ * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
+ *   for a complete specification.
+ * @param Interface the interface-type being wrapped
+ * @see nsDataHashtable, nsClassHashtable
+ */
+template <class KeyClass, class Interface>
+using nsInterfaceHashtable =
+    nsRefCountedHashtable<KeyClass, nsCOMPtr<Interface>>;
+
+/**
+ * templated hashtable class maps keys to reference pointers.
+ * See nsBaseHashtable for complete declaration.
+ * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
+ *   for a complete specification.
+ * @param PtrType the reference-type being wrapped
+ * @see nsDataHashtable, nsClassHashtable
+ */
+template <class KeyClass, class ClassType>
+using nsRefPtrHashtable = nsRefCountedHashtable<KeyClass, RefPtr<ClassType>>;
 
 #endif  // XPCOM_DS_NSHASHTABLESFWD_H_
