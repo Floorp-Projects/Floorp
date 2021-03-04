@@ -44,10 +44,6 @@
 using namespace mozilla::tasktracer;
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "GeckoProfiler.h"
-#endif
-
 // Undo the damage done by mozzconf.h
 #undef compress
 
@@ -2792,7 +2788,6 @@ void MessageChannel::DumpInterruptStack(const char* const pfx) const {
 void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
                                        MessageDirection aDirection) {
   mMonitor->AssertCurrentThreadOwns();
-
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_feature_active(ProfilerFeature::IPCMessages)) {
     int32_t pid = mListener->OtherPidMaybeInvalid();
