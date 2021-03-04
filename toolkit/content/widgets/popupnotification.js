@@ -38,6 +38,7 @@
         ".popup-notification-dropmarker > menupopup": "oncommand=menucommand",
         ".popup-notification-primary-button":
           "oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,default=buttonhighlight,disabled=mainactiondisabled",
+        ".panel-footer": "opinionated",
       };
     }
 
