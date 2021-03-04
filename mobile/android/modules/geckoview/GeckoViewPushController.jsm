@@ -56,7 +56,7 @@ const GeckoViewPushController = {
         );
 
         if (!data) {
-          PushNotifier.notifyPush(url, principal);
+          PushNotifier.notifyPush(url, principal, "");
           return;
         }
 
