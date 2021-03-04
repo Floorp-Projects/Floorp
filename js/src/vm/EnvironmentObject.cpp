@@ -1113,6 +1113,19 @@ JSObject* ExtensibleLexicalEnvironmentObject::thisObject() const {
 }
 
 /* static */
+ExtensibleLexicalEnvironmentObject*
+ExtensibleLexicalEnvironmentObject::forVarEnvironment(JSObject* obj) {
+  ExtensibleLexicalEnvironmentObject* lexical = nullptr;
+  if (obj->is<GlobalObject>()) {
+    lexical = &obj->as<GlobalObject>().lexicalEnvironment();
+  } else {
+    lexical = ObjectRealm::get(obj).getNonSyntacticLexicalEnvironment(obj);
+  }
+  MOZ_ASSERT(lexical);
+  return lexical;
+}
+
+/* static */
 GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
     JSContext* cx, Handle<GlobalObject*> global) {
   MOZ_ASSERT(global);
