@@ -50,13 +50,15 @@ var myInstance = new MyClass();
 test(g.myInstance.method, 10);
 test(g.myInstance.constructor, 14);
 
-const gEager = newGlobal({newCompartment: true, useWindowProxy: true, disableLazyParsing: true});
-const eagerDbg = Debugger(gEager);
-const gEagerWrapped = eagerDbg.addDebuggee(gEager);
-gEager.eval(`
+const g2 = newGlobal({newCompartment: true, useWindowProxy: true});
+const dbg2 = Debugger(g2);
+const g2Wrapped = dbg2.addDebuggee(g2);
+g2.evaluate(`
 function f7() { }
-`);
-const f7w = gEagerWrapped.makeDebuggeeValue(gEager.f7);
+`, {
+  forceFullParse: true,
+});
+const f7w = g2Wrapped.makeDebuggeeValue(g2.f7);
 assertEq(f7w.callable, true);
 assertEq(f7w.script.startColumn, 11);
 

@@ -6739,13 +6739,6 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       creationOptions.setNewCompartmentAndZone();
     }
 
-    if (!JS_GetProperty(cx, opts, "disableLazyParsing", &v)) {
-      return false;
-    }
-    if (v.isBoolean()) {
-      behaviors.setDisableLazyParsing(v.toBoolean());
-    }
-
     if (!JS_GetProperty(cx, opts, "discardSource", &v)) {
       return false;
     }
@@ -9228,8 +9221,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         compartment and zone.\n"
 "      invisibleToDebugger: If true, the global will be invisible to the\n"
 "         debugger (default false)\n"
-"      disableLazyParsing: If true, don't create lazy scripts for functions\n"
-"         (default false).\n"
 "      discardSource: If true, discard source after compiling a script\n"
 "         (default false).\n"
 "      useWindowProxy: the global will be created with a WindowProxy attached. In this\n"

@@ -22,20 +22,9 @@ function hasGname(f, v) {
 
 var x = "outer";
 
-var nonLazyGlobal = newGlobal({ disableLazyParsing: true });
-nonLazyGlobal.eval(bytecode.toString());
-nonLazyGlobal.eval(hasGname.toString());
-nonLazyGlobal.x = x;
-
 var f1 = new Function("assertEq(x, 'outer')");
 f1();
 hasGname(f1, 'x');
-
-nonLazyGlobal.evaluate(`
-var f2 = new Function("assertEq(x, 'outer')");
-f2();
-hasGname(f2, 'x');
-`);
 
 {
     let x = "inner";
@@ -43,12 +32,3 @@ hasGname(f2, 'x');
     f3();
     hasGname(f3, 'x');
 }
-
-nonLazyGlobal.evaluate(`
-{
-    let x = "inner";
-    var f4 = new Function("assertEq(x, 'outer')");
-    f4();
-    hasGname(f4, 'x');
-}
-`);
