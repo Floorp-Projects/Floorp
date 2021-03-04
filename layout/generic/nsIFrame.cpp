@@ -7403,6 +7403,12 @@ nsRect nsIFrame::GetNormalRect() const {
   return GetRect();
 }
 
+nsRect nsIFrame::GetBoundingClientRect() {
+  return nsLayoutUtils::GetAllInFlowRectsUnion(
+      this, nsLayoutUtils::GetContainingBlockForClientRect(this),
+      nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+}
+
 nsPoint nsIFrame::GetPositionIgnoringScrolling() const {
   return GetParent() ? GetParent()->GetPositionOfChildIgnoringScrolling(this)
                      : GetPosition();
