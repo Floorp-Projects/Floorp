@@ -180,7 +180,7 @@ nsresult nsPrinterListCUPS::SystemDefaultPrinterName(nsAString& aName) const {
   aName.Truncate();
 
   if (!CupsShim().InitOkay()) {
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   // Passing in nullptr for the name will return the default, if any.
