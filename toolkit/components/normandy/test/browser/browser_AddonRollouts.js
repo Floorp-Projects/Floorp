@@ -115,7 +115,7 @@ decorate_task(AddonRollouts.withTestMock(), async function testHas() {
 decorate_task(
   AddonRollouts.withTestMock(),
   withStub(TelemetryEnvironment, "setExperimentActive"),
-  async function testInitTelemetry(setExperimentActiveStub) {
+  async function testInitTelemetry({ setExperimentActiveStub }) {
     await AddonRollouts.add({
       slug: "test-rollout-active-1",
       state: AddonRollouts.STATE_ACTIVE,

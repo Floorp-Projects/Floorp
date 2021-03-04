@@ -34,7 +34,7 @@ function withStubInits() {
       withStub(PreferenceExperiments, "init"),
       withStub(RecipeRunner, "init"),
       withStub(TelemetryEvents, "init"),
-      () => testFunction()
+      testFunction
     );
   };
 }
@@ -135,7 +135,7 @@ decorate_task(
 
 decorate_task(
   withStub(Normandy, "finishInit"),
-  async function testStartupDelayed(finishInitStub) {
+  async function testStartupDelayed({ finishInitStub }) {
     await Normandy.init();
     ok(
       !finishInitStub.called,
@@ -153,12 +153,16 @@ decorate_task(
 // During startup, preferences that are changed for experiments should
 // be record by calling PreferenceExperiments.recordOriginalValues.
 decorate_task(
-  withStub(PreferenceExperiments, "recordOriginalValues"),
-  withStub(PreferenceRollouts, "recordOriginalValues"),
-  async function testApplyStartupPrefs(
+  withStub(PreferenceExperiments, "recordOriginalValues", {
+    as: "experimentsRecordOriginalValuesStub",
+  }),
+  withStub(PreferenceRollouts, "recordOriginalValues", {
+    as: "rolloutsRecordOriginalValueStub",
+  }),
+  async function testApplyStartupPrefs({
     experimentsRecordOriginalValuesStub,
-    rolloutsRecordOriginalValueStub
-  ) {
+    rolloutsRecordOriginalValueStub,
+  }) {
     const defaultBranch = Services.prefs.getDefaultBranch("");
 
     defaultBranch.setBoolPref(experimentPref1, false);
@@ -300,10 +304,10 @@ decorate_task(
   ]),
   PreferenceRollouts.withTestMock(),
   AddonRollouts.withTestMock(),
-  async function disablingTelemetryClearsEnrollmentIds(
-    [prefExperiment],
-    [addonStudy]
-  ) {
+  async function disablingTelemetryClearsEnrollmentIds({
+    prefExperiments: [prefExperiment],
+    addonStudies: [addonStudy],
+  }) {
     const prefRollout = {
       slug: "test-rollout",
       state: PreferenceRollouts.STATE_ACTIVE,

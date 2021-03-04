@@ -7,19 +7,16 @@ const { CanonicalJSON } = ChromeUtils.import(
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-const { NormandyTestUtils } = ChromeUtils.import(
-  "resource://testing-common/NormandyTestUtils.jsm"
-);
+
+/* import-globals-from utils.js */
+load("utils.js");
 
 NormandyTestUtils.init({ add_task });
 const { decorate_task } = NormandyTestUtils;
 
 Cu.importGlobalProperties(["fetch"]);
 
-/* import-globals-from utils.js */
-load("utils.js");
-
-decorate_task(withMockApiServer(), async function test_get(serverUrl) {
+decorate_task(withMockApiServer(), async function test_get({ serverUrl }) {
   // Test that NormandyApi can fetch from the test server.
   const response = await NormandyApi.get(`${serverUrl}/api/v1/`);
   const data = await response.json();
@@ -30,7 +27,9 @@ decorate_task(withMockApiServer(), async function test_get(serverUrl) {
   );
 });
 
-decorate_task(withMockApiServer(), async function test_getApiUrl(serverUrl) {
+decorate_task(withMockApiServer(), async function test_getApiUrl({
+  serverUrl,
+}) {
   const apiBase = `${serverUrl}/api/v1`;
   // Test that NormandyApi can use the self-describing API's index
   const recipeListUrl = await NormandyApi.getApiUrl("extension-list");
@@ -41,10 +40,10 @@ decorate_task(withMockApiServer(), async function test_getApiUrl(serverUrl) {
   );
 });
 
-decorate_task(withMockApiServer(), async function test_getApiUrlSlashes(
+decorate_task(withMockApiServer(), async function test_getApiUrlSlashes({
   serverUrl,
-  preferences
-) {
+  mockPreferences,
+}) {
   const fakeResponse = new MockResponse(
     JSON.stringify({ "test-endpoint": `${serverUrl}/test/` })
   );
@@ -55,7 +54,7 @@ decorate_task(withMockApiServer(), async function test_getApiUrlSlashes(
   // without slash
   {
     NormandyApi.clearIndexCache();
-    preferences.set("app.normandy.api_url", `${serverUrl}/api/v1`);
+    mockPreferences.set("app.normandy.api_url", `${serverUrl}/api/v1`);
     const endpoint = await NormandyApi.getApiUrl("test-endpoint");
     equal(endpoint, `${serverUrl}/test/`);
     ok(
@@ -68,7 +67,7 @@ decorate_task(withMockApiServer(), async function test_getApiUrlSlashes(
   // with slash
   {
     NormandyApi.clearIndexCache();
-    preferences.set("app.normandy.api_url", `${serverUrl}/api/v1/`);
+    mockPreferences.set("app.normandy.api_url", `${serverUrl}/api/v1/`);
     const endpoint = await NormandyApi.getApiUrl("test-endpoint");
     equal(endpoint, `${serverUrl}/test/`);
     ok(
@@ -168,7 +167,7 @@ decorate_task(withMockApiServer(), async function test_fetchExtensionDetails() {
 
 decorate_task(
   withScriptServer("query_server.sjs"),
-  async function test_getTestServer(serverUrl) {
+  async function test_getTestServer({ serverUrl }) {
     // Test that NormandyApi can fetch from the test server.
     const response = await NormandyApi.get(serverUrl);
     const data = await response.json();
@@ -182,7 +181,7 @@ decorate_task(
 
 decorate_task(
   withScriptServer("query_server.sjs"),
-  async function test_getQueryString(serverUrl) {
+  async function test_getQueryString({ serverUrl }) {
     // Test that NormandyApi can send query string parameters to the test server.
     const response = await NormandyApi.get(serverUrl, {
       foo: "bar",
@@ -200,7 +199,7 @@ decorate_task(
 // Test that no credentials are sent, even if the cookie store contains them.
 decorate_task(
   withScriptServer("cookie_server.sjs"),
-  async function test_sendsNoCredentials(serverUrl) {
+  async function test_sendsNoCredentials({ serverUrl }) {
     // This test uses cookie_server.sjs, which responds to all requests with a
     // response that sets a cookie.
 
