@@ -321,11 +321,6 @@ add_task(async function test_page_contextmenu_fxa_disabled() {
     true,
     "Send tab to device is hidden"
   );
-  is(
-    document.getElementById("context-sep-sendpagetodevice").hidden,
-    true,
-    "Separator is also hidden"
-  );
   await hideContentContextMenu();
   getter.restore();
   [...document.querySelectorAll(".sync-ui-item")].forEach(
