@@ -1,6 +1,149 @@
-//! Project changelog
+//! The change log.
 
-// TODO: for the next breaking release rename `Error::LoadLibraryW` to `Error::LoadLibraryExW`.
+/// Release 0.7.0 (2021-01-31)
+///
+/// ## Breaking changes
+///
+/// ### Loading functions are now `unsafe`
+///
+/// A number of associated methods involved in loading a library were changed to
+/// be `unsafe`. The affected functions are: [`Library::new`], [`os::unix::Library::new`],
+/// [`os::unix::Library::open`], [`os::windows::Library::new`],
+/// [`os::windows::Library::load_with_flags`]. This is the most prominent breaking change in this
+/// release and affects majority of the users of `libloading`.
+///
+/// In order to see why it was necessary, consider the following snippet of C++ code:
+///
+/// ```c++
+/// #include <vector>
+/// #include <iostream>
+///
+/// static std::vector<unsigned int> UNSHUU = { 1, 2, 3 };
+///
+/// int main() {
+///     std::cout << UNSHUU[0] << UNSHUU[1] << UNSHUU[2] << std::endl; // Prints 123
+///     return 0;
+/// }
+/// ```
+///
+/// The `std::vector` type, much like in Rust's `Vec`, stores its contents in a buffer allocated on
+/// the heap. In this example the vector object itself is stored and initialized as a static
+/// variable – a compile time construct. The heap, on the other hand, is a runtime construct. And
+/// yet the code works exactly as you'd expect – the vector contains numbers 1, 2 and 3 stored in
+/// a buffer on heap. So, _what_ makes it work out, exactly?
+///
+/// Various executable and shared library formats define conventions and machinery to execute
+/// arbitrary code when a program or a shared library is loaded. On systems using the PE format
+/// (e.g. Windows) this is available via the optional `DllMain` initializer. Various systems
+/// utilizing the ELF format take a sightly different approach of maintaining an array of function
+/// pointers in the `.init_array` section. A very similar mechanism exists on systems that utilize
+/// the Mach-O format.
+///
+/// For the C++ program above, the object stored in the `UNSHUU` global variable is constructed
+/// by code run as part of such an initializer routine. This initializer is run before the entry
+/// point (the `main` function) is executed, allowing for this magical behaviour to be possible.
+/// Were the C++ code built as a shared library instead, the initialization routines would run as
+/// the resulting shared library is loaded. In case of `libloading` – during the call to
+/// `Library::new` and other methods affected by this change.
+///
+/// These initialization (and very closely related termination) routines can be utilized outside of
+/// C++ too. Anybody can build a shared library in variety of different programming languages and
+/// set up the initializers to execute arbitrary code. Potentially code that does all sorts of
+/// wildly unsound stuff.
+///
+/// The routines are executed by components that are an integral part of the operating system.
+/// Changing or controlling the operation of these components is infeasible. With that in
+/// mind, the initializer and termination routines are something anybody loading a library must
+/// carefully evaluate the libraries loaded for soundness.
+///
+/// In practice, a vast majority of the libraries can be considered a good citizen and their
+/// initialization and termination routines, if they have any at all, can be trusted to be sound.
+///
+/// Also see: [issue #86].
+///
+/// ### Better & more consistent default behaviour on UNIX systems
+///
+/// On UNIX systems the [`Library::new`], [`os::unix::Library::new`] and
+/// [`os::unix::Library::this`] methods have been changed to use
+/// <code>[RTLD_LAZY] | [RTLD_LOCAL]</code> as the default set of loader options (previously:
+/// [`RTLD_NOW`]). This has a couple benefits. Namely:
+///
+/// * Lazy binding is generally quicker to execute when only a subset of symbols from a library are
+///   used and is typically the default when neither `RTLD_LAZY` nor `RTLD_NOW` are specified when
+///   calling the underlying `dlopen` API;
+/// * On most UNIX systems (macOS being a notable exception) `RTLD_LOCAL` is the default when
+///   neither `RTLD_LOCAL` nor [`RTLD_GLOBAL`] are specified. The explicit setting of the
+///   `RTLD_LOCAL` flag makes this behaviour consistent across platforms.
+///
+/// ### Dropped support for Windows XP/Vista
+///
+/// The (broken) support for Windows XP and Windows Vista environments was removed. This was
+/// prompted primarily by a similar policy change in the [Rust
+/// project](https://github.com/rust-lang/compiler-team/issues/378) but also as an acknowledgement
+/// to the fact that `libloading` never worked in these environments anyway.
+///
+/// ### More accurate error variant names
+///
+/// Finally, the `Error::LoadLibraryW` renamed to [`Error::LoadLibraryExW`] to more accurately
+/// represent the underlying API that's failing. No functional changes as part of this rename
+/// intended.
+///
+/// [issue #86]: https://github.com/nagisa/rust_libloading/issues/86
+/// [`Library::new`]: crate::Library::new
+/// [`Error::LoadLibraryExW`]: crate::Error::LoadLibraryExW
+/// [`os::unix::Library::this`]: crate::os::unix::Library::this
+/// [`os::unix::Library::new`]: crate::os::unix::Library::new
+/// [`os::unix::Library::open`]: crate::os::unix::Library::new
+/// [`os::windows::Library::new`]: crate::os::windows::Library::new
+/// [`os::windows::Library::load_with_flags`]: crate::os::windows::Library::load_with_flags
+/// [`RTLD_NOW`]: crate::os::unix::RTLD_NOW
+/// [RTLD_LAZY]: crate::os::unix::RTLD_LAZY
+/// [RTLD_LOCAL]: crate::os::unix::RTLD_LOCAL
+/// [`RTLD_GLOBAL`]: crate::os::unix::RTLD_GLOBAL
+pub mod r0_7_0 {}
+
+/// Release 0.6.7 (2021-01-14)
+///
+/// * Added a [`os::windows::Library::open_already_loaded`] to obtain a handle to a library that
+/// must already be loaded. There is no portable equivalent for all UNIX targets. Users who do not
+/// care about portability across UNIX platforms may use [`os::unix::Library::open`] with
+/// `libc::RTLD_NOLOAD`;
+///
+/// [`os::windows::Library::open_already_loaded`]: crate::os::windows::Library::open_already_loaded
+/// [`os::unix::Library::open`]: crate::os::unix::Library::open
+pub mod r0_6_7 {}
+
+/// Release 0.6.6 (2020-12-03)
+///
+/// * Fix a double-release of resources when [`Library::close`] or [`os::windows::Library::close`]
+///   is used on Windows.
+///
+/// [`Library::close`]: crate::Library::close
+/// [`os::windows::Library::close`]: crate::os::windows::Library::close
+pub mod r0_6_6 {}
+
+/// Release 0.6.5 (2020-10-23)
+///
+/// * Upgrade cfg-if 0.1 to 1.0
+pub mod r0_6_5 {}
+
+/// Release 0.6.4 (2020-10-10)
+///
+/// * Remove use of `build.rs` making it easier to build `libloading` without cargo. It also
+///   almost halves the build time of this crate.
+pub mod r0_6_4 {}
+
+/// Release 0.6.3 (2020-08-22)
+///
+/// * Improve documentation, allowing to view all of the os-specific functionality from
+/// documentation generated for any target;
+/// * Add [`os::windows::Library::this`];
+/// * Added constants to use with OS-specific `Library::open`;
+/// * Add [`library_filename`].
+///
+/// [`os::windows::Library::this`]: crate::os::windows::Library::this
+/// [`library_filename`]: crate::library_filename
+pub mod r0_6_3 {}
 
 /// Release 0.6.2 (2020-05-06)
 ///
@@ -12,7 +155,7 @@ pub mod r0_6_2 {}
 /// * Introduced a new method [`os::windows::Library::load_with_flags`];
 /// * Added support for the Illumos triple.
 ///
-/// [`os::windows::Library::load_with_flags`]: ../../os/windows/struct.Library.html#method.load_with_flags
+/// [`os::windows::Library::load_with_flags`]: crate::os::windows::Library::load_with_flags
 pub mod r0_6_1 {}
 
 /// Release 0.6.0 (2020-04-05)
@@ -39,9 +182,9 @@ pub mod r0_6_1 {}
 ///   `dlsym` returns a null pointer. For the use-cases where loading null pointers is necessary
 ///   consider using [`os::unix::Library::get_singlethreaded`] instead.
 ///
-/// [`Library::get`]: ../../struct.Library.html#method.get
-/// [`os::unix::Library::get_singlethreaded`]: ../../os/unix/struct.Library.html#method.get_singlethreaded
-/// [`Error`]: ../../enum.Error.html
+/// [`Library::get`]: crate::Library::get
+/// [`os::unix::Library::get_singlethreaded`]: crate::os::unix::Library::get_singlethreaded
+/// [`Error`]: crate::Error
 pub mod r0_6_0 {}
 
 

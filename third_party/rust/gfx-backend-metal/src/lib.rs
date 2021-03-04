@@ -68,20 +68,23 @@ use cocoa_foundation::foundation::NSInteger;
 #[cfg(feature = "dispatch")]
 use dispatch;
 use foreign_types::ForeignTypeRef;
-use lazy_static::lazy_static;
 use metal::MTLFeatureSet;
 use metal::MTLLanguageVersion;
-use metal::{CGFloat, CGSize, CoreAnimationLayer, CoreAnimationLayerRef};
+use metal::{CGFloat, CGSize, MetalLayer, MetalLayerRef};
 use objc::{
     declare::ClassDecl,
     runtime::{Class, Object, Sel, BOOL, YES},
 };
 use parking_lot::{Condvar, Mutex};
 
-use std::mem;
-use std::os::raw::c_void;
-use std::ptr::NonNull;
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    hash::BuildHasherDefault,
+    mem,
+    os::raw::c_void,
+    ptr::NonNull,
+    sync::{Arc, Once},
+};
 
 mod command;
 mod conversions;
@@ -93,9 +96,10 @@ mod window;
 
 pub use crate::command::CommandPool;
 pub use crate::device::{Device, LanguageVersion, PhysicalDevice};
-pub use crate::window::{AcquireMode, Surface};
+pub use crate::window::Surface;
 
 pub type GraphicsCommandPool = CommandPool;
+type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<fxhash::FxHasher>>;
 
 //TODO: investigate why exactly using `u8` here is slower (~5% total).
 /// A type representing Metal binding's resource index.
@@ -302,18 +306,6 @@ impl hal::Instance<Backend> for Instance {
     }
 }
 
-lazy_static! {
-    static ref GFX_MANAGED_METAL_LAYER_DELEGATE_CLASS: &'static Class = unsafe {
-        let mut decl = ClassDecl::new("GfxManagedMetalLayerDelegate", class!(NSObject)).unwrap();
-        decl.add_method(
-            sel!(layer:shouldInheritContentsScale:fromWindow:),
-            layer_should_inherit_contents_scale_from_window
-                as extern "C" fn(&Object, Sel, *mut Object, CGFloat, *mut Object) -> BOOL,
-        );
-        decl.register()
-    };
-}
-
 extern "C" fn layer_should_inherit_contents_scale_from_window(
     _: &Object,
     _: Sel,
@@ -321,33 +313,31 @@ extern "C" fn layer_should_inherit_contents_scale_from_window(
     _new_scale: CGFloat,
     _from_window: *mut Object,
 ) -> BOOL {
-    return YES;
+    YES
 }
 
+const CAML_DELEGATE_CLASS: &str = "GfxManagedMetalLayerDelegate";
+static CAML_DELEGATE_REGISTER: Once = Once::new();
+
 #[derive(Debug)]
-struct GfxManagedMetalLayerDelegate(*mut Object);
+struct GfxManagedMetalLayerDelegate(&'static Class);
 
 impl GfxManagedMetalLayerDelegate {
     pub fn new() -> Self {
-        unsafe {
-            let mut delegate: *mut Object =
-                msg_send![*GFX_MANAGED_METAL_LAYER_DELEGATE_CLASS, alloc];
-            delegate = msg_send![delegate, init];
-            Self(delegate)
-        }
+        CAML_DELEGATE_REGISTER.call_once(|| {
+            type Fun = extern "C" fn(&Object, Sel, *mut Object, CGFloat, *mut Object) -> BOOL;
+            let mut decl = ClassDecl::new(CAML_DELEGATE_CLASS, class!(NSObject)).unwrap();
+            unsafe {
+                decl.add_method(
+                    sel!(layer:shouldInheritContentsScale:fromWindow:),
+                    layer_should_inherit_contents_scale_from_window as Fun,
+                );
+            }
+            decl.register();
+        });
+        GfxManagedMetalLayerDelegate(Class::get(CAML_DELEGATE_CLASS).unwrap())
     }
 }
-
-impl Drop for GfxManagedMetalLayerDelegate {
-    fn drop(&mut self) {
-        unsafe {
-            let () = msg_send![self.0, release];
-        }
-    }
-}
-
-unsafe impl Send for GfxManagedMetalLayerDelegate {}
-unsafe impl Sync for GfxManagedMetalLayerDelegate {}
 
 impl Instance {
     #[cfg(target_os = "ios")]
@@ -361,11 +351,11 @@ impl Instance {
         let class = class!(CAMetalLayer);
         let is_valid_layer: BOOL = msg_send![main_layer, isKindOfClass: class];
         let render_layer = if is_valid_layer == YES {
-            mem::transmute::<_, &CoreAnimationLayerRef>(main_layer).to_owned()
+            mem::transmute::<_, &MetalLayerRef>(main_layer).to_owned()
         } else {
             // If the main layer is not a CAMetalLayer, we create a CAMetalLayer sublayer and use it instead.
             // Unlike on macOS, we cannot replace the main view as UIView does not allow it (when NSView does).
-            let new_layer: CoreAnimationLayer = msg_send![class, new];
+            let new_layer: MetalLayer = msg_send![class, new];
             let bounds: CGRect = msg_send![main_layer, bounds];
             let () = msg_send![new_layer.as_ref(), setFrame: bounds];
             let () = msg_send![main_layer, addSublayer: new_layer.as_ref()];
@@ -407,10 +397,10 @@ impl Instance {
             result == YES
         };
 
-        let render_layer: CoreAnimationLayer = if use_current {
-            mem::transmute::<_, &CoreAnimationLayerRef>(existing).to_owned()
+        let render_layer: MetalLayer = if use_current {
+            mem::transmute::<_, &MetalLayerRef>(existing).to_owned()
         } else {
-            let layer: CoreAnimationLayer = msg_send![class, new];
+            let layer: MetalLayer = msg_send![class, new];
             let () = msg_send![view, setLayer: layer.as_ref()];
             let () = msg_send![view, setWantsLayer: YES];
             let bounds: CGRect = msg_send![view, bounds];
@@ -429,14 +419,14 @@ impl Instance {
         Surface::new(NonNull::new(view), render_layer)
     }
 
-    unsafe fn create_from_layer(&self, layer: &CoreAnimationLayerRef) -> Surface {
+    unsafe fn create_from_layer(&self, layer: &MetalLayerRef) -> Surface {
         let class = class!(CAMetalLayer);
         let proper_kind: BOOL = msg_send![layer, isKindOfClass: class];
         assert_eq!(proper_kind, YES);
         Surface::new(None, layer.to_owned())
     }
 
-    pub fn create_surface_from_layer(&self, layer: &CoreAnimationLayerRef) -> Surface {
+    pub fn create_surface_from_layer(&self, layer: &MetalLayerRef) -> Surface {
         unsafe { self.create_from_layer(layer) }
     }
 
@@ -460,7 +450,7 @@ impl hal::Backend for Backend {
     type Surface = Surface;
 
     type QueueFamily = QueueFamily;
-    type CommandQueue = command::CommandQueue;
+    type Queue = command::Queue;
     type CommandBuffer = command::CommandBuffer;
 
     type Memory = native::Memory;
@@ -680,6 +670,7 @@ struct PrivateCapabilities {
     os_version: (u32, u32),
     msl_version: metal::MTLLanguageVersion,
     exposed_queues: usize,
+    read_write_texture_tier: metal::MTLReadWriteTextureTier,
     // if TRUE, we'll report `NON_FILL_POLYGON_MODE` feature without the points support
     expose_line_mode: bool,
     resource_heaps: bool,
@@ -785,10 +776,10 @@ impl PrivateCapabilities {
         let os_is_mac = device.supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v1);
 
         let mut sample_count_mask: u8 = 1 | 4; // 1 and 4 samples are supported on all devices
-        if device.supports_sample_count(2) {
+        if device.supports_texture_sample_count(2) {
             sample_count_mask |= 2;
         }
-        if device.supports_sample_count(8) {
+        if device.supports_texture_sample_count(8) {
             sample_count_mask |= 8;
         }
 
@@ -823,6 +814,7 @@ impl PrivateCapabilities {
                 MTLLanguageVersion::V1_0
             },
             exposed_queues: 1,
+            read_write_texture_tier: device.read_write_texture_support(),
             expose_line_mode: true,
             resource_heaps: Self::supports_any(&device, RESOURCE_HEAP_SUPPORT),
             argument_buffers: experiments.argument_buffers

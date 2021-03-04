@@ -1,47 +1,41 @@
 use crate::{
-    Binding, BuiltIn, Expression, GlobalVariable, Handle, ScalarKind, ShaderStage, StorageAccess,
-    StorageClass, Type, TypeInner, VectorSize,
+    Binding, BuiltIn, Expression, GlobalVariable, Handle, ScalarKind, StorageAccess, StorageClass,
+    Type, TypeInner, VectorSize,
 };
 
 use super::ast::*;
 use super::error::ErrorKind;
 use super::token::TokenMetadata;
 
-impl Program {
+impl Program<'_> {
     pub fn lookup_variable(&mut self, name: &str) -> Result<Option<Handle<Expression>>, ErrorKind> {
-        let mut expression: Option<Handle<Expression>> = None;
+        if let Some(local_var) = self.context.lookup_local_var(name) {
+            return Ok(Some(local_var));
+        }
+        if let Some(global_var) = self.context.lookup_global_var_exps.get(name) {
+            return Ok(Some(*global_var));
+        }
+        if let Some(constant) = self.context.lookup_constant_exps.get(name) {
+            return Ok(Some(*constant));
+        }
         match name {
             "gl_Position" => {
-                #[cfg(feature = "glsl-validate")]
-                match self.shader_stage {
-                    ShaderStage::Vertex | ShaderStage::Fragment { .. } => {}
-                    _ => {
-                        return Err(ErrorKind::VariableNotAvailable(name.into()));
-                    }
-                };
-                let h = self
-                    .module
-                    .global_variables
-                    .fetch_or_append(GlobalVariable {
-                        name: Some(name.into()),
-                        class: if self.shader_stage == ShaderStage::Vertex {
-                            StorageClass::Output
-                        } else {
-                            StorageClass::Input
+                let h = self.module.global_variables.append(GlobalVariable {
+                    name: Some(name.into()),
+                    class: StorageClass::Output,
+                    binding: Some(Binding::BuiltIn(BuiltIn::Position)),
+                    ty: self.module.types.fetch_or_append(Type {
+                        name: None,
+                        inner: TypeInner::Vector {
+                            size: VectorSize::Quad,
+                            kind: ScalarKind::Float,
+                            width: 4,
                         },
-                        binding: Some(Binding::BuiltIn(BuiltIn::Position)),
-                        ty: self.module.types.fetch_or_append(Type {
-                            name: None,
-                            inner: TypeInner::Vector {
-                                size: VectorSize::Quad,
-                                kind: ScalarKind::Float,
-                                width: 4,
-                            },
-                        }),
-                        init: None,
-                        interpolation: None,
-                        storage_access: StorageAccess::empty(),
-                    });
+                    }),
+                    init: None,
+                    interpolation: None,
+                    storage_access: StorageAccess::empty(),
+                });
                 self.lookup_global_variables.insert(name.into(), h);
                 let exp = self
                     .context
@@ -49,54 +43,73 @@ impl Program {
                     .append(Expression::GlobalVariable(h));
                 self.context.lookup_global_var_exps.insert(name.into(), exp);
 
-                expression = Some(exp);
+                Ok(Some(exp))
             }
             "gl_VertexIndex" => {
-                #[cfg(feature = "glsl-validate")]
-                match self.shader_stage {
-                    ShaderStage::Vertex => {}
-                    _ => {
-                        return Err(ErrorKind::VariableNotAvailable(name.into()));
-                    }
-                };
-                let h = self
-                    .module
-                    .global_variables
-                    .fetch_or_append(GlobalVariable {
-                        name: Some(name.into()),
-                        class: StorageClass::Input,
-                        binding: Some(Binding::BuiltIn(BuiltIn::VertexIndex)),
-                        ty: self.module.types.fetch_or_append(Type {
-                            name: None,
-                            inner: TypeInner::Scalar {
-                                kind: ScalarKind::Uint,
-                                width: 4,
-                            },
-                        }),
-                        init: None,
-                        interpolation: None,
-                        storage_access: StorageAccess::empty(),
-                    });
+                let h = self.module.global_variables.append(GlobalVariable {
+                    name: Some(name.into()),
+                    class: StorageClass::Input,
+                    binding: Some(Binding::BuiltIn(BuiltIn::VertexIndex)),
+                    ty: self.module.types.fetch_or_append(Type {
+                        name: None,
+                        inner: TypeInner::Scalar {
+                            kind: ScalarKind::Uint,
+                            width: 4,
+                        },
+                    }),
+                    init: None,
+                    interpolation: None,
+                    storage_access: StorageAccess::empty(),
+                });
                 self.lookup_global_variables.insert(name.into(), h);
-                let exp = self
+                let mut expr = self
                     .context
                     .expressions
                     .append(Expression::GlobalVariable(h));
-                self.context.lookup_global_var_exps.insert(name.into(), exp);
+                expr = self.context.expressions.append(Expression::As {
+                    expr,
+                    kind: ScalarKind::Sint,
+                    convert: true,
+                });
+                self.context
+                    .lookup_global_var_exps
+                    .insert(name.into(), expr);
 
-                expression = Some(exp);
+                Ok(Some(expr))
             }
-            _ => {}
-        }
+            "gl_InstanceIndex" => {
+                let h = self.module.global_variables.append(GlobalVariable {
+                    name: Some(name.into()),
+                    class: StorageClass::Input,
+                    binding: Some(Binding::BuiltIn(BuiltIn::InstanceIndex)),
+                    ty: self.module.types.fetch_or_append(Type {
+                        name: None,
+                        inner: TypeInner::Scalar {
+                            kind: ScalarKind::Uint,
+                            width: 4,
+                        },
+                    }),
+                    init: None,
+                    interpolation: None,
+                    storage_access: StorageAccess::empty(),
+                });
+                self.lookup_global_variables.insert(name.into(), h);
+                let mut expr = self
+                    .context
+                    .expressions
+                    .append(Expression::GlobalVariable(h));
+                expr = self.context.expressions.append(Expression::As {
+                    expr,
+                    kind: ScalarKind::Sint,
+                    convert: true,
+                });
+                self.context
+                    .lookup_global_var_exps
+                    .insert(name.into(), expr);
 
-        if let Some(expression) = expression {
-            Ok(Some(expression))
-        } else if let Some(local_var) = self.context.lookup_local_var(name) {
-            Ok(Some(local_var))
-        } else if let Some(global_var) = self.context.lookup_global_var_exps.get(name) {
-            Ok(Some(*global_var))
-        } else {
-            Ok(None)
+                Ok(Some(expr))
+            }
+            _ => Ok(None),
         }
     }
 
@@ -107,7 +120,10 @@ impl Program {
         meta: TokenMetadata,
     ) -> Result<Handle<Expression>, ErrorKind> {
         match *self.resolve_type(expression)? {
-            TypeInner::Struct { ref members } => {
+            TypeInner::Struct {
+                block: _,
+                ref members,
+            } => {
                 let index = members
                     .iter()
                     .position(|m| m.name == Some(name.into()))
@@ -166,7 +182,11 @@ impl Program {
                                         4 => VectorSize::Quad,
                                         _ => {
                                             return Err(ErrorKind::SemanticError(
-                                                "Bad swizzle size",
+                                                format!(
+                                                    "Bad swizzle size for \"{:?}\": {:?}",
+                                                    name, v
+                                                )
+                                                .into(),
                                             ));
                                         }
                                     },
@@ -176,10 +196,14 @@ impl Program {
                         }))
                     }
                 } else {
-                    Err(ErrorKind::SemanticError("Invalid swizzle for vector"))
+                    Err(ErrorKind::SemanticError(
+                        format!("Invalid swizzle for vector \"{}\"", name).into(),
+                    ))
                 }
             }
-            _ => Err(ErrorKind::SemanticError("Can't lookup field on this type")),
+            _ => Err(ErrorKind::SemanticError(
+                format!("Can't lookup field on this type \"{}\"", name).into(),
+            )),
         }
     }
 }

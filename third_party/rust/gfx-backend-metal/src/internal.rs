@@ -1,6 +1,5 @@
-use crate::{conversions as conv, PrivateCapabilities, MAX_COLOR_ATTACHMENTS};
+use crate::{conversions as conv, FastHashMap, PrivateCapabilities, MAX_COLOR_ATTACHMENTS};
 
-use auxil::FastHashMap;
 use hal::{
     command::ClearColor,
     format::{Aspects, ChannelType},

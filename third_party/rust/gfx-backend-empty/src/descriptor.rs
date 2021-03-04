@@ -6,7 +6,7 @@ use log::debug;
 pub struct DescriptorPool;
 
 impl pso::DescriptorPool<crate::Backend> for DescriptorPool {
-    unsafe fn allocate_set(
+    unsafe fn allocate_one(
         &mut self,
         _layout: &DescriptorSetLayout,
     ) -> Result<DescriptorSet, pso::AllocationError> {
@@ -17,7 +17,7 @@ impl pso::DescriptorPool<crate::Backend> for DescriptorPool {
 
     unsafe fn free<I>(&mut self, descriptor_sets: I)
     where
-        I: IntoIterator<Item = DescriptorSet>,
+        I: Iterator<Item = DescriptorSet>,
     {
         for _ in descriptor_sets {
             // Let the descriptor set drop

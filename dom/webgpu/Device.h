@@ -105,7 +105,7 @@ class Device final : public DOMEventTargetHelper {
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
 
-  Queue* DefaultQueue() const;
+  const RefPtr<Queue>& GetQueue() const;
 
   already_AddRefed<Buffer> CreateBuffer(const dom::GPUBufferDescriptor& aDesc,
                                         ErrorResult& aRv);
@@ -126,11 +126,13 @@ class Device final : public DOMEventTargetHelper {
       const dom::GPUBindGroupDescriptor& aDesc);
 
   already_AddRefed<ShaderModule> CreateShaderModule(
-      const dom::GPUShaderModuleDescriptor& aDesc);
+      JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc);
   already_AddRefed<ComputePipeline> CreateComputePipeline(
       const dom::GPUComputePipelineDescriptor& aDesc);
   already_AddRefed<RenderPipeline> CreateRenderPipeline(
       const dom::GPURenderPipelineDescriptor& aDesc);
+
+  void Destroy();
 
   IMPL_EVENT_HANDLER(uncapturederror)
 };

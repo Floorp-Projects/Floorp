@@ -1,6 +1,7 @@
 use super::ModuleState;
 use crate::arena::Handle;
 
+//TODO: use `thiserror`
 #[derive(Debug)]
 pub enum Error {
     InvalidHeader,
@@ -22,6 +23,8 @@ pub enum Error {
     UnsupportedBuiltIn(spirv::Word),
     UnsupportedControlFlow(spirv::Word),
     UnsupportedBinaryOperator(spirv::Word),
+    UnknownBinaryOperator(spirv::Op),
+    UnknownRelationalFunction(spirv::Op),
     InvalidParameter(spirv::Op),
     InvalidOperandCount(spirv::Op, u16),
     InvalidOperand,
@@ -33,18 +36,16 @@ pub enum Error {
     InvalidVectorSize(spirv::Word),
     InvalidVariableClass(spirv::StorageClass),
     InvalidAccessType(spirv::Word),
-    InvalidAccess(Handle<crate::Expression>),
+    InvalidAccess(crate::Expression),
     InvalidAccessIndex(spirv::Word),
     InvalidBinding(spirv::Word),
-    InvalidImageExpression(Handle<crate::Expression>),
+    InvalidGlobalVar(crate::Expression),
     InvalidImageBaseType(Handle<crate::Type>),
-    InvalidSamplerExpression(Handle<crate::Expression>),
-    InvalidSampleImage(Handle<crate::Type>),
-    InvalidSampleSampler(Handle<crate::Type>),
-    InvalidSampleCoordinates(Handle<crate::Type>),
+    InvalidImage(Handle<crate::Type>),
     InvalidDepthReference(Handle<crate::Type>),
     InvalidAsType(Handle<crate::Type>),
-    InconsistentComparisonSampling(Handle<crate::Type>),
+    InvalidVectorType(Handle<crate::Type>),
+    InconsistentComparisonSampling(Handle<crate::GlobalVariable>),
     WrongFunctionResultType(spirv::Word),
     WrongFunctionArgumentType(spirv::Word),
     MissingDecoration(spirv::Decoration),
@@ -52,5 +53,7 @@ pub enum Error {
     IncompleteData,
     InvalidTerminator,
     InvalidEdgeClassification,
-    UnexpectedComparisonType(Handle<crate::Type>),
+    // incomplete implementation error
+    UnsupportedRowMajorMatrix,
+    UnsupportedMatrixStride(spirv::Word),
 }

@@ -13,13 +13,13 @@ use {
 
 bitflags::bitflags! {
     /// Flags to augment descriptor set allocation.
-    pub struct DescriptorSetLayoutCreateFlags: u8 {
+    pub struct DescriptorSetLayoutCreateFlags: u32 {
         /// Specified that descriptor set must be allocated from\
         /// pool with `DescriptorPoolCreateFlags::UPDATE_AFTER_BIND`.
         ///
         /// This flag must be specified when and only when layout was created with matching backend-specific flag,
         /// that allows layout to have UpdateAfterBind bindings.
-        const UPDATE_AFTER_BIND = 0x1;
+        const UPDATE_AFTER_BIND = 0x2;
     }
 }
 
@@ -114,15 +114,18 @@ struct DescriptorBucket<P> {
 
 impl<P> Drop for DescriptorBucket<P> {
     fn drop(&mut self) {
-        assert_eq!(
-            self.total, 0,
-            "Allocator dropped before all sets were deallocated"
-        );
+        #[cfg(feature = "std")]
+        if !std::thread::panicking() {
+            assert_eq!(
+                self.total, 0,
+                "Allocator dropped before all sets were deallocated"
+            );
 
-        assert!(
-            self.pools.is_empty(),
-            "All sets deallocated but pools were not. Make sure to call `Allocator::cleanup`"
-        );
+            assert!(
+                self.pools.is_empty(),
+                "All sets deallocated but pools were not. Make sure to call `Allocator::cleanup`"
+            );
+        }
     }
 }
 
@@ -179,7 +182,7 @@ impl<P> DescriptorBucket<P> {
         (size, max_sets)
     }
 
-    fn allocate<L, S>(
+    unsafe fn allocate<L, S>(
         &mut self,
         device: &impl DescriptorDevice<L, P, S>,
         layout: &L,
@@ -202,18 +205,18 @@ impl<P> DescriptorBucket<P> {
             #[cfg(feature = "tracing")]
             tracing::trace!("Allocate `{}` sets from exising pool", allocate);
 
-            match unsafe {
-                device.alloc_descriptor_sets(
-                    &mut pool.raw,
-                    core::iter::repeat(layout).take(allocate as usize),
-                    &mut Allocation {
-                        size: self.size,
-                        update_after_bind: self.update_after_bind,
-                        pool_id: index as u64 + self.offset,
-                        sets: allocated_sets,
-                    },
-                )
-            } {
+            let result = device.alloc_descriptor_sets(
+                &mut pool.raw,
+                (0..allocate).map(|_| layout),
+                &mut Allocation {
+                    size: self.size,
+                    update_after_bind: self.update_after_bind,
+                    pool_id: index as u64 + self.offset,
+                    sets: allocated_sets,
+                },
+            );
+
+            match result {
                 Ok(()) => {}
                 Err(DeviceAllocationError::OutOfDeviceMemory) => {
                     return Err(AllocationError::OutOfDeviceMemory)
@@ -253,39 +256,35 @@ impl<P> DescriptorBucket<P> {
                 pool_size,
             );
 
-            let mut raw = unsafe {
-                device.create_descriptor_pool(
-                    &pool_size,
-                    max_sets,
-                    if self.update_after_bind {
-                        DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET
-                            | DescriptorPoolCreateFlags::UPDATE_AFTER_BIND
-                    } else {
-                        DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET
-                    },
-                )
-            }?;
+            let mut raw = device.create_descriptor_pool(
+                &pool_size,
+                max_sets,
+                if self.update_after_bind {
+                    DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET
+                        | DescriptorPoolCreateFlags::UPDATE_AFTER_BIND
+                } else {
+                    DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET
+                },
+            )?;
 
             let pool_id = self.pools.len() as u64 + self.offset;
 
             let allocate = max_sets.min(count);
-            let result = unsafe {
-                device.alloc_descriptor_sets(
-                    &mut raw,
-                    core::iter::repeat(layout).take(allocate as usize),
-                    &mut Allocation {
-                        pool_id,
-                        size: self.size,
-                        update_after_bind: self.update_after_bind,
-                        sets: allocated_sets,
-                    },
-                )
-            };
+            let result = device.alloc_descriptor_sets(
+                &mut raw,
+                (0..allocate).map(|_| layout),
+                &mut Allocation {
+                    pool_id,
+                    size: self.size,
+                    update_after_bind: self.update_after_bind,
+                    sets: allocated_sets,
+                },
+            );
 
             match result {
                 Ok(()) => {}
                 Err(err) => {
-                    unsafe { device.destroy_descriptor_pool(raw) }
+                    device.destroy_descriptor_pool(raw);
                     match err {
                         DeviceAllocationError::OutOfDeviceMemory => {
                             return Err(AllocationError::OutOfDeviceMemory)
@@ -316,7 +315,7 @@ impl<P> DescriptorBucket<P> {
         Ok(())
     }
 
-    fn free<L, S>(
+    unsafe fn free<L, S>(
         &mut self,
         device: &impl DescriptorDevice<L, P, S>,
         raw_sets: impl IntoIterator<Item = S>,
@@ -329,10 +328,7 @@ impl<P> DescriptorBucket<P> {
 
         let mut raw_sets = raw_sets.into_iter();
         let mut count = 0;
-        unsafe {
-            device
-                .dealloc_descriptor_sets(&mut pool.raw, raw_sets.by_ref().inspect(|_| count += 1));
-        };
+        device.dealloc_descriptor_sets(&mut pool.raw, raw_sets.by_ref().inspect(|_| count += 1));
 
         debug_assert!(
             raw_sets.next().is_none(),
@@ -354,12 +350,12 @@ impl<P> DescriptorBucket<P> {
             #[cfg(feature = "tracing")]
             tracing::trace!("Destroying old descriptor pool");
 
-            unsafe { device.destroy_descriptor_pool(pool.raw) };
+            device.destroy_descriptor_pool(pool.raw);
             self.offset += 1;
         }
     }
 
-    fn cleanup<L, S>(&mut self, device: &impl DescriptorDevice<L, P, S>) {
+    unsafe fn cleanup<L, S>(&mut self, device: &impl DescriptorDevice<L, P, S>) {
         while let Some(pool) = self.pools.pop_front() {
             if pool.allocated != 0 {
                 self.pools.push_front(pool);
@@ -369,7 +365,7 @@ impl<P> DescriptorBucket<P> {
             #[cfg(feature = "tracing")]
             tracing::trace!("Destroying old descriptor pool");
 
-            unsafe { device.destroy_descriptor_pool(pool.raw) };
+            device.destroy_descriptor_pool(pool.raw);
             self.offset += 1;
         }
     }
@@ -388,7 +384,7 @@ pub struct DescriptorAllocator<P, S> {
 
 impl<P, S> Drop for DescriptorAllocator<P, S> {
     fn drop(&mut self) {
-        if !self.buckets.is_empty() {
+        if self.buckets.drain().any(|(_, bucket)| bucket.total != 0) {
             #[cfg(feature = "tracing")]
             tracing::error!(
                 "`DescriptorAllocator` is dropped while some descriptor sets were not deallocated"
@@ -399,10 +395,7 @@ impl<P, S> Drop for DescriptorAllocator<P, S> {
 
 impl<P, S> DescriptorAllocator<P, S> {
     /// Create new allocator instance.
-    ///
-    /// # Safety
-    /// All later operations assume the device is not lost.
-    pub unsafe fn new(max_update_after_bind_descriptors_in_all_pools: u32) -> Self {
+    pub fn new(max_update_after_bind_descriptors_in_all_pools: u32) -> Self {
         DescriptorAllocator {
             buckets: HashMap::default(),
             total: 0,
@@ -413,12 +406,14 @@ impl<P, S> DescriptorAllocator<P, S> {
     }
 
     /// Allocate descriptor set with specified layout.
-    /// `DescriptorTotalCount` must match descriptor numbers of the layout.
-    /// `DescriptorTotalCount` can be constructed [from bindings] that were used
-    /// to create layout instance.
     ///
-    /// [from bindings]: .
-    pub fn allocate<L: Debug>(
+    /// # Safety
+    ///
+    /// * Same `device` instance must be passed to all method calls of
+    /// one `DescriptorAllocator` instance.
+    /// * `flags` must match flags that were used to create the layout.
+    /// * `layout_descriptor_count` must match descriptor numbers in the layout.
+    pub unsafe fn allocate<L: Debug>(
         &mut self,
         device: &impl DescriptorDevice<L, P, S>,
         layout: &L,
@@ -445,7 +440,7 @@ impl<P, S> DescriptorAllocator<P, S> {
 
         let bucket = self
             .buckets
-            .entry((layout_descriptor_count.clone(), update_after_bind))
+            .entry((*layout_descriptor_count, update_after_bind))
             .or_insert_with(|| DescriptorBucket::new(update_after_bind, *layout_descriptor_count));
         match bucket.allocate(device, layout, count, &mut self.sets_cache) {
             Ok(()) => Ok(core::mem::replace(&mut self.sets_cache, Vec::new())),
@@ -479,8 +474,10 @@ impl<P, S> DescriptorAllocator<P, S> {
     ///
     /// # Safety
     ///
-    /// None of descriptor sets can be referenced in any pending command buffers.
-    /// All command buffers where at least one of descriptor sets referenced
+    /// * Same `device` instance must be passed to all method calls of
+    ///   one `DescriptorAllocator` instance.
+    /// * None of descriptor sets can be referenced in any pending command buffers.
+    /// * All command buffers where at least one of descriptor sets referenced
     /// move to invalid state.
     pub unsafe fn free<L>(
         &mut self,
@@ -527,10 +524,16 @@ impl<P, S> DescriptorAllocator<P, S> {
     }
 
     /// Perform cleanup to allow resources reuse.
-    pub fn cleanup<L>(&mut self, device: &impl DescriptorDevice<L, P, S>) {
+    ///
+    /// # Safety
+    ///
+    /// * Same `device` instance must be passed to all method calls of
+    /// one `DescriptorAllocator` instance.
+    pub unsafe fn cleanup<L>(&mut self, device: &impl DescriptorDevice<L, P, S>) {
         for bucket in self.buckets.values_mut() {
             bucket.cleanup(device)
         }
+        self.buckets.retain(|_, bucket| !bucket.pools.is_empty());
     }
 }
 

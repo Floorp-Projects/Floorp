@@ -222,7 +222,7 @@ SPIRV_Cross_Output main()
     stage_output.gl_Position = gl_Position;
     return stage_output;
 }
-"
+",
         ),
         (
             Some((String::from("main_vs"), spirv::ExecutionModel::Vertex)),
@@ -249,7 +249,7 @@ SPIRV_Cross_Output main()
     stage_output.gl_Position = gl_Position;
     return stage_output;
 }
-"
+",
         ),
         (
             Some((String::from("main_fs"), spirv::ExecutionModel::Fragment)),
@@ -273,8 +273,8 @@ SPIRV_Cross_Output main()
     stage_output.color = float4(color);
     return stage_output;
 }
-"
-        )
+",
+        ),
     ];
 
     for (entry_point, expected_result) in cases.drain(..) {

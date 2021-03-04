@@ -4,6 +4,12 @@
 //!
 //! To improve performance and reduce memory usage, most structures are stored
 //! in an [`Arena`], and can be retrieved using the corresponding [`Handle`].
+#![warn(
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_qualifications
+)]
 #![allow(
     clippy::new_without_default,
     clippy::unneeded_field_pattern,
@@ -35,21 +41,6 @@ use serde::Serialize;
 pub type FastHashMap<K, T> = HashMap<K, T, BuildHasherDefault<fxhash::FxHasher>>;
 /// Hash set that is faster but not resilient to DoS attacks.
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<fxhash::FxHasher>>;
-
-/// Metadata for a given module.
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub struct Header {
-    /// Major, minor and patch version.
-    ///
-    /// Currently used only for the SPIR-V back end.
-    pub version: (u8, u8, u8),
-    /// Magic number identifying the tool that generated the shader code.
-    ///
-    /// Can safely be set to 0.
-    pub generator: u32,
-}
 
 /// Early fragment tests. In a standard situation if a driver determines that it is possible to
 /// switch on early depth test it will. Typical situations when early depth test is switched off:
@@ -140,19 +131,22 @@ pub enum BuiltIn {
     BaseVertex,
     ClipDistance,
     InstanceIndex,
+    PointSize,
     Position,
     VertexIndex,
     // fragment
-    PointSize,
     FragCoord,
+    FragDepth,
     FrontFacing,
     SampleIndex,
-    FragDepth,
+    SampleMaskIn,
+    SampleMaskOut,
     // compute
     GlobalInvocationId,
     LocalInvocationId,
     LocalInvocationIndex,
     WorkGroupId,
+    WorkGroupSize,
 }
 
 /// Number of bytes.
@@ -200,19 +194,6 @@ pub enum ArraySize {
     Dynamic,
 }
 
-/// Describes where a struct member is placed.
-#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub enum MemberOrigin {
-    /// Member is local to the shader.
-    Empty,
-    /// Built-in shader variable.
-    BuiltIn(BuiltIn),
-    /// Offset within the struct.
-    Offset(u32),
-}
-
 /// The interpolation qualifier of a binding or struct field.
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
@@ -244,7 +225,7 @@ pub enum Interpolation {
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct StructMember {
     pub name: Option<String>,
-    pub origin: MemberOrigin,
+    pub span: Option<NonZeroU32>,
     pub ty: Handle<Type>,
 }
 
@@ -267,6 +248,7 @@ bitflags::bitflags! {
     /// Flags describing an image.
     #[cfg_attr(feature = "serialize", derive(Serialize))]
     #[cfg_attr(feature = "deserialize", derive(Deserialize))]
+    #[derive(Default)]
     pub struct StorageAccess: u32 {
         /// Storage can be used as a source for load ops.
         const LOAD = 0x1;
@@ -385,7 +367,10 @@ pub enum TypeInner {
         stride: Option<NonZeroU32>,
     },
     /// User-defined structure.
-    Struct { members: Vec<StructMember> },
+    Struct {
+        block: bool,
+        members: Vec<StructMember>,
+    },
     /// Possibly multidimensional array of texels.
     Image {
         dim: ImageDimension,
@@ -404,19 +389,32 @@ pub struct Constant {
     pub name: Option<String>,
     pub specialization: Option<u32>,
     pub inner: ConstantInner,
-    pub ty: Handle<Type>,
 }
 
-/// Additional information, dependendent on the kind of constant.
-#[derive(Debug, PartialEq)]
+/// A literal scalar value, used in constants.
+#[derive(Debug, PartialEq, Clone, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub enum ConstantInner {
+pub enum ScalarValue {
     Sint(i64),
     Uint(u64),
     Float(f64),
     Bool(bool),
-    Composite(Vec<Handle<Constant>>),
+}
+
+/// Additional information, dependent on the kind of constant.
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub enum ConstantInner {
+    Scalar {
+        width: Bytes,
+        value: ScalarValue,
+    },
+    Composite {
+        ty: Handle<Type>,
+        components: Vec<Handle<Constant>>,
+    },
 }
 
 /// Describes how an input/output variable is to be bound.
@@ -430,18 +428,6 @@ pub enum Binding {
     Location(u32),
     /// Binding within a resource group.
     Resource { group: u32, binding: u32 },
-}
-
-bitflags::bitflags! {
-    /// Indicates how a global variable is used.
-    #[cfg_attr(feature = "serialize", derive(Serialize))]
-    #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-    pub struct GlobalUse: u8 {
-        /// Data will be read from the variable.
-        const LOAD = 0x1;
-        /// Data will be written to the variable.
-        const STORE = 0x2;
-    }
 }
 
 /// Variable defined at module level.
@@ -516,19 +502,6 @@ pub enum BinaryOperator {
     ShiftRight,
 }
 
-/// Built-in shader function.
-#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub enum IntrinsicFunction {
-    Any,
-    All,
-    IsNan,
-    IsInf,
-    IsFinite,
-    IsNormal,
-}
-
 /// Axis on which to compute a derivative.
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
@@ -539,17 +512,78 @@ pub enum DerivativeAxis {
     Width,
 }
 
-/// Origin of a function to call.
-#[derive(Clone, Debug, PartialEq)]
+/// Built-in shader function for testing relation between values.
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub enum FunctionOrigin {
-    Local(Handle<Function>),
-    // External {
-    //     namespace: String, // Maybe this should be a handle to a namespace Arena?
-    //     function: String,
-    // },
-    External(String),
+pub enum RelationalFunction {
+    All,
+    Any,
+    IsNan,
+    IsInf,
+    IsFinite,
+    IsNormal,
+}
+
+/// Built-in shader function for math.
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub enum MathFunction {
+    // comparison
+    Abs,
+    Min,
+    Max,
+    Clamp,
+    // trigonometry
+    Cos,
+    Cosh,
+    Sin,
+    Sinh,
+    Tan,
+    Tanh,
+    Acos,
+    Asin,
+    Atan,
+    Atan2,
+    // decomposition
+    Ceil,
+    Floor,
+    Round,
+    Fract,
+    Trunc,
+    Modf,
+    Frexp,
+    Ldexp,
+    // exponent
+    Exp,
+    Exp2,
+    Log,
+    Log2,
+    Pow,
+    // geometry
+    Dot,
+    Outer,
+    Cross,
+    Distance,
+    Length,
+    Normalize,
+    FaceForward,
+    Reflect,
+    // computational
+    Sign,
+    Fma,
+    Mix,
+    Step,
+    SmoothStep,
+    Sqrt,
+    InverseSqrt,
+    Inverse,
+    Transpose,
+    Determinant,
+    // bits
+    CountOneBits,
+    ReverseBits,
 }
 
 /// Sampling modifier to control the level of detail.
@@ -561,10 +595,35 @@ pub enum SampleLevel {
     Zero,
     Exact(Handle<Expression>),
     Bias(Handle<Expression>),
+    Gradient {
+        x: Handle<Expression>,
+        y: Handle<Expression>,
+    },
+}
+
+/// Type of an image query.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub enum ImageQuery {
+    /// Get the size at the specified level.
+    Size {
+        /// If `None`, the base level is considered.
+        level: Option<Handle<Expression>>,
+    },
+    /// Get the number of mipmap levels.
+    NumLevels,
+    /// Get the number of array layers.
+    NumLayers,
+    /// Get the number of samples.
+    NumSamples,
 }
 
 /// An expression that can be evaluated to obtain a value.
+///
+/// This is a Single Static Assignment (SSA) scheme similar to SPIR-V.
 #[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum Expression {
@@ -598,6 +657,8 @@ pub enum Expression {
         image: Handle<Expression>,
         sampler: Handle<Expression>,
         coordinate: Handle<Expression>,
+        array_index: Option<Handle<Expression>>,
+        offset: Option<Handle<Constant>>,
         level: SampleLevel,
         depth_ref: Option<Handle<Expression>>,
     },
@@ -605,10 +666,16 @@ pub enum Expression {
     ImageLoad {
         image: Handle<Expression>,
         coordinate: Handle<Expression>,
+        array_index: Option<Handle<Expression>>,
         /// For storage images, this is None.
         /// For sampled images, this is the Some(Level).
         /// For multisampled images, this is Some(Sample).
         index: Option<Handle<Expression>>,
+    },
+    /// Query information from an image.
+    ImageQuery {
+        image: Handle<Expression>,
+        query: ImageQuery,
     },
     /// Apply an unary operator.
     Unary {
@@ -628,17 +695,24 @@ pub enum Expression {
         accept: Handle<Expression>,
         reject: Handle<Expression>,
     },
-    /// Call an intrinsic function.
-    Intrinsic {
-        fun: IntrinsicFunction,
+    /// Compute the derivative on an axis.
+    Derivative {
+        axis: DerivativeAxis,
+        //modifier,
+        expr: Handle<Expression>,
+    },
+    /// Call a relational function.
+    Relational {
+        fun: RelationalFunction,
         argument: Handle<Expression>,
     },
-    /// Transpose of a matrix.
-    Transpose(Handle<Expression>),
-    /// Dot product between two vectors.
-    DotProduct(Handle<Expression>, Handle<Expression>),
-    /// Cross product between two vectors.
-    CrossProduct(Handle<Expression>, Handle<Expression>),
+    /// Call a math function
+    Math {
+        fun: MathFunction,
+        arg: Handle<Expression>,
+        arg1: Option<Handle<Expression>>,
+        arg2: Option<Handle<Expression>>,
+    },
     /// Cast a simply type to another kind.
     As {
         /// Source expression, which can only be a scalar or a vector.
@@ -648,15 +722,9 @@ pub enum Expression {
         /// True = conversion needs to take place; False = bitcast.
         convert: bool,
     },
-    /// Compute the derivative on an axis.
-    Derivative {
-        axis: DerivativeAxis,
-        //modifier,
-        expr: Handle<Expression>,
-    },
     /// Call another function.
     Call {
-        origin: FunctionOrigin,
+        function: Handle<Function>,
         arguments: Vec<Handle<Expression>>,
     },
     /// Get the length of an array.
@@ -666,12 +734,20 @@ pub enum Expression {
 /// A code block is just a vector of statements.
 pub type Block = Vec<Statement>;
 
-/// Marker type, used for falling through in a switch statement.
+/// A case for a switch statement.
 // Clone is used only for error reporting and is not intended for end users
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub struct FallThrough;
+pub struct SwitchCase {
+    /// Value, upon which the case is considered true.
+    pub value: i32,
+    /// Body of the cae.
+    pub body: Block,
+    /// If true, the control flow continues to the next case in the list,
+    /// or default.
+    pub fall_through: bool,
+}
 
 /// Instructions which make up an executable block.
 // Clone is used only for error reporting and is not intended for end users
@@ -690,7 +766,7 @@ pub enum Statement {
     /// Conditionally executes one of multiple blocks, based on the value of the selector.
     Switch {
         selector: Handle<Expression>, //int
-        cases: FastHashMap<i32, (Block, Option<FallThrough>)>,
+        cases: Vec<SwitchCase>,
         default: Block,
     },
     /// Executes a block repeatedly.
@@ -709,6 +785,18 @@ pub enum Statement {
         pointer: Handle<Expression>,
         value: Handle<Expression>,
     },
+    /// Stores a value to an image.
+    ImageStore {
+        image: Handle<Expression>,
+        coordinate: Handle<Expression>,
+        array_index: Option<Handle<Expression>>,
+        value: Handle<Expression>,
+    },
+    /// Calls a function with no return value.
+    Call {
+        function: Handle<Function>,
+        arguments: Vec<Handle<Expression>>,
+    },
 }
 
 /// A function argument.
@@ -723,7 +811,7 @@ pub struct FunctionArgument {
 }
 
 /// A function defined in the module.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct Function {
@@ -733,10 +821,6 @@ pub struct Function {
     pub arguments: Vec<FunctionArgument>,
     /// The return type of this function, if any.
     pub return_type: Option<Handle<Type>>,
-    /// Vector of global variable usages.
-    ///
-    /// Each item corresponds to a global variable in the module.
-    pub global_usage: Vec<GlobalUse>,
     /// Local variables defined and used in the function.
     pub local_variables: Arena<LocalVariable>,
     /// Expressions used inside this function.
@@ -765,16 +849,14 @@ pub struct EntryPoint {
 ///
 /// Some functions are marked as entry points, to be used in a certain shader stage.
 ///
-/// To create a new module, use [`Module::from_header`] or [`Module::generate_empty`].
+/// To create a new module, use the `Default` implementation.
 /// Alternatively, you can load an existing shader using one of the [available front ends][front].
 ///
 /// When finished, you can export modules using one of the [available back ends][back].
-#[derive(Debug)]
+#[derive(Debug, Default)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct Module {
-    /// Header containing module metadata.
-    pub header: Header,
     /// Storage for the types defined in this module.
     pub types: Arena<Type>,
     /// Storage for the constants defined in this module.

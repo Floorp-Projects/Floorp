@@ -52,7 +52,7 @@ Device::Device(Adapter* const aParent, RawId aId)
     : DOMEventTargetHelper(aParent->GetParentObject()),
       mId(aId),
       mBridge(aParent->mBridge),
-      mQueue(new Queue(this, aParent->mBridge, aId)) {
+      mQueue(new class Queue(this, aParent->mBridge, aId)) {
   mBridge->RegisterDevice(mId, this);
 }
 
@@ -68,7 +68,7 @@ void Device::Cleanup() {
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
 
-Queue* Device::DefaultQueue() const { return mQueue; }
+const RefPtr<Queue>& Device::GetQueue() const { return mQueue; }
 
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
@@ -98,14 +98,12 @@ already_AddRefed<Buffer> Device::CreateBuffer(
   // If the buffer is not mapped at creation, and it has Shmem, we send it
   // to the GPU process. Otherwise, we keep it.
   RawId id = mBridge->DeviceCreateBuffer(mId, aDesc);
-  if (hasMapFlags && !aDesc.mMappedAtCreation) {
-    mBridge->SendBufferReturnShmem(id, std::move(shmem));
-  }
   RefPtr<Buffer> buffer = new Buffer(this, id, aDesc.mSize);
-
   if (aDesc.mMappedAtCreation) {
     buffer->SetMapped(std::move(shmem),
                       !(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
+  } else if (hasMapFlags) {
+    mBridge->SendBufferReturnShmem(id, std::move(shmem));
   }
 
   return buffer.forget();
@@ -187,11 +185,8 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
 }
 
 already_AddRefed<ShaderModule> Device::CreateShaderModule(
-    const dom::GPUShaderModuleDescriptor& aDesc) {
-  if (aDesc.mCode.IsString()) {
-    // we don't yet support WGSL
-    return nullptr;
-  }
+    JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc) {
+  Unused << aCx;
   RawId id = mBridge->DeviceCreateShaderModule(mId, aDesc);
   RefPtr<ShaderModule> object = new ShaderModule(this, id);
   return object.forget();
@@ -238,6 +233,10 @@ already_AddRefed<Texture> Device::InitSwapChain(
   desc.mSampleCount = 1;
   desc.mUsage = aDesc.mUsage | dom::GPUTextureUsage_Binding::COPY_SRC;
   return CreateTexture(desc);
+}
+
+void Device::Destroy() {
+  // TODO
 }
 
 }  // namespace webgpu

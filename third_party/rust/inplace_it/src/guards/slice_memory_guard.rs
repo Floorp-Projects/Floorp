@@ -3,6 +3,7 @@ use core::{
     mem::{MaybeUninit, transmute},
     ptr::{drop_in_place, write},
 };
+use std::intrinsics::copy_nonoverlapping;
 
 /// Guard-struct used for correctly initialize uninitialized memory and `drop` it when guard goes out of scope.
 /// Usually, you *should not* use this struct to handle your memory.
@@ -50,6 +51,52 @@ impl<'a, T> SliceMemoryGuard<'a, T> {
         }
         SliceMemoryGuard { memory }
     }
+
+    /// Initialize memory guard using given iterator.
+    /// Automatically shrink's memory to given items' count.
+    /// `Ok(guard)` will be returned in this case.
+    ///
+    /// If items' count is too large to place in memory, moves it into new `Vec` and continue collecting into it.
+    /// `Err(vec)` will be returned in this case.
+    #[inline]
+    pub unsafe fn new_from_iter(memory: &'a mut [MaybeUninit<T>], mut iter: impl Iterator<Item=T>) -> Result<Self, Vec<T>> {
+        // Fulfilling placed memory
+        for (index, item) in memory.into_iter().enumerate() {
+            match iter.next() {
+                // While iterator returns new value, write it
+                Some(value) => {
+                    write(item.as_mut_ptr(), value);
+                }
+                // When it returns None then slicing memory and returning the guard
+                None => {
+                    return Ok(SliceMemoryGuard {
+                        memory: &mut memory[0..index],
+                    });
+                }
+            }
+        }
+
+        if let Some(next_item) = iter.next() {
+            // If iterator still contains values to return, collect it into the vector
+            let mut vec = Vec::<T>::with_capacity(
+                // We cannot trust the `size_hint` anymore
+                memory.len() + 1
+            );
+
+            // First, copying already fulfilled memory into the heap
+            vec.set_len(memory.len());
+            copy_nonoverlapping(memory.as_mut_ptr() as *mut T, vec.as_mut_ptr(), memory.len());
+
+            // Then, append it with the rest iterator's items
+            vec.push(next_item);
+            vec.extend(iter);
+
+            Err(vec)
+        } else {
+            // If iterator is done after fulfilling all available memory, just return the guard
+            Ok(SliceMemoryGuard { memory })
+        }
+    }
 }
 
 impl<'a, T> Deref for SliceMemoryGuard<'a, T> {
@@ -73,6 +120,34 @@ impl<'a, T> Drop for SliceMemoryGuard<'a, T> {
     fn drop(&mut self) {
         for item in self.memory.into_iter() {
             unsafe { drop_in_place(item.as_mut_ptr()); }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_from_iter_uses_exactly_same_count_that_collects() {
+        let mut memory: [MaybeUninit<usize>; 128] = unsafe { MaybeUninit::uninit().assume_init() };
+
+        // 0 and 128 cases should work also fine
+        for count in 0..128 {
+            let result = unsafe { SliceMemoryGuard::new_from_iter(&mut memory, 0..count) };
+            assert!(result.is_ok());
+            let guard = result.unwrap();
+            assert_eq!(guard.len(), count);
+            assert!(guard.iter().cloned().eq(0..count));
+        }
+
+        // cases when Vec should be returned
+        for count in [129, 200, 512].iter().cloned() {
+            let result = unsafe { SliceMemoryGuard::new_from_iter(&mut memory, 0..count) };
+            assert!(result.is_err());
+            let vec = result.err().unwrap();
+            assert_eq!(vec.len(), count);
+            assert_eq!(vec, (0..count).collect::<Vec<_>>());
         }
     }
 }

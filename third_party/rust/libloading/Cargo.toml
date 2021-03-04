@@ -12,14 +12,25 @@
 
 [package]
 name = "libloading"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Simonas Kazlauskas <libloading@kazlauskas.me>"]
-build = "build.rs"
 description = "A safer binding to platform’s dynamic library loading utilities"
 documentation = "https://docs.rs/libloading/"
+readme = "README.mkd"
 keywords = ["dlopen", "load", "shared", "dylib"]
+categories = ["api-bindings"]
 license = "ISC"
 repository = "https://github.com/nagisa/rust_libloading/"
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+[dev-dependencies.libc]
+version = "0.2"
+
+[dev-dependencies.static_assertions]
+version = "1.1"
+[target."cfg(unix)".dependencies.cfg-if]
+version = "1"
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3"
-features = ["winerror", "errhandlingapi", "libloaderapi"]
+features = ["errhandlingapi", "libloaderapi"]
