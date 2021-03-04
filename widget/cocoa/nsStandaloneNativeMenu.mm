@@ -40,14 +40,7 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
     return rv;
   }
 
-  mMenu = new nsMenuX();
-  rv = mMenu->Create(this, this, aElement);
-  if (NS_FAILED(rv)) {
-    delete mMenu;
-    mMenu = nullptr;
-    return rv;
-  }
-
+  mMenu = new nsMenuX(this, this, aElement);
   mMenu->SetupIcon();
 
   return NS_OK;
