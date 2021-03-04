@@ -3098,7 +3098,7 @@ static JSObject* CloneObject(JSContext* cx,
                                        : selfHostedFunction->getAllocKind();
 
       Handle<GlobalObject*> global = cx->global();
-      Rooted<LexicalEnvironmentObject*> globalLexical(
+      Rooted<GlobalLexicalEnvironmentObject*> globalLexical(
           cx, &global->lexicalEnvironment());
       RootedScope emptyGlobalScope(cx, &global->emptyGlobalScope());
       Rooted<ScriptSourceObject*> sourceObject(

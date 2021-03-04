@@ -127,8 +127,8 @@ static inline void AssertScopeMatchesEnvironment(Scope* scope,
           break;
 
         case ScopeKind::Global:
-          MOZ_ASSERT(env->as<LexicalEnvironmentObject>().isGlobal());
-          env = &env->as<LexicalEnvironmentObject>().enclosingEnvironment();
+          env =
+              &env->as<GlobalLexicalEnvironmentObject>().enclosingEnvironment();
           MOZ_ASSERT(env->is<GlobalObject>());
           break;
 
