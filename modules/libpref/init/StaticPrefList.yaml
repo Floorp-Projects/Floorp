@@ -3513,6 +3513,11 @@
   value: true
   mirror: always
 
+- name: dom.webidl.crosscontext_hasinstance.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 # WebShare API - exposes navigator.share()
 - name: dom.webshare.enabled
   type: bool
