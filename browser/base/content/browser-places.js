@@ -1918,7 +1918,7 @@ var BookmarkingUI = {
     this.updateEmptyToolbarMessage();
     this.star.addEventListener("mouseover", this, { once: true });
 
-    if (gProtonTabs) {
+    if (gProtonPlacesTooltip) {
       let bhTooltip = document.getElementById("bhTooltip");
       bhTooltip.setAttribute("position", "after_start");
     }

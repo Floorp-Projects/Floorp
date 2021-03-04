@@ -592,6 +592,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+/* Temporary pref while the dust settles around the updated tooltip design
+   for tabs and bookmarks toolbar. This will eventually be removed and
+   browser.proton.enabled will be used instead. */
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProtonPlacesTooltip",
+  "browser.proton.places-tooltip.enabled",
+  false
+);
+
 /* Import aboutWelcomeFeature from Nimbus Experiment API
    to access experiment values */
 XPCOMUtils.defineLazyGetter(this, "aboutWelcomeFeature", () => {
