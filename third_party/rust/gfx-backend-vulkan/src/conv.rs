@@ -10,9 +10,7 @@ use hal::{
     Features, IndexType,
 };
 
-use smallvec::SmallVec;
-
-use std::{borrow::Borrow, mem};
+use std::mem;
 
 pub fn map_format(format: format::Format) -> vk::Format {
     vk::Format::from_raw(format as i32)
@@ -377,15 +375,71 @@ pub fn map_query_result_flags(flags: query::ResultFlags) -> vk::QueryResultFlags
     vk::QueryResultFlags::from_raw(flags.bits() & vk::QueryResultFlags::all().as_raw())
 }
 
-pub fn map_image_features(features: vk::FormatFeatureFlags) -> format::ImageFeature {
-    format::ImageFeature::from_bits_truncate(features.as_raw())
+pub fn map_image_features(
+    features: vk::FormatFeatureFlags,
+    supports_transfer_bits: bool,
+) -> format::ImageFeature {
+    let mut mapped_flags = format::ImageFeature::empty();
+    if features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE) {
+        mapped_flags |= format::ImageFeature::SAMPLED;
+    }
+    if features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR) {
+        mapped_flags |= format::ImageFeature::SAMPLED_LINEAR;
+    }
+    if features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX) {
+        mapped_flags |= format::ImageFeature::SAMPLED_MINMAX;
+    }
+
+    if features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE) {
+        mapped_flags |= format::ImageFeature::STORAGE;
+        mapped_flags |= format::ImageFeature::STORAGE_READ_WRITE;
+    }
+    if features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE_ATOMIC) {
+        mapped_flags |= format::ImageFeature::STORAGE_ATOMIC;
+    }
+
+    if features.contains(vk::FormatFeatureFlags::COLOR_ATTACHMENT) {
+        mapped_flags |= format::ImageFeature::COLOR_ATTACHMENT;
+    }
+    if features.contains(vk::FormatFeatureFlags::COLOR_ATTACHMENT_BLEND) {
+        mapped_flags |= format::ImageFeature::COLOR_ATTACHMENT_BLEND;
+    }
+    if features.contains(vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT) {
+        mapped_flags |= format::ImageFeature::DEPTH_STENCIL_ATTACHMENT;
+    }
+
+    if features.contains(vk::FormatFeatureFlags::BLIT_SRC) {
+        mapped_flags |= format::ImageFeature::BLIT_SRC;
+        if !supports_transfer_bits {
+            mapped_flags |= format::ImageFeature::TRANSFER_SRC;
+        }
+    }
+    if features.contains(vk::FormatFeatureFlags::BLIT_DST) {
+        mapped_flags |= format::ImageFeature::BLIT_DST;
+        if !supports_transfer_bits {
+            mapped_flags |= format::ImageFeature::TRANSFER_DST;
+        }
+    }
+    if supports_transfer_bits {
+        if features.contains(vk::FormatFeatureFlags::TRANSFER_SRC) {
+            mapped_flags |= format::ImageFeature::TRANSFER_SRC;
+        }
+        if features.contains(vk::FormatFeatureFlags::TRANSFER_DST) {
+            mapped_flags |= format::ImageFeature::TRANSFER_DST;
+        }
+    }
+
+    mapped_flags
 }
 
 pub fn map_buffer_features(features: vk::FormatFeatureFlags) -> format::BufferFeature {
     format::BufferFeature::from_bits_truncate(features.as_raw())
 }
 
-pub(crate) fn map_device_features(features: Features) -> crate::DeviceCreationFeatures {
+pub(crate) fn map_device_features(
+    features: Features,
+    imageless_framebuffers: bool,
+) -> crate::DeviceCreationFeatures {
     crate::DeviceCreationFeatures {
         // vk::PhysicalDeviceFeatures is a struct composed of Bool32's while
         // Features is a bitfield so we need to map everything manually
@@ -466,11 +520,7 @@ pub(crate) fn map_device_features(features: Features) -> crate::DeviceCreationFe
             .variable_multisample_rate(features.contains(Features::VARIABLE_MULTISAMPLE_RATE))
             .inherited_queries(features.contains(Features::INHERITED_QUERIES))
             .build(),
-        descriptor_indexing: if features.intersects(
-            Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING
-                | Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING
-                | Features::UNSIZED_DESCRIPTOR_ARRAY,
-        ) {
+        descriptor_indexing: if features.intersects(Features::DESCRIPTOR_INDEXING_MASK) {
             Some(
                 vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder()
                     .shader_sampled_image_array_non_uniform_indexing(
@@ -485,7 +535,7 @@ pub(crate) fn map_device_features(features: Features) -> crate::DeviceCreationFe
         } else {
             None
         },
-        mesh_shaders: if features.intersects(Features::TASK_SHADER | Features::MESH_SHADER) {
+        mesh_shaders: if features.intersects(Features::MESH_SHADER_MASK) {
             Some(
                 vk::PhysicalDeviceMeshShaderFeaturesNV::builder()
                     .task_shader(features.contains(Features::TASK_SHADER))
@@ -495,25 +545,24 @@ pub(crate) fn map_device_features(features: Features) -> crate::DeviceCreationFe
         } else {
             None
         },
+        imageless_framebuffers: if imageless_framebuffers {
+            Some(
+                vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder()
+                    .imageless_framebuffer(imageless_framebuffers)
+                    .build(),
+            )
+        } else {
+            None
+        },
     }
 }
 
-pub fn map_memory_ranges<'a, I>(ranges: I) -> SmallVec<[vk::MappedMemoryRange; 4]>
-where
-    I: IntoIterator,
-    I::Item: Borrow<(&'a n::Memory, Segment)>,
-{
-    ranges
-        .into_iter()
-        .map(|range| {
-            let &(ref memory, ref segment) = range.borrow();
-            vk::MappedMemoryRange::builder()
-                .memory(memory.raw)
-                .offset(segment.offset)
-                .size(segment.size.unwrap_or(vk::WHOLE_SIZE))
-                .build()
-        })
-        .collect()
+pub fn map_memory_range<'a>((memory, segment): (&'a n::Memory, Segment)) -> vk::MappedMemoryRange {
+    vk::MappedMemoryRange::builder()
+        .memory(memory.raw)
+        .offset(segment.offset)
+        .size(segment.size.unwrap_or(vk::WHOLE_SIZE))
+        .build()
 }
 
 pub fn map_command_buffer_flags(flags: command::CommandBufferFlags) -> vk::CommandBufferUsageFlags {
@@ -635,7 +684,11 @@ pub fn map_descriptor_pool_create_flags(
     vk::DescriptorPoolCreateFlags::from_raw(flags.bits())
 }
 
-pub fn map_memory_properties(flags: vk::MemoryPropertyFlags) -> hal::memory::Properties {
+pub fn map_sample_count_flags(samples: image::NumSamples) -> vk::SampleCountFlags {
+    vk::SampleCountFlags::from_raw((samples as u32) & vk::SampleCountFlags::all().as_raw())
+}
+
+pub fn map_vk_memory_properties(flags: vk::MemoryPropertyFlags) -> hal::memory::Properties {
     use crate::memory::Properties;
     let mut properties = Properties::empty();
 
@@ -658,7 +711,7 @@ pub fn map_memory_properties(flags: vk::MemoryPropertyFlags) -> hal::memory::Pro
     properties
 }
 
-pub fn map_memory_heap_flags(flags: vk::MemoryHeapFlags) -> hal::memory::HeapFlags {
+pub fn map_vk_memory_heap_flags(flags: vk::MemoryHeapFlags) -> hal::memory::HeapFlags {
     use hal::memory::HeapFlags;
     let mut hal_flags = HeapFlags::empty();
 

@@ -114,7 +114,7 @@ pub trait MemoryDevice<M> {
     ///   memory object was allocated from this device.
     unsafe fn map_memory(
         &self,
-        memory: &M,
+        memory: &mut M,
         offset: u64,
         size: u64,
     ) -> Result<NonNull<u8>, DeviceMapError>;
@@ -125,7 +125,7 @@ pub trait MemoryDevice<M> {
     ///
     /// * Memory object must have been allocated from this device.
     /// * Memory object must be mapped
-    unsafe fn unmap_memory(&self, memory: &M);
+    unsafe fn unmap_memory(&self, memory: &mut M);
 
     /// Invalidates ranges of memory mapped regions.
     ///

@@ -8,13 +8,13 @@
 //! for a particular GPU, generally created from an [instance][crate::Instance]
 //! of that [backend][crate::Backend].
 
-use std::{any::Any, fmt};
-
 use crate::{
     device, format, image, memory,
     queue::{QueueGroup, QueuePriority},
-    Backend, Features, Hints, Limits,
+    Backend, Features, PhysicalDeviceProperties,
 };
+
+use std::{any::Any, fmt};
 
 /// A description for a single type of memory in a heap.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -56,7 +56,7 @@ pub struct MemoryProperties {
 pub struct Gpu<B: Backend> {
     /// [Logical device][crate::device::Device] for a given backend.
     pub device: B::Device,
-    /// The [command queues][crate::queue::CommandQueue] that the device provides.
+    /// The [command queues][crate::queue::Queue] that the device provides.
     pub queue_groups: Vec<QueueGroup<B>>,
 }
 
@@ -116,14 +116,12 @@ pub trait PhysicalDevice<B: Backend>: fmt::Debug + Any + Send + Sync {
     fn memory_properties(&self) -> MemoryProperties;
 
     /// Returns the features of this `PhysicalDevice`. This usually depends on the graphics API being
-    /// used.
+    /// used, as well as the actual platform underneath.
     fn features(&self) -> Features;
 
-    /// Returns the performance hints of this `PhysicalDevice`.
-    fn hints(&self) -> Hints;
-
-    /// Returns the resource limits of this `PhysicalDevice`.
-    fn limits(&self) -> Limits;
+    /// Returns the properties of this `PhysicalDevice`. Similarly to `Features`, they
+    // depend on the platform, but unlike features, these are immutable and can't be switched on.
+    fn properties(&self) -> PhysicalDeviceProperties;
 
     /// Check cache compatibility with the `PhysicalDevice`.
     fn is_valid_cache(&self, _cache: &[u8]) -> bool {

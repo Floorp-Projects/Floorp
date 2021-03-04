@@ -14,6 +14,7 @@ namespace mozilla {
 class ErrorResult;
 namespace dom {
 class RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
+class ArrayBufferViewOrArrayBuffer;
 template <typename T>
 class Optional;
 template <typename T>
@@ -40,16 +41,16 @@ class Queue final : public ObjectBase, public ChildOf<Device> {
       const dom::Sequence<OwningNonNull<CommandBuffer>>& aCommandBuffers);
 
   void WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
-                   const dom::ArrayBuffer& adata, uint64_t aDataOffset,
-                   const dom::Optional<uint64_t>& aSize, ErrorResult& aRv);
+                   const dom::ArrayBufferViewOrArrayBuffer& aData,
+                   uint64_t aDataOffset, const dom::Optional<uint64_t>& aSize,
+                   ErrorResult& aRv);
 
   void WriteTexture(const dom::GPUTextureCopyView& aDestination,
-                    const dom::ArrayBuffer& aData,
+                    const dom::ArrayBufferViewOrArrayBuffer& aData,
                     const dom::GPUTextureDataLayout& aDataLayout,
                     const dom::GPUExtent3D& aSize, ErrorResult& aRv);
 
  private:
-  Queue() = delete;
   virtual ~Queue();
   void Cleanup() {}
 

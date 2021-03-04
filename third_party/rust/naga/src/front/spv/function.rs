@@ -1,7 +1,6 @@
-use crate::arena::Handle;
+use crate::arena::{Arena, Handle};
 
-use super::flow::*;
-use super::*;
+use super::{flow::*, Error, Instruction, LookupExpression, LookupHelper as _};
 
 pub type BlockId = u32;
 
@@ -50,32 +49,25 @@ pub enum Terminator {
 }
 
 impl<I: Iterator<Item = u32>> super::Parser<I> {
-    pub fn parse_function(
-        &mut self,
-        inst: Instruction,
-        module: &mut crate::Module,
-    ) -> Result<(), Error> {
-        self.switch(ModuleState::Function, inst.op)?;
-        inst.expect(5)?;
-        let result_type = self.next()?;
+    pub fn parse_function(&mut self, module: &mut crate::Module) -> Result<(), Error> {
+        let result_type_id = self.next()?;
         let fun_id = self.next()?;
         let _fun_control = self.next()?;
-        let fun_type = self.next()?;
+        let fun_type_id = self.next()?;
 
         let mut fun = {
-            let ft = self.lookup_function_type.lookup(fun_type)?;
-            if ft.return_type_id != result_type {
-                return Err(Error::WrongFunctionResultType(result_type));
+            let ft = self.lookup_function_type.lookup(fun_type_id)?;
+            if ft.return_type_id != result_type_id {
+                return Err(Error::WrongFunctionResultType(result_type_id));
             }
             crate::Function {
                 name: self.future_decor.remove(&fun_id).and_then(|dec| dec.name),
                 arguments: Vec::with_capacity(ft.parameter_type_ids.len()),
-                return_type: if self.lookup_void_type.contains(&result_type) {
+                return_type: if self.lookup_void_type == Some(result_type_id) {
                     None
                 } else {
-                    Some(self.lookup_type.lookup(result_type)?.handle)
+                    Some(self.lookup_type.lookup(result_type_id)?.handle)
                 },
-                global_usage: Vec::new(),
                 local_variables: Arena::new(),
                 expressions: self.make_expression_storage(),
                 body: Vec::new(),
@@ -101,7 +93,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                     if type_id
                         != self
                             .lookup_function_type
-                            .lookup(fun_type)?
+                            .lookup(fun_type_id)?
                             .parameter_type_ids[i]
                     {
                         return Err(Error::WrongFunctionArgumentType(type_id));
@@ -115,7 +107,6 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
         }
 
         // Read body
-        let mut local_function_calls = FastHashMap::default();
         let mut flow_graph = FlowGraph::new();
 
         // Scan the blocks and add them as nodes
@@ -135,7 +126,6 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                         &module.types,
                         &module.constants,
                         &module.global_variables,
-                        &mut local_function_calls,
                     )?;
 
                     flow_graph.add_node(node);
@@ -155,44 +145,31 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
         fun.body = flow_graph.to_naga()?;
 
         // done
-        fun.fill_global_use(&module.global_variables);
+        self.patch_function_calls(&mut fun)?;
 
-        let source = match self.lookup_entry_point.remove(&fun_id) {
+        let dump_suffix = match self.lookup_entry_point.remove(&fun_id) {
             Some(ep) => {
+                let dump_name = format!("flow.{:?}-{}.dot", ep.stage, ep.name);
                 module.entry_points.insert(
-                    (ep.stage, ep.name.clone()),
+                    (ep.stage, ep.name),
                     crate::EntryPoint {
                         early_depth_test: ep.early_depth_test,
                         workgroup_size: ep.workgroup_size,
                         function: fun,
                     },
                 );
-                DeferredSource::EntryPoint(ep.stage, ep.name)
+                dump_name
             }
             None => {
                 let handle = module.functions.append(fun);
                 self.lookup_function.insert(fun_id, handle);
-                DeferredSource::Function(handle)
+                format!("flow.Fun-{}.dot", handle.index())
             }
         };
 
         if let Some(ref prefix) = self.options.flow_graph_dump_prefix {
             let dump = flow_graph.to_graphviz().unwrap_or_default();
-            let suffix = match source {
-                DeferredSource::EntryPoint(stage, ref name) => {
-                    format!("flow.{:?}-{}.dot", stage, name)
-                }
-                DeferredSource::Function(handle) => format!("flow.Fun-{}.dot", handle.index()),
-            };
-            let _ = std::fs::write(prefix.join(suffix), dump);
-        }
-
-        for (expr_handle, dst_id) in local_function_calls {
-            self.deferred_function_calls.push(DeferredFunctionCall {
-                source: source.clone(),
-                expr_handle,
-                dst_id,
-            });
+            let _ = std::fs::write(prefix.join(dump_suffix), dump);
         }
 
         self.lookup_expression.clear();

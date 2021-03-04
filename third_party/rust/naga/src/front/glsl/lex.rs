@@ -1,5 +1,6 @@
 use super::parser::Token;
 use super::{preprocess::LinePreProcessor, token::TokenMetadata, types::parse_type};
+use crate::FastHashMap;
 use std::{iter::Enumerate, str::Lines};
 
 fn _consume_str<'a>(input: &'a str, what: &str) -> Option<&'a str> {
@@ -23,7 +24,7 @@ pub struct Lexer<'a> {
     line: usize,
     offset: usize,
     inside_comment: bool,
-    pub pp: LinePreProcessor,
+    pp: LinePreProcessor,
 }
 
 impl<'a> Lexer<'a> {
@@ -93,20 +94,50 @@ impl<'a> Lexer<'a> {
                 }
             }
             '0'..='9' => {
-                let (number, _, pos) = consume_any(input, |c| (c >= '0' && c <= '9' || c == '.'));
+                let next = chars.next().and_then(|c| c.to_lowercase().next());
+
+                let hexadecimal = cur == '0' && next.map_or(false, |c| c == 'x');
+
+                let (number, remainder, pos) = if hexadecimal {
+                    consume_any(&input[2..], |c| {
+                        ('0'..='9').contains(&c)
+                            || ('a'..='f').contains(&c)
+                            || ('A'..='F').contains(&c)
+                    })
+                } else {
+                    consume_any(input, |c| (('0'..='9').contains(&c) || c == '.'))
+                };
+
+                let mut remainder_chars = remainder.chars();
+                let first = remainder_chars.next().and_then(|c| c.to_lowercase().next());
+
                 if number.find('.').is_some() {
-                    if (
-                        chars.next().map(|c| c.to_lowercase().next().unwrap()),
-                        chars.next().map(|c| c.to_lowercase().next().unwrap()),
-                    ) == (Some('l'), Some('f'))
-                    {
+                    let second = remainder_chars.next().and_then(|c| c.to_lowercase().next());
+
+                    if (first, second) == (Some('l'), Some('f')) {
                         meta.chars.end = start + pos + 2;
                         Some(Token::DoubleConstant((meta, number.parse().unwrap())))
                     } else {
                         meta.chars.end = start + pos;
-
                         Some(Token::FloatConstant((meta, number.parse().unwrap())))
                     }
+                } else if first == Some('u') {
+                    if hexadecimal {
+                        meta.chars.end = start + pos + 3;
+                        Some(Token::UintConstant((
+                            meta,
+                            u64::from_str_radix(number, 16).unwrap(),
+                        )))
+                    } else {
+                        meta.chars.end = start + pos + 1;
+                        Some(Token::UintConstant((meta, number.parse().unwrap())))
+                    }
+                } else if hexadecimal {
+                    meta.chars.end = start + pos + 2;
+                    Some(Token::IntConstant((
+                        meta,
+                        i64::from_str_radix(number, 16).unwrap(),
+                    )))
                 } else {
                     meta.chars.end = start + pos;
                     Some(Token::IntConstant((meta, number.parse().unwrap())))
@@ -152,6 +183,7 @@ impl<'a> Lexer<'a> {
                     "for" => Some(Token::For(meta)),
                     // types
                     "void" => Some(Token::Void(meta)),
+                    "const" => Some(Token::Const(meta)),
                     word => {
                         let token = match parse_type(word) {
                             Some(t) => Token::TypeName((meta, t)),
@@ -293,14 +325,14 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn new(input: &'a str) -> Self {
+    pub fn new(input: &'a str, defines: &FastHashMap<String, String>) -> Self {
         let mut lexer = Lexer {
             lines: input.lines().enumerate(),
             input: "".to_string(),
             line: 0,
             offset: 0,
             inside_comment: false,
-            pp: LinePreProcessor::new(),
+            pp: LinePreProcessor::new(defines),
         };
         lexer.next_line();
         lexer

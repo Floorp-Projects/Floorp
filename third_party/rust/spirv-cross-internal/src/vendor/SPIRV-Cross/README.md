@@ -418,7 +418,8 @@ Reserved identifiers currently assumed by the implementation are (in pseudo-rege
 - _$digit+_.+, e.g. `_100_tmp`, `_2_foobar`. `_2Bar` is **not** reserved.
 - gl_- prefix
 - spv- prefix
-- SPIRV_Cross prefix
+- SPIRV_Cross prefix. This prefix is generally used for interface variables where app needs to provide data for workaround purposes.
+  This identifier will not be rewritten, but be aware of potential collisions.
 - Double underscores (reserved by all target languages).
 
 Members of structs also have a reserved identifier:

@@ -141,6 +141,7 @@ pub struct Properties {
     pub buffer_features: BufferFeature,
 }
 
+//Note: these are detached from Vulkan!
 bitflags!(
     /// Image feature flags.
     #[derive(Default)]
@@ -148,24 +149,33 @@ bitflags!(
     pub struct ImageFeature: u32 {
         /// Image view can be sampled.
         const SAMPLED = 0x1;
-        /// Image view can be used as storage image.
-        const STORAGE = 0x2;
-        /// Image view can be used as storage image (with atomics).
-        const STORAGE_ATOMIC = 0x4;
+        /// Image can be sampled with a linear sampler or as blit source with linear sampling.
+        const SAMPLED_LINEAR = 0x2;
+        /// Image can be sampled with a min/max reduction sampler.
+        const SAMPLED_MINMAX = 0x4;
+
+        /// Image view can be used as storage image with exclusive read & write access.
+        const STORAGE = 0x10;
+        /// Image view can be used as storage image with simultaneous read/write access.
+        const STORAGE_READ_WRITE = 0x20;
+        /// Image view can be used as storage image with atomics.
+        const STORAGE_ATOMIC = 0x40;
+
         /// Image view can be used as color and input attachment.
-        const COLOR_ATTACHMENT = 0x80;
+        const COLOR_ATTACHMENT = 0x100;
         /// Image view can be used as color (with blending) and input attachment.
-        const COLOR_ATTACHMENT_BLEND = 0x100;
+        const COLOR_ATTACHMENT_BLEND = 0x200;
         /// Image view can be used as depth-stencil and input attachment.
-        const DEPTH_STENCIL_ATTACHMENT = 0x200;
+        const DEPTH_STENCIL_ATTACHMENT = 0x400;
+
         /// Image can be used as source for blit commands.
-        const BLIT_SRC = 0x400;
+        const BLIT_SRC = 0x1000;
         /// Image can be used as destination for blit commands.
-        const BLIT_DST = 0x800;
-        /// Image can be sampled with a (mipmap) linear sampler or as blit source
-        /// with linear sampling.
-        /// Requires `SAMPLED` or `BLIT_SRC` flag.
-        const SAMPLED_LINEAR = 0x1000;
+        const BLIT_DST = 0x2000;
+        /// Image can be copied from.
+        const TRANSFER_SRC = 0x4000;
+        /// Image can be copied to.
+        const TRANSFER_DST = 0x8000;
     }
 );
 

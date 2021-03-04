@@ -352,7 +352,7 @@ void main()
     gl_Position = vec4(1.0);
 }
 
-"
+",
         ),
         (
             Some((String::from("main_vs"), spirv::ExecutionModel::Vertex)),
@@ -364,7 +364,7 @@ void main()
     gl_Position = vec4(1.0);
 }
 
-"
+",
         ),
         (
             Some((String::from("main_fs"), spirv::ExecutionModel::Fragment)),
@@ -378,8 +378,8 @@ void main()
     color = vec4(1.0);
 }
 
-"
-        )
+",
+        ),
     ];
 
     for (entry_point, expected_result) in cases.drain(..) {

@@ -1,10 +1,11 @@
-extern crate winapi;
 #[macro_use]
 extern crate bitflags;
 
 use std::ffi::CStr;
-use winapi::shared::dxgiformat;
-use winapi::um::{d3d12, d3dcommon};
+use winapi::{
+    shared::dxgiformat,
+    um::{d3d12, d3dcommon},
+};
 
 mod com;
 mod command_allocator;
@@ -42,6 +43,8 @@ pub type Format = dxgiformat::DXGI_FORMAT;
 pub type Rect = d3d12::D3D12_RECT;
 pub type NodeMask = u32;
 
+/// Index into the root signature.
+pub type RootIndex = u32;
 /// Draw vertex count.
 pub type VertexCount = u32;
 /// Draw vertex base offset.
@@ -73,9 +76,9 @@ pub enum FeatureLevel {
     L12_1 = d3dcommon::D3D_FEATURE_LEVEL_12_1,
 }
 
-pub type Blob = self::com::WeakPtr<d3dcommon::ID3DBlob>;
+pub type Blob = WeakPtr<d3dcommon::ID3DBlob>;
 
-pub type Error = self::com::WeakPtr<d3dcommon::ID3DBlob>;
+pub type Error = WeakPtr<d3dcommon::ID3DBlob>;
 impl Error {
     pub unsafe fn as_c_str(&self) -> &CStr {
         debug_assert!(!self.is_null());
@@ -92,10 +95,7 @@ pub struct D3D12Lib {
 
 #[cfg(feature = "libloading")]
 impl D3D12Lib {
-    pub fn new() -> libloading::Result<Self> {
-        libloading::Library::new("d3d12.dll")
-            .map(|lib| D3D12Lib {
-                lib,
-            })
+    pub fn new() -> Result<Self, libloading::Error> {
+        unsafe { libloading::Library::new("d3d12.dll").map(|lib| D3D12Lib { lib }) }
     }
 }

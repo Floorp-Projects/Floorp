@@ -43,7 +43,7 @@ pub trait DescriptorDevice<L, P, S> {
     unsafe fn alloc_descriptor_sets<'a>(
         &self,
         pool: &mut P,
-        layouts: impl Iterator<Item = &'a L>,
+        layouts: impl ExactSizeIterator<Item = &'a L>,
         sets: &mut impl Extend<S>,
     ) -> Result<(), DeviceAllocationError>
     where

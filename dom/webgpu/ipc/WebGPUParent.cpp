@@ -245,35 +245,10 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 }
 
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
-    RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc, RawId aNewId) {
-  ffi::WGPUDeviceDescriptor desc = {};
-  desc.shader_validation = true;  // required for implicit pipeline layouts
-
-  if (aDesc.mLimits.WasPassed()) {
-    const auto& lim = aDesc.mLimits.Value();
-    desc.limits.max_bind_groups = lim.mMaxBindGroups;
-    desc.limits.max_dynamic_uniform_buffers_per_pipeline_layout =
-        lim.mMaxDynamicUniformBuffersPerPipelineLayout;
-    desc.limits.max_dynamic_storage_buffers_per_pipeline_layout =
-        lim.mMaxDynamicStorageBuffersPerPipelineLayout;
-    desc.limits.max_sampled_textures_per_shader_stage =
-        lim.mMaxSampledTexturesPerShaderStage;
-    desc.limits.max_samplers_per_shader_stage = lim.mMaxSamplersPerShaderStage;
-    desc.limits.max_storage_buffers_per_shader_stage =
-        lim.mMaxStorageBuffersPerShaderStage;
-    desc.limits.max_storage_textures_per_shader_stage =
-        lim.mMaxStorageTexturesPerShaderStage;
-    desc.limits.max_uniform_buffers_per_shader_stage =
-        lim.mMaxUniformBuffersPerShaderStage;
-    desc.limits.max_uniform_buffer_binding_size =
-        lim.mMaxUniformBufferBindingSize;
-  } else {
-    ffi::wgpu_server_fill_default_limits(&desc.limits);
-  }
-
+    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId) {
   ErrorBuffer error;
-  ffi::wgpu_server_adapter_request_device(mContext, aSelfId, &desc, aNewId,
-                                          error.ToFFI());
+  ffi::wgpu_server_adapter_request_device(mContext, aSelfId, ToFFI(&aByteBuf),
+                                          aNewId, error.ToFFI());
   error.CheckAndForward(this, 0);
   return IPC_OK();
 }

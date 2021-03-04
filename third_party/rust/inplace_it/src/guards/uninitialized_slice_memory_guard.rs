@@ -137,6 +137,19 @@ impl<'a, T> UninitializedSliceMemoryGuard<'a, T> {
         self.slice(..iter.len()).init(|_index| { iter.next().unwrap() })
     }
 
+    /// Initialize memory guard using given iterator.
+    /// Automatically shrink's memory to given items' count.
+    /// `Ok(guard)` will be returned in this case.
+    ///
+    /// If items' count is too large to place in memory, moves it into new `Vec` and continue collecting into it.
+    /// `Err(vec)` will be returned in this case.
+    #[inline]
+    pub fn init_with_dyn_iter(self, iter: impl Iterator<Item = T>) -> Result<SliceMemoryGuard<'a, T>, Vec<T>> {
+        unsafe {
+            SliceMemoryGuard::new_from_iter(self.memory, iter)
+        }
+    }
+
     /// Create new uninit memory guard with less or equal lifetime to original guard's lifetime.
     /// This function should be used to reuse memory because init-API consumes the guard.
     #[inline]

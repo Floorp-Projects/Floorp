@@ -142,6 +142,10 @@ pub mod root {
             root::spv::ExecutionMode = 5370;
         pub const ExecutionMode_ExecutionModeShadingRateInterlockUnorderedEXT:
             root::spv::ExecutionMode = 5371;
+        pub const ExecutionMode_ExecutionModeMaxWorkgroupSizeINTEL: root::spv::ExecutionMode = 5893;
+        pub const ExecutionMode_ExecutionModeMaxWorkDimINTEL: root::spv::ExecutionMode = 5894;
+        pub const ExecutionMode_ExecutionModeNoGlobalOffsetINTEL: root::spv::ExecutionMode = 5895;
+        pub const ExecutionMode_ExecutionModeNumSIMDWorkitemsINTEL: root::spv::ExecutionMode = 5896;
         pub const ExecutionMode_ExecutionModeMax: root::spv::ExecutionMode = 2147483647;
         pub type ExecutionMode = u32;
         pub const StorageClass_StorageClassUniformConstant: root::spv::StorageClass = 0;
@@ -171,6 +175,7 @@ pub mod root {
         pub const StorageClass_StorageClassShaderRecordBufferNV: root::spv::StorageClass = 5343;
         pub const StorageClass_StorageClassPhysicalStorageBuffer: root::spv::StorageClass = 5349;
         pub const StorageClass_StorageClassPhysicalStorageBufferEXT: root::spv::StorageClass = 5349;
+        pub const StorageClass_StorageClassCodeSectionINTEL: root::spv::StorageClass = 5605;
         pub const StorageClass_StorageClassMax: root::spv::StorageClass = 2147483647;
         pub type StorageClass = u32;
         pub const Dim_Dim1D: root::spv::Dim = 0;
@@ -239,6 +244,8 @@ pub mod root {
         pub const ImageFormat_ImageFormatRg8ui: root::spv::ImageFormat = 37;
         pub const ImageFormat_ImageFormatR16ui: root::spv::ImageFormat = 38;
         pub const ImageFormat_ImageFormatR8ui: root::spv::ImageFormat = 39;
+        pub const ImageFormat_ImageFormatR64ui: root::spv::ImageFormat = 40;
+        pub const ImageFormat_ImageFormatR64i: root::spv::ImageFormat = 41;
         pub const ImageFormat_ImageFormatMax: root::spv::ImageFormat = 2147483647;
         pub type ImageFormat = u32;
         pub const ImageChannelOrder_ImageChannelOrderR: root::spv::ImageChannelOrder = 0;
@@ -618,9 +625,22 @@ pub mod root {
             DecorationNonUniform = 5300,
             DecorationRestrictPointer = 5355,
             DecorationAliasedPointer = 5356,
+            DecorationReferencedIndirectlyINTEL = 5602,
             DecorationCounterBuffer = 5634,
             DecorationHlslSemanticGOOGLE = 5635,
             DecorationUserTypeGOOGLE = 5636,
+            DecorationRegisterINTEL = 5825,
+            DecorationMemoryINTEL = 5826,
+            DecorationNumbanksINTEL = 5827,
+            DecorationBankwidthINTEL = 5828,
+            DecorationMaxPrivateCopiesINTEL = 5829,
+            DecorationSinglepumpINTEL = 5830,
+            DecorationDoublepumpINTEL = 5831,
+            DecorationMaxReplicatesINTEL = 5832,
+            DecorationSimpleDualPortINTEL = 5833,
+            DecorationMergeINTEL = 5834,
+            DecorationBankBitsINTEL = 5835,
+            DecorationForcePow2DepthINTEL = 5836,
             DecorationMax = 2147483647,
         }
         impl root::spv::BuiltIn {
@@ -684,9 +704,6 @@ pub mod root {
             pub const BuiltInWorldToObjectNV: root::spv::BuiltIn = BuiltIn::BuiltInWorldToObjectKHR;
         }
         impl root::spv::BuiltIn {
-            pub const BuiltInHitTNV: root::spv::BuiltIn = BuiltIn::BuiltInHitTKHR;
-        }
-        impl root::spv::BuiltIn {
             pub const BuiltInHitKindNV: root::spv::BuiltIn = BuiltIn::BuiltInHitKindKHR;
         }
         impl root::spv::BuiltIn {
@@ -745,8 +762,10 @@ pub mod root {
             BuiltInBaseVertex = 4424,
             BuiltInBaseInstance = 4425,
             BuiltInDrawIndex = 4426,
+            BuiltInPrimitiveShadingRateKHR = 4432,
             BuiltInDeviceIndex = 4438,
             BuiltInViewIndex = 4440,
+            BuiltInShadingRateKHR = 4444,
             BuiltInBaryCoordNoPerspAMD = 4992,
             BuiltInBaryCoordNoPerspCentroidAMD = 4993,
             BuiltInBaryCoordNoPerspSampleAMD = 4994,
@@ -784,7 +803,7 @@ pub mod root {
             BuiltInInstanceCustomIndexKHR = 5327,
             BuiltInObjectToWorldKHR = 5330,
             BuiltInWorldToObjectKHR = 5331,
-            BuiltInHitTKHR = 5332,
+            BuiltInHitTNV = 5332,
             BuiltInHitKindKHR = 5333,
             BuiltInIncomingRayFlagsKHR = 5351,
             BuiltInRayGeometryIndexKHR = 5352,
@@ -854,6 +873,20 @@ pub mod root {
             6;
         pub const LoopControlShift_LoopControlPeelCountShift: root::spv::LoopControlShift = 7;
         pub const LoopControlShift_LoopControlPartialCountShift: root::spv::LoopControlShift = 8;
+        pub const LoopControlShift_LoopControlInitiationIntervalINTELShift:
+            root::spv::LoopControlShift = 16;
+        pub const LoopControlShift_LoopControlMaxConcurrencyINTELShift:
+            root::spv::LoopControlShift = 17;
+        pub const LoopControlShift_LoopControlDependencyArrayINTELShift:
+            root::spv::LoopControlShift = 18;
+        pub const LoopControlShift_LoopControlPipelineEnableINTELShift:
+            root::spv::LoopControlShift = 19;
+        pub const LoopControlShift_LoopControlLoopCoalesceINTELShift: root::spv::LoopControlShift =
+            20;
+        pub const LoopControlShift_LoopControlMaxInterleavingINTELShift:
+            root::spv::LoopControlShift = 21;
+        pub const LoopControlShift_LoopControlSpeculatedIterationsINTELShift:
+            root::spv::LoopControlShift = 22;
         pub const LoopControlShift_LoopControlMax: root::spv::LoopControlShift = 2147483647;
         pub type LoopControlShift = u32;
         impl LoopControlMask {
@@ -895,6 +928,34 @@ pub mod root {
         impl LoopControlMask {
             pub const LoopControlPartialCountMask: root::spv::LoopControlMask =
                 root::spv::LoopControlMask(256);
+        }
+        impl LoopControlMask {
+            pub const LoopControlInitiationIntervalINTELMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(65536);
+        }
+        impl LoopControlMask {
+            pub const LoopControlMaxConcurrencyINTELMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(131072);
+        }
+        impl LoopControlMask {
+            pub const LoopControlDependencyArrayINTELMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(262144);
+        }
+        impl LoopControlMask {
+            pub const LoopControlPipelineEnableINTELMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(524288);
+        }
+        impl LoopControlMask {
+            pub const LoopControlLoopCoalesceINTELMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(1048576);
+        }
+        impl LoopControlMask {
+            pub const LoopControlMaxInterleavingINTELMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(2097152);
+        }
+        impl LoopControlMask {
+            pub const LoopControlSpeculatedIterationsINTELMask: root::spv::LoopControlMask =
+                root::spv::LoopControlMask(4194304);
         }
         impl ::std::ops::BitOr<root::spv::LoopControlMask> for root::spv::LoopControlMask {
             type Output = Self;
@@ -1388,6 +1449,7 @@ pub mod root {
         pub const Capability_CapabilityGroupNonUniformQuad: root::spv::Capability = 68;
         pub const Capability_CapabilityShaderLayer: root::spv::Capability = 69;
         pub const Capability_CapabilityShaderViewportIndex: root::spv::Capability = 70;
+        pub const Capability_CapabilityFragmentShadingRateKHR: root::spv::Capability = 4422;
         pub const Capability_CapabilitySubgroupBallotKHR: root::spv::Capability = 4423;
         pub const Capability_CapabilityDrawParameters: root::spv::Capability = 4427;
         pub const Capability_CapabilitySubgroupVoteKHR: root::spv::Capability = 4431;
@@ -1414,13 +1476,16 @@ pub mod root {
         pub const Capability_CapabilityRoundingModeRTE: root::spv::Capability = 4467;
         pub const Capability_CapabilityRoundingModeRTZ: root::spv::Capability = 4468;
         pub const Capability_CapabilityRayQueryProvisionalKHR: root::spv::Capability = 4471;
-        pub const Capability_CapabilityRayTraversalPrimitiveCullingProvisionalKHR:
-            root::spv::Capability = 4478;
+        pub const Capability_CapabilityRayQueryKHR: root::spv::Capability = 4472;
+        pub const Capability_CapabilityRayTraversalPrimitiveCullingKHR: root::spv::Capability =
+            4478;
+        pub const Capability_CapabilityRayTracingKHR: root::spv::Capability = 4479;
         pub const Capability_CapabilityFloat16ImageAMD: root::spv::Capability = 5008;
         pub const Capability_CapabilityImageGatherBiasLodAMD: root::spv::Capability = 5009;
         pub const Capability_CapabilityFragmentMaskAMD: root::spv::Capability = 5010;
         pub const Capability_CapabilityStencilExportEXT: root::spv::Capability = 5013;
         pub const Capability_CapabilityImageReadWriteLodAMD: root::spv::Capability = 5015;
+        pub const Capability_CapabilityInt64ImageEXT: root::spv::Capability = 5016;
         pub const Capability_CapabilityShaderClockKHR: root::spv::Capability = 5055;
         pub const Capability_CapabilitySampleMaskOverrideCoverageNV: root::spv::Capability = 5249;
         pub const Capability_CapabilityGeometryShaderPassthroughNV: root::spv::Capability = 5251;
@@ -1506,12 +1571,23 @@ pub mod root {
         pub const Capability_CapabilitySubgroupImageBlockIOINTEL: root::spv::Capability = 5570;
         pub const Capability_CapabilitySubgroupImageMediaBlockIOINTEL: root::spv::Capability = 5579;
         pub const Capability_CapabilityIntegerFunctions2INTEL: root::spv::Capability = 5584;
+        pub const Capability_CapabilityFunctionPointersINTEL: root::spv::Capability = 5603;
+        pub const Capability_CapabilityIndirectReferencesINTEL: root::spv::Capability = 5604;
         pub const Capability_CapabilitySubgroupAvcMotionEstimationINTEL: root::spv::Capability =
             5696;
         pub const Capability_CapabilitySubgroupAvcMotionEstimationIntraINTEL:
             root::spv::Capability = 5697;
         pub const Capability_CapabilitySubgroupAvcMotionEstimationChromaINTEL:
             root::spv::Capability = 5698;
+        pub const Capability_CapabilityFPGAMemoryAttributesINTEL: root::spv::Capability = 5824;
+        pub const Capability_CapabilityUnstructuredLoopControlsINTEL: root::spv::Capability = 5886;
+        pub const Capability_CapabilityFPGALoopControlsINTEL: root::spv::Capability = 5888;
+        pub const Capability_CapabilityKernelAttributesINTEL: root::spv::Capability = 5892;
+        pub const Capability_CapabilityFPGAKernelAttributesINTEL: root::spv::Capability = 5897;
+        pub const Capability_CapabilityBlockingPipesINTEL: root::spv::Capability = 5945;
+        pub const Capability_CapabilityFPGARegINTEL: root::spv::Capability = 5948;
+        pub const Capability_CapabilityAtomicFloat32AddEXT: root::spv::Capability = 6033;
+        pub const Capability_CapabilityAtomicFloat64AddEXT: root::spv::Capability = 6034;
         pub const Capability_CapabilityMax: root::spv::Capability = 2147483647;
         pub type Capability = u32;
         pub const RayFlagsShift_RayFlagsOpaqueKHRShift: root::spv::RayFlagsShift = 0;
@@ -1616,6 +1692,66 @@ pub mod root {
         pub const RayQueryCandidateIntersectionType_RayQueryCandidateIntersectionTypeMax:
             root::spv::RayQueryCandidateIntersectionType = 2147483647;
         pub type RayQueryCandidateIntersectionType = u32;
+        pub const FragmentShadingRateShift_FragmentShadingRateVertical2PixelsShift:
+            root::spv::FragmentShadingRateShift = 0;
+        pub const FragmentShadingRateShift_FragmentShadingRateVertical4PixelsShift:
+            root::spv::FragmentShadingRateShift = 1;
+        pub const FragmentShadingRateShift_FragmentShadingRateHorizontal2PixelsShift:
+            root::spv::FragmentShadingRateShift = 2;
+        pub const FragmentShadingRateShift_FragmentShadingRateHorizontal4PixelsShift:
+            root::spv::FragmentShadingRateShift = 3;
+        pub const FragmentShadingRateShift_FragmentShadingRateMax:
+            root::spv::FragmentShadingRateShift = 2147483647;
+        pub type FragmentShadingRateShift = u32;
+        impl FragmentShadingRateMask {
+            pub const FragmentShadingRateMaskNone: root::spv::FragmentShadingRateMask =
+                root::spv::FragmentShadingRateMask(0);
+        }
+        impl FragmentShadingRateMask {
+            pub const FragmentShadingRateVertical2PixelsMask: root::spv::FragmentShadingRateMask =
+                root::spv::FragmentShadingRateMask(1);
+        }
+        impl FragmentShadingRateMask {
+            pub const FragmentShadingRateVertical4PixelsMask: root::spv::FragmentShadingRateMask =
+                root::spv::FragmentShadingRateMask(2);
+        }
+        impl FragmentShadingRateMask {
+            pub const FragmentShadingRateHorizontal2PixelsMask: root::spv::FragmentShadingRateMask =
+                root::spv::FragmentShadingRateMask(4);
+        }
+        impl FragmentShadingRateMask {
+            pub const FragmentShadingRateHorizontal4PixelsMask: root::spv::FragmentShadingRateMask =
+                root::spv::FragmentShadingRateMask(8);
+        }
+        impl ::std::ops::BitOr<root::spv::FragmentShadingRateMask> for root::spv::FragmentShadingRateMask {
+            type Output = Self;
+            #[inline]
+            fn bitor(self, other: Self) -> Self {
+                FragmentShadingRateMask(self.0 | other.0)
+            }
+        }
+        impl ::std::ops::BitOrAssign for root::spv::FragmentShadingRateMask {
+            #[inline]
+            fn bitor_assign(&mut self, rhs: root::spv::FragmentShadingRateMask) {
+                self.0 |= rhs.0;
+            }
+        }
+        impl ::std::ops::BitAnd<root::spv::FragmentShadingRateMask> for root::spv::FragmentShadingRateMask {
+            type Output = Self;
+            #[inline]
+            fn bitand(self, other: Self) -> Self {
+                FragmentShadingRateMask(self.0 & other.0)
+            }
+        }
+        impl ::std::ops::BitAndAssign for root::spv::FragmentShadingRateMask {
+            #[inline]
+            fn bitand_assign(&mut self, rhs: root::spv::FragmentShadingRateMask) {
+                self.0 &= rhs.0;
+            }
+        }
+        #[repr(transparent)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+        pub struct FragmentShadingRateMask(pub u32);
         pub const Op_OpNop: root::spv::Op = 0;
         pub const Op_OpUndef: root::spv::Op = 1;
         pub const Op_OpSourceContinued: root::spv::Op = 2;
@@ -1960,13 +2096,19 @@ pub mod root {
         pub const Op_OpPtrEqual: root::spv::Op = 401;
         pub const Op_OpPtrNotEqual: root::spv::Op = 402;
         pub const Op_OpPtrDiff: root::spv::Op = 403;
+        pub const Op_OpTerminateInvocation: root::spv::Op = 4416;
         pub const Op_OpSubgroupBallotKHR: root::spv::Op = 4421;
         pub const Op_OpSubgroupFirstInvocationKHR: root::spv::Op = 4422;
         pub const Op_OpSubgroupAllKHR: root::spv::Op = 4428;
         pub const Op_OpSubgroupAnyKHR: root::spv::Op = 4429;
         pub const Op_OpSubgroupAllEqualKHR: root::spv::Op = 4430;
         pub const Op_OpSubgroupReadInvocationKHR: root::spv::Op = 4432;
-        pub const Op_OpTypeRayQueryProvisionalKHR: root::spv::Op = 4472;
+        pub const Op_OpTraceRayKHR: root::spv::Op = 4445;
+        pub const Op_OpExecuteCallableKHR: root::spv::Op = 4446;
+        pub const Op_OpConvertUToAccelerationStructureKHR: root::spv::Op = 4447;
+        pub const Op_OpIgnoreIntersectionKHR: root::spv::Op = 4448;
+        pub const Op_OpTerminateRayKHR: root::spv::Op = 4449;
+        pub const Op_OpTypeRayQueryKHR: root::spv::Op = 4472;
         pub const Op_OpRayQueryInitializeKHR: root::spv::Op = 4473;
         pub const Op_OpRayQueryTerminateKHR: root::spv::Op = 4474;
         pub const Op_OpRayQueryGenerateIntersectionKHR: root::spv::Op = 4475;
@@ -1989,15 +2131,11 @@ pub mod root {
         pub const Op_OpWritePackedPrimitiveIndices4x8NV: root::spv::Op = 5299;
         pub const Op_OpReportIntersectionKHR: root::spv::Op = 5334;
         pub const Op_OpReportIntersectionNV: root::spv::Op = 5334;
-        pub const Op_OpIgnoreIntersectionKHR: root::spv::Op = 5335;
         pub const Op_OpIgnoreIntersectionNV: root::spv::Op = 5335;
-        pub const Op_OpTerminateRayKHR: root::spv::Op = 5336;
         pub const Op_OpTerminateRayNV: root::spv::Op = 5336;
         pub const Op_OpTraceNV: root::spv::Op = 5337;
-        pub const Op_OpTraceRayKHR: root::spv::Op = 5337;
         pub const Op_OpTypeAccelerationStructureKHR: root::spv::Op = 5341;
         pub const Op_OpTypeAccelerationStructureNV: root::spv::Op = 5341;
-        pub const Op_OpExecuteCallableKHR: root::spv::Op = 5344;
         pub const Op_OpExecuteCallableNV: root::spv::Op = 5344;
         pub const Op_OpTypeCooperativeMatrixNV: root::spv::Op = 5358;
         pub const Op_OpCooperativeMatrixLoadNV: root::spv::Op = 5359;
@@ -2032,6 +2170,8 @@ pub mod root {
         pub const Op_OpUSubSatINTEL: root::spv::Op = 5596;
         pub const Op_OpIMul32x16INTEL: root::spv::Op = 5597;
         pub const Op_OpUMul32x16INTEL: root::spv::Op = 5598;
+        pub const Op_OpFunctionPointerINTEL: root::spv::Op = 5600;
+        pub const Op_OpFunctionPointerCallINTEL: root::spv::Op = 5601;
         pub const Op_OpDecorateString: root::spv::Op = 5632;
         pub const Op_OpDecorateStringGOOGLE: root::spv::Op = 5632;
         pub const Op_OpMemberDecorateString: root::spv::Op = 5633;
@@ -2174,6 +2314,10 @@ pub mod root {
         pub const Op_OpSubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL: root::spv::Op = 5814;
         pub const Op_OpSubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL: root::spv::Op = 5815;
         pub const Op_OpSubgroupAvcSicGetInterRawSadsINTEL: root::spv::Op = 5816;
+        pub const Op_OpLoopControlINTEL: root::spv::Op = 5887;
+        pub const Op_OpReadPipeBlockingINTEL: root::spv::Op = 5946;
+        pub const Op_OpWritePipeBlockingINTEL: root::spv::Op = 5947;
+        pub const Op_OpFPGARegINTEL: root::spv::Op = 5949;
         pub const Op_OpRayQueryGetRayTMinKHR: root::spv::Op = 6016;
         pub const Op_OpRayQueryGetRayFlagsKHR: root::spv::Op = 6017;
         pub const Op_OpRayQueryGetIntersectionTKHR: root::spv::Op = 6018;
@@ -2192,12 +2336,17 @@ pub mod root {
         pub const Op_OpRayQueryGetWorldRayOriginKHR: root::spv::Op = 6030;
         pub const Op_OpRayQueryGetIntersectionObjectToWorldKHR: root::spv::Op = 6031;
         pub const Op_OpRayQueryGetIntersectionWorldToObjectKHR: root::spv::Op = 6032;
+        pub const Op_OpAtomicFAddEXT: root::spv::Op = 6035;
         pub const Op_OpMax: root::spv::Op = 2147483647;
         pub type Op = u32;
     }
     pub mod std {
         #[allow(unused_imports)]
         use self::super::super::root;
+        pub mod __fs {
+            #[allow(unused_imports)]
+            use self::super::super::super::root;
+        }
     }
     pub type __darwin_size_t = ::std::os::raw::c_ulong;
     pub mod spirv_cross {
@@ -2228,7 +2377,8 @@ pub mod root {
             AccelerationStructure = 19,
             RayQuery = 20,
             ControlPointArray = 21,
-            Char = 22,
+            Interpolant = 22,
+            Char = 23,
         }
         pub const MSLSamplerCoord_MSL_SAMPLER_COORD_NORMALIZED: root::spirv_cross::MSLSamplerCoord =
             0;

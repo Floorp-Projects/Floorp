@@ -1,10 +1,8 @@
 //! Pipeline state
 
-use com::WeakPtr;
-use std::ops::Deref;
-use std::{ffi, ptr};
+use crate::{com::WeakPtr, Blob, D3DResult, Error};
+use std::{ffi, ops::Deref, ptr};
 use winapi::um::{d3d12, d3dcompiler};
-use {Blob, D3DResult, Error};
 
 bitflags! {
     pub struct PipelineStateFlags: u32 {
@@ -31,6 +29,13 @@ impl Shader {
         Shader(d3d12::D3D12_SHADER_BYTECODE {
             BytecodeLength: 0,
             pShaderBytecode: ptr::null(),
+        })
+    }
+
+    pub fn from_raw(data: &[u8]) -> Self {
+        Shader(d3d12::D3D12_SHADER_BYTECODE {
+            BytecodeLength: data.len() as _,
+            pShaderBytecode: data.as_ptr() as _,
         })
     }
 

@@ -10,6 +10,9 @@ use crate::{device::OutOfMemory, format::Format};
 /// An offset inside a buffer, in bytes.
 pub type Offset = u64;
 
+/// An stride between elements inside a buffer, in bytes.
+pub type Stride = u32;
+
 /// A subrange of the buffer.
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -37,89 +40,27 @@ impl SubRange {
 pub type State = Access;
 
 /// Error creating a buffer.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum CreationError {
     /// Out of either host or device memory.
-    OutOfMemory(OutOfMemory),
-
+    #[error(transparent)]
+    OutOfMemory(#[from] OutOfMemory),
     /// Requested buffer usage is not supported.
     ///
     /// Older GL version don't support constant buffers or multiple usage flags.
-    UnsupportedUsage {
-        /// Unsupported usage passed on buffer creation.
-        usage: Usage,
-    },
-}
-
-impl From<OutOfMemory> for CreationError {
-    fn from(error: OutOfMemory) -> Self {
-        CreationError::OutOfMemory(error)
-    }
-}
-
-impl std::fmt::Display for CreationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CreationError::OutOfMemory(err) => write!(fmt, "Failed to create buffer: {}", err),
-            CreationError::UnsupportedUsage { usage } => write!(
-                fmt,
-                "Failed to create buffer: Unsupported usage: {:?}",
-                usage
-            ),
-        }
-    }
-}
-
-impl std::error::Error for CreationError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            CreationError::OutOfMemory(err) => Some(err),
-            _ => None,
-        }
-    }
+    #[error("Unsupported usage: {0:?}")]
+    UnsupportedUsage(Usage),
 }
 
 /// Error creating a buffer view.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum ViewCreationError {
     /// Out of either host or device memory.
-    OutOfMemory(OutOfMemory),
-
+    #[error(transparent)]
+    OutOfMemory(#[from] OutOfMemory),
     /// Buffer view format is not supported.
+    #[error("Unsupported format: {0:?}")]
     UnsupportedFormat(Option<Format>),
-}
-
-impl From<OutOfMemory> for ViewCreationError {
-    fn from(error: OutOfMemory) -> Self {
-        ViewCreationError::OutOfMemory(error)
-    }
-}
-
-impl std::fmt::Display for ViewCreationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ViewCreationError::OutOfMemory(err) => {
-                write!(fmt, "Failed to create buffer view: {}", err)
-            }
-            ViewCreationError::UnsupportedFormat(Some(format)) => write!(
-                fmt,
-                "Failed to create buffer view: Unsupported format {:?}",
-                format
-            ),
-            ViewCreationError::UnsupportedFormat(None) => {
-                write!(fmt, "Failed to create buffer view: Unspecified format")
-            }
-        }
-    }
-}
-
-impl std::error::Error for ViewCreationError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            ViewCreationError::OutOfMemory(err) => Some(err),
-            _ => None,
-        }
-    }
 }
 
 bitflags!(

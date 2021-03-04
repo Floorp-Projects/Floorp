@@ -1,11 +1,13 @@
 bitflags::bitflags! {
     /// Flags to augment descriptor pool creation.
-    pub struct DescriptorPoolCreateFlags : u8 {
+    ///
+    /// Match corresponding bits in Vulkan.
+    pub struct DescriptorPoolCreateFlags: u32 {
         /// Allows freeing individial sets.
-        const FREE_DESCRIPTOR_SET = 1;
+        const FREE_DESCRIPTOR_SET = 0x1;
 
         /// Allows allocating sets with layout created with matching backend-specific flag.
-        const UPDATE_AFTER_BIND = 2;
+        const UPDATE_AFTER_BIND = 0x2;
     }
 }
 

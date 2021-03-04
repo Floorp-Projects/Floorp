@@ -12,7 +12,6 @@ use winapi::{
 use wio::com::ComPtr;
 
 use std::{
-    borrow::Borrow,
     fmt, mem,
     ops::Range,
     ptr,
@@ -413,13 +412,12 @@ impl Device {
         source: &pso::EntryPoint<Backend>,
         layout: &PipelineLayout,
         features: &hal::Features,
-    ) -> Result<Option<ComPtr<d3dcommon::ID3DBlob>>, device::ShaderError> {
+    ) -> Result<Option<ComPtr<d3dcommon::ID3DBlob>>, pso::CreationError> {
         // TODO: entrypoint stuff
         match *source.module {
             ShaderModule::Dxbc(ref _shader) => {
-                unimplemented!()
-
-                // Ok(Some(shader))
+                error!("DXBC modules are not supported yet");
+                Err(pso::CreationError::Other)
             }
             ShaderModule::Spirv(ref raw_data) => Ok(shader::compile_spirv_entrypoint(
                 raw_data, stage, source, layout, features,
@@ -765,7 +763,7 @@ impl Device {
         config: &window::SwapchainConfig,
         window_handle: HWND,
         factory: ComPtr<dxgi::IDXGIFactory>,
-    ) -> Result<(ComPtr<dxgi::IDXGISwapChain>, dxgiformat::DXGI_FORMAT), window::CreationError>
+    ) -> Result<(ComPtr<dxgi::IDXGISwapChain>, dxgiformat::DXGI_FORMAT), window::SwapchainError>
     {
         // TODO: use IDXGIFactory2 for >=11.1
         // TODO: this function should be able to fail (Result)?
@@ -858,70 +856,44 @@ impl device::Device<Backend> for Device {
         // automatic
     }
 
-    unsafe fn create_render_pass<'a, IA, IS, ID>(
+    unsafe fn create_render_pass<'a, Ia, Is, Id>(
         &self,
-        attachments: IA,
-        subpasses: IS,
-        _dependencies: ID,
+        attachments: Ia,
+        subpasses: Is,
+        _dependencies: Id,
     ) -> Result<RenderPass, device::OutOfMemory>
     where
-        IA: IntoIterator,
-        IA::Item: Borrow<pass::Attachment>,
-        IS: IntoIterator,
-        IS::Item: Borrow<pass::SubpassDesc<'a>>,
-        ID: IntoIterator,
-        ID::Item: Borrow<pass::SubpassDependency>,
+        Ia: Iterator<Item = pass::Attachment>,
+        Is: Iterator<Item = pass::SubpassDesc<'a>>,
     {
         Ok(RenderPass {
-            attachments: attachments
-                .into_iter()
-                .map(|attachment| attachment.borrow().clone())
-                .collect(),
+            attachments: attachments.collect(),
             subpasses: subpasses
-                .into_iter()
-                .map(|desc| {
-                    let desc = desc.borrow();
-                    SubpassDesc {
-                        color_attachments: desc
-                            .colors
-                            .iter()
-                            .map(|color| color.borrow().clone())
-                            .collect(),
-                        depth_stencil_attachment: desc.depth_stencil.map(|d| *d),
-                        input_attachments: desc
-                            .inputs
-                            .iter()
-                            .map(|input| input.borrow().clone())
-                            .collect(),
-                        resolve_attachments: desc
-                            .resolves
-                            .iter()
-                            .map(|resolve| resolve.borrow().clone())
-                            .collect(),
-                    }
+                .map(|desc| SubpassDesc {
+                    color_attachments: desc.colors.to_vec(),
+                    depth_stencil_attachment: desc.depth_stencil.cloned(),
+                    input_attachments: desc.inputs.to_vec(),
+                    resolve_attachments: desc.resolves.to_vec(),
                 })
                 .collect(),
         })
     }
 
-    unsafe fn create_pipeline_layout<IS, IR>(
+    unsafe fn create_pipeline_layout<'a, Is, Ic>(
         &self,
-        set_layouts: IS,
-        _push_constant_ranges: IR,
+        set_layouts: Is,
+        _push_constant_ranges: Ic,
     ) -> Result<PipelineLayout, device::OutOfMemory>
     where
-        IS: IntoIterator,
-        IS::Item: Borrow<DescriptorSetLayout>,
-        IR: IntoIterator,
-        IR::Item: Borrow<(pso::ShaderStageFlags, Range<u32>)>,
+        Is: Iterator<Item = &'a DescriptorSetLayout>,
+        Ic: Iterator<Item = (pso::ShaderStageFlags, Range<u32>)>,
     {
         let mut res_offsets = MultiStageData::<RegisterData<RegisterAccumulator>>::default();
         let mut sets = Vec::new();
         for set_layout in set_layouts {
-            let layout = set_layout.borrow();
             sets.push(DescriptorSetInfo {
-                bindings: Arc::clone(&layout.bindings),
-                registers: res_offsets.advance(&layout.pool_mapping),
+                bindings: Arc::clone(&set_layout.bindings),
+                registers: res_offsets.advance(&set_layout.pool_mapping),
             });
         }
 
@@ -975,10 +947,13 @@ impl device::Device<Backend> for Device {
         //empty
     }
 
-    unsafe fn merge_pipeline_caches<I>(&self, _: &(), _: I) -> Result<(), device::OutOfMemory>
+    unsafe fn merge_pipeline_caches<'a, I>(
+        &self,
+        _: &mut (),
+        _: I,
+    ) -> Result<(), device::OutOfMemory>
     where
-        I: IntoIterator,
-        I::Item: Borrow<()>,
+        I: Iterator<Item = &'a ()>,
     {
         //empty
         Ok(())
@@ -990,15 +965,11 @@ impl device::Device<Backend> for Device {
         _cache: Option<&()>,
     ) -> Result<GraphicsPipeline, pso::CreationError> {
         let features = &self.features;
-        let build_shader = |stage: ShaderStage, source: Option<&pso::EntryPoint<'a, Backend>>| {
-            let source = match source {
-                Some(src) => src,
-                None => return Ok(None),
+        let build_shader =
+            |stage: ShaderStage, source: Option<&pso::EntryPoint<'a, Backend>>| match source {
+                Some(src) => Self::extract_entry_point(stage, src, desc.layout, features),
+                None => Ok(None),
             };
-
-            Self::extract_entry_point(stage, source, desc.layout, features)
-                .map_err(|err| pso::CreationError::Shader(err))
-        };
 
         let (layout, vs, gs, hs, ds) = match desc.primitive_assembler {
             pso::PrimitiveAssemblerDesc::Vertex {
@@ -1011,8 +982,7 @@ impl device::Device<Backend> for Device {
             } => {
                 let vertex_semantic_remapping = match vertex.module {
                     ShaderModule::Spirv(spirv) => {
-                        shader::introspect_spirv_vertex_semantic_remapping(spirv)
-                            .map_err(|err| pso::CreationError::Shader(err))?
+                        shader::introspect_spirv_vertex_semantic_remapping(spirv)?
                     }
                     _ => unimplemented!(),
                 };
@@ -1065,6 +1035,20 @@ impl device::Device<Backend> for Device {
         let blend_state = self.create_blend_state(&desc.blender, &desc.multisampling)?;
         let depth_stencil_state = Some(self.create_depth_stencil_state(&desc.depth_stencil)?);
 
+        match desc.label {
+            Some(label) if verify_debug_ascii(label) => {
+                let mut name = label.to_string();
+
+                set_debug_name_with_suffix(&blend_state, &mut name, " -- Blend State");
+                set_debug_name_with_suffix(&rasterizer_state, &mut name, " -- Rasterizer State");
+                set_debug_name_with_suffix(&layout.raw, &mut name, " -- Input Layout");
+                if let Some(ref dss) = depth_stencil_state {
+                    set_debug_name_with_suffix(&dss.raw, &mut name, " -- Depth Stencil State");
+                }
+            }
+            _ => {}
+        }
+
         Ok(GraphicsPipeline {
             vs,
             gs,
@@ -1089,15 +1073,11 @@ impl device::Device<Backend> for Device {
         _cache: Option<&()>,
     ) -> Result<ComputePipeline, pso::CreationError> {
         let features = &self.features;
-        let build_shader = |stage: ShaderStage, source: Option<&pso::EntryPoint<'a, Backend>>| {
-            let source = match source {
-                Some(src) => src,
-                None => return Ok(None),
+        let build_shader =
+            |stage: ShaderStage, source: Option<&pso::EntryPoint<'a, Backend>>| match source {
+                Some(src) => Self::extract_entry_point(stage, src, desc.layout, features),
+                None => Ok(None),
             };
-
-            Self::extract_entry_point(stage, source, desc.layout, features)
-                .map_err(|err| pso::CreationError::Shader(err))
-        };
 
         let cs = build_shader(ShaderStage::Compute, Some(&desc.shader))?.unwrap();
         let cs = self.create_compute_shader(cs)?;
@@ -1108,18 +1088,10 @@ impl device::Device<Backend> for Device {
     unsafe fn create_framebuffer<I>(
         &self,
         _renderpass: &RenderPass,
-        attachments: I,
+        _attachments: I,
         extent: image::Extent,
-    ) -> Result<Framebuffer, device::OutOfMemory>
-    where
-        I: IntoIterator,
-        I::Item: Borrow<ImageView>,
-    {
+    ) -> Result<Framebuffer, device::OutOfMemory> {
         Ok(Framebuffer {
-            attachments: attachments
-                .into_iter()
-                .map(|att| att.borrow().clone())
-                .collect(),
             layers: extent.depth as _,
         })
     }
@@ -1907,14 +1879,12 @@ impl device::Device<Backend> for Device {
         _flags: pso::DescriptorPoolCreateFlags,
     ) -> Result<DescriptorPool, device::OutOfMemory>
     where
-        I: IntoIterator,
-        I::Item: Borrow<pso::DescriptorRangeDesc>,
+        I: Iterator<Item = pso::DescriptorRangeDesc>,
     {
         let mut total = RegisterData::default();
         for range in ranges {
-            let r = range.borrow();
-            let content = DescriptorContent::from(r.ty);
-            total.add_content_many(content, r.count as DescriptorIndex);
+            let content = DescriptorContent::from(range.ty);
+            total.add_content_many(content, range.count as DescriptorIndex);
         }
 
         let max_stages = 6;
@@ -1922,22 +1892,17 @@ impl device::Device<Backend> for Device {
         Ok(DescriptorPool::with_capacity(count))
     }
 
-    unsafe fn create_descriptor_set_layout<I, J>(
+    unsafe fn create_descriptor_set_layout<'a, I, J>(
         &self,
         layout_bindings: I,
         _immutable_samplers: J,
     ) -> Result<DescriptorSetLayout, device::OutOfMemory>
     where
-        I: IntoIterator,
-        I::Item: Borrow<pso::DescriptorSetLayoutBinding>,
-        J: IntoIterator,
-        J::Item: Borrow<Sampler>,
+        I: Iterator<Item = pso::DescriptorSetLayoutBinding>,
+        J: Iterator<Item = &'a Sampler>,
     {
         let mut total = MultiStageData::<RegisterData<_>>::default();
-        let mut bindings = layout_bindings
-            .into_iter()
-            .map(|b| b.borrow().clone())
-            .collect::<Vec<_>>();
+        let mut bindings = layout_bindings.collect::<Vec<_>>();
 
         for binding in bindings.iter() {
             let content = DescriptorContent::from(binding.ty);
@@ -1972,208 +1937,187 @@ impl device::Device<Backend> for Device {
         })
     }
 
-    unsafe fn write_descriptor_sets<'a, I, J>(&self, write_iter: I)
+    unsafe fn write_descriptor_set<'a, I>(&self, op: pso::DescriptorSetWrite<'a, Backend, I>)
     where
-        I: IntoIterator<Item = pso::DescriptorSetWrite<'a, Backend, J>>,
-        J: IntoIterator,
-        J::Item: Borrow<pso::Descriptor<'a, Backend>>,
+        I: Iterator<Item = pso::Descriptor<'a, Backend>>,
     {
-        for write in write_iter {
-            // Get baseline mapping
-            let mut mapping = write
-                .set
-                .layout
-                .pool_mapping
-                .map_register(|mapping| mapping.offset);
+        // Get baseline mapping
+        let mut mapping = op
+            .set
+            .layout
+            .pool_mapping
+            .map_register(|mapping| mapping.offset);
 
-            // Iterate over layout bindings until the first binding is found.
-            let binding_start = write
-                .set
-                .layout
-                .bindings
-                .iter()
-                .position(|binding| binding.binding == write.binding)
-                .unwrap();
+        // Iterate over layout bindings until the first binding is found.
+        let binding_start = op
+            .set
+            .layout
+            .bindings
+            .iter()
+            .position(|binding| binding.binding == op.binding)
+            .unwrap();
 
-            // If we've skipped layout bindings, we need to add them to get the correct binding offset
-            for binding in &write.set.layout.bindings[..binding_start] {
-                let content = DescriptorContent::from(binding.ty);
-                mapping.add_content_many(content, binding.stage_flags, binding.count as _);
-            }
+        // If we've skipped layout bindings, we need to add them to get the correct binding offset
+        for binding in &op.set.layout.bindings[..binding_start] {
+            let content = DescriptorContent::from(binding.ty);
+            mapping.add_content_many(content, binding.stage_flags, binding.count as _);
+        }
 
-            // We start at the given binding index and array index
-            let mut binding_index = binding_start;
-            let mut array_index = write.array_offset;
+        // We start at the given binding index and array index
+        let mut binding_index = binding_start;
+        let mut array_index = op.array_offset;
 
-            // If we're skipping array indices in the current binding, we need to add them to get the correct binding offset
-            if array_index > 0 {
-                let binding: &pso::DescriptorSetLayoutBinding =
-                    &write.set.layout.bindings[binding_index];
-                let content = DescriptorContent::from(binding.ty);
-                mapping.add_content_many(content, binding.stage_flags, array_index as _);
-            }
+        // If we're skipping array indices in the current binding, we need to add them to get the correct binding offset
+        if array_index > 0 {
+            let binding: &pso::DescriptorSetLayoutBinding = &op.set.layout.bindings[binding_index];
+            let content = DescriptorContent::from(binding.ty);
+            mapping.add_content_many(content, binding.stage_flags, array_index as _);
+        }
 
-            // Iterate over the descriptors, figuring out the corresponding binding, and adding
-            // it to the set of bindings.
-            //
-            // When we hit the end of an array of descriptors and there are still descriptors left
-            // over, we will spill into writing the next binding.
-            for descriptor in write.descriptors {
-                let binding: &pso::DescriptorSetLayoutBinding =
-                    &write.set.layout.bindings[binding_index];
+        // Iterate over the descriptors, figuring out the corresponding binding, and adding
+        // it to the set of bindings.
+        //
+        // When we hit the end of an array of descriptors and there are still descriptors left
+        // over, we will spill into writing the next binding.
+        for descriptor in op.descriptors {
+            let binding: &pso::DescriptorSetLayoutBinding = &op.set.layout.bindings[binding_index];
 
-                let handles = match *descriptor.borrow() {
-                    pso::Descriptor::Buffer(buffer, ref _sub) => RegisterData {
-                        c: match buffer.internal.disjoint_cb {
-                            Some(dj_buf) => dj_buf as *mut _,
-                            None => buffer.internal.raw as *mut _,
-                        },
-                        t: buffer.internal.srv.map_or(ptr::null_mut(), |p| p as *mut _),
-                        u: buffer.internal.uav.map_or(ptr::null_mut(), |p| p as *mut _),
-                        s: ptr::null_mut(),
+            let handles = match descriptor {
+                pso::Descriptor::Buffer(buffer, ref _sub) => RegisterData {
+                    c: match buffer.internal.disjoint_cb {
+                        Some(dj_buf) => dj_buf as *mut _,
+                        None => buffer.internal.raw as *mut _,
                     },
-                    pso::Descriptor::Image(image, _layout) => RegisterData {
-                        c: ptr::null_mut(),
-                        t: image.srv_handle.map_or(ptr::null_mut(), |h| h as *mut _),
-                        u: image.uav_handle.map_or(ptr::null_mut(), |h| h as *mut _),
-                        s: ptr::null_mut(),
-                    },
-                    pso::Descriptor::Sampler(sampler) => RegisterData {
-                        c: ptr::null_mut(),
-                        t: ptr::null_mut(),
-                        u: ptr::null_mut(),
-                        s: sampler.sampler_handle.as_raw() as *mut _,
-                    },
-                    pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => {
-                        RegisterData {
-                            c: ptr::null_mut(),
-                            t: image.srv_handle.map_or(ptr::null_mut(), |h| h as *mut _),
-                            u: image.uav_handle.map_or(ptr::null_mut(), |h| h as *mut _),
-                            s: sampler.sampler_handle.as_raw() as *mut _,
-                        }
-                    }
-                    pso::Descriptor::TexelBuffer(_buffer_view) => unimplemented!(),
+                    t: buffer.internal.srv.map_or(ptr::null_mut(), |p| p as *mut _),
+                    u: buffer.internal.uav.map_or(ptr::null_mut(), |p| p as *mut _),
+                    s: ptr::null_mut(),
+                },
+                pso::Descriptor::Image(image, _layout) => RegisterData {
+                    c: ptr::null_mut(),
+                    t: image.srv_handle.map_or(ptr::null_mut(), |h| h as *mut _),
+                    u: image.uav_handle.map_or(ptr::null_mut(), |h| h as *mut _),
+                    s: ptr::null_mut(),
+                },
+                pso::Descriptor::Sampler(sampler) => RegisterData {
+                    c: ptr::null_mut(),
+                    t: ptr::null_mut(),
+                    u: ptr::null_mut(),
+                    s: sampler.sampler_handle.as_raw() as *mut _,
+                },
+                pso::Descriptor::CombinedImageSampler(image, _layout, sampler) => RegisterData {
+                    c: ptr::null_mut(),
+                    t: image.srv_handle.map_or(ptr::null_mut(), |h| h as *mut _),
+                    u: image.uav_handle.map_or(ptr::null_mut(), |h| h as *mut _),
+                    s: sampler.sampler_handle.as_raw() as *mut _,
+                },
+                pso::Descriptor::TexelBuffer(_buffer_view) => unimplemented!(),
+            };
+
+            let content = DescriptorContent::from(binding.ty);
+            if content.contains(DescriptorContent::CBV) {
+                let offsets = mapping.map_other(|map| map.c);
+                op.set
+                    .assign_stages(&offsets, binding.stage_flags, handles.c);
+            };
+            if content.contains(DescriptorContent::SRV) {
+                let offsets = mapping.map_other(|map| map.t);
+                op.set
+                    .assign_stages(&offsets, binding.stage_flags, handles.t);
+            };
+            if content.contains(DescriptorContent::UAV) {
+                // If this binding is used by the graphics pipeline and is a UAV, it belongs to the "Output Merger"
+                // stage, so we only put them in the fragment stage to save redundant descriptor allocations.
+                let stage_flags = if binding
+                    .stage_flags
+                    .intersects(pso::ShaderStageFlags::ALL - pso::ShaderStageFlags::COMPUTE)
+                {
+                    let mut stage_flags = pso::ShaderStageFlags::FRAGMENT;
+                    stage_flags.set(
+                        pso::ShaderStageFlags::COMPUTE,
+                        binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE),
+                    );
+                    stage_flags
+                } else {
+                    binding.stage_flags
                 };
 
-                let content = DescriptorContent::from(binding.ty);
-                if content.contains(DescriptorContent::CBV) {
-                    let offsets = mapping.map_other(|map| map.c);
-                    write
-                        .set
-                        .assign_stages(&offsets, binding.stage_flags, handles.c);
-                };
-                if content.contains(DescriptorContent::SRV) {
-                    let offsets = mapping.map_other(|map| map.t);
-                    write
-                        .set
-                        .assign_stages(&offsets, binding.stage_flags, handles.t);
-                };
-                if content.contains(DescriptorContent::UAV) {
-                    // If this binding is used by the graphics pipeline and is a UAV, it belongs to the "Output Merger"
-                    // stage, so we only put them in the fragment stage to save redundant descriptor allocations.
-                    let stage_flags = if binding
-                        .stage_flags
-                        .intersects(pso::ShaderStageFlags::ALL - pso::ShaderStageFlags::COMPUTE)
-                    {
-                        let mut stage_flags = pso::ShaderStageFlags::FRAGMENT;
-                        stage_flags.set(
-                            pso::ShaderStageFlags::COMPUTE,
-                            binding.stage_flags.contains(pso::ShaderStageFlags::COMPUTE),
-                        );
-                        stage_flags
-                    } else {
-                        binding.stage_flags
-                    };
+                let offsets = mapping.map_other(|map| map.u);
+                op.set.assign_stages(&offsets, stage_flags, handles.u);
+            };
+            if content.contains(DescriptorContent::SAMPLER) {
+                let offsets = mapping.map_other(|map| map.s);
+                op.set
+                    .assign_stages(&offsets, binding.stage_flags, handles.s);
+            };
 
-                    let offsets = mapping.map_other(|map| map.u);
-                    write.set.assign_stages(&offsets, stage_flags, handles.u);
-                };
-                if content.contains(DescriptorContent::SAMPLER) {
-                    let offsets = mapping.map_other(|map| map.s);
-                    write
-                        .set
-                        .assign_stages(&offsets, binding.stage_flags, handles.s);
-                };
+            mapping.add_content_many(content, binding.stage_flags, 1);
 
-                mapping.add_content_many(content, binding.stage_flags, 1);
-
-                array_index += 1;
-                if array_index >= binding.count {
-                    // We've run out of array to write to, we should overflow to the next binding.
-                    array_index = 0;
-                    binding_index += 1;
-                }
+            array_index += 1;
+            if array_index >= binding.count {
+                // We've run out of array to write to, we should overflow to the next binding.
+                array_index = 0;
+                binding_index += 1;
             }
         }
     }
 
-    unsafe fn copy_descriptor_sets<'a, I>(&self, copy_iter: I)
-    where
-        I: IntoIterator,
-        I::Item: Borrow<pso::DescriptorSetCopy<'a, Backend>>,
-    {
-        for copy in copy_iter {
-            let _copy = copy.borrow();
-            //TODO
-            /*
-            for offset in 0 .. copy.count {
-                let (dst_ty, dst_handle_offset, dst_second_handle_offset) = copy
-                    .dst_set
-                    .get_handle_offset(copy.dst_binding + offset as u32);
-                let (src_ty, src_handle_offset, src_second_handle_offset) = copy
-                    .src_set
-                    .get_handle_offset(copy.src_binding + offset as u32);
-                assert_eq!(dst_ty, src_ty);
+    unsafe fn copy_descriptor_set<'a>(&self, _op: pso::DescriptorSetCopy<'a, Backend>) {
+        unimplemented!()
+        /*
+        for offset in 0 .. copy.count {
+            let (dst_ty, dst_handle_offset, dst_second_handle_offset) = copy
+                .dst_set
+                .get_handle_offset(copy.dst_binding + offset as u32);
+            let (src_ty, src_handle_offset, src_second_handle_offset) = copy
+                .src_set
+                .get_handle_offset(copy.src_binding + offset as u32);
+            assert_eq!(dst_ty, src_ty);
 
-                let dst_handle = copy.dst_set.handles.offset(dst_handle_offset as isize);
-                let src_handle = copy.dst_set.handles.offset(src_handle_offset as isize);
+            let dst_handle = copy.dst_set.handles.offset(dst_handle_offset as isize);
+            let src_handle = copy.dst_set.handles.offset(src_handle_offset as isize);
 
-                match dst_ty {
-                    pso::DescriptorType::Image {
-                        ty: pso::ImageDescriptorType::Sampled { with_sampler: true }
-                    } => {
-                        let dst_second_handle = copy
-                            .dst_set
-                            .handles
-                            .offset(dst_second_handle_offset as isize);
-                        let src_second_handle = copy
-                            .dst_set
-                            .handles
-                            .offset(src_second_handle_offset as isize);
+            match dst_ty {
+                pso::DescriptorType::Image {
+                    ty: pso::ImageDescriptorType::Sampled { with_sampler: true }
+                } => {
+                    let dst_second_handle = copy
+                        .dst_set
+                        .handles
+                        .offset(dst_second_handle_offset as isize);
+                    let src_second_handle = copy
+                        .dst_set
+                        .handles
+                        .offset(src_second_handle_offset as isize);
 
-                        *dst_handle = *src_handle;
-                        *dst_second_handle = *src_second_handle;
-                    }
-                    _ => *dst_handle = *src_handle,
+                    *dst_handle = *src_handle;
+                    *dst_second_handle = *src_second_handle;
                 }
-            }*/
-        }
+                _ => *dst_handle = *src_handle,
+            }
+        }*/
     }
 
     unsafe fn map_memory(
         &self,
-        memory: &Memory,
+        memory: &mut Memory,
         segment: memory::Segment,
     ) -> Result<*mut u8, device::MapError> {
         Ok(memory.host_ptr.offset(segment.offset as isize))
     }
 
-    unsafe fn unmap_memory(&self, _memory: &Memory) {
+    unsafe fn unmap_memory(&self, _memory: &mut Memory) {
         // persistent mapping FTW
     }
 
     unsafe fn flush_mapped_memory_ranges<'a, I>(&self, ranges: I) -> Result<(), device::OutOfMemory>
     where
-        I: IntoIterator,
-        I::Item: Borrow<(&'a Memory, memory::Segment)>,
+        I: Iterator<Item = (&'a Memory, memory::Segment)>,
     {
         let _scope = debug_scope!(&self.context, "FlushMappedRanges");
 
         // go through every range we wrote to
-        for range in ranges.into_iter() {
-            let &(memory, ref segment) = range.borrow();
+        for (memory, ref segment) in ranges {
             let range = memory.resolve(segment);
-
             let _scope = debug_scope!(&self.context, "Range({:?})", range);
             memory.flush(&self.context, range);
         }
@@ -2186,16 +2130,13 @@ impl device::Device<Backend> for Device {
         ranges: I,
     ) -> Result<(), device::OutOfMemory>
     where
-        I: IntoIterator,
-        I::Item: Borrow<(&'a Memory, memory::Segment)>,
+        I: Iterator<Item = (&'a Memory, memory::Segment)>,
     {
         let _scope = debug_scope!(&self.context, "InvalidateMappedRanges");
 
         // go through every range we want to read from
-        for range in ranges.into_iter() {
-            let &(memory, ref segment) = range.borrow();
+        for (memory, ref segment) in ranges {
             let range = memory.resolve(segment);
-
             let _scope = debug_scope!(&self.context, "Range({:?})", range);
             memory.invalidate(
                 &self.context,
@@ -2220,7 +2161,7 @@ impl device::Device<Backend> for Device {
         }))
     }
 
-    unsafe fn reset_fence(&self, fence: &Fence) -> Result<(), device::OutOfMemory> {
+    unsafe fn reset_fence(&self, fence: &mut Fence) -> Result<(), device::OutOfMemory> {
         *fence.mutex.lock() = false;
         Ok(())
     }
@@ -2229,7 +2170,7 @@ impl device::Device<Backend> for Device {
         &self,
         fence: &Fence,
         timeout_ns: u64,
-    ) -> Result<bool, device::OomOrDeviceLost> {
+    ) -> Result<bool, device::WaitError> {
         use std::time::{Duration, Instant};
 
         debug!("wait_for_fence {:?} for {} ns", fence, timeout_ns);
@@ -2268,15 +2209,15 @@ impl device::Device<Backend> for Device {
         unimplemented!()
     }
 
-    unsafe fn get_event_status(&self, _event: &()) -> Result<bool, device::OomOrDeviceLost> {
+    unsafe fn get_event_status(&self, _event: &()) -> Result<bool, device::WaitError> {
         unimplemented!()
     }
 
-    unsafe fn set_event(&self, _event: &()) -> Result<(), device::OutOfMemory> {
+    unsafe fn set_event(&self, _event: &mut ()) -> Result<(), device::OutOfMemory> {
         unimplemented!()
     }
 
-    unsafe fn reset_event(&self, _event: &()) -> Result<(), device::OutOfMemory> {
+    unsafe fn reset_event(&self, _event: &mut ()) -> Result<(), device::OutOfMemory> {
         unimplemented!()
     }
 
@@ -2309,9 +2250,9 @@ impl device::Device<Backend> for Device {
         _pool: &QueryPool,
         _queries: Range<query::Id>,
         _data: &mut [u8],
-        _stride: buffer::Offset,
+        _stride: buffer::Stride,
         _flags: query::ResultFlags,
-    ) -> Result<bool, device::OomOrDeviceLost> {
+    ) -> Result<bool, device::WaitError> {
         unimplemented!()
     }
 
@@ -2446,40 +2387,5 @@ impl device::Device<Backend> for Device {
 
     unsafe fn set_pipeline_layout_name(&self, _pipeline_layout: &mut PipelineLayout, _name: &str) {
         // TODO
-    }
-
-    unsafe fn set_compute_pipeline_name(
-        &self,
-        _compute_pipeline: &mut ComputePipeline,
-        _name: &str,
-    ) {
-        // TODO
-    }
-
-    unsafe fn set_graphics_pipeline_name(
-        &self,
-        graphics_pipeline: &mut GraphicsPipeline,
-        name: &str,
-    ) {
-        if !verify_debug_ascii(name) {
-            return;
-        }
-
-        let mut name = name.to_string();
-
-        set_debug_name_with_suffix(&graphics_pipeline.blend_state, &mut name, " -- Blend State");
-        set_debug_name_with_suffix(
-            &graphics_pipeline.rasterizer_state,
-            &mut name,
-            " -- Rasterizer State",
-        );
-        set_debug_name_with_suffix(
-            &graphics_pipeline.input_layout,
-            &mut name,
-            " -- Input Layout",
-        );
-        if let Some(ref dss) = graphics_pipeline.depth_stencil_state {
-            set_debug_name_with_suffix(&dss.raw, &mut name, " -- Depth Stencil State");
-        }
     }
 }

@@ -61,3 +61,48 @@ pub fn inplace_or_alloc_array<T, R, Consumer>(size: usize, consumer: Consumer) -
         Err(consumer) => alloc_array(size, consumer),
     }
 }
+
+/// `inplace_or_alloc_from_iter` is helper function used to easy trying to place data from `Iterator`.
+///
+/// It tries to get upper bound of `size_hint` of iterator and forward it to `inplace_or_alloc_array` function.
+/// It there is not upper bound hint from iterator, then it just `collect` your data into `Vec`.
+///
+/// If iterator contains more data that `size_hint` said
+/// (and more than `try_inplace_array` function placed on stack),
+/// then items will be moved and collected (by iterating) into `Vec` also.
+///
+/// # Examples
+///
+/// ```rust
+/// // Some random number to demonstrate
+/// let count = 42;
+/// let iterator = 0..count;
+///
+/// let result = ::inplace_it::inplace_or_alloc_from_iter(iterator.clone(), |mem| {
+///      assert_eq!(mem.len(), count);
+///      assert!(mem.iter().cloned().eq(iterator));
+///
+///      // Some result
+///      format!("{}", mem.len())
+///  });
+///  assert_eq!(result, format!("{}", count));
+/// ```
+pub fn inplace_or_alloc_from_iter<Iter, R, Consumer>(iter: Iter, consumer: Consumer) -> R
+    where Iter: Iterator,
+          Consumer: FnOnce(&mut [Iter::Item]) -> R,
+{
+    match iter.size_hint().1 {
+        Some(upper_bound_hint) => {
+            inplace_or_alloc_array(upper_bound_hint, |uninitialized_guard| {
+                match uninitialized_guard.init_with_dyn_iter(iter) {
+                    Ok(mut guard) => consumer(&mut *guard),
+                    Err(mut vec) => consumer(&mut *vec),
+                }
+            })
+        }
+        None => {
+            let mut vec = iter.collect::<Vec<_>>();
+            consumer(&mut *vec)
+        }
+    }
+}

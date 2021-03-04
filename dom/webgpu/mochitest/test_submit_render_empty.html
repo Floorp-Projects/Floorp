@@ -31,7 +31,7 @@ const func = async function() {
   });
   pass.endPass();
   const command_buffer = encoder.finish();
-  device.defaultQueue.submit([command_buffer]);
+  device.queue.submit([command_buffer]);
   ok(command_buffer !== undefined, 'command_buffer !== undefined');
 };
 

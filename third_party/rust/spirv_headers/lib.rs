@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/spirv_headers/1.4/")]
+#![doc(html_root_url = "https://docs.rs/spirv_headers/1.5/")]
 
 //! The SPIR-V header.
 //!
