@@ -30,9 +30,8 @@ webrtc = ["gkrust-shared/webrtc"]
 wasm_library_sandboxing = ["gkrust-shared/wasm_library_sandboxing"]
 webgpu = ["gkrust-shared/webgpu"]
 remote_agent = ["gkrust-shared/remote"]
-glean = ["gkrust-shared/glean", "fog-gtest"]
 glean_disable_upload = ["gkrust-shared/glean_disable_upload"]
-glean_with_gecko = ["gkrust-shared/glean_with_gecko", "fog-gtest"]
+glean_with_gecko = ["gkrust-shared/glean_with_gecko"]
 rust_fxa_client = ["gkrust-shared/rust_fxa_client"]
 with_dbus = ["gkrust-shared/with_dbus"]
 thread_sanitizer = ["gkrust-shared/thread_sanitizer"]
@@ -47,7 +46,7 @@ nsstring-gtest = { path = "../../../../xpcom/rust/gtest/nsstring" }
 xpcom-gtest = { path = "../../../../xpcom/rust/gtest/xpcom" }
 gkrust-shared = { path = "../../rust/shared" }
 gecko-fuzz-targets = { path = "../../../../tools/fuzzing/rust", optional = true }
-fog-gtest = { path = "../../../components/glean/gtest", optional = true }
+fog-gtest = { path = "../../../components/glean/gtest" }
 
 # Workarounds for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../../mozglue/static/rust" }

@@ -420,8 +420,8 @@ this.AppConstants = Object.freeze({
     true,
 #endif
 
-  MOZ_GLEAN:
-#ifdef MOZ_GLEAN
+  MOZ_GLEAN_ANDROID:
+#ifdef MOZ_GLEAN_ANDROID
     true,
 #else
     false,

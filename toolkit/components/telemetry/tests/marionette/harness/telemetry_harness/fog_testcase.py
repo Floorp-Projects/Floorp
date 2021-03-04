@@ -23,15 +23,15 @@ class FOGTestCase(TelemetryTestCase):
         super(FOGTestCase, self).setUp(*args, **kwargs)
 
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            fog_present = self.marionette.execute_script(
-                "return AppConstants.MOZ_GLEAN;"
+            fog_android = self.marionette.execute_script(
+                "return AppConstants.MOZ_GLEAN_ANDROID;"
             )
 
-        if not fog_present:
+        if fog_android:
             # Before we skip this test, we need to quit marionette and the ping
             # server created in TelemetryTestCase by running tearDown
             super(FOGTestCase, self).tearDown(*args, **kwargs)
-            self.skipTest("FOG is only present in AppConstants.MOZ_GLEAN builds.")
+            self.skipTest("FOG is only initialized when not in an Android build.")
 
         self.fog_ping_server = FOGPingServer(
             self.testvars["server_root"], "http://localhost:0"
