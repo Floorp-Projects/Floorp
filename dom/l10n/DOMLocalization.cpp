@@ -10,6 +10,7 @@
 #include "nsIScriptError.h"
 #include "DOMLocalization.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/L10nOverlays.h"
 

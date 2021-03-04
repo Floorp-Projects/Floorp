@@ -9,6 +9,10 @@
 #include "mozilla/dom/TimeoutManager.h"
 #include "nsGlobalWindowInner.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "GeckoProfiler.h"
+#endif
+
 namespace mozilla::dom {
 
 Timeout::Timeout()
