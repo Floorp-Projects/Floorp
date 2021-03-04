@@ -443,7 +443,8 @@ class QuotaManager final : public BackgroundThreadObject {
                                   const OriginMetadata& aOriginMetadata);
 
   already_AddRefed<GroupInfo> LockedGetOrCreateGroupInfo(
-      PersistenceType aPersistenceType, const nsACString& aGroup);
+      PersistenceType aPersistenceType, const nsACString& aSuffix,
+      const nsACString& aGroup);
 
   already_AddRefed<OriginInfo> LockedGetOriginInfo(
       PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata);
