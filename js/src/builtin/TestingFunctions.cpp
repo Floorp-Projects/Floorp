@@ -6076,7 +6076,7 @@ static bool AssertCorrectRealm(JSContext* cx, unsigned argc, Value* vp) {
 static bool GlobalLexicals(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  Rooted<LexicalEnvironmentObject*> globalLexical(
+  Rooted<GlobalLexicalEnvironmentObject*> globalLexical(
       cx, &cx->global()->lexicalEnvironment());
 
   RootedIdVector props(cx);

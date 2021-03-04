@@ -2718,7 +2718,7 @@ AttachDecision GetNameIRGenerator::tryAttachStub() {
 }
 
 bool CanAttachGlobalName(JSContext* cx,
-                         Handle<LexicalEnvironmentObject*> globalLexical,
+                         Handle<GlobalLexicalEnvironmentObject*> globalLexical,
                          HandleId id, MutableHandleNativeObject holder,
                          MutableHandleShape shape) {
   // The property must be found, and it must be found as a normal data property.
@@ -2756,9 +2756,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  Handle<LexicalEnvironmentObject*> globalLexical =
-      env_.as<LexicalEnvironmentObject>();
-  MOZ_ASSERT(globalLexical->isGlobal());
+  Handle<GlobalLexicalEnvironmentObject*> globalLexical =
+      env_.as<GlobalLexicalEnvironmentObject>();
 
   RootedNativeObject holder(cx_);
   RootedShape shape(cx_);
@@ -2820,8 +2819,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  Handle<LexicalEnvironmentObject*> globalLexical =
-      env_.as<LexicalEnvironmentObject>();
+  Handle<GlobalLexicalEnvironmentObject*> globalLexical =
+      env_.as<GlobalLexicalEnvironmentObject>();
   MOZ_ASSERT(globalLexical->isGlobal());
 
   RootedNativeObject holder(cx_);
@@ -2994,8 +2993,8 @@ AttachDecision BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  Handle<LexicalEnvironmentObject*> globalLexical =
-      env_.as<LexicalEnvironmentObject>();
+  Handle<GlobalLexicalEnvironmentObject*> globalLexical =
+      env_.as<GlobalLexicalEnvironmentObject>();
   MOZ_ASSERT(globalLexical->isGlobal());
 
   JSObject* result = nullptr;
@@ -3646,8 +3645,7 @@ static bool IsGlobalLexicalSetGName(JSOp op, NativeObject* obj,
     return false;
   }
 
-  if (!obj->is<LexicalEnvironmentObject>() ||
-      !obj->as<LexicalEnvironmentObject>().isGlobal()) {
+  if (!obj->is<GlobalLexicalEnvironmentObject>()) {
     return false;
   }
 
