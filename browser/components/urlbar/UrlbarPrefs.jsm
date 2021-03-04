@@ -80,9 +80,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the urlbar displays a permanent search button.
   ["experimental.searchButton", false],
 
-  // Whether we style the search mode indicator's close button on hover.
-  ["experimental.searchModeIndicatorHover", false],
-
   // When we send events to extensions, we wait this amount of time in
   // milliseconds for them to respond before timing out.
   ["extension.timeout", 400],
