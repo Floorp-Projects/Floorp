@@ -50,7 +50,7 @@ add_task(async () => {
 });
 
 decorate_task(
-  withMockApiServer,
+  withMockApiServer(),
   AddonStudies.withStudies([]),
   async function test_addon_unenroll(
     _serverUrl,
@@ -224,7 +224,7 @@ decorate_task(
 
 /* Test that a broken unenroll listener doesn't stop the add-on from being removed */
 decorate_task(
-  withMockApiServer,
+  withMockApiServer(),
   AddonStudies.withStudies([]),
   async function test_addon_unenroll(
     _serverUrl,
