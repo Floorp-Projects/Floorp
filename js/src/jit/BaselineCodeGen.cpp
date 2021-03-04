@@ -881,7 +881,7 @@ void BaselineInterpreterCodeGen::loadGlobalThisValue(ValueOperand dest) {
   Register scratch = dest.scratchReg();
   loadGlobalLexicalEnvironment(scratch);
   static constexpr size_t SlotOffset =
-      GlobalLexicalEnvironmentObject::offsetOfThisValueSlot();
+      LexicalEnvironmentObject::offsetOfThisValueOrScopeSlot();
   masm.loadValue(Address(scratch, SlotOffset), dest);
 }
 

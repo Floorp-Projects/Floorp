@@ -646,8 +646,8 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
     global->setPrivate(nullptr);
   }
 
-  Rooted<GlobalLexicalEnvironmentObject*> lexical(
-      cx, GlobalLexicalEnvironmentObject::create(cx, global));
+  Rooted<LexicalEnvironmentObject*> lexical(
+      cx, LexicalEnvironmentObject::createGlobal(cx, global));
   if (!lexical) {
     return nullptr;
   }
@@ -712,7 +712,7 @@ GlobalObject* GlobalObject::new_(JSContext* cx, const JSClass* clasp,
   return global;
 }
 
-GlobalLexicalEnvironmentObject& GlobalObject::lexicalEnvironment() const {
+LexicalEnvironmentObject& GlobalObject::lexicalEnvironment() const {
   // The lexical environment is marked when marking the global, so we don't need
   // a read barrier here because we know the global is live.
   return *realm()->unbarrieredLexicalEnvironment();

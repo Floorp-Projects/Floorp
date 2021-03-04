@@ -656,7 +656,7 @@ Scope* ScopeStencil::createScope(JSContext* cx, CompilationAtomCache& atomCache,
     case ScopeKind::ClassBody: {
       using ScopeType = LexicalScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      return createSpecificScope<ScopeType, BlockLexicalEnvironmentObject>(
+      return createSpecificScope<ScopeType, LexicalEnvironmentObject>(
           cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::FunctionBodyVar: {

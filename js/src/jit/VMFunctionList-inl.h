@@ -82,8 +82,6 @@ namespace jit {
     js::jit::BigIntStringEqual<js::jit::EqualityKind::NotEqual>)               \
   _(BigIntSub, JS::BigInt::sub)                                                \
   _(BindVarOperation, js::BindVarOperation)                                    \
-  _(BlockLexicalEnvironmentObjectCreate,                                       \
-    js::BlockLexicalEnvironmentObject::create)                                 \
   _(BoxBoxableValue, js::wasm::BoxBoxableValue)                                \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinObjectOperation, js::BuiltinObjectOperation)                        \
@@ -181,6 +179,7 @@ namespace jit {
   _(Lambda, js::Lambda)                                                        \
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
+  _(LexicalEnvironmentObjectCreate, js::LexicalEnvironmentObject::create)      \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
     js::NamedLambdaObject::createTemplateObject)                               \
