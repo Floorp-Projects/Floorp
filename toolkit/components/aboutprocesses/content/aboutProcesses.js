@@ -981,16 +981,20 @@ var Control = {
       }
 
       // Handle selection changes
-      let row = target.parentNode;
+      let row = target.closest("tr");
+      if (!row) {
+        return;
+      }
       if (this.selectedRow) {
         this.selectedRow.removeAttribute("selected");
+        if (this.selectedRow.rowId == row.rowId) {
+          // Clicking the same row again clears the selection.
+          this.selectedRow = null;
+          return;
+        }
       }
-      if (row.windowId) {
-        row.setAttribute("selected", "true");
-        this.selectedRow = row;
-      } else if (this.selectedRow) {
-        this.selectedRow = null;
-      }
+      row.setAttribute("selected", "true");
+      this.selectedRow = row;
     });
 
     // Double click:
@@ -1108,6 +1112,13 @@ var Control = {
 
     await this._updateDisplay(force);
   },
+  _setRowId(row, id, selectedId) {
+    row.rowId = id;
+    if (id == selectedId) {
+      row.setAttribute("selected", "true");
+      this.selectedRow = row;
+    }
+  },
 
   // The force parameter can force a full update even when the mouse has been
   // moved recently.
@@ -1124,6 +1135,11 @@ var Control = {
 
     // Reset the selectedRow field and the _openItems set each time we redraw
     // to avoid keeping forever references to dead processes.
+    let selectedRowId;
+    if (this.selectedRow) {
+      selectedRowId = this.selectedRow.rowId;
+      this.selectedRow = null;
+    }
     let openItems = this._openItems;
     this._openItems = new Set();
 
@@ -1146,6 +1162,7 @@ var Control = {
       process.isHung = isHung;
 
       let processRow = View.appendProcessRow(process, units);
+      this._setRowId(processRow, "p:" + process.pid, selectedRowId);
       processRow.process = process;
 
       if (process.type != "extension") {
@@ -1154,6 +1171,7 @@ var Control = {
         for (let win of process.windows) {
           if (SHOW_ALL_SUBFRAMES || win.tab || win.isProcessRoot) {
             winRow = View.appendDOMWindowRow(win, process);
+            this._setRowId(winRow, "w:" + win.outerWindowId, selectedRowId);
             winRow.win = win;
           }
         }
@@ -1161,11 +1179,12 @@ var Control = {
 
       if (SHOW_THREADS) {
         let threadSummaryRow = View.appendThreadSummaryRow(process, isOpen);
+        this._setRowId(threadSummaryRow, "ts:" + process.pid, selectedRowId);
         threadSummaryRow.process = process;
 
         if (isOpen) {
           this._openItems.add(process.pid);
-          this._showThreads(processRow, units);
+          this._showThreads(processRow, units, selectedRowId);
         }
       }
       if (
@@ -1181,13 +1200,14 @@ var Control = {
 
     await View.commit();
   },
-  _showThreads(row, units) {
+  _showThreads(row, units, selectedRowId) {
     let process = row.process;
     this._sortThreads(process.threads);
     let elt = row;
     for (let thread of process.threads) {
-      // Enrich `elt` with a property `thread`, used for testing.
       elt = View.appendThreadRow(thread, units);
+      this._setRowId(elt, "t:" + thread.tid, selectedRowId);
+      // Enrich `elt` with a property `thread`, used for testing.
       elt.thread = thread;
     }
     return elt;
