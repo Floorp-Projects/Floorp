@@ -16,6 +16,7 @@
 
       let iframe = document.getElementById("iframe");
       let doc = iframe.contentDocument;
+      let win = iframe.contentWindow;
       doc.open("text/html");
       // We need to do two writes here. The first creates the document element,
       // which normally triggers parser blocking. The second triggers the
@@ -25,7 +26,7 @@
       doc.write("<div id=beer></div>");
 
       let elem = doc.getElementById("beer");
-      top.postMessage(elem instanceof HTMLDivElement ? "ok" : "fail",
+      top.postMessage(elem instanceof win.HTMLDivElement ? "ok" : "fail",
                       "*");
 
       doc.close();
