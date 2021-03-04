@@ -10,8 +10,8 @@ using wr::ExternalImageId from "mozilla/webrender/WebRenderAPI.h";
 using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using BufferAddress from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
+using dom::GPUDeviceDescriptor from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
-using webgpu::ffi::WGPUDeviceDescriptor from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUTextureDataLayout from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUTextureCopyView from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUExtent3d from "mozilla/webgpu/ffi/wgpu.h";
@@ -41,7 +41,7 @@ parent:
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (RawId adapterId);
-  async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId);
+  async AdapterRequestDevice(RawId selfId, GPUDeviceDescriptor desc, RawId newId);
   async AdapterDestroy(RawId selfId);
   async BufferReturnShmem(RawId selfId, Shmem shmem);
   async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (Shmem sm);

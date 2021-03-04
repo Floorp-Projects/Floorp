@@ -32,8 +32,12 @@ DEFINE_IPC_SERIALIZER_WITHOUT_FIELDS(mozilla::dom::GPUCommandBufferDescriptor);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPURequestAdapterOptions,
                                   mPowerPreference);
+DEFINE_IPC_SERIALIZER_WITHOUT_FIELDS(mozilla::dom::GPUExtensions);
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPULimits, mMaxBindGroups);
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUDeviceDescriptor,
+                                  mExtensions, mLimits);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUExtent3d, width,
-                                  height, depth_or_array_layers);
+                                  height, depth);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUOrigin3d, x, y, z);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUTextureDataLayout,

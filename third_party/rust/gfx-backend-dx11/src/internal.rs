@@ -13,7 +13,7 @@ use winapi::{
 
 use wio::com::ComPtr;
 
-use std::{mem, ptr};
+use std::{borrow::Borrow, mem, ptr};
 
 use parking_lot::Mutex;
 use smallvec::SmallVec;
@@ -654,7 +654,8 @@ impl Internal {
         dst: &Image,
         regions: T,
     ) where
-        T: Iterator<Item = command::ImageCopy>,
+        T: IntoIterator,
+        T::Item: Borrow<command::ImageCopy>,
     {
         let key = (
             src.decomposed_format.copy_srv.unwrap(),
@@ -674,7 +675,8 @@ impl Internal {
                 context.CSSetConstantBuffers(0, 1, &const_buf.buffer.as_raw());
                 context.CSSetShaderResources(0, 1, [srv].as_ptr());
 
-                for info in regions {
+                for region in regions.into_iter() {
+                    let info = region.borrow();
                     let image = ImageCopy {
                         src: [
                             info.src_offset.x as _,
@@ -714,7 +716,9 @@ impl Internal {
             }
         } else {
             // Default copy path
-            for info in regions {
+            for region in regions.into_iter() {
+                let info: &command::ImageCopy = region.borrow();
+
                 assert_eq!(
                     src.decomposed_format.typeless, dst.decomposed_format.typeless,
                     "DX11 backend cannot copy between underlying image formats: {} to {}.",
@@ -775,7 +779,8 @@ impl Internal {
         dst: &Buffer,
         regions: T,
     ) where
-        T: Iterator<Item = command::BufferImageCopy>,
+        T: IntoIterator,
+        T::Item: Borrow<command::BufferImageCopy>,
     {
         let _scope = debug_scope!(
             context,
@@ -802,7 +807,8 @@ impl Internal {
             context.CSSetShaderResources(0, 1, [srv].as_ptr());
             context.CSSetUnorderedAccessViews(0, 1, [uav].as_ptr(), ptr::null_mut());
 
-            for info in regions {
+            for copy in regions {
+                let info = copy.borrow();
                 let size = src.kind.extent();
                 let buffer_image = BufferImageCopy {
                     buffer_offset: info.buffer_offset as _,
@@ -883,7 +889,8 @@ impl Internal {
         dst: &Image,
         regions: T,
     ) where
-        T: Iterator<Item = command::BufferImageCopy>,
+        T: IntoIterator,
+        T::Item: Borrow<command::BufferImageCopy>,
     {
         let _scope = debug_scope!(
             context,
@@ -904,7 +911,9 @@ impl Internal {
                 "Only CPU to GPU upload of compressed texture is supported atm"
             );
 
-            for info in regions {
+            for copy in regions {
+                let info: &command::BufferImageCopy = copy.borrow();
+
                 let bytes_per_texel = format_desc.bits as u32 / 8;
 
                 let bounds = d3d11::D3D11_BOX {
@@ -958,7 +967,8 @@ impl Internal {
                 context.CSSetConstantBuffers(0, 1, &const_buf.buffer.as_raw());
                 context.CSSetShaderResources(0, 1, [srv].as_ptr());
 
-                for info in regions {
+                for copy in regions {
+                    let info = copy.borrow();
                     let size = dst.kind.extent();
                     let buffer_image = BufferImageCopy {
                         buffer_offset: info.buffer_offset as _,
@@ -1047,7 +1057,8 @@ impl Internal {
         filter: image::Filter,
         regions: T,
     ) where
-        T: Iterator<Item = command::ImageBlit>,
+        T: IntoIterator,
+        T::Item: Borrow<command::ImageBlit>,
     {
         use std::cmp;
 
@@ -1081,7 +1092,8 @@ impl Internal {
                 .as_ptr(),
             );
 
-            for info in regions {
+            for region in regions {
+                let info = region.borrow();
                 let blit_info = {
                     let (sx, dx) = if info.dst_bounds.start.x > info.dst_bounds.end.x {
                         (
@@ -1154,13 +1166,18 @@ impl Internal {
         rects: U,
         cache: &RenderPassCache,
     ) where
-        T: Iterator<Item = command::AttachmentClear>,
-        U: Iterator<Item = pso::ClearRect>,
+        T: IntoIterator,
+        T::Item: Borrow<command::AttachmentClear>,
+        U: IntoIterator,
+        U::Item: Borrow<pso::ClearRect>,
     {
         use hal::format::ChannelType as Ct;
         let _scope = debug_scope!(context, "ClearAttachments");
 
-        let clear_rects: SmallVec<[pso::ClearRect; 8]> = rects.collect();
+        let clear_rects: SmallVec<[pso::ClearRect; 8]> = rects
+            .into_iter()
+            .map(|rect| rect.borrow().clone())
+            .collect();
         let mut const_buf = self.internal_buffer.lock();
 
         unsafe {
@@ -1173,9 +1190,11 @@ impl Internal {
         let subpass = &cache.render_pass.subpasses[cache.current_subpass as usize];
 
         for clear in clears {
+            let clear = clear.borrow();
+
             let _scope = debug_scope!(context, "{:?}", clear);
 
-            match clear {
+            match *clear {
                 command::AttachmentClear::Color { index, value } => {
                     unsafe {
                         const_buf.update(
@@ -1188,7 +1207,7 @@ impl Internal {
 
                     let attachment = {
                         let rtv_id = subpass.color_attachments[index];
-                        &cache.attachments[rtv_id.0].view
+                        &cache.framebuffer.attachments[rtv_id.0]
                     };
 
                     unsafe {
@@ -1237,7 +1256,7 @@ impl Internal {
 
                     let attachment = {
                         let dsv_id = subpass.depth_stencil_attachment.unwrap();
-                        &cache.attachments[dsv_id.0].view
+                        &cache.framebuffer.attachments[dsv_id.0]
                     };
 
                     unsafe {

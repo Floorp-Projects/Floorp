@@ -1,12 +1,14 @@
 //! Graphics command list
 
-use crate::{
-    com::WeakPtr, resource::DiscardRegion, CommandAllocator, CpuDescriptor, DescriptorHeap, Format,
-    GpuAddress, GpuDescriptor, IndexCount, InstanceCount, PipelineState, Rect, Resource, RootIndex,
-    RootSignature, Subresource, VertexCount, VertexOffset, WorkGroupCount, HRESULT,
-};
+use com::WeakPtr;
+use resource::DiscardRegion;
 use std::{mem, ptr};
 use winapi::um::d3d12;
+use {
+    CommandAllocator, CpuDescriptor, DescriptorHeap, Format, GpuAddress, GpuDescriptor, IndexCount,
+    InstanceCount, PipelineState, Rect, Resource, RootSignature, VertexCount, VertexOffset,
+    WorkGroupCount, HRESULT,
+};
 
 #[repr(u32)]
 #[derive(Clone, Copy)]
@@ -60,7 +62,7 @@ pub struct ResourceBarrier(d3d12::D3D12_RESOURCE_BARRIER);
 impl ResourceBarrier {
     pub fn transition(
         resource: Resource,
-        subresource: Subresource,
+        subresource: u32,
         state_before: d3d12::D3D12_RESOURCE_STATES,
         state_after: d3d12::D3D12_RESOURCE_STATES,
         flags: d3d12::D3D12_RESOURCE_BARRIER_FLAGS,
@@ -183,13 +185,13 @@ impl GraphicsCommandList {
     }
 
     pub fn set_index_buffer(&self, gpu_address: GpuAddress, size: u32, format: Format) {
-        let ibv = d3d12::D3D12_INDEX_BUFFER_VIEW {
+        let mut ibv = d3d12::D3D12_INDEX_BUFFER_VIEW {
             BufferLocation: gpu_address,
             SizeInBytes: size,
             Format: format,
         };
         unsafe {
-            self.IASetIndexBuffer(&ibv);
+            self.IASetIndexBuffer(&mut ibv);
         }
     }
 
@@ -240,7 +242,7 @@ impl GraphicsCommandList {
 
     pub fn set_compute_root_descriptor_table(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         base_descriptor: GpuDescriptor,
     ) {
         unsafe {
@@ -250,7 +252,7 @@ impl GraphicsCommandList {
 
     pub fn set_compute_root_constant_buffer_view(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         buffer_location: GpuAddress,
     ) {
         unsafe {
@@ -260,7 +262,7 @@ impl GraphicsCommandList {
 
     pub fn set_compute_root_shader_resource_view(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         buffer_location: GpuAddress,
     ) {
         unsafe {
@@ -270,7 +272,7 @@ impl GraphicsCommandList {
 
     pub fn set_compute_root_unordered_access_view(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         buffer_location: GpuAddress,
     ) {
         unsafe {
@@ -280,7 +282,7 @@ impl GraphicsCommandList {
 
     pub fn set_graphics_root_descriptor_table(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         base_descriptor: GpuDescriptor,
     ) {
         unsafe {
@@ -290,7 +292,7 @@ impl GraphicsCommandList {
 
     pub fn set_graphics_root_constant_buffer_view(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         buffer_location: GpuAddress,
     ) {
         unsafe {
@@ -300,7 +302,7 @@ impl GraphicsCommandList {
 
     pub fn set_graphics_root_shader_resource_view(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         buffer_location: GpuAddress,
     ) {
         unsafe {
@@ -310,7 +312,7 @@ impl GraphicsCommandList {
 
     pub fn set_graphics_root_unordered_access_view(
         &self,
-        root_index: RootIndex,
+        root_index: u32,
         buffer_location: GpuAddress,
     ) {
         unsafe {

@@ -5,8 +5,12 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+#[macro_use]
+extern crate objc;
+
 use metal::*;
-use objc::rc::autoreleasepool;
+
+use cocoa::foundation::NSAutoreleasePool;
 
 const PROGRAM: &'static str = "
     #include <metal_stdlib>\n\
@@ -41,35 +45,39 @@ const PROGRAM: &'static str = "
 ";
 
 fn main() {
-    autoreleasepool(|| {
-        let device = Device::system_default().expect("no device found");
+    let pool = unsafe { NSAutoreleasePool::new(cocoa::base::nil) };
 
-        let options = CompileOptions::new();
-        let library = device.new_library_with_source(PROGRAM, &options).unwrap();
-        let (vs, ps) = (
-            library.get_function("vs", None).unwrap(),
-            library.get_function("ps", None).unwrap(),
-        );
+    let device = Device::system_default().expect("no device found");
 
-        let vertex_desc = VertexDescriptor::new();
+    let options = CompileOptions::new();
+    let library = device.new_library_with_source(PROGRAM, &options).unwrap();
+    let (vs, ps) = (
+        library.get_function("vs", None).unwrap(),
+        library.get_function("ps", None).unwrap(),
+    );
 
-        let desc = RenderPipelineDescriptor::new();
-        desc.set_vertex_function(Some(&vs));
-        desc.set_fragment_function(Some(&ps));
-        desc.set_vertex_descriptor(Some(vertex_desc));
+    let vertex_desc = VertexDescriptor::new();
 
-        println!("{:?}", desc);
+    let desc = RenderPipelineDescriptor::new();
+    desc.set_vertex_function(Some(&vs));
+    desc.set_fragment_function(Some(&ps));
+    desc.set_vertex_descriptor(Some(vertex_desc));
 
-        #[cfg(features = "private")]
-        let _reflection = unsafe {
-            RenderPipelineReflection::new(
-                desc.serialize_vertex_data(),
-                desc.serialize_fragment_data(),
-                vertex_desc.serialize_descriptor(),
-                &device,
-                0x8,
-                0x0,
-            )
-        };
-    });
+    println!("{:?}", desc);
+
+    #[cfg(features = "private")]
+    let _reflection = unsafe {
+        RenderPipelineReflection::new(
+            desc.serialize_vertex_data(),
+            desc.serialize_fragment_data(),
+            vertex_desc.serialize_descriptor(),
+            &device,
+            0x8,
+            0x0,
+        )
+    };
+
+    unsafe {
+        let () = msg_send![pool, release];
+    }
 }

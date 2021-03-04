@@ -6,8 +6,6 @@
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Adapter.h"
 
-#include "AdapterFeatures.h"
-#include "AdapterLimits.h"
 #include "Device.h"
 #include "Instance.h"
 #include "ipc/WebGPUChild.h"
@@ -30,9 +28,6 @@ void Adapter::Cleanup() {
     mBridge->SendAdapterDestroy(mId);
   }
 }
-
-const RefPtr<AdapterFeatures>& Adapter::Features() const { return mFeatures; }
-const RefPtr<AdapterLimits>& Adapter::Limits() const { return mLimits; }
 
 already_AddRefed<dom::Promise> Adapter::RequestDevice(
     const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv) {

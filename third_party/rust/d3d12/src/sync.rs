@@ -1,6 +1,8 @@
-use crate::{com::WeakPtr, HRESULT};
+use com::WeakPtr;
 use std::ptr;
-use winapi::um::{d3d12, synchapi, winnt};
+use winapi::um::d3d12;
+use winapi::um::{synchapi, winnt};
+use HRESULT;
 
 #[derive(Copy, Clone)]
 #[repr(transparent)]

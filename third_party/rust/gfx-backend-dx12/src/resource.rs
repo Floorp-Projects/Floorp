@@ -7,7 +7,14 @@ use winapi::{
     um::d3d12,
 };
 
-use std::{collections::BTreeMap, fmt, ops::Range, slice, sync::Arc};
+use std::{
+    cell::{Cell, RefCell, UnsafeCell},
+    collections::BTreeMap,
+    fmt,
+    ops::Range,
+    slice,
+    sync::Arc,
+};
 
 use crate::{
     descriptors_cpu::{Handle, MultiCopyAccumulator},
@@ -168,7 +175,8 @@ pub struct PipelineLayout {
 
 #[derive(Debug, Clone)]
 pub struct Framebuffer {
-    /// Number of layers in the render area. Required for subpass resolves.
+    pub(crate) attachments: Vec<ImageView>,
+    // Number of layers in the render area. Required for subpass resolves.
     pub(crate) layers: image::Layer,
 }
 
@@ -551,7 +559,7 @@ pub(crate) struct DynamicDescriptor {
 pub struct DescriptorBindingInfo {
     pub(crate) count: u64,
     pub(crate) view_range: Option<DescriptorRange>,
-    pub(crate) dynamic_descriptors: Vec<DynamicDescriptor>,
+    pub(crate) dynamic_descriptors: UnsafeCell<Vec<DynamicDescriptor>>,
     pub(crate) content: DescriptorContent,
 }
 
@@ -588,9 +596,9 @@ pub struct DescriptorSet {
     // Required for binding at command buffer
     pub(crate) heap_srv_cbv_uav: native::DescriptorHeap,
     pub(crate) heap_samplers: native::DescriptorHeap,
-    pub(crate) sampler_origins: Box<[native::CpuDescriptor]>,
+    pub(crate) sampler_origins: RefCell<Box<[native::CpuDescriptor]>>,
     pub(crate) binding_infos: Vec<DescriptorBindingInfo>,
-    pub(crate) first_gpu_sampler: Option<native::GpuDescriptor>,
+    pub(crate) first_gpu_sampler: Cell<Option<native::GpuDescriptor>>,
     pub(crate) first_gpu_view: Option<native::GpuDescriptor>,
     pub(crate) raw_name: Vec<u16>,
 }
@@ -631,34 +639,35 @@ impl DescriptorSet {
     }
 
     pub fn update_samplers(
-        &mut self,
+        &self,
         heap: &DescriptorHeap,
         origins: &RwLock<DescriptorOrigins>,
         accum: &mut MultiCopyAccumulator,
     ) {
+        let desc_origins = self.sampler_origins.borrow();
         let start_index = if let Some(index) = {
             // explicit variable allows to limit the lifetime of that borrow
             let borrow = origins.read();
-            borrow.find(&self.sampler_origins)
+            borrow.find(&*desc_origins)
         } {
             Some(index)
-        } else if self.sampler_origins.iter().any(|desc| desc.ptr == 0) {
+        } else if desc_origins.iter().any(|desc| desc.ptr == 0) {
             // set is incomplete, don't try to build it
             None
         } else {
-            let base = origins.write().grow(&self.sampler_origins);
+            let base = origins.write().grow(&*desc_origins);
             // copy the descriptors from their origins into the new location
-            accum.dst_samplers.add(
-                heap.cpu_descriptor_at(base),
-                self.sampler_origins.len() as u32,
-            );
-            for &origin in self.sampler_origins.iter() {
+            accum
+                .dst_samplers
+                .add(heap.cpu_descriptor_at(base), desc_origins.len() as u32);
+            for &origin in desc_origins.iter() {
                 accum.src_samplers.add(origin, 1);
             }
             Some(base)
         };
 
-        self.first_gpu_sampler = start_index.map(|index| heap.gpu_descriptor_at(index));
+        self.first_gpu_sampler
+            .set(start_index.map(|index| heap.gpu_descriptor_at(index)));
     }
 }
 
@@ -767,7 +776,7 @@ unsafe impl Send for DescriptorPool {}
 unsafe impl Sync for DescriptorPool {}
 
 impl pso::DescriptorPool<Backend> for DescriptorPool {
-    unsafe fn allocate_one(
+    unsafe fn allocate_set(
         &mut self,
         layout: &DescriptorSetLayout,
     ) -> Result<DescriptorSet, pso::AllocationError> {
@@ -775,7 +784,7 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         let mut first_gpu_view = None;
         let mut num_samplers = 0;
 
-        info!("allocate_one");
+        info!("allocate_set");
         for binding in &layout.bindings {
             // Add dummy bindings in case of out-of-range or sparse binding layout.
             while binding_infos.len() <= binding.binding as usize {
@@ -825,7 +834,7 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
             binding_infos[binding.binding as usize] = DescriptorBindingInfo {
                 count: binding.count as _,
                 view_range,
-                dynamic_descriptors,
+                dynamic_descriptors: UnsafeCell::new(dynamic_descriptors),
                 content,
             };
         }
@@ -833,10 +842,11 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
         Ok(DescriptorSet {
             heap_srv_cbv_uav: self.heap_srv_cbv_uav.heap,
             heap_samplers: self.heap_raw_sampler,
-            sampler_origins: vec![native::CpuDescriptor { ptr: 0 }; num_samplers]
-                .into_boxed_slice(),
+            sampler_origins: RefCell::new(
+                vec![native::CpuDescriptor { ptr: 0 }; num_samplers].into_boxed_slice(),
+            ),
             binding_infos,
-            first_gpu_sampler: None,
+            first_gpu_sampler: Cell::new(None),
             first_gpu_view,
             raw_name: Vec::new(),
         })
@@ -844,7 +854,7 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
 
     unsafe fn free<I>(&mut self, descriptor_sets: I)
     where
-        I: Iterator<Item = DescriptorSet>,
+        I: IntoIterator<Item = DescriptorSet>,
     {
         for descriptor_set in descriptor_sets {
             for binding_info in descriptor_set.binding_infos {
@@ -865,7 +875,7 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
 #[derive(Debug)]
 pub struct QueryPool {
     pub(crate) raw: native::QueryHeap,
-    pub(crate) ty: hal::query::Type,
+    pub(crate) ty: native::QueryHeapType,
 }
 
 unsafe impl Send for QueryPool {}

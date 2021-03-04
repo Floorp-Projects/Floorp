@@ -64,35 +64,7 @@ RefPtr<RawIdPromise> WebGPUChild::InstanceRequestAdapter(
 Maybe<RawId> WebGPUChild::AdapterRequestDevice(
     RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_device_id(mClient, aSelfId);
-
-  ffi::WGPUDeviceDescriptor desc = {};
-  ffi::wgpu_client_fill_default_limits(&desc.limits);
-
-  if (aDesc.mNonGuaranteedLimits.WasPassed()) {
-    for (const auto& entry : aDesc.mNonGuaranteedLimits.Value().Entries()) {
-      Unused << entry;  // TODO
-    }
-    /*desc.limits.max_bind_groups = lim.mMaxBindGroups;
-    desc.limits.max_dynamic_uniform_buffers_per_pipeline_layout =
-        lim.mMaxDynamicUniformBuffersPerPipelineLayout;
-    desc.limits.max_dynamic_storage_buffers_per_pipeline_layout =
-        lim.mMaxDynamicStorageBuffersPerPipelineLayout;
-    desc.limits.max_sampled_textures_per_shader_stage =
-        lim.mMaxSampledTexturesPerShaderStage;
-    desc.limits.max_samplers_per_shader_stage = lim.mMaxSamplersPerShaderStage;
-    desc.limits.max_storage_buffers_per_shader_stage =
-        lim.mMaxStorageBuffersPerShaderStage;
-    desc.limits.max_storage_textures_per_shader_stage =
-        lim.mMaxStorageTexturesPerShaderStage;
-    desc.limits.max_uniform_buffers_per_shader_stage =
-        lim.mMaxUniformBuffersPerShaderStage;
-    desc.limits.max_uniform_buffer_binding_size =
-        lim.mMaxUniformBufferBindingSize;*/
-  }
-
-  ByteBuf bb;
-  ffi::wgpu_client_serialize_device_descriptor(&desc, ToFFI(&bb));
-  if (SendAdapterRequestDevice(aSelfId, std::move(bb), id)) {
+  if (SendAdapterRequestDevice(aSelfId, aDesc, id)) {
     return Some(id);
   }
   ffi::wgpu_client_kill_device_id(mClient, id);
@@ -132,12 +104,12 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
     const auto& seq = aDesc.mSize.GetAsRangeEnforcedUnsignedLongSequence();
     desc.size.width = seq.Length() > 0 ? seq[0] : 1;
     desc.size.height = seq.Length() > 1 ? seq[1] : 1;
-    desc.size.depth_or_array_layers = seq.Length() > 2 ? seq[2] : 1;
+    desc.size.depth = seq.Length() > 2 ? seq[2] : 1;
   } else if (aDesc.mSize.IsGPUExtent3DDict()) {
     const auto& dict = aDesc.mSize.GetAsGPUExtent3DDict();
     desc.size.width = dict.mWidth;
     desc.size.height = dict.mHeight;
-    desc.size.depth_or_array_layers = dict.mDepthOrArrayLayers;
+    desc.size.depth = dict.mDepth;
   } else {
     MOZ_CRASH("Unexpected union");
   }
@@ -269,33 +241,30 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
   nsTArray<OptionalData> optional(aDesc.mEntries.Length());
   for (const auto& entry : aDesc.mEntries) {
     OptionalData data = {};
-    if (entry.mTexture.WasPassed()) {
-      const auto& texture = entry.mTexture.Value();
-      data.dim = ffi::WGPUTextureViewDimension(texture.mViewDimension);
-      switch (texture.mSampleType) {
-        case dom::GPUTextureSampleType::Float:
+    if (entry.mViewDimension.WasPassed()) {
+      data.dim = ffi::WGPUTextureViewDimension(entry.mViewDimension.Value());
+    }
+    if (entry.mTextureComponentType.WasPassed()) {
+      switch (entry.mTextureComponentType.Value()) {
+        case dom::GPUTextureComponentType::Float:
           data.type = ffi::WGPURawTextureSampleType_Float;
           break;
-        case dom::GPUTextureSampleType::Unfilterable_float:
-          data.type = ffi::WGPURawTextureSampleType_UnfilterableFloat;
-          break;
-        case dom::GPUTextureSampleType::Uint:
+        case dom::GPUTextureComponentType::Uint:
           data.type = ffi::WGPURawTextureSampleType_Uint;
           break;
-        case dom::GPUTextureSampleType::Sint:
+        case dom::GPUTextureComponentType::Sint:
           data.type = ffi::WGPURawTextureSampleType_Sint;
           break;
-        case dom::GPUTextureSampleType::Depth:
+        case dom::GPUTextureComponentType::Depth_comparison:
           data.type = ffi::WGPURawTextureSampleType_Depth;
           break;
-        case dom::GPUTextureSampleType::EndGuard_:
+        default:
           MOZ_ASSERT_UNREACHABLE();
+          break;
       }
     }
-    if (entry.mStorageTexture.WasPassed()) {
-      const auto& texture = entry.mStorageTexture.Value();
-      data.dim = ffi::WGPUTextureViewDimension(texture.mViewDimension);
-      data.format = ffi::WGPUTextureFormat(texture.mFormat);
+    if (entry.mStorageTextureFormat.WasPassed()) {
+      data.format = ffi::WGPUTextureFormat(entry.mStorageTextureFormat.Value());
     }
     optional.AppendElement(data);
   }
@@ -306,50 +275,17 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
     ffi::WGPUBindGroupLayoutEntry e = {};
     e.binding = entry.mBinding;
     e.visibility = entry.mVisibility;
-    if (entry.mBuffer.WasPassed()) {
-      switch (entry.mBuffer.Value().mType) {
-        case dom::GPUBufferBindingType::Uniform:
-          e.ty = ffi::WGPURawBindingType_UniformBuffer;
-          break;
-        case dom::GPUBufferBindingType::Storage:
-          e.ty = ffi::WGPURawBindingType_StorageBuffer;
-          break;
-        case dom::GPUBufferBindingType::Read_only_storage:
-          e.ty = ffi::WGPURawBindingType_ReadonlyStorageBuffer;
-          break;
-        case dom::GPUBufferBindingType::EndGuard_:
-          MOZ_ASSERT_UNREACHABLE();
-      }
-      e.has_dynamic_offset = entry.mBuffer.Value().mHasDynamicOffset;
-    }
-    if (entry.mTexture.WasPassed()) {
-      e.ty = ffi::WGPURawBindingType_SampledTexture;
+    e.ty = ffi::WGPURawBindingType(entry.mType);
+    e.multisampled = entry.mMultisampled;
+    e.has_dynamic_offset = entry.mHasDynamicOffset;
+    if (entry.mViewDimension.WasPassed()) {
       e.view_dimension = &optional[i].dim;
+    }
+    if (entry.mTextureComponentType.WasPassed()) {
       e.texture_sample_type = &optional[i].type;
-      e.multisampled = entry.mTexture.Value().mMultisampled;
     }
-    if (entry.mStorageTexture.WasPassed()) {
-      e.ty = entry.mStorageTexture.Value().mAccess ==
-                     dom::GPUStorageTextureAccess::Write_only
-                 ? ffi::WGPURawBindingType_WriteonlyStorageTexture
-                 : ffi::WGPURawBindingType_ReadonlyStorageTexture;
-      e.view_dimension = &optional[i].dim;
+    if (entry.mStorageTextureFormat.WasPassed()) {
       e.storage_texture_format = &optional[i].format;
-    }
-    if (entry.mSampler.WasPassed()) {
-      e.ty = ffi::WGPURawBindingType_Sampler;
-      switch (entry.mSampler.Value().mType) {
-        case dom::GPUSamplerBindingType::Filtering:
-          e.sampler_filter = true;
-          break;
-        case dom::GPUSamplerBindingType::Non_filtering:
-          break;
-        case dom::GPUSamplerBindingType::Comparison:
-          e.sampler_compare = true;
-          break;
-        case dom::GPUSamplerBindingType::EndGuard_:
-          MOZ_ASSERT_UNREACHABLE();
-      }
     }
     entries.AppendElement(e);
   }
@@ -443,8 +379,8 @@ RawId WebGPUChild::DeviceCreateShaderModule(
   ffi::WGPUShaderModuleDescriptor desc = {};
 
   nsCString wgsl;
-  if (aDesc.mCode.IsUSVString()) {
-    LossyCopyUTF16toASCII(aDesc.mCode.GetAsUSVString(), wgsl);
+  if (aDesc.mCode.IsString()) {
+    LossyCopyUTF16toASCII(aDesc.mCode.GetAsString(), wgsl);
     desc.wgsl_chars = wgsl.get();
   } else {
     const auto& code = aDesc.mCode.GetAsUint32Array();
@@ -474,9 +410,9 @@ RawId WebGPUChild::DeviceCreateComputePipeline(
   if (aDesc.mLayout.WasPassed()) {
     desc.layout = aDesc.mLayout.Value().mId;
   }
-  desc.stage.module = aDesc.mCompute.mModule->mId;
-  LossyCopyUTF16toASCII(aDesc.mCompute.mEntryPoint, entryPoint);
-  desc.stage.entry_point = entryPoint.get();
+  desc.compute_stage.module = aDesc.mComputeStage.mModule->mId;
+  LossyCopyUTF16toASCII(aDesc.mComputeStage.mEntryPoint, entryPoint);
+  desc.compute_stage.entry_point = entryPoint.get();
 
   ByteBuf bb;
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
@@ -493,27 +429,39 @@ RawId WebGPUChild::DeviceCreateComputePipeline(
   return id;
 }
 
-static ffi::WGPUMultisampleState ConvertMultisampleState(
-    const dom::GPUMultisampleState& aDesc) {
-  ffi::WGPUMultisampleState desc = {};
-  desc.count = aDesc.mCount;
-  desc.mask = aDesc.mMask;
-  desc.alpha_to_coverage_enabled = aDesc.mAlphaToCoverageEnabled;
+static ffi::WGPURasterizationStateDescriptor ConvertRasterizationDescriptor(
+    const dom::GPURasterizationStateDescriptor& aDesc) {
+  ffi::WGPURasterizationStateDescriptor desc = {};
+  desc.front_face = ffi::WGPUFrontFace(aDesc.mFrontFace);
+  desc.cull_mode = ffi::WGPUCullMode(aDesc.mCullMode);
+  desc.depth_bias = aDesc.mDepthBias;
+  desc.depth_bias_slope_scale = aDesc.mDepthBiasSlopeScale;
+  desc.depth_bias_clamp = aDesc.mDepthBiasClamp;
   return desc;
 }
 
-static ffi::WGPUBlendComponent ConvertBlendComponent(
-    const dom::GPUBlendComponent& aDesc) {
-  ffi::WGPUBlendComponent desc = {};
+static ffi::WGPUBlendDescriptor ConvertBlendDescriptor(
+    const dom::GPUBlendDescriptor& aDesc) {
+  ffi::WGPUBlendDescriptor desc = {};
   desc.src_factor = ffi::WGPUBlendFactor(aDesc.mSrcFactor);
   desc.dst_factor = ffi::WGPUBlendFactor(aDesc.mDstFactor);
   desc.operation = ffi::WGPUBlendOperation(aDesc.mOperation);
   return desc;
 }
 
-static ffi::WGPUStencilFaceState ConvertStencilFaceState(
-    const dom::GPUStencilFaceState& aDesc) {
-  ffi::WGPUStencilFaceState desc = {};
+static ffi::WGPUColorStateDescriptor ConvertColorDescriptor(
+    const dom::GPUColorStateDescriptor& aDesc) {
+  ffi::WGPUColorStateDescriptor desc = {};
+  desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
+  desc.alpha_blend = ConvertBlendDescriptor(aDesc.mAlphaBlend);
+  desc.color_blend = ConvertBlendDescriptor(aDesc.mColorBlend);
+  desc.write_mask = aDesc.mWriteMask;
+  return desc;
+}
+
+static ffi::WGPUStencilStateFaceDescriptor ConvertStencilFaceDescriptor(
+    const dom::GPUStencilStateFaceDescriptor& aDesc) {
+  ffi::WGPUStencilStateFaceDescriptor desc = {};
   desc.compare = ConvertCompareFunction(aDesc.mCompare);
   desc.fail_op = ffi::WGPUStencilOperation(aDesc.mFailOp);
   desc.depth_fail_op = ffi::WGPUStencilOperation(aDesc.mDepthFailOp);
@@ -521,36 +469,26 @@ static ffi::WGPUStencilFaceState ConvertStencilFaceState(
   return desc;
 }
 
-static ffi::WGPUDepthStencilState ConvertDepthStencilState(
-    const dom::GPUDepthStencilState& aDesc) {
-  ffi::WGPUDepthStencilState desc = {};
+static ffi::WGPUDepthStencilStateDescriptor ConvertDepthStencilDescriptor(
+    const dom::GPUDepthStencilStateDescriptor& aDesc) {
+  ffi::WGPUDepthStencilStateDescriptor desc = {};
   desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
   desc.depth_write_enabled = aDesc.mDepthWriteEnabled;
   desc.depth_compare = ConvertCompareFunction(aDesc.mDepthCompare);
-  desc.stencil.front = ConvertStencilFaceState(aDesc.mStencilFront);
-  desc.stencil.back = ConvertStencilFaceState(aDesc.mStencilBack);
+  desc.stencil.front = ConvertStencilFaceDescriptor(aDesc.mStencilFront);
+  desc.stencil.back = ConvertStencilFaceDescriptor(aDesc.mStencilBack);
   desc.stencil.read_mask = aDesc.mStencilReadMask;
   desc.stencil.write_mask = aDesc.mStencilWriteMask;
-  desc.bias.constant = aDesc.mDepthBias;
-  desc.bias.slope_scale = aDesc.mDepthBiasSlopeScale;
-  desc.bias.clamp = aDesc.mDepthBiasClamp;
   return desc;
 }
 
 RawId WebGPUChild::DeviceCreateRenderPipeline(
     RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc,
     nsTArray<RawId>* const aImplicitBindGroupLayoutIds) {
-  // A bunch of stack locals that we can have pointers into
-  nsTArray<ffi::WGPUVertexBufferLayout> vertexBuffers;
-  nsTArray<ffi::WGPUVertexAttribute> vertexAttributes;
   ffi::WGPURenderPipelineDescriptor desc = {};
   nsCString label, vsEntry, fsEntry;
-  ffi::WGPUIndexFormat stripIndexFormat = ffi::WGPUIndexFormat_Uint16;
-  ffi::WGPUFace cullFace = ffi::WGPUFace_Front;
-  ffi::WGPUVertexState vertexState = {};
-  ffi::WGPUFragmentState fragmentState = {};
-  nsTArray<ffi::WGPUColorTargetState> colorStates;
-  nsTArray<ffi::WGPUBlendState> blendStates;
+  ffi::WGPUProgrammableStageDescriptor vertexStage = {};
+  ffi::WGPUProgrammableStageDescriptor fragmentStage = {};
 
   if (aDesc.mLabel.WasPassed()) {
     LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
@@ -560,95 +498,73 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
     desc.layout = aDesc.mLayout.Value().mId;
   }
 
-  {
-    const auto& stage = aDesc.mVertex;
-    vertexState.stage.module = stage.mModule->mId;
-    LossyCopyUTF16toASCII(stage.mEntryPoint, vsEntry);
-    vertexState.stage.entry_point = vsEntry.get();
+  vertexStage.module = aDesc.mVertexStage.mModule->mId;
+  LossyCopyUTF16toASCII(aDesc.mVertexStage.mEntryPoint, vsEntry);
+  vertexStage.entry_point = vsEntry.get();
+  desc.vertex_stage = &vertexStage;
 
-    for (const auto& vertex_desc : stage.mBuffers) {
-      ffi::WGPUVertexBufferLayout vb_desc = {};
-      if (!vertex_desc.IsNull()) {
-        const auto& vd = vertex_desc.Value();
-        vb_desc.array_stride = vd.mArrayStride;
-        vb_desc.step_mode = ffi::WGPUInputStepMode(vd.mStepMode);
-        // Note: we are setting the length but not the pointer
-        vb_desc.attributes_length = vd.mAttributes.Length();
-        for (const auto& vat : vd.mAttributes) {
-          ffi::WGPUVertexAttribute ad = {};
-          ad.offset = vat.mOffset;
-          ad.format = ffi::WGPUVertexFormat(vat.mFormat);
-          ad.shader_location = vat.mShaderLocation;
-          vertexAttributes.AppendElement(ad);
-        }
-      }
-      vertexBuffers.AppendElement(vb_desc);
-    }
-    // Now patch up all the pointers to attribute lists.
-    size_t numAttributes = 0;
-    for (auto& vb_desc : vertexBuffers) {
-      vb_desc.attributes = vertexAttributes.Elements() + numAttributes;
-      numAttributes += vb_desc.attributes_length;
-    }
-
-    vertexState.buffers = vertexBuffers.Elements();
-    vertexState.buffers_length = vertexBuffers.Length();
-    desc.vertex = &vertexState;
-  }
-
-  if (aDesc.mFragment.WasPassed()) {
-    const auto& stage = aDesc.mFragment.Value();
-    fragmentState.stage.module = stage.mModule->mId;
+  if (aDesc.mFragmentStage.WasPassed()) {
+    const auto& stage = aDesc.mFragmentStage.Value();
+    fragmentStage.module = stage.mModule->mId;
     LossyCopyUTF16toASCII(stage.mEntryPoint, fsEntry);
-    fragmentState.stage.entry_point = fsEntry.get();
+    fragmentStage.entry_point = fsEntry.get();
+    desc.fragment_stage = &fragmentStage;
+  }
 
-    // Note: we pre-collect the blend states into a different array
-    // so that we can have non-stale pointers into it.
-    for (const auto& colorState : stage.mTargets) {
-      ffi::WGPUColorTargetState desc = {};
-      desc.format = ffi::WGPUTextureFormat(colorState.mFormat);
-      desc.write_mask = colorState.mWriteMask;
-      colorStates.AppendElement(desc);
-      ffi::WGPUBlendState bs = {};
-      if (colorState.mBlend.WasPassed()) {
-        const auto& blend = colorState.mBlend.Value();
-        bs.alpha = ConvertBlendComponent(blend.mAlpha);
-        bs.color = ConvertBlendComponent(blend.mColor);
+  desc.primitive_topology =
+      ffi::WGPUPrimitiveTopology(aDesc.mPrimitiveTopology);
+  const auto rasterization =
+      ConvertRasterizationDescriptor(aDesc.mRasterizationState);
+  desc.rasterization_state = &rasterization;
+
+  nsTArray<ffi::WGPUColorStateDescriptor> colorStates;
+  for (const auto& colorState : aDesc.mColorStates) {
+    colorStates.AppendElement(ConvertColorDescriptor(colorState));
+  }
+  desc.color_states = colorStates.Elements();
+  desc.color_states_length = colorStates.Length();
+
+  ffi::WGPUDepthStencilStateDescriptor depthStencilState = {};
+  if (aDesc.mDepthStencilState.WasPassed()) {
+    depthStencilState =
+        ConvertDepthStencilDescriptor(aDesc.mDepthStencilState.Value());
+    desc.depth_stencil_state = &depthStencilState;
+  }
+
+  desc.vertex_state.index_format =
+      ffi::WGPUIndexFormat(aDesc.mVertexState.mIndexFormat);
+  nsTArray<ffi::WGPUVertexBufferDescriptor> vertexBuffers;
+  nsTArray<ffi::WGPUVertexAttributeDescriptor> vertexAttributes;
+  for (const auto& vertex_desc : aDesc.mVertexState.mVertexBuffers) {
+    ffi::WGPUVertexBufferDescriptor vb_desc = {};
+    if (!vertex_desc.IsNull()) {
+      const auto& vd = vertex_desc.Value();
+      vb_desc.stride = vd.mArrayStride;
+      vb_desc.step_mode = ffi::WGPUInputStepMode(vd.mStepMode);
+      // Note: we are setting the length but not the pointer
+      vb_desc.attributes_length = vd.mAttributes.Length();
+      for (const auto& vat : vd.mAttributes) {
+        ffi::WGPUVertexAttributeDescriptor ad = {};
+        ad.offset = vat.mOffset;
+        ad.format = ffi::WGPUVertexFormat(vat.mFormat);
+        ad.shader_location = vat.mShaderLocation;
+        vertexAttributes.AppendElement(ad);
       }
-      blendStates.AppendElement(bs);
     }
-    for (size_t i = 0; i < colorStates.Length(); ++i) {
-      if (stage.mTargets[i].mBlend.WasPassed()) {
-        colorStates[i].blend = &blendStates[i];
-      }
-    }
-
-    fragmentState.targets = colorStates.Elements();
-    fragmentState.targets_length = colorStates.Length();
-    desc.fragment = &fragmentState;
+    vertexBuffers.AppendElement(vb_desc);
+  }
+  // Now patch up all the pointers to attribute lists.
+  size_t numAttributes = 0;
+  for (auto& vb_desc : vertexBuffers) {
+    vb_desc.attributes = vertexAttributes.Elements() + numAttributes;
+    numAttributes += vb_desc.attributes_length;
   }
 
-  {
-    const auto& prim = aDesc.mPrimitive;
-    desc.primitive.topology = ffi::WGPUPrimitiveTopology(prim.mTopology);
-    if (prim.mStripIndexFormat.WasPassed()) {
-      stripIndexFormat = ffi::WGPUIndexFormat(prim.mStripIndexFormat.Value());
-      desc.primitive.strip_index_format = &stripIndexFormat;
-    }
-    desc.primitive.front_face = ffi::WGPUFrontFace(prim.mFrontFace);
-    if (prim.mCullMode != dom::GPUCullMode::None) {
-      cullFace = prim.mCullMode == dom::GPUCullMode::Front ? ffi::WGPUFace_Front
-                                                           : ffi::WGPUFace_Back;
-      desc.primitive.cull_mode = &cullFace;
-    }
-  }
-  desc.multisample = ConvertMultisampleState(aDesc.mMultisample);
-
-  ffi::WGPUDepthStencilState depthStencilState = {};
-  if (aDesc.mDepthStencil.WasPassed()) {
-    depthStencilState = ConvertDepthStencilState(aDesc.mDepthStencil.Value());
-    desc.depth_stencil = &depthStencilState;
-  }
+  desc.vertex_state.vertex_buffers = vertexBuffers.Elements();
+  desc.vertex_state.vertex_buffers_length = vertexBuffers.Length();
+  desc.sample_count = aDesc.mSampleCount;
+  desc.sample_mask = aDesc.mSampleMask;
+  desc.alpha_to_coverage_enabled = aDesc.mAlphaToCoverageEnabled;
 
   ByteBuf bb;
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};

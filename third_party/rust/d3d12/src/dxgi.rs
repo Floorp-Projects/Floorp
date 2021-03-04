@@ -1,10 +1,10 @@
-use crate::{com::WeakPtr, CommandQueue, D3DResult, Resource, SampleDesc, HRESULT};
+use com::WeakPtr;
 use std::ptr;
-use winapi::{
-    shared::{dxgi, dxgi1_2, dxgi1_3, dxgi1_4, dxgiformat, dxgitype, windef::HWND},
-    um::{d3d12, dxgidebug},
-    Interface,
-};
+use winapi::shared::windef::HWND;
+use winapi::shared::{dxgi, dxgi1_2, dxgi1_3, dxgi1_4, dxgiformat, dxgitype};
+use winapi::um::{dxgidebug, d3d12};
+use winapi::Interface;
+use {CommandQueue, D3DResult, Resource, SampleDesc, HRESULT};
 
 bitflags! {
     pub struct FactoryCreationFlags: u32 {
@@ -55,14 +55,16 @@ pub struct DxgiLib {
 
 #[cfg(feature = "libloading")]
 impl DxgiLib {
-    pub fn new() -> Result<Self, libloading::Error> {
-        unsafe { libloading::Library::new("dxgi.dll").map(|lib| DxgiLib { lib }) }
+    pub fn new() -> libloading::Result<Self> {
+        libloading::Library::new("dxgi.dll")
+            .map(|lib| DxgiLib {
+                lib,
+            })
     }
 
     pub fn create_factory2(
-        &self,
-        flags: FactoryCreationFlags,
-    ) -> Result<D3DResult<Factory4>, libloading::Error> {
+        &self, flags: FactoryCreationFlags
+    ) -> libloading::Result<D3DResult<Factory4>> {
         type Fun = extern "system" fn(
             winapi::shared::minwindef::UINT,
             winapi::shared::guiddef::REFIID,
@@ -82,7 +84,7 @@ impl DxgiLib {
         Ok((factory, hr))
     }
 
-    pub fn get_debug_interface1(&self) -> Result<D3DResult<InfoQueue>, libloading::Error> {
+    pub fn get_debug_interface1(&self) -> libloading::Result<D3DResult<InfoQueue>> {
         type Fun = extern "system" fn(
             winapi::shared::minwindef::UINT,
             winapi::shared::guiddef::REFIID,
@@ -92,7 +94,11 @@ impl DxgiLib {
         let mut queue = InfoQueue::null();
         let hr = unsafe {
             let func: libloading::Symbol<Fun> = self.lib.get(b"DXGIGetDebugInterface1")?;
-            func(0, &dxgidebug::IDXGIInfoQueue::uuidof(), queue.mut_void())
+            func(
+                0,
+                &dxgidebug::IDXGIInfoQueue::uuidof(),
+                queue.mut_void(),
+            )
         };
         Ok((queue, hr))
     }
@@ -181,20 +187,6 @@ impl Factory4 {
     }
 }
 
-bitflags! {
-    pub struct SwapChainPresentFlags: u32 {
-        const DXGI_PRESENT_DO_NOT_SEQUENCE = dxgi::DXGI_PRESENT_DO_NOT_SEQUENCE;
-        const DXGI_PRESENT_TEST = dxgi::DXGI_PRESENT_TEST;
-        const DXGI_PRESENT_RESTART = dxgi::DXGI_PRESENT_RESTART;
-        const DXGI_PRESENT_DO_NOT_WAIT = dxgi::DXGI_PRESENT_DO_NOT_WAIT;
-        const DXGI_PRESENT_RESTRICT_TO_OUTPUT = dxgi::DXGI_PRESENT_RESTRICT_TO_OUTPUT;
-        const DXGI_PRESENT_STEREO_PREFER_RIGHT = dxgi::DXGI_PRESENT_STEREO_PREFER_RIGHT;
-        const DXGI_PRESENT_STEREO_TEMPORARY_MONO = dxgi::DXGI_PRESENT_STEREO_TEMPORARY_MONO;
-        const DXGI_PRESENT_USE_DURATION = dxgi::DXGI_PRESENT_USE_DURATION;
-        const DXGI_PRESENT_ALLOW_TEARING = dxgi::DXGI_PRESENT_ALLOW_TEARING;
-    }
-}
-
 impl SwapChain {
     pub fn get_buffer(&self, id: u32) -> D3DResult<Resource> {
         let mut resource = Resource::null();
@@ -204,13 +196,9 @@ impl SwapChain {
         (resource, hr)
     }
 
-    //TODO: replace by present_flags
+    // TODO: present flags
     pub fn present(&self, interval: u32, flags: u32) -> HRESULT {
         unsafe { self.Present(interval, flags) }
-    }
-
-    pub fn present_flags(&self, interval: u32, flags: SwapChainPresentFlags) -> HRESULT {
-        unsafe { self.Present(interval, flags.bits()) }
     }
 }
 

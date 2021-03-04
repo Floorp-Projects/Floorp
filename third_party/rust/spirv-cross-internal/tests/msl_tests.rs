@@ -53,7 +53,6 @@ fn ast_compiles_to_msl() {
             buffer_id: 5,
             texture_id: 6,
             sampler_id: 7,
-            count: 0,
         },
     );
 
@@ -264,7 +263,6 @@ fn sets_argument_buffer_index() {
             buffer_id: 2,
             texture_id: 0,
             sampler_id: 0,
-            count: 0,
         },
     );
     let mut compiler_options = msl::CompilerOptions::default();
@@ -521,7 +519,7 @@ vertex main_vs_out main_vs()
     return out;
 }
 
-",
+"
         ),
         (
             Some((String::from("main_vs"), spirv::ExecutionModel::Vertex)),
@@ -543,7 +541,7 @@ vertex main_vs_out main_vs()
     return out;
 }
 
-",
+"
         ),
         (
             Some((String::from("main_fs"), spirv::ExecutionModel::Fragment)),
@@ -565,8 +563,8 @@ fragment main_fs_out main_fs()
     return out;
 }
 
-",
-        ),
+"
+        )
     ];
 
     for (entry_point, expected_result) in cases.drain(..) {
