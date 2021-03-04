@@ -25,7 +25,7 @@ use std::os::raw::c_void;
 
 use cocoa_foundation::foundation::NSUInteger;
 use foreign_types::ForeignType;
-use objc::runtime::{Object, BOOL, NO, YES};
+use objc::runtime::{Object, NO, YES};
 
 #[cfg(target_pointer_width = "64")]
 pub type CGFloat = f64;
@@ -42,6 +42,20 @@ pub struct CGSize {
 impl CGSize {
     pub fn new(width: f64, height: f64) -> Self {
         CGSize { width, height }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct NSRange {
+    pub location: NSUInteger,
+    pub length: NSUInteger,
+}
+
+impl NSRange {
+    #[inline]
+    pub fn new(location: NSUInteger, length: NSUInteger) -> NSRange {
+        NSRange { location, length }
     }
 }
 
@@ -279,12 +293,12 @@ pub enum CAMetalDrawable {}
 
 foreign_obj_type! {
     type CType = CAMetalDrawable;
-    pub struct CoreAnimationDrawable;
-    pub struct CoreAnimationDrawableRef;
+    pub struct MetalDrawable;
+    pub struct MetalDrawableRef;
     type ParentType = DrawableRef;
 }
 
-impl CoreAnimationDrawableRef {
+impl MetalDrawableRef {
     pub fn texture(&self) -> &TextureRef {
         unsafe { msg_send![self, texture] }
     }
@@ -294,11 +308,11 @@ pub enum CAMetalLayer {}
 
 foreign_obj_type! {
     type CType = CAMetalLayer;
-    pub struct CoreAnimationLayer;
-    pub struct CoreAnimationLayerRef;
+    pub struct MetalLayer;
+    pub struct MetalLayerRef;
 }
 
-impl CoreAnimationLayer {
+impl MetalLayer {
     pub fn new() -> Self {
         unsafe {
             let class = class!(CAMetalLayer);
@@ -307,7 +321,7 @@ impl CoreAnimationLayer {
     }
 }
 
-impl CoreAnimationLayerRef {
+impl MetalLayerRef {
     pub fn device(&self) -> &DeviceRef {
         unsafe { msg_send![self, device] }
     }
@@ -346,6 +360,28 @@ impl CoreAnimationLayerRef {
         unsafe { msg_send![self, setPresentsWithTransaction: transaction] }
     }
 
+    pub fn display_sync_enabled(&self) -> bool {
+        unsafe {
+            match msg_send![self, displaySyncEnabled] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_display_sync_enabled(&self, enabled: bool) {
+        unsafe { msg_send![self, setDisplaySyncEnabled: enabled] }
+    }
+
+    pub fn maximum_drawable_count(&self) -> NSUInteger {
+        unsafe { msg_send![self, maximumDrawableCount] }
+    }
+
+    pub fn set_maximum_drawable_count(&self, count: NSUInteger) {
+        unsafe { msg_send![self, setMaximumDrawableCount: count] }
+    }
+
     pub fn set_edge_antialiasing_mask(&self, mask: u64) {
         unsafe { msg_send![self, setEdgeAntialiasingMask: mask] }
     }
@@ -358,7 +394,7 @@ impl CoreAnimationLayerRef {
         unsafe { msg_send![self, removeAllAnimations] }
     }
 
-    pub fn next_drawable(&self) -> Option<&CoreAnimationDrawableRef> {
+    pub fn next_drawable(&self) -> Option<&MetalDrawableRef> {
         unsafe { msg_send![self, nextDrawable] }
     }
 
@@ -367,8 +403,32 @@ impl CoreAnimationLayerRef {
     }
 
     /// [framebufferOnly Apple Docs](https://developer.apple.com/documentation/metal/mtltexture/1515749-framebufferonly?language=objc)
-    pub fn set_framebuffer_only(&self, framebuffer_only: BOOL) {
+    pub fn framebuffer_only(&self) -> bool {
+        unsafe {
+            match msg_send![self, framebufferOnly] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_framebuffer_only(&self, framebuffer_only: bool) {
         unsafe { msg_send![self, setFramebufferOnly: framebuffer_only] }
+    }
+
+    pub fn is_opaque(&self) -> bool {
+        unsafe {
+            match msg_send![self, isOpaque] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_opaque(&self, opaque: bool) {
+        unsafe { msg_send![self, setOpaque: opaque] }
     }
 }
 
@@ -386,10 +446,13 @@ mod encoder;
 mod heap;
 mod indirect_encoder;
 mod library;
+#[cfg(feature = "mps")]
+mod mps;
 mod pipeline;
 mod renderpass;
 mod resource;
 mod sampler;
+mod sync;
 mod texture;
 mod types;
 mod vertexdescriptor;
@@ -417,7 +480,11 @@ pub use {
     texture::*,
     types::*,
     vertexdescriptor::*,
+    sync::*,
 };
+
+#[cfg(feature = "mps")]
+pub use mps::*;
 
 #[inline]
 unsafe fn obj_drop<T>(p: *mut T) {
@@ -431,3 +498,31 @@ unsafe fn obj_clone<T: 'static>(p: *mut T) -> *mut T {
 
 #[allow(non_camel_case_types)]
 type c_size_t = usize;
+
+// TODO: expand supported interface
+pub enum NSURL {}
+
+foreign_obj_type! {
+    type CType = NSURL;
+    pub struct URL;
+    pub struct URLRef;
+}
+
+impl URL {
+    pub fn new_with_string(string: &str) -> Self {
+        unsafe {
+            let ns_str = crate::nsstring_from_str(string);
+            let class = class!(NSURL);
+            msg_send![class, URLWithString: ns_str]
+        }
+    }
+}
+
+impl URLRef {
+    pub fn absolute_string(&self) -> &str {
+        unsafe {
+            let absolute_string = msg_send![self, absoluteString];
+            crate::nsstring_as_str(absolute_string)
+        }
+    }
+}

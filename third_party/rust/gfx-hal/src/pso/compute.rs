@@ -8,6 +8,8 @@ use crate::{
 /// A description of the data needed to construct a compute pipeline.
 #[derive(Debug)]
 pub struct ComputePipelineDesc<'a, B: Backend> {
+    /// Pipeline label
+    pub label: Option<&'a str>,
     /// The shader entry point that performs the computation.
     pub shader: EntryPoint<'a, B>,
     /// Pipeline layout.
@@ -22,6 +24,7 @@ impl<'a, B: Backend> ComputePipelineDesc<'a, B> {
     /// Create a new empty PSO descriptor.
     pub fn new(shader: EntryPoint<'a, B>, layout: &'a B::PipelineLayout) -> Self {
         ComputePipelineDesc {
+            label: None,
             shader,
             layout,
             flags: PipelineCreationFlags::empty(),

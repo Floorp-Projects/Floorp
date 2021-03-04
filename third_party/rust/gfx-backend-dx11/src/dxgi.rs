@@ -6,7 +6,7 @@ use winapi::{
         guiddef::{GUID, REFIID},
         winerror,
     },
-    um::unknwnbase::IUnknown,
+    um::{d3d11, unknwnbase::IUnknown},
     Interface,
 };
 
@@ -90,7 +90,7 @@ fn create_dxgi_factory1(
 pub(crate) fn get_dxgi_factory(
 ) -> Result<(libloading::Library, ComPtr<dxgi::IDXGIFactory>, DxgiVersion), winerror::HRESULT> {
     // The returned Com-pointer is only safe to use for the lifetime of the Library.
-    let library = libloading::Library::new("dxgi.dll").map_err(|_| -1)?;
+    let library = unsafe { libloading::Library::new("dxgi.dll").map_err(|_| -1)? };
     let func: libloading::Symbol<DxgiFun> =
         unsafe { library.get(b"CreateDXGIFactory1") }.map_err(|_| -1)?;
 
@@ -140,7 +140,56 @@ fn enum_adapters1(
     }
 }
 
-fn get_adapter_desc(adapter: *mut dxgi::IDXGIAdapter, version: DxgiVersion) -> AdapterInfo {
+fn build_adapter_info(
+    description: &[u16],
+    vendor_id: u32,
+    device_id: u32,
+    flags: u32,
+    video_mem: usize,
+    device: &ComPtr<d3d11::ID3D11Device>,
+) -> AdapterInfo {
+    let mut features_options2: d3d11::D3D11_FEATURE_DATA_D3D11_OPTIONS2 = unsafe { mem::zeroed() };
+    let discovered_gpu_type = winerror::SUCCEEDED(unsafe {
+        device.CheckFeatureSupport(
+            d3d11::D3D11_FEATURE_D3D11_OPTIONS2,
+            &mut features_options2 as *mut _ as *mut _,
+            mem::size_of::<d3d11::D3D11_FEATURE_DATA_D3D11_OPTIONS2>() as _,
+        )
+    });
+
+    let device_name = {
+        let len = description.iter().take_while(|&&c| c != 0).count();
+        let name = <OsString as OsStringExt>::from_wide(&description[..len]);
+        name.to_string_lossy().into_owned()
+    };
+
+    AdapterInfo {
+        name: device_name,
+        vendor: vendor_id as usize,
+        device: device_id as usize,
+        device_type: if (flags & dxgi::DXGI_ADAPTER_FLAG_SOFTWARE) != 0 {
+            DeviceType::VirtualGpu
+        } else if discovered_gpu_type {
+            if features_options2.UnifiedMemoryArchitecture == 1 {
+                DeviceType::IntegratedGpu
+            } else {
+                DeviceType::DiscreteGpu
+            }
+        } else if video_mem <= 512_000_000 {
+            DeviceType::IntegratedGpu
+        } else {
+            DeviceType::DiscreteGpu
+        },
+    }
+}
+
+pub(crate) fn get_adapter_desc(
+    adapter: &ComPtr<dxgi::IDXGIAdapter>,
+    device: &ComPtr<d3d11::ID3D11Device>,
+    version: DxgiVersion,
+) -> AdapterInfo {
+    let adapter = adapter.as_raw();
+
     match version {
         DxgiVersion::Dxgi1_0 => {
             let mut desc: dxgi::DXGI_ADAPTER_DESC1 = unsafe { mem::zeroed() };
@@ -148,22 +197,14 @@ fn get_adapter_desc(adapter: *mut dxgi::IDXGIAdapter, version: DxgiVersion) -> A
                 (*(adapter as *mut dxgi::IDXGIAdapter1)).GetDesc1(&mut desc);
             }
 
-            let device_name = {
-                let len = desc.Description.iter().take_while(|&&c| c != 0).count();
-                let name = <OsString as OsStringExt>::from_wide(&desc.Description[..len]);
-                name.to_string_lossy().into_owned()
-            };
-
-            AdapterInfo {
-                name: device_name,
-                vendor: desc.VendorId as usize,
-                device: desc.DeviceId as usize,
-                device_type: if (desc.Flags & dxgi::DXGI_ADAPTER_FLAG_SOFTWARE) != 0 {
-                    DeviceType::VirtualGpu
-                } else {
-                    DeviceType::DiscreteGpu
-                },
-            }
+            build_adapter_info(
+                &desc.Description,
+                desc.VendorId,
+                desc.DeviceId,
+                desc.Flags,
+                desc.DedicatedVideoMemory,
+                device,
+            )
         }
         DxgiVersion::Dxgi1_2
         | DxgiVersion::Dxgi1_3
@@ -174,22 +215,14 @@ fn get_adapter_desc(adapter: *mut dxgi::IDXGIAdapter, version: DxgiVersion) -> A
                 (*(adapter as *mut dxgi1_2::IDXGIAdapter2)).GetDesc2(&mut desc);
             }
 
-            let device_name = {
-                let len = desc.Description.iter().take_while(|&&c| c != 0).count();
-                let name = <OsString as OsStringExt>::from_wide(&desc.Description[..len]);
-                name.to_string_lossy().into_owned()
-            };
-
-            AdapterInfo {
-                name: device_name,
-                vendor: desc.VendorId as usize,
-                device: desc.DeviceId as usize,
-                device_type: if (desc.Flags & dxgi::DXGI_ADAPTER_FLAG_SOFTWARE) != 0 {
-                    DeviceType::VirtualGpu
-                } else {
-                    DeviceType::DiscreteGpu
-                },
-            }
+            build_adapter_info(
+                &desc.Description,
+                desc.VendorId,
+                desc.DeviceId,
+                desc.Flags,
+                desc.DedicatedVideoMemory,
+                device,
+            )
         }
     }
 }
@@ -198,7 +231,7 @@ pub(crate) fn get_adapter(
     idx: u32,
     factory: *mut dxgi::IDXGIFactory,
     version: DxgiVersion,
-) -> Result<(ComPtr<dxgi::IDXGIAdapter>, AdapterInfo), winerror::HRESULT> {
+) -> Result<ComPtr<dxgi::IDXGIAdapter>, winerror::HRESULT> {
     let adapter = match version {
         DxgiVersion::Dxgi1_0
         | DxgiVersion::Dxgi1_2
@@ -207,7 +240,5 @@ pub(crate) fn get_adapter(
         | DxgiVersion::Dxgi1_5 => enum_adapters1(idx, factory)?,
     };
 
-    let desc = get_adapter_desc(adapter.as_raw(), version);
-
-    Ok((adapter, desc))
+    Ok(adapter)
 }

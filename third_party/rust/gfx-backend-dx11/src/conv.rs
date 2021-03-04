@@ -763,7 +763,7 @@ pub(crate) fn map_depth_stencil_desc(
     )
 }
 
-pub fn map_execution_model(model: spirv::ExecutionModel) -> ShaderStage {
+pub fn _map_execution_model(model: spirv::ExecutionModel) -> ShaderStage {
     match model {
         spirv::ExecutionModel::Vertex => ShaderStage::Vertex,
         spirv::ExecutionModel::Fragment => ShaderStage::Fragment,

@@ -1,0 +1,82 @@
+---
+source: tests/snapshots.rs
+expression: dis
+---
+; SPIR-V
+; Version: 1.0
+; Generator: rspirv
+; Bound: 39
+OpCapability Shader
+%1 = OpExtInstImport "GLSL.std.450"
+OpMemoryModel Logical GLSL450
+OpEntryPoint Vertex %7 "main" %20 %13 %11 %17
+OpEntryPoint Fragment %23 "main" %35 %25
+OpExecutionMode %23 OriginUpperLeft
+OpSource GLSL 450
+OpName %3 "c_scale"
+OpName %7 "main"
+OpName %11 "v_uv"
+OpName %13 "a_uv"
+OpName %17 "o_position"
+OpName %20 "a_pos"
+OpName %7 "main"
+OpName %23 "main"
+OpName %25 "o_color"
+OpName %27 "u_texture"
+OpName %32 "u_sampler"
+OpName %35 "v_uv"
+OpName %23 "main"
+OpDecorate %11 Location 0
+OpDecorate %13 Location 1
+OpDecorate %17 BuiltIn Position
+OpDecorate %20 Location 0
+OpDecorate %25 Location 0
+OpDecorate %27 DescriptorSet 0
+OpDecorate %27 Binding 0
+OpDecorate %32 DescriptorSet 0
+OpDecorate %32 Binding 1
+OpDecorate %35 Location 0
+%2 = OpTypeVoid
+%4 = OpTypeFloat 32
+%3 = OpConstant  %4  1.2
+%5 = OpConstant  %4  0.0
+%6 = OpConstant  %4  1.0
+%8 = OpTypeFunction %2
+%10 = OpTypeVector %4 2
+%12 = OpTypePointer Output %10
+%11 = OpVariable  %12  Output
+%14 = OpTypePointer Input %10
+%13 = OpVariable  %14  Input
+%16 = OpTypeVector %4 4
+%18 = OpTypePointer Output %16
+%17 = OpVariable  %18  Output
+%20 = OpVariable  %14  Input
+%25 = OpVariable  %18  Output
+%26 = OpTypeImage %4 2D 0 0 0 1 Unknown
+%28 = OpTypePointer UniformConstant %26
+%27 = OpVariable  %28  UniformConstant
+%30 = OpTypeSampledImage %26
+%31 = OpTypeSampler
+%33 = OpTypePointer UniformConstant %31
+%32 = OpVariable  %33  UniformConstant
+%35 = OpVariable  %14  Input
+%7 = OpFunction  %2  None %8
+%9 = OpLabel
+%15 = OpLoad  %10  %13
+OpStore %11 %15
+%21 = OpLoad  %10  %20
+%19 = OpVectorTimesScalar  %10  %21 %3
+%22 = OpCompositeConstruct  %16  %19 %5 %6
+OpStore %17 %22
+OpReturn
+OpFunctionEnd
+%23 = OpFunction  %2  None %8
+%24 = OpLabel
+%29 = OpLoad  %26  %27
+%34 = OpLoad  %31  %32
+%36 = OpLoad  %10  %35
+%37 = OpSampledImage  %30  %29 %34
+%38 = OpImageSampleImplicitLod  %16  %37 %36
+OpStore %25 %38
+OpReturn
+OpFunctionEnd

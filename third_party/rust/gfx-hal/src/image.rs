@@ -103,119 +103,66 @@ pub enum Tiling {
 }
 
 /// Pure image object creation error.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum CreationError {
     /// Out of either host or device memory.
-    OutOfMemory(device::OutOfMemory),
+    #[error(transparent)]
+    OutOfMemory(#[from] device::OutOfMemory),
     /// The format is not supported by the device.
+    #[error("Unsupported format: {0:?}")]
     Format(format::Format),
     /// The kind doesn't support a particular operation.
+    #[error("Specified kind doesn't support particular operation")]
     Kind,
     /// Failed to map a given multisampled kind to the device.
+    #[error("Specified format doesn't support specified sampling {0:}")]
     Samples(NumSamples),
     /// Unsupported size in one of the dimensions.
+    #[error("Unsupported size in one of the dimensions {0:}")]
     Size(Size),
     /// The given data has a different size than the target image slice.
+    #[error("The given data has a different size ({0:}) than the target image slice")]
     Data(usize),
     /// The mentioned usage mode is not supported
+    #[error("Unsupported usage: {0:?}")]
     Usage(Usage),
-}
-
-impl From<device::OutOfMemory> for CreationError {
-    fn from(error: device::OutOfMemory) -> Self {
-        CreationError::OutOfMemory(error)
-    }
-}
-
-impl std::fmt::Display for CreationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CreationError::OutOfMemory(err) => write!(fmt, "Failed to create image: {}", err),
-            CreationError::Format(format) => write!(fmt, "Failed to create image: Unsupported format: {:?}", format),
-            CreationError::Kind => write!(fmt, "Failed to create image: Specified kind doesn't support particular operation"), // Room for improvement.
-            CreationError::Samples(samples) => write!(fmt, "Failed to create image: Specified format doesn't support specified sampling {}", samples),
-            CreationError::Size(size) => write!(fmt, "Failed to create image: Unsupported size in one of the dimensions {}", size),
-            CreationError::Data(data) => write!(fmt, "Failed to create image: The given data has a different size {{{}}} than the target image slice", data), // Actually nothing emits this.
-            CreationError::Usage(usage) => write!(fmt, "Failed to create image: Unsupported usage: {:?}", usage),
-        }
-    }
-}
-
-impl std::error::Error for CreationError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            CreationError::OutOfMemory(err) => Some(err),
-            _ => None,
-        }
-    }
 }
 
 /// Error creating an `ImageView`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum ViewCreationError {
+    /// Out of either Host or Device memory
+    #[error(transparent)]
+    OutOfMemory(#[from] device::OutOfMemory),
     /// The required usage flag is not present in the image.
+    #[error("Specified usage flags are not present in the image {0:?}")]
     Usage(Usage),
     /// Selected mip level doesn't exist.
+    #[error("Selected level doesn't exist in the image {0:}")]
     Level(Level),
     /// Selected array layer doesn't exist.
-    Layer(LayerError),
+    #[error(transparent)]
+    Layer(#[from] LayerError),
     /// An incompatible format was requested for the view.
+    #[error("Incompatible format: {0:?}")]
     BadFormat(format::Format),
     /// An incompatible view kind was requested for the view.
+    #[error("Incompatible kind: {0:?}")]
     BadKind(ViewKind),
-    /// Out of either Host or Device memory
-    OutOfMemory(device::OutOfMemory),
     /// The backend refused for some reason.
+    #[error("Implementation specific error occurred")]
     Unsupported,
 }
 
-impl From<device::OutOfMemory> for ViewCreationError {
-    fn from(error: device::OutOfMemory) -> Self {
-        ViewCreationError::OutOfMemory(error)
-    }
-}
-
-impl std::fmt::Display for ViewCreationError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ViewCreationError::Usage(usage) => write!(fmt, "Failed to create image view: Specified usage flags are not present in the image {:?}", usage),
-            ViewCreationError::Level(level) => write!(fmt, "Failed to create image view: Selected level doesn't exist in the image {}", level),
-            ViewCreationError::Layer(err) => write!(fmt, "Failed to create image view: {}", err),
-            ViewCreationError::BadFormat(format) => write!(fmt, "Failed to create image view: Incompatible format {:?}", format),
-            ViewCreationError::BadKind(kind) => write!(fmt, "Failed to create image view: Incompatible kind {:?}", kind),
-            ViewCreationError::OutOfMemory(err) => write!(fmt, "Failed to create image view: {}", err),
-            ViewCreationError::Unsupported => write!(fmt, "Failed to create image view: Implementation specific error occurred"),
-        }
-    }
-}
-
-impl std::error::Error for ViewCreationError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            ViewCreationError::OutOfMemory(err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
 /// An error associated with selected image layer.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum LayerError {
     /// The source image kind doesn't support array slices.
+    #[error("Source image doesn't support view kind {0:?}")]
     NotExpected(Kind),
     /// Selected layers are outside of the provided range.
+    #[error("Selected layers are out of bounds")]
     OutOfBounds,
-}
-
-impl std::fmt::Display for LayerError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            LayerError::NotExpected(kind) => {
-                write!(fmt, "Kind {{{:?}}} does not support arrays", kind)
-            }
-            LayerError::OutOfBounds => write!(fmt, "Out of bounds layers"),
-        }
-    }
 }
 
 /// How to [filter](https://en.wikipedia.org/wiki/Texture_filtering) the
@@ -381,6 +328,7 @@ pub enum ViewKind {
 bitflags!(
     /// Capabilities to create views into an image.
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Default)]
     pub struct ViewCapabilities: u32 {
         /// Support creation of views with different formats.
         const MUTABLE_FORMAT = 0x0000_0008;
@@ -750,4 +698,17 @@ pub struct SubresourceFootprint {
     pub array_pitch: RawOffset,
     /// Byte distance between depth slices.
     pub depth_pitch: RawOffset,
+}
+
+/// Description of a framebuffer attachment.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FramebufferAttachment {
+    /// Usage that an image is created with.
+    pub usage: Usage,
+    /// View capabilities that an image is created with.
+    pub view_caps: ViewCapabilities,
+    //TODO: make this a list
+    /// The image view format.
+    pub format: format::Format,
 }

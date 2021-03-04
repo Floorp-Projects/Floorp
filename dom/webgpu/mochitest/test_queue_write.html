@@ -16,9 +16,9 @@ const func = async function() {
   const buffer = device.createBuffer({size:16, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX});
   const arrayBuf = new ArrayBuffer(16);
   (new Int32Array(arrayBuf)).fill(5)
-  device.defaultQueue.writeBuffer(buffer, 0, arrayBuf, 0);
+  device.queue.writeBuffer(buffer, 0, arrayBuf, 0);
   const texture = device.createTexture({size: [2,2,1], dimension: "2d", format: "rgba8unorm", usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC });
-  device.defaultQueue.writeTexture({ texture }, arrayBuf, { bytesPerRow:8 }, [2,2,1]);
+  device.queue.writeTexture({ texture }, arrayBuf, { bytesPerRow:8 }, [2,2,1]);
   // this isn't a process check, we need to read back the contents and verify the writes happened
   ok(device !== undefined, '');
 };
