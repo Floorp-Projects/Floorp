@@ -16,7 +16,7 @@
   --proton-shadow-blur-radius: 6px;
   --proton-tab-block-margin: 4px;
   --proton-tab-inline-padding: 2px;
-  --inline-tab-padding: 12.5px;
+  --inline-tab-padding: 8px;
 }
 } /*** END proton ***/
 
@@ -458,8 +458,8 @@
 }
 
 .tab-close-button {
-  -moz-context-properties: fill, fill-opacity, stroke-opacity;
-  stroke-opacity: var(--toolbarbutton-icon-fill-opacity);
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
@@ -475,19 +475,20 @@
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-close-button {
-  margin-inline-end: 0;
-  width: 16px;
-}
-
-:root[uidensity=touch] .tab-close-button {
-  width: 20px;
+  margin-inline: 8px calc(var(--inline-tab-padding) / -2);
+  width: 24px;
+  height: 24px;
+  padding: 5px;
+  border-radius: var(--proton-tab-radius);
 }
 } /*** END proton ***/
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 :root[uidensity=touch] .tab-close-button {
-  margin-inline-end: calc(-1 * var(--inline-tab-padding));
-  padding: 10px calc(var(--inline-tab-padding) - 2px);
+  margin-inline-end: calc(var(--inline-tab-padding) / -2);
+  width: 24px;
+  height: 24px;
+  padding: 4px;
 }
 } /*** END !proton ***/
 

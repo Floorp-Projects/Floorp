@@ -193,8 +193,7 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 .close-icon {
   background: url("chrome://global/skin/icons/close.svg") no-repeat center;
   opacity: 0;      /* Start out as transparent */
-  fill-opacity: 0; /* Make SVG background transparent */
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: currentColor;
 }
 

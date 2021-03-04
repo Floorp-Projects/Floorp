@@ -249,10 +249,9 @@ p {
 }
 
 .search-banner-close-image {
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: currentColor;
-  fill-opacity: 0;
-  width: 28px;
+  width: 22px;
 }
 
 #private-browsing-vpn-link {

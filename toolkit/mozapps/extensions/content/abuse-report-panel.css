@@ -72,10 +72,9 @@ html {
 
 button.abuse-report-close-icon {
   background: var(--close-icon-url) no-repeat center center;
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   color: inherit !important;
   fill: currentColor;
-  fill-opacity: 0;
   min-width: auto;
   min-height: auto;
   width: var(--close-icon-size);

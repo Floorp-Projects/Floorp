@@ -96,9 +96,8 @@ tr:is([selected], :hover) > td > .action-icon {
 
 /* icons */
 .action-icon::after {
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: currentColor;
-  fill-opacity: 0;
   background-repeat: no-repeat;
   background-position: center;
   line-height: 100%;
