@@ -911,6 +911,14 @@ bool js::CreateNonSyntacticEnvironmentChain(JSContext* cx,
 
 /*****************************************************************************/
 
+const JSClass LexicalEnvironmentObject::class_ = {
+    "LexicalEnvironment",
+    JSCLASS_HAS_RESERVED_SLOTS(LexicalEnvironmentObject::RESERVED_SLOTS),
+    JS_NULL_CLASS_OPS,
+    JS_NULL_CLASS_SPEC,
+    JS_NULL_CLASS_EXT,
+    JS_NULL_OBJECT_OPS};
+
 /* static */
 LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
     JSContext* cx, HandleShape shape, HandleObject enclosing,
@@ -933,6 +941,10 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
   }
 
   return env;
+}
+
+bool LexicalEnvironmentObject::isExtensible() const {
+  return NativeObject::isExtensible();
 }
 
 /* static */
@@ -965,50 +977,6 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::createForFrame(
     JSContext* cx, Handle<LexicalScope*> scope, AbstractFramePtr frame) {
   RootedObject enclosing(cx, frame.environmentChain());
   return create(cx, scope, enclosing, gc::DefaultHeap);
-}
-
-/* static */
-GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
-    JSContext* cx, Handle<GlobalObject*> global) {
-  MOZ_ASSERT(global);
-
-  RootedShape shape(cx, LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
-  if (!shape) {
-    return nullptr;
-  }
-
-  auto* env = static_cast<GlobalLexicalEnvironmentObject*>(
-      createTemplateObject(cx, shape, global, gc::TenuredHeap));
-  if (!env) {
-    return nullptr;
-  }
-
-  env->initThisObject(global);
-  return env;
-}
-
-/* static */
-NonSyntacticLexicalEnvironmentObject*
-NonSyntacticLexicalEnvironmentObject::create(JSContext* cx,
-                                             HandleObject enclosing,
-                                             HandleObject thisv) {
-  MOZ_ASSERT(enclosing);
-  MOZ_ASSERT(!IsSyntacticEnvironment(enclosing));
-
-  RootedShape shape(cx, LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
-  if (!shape) {
-    return nullptr;
-  }
-
-  auto* env = static_cast<NonSyntacticLexicalEnvironmentObject*>(
-      createTemplateObject(cx, shape, enclosing, gc::TenuredHeap));
-  if (!env) {
-    return nullptr;
-  }
-
-  env->initThisObject(thisv);
-
-  return env;
 }
 
 /* static */
@@ -1081,37 +1049,6 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::recreate(
   return create(cx, scope, enclosing, gc::DefaultHeap);
 }
 
-bool LexicalEnvironmentObject::isExtensible() const {
-  return NativeObject::isExtensible();
-}
-
-JSObject* ExtensibleLexicalEnvironmentObject::thisObject() const {
-  JSObject* obj = &getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT).toObject();
-
-  // Windows must never be exposed to script. setWindowProxyThisValue should
-  // have set this to the WindowProxy.
-  MOZ_ASSERT(!IsWindow(obj));
-
-  // WarpBuilder relies on the return value not being nursery-allocated for the
-  // global lexical environment.
-  MOZ_ASSERT_IF(isGlobal(), obj->isTenured());
-
-  return obj;
-}
-
-void GlobalLexicalEnvironmentObject::setWindowProxyThisObject(JSObject* obj) {
-  MOZ_ASSERT(IsWindowProxy(obj));
-  setReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*obj));
-}
-
-const JSClass LexicalEnvironmentObject::class_ = {
-    "LexicalEnvironment",
-    JSCLASS_HAS_RESERVED_SLOTS(LexicalEnvironmentObject::RESERVED_SLOTS),
-    JS_NULL_CLASS_OPS,
-    JS_NULL_CLASS_SPEC,
-    JS_NULL_CLASS_EXT,
-    JS_NULL_OBJECT_OPS};
-
 /* static */
 NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
                                              HandleFunction callee,
@@ -1159,6 +1096,69 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
 size_t NamedLambdaObject::lambdaSlot() {
   // Named lambda environments have exactly one name.
   return JSSLOT_FREE(&LexicalEnvironmentObject::class_);
+}
+
+JSObject* ExtensibleLexicalEnvironmentObject::thisObject() const {
+  JSObject* obj = &getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT).toObject();
+
+  // Windows must never be exposed to script. setWindowProxyThisValue should
+  // have set this to the WindowProxy.
+  MOZ_ASSERT(!IsWindow(obj));
+
+  // WarpBuilder relies on the return value not being nursery-allocated for the
+  // global lexical environment.
+  MOZ_ASSERT_IF(isGlobal(), obj->isTenured());
+
+  return obj;
+}
+
+/* static */
+GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  MOZ_ASSERT(global);
+
+  RootedShape shape(cx, LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
+  if (!shape) {
+    return nullptr;
+  }
+
+  auto* env = static_cast<GlobalLexicalEnvironmentObject*>(
+      createTemplateObject(cx, shape, global, gc::TenuredHeap));
+  if (!env) {
+    return nullptr;
+  }
+
+  env->initThisObject(global);
+  return env;
+}
+
+void GlobalLexicalEnvironmentObject::setWindowProxyThisObject(JSObject* obj) {
+  MOZ_ASSERT(IsWindowProxy(obj));
+  setReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*obj));
+}
+
+/* static */
+NonSyntacticLexicalEnvironmentObject*
+NonSyntacticLexicalEnvironmentObject::create(JSContext* cx,
+                                             HandleObject enclosing,
+                                             HandleObject thisv) {
+  MOZ_ASSERT(enclosing);
+  MOZ_ASSERT(!IsSyntacticEnvironment(enclosing));
+
+  RootedShape shape(cx, LexicalScope::getEmptyExtensibleEnvironmentShape(cx));
+  if (!shape) {
+    return nullptr;
+  }
+
+  auto* env = static_cast<NonSyntacticLexicalEnvironmentObject*>(
+      createTemplateObject(cx, shape, enclosing, gc::TenuredHeap));
+  if (!env) {
+    return nullptr;
+  }
+
+  env->initThisObject(thisv);
+
+  return env;
 }
 
 /* static */
