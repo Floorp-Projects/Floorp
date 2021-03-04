@@ -18,7 +18,7 @@ namespace mozilla {
 
 /* static */
 void ContentBlockingUserInteraction::Observe(nsIPrincipal* aPrincipal) {
-  if (!aPrincipal) {
+  if (!aPrincipal || aPrincipal->IsSystemPrincipal()) {
     // The content process may have sent us garbage data.
     return;
   }
