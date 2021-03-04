@@ -10,12 +10,11 @@
 #include "mozilla/PrincipalHashKey.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
+#include "nsHashtablesFwd.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "PLDHashTable.h"
 
-template <class, class>
-class nsDataHashtable;
 class nsITimer;
 class TemporaryAccessGrantCacheKey;
 

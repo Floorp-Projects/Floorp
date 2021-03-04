@@ -41,6 +41,7 @@
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/Point.h"
 #include "nsCOMPtr.h"
+#include "nsHashtablesFwd.h"
 #include "nsIContentPolicy.h"
 #include "nsID.h"
 #include "nsINode.h"
@@ -124,8 +125,6 @@ class nsWrapperCache;
 struct JSContext;
 struct nsPoint;
 
-template <class K, class V>
-class nsDataHashtable;
 template <class T>
 class nsRefPtrHashKey;
 

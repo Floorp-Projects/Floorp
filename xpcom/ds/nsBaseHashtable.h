@@ -17,10 +17,8 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsHashtablesFwd.h"
 #include "nsTHashtable.h"
-
-template <class KeyClass, class DataType, class UserDataType, class Converter>
-class nsBaseHashtable;  // forward declaration
 
 namespace mozilla::detail {
 
@@ -168,8 +166,7 @@ class nsBaseHashtableET : public KeyClass {
  *   default converter is provided that assumes implicit conversion is an
  *   option.
  */
-template <class KeyClass, class DataType, class UserDataType,
-          class Converter = nsDefaultConverter<DataType, UserDataType>>
+template <class KeyClass, class DataType, class UserDataType, class Converter>
 class nsBaseHashtable
     : protected nsTHashtable<nsBaseHashtableET<KeyClass, DataType>> {
   using Base = nsTHashtable<nsBaseHashtableET<KeyClass, DataType>>;

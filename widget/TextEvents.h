@@ -22,6 +22,7 @@
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/widget/IMEData.h"
 #include "nsCOMPtr.h"
+#include "nsHashtablesFwd.h"
 #include "nsISelectionListener.h"
 #include "nsITransferable.h"
 #include "nsRect.h"
@@ -29,8 +30,6 @@
 #include "nsTArray.h"
 
 class nsStringHashKey;
-template <class, class>
-class nsDataHashtable;
 
 /******************************************************************************
  * virtual keycode values
