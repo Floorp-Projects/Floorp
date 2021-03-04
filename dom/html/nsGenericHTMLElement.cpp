@@ -247,7 +247,7 @@ static OffsetResult GetUnretargetedOffsetsFor(const Element& aElement) {
     parent = frame;
   } else {
     const bool isPositioned = styleFrame->IsAbsPosContainingBlock();
-    const bool isAbsolutelyPositioned = styleFrame->IsAbsolutelyPositioned();
+    const bool isAbsolutelyPositioned = frame->IsAbsolutelyPositioned();
     origin += frame->GetPositionIgnoringScrolling();
 
     for (; parent; parent = parent->GetParent()) {
