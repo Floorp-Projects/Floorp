@@ -54,7 +54,7 @@ static bool ValidateNoSamplingFeedback(const WebGLTexture& tex,
   for (const auto& attach : texAttachments) {
     if (attach->Texture() != &tex) continue;
 
-    const auto& srcBase = tex.BaseMipmapLevel();
+    const auto& srcBase = tex.Es3_level_base();
     const auto srcLast = srcBase + sampledLevels - 1;
     const auto& dstLevel = attach->MipLevel();
     if (MOZ_UNLIKELY(srcBase <= dstLevel && dstLevel <= srcLast)) {
