@@ -12,6 +12,8 @@
 #include "nsObjCExceptions.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
+
 using mozilla::dom::Element;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsStandaloneNativeMenu, nsMenuGroupOwnerX, nsIMutationObserver,
@@ -19,11 +21,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsStandaloneNativeMenu, nsMenuGroupOwnerX, nsIMutati
 
 nsStandaloneNativeMenu::nsStandaloneNativeMenu() : mMenu(nullptr), mContainerStatusBarItem(nil) {}
 
-nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {
-  if (mMenu) {
-    delete mMenu;
-  }
-}
+nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {}
 
 NS_IMETHODIMP
 nsStandaloneNativeMenu::Init(Element* aElement) {
@@ -40,7 +38,7 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
     return rv;
   }
 
-  mMenu = new nsMenuX(this, this, aElement);
+  mMenu = MakeUnique<nsMenuX>(this, this, aElement);
   mMenu->SetupIcon();
 
   return NS_OK;
@@ -65,7 +63,7 @@ nsStandaloneNativeMenu::MenuWillOpen(bool* aResult) {
 
   // Force an update on the mMenu by faking an open/close on all of
   // its submenus.
-  UpdateMenu(mMenu);
+  UpdateMenu(mMenu.get());
 
   *aResult = true;
   return NS_OK;
@@ -134,7 +132,7 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
     return NS_OK;
   }
 
-  nsMenuX* currentMenu = mMenu;
+  nsMenuX* currentMenu = mMenu.get();
 
   // now find the correct submenu
   for (unsigned int i = 1; currentMenu && i < indexCount; i++) {

@@ -187,20 +187,19 @@ nsMenuX::~nsMenuX() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsMenuX::AddMenuItem(nsMenuItemX* aMenuItem) {
+void nsMenuX::AddMenuItem(UniquePtr<nsMenuItemX>&& aMenuItem) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!aMenuItem) {
-    return NS_ERROR_INVALID_ARG;
+  nsMenuItemX* menuItem = aMenuItem.get();
+  mMenuObjectsArray.AppendElement(std::move(aMenuItem));
+
+  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuItem->Content())) {
+    return;
   }
 
-  mMenuObjectsArray.AppendElement(aMenuItem);
-  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(aMenuItem->Content())) {
-    return NS_OK;
-  }
   ++mVisibleItemsCount;
 
-  NSMenuItem* newNativeMenuItem = (NSMenuItem*)aMenuItem->NativeData();
+  NSMenuItem* newNativeMenuItem = (NSMenuItem*)menuItem->NativeData();
 
   // add the menu item to this menu
   [mNativeMenu addItem:newNativeMenuItem];
@@ -210,17 +209,17 @@ nsresult nsMenuX::AddMenuItem(nsMenuItemX* aMenuItem) {
   [newNativeMenuItem setAction:@selector(menuItemHit:)];
 
   // set its command. we get the unique command id from the menubar
-  [newNativeMenuItem setTag:mMenuGroupOwner->RegisterForCommand(aMenuItem)];
+  [newNativeMenuItem setTag:mMenuGroupOwner->RegisterForCommand(menuItem)];
   MenuItemInfo* info = [[MenuItemInfo alloc] initWithMenuGroupOwner:mMenuGroupOwner];
   [newNativeMenuItem setRepresentedObject:info];
   [info release];
 
-  return NS_OK;
+  menuItem->SetupIcon();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu) {
+void nsMenuX::AddMenu(UniquePtr<nsMenuX>&& aMenu) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // aMenu transfers ownership to mMenuObjectsArray and becomes nullptr, so
@@ -229,7 +228,7 @@ nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu) {
   mMenuObjectsArray.AppendElement(std::move(aMenu));
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(menu->Content())) {
-    return menu;
+    return;
   }
 
   ++mVisibleItemsCount;
@@ -241,7 +240,7 @@ nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu) {
     [newNativeMenuItem setSubmenu:(NSMenu*)menu->NativeData()];
   }
 
-  return menu;
+  menu->SetupIcon();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -486,28 +485,12 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent) {
     }
   }
 
-  // Create the item.
-  nsMenuItemX* menuItem =
-      new nsMenuItemX(this, menuitemName, itemType, mMenuGroupOwner, inMenuItemContent);
-  AddMenuItem(menuItem);
-
-  // This needs to happen after the nsIMenuItem object is inserted into
-  // our item array in AddMenuItem()
-  menuItem->SetupIcon();
+  AddMenuItem(
+      MakeUnique<nsMenuItemX>(this, menuitemName, itemType, mMenuGroupOwner, inMenuItemContent));
 }
 
 void nsMenuX::LoadSubMenu(nsIContent* inMenuContent) {
-  auto menu = MakeUnique<nsMenuX>(this, mMenuGroupOwner, inMenuContent);
-
-  // |menu|'s ownership is transfer to AddMenu but, if it is successfully
-  // added, we can access it via the returned raw pointer.
-  nsMenuX* menu_ptr = AddMenu(std::move(menu));
-
-  // This needs to happen after the nsIMenu object is inserted into
-  // our item array in AddMenu()
-  if (menu_ptr) {
-    menu_ptr->SetupIcon();
-  }
+  AddMenu(MakeUnique<nsMenuX>(this, mMenuGroupOwner, inMenuContent));
 }
 
 // This menu is about to open. Returns TRUE if we should keep processing the event,
