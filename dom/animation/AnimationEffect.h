@@ -8,21 +8,22 @@
 #define mozilla_dom_AnimationEffect_h
 
 #include "mozilla/ComputedTiming.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/StickyTimeDuration.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TimingParams.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 class Animation;
 class KeyframeEffect;
 struct ComputedEffectTiming;
+struct EffectTiming;
+struct OptionalEffectTiming;
 class Document;
 
 class AnimationEffect : public nsISupports, public nsWrapperCache {
