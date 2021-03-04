@@ -3594,8 +3594,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   forceStrictMode_ = cx->options().strictMode();
 
   // Certain modes of operation disallow syntax parsing in general.
-  forceFullParse_ = cx->realm()->behaviors().disableLazyParsing() ||
-                    coverage::IsLCovEnabled();
+  forceFullParse_ = coverage::IsLCovEnabled();
 
   // If instrumentation is enabled in the realm, the compiler should insert the
   // requested kinds of instrumentation into all scripts.
