@@ -81,6 +81,16 @@ class APZCBasicTester : public APZCTesterBase {
     mcc->AdvanceBy(increment);
     apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   }
+  /**
+   * Sample animations one frame, 17 ms later than the last sample.
+   */
+  void SampleAnimationOneFrame() {
+    const TimeDuration increment = TimeDuration::FromMilliseconds(17);
+    ParentLayerPoint pointOut;
+    AsyncTransform viewTransformOut;
+    mcc->AdvanceBy(increment);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
+  }
 
   /**
    * Sample animations until we recover from overscroll.
