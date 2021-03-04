@@ -51,7 +51,7 @@ class JS_PUBLIC_API RealmOptions;
 namespace js {
 
 class GlobalScope;
-class LexicalEnvironmentObject;
+class GlobalLexicalEnvironmentObject;
 class PlainObject;
 class RegExpStatics;
 
@@ -148,7 +148,7 @@ class GlobalObject : public NativeObject {
   }
 
  public:
-  LexicalEnvironmentObject& lexicalEnvironment() const;
+  GlobalLexicalEnvironmentObject& lexicalEnvironment() const;
   GlobalScope& emptyGlobalScope() const;
 
   void setOriginalEval(JSObject* evalobj) {

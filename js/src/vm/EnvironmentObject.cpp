@@ -968,7 +968,7 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createForFrame(
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::createGlobal(
+GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
     JSContext* cx, Handle<GlobalObject*> global) {
   MOZ_ASSERT(global);
 
@@ -977,9 +977,8 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createGlobal(
     return nullptr;
   }
 
-  LexicalEnvironmentObject* env =
-      LexicalEnvironmentObject::createTemplateObject(cx, shape, global,
-                                                     gc::TenuredHeap);
+  auto* env = static_cast<GlobalLexicalEnvironmentObject*>(
+      createTemplateObject(cx, shape, global, gc::TenuredHeap));
   if (!env) {
     return nullptr;
   }
@@ -1098,8 +1097,7 @@ JSObject* LexicalEnvironmentObject::thisObject() const {
   return obj;
 }
 
-void LexicalEnvironmentObject::setWindowProxyThisObject(JSObject* obj) {
-  MOZ_ASSERT(isGlobal());
+void GlobalLexicalEnvironmentObject::setWindowProxyThisObject(JSObject* obj) {
   MOZ_ASSERT(IsWindowProxy(obj));
   setReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*obj));
 }
@@ -4224,7 +4222,8 @@ JSObject* js::MaybeOptimizeBindGlobalName(JSContext* cx,
   // We can bind name to the global lexical scope if the binding already
   // exists, is initialized, and is writable (i.e., an initialized
   // 'let') at compile time.
-  Rooted<LexicalEnvironmentObject*> env(cx, &global->lexicalEnvironment());
+  Rooted<GlobalLexicalEnvironmentObject*> env(cx,
+                                              &global->lexicalEnvironment());
   if (Shape* shape = env->lookup(cx, name)) {
     if (shape->writable() &&
         !env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {

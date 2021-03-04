@@ -13,8 +13,8 @@ BEGIN_TEST(testForceLexicalInitialization) {
   // Attach an uninitialized lexical to a scope and ensure that it's
   // set to undefined
   js::RootedGlobalObject g(cx, cx->global());
-  JS::Rooted<js::LexicalEnvironmentObject*> env(
-      cx, js::LexicalEnvironmentObject::createGlobal(cx, g));
+  JS::Rooted<js::GlobalLexicalEnvironmentObject*> env(
+      cx, js::GlobalLexicalEnvironmentObject::create(cx, g));
 
   JS::RootedValue uninitialized(cx, JS::MagicValue(JS_UNINITIALIZED_LEXICAL));
   js::RootedPropertyName name(cx, Atomize(cx, "foopi", 4)->asPropertyName());
