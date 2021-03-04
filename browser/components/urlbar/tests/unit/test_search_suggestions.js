@@ -354,6 +354,40 @@ add_task(async function suffixMatch() {
   await cleanUpSuggestions();
 });
 
+add_task(async function remoteSuggestionsDupeSearchString() {
+  Services.prefs.setIntPref(MAX_FORM_HISTORY_PREF, 0);
+
+  // Return remote suggestions with the trimmed search string, the uppercased
+  // search string, and the search string with a trailing space, plus the usual
+  // "foo" and "bar" suggestions.
+  setSuggestionsFn(searchStr => {
+    let suffixes = ["foo", "bar"];
+    return [searchStr.trim(), searchStr.toUpperCase(), searchStr + " "].concat(
+      suffixes.map(s => searchStr + " " + s)
+    );
+  });
+
+  // Do a search with a trailing space.  All the variations of the search string
+  // with regard to spaces and case should be discarded from the remote
+  // suggestions, leaving only the usual "foo" and "bar" suggestions.
+  let query = SEARCH_STRING + " ";
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        query,
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
+      ...makeRemoteSuggestionResults(context),
+    ],
+  });
+
+  await cleanUpSuggestions();
+  Services.prefs.clearUserPref(MAX_FORM_HISTORY_PREF);
+});
+
 add_task(async function queryIsNotASubstring() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
 
@@ -1542,6 +1576,25 @@ add_task(async function formHistory() {
     ],
   });
 
+  // Do the same search but in uppercase with a trailing space.  We should get
+  // the same results, i.e., the form history result dupes the trimmed search
+  // string so it shouldn't be included.
+  let query = firstSuggestion.toUpperCase() + " ";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        query,
+        engineName: ENGINE_NAME,
+        heuristic: true,
+      }),
+      ...makeRemoteSuggestionResults(context, {
+        suggestionPrefix: firstSuggestion.toUpperCase(),
+      }),
+    ],
+  });
+
   // Add a form history entry that dupes the first remote suggestion and do a
   // search that triggers both.  The form history should be included but the
   // remote suggestion should not since it dupes the form history.
@@ -1568,13 +1621,13 @@ add_task(async function formHistory() {
   await UrlbarTestUtils.formHistory.remove([dupeSuggestion]);
 
   // Add these form history strings to use below.
-  let formHistoryStrings = ["foo", "foobar", "fooquux"];
+  let formHistoryStrings = ["foo", "FOO ", "foobar", "fooquux"];
   await UrlbarTestUtils.formHistory.add(formHistoryStrings);
 
-  // Search for "foo".  "foo" shouldn't be included since it dupes the
-  // heuristic.  Both "foobar" and "fooquux" should be included even though the
-  // max form history count is only two and there are three matching form
-  // history results (including "foo").
+  // Search for "foo".  "foo" and "FOO " shouldn't be included since they dupe
+  // the heuristic.  Both "foobar" and "fooquux" should be included even though
+  // the max form history count is only two and there are four matching form
+  // history results (including the discarded "foo" and "FOO ").
   context = createContext("foo", { isPrivate: false });
   await check_results({
     context,
@@ -1628,20 +1681,22 @@ add_task(async function formHistory() {
   });
   await PlacesUtils.history.clear();
 
-  // Add SERPs for "foobar" and "food" and search for "foo".  The "foo" form
-  // history should be excluded since it dupes the heuristic; the "foobar" and
-  // "fooquux" form history should be included; the "food" SERP should be
-  // included since it doesn't dupe either form history result; and the "foobar"
-  // SERP depends on the result buckets, see below.
+  // Add SERPs for "foobar", "fooBAR ", and "food", and search for "foo".  The
+  // "foo" form history should be excluded since it dupes the heuristic; the
+  // "foobar" and "fooquux" form history should be included; the "food" SERP
+  // should be included since it doesn't dupe either form history result; and
+  // the "foobar" and "fooBAR " SERPs depend on the result buckets, see below.
   let engine = await Services.search.getDefault();
-  let [serpURL1] = UrlbarUtils.getSearchQueryUrl(engine, "foobar");
-  let [serpURL2] = UrlbarUtils.getSearchQueryUrl(engine, "food");
-  await PlacesTestUtils.addVisits([serpURL1, serpURL2]);
+  let serpURLs = ["foobar", "fooBAR ", "food"].map(
+    term => UrlbarUtils.getSearchQueryUrl(engine, term)[0]
+  );
+  await PlacesTestUtils.addVisits(serpURLs);
 
   // First set showSearchSuggestionsFirst = false so that general results appear
-  // before suggestions, which means that the muxer visits the "foobar" SERP
-  // before visiting the "foobar" form history, and so it doesn't see that the
-  // SERP dupes the form history.  The "foobar" SERP is therefore included.
+  // before suggestions, which means that the muxer visits the "foobar" and
+  // "fooBAR " SERPs before visiting the "foobar" form history, and so it
+  // doesn't see that these two SERPs dupe the form history.  They are therefore
+  // included.
   Services.prefs.setBoolPref(SHOW_SEARCH_SUGGESTIONS_FIRST_PREF, false);
   context = createContext("foo", { isPrivate: false });
   await check_results({
@@ -1651,6 +1706,10 @@ add_task(async function formHistory() {
       makeVisitResult(context, {
         uri: "http://localhost:9000/search?terms=food",
         title: "test visit for http://localhost:9000/search?terms=food",
+      }),
+      makeVisitResult(context, {
+        uri: "http://localhost:9000/search?terms=fooBAR+",
+        title: "test visit for http://localhost:9000/search?terms=fooBAR+",
       }),
       makeVisitResult(context, {
         uri: "http://localhost:9000/search?terms=foobar",
@@ -1671,8 +1730,8 @@ add_task(async function formHistory() {
   });
 
   // Now clear showSearchSuggestionsFirst so that suggestions appear before
-  // general results.  Now the muxer will see that the "foobar" SERP dupes the
-  // "foobar" form history, so it will exclude the SERP.
+  // general results.  Now the muxer will see that the "foobar" and "fooBAR "
+  // SERPs dupe the "foobar" form history, so it will exclude them.
   Services.prefs.clearUserPref(SHOW_SEARCH_SUGGESTIONS_FIRST_PREF);
   context = createContext("foo", { isPrivate: false });
   await check_results({
