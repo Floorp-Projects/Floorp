@@ -37,6 +37,8 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeBasicTheme, nsNativeTheme, nsITheme)
 
 namespace {
 
+static constexpr sRGBColor sTransparent = sRGBColor::White(0.0);
+
 // This pushes and pops a clip rect to the draw target.
 //
 // This is done to reduce fuzz in places where we may have antialiasing,
@@ -290,7 +292,13 @@ sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState) {
     return sColorGrey40Alpha50;
   }
   if (isFocused) {
-    return sAccentColor;
+    // We draw the outline over the border for all controls that call into this,
+    // so to prevent issues where the border shows underneath if it snaps in the
+    // wrong direction, we use a transparent border. An alternative to this is
+    // ensuring that we snap the offset in PaintRoundedFocusRect the same was a
+    // we snap border widths, so that negative offsets are guaranteed to cover
+    // the border. But this looks harder to mess up.
+    return sTransparent;
   }
   if (isActive) {
     return sColorGrey60;
@@ -561,7 +569,6 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
   // NOTE(emilio): If the widths or offsets here change, make sure to tweak
   // the GetWidgetOverflow path for FocusOutline.
   auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors();
-  const sRGBColor kTransparent = sRGBColor::White(0.0);
 
   LayoutDeviceRect focusRect(aRect);
 
@@ -573,24 +580,28 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
   // But some controls might provide a negative offset to cover the border, if
   // necessary.
   CSSCoord strokeWidth = kInnerFocusOutlineWidth;
+  auto strokeWidthDevPx =
+      LayoutDeviceCoord(SnapBorderWidth(strokeWidth, aDpiRatio));
   CSSCoord strokeRadius = aRadius;
-  focusRect.Inflate(aOffset * aDpiRatio + strokeWidth * aDpiRatio);
+  focusRect.Inflate(aOffset * aDpiRatio + strokeWidthDevPx);
 
-  PaintRoundedRectWithRadius(aBackendData, focusRect, kTransparent, innerColor,
+  PaintRoundedRectWithRadius(aBackendData, focusRect, sTransparent, innerColor,
                              strokeWidth, strokeRadius, aDpiRatio);
 
   strokeWidth = CSSCoord(1.0f);
+  strokeWidthDevPx = LayoutDeviceCoord(SnapBorderWidth(strokeWidth, aDpiRatio));
   strokeRadius += strokeWidth;
-  focusRect.Inflate(strokeWidth * aDpiRatio);
+  focusRect.Inflate(strokeWidthDevPx);
 
-  PaintRoundedRectWithRadius(aBackendData, focusRect, kTransparent, middleColor,
+  PaintRoundedRectWithRadius(aBackendData, focusRect, sTransparent, middleColor,
                              strokeWidth, strokeRadius, aDpiRatio);
 
   strokeWidth = CSSCoord(2.0f);
+  strokeWidthDevPx = LayoutDeviceCoord(SnapBorderWidth(strokeWidth, aDpiRatio));
   strokeRadius += strokeWidth;
-  focusRect.Inflate(strokeWidth * aDpiRatio);
+  focusRect.Inflate(strokeWidthDevPx);
 
-  PaintRoundedRectWithRadius(aBackendData, focusRect, kTransparent, outerColor,
+  PaintRoundedRectWithRadius(aBackendData, focusRect, sTransparent, outerColor,
                              strokeWidth, strokeRadius, aDpiRatio);
 }
 
@@ -637,17 +648,19 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
     }
   }
 
-  // Push the border.
-  const auto borderColor = ToDeviceColor(aBorderColor);
-  const auto side = wr::ToBorderSide(borderColor, StyleBorderStyle::Solid);
-  const wr::BorderSide sides[4] = {side, side, side, side};
-  const LayoutDeviceSize sideRadius(radius, radius);
-  const auto widths =
-      wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
-  const auto wrRadius =
-      wr::ToBorderRadius(sideRadius, sideRadius, sideRadius, sideRadius);
-  aWrData.mBuilder.PushBorder(dest, clip, kBackfaceIsVisible, widths,
-                              {sides, 4}, wrRadius);
+  if (borderWidth && aBorderColor.a) {
+    // Push the border.
+    const auto borderColor = ToDeviceColor(aBorderColor);
+    const auto side = wr::ToBorderSide(borderColor, StyleBorderStyle::Solid);
+    const wr::BorderSide sides[4] = {side, side, side, side};
+    const LayoutDeviceSize sideRadius(radius, radius);
+    const auto widths =
+        wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
+    const auto wrRadius =
+        wr::ToBorderRadius(sideRadius, sideRadius, sideRadius, sideRadius);
+    aWrData.mBuilder.PushBorder(dest, clip, kBackfaceIsVisible, widths,
+                                {sides, 4}, wrRadius);
+  }
 }
 
 void nsNativeBasicTheme::FillRect(DrawTarget& aDt,
@@ -694,22 +707,33 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
   if (aBackgroundColor.a) {
     backgroundPattern.emplace(ToDeviceColor(aBackgroundColor));
   }
-  ColorPattern borderPattern(ToDeviceColor(aBorderColor));
-  if (radius) {
-    RectCornerRadii radii(radius, radius, radius, radius);
-    RefPtr<Path> roundedRect =
-        MakePathForRoundedRect(aDrawTarget, rect.ToUnknownRect(), radii);
+  Maybe<ColorPattern> borderPattern;
+  if (borderWidth && aBorderColor.a) {
+    borderPattern.emplace(ToDeviceColor(aBorderColor));
+  }
 
-    if (backgroundPattern) {
-      aDrawTarget.Fill(roundedRect, *backgroundPattern);
-    }
-    aDrawTarget.Stroke(roundedRect, borderPattern, StrokeOptions(borderWidth));
-  } else {
-    if (backgroundPattern) {
-      aDrawTarget.FillRect(rect.ToUnknownRect(), *backgroundPattern);
-    }
-    aDrawTarget.StrokeRect(rect.ToUnknownRect(), borderPattern,
+  if (borderPattern || backgroundPattern) {
+    if (radius) {
+      RectCornerRadii radii(radius, radius, radius, radius);
+      RefPtr<Path> roundedRect =
+          MakePathForRoundedRect(aDrawTarget, rect.ToUnknownRect(), radii);
+
+      if (backgroundPattern) {
+        aDrawTarget.Fill(roundedRect, *backgroundPattern);
+      }
+      if (borderPattern) {
+        aDrawTarget.Stroke(roundedRect, *borderPattern,
                            StrokeOptions(borderWidth));
+      }
+    } else {
+      if (backgroundPattern) {
+        aDrawTarget.FillRect(rect.ToUnknownRect(), *backgroundPattern);
+      }
+      if (borderPattern) {
+        aDrawTarget.StrokeRect(rect.ToUnknownRect(), *borderPattern,
+                               StrokeOptions(borderWidth));
+      }
+    }
   }
 
   if (needsClip) {
@@ -916,7 +940,8 @@ void nsNativeBasicTheme::PaintTextField(PaintBackendData& aPaintData,
                              kTextFieldBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio, radius,
+    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio,
+                          radius + kTextFieldBorderWidth,
                           -kTextFieldBorderWidth);
   }
 }
@@ -933,8 +958,8 @@ void nsNativeBasicTheme::PaintListbox(PaintBackendData& aPaintData,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio, radius,
-                          -kMenulistBorderWidth);
+    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio,
+                          radius + kMenulistBorderWidth, -kMenulistBorderWidth);
   }
 }
 
@@ -950,8 +975,8 @@ void nsNativeBasicTheme::PaintMenulist(PaintBackendData& aDrawTarget,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, radius,
-                          -kMenulistBorderWidth);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio,
+                          radius + kMenulistBorderWidth, -kMenulistBorderWidth);
   }
 }
 
@@ -1184,8 +1209,8 @@ void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame,
                              kButtonBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio, radius,
-                          -kButtonBorderWidth);
+    PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio,
+                          radius + kButtonBorderWidth, -kButtonBorderWidth);
   }
 }
 
@@ -1598,7 +1623,8 @@ void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
   Unused << outerColor;
 
   LayoutDeviceRect rect(aRect);
-  const LayoutDeviceCoord width = kInnerFocusOutlineWidth * aDpiRatio;
+  auto width =
+      LayoutDeviceCoord(SnapBorderWidth(kInnerFocusOutlineWidth, aDpiRatio));
   rect.Inflate(width);
 
   nscoord cssRadii[8];
