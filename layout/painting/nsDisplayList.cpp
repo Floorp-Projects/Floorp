@@ -3277,16 +3277,18 @@ bool nsDisplaySolidColorRegion::CreateWebRenderCommands(
 static void RegisterThemeGeometry(nsDisplayListBuilder* aBuilder,
                                   nsDisplayItem* aItem, nsIFrame* aFrame,
                                   nsITheme::ThemeGeometryType aType) {
-  if (aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
+  if (aBuilder->IsInChromeDocumentOrPopup()) {
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
-    nsPoint offset = aBuilder->IsInSubdocument()
-                         ? aBuilder->ToReferenceFrame(aFrame)
-                         : aFrame->GetOffsetTo(displayRoot);
-    nsRect borderBox = nsRect(offset, aFrame->GetSize());
-    aBuilder->RegisterThemeGeometry(
-        aType, aItem,
-        LayoutDeviceIntRect::FromUnknownRect(borderBox.ToNearestPixels(
-            aFrame->PresContext()->AppUnitsPerDevPixel())));
+    bool preservesAxisAlignedRectangles = false;
+    nsRect borderBox = nsLayoutUtils::TransformFrameRectToAncestor(
+        aFrame, aFrame->GetRectRelativeToSelf(), displayRoot,
+        &preservesAxisAlignedRectangles);
+    if (preservesAxisAlignedRectangles) {
+      aBuilder->RegisterThemeGeometry(
+          aType, aItem,
+          LayoutDeviceIntRect::FromUnknownRect(borderBox.ToNearestPixels(
+              aFrame->PresContext()->AppUnitsPerDevPixel())));
+    }
   }
 }
 
