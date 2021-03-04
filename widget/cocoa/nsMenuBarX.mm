@@ -11,7 +11,6 @@
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsCocoaUtils.h"
-#include "nsCocoaWindow.h"
 #include "nsChildView.h"
 
 #include "nsCOMPtr.h"
@@ -32,6 +31,7 @@
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
+using mozilla::dom::Element;
 
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
@@ -73,10 +73,7 @@ static nsIContent* sQuitItemContent = nullptr;
 @end
 
 nsMenuBarX::nsMenuBarX()
-    : nsMenuGroupOwnerX(),
-      mParentWindow(nullptr),
-      mNeedsRebuild(false),
-      mApplicationMenuDelegate(nil) {
+    : nsMenuGroupOwnerX(), mNeedsRebuild(false), mApplicationMenuDelegate(nil) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
@@ -123,14 +120,9 @@ nsMenuBarX::~nsMenuBarX() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent) {
+nsresult nsMenuBarX::Create(Element* aContent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!aParent) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mParentWindow = aParent;
   mContent = aContent;
 
   if (mContent) {
@@ -146,9 +138,6 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent) {
   } else {
     ConstructFallbackNativeMenus();
   }
-
-  // Give this to the parent window. The parent takes ownership.
-  static_cast<nsCocoaWindow*>(mParentWindow)->SetMenuBar(this);
 
   return NS_OK;
 
@@ -791,8 +780,6 @@ void nsMenuBarX::CreateApplicationMenu(nsMenuX* aMenu) {
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
-void nsMenuBarX::SetParent(nsIWidget* aParent) { mParentWindow = aParent; }
 
 //
 // Objective-C class used to allow us to have keyboard commands
