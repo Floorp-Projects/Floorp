@@ -114,6 +114,15 @@
   -moz-box-align: center;
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+.tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-bottom-line {
+  background-color: var(--identity-icon-color);
+  height: 2px;
+  border-radius: 0 0 var(--proton-tab-radius) var(--proton-tab-radius);
+}
+} /*** END proton ***/
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-bottom-line {
   background: linear-gradient(to right, transparent 10%, var(--identity-tab-color) 10%, var(--identity-tab-color) 90%, transparent 90%);
   height: 2px;
@@ -123,6 +132,7 @@
 .tabbrowser-tab[pinned][usercontextid] > .tab-stack > .tab-background > .tab-bottom-line {
   background: linear-gradient(to right, transparent 30%, var(--identity-tab-color) 30%, var(--identity-tab-color) 70%, transparent 70%);
 }
+} /*** END !proton ***/
 
 .userContext-icon-inprefs {
   margin-inline: 4px 10px;
