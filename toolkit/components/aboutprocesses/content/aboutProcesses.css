@@ -54,15 +54,16 @@ tr {
   height: inherit;
 }
 
-#process-thead > tr > td {
-  border: none;
+th {
+  font-weight: normal;
+  text-align: start;
   background-color: var(--in-content-button-background);
 }
-#process-thead > tr > td:not(:first-child) {
+th:not(:first-child) {
   border-inline-start: 1px solid;
   border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
 }
-td {
+th, td {
   padding: 5px 10px;
   min-height: 16px;
   max-height: 2em;
@@ -82,7 +83,7 @@ td.type, td.favicon {
 td.type:dir(rtl), td.favicon:dir(rtl) {
   background-position-x: right 11px;
 }
-#process-tbody > tr > td:first-child {
+td:first-child {
   text-overflow: ellipsis;
 }
 .twisty {
@@ -107,14 +108,14 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 .twisty.open::before {
   content: url("chrome://global/skin/icons/twisty-expanded.svg");
 }
-#process-tbody > tr > td.indent {
+.indent {
   padding-inline: 48px 0;
 }
-#process-tbody > tr > td.double_indent {
+.double_indent {
   padding-inline: 58px 0;
 }
 
-#process-tbody > tr[selected] > td {
+tr[selected] > td {
   background-color: var(--in-content-item-selected);
   color: var(--in-content-selected-text);
 }
@@ -165,17 +166,17 @@ td.type:dir(rtl), td.favicon:dir(rtl) {
 }
 %endif
 
-#process-thead > tr > td.clickable:hover {
+th.clickable:hover {
   background-color: var(--in-content-button-background-hover);
 }
-#process-thead > tr > td.clickable:hover:active {
+th.clickable:hover:active {
   background-color: var(--in-content-button-background-active);
 }
 
-#process-tbody > tr.process > td.type {
+tr.process > td.type {
   font-weight: bold;
 }
-#process-tbody > tr.thread {
+tr.thread {
   font-size-adjust: 0.5;
 }
 
@@ -220,7 +221,7 @@ tr:is([selected], :hover):not(.killing) > .close-icon {
   Show a separation between process groups.
  */
 
-#process-tbody > tr.separate-from-previous-process-group {
+tr.separate-from-previous-process-group {
   border-top: dotted 1px var(--in-content-box-border-color);
   margin-top: -1px;
 }
