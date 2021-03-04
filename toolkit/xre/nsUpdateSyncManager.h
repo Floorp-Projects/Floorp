@@ -24,7 +24,7 @@
 class nsUpdateSyncManager final : public nsIUpdateSyncManager,
                                   public nsIObserver {
  public:
-  explicit nsUpdateSyncManager(nsIFile* anAppFile = nullptr);
+  nsUpdateSyncManager();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUPDATESYNCMANAGER
@@ -40,7 +40,7 @@ class nsUpdateSyncManager final : public nsIUpdateSyncManager,
   nsUpdateSyncManager& operator=(nsUpdateSyncManager&) = delete;
   nsUpdateSyncManager& operator=(nsUpdateSyncManager&&) = delete;
 
-  nsresult OpenLock(nsIFile* anAppFile = nullptr);
+  nsresult OpenLock();
   void ReleaseLock();
 
   mozilla::MultiInstLockHandle mLock = MULTI_INSTANCE_LOCK_HANDLE_ERROR;

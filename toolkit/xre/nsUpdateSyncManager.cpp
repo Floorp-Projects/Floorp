@@ -24,10 +24,7 @@ nsUpdateSyncManager* gUpdateSyncManager = nullptr;
 
 NS_IMPL_ISUPPORTS(nsUpdateSyncManager, nsIUpdateSyncManager, nsIObserver)
 
-nsUpdateSyncManager::nsUpdateSyncManager(nsIFile* anAppFile /* = nullptr */) {
-  gUpdateSyncManager = this;
-  OpenLock(anAppFile);
-}
+nsUpdateSyncManager::nsUpdateSyncManager() { OpenLock(); }
 
 nsUpdateSyncManager::~nsUpdateSyncManager() {
   ReleaseLock();
@@ -36,7 +33,7 @@ nsUpdateSyncManager::~nsUpdateSyncManager() {
 
 already_AddRefed<nsUpdateSyncManager> nsUpdateSyncManager::GetSingleton() {
   if (!gUpdateSyncManager) {
-    new nsUpdateSyncManager();  // This sets gUpdateSyncManager.
+    gUpdateSyncManager = new nsUpdateSyncManager();
   }
   return do_AddRef(gUpdateSyncManager);
 }
@@ -66,7 +63,7 @@ NS_IMETHODIMP nsUpdateSyncManager::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-nsresult nsUpdateSyncManager::OpenLock(nsIFile* anAppFile) {
+nsresult nsUpdateSyncManager::OpenLock() {
   if (mLock != MULTI_INSTANCE_LOCK_HANDLE_ERROR) {
     // Lock is already open.
     return NS_OK;
@@ -78,22 +75,14 @@ nsresult nsUpdateSyncManager::OpenLock(nsIFile* anAppFile) {
     return NS_OK;
   }
 
-  // If we're given an app file, use it; otherwise, get it from the ambient
-  // directory service.
-  nsresult rv;
-  nsCOMPtr<nsIFile> appFile;
-  if (anAppFile) {
-    rv = anAppFile->Clone(getter_AddRefs(appFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    nsCOMPtr<nsIProperties> dirSvc =
-        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(dirSvc, NS_ERROR_SERVICE_NOT_AVAILABLE);
+  nsCOMPtr<nsIProperties> dirSvc =
+      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(dirSvc, NS_ERROR_SERVICE_NOT_AVAILABLE);
 
-    rv = dirSvc->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
-                     getter_AddRefs(appFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCOMPtr<nsIFile> appFile;
+  nsresult rv = dirSvc->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
+                            getter_AddRefs(appFile));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> appDirFile;
   rv = appFile->GetParent(getter_AddRefs(appDirFile));
@@ -135,7 +124,7 @@ NS_IMETHODIMP nsUpdateSyncManager::IsOtherInstanceRunning(bool* aResult) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUpdateSyncManager::ResetLock(nsIFile* anAppFile = nullptr) {
+NS_IMETHODIMP nsUpdateSyncManager::ResetLock() {
   ReleaseLock();
-  return OpenLock(anAppFile);
+  return OpenLock();
 }
