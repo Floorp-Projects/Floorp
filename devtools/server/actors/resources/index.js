@@ -19,6 +19,7 @@ const TYPES = {
   SOURCE: "source",
   THREAD_STATE: "thread-state",
   SERVER_SENT_EVENT: "server-sent-event",
+  WEBSOCKET: "websocket",
   // storage types
   CACHE_STORAGE: "Cache",
   LOCAL_STORAGE: "local-storage",
@@ -77,6 +78,9 @@ const FrameTargetResources = augmentResourceDictionary({
   },
   [TYPES.SERVER_SENT_EVENT]: {
     path: "devtools/server/actors/resources/server-sent-events",
+  },
+  [TYPES.WEBSOCKET]: {
+    path: "devtools/server/actors/resources/websockets",
   },
 });
 const ProcessTargetResources = augmentResourceDictionary({

@@ -25,6 +25,7 @@ DevToolsModules(
     "storage-session-storage.js",
     "stylesheets.js",
     "thread-states.js",
+    "websockets.js",
 )
 
 with Files("*-messages.js"):
