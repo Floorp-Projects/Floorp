@@ -7,12 +7,14 @@
 #ifndef mozilla_glean_Glean_h
 #define mozilla_glean_Glean_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/glean/bindings/Category.h"
+#include "js/TypeDecls.h"
 #include "nsISupports.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla::glean {
+
+class Category;
 
 class Glean final : public nsISupports, public nsWrapperCache {
  public:

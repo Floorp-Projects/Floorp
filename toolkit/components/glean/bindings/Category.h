@@ -7,8 +7,9 @@
 #ifndef mozilla_glean_Category_h
 #define mozilla_glean_Category_h
 
-#include "mozilla/dom/BindingDeclarations.h"
+#include "js/TypeDecls.h"
 #include "nsISupports.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla::glean {

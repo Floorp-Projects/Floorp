@@ -9,8 +9,6 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/EnumeratedArray.h"
 #include "nsCycleCollectionParticipant.h"
@@ -23,6 +21,9 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
+
+class Document;
+class MediaMetadata;
 
 // https://w3c.github.io/mediasession/#position-state
 struct PositionState {

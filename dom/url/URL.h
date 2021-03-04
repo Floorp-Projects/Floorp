@@ -7,14 +7,13 @@
 #ifndef mozilla_dom_URL_h
 #define mozilla_dom_URL_h
 
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIURI.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
 class nsISupports;
-class nsIURI;
 
 namespace mozilla {
 
@@ -25,6 +24,8 @@ namespace dom {
 class Blob;
 class MediaSource;
 class GlobalObject;
+template <typename T>
+class Optional;
 
 class URL final : public URLSearchParamsObserver, public nsWrapperCache {
  public:
