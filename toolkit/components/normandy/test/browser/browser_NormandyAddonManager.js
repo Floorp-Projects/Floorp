@@ -7,7 +7,7 @@ const { NormandyAddonManager } = ChromeUtils.import(
   "resource://normandy/lib/NormandyAddonManager.jsm"
 );
 
-decorate_task(ensureAddonCleanup, async function download_and_install() {
+decorate_task(ensureAddonCleanup(), async function download_and_install() {
   const applyDeferred = PromiseUtils.defer();
 
   const [addonId, addonVersion] = await NormandyAddonManager.downloadAndInstall(
@@ -39,7 +39,7 @@ decorate_task(ensureAddonCleanup, async function download_and_install() {
   await addon.uninstall();
 });
 
-decorate_task(ensureAddonCleanup, async function id_mismatch() {
+decorate_task(ensureAddonCleanup(), async function id_mismatch() {
   const applyDeferred = PromiseUtils.defer();
   const undoDeferred = PromiseUtils.defer();
 
@@ -89,7 +89,7 @@ decorate_task(ensureAddonCleanup, async function id_mismatch() {
   ok(!addon, "add-on is not installed");
 });
 
-decorate_task(ensureAddonCleanup, async function version_mismatch() {
+decorate_task(ensureAddonCleanup(), async function version_mismatch() {
   const applyDeferred = PromiseUtils.defer();
   const undoDeferred = PromiseUtils.defer();
 
@@ -139,7 +139,7 @@ decorate_task(ensureAddonCleanup, async function version_mismatch() {
   ok(!addon, "add-on is not installed");
 });
 
-decorate_task(ensureAddonCleanup, async function download_failure() {
+decorate_task(ensureAddonCleanup(), async function download_failure() {
   const applyDeferred = PromiseUtils.defer();
   const undoDeferred = PromiseUtils.defer();
 

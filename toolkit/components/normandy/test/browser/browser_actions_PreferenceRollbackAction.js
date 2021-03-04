@@ -19,7 +19,7 @@ decorate_task(
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function simple_rollback(setExperimentInactiveStub, sendEventSpy) {
+  async function simple_rollback({ setExperimentInactiveStub, sendEventSpy }) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref1", 2);
     Services.prefs
       .getDefaultBranch("")
@@ -131,7 +131,7 @@ decorate_task(
 decorate_task(
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function cant_rollback_graduated(sendEventSpy) {
+  async function cant_rollback_graduated({ sendEventSpy }) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
     await PreferenceRollouts.add({
       slug: "graduated-rollout",
@@ -191,7 +191,7 @@ decorate_task(
   withSendEventSpy(),
   withStub(Uptake, "reportRecipe"),
   PreferenceRollouts.withTestMock(),
-  async function rollback_without_rollout(sendEventSpy, reportRecipeStub) {
+  async function rollback_without_rollout({ sendEventSpy, reportRecipeStub }) {
     let recipe = { id: 1, arguments: { rolloutSlug: "missing-rollout" } };
 
     const action = new PreferenceRollbackAction();
@@ -213,10 +213,10 @@ decorate_task(
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function rollback_already_rolled_back(
+  async function rollback_already_rolled_back({
     setExperimentInactiveStub,
-    sendEventSpy
-  ) {
+    sendEventSpy,
+  }) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
 
     const recipe = { id: 1, arguments: { rolloutSlug: "test-rollout" } };
@@ -314,7 +314,7 @@ decorate_task(
   PreferenceRollouts.withTestMock({
     graduationSet: new Set(["graduated-rollout"]),
   }),
-  async function cant_rollback_graduation_set(sendEventSpy) {
+  async function cant_rollback_graduation_set({ sendEventSpy }) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
 
     let recipe = { id: 1, arguments: { rolloutSlug: "graduated-rollout" } };
