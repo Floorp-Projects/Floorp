@@ -832,7 +832,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   nsTHashtable<nsCStringHashKey> mExcludedHttp2Origins;
   nsTHashtable<nsCStringHashKey> mExcludedHttp3Origins;
 
-  bool mThroughCaptivePortal;
+  Atomic<bool, Relaxed> mThroughCaptivePortal;
 
   // The mapping of channel id and the weak pointer of nsHttpChannel.
   nsDataHashtable<nsUint64HashKey, nsWeakPtr> mIDToHttpChannelMap;
