@@ -382,13 +382,17 @@
   display: none;
   -moz-outline-radius: 2px;
   margin-inline-end: 8px;
-  min-width: 16px; /* So the close button never causes motion */
   align-items: center;
-
   background-color: #d6ebff;
   outline: 1px solid #0060df; /* Blue 60 */
   color: #0060df; /* Blue 60 */
 }
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-search-mode-indicator {
+  min-width: 16px; /* So the close button never causes motion */
+}
+} /*** END !proton ***/
 
 #urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-search-mode-indicator {
   display: inline-flex;
@@ -415,17 +419,39 @@
 }
 
 #urlbar-search-mode-indicator-close {
-  display: none;
   background: url(chrome://global/skin/icons/close.svg) no-repeat center;
   background-size: 14px 14px;
   width: 16px;
   height: 100%;
-  margin-inline-start: -16px;
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0.6;
-  /* fill and background-color should match the urlbar focused color and
-     background. */
   fill: FieldText;
+}
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-search-mode-indicator-close {
+  height: 16px;
+  border-radius: var(--toolbarbutton-border-radius);
+}
+#urlbar-search-mode-indicator-close:hover {
+  background-color: hsla(0,0%,70%,.2);
+}
+#urlbar-search-mode-indicator-close:hover:active {
+  background-color: hsla(0,0%,70%,.3);
+}
+} /*** END proton ***/
+
+@media (prefers-contrast) {
+  #urlbar-search-mode-indicator-close {
+    fill-opacity: 1.0;
+  }
+}
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-search-mode-indicator-close {
+  display: none;
+  margin-inline-start: -16px;
+  /* background-color should match the urlbar background. */
   background-color: Field;
 }
 
@@ -436,32 +462,10 @@
   background-color: var(--lwt-toolbar-field-focus);
 }
 
-@media (prefers-contrast) {
-  #urlbar-search-mode-indicator-close {
-    fill-opacity: 1.0;
-  }
-}
-
 #urlbar-search-mode-indicator:hover > #urlbar-search-mode-indicator-close {
   display: block;
 }
-
-@supports -moz-bool-pref("browser.urlbar.experimental.searchModeIndicatorHover") {
-  #urlbar-search-mode-indicator-close:hover {
-    background-color: #ededf0; /* Grey 20 */
-  }
-  #urlbar-search-mode-indicator-close:hover:active {
-    background-color: #d7d7db; /* Grey 30 */
-  }
-
-  :root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator-close:hover {
-    background-color: #737373; /* Grey 50 */
-  }
-
-  :root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator-close:hover:active {
-    background-color: #b1b1b3; /* Grey 40 */
-  }
-}
+} /*** END !proton ***/
 
 /* Page action panel */
 .pageAction-panel-button > .toolbarbutton-icon {
