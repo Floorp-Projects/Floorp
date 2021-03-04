@@ -44,9 +44,9 @@ class JitRealm;
 
 class AutoRestoreRealmDebugMode;
 class GlobalObject;
-class LexicalEnvironmentObject;
 class GlobalLexicalEnvironmentObject;
 class MapObject;
+class NonSyntacticLexicalEnvironmentObject;
 class ScriptSourceObject;
 class SetObject;
 struct NativeIterator;
@@ -276,12 +276,15 @@ class ObjectRealm {
 
   MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
 
-  js::LexicalEnvironmentObject* getOrCreateNonSyntacticLexicalEnvironment(
-      JSContext* cx, js::HandleObject enclosing);
-  js::LexicalEnvironmentObject* getOrCreateNonSyntacticLexicalEnvironment(
-      JSContext* cx, js::HandleObject enclosing, js::HandleObject key,
-      js::HandleObject thisv);
-  js::LexicalEnvironmentObject* getNonSyntacticLexicalEnvironment(
+  js::NonSyntacticLexicalEnvironmentObject*
+  getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
+                                            js::HandleObject enclosing);
+  js::NonSyntacticLexicalEnvironmentObject*
+  getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
+                                            js::HandleObject enclosing,
+                                            js::HandleObject key,
+                                            js::HandleObject thisv);
+  js::NonSyntacticLexicalEnvironmentObject* getNonSyntacticLexicalEnvironment(
       JSObject* key) const;
 };
 
