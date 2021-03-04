@@ -48,6 +48,7 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
+import org.mozilla.fenix.components.metrics.SecurePrefsTelemetry
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.ProfilerMarkerFactProcessor
 import org.mozilla.fenix.perf.StartupTimeline
@@ -218,6 +219,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         components.core.bookmarksStorage.warmUp()
                         components.core.passwordsStorage.warmUp()
                     }
+
+                    SecurePrefsTelemetry(this@FenixApplication, components.analytics.experiments).startTests()
                 }
                 // Account manager initialization needs to happen on the main thread.
                 GlobalScope.launch(Dispatchers.Main) {

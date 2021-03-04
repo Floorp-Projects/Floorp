@@ -8,6 +8,7 @@ class Experiments {
     companion object {
         const val A_A_NIMBUS_VALIDATION = "fenix-nimbus-validation-v3"
         const val BOOKMARK_ICON = "fenix-bookmark-list-icon"
+        const val ANDROID_KEYSTORE = "fenix-android-keystore"
     }
 }
 
