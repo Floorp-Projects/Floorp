@@ -7,13 +7,28 @@
 #ifndef mozilla_dom_indexeddb_keypath_h__
 #define mozilla_dom_indexeddb_keypath_h__
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/Nullable.h"
+#include <new>
+#include <utility>
+#include "js/TypeDecls.h"
+#include "mozilla/Result.h"
+#include "nsISupports.h"
+#include "nsError.h"
+#include "nsString.h"
+#include "nsTArray.h"
+
+namespace JS {
+template <class T>
+class Heap;
+}
 
 namespace mozilla {
 namespace dom {
 
 class OwningStringOrStringSequence;
+template <typename T>
+class Sequence;
+template <typename T>
+struct Nullable;
 
 namespace indexedDB {
 

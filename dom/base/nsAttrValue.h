@@ -20,16 +20,14 @@
 #include "nsColor.h"
 #include "nsCaseTreatment.h"
 #include "nsMargin.h"
-#include "nsCOMPtr.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
-#include "nsAtom.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/AtomArray.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/SVGAttrValueWrapper.h"
 
+class nsAtom;
+class nsIPrincipal;
 class nsIURI;
 class nsStyledElement;
 struct MiscContainer;
@@ -37,6 +35,18 @@ struct MiscContainer;
 namespace mozilla {
 class DeclarationBlock;
 class ShadowParts;
+class SVGAnimatedIntegerPair;
+class SVGAnimatedLength;
+class SVGAnimatedNumberPair;
+class SVGAnimatedOrient;
+class SVGAnimatedPreserveAspectRatio;
+class SVGAnimatedViewBox;
+class SVGLengthList;
+class SVGNumberList;
+class SVGPathData;
+class SVGPointList;
+class SVGStringList;
+class SVGTransformList;
 
 namespace dom {
 class DOMString;

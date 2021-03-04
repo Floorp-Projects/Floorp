@@ -8,7 +8,6 @@
 #define mozilla_DOMEventTargetHelper_h_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/RefPtr.h"
@@ -38,6 +37,7 @@ class EventListenerManager;
 namespace dom {
 class Document;
 class Event;
+enum class CallerType : uint32_t;
 }  // namespace dom
 
 #define NS_DOMEVENTTARGETHELPER_IID                  \
