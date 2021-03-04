@@ -6,6 +6,7 @@
 
 #include "DocumentL10n.h"
 #include "nsIContentSink.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
 #include "mozilla/Telemetry.h"

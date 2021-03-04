@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/JSActorManager.h"
+
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/ipc/ProtocolUtils.h"
