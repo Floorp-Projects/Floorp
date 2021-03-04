@@ -6,8 +6,6 @@
 %include addons/extension-controlled.inc.css
 
 %filter substitution
-%define identityBoxPaddingInline 6px
-%define identityBoxMarginInline 3px
 %define lwtPopupBrighttextLinkColor #74c0ff
 %define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
 %define urlbarBreakoutExtend 2px
@@ -23,11 +21,15 @@
   --buttons-secondary-hover-bgcolor: hsla(0,0%,80%,.5);
   --buttons-secondary-active-bgcolor: hsla(0,0%,80%,.8);
   --buttons-secondary-color: currentColor;
+
+  --identity-box-padding-inline: 6px;
+  --identity-box-margin-inline: 4px;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
   :root {
     --focus-outline-width: 0;
+    --identity-box-margin-inline: 3px;
   }
 }
 
