@@ -52,13 +52,13 @@ async function test_nativeStream_continue(r, that) {
 
   let blob = await r.blob();
 
-  that.ok(blob instanceof Blob, "We have a blob");
+  that.ok(blob instanceof that.Blob, "We have a blob");
   let d = await a.body.getReader().read();
 
   that.ok(!d.done, "We have read something!");
   blob = await b.blob();
 
-  that.ok(blob instanceof Blob, "We have a blob");
+  that.ok(blob instanceof that.Blob, "We have a blob");
 }
 
 async function test_timeout(compartment) {
@@ -123,13 +123,13 @@ async function test_nonNativeStream_continue(data, that) {
 
   let blob = await data.r.blob();
 
-  that.ok(blob instanceof Blob, "We have a blob");
+  that.ok(blob instanceof that.Blob, "We have a blob");
   let d = await a.body.getReader().read();
 
   that.ok(!d.done, "We have read something!");
   blob = await b.blob();
 
-  that.ok(blob instanceof Blob, "We have a blob");
+  that.ok(blob instanceof that.Blob, "We have a blob");
   that.is(blob.size, data.buffer.byteLength, "Blob size matches");
 }
 

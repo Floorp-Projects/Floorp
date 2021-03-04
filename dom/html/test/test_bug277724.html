@@ -44,12 +44,13 @@ function startTest(frameid) {
   is(childUnloaded, false, "Child not unloaded yet");
 
   var doc = $(frameid).contentDocument;
-  ok(doc instanceof Document, "doc should be a document");
+  var win = $(frameid).contentWindow;
+  ok(doc instanceof win.Document, "doc should be a document");
 
   for (var i = 0; i < nodes.length; ++i) {
     var id = nodes[i][0];
     var node = doc.getElementById(id);
-    ok(node instanceof nodes[i][1], id + " should be a " + nodes[i][1]);
+    ok(node instanceof win[nodes[i][1].name], id + " should be a " + nodes[i][1]);
     is(node.disabled, false, "check for " + id + " state");
     node.disabled = true;
     is(node.disabled, true, "check for " + id + " state change");
@@ -67,7 +68,8 @@ function startTest(frameid) {
 function continueTest(frameid) {
   is(childUnloaded, true, "Unload handler should have fired");
   var doc = $(frameid).contentDocument;
-  ok(doc instanceof Document, "doc should be a document");
+  var win = $(frameid).contentWindow;
+  ok(doc instanceof win.Document, "doc should be a document");
 
   for (var i = 0; i < nodes.length; ++i) {
     var id = nodes[i][0];
@@ -100,12 +102,13 @@ function flipper(a, b, c) {
 
 function finishTest(frameid) {
   var doc = $(frameid).contentDocument;
-  ok(doc instanceof Document, "doc should be a document");
+  var win = $(frameid).contentWindow;
+  ok(doc instanceof win.Document, "doc should be a document");
 
   for (var i = 0; i < nodes.length; ++i) {
     var id = nodes[i][0];
     var node = doc.getElementById(id);
-    ok(node instanceof nodes[i][1], id + " should be a " + nodes[i][1]);
+    ok(node instanceof win[nodes[i][1].name], id + " should be a " + nodes[i][1]);
     //testIs(node.disabled, true, "check for " + id + " state restore");
   }
 
