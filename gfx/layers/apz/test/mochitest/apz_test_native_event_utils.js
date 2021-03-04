@@ -65,7 +65,7 @@ function nativeHorizontalWheelEventMsg() {
 
 // Given an event target which may be a window or an element, get the associated window.
 function windowForTarget(aTarget) {
-  if (aTarget instanceof Window) {
+  if (aTarget.Window && aTarget instanceof aTarget.Window) {
     return aTarget;
   }
   return aTarget.ownerDocument.defaultView;
@@ -73,7 +73,7 @@ function windowForTarget(aTarget) {
 
 // Given an event target which may be a window or an element, get the associated element.
 function elementForTarget(aTarget) {
-  if (aTarget instanceof Window) {
+  if (aTarget.Window && aTarget instanceof aTarget.Window) {
     return aTarget.document.documentElement;
   }
   return aTarget;

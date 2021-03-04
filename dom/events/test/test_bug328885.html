@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=328885">Mozilla Bug 328885</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <input type="text" id="inputelement"
        style="position: absolute; left: 0px; top: 0px;">
@@ -37,11 +37,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
     inputelement.addEventListener("DOMNodeInsertedIntoDocument", mutationListener);
     inputelement.addEventListener("DOMAttrModified", mutationListener);
     inputelement.addEventListener("DOMCharacterDataModified", mutationListener);
-    
-    inputelement.addEventListener('click', 
+
+    inputelement.addEventListener('click',
       function(event) {
         var evt = SpecialPowers.wrap(event);
-        ok(SpecialPowers.unwrap(evt.originalTarget) instanceof HTMLDivElement,
+        ok(SpecialPowers.call_Instanceof(evt.originalTarget, HTMLDivElement),
            "(1) Wrong originalTarget!");
         is(SpecialPowers.unwrap(evt.originalTarget.parentNode), inputelement,
            "(2) Wront parent node!");
@@ -92,7 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
         ok(mutationCount == 12, "(16) Mutation listener should have been called! ["+ mutationCount + "]");
 
         // Then try some mixed mutations. The mutation handler of non-native-a
-        inputelement.addEventListener("DOMAttrModified", 
+        inputelement.addEventListener("DOMAttrModified",
           function (evt2) {
             evt.originalTarget.setAttribute("foo", "bar" + mutationCount);
             ok(evt.originalTarget.getAttribute("foo") == "bar" + mutationCount,
