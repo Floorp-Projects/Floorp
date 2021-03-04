@@ -12,7 +12,6 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
-import org.mozilla.geckoview.MediaElement
 import org.mozilla.geckoview.MediaSession
 import org.mozilla.geckoview.WebRequestError
 
@@ -39,6 +38,7 @@ class Callbacks private constructor() {
     interface ScrollDelegate : GeckoSession.ScrollDelegate {}
     interface ContentBlockingDelegate : ContentBlocking.Delegate {}
     interface SelectionActionDelegate : GeckoSession.SelectionActionDelegate {}
+    @Suppress("DEPRECATION")
     interface MediaDelegate: GeckoSession.MediaDelegate {}
     interface HistoryDelegate : GeckoSession.HistoryDelegate {}
     interface MediaSessionDelegate: MediaSession.Delegate {}
