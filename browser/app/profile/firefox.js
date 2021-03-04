@@ -1467,7 +1467,7 @@ pref("trailhead.firstrun.newtab.triplets", "");
 // Separate about welcome
 pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX
-pref("browser.aboutwelcome.overrideContent", "");
+pref("browser.aboutwelcome.screens", "");
 pref("browser.aboutwelcome.skipFocus", false);
 
 // The pref that controls if the What's New panel is enabled.
