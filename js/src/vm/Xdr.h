@@ -28,7 +28,6 @@ namespace js {
 struct SourceExtent;
 
 namespace frontend {
-struct BaseCompilationStencil;
 struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 struct CompilationStencilMerger;
@@ -555,9 +554,7 @@ class XDROffThreadDecoder : public XDRDecoder {
  *   d. Alignment padding
  * 2. Stencil
  *   a. ParseAtomTable
- *   b. BaseCompilationStencil
- *   c. ScriptStencilExtra[]
- *   d. StencilModuleMetadata (if exists)
+ *   b. CompilationStencil
  */
 
 /*
@@ -658,10 +655,6 @@ XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 template <XDRMode mode>
 XDRResult XDRParserAtom(XDRState<mode>* xdr, frontend::ParserAtom** atomp);
-
-template <XDRMode mode>
-XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,
-                                    frontend::BaseCompilationStencil& stencil);
 
 template <XDRMode mode>
 XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
