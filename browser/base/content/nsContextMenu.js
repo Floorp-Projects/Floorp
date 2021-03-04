@@ -168,7 +168,7 @@ class nsContextMenu {
     this.onPlainTextLink = false;
 
     // Initialize (disable/remove) menu items.
-    this.initItems();
+    this.initItems(aXulMenu);
   }
 
   setContext() {
@@ -293,14 +293,15 @@ class nsContextMenu {
       );
       let canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
       this.showItem("spell-check-enabled", canSpell);
-      this.showItem("spell-separator", canSpell);
     }
   } // setContext
 
-  hiding() {
+  hiding(aXulMenu) {
     if (this.actor) {
       this.actor.hiding();
     }
+
+    aXulMenu.showHideSeparators = null;
 
     this.contentData = null;
     InlineSpellCheckerUI.clearSuggestionsFromMenu();
@@ -318,7 +319,7 @@ class nsContextMenu {
     }
   }
 
-  initItems() {
+  initItems(aXulMenu) {
     this.initPageMenuSeparator();
     this.initOpenItems();
     this.initNavigationItems();
@@ -334,6 +335,16 @@ class nsContextMenu {
     this.initPasswordManagerItems();
     this.initSyncItems();
     this.initViewSourceItems();
+
+    this.showHideSeparators(aXulMenu);
+    if (!aXulMenu.showHideSeparators) {
+      // Set the showHideSeparators function on the menu itself so that
+      // the extension code (ext-menus.js) can call it after modifying
+      // the menus.
+      aXulMenu.showHideSeparators = () => {
+        this.showHideSeparators(aXulMenu);
+      };
+    }
   }
 
   initPageMenuSeparator() {
@@ -406,7 +417,6 @@ class nsContextMenu {
       shouldShow && !isWindowPrivate && showContainers
     );
     this.showItem("context-openlinkincurrent", this.onPlainTextLink);
-    this.showItem("context-sep-open", shouldShow);
   }
 
   initNavigationItems() {
@@ -421,7 +431,6 @@ class nsContextMenu {
         this.onTextInput
       ) && this.inTabBrowser;
     this.showItem("context-navigation", shouldShow);
-    this.showItem("context-sep-navigation", shouldShow);
 
     let stopped =
       XULBrowserWindow.stopCommand.getAttribute("disabled") == "true";
@@ -464,11 +473,6 @@ class nsContextMenu {
     // only show the option if the user is in DOM fullscreen
     var shouldShow = this.target.ownerDocument.fullscreen;
     this.showItem("context-leave-dom-fullscreen", shouldShow);
-
-    // Explicitly show if in DOM fullscreen, but do not hide it has already been shown
-    if (shouldShow) {
-      this.showItem("context-media-sep-commands", true);
-    }
   }
 
   initSaveItems() {
@@ -573,11 +577,6 @@ class nsContextMenu {
       haveSetDesktopBackground && this.onLoadedImage
     );
 
-    this.showItem(
-      "context-sep-setbackground",
-      haveSetDesktopBackground && this.onLoadedImage
-    );
-
     if (haveSetDesktopBackground && this.onLoadedImage) {
       document.getElementById(
         "context-setDesktopBackground"
@@ -628,12 +627,9 @@ class nsContextMenu {
         nsContextMenu.DevToolsShim.isDevToolsUser());
 
     this.showItem("context-viewsource", shouldShow);
-    this.showItem("inspect-separator", showInspect);
     this.showItem("context-inspect", showInspect);
 
     this.showItem("context-inspect-a11y", showInspectA11Y);
-
-    this.showItem("context-sep-viewsource", shouldShow);
 
     // View video depends on not having a standalone video.
     this.showItem(
@@ -646,13 +642,6 @@ class nsContextMenu {
     // background images of a stand-alone media document available.
     this.showItem(
       "context-viewbgimage",
-      shouldShow &&
-        !this.hasMultipleBGImages &&
-        !this.inSyntheticDoc &&
-        !this.inPDFViewer
-    );
-    this.showItem(
-      "context-sep-viewbgimage",
       shouldShow &&
         !this.hasMultipleBGImages &&
         !this.inSyntheticDoc &&
@@ -705,9 +694,6 @@ class nsContextMenu {
     this.showItem("context-openframeintab", !this.inSrcdocFrame);
     this.showItem("context-openframe", !this.inSrcdocFrame);
     this.showItem("context-bookmarkframe", !this.inSrcdocFrame);
-    this.showItem("open-frame-sep", !this.inSrcdocFrame);
-
-    this.showItem("frame-sep", this.inFrame && this.isTextSelected);
 
     // Hide menu entries for images, show otherwise
     if (this.inFrame) {
@@ -717,7 +703,6 @@ class nsContextMenu {
     }
 
     // BiDi UI
-    this.showItem("context-sep-bidi", !this.onNumeric && top.gBidiUI);
     this.showItem(
       "context-bidi-text-direction-toggle",
       this.onTextInput && !this.onNumeric && top.gBidiUI
@@ -737,7 +722,6 @@ class nsContextMenu {
     var onMisspelling = InlineSpellCheckerUI.overMisspelling;
     var showUndo = canSpell && InlineSpellCheckerUI.canUndo();
     this.showItem("spell-check-enabled", canSpell);
-    this.showItem("spell-separator", canSpell);
     document
       .getElementById("spell-check-enabled")
       .setAttribute("checked", canSpell && InlineSpellCheckerUI.enabled);
@@ -746,7 +730,6 @@ class nsContextMenu {
     this.showItem("spell-undo-add-to-dictionary", showUndo);
 
     // suggestion list
-    this.showItem("spell-suggestions-separator", onMisspelling || showUndo);
     if (onMisspelling) {
       var suggestionsSeparator = document.getElementById(
         "spell-add-to-dictionary"
@@ -766,17 +749,12 @@ class nsContextMenu {
     if (canSpell) {
       var dictMenu = document.getElementById("spell-dictionaries-menu");
       var dictSep = document.getElementById("spell-language-separator");
-      let count = InlineSpellCheckerUI.addDictionaryListToMenu(
-        dictMenu,
-        dictSep
-      );
-      this.showItem(dictSep, count > 0);
+      InlineSpellCheckerUI.addDictionaryListToMenu(dictMenu, dictSep);
       this.showItem("spell-add-dictionaries-main", false);
     } else if (this.onSpellcheckable) {
       // when there is no spellchecker but we might be able to spellcheck
       // add the add to dictionaries item. This will ensure that people
       // with no dictionaries will be able to download them
-      this.showItem("spell-language-separator", showDictionaries);
       this.showItem("spell-add-dictionaries-main", showDictionaries);
     } else {
       this.showItem("spell-add-dictionaries-main", false);
@@ -792,7 +770,6 @@ class nsContextMenu {
 
     this.showItem("context-undo", this.onTextInput);
     this.showItem("context-redo", this.onTextInput);
-    this.showItem("context-sep-redo", this.onTextInput);
     this.showItem("context-cut", this.onTextInput);
     this.showItem("context-copy", this.isContentSelected || this.onTextInput);
     this.showItem("context-paste", this.onTextInput);
@@ -807,11 +784,6 @@ class nsContextMenu {
         this.inSyntheticDoc
       ) || this.isDesignMode
     );
-    this.showItem(
-      "context-sep-selectall",
-      !this.inAboutDevtoolsToolbox &&
-        (this.isContentSelected || this.shouldShowAddKeyword())
-    );
 
     // XXX dr
     // ------
@@ -823,10 +795,6 @@ class nsContextMenu {
 
     // Copy link location depends on whether we're on a non-mailto link.
     this.showItem("context-copylink", this.onLink && !this.onMailtoLink);
-    this.showItem(
-      "context-sep-copylink",
-      this.onLink && (this.onImage || this.onVideo || this.onAudio)
-    );
 
     this.showItem("context-copyvideourl", this.onVideo);
     this.showItem("context-copyaudiourl", this.onAudio);
@@ -876,7 +844,6 @@ class nsContextMenu {
       this.showItem("context-video-pictureinpicture", shouldDisplay);
     }
     this.showItem("context-media-eme-learnmore", this.onDRMMedia);
-    this.showItem("context-media-eme-separator", this.onDRMMedia);
 
     // Disable them when there isn't a valid media source loaded.
     if (onMedia) {
@@ -943,13 +910,11 @@ class nsContextMenu {
         );
       }
     }
-    this.showItem("context-media-sep-commands", onMedia);
   }
 
   initClickToPlayItems() {
     this.showItem("context-ctp-play", this.onCTPPlugin);
     this.showItem("context-ctp-hide", this.onCTPPlugin);
-    this.showItem("context-sep-ctp", this.onCTPPlugin);
   }
 
   initPasswordManagerItems() {
@@ -1034,10 +999,6 @@ class nsContextMenu {
         "disabled",
         !enableGeneration
       );
-      this.showItem(
-        "passwordmgr-items-separator",
-        showFill || showGenerate || showManage
-      );
     }
   }
 
@@ -1076,7 +1037,45 @@ class nsContextMenu {
     showViewSourceItem("highlightSyntax", () =>
       gViewSourceUtils.getPageActor(this.browser).queryIsSyntaxHighlighting()
     );
-    this.showItem("context-sep-viewsource-commands", onViewSource);
+  }
+
+  // Iterate over the visible items on the menu and its submenus and
+  // hide any duplicated separators next to each other.
+  showHideSeparators(aPopup) {
+    let lastVisibleSeparator = null;
+    let count = 0;
+    for (let menuItem of aPopup.children) {
+      // Skip any items that were added by the page menu.
+      if (menuItem.hasAttribute("generateditemid")) {
+        count++;
+        continue;
+      }
+
+      if (menuItem.localName == "menuseparator") {
+        if (!count) {
+          menuItem.hidden = true;
+        } else {
+          menuItem.hidden = false;
+          lastVisibleSeparator = menuItem;
+        }
+
+        count = 0;
+      } else if (!menuItem.hidden) {
+        if (menuItem.localName == "menu") {
+          this.showHideSeparators(menuItem.menupopup);
+        } else if (menuItem.localName == "menugroup") {
+          this.showHideSeparators(menuItem);
+        }
+        count++;
+      }
+    }
+
+    // If count is 0 yet lastVisibleSeparator is set, then there must be a separator
+    // visible at the end of the menu, so hide it. Note that there could be more than
+    // one but this isn't handled here.
+    if (!count && lastVisibleSeparator) {
+      lastVisibleSeparator.hidden = true;
+    }
   }
 
   openPasswordManager() {

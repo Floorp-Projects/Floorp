@@ -288,29 +288,6 @@ var gMenuBuilder = {
     return children;
   },
 
-  removeSeparatorIfNoTopLevelItems() {
-    // Extension menu items always have have a non-empty ID.
-    let isNonExtensionSeparator = item =>
-      item.nodeName === "menuseparator" && !item.id;
-
-    // itemsToCleanUp contains all top-level menu items. A separator should
-    // only be kept if it is next to an extension menu item.
-    let isExtensionMenuItemSibling = item =>
-      item && this.itemsToCleanUp.has(item) && !isNonExtensionSeparator(item);
-
-    for (let item of this.itemsToCleanUp) {
-      if (isNonExtensionSeparator(item)) {
-        if (
-          !isExtensionMenuItemSibling(item.previousElementSibling) &&
-          !isExtensionMenuItemSibling(item.nextElementSibling)
-        ) {
-          item.remove();
-          this.itemsToCleanUp.delete(item);
-        }
-      }
-    }
-  },
-
   buildSingleElement(item, contextData) {
     let doc = contextData.menu.ownerDocument;
     let element;
@@ -552,7 +529,8 @@ var gMenuBuilder = {
     if (root) {
       this.createAndInsertTopLevelElements(root, contextData, nextSibling);
     }
-    this.removeSeparatorIfNoTopLevelItems();
+
+    this.xulMenu.showHideSeparators?.();
   },
 
   // This should be called once, after constructing the top-level menus, if any.
@@ -586,6 +564,10 @@ var gMenuBuilder = {
       if (!this.itemsToCleanUp.has(item)) {
         item.hidden = true;
       }
+    }
+
+    if (this.xulMenu.showHideSeparators) {
+      this.xulMenu.showHideSeparators();
     }
   },
 

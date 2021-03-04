@@ -533,7 +533,7 @@
                                return gContextMenu.shouldDisplay;"
                onpopuphiding="if (event.target != this)
                                 return;
-                              gContextMenu.hiding();
+                              gContextMenu.hiding(this);
                               gContextMenu = null;
                               updateEditUIVisibility();">
 #include browser-context.inc
