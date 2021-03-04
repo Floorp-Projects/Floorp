@@ -109,6 +109,21 @@
 #identity-box[pageproxystate="valid"].extensionPage,
 #urlbar-label-box {
   margin-inline-end: 8px;
+}
+
+#identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
+#identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
+#identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
+#urlbar-label-box {
+  padding-inline: 8px;
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#identity-box[pageproxystate="valid"].notSecureText,
+#identity-box[pageproxystate="valid"].chromeUI,
+#identity-box[pageproxystate="valid"].extensionPage,
+#urlbar-label-box {
   border-inline-end: 1px solid var(--urlbar-separator-color);
   border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
   border-image-slice: 1;
@@ -118,11 +133,13 @@
 #identity-box[pageproxystate="valid"].chromeUI > #identity-icon-box,
 #identity-box[pageproxystate="valid"].extensionPage > #identity-icon-box {
   padding-inline: 8px;
+  border-radius: 0;
 }
 
 #urlbar-label-box {
   padding-inline: 4px;
   border-inline-start: 1px solid var(--urlbar-separator-color);
+  border-radius: 0;
 }
 
 #urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box {
@@ -134,6 +151,7 @@
 #urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box:-moz-locale-dir(rtl) {
   border-image-width: 0 0 0 1px;
 }
+}/*** END !proton ***/
 
 .urlbar-label {
   margin: 0;
