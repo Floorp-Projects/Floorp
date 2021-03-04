@@ -1083,8 +1083,7 @@ bool LexicalEnvironmentObject::isExtensible() const {
   return NativeObject::isExtensible();
 }
 
-JSObject* LexicalEnvironmentObject::thisObject() const {
-  MOZ_ASSERT(isExtensible());
+JSObject* ExtensibleLexicalEnvironmentObject::thisObject() const {
   JSObject* obj = &getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT).toObject();
 
   // Windows must never be exposed to script. setWindowProxyThisValue should
@@ -3470,10 +3469,9 @@ bool js::GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
       cx, ei, scopeChain, nullptr, res);
 }
 
-bool js::CheckLexicalNameConflict(JSContext* cx,
-                                  Handle<LexicalEnvironmentObject*> lexicalEnv,
-                                  HandleObject varObj,
-                                  HandlePropertyName name) {
+bool js::CheckLexicalNameConflict(
+    JSContext* cx, Handle<ExtensibleLexicalEnvironmentObject*> lexicalEnv,
+    HandleObject varObj, HandlePropertyName name) {
   const char* redeclKind = nullptr;
   RootedId id(cx, NameToId(name));
   RootedShape shape(cx);
@@ -3510,9 +3508,9 @@ bool js::CheckLexicalNameConflict(JSContext* cx,
   return true;
 }
 
-bool js::CheckVarNameConflict(JSContext* cx,
-                              Handle<LexicalEnvironmentObject*> lexicalEnv,
-                              HandlePropertyName name) {
+static MOZ_MUST_USE bool CheckVarNameConflict(
+    JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
+    HandlePropertyName name) {
   if (Shape* shape = lexicalEnv->lookup(cx, name)) {
     ReportRuntimeRedeclaration(cx, name, shape->writable() ? "let" : "const");
     return false;
@@ -3581,7 +3579,8 @@ bool js::CheckCanDeclareGlobalBinding(JSContext* cx,
 // performed.
 static bool InitGlobalOrEvalDeclarations(
     JSContext* cx, HandleScript script,
-    Handle<LexicalEnvironmentObject*> lexicalEnv, HandleObject varObj) {
+    Handle<ExtensibleLexicalEnvironmentObject*> lexicalEnv,
+    HandleObject varObj) {
   Rooted<BindingIter> bi(cx, BindingIter(script));
   for (; bi; bi++) {
     if (bi.isTopLevelFunction()) {
@@ -3742,7 +3741,8 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
 
 bool js::CheckGlobalDeclarationConflicts(
     JSContext* cx, HandleScript script,
-    Handle<LexicalEnvironmentObject*> lexicalEnv, HandleObject varObj) {
+    Handle<ExtensibleLexicalEnvironmentObject*> lexicalEnv,
+    HandleObject varObj) {
   // Due to the extensibility of the global lexical environment, we must
   // check for redeclaring a binding.
   //
@@ -3792,8 +3792,9 @@ bool js::CheckGlobalDeclarationConflicts(
   return true;
 }
 
-static bool CheckVarNameConflictsInEnv(JSContext* cx, HandleScript script,
-                                       HandleObject obj) {
+static MOZ_MUST_USE bool CheckVarNameConflictsInEnv(JSContext* cx,
+                                                    HandleScript script,
+                                                    HandleObject obj) {
   Rooted<LexicalEnvironmentObject*> env(cx);
 
   if (obj->is<LexicalEnvironmentObject>()) {
@@ -3914,7 +3915,7 @@ bool js::GlobalOrEvalDeclInstantiation(JSContext* cx, HandleObject envChain,
   MOZ_ASSERT(script->isGlobalCode() || script->isForEval());
 
   RootedObject varObj(cx, &GetVariablesObject(envChain));
-  Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
+  Rooted<ExtensibleLexicalEnvironmentObject*> lexicalEnv(cx);
 
   if (script->isForEval()) {
     if (!CheckEvalDeclarationConflicts(cx, script, envChain, varObj)) {
