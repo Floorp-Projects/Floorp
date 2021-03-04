@@ -528,3 +528,81 @@ TEST_F(APZCBasicTester, RelativeScrollOffset) {
   EXPECT_EQ(metrics.GetLayoutScrollOffset(), CSSPoint(200, 200));
   EXPECT_EQ(metrics.GetVisualScrollOffset(), CSSPoint(220, 220));
 }
+
+TEST_F(APZCBasicTester, MultipleSmoothScrollsSmooth) {
+  // We want to test that if we send multiple smooth scroll requests that we
+  // still smoothly animate, ie that we get non-zero change every frame while
+  // the animation is running.
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetScrollableRect(CSSRect(0, 0, 100, 10000));
+  metrics.SetLayoutViewport(CSSRect(0, 0, 100, 100));
+  metrics.SetZoom(CSSToParentLayerScale2D(1.0, 1.0));
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetVisualScrollOffset(CSSPoint(0, 0));
+  metrics.SetIsRootContent(true);
+  apzc->SetFrameMetrics(metrics);
+
+  // Structure of this test.
+  //   -send a pure relative smooth scroll request via NotifyLayersUpdated
+  //   -advance animations a few times, check that scroll offset is increasing
+  //    after the first few advances
+  //   -send a pure relative smooth scroll request via NotifyLayersUpdated
+  //   -advance animations a few times, check that scroll offset is increasing
+  //   -send a pure relative smooth scroll request via NotifyLayersUpdated
+  //   -advance animations a few times, check that scroll offset is increasing
+
+  ScrollMetadata metadata2 = metadata;
+  nsTArray<ScrollPositionUpdate> scrollUpdates2;
+  scrollUpdates2.AppendElement(ScrollPositionUpdate::NewPureRelativeScroll(
+      ScrollOrigin::Other, ScrollMode::Smooth,
+      CSSPoint::ToAppUnits(CSSPoint(0, 200))));
+  metadata2.SetScrollUpdates(scrollUpdates2);
+  metadata2.GetMetrics().SetScrollGeneration(
+      scrollUpdates2.LastElement().GetGeneration());
+  apzc->NotifyLayersUpdated(metadata2, /*isFirstPaint=*/false,
+                            /*thisLayerTreeUpdated=*/true);
+
+  // Get the animation going
+  for (uint32_t i = 0; i < 3; i++) {
+    SampleAnimationOneFrame();
+  }
+
+  float offset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForCompositing)
+          .y;
+  ASSERT_GT(offset, 0);
+  float lastOffset = offset;
+
+  for (uint32_t i = 0; i < 2; i++) {
+    for (uint32_t j = 0; j < 3; j++) {
+      SampleAnimationOneFrame();
+      offset = apzc->GetCurrentAsyncScrollOffset(
+                       AsyncPanZoomController::eForCompositing)
+                   .y;
+      ASSERT_GT(offset, lastOffset);
+      lastOffset = offset;
+    }
+
+    ScrollMetadata metadata3 = metadata;
+    nsTArray<ScrollPositionUpdate> scrollUpdates3;
+    scrollUpdates3.AppendElement(ScrollPositionUpdate::NewPureRelativeScroll(
+        ScrollOrigin::Other, ScrollMode::Smooth,
+        CSSPoint::ToAppUnits(CSSPoint(0, 200))));
+    metadata3.SetScrollUpdates(scrollUpdates3);
+    metadata3.GetMetrics().SetScrollGeneration(
+        scrollUpdates3.LastElement().GetGeneration());
+    apzc->NotifyLayersUpdated(metadata3, /*isFirstPaint=*/false,
+                              /*thisLayerTreeUpdated=*/true);
+  }
+
+  for (uint32_t j = 0; j < 7; j++) {
+    SampleAnimationOneFrame();
+    offset = apzc->GetCurrentAsyncScrollOffset(
+                     AsyncPanZoomController::eForCompositing)
+                 .y;
+    ASSERT_GT(offset, lastOffset);
+    lastOffset = offset;
+  }
+}
