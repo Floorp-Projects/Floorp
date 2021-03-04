@@ -1696,7 +1696,7 @@ class ExtensionData {
     result.text = info.unsigned
       ? bundle.GetStringFromName("webextPerms.unsignedWarning")
       : "";
-    result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
+    result.listIntro = bundle.GetStringFromName("webextPerms.listIntro2");
 
     result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
     result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
