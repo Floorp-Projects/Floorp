@@ -41,6 +41,10 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIURIMutator.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "GeckoProfiler.h"
+#endif
+
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
 
