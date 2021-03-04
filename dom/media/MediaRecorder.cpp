@@ -140,7 +140,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaRecorder,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInvalidModificationDomException)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOtherDomException)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSecurityDomException)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUnknownDomException)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
@@ -150,7 +150,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaRecorder,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInvalidModificationDomException)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOtherDomException)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSecurityDomException)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUnknownDomException)
   tmp->UnRegisterActivityObserver();
@@ -616,8 +616,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         ("Session.NotifyTrackAdded %p Raising error due to track set change",
          this));
     // There's a chance we have a sensible JS stack here.
-    if (!mRecorder->mInvalidModificationDomException) {
-      mRecorder->mInvalidModificationDomException = DOMException::Create(
+    if (!mRecorder->mOtherDomException) {
+      mRecorder->mOtherDomException = DOMException::Create(
           NS_ERROR_DOM_INVALID_MODIFICATION_ERR,
           "An attempt was made to add a track to the recorded MediaStream "
           "during the recording"_ns);
@@ -634,8 +634,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         ("Session.NotifyTrackRemoved %p Raising error due to track set change",
          this));
     // There's a chance we have a sensible JS stack here.
-    if (!mRecorder->mInvalidModificationDomException) {
-      mRecorder->mInvalidModificationDomException = DOMException::Create(
+    if (!mRecorder->mOtherDomException) {
+      mRecorder->mOtherDomException = DOMException::Create(
           NS_ERROR_DOM_INVALID_MODIFICATION_ERR,
           "An attempt was made to remove a track from the recorded MediaStream "
           "during the recording"_ns);
@@ -1755,11 +1755,14 @@ void MediaRecorder::NotifyError(nsresult aRv) {
       }
       init.mError = std::move(mSecurityDomException);
       break;
-    case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
-      MOZ_DIAGNOSTIC_ASSERT(mInvalidModificationDomException);
-      init.mError = std::move(mInvalidModificationDomException);
-      break;
     default:
+      if (mOtherDomException && aRv == mOtherDomException->GetResult()) {
+        LOG(LogLevel::Debug, ("MediaRecorder.NotifyError: "
+                              "mOtherDomException being fired for aRv: %X",
+                              uint32_t(aRv)));
+        init.mError = std::move(mOtherDomException);
+        break;
+      }
       if (!mUnknownDomException) {
         LOG(LogLevel::Debug, ("MediaRecorder.NotifyError: "
                               "mUnknownDomException was not initialized"));
@@ -1769,6 +1772,7 @@ void MediaRecorder::NotifyError(nsresult aRv) {
                             "mUnknownDomException being fired for aRv: %X",
                             uint32_t(aRv)));
       init.mError = std::move(mUnknownDomException);
+      break;
   }
 
   RefPtr<MediaRecorderErrorEvent> event =

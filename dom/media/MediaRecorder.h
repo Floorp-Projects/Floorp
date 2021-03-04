@@ -169,7 +169,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // DOMExceptions that are created early and possibly thrown in NotifyError.
   // Creating them early allows us to capture the JS stack for which cannot be
   // done at the time the error event is fired.
-  RefPtr<DOMException> mInvalidModificationDomException;
+  RefPtr<DOMException> mOtherDomException;
   RefPtr<DOMException> mSecurityDomException;
   RefPtr<DOMException> mUnknownDomException;
 
