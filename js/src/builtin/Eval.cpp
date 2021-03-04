@@ -446,7 +446,7 @@ JS_FRIEND_API JSObject* JS::NewJSMEnvironment(JSContext* cx) {
     return nullptr;
   }
 
-  // Force LexicalEnvironmentObject to be created.
+  // Force the NonSyntacticLexicalEnvironmentObject to be created.
   ObjectRealm& realm = ObjectRealm::get(varEnv);
   MOZ_ASSERT(!realm.getNonSyntacticLexicalEnvironment(varEnv));
   if (!realm.getOrCreateNonSyntacticLexicalEnvironment(cx, varEnv)) {
@@ -481,9 +481,9 @@ JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
     //      GlobalObject / BackstagePass
     //      GlobalLexicalEnvironmentObject[this=global]
     //      NonSyntacticVariablesObject (the JSMEnvironment)
-    //      LexicalEnvironmentObject[this=nsvo]
+    //      NonSyntacticLexicalEnvironmentObject[this=nsvo]
     //      WithEnvironmentObject[target=targetObj]
-    //      LexicalEnvironmentObject[this=targetObj] (*)
+    //      NonSyntacticLexicalEnvironmentObject[this=targetObj] (*)
     //
     //  (*) This environment intercepts JSOp::GlobalThis.
 
