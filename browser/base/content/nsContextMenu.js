@@ -185,10 +185,9 @@ class nsContextMenu {
 
     // Assign what's _possibly_ needed from `context` sent by ContextMenuChild.jsm
     // Keep this consistent with the similar code in ContextMenu's _setContext
-    this.bgImageURL = context.bgImageURL;
     this.imageDescURL = context.imageDescURL;
     this.imageInfo = context.imageInfo;
-    this.mediaURL = context.mediaURL;
+    this.mediaURL = context.mediaURL || context.bgImageURL;
     this.webExtBrowserType = context.webExtBrowserType;
 
     this.canSpellCheck = context.canSpellCheck;
@@ -532,11 +531,23 @@ class nsContextMenu {
     );
 
     // View image depends on having an image that's not standalone
-    // (or is in a frame), or a canvas.
-    this.showItem(
-      "context-viewimage",
-      (this.onImage && (!this.inSyntheticDoc || this.inFrame)) || this.onCanvas
-    );
+    // (or is in a frame), or a canvas. If this isn't an image, check
+    // if there is a background image.
+    let showViewImage =
+      (this.onImage && (!this.inSyntheticDoc || this.inFrame)) || this.onCanvas;
+    let showBGImage =
+      this.hasBGImage &&
+      !this.hasMultipleBGImages &&
+      !this.inSyntheticDoc &&
+      !this.inPDFViewer &&
+      !this.isContentSelected &&
+      !this.onImage &&
+      !this.onCanvas &&
+      !this.onVideo &&
+      !this.onAudio &&
+      !this.onLink &&
+      !this.onTextInput;
+    this.showItem("context-viewimage", showViewImage || showBGImage);
 
     // Save image depends on having loaded its content.
     this.showItem("context-saveimage", this.onLoadedImage || this.onCanvas);
@@ -547,11 +558,13 @@ class nsContextMenu {
     this.showItem("context-copyimage-contents", this.onImage);
 
     // Copy image location depends on whether we're on an image.
-    this.showItem("context-copyimage", this.onImage);
+    this.showItem("context-copyimage", this.onImage || showBGImage);
 
     // Send media URL (but not for canvas, since it's a big data: URL)
-    this.showItem("context-sendimage", this.onImage);
+    this.showItem("context-sendimage", this.onImage || showBGImage);
 
+    // Open the link to more details about the image. Does not apply to
+    // background images.
     this.showItem(
       "context-viewimagedesc",
       this.onImage && this.imageDescURL !== ""
@@ -637,17 +650,6 @@ class nsContextMenu {
       this.onVideo && (!this.inSyntheticDoc || this.inFrame)
     );
     this.setItemAttr("context-viewvideo", "disabled", !this.mediaURL);
-
-    // View background image depends on whether there is one, but don't make
-    // background images of a stand-alone media document available.
-    this.showItem(
-      "context-viewbgimage",
-      shouldShow &&
-        !this.hasMultipleBGImages &&
-        !this.inSyntheticDoc &&
-        !this.inPDFViewer
-    );
-    document.getElementById("context-viewbgimage").disabled = !this.hasBGImage;
   }
 
   initMiscItems() {
