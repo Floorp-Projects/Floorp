@@ -150,7 +150,29 @@ class WebGLTexture final : public WebGLContextBoundObject,
 
   const auto& Immutable() const { return mImmutable; }
   const auto& ImmutableLevelCount() const { return mImmutableLevelCount; }
-  const auto& BaseMipmapLevel() const { return mBaseMipmapLevel; }
+
+  // ES3.0 p150
+  uint32_t Es3_level_base() const {
+    const auto level_prime_base = mBaseMipmapLevel;
+    const auto level_immut = mImmutableLevelCount;
+
+    if (!mImmutable) return level_prime_base;
+    return std::min(level_prime_base, level_immut - 1u);
+  }
+  uint32_t Es3_level_max() const {
+    const auto level_base = Es3_level_base();
+    const auto level_prime_max = mMaxMipmapLevel;
+    const auto level_immut = mImmutableLevelCount;
+
+    if (!mImmutable) return level_prime_max;
+    return std::min(std::max(level_base, level_prime_max), level_immut - 1u);
+  }
+
+  // GLES 3.0.5 p158: `q`
+  uint32_t Es3_q() const;  // "effective max mip level"
+
+  // -
+
   const auto& FaceCount() const { return mFaceCount; }
 
   // We can just max this out to 31, which is the number of unsigned bits in
@@ -223,10 +245,6 @@ class WebGLTexture final : public WebGLContextBoundObject,
   void ClampLevelBaseAndMax();
   void RefreshSwizzle() const;
 
- public:
-  uint32_t EffectiveMaxLevel() const;  // GLES 3.0.5 p158: `q`
-
- protected:
   static uint8_t FaceForTarget(TexImageTarget texImageTarget) {
     GLenum rawTexImageTarget = texImageTarget.get();
     switch (rawTexImageTarget) {

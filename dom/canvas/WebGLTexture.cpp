@@ -186,7 +186,8 @@ Maybe<const WebGLTexture::CompletenessInfo> WebGLTexture::CalcCompletenessInfo(
 
   // -
 
-  if (mBaseMipmapLevel > kMaxLevelCount - 1) {
+  const auto level_base = Es3_level_base();
+  if (level_base > kMaxLevelCount - 1) {
     ret->incompleteReason = "`level_base` too high.";
     return ret;
   }
@@ -195,7 +196,7 @@ Maybe<const WebGLTexture::CompletenessInfo> WebGLTexture::CalcCompletenessInfo(
   // "[A] texture is complete unless any of the following conditions hold true:"
 
   // "* Any dimension of the `level_base` array is not positive."
-  const auto& baseImageInfo = ImageInfoAtFace(0, mBaseMipmapLevel);
+  const auto& baseImageInfo = ImageInfoAtFace(0, level_base);
   if (!baseImageInfo.IsDefined()) {
     // In case of undefined texture image, we don't print any message because
     // this is a very common and often legitimate case (asynchronous texture
@@ -213,7 +214,7 @@ Maybe<const WebGLTexture::CompletenessInfo> WebGLTexture::CalcCompletenessInfo(
 
   // "* The texture is a cube map texture, and is not cube complete."
   bool initFailed = false;
-  if (!IsMipAndCubeComplete(mBaseMipmapLevel, ensureInit, &initFailed)) {
+  if (!IsMipAndCubeComplete(level_base, ensureInit, &initFailed)) {
     if (initFailed) return {};
 
     // Can only fail if not cube-complete.
@@ -240,21 +241,22 @@ Maybe<const WebGLTexture::CompletenessInfo> WebGLTexture::CalcCompletenessInfo(
 
   // "* `level_base <= level_max`"
 
-  const auto maxLevel = EffectiveMaxLevel();
-  if (mBaseMipmapLevel > maxLevel) {
+  const auto level_max = Es3_level_max();
+  const auto maxLevel_aka_q = Es3_q();
+  if (level_base > level_max) {  // `level_max` not `q`!
     ret->incompleteReason = "`level_base > level_max`.";
     return ret;
   }
 
   if (skipMips) return ret;
 
-  if (!IsMipAndCubeComplete(maxLevel, ensureInit, &initFailed)) {
+  if (!IsMipAndCubeComplete(maxLevel_aka_q, ensureInit, &initFailed)) {
     if (initFailed) return {};
 
     ret->incompleteReason = "Bad mipmap dimension or format.";
     return ret;
   }
-  ret->levels = AutoAssertCast(maxLevel - mBaseMipmapLevel + 1);
+  ret->levels = AutoAssertCast(maxLevel_aka_q - level_base + 1);
   ret->mipmapComplete = true;
 
   // -
@@ -379,6 +381,9 @@ Maybe<const webgl::SampleableInfo> WebGLTexture::CalcSampleableInfo(
   ret->incompleteReason =
       nullptr;  // NB: incompleteReason is also null for undefined
   ret->levels = completeness->levels;  //   textures.
+  if (!needsMips && ret->levels) {
+    ret->levels = 1;
+  }
   ret->usage = completeness->usage;
   return ret;
 }
@@ -402,7 +407,7 @@ const webgl::SampleableInfo* WebGLTexture::GetSampleableInfo(
 
 // ---------------------------
 
-uint32_t WebGLTexture::EffectiveMaxLevel() const {
+uint32_t WebGLTexture::Es3_q() const {
   const auto& imageInfo = BaseImageInfo();
   if (!imageInfo.IsDefined()) return mBaseMipmapLevel;
 
@@ -811,7 +816,7 @@ void WebGLTexture::GenerateMipmap() {
 
   // Record the results.
 
-  const auto maxLevel = EffectiveMaxLevel();
+  const auto maxLevel = Es3_q();
   PopulateMipChain(maxLevel);
 }
 
