@@ -398,37 +398,6 @@ Maybe<InlinableSetterData> FindInlinableSetterData(ICCacheIRStub* stub) {
   return data;
 }
 
-/*static*/
-bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
-  if (!target->hasJitScript()) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: no JIT script");
-    return false;
-  }
-  JSScript* script = target->nonLazyScript();
-  if (!script->jitScript()->hasBaselineScript()) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: no BaselineScript");
-    return false;
-  }
-  if (script->uninlineable()) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: uninlineable flag");
-    return false;
-  }
-  if (!script->canIonCompile()) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: can't ion-compile");
-    return false;
-  }
-  if (script->isDebuggee()) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: is debuggee");
-    return false;
-  }
-  // Don't inline cross-realm calls.
-  if (target->realm() != caller->realm()) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: cross-realm call");
-    return false;
-  }
-  return true;
-}
-
 // Return the number of actual arguments that will be passed to the
 // target function.
 static uint32_t GetCalleeNumActuals(BytecodeLocation loc) {
@@ -460,6 +429,60 @@ static uint32_t GetCalleeNumActuals(BytecodeLocation loc) {
   }
 }
 
+/*static*/
+bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
+                             BytecodeLocation loc) {
+  if (!target->hasJitScript()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: no JIT script");
+    return false;
+  }
+  JSScript* script = target->nonLazyScript();
+  if (!script->jitScript()->hasBaselineScript()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: no BaselineScript");
+    return false;
+  }
+  if (script->uninlineable()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: uninlineable flag");
+    return false;
+  }
+  if (!script->canIonCompile()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: can't ion-compile");
+    return false;
+  }
+  if (script->isDebuggee()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: is debuggee");
+    return false;
+  }
+  // Don't inline cross-realm calls.
+  if (target->realm() != caller->realm()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: cross-realm call");
+    return false;
+  }
+
+  uint32_t calleeNumActuals = GetCalleeNumActuals(loc);
+  if (script->argumentsHasVarBinding() &&
+      calleeNumActuals > ArgumentsObject::MaxInlinedArgs) {
+    JitSpew(JitSpew_WarpTrialInlining,
+            "SKIP: needs arguments object with %u actual args (maximum %u)",
+            calleeNumActuals, ArgumentsObject::MaxInlinedArgs);
+    return false;
+  }
+
+  if (TooManyFormalArguments(target->nargs())) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: Too many formal arguments: %u",
+            unsigned(target->nargs()));
+    return false;
+  }
+
+  if (TooManyFormalArguments(calleeNumActuals)) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: argc too large: %u",
+            unsigned(loc.getCallArgc()));
+    return false;
+  }
+
+  return true;
+}
+
 bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
                                 BytecodeLocation loc) {
 #ifdef JS_JITSPEW
@@ -473,7 +496,7 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
           baseScript ? baseScript->column() : 0);
 #endif
 
-  if (!canInline(target, script_)) {
+  if (!canInline(target, script_, loc)) {
     return false;
   }
 
@@ -482,15 +505,6 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
   JSScript* targetScript = target->nonLazyScript();
   if (script_ == targetScript) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: recursion");
-    return false;
-  }
-
-  uint32_t calleeNumActuals = GetCalleeNumActuals(loc);
-  if (targetScript->argumentsHasVarBinding() &&
-      calleeNumActuals > ArgumentsObject::MaxInlinedArgs) {
-    JitSpew(JitSpew_WarpTrialInlining,
-            "SKIP: needs arguments object with %u actual args (maximum %u)",
-            calleeNumActuals, ArgumentsObject::MaxInlinedArgs);
     return false;
   }
 
@@ -526,18 +540,6 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
     JitSpew(JitSpew_WarpTrialInlining,
             "INFO: Ignored length (%u) of InlinableLargeFunction",
             unsigned(targetScript->length()));
-  }
-
-  if (TooManyFormalArguments(target->nargs())) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: Too many formal arguments: %u",
-            unsigned(target->nargs()));
-    return false;
-  }
-
-  if (TooManyFormalArguments(calleeNumActuals)) {
-    JitSpew(JitSpew_WarpTrialInlining, "SKIP: argc too large: %u",
-            unsigned(loc.getCallArgc()));
-    return false;
   }
 
   return true;

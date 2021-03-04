@@ -129,7 +129,8 @@ class MOZ_RAII TrialInliner {
   [[nodiscard]] bool maybeInlineSetter(const ICEntry& entry,
                                        BytecodeLocation loc);
 
-  static bool canInline(JSFunction* target, HandleScript caller);
+  static bool canInline(JSFunction* target, HandleScript caller,
+                        BytecodeLocation loc);
 
  private:
   ICCacheIRStub* maybeSingleStub(const ICEntry& entry);
