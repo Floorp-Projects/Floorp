@@ -368,9 +368,9 @@ void swgl_drawSpanRGBA8() {
     #ifdef WR_FEATURE_ALPHA_PASS
     if (v_color != vec4(1.0)) {
         #ifdef WR_FEATURE_REPETITION
-            swgl_commitTextureRepeatColorRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds, v_color, 0.0);
+            swgl_commitTextureRepeatColorRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds, v_color);
         #else
-            swgl_commitTextureColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color, 0.0);
+            swgl_commitTextureColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color);
         #endif
         return;
     }
@@ -378,9 +378,9 @@ void swgl_drawSpanRGBA8() {
     #endif
 
     #ifdef WR_FEATURE_REPETITION
-        swgl_commitTextureRepeatRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds, 0.0);
+        swgl_commitTextureRepeatRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds);
     #else
-        swgl_commitTextureRGBA8(sColor0, uv, v_uv_sample_bounds, 0.0);
+        swgl_commitTextureRGBA8(sColor0, uv, v_uv_sample_bounds);
     #endif
 }
 #endif

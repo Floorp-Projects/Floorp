@@ -66,32 +66,12 @@ extern "C" {
     );
     fn CheckFramebufferStatus(target: GLenum) -> GLenum;
     fn InvalidateFramebuffer(target: GLenum, num_attachments: GLsizei, attachments: *const GLenum);
-    fn TexStorage3D(
-        target: GLenum,
-        levels: GLint,
-        internal_format: GLenum,
-        width: GLsizei,
-        height: GLsizei,
-        depth: GLsizei,
-    );
     fn TexImage2D(
         target: GLenum,
         level: GLint,
         internal_format: GLint,
         width: GLsizei,
         height: GLsizei,
-        border: GLint,
-        format: GLenum,
-        ty: GLenum,
-        data: *const c_void,
-    );
-    fn TexImage3D(
-        target: GLenum,
-        level: GLint,
-        internal_format: GLint,
-        width: GLsizei,
-        height: GLsizei,
-        depth: GLsizei,
         border: GLint,
         format: GLenum,
         ty: GLenum,
@@ -104,19 +84,6 @@ extern "C" {
         yoffset: GLint,
         width: GLsizei,
         height: GLsizei,
-        format: GLenum,
-        ty: GLenum,
-        data: *const c_void,
-    );
-    fn TexSubImage3D(
-        target: GLenum,
-        level: GLint,
-        xoffset: GLint,
-        yoffset: GLint,
-        zoffset: GLint,
-        width: GLsizei,
-        height: GLsizei,
-        depth: GLsizei,
         format: GLenum,
         ty: GLenum,
         data: *const c_void,
@@ -165,13 +132,6 @@ extern "C" {
     fn GetLinkStatus(program: GLuint) -> GLint;
     fn UseProgram(program: GLuint);
     fn SetViewport(x: GLint, y: GLint, width: GLsizei, height: GLsizei);
-    fn FramebufferTextureLayer(
-        target: GLenum,
-        attachment: GLenum,
-        texture: GLuint,
-        level: GLint,
-        layer: GLint,
-    );
     fn FramebufferRenderbuffer(
         target: GLenum,
         attachment: GLenum,
@@ -245,17 +205,6 @@ extern "C" {
         level: GLint,
         xoffset: GLint,
         yoffset: GLint,
-        x: GLint,
-        y: GLint,
-        width: GLsizei,
-        height: GLsizei,
-    );
-    fn CopyTexSubImage3D(
-        target: GLenum,
-        level: GLint,
-        xoffset: GLint,
-        yoffset: GLint,
-        zoffset: GLint,
         x: GLint,
         y: GLint,
         width: GLsizei,
@@ -1072,7 +1021,6 @@ impl Gl for Context {
         panic!();
     }
 
-    // FIXME: Does not verify buffer size -- unsafe!
     fn tex_image_3d(
         &self,
         target: GLenum,
@@ -1086,24 +1034,7 @@ impl Gl for Context {
         ty: GLenum,
         opt_data: Option<&[u8]>,
     ) {
-        unsafe {
-            let pdata = match opt_data {
-                Some(data) => data.as_ptr() as *const GLvoid,
-                None => ptr::null(),
-            };
-            TexImage3D(
-                target,
-                level,
-                internal_format,
-                width,
-                height,
-                depth,
-                border,
-                format,
-                ty,
-                pdata,
-            );
-        }
+        panic!();
     }
 
     fn copy_tex_image_2d(
@@ -1148,11 +1079,7 @@ impl Gl for Context {
         width: GLsizei,
         height: GLsizei,
     ) {
-        unsafe {
-            CopyTexSubImage3D(
-                target, level, xoffset, yoffset, zoffset, x, y, width, height,
-            );
-        }
+        panic!();
     }
 
     fn tex_sub_image_2d(
@@ -1234,22 +1161,7 @@ impl Gl for Context {
         data: &[u8],
     ) {
         debug!("tex_sub_image_3d");
-        //panic!();
-        unsafe {
-            TexSubImage3D(
-                target,
-                level,
-                xoffset,
-                yoffset,
-                zoffset,
-                width,
-                height,
-                depth,
-                format,
-                ty,
-                data.as_ptr() as *const c_void,
-            );
-        }
+        panic!();
     }
 
     fn tex_sub_image_3d_pbo(
@@ -1266,21 +1178,7 @@ impl Gl for Context {
         ty: GLenum,
         offset: usize,
     ) {
-        unsafe {
-            TexSubImage3D(
-                target,
-                level,
-                xoffset,
-                yoffset,
-                zoffset,
-                width,
-                height,
-                depth,
-                format,
-                ty,
-                offset as *const c_void,
-            );
-        }
+        panic!();
     }
 
     fn tex_storage_2d(
@@ -1306,10 +1204,7 @@ impl Gl for Context {
         height: GLsizei,
         depth: GLsizei,
     ) {
-        //panic!();
-        unsafe {
-            TexStorage3D(target, levels, internal_format, width, height, depth);
-        }
+        panic!();
     }
 
     fn get_tex_image_into_buffer(
@@ -1469,10 +1364,7 @@ impl Gl for Context {
             "framebuffer_texture_layer {} {} {} {} {}",
             target, attachment, texture, level, layer
         );
-        //panic!();
-        unsafe {
-            FramebufferTextureLayer(target, attachment, texture, level, layer);
-        }
+        panic!();
     }
 
     fn blit_framebuffer(

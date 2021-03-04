@@ -151,31 +151,31 @@ during span rasterization, it uses the same distance field method as WR on
 those span boundary pixels to estimate the coverage based on edge slope.
 
 ```
-void swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-void swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+void swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds);
+void swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds);
 
-void swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
-void swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
+void swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
-void swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds);
+void swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureNearestRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-void swgl_commitTextureNearestColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureNearestRGBA8(sampler, vec2 uv, vec4 uv_bounds);
+void swgl_commitTextureNearestColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureNearestRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
-void swgl_commitTextureNearestRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureNearestRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds);
+void swgl_commitTextureNearestRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
-void swgl_commitTextureColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureRGBA8(sampler, vec2 uv, vec4 uv_bounds);
+void swgl_commitTextureColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, float layer);
-void swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color, float layer);
+void swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds);
+void swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
 ```
 
 Samples and commits an entire span of texture starting at the given uv and
-within the supplied uv bounds from the given layer. The color variations
-also accept a supplied color that modulates the result.
+within the supplied uv bounds. The color variations also accept a supplied color
+that modulates the result.
 
 The RGBA8 versions may only be used to commit within `swgl_drawSpanRGBA8`, and
 the R8 versions may only be used to commit within `swgl_drawSpanR8`.

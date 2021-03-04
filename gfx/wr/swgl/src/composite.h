@@ -15,9 +15,8 @@ static inline void scale_row(P* dst, int dstWidth, const P* src, int srcWidth,
 }
 
 static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
-                                 int srcZ, Texture& dsttex,
-                                 const IntRect& dstReq, int dstZ, bool invertY,
-                                 const IntRect& clipRect) {
+                                 Texture& dsttex, const IntRect& dstReq,
+                                 bool invertY, const IntRect& clipRect) {
   // Cache scaling ratios
   int srcWidth = srcReq.width();
   int srcHeight = srcReq.height();
@@ -44,8 +43,8 @@ static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
   int bpp = srctex.bpp();
   int srcStride = srctex.stride();
   int destStride = dsttex.stride();
-  char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ);
-  char* src = srctex.sample_ptr(srcReq, srcBounds, srcZ, invertY);
+  char* dest = dsttex.sample_ptr(dstReq, dstBounds);
+  char* src = srctex.sample_ptr(srcReq, srcBounds, invertY);
   // Inverted Y must step downward along source rows
   if (invertY) {
     srcStride = -srcStride;
@@ -92,57 +91,53 @@ static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
 }
 
 static void linear_row_blit(uint32_t* dest, int span, const vec2_scalar& srcUV,
-                            float srcDU, int srcZOffset,
-                            sampler2DArray sampler) {
+                            float srcDU, sampler2D sampler) {
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
-    auto srcpx = textureLinearPackedRGBA8(sampler, ivec2(uv), srcZOffset);
+    auto srcpx = textureLinearPackedRGBA8(sampler, ivec2(uv));
     unaligned_store(dest, srcpx);
     dest += 4;
     uv.x += 4 * srcDU;
   }
   if (span > 0) {
-    auto srcpx = textureLinearPackedRGBA8(sampler, ivec2(uv), srcZOffset);
+    auto srcpx = textureLinearPackedRGBA8(sampler, ivec2(uv));
     partial_store_span(dest, srcpx, span);
   }
 }
 
 static void linear_row_blit(uint8_t* dest, int span, const vec2_scalar& srcUV,
-                            float srcDU, int srcZOffset,
-                            sampler2DArray sampler) {
+                            float srcDU, sampler2D sampler) {
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
-    auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
+    auto srcpx = textureLinearPackedR8(sampler, ivec2(uv));
     unaligned_store(dest, srcpx);
     dest += 4;
     uv.x += 4 * srcDU;
   }
   if (span > 0) {
-    auto srcpx = textureLinearPackedR8(sampler, ivec2(uv), srcZOffset);
+    auto srcpx = textureLinearPackedR8(sampler, ivec2(uv));
     partial_store_span(dest, srcpx, span);
   }
 }
 
 static void linear_row_blit(uint16_t* dest, int span, const vec2_scalar& srcUV,
-                            float srcDU, int srcZOffset,
-                            sampler2DArray sampler) {
+                            float srcDU, sampler2D sampler) {
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
-    auto srcpx = textureLinearPackedRG8(sampler, ivec2(uv), srcZOffset);
+    auto srcpx = textureLinearPackedRG8(sampler, ivec2(uv));
     unaligned_store(dest, srcpx);
     dest += 4;
     uv.x += 4 * srcDU;
   }
   if (span > 0) {
-    auto srcpx = textureLinearPackedRG8(sampler, ivec2(uv), srcZOffset);
+    auto srcpx = textureLinearPackedRG8(sampler, ivec2(uv));
     partial_store_span(dest, srcpx, span);
   }
 }
 
 static NO_INLINE void linear_blit(Texture& srctex, const IntRect& srcReq,
-                                  int srcZ, Texture& dsttex,
-                                  const IntRect& dstReq, int dstZ, bool invertY,
-                                  const IntRect& clipRect) {
+                                  Texture& dsttex, const IntRect& dstReq,
+                                  bool invertY, const IntRect& clipRect) {
   assert(srctex.internal_format == GL_RGBA8 ||
          srctex.internal_format == GL_R8 || srctex.internal_format == GL_RG8);
   // Compute valid dest bounds
@@ -153,12 +148,10 @@ static NO_INLINE void linear_blit(Texture& srctex, const IntRect& srcReq,
     return;
   }
   // Initialize sampler for source texture
-  sampler2DArray_impl sampler;
+  sampler2D_impl sampler;
   init_sampler(&sampler, srctex);
-  init_depth(&sampler, srctex);
   sampler.filter = TextureFilter::LINEAR;
   // Compute source UVs
-  int srcZOffset = srcZ * sampler.height_stride;
   vec2_scalar srcUV(srcReq.x0, srcReq.y0);
   vec2_scalar srcDUV(float(srcReq.width()) / dstReq.width(),
                      float(srcReq.height()) / dstReq.height());
@@ -175,21 +168,18 @@ static NO_INLINE void linear_blit(Texture& srctex, const IntRect& srcReq,
   // Calculate dest pointer from clamped offsets
   int bpp = dsttex.bpp();
   int destStride = dsttex.stride();
-  char* dest = dsttex.sample_ptr(dstReq, dstBounds, dstZ);
+  char* dest = dsttex.sample_ptr(dstReq, dstBounds);
   int span = dstBounds.width();
   for (int rows = dstBounds.height(); rows > 0; rows--) {
     switch (bpp) {
       case 1:
-        linear_row_blit((uint8_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
-                        &sampler);
+        linear_row_blit((uint8_t*)dest, span, srcUV, srcDUV.x, &sampler);
         break;
       case 2:
-        linear_row_blit((uint16_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
-                        &sampler);
+        linear_row_blit((uint16_t*)dest, span, srcUV, srcDUV.x, &sampler);
         break;
       case 4:
-        linear_row_blit((uint32_t*)dest, span, srcUV, srcDUV.x, srcZOffset,
-                        &sampler);
+        linear_row_blit((uint32_t*)dest, span, srcUV, srcDUV.x, &sampler);
         break;
       default:
         assert(false);
@@ -205,7 +195,7 @@ static void linear_row_composite(uint32_t* dest, int span,
                                  sampler2D sampler) {
   vec2 uv = init_interp(srcUV, vec2_scalar(srcDU, 0.0f));
   for (; span >= 4; span -= 4) {
-    WideRGBA8 srcpx = textureLinearUnpackedRGBA8(sampler, ivec2(uv), 0);
+    WideRGBA8 srcpx = textureLinearUnpackedRGBA8(sampler, ivec2(uv));
     WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dest));
     PackedRGBA8 r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
     unaligned_store(dest, r);
@@ -214,7 +204,7 @@ static void linear_row_composite(uint32_t* dest, int span,
     uv.x += 4 * srcDU;
   }
   if (span > 0) {
-    WideRGBA8 srcpx = textureLinearUnpackedRGBA8(sampler, ivec2(uv), 0);
+    WideRGBA8 srcpx = textureLinearUnpackedRGBA8(sampler, ivec2(uv));
     WideRGBA8 dstpx = unpack(partial_load_span<PackedRGBA8>(dest, span));
     PackedRGBA8 r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
     partial_store_span(dest, r, span);
@@ -253,7 +243,7 @@ static NO_INLINE void linear_composite(Texture& srctex, const IntRect& srcReq,
   srcDUV *= 128.0f;
   // Calculate dest pointer from clamped offsets
   int destStride = dsttex.stride();
-  char* dest = dsttex.sample_ptr(dstReq, dstBounds, 0);
+  char* dest = dsttex.sample_ptr(dstReq, dstBounds);
   int span = dstBounds.width();
   for (int rows = dstBounds.height(); rows > 0; rows--) {
     linear_row_composite((uint32_t*)dest, span, srcUV, srcDUV.x, &sampler);
@@ -269,13 +259,13 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
                      GLbitfield mask, GLenum filter) {
   assert(mask == GL_COLOR_BUFFER_BIT);
   Framebuffer* srcfb = get_framebuffer(GL_READ_FRAMEBUFFER);
-  if (!srcfb || srcfb->layer < 0) return;
+  if (!srcfb) return;
   Framebuffer* dstfb = get_framebuffer(GL_DRAW_FRAMEBUFFER);
-  if (!dstfb || dstfb->layer < 0) return;
+  if (!dstfb) return;
   Texture& srctex = ctx->textures[srcfb->color_attachment];
-  if (!srctex.buf || srcfb->layer >= max(srctex.depth, 1)) return;
+  if (!srctex.buf) return;
   Texture& dsttex = ctx->textures[dstfb->color_attachment];
-  if (!dsttex.buf || dstfb->layer >= max(dsttex.depth, 1)) return;
+  if (!dsttex.buf) return;
   assert(!dsttex.locked);
   if (srctex.internal_format != dsttex.internal_format) {
     assert(false);
@@ -301,11 +291,9 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR &&
       (srctex.internal_format == GL_RGBA8 || srctex.internal_format == GL_R8 ||
        srctex.internal_format == GL_RG8)) {
-    linear_blit(srctex, srcReq, srcfb->layer, dsttex, dstReq, dstfb->layer,
-                invertY, dstReq);
+    linear_blit(srctex, srcReq, dsttex, dstReq, invertY, dstReq);
   } else {
-    scale_blit(srctex, srcReq, srcfb->layer, dsttex, dstReq, dstfb->layer,
-               invertY, clipRect);
+    scale_blit(srctex, srcReq, dsttex, dstReq, invertY, clipRect);
   }
 }
 
@@ -328,11 +316,9 @@ LockedTexture* LockTexture(GLuint texId) {
 // Lock the given framebuffer's color attachment to prevent modification.
 LockedTexture* LockFramebuffer(GLuint fboId) {
   Framebuffer& fb = ctx->framebuffers[fboId];
-  // Only allow locking a framebuffer if it has a valid color attachment and
-  // only if targeting the first layer.
-  if (!fb.color_attachment || fb.layer > 0) {
+  // Only allow locking a framebuffer if it has a valid color attachment.
+  if (!fb.color_attachment) {
     assert(fb.color_attachment != 0);
-    assert(fb.layer == 0);
     return nullptr;
   }
   return LockTexture(fb.color_attachment);
@@ -392,8 +378,8 @@ static NO_INLINE void unscaled_composite(Texture& srctex, const IntRect& srcReq,
   IntRect bounds = dsttex.sample_bounds(dstReq);
   bounds.intersect(clipRect);
   bounds.intersect(srctex.sample_bounds(srcReq, invertY));
-  char* dest = dsttex.sample_ptr(dstReq, bounds, 0);
-  char* src = srctex.sample_ptr(srcReq, bounds, 0, invertY);
+  char* dest = dsttex.sample_ptr(dstReq, bounds);
+  char* src = srctex.sample_ptr(srcReq, bounds, invertY);
   int srcStride = srctex.stride();
   int destStride = dsttex.stride();
   if (invertY) {
@@ -438,9 +424,9 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
     // Ensure we have rows of at least 2 pixels when using the linear filter
     // to avoid overreading the row.
     if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR) {
-      linear_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, clipRect);
+      linear_blit(srctex, srcReq, dsttex, dstReq, flip, clipRect);
     } else {
-      scale_blit(srctex, srcReq, 0, dsttex, dstReq, 0, flip, clipRect);
+      scale_blit(srctex, srcReq, dsttex, dstReq, flip, clipRect);
     }
   } else {
     if (!srcReq.same_size(dstReq) && srctex.width >= 2) {
@@ -1007,7 +993,7 @@ static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
   }
   // Calculate dest pointer from clamped offsets
   int destStride = dsttex.stride();
-  char* dest = dsttex.sample_ptr(dstReq, dstBounds, 0);
+  char* dest = dsttex.sample_ptr(dstReq, dstBounds);
   int span = dstBounds.width();
   for (int rows = dstBounds.height(); rows > 0; rows--) {
     linear_row_yuv((uint32_t*)dest, span, &sampler[0], srcUV, srcDUV.x,
