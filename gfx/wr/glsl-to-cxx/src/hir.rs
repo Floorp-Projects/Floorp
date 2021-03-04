@@ -3657,13 +3657,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         state,
         "texelFetch",
         None,
-        Type::new(Vec4),
-        vec![Type::new(Sampler2DArray), Type::new(IVec3), Type::new(Int)],
-    );
-    declare_function(
-        state,
-        "texelFetch",
-        None,
         Type::new(IVec4),
         vec![Type::new(ISampler2D), Type::new(IVec2), Type::new(Int)],
     );
@@ -3704,27 +3697,6 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         None,
         Type::new(Vec4),
         vec![Type::new(Sampler2DRect), Type::new(Vec2)],
-    );
-    declare_function(
-        state,
-        "texture",
-        None,
-        Type::new(Vec4),
-        vec![Type::new(Sampler2DArray), Type::new(Vec3)],
-    );
-    declare_function(
-        state,
-        "textureLod",
-        None,
-        Type::new(Vec4),
-        vec![Type::new(Sampler2DArray), Type::new(Vec3), Type::new(Float)],
-    );
-    declare_function(
-        state,
-        "textureSize",
-        None,
-        Type::new(IVec3),
-        vec![Type::new(Sampler2DArray), Type::new(Int)],
     );
     declare_function(
         state,
@@ -3935,7 +3907,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         Type::new(Void),
         vec![Type::new(Sampler2D), Type::new(Int), Type::new(Float), Type::new(Float)],
     );
-    for s in &[Sampler2D, Sampler2DRect, Sampler2DArray] {
+    for s in &[Sampler2D, Sampler2DRect] {
         declare_function_ext(
             state,
             "swgl_isTextureLinear",
@@ -3965,35 +3937,35 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureLinearRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureLinearR8",
             None,
             Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureLinearColorRGBA8",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureLinearColorRGBA8",
+            None,
+            Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearColorRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearColorRGBA8",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float), Type::new(Float)],
         );
         declare_function(
             state,
             "swgl_commitTextureLinearColorR8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
         );
 
         declare_function(
@@ -4001,14 +3973,14 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureLinearRepeatRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureLinearRepeatColorRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4)],
         );
 
         declare_function(
@@ -4016,28 +3988,28 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureNearestRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureNearestColorRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureNearestRepeatRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureNearestRepeatColorRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4)],
         );
 
         declare_function(
@@ -4045,28 +4017,28 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureColorRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureRepeatRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4)],
         );
         declare_function(
             state,
             "swgl_commitTextureRepeatColorRGBA8",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4), Type::new(Float)],
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Vec4), Type::new(Vec4)],
         );
 
         declare_function(
@@ -4075,7 +4047,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Bool),
-                 Type::new(Int), Type::new(Vec2), Type::new(Float)],
+                 Type::new(Int), Type::new(Vec2)],
         );
         declare_function(
             state,
@@ -4083,14 +4055,14 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Bool),
-                 Type::new(Int), Type::new(Vec2), Type::new(Float)],
+                 Type::new(Int), Type::new(Vec2)],
         );
         declare_function(
             state,
             "swgl_commitTextureLinearYUV",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(Int), Type::new(Int)],
         );
         declare_function(
@@ -4098,8 +4070,8 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureLinearYUV",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
-                 Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(Int), Type::new(Int)],
         );
         declare_function(
@@ -4107,9 +4079,9 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureLinearYUV",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
-                 Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
-                 Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(Int), Type::new(Int)],
         );
         declare_function(
@@ -4117,7 +4089,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureLinearColorYUV",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(Int), Type::new(Int), Type::new(Float)],
         );
         declare_function(
@@ -4125,8 +4097,8 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureLinearColorYUV",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
-                 Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(Int), Type::new(Int), Type::new(Float)],
         );
         declare_function(
@@ -4134,9 +4106,9 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             "swgl_commitTextureLinearColorYUV",
             None,
             Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
-                 Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
-                 Type::new(*s), Type::new(Vec2), Type::new(Vec4), Type::new(Float),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(Int), Type::new(Int), Type::new(Float)],
         );
     }

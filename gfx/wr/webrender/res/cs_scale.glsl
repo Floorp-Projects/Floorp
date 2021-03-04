@@ -43,7 +43,7 @@ void main(void) {
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    swgl_commitTextureLinearRGBA8(sColor0, vUv, vUvRect, 0.0);
+    swgl_commitTextureLinearRGBA8(sColor0, vUv, vUvRect);
 }
 #endif
 

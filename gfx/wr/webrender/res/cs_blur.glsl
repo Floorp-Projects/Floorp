@@ -178,12 +178,12 @@ void main(void) {
     #ifdef WR_FEATURE_COLOR_TARGET
 void swgl_drawSpanRGBA8() {
     swgl_commitGaussianBlurRGBA8(sColor0, vUv, vUvRect, vOffsetScale.x != 0.0,
-                                 vSupport, vGaussCoefficients, 0.0);
+                                 vSupport, vGaussCoefficients);
 }
     #else
 void swgl_drawSpanR8() {
     swgl_commitGaussianBlurR8(sColor0, vUv, vUvRect, vOffsetScale.x != 0.0,
-                              vSupport, vGaussCoefficients, 0.0);
+                              vSupport, vGaussCoefficients);
 }
     #endif
 #endif

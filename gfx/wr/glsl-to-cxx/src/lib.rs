@@ -292,8 +292,7 @@ fn write_program_samplers(state: &mut OutputState, uniform_indices: &UniformIndi
         match tk {
             hir::TypeKind::Sampler2D
             | hir::TypeKind::Sampler2DRect
-            | hir::TypeKind::ISampler2D
-            | hir::TypeKind::Sampler2DArray => {
+            | hir::TypeKind::ISampler2D => {
                 write!(state, " ");
                 show_type_kind(state, &tk);
                 let suffix = if let hir::StorageClass::Sampler(format) = storage {
@@ -316,8 +315,7 @@ fn write_program_samplers(state: &mut OutputState, uniform_indices: &UniformIndi
         match tk {
             hir::TypeKind::Sampler2D
             | hir::TypeKind::Sampler2DRect
-            | hir::TypeKind::ISampler2D
-            | hir::TypeKind::Sampler2DArray => {
+            | hir::TypeKind::ISampler2D => {
                 write!(state, "  case {}:\n", index);
                 write!(state, "   {}_slot = value;\n", name);
                 write!(state, "   return true;\n");
@@ -344,9 +342,6 @@ fn write_bind_textures(state: &mut OutputState, uniforms: &UniformIndices) {
                         name),
                     hir::TypeKind::ISampler2D => write!(state,
                         " {0} = lookup_isampler(&samplers.{0}_impl, samplers.{0}_slot);\n",
-                        name),
-                    hir::TypeKind::Sampler2DArray => write!(state,
-                        " {0} = lookup_sampler_array(&samplers.{0}_impl, samplers.{0}_slot);\n",
                         name),
                     _ => {}
                 };

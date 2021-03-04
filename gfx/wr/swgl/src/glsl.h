@@ -20,25 +20,9 @@ struct samplerCommon {
   TextureFormat format = TextureFormat::RGBA8;
 };
 
-struct samplerDepth {
-  int depth = 0;
-  uint32_t height_stride = 0;  // in units of BPP if < 4, or dwords if BPP >= 4
-};
-
 struct samplerFilter {
   TextureFilter filter = TextureFilter::NEAREST;
 };
-
-struct sampler2DArray_impl : samplerCommon, samplerDepth, samplerFilter {};
-typedef sampler2DArray_impl* sampler2DArray;
-
-typedef struct sampler2DArrayR8_impl : sampler2DArray_impl{} * sampler2DArrayR8;
-typedef struct sampler2DArrayRG8_impl : sampler2DArray_impl{} *
-                                        sampler2DArrayRG8;
-typedef struct sampler2DArrayRGBA8_impl : sampler2DArray_impl{} *
-                                          sampler2DArrayRGBA8;
-typedef struct sampler2DArrayRGBA32F_impl : sampler2DArray_impl{} *
-                                            sampler2DArrayRGBA32F;
 
 struct sampler2D_impl : samplerCommon, samplerFilter {};
 typedef sampler2D_impl* sampler2D;

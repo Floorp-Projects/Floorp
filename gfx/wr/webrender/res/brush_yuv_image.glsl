@@ -112,16 +112,16 @@ Fragment brush_fs() {
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
     if (vFormat == YUV_FORMAT_PLANAR) {
-        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, 0.0,
-                                    sColor1, vUv_U, vUvBounds_U, 0.0,
-                                    sColor2, vUv_V, vUvBounds_V, 0.0,
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y,
+                                    sColor1, vUv_U, vUvBounds_U,
+                                    sColor2, vUv_V, vUvBounds_V,
                                     vYuvColorSpace, vRescaleFactor);
     } else if (vFormat == YUV_FORMAT_NV12) {
-        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, 0.0,
-                                    sColor1, vUv_U, vUvBounds_U, 0.0,
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y,
+                                    sColor1, vUv_U, vUvBounds_U,
                                     vYuvColorSpace, vRescaleFactor);
     } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
-        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, 0.0,
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y,
                                     vYuvColorSpace, vRescaleFactor);
     }
 }
