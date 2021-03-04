@@ -65,7 +65,7 @@ function nativeHorizontalWheelEventMsg() {
 
 // Given an event target which may be a window or an element, get the associated window.
 function windowForTarget(aTarget) {
-  if (aTarget.Window && aTarget instanceof aTarget.Window) {
+  if (aTarget instanceof Window) {
     return aTarget;
   }
   return aTarget.ownerDocument.defaultView;
@@ -73,7 +73,7 @@ function windowForTarget(aTarget) {
 
 // Given an event target which may be a window or an element, get the associated element.
 function elementForTarget(aTarget) {
-  if (aTarget.Window && aTarget instanceof aTarget.Window) {
+  if (aTarget instanceof Window) {
     return aTarget.document.documentElement;
   }
   return aTarget;
@@ -202,11 +202,7 @@ function getTargetRect(aTarget) {
   // If the target is the root content window, its origin relative
   // to the visual viewport is (0, 0).
   if (aTarget instanceof Window) {
-    return rect;
-  }
-  if (aTarget.Window && aTarget instanceof aTarget.Window) {
-    // iframe window
-    // FIXME: Compute proper rect against the root content window
+    // FIXME: Assert that it's not an iframe window.
     return rect;
   }
 
