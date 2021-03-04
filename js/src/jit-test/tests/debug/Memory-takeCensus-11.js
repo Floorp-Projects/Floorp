@@ -5,32 +5,19 @@
 
 // Check byte counts produced by takeCensus.
 
-const g = newGlobal({newCompartment: true });
-g.evaluate("setJitCompilerOption('ion.warmup.trigger', 1000)",
-           {
-             forceFullParse: true,
-           });
+const g = newGlobal({newCompartment: true, disableLazyParsing: true });
+g.eval("setJitCompilerOption('ion.warmup.trigger', 1000)");
 
 const dbg = new Debugger(g);
 
-g.evaluate("function one() {}",
-           {
-             fileName: "one.js",
-             forceFullParse: true,
-           });
+g.evaluate("function one() {}", { fileName: "one.js" });
 g.evaluate(`function two1() {}
             function two2() {}`,
-           {
-             fileName: "two.js",
-             forceFullParse: true,
-           });
+           { fileName: "two.js" });
 g.evaluate(`function three1() {}
             function three2() {}
             function three3() {}`,
-           {
-             fileName: "three.js",
-             forceFullParse: true,
-           });
+           { fileName: "three.js" });
 
 const report = dbg.memory.takeCensus({
   breakdown: {
