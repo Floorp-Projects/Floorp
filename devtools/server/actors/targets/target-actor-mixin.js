@@ -10,8 +10,13 @@ const Resources = require("devtools/server/actors/resources/index");
 const {
   WatchedDataHelpers,
 } = require("devtools/server/actors/watcher/WatchedDataHelpers.jsm");
-const { RESOURCES, BREAKPOINTS } = WatchedDataHelpers.SUPPORTED_DATA;
 const { STATES: THREAD_STATES } = require("devtools/server/actors/thread");
+const {
+  RESOURCES,
+  BREAKPOINTS,
+  TARGET_CONFIGURATION,
+  XHR_BREAKPOINTS,
+} = WatchedDataHelpers.SUPPORTED_DATA;
 
 module.exports = function(targetType, targetActorSpec, implementation) {
   const proto = {
@@ -58,7 +63,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
             )
           );
         }
-      } else if (type == "target-configuration") {
+      } else if (type == TARGET_CONFIGURATION) {
         // Only BrowsingContextTargetActor implements updateTargetConfiguration,
         // skip this data entry update for other targets.
         if (typeof this.updateTargetConfiguration == "function") {
@@ -68,6 +73,29 @@ module.exports = function(targetType, targetActorSpec, implementation) {
           }
           this.updateTargetConfiguration(options);
         }
+      } else if (type == XHR_BREAKPOINTS) {
+        // Breakpoints require the target to be attached,
+        // mostly to have the thread actor instantiated
+        // (content process targets don't have attach method,
+        //  instead they instantiate their ThreadActor immediately)
+        if (typeof this.attach == "function") {
+          this.attach();
+        }
+
+        // The thread actor has to be initialized in order to correctly
+        // retrieve the stack trace when hitting an XHR
+        if (
+          this.threadActor.state == "detached" &&
+          !this.targetType.endsWith("worker")
+        ) {
+          await this.threadActor.attach();
+        }
+
+        await Promise.all(
+          entries.map(({ path, method }) =>
+            this.threadActor.setXHRBreakpoint(path, method)
+          )
+        );
       }
     },
 
@@ -78,8 +106,12 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         for (const { location } of entries) {
           this.threadActor.removeBreakpoint(location);
         }
-      } else if (type == "target-configuration") {
+      } else if (type == TARGET_CONFIGURATION) {
         // configuration data entries are always added/updated, never removed.
+      } else if (type == XHR_BREAKPOINTS) {
+        for (const { path, method } of entries) {
+          this.threadActor.removeXHRBreakpoint(path, method);
+        }
       }
 
       return Promise.resolve();
