@@ -22,15 +22,15 @@ const { NormandyTestUtils } = ChromeUtils.import(
 // Test that a simple recipe unenrolls as expected
 decorate_task(
   AddonRollouts.withTestMock(),
-  ensureAddonCleanup,
+  ensureAddonCleanup(),
   withMockNormandyApi(),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   withSendEventSpy(),
-  async function simple_recipe_unenrollment(
-    mockApi,
+  async function simple_recipe_unenrollment({
+    mockNormandyApi,
     setExperimentInactiveStub,
-    sendEventSpy
-  ) {
+    sendEventSpy,
+  }) {
     const rolloutRecipe = {
       id: 1,
       arguments: {
@@ -38,7 +38,7 @@ decorate_task(
         extensionApiId: 1,
       },
     };
-    mockApi.extensionDetails = {
+    mockNormandyApi.extensionDetails = {
       [rolloutRecipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: rolloutRecipe.arguments.extensionApiId,
       }),
@@ -117,10 +117,10 @@ decorate_task(
 // Add-on already uninstalled
 decorate_task(
   AddonRollouts.withTestMock(),
-  ensureAddonCleanup,
+  ensureAddonCleanup(),
   withMockNormandyApi(),
   withSendEventSpy(),
-  async function addon_already_uninstalled(mockApi, sendEventSpy) {
+  async function addon_already_uninstalled({ mockNormandyApi, sendEventSpy }) {
     const rolloutRecipe = {
       id: 1,
       arguments: {
@@ -128,7 +128,7 @@ decorate_task(
         extensionApiId: 1,
       },
     };
-    mockApi.extensionDetails = {
+    mockNormandyApi.extensionDetails = {
       [rolloutRecipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: rolloutRecipe.arguments.extensionApiId,
       }),
@@ -200,10 +200,10 @@ decorate_task(
 // Already rolled back, do nothing
 decorate_task(
   AddonRollouts.withTestMock(),
-  ensureAddonCleanup,
+  ensureAddonCleanup(),
   withMockNormandyApi(),
   withSendEventSpy(),
-  async function already_rolled_back(mockApi, sendEventSpy) {
+  async function already_rolled_back({ sendEventSpy }) {
     const rollout = {
       recipeId: 1,
       slug: "test-rollout",
