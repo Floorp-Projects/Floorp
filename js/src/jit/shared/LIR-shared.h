@@ -795,6 +795,24 @@ class LCreateInlinedArgumentsObject : public LVariadicInstruction<1, 1> {
   }
 };
 
+class LGetInlinedArgument : public LVariadicInstruction<BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(GetInlinedArgument)
+
+  static const size_t Index = 0;
+  static const size_t NumNonArgumentOperands = 1;
+  static size_t ArgIndex(size_t i) {
+    return NumNonArgumentOperands + BOX_PIECES * i;
+  }
+
+  explicit LGetInlinedArgument(uint32_t numOperands)
+      : LVariadicInstruction(classOpcode, numOperands) {}
+
+  const LAllocation* getIndex() { return getOperand(Index); }
+
+  MGetInlinedArgument* mir() const { return mir_->toGetInlinedArgument(); }
+};
+
 // Get argument from arguments object.
 class LGetArgumentsObjectArg : public LInstructionHelper<BOX_PIECES, 1, 1> {
  public:

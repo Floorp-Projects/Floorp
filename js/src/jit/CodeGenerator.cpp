@@ -7293,6 +7293,42 @@ void CodeGenerator::visitCreateInlinedArgumentsObject(
   masm.freeStack(argc * sizeof(Value));
 }
 
+void CodeGenerator::visitGetInlinedArgument(LGetInlinedArgument* lir) {
+  Register index = ToRegister(lir->getIndex());
+  ValueOperand output = ToOutValue(lir);
+
+  uint32_t numActuals = lir->mir()->numActuals();
+  MOZ_ASSERT(numActuals > 0 && numActuals <= ArgumentsObject::MaxInlinedArgs);
+
+  // Check the first n-1 possible indices.
+  Label done;
+  for (uint32_t i = 0; i < numActuals - 1; i++) {
+    Label skip;
+    ConstantOrRegister arg = toConstantOrRegister(
+        lir, LGetInlinedArgument::ArgIndex(i), lir->mir()->getArg(i)->type());
+    masm.branch32(Assembler::NotEqual, index, Imm32(i), &skip);
+    masm.moveValue(arg, output);
+
+    masm.jump(&done);
+    masm.bind(&skip);
+  }
+
+#ifdef DEBUG
+  Label skip;
+  masm.branch32(Assembler::Equal, index, Imm32(numActuals - 1), &skip);
+  masm.assumeUnreachable("LGetInlinedArgument: invalid index");
+  masm.bind(&skip);
+#endif
+
+  // The index has already been bounds-checked, so load the last argument.
+  uint32_t lastIdx = numActuals - 1;
+  ConstantOrRegister arg =
+      toConstantOrRegister(lir, LGetInlinedArgument::ArgIndex(lastIdx),
+                           lir->mir()->getArg(lastIdx)->type());
+  masm.moveValue(arg, output);
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitGetArgumentsObjectArg(LGetArgumentsObjectArg* lir) {
   Register temp = ToRegister(lir->getTemp(0));
   Register argsObj = ToRegister(lir->getArgsObject());

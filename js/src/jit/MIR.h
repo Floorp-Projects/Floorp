@@ -3149,6 +3149,31 @@ class MCreateInlinedArgumentsObject : public MVariadicInstruction,
   bool canRecoverOnBailout() const override { return true; }
 };
 
+class MGetInlinedArgument : public MVariadicInstruction,
+                            public UnboxedInt32Policy<0>::Data {
+  MGetInlinedArgument() : MVariadicInstruction(classOpcode) {
+    setResultType(MIRType::Value);
+  }
+
+  static const size_t NumNonArgumentOperands = 1;
+
+ public:
+  INSTRUCTION_HEADER(GetInlinedArgument)
+  static MGetInlinedArgument* New(TempAllocator& alloc, MDefinition* index,
+                                  MCreateInlinedArgumentsObject* args);
+  NAMED_OPERANDS((0, index))
+
+  MDefinition* getArg(uint32_t idx) const {
+    return getOperand(idx + NumNonArgumentOperands);
+  }
+  uint32_t numActuals() const { return numOperands() - NumNonArgumentOperands; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 class MGetArgumentsObjectArg : public MUnaryInstruction,
                                public ObjectPolicy<0>::Data {
   size_t argno_;
