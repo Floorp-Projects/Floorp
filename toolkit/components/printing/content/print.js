@@ -875,7 +875,7 @@ var PrintEventHandler = {
     let printers;
 
     if (Cu.isInAutomation) {
-      printers = await Promise.resolve(window._mockPrinters || []);
+      printers = window._mockPrinters || [];
     } else {
       try {
         printers = await printerList.printers;
