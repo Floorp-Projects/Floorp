@@ -17,6 +17,10 @@ const MANIFEST = {
     description: "The about:welcome page",
     enabledFallbackPref: "browser.aboutwelcome.enabled",
     variables: {
+      screens: {
+        type: "json",
+        fallbackPref: "browser.aboutwelcome.screens",
+      },
       skipFocus: {
         type: "boolean",
         fallbackPref: "browser.aboutwelcome.skipFocus",

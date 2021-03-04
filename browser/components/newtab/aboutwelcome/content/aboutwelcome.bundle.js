@@ -212,49 +212,25 @@ function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
 }
 
 async function retrieveRenderContent() {
-  var _aboutWelcomeProps;
+  // Check for featureConfig and retrieve content
+  const featureConfig = await window.AWGetFeatureConfig();
+  let aboutWelcomeProps;
 
-  // Check for override content in pref browser.aboutwelcome.overrideContent
-  let aboutWelcomeProps = await window.AWGetWelcomeOverrideContent();
-
-  if ((_aboutWelcomeProps = aboutWelcomeProps) !== null && _aboutWelcomeProps !== void 0 && _aboutWelcomeProps.template) {
-    let {
-      messageId,
-      UTMTerm
-    } = ComputeTelemetryInfo(aboutWelcomeProps);
-    return {
-      aboutWelcomeProps,
-      messageId,
-      UTMTerm
-    };
-  } // Check for experiment and retrieve content
-
-
-  const {
-    slug,
-    branch
-  } = await window.AWGetExperimentData();
-  aboutWelcomeProps = branch !== null && branch !== void 0 && branch.feature ? branch.feature.value : {}; // Check if there is any attribution data, this could take a while to await in series
-  // especially when there is an add-on that requires remote lookup
-  // Moving RTAMO as part of another screen of multistage is one option to fix the delay
-  // as it will allow the initial page to be fast while we fetch attribution data in parallel for a later screen.
-
-  const attribution = await window.AWGetAttributionData();
-
-  if (attribution !== null && attribution !== void 0 && attribution.template) {
-    var _aboutWelcomeProps2;
-
-    aboutWelcomeProps = { ...aboutWelcomeProps,
-      // If part of an experiment, render experiment template
-      template: (_aboutWelcomeProps2 = aboutWelcomeProps) !== null && _aboutWelcomeProps2 !== void 0 && _aboutWelcomeProps2.template ? aboutWelcomeProps.template : attribution.template,
+  if (!featureConfig.screens) {
+    const attribution = await window.AWGetAttributionData();
+    aboutWelcomeProps = {
+      template: attribution.template,
       ...attribution.extraProps
     };
+  } else {
+    // If screens is defined then we have multi stage AW content to show
+    aboutWelcomeProps = featureConfig.screens ? featureConfig : {};
   }
 
   let {
     messageId,
     UTMTerm
-  } = ComputeTelemetryInfo(aboutWelcomeProps, slug, branch && branch.slug);
+  } = ComputeTelemetryInfo(aboutWelcomeProps, featureConfig.slug, featureConfig.branch && featureConfig.branch.slug);
   return {
     aboutWelcomeProps,
     messageId,

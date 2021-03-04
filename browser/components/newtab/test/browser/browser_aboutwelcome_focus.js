@@ -1,22 +1,17 @@
 "use strict";
 
-const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
-  "browser.aboutwelcome.overrideContent";
+const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
 const ABOUT_WELCOME_FOCUS_PREF = "browser.aboutwelcome.skipFocus";
 
-const TEST_MULTISTAGE_JSON = {
-  id: "multi-stage-welcome",
-  template: "multistage",
-  screens: [
-    {
-      id: "AW_STEP1",
-      order: 0,
-      content: {
-        title: "Step 1",
-      },
+const TEST_MULTISTAGE_JSON = [
+  {
+    id: "AW_STEP1",
+    order: 0,
+    content: {
+      title: "Step 1",
     },
-  ],
-};
+  },
+];
 
 async function setAboutWelcomeOverrideContent(value) {
   return pushPrefs([ABOUT_WELCOME_OVERRIDE_CONTENT_PREF, value]);
