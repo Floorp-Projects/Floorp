@@ -280,8 +280,10 @@ bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
     int32_t i = 0;
     for (const auto& pair : styleContent->mCounterIncrement.AsSpan()) {
       hasListItemIncrement |= pair.name.AsAtom() == nsGkAtoms::list_item;
-      dirty |= AddCounterChangeNode(*this, aFrame, i++, pair,
-                                    nsCounterChangeNode::INCREMENT);
+      if (pair.value != 0) {
+        dirty |= AddCounterChangeNode(*this, aFrame, i++, pair,
+                                      nsCounterChangeNode::INCREMENT);
+      }
     }
   }
 
@@ -349,7 +351,7 @@ void nsCounterManager::Dump() {
     nsCounterList* list = iter.UserData();
     int32_t i = 0;
     for (nsCounterNode* node = list->First(); node; node = list->Next(node)) {
-      const char* types[] = {"RESET", "SET", "INCREMENT", "USE"};
+      const char* types[] = {"RESET", "INCREMENT", "SET", "USE"};
       printf(
           "  Node #%d @%p frame=%p index=%d type=%s valAfter=%d\n"
           "       scope-start=%p scope-prev=%p",
