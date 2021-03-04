@@ -17,7 +17,6 @@
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"

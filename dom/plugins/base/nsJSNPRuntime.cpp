@@ -32,7 +32,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
