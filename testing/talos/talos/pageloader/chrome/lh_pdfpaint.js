@@ -20,9 +20,4 @@ function _pdfPaintHandler() {
   );
 }
 
-addEventListener(
-  "DOMContentLoaded",
-  // eslint-disable-next-line no-undef
-  contentLoadHandlerCallback(_pdfPaintHandler),
-  true
-);
+addEventListener("DOMContentLoaded", _pdfPaintHandler, true);
