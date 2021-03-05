@@ -28,11 +28,10 @@
 js::PlainObject::createWithTemplate(JSContext* cx,
                                     JS::Handle<PlainObject*> templateObject) {
   JS::Rooted<ObjectGroup*> group(cx, templateObject->group());
-  MOZ_ASSERT(group->clasp() == &PlainObject::class_);
-
-  gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
-
   JS::Rooted<Shape*> shape(cx, templateObject->lastProperty());
+
+  MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
+  gc::InitialHeap heap = GetInitialHeap(GenericObject, &PlainObject::class_);
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
   MOZ_ASSERT(gc::CanChangeToBackgroundAllocKind(kind, shape->getObjectClass()));
