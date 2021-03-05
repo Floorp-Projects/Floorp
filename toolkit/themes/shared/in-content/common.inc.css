@@ -1232,10 +1232,3 @@ xul|*.addons-icon {
 .back-button:dir(rtl) {
   transform: scaleX(-1);
 }
-
-/* Adjust vertical margins for buttons in dialogs. We do this here because
- * this sheet gets inserted into the Shadow DOM for the button box in the dialog,
- * so can actually affect the button styling that way.  */
-:host(dialog[subdialog]) .dialog-button-box > button {
-  margin: 0 4px;
-}
