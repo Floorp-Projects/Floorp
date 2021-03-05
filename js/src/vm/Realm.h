@@ -314,12 +314,6 @@ class JS::Realm : public JS::shadow::Realm {
   js::ObjectRealm objects_;
   friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
 
-  // Object group tables and other state in the realm. This is private to
-  // enforce use of ObjectGroupRealm::getForNewObject(cx).
-  js::ObjectGroupRealm objectGroups_;
-  friend js::ObjectGroupRealm& js::ObjectGroupRealm::getForNewObject(
-      JSContext* cx);
-
   // The global environment record's [[VarNames]] list that contains all
   // names declared using FunctionDeclaration, GeneratorDeclaration, and
   // VariableDeclaration declarations in global code in this realm.
@@ -570,12 +564,6 @@ class JS::Realm : public JS::shadow::Realm {
   void purge();
 
   void fixupAfterMovingGC(JSTracer* trc);
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-  void checkObjectGroupTablesAfterMovingGC() {
-    objectGroups_.checkTablesAfterMovingGC();
-  }
-#endif
 
   // Add a name to [[VarNames]].  Reports OOM on failure.
   [[nodiscard]] bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);

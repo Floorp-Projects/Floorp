@@ -450,7 +450,6 @@ void Realm::traceWeakTemplateObjects(JSTracer* trc) {
 void Realm::fixupAfterMovingGC(JSTracer* trc) {
   purge();
   fixupGlobal();
-  objectGroups_.fixupTablesAfterMovingGC();
 }
 
 void Realm::fixupGlobal() {
@@ -463,7 +462,6 @@ void Realm::fixupGlobal() {
 void Realm::purge() {
   dtoaCache.purge();
   newProxyCache.purge();
-  objectGroups_.purge();
   objects_.iteratorCache.clearAndCompact();
   arraySpeciesLookup.purge();
   promiseLookup.purge();
@@ -480,7 +478,6 @@ void Realm::clearTables() {
   MOZ_ASSERT(!debugEnvs_);
   MOZ_ASSERT(objects_.enumerators->next() == objects_.enumerators);
 
-  objectGroups_.clearTables();
   savedStacks_.clear();
   varNames_.clear();
 }
@@ -649,7 +646,6 @@ void Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                    size_t* nonSyntacticLexicalEnvironmentsArg,
                                    size_t* jitRealm) {
   *realmObject += mallocSizeOf(this);
-  objectGroups_.addSizeOfExcludingThis(mallocSizeOf, realmTables);
   wasm.addSizeOfExcludingThis(mallocSizeOf, realmTables);
 
   objects_.addSizeOfExcludingThis(mallocSizeOf, innerViewsArg,

@@ -184,12 +184,6 @@ JS_FRIEND_API void JS_TraceShapeCycleCollectorChildren(JS::CallbackTracer* trc,
   TraceCycleCollectorChildren(trc, &shape.as<Shape>());
 }
 
-JS_FRIEND_API void JS_TraceObjectGroupCycleCollectorChildren(
-    JS::CallbackTracer* trc, JS::GCCellPtr group) {
-  MOZ_ASSERT(group.is<ObjectGroup>());
-  TraceCycleCollectorChildren(trc, &group.as<ObjectGroup>());
-}
-
 static bool DefineHelpProperty(JSContext* cx, HandleObject obj,
                                const char* prop, const char* value) {
   RootedAtom atom(cx, Atomize(cx, value, strlen(value)));

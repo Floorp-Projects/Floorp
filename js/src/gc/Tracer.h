@@ -295,7 +295,6 @@ namespace gc {
 // Trace through a shape or group iteratively during cycle collection to avoid
 // deep or infinite recursion.
 void TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape);
-void TraceCycleCollectorChildren(JS::CallbackTracer* trc, ObjectGroup* group);
 
 /**
  * Trace every value within |compartments| that is wrapped by a
@@ -328,10 +327,6 @@ inline js::BaseScript* DispatchToOnEdge(GenericTracer* trc,
 }
 inline js::Shape* DispatchToOnEdge(GenericTracer* trc, js::Shape* shape) {
   return trc->onShapeEdge(shape);
-}
-inline js::ObjectGroup* DispatchToOnEdge(GenericTracer* trc,
-                                         js::ObjectGroup* group) {
-  return trc->onObjectGroupEdge(group);
 }
 inline js::BaseShape* DispatchToOnEdge(GenericTracer* trc,
                                        js::BaseShape* base) {
