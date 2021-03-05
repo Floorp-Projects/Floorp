@@ -85,7 +85,7 @@ skip-if(Android) == spellcheck-hyphen-multiple-valid.html spellcheck-hyphen-mult
 skip-if(Android) needs-focus != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html
 skip-if(Android) == spellcheck-dotafterquote-valid.html spellcheck-dotafterquote-valid-ref.html
 skip-if(Android) == spellcheck-url-valid.html spellcheck-url-valid-ref.html
-skip-if(Android) needs-focus == spellcheck-non-latin-arabic.html spellcheck-non-latin-arabic-ref.html
+skip-if(Android) fuzzy-if(!nativeThemePref,0-32,0-1) needs-focus == spellcheck-non-latin-arabic.html spellcheck-non-latin-arabic-ref.html
 skip-if(Android) needs-focus == spellcheck-non-latin-chinese-simplified.html spellcheck-non-latin-chinese-simplified-ref.html
 skip-if(Android) needs-focus == spellcheck-non-latin-chinese-traditional.html spellcheck-non-latin-chinese-traditional-ref.html
 skip-if(Android) needs-focus == spellcheck-non-latin-hebrew.html spellcheck-non-latin-hebrew-ref.html
