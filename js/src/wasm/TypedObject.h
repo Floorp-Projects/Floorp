@@ -144,8 +144,7 @@ class TypedObject : public JSObject {
   static JS::Result<TypedObject*, JS::OOM> create(JSContext* cx,
                                                   js::gc::AllocKind kind,
                                                   js::gc::InitialHeap heap,
-                                                  js::HandleShape shape,
-                                                  js::HandleObjectGroup group);
+                                                  js::HandleShape shape);
 
   uint32_t offset() const;
   uint32_t size() const { return typeDescr().size(); }

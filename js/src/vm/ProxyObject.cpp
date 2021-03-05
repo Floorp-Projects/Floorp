@@ -91,27 +91,19 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   Realm* realm = cx->realm();
 
   AutoSetNewObjectMetadata metadata(cx);
-  // Try to look up the group and shape in the NewProxyCache.
-  RootedObjectGroup group(cx);
+  // Try to look up the shape in the NewProxyCache.
   RootedShape shape(cx);
-  if (!realm->newProxyCache.lookup(clasp, proto, group.address(),
-                                   shape.address())) {
-    group = ObjectGroup::defaultNewGroup(cx, clasp, proto);
-    if (!group) {
-      return nullptr;
-    }
-
+  if (!realm->newProxyCache.lookup(clasp, proto, shape.address())) {
     shape =
         EmptyShape::getInitialShape(cx, clasp, realm, proto, /* nfixed = */ 0);
     if (!shape) {
       return nullptr;
     }
 
-    realm->newProxyCache.add(group, shape);
+    realm->newProxyCache.add(shape);
   }
 
   MOZ_ASSERT(shape->realm() == realm);
-  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(group.address()));
   MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(shape.address()));
 
   // Ensure that the wrapper has the same lifetime assumptions as the
@@ -124,7 +116,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
     heap = gc::DefaultHeap;
   }
 
-  debugCheckNewObject(group, shape, allocKind, heap);
+  debugCheckNewObject(shape, allocKind, heap);
 
   JSObject* obj =
       AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
@@ -133,7 +125,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   }
 
   ProxyObject* proxy = static_cast<ProxyObject*>(obj);
-  proxy->initGroup(group);
+  proxy->initGroup(nullptr);
   proxy->initShape(shape);
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());

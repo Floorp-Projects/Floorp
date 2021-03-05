@@ -2023,7 +2023,6 @@ scan_obj : {
   }
 
   markImplicitEdges(obj);
-  markAndTraverseEdge(obj, obj->group());
   markAndTraverseEdge(obj, obj->shape());
 
   CallTraceHook(this, obj);

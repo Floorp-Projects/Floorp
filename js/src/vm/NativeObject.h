@@ -599,7 +599,7 @@ class NativeObject : public JSObject {
 
   static inline JS::Result<NativeObject*, JS::OOM> create(
       JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-      js::HandleShape shape, js::HandleObjectGroup group);
+      js::HandleShape shape);
 
 #ifdef DEBUG
   static void enableShapeConsistencyChecks();
