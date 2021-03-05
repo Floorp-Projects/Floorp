@@ -96,8 +96,8 @@ Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                                  uint32_t numSlots, ObjectFlags objectFlags) {
   // Put as many slots into the object header as possible.
   uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
-  return EmptyShape::getInitialShape(cx, cls, TaggedProto(nullptr), numFixed,
-                                     objectFlags);
+  return EmptyShape::getInitialShape(cx, cls, cx->realm(), TaggedProto(nullptr),
+                                     numFixed, objectFlags);
 }
 
 static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
@@ -542,9 +542,9 @@ uint32_t Scope::environmentChainLength() const {
 }
 
 Shape* Scope::maybeCloneEnvironmentShape(JSContext* cx) {
-  // Clone the environment shape if cloning into a different zone.
+  // Clone the environment shape if cloning into a different realm.
   Shape* shape = environmentShape();
-  if (shape && shape->zoneFromAnyThread() != cx->zone()) {
+  if (shape && shape->realm() != cx->realm()) {
     BindingIter bi(this);
     return CreateEnvironmentShape(cx, bi, shape->getObjectClass(),
                                   shape->slotSpan(), shape->objectFlags());

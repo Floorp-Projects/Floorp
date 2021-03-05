@@ -6623,11 +6623,11 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
   JSObject* templateObject = lir->mir()->templateObject();
 
   if (templateObject) {
-    pushArg(ImmGCPtr(templateObject->group()));
+    pushArg(ImmGCPtr(templateObject->shape()));
     pushArg(Imm32(lir->mir()->length()));
 
-    using Fn = ArrayObject* (*)(JSContext*, uint32_t, HandleObjectGroup);
-    callVM<Fn, NewArrayWithGroup>(lir);
+    using Fn = ArrayObject* (*)(JSContext*, uint32_t, HandleShape);
+    callVM<Fn, NewArrayWithShape>(lir);
   } else {
     pushArg(Imm32(GenericObject));
     pushArg(Imm32(lir->mir()->length()));

@@ -1644,8 +1644,9 @@ void MacroAssembler::switchToRealm(const void* realm, Register scratch) {
 }
 
 void MacroAssembler::switchToObjectRealm(Register obj, Register scratch) {
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  loadPtr(Address(scratch, ObjectGroup::offsetOfRealm()), scratch);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfRealm()), scratch);
   switchToRealm(scratch);
 }
 
@@ -1685,8 +1686,9 @@ void MacroAssembler::setIsCrossRealmArrayConstructor(Register obj,
 
   // The object's realm must not be cx->realm.
   Label isFalse, done;
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), output);
-  loadPtr(Address(output, ObjectGroup::offsetOfRealm()), output);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), output);
+  loadPtr(Address(output, Shape::offsetOfBaseShape()), output);
+  loadPtr(Address(output, BaseShape::offsetOfRealm()), output);
   branchPtr(Assembler::Equal, AbsoluteAddress(ContextRealmPtr()), output,
             &isFalse);
 
@@ -3595,8 +3597,9 @@ void MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
                                               const Address& compartment,
                                               Register scratch, Label* label) {
   MOZ_ASSERT(obj != scratch);
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  loadPtr(Address(scratch, ObjectGroup::offsetOfRealm()), scratch);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfRealm()), scratch);
   loadPtr(Address(scratch, Realm::offsetOfCompartment()), scratch);
   branchPtr(cond, compartment, scratch, label);
 }
@@ -3605,8 +3608,9 @@ void MacroAssembler::branchTestObjCompartment(
     Condition cond, Register obj, const JS::Compartment* compartment,
     Register scratch, Label* label) {
   MOZ_ASSERT(obj != scratch);
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  loadPtr(Address(scratch, ObjectGroup::offsetOfRealm()), scratch);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfRealm()), scratch);
   loadPtr(Address(scratch, Realm::offsetOfCompartment()), scratch);
   branchPtr(cond, scratch, ImmPtr(compartment), label);
 }

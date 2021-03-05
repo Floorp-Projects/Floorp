@@ -101,7 +101,8 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
       return nullptr;
     }
 
-    shape = EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0);
+    shape =
+        EmptyShape::getInitialShape(cx, clasp, realm, proto, /* nfixed = */ 0);
     if (!shape) {
       return nullptr;
     }
@@ -109,8 +110,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
     realm->newProxyCache.add(group, shape);
   }
 
-  MOZ_ASSERT(group->realm() == realm);
-  MOZ_ASSERT(shape->zone() == cx->zone());
+  MOZ_ASSERT(shape->realm() == realm);
   MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(group.address()));
   MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(shape.address()));
 

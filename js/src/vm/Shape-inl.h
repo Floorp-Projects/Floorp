@@ -29,7 +29,8 @@ inline AutoKeepShapeCaches::~AutoKeepShapeCaches() {
   cx_->zone()->setKeepShapeCaches(prev_);
 }
 
-inline StackBaseShape::StackBaseShape(const JSClass* clasp) : clasp(clasp) {}
+inline StackBaseShape::StackBaseShape(const JSClass* clasp, JS::Realm* realm)
+    : clasp(clasp), realm(realm) {}
 
 MOZ_ALWAYS_INLINE Shape* Shape::search(JSContext* cx, jsid id) {
   return search(cx, this, id);

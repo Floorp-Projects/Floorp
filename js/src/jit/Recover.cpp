@@ -1571,9 +1571,9 @@ RNewArray::RNewArray(CompactBufferReader& reader) {
 bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
   RootedValue result(cx);
-  RootedObjectGroup group(cx, templateObject->group());
+  RootedShape shape(cx, templateObject->shape());
 
-  ArrayObject* resultObject = NewArrayWithGroup(cx, count_, group);
+  ArrayObject* resultObject = NewArrayWithShape(cx, count_, shape);
   if (!resultObject) {
     return false;
   }

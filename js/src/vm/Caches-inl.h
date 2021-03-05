@@ -50,11 +50,9 @@ inline NativeObject* NewObjectCache::newObjectFromHit(JSContext* cx,
   NativeObject* templateObj =
       reinterpret_cast<NativeObject*>(&entry->templateObject);
 
-  ObjectGroup* group = templateObj->group();
-
-  // If we did the lookup based on the proto we might have a group/object from a
+  // If we did the lookup based on the proto we might have a shape/object from a
   // different (same-compartment) realm, so we have to do a realm check.
-  if (group->realm() != cx->realm()) {
+  if (templateObj->shape()->realm() != cx->realm()) {
     return nullptr;
   }
 

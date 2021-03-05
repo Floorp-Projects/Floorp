@@ -591,9 +591,9 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   }
 
   const JSClass* clasp = &PropertyIteratorObject::class_;
-  RootedShape shape(cx,
-                    EmptyShape::getInitialShape(cx, clasp, TaggedProto(nullptr),
-                                                ITERATOR_FINALIZE_KIND));
+  RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(),
+                                                    TaggedProto(nullptr),
+                                                    ITERATOR_FINALIZE_KIND));
   if (!shape) {
     return nullptr;
   }

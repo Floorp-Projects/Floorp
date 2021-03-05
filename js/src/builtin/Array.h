@@ -85,8 +85,8 @@ extern ArrayObject* NewDenseCopiedArray(JSContext* cx, uint32_t length,
 extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(
     JSContext* cx, uint32_t length, ArrayObject* templateObject);
 
-extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
-                                      HandleObjectGroup group);
+extern ArrayObject* NewArrayWithShape(JSContext* cx, uint32_t length,
+                                      HandleShape shape);
 
 extern bool ToLength(JSContext* cx, HandleValue v, uint64_t* out);
 
