@@ -420,6 +420,12 @@ AST_MATCHER(UsingDirectiveDecl, isUsingNamespaceMozillaJava) {
          !FQName.compare(0, sizeof(PREFIX) - 1, PREFIX);
 }
 
+AST_MATCHER(MemberExpr, hasKnownLiveAnnotation) {
+  ValueDecl *Member = Node.getMemberDecl();
+  FieldDecl *Field = dyn_cast<FieldDecl>(Member);
+  return Field && hasCustomAttribute<moz_known_live>(Field);
+}
+
 } // namespace ast_matchers
 } // namespace clang
 
