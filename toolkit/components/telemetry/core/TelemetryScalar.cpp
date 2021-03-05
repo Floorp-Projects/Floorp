@@ -1813,9 +1813,6 @@ nsresult internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
   }
 
   scalar = new KeyedScalar(info);
-  if (!scalar) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
   scalarStorage->InsertOrUpdate(aId.id, UniquePtr<KeyedScalar>(scalar));
   *aRet = scalar;
