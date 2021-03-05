@@ -2503,9 +2503,9 @@ function* testContinuousTrustedEvents()
       wheel: {
         expected: true, preventDefault: false,
         skipDeltaModeCheck: true,
-        deltaX: SpecialPowers.getIntPref("dom.event.wheel-deltaMode-lines-to-pixel-scale"),
-        deltaY: SpecialPowers.getIntPref("dom.event.wheel-deltaMode-lines-to-pixel-scale"),
-        deltaZ: SpecialPowers.getIntPref("dom.event.wheel-deltaMode-lines-to-pixel-scale"),
+        deltaX: gHorizontalLine,
+        deltaY: gLineHeight,
+        deltaZ: Math.max(gHorizontalLine, gLineHeight),
       },
       DOMMouseScroll: {
         horizontal: { expected: true,  preventDefault: false, detail: 1 },
