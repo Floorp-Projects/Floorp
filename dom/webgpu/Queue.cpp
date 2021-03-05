@@ -33,7 +33,7 @@ void Queue::Submit(
     }
   }
 
-  mBridge->SendQueueSubmit(mId, list);
+  mBridge->SendQueueSubmit(mId, mParent->mId, list);
 }
 
 void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
@@ -80,8 +80,12 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
   }
 
   memcpy(shmem.get<uint8_t>(), data + aDataOffset, size);
-  mBridge->SendQueueWriteBuffer(mId, aBuffer.mId, aBufferOffset,
-                                std::move(shmem));
+  ipc::ByteBuf bb;
+  ffi::wgpu_queue_write_buffer(aBuffer.mId, aBufferOffset, ToFFI(&bb));
+  if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                     std::move(shmem))) {
+    MOZ_CRASH("IPC failure");
+  }
 }
 
 void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
@@ -150,8 +154,12 @@ void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
   }
 
   memcpy(shmem.get<uint8_t>(), data + aDataLayout.mOffset, size);
-  mBridge->SendQueueWriteTexture(mId, copyView, std::move(shmem), dataLayout,
-                                 extent);
+  ipc::ByteBuf bb;
+  ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
+  if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                     std::move(shmem))) {
+    MOZ_CRASH("IPC failure");
+  }
 }
 
 }  // namespace webgpu

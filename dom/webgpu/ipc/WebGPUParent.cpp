@@ -385,30 +385,23 @@ ipc::IPCResult WebGPUParent::RecvCommandBufferDestroy(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvQueueSubmit(
-    RawId aSelfId, const nsTArray<RawId>& aCommandBuffers) {
+    RawId aSelfId, RawId aDeviceId, const nsTArray<RawId>& aCommandBuffers) {
+  ErrorBuffer error;
   ffi::wgpu_server_queue_submit(mContext, aSelfId, aCommandBuffers.Elements(),
-                                aCommandBuffers.Length());
+                                aCommandBuffers.Length(), error.ToFFI());
+  error.CheckAndForward(this, aDeviceId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvQueueWriteBuffer(RawId aSelfId,
-                                                  RawId aBufferId,
-                                                  uint64_t aBufferOffset,
+ipc::IPCResult WebGPUParent::RecvQueueWriteAction(RawId aSelfId,
+                                                  RawId aDeviceId,
+                                                  const ipc::ByteBuf& aByteBuf,
                                                   Shmem&& aShmem) {
-  ffi::wgpu_server_queue_write_buffer(mContext, aSelfId, aBufferId,
-                                      aBufferOffset, aShmem.get<uint8_t>(),
-                                      aShmem.Size<uint8_t>());
-  DeallocShmem(aShmem);
-  return IPC_OK();
-}
-
-ipc::IPCResult WebGPUParent::RecvQueueWriteTexture(
-    RawId aSelfId, const ffi::WGPUTextureCopyView& aDestination, Shmem&& aShmem,
-    const ffi::WGPUTextureDataLayout& aDataLayout,
-    const ffi::WGPUExtent3d& aExtent) {
-  ffi::wgpu_server_queue_write_texture(
-      mContext, aSelfId, &aDestination, aShmem.get<uint8_t>(),
-      aShmem.Size<uint8_t>(), &aDataLayout, &aExtent);
+  ErrorBuffer error;
+  ffi::wgpu_server_queue_write_action(mContext, aSelfId, ToFFI(&aByteBuf),
+                                      aShmem.get<uint8_t>(),
+                                      aShmem.Size<uint8_t>(), error.ToFFI());
+  error.CheckAndForward(this, aDeviceId);
   DeallocShmem(aShmem);
   return IPC_OK();
 }
@@ -611,8 +604,14 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     }
   }
 
-  ffi::wgpu_server_queue_submit(mContext, data->mQueueId, &aCommandEncoderId,
-                                1);
+  {
+    ErrorBuffer error;
+    ffi::wgpu_server_queue_submit(mContext, data->mQueueId, &aCommandEncoderId,
+                                  1, error.ToFFI());
+    if (error.CheckAndForward(this, data->mDeviceId)) {
+      return IPC_OK();
+    }
+  }
 
   // step 4: request the pixels to be copied into the external texture
   // TODO: this isn't strictly necessary. When WR wants to Lock() the external

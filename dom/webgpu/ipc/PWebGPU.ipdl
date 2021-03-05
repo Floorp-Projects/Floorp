@@ -8,13 +8,8 @@
 using layers::RGBDescriptor from "mozilla/layers/LayersSurfaces.h";
 using wr::ExternalImageId from "mozilla/webrender/WebRenderAPI.h";
 using RawId from "mozilla/webgpu/WebGPUTypes.h";
-using BufferAddress from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
-using webgpu::ffi::WGPUDeviceDescriptor from "mozilla/webgpu/ffi/wgpu.h";
-using webgpu::ffi::WGPUTextureDataLayout from "mozilla/webgpu/ffi/wgpu.h";
-using webgpu::ffi::WGPUTextureCopyView from "mozilla/webgpu/ffi/wgpu.h";
-using webgpu::ffi::WGPUExtent3d from "mozilla/webgpu/ffi/wgpu.h";
 using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
 
 include "mozilla/ipc/ByteBufUtils.h";
@@ -55,9 +50,8 @@ parent:
   async CommandEncoderFinish(RawId selfId, RawId deviceId, GPUCommandBufferDescriptor desc);
   async CommandEncoderDestroy(RawId selfId);
   async CommandBufferDestroy(RawId selfId);
-  async QueueSubmit(RawId selfId, RawId[] commandBuffers);
-  async QueueWriteBuffer(RawId selfId, RawId bufferId, BufferAddress bufferOffset, Shmem shmem);
-  async QueueWriteTexture(RawId selfId, WGPUTextureCopyView destination, Shmem shmem, WGPUTextureDataLayout layout, WGPUExtent3d extent);
+  async QueueSubmit(RawId selfId, RawId aDeviceId, RawId[] commandBuffers);
+  async QueueWriteAction(RawId selfId, RawId aDeviceId, ByteBuf buf, Shmem shmem);
 
   async BindGroupLayoutDestroy(RawId selfId);
   async PipelineLayoutDestroy(RawId selfId);

@@ -32,14 +32,6 @@ DEFINE_IPC_SERIALIZER_WITHOUT_FIELDS(mozilla::dom::GPUCommandBufferDescriptor);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPURequestAdapterOptions,
                                   mPowerPreference);
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUExtent3d, width,
-                                  height, depth_or_array_layers);
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUOrigin3d, x, y, z);
-
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUTextureDataLayout,
-                                  offset, bytes_per_row, rows_per_image);
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ffi::WGPUTextureCopyView,
-                                  texture, mip_level, origin);
 
 #undef DEFINE_IPC_SERIALIZER_FFI_ENUM
 #undef DEFINE_IPC_SERIALIZER_DOM_ENUM
