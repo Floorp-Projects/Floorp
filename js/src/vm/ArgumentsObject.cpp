@@ -271,12 +271,6 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
     return nullptr;
   }
 
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, clasp, TaggedProto(proto.get())));
-  if (!group) {
-    return nullptr;
-  }
-
   constexpr ObjectFlags objectFlags = {ObjectFlag::Indexed};
   RootedShape shape(cx, EmptyShape::getInitialShape(
                             cx, clasp, cx->realm(), TaggedProto(proto),
@@ -289,7 +283,7 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
   JSObject* base;
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, base,
-      NativeObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, group));
+      NativeObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape));
 
   ArgumentsObject* obj = &base->as<js::ArgumentsObject>();
   obj->initFixedSlot(ArgumentsObject::DATA_SLOT, PrivateValue(nullptr));
@@ -331,7 +325,6 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   }
 
   RootedShape shape(cx, templateObj->lastProperty());
-  RootedObjectGroup group(cx, templateObj->group());
 
   unsigned numFormals = callee->nargs();
   unsigned numArgs = std::max(numActuals, numFormals);
@@ -347,7 +340,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
     JSObject* base;
     JS_TRY_VAR_OR_RETURN_NULL(
         cx, base,
-        NativeObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, group));
+        NativeObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape));
     obj = &base->as<ArgumentsObject>();
 
     data = reinterpret_cast<ArgumentsData*>(

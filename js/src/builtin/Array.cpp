@@ -3810,13 +3810,6 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  RootedObjectGroup group(cx,
-                          ObjectGroup::defaultNewGroup(cx, &ArrayObject::class_,
-                                                       TaggedProto(proto)));
-  if (!group) {
-    return nullptr;
-  }
-
   RootedShape shape(cx, EmptyShape::getInitialShape(
                             cx, &ArrayObject::class_, cx->realm(),
                             TaggedProto(proto), gc::AllocKind::OBJECT0));
@@ -3827,7 +3820,7 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedArrayObject arrayProto(
       cx, ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
-                                   shape, group, 0, metadata));
+                                   shape, 0, metadata));
   if (!arrayProto || !JSObject::setDelegate(cx, arrayProto) ||
       !AddLengthProperty(cx, arrayProto)) {
     return nullptr;
@@ -3961,13 +3954,6 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
     }
   }
 
-  RootedObjectGroup group(cx,
-                          ObjectGroup::defaultNewGroup(cx, &ArrayObject::class_,
-                                                       TaggedProto(proto)));
-  if (!group) {
-    return nullptr;
-  }
-
   /*
    * Get a shape with zero fixed slots, regardless of the size class.
    * See JSObject::createArray.
@@ -3983,7 +3969,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
   RootedArrayObject arr(
       cx, ArrayObject::createArray(
               cx, allocKind, GetInitialHeap(newKind, &ArrayObject::class_),
-              shape, group, length, metadata));
+              shape, length, metadata));
   if (!arr) {
     return nullptr;
   }
@@ -4068,13 +4054,12 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
-  RootedObjectGroup group(cx, templateObject->group());
   RootedShape shape(cx, templateObject->lastProperty());
 
   gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
   Rooted<ArrayObject*> arr(
-      cx, ArrayObject::createArray(cx, allocKind, heap, shape, group, length,
-                                   metadata));
+      cx,
+      ArrayObject::createArray(cx, allocKind, heap, shape, length, metadata));
   if (!arr) {
     return nullptr;
   }

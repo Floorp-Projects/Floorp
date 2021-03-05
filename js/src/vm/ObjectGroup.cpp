@@ -90,13 +90,6 @@ bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
     }
   }
 
-  ObjectGroup* group = MakeGroup(cx, proto);
-  if (!group) {
-    return false;
-  }
-
-  global->setGroupRaw(group);
-
   return JSObject::setProtoUnchecked(cx, global, proto);
 }
 
