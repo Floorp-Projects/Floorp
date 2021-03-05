@@ -3993,7 +3993,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
       return nullptr;
     }
     shape = arr->lastProperty();
-    EmptyShape::insertInitialShape(cx, shape, proto);
+    EmptyShape::insertInitialShape(cx, shape);
   }
 
   if (isCachable) {
