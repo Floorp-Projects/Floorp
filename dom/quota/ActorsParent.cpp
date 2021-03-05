@@ -4091,14 +4091,18 @@ nsresult QuotaManager::LoadQuota() {
             // in the metadata file, but only as a side-effect. The actual place
             // we ensure consistency is in EnsureTemporaryOriginIsInitialized.
 
-            QM_TRY_INSPECT(const auto& metadata,
-                           GetDirectoryMetadataWithOriginMetadata2WithRestore(
-                               directory, /* aPersistent */ false));
+            QM_TRY_INSPECT(
+                const auto& metadata,
+                GetDirectoryMetadataWithOriginMetadata2WithRestore(directory));
 
             QM_TRY(OkIf(lastAccessTime == metadata.mTimestamp),
                    Err(NS_ERROR_FAILURE));
 
             QM_TRY(OkIf(persisted == metadata.mPersisted),
+                   Err(NS_ERROR_FAILURE));
+
+            QM_TRY(OkIf(originMetadata.mPersistenceType ==
+                        metadata.mOriginMetadata.mPersistenceType),
                    Err(NS_ERROR_FAILURE));
 
             QM_TRY(OkIf(originMetadata.mSuffix ==
@@ -4112,8 +4116,6 @@ nsresult QuotaManager::LoadQuota() {
             QM_TRY(OkIf(originMetadata.mOrigin ==
                         metadata.mOriginMetadata.mOrigin),
                    Err(NS_ERROR_FAILURE));
-
-            // XXX Check the persistence type too!
 
             QM_TRY(InitializeOrigin(originMetadata.mPersistenceType,
                                     originMetadata, lastAccessTime, persisted,
@@ -4507,7 +4509,8 @@ nsresult QuotaManager::RestoreDirectoryMetadata2(nsIFile* aDirectory,
 }
 
 Result<QuotaManager::GetDirectoryResultWithOriginMetadata, nsresult>
-QuotaManager::GetDirectoryMetadataWithOriginMetadata2(nsIFile* aDirectory) {
+QuotaManager::GetDirectoryMetadataWithOriginMetadata2(
+    nsIFile* aDirectory, PersistenceType aPersistenceType) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(mStorageConnection);
@@ -4526,13 +4529,14 @@ QuotaManager::GetDirectoryMetadataWithOriginMetadata2(nsIFile* aDirectory) {
                  MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
   Unused << reservedData1;
 
+  // XXX Use for the persistence type.
   QM_TRY_INSPECT(const bool& reservedData2,
                  MOZ_TO_RESULT_INVOKE(binaryStream, Read32));
   Unused << reservedData2;
 
   OriginMetadata originMetadata;
 
-  originMetadata.mPersistenceType = PERSISTENCE_TYPE_INVALID;
+  originMetadata.mPersistenceType = aPersistenceType;
 
   QM_TRY_UNWRAP(
       originMetadata.mSuffix,
@@ -4569,20 +4573,35 @@ QuotaManager::GetDirectoryMetadataWithOriginMetadata2(nsIFile* aDirectory) {
 
 Result<QuotaManager::GetDirectoryResultWithOriginMetadata, nsresult>
 QuotaManager::GetDirectoryMetadataWithOriginMetadata2WithRestore(
-    nsIFile* aDirectory, bool aPersistent) {
+    nsIFile* aDirectory) {
+  // XXX Once the persistence type is stored in the metadata file, this block
+  // for getting the persistence type from the parent directory name can be
+  // removed.
+  nsCOMPtr<nsIFile> parentDir;
+  QM_TRY(aDirectory->GetParent(getter_AddRefs(parentDir)));
+
+  const auto maybePersistenceType =
+      PersistenceTypeFromFile(*parentDir, fallible);
+  QM_TRY(OkIf(maybePersistenceType.isSome()), Err(NS_ERROR_FAILURE));
+
+  const auto& persistenceType = maybePersistenceType.value();
+
   QM_TRY_UNWRAP(
       auto maybeFirstAttemptResult,
       ([&]() -> Result<Maybe<GetDirectoryResultWithOriginMetadata>, nsresult> {
-        QM_TRY_RETURN(GetDirectoryMetadataWithOriginMetadata2(aDirectory)
-                          .map(Some<GetDirectoryResultWithOriginMetadata,
-                                    GetDirectoryResultWithOriginMetadata>),
-                      Maybe<GetDirectoryResultWithOriginMetadata>{});
+        QM_TRY_RETURN(
+            GetDirectoryMetadataWithOriginMetadata2(aDirectory, persistenceType)
+                .map(Some<GetDirectoryResultWithOriginMetadata,
+                          GetDirectoryResultWithOriginMetadata>),
+            Maybe<GetDirectoryResultWithOriginMetadata>{});
       }()));
 
   if (!maybeFirstAttemptResult) {
-    QM_TRY(RestoreDirectoryMetadata2(aDirectory, aPersistent));
+    QM_TRY(RestoreDirectoryMetadata2(
+        aDirectory, persistenceType == PERSISTENCE_TYPE_PERSISTENT));
 
-    QM_TRY_RETURN(GetDirectoryMetadataWithOriginMetadata2(aDirectory));
+    QM_TRY_RETURN(
+        GetDirectoryMetadataWithOriginMetadata2(aDirectory, persistenceType));
   }
 
   return maybeFirstAttemptResult.extract();
@@ -4642,8 +4661,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
                         QM_TRY_UNWRAP(
                             auto metadata,
                             GetDirectoryMetadataWithOriginMetadata2WithRestore(
-                                childDirectory,
-                                /* aPersistent */ false));
+                                childDirectory));
 
                         // FIXME(tt): The check for origin name consistency can
                         // be removed once we have an upgrade to traverse origin
@@ -6038,31 +6056,30 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
 
     QM_TRY_INSPECT(const bool& created, EnsureOriginDirectory(*directory));
 
-    QM_TRY_INSPECT(const int64_t& timestamp,
-                   ([this, created, &directory,
-                     &aOriginMetadata]() -> Result<int64_t, nsresult> {
-                     if (created) {
-                       const int64_t timestamp = PR_Now();
+    QM_TRY_INSPECT(
+        const int64_t& timestamp,
+        ([this, created, &directory,
+          &aOriginMetadata]() -> Result<int64_t, nsresult> {
+          if (created) {
+            const int64_t timestamp = PR_Now();
 
-                       // Only creating .metadata-v2 to reduce IO.
-                       QM_TRY(CreateDirectoryMetadata2(*directory, timestamp,
-                                                       /* aPersisted */ true,
-                                                       aOriginMetadata));
+            // Only creating .metadata-v2 to reduce IO.
+            QM_TRY(CreateDirectoryMetadata2(*directory, timestamp,
+                                            /* aPersisted */ true,
+                                            aOriginMetadata));
 
-                       return timestamp;
-                     }
+            return timestamp;
+          }
 
-                     // Get the metadata. We only use the timestamp.
-                     QM_TRY_INSPECT(
-                         const auto& metadata,
-                         GetDirectoryMetadataWithOriginMetadata2WithRestore(
-                             directory,
-                             /* aPersistent */ true));
+          // Get the metadata. We only use the timestamp.
+          QM_TRY_INSPECT(
+              const auto& metadata,
+              GetDirectoryMetadataWithOriginMetadata2WithRestore(directory));
 
-                     MOZ_ASSERT(metadata.mTimestamp <= PR_Now());
+          MOZ_ASSERT(metadata.mTimestamp <= PR_Now());
 
-                     return metadata.mTimestamp;
-                   }()));
+          return metadata.mTimestamp;
+        }()));
 
     QM_TRY(InitializeOrigin(PERSISTENCE_TYPE_PERSISTENT, aOriginMetadata,
                             timestamp,
@@ -8381,6 +8398,9 @@ const Atomic<bool>& GetUsageOp::GetIsCanceledFlag() {
   return mCanceled;
 }
 
+// XXX Remove aPersistent
+// XXX Remove aPersistenceType once GetUsageForOrigin uses the persistence
+// type from OriginMetadata
 nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
                                    nsIFile& aOriginDir, const bool aPersistent,
                                    const PersistenceType aPersistenceType) {
@@ -8389,7 +8409,7 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
   QM_TRY_INSPECT(
       const auto& metadata,
       aQuotaManager.GetDirectoryMetadataWithOriginMetadata2WithRestore(
-          &aOriginDir, aPersistent));
+          &aOriginDir));
 
   QM_TRY_INSPECT(const auto& usageInfo,
                  GetUsageForOrigin(aQuotaManager, aPersistenceType,
@@ -8930,14 +8950,11 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
                      break;
                    }
 
-                   const bool persistent =
-                       aPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
-
                    QM_TRY_INSPECT(
                        const auto& metadata,
                        aQuotaManager
                            .GetDirectoryMetadataWithOriginMetadata2WithRestore(
-                               file, persistent));
+                               file));
 
                    if (!mClientType.IsNull()) {
                      nsAutoString clientDirectoryName;
@@ -9223,8 +9240,7 @@ nsresult PersistedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
     QM_TRY_INSPECT(
         const auto& metadata,
         aQuotaManager.GetDirectoryMetadataWithOriginMetadata2WithRestore(
-            directory,
-            /* aPersistent */ false));
+            directory));
 
     mPersisted = metadata.mPersisted;
   } else {
@@ -9292,8 +9308,7 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
     QM_TRY_INSPECT(
         const auto& metadata,
         aQuotaManager.GetDirectoryMetadataWithOriginMetadata2WithRestore(
-            directory,
-            /* aPersistent */ false));
+            directory));
 
     if (!metadata.mPersisted) {
       QM_TRY_INSPECT(const auto& file,
@@ -9426,7 +9441,7 @@ nsresult ListOriginsOp::ProcessOrigin(QuotaManager& aQuotaManager,
   QM_TRY_UNWRAP(
       auto metadata,
       aQuotaManager.GetDirectoryMetadataWithOriginMetadata2WithRestore(
-          &aOriginDir, aPersistent));
+          &aOriginDir));
 
   if (aQuotaManager.IsOriginInternal(metadata.mOriginMetadata.mOrigin)) {
     return NS_OK;
