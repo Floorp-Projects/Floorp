@@ -201,20 +201,23 @@ function checkPromptState(promptState, expectedState) {
   // XXX check title? OS X has title in content
   is(promptState.msg, expectedState.msg, "Checking expected message");
 
-  // OS X: We don't show the title on prompts opened with tab modal prompt.
-  let isOldContentPromptOnOSX =
-    isOSX &&
-    contentSubDialogsEnabled &&
+  let isOldContentPrompt =
+    !promptState.isSubDialogPrompt &&
     modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT;
 
-  if (
-    !isOldContentPromptOnOSX &&
-    (isOSX ||
-      (tabSubDialogsEnabled && modalType === Ci.nsIPrompt.MODAL_TYPE_TAB))
+  if (isOldContentPrompt && !promptState.showCallerOrigin) {
+    ok(
+      promptState.titleHidden,
+      "The title should be hidden for content prompts opened with tab modal prompt."
+    );
+  } else if (
+    isOSX ||
+    promptState.isSubDialogPrompt ||
+    promptState.showCallerOrigin
   ) {
     ok(
       !promptState.titleHidden,
-      "Checking title always visible on OS X or when opened with tabdialog"
+      "Checking title always visible on OS X or when opened with common dialog"
     );
   } else {
     is(
