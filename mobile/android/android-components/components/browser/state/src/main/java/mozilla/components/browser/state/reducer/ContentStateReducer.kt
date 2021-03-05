@@ -68,13 +68,9 @@ internal object ContentStateReducer {
             is ContentAction.UpdateDownloadAction -> updateContentState(state, action.sessionId) {
                 it.copy(download = action.download.copy(sessionId = action.sessionId))
             }
-            is ContentAction.ConsumeDownloadAction -> updateContentState(state, action.sessionId) {
-                if (it.download != null && it.download.id == action.downloadId) {
-                    it.copy(download = null)
-                } else {
-                    it
-                }
-            }
+            is ContentAction.ConsumeDownloadAction -> consumeDownload(state, action.sessionId, action.downloadId)
+            is ContentAction.CancelDownloadAction -> consumeDownload(state, action.sessionId, action.downloadId)
+
             is ContentAction.UpdateHitResultAction -> updateContentState(state, action.sessionId) {
                 it.copy(hitResult = action.hitResult)
             }
@@ -209,6 +205,15 @@ internal object ContentStateReducer {
             }
             is ContentAction.ConsumeAppIntentAction -> updateContentState(state, action.sessionId) {
                 it.copy(appIntent = null)
+            }
+        }
+    }
+    private fun consumeDownload(state: BrowserState, sessionId: String, downloadId: String): BrowserState {
+        return updateContentState(state, sessionId) {
+            if (it.download != null && it.download.id == downloadId) {
+                it.copy(download = null)
+            } else {
+                it
             }
         }
     }

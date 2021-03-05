@@ -335,11 +335,15 @@ sealed class ContentAction : BrowserAction() {
         ContentAction()
 
     /**
+     * Closes the [DownloadState.response] of the [ContentState.download]
+     * and removes the [DownloadState] of the [ContentState] with the given [sessionId].
+     */
+    data class CancelDownloadAction(val sessionId: String, val downloadId: String) : ContentAction()
+
+    /**
      * Removes the [DownloadState] of the [ContentState] with the given [sessionId].
      */
-    data class ConsumeDownloadAction(val sessionId: String, val downloadId: String) :
-        ContentAction()
-
+    data class ConsumeDownloadAction(val sessionId: String, val downloadId: String) : ContentAction()
     /**
      * Updates the [HitResult] of the [ContentState] with the given [sessionId].
      */

@@ -14,8 +14,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
@@ -75,6 +77,7 @@ class DownloadMiddleware(
             is TabListAction.RemoveTabAction -> removePrivateNotifications(context.store, listOf(action.tabId))
             is DownloadAction.AddDownloadAction -> sendDownloadIntent(action.download)
             is DownloadAction.RestoreDownloadStateAction -> sendDownloadIntent(action.download)
+            is ContentAction.CancelDownloadAction -> closeDownloadResponse(context.store, action.sessionId)
         }
     }
 
@@ -125,6 +128,13 @@ class DownloadMiddleware(
             true
         } else {
             false
+        }
+    }
+
+    @VisibleForTesting
+    internal fun closeDownloadResponse(store: Store<BrowserState, BrowserAction>, tabId: String) {
+        store.state.findTabOrCustomTab(tabId)?.let {
+            it.content.download?.response?.close()
         }
     }
 

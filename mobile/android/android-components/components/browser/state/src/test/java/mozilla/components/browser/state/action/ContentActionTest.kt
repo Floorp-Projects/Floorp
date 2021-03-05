@@ -392,6 +392,26 @@ class ContentActionTest {
     }
 
     @Test
+    fun `CancelDownloadAction removes download`() {
+        val download = DownloadState(
+            id = "1337",
+            url = "https://www.mozilla.org", sessionId = tab.id
+        )
+
+        store.dispatch(
+                ContentAction.UpdateDownloadAction(tab.id, download)
+        ).joinBlocking()
+
+        assertEquals(download, tab.content.download)
+
+        store.dispatch(
+                ContentAction.CancelDownloadAction(tab.id, downloadId = "1337")
+        ).joinBlocking()
+
+        assertNull(tab.content.download)
+    }
+
+    @Test
     fun `ConsumeDownloadAction does not remove download with different id`() {
         val download = DownloadState(
             id = "1337",

@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -23,7 +24,9 @@ import mozilla.components.browser.state.state.content.DownloadState.Status.COMPL
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
 import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -474,5 +477,52 @@ class DownloadMiddlewareTest {
         downloadMiddleware.removePrivateNotifications(store, listOf("tab2"))
 
         verify(downloadMiddleware, times(1)).removeStatusBarNotification(any(), any())
+    }
+
+    @Test
+    fun `WHEN an action for canceling a download response is received THEN a download response must be canceled`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val store = BrowserStore(
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        store.dispatch(ContentAction.CancelDownloadAction("tabID", "downloadID")).joinBlocking()
+
+        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(downloadMiddleware, times(1)).closeDownloadResponse(any(), any())
+    }
+
+    @Test
+    fun `WHEN closing a download response THEN the response object must be closed`() {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(DownloadMiddleware(
+            applicationContext,
+            AbstractFetchDownloadService::class.java,
+            coroutineContext = dispatcher,
+            downloadStorage = mock()
+        ))
+        val store = BrowserStore(
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        val tab = createTab("https://www.mozilla.org")
+        val response = mock<Response>()
+        val download = DownloadState(url = "https://www.mozilla.org/file.txt", sessionId = tab.id, response = response)
+
+        store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
+        store.dispatch(ContentAction.UpdateDownloadAction(tab.id, download = download)).joinBlocking()
+
+        downloadMiddleware.closeDownloadResponse(store, tab.id)
+        verify(response).close()
     }
 }

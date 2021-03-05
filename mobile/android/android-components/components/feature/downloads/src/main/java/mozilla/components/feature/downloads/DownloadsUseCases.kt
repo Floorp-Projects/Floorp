@@ -16,6 +16,21 @@ import mozilla.components.browser.state.store.BrowserStore
 class DownloadsUseCases(
     store: BrowserStore
 ) {
+
+    /**
+     * Use case that cancels the download request from a tab.
+     */
+    class CancelDownloadRequestUseCase(
+        private val store: BrowserStore
+    ) {
+        /**
+         * Cancels the download request the session with the given [tabId].
+         */
+        operator fun invoke(tabId: String, downloadId: String) {
+            store.dispatch(ContentAction.CancelDownloadAction(tabId, downloadId))
+        }
+    }
+
     class ConsumeDownloadUseCase(
         private val store: BrowserStore
     ) {
@@ -66,6 +81,7 @@ class DownloadsUseCases(
         }
     }
 
+    val cancelDownloadRequest = CancelDownloadRequestUseCase(store)
     val consumeDownload = ConsumeDownloadUseCase(store)
     val restoreDownloads = RestoreDownloadsUseCase(store)
     val removeDownload = RemoveDownloadUseCase(store)
