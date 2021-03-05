@@ -583,13 +583,6 @@ static inline void RegisterEnumerator(ObjectRealm& realm, NativeIterator* ni) {
 }
 
 static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
-  RootedObjectGroup group(
-      cx, ObjectGroup::defaultNewGroup(cx, &PropertyIteratorObject::class_,
-                                       TaggedProto(nullptr)));
-  if (!group) {
-    return nullptr;
-  }
-
   const JSClass* clasp = &PropertyIteratorObject::class_;
   RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(),
                                                     TaggedProto(nullptr),
@@ -602,7 +595,7 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, obj,
       NativeObject::create(cx, ITERATOR_FINALIZE_KIND,
-                           GetInitialHeap(GenericObject, clasp), shape, group));
+                           GetInitialHeap(GenericObject, clasp), shape));
 
   PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 

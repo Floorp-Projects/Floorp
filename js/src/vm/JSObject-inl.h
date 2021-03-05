@@ -130,11 +130,6 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
   }
 }
 
-inline void JSObject::setGroup(js::ObjectGroup* group) {
-  MOZ_RELEASE_ASSERT(group);
-  setGroupRaw(group);
-}
-
 /* * */
 
 inline bool JSObject::isQualifiedVarObj() const {

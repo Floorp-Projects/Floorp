@@ -450,8 +450,8 @@ inline bool NativeObject::isInWholeCellBuffer() const {
 
 /* static */ inline JS::Result<NativeObject*, JS::OOM> NativeObject::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-    js::HandleShape shape, js::HandleObjectGroup group) {
-  debugCheckNewObject(group, shape, kind, heap);
+    js::HandleShape shape) {
+  debugCheckNewObject(shape, kind, heap);
 
   const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(clasp->isNativeObject());
@@ -466,7 +466,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   }
 
   NativeObject* nobj = static_cast<NativeObject*>(obj);
-  nobj->initGroup(group);
+  nobj->initGroup(nullptr);
   nobj->initShape(shape);
   // NOTE: Dynamic slots are created internally by Allocate<JSObject>.
   if (!nDynamicSlots) {

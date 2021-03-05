@@ -4641,18 +4641,6 @@ static bool ShapeOf(JSContext* cx, unsigned argc, JS::Value* vp) {
   return true;
 }
 
-static bool GroupOf(JSContext* cx, unsigned argc, JS::Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.get(0).isObject()) {
-    JS_ReportErrorASCII(cx, "groupOf: object expected");
-    return false;
-  }
-  RootedObject obj(cx, &args[0].toObject());
-  ObjectGroup* group = obj->group();
-  args.rval().set(JS_NumberValue(double(uintptr_t(group) >> 3)));
-  return true;
-}
-
 static bool Sleep_fn(JSContext* cx, unsigned argc, Value* vp) {
   ShellContext* sc = GetShellContext(cx);
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -9025,10 +9013,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("shapeOf", ShapeOf, 1, 0,
 "shapeOf(obj)",
 "  Get the shape of obj (an implementation detail)."),
-
-    JS_FN_HELP("groupOf", GroupOf, 1, 0,
-"groupOf(obj)",
-"  Get the group of obj (an implementation detail)."),
 
 #ifdef DEBUG
     JS_FN_HELP("arrayInfo", ArrayInfo, 1, 0,
