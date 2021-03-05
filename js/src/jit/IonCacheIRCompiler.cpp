@@ -659,6 +659,35 @@ bool IonCacheIRCompiler::emitGuardShape(ObjOperandId objId,
   return true;
 }
 
+bool IonCacheIRCompiler::emitGuardGroup(ObjOperandId objId,
+                                        uint32_t groupOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  ObjectGroup* group = groupStubField(groupOffset);
+
+  bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
+
+  Maybe<AutoScratchRegister> maybeScratch;
+  if (needSpectreMitigations) {
+    maybeScratch.emplace(allocator, masm);
+  }
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  if (needSpectreMitigations) {
+    masm.branchTestObjGroup(Assembler::NotEqual, obj, group, *maybeScratch, obj,
+                            failure->label());
+  } else {
+    masm.branchTestObjGroupNoSpectreMitigations(Assembler::NotEqual, obj, group,
+                                                failure->label());
+  }
+
+  return true;
+}
+
 bool IonCacheIRCompiler::emitGuardTypeDescr(ObjOperandId objId,
                                             uint32_t descrOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

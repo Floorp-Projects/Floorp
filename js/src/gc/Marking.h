@@ -24,6 +24,7 @@ namespace js {
 class BaseShape;
 class GCMarker;
 class NativeObject;
+class ObjectGroup;
 class Shape;
 class WeakMapBase;
 

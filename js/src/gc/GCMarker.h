@@ -89,6 +89,7 @@ class MarkStack {
   enum Tag {
     SlotsOrElementsRangeTag,
     ObjectTag,
+    GroupTag,
     JitCodeTag,
     ScriptTag,
     TempRopeTag,
@@ -429,6 +430,7 @@ class GCMarker final : public JSTracer {
   void eagerlyMarkChildren(JSString* str);
   void eagerlyMarkChildren(Shape* shape);
   void eagerlyMarkChildren(Scope* scope);
+  void lazilyMarkChildren(ObjectGroup* group);
 
   // We may not have concrete types yet, so this has to be outside the header.
   template <typename T>

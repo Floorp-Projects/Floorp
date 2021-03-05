@@ -18,9 +18,10 @@
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
 #include "js/HeapAPI.h"
-#include "js/Object.h"           // JS::GetClass
-#include "js/shadow/Function.h"  // JS::shadow::Function
-#include "js/shadow/Object.h"    // JS::shadow::Object
+#include "js/Object.h"              // JS::GetClass
+#include "js/shadow/Function.h"     // JS::shadow::Function
+#include "js/shadow/Object.h"       // JS::shadow::Object
+#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
@@ -363,7 +364,7 @@ JS_FRIEND_API bool UninlinedIsCrossCompartmentWrapper(const JSObject* obj);
 // getting a wrapper's realm usually doesn't make sense.
 static MOZ_ALWAYS_INLINE JS::Realm* GetNonCCWObjectRealm(JSObject* obj) {
   MOZ_ASSERT(!js::UninlinedIsCrossCompartmentWrapper(obj));
-  return reinterpret_cast<JS::shadow::Object*>(obj)->shape->base->realm;
+  return reinterpret_cast<JS::shadow::Object*>(obj)->group->realm;
 }
 
 JS_FRIEND_API void AssertSameCompartment(JSContext* cx, JSObject* obj);

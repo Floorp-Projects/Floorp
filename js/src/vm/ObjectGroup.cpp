@@ -36,6 +36,45 @@
 using namespace js;
 
 /////////////////////////////////////////////////////////////////////
+// ObjectGroup
+/////////////////////////////////////////////////////////////////////
+
+static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
+                              Handle<TaggedProto> proto) {
+  MOZ_ASSERT_IF(proto.isObject(),
+                cx->isInsideCurrentCompartment(proto.toObject()));
+
+  ObjectGroup* group = Allocate<ObjectGroup>(cx);
+  if (!group) {
+    return nullptr;
+  }
+  new (group) ObjectGroup(clasp, proto, cx->realm());
+
+  return group;
+}
+
+ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
+                         JS::Realm* realm)
+    : TenuredCellWithNonGCPointer(clasp), proto_(proto), realm_(realm) {
+  /* Windows may not appear on prototype chains. */
+  MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
+  MOZ_ASSERT(JS::StringIsASCII(clasp->name));
+
+#ifdef DEBUG
+  GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal();
+  if (global) {
+    AssertTargetIsNotGray(global);
+  }
+#endif
+}
+
+void ObjectGroup::setProtoUnchecked(TaggedProto proto) {
+  proto_ = proto;
+  MOZ_ASSERT_IF(proto_.isObject() && proto_.toObject()->is<NativeObject>(),
+                proto_.toObject()->isDelegate());
+}
+
+/////////////////////////////////////////////////////////////////////
 // GlobalObject
 /////////////////////////////////////////////////////////////////////
 
@@ -61,7 +100,157 @@ bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
     }
   }
 
-  return JSObject::setProtoUnchecked(cx, global, proto);
+  ObjectGroup* group = MakeGroup(cx, global->getClass(), proto);
+  if (!group) {
+    return false;
+  }
+
+  global->setGroupRaw(group);
+  return true;
+}
+
+/////////////////////////////////////////////////////////////////////
+// ObjectGroupRealm NewTable
+/////////////////////////////////////////////////////////////////////
+
+/*
+ * Entries for the per-realm set of groups based on prototype and class. An
+ * optional associated object is used which allows multiple groups to be
+ * created with the same prototype. The associated object is a type descriptor
+ * (for typed objects).
+ */
+struct ObjectGroupRealm::NewEntry {
+  WeakHeapPtrObjectGroup group;
+
+  explicit NewEntry(ObjectGroup* group) : group(group) {}
+
+  struct Lookup {
+    const JSClass* clasp;
+    TaggedProto proto;
+
+    Lookup(const JSClass* clasp, TaggedProto proto)
+        : clasp(clasp), proto(proto) {
+      MOZ_ASSERT(clasp);
+    }
+
+    explicit Lookup(const NewEntry& entry)
+        : clasp(entry.group.unbarrieredGet()->clasp()),
+          proto(entry.group.unbarrieredGet()->proto()) {}
+  };
+
+  bool needsSweep() { return IsAboutToBeFinalized(&group); }
+
+  bool operator==(const NewEntry& other) const { return group == other.group; }
+};
+
+namespace js {
+template <>
+struct MovableCellHasher<ObjectGroupRealm::NewEntry> {
+  using Key = ObjectGroupRealm::NewEntry;
+  using Lookup = ObjectGroupRealm::NewEntry::Lookup;
+
+  static bool hasHash(const Lookup& l) {
+    return MovableCellHasher<TaggedProto>::hasHash(l.proto);
+  }
+
+  static bool ensureHash(const Lookup& l) {
+    return MovableCellHasher<TaggedProto>::ensureHash(l.proto);
+  }
+
+  static inline HashNumber hash(const Lookup& lookup) {
+    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
+    return mozilla::AddToHash(hash, mozilla::HashGeneric(lookup.clasp));
+  }
+
+  static inline bool match(const ObjectGroupRealm::NewEntry& key,
+                           const Lookup& lookup) {
+    if (key.group.unbarrieredGet()->clasp() != lookup.clasp) {
+      return false;
+    }
+
+    TaggedProto proto = key.group.unbarrieredGet()->proto();
+    return MovableCellHasher<TaggedProto>::match(proto, lookup.proto);
+  }
+};
+}  // namespace js
+
+class ObjectGroupRealm::NewTable
+    : public JS::WeakCache<js::GCHashSet<NewEntry, MovableCellHasher<NewEntry>,
+                                         SystemAllocPolicy>> {
+  using Table =
+      js::GCHashSet<NewEntry, MovableCellHasher<NewEntry>, SystemAllocPolicy>;
+  using Base = JS::WeakCache<Table>;
+
+ public:
+  explicit NewTable(Zone* zone) : Base(zone) {}
+};
+
+/* static*/ ObjectGroupRealm& ObjectGroupRealm::getForNewObject(JSContext* cx) {
+  return cx->realm()->objectGroups_;
+}
+
+MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
+    const JSClass* clasp, TaggedProto proto) {
+  if (group_ && group_->proto() == proto && group_->clasp() == clasp) {
+    return group_;
+  }
+  return nullptr;
+}
+
+/* static */
+ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
+                                          TaggedProto proto) {
+  MOZ_ASSERT(clasp);
+  MOZ_ASSERT_IF(proto.isObject(),
+                cx->isInsideCurrentCompartment(proto.toObject()));
+
+  ObjectGroupRealm& groups = ObjectGroupRealm::getForNewObject(cx);
+
+  if (ObjectGroup* group = groups.defaultNewGroupCache.lookup(clasp, proto)) {
+    return group;
+  }
+
+  gc::AutoSuppressGC suppressGC(cx);
+
+  ObjectGroupRealm::NewTable*& table = groups.defaultNewTable;
+
+  if (!table) {
+    table = cx->new_<ObjectGroupRealm::NewTable>(cx->zone());
+    if (!table) {
+      return nullptr;
+    }
+  }
+
+  if (proto.isObject() && !proto.toObject()->isDelegate()) {
+    RootedObject protoObj(cx, proto.toObject());
+    if (!JSObject::setDelegate(cx, protoObj)) {
+      return nullptr;
+    }
+  }
+
+  ObjectGroupRealm::NewTable::AddPtr p =
+      table->lookupForAdd(ObjectGroupRealm::NewEntry::Lookup(clasp, proto));
+  if (p) {
+    ObjectGroup* group = p->group;
+    MOZ_ASSERT(group->clasp() == clasp);
+    MOZ_ASSERT(group->proto() == proto);
+    groups.defaultNewGroupCache.put(group);
+    return group;
+  }
+
+  Rooted<TaggedProto> protoRoot(cx, proto);
+  ObjectGroup* group = MakeGroup(cx, clasp, protoRoot);
+  if (!group) {
+    return nullptr;
+  }
+
+  if (!table->add(p, ObjectGroupRealm::NewEntry(group))) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  groups.defaultNewGroupCache.put(group);
+  return group;
 }
 
 static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
@@ -92,4 +281,81 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
     return nullptr;
   }
   return obj;
+}
+
+/////////////////////////////////////////////////////////////////////
+// ObjectGroupRealm
+/////////////////////////////////////////////////////////////////////
+
+ObjectGroupRealm::~ObjectGroupRealm() { js_delete(defaultNewTable); }
+
+void ObjectGroupRealm::addSizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf, size_t* realmTables) {
+  if (defaultNewTable) {
+    *realmTables += defaultNewTable->sizeOfIncludingThis(mallocSizeOf);
+  }
+}
+
+void ObjectGroupRealm::clearTables() {
+  if (defaultNewTable) {
+    defaultNewTable->clear();
+  }
+  defaultNewGroupCache.purge();
+}
+
+void ObjectGroupRealm::fixupNewTableAfterMovingGC(NewTable* table) {
+  /*
+   * Each entry's hash depends on the object's prototype and we can't tell
+   * whether that has been moved or not in sweepNewObjectGroupTable().
+   */
+  if (table) {
+    for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
+      NewEntry& entry = e.mutableFront();
+
+      ObjectGroup* group = entry.group.unbarrieredGet();
+      if (IsForwarded(group)) {
+        group = Forwarded(group);
+        entry.group.set(group);
+      }
+      TaggedProto proto = group->proto();
+      if (proto.isObject() && IsForwarded(proto.toObject())) {
+        proto = TaggedProto(Forwarded(proto.toObject()));
+        // Update the group's proto here so that we are able to lookup
+        // entries in this table before all object pointers are updated.
+        group->proto() = proto;
+      }
+    }
+  }
+}
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+
+void ObjectGroupRealm::checkNewTableAfterMovingGC(NewTable* table) {
+  /*
+   * Assert that nothing points into the nursery or needs to be relocated, and
+   * that the hash table entries are discoverable.
+   */
+  if (!table) {
+    return;
+  }
+
+  for (auto r = table->all(); !r.empty(); r.popFront()) {
+    NewEntry entry = r.front();
+    CheckGCThingAfterMovingGC(entry.group.unbarrieredGet());
+    TaggedProto proto = entry.group.unbarrieredGet()->proto();
+    if (proto.isObject()) {
+      CheckGCThingAfterMovingGC(proto.toObject());
+    }
+
+    auto ptr = table->lookup(NewEntry::Lookup(entry));
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+  }
+}
+
+#endif  // JSGC_HASH_TABLE_CHECKS
+
+JS::ubi::Node::Size JS::ubi::Concrete<js::ObjectGroup>::size(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+  return size;
 }

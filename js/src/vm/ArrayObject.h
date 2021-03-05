@@ -44,16 +44,16 @@ class ArrayObject : public NativeObject {
   // Make an array object with the specified initial state.
   static inline ArrayObject* createArray(JSContext* cx, gc::AllocKind kind,
                                          gc::InitialHeap heap,
-                                         HandleShape shape, uint32_t length,
+                                         HandleShape shape,
+                                         HandleObjectGroup group,
+                                         uint32_t length,
                                          AutoSetNewObjectMetadata& metadata);
 
  private:
   // Helper for the above methods.
-  static inline ArrayObject* createArrayInternal(JSContext* cx,
-                                                 gc::AllocKind kind,
-                                                 gc::InitialHeap heap,
-                                                 HandleShape shape,
-                                                 AutoSetNewObjectMetadata&);
+  static inline ArrayObject* createArrayInternal(
+      JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+      HandleShape shape, HandleObjectGroup group, AutoSetNewObjectMetadata&);
 
   static inline ArrayObject* finishCreateArray(
       ArrayObject* obj, HandleShape shape, AutoSetNewObjectMetadata& metadata);

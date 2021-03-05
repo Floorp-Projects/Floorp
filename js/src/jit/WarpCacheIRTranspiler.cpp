@@ -141,6 +141,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   JS::Symbol* symbolStubField(uint32_t offset) {
     return reinterpret_cast<JS::Symbol*>(readStubWord(offset));
   }
+  ObjectGroup* groupStubField(uint32_t offset) {
+    return reinterpret_cast<ObjectGroup*>(readStubWord(offset));
+  }
   BaseScript* baseScriptStubField(uint32_t offset) {
     return reinterpret_cast<BaseScript*>(readStubWord(offset));
   }
@@ -385,6 +388,19 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   Shape* shape = shapeStubField(shapeOffset);
 
   auto* ins = MGuardShape::New(alloc(), def, shape);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardGroup(ObjOperandId objId,
+                                           uint32_t groupOffset) {
+  MDefinition* def = getOperand(objId);
+  ObjectGroup* group = groupStubField(groupOffset);
+
+  auto* ins = MGuardObjectGroup::New(alloc(), def, group,
+                                     /* bailOnEquality = */ false);
   add(ins);
 
   setOperand(objId, ins);

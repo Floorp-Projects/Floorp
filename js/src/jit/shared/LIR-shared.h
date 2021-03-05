@@ -6774,6 +6774,19 @@ class LGuardIsTypedArray : public LInstructionHelper<0, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LGuardObjectGroup : public LInstructionHelper<1, 1, 1> {
+ public:
+  LIR_HEADER(GuardObjectGroup)
+
+  LGuardObjectGroup(const LAllocation& in, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, in);
+    setTemp(0, temp);
+  }
+  const LDefinition* temp() { return getTemp(0); }
+  const MGuardObjectGroup* mir() const { return mir_->toGuardObjectGroup(); }
+};
+
 class LGuardNoDenseElements : public LInstructionHelper<0, 1, 1> {
  public:
   LIR_HEADER(GuardNoDenseElements)

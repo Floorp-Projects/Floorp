@@ -96,13 +96,19 @@ Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                                  uint32_t numSlots, ObjectFlags objectFlags) {
   // Put as many slots into the object header as possible.
   uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
-  return EmptyShape::getInitialShape(cx, cls, cx->realm(), TaggedProto(nullptr),
-                                     numFixed, objectFlags);
+  return EmptyShape::getInitialShape(cx, cls, TaggedProto(nullptr), numFixed,
+                                     objectFlags);
 }
 
 static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
                                    BindingKind bindKind, uint32_t slot,
+                                   StackBaseShape& stackBase,
                                    HandleShape shape) {
+  UnownedBaseShape* base = BaseShape::getUnowned(cx, stackBase);
+  if (!base) {
+    return nullptr;
+  }
+
   unsigned attrs = JSPROP_PERMANENT | JSPROP_ENUMERATE;
   switch (bindKind) {
     case BindingKind::Const:
@@ -114,8 +120,7 @@ static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
   }
 
   jsid id = NameToId(name->asPropertyName());
-  Rooted<StackShape> child(
-      cx, StackShape(shape->base(), shape->objectFlags(), id, slot, attrs));
+  Rooted<StackShape> child(cx, StackShape(base, id, slot, attrs));
   return cx->zone()->propertyTree().getChild(cx, shape, child);
 }
 
@@ -128,12 +133,14 @@ Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
   }
 
   RootedAtom name(cx);
+  StackBaseShape stackBase(cls, objectFlags);
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
       name = bi.name();
       cx->markAtom(name);
-      shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), shape);
+      shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), stackBase,
+                                   shape);
       if (!shape) {
         return nullptr;
       }
@@ -153,13 +160,15 @@ Shape* js::CreateEnvironmentShape(
   }
 
   RootedAtom name(cx);
+  StackBaseShape stackBase(cls, objectFlags);
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
       name = atomCache.getExistingAtomAt(cx, bi.name());
       MOZ_ASSERT(name);
       cx->markAtom(name);
-      shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), shape);
+      shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), stackBase,
+                                   shape);
       if (!shape) {
         return nullptr;
       }
@@ -542,9 +551,9 @@ uint32_t Scope::environmentChainLength() const {
 }
 
 Shape* Scope::maybeCloneEnvironmentShape(JSContext* cx) {
-  // Clone the environment shape if cloning into a different realm.
+  // Clone the environment shape if cloning into a different zone.
   Shape* shape = environmentShape();
-  if (shape && shape->realm() != cx->realm()) {
+  if (shape && shape->zoneFromAnyThread() != cx->zone()) {
     BindingIter bi(this);
     return CreateEnvironmentShape(cx, bi, shape->getObjectClass(),
                                   shape->slotSpan(), shape->objectFlags());

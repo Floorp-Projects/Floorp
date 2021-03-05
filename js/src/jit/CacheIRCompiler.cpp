@@ -1089,6 +1089,8 @@ GCPtr<T>& CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const {
 
 template GCPtr<Shape*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
     ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<ObjectGroup*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
 template GCPtr<JSObject*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
     ICCacheIRStub* stub, uint32_t offset) const;
 template GCPtr<JSString*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
@@ -1128,6 +1130,9 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
       case StubField::Type::JSObject:
         InitGCPtr<JSObject*>(destWords, field.asWord());
         break;
+      case StubField::Type::ObjectGroup:
+        InitGCPtr<ObjectGroup*>(destWords, field.asWord());
+        break;
       case StubField::Type::Symbol:
         InitGCPtr<JS::Symbol*>(destWords, field.asWord());
         break;
@@ -1166,16 +1171,14 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
         break;
-      case StubField::Type::Shape: {
-        // For CCW IC stubs, we can store same-zone but cross-compartment
-        // shapes. Use TraceSameZoneCrossCompartmentEdge to not assert in the
-        // GC. Note: CacheIRWriter::writeShapeField asserts we never store
-        // cross-zone shapes.
-        GCPtrShape& shapeField =
-            stubInfo->getStubField<T, Shape*>(stub, offset);
-        TraceSameZoneCrossCompartmentEdge(trc, &shapeField, "cacheir-shape");
+      case StubField::Type::Shape:
+        TraceEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),
+                  "cacheir-shape");
         break;
-      }
+      case StubField::Type::ObjectGroup:
+        TraceEdge(trc, &stubInfo->getStubField<T, ObjectGroup*>(stub, offset),
+                  "cacheir-group");
+        break;
       case StubField::Type::JSObject:
         TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
                   "cacheir-object");
@@ -6774,6 +6777,9 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::String:
       masm.movePtr(ImmGCPtr(stringStubField(val.getOffset())), dest);
       break;
+    case StubField::Type::ObjectGroup:
+      masm.movePtr(ImmGCPtr(groupStubField(val.getOffset())), dest);
+      break;
     case StubField::Type::JSObject:
       masm.movePtr(ImmGCPtr(objectStubField(val.getOffset())), dest);
       break;
@@ -6806,6 +6812,7 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     switch (val.getStubFieldType()) {
       case StubField::Type::RawPointer:
       case StubField::Type::Shape:
+      case StubField::Type::ObjectGroup:
       case StubField::Type::JSObject:
       case StubField::Type::Symbol:
       case StubField::Type::String:

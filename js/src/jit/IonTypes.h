@@ -497,7 +497,8 @@ enum class MIRType : uint8_t {
   RefOrNull,     // Wasm Ref/AnyRef/NullRef: a raw JSObject* or a raw (void*)0
   StackResults,  // Wasm multi-value stack result area, which may contain refs
   Shape,         // A Shape pointer.
-  Last = Shape
+  ObjectGroup,   // An ObjectGroup pointer.
+  Last = ObjectGroup
 };
 
 static inline MIRType MIRTypeFromValueType(JSValueType type) {
@@ -636,6 +637,8 @@ static inline const char* StringFromMIRType(MIRType type) {
       return "StackResults";
     case MIRType::Shape:
       return "Shape";
+    case MIRType::ObjectGroup:
+      return "ObjectGroup";
     case MIRType::Simd128:
       return "Simd128";
   }

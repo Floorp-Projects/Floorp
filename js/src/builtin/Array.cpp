@@ -3810,9 +3810,16 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  RootedShape shape(cx, EmptyShape::getInitialShape(
-                            cx, &ArrayObject::class_, cx->realm(),
-                            TaggedProto(proto), gc::AllocKind::OBJECT0));
+  RootedObjectGroup group(cx,
+                          ObjectGroup::defaultNewGroup(cx, &ArrayObject::class_,
+                                                       TaggedProto(proto)));
+  if (!group) {
+    return nullptr;
+  }
+
+  RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayObject::class_,
+                                                    TaggedProto(proto),
+                                                    gc::AllocKind::OBJECT0));
   if (!shape) {
     return nullptr;
   }
@@ -3820,7 +3827,7 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedArrayObject arrayProto(
       cx, ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
-                                   shape, 0, metadata));
+                                   shape, group, 0, metadata));
   if (!arrayProto || !JSObject::setDelegate(cx, arrayProto) ||
       !AddLengthProperty(cx, arrayProto)) {
     return nullptr;
@@ -3954,22 +3961,28 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
     }
   }
 
+  RootedObjectGroup group(cx,
+                          ObjectGroup::defaultNewGroup(cx, &ArrayObject::class_,
+                                                       TaggedProto(proto)));
+  if (!group) {
+    return nullptr;
+  }
+
   /*
    * Get a shape with zero fixed slots, regardless of the size class.
    * See JSObject::createArray.
    */
-  RootedShape shape(cx, EmptyShape::getInitialShape(
-                            cx, &ArrayObject::class_, cx->realm(),
-                            TaggedProto(proto), gc::AllocKind::OBJECT0));
+  RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayObject::class_,
+                                                    TaggedProto(proto),
+                                                    gc::AllocKind::OBJECT0));
   if (!shape) {
     return nullptr;
   }
 
   AutoSetNewObjectMetadata metadata(cx);
-  RootedArrayObject arr(
-      cx, ArrayObject::createArray(
-              cx, allocKind, GetInitialHeap(newKind, &ArrayObject::class_),
-              shape, length, metadata));
+  RootedArrayObject arr(cx, ArrayObject::createArray(
+                                cx, allocKind, GetInitialHeap(newKind, group),
+                                shape, group, length, metadata));
   if (!arr) {
     return nullptr;
   }
@@ -3979,7 +3992,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
       return nullptr;
     }
     shape = arr->lastProperty();
-    EmptyShape::insertInitialShape(cx, shape);
+    EmptyShape::insertInitialShape(cx, shape, proto);
   }
 
   if (isCachable) {
@@ -4054,12 +4067,13 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
+  RootedObjectGroup group(cx, templateObject->group());
   RootedShape shape(cx, templateObject->lastProperty());
 
-  gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
+  gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
   Rooted<ArrayObject*> arr(
-      cx,
-      ArrayObject::createArray(cx, allocKind, heap, shape, length, metadata));
+      cx, ArrayObject::createArray(cx, allocKind, heap, shape, group, length,
+                                   metadata));
   if (!arr) {
     return nullptr;
   }
@@ -4074,14 +4088,14 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
 }
 
 // TODO(no-TI): clean up.
-ArrayObject* js::NewArrayWithShape(JSContext* cx, uint32_t length,
-                                   HandleShape shape) {
-  // Ion can call this with a shape from a different realm when calling
+ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
+                                   HandleObjectGroup group) {
+  // Ion can call this with a group from a different realm when calling
   // another realm's Array constructor.
   Maybe<AutoRealm> ar;
-  if (cx->realm() != shape->realm()) {
-    MOZ_ASSERT(cx->compartment() == shape->compartment());
-    ar.emplace(cx, shape);
+  if (cx->realm() != group->realm()) {
+    MOZ_ASSERT(cx->compartment() == group->compartment());
+    ar.emplace(cx, group);
   }
 
   return NewDenseFullyAllocatedArray(cx, length);
