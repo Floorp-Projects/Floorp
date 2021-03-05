@@ -1524,8 +1524,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   box-shadow: 0 2px 14px 0 rgba(58, 57, 68, 0.2);
   display: -moz-box;
   margin: 0;
-  /* Make dialogs overlap with upper chrome UI */
-  margin-top: -5px;
   padding: 0;
   overflow-x: auto;
 }
@@ -1540,7 +1538,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   resize: both;
   overflow: hidden;
   min-height: 20em;
-  min-width: 66ch;
 }
 
 .dialogBox[sizeto="available"] {
@@ -1582,16 +1579,36 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   }
 }
 
+.content-prompt-dialog > .dialogOverlay {
+  display: grid;
+  place-content: center;
+  /* 90% for 5% top/bottom margins, the document height so that
+   * smaller dialogs don't become too big. */
+  grid-auto-rows: min(90%, var(--doc-height-px));
+}
+
+#window-modal-dialog > .dialogOverlay > .dialogBox,
+.tab-prompt-dialog > .dialogOverlay > .dialogBox:not([sizeto=available]) {
+  /* For content-prompts, we size the item using the grid-auto-rows.
+   * For tab and window prompts, where we fully control the content,
+   * we use the document height directly.  */
+  min-height: var(--doc-height-px);
+}
+
+
+:not(.content-prompt-dialog) > .dialogOverlay > .dialogBox {
+  /* Make dialogs overlap with upper chrome UI. */
+  margin-top: -5px;
+}
+
 .dialogFrame {
   margin: 0;
   -moz-box-flex: 1;
   /* Default dialog dimensions */
-  width: 66ch;
-}
-
-.content-prompt-dialog > .dialogOverlay {
-  display: grid;
-  place-content: center;
+  width: 59.5ch;
+  /* will get overridden, but need to change the default so small
+   * dialogs don't end up being 150px tall */
+  height: 80px;
 }
 
 /* Override default <html:dialog> styles */
