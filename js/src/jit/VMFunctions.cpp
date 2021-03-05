@@ -1680,12 +1680,6 @@ void JitShapePreWriteBarrier(JSRuntime* rt, Shape** shapep) {
   gc::PreWriteBarrier(*shapep);
 }
 
-void JitObjectGroupPreWriteBarrier(JSRuntime* rt, ObjectGroup** groupp) {
-  AutoUnsafeCallWithABI unsafe;
-  MOZ_ASSERT(!(*groupp)->isMarkedBlack());
-  gc::PreWriteBarrier(*groupp);
-}
-
 bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber) {
   ScriptFrameIter iter(cx);
   RootedScript script(cx, iter.script());
