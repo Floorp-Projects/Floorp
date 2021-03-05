@@ -602,7 +602,7 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, obj,
       NativeObject::create(cx, ITERATOR_FINALIZE_KIND,
-                           GetInitialHeap(GenericObject, group), shape, group));
+                           GetInitialHeap(GenericObject, clasp), shape, group));
 
   PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 

@@ -452,7 +452,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
     js::HandleShape shape, js::HandleObjectGroup group) {
   debugCheckNewObject(group, shape, kind, heap);
 
-  const JSClass* clasp = group->clasp();
+  const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(clasp->isNativeObject());
   MOZ_ASSERT(!clasp->isJSFunction(), "should use JSFunction::create");
 

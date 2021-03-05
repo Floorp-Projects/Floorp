@@ -672,10 +672,10 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   friend struct StackBaseShape;
   friend struct StackShape;
 
- private:
   /* Class of referring object, stored in the cell header */
   const JSClass* clasp() const { return headerPtr(); }
 
+ private:
   // Temporary padding to respect MinCellSize.
   uint64_t padding_ = 0;
 
@@ -700,10 +700,12 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   void traceChildren(JSTracer* trc);
 
+  static constexpr size_t offsetOfClasp() { return offsetOfHeaderPtr(); }
+
  private:
   static void staticAsserts() {
     static_assert(offsetOfHeaderPtr() ==
-                  offsetof(JS::shadow::BaseShape, clasp_));
+                  offsetof(JS::shadow::BaseShape, clasp));
     static_assert(sizeof(BaseShape) % gc::CellAlignBytes == 0,
                   "Things inheriting from gc::Cell must have a size that's "
                   "a multiple of gc::CellAlignBytes");
