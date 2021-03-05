@@ -111,10 +111,6 @@ body {
   background-image: url("chrome://mozapps/skin/extensions/category-recent.svg");
 }
 
-.header-name {
-  user-select: initial;
-}
-
 .sticky-container {
   background: var(--in-content-page-background);
   width: 100%;

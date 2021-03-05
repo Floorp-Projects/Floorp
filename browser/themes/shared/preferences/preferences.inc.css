@@ -220,17 +220,6 @@ button > hbox > label {
   list-style-image: url("chrome://browser/skin/preferences/experiments.svg");
 }
 
-/* header */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header[hidden=true] {
-  display: none;
-}
-
 /* All panes */
 
 .info-icon,
