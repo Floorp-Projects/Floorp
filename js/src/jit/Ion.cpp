@@ -206,10 +206,6 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Shape");
   shapePreBarrierOffset_ = generatePreBarrier(cx, masm, MIRType::Shape);
 
-  JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for ObjectGroup");
-  objectGroupPreBarrierOffset_ =
-      generatePreBarrier(cx, masm, MIRType::ObjectGroup);
-
   JitSpew(JitSpew_Codegen, "# Emitting free stub");
   generateFreeStub(masm);
 
