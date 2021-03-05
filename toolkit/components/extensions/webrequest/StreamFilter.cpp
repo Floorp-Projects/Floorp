@@ -15,6 +15,7 @@
 #include "mozilla/extensions/StreamFilterChild.h"
 #include "mozilla/extensions/StreamFilterEvents.h"
 #include "mozilla/extensions/StreamFilterParent.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "nsContentUtils.h"

@@ -114,6 +114,10 @@
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "GeckoProfiler.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
