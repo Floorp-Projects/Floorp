@@ -7,6 +7,8 @@
 #ifndef vm_ObjectGroup_h
 #define vm_ObjectGroup_h
 
+#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
+
 #include "jsfriendapi.h"
 
 #include "ds/IdValuePair.h"
@@ -21,6 +23,7 @@
 
 namespace js {
 
+class ObjectGroupRealm;
 class PlainObject;
 
 /*
@@ -39,11 +42,164 @@ enum NewObjectKind {
   TenuredObject
 };
 
+class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
+ public:
+  /* Class shared by objects in this group, stored in the cell header. */
+  const JSClass* clasp() const { return headerPtr(); }
+
+ private:
+  /* Prototype shared by objects in this group. */
+  GCPtr<TaggedProto> proto_;  // set by constructor
+
+  /* Realm shared by objects in this group. */
+  JS::Realm* realm_;  // set by constructor
+
+  // END OF PROPERTIES
+
+ private:
+  static inline uint32_t offsetOfClasp() { return offsetOfHeaderPtr(); }
+
+  static inline uint32_t offsetOfProto() {
+    return offsetof(ObjectGroup, proto_);
+  }
+
+  static inline uint32_t offsetOfRealm() {
+    return offsetof(ObjectGroup, realm_);
+  }
+
+  friend class gc::GCRuntime;
+
+  // See JSObject::offsetOfGroup() comment.
+  friend class js::jit::MacroAssembler;
+
+ public:
+  inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm);
+
+  const GCPtr<TaggedProto>& proto() const { return proto_; }
+
+  GCPtr<TaggedProto>& proto() { return proto_; }
+
+  void setProtoUnchecked(TaggedProto proto);
+
+  JS::Compartment* compartment() const {
+    return JS::GetCompartmentForRealm(realm_);
+  }
+  JS::Compartment* maybeCompartment() const { return compartment(); }
+  JS::Realm* realm() const { return realm_; }
+
+  /* Helpers */
+
+  void traceChildren(JSTracer* trc);
+
+  void finalize(JSFreeOp* fop) {
+    // Nothing to do.
+  }
+
+  static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
+
+  static void staticAsserts() {
+    static_assert(offsetof(ObjectGroup, proto_) ==
+                  offsetof(JS::shadow::ObjectGroup, proto));
+  }
+
+  static ObjectGroup* defaultNewGroup(JSContext* cx, const JSClass* clasp,
+                                      TaggedProto proto);
+};
+
+// Structure used to manage the groups in a realm.
+class ObjectGroupRealm {
+ private:
+  class NewTable;
+
+ private:
+  // Set of default 'new' groups in the realm.
+  NewTable* defaultNewTable = nullptr;
+
+  // This cache is purged on GC.
+  class DefaultNewGroupCache {
+    ObjectGroup* group_;
+
+   public:
+    DefaultNewGroupCache() { purge(); }
+
+    void purge() { group_ = nullptr; }
+    void put(ObjectGroup* group) { group_ = group; }
+
+    MOZ_ALWAYS_INLINE ObjectGroup* lookup(const JSClass* clasp,
+                                          TaggedProto proto);
+  } defaultNewGroupCache = {};
+
+  // END OF PROPERTIES
+
+ private:
+  friend class ObjectGroup;
+
+ public:
+  struct NewEntry;
+
+  ObjectGroupRealm() = default;
+  ~ObjectGroupRealm();
+
+  ObjectGroupRealm(ObjectGroupRealm&) = delete;
+  void operator=(ObjectGroupRealm&) = delete;
+
+  static ObjectGroupRealm& getForNewObject(JSContext* cx);
+
+  void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                              size_t* realmTables);
+
+  void clearTables();
+
+  void purge() { defaultNewGroupCache.purge(); }
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+  void checkTablesAfterMovingGC() {
+    checkNewTableAfterMovingGC(defaultNewTable);
+  }
+#endif
+
+  void fixupTablesAfterMovingGC() {
+    fixupNewTableAfterMovingGC(defaultNewTable);
+  }
+
+ private:
+#ifdef JSGC_HASH_TABLE_CHECKS
+  void checkNewTableAfterMovingGC(NewTable* table);
+#endif
+
+  void fixupNewTableAfterMovingGC(NewTable* table);
+};
+
 PlainObject* NewPlainObjectWithProperties(JSContext* cx,
                                           IdValuePair* properties,
                                           size_t nproperties,
                                           NewObjectKind newKind);
 
 }  // namespace js
+
+// JS::ubi::Nodes can point to object groups; they're js::gc::Cell instances
+// with no associated compartment.
+namespace JS {
+namespace ubi {
+
+template <>
+class Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> {
+ protected:
+  explicit Concrete(js::ObjectGroup* ptr)
+      : TracerConcrete<js::ObjectGroup>(ptr) {}
+
+ public:
+  static void construct(void* storage, js::ObjectGroup* ptr) {
+    new (storage) Concrete(ptr);
+  }
+
+  Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+  const char16_t* typeName() const override { return concreteTypeName; }
+  static const char16_t concreteTypeName[];
+};
+
+}  // namespace ubi
+}  // namespace JS
 
 #endif /* vm_ObjectGroup_h */

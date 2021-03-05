@@ -320,6 +320,11 @@ struct TypeToArgProperties<HandleShape> {
       TypeToArgProperties<Shape*>::result | VMFunctionData::ByRef;
 };
 template <>
+struct TypeToArgProperties<HandleObjectGroup> {
+  static const uint32_t result =
+      TypeToArgProperties<ObjectGroup*>::result | VMFunctionData::ByRef;
+};
+template <>
 struct TypeToArgProperties<HandleBigInt> {
   static const uint32_t result =
       TypeToArgProperties<BigInt*>::result | VMFunctionData::ByRef;
@@ -371,6 +376,10 @@ struct TypeToRootType<HandleId> {
 };
 template <>
 struct TypeToRootType<HandleShape> {
+  static const uint32_t result = VMFunctionData::RootCell;
+};
+template <>
+struct TypeToRootType<HandleObjectGroup> {
   static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
@@ -994,8 +1003,9 @@ bool InterruptCheck(JSContext* cx) {
   return CheckForInterrupt(cx);
 }
 
-JSObject* NewCallObject(JSContext* cx, HandleShape shape) {
-  JSObject* obj = CallObject::create(cx, shape);
+JSObject* NewCallObject(JSContext* cx, HandleShape shape,
+                        HandleObjectGroup group) {
+  JSObject* obj = CallObject::create(cx, shape, group);
   if (!obj) {
     return nullptr;
   }
@@ -1372,7 +1382,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
     Rooted<ArrayObject*> arrRes(cx, &objRes->as<ArrayObject>());
 
     MOZ_ASSERT(!arrRes->getDenseInitializedLength());
-    MOZ_ASSERT(arrRes->shape() == templateObj->shape());
+    MOZ_ASSERT(arrRes->group() == templateObj->group());
 
     // Fast path: we managed to allocate the array inline; initialize the
     // slots.
@@ -1558,6 +1568,7 @@ void AssertValidObjectPtr(JSContext* cx, JSObject* obj) {
   MOZ_ASSERT(obj->compartment() == cx->compartment());
   MOZ_ASSERT(obj->zoneFromAnyThread() == cx->zone());
   MOZ_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
+  MOZ_ASSERT(obj->group()->clasp() == obj->shape()->getObjectClass());
 
   if (obj->isTenured()) {
     MOZ_ASSERT(obj->isAligned());
@@ -1668,6 +1679,12 @@ void JitShapePreWriteBarrier(JSRuntime* rt, Shape** shapep) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(!(*shapep)->isMarkedBlack());
   gc::PreWriteBarrier(*shapep);
+}
+
+void JitObjectGroupPreWriteBarrier(JSRuntime* rt, ObjectGroup** groupp) {
+  AutoUnsafeCallWithABI unsafe;
+  MOZ_ASSERT(!(*groupp)->isMarkedBlack());
+  gc::PreWriteBarrier(*groupp);
 }
 
 bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber) {

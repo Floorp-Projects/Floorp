@@ -4641,6 +4641,33 @@ static bool ShapeOf(JSContext* cx, unsigned argc, JS::Value* vp) {
   return true;
 }
 
+static bool GroupOf(JSContext* cx, unsigned argc, JS::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.get(0).isObject()) {
+    JS_ReportErrorASCII(cx, "groupOf: object expected");
+    return false;
+  }
+  RootedObject obj(cx, &args[0].toObject());
+  ObjectGroup* group = obj->group();
+  args.rval().set(JS_NumberValue(double(uintptr_t(group) >> 3)));
+  return true;
+}
+
+static bool UnwrappedObjectsHaveSameShape(JSContext* cx, unsigned argc,
+                                          JS::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.get(0).isObject() || !args.get(1).isObject()) {
+    JS_ReportErrorASCII(cx, "2 objects expected");
+    return false;
+  }
+
+  RootedObject obj1(cx, UncheckedUnwrap(&args[0].toObject()));
+  RootedObject obj2(cx, UncheckedUnwrap(&args[1].toObject()));
+
+  args.rval().setBoolean(obj1->shape() == obj2->shape());
+  return true;
+}
+
 static bool Sleep_fn(JSContext* cx, unsigned argc, Value* vp) {
   ShellContext* sc = GetShellContext(cx);
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -9013,6 +9040,16 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("shapeOf", ShapeOf, 1, 0,
 "shapeOf(obj)",
 "  Get the shape of obj (an implementation detail)."),
+
+    JS_FN_HELP("groupOf", GroupOf, 1, 0,
+"groupOf(obj)",
+"  Get the group of obj (an implementation detail)."),
+
+    JS_FN_HELP("unwrappedObjectsHaveSameShape", UnwrappedObjectsHaveSameShape, 2, 0,
+"unwrappedObjectsHaveSameShape(obj1, obj2)",
+"  Returns true iff obj1 and obj2 have the same shape, false otherwise. Both\n"
+"  objects are unwrapped first, so this can be used on objects from different\n"
+"  globals."),
 
 #ifdef DEBUG
     JS_FN_HELP("arrayInfo", ArrayInfo, 1, 0,

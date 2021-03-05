@@ -1109,11 +1109,13 @@ namespace js {
 class ArrayObject;
 class DebugEnvironmentProxy;
 class GlobalObject;
+class ObjectGroup;
 class PropertyName;
 class Scope;
 class ScriptSourceObject;
 class Shape;
 class BaseShape;
+class UnownedBaseShape;
 class WasmInstanceObject;
 class WasmTableObject;
 
@@ -1135,6 +1137,8 @@ using GCPtrObject = GCPtr<JSObject*>;
 using GCPtrScript = GCPtr<JSScript*>;
 using GCPtrString = GCPtr<JSString*>;
 using GCPtrShape = GCPtr<Shape*>;
+using GCPtrUnownedBaseShape = GCPtr<UnownedBaseShape*>;
+using GCPtrObjectGroup = GCPtr<ObjectGroup*>;
 using GCPtrValue = GCPtr<Value>;
 using GCPtrId = GCPtr<jsid>;
 
@@ -1148,6 +1152,7 @@ using WeakHeapPtrScript = WeakHeapPtr<JSScript*>;
 using WeakHeapPtrScriptSourceObject = WeakHeapPtr<ScriptSourceObject*>;
 using WeakHeapPtrShape = WeakHeapPtr<Shape*>;
 using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
+using WeakHeapPtrObjectGroup = WeakHeapPtr<ObjectGroup*>;
 using WeakHeapPtrSymbol = WeakHeapPtr<JS::Symbol*>;
 using WeakHeapPtrWasmInstanceObject = WeakHeapPtr<WasmInstanceObject*>;
 using WeakHeapPtrWasmTableObject = WeakHeapPtr<WasmTableObject*>;

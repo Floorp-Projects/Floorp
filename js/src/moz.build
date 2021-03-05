@@ -266,6 +266,7 @@ EXPORTS.js.friend += [
 EXPORTS.js.shadow += [
     "../public/shadow/Function.h",
     "../public/shadow/Object.h",
+    "../public/shadow/ObjectGroup.h",
     "../public/shadow/Realm.h",
     "../public/shadow/Shape.h",
     "../public/shadow/String.h",

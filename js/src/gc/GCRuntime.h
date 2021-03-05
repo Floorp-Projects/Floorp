@@ -269,6 +269,7 @@ class BarrierTracer final : public GenericTracer {
   Scope* onScopeEdge(Scope* scope) override;
   RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
   BigInt* onBigIntEdge(BigInt* bi) override;
+  ObjectGroup* onObjectGroupEdge(ObjectGroup* group) override;
   JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
   jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override;
 

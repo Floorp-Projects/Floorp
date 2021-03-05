@@ -17,6 +17,9 @@
 #include "gc/Heap.h"
 
 namespace js {
+
+class ObjectGroup;
+
 namespace gc {
 namespace gcprobes {
 

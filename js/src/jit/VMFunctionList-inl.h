@@ -188,7 +188,7 @@ namespace jit {
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayIterator, js::NewArrayIterator)                                    \
   _(NewArrayOperation, js::NewArrayOperation)                                  \
-  _(NewArrayWithShape, js::NewArrayWithShape)                                  \
+  _(NewArrayWithGroup, js::NewArrayWithGroup)                                  \
   _(NewCallObject, js::jit::NewCallObject)                                     \
   _(NewObjectOperation, js::NewObjectOperation)                                \
   _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \

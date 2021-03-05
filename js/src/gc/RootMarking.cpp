@@ -246,10 +246,6 @@ void StackShape::trace(JSTracer* trc) {
   }
 }
 
-void StackBaseShape::trace(JSTracer* trc) {
-  proto.trace(trc);
-}
-
 void PropertyDescriptor::trace(JSTracer* trc) {
   if (obj) {
     TraceRoot(trc, &obj, "Descriptor::obj");
@@ -515,6 +511,10 @@ class BufferGrayRootsTracer final : public GenericTracer {
   JS::BigInt* onBigIntEdge(JS::BigInt* bi) override { return bufferRoot(bi); }
 
   js::Shape* onShapeEdge(js::Shape* shape) override {
+    unsupportedEdge();
+    return nullptr;
+  }
+  js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) override {
     unsupportedEdge();
     return nullptr;
   }

@@ -26,8 +26,7 @@ namespace JS {
 namespace shadow {
 
 struct BaseShape {
-  const JSClass* clasp;
-  JS::Realm* realm;
+  const JSClass* clasp_;
 };
 
 class Shape {

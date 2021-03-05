@@ -247,6 +247,7 @@ class StubField {
     RawInt32,
     RawPointer,
     Shape,
+    ObjectGroup,
     JSObject,
     Symbol,
     String,
@@ -530,9 +531,7 @@ bool CallAnyNative(JSContext* cx, unsigned argc, Value* vp);
 
 // Class to record CacheIR + some additional metadata for code generation.
 class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
-#ifdef DEBUG
   JSContext* cx_;
-#endif
   CompactBufferWriter buffer_;
 
   uint32_t nextOperandId_;
@@ -567,13 +566,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   size_t currentOpArgsStart_ = 0;
 #endif
 
-#ifdef DEBUG
-  void assertSameCompartment(JSObject* obj);
-  void assertSameZone(Shape* shape);
-#else
-  void assertSameCompartment(JSObject* obj) {}
-  void assertSameZone(Shape* shape) {}
-#endif
+  void assertSameCompartment(JSObject*);
 
   void writeOp(CacheOp op) {
     buffer_.writeUnsigned15Bit(uint32_t(op));
@@ -633,8 +626,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void writeShapeField(Shape* shape) {
     MOZ_ASSERT(shape);
-    assertSameZone(shape);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
+  }
+  void writeGroupField(ObjectGroup* group) {
+    MOZ_ASSERT(group);
+    addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
   void writeObjectField(JSObject* obj) {
     MOZ_ASSERT(obj);
@@ -726,17 +722,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
  public:
   explicit CacheIRWriter(JSContext* cx)
       : CustomAutoRooter(cx),
-#ifdef DEBUG
         cx_(cx),
-#endif
         nextOperandId_(0),
         nextInstructionId_(0),
         numInputOperands_(0),
         stubDataSize_(0),
         tooLarge_(false),
         lastOffset_(0),
-        lastIndex_(0) {
-  }
+        lastIndex_(0) {}
 
   bool failed() const { return buffer_.oom() || tooLarge_; }
 
@@ -846,6 +839,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
  public:
+  // Instead of calling guardGroup manually, use (or create) a specialization
+  // below to clarify what constraint the group guard is implying.
+  void guardGroupForProto(ObjOperandId obj, ObjectGroup* group) {
+    guardGroup(obj, group);
+  }
+
   static uint32_t encodeNargsAndFlags(JSFunction* fun) {
     static_assert(JSFunction::NArgsBits == 16);
     static_assert(sizeof(decltype(fun->flags().toRaw())) == sizeof(uint16_t));
@@ -1216,6 +1215,7 @@ class MOZ_RAII CacheIRCloner {
   int64_t readStubInt64(uint32_t offset);
 
   Shape* getShapeField(uint32_t stubOffset);
+  ObjectGroup* getGroupField(uint32_t stubOffset);
   JSObject* getObjectField(uint32_t stubOffset);
   JSString* getStringField(uint32_t stubOffset);
   JSAtom* getAtomField(uint32_t stubOffset);
