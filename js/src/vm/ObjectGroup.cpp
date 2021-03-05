@@ -58,7 +58,7 @@ ObjectGroup::ObjectGroup(TaggedProto proto)
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
 }
 
-void ObjectGroup::setProtoUnchecked(TaggedProto proto) {
+void ObjectGroup::setProtoUncheckedDeprecated(TaggedProto proto) {
   proto_ = proto;
   MOZ_ASSERT_IF(proto_.isObject() && proto_.toObject()->is<NativeObject>(),
                 proto_.toObject()->isDelegate());
@@ -96,7 +96,8 @@ bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
   }
 
   global->setGroupRaw(group);
-  return true;
+
+  return JSObject::setProtoUnchecked(cx, global, proto);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -120,7 +121,7 @@ struct ObjectGroupRealm::NewEntry {
     explicit Lookup(TaggedProto proto) : proto(proto) {}
 
     explicit Lookup(const NewEntry& entry)
-        : proto(entry.group.unbarrieredGet()->proto()) {}
+        : proto(entry.group.unbarrieredGet()->protoDeprecated()) {}
   };
 
   bool needsSweep() { return IsAboutToBeFinalized(&group); }
@@ -148,7 +149,7 @@ struct MovableCellHasher<ObjectGroupRealm::NewEntry> {
 
   static inline bool match(const ObjectGroupRealm::NewEntry& key,
                            const Lookup& lookup) {
-    TaggedProto proto = key.group.unbarrieredGet()->proto();
+    TaggedProto proto = key.group.unbarrieredGet()->protoDeprecated();
     return MovableCellHasher<TaggedProto>::match(proto, lookup.proto);
   }
 };
@@ -171,7 +172,7 @@ class ObjectGroupRealm::NewTable
 
 MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
     const JSClass* clasp, TaggedProto proto) {
-  if (group_ && group_->proto() == proto) {
+  if (group_ && group_->protoDeprecated() == proto) {
     return group_;
   }
   return nullptr;
@@ -212,7 +213,7 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
       table->lookupForAdd(ObjectGroupRealm::NewEntry::Lookup(proto));
   if (p) {
     ObjectGroup* group = p->group;
-    MOZ_ASSERT(group->proto() == proto);
+    MOZ_ASSERT(group->protoDeprecated() == proto);
     groups.defaultNewGroupCache.put(group);
     return group;
   }
@@ -296,12 +297,12 @@ void ObjectGroupRealm::fixupNewTableAfterMovingGC(NewTable* table) {
         group = Forwarded(group);
         entry.group.set(group);
       }
-      TaggedProto proto = group->proto();
+      TaggedProto proto = group->protoDeprecated();
       if (proto.isObject() && IsForwarded(proto.toObject())) {
         proto = TaggedProto(Forwarded(proto.toObject()));
         // Update the group's proto here so that we are able to lookup
         // entries in this table before all object pointers are updated.
-        group->proto() = proto;
+        group->protoDeprecated() = proto;
       }
     }
   }
@@ -321,7 +322,7 @@ void ObjectGroupRealm::checkNewTableAfterMovingGC(NewTable* table) {
   for (auto r = table->all(); !r.empty(); r.popFront()) {
     NewEntry entry = r.front();
     CheckGCThingAfterMovingGC(entry.group.unbarrieredGet());
-    TaggedProto proto = entry.group.unbarrieredGet()->proto();
+    TaggedProto proto = entry.group.unbarrieredGet()->protoDeprecated();
     if (proto.isObject()) {
       CheckGCThingAfterMovingGC(proto.toObject());
     }

@@ -771,9 +771,9 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
                       ? GetGCKindSlots(gc::GetGCObjectKind(clasp), clasp)
                       : GetGCKindSlots(kind, clasp);
 
-  RootedShape shape(
-      cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(), group->proto(),
-                                      nfixed, objectFlags));
+  RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(),
+                                                    group->protoDeprecated(),
+                                                    nfixed, objectFlags));
   if (!shape) {
     return nullptr;
   }
@@ -1818,7 +1818,8 @@ static bool SetProto(JSContext* cx, HandleObject obj,
   }
 
   obj->setGroup(newGroup);
-  return true;
+
+  return JSObject::setProtoUnchecked(cx, obj, proto);
 }
 
 /**
