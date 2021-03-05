@@ -2022,7 +2022,7 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
                          objectFlags);
 }
 
-void NewObjectCache::invalidateEntriesForShape(Shape* shape, JSObject* proto) {
+void NewObjectCache::invalidateEntriesForShape(Shape* shape) {
   const JSClass* clasp = shape->getObjectClass();
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
@@ -2038,16 +2038,17 @@ void NewObjectCache::invalidateEntriesForShape(Shape* shape, JSObject* proto) {
       }
     }
   }
+
+  JSObject* proto = shape->proto().toObject();
   if (!proto->is<GlobalObject>() && lookupProto(clasp, proto, kind, &entry)) {
     PodZero(&entries[entry]);
   }
 }
 
 /* static */
-void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape,
-                                    HandleObject proto) {
+void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape) {
   using Lookup = InitialShapeEntry::Lookup;
-  Lookup lookup(shape->getObjectClass(), shape->realm(), TaggedProto(proto),
+  Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
                 shape->numFixedSlots(), shape->objectFlags());
 
   InitialShapeSet::Ptr p = cx->zone()->initialShapes().lookup(lookup);
@@ -2083,7 +2084,7 @@ void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape,
    * thread, as it will not use the new object cache for allocations.
    */
   if (!cx->isHelperThreadContext()) {
-    cx->caches().newObjectCache.invalidateEntriesForShape(shape, proto);
+    cx->caches().newObjectCache.invalidateEntriesForShape(shape);
   }
 }
 
