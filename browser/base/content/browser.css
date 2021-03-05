@@ -1516,19 +1516,24 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 .dialogOverlay[topmost="true"] {
-  background-color: rgba(0,0,0,0.5);
   z-index: 1;
 }
 
 .dialogBox {
   background-clip: content-box;
-  box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
+  box-shadow: 0 2px 14px 0 rgba(58, 57, 68, 0.2);
   display: -moz-box;
   margin: 0;
   /* Make dialogs overlap with upper chrome UI */
   margin-top: -5px;
   padding: 0;
   overflow-x: auto;
+}
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+.dialogBox {
+  border-radius: 8px;
+}
 }
 
 .dialogBox[resizable="true"] {
@@ -1595,8 +1600,16 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   background-color: transparent;
 }
 
+.dialogOverlay[topmost="true"],
 #window-modal-dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(91, 91, 102, 0.45);
+}
+
+/* For the window-modal dialog, the background is supplied by the HTML dialog
+ * backdrop, so the dialogOverlay background above "double backgrounds" - so
+ * we remove it here: */
+#window-modal-dialog > .dialogOverlay[topmost="true"] {
+  background-color: transparent;
 }
 
 /* Hide tab-modal dialogs when a window-modal one is up. */
