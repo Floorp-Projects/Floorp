@@ -436,8 +436,7 @@ bool js::GetObjectProto(JSContext* cx, JS::Handle<JSObject*> obj,
     return JS_GetPrototype(cx, obj, proto);
   }
 
-  proto.set(
-      reinterpret_cast<const JS::shadow::Object*>(obj.get())->group->proto);
+  proto.set(obj->staticPrototype());
   return true;
 }
 

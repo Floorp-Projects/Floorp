@@ -18,10 +18,9 @@
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
 #include "js/HeapAPI.h"
-#include "js/Object.h"              // JS::GetClass
-#include "js/shadow/Function.h"     // JS::shadow::Function
-#include "js/shadow/Object.h"       // JS::shadow::Object
-#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
+#include "js/Object.h"           // JS::GetClass
+#include "js/shadow/Function.h"  // JS::shadow::Function
+#include "js/shadow/Object.h"    // JS::shadow::Object
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
