@@ -1082,7 +1082,8 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
   Rooted<BaseShape*> base(cx, last->base());
 
   RootedId id(cx, NameToId(name));
-  Rooted<StackShape> child(cx, StackShape(base, id, slot, 0));
+  Rooted<StackShape> child(cx,
+                           StackShape(base, last->objectFlags(), id, slot, 0));
   Shape* shape = cx->zone()->propertyTree().getChild(cx, last, child);
   if (!shape) {
     return false;

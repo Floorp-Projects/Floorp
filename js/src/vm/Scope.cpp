@@ -114,7 +114,8 @@ static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
   }
 
   jsid id = NameToId(name->asPropertyName());
-  Rooted<StackShape> child(cx, StackShape(shape->base(), id, slot, attrs));
+  Rooted<StackShape> child(
+      cx, StackShape(shape->base(), shape->objectFlags(), id, slot, attrs));
   return cx->zone()->propertyTree().getChild(cx, shape, child);
 }
 
