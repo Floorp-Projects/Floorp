@@ -16,6 +16,8 @@ import hashlib
 import os
 import sys
 
+import six
+
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
 import mozpack.path as mozpath
@@ -208,7 +210,7 @@ def resolve_files_and_hash(manifest):
 
         sha256 = hashlib.sha256()
         sha256.update(data)
-        manifest[p] = (len(data), sha256.hexdigest())
+        manifest[p] = (len(data), sha256.hexdigest().encode("utf-8"))
 
         yield p, data, f.mode
 
@@ -227,8 +229,7 @@ def format_manifest(manifest):
 
 def write_zip(zip_path, prefix=None):
     """Write toolchain data to a zip file."""
-    if isinstance(prefix, unicode):  # noqa Special case for Python 2
-        prefix = prefix.encode("utf-8")
+    prefix = six.ensure_binary(prefix, encoding="utf-8")
 
     with JarWriter(file=zip_path, compress_level=5) as zip:
         manifest = {}
