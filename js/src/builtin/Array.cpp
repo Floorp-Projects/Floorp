@@ -3817,9 +3817,9 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayObject::class_,
-                                                    TaggedProto(proto),
-                                                    gc::AllocKind::OBJECT0));
+  RootedShape shape(cx, EmptyShape::getInitialShape(
+                            cx, &ArrayObject::class_, cx->realm(),
+                            TaggedProto(proto), gc::AllocKind::OBJECT0));
   if (!shape) {
     return nullptr;
   }
@@ -3972,9 +3972,9 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
    * Get a shape with zero fixed slots, regardless of the size class.
    * See JSObject::createArray.
    */
-  RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayObject::class_,
-                                                    TaggedProto(proto),
-                                                    gc::AllocKind::OBJECT0));
+  RootedShape shape(cx, EmptyShape::getInitialShape(
+                            cx, &ArrayObject::class_, cx->realm(),
+                            TaggedProto(proto), gc::AllocKind::OBJECT0));
   if (!shape) {
     return nullptr;
   }
@@ -4089,14 +4089,14 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
 }
 
 // TODO(no-TI): clean up.
-ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
-                                   HandleObjectGroup group) {
-  // Ion can call this with a group from a different realm when calling
+ArrayObject* js::NewArrayWithShape(JSContext* cx, uint32_t length,
+                                   HandleShape shape) {
+  // Ion can call this with a shape from a different realm when calling
   // another realm's Array constructor.
   Maybe<AutoRealm> ar;
-  if (cx->realm() != group->realm()) {
-    MOZ_ASSERT(cx->compartment() == group->compartment());
-    ar.emplace(cx, group);
+  if (cx->realm() != shape->realm()) {
+    MOZ_ASSERT(cx->compartment() == shape->compartment());
+    ar.emplace(cx, shape);
   }
 
   return NewDenseFullyAllocatedArray(cx, length);

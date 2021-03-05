@@ -8054,8 +8054,11 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
         group->setProtoUnchecked(TaggedProto(targetProto));
       }
     }
+  }
 
-    group->realm_ = target;
+  for (auto baseShape = source->zone()->cellIterUnsafe<BaseShape>();
+       !baseShape.done(); baseShape.next()) {
+    baseShape->setRealmForMergeRealms(target);
   }
 
   // Fixup zone pointers in source's zone to refer to target's zone.

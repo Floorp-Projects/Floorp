@@ -56,7 +56,7 @@ inline const JSClass* GetClass(const JSObject* obj) {
  * compartment of this realm.
  */
 static MOZ_ALWAYS_INLINE Compartment* GetCompartment(JSObject* obj) {
-  Realm* realm = reinterpret_cast<shadow::Object*>(obj)->group->realm;
+  Realm* realm = reinterpret_cast<shadow::Object*>(obj)->shape->base->realm;
   return GetCompartmentForRealm(realm);
 }
 

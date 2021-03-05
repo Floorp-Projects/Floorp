@@ -374,7 +374,7 @@ inline void JSContext::enterRealmOf(JSScript* target) {
   enterRealm(target->realm());
 }
 
-inline void JSContext::enterRealmOf(js::ObjectGroup* target) {
+inline void JSContext::enterRealmOf(js::Shape* target) {
   JS::AssertCellIsNotGray(target);
   enterRealm(target->realm());
 }
