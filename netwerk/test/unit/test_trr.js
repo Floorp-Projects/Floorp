@@ -1088,7 +1088,7 @@ add_task(async function test25d() {
 });
 
 // TRR-only check that captivedetect.canonicalURL is resolved via native DNS
-add_task({ skip_if: () => true }, async function test25e() {
+add_task(async function test25e() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref(
