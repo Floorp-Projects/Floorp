@@ -44,14 +44,11 @@ class WebGPUParent final : public PWebGPUParent {
       const dom::GPUCommandBufferDescriptor& aDesc);
   ipc::IPCResult RecvCommandEncoderDestroy(RawId aSelfId);
   ipc::IPCResult RecvCommandBufferDestroy(RawId aSelfId);
-  ipc::IPCResult RecvQueueSubmit(RawId aSelfId,
+  ipc::IPCResult RecvQueueSubmit(RawId aSelfId, RawId aDeviceId,
                                  const nsTArray<RawId>& aCommandBuffers);
-  ipc::IPCResult RecvQueueWriteBuffer(RawId aSelfId, RawId aBufferId,
-                                      uint64_t aBufferOffset, Shmem&& aShmem);
-  ipc::IPCResult RecvQueueWriteTexture(
-      RawId aSelfId, const ffi::WGPUTextureCopyView& aDestination,
-      Shmem&& aShmem, const ffi::WGPUTextureDataLayout& aDataLayout,
-      const ffi::WGPUExtent3d& aExtent);
+  ipc::IPCResult RecvQueueWriteAction(RawId aSelfId, RawId aDeviceId,
+                                      const ipc::ByteBuf& aByteBuf,
+                                      Shmem&& aShmem);
   ipc::IPCResult RecvBindGroupLayoutDestroy(RawId aSelfId);
   ipc::IPCResult RecvPipelineLayoutDestroy(RawId aSelfId);
   ipc::IPCResult RecvBindGroupDestroy(RawId aSelfId);
