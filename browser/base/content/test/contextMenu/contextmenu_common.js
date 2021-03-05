@@ -430,12 +430,16 @@ async function test_contextmenu(selector, menuItems, options = {}) {
 
   if (menuItems) {
     if (Services.prefs.getBoolPref("devtools.inspector.enabled", true)) {
-      const inspectItems = ["---", null];
+      const inspectItems =
+        menuItems.includes("context-viewsource") ||
+        menuItems.includes("context-viewpartialsource-selection")
+          ? []
+          : ["---", null];
       if (Services.prefs.getBoolPref("devtools.accessibility.enabled", true)) {
         inspectItems.push("context-inspect-a11y", true);
       }
-
       inspectItems.push("context-inspect", true);
+
       menuItems = menuItems.concat(inspectItems);
     }
 
