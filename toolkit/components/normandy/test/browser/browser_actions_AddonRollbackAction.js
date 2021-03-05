@@ -21,16 +21,16 @@ const { NormandyTestUtils } = ChromeUtils.import(
 
 // Test that a simple recipe unenrolls as expected
 decorate_task(
-  AddonRollouts.withTestMock(),
-  ensureAddonCleanup(),
-  withMockNormandyApi(),
+  AddonRollouts.withTestMock,
+  ensureAddonCleanup,
+  withMockNormandyApi,
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withSendEventSpy(),
-  async function simple_recipe_unenrollment({
-    mockNormandyApi,
+  withSendEventSpy,
+  async function simple_recipe_unenrollment(
+    mockApi,
     setExperimentInactiveStub,
-    sendEventSpy,
-  }) {
+    sendEventStub
+  ) {
     const rolloutRecipe = {
       id: 1,
       arguments: {
@@ -38,7 +38,7 @@ decorate_task(
         extensionApiId: 1,
       },
     };
-    mockNormandyApi.extensionDetails = {
+    mockApi.extensionDetails = {
       [rolloutRecipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: rolloutRecipe.arguments.extensionApiId,
       }),
@@ -101,7 +101,7 @@ decorate_task(
       "enrollmentId should be a UUID"
     );
 
-    sendEventSpy.assertEvents([
+    sendEventStub.assertEvents([
       ["enroll", "addon_rollout", rollbackRecipe.arguments.rolloutSlug],
       ["unenroll", "addon_rollback", rollbackRecipe.arguments.rolloutSlug],
     ]);
@@ -116,11 +116,11 @@ decorate_task(
 
 // Add-on already uninstalled
 decorate_task(
-  AddonRollouts.withTestMock(),
-  ensureAddonCleanup(),
-  withMockNormandyApi(),
-  withSendEventSpy(),
-  async function addon_already_uninstalled({ mockNormandyApi, sendEventSpy }) {
+  AddonRollouts.withTestMock,
+  ensureAddonCleanup,
+  withMockNormandyApi,
+  withSendEventSpy,
+  async function addon_already_uninstalled(mockApi, sendEventStub) {
     const rolloutRecipe = {
       id: 1,
       arguments: {
@@ -128,7 +128,7 @@ decorate_task(
         extensionApiId: 1,
       },
     };
-    mockNormandyApi.extensionDetails = {
+    mockApi.extensionDetails = {
       [rolloutRecipe.arguments.extensionApiId]: extensionDetailsFactory({
         id: rolloutRecipe.arguments.extensionApiId,
       }),
@@ -190,7 +190,7 @@ decorate_task(
       "enrollment ID should be a UUID"
     );
 
-    sendEventSpy.assertEvents([
+    sendEventStub.assertEvents([
       ["enroll", "addon_rollout", rollbackRecipe.arguments.rolloutSlug],
       ["unenroll", "addon_rollback", rollbackRecipe.arguments.rolloutSlug],
     ]);
@@ -199,11 +199,11 @@ decorate_task(
 
 // Already rolled back, do nothing
 decorate_task(
-  AddonRollouts.withTestMock(),
-  ensureAddonCleanup(),
-  withMockNormandyApi(),
-  withSendEventSpy(),
-  async function already_rolled_back({ sendEventSpy }) {
+  AddonRollouts.withTestMock,
+  ensureAddonCleanup,
+  withMockNormandyApi,
+  withSendEventSpy,
+  async function already_rolled_back(mockApi, sendEventStub) {
     const rollout = {
       recipeId: 1,
       slug: "test-rollout",
@@ -246,6 +246,6 @@ decorate_task(
       "Rollback should be stored in db"
     );
 
-    sendEventSpy.assertEvents([]);
+    sendEventStub.assertEvents([]);
   }
 );

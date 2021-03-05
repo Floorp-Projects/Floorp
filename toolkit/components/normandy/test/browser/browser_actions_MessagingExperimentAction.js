@@ -13,9 +13,9 @@ const { _ExperimentManager, ExperimentManager } = ChromeUtils.import(
 );
 
 decorate_task(
-  withStudiesEnabled(),
+  withStudiesEnabled,
   withStub(Uptake, "reportRecipe"),
-  async function arguments_are_validated({ reportRecipeStub }) {
+  async function arguments_are_validated(reportRecipe) {
     const action = new MessagingExperimentAction();
 
     is(
@@ -55,7 +55,7 @@ decorate_task(
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
 
-    Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_SUCCESS]]);
+    Assert.deepEqual(reportRecipe.args, [[recipe, Uptake.RECIPE_SUCCESS]]);
     Assert.deepEqual(
       onRecipeStub.args,
       [[recipe.arguments, "normandy"]],

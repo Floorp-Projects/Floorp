@@ -211,21 +211,19 @@ const AddonRollouts = {
    * Test wrapper that temporarily replaces the stored rollout data with fake
    * data for testing.
    */
-  withTestMock() {
-    return function(testFunction) {
-      return async function inner(...args) {
-        let db = await getDatabase();
-        const oldData = await getStore(db, "readonly").getAll();
+  withTestMock(testFunction) {
+    return async function inner(...args) {
+      let db = await getDatabase();
+      const oldData = await getStore(db, "readonly").getAll();
+      await getStore(db, "readwrite").clear();
+      try {
+        await testFunction(...args);
+      } finally {
+        db = await getDatabase();
         await getStore(db, "readwrite").clear();
-        try {
-          await testFunction(...args);
-        } finally {
-          db = await getDatabase();
-          await getStore(db, "readwrite").clear();
-          const store = getStore(db, "readwrite");
-          await Promise.all(oldData.map(d => store.add(d)));
-        }
-      };
+        const store = getStore(db, "readwrite");
+        await Promise.all(oldData.map(d => store.add(d)));
+      }
     };
   },
 };

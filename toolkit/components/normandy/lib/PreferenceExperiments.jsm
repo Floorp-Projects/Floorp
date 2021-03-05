@@ -353,12 +353,12 @@ var PreferenceExperiments = {
    * Test wrapper that temporarily replaces the stored experiment data with fake
    * data for testing.
    */
-  withMockExperiments(prefExperiments = []) {
+  withMockExperiments(mockExperiments = []) {
     return function wrapper(testFunction) {
-      return async function wrappedTestFunction(args) {
+      return async function wrappedTestFunction(...args) {
         const experiments = {};
 
-        for (const exp of prefExperiments) {
+        for (const exp of mockExperiments) {
           if (exp.name) {
             throw new Error(
               "Preference experiments 'name' field has been replaced by 'slug' and 'userFacingName', please update."
@@ -377,7 +377,7 @@ var PreferenceExperiments = {
         const oldObservers = experimentObservers;
         experimentObservers = new Map();
         try {
-          await testFunction({ ...args, prefExperiments });
+          await testFunction(...args, mockExperiments);
         } finally {
           gStorePromise = oldPromise;
           PreferenceExperiments.stopAllObservers();

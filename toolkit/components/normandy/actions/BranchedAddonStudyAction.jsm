@@ -148,46 +148,50 @@ class BranchedAddonStudyAction extends BaseStudyAction {
 
     switch (suitability) {
       case BaseAction.suitability.FILTER_MATCH: {
-        if (!study) {
-          await this.enroll(recipe);
-        } else if (study.active) {
+        if (study) {
           await this.update(recipe, study);
+        } else {
+          await this.enroll(recipe);
         }
         break;
       }
 
       case BaseAction.suitability.SIGNATURE_ERROR: {
-        await this._considerTemporaryError({
-          study,
-          reason: "signature-error",
-        });
+        if (study) {
+          await this._considerTemporaryError({
+            study,
+            reason: "signature-error",
+          });
+        }
         break;
       }
 
       case BaseAction.suitability.FILTER_ERROR: {
-        await this._considerTemporaryError({
-          study,
-          reason: "filter-error",
-        });
+        if (study) {
+          await this._considerTemporaryError({
+            study,
+            reason: "filter-error",
+          });
+        }
         break;
       }
 
       case BaseAction.suitability.CAPABILITES_MISMATCH: {
-        if (study?.active) {
+        if (study) {
           await this.unenroll(recipe.id, "capability-mismatch");
         }
         break;
       }
 
       case BaseAction.suitability.FILTER_MISMATCH: {
-        if (study?.active) {
+        if (study) {
           await this.unenroll(recipe.id, "filter-mismatch");
         }
         break;
       }
 
       case BaseAction.suitability.ARGUMENTS_INVALID: {
-        if (study?.active) {
+        if (study) {
           await this.unenroll(recipe.id, "arguments-invalid");
         }
         break;
@@ -748,10 +752,6 @@ class BranchedAddonStudyAction extends BaseStudyAction {
    * @param {String} args.reason If the study should end, the reason it is ending.
    */
   async _considerTemporaryError({ study, reason }) {
-    if (!study?.active) {
-      return;
-    }
-
     let now = Date.now(); // milliseconds-since-epoch
     let day = 24 * 60 * 60 * 1000;
     let newDeadline = new Date(now + 7 * day);
