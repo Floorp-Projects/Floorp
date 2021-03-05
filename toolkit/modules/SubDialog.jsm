@@ -497,10 +497,15 @@ SubDialog.prototype = {
     let frameSizeDifference =
       frameRect.top - boxRect.top + (boxRect.bottom - frameRect.bottom);
 
+    let contentPane =
+      this._frame.contentDocument.querySelector(".contentPane") ||
+      this._frame.contentDocument.querySelector("dialog");
+
     let sizeTo = this._box.getAttribute("sizeto");
     if (["available", "limitheight"].includes(sizeTo)) {
       if (sizeTo == "limitheight") {
         this._overlay.style.setProperty("--doc-height-px", getDocHeight());
+        contentPane?.classList.add("sizeDetermined");
       } else {
         // Inform the CSS of the toolbar height so the bottom padding can be
         // correctly calculated.
@@ -550,9 +555,7 @@ SubDialog.prototype = {
       // element is used to implement the subdialog instead.
       frameHeight = maxHeight + "px";
       frameMinHeight = maxHeight + "px";
-      let contentPane =
-        this._frame.contentDocument.querySelector(".contentPane") ||
-        this._frame.contentDocument.querySelector("dialog");
+
       if (contentPane) {
         // There are also instances where the subdialog is neither implemented
         // using a content pane, nor a <dialog> (such as manageAddresses.xhtml)
