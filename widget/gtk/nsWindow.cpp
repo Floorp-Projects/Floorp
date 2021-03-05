@@ -1129,8 +1129,6 @@ void nsWindow::ApplySizeConstraints(void) {
 
     gtk_window_set_geometry_hints(GTK_WINDOW(mShell), nullptr, &geometry,
                                   GdkWindowHints(hints));
-    gtk_widget_set_size_request(GTK_WIDGET(mContainer), geometry.min_width,
-                                geometry.min_height);
   }
 }
 
