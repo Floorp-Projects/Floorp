@@ -1249,6 +1249,8 @@ void Shape::traceChildren(JSTracer* trc) {
     }
   }
 
+  cache_.trace(trc);
+
   if (hasGetterObject()) {
     TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
   }
@@ -1260,14 +1262,10 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
   MOZ_ASSERT(shape->isMarked(markColor()));
 
   do {
-    // Special case: if a base shape has a shape table then all its pointers
-    // must point to this shape or an anscestor.  Since these pointers will
-    // be traced by this loop they do not need to be traced here as well.
     BaseShape* base = shape->base();
     checkTraversedEdge(shape, base);
     if (mark(base)) {
-      MOZ_ASSERT(base->canSkipMarkingShapeCache(shape));
-      base->traceChildrenSkipShapeCache(this);
+      base->traceChildren(this);
     }
 
     markAndTraverseEdge(shape, shape->propidRef().get());
@@ -1278,6 +1276,11 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
     if (shape->dictNext.isObject()) {
       markAndTraverseEdge(shape, shape->dictNext.toObject());
     }
+
+    // Special case: if a shape has a shape table then all its pointers
+    // must point to this shape or an anscestor.  Since these pointers will
+    // be traced by this loop they do not need to be traced here as well.
+    MOZ_ASSERT(shape->canSkipMarkingShapeCache());
 
     // When triggered between slices on behalf of a barrier, these
     // objects may reside in the nursery, so require an extra check.
