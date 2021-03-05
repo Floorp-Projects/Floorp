@@ -66,7 +66,6 @@ inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
   }
 
   NativeObject* nobj = static_cast<NativeObject*>(obj);
-  nobj->initGroup(nullptr);
   nobj->initShape(shape);
 
   nobj->initEmptyDynamicSlots();

@@ -125,7 +125,6 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   }
 
   ProxyObject* proxy = static_cast<ProxyObject*>(obj);
-  proxy->initGroup(nullptr);
   proxy->initShape(shape);
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
