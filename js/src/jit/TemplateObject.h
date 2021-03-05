@@ -37,8 +37,9 @@ class TemplateObject {
   inline bool isCallObject() const;
   inline bool isPlainObject() const;
 
-  // The shape should not change. This is true for template objects because
-  // they're never exposed to arbitrary script.
+  // The group and shape should not change. This is true for template objects
+  // because they're never exposed to arbitrary script.
+  inline gc::Cell* group() const;
   inline gc::Cell* shape() const;
 };
 

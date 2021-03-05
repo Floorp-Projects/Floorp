@@ -250,6 +250,7 @@ class GenericTracer : public JSTracer {
   virtual js::BaseScript* onScriptEdge(js::BaseScript* script) = 0;
   virtual js::Shape* onShapeEdge(js::Shape* shape) = 0;
   virtual js::RegExpShared* onRegExpSharedEdge(js::RegExpShared* shared) = 0;
+  virtual js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) = 0;
   virtual js::BaseShape* onBaseShapeEdge(js::BaseShape* base) = 0;
   virtual js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) = 0;
   virtual js::Scope* onScopeEdge(js::Scope* scope) = 0;
@@ -298,6 +299,10 @@ class JS_PUBLIC_API CallbackTracer : public js::GenericTracer {
   virtual js::Shape* onShapeEdge(js::Shape* shape) {
     onChild(JS::GCCellPtr(shape, JS::TraceKind::Shape));
     return shape;
+  }
+  virtual js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) {
+    onChild(JS::GCCellPtr(group, JS::TraceKind::ObjectGroup));
+    return group;
   }
   virtual js::BaseShape* onBaseShapeEdge(js::BaseShape* base) {
     onChild(JS::GCCellPtr(base, JS::TraceKind::BaseShape));

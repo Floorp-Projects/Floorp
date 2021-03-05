@@ -428,6 +428,11 @@ void TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
     // The maximum depth of traversal when tracing a Shape is unbounded, due to
     // the parent pointers on the shape.
     JS_TraceShapeCycleCollectorChildren(this, aThing);
+  } else if (aThing.is<js::ObjectGroup>()) {
+    // The maximum depth of traversal when tracing an ObjectGroup is unbounded,
+    // due to information attached to the groups which can lead other groups to
+    // be traced.
+    JS_TraceObjectGroupCycleCollectorChildren(this, aThing);
   } else {
     JS::TraceChildren(this, aThing);
   }

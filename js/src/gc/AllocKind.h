@@ -64,6 +64,7 @@ namespace gc {
     D(SHAPE,               Shape,        js::Shape,         js::Shape,         true,   false,  true) \
     D(ACCESSOR_SHAPE,      Shape,        js::AccessorShape, js::AccessorShape, true,   false,  true) \
     D(BASE_SHAPE,          BaseShape,    js::BaseShape,     js::BaseShape,     true,   false,  true) \
+    D(OBJECT_GROUP,        ObjectGroup,  js::ObjectGroup,   js::ObjectGroup,   true,   false,  true) \
     D(EXTERNAL_STRING,     String,       JSExternalString,  JSExternalString,  true,   false,  true) \
     D(FAT_INLINE_ATOM,     String,       js::FatInlineAtom, js::FatInlineAtom, true,   false,  false) \
     D(ATOM,                String,       js::NormalAtom,    js::NormalAtom,    true,   false,  false) \

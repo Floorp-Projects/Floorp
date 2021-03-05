@@ -538,7 +538,7 @@ class NativeObject : public JSObject {
     static_assert(sizeof(NativeObject) % sizeof(Value) == 0,
                   "fixed slots after an object must be aligned");
 
-    static_assert(offsetOfShape() == offsetof(JS::shadow::Object, shape),
+    static_assert(offsetOfGroup() == offsetof(JS::shadow::Object, group),
                   "shadow type must match actual type");
     static_assert(
         offsetof(NativeObject, slots_) == offsetof(JS::shadow::Object, slots),
@@ -552,13 +552,6 @@ class NativeObject : public JSObject {
     static_assert(sizeof(NativeObject) + MAX_FIXED_SLOTS * sizeof(Value) ==
                       JSObject::MAX_BYTE_SIZE,
                   "inconsistent maximum object size");
-
-    // Sanity check NativeObject size is what we expect.
-#ifdef JS_64BIT
-    static_assert(sizeof(NativeObject) == 3 * sizeof(void*));
-#else
-    static_assert(sizeof(NativeObject) == 4 * sizeof(void*));
-#endif
   }
 
  public:
@@ -606,7 +599,7 @@ class NativeObject : public JSObject {
 
   static inline JS::Result<NativeObject*, JS::OOM> create(
       JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-      js::HandleShape shape);
+      js::HandleShape shape, js::HandleObjectGroup group);
 
 #ifdef DEBUG
   static void enableShapeConsistencyChecks();

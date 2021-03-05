@@ -242,6 +242,7 @@ struct MovingTracer final : public GenericTracer {
   Scope* onScopeEdge(Scope* scope) override;
   RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
   BigInt* onBigIntEdge(BigInt* bi) override;
+  ObjectGroup* onObjectGroupEdge(ObjectGroup* group) override;
   JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
   jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override;
 
@@ -264,6 +265,7 @@ struct SweepingTracer final : public GenericTracer {
   Scope* onScopeEdge(Scope* scope) override;
   RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
   BigInt* onBigIntEdge(BigInt* bi) override;
+  js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) override;
   JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
 
  private:

@@ -548,28 +548,6 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<BaseScript*>(
     JSTracer*, JSObject*, BaseScript**, const char*);
 
 template <typename T>
-void js::TraceSameZoneCrossCompartmentEdge(JSTracer* trc,
-                                           const WriteBarriered<T>* dst,
-                                           const char* name) {
-#ifdef DEBUG
-  if (trc->isMarkingTracer()) {
-    MOZ_ASSERT((*dst)->maybeCompartment(),
-               "Use TraceEdge for GC things without a compartment");
-
-    GCMarker* gcMarker = GCMarker::fromTracer(trc);
-    MOZ_ASSERT_IF(gcMarker->tracingZone,
-                  (*dst)->zone() == gcMarker->tracingZone);
-  }
-#endif
-
-  // Clear expected compartment for cross-compartment edge.
-  AutoClearTracingSource acts(trc);
-  TraceEdgeInternal(trc, ConvertToBase(dst->unbarrieredAddress()), name);
-}
-template void js::TraceSameZoneCrossCompartmentEdge(
-    JSTracer*, const WriteBarriered<Shape*>*, const char*);
-
-template <typename T>
 void js::TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone,
                                      T** thingp, const char* name) {
   // We can't use ShouldTraceCrossCompartment here because that assumes the
@@ -1112,6 +1090,10 @@ void GCMarker::traverse(JSObject* thing) {
   pushThing(thing);
 }
 template <>
+void GCMarker::traverse(ObjectGroup* thing) {
+  pushThing(thing);
+}
+template <>
 void GCMarker::traverse(jit::JitCode* thing) {
   pushThing(thing);
 }
@@ -1267,8 +1249,6 @@ void Shape::traceChildren(JSTracer* trc) {
     }
   }
 
-  cache_.trace(trc);
-
   if (hasGetterObject()) {
     TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
   }
@@ -1280,10 +1260,14 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
   MOZ_ASSERT(shape->isMarked(markColor()));
 
   do {
+    // Special case: if a base shape has a shape table then all its pointers
+    // must point to this shape or an anscestor.  Since these pointers will
+    // be traced by this loop they do not need to be traced here as well.
     BaseShape* base = shape->base();
     checkTraversedEdge(shape, base);
     if (mark(base)) {
-      base->traceChildren(this);
+      MOZ_ASSERT(base->canSkipMarkingShapeCache(shape));
+      base->traceChildrenSkipShapeCache(this);
     }
 
     markAndTraverseEdge(shape, shape->propidRef().get());
@@ -1294,11 +1278,6 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
     if (shape->dictNext.isObject()) {
       markAndTraverseEdge(shape, shape->dictNext.toObject());
     }
-
-    // Special case: if a shape has a shape table then all its pointers
-    // must point to this shape or an anscestor.  Since these pointers will
-    // be traced by this loop they do not need to be traced here as well.
-    MOZ_ASSERT(shape->canSkipMarkingShapeCache());
 
     // When triggered between slices on behalf of a barrier, these
     // objects may reside in the nursery, so require an extra check.
@@ -1555,14 +1534,25 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   } while (scope && mark(scope));
 }
 
-void BaseShape::traceChildren(JSTracer* trc) {
-  // Note: the realm's global can be nullptr if we GC while creating the global.
-  if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
-    TraceManuallyBarrieredEdge(trc, &global, "baseshape_global");
+void js::ObjectGroup::traceChildren(JSTracer* trc) {
+  if (proto().isObject()) {
+    TraceEdge(trc, &proto(), "group_proto");
   }
 
-  if (proto_.isObject()) {
-    TraceEdge(trc, &proto_, "baseshape_proto");
+  // Note: the realm's global can be nullptr if we GC while creating the global.
+  if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
+    TraceManuallyBarrieredEdge(trc, &global, "group_global");
+  }
+}
+
+void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
+  if (group->proto().isObject()) {
+    markAndTraverseEdge(group, group->proto().toObject());
+  }
+
+  // Note: the realm's global can be nullptr if we GC while creating the global.
+  if (GlobalObject* global = group->realm()->unsafeUnbarrieredMaybeGlobal()) {
+    markAndTraverseEdge(group, static_cast<JSObject*>(global));
   }
 }
 
@@ -1931,6 +1921,11 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
       goto scan_obj;
     }
 
+    case MarkStack::GroupTag: {
+      auto group = stack.popPtr().as<ObjectGroup>();
+      return lazilyMarkChildren(group);
+    }
+
     case MarkStack::JitCodeTag: {
       auto code = stack.popPtr().as<jit::JitCode>();
       AutoSetTracingSource asts(this, code);
@@ -2002,6 +1997,7 @@ scan_obj : {
   }
 
   markImplicitEdges(obj);
+  markAndTraverseEdge(obj, obj->group());
   markAndTraverseEdge(obj, obj->shape());
 
   CallTraceHook(this, obj);
@@ -2067,6 +2063,10 @@ struct MapTypeToMarkStackTag {};
 template <>
 struct MapTypeToMarkStackTag<JSObject*> {
   static const auto value = MarkStack::ObjectTag;
+};
+template <>
+struct MapTypeToMarkStackTag<ObjectGroup*> {
+  static const auto value = MarkStack::GroupTag;
 };
 template <>
 struct MapTypeToMarkStackTag<jit::JitCode*> {
@@ -2835,6 +2835,9 @@ js::BaseScript* TenuringTracer::onScriptEdge(BaseScript* script) {
 js::Shape* TenuringTracer::onShapeEdge(Shape* shape) { return shape; }
 js::RegExpShared* TenuringTracer::onRegExpSharedEdge(RegExpShared* shared) {
   return shared;
+}
+js::ObjectGroup* TenuringTracer::onObjectGroupEdge(ObjectGroup* group) {
+  return group;
 }
 js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base) { return base; }
 js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code) {
@@ -3874,6 +3877,9 @@ Scope* SweepingTracer::onScopeEdge(Scope* scope) { return onEdge(scope); }
 RegExpShared* SweepingTracer::onRegExpSharedEdge(RegExpShared* shared) {
   return onEdge(shared);
 }
+ObjectGroup* SweepingTracer::onObjectGroupEdge(ObjectGroup* group) {
+  return onEdge(group);
+}
 BigInt* SweepingTracer::onBigIntEdge(BigInt* bi) { return onEdge(bi); }
 JS::Symbol* SweepingTracer::onSymbolEdge(JS::Symbol* sym) {
   return onEdge(sym);
@@ -4182,6 +4188,10 @@ RegExpShared* BarrierTracer::onRegExpSharedEdge(RegExpShared* shared) {
 BigInt* BarrierTracer::onBigIntEdge(BigInt* bi) {
   PreWriteBarrier(bi);
   return bi;
+}
+ObjectGroup* BarrierTracer::onObjectGroupEdge(ObjectGroup* group) {
+  PreWriteBarrier(group);
+  return group;
 }
 JS::Symbol* BarrierTracer::onSymbolEdge(JS::Symbol* sym) {
   PreWriteBarrier(sym);

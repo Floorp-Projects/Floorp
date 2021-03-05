@@ -157,7 +157,7 @@ static inline bool IsOptimizableObjectInstruction(MInstruction* ins) {
 static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
   MOZ_ASSERT(IsOptimizableObjectInstruction(ins) || ins->isGuardShape() ||
-             ins->isFunctionEnvironment());
+             ins->isGuardObjectGroup() || ins->isFunctionEnvironment());
 
   JitSpewDef(JitSpew_Escape, "Check object\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
@@ -223,6 +223,20 @@ static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault) {
         MOZ_ASSERT(!ins->isGuardShape());
         if (obj->shape() != guard->shape()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
+          return true;
+        }
+        if (IsObjectEscaped(def->toInstruction(), obj)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::GuardObjectGroup: {
+        MGuardObjectGroup* guard = def->toGuardObjectGroup();
+        MOZ_ASSERT(!ins->isGuardObjectGroup());
+        if (obj->group() != guard->group()) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching guard group\n", guard);
           return true;
         }
         if (IsObjectEscaped(def->toInstruction(), obj)) {
@@ -301,6 +315,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitStoreDynamicSlot(MStoreDynamicSlot* ins);
   void visitLoadDynamicSlot(MLoadDynamicSlot* ins);
   void visitGuardShape(MGuardShape* ins);
+  void visitGuardObjectGroup(MGuardObjectGroup* ins);
   void visitFunctionEnvironment(MFunctionEnvironment* ins);
   void visitLambda(MLambda* ins);
   void visitLambdaArrow(MLambdaArrow* ins);
@@ -618,6 +633,10 @@ void ObjectMemoryView::visitObjectGuard(MInstruction* ins,
 }
 
 void ObjectMemoryView::visitGuardShape(MGuardShape* ins) {
+  visitObjectGuard(ins, ins->object());
+}
+
+void ObjectMemoryView::visitGuardObjectGroup(MGuardObjectGroup* ins) {
   visitObjectGuard(ins, ins->object());
 }
 

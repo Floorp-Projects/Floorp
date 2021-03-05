@@ -83,10 +83,11 @@ class DtoaCache {
 };
 
 // Cache to speed up the group/shape lookup in ProxyObject::create. A proxy's
-// shape is only determined by the Class + proto, so a small cache for this is
-// very effective in practice.
+// group/shape is only determined by the Class + proto, so a small cache for
+// this is very effective in practice.
 class NewProxyCache {
   struct Entry {
+    ObjectGroup* group;
     Shape* shape;
   };
   static const size_t NumEntries = 4;
@@ -94,22 +95,23 @@ class NewProxyCache {
 
  public:
   MOZ_ALWAYS_INLINE bool lookup(const JSClass* clasp, TaggedProto proto,
-                                Shape** shape) const {
+                                ObjectGroup** group, Shape** shape) const {
     if (!entries_) {
       return false;
     }
     for (size_t i = 0; i < NumEntries; i++) {
       const Entry& entry = entries_[i];
-      if (entry.shape && entry.shape->getObjectClass() == clasp &&
-          entry.shape->proto() == proto) {
+      if (entry.group && entry.group->clasp() == clasp &&
+          entry.group->proto() == proto) {
+        *group = entry.group;
         *shape = entry.shape;
         return true;
       }
     }
     return false;
   }
-  void add(Shape* shape) {
-    MOZ_ASSERT(shape);
+  void add(ObjectGroup* group, Shape* shape) {
+    MOZ_ASSERT(group && shape);
     if (!entries_) {
       entries_.reset(js_pod_calloc<Entry>(NumEntries));
       if (!entries_) {
@@ -120,6 +122,7 @@ class NewProxyCache {
         entries_[i] = entries_[i - 1];
       }
     }
+    entries_[0].group = group;
     entries_[0].shape = shape;
   }
   void purge() { entries_.reset(); }
@@ -313,6 +316,12 @@ class JS::Realm : public JS::shadow::Realm {
   // Note: this is private to enforce use of ObjectRealm::get(obj).
   js::ObjectRealm objects_;
   friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
+
+  // Object group tables and other state in the realm. This is private to
+  // enforce use of ObjectGroupRealm::getForNewObject(cx).
+  js::ObjectGroupRealm objectGroups_;
+  friend js::ObjectGroupRealm& js::ObjectGroupRealm::getForNewObject(
+      JSContext* cx);
 
   // The global environment record's [[VarNames]] list that contains all
   // names declared using FunctionDeclaration, GeneratorDeclaration, and
@@ -564,6 +573,12 @@ class JS::Realm : public JS::shadow::Realm {
   void purge();
 
   void fixupAfterMovingGC(JSTracer* trc);
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+  void checkObjectGroupTablesAfterMovingGC() {
+    objectGroups_.checkTablesAfterMovingGC();
+  }
+#endif
 
   // Add a name to [[VarNames]].  Reports OOM on failure.
   [[nodiscard]] bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);

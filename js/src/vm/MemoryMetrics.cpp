@@ -479,6 +479,11 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       break;
     }
 
+    case JS::TraceKind::ObjectGroup: {
+      zStats->objectGroupsGCHeap += thingSize;
+      break;
+    }
+
     case JS::TraceKind::Scope: {
       Scope* scope = &cellptr.as<Scope>();
       zStats->scopesGCHeap += thingSize;

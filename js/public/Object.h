@@ -17,9 +17,10 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Class.h"  // js::ESClass, JSCLASS_RESERVED_SLOTS, JSCLASS_HAS_PRIVATE
-#include "js/Realm.h"       // JS::GetCompartmentForRealm
-#include "js/RootingAPI.h"  // JS::{,Mutable}Handle
-#include "js/Value.h"       // JS::Value
+#include "js/Realm.h"               // JS::GetCompartmentForRealm
+#include "js/RootingAPI.h"          // JS::{,Mutable}Handle
+#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
+#include "js/Value.h"               // JS::Value
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
@@ -44,7 +45,7 @@ extern JS_PUBLIC_API bool GetBuiltinClass(JSContext* cx, Handle<JSObject*> obj,
 
 /** Get the |JSClass| of an object. */
 inline const JSClass* GetClass(const JSObject* obj) {
-  return reinterpret_cast<const shadow::Object*>(obj)->shape->base->clasp;
+  return reinterpret_cast<const shadow::Object*>(obj)->group->clasp;
 }
 
 /**
@@ -55,7 +56,7 @@ inline const JSClass* GetClass(const JSObject* obj) {
  * compartment of this realm.
  */
 static MOZ_ALWAYS_INLINE Compartment* GetCompartment(JSObject* obj) {
-  Realm* realm = reinterpret_cast<shadow::Object*>(obj)->shape->base->realm;
+  Realm* realm = reinterpret_cast<shadow::Object*>(obj)->group->realm;
   return GetCompartmentForRealm(realm);
 }
 

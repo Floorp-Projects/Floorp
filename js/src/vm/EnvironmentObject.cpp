@@ -78,6 +78,7 @@ PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
 
 template <typename T>
 static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
+                                  HandleObjectGroup group,
                                   gc::InitialHeap heap) {
   static_assert(std::is_base_of_v<EnvironmentObject, T>,
                 "T must be an EnvironmentObject");
@@ -88,10 +89,23 @@ static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
   allocKind = gc::ForegroundToBackgroundAllocKind(allocKind);
 
   JSObject* obj;
-  JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
-                            NativeObject::create(cx, allocKind, heap, shape));
+  JS_TRY_VAR_OR_RETURN_NULL(
+      cx, obj, NativeObject::create(cx, allocKind, heap, shape, group));
 
   return &obj->as<T>();
+}
+
+// As above, but the caller does not have to pass the group.
+template <typename T>
+static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
+                                  gc::InitialHeap heap) {
+  RootedObjectGroup group(
+      cx, ObjectGroup::defaultNewGroup(cx, &T::class_, TaggedProto(nullptr)));
+  if (!group) {
+    return nullptr;
+  }
+
+  return CreateEnvironmentObject<T>(cx, shape, group, heap);
 }
 
 // Helper function for simple environment objects that don't need the overloads
@@ -99,13 +113,20 @@ static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
 template <typename T>
 static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
                                   NewObjectKind newKind = GenericObject) {
-  gc::InitialHeap heap = GetInitialHeap(newKind, &T::class_);
-  return CreateEnvironmentObject<T>(cx, shape, heap);
+  RootedObjectGroup group(
+      cx, ObjectGroup::defaultNewGroup(cx, &T::class_, TaggedProto(nullptr)));
+  if (!group) {
+    return nullptr;
+  }
+
+  gc::InitialHeap heap = GetInitialHeap(newKind, group);
+  return CreateEnvironmentObject<T>(cx, shape, group, heap);
 }
 
-CallObject* CallObject::create(JSContext* cx, HandleShape shape) {
-  gc::InitialHeap heap = GetInitialHeap(GenericObject, &class_);
-  return CreateEnvironmentObject<CallObject>(cx, shape, heap);
+CallObject* CallObject::create(JSContext* cx, HandleShape shape,
+                               HandleObjectGroup group) {
+  gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
+  return CreateEnvironmentObject<CallObject>(cx, shape, group, heap);
 }
 
 /*
@@ -228,7 +249,12 @@ CallObject* CallObject::createHollowForDebug(JSContext* cx,
   if (!shape) {
     return nullptr;
   }
-  Rooted<CallObject*> callobj(cx, create(cx, shape));
+  RootedObjectGroup group(
+      cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+  if (!group) {
+    return nullptr;
+  }
+  Rooted<CallObject*> callobj(cx, create(cx, shape, group));
   if (!callobj) {
     return nullptr;
   }

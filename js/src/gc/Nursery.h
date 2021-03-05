@@ -133,6 +133,7 @@ class TenuringTracer final : public GenericTracer {
   js::BaseScript* onScriptEdge(BaseScript* script) override;
   js::Shape* onShapeEdge(Shape* shape) override;
   js::RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
+  js::ObjectGroup* onObjectGroupEdge(ObjectGroup* group) override;
   js::BaseShape* onBaseShapeEdge(BaseShape* base) override;
   js::jit::JitCode* onJitCodeEdge(jit::JitCode* code) override;
   js::Scope* onScopeEdge(Scope* scope) override;
