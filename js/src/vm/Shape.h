@@ -723,6 +723,12 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
     static_assert(sizeof(BaseShape) % gc::CellAlignBytes == 0,
                   "Things inheriting from gc::Cell must have a size that's "
                   "a multiple of gc::CellAlignBytes");
+    // Sanity check BaseShape size is what we expect.
+#ifdef JS_64BIT
+    static_assert(sizeof(BaseShape) == 3 * sizeof(void*));
+#else
+    static_assert(sizeof(BaseShape) == 4 * sizeof(void*));
+#endif
   }
 };
 
@@ -1337,6 +1343,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
                   offsetof(JS::shadow::Shape, immutableFlags));
     static_assert(FIXED_SLOTS_SHIFT == JS::shadow::Shape::FIXED_SLOTS_SHIFT);
     static_assert(FIXED_SLOTS_MASK == JS::shadow::Shape::FIXED_SLOTS_MASK);
+    // Sanity check Shape size is what we expect.
+#ifdef JS_64BIT
+    static_assert(sizeof(Shape) == 6 * sizeof(void*));
+#else
+    static_assert(sizeof(Shape) == 8 * sizeof(void*));
+#endif
   }
 };
 

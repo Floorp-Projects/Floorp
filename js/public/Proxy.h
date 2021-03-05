@@ -464,7 +464,11 @@ struct ProxyDataLayout {
   }
 };
 
-const uint32_t ProxyDataOffset = 2 * sizeof(void*);
+#ifdef JS_64BIT
+constexpr uint32_t ProxyDataOffset = 1 * sizeof(void*);
+#else
+constexpr uint32_t ProxyDataOffset = 2 * sizeof(void*);
+#endif
 
 inline ProxyDataLayout* GetProxyDataLayout(JSObject* obj) {
   MOZ_ASSERT(IsProxy(obj));

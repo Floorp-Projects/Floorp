@@ -466,7 +466,6 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   }
 
   NativeObject* nobj = static_cast<NativeObject*>(obj);
-  nobj->initGroup(nullptr);
   nobj->initShape(shape);
   // NOTE: Dynamic slots are created internally by Allocate<JSObject>.
   if (!nDynamicSlots) {

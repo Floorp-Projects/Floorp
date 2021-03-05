@@ -62,19 +62,11 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  * and execution semantics. The runtime class of an arbitrary JSObject is
  * identified by JSObject::getClass().
  *
- * The members common to all objects are as follows:
+ * All objects have a non-null Shape, stored in the cell header, which describes
+ * the current layout and set of property keys of the object.
  *
- * - The |group_| member stores the group of the object, which contains its
- *   prototype object, its class, and its realm.
- *
- * - The |shape_| member stores the current 'shape' of the object, which
- *   describes the current layout and set of property keys of the object. The
- *   |shape_| field must be non-null.
- *
- * NOTE: shape()->getObjectClass() must equal getClass().
- *
- * NOTE: The JIT may check |shape_| pointer value without ever inspecting
- *       |group_| or the class.
+ * Each Shape has a pointer to a BaseShape. The BaseShape contains the object's
+ * prototype object, its class, and its realm.
  *
  * NOTE: Some operations can change the contents of an object (including class)
  *       in-place so avoid assuming an object with same pointer has same class
@@ -82,13 +74,15 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  *       - JSObject::swap()
  */
 class JSObject
-    : public js::gc::CellWithTenuredGCPointer<js::gc::Cell, js::ObjectGroup> {
+    : public js::gc::CellWithTenuredGCPointer<js::gc::Cell, js::Shape> {
  public:
-  // The ObjectGroup is stored in the cell header.
-  js::ObjectGroup* group() const { return headerPtr(); }
+  // The Shape is stored in the cell header.
+  js::Shape* shape() const { return headerPtr(); }
 
- protected:
-  js::GCPtrShape shape_;
+#ifndef JS_64BIT
+  // Ensure fixed slots have 8-byte alignment on 32-bit platforms.
+  uint32_t padding_;
+#endif
 
  private:
   friend class js::DictionaryShapeLink;
@@ -103,7 +97,7 @@ class JSObject
                                         bool* succeeded);
 
  public:
-  const JSClass* getClass() const { return shape_->getObjectClass(); }
+  const JSClass* getClass() const { return shape()->getObjectClass(); }
   bool hasClass(const JSClass* c) const { return getClass() == c; }
 
   js::LookupPropertyOp getOpsLookupProperty() const {
@@ -134,8 +128,6 @@ class JSObject
     return getClass()->getOpsFunToString();
   }
 
-  void initGroup(js::ObjectGroup* group) { initHeaderPtr(group); }
-
   JS::Compartment* compartment() const { return shape()->compartment(); }
   JS::Compartment* maybeCompartment() const { return compartment(); }
 
@@ -143,13 +135,12 @@ class JSObject
     // Note: use Cell::Zone() instead of zone() because zone() relies on the
     // shape we still have to initialize.
     MOZ_ASSERT(Cell::zone() == shape->zone());
-    shape_.init(shape);
+    initHeaderPtr(shape);
   }
   void setShape(js::Shape* shape) {
     MOZ_ASSERT(maybeCCWRealm() == shape->realm());
-    shape_ = shape;
+    setHeaderPtr(shape);
   }
-  js::Shape* shape() const { return shape_; }
 
   static JSObject* fromShapeFieldPointer(uintptr_t p) {
     return reinterpret_cast<JSObject*>(p - JSObject::offsetOfShape());
@@ -505,21 +496,22 @@ class JSObject
 #endif
 
   // Maximum size in bytes of a JSObject.
-  static const size_t MAX_BYTE_SIZE =
+#ifdef JS_64BIT
+  static constexpr size_t MAX_BYTE_SIZE =
+      3 * sizeof(void*) + 16 * sizeof(JS::Value);
+#else
+  static constexpr size_t MAX_BYTE_SIZE =
       4 * sizeof(void*) + 16 * sizeof(JS::Value);
+#endif
 
  protected:
-  // Used for GC tracing and Shape::listp
-  MOZ_ALWAYS_INLINE js::GCPtrShape* shapePtr() { return &(this->shape_); }
-
   // JIT Accessors.
   //
   // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
   // to call the method below.
   friend class js::jit::MacroAssembler;
 
-  static constexpr size_t offsetOfGroup() { return offsetOfHeaderPtr(); }
-  static constexpr size_t offsetOfShape() { return offsetof(JSObject, shape_); }
+  static constexpr size_t offsetOfShape() { return offsetOfHeaderPtr(); }
 
  private:
   JSObject() = delete;
