@@ -636,65 +636,6 @@ void MacroAssembler::branchTestObjShapeUnsafe(Condition cond, Register obj,
   branchTestObjShapeNoSpectreMitigations(cond, obj, shape, label);
 }
 
-void MacroAssembler::branchTestObjGroup(Condition cond, Register obj,
-                                        const ObjectGroup* group,
-                                        Register scratch,
-                                        Register spectreRegToZero,
-                                        Label* label) {
-  MOZ_ASSERT(obj != scratch);
-  MOZ_ASSERT(spectreRegToZero != scratch);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    move32(Imm32(0), scratch);
-  }
-
-  branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), ImmGCPtr(group),
-            label);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    spectreMovePtr(cond, scratch, spectreRegToZero);
-  }
-}
-
-void MacroAssembler::branchTestObjGroupNoSpectreMitigations(
-    Condition cond, Register obj, const ObjectGroup* group, Label* label) {
-  branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), ImmGCPtr(group),
-            label);
-}
-
-void MacroAssembler::branchTestObjGroupUnsafe(Condition cond, Register obj,
-                                              const ObjectGroup* group,
-                                              Label* label) {
-  branchTestObjGroupNoSpectreMitigations(cond, obj, group, label);
-}
-
-void MacroAssembler::branchTestObjGroup(Condition cond, Register obj,
-                                        Register group, Register scratch,
-                                        Register spectreRegToZero,
-                                        Label* label) {
-  MOZ_ASSERT(obj != scratch);
-  MOZ_ASSERT(obj != group);
-  MOZ_ASSERT(spectreRegToZero != scratch);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    move32(Imm32(0), scratch);
-  }
-
-  branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), group, label);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    spectreMovePtr(cond, scratch, spectreRegToZero);
-  }
-}
-
-void MacroAssembler::branchTestObjGroupNoSpectreMitigations(Condition cond,
-                                                            Register obj,
-                                                            Register group,
-                                                            Label* label) {
-  MOZ_ASSERT(obj != group);
-  branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), group, label);
-}
-
 void MacroAssembler::branchTestClassIsProxy(bool proxy, Register clasp,
                                             Label* label) {
   branchTest32(proxy ? Assembler::NonZero : Assembler::Zero,
