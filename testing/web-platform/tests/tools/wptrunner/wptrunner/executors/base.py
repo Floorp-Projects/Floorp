@@ -8,8 +8,9 @@ import traceback
 import socket
 import sys
 from abc import ABCMeta, abstractmethod
-from http.client import HTTPConnection
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from six import text_type
+from six.moves.http_client import HTTPConnection
+from six.moves.urllib.parse import urljoin, urlsplit, urlunsplit
 
 from .actions import actions
 from .protocol import Protocol, BaseProtocolPart
@@ -332,7 +333,7 @@ class TestExecutor(object):
             status = e.status
         else:
             status = "INTERNAL-ERROR"
-        message = str(getattr(e, "message", ""))
+        message = text_type(getattr(e, "message", ""))
         if message:
             message += "\n"
         message += exception_string

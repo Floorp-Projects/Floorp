@@ -1,15 +1,11 @@
-"""Generic mechanism for marking and selecting python functions."""
-import typing
-import warnings
-from typing import AbstractSet
-from typing import List
-from typing import Optional
-from typing import Union
+# -*- coding: utf-8 -*-
+""" generic mechanism for marking and selecting python functions. """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-import attr
-
-from .expression import Expression
-from .expression import ParseError
+from .legacy import matchkeyword
+from .legacy import matchmark
 from .structures import EMPTY_PARAMETERSET_OPTION
 from .structures import get_empty_parameterset_mark
 from .structures import Mark
@@ -17,58 +13,32 @@ from .structures import MARK_GEN
 from .structures import MarkDecorator
 from .structures import MarkGenerator
 from .structures import ParameterSet
-from _pytest.compat import TYPE_CHECKING
-from _pytest.config import Config
-from _pytest.config import ExitCode
-from _pytest.config import hookimpl
 from _pytest.config import UsageError
-from _pytest.config.argparsing import Parser
-from _pytest.deprecated import MINUS_K_COLON
-from _pytest.deprecated import MINUS_K_DASH
-from _pytest.store import StoreKey
 
-if TYPE_CHECKING:
-    from _pytest.nodes import Item
+__all__ = ["Mark", "MarkDecorator", "MarkGenerator", "get_empty_parameterset_mark"]
 
 
-__all__ = [
-    "MARK_GEN",
-    "Mark",
-    "MarkDecorator",
-    "MarkGenerator",
-    "ParameterSet",
-    "get_empty_parameterset_mark",
-]
-
-
-old_mark_config_key = StoreKey[Optional[Config]]()
-
-
-def param(
-    *values: object,
-    marks: "Union[MarkDecorator, typing.Collection[Union[MarkDecorator, Mark]]]" = (),
-    id: Optional[str] = None
-) -> ParameterSet:
+def param(*values, **kw):
     """Specify a parameter in `pytest.mark.parametrize`_ calls or
     :ref:`parametrized fixtures <fixture-parametrize-marks>`.
 
     .. code-block:: python
 
-        @pytest.mark.parametrize(
-            "test_input,expected",
-            [("3+5", 8), pytest.param("6*9", 42, marks=pytest.mark.xfail),],
-        )
+        @pytest.mark.parametrize("test_input,expected", [
+            ("3+5", 8),
+            pytest.param("6*9", 42, marks=pytest.mark.xfail),
+        ])
         def test_eval(test_input, expected):
             assert eval(test_input) == expected
 
-    :param values: Variable args of the values of the parameter set, in order.
-    :keyword marks: A single mark or a list of marks to be applied to this parameter set.
-    :keyword str id: The id to attribute to this parameter set.
+    :param values: variable args of the values of the parameter set, in order.
+    :keyword marks: a single mark or a list of marks to be applied to this parameter set.
+    :keyword str id: the id to attribute to this parameter set.
     """
-    return ParameterSet.param(*values, marks=marks, id=id)
+    return ParameterSet.param(*values, **kw)
 
 
-def pytest_addoption(parser: Parser) -> None:
+def pytest_addoption(parser):
     group = parser.getgroup("general")
     group._addoption(
         "-k",
@@ -86,8 +56,7 @@ def pytest_addoption(parser: Parser) -> None:
         "-k 'not test_method and not test_other' will eliminate the matches. "
         "Additionally keywords are matched to classes and functions "
         "containing extra names in their 'extra_keyword_matches' set, "
-        "as well as functions which have names assigned directly to them. "
-        "The matching is case-insensitive.",
+        "as well as functions which have names assigned directly to them.",
     )
 
     group._addoption(
@@ -96,8 +65,8 @@ def pytest_addoption(parser: Parser) -> None:
         dest="markexpr",
         default="",
         metavar="MARKEXPR",
-        help="only run tests matching given mark expression.\n"
-        "For example: -m 'mark1 and not mark2'.",
+        help="only run tests matching given mark expression.  "
+        "example: -m 'mark1 and not mark2'.",
     )
 
     group.addoption(
@@ -110,8 +79,7 @@ def pytest_addoption(parser: Parser) -> None:
     parser.addini(EMPTY_PARAMETERSET_OPTION, "default marker for empty parametersets")
 
 
-@hookimpl(tryfirst=True)
-def pytest_cmdline_main(config: Config) -> Optional[Union[int, ExitCode]]:
+def pytest_cmdline_main(config):
     import _pytest.config
 
     if config.option.markers:
@@ -127,87 +95,26 @@ def pytest_cmdline_main(config: Config) -> Optional[Union[int, ExitCode]]:
         config._ensure_unconfigure()
         return 0
 
-    return None
+
+pytest_cmdline_main.tryfirst = True
 
 
-@attr.s(slots=True)
-class KeywordMatcher:
-    """A matcher for keywords.
-
-    Given a list of names, matches any substring of one of these names. The
-    string inclusion check is case-insensitive.
-
-    Will match on the name of colitem, including the names of its parents.
-    Only matches names of items which are either a :class:`Class` or a
-    :class:`Function`.
-
-    Additionally, matches on names in the 'extra_keyword_matches' set of
-    any item, as well as names directly assigned to test functions.
-    """
-
-    _names = attr.ib(type=AbstractSet[str])
-
-    @classmethod
-    def from_item(cls, item: "Item") -> "KeywordMatcher":
-        mapped_names = set()
-
-        # Add the names of the current item and any parent items.
-        import pytest
-
-        for node in item.listchain():
-            if not isinstance(node, (pytest.Instance, pytest.Session)):
-                mapped_names.add(node.name)
-
-        # Add the names added as extra keywords to current or parent items.
-        mapped_names.update(item.listextrakeywords())
-
-        # Add the names attached to the current function through direct assignment.
-        function_obj = getattr(item, "function", None)
-        if function_obj:
-            mapped_names.update(function_obj.__dict__)
-
-        # Add the markers to the keywords as we no longer handle them correctly.
-        mapped_names.update(mark.name for mark in item.iter_markers())
-
-        return cls(mapped_names)
-
-    def __call__(self, subname: str) -> bool:
-        subname = subname.lower()
-        names = (name.lower() for name in self._names)
-
-        for name in names:
-            if subname in name:
-                return True
-        return False
-
-
-def deselect_by_keyword(items: "List[Item]", config: Config) -> None:
+def deselect_by_keyword(items, config):
     keywordexpr = config.option.keyword.lstrip()
     if not keywordexpr:
         return
 
     if keywordexpr.startswith("-"):
-        # To be removed in pytest 7.0.0.
-        warnings.warn(MINUS_K_DASH, stacklevel=2)
         keywordexpr = "not " + keywordexpr[1:]
     selectuntil = False
     if keywordexpr[-1:] == ":":
-        # To be removed in pytest 7.0.0.
-        warnings.warn(MINUS_K_COLON, stacklevel=2)
         selectuntil = True
         keywordexpr = keywordexpr[:-1]
-
-    try:
-        expression = Expression.compile(keywordexpr)
-    except ParseError as e:
-        raise UsageError(
-            "Wrong expression passed to '-k': {}: {}".format(keywordexpr, e)
-        ) from None
 
     remaining = []
     deselected = []
     for colitem in items:
-        if keywordexpr and not expression.evaluate(KeywordMatcher.from_item(colitem)):
+        if keywordexpr and not matchkeyword(colitem, keywordexpr):
             deselected.append(colitem)
         else:
             if selectuntil:
@@ -219,40 +126,15 @@ def deselect_by_keyword(items: "List[Item]", config: Config) -> None:
         items[:] = remaining
 
 
-@attr.s(slots=True)
-class MarkMatcher:
-    """A matcher for markers which are present.
-
-    Tries to match on any marker names, attached to the given colitem.
-    """
-
-    own_mark_names = attr.ib()
-
-    @classmethod
-    def from_item(cls, item) -> "MarkMatcher":
-        mark_names = {mark.name for mark in item.iter_markers()}
-        return cls(mark_names)
-
-    def __call__(self, name: str) -> bool:
-        return name in self.own_mark_names
-
-
-def deselect_by_mark(items: "List[Item]", config: Config) -> None:
+def deselect_by_mark(items, config):
     matchexpr = config.option.markexpr
     if not matchexpr:
         return
 
-    try:
-        expression = Expression.compile(matchexpr)
-    except ParseError as e:
-        raise UsageError(
-            "Wrong expression passed to '-m': {}: {}".format(matchexpr, e)
-        ) from None
-
     remaining = []
     deselected = []
     for item in items:
-        if expression.evaluate(MarkMatcher.from_item(item)):
+        if matchmark(item, matchexpr):
             remaining.append(item)
         else:
             deselected.append(item)
@@ -262,13 +144,13 @@ def deselect_by_mark(items: "List[Item]", config: Config) -> None:
         items[:] = remaining
 
 
-def pytest_collection_modifyitems(items: "List[Item]", config: Config) -> None:
+def pytest_collection_modifyitems(items, config):
     deselect_by_keyword(items, config)
     deselect_by_mark(items, config)
 
 
-def pytest_configure(config: Config) -> None:
-    config._store[old_mark_config_key] = MARK_GEN._config
+def pytest_configure(config):
+    config._old_mark_config = MARK_GEN._config
     MARK_GEN._config = config
 
     empty_parameterset = config.getini(EMPTY_PARAMETERSET_OPTION)
@@ -280,5 +162,5 @@ def pytest_configure(config: Config) -> None:
         )
 
 
-def pytest_unconfigure(config: Config) -> None:
-    MARK_GEN._config = config._store.get(old_mark_config_key, None)
+def pytest_unconfigure(config):
+    MARK_GEN._config = getattr(config, "_old_mark_config", None)

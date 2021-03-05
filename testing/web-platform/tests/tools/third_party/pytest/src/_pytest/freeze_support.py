@@ -1,14 +1,18 @@
-"""Provides a function to report all internal modules for using freezing
-tools."""
-import types
-from typing import Iterator
-from typing import List
-from typing import Union
+# -*- coding: utf-8 -*-
+"""
+Provides a function to report all internal modules for using freezing tools
+pytest
+"""
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 
-def freeze_includes() -> List[str]:
-    """Return a list of module names used by pytest that should be
-    included by cx_freeze."""
+def freeze_includes():
+    """
+    Returns a list of module names used by pytest that should be
+    included by cx_freeze.
+    """
     import py
     import _pytest
 
@@ -17,26 +21,25 @@ def freeze_includes() -> List[str]:
     return result
 
 
-def _iter_all_modules(
-    package: Union[str, types.ModuleType], prefix: str = "",
-) -> Iterator[str]:
-    """Iterate over the names of all modules that can be found in the given
+def _iter_all_modules(package, prefix=""):
+    """
+    Iterates over the names of all modules that can be found in the given
     package, recursively.
-
-        >>> import _pytest
-        >>> list(_iter_all_modules(_pytest))
-        ['_pytest._argcomplete', '_pytest._code.code', ...]
+    Example:
+        _iter_all_modules(_pytest) ->
+            ['_pytest.assertion.newinterpret',
+             '_pytest.capture',
+             '_pytest.core',
+             ...
+            ]
     """
     import os
     import pkgutil
 
-    if isinstance(package, str):
-        path = package
+    if type(package) is not str:
+        path, prefix = package.__path__[0], package.__name__ + "."
     else:
-        # Type ignored because typeshed doesn't define ModuleType.__path__
-        # (only defined on packages).
-        package_path = package.__path__  # type: ignore[attr-defined]
-        path, prefix = package_path[0], package.__name__ + "."
+        path = package
     for _, name, is_package in pkgutil.iter_modules([path]):
         if is_package:
             for m in _iter_all_modules(os.path.join(path, name), prefix=name + "."):

@@ -1,7 +1,7 @@
 import unittest
 
 import pytest
-from urllib.error import HTTPError
+from six.moves.urllib.error import HTTPError
 
 wptserve = pytest.importorskip("wptserve")
 from .base import TestUsingServer, TestUsingH2Server

@@ -1,3 +1,0 @@
-[pytest11]
-asyncio = pytest_asyncio.plugin
-

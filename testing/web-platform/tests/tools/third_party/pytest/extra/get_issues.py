@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 import json
-from pathlib import Path
 
+import py
 import requests
 
 issues_url = "https://api.github.com/repos/pytest-dev/pytest/issues"
@@ -31,12 +32,12 @@ def get_issues():
 
 
 def main(args):
-    cachefile = Path(args.cache)
+    cachefile = py.path.local(args.cache)
     if not cachefile.exists() or args.refresh:
         issues = get_issues()
-        cachefile.write_text(json.dumps(issues), "utf-8")
+        cachefile.write(json.dumps(issues))
     else:
-        issues = json.loads(cachefile.read_text("utf-8"))
+        issues = json.loads(cachefile.read())
 
     open_issues = [x for x in issues if x["state"] == "open"]
 
@@ -45,7 +46,7 @@ def main(args):
 
 
 def _get_kind(issue):
-    labels = [label["name"] for label in issue["labels"]]
+    labels = [l["name"] for l in issue["labels"]]
     for key in ("bug", "enhancement", "proposal"):
         if key in labels:
             return key

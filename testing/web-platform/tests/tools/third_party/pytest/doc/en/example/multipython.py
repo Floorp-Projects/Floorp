@@ -1,14 +1,15 @@
+# -*- coding: utf-8 -*-
 """
 module containing a parametrized tests testing cross-python
 serialization via the pickle module.
 """
-import shutil
+import distutils.spawn
 import subprocess
 import textwrap
 
 import pytest
 
-pythonlist = ["python3.5", "python3.6", "python3.7"]
+pythonlist = ["python2.7", "python3.4", "python3.5"]
 
 
 @pytest.fixture(params=pythonlist)
@@ -22,9 +23,9 @@ def python2(request, python1):
     return Python(request.param, python1.picklefile)
 
 
-class Python:
+class Python(object):
     def __init__(self, version, picklefile):
-        self.pythonpath = shutil.which(version)
+        self.pythonpath = distutils.spawn.find_executable(version)
         if not self.pythonpath:
             pytest.skip("{!r} not found".format(version))
         self.picklefile = picklefile
@@ -69,4 +70,4 @@ class Python:
 @pytest.mark.parametrize("obj", [42, {}, {1: 3}])
 def test_basic_objects(python1, python2, obj):
     python1.dumps(obj)
-    python2.load_and_is_true("obj == {}".format(obj))
+    python2.load_and_is_true("obj == %s" % obj)
