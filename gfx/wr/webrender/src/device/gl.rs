@@ -1920,7 +1920,15 @@ impl Device {
         // wrapper from our GL context.
         let being_profiled = profiler::thread_is_being_profiled();
         let using_wrapper = self.base_gl.is_some();
-        if being_profiled && !using_wrapper {
+
+        // We can usually unwind driver stacks on x86 so we don't need to manually instrument
+        // gl calls there. Timestamps can be pretty expensive on Windows (2us each and perhaps
+        // an opportunity to be descheduled?) which makes the profiles gathered with this
+        // turned on less useful so only profile on ARM.
+        if cfg!(any(target_arch = "arm", target_arch = "aarch64"))
+            && being_profiled
+            && !using_wrapper
+        {
             fn note(name: &str, duration: Duration) {
                 profiler::add_text_marker(cstr!("OpenGL Calls"), name, duration);
             }
