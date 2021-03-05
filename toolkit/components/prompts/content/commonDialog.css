@@ -10,7 +10,6 @@
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  max-height: 100%;
 }
 
 .dialogRow:not([hidden]) {
@@ -25,46 +24,12 @@
   max-width: 45em;
 }
 
-#infoTitle {
-  margin-bottom: 1em;
-}
-
 #infoBody {
   -moz-user-focus: normal;
   user-select: text;
   cursor: text !important;
   white-space: pre-wrap;
-  word-break: break-word;
   unicode-bidi: plaintext;
-}
-
-.sizeDetermined #infoBody {
-  overflow-y: auto;
-}
-
-.sizeDetermined,
-.sizeDetermined::part(content-box) {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-@supports not -moz-bool-pref("browser.proton.enabled") {
-.sizeDetermined,
-.sizeDetermined .dialogRow,
-.sizeDetermined #infoContainer {
-  max-height: 100%;
-}
-
-dialog[subdialog] #infoContainer {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-}
-
-.sizeDetermined > div {
-  display: contents;
 }
 
 #loginLabel, #password1Label {
@@ -74,58 +39,4 @@ dialog[subdialog] #infoContainer {
 #loginTextbox,
 #password1Textbox {
   text-align: match-parent;
-}
-
-@supports -moz-bool-pref("browser.proton.enabled") {
-/* use flexbox instead of grid: */
-dialog[subdialog],
-dialog[subdialog] #dialogGrid,
-dialog[subdialog] #infoContainer,
-dialog[subdialog] .dialogRow:not([hidden]) {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-dialog[subdialog] #infoContainer {
-  max-height: 100%;
-  /* Needed to ensure text wrapping happens correctly. Without this, when
-   * text wraps unexpectedly, the overall dialog height is off by the height
-   * of a line of text. */
-  max-width: calc(100vw - 32px);
-}
-
-.sizeDetermined #infoRow {
-  min-height: 0;
-}
-
-dialog[subdialog] #iconContainer {
-  display: none;
-}
-
-/* Fix padding/spacing */
-dialog[subdialog] {
-  /* All the inner items should have 4px inline margin, leading to 16px spacing
-   * between the dialog and its contents, and 8px horizontal spacing between items. */
-  padding: 16px 12px;
-}
-
-/* Use an ID selector for the dialog to win on specificity... */
-#commonDialog[subdialog] label,
-#commonDialog[subdialog] description,
-#commonDialog[subdialog] checkbox,
-#commonDialog[subdialog] input {
-  margin: 0 4px;
-}
-
-/* Add vertical spaces between rows: */
-dialog[subdialog] .dialogRow,
-dialog[subdialog] #infoTitle {
-  margin-block: 0 20px;
-}
-
-/* Start-align labels: */
-#loginLabel, #password1Label {
-  text-align: start;
-}
 }

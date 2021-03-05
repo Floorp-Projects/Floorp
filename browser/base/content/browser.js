@@ -8994,10 +8994,6 @@ class TabDialogBox {
         }
       };
 
-      if (modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT) {
-        sizeTo = "limitheight";
-      }
-
       // Open dialog and resolve once it has been closed
       let dialog = dialogManager.open(
         aURL,
