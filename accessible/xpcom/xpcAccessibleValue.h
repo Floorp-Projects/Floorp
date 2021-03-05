@@ -31,7 +31,7 @@ class xpcAccessibleValue : public nsIAccessibleValue {
   virtual ~xpcAccessibleValue() {}
 
  private:
-  Accessible* Intl();
+  AccessibleOrProxy Intl();
 
   xpcAccessibleValue(const xpcAccessibleValue&) = delete;
   xpcAccessibleValue& operator=(const xpcAccessibleValue&) = delete;
