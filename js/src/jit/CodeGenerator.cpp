@@ -4295,16 +4295,6 @@ void CodeGenerator::visitGuardIsTypedArray(LGuardIsTypedArray* guard) {
   bailoutFrom(&bail, guard->snapshot());
 }
 
-void CodeGenerator::visitGuardObjectGroup(LGuardObjectGroup* guard) {
-  Register obj = ToRegister(guard->input());
-  Register temp = ToTempRegisterOrInvalid(guard->temp());
-  Assembler::Condition cond =
-      guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
-  Label bail;
-  masm.branchTestObjGroup(cond, obj, guard->mir()->group(), temp, obj, &bail);
-  bailoutFrom(&bail, guard->snapshot());
-}
-
 void CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity* guard) {
   Register input = ToRegister(guard->input());
   Register expected = ToRegister(guard->expected());
