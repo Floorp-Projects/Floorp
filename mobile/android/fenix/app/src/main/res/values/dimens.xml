@@ -58,6 +58,7 @@
     <dimen name="checkbox_preference_padding_vertical">12dp</dimen>
     <dimen name="radiobutton_preference_margin_start">8dp</dimen>
     <dimen name="top_bar_alignment_margin_start">72dp</dimen>
+    <dimen name="top_bar_no_icon_alignment_margin_start">16dp</dimen>
     <dimen name="section_header_height">48dp</dimen>
 
     <!--Quick Settings-->

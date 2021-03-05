@@ -40,6 +40,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
@@ -132,7 +133,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.preferences, rootKey)
+        val preferencesId = if (FeatureFlags.newIconSet) {
+            R.xml.preferences_without_icons
+        } else {
+            R.xml.preferences
+        }
+        setPreferencesFromResource(preferencesId, rootKey)
         updateMakeDefaultBrowserPreference()
     }
 
@@ -368,8 +374,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferenceOpenLinksInExternalApp =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_open_links_in_external_app))
 
-        preferencePrivateBrowsing.icon.mutate().apply {
-            setTint(requireContext().getColorFromAttr(R.attr.primaryText))
+        if (!FeatureFlags.newIconSet) {
+            preferencePrivateBrowsing.icon.mutate().apply {
+                setTint(requireContext().getColorFromAttr(R.attr.primaryText))
+            }
         }
 
         if (!Config.channel.isReleased) {
