@@ -71,11 +71,11 @@ notification[type="critical"] {
 }
 
 notification[type="critical"] > .close-icon:hover {
-  background-color: color-mix(in srgb, transparent 20%, currentColor);
+  background-color: color-mix(in srgb, currentColor 20%, transparent);
 }
 
 notification[type="critical"] > .close-icon:hover:active {
-  background-color: color-mix(in srgb, transparent 30%, currentColor);
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
 }
 
 .messageText {
