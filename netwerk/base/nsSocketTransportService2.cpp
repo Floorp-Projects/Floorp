@@ -5,6 +5,7 @@
 
 #include "nsSocketTransportService2.h"
 
+#include "GeckoProfiler.h"
 #include "IOActivityMonitor.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/ChaosMode.h"

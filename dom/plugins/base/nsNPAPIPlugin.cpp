@@ -32,6 +32,7 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIIDNService.h"
