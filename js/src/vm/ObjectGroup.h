@@ -7,8 +7,6 @@
 #ifndef vm_ObjectGroup_h
 #define vm_ObjectGroup_h
 
-#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
-
 #include "jsfriendapi.h"
 
 #include "ds/IdValuePair.h"
@@ -84,11 +82,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<int> {
   }
 
   static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
-
-  static void staticAsserts() {
-    static_assert(offsetof(ObjectGroup, proto_) ==
-                  offsetof(JS::shadow::ObjectGroup, proto));
-  }
 
   static ObjectGroup* defaultNewGroup(JSContext* cx, const JSClass* clasp,
                                       TaggedProto proto);
