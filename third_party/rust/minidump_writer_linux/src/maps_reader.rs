@@ -12,7 +12,7 @@ use std::path::PathBuf;
 pub const LINUX_GATE_LIBRARY_NAME: &'static str = "linux-gate.so";
 pub const DELETED_SUFFIX: &'static str = " (deleted)";
 pub const MOZILLA_IPC_PREFIX: &'static str = "org.mozilla.ipc.";
-pub const RESERVED_FLAGS: &'static str = " ---p";
+pub const RESERVED_FLAGS: &'static str = "---p";
 
 type Result<T> = std::result::Result<T, MapsReaderError>;
 
@@ -170,8 +170,8 @@ impl MappingInfo {
                 if (start_address == module_end_address)
                     && module.executable
                     && is_mapping_a_path(module.name.as_deref())
-                    && offset == 0
-                    || offset == module_end_address && perms == RESERVED_FLAGS
+                    && (offset == 0 || offset == module_end_address)
+                    && perms == RESERVED_FLAGS
                 {
                     module.size = end_address - module.start_address;
                     return Ok(MappingInfoParsingResult::SkipLine);
@@ -409,7 +409,7 @@ mod tests {
 "7efd96d85000-7efd96d86000 ---p 001c1000 00:31 4996104                    /lib64/libc-2.32.so",
 "7efd96d86000-7efd96d89000 r--p 001c1000 00:31 4996104                    /lib64/libc-2.32.so",
 "7efd96d89000-7efd96d8c000 rw-p 001c4000 00:31 4996104                    /lib64/libc-2.32.so",
-"7efd96d8c000-7efd96d92000 rw-p 00000000 00:00 0",
+"7efd96d8c000-7efd96d92000 ---p 00000000 00:00 0",
 "7efd96da0000-7efd96da1000 r--p 00000000 00:31 5004379                    /usr/lib/locale/en_US.utf8/LC_NUMERIC",
 "7efd96da1000-7efd96da2000 r--p 00000000 00:31 5004382                    /usr/lib/locale/en_US.utf8/LC_TIME",
 "7efd96da2000-7efd96da3000 r--p 00000000 00:31 5004377                    /usr/lib/locale/en_US.utf8/LC_MONETARY",
