@@ -3980,8 +3980,8 @@ NSAttributedString* IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aR
   //     just marked string without any style.  So, let's keep current behavior
   //     at least for now.
   NSUInteger compositionLength = mIMECompositionString ? [mIMECompositionString length] : 0;
-  if (mIMECompositionStart != UINT32_MAX && mIMECompositionStart >= aRange.location &&
-      mIMECompositionStart + compositionLength <= aRange.location + aRange.length) {
+  if (mIMECompositionStart != UINT32_MAX && aRange.location >= mIMECompositionStart &&
+      aRange.location + aRange.length <= mIMECompositionStart + compositionLength) {
     NSRange range = NSMakeRange(aRange.location - mIMECompositionStart, aRange.length);
     NSString* nsstr = [mIMECompositionString substringWithRange:range];
     NSMutableAttributedString* result =
