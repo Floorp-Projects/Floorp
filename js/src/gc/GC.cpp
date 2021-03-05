@@ -4084,9 +4084,13 @@ void GCRuntime::purgeShapeCachesForShrinkingGC() {
     if (!canRelocateZone(zone) || zone->keepShapeCaches()) {
       continue;
     }
-    for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
-         baseShape.next()) {
-      baseShape->maybePurgeCache(rt->defaultFreeOp());
+    for (auto shape = zone->cellIterUnsafe<Shape>(); !shape.done();
+         shape.next()) {
+      shape->maybePurgeCache(rt->defaultFreeOp());
+    }
+    for (auto shape = zone->cellIterUnsafe<AccessorShape>(); !shape.done();
+         shape.next()) {
+      shape->maybePurgeCache(rt->defaultFreeOp());
     }
   }
 }
@@ -8395,9 +8399,14 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
     zone->checkScriptMapsAfterMovingGC();
 
     JS::AutoCheckCannotGC nogc;
-    for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
-         baseShape.next()) {
-      ShapeCachePtr p = baseShape->getCache(nogc);
+    for (auto shape = zone->cellIterUnsafe<Shape>(); !shape.done();
+         shape.next()) {
+      ShapeCachePtr p = shape->getCache(nogc);
+      p.checkAfterMovingGC();
+    }
+    for (auto shape = zone->cellIterUnsafe<AccessorShape>(); !shape.done();
+         shape.next()) {
+      ShapeCachePtr p = shape->getCache(nogc);
       p.checkAfterMovingGC();
     }
   }
