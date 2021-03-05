@@ -1112,10 +1112,6 @@ void GCMarker::traverse(JSObject* thing) {
   pushThing(thing);
 }
 template <>
-void GCMarker::traverse(ObjectGroup* thing) {
-  pushThing(thing);
-}
-template <>
 void GCMarker::traverse(jit::JitCode* thing) {
   pushThing(thing);
 }
@@ -1559,18 +1555,6 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   } while (scope && mark(scope));
 }
 
-void js::ObjectGroup::traceChildren(JSTracer* trc) {
-  if (protoDeprecated().isObject()) {
-    TraceEdge(trc, &protoDeprecated(), "group_proto");
-  }
-}
-
-void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
-  if (group->protoDeprecated().isObject()) {
-    markAndTraverseEdge(group, group->protoDeprecated().toObject());
-  }
-}
-
 void BaseShape::traceChildren(JSTracer* trc) {
   // Note: the realm's global can be nullptr if we GC while creating the global.
   if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
@@ -1947,11 +1931,6 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
       goto scan_obj;
     }
 
-    case MarkStack::GroupTag: {
-      auto group = stack.popPtr().as<ObjectGroup>();
-      return lazilyMarkChildren(group);
-    }
-
     case MarkStack::JitCodeTag: {
       auto code = stack.popPtr().as<jit::JitCode>();
       AutoSetTracingSource asts(this, code);
@@ -2088,10 +2067,6 @@ struct MapTypeToMarkStackTag {};
 template <>
 struct MapTypeToMarkStackTag<JSObject*> {
   static const auto value = MarkStack::ObjectTag;
-};
-template <>
-struct MapTypeToMarkStackTag<ObjectGroup*> {
-  static const auto value = MarkStack::GroupTag;
 };
 template <>
 struct MapTypeToMarkStackTag<jit::JitCode*> {
@@ -2860,9 +2835,6 @@ js::BaseScript* TenuringTracer::onScriptEdge(BaseScript* script) {
 js::Shape* TenuringTracer::onShapeEdge(Shape* shape) { return shape; }
 js::RegExpShared* TenuringTracer::onRegExpSharedEdge(RegExpShared* shared) {
   return shared;
-}
-js::ObjectGroup* TenuringTracer::onObjectGroupEdge(ObjectGroup* group) {
-  return group;
 }
 js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base) { return base; }
 js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code) {
@@ -3902,9 +3874,6 @@ Scope* SweepingTracer::onScopeEdge(Scope* scope) { return onEdge(scope); }
 RegExpShared* SweepingTracer::onRegExpSharedEdge(RegExpShared* shared) {
   return onEdge(shared);
 }
-ObjectGroup* SweepingTracer::onObjectGroupEdge(ObjectGroup* group) {
-  return onEdge(group);
-}
 BigInt* SweepingTracer::onBigIntEdge(BigInt* bi) { return onEdge(bi); }
 JS::Symbol* SweepingTracer::onSymbolEdge(JS::Symbol* sym) {
   return onEdge(sym);
@@ -4213,10 +4182,6 @@ RegExpShared* BarrierTracer::onRegExpSharedEdge(RegExpShared* shared) {
 BigInt* BarrierTracer::onBigIntEdge(BigInt* bi) {
   PreWriteBarrier(bi);
   return bi;
-}
-ObjectGroup* BarrierTracer::onObjectGroupEdge(ObjectGroup* group) {
-  PreWriteBarrier(group);
-  return group;
 }
 JS::Symbol* BarrierTracer::onSymbolEdge(JS::Symbol* sym) {
   PreWriteBarrier(sym);

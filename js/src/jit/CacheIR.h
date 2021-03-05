@@ -247,7 +247,6 @@ class StubField {
     RawInt32,
     RawPointer,
     Shape,
-    ObjectGroup,
     JSObject,
     Symbol,
     String,
@@ -636,10 +635,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(shape);
     assertSameZone(shape);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
-  }
-  void writeGroupField(ObjectGroup* group) {
-    MOZ_ASSERT(group);
-    addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
   void writeObjectField(JSObject* obj) {
     MOZ_ASSERT(obj);
@@ -1221,7 +1216,6 @@ class MOZ_RAII CacheIRCloner {
   int64_t readStubInt64(uint32_t offset);
 
   Shape* getShapeField(uint32_t stubOffset);
-  ObjectGroup* getGroupField(uint32_t stubOffset);
   JSObject* getObjectField(uint32_t stubOffset);
   JSString* getStringField(uint32_t stubOffset);
   JSAtom* getAtomField(uint32_t stubOffset);

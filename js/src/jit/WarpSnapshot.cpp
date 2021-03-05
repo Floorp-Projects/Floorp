@@ -337,11 +337,6 @@ void WarpCacheIR::traceData(JSTracer* trc) {
           TraceWarpStubPtr<Shape>(trc, word, "warp-cacheir-shape");
           break;
         }
-        case StubField::Type::ObjectGroup: {
-          uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
-          TraceWarpStubPtr<ObjectGroup>(trc, word, "warp-cacheir-group");
-          break;
-        }
         case StubField::Type::JSObject: {
           uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
           WarpObjectField field = WarpObjectField::fromData(word);

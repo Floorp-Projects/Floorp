@@ -183,9 +183,6 @@ int64_t CacheIRCloner::readStubInt64(uint32_t offset) {
 Shape* CacheIRCloner::getShapeField(uint32_t stubOffset) {
   return reinterpret_cast<Shape*>(readStubWord(stubOffset));
 }
-ObjectGroup* CacheIRCloner::getGroupField(uint32_t stubOffset) {
-  return reinterpret_cast<ObjectGroup*>(readStubWord(stubOffset));
-}
 JSObject* CacheIRCloner::getObjectField(uint32_t stubOffset) {
   return reinterpret_cast<JSObject*>(readStubWord(stubOffset));
 }
