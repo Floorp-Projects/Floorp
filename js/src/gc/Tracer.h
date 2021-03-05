@@ -251,6 +251,13 @@ void TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
       trc, src, gc::ConvertToBase(dst->unbarrieredAddress()), name);
 }
 
+// Trace an edge that's guaranteed to be same-zone but may cross a compartment
+// boundary.
+template <typename T>
+void TraceSameZoneCrossCompartmentEdge(JSTracer* trc,
+                                       const WriteBarriered<T>* dst,
+                                       const char* name);
+
 // Trace a weak map key. For debugger weak maps these may be cross compartment,
 // but the compartment must always be within the current sweep group.
 template <typename T>

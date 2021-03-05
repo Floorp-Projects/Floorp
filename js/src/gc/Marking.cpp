@@ -548,6 +548,28 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<BaseScript*>(
     JSTracer*, JSObject*, BaseScript**, const char*);
 
 template <typename T>
+void js::TraceSameZoneCrossCompartmentEdge(JSTracer* trc,
+                                           const WriteBarriered<T>* dst,
+                                           const char* name) {
+#ifdef DEBUG
+  if (trc->isMarkingTracer()) {
+    MOZ_ASSERT((*dst)->maybeCompartment(),
+               "Use TraceEdge for GC things without a compartment");
+
+    GCMarker* gcMarker = GCMarker::fromTracer(trc);
+    MOZ_ASSERT_IF(gcMarker->tracingZone,
+                  (*dst)->zone() == gcMarker->tracingZone);
+  }
+#endif
+
+  // Clear expected compartment for cross-compartment edge.
+  AutoClearTracingSource acts(trc);
+  TraceEdgeInternal(trc, ConvertToBase(dst->unbarrieredAddress()), name);
+}
+template void js::TraceSameZoneCrossCompartmentEdge(
+    JSTracer*, const WriteBarriered<Shape*>*, const char*);
+
+template <typename T>
 void js::TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone,
                                      T** thingp, const char* name) {
   // We can't use ShouldTraceCrossCompartment here because that assumes the
