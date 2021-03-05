@@ -1,36 +1,54 @@
-import re
+# -*- coding: utf-8 -*-
 import sys
 
+import six
+
 import pytest
+from _pytest.compat import dummy_context_manager
 from _pytest.outcomes import Failed
+from _pytest.warning_types import PytestDeprecationWarning
 
 
-class TestRaises:
-    def test_check_callable(self) -> None:
-        with pytest.raises(TypeError, match=r".* must be callable"):
-            pytest.raises(RuntimeError, "int('qwe')")  # type: ignore[call-overload]
-
+class TestRaises(object):
     def test_raises(self):
-        excinfo = pytest.raises(ValueError, int, "qwe")
-        assert "invalid literal" in str(excinfo.value)
+        source = "int('qwe')"
+        with pytest.warns(PytestDeprecationWarning):
+            excinfo = pytest.raises(ValueError, source)
+        code = excinfo.traceback[-1].frame.code
+        s = str(code.fullsource)
+        assert s == source
+
+    def test_raises_exec(self):
+        with pytest.warns(PytestDeprecationWarning) as warninfo:
+            pytest.raises(ValueError, "a,x = []")
+        assert warninfo[0].filename == __file__
+
+    def test_raises_exec_correct_filename(self):
+        with pytest.warns(PytestDeprecationWarning):
+            excinfo = pytest.raises(ValueError, 'int("s")')
+            assert __file__ in excinfo.traceback[-1].path
+
+    def test_raises_syntax_error(self):
+        with pytest.warns(PytestDeprecationWarning) as warninfo:
+            pytest.raises(SyntaxError, "qwe qwe qwe")
+        assert warninfo[0].filename == __file__
 
     def test_raises_function(self):
-        excinfo = pytest.raises(ValueError, int, "hello")
-        assert "invalid literal" in str(excinfo.value)
+        pytest.raises(ValueError, int, "hello")
 
-    def test_raises_callable_no_exception(self) -> None:
-        class A:
+    def test_raises_callable_no_exception(self):
+        class A(object):
             def __call__(self):
                 pass
 
         try:
             pytest.raises(ValueError, A())
-        except pytest.fail.Exception:
+        except pytest.raises.Exception:
             pass
 
-    def test_raises_falsey_type_error(self) -> None:
+    def test_raises_falsey_type_error(self):
         with pytest.raises(TypeError):
-            with pytest.raises(AssertionError, match=0):  # type: ignore[call-overload]
+            with pytest.raises(AssertionError, match=0):
                 raise AssertionError("ohai")
 
     def test_raises_repr_inflight(self):
@@ -126,23 +144,23 @@ class TestRaises:
         result = testdir.runpytest()
         result.stdout.fnmatch_lines(["*2 failed*"])
 
-    def test_noclass(self) -> None:
+    def test_noclass(self):
         with pytest.raises(TypeError):
-            pytest.raises("wrong", lambda: None)  # type: ignore[call-overload]
+            pytest.raises("wrong", lambda: None)
 
-    def test_invalid_arguments_to_raises(self) -> None:
+    def test_invalid_arguments_to_raises(self):
         with pytest.raises(TypeError, match="unknown"):
-            with pytest.raises(TypeError, unknown="bogus"):  # type: ignore[call-overload]
+            with pytest.raises(TypeError, unknown="bogus"):
                 raise ValueError()
 
     def test_tuple(self):
         with pytest.raises((KeyError, ValueError)):
             raise KeyError("oops")
 
-    def test_no_raise_message(self) -> None:
+    def test_no_raise_message(self):
         try:
             pytest.raises(ValueError, int, "0")
-        except pytest.fail.Exception as e:
+        except pytest.raises.Exception as e:
             assert e.msg == "DID NOT RAISE {}".format(repr(ValueError))
         else:
             assert False, "Expected pytest.raises.Exception"
@@ -150,32 +168,36 @@ class TestRaises:
         try:
             with pytest.raises(ValueError):
                 pass
-        except pytest.fail.Exception as e:
+        except pytest.raises.Exception as e:
             assert e.msg == "DID NOT RAISE {}".format(repr(ValueError))
         else:
             assert False, "Expected pytest.raises.Exception"
 
-    @pytest.mark.parametrize("method", ["function", "function_match", "with"])
+    def test_custom_raise_message(self):
+        message = "TEST_MESSAGE"
+        try:
+            with pytest.warns(PytestDeprecationWarning):
+                with pytest.raises(ValueError, message=message):
+                    pass
+        except pytest.raises.Exception as e:
+            assert e.msg == message
+        else:
+            assert False, "Expected pytest.raises.Exception"
+
+    @pytest.mark.parametrize("method", ["function", "with"])
     def test_raises_cyclic_reference(self, method):
-        """Ensure pytest.raises does not leave a reference cycle (#1965)."""
+        """
+        Ensure pytest.raises does not leave a reference cycle (#1965).
+        """
         import gc
 
-        class T:
+        class T(object):
             def __call__(self):
-                # Early versions of Python 3.5 have some bug causing the
-                # __call__ frame to still refer to t even after everything
-                # is done. This makes the test pass for them.
-                if sys.version_info < (3, 5, 2):
-                    del self
                 raise ValueError
 
         t = T()
-        refcount = len(gc.get_referrers(t))
-
         if method == "function":
             pytest.raises(ValueError, t)
-        elif method == "function_match":
-            pytest.raises(ValueError, t).match("^$")
         else:
             with pytest.raises(ValueError):
                 t()
@@ -183,9 +205,13 @@ class TestRaises:
         # ensure both forms of pytest.raises don't leave exceptions in sys.exc_info()
         assert sys.exc_info() == (None, None, None)
 
-        assert refcount == len(gc.get_referrers(t))
+        del t
 
-    def test_raises_match(self) -> None:
+        # ensure the t instance is not stuck in a cyclic reference
+        for o in gc.get_objects():
+            assert type(o) is not T
+
+    def test_raises_match(self):
         msg = r"with base \d+"
         with pytest.raises(ValueError, match=msg):
             int("asdf")
@@ -195,45 +221,12 @@ class TestRaises:
             int("asdf")
 
         msg = "with base 16"
-        expr = "Regex pattern {!r} does not match \"invalid literal for int() with base 10: 'asdf'\".".format(
+        expr = r"Pattern '{}' not found in \"invalid literal for int\(\) with base 10: 'asdf'\"".format(
             msg
         )
-        with pytest.raises(AssertionError, match=re.escape(expr)):
+        with pytest.raises(AssertionError, match=expr):
             with pytest.raises(ValueError, match=msg):
                 int("asdf", base=10)
-
-        # "match" without context manager.
-        pytest.raises(ValueError, int, "asdf").match("invalid literal")
-        with pytest.raises(AssertionError) as excinfo:
-            pytest.raises(ValueError, int, "asdf").match(msg)
-        assert str(excinfo.value) == expr
-
-        pytest.raises(TypeError, int, match="invalid")
-
-        def tfunc(match):
-            raise ValueError("match={}".format(match))
-
-        pytest.raises(ValueError, tfunc, match="asdf").match("match=asdf")
-        pytest.raises(ValueError, tfunc, match="").match("match=")
-
-    def test_match_failure_string_quoting(self):
-        with pytest.raises(AssertionError) as excinfo:
-            with pytest.raises(AssertionError, match="'foo"):
-                raise AssertionError("'bar")
-        (msg,) = excinfo.value.args
-        assert msg == 'Regex pattern "\'foo" does not match "\'bar".'
-
-    def test_match_failure_exact_string_message(self):
-        message = "Oh here is a message with (42) numbers in parameters"
-        with pytest.raises(AssertionError) as excinfo:
-            with pytest.raises(AssertionError, match=message):
-                raise AssertionError(message)
-        (msg,) = excinfo.value.args
-        assert msg == (
-            "Regex pattern 'Oh here is a message with (42) numbers in "
-            "parameters' does not match 'Oh here is a message with (42) "
-            "numbers in parameters'. Did you mean to `re.escape()` the regex?"
-        )
 
     def test_raises_match_wrong_type(self):
         """Raising an exception with the wrong type and match= given.
@@ -246,14 +239,17 @@ class TestRaises:
                 int("asdf")
 
     def test_raises_exception_looks_iterable(self):
-        class Meta(type):
+        from six import add_metaclass
+
+        class Meta(type(object)):
             def __getitem__(self, item):
                 return 1 / 0
 
             def __len__(self):
                 return 1
 
-        class ClassLooksIterableException(Exception, metaclass=Meta):
+        @add_metaclass(Meta)
+        class ClassLooksIterableException(Exception):
             pass
 
         with pytest.raises(
@@ -262,41 +258,68 @@ class TestRaises:
         ):
             pytest.raises(ClassLooksIterableException, lambda: None)
 
-    def test_raises_with_raising_dunder_class(self) -> None:
+    def test_raises_with_raising_dunder_class(self):
         """Test current behavior with regard to exceptions via __class__ (#4284)."""
 
         class CrappyClass(Exception):
-            # Type ignored because it's bypassed intentionally.
-            @property  # type: ignore
+            @property
             def __class__(self):
                 assert False, "via __class__"
 
-        with pytest.raises(AssertionError) as excinfo:
-            with pytest.raises(CrappyClass()):  # type: ignore[call-overload]
-                pass
-        assert "via __class__" in excinfo.value.args[0]
+        if six.PY2:
+            with pytest.raises(pytest.fail.Exception) as excinfo:
+                with pytest.raises(CrappyClass()):
+                    pass
+            assert "DID NOT RAISE" in excinfo.value.args[0]
 
-    def test_raises_context_manager_with_kwargs(self):
-        with pytest.raises(TypeError) as excinfo:
-            with pytest.raises(Exception, foo="bar"):  # type: ignore[call-overload]
-                pass
-        assert "Unexpected keyword arguments" in str(excinfo.value)
+            with pytest.raises(CrappyClass) as excinfo:
+                raise CrappyClass()
+        else:
+            with pytest.raises(AssertionError) as excinfo:
+                with pytest.raises(CrappyClass()):
+                    pass
+            assert "via __class__" in excinfo.value.args[0]
 
-    def test_expected_exception_is_not_a_baseexception(self) -> None:
-        with pytest.raises(TypeError) as excinfo:
-            with pytest.raises("hello"):  # type: ignore[call-overload]
-                pass  # pragma: no cover
-        assert "must be a BaseException type, not str" in str(excinfo.value)
 
-        class NotAnException:
-            pass
+class TestUnicodeHandling:
+    """Test various combinations of bytes and unicode with pytest.raises (#5478)
 
-        with pytest.raises(TypeError) as excinfo:
-            with pytest.raises(NotAnException):  # type: ignore[type-var]
-                pass  # pragma: no cover
-        assert "must be a BaseException type, not NotAnException" in str(excinfo.value)
+    https://github.com/pytest-dev/pytest/pull/5479#discussion_r298852433
+    """
 
-        with pytest.raises(TypeError) as excinfo:
-            with pytest.raises(("hello", NotAnException)):  # type: ignore[arg-type]
-                pass  # pragma: no cover
-        assert "must be a BaseException type, not str" in str(excinfo.value)
+    success = dummy_context_manager
+    py2_only = pytest.mark.skipif(
+        not six.PY2, reason="bytes in raises only supported in Python 2"
+    )
+
+    @pytest.mark.parametrize(
+        "message, match, expectation",
+        [
+            (u"\u2603", u"\u2603", success()),
+            (u"\u2603", u"\u2603foo", pytest.raises(AssertionError)),
+            pytest.param(b"hello", b"hello", success(), marks=py2_only),
+            pytest.param(
+                b"hello", b"world", pytest.raises(AssertionError), marks=py2_only
+            ),
+            pytest.param(u"hello", b"hello", success(), marks=py2_only),
+            pytest.param(
+                u"hello", b"world", pytest.raises(AssertionError), marks=py2_only
+            ),
+            pytest.param(
+                u"😊".encode("UTF-8"),
+                b"world",
+                pytest.raises(AssertionError),
+                marks=py2_only,
+            ),
+            pytest.param(
+                u"world",
+                u"😊".encode("UTF-8"),
+                pytest.raises(AssertionError),
+                marks=py2_only,
+            ),
+        ],
+    )
+    def test_handling(self, message, match, expectation):
+        with expectation:
+            with pytest.raises(RuntimeError, match=match):
+                raise RuntimeError(message)

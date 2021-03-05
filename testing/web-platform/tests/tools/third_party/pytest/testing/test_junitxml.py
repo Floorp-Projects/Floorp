@@ -1,54 +1,26 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import platform
+import sys
 from datetime import datetime
-from typing import cast
-from typing import List
-from typing import Tuple
 from xml.dom import minidom
 
 import py
-import xmlschema
 
 import pytest
-from _pytest.compat import TYPE_CHECKING
-from _pytest.config import Config
-from _pytest.junitxml import bin_xml_escape
 from _pytest.junitxml import LogXML
-from _pytest.pathlib import Path
 from _pytest.reports import BaseReport
-from _pytest.reports import TestReport
-from _pytest.store import Store
 
 
-@pytest.fixture(scope="session")
-def schema():
-    """Return an xmlschema.XMLSchema object for the junit-10.xsd file."""
-    fn = Path(__file__).parent / "example_scripts/junit-10.xsd"
-    with fn.open() as f:
-        return xmlschema.XMLSchema(f)
-
-
-@pytest.fixture
-def run_and_parse(testdir, schema):
-    """Fixture that returns a function that can be used to execute pytest and
-    return the parsed ``DomNode`` of the root xml node.
-
-    The ``family`` parameter is used to configure the ``junit_family`` of the written report.
-    "xunit2" is also automatically validated against the schema.
-    """
-
-    def run(*args, family="xunit1"):
-        if family:
-            args = ("-o", "junit_family=" + family) + args
-        xml_path = testdir.tmpdir.join("junit.xml")
-        result = testdir.runpytest("--junitxml=%s" % xml_path, *args)
-        if family == "xunit2":
-            with xml_path.open() as f:
-                schema.validate(f)
-        xmldoc = minidom.parse(str(xml_path))
-        return result, DomNode(xmldoc)
-
-    return run
+def runandparse(testdir, *args):
+    resultpath = testdir.tmpdir.join("junit.xml")
+    result = testdir.runpytest("--junitxml=%s" % resultpath, *args)
+    xmldoc = minidom.parse(str(resultpath))
+    return result, DomNode(xmldoc)
 
 
 def assert_attr(node, **kwargs):
@@ -64,7 +36,7 @@ def assert_attr(node, **kwargs):
     assert on_node == expected
 
 
-class DomNode:
+class DomNode(object):
     def __init__(self, dom):
         self.__node = dom
 
@@ -125,12 +97,8 @@ class DomNode:
         return type(self)(self.__node.nextSibling)
 
 
-parametrize_families = pytest.mark.parametrize("xunit_family", ["xunit1", "xunit2"])
-
-
-class TestPython:
-    @parametrize_families
-    def test_summing_simple(self, testdir, run_and_parse, xunit_family):
+class TestPython(object):
+    def test_summing_simple(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -148,13 +116,12 @@ class TestPython:
                 assert 1
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(name="pytest", errors=0, failures=1, skipped=2, tests=5)
 
-    @parametrize_families
-    def test_summing_simple_with_errors(self, testdir, run_and_parse, xunit_family):
+    def test_summing_simple_with_errors(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -175,25 +142,23 @@ class TestPython:
                 assert True
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(name="pytest", errors=1, failures=2, skipped=1, tests=5)
 
-    @parametrize_families
-    def test_hostname_in_xml(self, testdir, run_and_parse, xunit_family):
+    def test_hostname_in_xml(self, testdir):
         testdir.makepyfile(
             """
             def test_pass():
                 pass
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(hostname=platform.node())
 
-    @parametrize_families
-    def test_timestamp_in_xml(self, testdir, run_and_parse, xunit_family):
+    def test_timestamp_in_xml(self, testdir):
         testdir.makepyfile(
             """
             def test_pass():
@@ -201,33 +166,31 @@ class TestPython:
         """
         )
         start_time = datetime.now()
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         timestamp = datetime.strptime(node["timestamp"], "%Y-%m-%dT%H:%M:%S.%f")
         assert start_time <= timestamp < datetime.now()
 
-    def test_timing_function(self, testdir, run_and_parse, mock_timing):
+    def test_timing_function(self, testdir):
         testdir.makepyfile(
             """
-            from _pytest import timing
+            import time, pytest
             def setup_module():
-                timing.sleep(1)
+                time.sleep(0.01)
             def teardown_module():
-                timing.sleep(2)
+                time.sleep(0.01)
             def test_sleep():
-                timing.sleep(4)
+                time.sleep(0.01)
         """
         )
-        result, dom = run_and_parse()
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         tnode = node.find_first_by_tag("testcase")
         val = tnode["time"]
-        assert float(val) == 7.0
+        assert round(float(val), 2) >= 0.03
 
     @pytest.mark.parametrize("duration_report", ["call", "total"])
-    def test_junit_duration_report(
-        self, testdir, monkeypatch, duration_report, run_and_parse
-    ):
+    def test_junit_duration_report(self, testdir, monkeypatch, duration_report):
 
         # mock LogXML.node_reporter so it always sets a known duration to each test report object
         original_node_reporter = LogXML.node_reporter
@@ -245,8 +208,8 @@ class TestPython:
                 pass
         """
         )
-        result, dom = run_and_parse(
-            "-o", "junit_duration_report={}".format(duration_report)
+        result, dom = runandparse(
+            testdir, "-o", "junit_duration_report={}".format(duration_report)
         )
         node = dom.find_first_by_tag("testsuite")
         tnode = node.find_first_by_tag("testcase")
@@ -257,31 +220,29 @@ class TestPython:
             assert duration_report == "call"
             assert val == 1.0
 
-    @parametrize_families
-    def test_setup_error(self, testdir, run_and_parse, xunit_family):
+    def test_setup_error(self, testdir):
         testdir.makepyfile(
             """
             import pytest
 
             @pytest.fixture
             def arg(request):
-                raise ValueError("Error reason")
+                raise ValueError()
             def test_function(arg):
                 pass
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(errors=1, tests=1)
         tnode = node.find_first_by_tag("testcase")
         tnode.assert_attr(classname="test_setup_error", name="test_function")
         fnode = tnode.find_first_by_tag("error")
-        fnode.assert_attr(message='failed on setup with "ValueError: Error reason"')
+        fnode.assert_attr(message="test setup failure")
         assert "ValueError" in fnode.toxml()
 
-    @parametrize_families
-    def test_teardown_error(self, testdir, run_and_parse, xunit_family):
+    def test_teardown_error(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -289,22 +250,21 @@ class TestPython:
             @pytest.fixture
             def arg():
                 yield
-                raise ValueError('Error reason')
+                raise ValueError()
             def test_function(arg):
                 pass
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         tnode = node.find_first_by_tag("testcase")
         tnode.assert_attr(classname="test_teardown_error", name="test_function")
         fnode = tnode.find_first_by_tag("error")
-        fnode.assert_attr(message='failed on teardown with "ValueError: Error reason"')
+        fnode.assert_attr(message="test teardown failure")
         assert "ValueError" in fnode.toxml()
 
-    @parametrize_families
-    def test_call_failure_teardown_error(self, testdir, run_and_parse, xunit_family):
+    def test_call_failure_teardown_error(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -317,23 +277,19 @@ class TestPython:
                 raise Exception("Call Exception")
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(errors=1, failures=1, tests=1)
         first, second = dom.find_by_tag("testcase")
-        assert first
-        assert second
-        assert first != second
+        if not first or not second or first == second:
+            assert 0
         fnode = first.find_first_by_tag("failure")
         fnode.assert_attr(message="Exception: Call Exception")
         snode = second.find_first_by_tag("error")
-        snode.assert_attr(
-            message='failed on teardown with "Exception: Teardown Exception"'
-        )
+        snode.assert_attr(message="test teardown failure")
 
-    @parametrize_families
-    def test_skip_contains_name_reason(self, testdir, run_and_parse, xunit_family):
+    def test_skip_contains_name_reason(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -341,7 +297,7 @@ class TestPython:
                 pytest.skip("hello23")
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret == 0
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(skipped=1)
@@ -350,8 +306,7 @@ class TestPython:
         snode = tnode.find_first_by_tag("skipped")
         snode.assert_attr(type="pytest.skip", message="hello23")
 
-    @parametrize_families
-    def test_mark_skip_contains_name_reason(self, testdir, run_and_parse, xunit_family):
+    def test_mark_skip_contains_name_reason(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -360,7 +315,7 @@ class TestPython:
                 assert True
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret == 0
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(skipped=1)
@@ -371,10 +326,7 @@ class TestPython:
         snode = tnode.find_first_by_tag("skipped")
         snode.assert_attr(type="pytest.skip", message="hello24")
 
-    @parametrize_families
-    def test_mark_skipif_contains_name_reason(
-        self, testdir, run_and_parse, xunit_family
-    ):
+    def test_mark_skipif_contains_name_reason(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -384,7 +336,7 @@ class TestPython:
                 assert True
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret == 0
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(skipped=1)
@@ -395,10 +347,7 @@ class TestPython:
         snode = tnode.find_first_by_tag("skipped")
         snode.assert_attr(type="pytest.skip", message="hello25")
 
-    @parametrize_families
-    def test_mark_skip_doesnt_capture_output(
-        self, testdir, run_and_parse, xunit_family
-    ):
+    def test_mark_skip_doesnt_capture_output(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -407,13 +356,12 @@ class TestPython:
                 print("bar!")
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret == 0
         node_xml = dom.find_first_by_tag("testsuite").toxml()
         assert "bar!" not in node_xml
 
-    @parametrize_families
-    def test_classname_instance(self, testdir, run_and_parse, xunit_family):
+    def test_classname_instance(self, testdir):
         testdir.makepyfile(
             """
             class TestClass(object):
@@ -421,7 +369,7 @@ class TestPython:
                     assert 0
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(failures=1)
@@ -430,22 +378,20 @@ class TestPython:
             classname="test_classname_instance.TestClass", name="test_method"
         )
 
-    @parametrize_families
-    def test_classname_nested_dir(self, testdir, run_and_parse, xunit_family):
+    def test_classname_nested_dir(self, testdir):
         p = testdir.tmpdir.ensure("sub", "test_hello.py")
         p.write("def test_func(): 0/0")
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(failures=1)
         tnode = node.find_first_by_tag("testcase")
         tnode.assert_attr(classname="sub.test_hello", name="test_func")
 
-    @parametrize_families
-    def test_internal_error(self, testdir, run_and_parse, xunit_family):
+    def test_internal_error(self, testdir):
         testdir.makeconftest("def pytest_runtest_protocol(): 0 / 0")
         testdir.makepyfile("def test_function(): pass")
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(errors=1, tests=1)
@@ -455,13 +401,8 @@ class TestPython:
         fnode.assert_attr(message="internal error")
         assert "Division" in fnode.toxml()
 
-    @pytest.mark.parametrize(
-        "junit_logging", ["no", "log", "system-out", "system-err", "out-err", "all"]
-    )
-    @parametrize_families
-    def test_failure_function(
-        self, testdir, junit_logging, run_and_parse, xunit_family
-    ):
+    @pytest.mark.parametrize("junit_logging", ["no", "system-out", "system-err"])
+    def test_failure_function(self, testdir, junit_logging):
         testdir.makepyfile(
             """
             import logging
@@ -476,54 +417,35 @@ class TestPython:
         """
         )
 
-        result, dom = run_and_parse(
-            "-o", "junit_logging=%s" % junit_logging, family=xunit_family
-        )
-        assert result.ret, "Expected ret > 0"
+        result, dom = runandparse(testdir, "-o", "junit_logging=%s" % junit_logging)
+        assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(failures=1, tests=1)
         tnode = node.find_first_by_tag("testcase")
         tnode.assert_attr(classname="test_failure_function", name="test_fail")
         fnode = tnode.find_first_by_tag("failure")
         fnode.assert_attr(message="ValueError: 42")
-        assert "ValueError" in fnode.toxml(), "ValueError not included"
+        assert "ValueError" in fnode.toxml()
+        systemout = fnode.next_sibling
+        assert systemout.tag == "system-out"
+        assert "hello-stdout" in systemout.toxml()
+        assert "info msg" not in systemout.toxml()
+        systemerr = systemout.next_sibling
+        assert systemerr.tag == "system-err"
+        assert "hello-stderr" in systemerr.toxml()
+        assert "info msg" not in systemerr.toxml()
 
-        if junit_logging in ["log", "all"]:
-            logdata = tnode.find_first_by_tag("system-out")
-            log_xml = logdata.toxml()
-            assert logdata.tag == "system-out", "Expected tag: system-out"
-            assert "info msg" not in log_xml, "Unexpected INFO message"
-            assert "warning msg" in log_xml, "Missing WARN message"
-        if junit_logging in ["system-out", "out-err", "all"]:
-            systemout = tnode.find_first_by_tag("system-out")
-            systemout_xml = systemout.toxml()
-            assert systemout.tag == "system-out", "Expected tag: system-out"
-            assert "info msg" not in systemout_xml, "INFO message found in system-out"
-            assert (
-                "hello-stdout" in systemout_xml
-            ), "Missing 'hello-stdout' in system-out"
-        if junit_logging in ["system-err", "out-err", "all"]:
-            systemerr = tnode.find_first_by_tag("system-err")
-            systemerr_xml = systemerr.toxml()
-            assert systemerr.tag == "system-err", "Expected tag: system-err"
-            assert "info msg" not in systemerr_xml, "INFO message found in system-err"
-            assert (
-                "hello-stderr" in systemerr_xml
-            ), "Missing 'hello-stderr' in system-err"
-            assert (
-                "warning msg" not in systemerr_xml
-            ), "WARN message found in system-err"
-        if junit_logging == "no":
-            assert not tnode.find_by_tag("log"), "Found unexpected content: log"
-            assert not tnode.find_by_tag(
-                "system-out"
-            ), "Found unexpected content: system-out"
-            assert not tnode.find_by_tag(
-                "system-err"
-            ), "Found unexpected content: system-err"
+        if junit_logging == "system-out":
+            assert "warning msg" in systemout.toxml()
+            assert "warning msg" not in systemerr.toxml()
+        elif junit_logging == "system-err":
+            assert "warning msg" not in systemout.toxml()
+            assert "warning msg" in systemerr.toxml()
+        elif junit_logging == "no":
+            assert "warning msg" not in systemout.toxml()
+            assert "warning msg" not in systemerr.toxml()
 
-    @parametrize_families
-    def test_failure_verbose_message(self, testdir, run_and_parse, xunit_family):
+    def test_failure_verbose_message(self, testdir):
         testdir.makepyfile(
             """
             import sys
@@ -531,14 +453,14 @@ class TestPython:
                 assert 0, "An error"
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         tnode = node.find_first_by_tag("testcase")
         fnode = tnode.find_first_by_tag("failure")
-        fnode.assert_attr(message="AssertionError: An error\nassert 0")
+        fnode.assert_attr(message="AssertionError: An error assert 0")
 
-    @parametrize_families
-    def test_failure_escape(self, testdir, run_and_parse, xunit_family):
+    def test_failure_escape(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -548,9 +470,7 @@ class TestPython:
                 assert 0
         """
         )
-        result, dom = run_and_parse(
-            "-o", "junit_logging=system-out", family=xunit_family
-        )
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(failures=3, tests=3)
@@ -563,10 +483,9 @@ class TestPython:
             )
             sysout = tnode.find_first_by_tag("system-out")
             text = sysout.text
-            assert "%s\n" % char in text
+            assert text == "%s\n" % char
 
-    @parametrize_families
-    def test_junit_prefixing(self, testdir, run_and_parse, xunit_family):
+    def test_junit_prefixing(self, testdir):
         testdir.makepyfile(
             """
             def test_func():
@@ -576,7 +495,7 @@ class TestPython:
                     pass
         """
         )
-        result, dom = run_and_parse("--junitprefix=xyz", family=xunit_family)
+        result, dom = runandparse(testdir, "--junitprefix=xyz")
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(failures=1, tests=2)
@@ -587,8 +506,7 @@ class TestPython:
             classname="xyz.test_junit_prefixing.TestHello", name="test_hello"
         )
 
-    @parametrize_families
-    def test_xfailure_function(self, testdir, run_and_parse, xunit_family):
+    def test_xfailure_function(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -596,7 +514,7 @@ class TestPython:
                 pytest.xfail("42")
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert not result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(skipped=1, tests=1)
@@ -604,9 +522,9 @@ class TestPython:
         tnode.assert_attr(classname="test_xfailure_function", name="test_xfail")
         fnode = tnode.find_first_by_tag("skipped")
         fnode.assert_attr(type="pytest.xfail", message="42")
+        # assert "ValueError" in fnode.toxml()
 
-    @parametrize_families
-    def test_xfailure_marker(self, testdir, run_and_parse, xunit_family):
+    def test_xfailure_marker(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -615,7 +533,7 @@ class TestPython:
                 assert False
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert not result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(skipped=1, tests=1)
@@ -624,10 +542,7 @@ class TestPython:
         fnode = tnode.find_first_by_tag("skipped")
         fnode.assert_attr(type="pytest.xfail", message="42")
 
-    @pytest.mark.parametrize(
-        "junit_logging", ["no", "log", "system-out", "system-err", "out-err", "all"]
-    )
-    def test_xfail_captures_output_once(self, testdir, junit_logging, run_and_parse):
+    def test_xfail_captures_output_once(self, testdir):
         testdir.makepyfile(
             """
             import sys
@@ -640,21 +555,13 @@ class TestPython:
                 assert 0
         """
         )
-        result, dom = run_and_parse("-o", "junit_logging=%s" % junit_logging)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         tnode = node.find_first_by_tag("testcase")
-        if junit_logging in ["system-err", "out-err", "all"]:
-            assert len(tnode.find_by_tag("system-err")) == 1
-        else:
-            assert len(tnode.find_by_tag("system-err")) == 0
+        assert len(tnode.find_by_tag("system-err")) == 1
+        assert len(tnode.find_by_tag("system-out")) == 1
 
-        if junit_logging in ["log", "system-out", "out-err", "all"]:
-            assert len(tnode.find_by_tag("system-out")) == 1
-        else:
-            assert len(tnode.find_by_tag("system-out")) == 0
-
-    @parametrize_families
-    def test_xfailure_xpass(self, testdir, run_and_parse, xunit_family):
+    def test_xfailure_xpass(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -663,15 +570,14 @@ class TestPython:
                 pass
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         # assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(skipped=0, tests=1)
         tnode = node.find_first_by_tag("testcase")
         tnode.assert_attr(classname="test_xfailure_xpass", name="test_xpass")
 
-    @parametrize_families
-    def test_xfailure_xpass_strict(self, testdir, run_and_parse, xunit_family):
+    def test_xfailure_xpass_strict(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -680,7 +586,7 @@ class TestPython:
                 pass
         """
         )
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         # assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(skipped=0, tests=1)
@@ -689,10 +595,9 @@ class TestPython:
         fnode = tnode.find_first_by_tag("failure")
         fnode.assert_attr(message="[XPASS(strict)] This needs to fail!")
 
-    @parametrize_families
-    def test_collect_error(self, testdir, run_and_parse, xunit_family):
+    def test_collect_error(self, testdir):
         testdir.makepyfile("syntax error")
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(errors=1, tests=1)
@@ -701,25 +606,26 @@ class TestPython:
         fnode.assert_attr(message="collection failure")
         assert "SyntaxError" in fnode.toxml()
 
-    def test_unicode(self, testdir, run_and_parse):
+    def test_unicode(self, testdir):
         value = "hx\xc4\x85\xc4\x87\n"
         testdir.makepyfile(
-            """\
+            """
             # coding: latin1
             def test_hello():
                 print(%r)
                 assert 0
-            """
+        """
             % value
         )
-        result, dom = run_and_parse()
+        result, dom = runandparse(testdir)
         assert result.ret == 1
         tnode = dom.find_first_by_tag("testcase")
         fnode = tnode.find_first_by_tag("failure")
-        assert "hx" in fnode.toxml()
+        if not sys.platform.startswith("java"):
+            assert "hx" in fnode.toxml()
 
-    def test_assertion_binchars(self, testdir, run_and_parse):
-        """This test did fail when the escaping wasn't strict."""
+    def test_assertion_binchars(self, testdir):
+        """this test did fail when the escaping wasnt strict"""
         testdir.makepyfile(
             """
 
@@ -730,32 +636,23 @@ class TestPython:
                 assert M1 == M2
             """
         )
-        result, dom = run_and_parse()
+        result, dom = runandparse(testdir)
         print(dom.toxml())
 
-    @pytest.mark.parametrize("junit_logging", ["no", "system-out"])
-    def test_pass_captures_stdout(self, testdir, run_and_parse, junit_logging):
+    def test_pass_captures_stdout(self, testdir):
         testdir.makepyfile(
             """
             def test_pass():
                 print('hello-stdout')
         """
         )
-        result, dom = run_and_parse("-o", "junit_logging=%s" % junit_logging)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         pnode = node.find_first_by_tag("testcase")
-        if junit_logging == "no":
-            assert not node.find_by_tag(
-                "system-out"
-            ), "system-out should not be generated"
-        if junit_logging == "system-out":
-            systemout = pnode.find_first_by_tag("system-out")
-            assert (
-                "hello-stdout" in systemout.toxml()
-            ), "'hello-stdout' should be in system-out"
+        systemout = pnode.find_first_by_tag("system-out")
+        assert "hello-stdout" in systemout.toxml()
 
-    @pytest.mark.parametrize("junit_logging", ["no", "system-err"])
-    def test_pass_captures_stderr(self, testdir, run_and_parse, junit_logging):
+    def test_pass_captures_stderr(self, testdir):
         testdir.makepyfile(
             """
             import sys
@@ -763,21 +660,13 @@ class TestPython:
                 sys.stderr.write('hello-stderr')
         """
         )
-        result, dom = run_and_parse("-o", "junit_logging=%s" % junit_logging)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         pnode = node.find_first_by_tag("testcase")
-        if junit_logging == "no":
-            assert not node.find_by_tag(
-                "system-err"
-            ), "system-err should not be generated"
-        if junit_logging == "system-err":
-            systemerr = pnode.find_first_by_tag("system-err")
-            assert (
-                "hello-stderr" in systemerr.toxml()
-            ), "'hello-stderr' should be in system-err"
+        systemout = pnode.find_first_by_tag("system-err")
+        assert "hello-stderr" in systemout.toxml()
 
-    @pytest.mark.parametrize("junit_logging", ["no", "system-out"])
-    def test_setup_error_captures_stdout(self, testdir, run_and_parse, junit_logging):
+    def test_setup_error_captures_stdout(self, testdir):
         testdir.makepyfile(
             """
             import pytest
@@ -790,21 +679,13 @@ class TestPython:
                 pass
         """
         )
-        result, dom = run_and_parse("-o", "junit_logging=%s" % junit_logging)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         pnode = node.find_first_by_tag("testcase")
-        if junit_logging == "no":
-            assert not node.find_by_tag(
-                "system-out"
-            ), "system-out should not be generated"
-        if junit_logging == "system-out":
-            systemout = pnode.find_first_by_tag("system-out")
-            assert (
-                "hello-stdout" in systemout.toxml()
-            ), "'hello-stdout' should be in system-out"
+        systemout = pnode.find_first_by_tag("system-out")
+        assert "hello-stdout" in systemout.toxml()
 
-    @pytest.mark.parametrize("junit_logging", ["no", "system-err"])
-    def test_setup_error_captures_stderr(self, testdir, run_and_parse, junit_logging):
+    def test_setup_error_captures_stderr(self, testdir):
         testdir.makepyfile(
             """
             import sys
@@ -818,21 +699,13 @@ class TestPython:
                 pass
         """
         )
-        result, dom = run_and_parse("-o", "junit_logging=%s" % junit_logging)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         pnode = node.find_first_by_tag("testcase")
-        if junit_logging == "no":
-            assert not node.find_by_tag(
-                "system-err"
-            ), "system-err should not be generated"
-        if junit_logging == "system-err":
-            systemerr = pnode.find_first_by_tag("system-err")
-            assert (
-                "hello-stderr" in systemerr.toxml()
-            ), "'hello-stderr' should be in system-err"
+        systemout = pnode.find_first_by_tag("system-err")
+        assert "hello-stderr" in systemout.toxml()
 
-    @pytest.mark.parametrize("junit_logging", ["no", "system-out"])
-    def test_avoid_double_stdout(self, testdir, run_and_parse, junit_logging):
+    def test_avoid_double_stdout(self, testdir):
         testdir.makepyfile(
             """
             import sys
@@ -847,17 +720,12 @@ class TestPython:
                 sys.stdout.write('hello-stdout call')
         """
         )
-        result, dom = run_and_parse("-o", "junit_logging=%s" % junit_logging)
+        result, dom = runandparse(testdir)
         node = dom.find_first_by_tag("testsuite")
         pnode = node.find_first_by_tag("testcase")
-        if junit_logging == "no":
-            assert not node.find_by_tag(
-                "system-out"
-            ), "system-out should not be generated"
-        if junit_logging == "system-out":
-            systemout = pnode.find_first_by_tag("system-out")
-            assert "hello-stdout call" in systemout.toxml()
-            assert "hello-stdout teardown" in systemout.toxml()
+        systemout = pnode.find_first_by_tag("system-out")
+        assert "hello-stdout call" in systemout.toxml()
+        assert "hello-stdout teardown" in systemout.toxml()
 
 
 def test_mangle_test_address():
@@ -868,46 +736,44 @@ def test_mangle_test_address():
     assert newnames == ["a.my.py.thing", "Class", "method", "[a-1-::]"]
 
 
-def test_dont_configure_on_workers(tmpdir) -> None:
-    gotten = []  # type: List[object]
+def test_dont_configure_on_slaves(tmpdir):
+    gotten = []
 
-    class FakeConfig:
-        if TYPE_CHECKING:
-            workerinput = None
-
+    class FakeConfig(object):
         def __init__(self):
             self.pluginmanager = self
             self.option = self
-            self._store = Store()
 
         def getini(self, name):
             return "pytest"
 
         junitprefix = None
-        # XXX: shouldn't need tmpdir ?
+        # XXX: shouldnt need tmpdir ?
         xmlpath = str(tmpdir.join("junix.xml"))
         register = gotten.append
 
-    fake_config = cast(Config, FakeConfig())
+    fake_config = FakeConfig()
     from _pytest import junitxml
 
     junitxml.pytest_configure(fake_config)
     assert len(gotten) == 1
-    FakeConfig.workerinput = None
+    FakeConfig.slaveinput = None
     junitxml.pytest_configure(fake_config)
     assert len(gotten) == 1
 
 
-class TestNonPython:
-    @parametrize_families
-    def test_summing_simple(self, testdir, run_and_parse, xunit_family):
+class TestNonPython(object):
+    def test_summing_simple(self, testdir):
         testdir.makeconftest(
             """
             import pytest
             def pytest_collect_file(path, parent):
                 if path.ext == ".xyz":
-                    return MyItem.from_parent(name=path.basename, parent=parent)
+                    return MyItem(path, parent)
             class MyItem(pytest.Item):
+                def __init__(self, path, parent):
+                    super(MyItem, self).__init__(path.basename, parent)
+                    self.fspath = path
                 def runtest(self):
                     raise ValueError(42)
                 def repr_failure(self, excinfo):
@@ -915,7 +781,7 @@ class TestNonPython:
         """
         )
         testdir.tmpdir.join("myfile.xyz").write("hello")
-        result, dom = run_and_parse(family=xunit_family)
+        result, dom = runandparse(testdir)
         assert result.ret
         node = dom.find_first_by_tag("testsuite")
         node.assert_attr(errors=0, failures=1, skipped=0, tests=1)
@@ -926,8 +792,7 @@ class TestNonPython:
         assert "custom item runtest failed" in fnode.toxml()
 
 
-@pytest.mark.parametrize("junit_logging", ["no", "system-out"])
-def test_nullbyte(testdir, junit_logging):
+def test_nullbyte(testdir):
     # A null byte can not occur in XML (see section 2.2 of the spec)
     testdir.makepyfile(
         """
@@ -939,17 +804,13 @@ def test_nullbyte(testdir, junit_logging):
     """
     )
     xmlf = testdir.tmpdir.join("junit.xml")
-    testdir.runpytest("--junitxml=%s" % xmlf, "-o", "junit_logging=%s" % junit_logging)
+    testdir.runpytest("--junitxml=%s" % xmlf)
     text = xmlf.read()
     assert "\x00" not in text
-    if junit_logging == "system-out":
-        assert "#x00" in text
-    if junit_logging == "no":
-        assert "#x00" not in text
+    assert "#x00" in text
 
 
-@pytest.mark.parametrize("junit_logging", ["no", "system-out"])
-def test_nullbyte_replace(testdir, junit_logging):
+def test_nullbyte_replace(testdir):
     # Check if the null byte gets replaced
     testdir.makepyfile(
         """
@@ -961,23 +822,25 @@ def test_nullbyte_replace(testdir, junit_logging):
     """
     )
     xmlf = testdir.tmpdir.join("junit.xml")
-    testdir.runpytest("--junitxml=%s" % xmlf, "-o", "junit_logging=%s" % junit_logging)
+    testdir.runpytest("--junitxml=%s" % xmlf)
     text = xmlf.read()
-    if junit_logging == "system-out":
-        assert "#x0" in text
-    if junit_logging == "no":
-        assert "#x0" not in text
+    assert "#x0" in text
 
 
 def test_invalid_xml_escape():
     # Test some more invalid xml chars, the full range should be
-    # tested really but let's just test the edges of the ranges
-    # instead.
+    # tested really but let's just thest the edges of the ranges
+    # intead.
     # XXX This only tests low unicode character points for now as
     #     there are some issues with the testing infrastructure for
     #     the higher ones.
     # XXX Testing 0xD (\r) is tricky as it overwrites the just written
     #     line in the output, so we skip it too.
+    global unichr
+    try:
+        unichr(65)
+    except NameError:
+        unichr = chr
     invalid = (
         0x00,
         0x1,
@@ -994,15 +857,17 @@ def test_invalid_xml_escape():
     valid = (0x9, 0xA, 0x20)
     # 0xD, 0xD7FF, 0xE000, 0xFFFD, 0x10000, 0x10FFFF)
 
+    from _pytest.junitxml import bin_xml_escape
+
     for i in invalid:
-        got = bin_xml_escape(chr(i))
+        got = bin_xml_escape(unichr(i)).uniobj
         if i <= 0xFF:
             expected = "#x%02X" % i
         else:
             expected = "#x%04X" % i
         assert got == expected
     for i in valid:
-        assert chr(i) == bin_xml_escape(chr(i))
+        assert chr(i) == bin_xml_escape(unichr(i)).uniobj
 
 
 def test_logxml_path_expansion(tmpdir, monkeypatch):
@@ -1049,22 +914,22 @@ def test_logxml_check_isdir(testdir):
     result.stderr.fnmatch_lines(["*--junitxml must be a filename*"])
 
 
-def test_escaped_parametrized_names_xml(testdir, run_and_parse):
+def test_escaped_parametrized_names_xml(testdir):
     testdir.makepyfile(
-        """\
+        """
         import pytest
-        @pytest.mark.parametrize('char', ["\\x00"])
+        @pytest.mark.parametrize('char', [u"\\x00"])
         def test_func(char):
             assert char
-        """
+    """
     )
-    result, dom = run_and_parse()
+    result, dom = runandparse(testdir)
     assert result.ret == 0
     node = dom.find_first_by_tag("testcase")
     node.assert_attr(name="test_func[\\x00]")
 
 
-def test_double_colon_split_function_issue469(testdir, run_and_parse):
+def test_double_colon_split_function_issue469(testdir):
     testdir.makepyfile(
         """
         import pytest
@@ -1073,14 +938,14 @@ def test_double_colon_split_function_issue469(testdir, run_and_parse):
             pass
     """
     )
-    result, dom = run_and_parse()
+    result, dom = runandparse(testdir)
     assert result.ret == 0
     node = dom.find_first_by_tag("testcase")
     node.assert_attr(classname="test_double_colon_split_function_issue469")
     node.assert_attr(name="test_func[double::colon]")
 
 
-def test_double_colon_split_method_issue469(testdir, run_and_parse):
+def test_double_colon_split_method_issue469(testdir):
     testdir.makepyfile(
         """
         import pytest
@@ -1090,25 +955,25 @@ def test_double_colon_split_method_issue469(testdir, run_and_parse):
                 pass
     """
     )
-    result, dom = run_and_parse()
+    result, dom = runandparse(testdir)
     assert result.ret == 0
     node = dom.find_first_by_tag("testcase")
     node.assert_attr(classname="test_double_colon_split_method_issue469.TestClass")
     node.assert_attr(name="test_func[double::colon]")
 
 
-def test_unicode_issue368(testdir) -> None:
+def test_unicode_issue368(testdir):
     path = testdir.tmpdir.join("test.xml")
     log = LogXML(str(path), None)
-    ustr = "ВНИ!"
+    ustr = u"ВНИ!"
 
     class Report(BaseReport):
         longrepr = ustr
-        sections = []  # type: List[Tuple[str, str]]
+        sections = []
         nodeid = "something"
         location = "tests/filename.py", 42, "TestClass.method"
 
-    test_report = cast(TestReport, Report())
+    test_report = Report()
 
     # hopefully this is not too brittle ...
     log.pytest_sessionstart()
@@ -1121,12 +986,12 @@ def test_unicode_issue368(testdir) -> None:
     node_reporter.append_skipped(test_report)
     test_report.longrepr = "filename", 1, "Skipped: 卡嘣嘣"
     node_reporter.append_skipped(test_report)
-    test_report.wasxfail = ustr  # type: ignore[attr-defined]
+    test_report.wasxfail = ustr
     node_reporter.append_skipped(test_report)
     log.pytest_sessionfinish()
 
 
-def test_record_property(testdir, run_and_parse):
+def test_record_property(testdir):
     testdir.makepyfile(
         """
         import pytest
@@ -1138,17 +1003,16 @@ def test_record_property(testdir, run_and_parse):
             record_property("foo", "<1");
     """
     )
-    result, dom = run_and_parse()
+    result, dom = runandparse(testdir, "-rwv")
     node = dom.find_first_by_tag("testsuite")
     tnode = node.find_first_by_tag("testcase")
     psnode = tnode.find_first_by_tag("properties")
     pnodes = psnode.find_by_tag("property")
     pnodes[0].assert_attr(name="bar", value="1")
     pnodes[1].assert_attr(name="foo", value="<1")
-    result.stdout.fnmatch_lines(["*= 1 passed in *"])
 
 
-def test_record_property_same_name(testdir, run_and_parse):
+def test_record_property_same_name(testdir):
     testdir.makepyfile(
         """
         def test_record_with_same_name(record_property):
@@ -1156,7 +1020,7 @@ def test_record_property_same_name(testdir, run_and_parse):
             record_property("foo", "baz")
     """
     )
-    result, dom = run_and_parse()
+    result, dom = runandparse(testdir, "-rw")
     node = dom.find_first_by_tag("testsuite")
     tnode = node.find_first_by_tag("testcase")
     psnode = tnode.find_first_by_tag("properties")
@@ -1180,7 +1044,7 @@ def test_record_fixtures_without_junitxml(testdir, fixture_name):
 
 
 @pytest.mark.filterwarnings("default")
-def test_record_attribute(testdir, run_and_parse):
+def test_record_attribute(testdir):
     testdir.makeini(
         """
         [pytest]
@@ -1198,7 +1062,7 @@ def test_record_attribute(testdir, run_and_parse):
             record_xml_attribute("foo", "<1");
     """
     )
-    result, dom = run_and_parse()
+    result, dom = runandparse(testdir, "-rw")
     node = dom.find_first_by_tag("testsuite")
     tnode = node.find_first_by_tag("testcase")
     tnode.assert_attr(bar="1")
@@ -1210,8 +1074,9 @@ def test_record_attribute(testdir, run_and_parse):
 
 @pytest.mark.filterwarnings("default")
 @pytest.mark.parametrize("fixture_name", ["record_xml_attribute", "record_property"])
-def test_record_fixtures_xunit2(testdir, fixture_name, run_and_parse):
-    """Ensure record_xml_attribute and record_property drop values when outside of legacy family."""
+def test_record_fixtures_xunit2(testdir, fixture_name):
+    """Ensure record_xml_attribute and record_property drop values when outside of legacy family
+    """
     testdir.makeini(
         """
         [pytest]
@@ -1232,7 +1097,7 @@ def test_record_fixtures_xunit2(testdir, fixture_name, run_and_parse):
         )
     )
 
-    result, dom = run_and_parse(family=None)
+    result, dom = runandparse(testdir, "-rw")
     expected_lines = []
     if fixture_name == "record_xml_attribute":
         expected_lines.append(
@@ -1247,10 +1112,11 @@ def test_record_fixtures_xunit2(testdir, fixture_name, run_and_parse):
     result.stdout.fnmatch_lines(expected_lines)
 
 
-def test_random_report_log_xdist(testdir, monkeypatch, run_and_parse):
-    """`xdist` calls pytest_runtest_logreport as they are executed by the workers,
+def test_random_report_log_xdist(testdir, monkeypatch):
+    """xdist calls pytest_runtest_logreport as they are executed by the slaves,
     with nodes from several nodes overlapping, so junitxml must cope with that
-    to produce correct reports (#1064)."""
+    to produce correct reports. #1064
+    """
     pytest.importorskip("xdist")
     monkeypatch.delenv("PYTEST_DISABLE_PLUGIN_AUTOLOAD", raising=False)
     testdir.makepyfile(
@@ -1261,7 +1127,7 @@ def test_random_report_log_xdist(testdir, monkeypatch, run_and_parse):
             assert i != 22
     """
     )
-    _, dom = run_and_parse("-n2")
+    _, dom = runandparse(testdir, "-n2")
     suite_node = dom.find_first_by_tag("testsuite")
     failed = []
     for case_node in suite_node.find_by_tag("testcase"):
@@ -1271,22 +1137,21 @@ def test_random_report_log_xdist(testdir, monkeypatch, run_and_parse):
     assert failed == ["test_x[22]"]
 
 
-@parametrize_families
-def test_root_testsuites_tag(testdir, run_and_parse, xunit_family):
+def test_root_testsuites_tag(testdir):
     testdir.makepyfile(
         """
         def test_x():
             pass
     """
     )
-    _, dom = run_and_parse(family=xunit_family)
+    _, dom = runandparse(testdir)
     root = dom.get_unique_child
     assert root.tag == "testsuites"
     suite_node = root.get_unique_child
     assert suite_node.tag == "testsuite"
 
 
-def test_runs_twice(testdir, run_and_parse):
+def test_runs_twice(testdir):
     f = testdir.makepyfile(
         """
         def test_pass():
@@ -1294,15 +1159,15 @@ def test_runs_twice(testdir, run_and_parse):
     """
     )
 
-    result, dom = run_and_parse(f, f)
-    result.stdout.no_fnmatch_line("*INTERNALERROR*")
+    result, dom = runandparse(testdir, f, f)
+    assert "INTERNALERROR" not in result.stdout.str()
     first, second = [x["classname"] for x in dom.find_by_tag("testcase")]
     assert first == second
 
 
-def test_runs_twice_xdist(testdir, run_and_parse):
+@pytest.mark.xfail(reason="hangs", run=False)
+def test_runs_twice_xdist(testdir):
     pytest.importorskip("xdist")
-    testdir.monkeypatch.delenv("PYTEST_DISABLE_PLUGIN_AUTOLOAD")
     f = testdir.makepyfile(
         """
         def test_pass():
@@ -1310,13 +1175,13 @@ def test_runs_twice_xdist(testdir, run_and_parse):
     """
     )
 
-    result, dom = run_and_parse(f, "--dist", "each", "--tx", "2*popen")
-    result.stdout.no_fnmatch_line("*INTERNALERROR*")
+    result, dom = runandparse(testdir, f, "--dist", "each", "--tx", "2*popen")
+    assert "INTERNALERROR" not in result.stdout.str()
     first, second = [x["classname"] for x in dom.find_by_tag("testcase")]
     assert first == second
 
 
-def test_fancy_items_regression(testdir, run_and_parse):
+def test_fancy_items_regression(testdir):
     # issue 1259
     testdir.makeconftest(
         """
@@ -1331,14 +1196,14 @@ def test_fancy_items_regression(testdir, run_and_parse):
         class FunCollector(pytest.File):
             def collect(self):
                 return [
-                    FunItem.from_parent(name='a', parent=self),
-                    NoFunItem.from_parent(name='a', parent=self),
-                    NoFunItem.from_parent(name='b', parent=self),
+                    FunItem('a', self),
+                    NoFunItem('a', self),
+                    NoFunItem('b', self),
                 ]
 
         def pytest_collect_file(path, parent):
             if path.check(ext='.py'):
-                return FunCollector.from_parent(fspath=path, parent=parent)
+                return FunCollector(path, parent)
     """
     )
 
@@ -1349,37 +1214,36 @@ def test_fancy_items_regression(testdir, run_and_parse):
     """
     )
 
-    result, dom = run_and_parse()
+    result, dom = runandparse(testdir)
 
-    result.stdout.no_fnmatch_line("*INTERNALERROR*")
+    assert "INTERNALERROR" not in result.stdout.str()
 
     items = sorted("%(classname)s %(name)s" % x for x in dom.find_by_tag("testcase"))
     import pprint
 
     pprint.pprint(items)
     assert items == [
-        "conftest a",
-        "conftest a",
-        "conftest b",
-        "test_fancy_items_regression a",
-        "test_fancy_items_regression a",
-        "test_fancy_items_regression b",
-        "test_fancy_items_regression test_pass",
+        u"conftest a",
+        u"conftest a",
+        u"conftest b",
+        u"test_fancy_items_regression a",
+        u"test_fancy_items_regression a",
+        u"test_fancy_items_regression b",
+        u"test_fancy_items_regression test_pass",
     ]
 
 
-@parametrize_families
-def test_global_properties(testdir, xunit_family) -> None:
+def test_global_properties(testdir):
     path = testdir.tmpdir.join("test_global_properties.xml")
-    log = LogXML(str(path), None, family=xunit_family)
+    log = LogXML(str(path), None)
 
     class Report(BaseReport):
-        sections = []  # type: List[Tuple[str, str]]
+        sections = []
         nodeid = "test_node_id"
 
     log.pytest_sessionstart()
-    log.add_global_property("foo", "1")
-    log.add_global_property("bar", "2")
+    log.add_global_property("foo", 1)
+    log.add_global_property("bar", 2)
     log.pytest_sessionfinish()
 
     dom = minidom.parse(str(path))
@@ -1403,19 +1267,19 @@ def test_global_properties(testdir, xunit_family) -> None:
     assert actual == expected
 
 
-def test_url_property(testdir) -> None:
+def test_url_property(testdir):
     test_url = "http://www.github.com/pytest-dev"
     path = testdir.tmpdir.join("test_url_property.xml")
     log = LogXML(str(path), None)
 
     class Report(BaseReport):
         longrepr = "FooBarBaz"
-        sections = []  # type: List[Tuple[str, str]]
+        sections = []
         nodeid = "something"
         location = "tests/filename.py", 42, "TestClass.method"
         url = test_url
 
-    test_report = cast(TestReport, Report())
+    test_report = Report()
 
     log.pytest_sessionstart()
     node_reporter = log._opentestcase(test_report)
@@ -1429,8 +1293,7 @@ def test_url_property(testdir) -> None:
     ), "The URL did not get written to the xml"
 
 
-@parametrize_families
-def test_record_testsuite_property(testdir, run_and_parse, xunit_family):
+def test_record_testsuite_property(testdir):
     testdir.makepyfile(
         """
         def test_func1(record_testsuite_property):
@@ -1440,7 +1303,7 @@ def test_record_testsuite_property(testdir, run_and_parse, xunit_family):
             record_testsuite_property("stats", 10)
     """
     )
-    result, dom = run_and_parse(family=xunit_family)
+    result, dom = runandparse(testdir)
     assert result.ret == 0
     node = dom.find_first_by_tag("testsuite")
     properties_node = node.find_first_by_tag("properties")
@@ -1478,16 +1341,14 @@ def test_record_testsuite_property_type_checking(testdir, junit):
 
 
 @pytest.mark.parametrize("suite_name", ["my_suite", ""])
-@parametrize_families
-def test_set_suite_name(testdir, suite_name, run_and_parse, xunit_family):
+def test_set_suite_name(testdir, suite_name):
     if suite_name:
         testdir.makeini(
             """
             [pytest]
-            junit_suite_name={suite_name}
-            junit_family={family}
+            junit_suite_name={}
         """.format(
-                suite_name=suite_name, family=xunit_family
+                suite_name
             )
         )
         expected = suite_name
@@ -1501,13 +1362,13 @@ def test_set_suite_name(testdir, suite_name, run_and_parse, xunit_family):
             pass
     """
     )
-    result, dom = run_and_parse(family=xunit_family)
+    result, dom = runandparse(testdir)
     assert result.ret == 0
     node = dom.find_first_by_tag("testsuite")
     node.assert_attr(name=expected)
 
 
-def test_escaped_skipreason_issue3533(testdir, run_and_parse):
+def test_escaped_skipreason_issue3533(testdir):
     testdir.makepyfile(
         """
         import pytest
@@ -1516,26 +1377,20 @@ def test_escaped_skipreason_issue3533(testdir, run_and_parse):
             pass
     """
     )
-    _, dom = run_and_parse()
+    _, dom = runandparse(testdir)
     node = dom.find_first_by_tag("testcase")
     snode = node.find_first_by_tag("skipped")
     assert "1 <> 2" in snode.text
     snode.assert_attr(message="1 <> 2")
 
 
-@parametrize_families
-def test_logging_passing_tests_disabled_does_not_log_test_output(
-    testdir, run_and_parse, xunit_family
-):
+def test_logging_passing_tests_disabled_does_not_log_test_output(testdir):
     testdir.makeini(
         """
         [pytest]
         junit_log_passing_tests=False
         junit_logging=system-out
-        junit_family={family}
-    """.format(
-            family=xunit_family
-        )
+    """
     )
     testdir.makepyfile(
         """
@@ -1549,26 +1404,22 @@ def test_logging_passing_tests_disabled_does_not_log_test_output(
             logging.warning('hello')
     """
     )
-    result, dom = run_and_parse(family=xunit_family)
+    result, dom = runandparse(testdir)
     assert result.ret == 0
     node = dom.find_first_by_tag("testcase")
     assert len(node.find_by_tag("system-err")) == 0
     assert len(node.find_by_tag("system-out")) == 0
 
 
-@parametrize_families
 @pytest.mark.parametrize("junit_logging", ["no", "system-out", "system-err"])
 def test_logging_passing_tests_disabled_logs_output_for_failing_test_issue5430(
-    testdir, junit_logging, run_and_parse, xunit_family
+    testdir, junit_logging
 ):
     testdir.makeini(
         """
         [pytest]
         junit_log_passing_tests=False
-        junit_family={family}
-    """.format(
-            family=xunit_family
-        )
+    """
     )
     testdir.makepyfile(
         """
@@ -1581,9 +1432,7 @@ def test_logging_passing_tests_disabled_logs_output_for_failing_test_issue5430(
             assert 0
     """
     )
-    result, dom = run_and_parse(
-        "-o", "junit_logging=%s" % junit_logging, family=xunit_family
-    )
+    result, dom = runandparse(testdir, "-o", "junit_logging=%s" % junit_logging)
     assert result.ret == 1
     node = dom.find_first_by_tag("testcase")
     if junit_logging == "system-out":

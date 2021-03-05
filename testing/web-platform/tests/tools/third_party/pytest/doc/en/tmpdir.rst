@@ -22,7 +22,7 @@ created in the `base temporary directory`_.
     # content of test_tmp_path.py
     import os
 
-    CONTENT = "content"
+    CONTENT = u"content"
 
 
     def test_create_file(tmp_path):
@@ -41,7 +41,7 @@ Running this would result in a passed test except for the last
 
     $ pytest test_tmp_path.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-4.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -64,9 +64,7 @@ Running this would result in a passed test except for the last
     E       assert 0
 
     test_tmp_path.py:13: AssertionError
-    ========================= short test summary info ==========================
-    FAILED test_tmp_path.py::test_create_file - assert 0
-    ============================ 1 failed in 0.12s =============================
+    ========================= 1 failed in 0.12 seconds =========================
 
 .. _`tmp_path_factory example`:
 
@@ -92,14 +90,10 @@ provide a temporary directory unique to the test invocation,
 created in the `base temporary directory`_.
 
 ``tmpdir`` is a `py.path.local`_ object which offers ``os.path`` methods
-and more.  Here is an example test usage:
-
-.. code-block:: python
+and more.  Here is an example test usage::
 
     # content of test_tmpdir.py
     import os
-
-
     def test_create_file(tmpdir):
         p = tmpdir.mkdir("sub").join("hello.txt")
         p.write("content")
@@ -114,7 +108,7 @@ Running this would result in a passed test except for the last
 
     $ pytest test_tmpdir.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-4.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -134,10 +128,8 @@ Running this would result in a passed test except for the last
     >       assert 0
     E       assert 0
 
-    test_tmpdir.py:9: AssertionError
-    ========================= short test summary info ==========================
-    FAILED test_tmpdir.py::test_create_file - assert 0
-    ============================ 1 failed in 0.12s =============================
+    test_tmpdir.py:7: AssertionError
+    ========================= 1 failed in 0.12 seconds =========================
 
 .. _`tmpdir factory example`:
 
@@ -192,13 +184,8 @@ You can override the default temporary directory setting like this:
 
     pytest --basetemp=mydir
 
-.. warning::
-
-    The contents of ``mydir`` will be completely removed, so make sure to use a directory
-    for that purpose only.
-
-When distributing tests on the local machine using ``pytest-xdist``, care is taken to
-automatically configure a basetemp directory for the sub processes such that all temporary
+When distributing tests on the local machine, ``pytest`` takes care to
+configure a basetemp directory for the sub processes such that all temporary
 data lands below a single per-test run basetemp directory.
 
 .. _`py.path.local`: https://py.readthedocs.io/en/latest/path.html

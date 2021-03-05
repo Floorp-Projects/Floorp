@@ -1,5 +1,10 @@
+# -*- coding: utf-8 -*-
 """Reproduces issue #3774"""
-from unittest import mock
+
+try:
+    import mock
+except ImportError:
+    import unittest.mock as mock
 
 import pytest
 
