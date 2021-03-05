@@ -20,15 +20,15 @@ const {
 ShieldPreferences.init();
 
 decorate_task(
-  withMockPreferences(),
+  withMockPreferences,
   AddonStudies.withStudies([
     addonStudyFactory({ active: true }),
     addonStudyFactory({ active: true }),
   ]),
-  async function testDisableStudiesWhenOptOutDisabled({
+  async function testDisableStudiesWhenOptOutDisabled(
     mockPreferences,
-    addonStudies: [study1, study2],
-  }) {
+    [study1, study2]
+  ) {
     mockPreferences.set(OPT_OUT_STUDIES_ENABLED_PREF, true);
     const observers = [
       studyEndObserved(study1.recipeId),
@@ -47,17 +47,17 @@ decorate_task(
 );
 
 decorate_task(
-  withMockPreferences(),
+  withMockPreferences,
   PreferenceExperiments.withMockExperiments([
     preferenceStudyFactory({ active: true }),
     preferenceStudyFactory({ active: true }),
   ]),
   withStub(PreferenceExperiments, "stop"),
-  async function testDisableExperimentsWhenOptOutDisabled({
+  async function testDisableExperimentsWhenOptOutDisabled(
     mockPreferences,
-    prefExperiments: [study1, study2],
-    stopStub,
-  }) {
+    [study1, study2],
+    stopStub
+  ) {
     mockPreferences.set(OPT_OUT_STUDIES_ENABLED_PREF, true);
     let stopArgs = [];
     let stoppedBoth = new Promise(resolve => {

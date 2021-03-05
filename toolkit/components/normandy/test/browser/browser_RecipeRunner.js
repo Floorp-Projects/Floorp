@@ -131,10 +131,10 @@ decorate_task(
   withStub(FilterExpressions, "eval"),
   withStub(Uptake, "reportRecipe"),
   withStub(NormandyApi, "verifyObjectSignature"),
-  async function test_getRecipeSuitability_canHandleExceptions({
+  async function test_getRecipeSuitability_canHandleExceptions(
     evalStub,
-    reportRecipeStub,
-  }) {
+    reportRecipeStub
+  ) {
     evalStub.throws("this filter was broken somehow");
     const someRecipe = {
       id: "1",
@@ -158,10 +158,10 @@ decorate_task(
   withSpy(FilterExpressions, "eval"),
   withStub(RecipeRunner, "getCapabilities"),
   withStub(NormandyApi, "verifyObjectSignature"),
-  async function test_getRecipeSuitability_checksCapabilities({
+  async function test_getRecipeSuitability_checksCapabilities(
     evalSpy,
-    getCapabilitiesStub,
-  }) {
+    getCapabilitiesStub
+  ) {
     getCapabilitiesStub.returns(new Set(["test-capability"]));
 
     is(
@@ -209,13 +209,10 @@ decorate_task(
 );
 
 decorate_task(
-  withMockNormandyApi(),
+  withMockNormandyApi,
   withStub(ClientEnvironment, "getClientClassification"),
-  async function testClientClassificationCache({
-    mockNormandyApi,
-    getClientClassificationStub,
-  }) {
-    getClientClassificationStub.returns(Promise.resolve(false));
+  async function testClientClassificationCache(api, getStub) {
+    getStub.returns(Promise.resolve(false));
 
     await SpecialPowers.pushPrefEnv({
       set: [["app.normandy.api_url", "https://example.com/selfsupport-dummy"]],
@@ -225,32 +222,18 @@ decorate_task(
     await SpecialPowers.pushPrefEnv({
       set: [["app.normandy.experiments.lazy_classify", false]],
     });
-    ok(
-      !getClientClassificationStub.called,
-      "getClientClassification hasn't been called"
-    );
+    ok(!getStub.called, "getClientClassification hasn't been called");
     await RecipeRunner.run();
-    ok(
-      getClientClassificationStub.called,
-      "getClientClassification was called eagerly"
-    );
+    ok(getStub.called, "getClientClassification was called eagerly");
 
     // When the experiment pref is true, do not eagerly call getClientClassification.
     await SpecialPowers.pushPrefEnv({
       set: [["app.normandy.experiments.lazy_classify", true]],
     });
-    getClientClassificationStub.reset();
-    ok(
-      !getClientClassificationStub.called,
-
-      "getClientClassification hasn't been called"
-    );
+    getStub.reset();
+    ok(!getStub.called, "getClientClassification hasn't been called");
     await RecipeRunner.run();
-    ok(
-      !getClientClassificationStub.called,
-
-      "getClientClassification was not called eagerly"
-    );
+    ok(!getStub.called, "getClientClassification was not called eagerly");
   }
 );
 
@@ -258,7 +241,7 @@ decorate_task(
   withStub(Uptake, "reportRunner"),
   withStub(ActionsManager.prototype, "finalize"),
   NormandyTestUtils.withMockRecipeCollection([]),
-  async function testRunEvents() {
+  async function testRunEvents(reportRunnerStub, finalizeStub) {
     const startPromise = TestUtils.topicObserved("recipe-runner:start");
     const endPromise = TestUtils.topicObserved("recipe-runner:end");
 
@@ -275,8 +258,8 @@ decorate_task(
   withStub(RecipeRunner, "getCapabilities"),
   withStub(NormandyApi, "verifyObjectSignature"),
   NormandyTestUtils.withMockRecipeCollection([{ id: 1 }]),
-  async function test_run_includesCapabilities({ getCapabilitiesStub }) {
-    getCapabilitiesStub.returns(new Set(["test-capability"]));
+  async function test_run_includesCapabilities(getCapabilitiesStub) {
+    getCapabilitiesStub.returns(new Set(["test-capabilitiy"]));
     await RecipeRunner.run();
     ok(getCapabilitiesStub.called, "getCapabilities should be called");
   }
@@ -287,12 +270,12 @@ decorate_task(
   withStub(ActionsManager.prototype, "processRecipe"),
   withStub(ActionsManager.prototype, "finalize"),
   withStub(Uptake, "reportRecipe"),
-  async function testReadFromRemoteSettings({
+  async function testReadFromRemoteSettings(
     verifyObjectSignatureStub,
     processRecipeStub,
     finalizeStub,
-    reportRecipeStub,
-  }) {
+    reportRecipeStub
+  ) {
     const matchRecipe = {
       id: 1,
       name: "match",
@@ -371,10 +354,11 @@ decorate_task(
   withStub(NormandyApi, "verifyObjectSignature"),
   withStub(ActionsManager.prototype, "processRecipe"),
   withStub(RecipeRunner, "getCapabilities"),
-  async function testReadFromRemoteSettings({
-    processRecipeStub,
-    getCapabilitiesStub,
-  }) {
+  async function testReadFromRemoteSettings(
+    verifyObjectSignatureStub,
+    processRecipe,
+    getCapabilitiesStub
+  ) {
     getCapabilitiesStub.returns(new Set(["compatible"]));
     const compatibleRecipe = {
       name: "match",
@@ -412,7 +396,7 @@ decorate_task(
     await RecipeRunner.run();
 
     Assert.deepEqual(
-      processRecipeStub.args,
+      processRecipe.args,
       [
         [compatibleRecipe, BaseAction.suitability.FILTER_MATCH],
         [incompatibleRecipe, BaseAction.suitability.CAPABILITES_MISMATCH],
@@ -427,12 +411,12 @@ decorate_task(
   withStub(NormandyApi, "verifyObjectSignature"),
   withStub(Uptake, "reportRecipe"),
   NormandyTestUtils.withMockRecipeCollection(),
-  async function testBadSignatureFromRemoteSettings({
+  async function testBadSignatureFromRemoteSettings(
     processRecipeStub,
     verifyObjectSignatureStub,
     reportRecipeStub,
-    mockRecipeCollection,
-  }) {
+    mockRecipeCollection
+  ) {
     verifyObjectSignatureStub.throws(new Error("fake signature error"));
     const badSigRecipe = {
       id: 1,
@@ -466,7 +450,7 @@ decorate_task(
   }),
   withStub(RecipeRunner, "run"),
   withStub(RecipeRunner, "registerTimer"),
-  async function testInit({ runStub, registerTimerStub }) {
+  async function testInit(runStub, registerTimerStub) {
     await RecipeRunner.init();
     ok(
       !runStub.called,
@@ -487,7 +471,7 @@ decorate_task(
   withStub(RecipeRunner, "run"),
   withStub(RecipeRunner, "registerTimer"),
   withStub(RecipeRunner._remoteSettingsClientForTesting, "sync"),
-  async function testInitDevMode({ runStub, registerTimerStub, syncStub }) {
+  async function testInitDevMode(runStub, registerTimerStub, syncStub) {
     await RecipeRunner.init();
     Assert.deepEqual(
       runStub.args,
@@ -514,11 +498,7 @@ decorate_task(
   withStub(RecipeRunner, "run"),
   withStub(RecipeRunner, "registerTimer"),
   withStub(RecipeRunner, "watchPrefs"),
-  async function testInitFirstRun({
-    runStub,
-    registerTimerStub,
-    watchPrefsStub,
-  }) {
+  async function testInitFirstRun(runStub, registerTimerStub, watchPrefsStub) {
     await RecipeRunner.init();
     Assert.deepEqual(
       runStub.args,
@@ -556,7 +536,12 @@ decorate_task(
   withStub(RecipeRunner, "disable"),
   withStub(CleanupManager, "addCleanupHandler"),
 
-  async function testPrefWatching({ runStub, enableStub, disableStub }) {
+  async function testPrefWatching(
+    runStub,
+    enableStub,
+    disableStub,
+    addCleanupHandlerStub
+  ) {
     await RecipeRunner.init();
     is(enableStub.callCount, 1, "Enable should be called initially");
     is(disableStub.callCount, 0, "Disable should not be called initially");
@@ -609,7 +594,8 @@ decorate_task(
 decorate_task(
   withStub(RecipeRunner, "registerTimer"),
   withStub(RecipeRunner, "unregisterTimer"),
-  async function testPrefWatching({ registerTimerStub }) {
+
+  async function testPrefWatching(registerTimerStub, unregisterTimerStub) {
     const originalEnabled = RecipeRunner.enabled;
 
     try {
@@ -635,7 +621,7 @@ decorate_task(
     set: [["app.normandy.onsync_skew_sec", 0]],
   }),
   withStub(RecipeRunner, "run"),
-  async function testRunOnSyncRemoteSettings({ runStub }) {
+  async function testRunOnSyncRemoteSettings(runStub) {
     const rsClient = RecipeRunner._remoteSettingsClientForTesting;
     await RecipeRunner.init();
     ok(
@@ -675,7 +661,7 @@ decorate_task(
     ],
   }),
   withStub(RecipeRunner, "run"),
-  async function testOnSyncRunDelayed({ runStub }) {
+  async function testOnSyncRunDelayed(runStub) {
     ok(
       !RecipeRunner._syncSkewTimeout,
       "precondition: No timer should be active"
@@ -690,8 +676,8 @@ decorate_task(
 
 decorate_task(
   withStub(RecipeRunner._remoteSettingsClientForTesting, "get"),
-  async function testRunCanRunOnlyOnce({ getStub }) {
-    getStub.returns(
+  async function testRunCanRunOnlyOnce(getRecipesStub) {
+    getRecipesStub.returns(
       // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
       new Promise(resolve => setTimeout(() => resolve([]), 10))
     );
@@ -699,7 +685,7 @@ decorate_task(
     // Run 2 in parallel.
     await Promise.all([RecipeRunner.run(), RecipeRunner.run()]);
 
-    is(getStub.callCount, 1, "run() is no-op if already running");
+    is(getRecipesStub.callCount, 1, "run() is no-op if already running");
   }
 );
 
@@ -716,7 +702,7 @@ decorate_task(
   withSpy(RecipeRunner, "run"),
   withStub(ActionsManager.prototype, "finalize"),
   withStub(Uptake, "reportRunner"),
-  async function testSyncDelaysTimer({ runSpy }) {
+  async function testSyncDelaysTimer(runSpy, finalizeStub, reportRecipeStub) {
     // Mark any existing timer as having run just now.
     for (const { value } of Services.catMan.enumerateCategory("update-timer")) {
       const timerID = value.split(",")[2];
@@ -801,7 +787,7 @@ decorate_task(
   withStub(Uptake, "reportRunner"),
   withStub(ActionsManager.prototype, "finalize"),
   NormandyTestUtils.withMockRecipeCollection([]),
-  async function testRunEvents({ reportRunnerStub, finalizeStub }) {
+  async function testRunEvents(reportRunnerStub, finalizeStub) {
     const observer = sinon.spy();
     Services.obs.addObserver(observer, "recipe-runner:start");
 
