@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
-    cow_label, ByteBuf, CommandEncoderAction, DeviceAction, DropAction, ImplicitLayout, RawString,
-    ShaderModuleSource, TextureAction,
+    cow_label, ByteBuf, CommandEncoderAction, DeviceAction, DropAction, ImplicitLayout,
+    QueueWriteAction, RawString, ShaderModuleSource, TextureAction,
 };
 
 use wgc::{hub::IdentityManager, id};
@@ -987,4 +987,25 @@ pub unsafe extern "C" fn wgpu_render_pass_set_index_buffer(
     size: Option<wgt::BufferSize>,
 ) {
     pass.set_index_buffer(buffer, index_format, offset, size);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_queue_write_buffer(
+    dst: id::BufferId,
+    offset: wgt::BufferAddress,
+    bb: &mut ByteBuf,
+) {
+    let action = QueueWriteAction::Buffer { dst, offset };
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_queue_write_texture(
+    dst: wgt::TextureCopyView<id::TextureId>,
+    layout: wgt::TextureDataLayout,
+    size: wgt::Extent3d,
+    bb: &mut ByteBuf,
+) {
+    let action = QueueWriteAction::Texture { dst, layout, size };
+    *bb = make_byte_buf(&action);
 }

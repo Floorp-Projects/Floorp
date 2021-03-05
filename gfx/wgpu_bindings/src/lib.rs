@@ -111,6 +111,19 @@ enum DeviceAction<'a> {
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
+enum QueueWriteAction {
+    Buffer {
+        dst: id::BufferId,
+        offset: wgt::BufferAddress,
+    },
+    Texture {
+        dst: wgt::TextureCopyView<id::TextureId>,
+        layout: wgt::TextureDataLayout,
+        size: wgt::Extent3d,
+    },
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
 enum TextureAction<'a> {
     CreateView(id::TextureViewId, wgc::resource::TextureViewDescriptor<'a>),
 }
