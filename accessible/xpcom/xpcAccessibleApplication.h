@@ -20,7 +20,7 @@ namespace a11y {
 class xpcAccessibleApplication : public xpcAccessibleGeneric,
                                  public nsIAccessibleApplication {
  public:
-  explicit xpcAccessibleApplication(Accessible* aIntl)
+  explicit xpcAccessibleApplication(LocalAccessible* aIntl)
       : xpcAccessibleGeneric(aIntl) {}
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -35,7 +35,9 @@ class xpcAccessibleApplication : public xpcAccessibleGeneric,
   virtual ~xpcAccessibleApplication() { Shutdown(); }
 
  private:
-  ApplicationAccessible* Intl() { return mIntl->AsLocal()->AsApplication(); }
+  ApplicationAccessible* Intl() {
+    return mIntl.AsAccessible()->AsApplication();
+  }
 
   xpcAccessibleApplication(const xpcAccessibleApplication&) = delete;
   xpcAccessibleApplication& operator=(const xpcAccessibleApplication&) = delete;
