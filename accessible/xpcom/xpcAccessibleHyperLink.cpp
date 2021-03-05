@@ -17,16 +17,16 @@ xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex) {
   NS_ENSURE_ARG_POINTER(aStartIndex);
   *aStartIndex = 0;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible()) {
-    *aStartIndex = Intl().AsAccessible()->StartOffset();
+  if (Intl()->IsLocal()) {
+    *aStartIndex = Intl()->AsLocal()->StartOffset();
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
     bool isIndexValid = false;
-    uint32_t startOffset = Intl().AsProxy()->StartOffset(&isIndexValid);
+    uint32_t startOffset = Intl()->AsRemote()->StartOffset(&isIndexValid);
     if (!isIndexValid) return NS_ERROR_FAILURE;
 
     *aStartIndex = startOffset;
@@ -41,16 +41,16 @@ xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex) {
   NS_ENSURE_ARG_POINTER(aEndIndex);
   *aEndIndex = 0;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible()) {
-    *aEndIndex = Intl().AsAccessible()->EndOffset();
+  if (Intl()->IsLocal()) {
+    *aEndIndex = Intl()->AsLocal()->EndOffset();
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
     bool isIndexValid = false;
-    uint32_t endOffset = Intl().AsProxy()->EndOffset(&isIndexValid);
+    uint32_t endOffset = Intl()->AsRemote()->EndOffset(&isIndexValid);
     if (!isIndexValid) return NS_ERROR_FAILURE;
 
     *aEndIndex = endOffset;
@@ -65,16 +65,16 @@ xpcAccessibleHyperLink::GetAnchorCount(int32_t* aAnchorCount) {
   NS_ENSURE_ARG_POINTER(aAnchorCount);
   *aAnchorCount = 0;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible()) {
-    *aAnchorCount = Intl().AsAccessible()->AnchorCount();
+  if (Intl()->IsLocal()) {
+    *aAnchorCount = Intl()->AsLocal()->AnchorCount();
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
     bool isCountValid = false;
-    uint32_t anchorCount = Intl().AsProxy()->AnchorCount(&isCountValid);
+    uint32_t anchorCount = Intl()->AsRemote()->AnchorCount(&isCountValid);
     if (!isCountValid) return NS_ERROR_FAILURE;
 
     *aAnchorCount = anchorCount;
@@ -88,23 +88,23 @@ NS_IMETHODIMP
 xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   if (aIndex < 0) return NS_ERROR_INVALID_ARG;
 
-  if (Intl().IsAccessible()) {
-    if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount())) {
+  if (Intl()->IsLocal()) {
+    if (aIndex >= static_cast<int32_t>(Intl()->AsLocal()->AnchorCount())) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    RefPtr<nsIURI>(Intl().AsAccessible()->AnchorURIAt(aIndex)).forget(aURI);
+    RefPtr<nsIURI>(Intl()->AsLocal()->AnchorURIAt(aIndex)).forget(aURI);
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
     nsCString spec;
     bool isURIValid = false;
-    Intl().AsProxy()->AnchorURIAt(aIndex, spec, &isURIValid);
+    Intl()->AsRemote()->AnchorURIAt(aIndex, spec, &isURIValid);
     if (!isURIValid) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIURI> uri;
@@ -123,21 +123,21 @@ xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible) {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nullptr;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
   if (aIndex < 0) return NS_ERROR_INVALID_ARG;
 
-  if (Intl().IsAccessible()) {
-    if (aIndex >= static_cast<int32_t>(Intl().AsAccessible()->AnchorCount())) {
+  if (Intl()->IsLocal()) {
+    if (aIndex >= static_cast<int32_t>(Intl()->AsLocal()->AnchorCount())) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    NS_IF_ADDREF(*aAccessible = ToXPC(Intl().AsAccessible()->AnchorAt(aIndex)));
+    NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->AsLocal()->AnchorAt(aIndex)));
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
-    NS_IF_ADDREF(*aAccessible = ToXPC(Intl().AsProxy()->AnchorAt(aIndex)));
+    NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->AsRemote()->AnchorAt(aIndex)));
 #endif
   }
 
@@ -149,15 +149,15 @@ xpcAccessibleHyperLink::GetValid(bool* aValid) {
   NS_ENSURE_ARG_POINTER(aValid);
   *aValid = false;
 
-  if (Intl().IsNull()) return NS_ERROR_FAILURE;
+  if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl().IsAccessible()) {
-    *aValid = Intl().AsAccessible()->IsLinkValid();
+  if (Intl()->IsLocal()) {
+    *aValid = Intl()->AsLocal()->IsLinkValid();
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
-    *aValid = Intl().AsProxy()->IsLinkValid();
+    *aValid = Intl()->AsRemote()->IsLinkValid();
 #endif
   }
 
