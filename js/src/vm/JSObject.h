@@ -213,9 +213,10 @@ class JSObject
   // exist on the scope chain) are kept.
   inline bool isUnqualifiedVarObj() const;
 
-  // Objects with an uncacheable proto can have their prototype mutated
-  // without inducing a shape change on the object. JIT inline caches should
-  // do an explicit group guard to guard against this.
+  // An object with an "uncacheable proto" is a Delegate object that either had
+  // its own proto mutated or it was on the proto chain of an object that had
+  // its proto mutated. This is used to opt-out of the shape teleporting
+  // optimization. See: ReshapeForProtoMutation, ProtoChainSupportsTeleporting.
   inline bool hasUncacheableProto() const;
   static bool setUncacheableProto(JSContext* cx, JS::HandleObject obj) {
     MOZ_ASSERT(obj->hasStaticPrototype(),
