@@ -15,6 +15,7 @@
 #include "gc/HashUtil.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
+#include "js/friend/WindowProxy.h"  // js::IsWindow
 #include "js/HashTable.h"
 #include "js/UniquePtr.h"
 #include "util/Text.h"
@@ -335,6 +336,16 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
 
   Rooted<StackShape> child(cx, StackShape(shape));
   child.setObjectFlags(objectFlags);
+
+  if (proto != shape->proto()) {
+    Rooted<StackBaseShape> base(
+        cx, StackBaseShape(shape->getObjectClass(), shape->realm(), proto));
+    BaseShape* nbase = BaseShape::get(cx, base);
+    if (!nbase) {
+      return nullptr;
+    }
+    child.setBase(nbase);
+  }
 
   return cx->zone()->propertyTree().getChild(cx, shape->parent, child);
 }
@@ -1366,8 +1377,43 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
     return true;
   }
 
-  Shape* newShape =
-      Shape::setObjectFlag(cx, flag, obj->taggedProto(), obj->shape());
+  Shape* newShape = Shape::setObjectFlag(cx, flag, obj->shape());
+  if (!newShape) {
+    return false;
+  }
+
+  obj->setShape(newShape);
+  return true;
+}
+
+/* static */
+bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
+                                 Handle<TaggedProto> proto) {
+  MOZ_ASSERT(cx->compartment() == obj->compartment());
+  MOZ_ASSERT_IF(proto.isObject(), proto.toObject()->isDelegate());
+
+  if (obj->shape()->proto() == proto) {
+    return true;
+  }
+
+  if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
+    Rooted<StackBaseShape> base(
+        cx, StackBaseShape(obj->getClass(), obj->nonCCWRealm(), proto));
+    Rooted<BaseShape*> nbase(cx, BaseShape::get(cx, base));
+    if (!nbase) {
+      return false;
+    }
+
+    if (!NativeObject::generateOwnShape(cx, obj.as<NativeObject>())) {
+      return false;
+    }
+
+    Shape* last = obj->as<NativeObject>().lastProperty();
+    last->setBase(nbase);
+    return true;
+  }
+
+  Shape* newShape = Shape::setProto(cx, proto, obj->shape());
   if (!newShape) {
     return false;
   }
@@ -1395,8 +1441,7 @@ bool NativeObject::clearFlag(JSContext* cx, HandleNativeObject obj,
 }
 
 /* static */
-Shape* Shape::setObjectFlag(JSContext* cx, ObjectFlag flag, TaggedProto proto,
-                            Shape* last) {
+Shape* Shape::setObjectFlag(JSContext* cx, ObjectFlag flag, Shape* last) {
   MOZ_ASSERT(!last->inDictionary());
   MOZ_ASSERT(!last->hasObjectFlag(flag));
 
@@ -1404,12 +1449,29 @@ Shape* Shape::setObjectFlag(JSContext* cx, ObjectFlag flag, TaggedProto proto,
   objectFlags.setFlag(flag);
 
   RootedShape lastRoot(cx, last);
-  return replaceLastProperty(cx, objectFlags, proto, lastRoot);
+  return replaceLastProperty(cx, objectFlags, last->proto(), lastRoot);
+}
+
+/* static */
+Shape* Shape::setProto(JSContext* cx, TaggedProto proto, Shape* last) {
+  MOZ_ASSERT(!last->inDictionary());
+  MOZ_ASSERT(last->proto() != proto);
+
+  RootedShape lastRoot(cx, last);
+  return replaceLastProperty(cx, last->objectFlags(), proto, lastRoot);
 }
 
 inline BaseShape::BaseShape(const StackBaseShape& base)
-    : TenuredCellWithNonGCPointer(base.clasp), realm_(base.realm) {
+    : TenuredCellWithNonGCPointer(base.clasp),
+      realm_(base.realm),
+      proto_(base.proto) {
   MOZ_ASSERT(JS::StringIsASCII(clasp()->name));
+
+  MOZ_ASSERT_IF(proto().isObject(),
+                compartment() == proto().toObject()->compartment());
+
+  // Windows may not appear on prototype chains.
+  MOZ_ASSERT_IF(proto().isObject(), !IsWindow(proto().toObject()));
 
 #ifdef DEBUG
   if (GlobalObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
@@ -1419,10 +1481,10 @@ inline BaseShape::BaseShape(const StackBaseShape& base)
 }
 
 /* static */
-BaseShape* BaseShape::get(JSContext* cx, StackBaseShape& base) {
+BaseShape* BaseShape::get(JSContext* cx, Handle<StackBaseShape> base) {
   auto& table = cx->zone()->baseShapes();
 
-  auto p = MakeDependentAddPtr(cx, table, base);
+  auto p = MakeDependentAddPtr(cx, table, base.get());
   if (p) {
     return *p;
   }
@@ -1480,11 +1542,9 @@ void Zone::checkBaseShapeTableAfterMovingGC() {
 
 #endif  // JSGC_HASH_TABLE_CHECKS
 
-inline InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto() {}
+inline InitialShapeEntry::InitialShapeEntry() : shape(nullptr) {}
 
-inline InitialShapeEntry::InitialShapeEntry(Shape* shape,
-                                            const TaggedProto& proto)
-    : shape(shape), proto(proto) {}
+inline InitialShapeEntry::InitialShapeEntry(Shape* shape) : shape(shape) {}
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
@@ -1496,16 +1556,12 @@ void Zone::checkInitialShapesTableAfterMovingGC() {
    */
   for (auto r = initialShapes().all(); !r.empty(); r.popFront()) {
     InitialShapeEntry entry = r.front();
-    TaggedProto proto = entry.proto.unbarrieredGet();
     Shape* shape = entry.shape.unbarrieredGet();
 
     CheckGCThingAfterMovingGC(shape);
-    if (proto.isObject()) {
-      CheckGCThingAfterMovingGC(proto.toObject());
-    }
 
     using Lookup = InitialShapeEntry::Lookup;
-    Lookup lookup(shape->getObjectClass(), shape->realm(), proto,
+    Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
                   shape->numFixedSlots(), shape->objectFlags());
     InitialShapeSet::Ptr ptr = initialShapes().lookup(lookup);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
@@ -1938,7 +1994,7 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
   }
 
   Rooted<TaggedProto> protoRoot(cx, proto);
-  StackBaseShape base(clasp, realm);
+  Rooted<StackBaseShape> base(cx, StackBaseShape(clasp, realm, proto));
   Rooted<BaseShape*> nbase(cx, BaseShape::get(cx, base));
   if (!nbase) {
     return nullptr;
@@ -1950,8 +2006,7 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
   }
 
   Lookup lookup(clasp, realm, protoRoot, nfixed, objectFlags);
-  if (!protoPointer.add(cx, table, lookup,
-                        InitialShapeEntry(shape, protoRoot))) {
+  if (!protoPointer.add(cx, table, lookup, InitialShapeEntry(shape))) {
     return nullptr;
   }
 
@@ -2041,18 +2096,6 @@ void Zone::fixupInitialShapeTable() {
       e.mutableFront().shape.set(shape);
     }
     shape->updateBaseShapeAfterMovingGC();
-
-    // If the prototype has moved we have to rekey the entry.
-    InitialShapeEntry entry = e.front();
-    // Use unbarrieredGet() to prevent triggering read barrier while collecting.
-    const TaggedProto& proto = entry.proto.unbarrieredGet();
-    if (proto.isObject() && IsForwarded(proto.toObject())) {
-      entry.proto = TaggedProto(Forwarded(proto.toObject()));
-      using Lookup = InitialShapeEntry::Lookup;
-      Lookup relookup(shape->getObjectClass(), shape->realm(), proto,
-                      shape->numFixedSlots(), shape->objectFlags());
-      e.rekeyFront(relookup, entry);
-    }
   }
 }
 

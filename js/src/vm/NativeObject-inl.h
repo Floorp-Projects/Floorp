@@ -64,7 +64,8 @@ inline bool NativeObject::canRemoveLastProperty() {
   // mode instead.
   MOZ_ASSERT(!inDictionaryMode());
   Shape* previous = lastProperty()->previous().get();
-  if (previous->objectFlags() != lastProperty()->objectFlags()) {
+  if (previous->objectFlags() != lastProperty()->objectFlags() ||
+      previous->proto() != lastProperty()->proto()) {
     return false;
   }
   MOZ_ASSERT(lastProperty()->base() == previous->base());
