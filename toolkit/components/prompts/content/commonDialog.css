@@ -24,11 +24,16 @@
   max-width: 45em;
 }
 
+#infoTitle {
+  margin-bottom: 1em;
+}
+
 #infoBody {
   -moz-user-focus: normal;
   user-select: text;
   cursor: text !important;
   white-space: pre-wrap;
+  word-break: break-word;
   unicode-bidi: plaintext;
 }
 
