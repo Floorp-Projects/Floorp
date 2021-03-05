@@ -190,7 +190,6 @@ const allProperties = new Set([
   "sharingState",
   "status",
   "title",
-  "url",
 ]);
 const restricted = new Set(["url", "favIconUrl", "title"]);
 
@@ -358,11 +357,8 @@ class TabsUpdateFilterEventManager extends EventManager {
             return;
           }
 
-          let changed = {};
-          if (filter.properties.has("status")) {
-            changed.status = status;
-          }
-          if (url && filter.properties.has("url")) {
+          let changed = { status };
+          if (url) {
             changed.url = url;
           }
 
@@ -381,7 +377,7 @@ class TabsUpdateFilterEventManager extends EventManager {
       };
 
       let listeners = new Map();
-      if (filter.properties.has("status") || filter.properties.has("url")) {
+      if (filter.properties.has("status")) {
         listeners.set("status", statusListener);
       }
       if (needsModified) {

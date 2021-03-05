@@ -318,8 +318,7 @@
           "pinned",
           "sharingState",
           "status",
-          "title",
-          "url"
+          "title"
         ],
         "description": "Event names supported in onUpdated."
       },
