@@ -23,7 +23,6 @@ namespace shadow {
 struct ObjectGroup {
   int* unused;
   JSObject* proto;
-  JS::Realm* realm;
 };
 
 }  // namespace shadow

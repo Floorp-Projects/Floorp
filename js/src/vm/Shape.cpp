@@ -329,8 +329,8 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
   if (!shape->parent) {
     /* Treat as resetting the initial property of the shape hierarchy. */
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-    return EmptyShape::getInitialShape(cx, shape->getObjectClass(), proto, kind,
-                                       objectFlags);
+    return EmptyShape::getInitialShape(
+        cx, shape->getObjectClass(), shape->realm(), proto, kind, objectFlags);
   }
 
   Rooted<StackShape> child(cx, StackShape(shape));
@@ -1408,8 +1408,14 @@ Shape* Shape::setObjectFlag(JSContext* cx, ObjectFlag flag, TaggedProto proto,
 }
 
 inline BaseShape::BaseShape(const StackBaseShape& base)
-    : TenuredCellWithNonGCPointer(base.clasp) {
+    : TenuredCellWithNonGCPointer(base.clasp), realm_(base.realm) {
   MOZ_ASSERT(JS::StringIsASCII(clasp()->name));
+
+#ifdef DEBUG
+  if (GlobalObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
+    AssertTargetIsNotGray(global);
+  }
+#endif
 }
 
 /* static */
@@ -1434,8 +1440,6 @@ BaseShape* BaseShape::get(JSContext* cx, StackBaseShape& base) {
 
   return nbase;
 }
-
-void BaseShape::traceChildren(JSTracer* trc) {}
 
 #ifdef DEBUG
 bool Shape::canSkipMarkingShapeCache() {
@@ -1501,8 +1505,8 @@ void Zone::checkInitialShapesTableAfterMovingGC() {
     }
 
     using Lookup = InitialShapeEntry::Lookup;
-    Lookup lookup(shape->getObjectClass(), proto, shape->numFixedSlots(),
-                  shape->objectFlags());
+    Lookup lookup(shape->getObjectClass(), shape->realm(), proto,
+                  shape->numFixedSlots(), shape->objectFlags());
     InitialShapeSet::Ptr ptr = initialShapes().lookup(lookup);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
@@ -1918,22 +1922,23 @@ void Shape::dumpSubtree(int level, js::GenericPrinter& out) const {
 
 /* static */
 Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
-                                   TaggedProto proto, size_t nfixed,
-                                   ObjectFlags objectFlags) {
+                                   JS::Realm* realm, TaggedProto proto,
+                                   size_t nfixed, ObjectFlags objectFlags) {
+  MOZ_ASSERT(cx->compartment() == realm->compartment());
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
 
-  auto& table = cx->zone()->initialShapes();
+  auto& table = realm->zone()->initialShapes();
 
   using Lookup = InitialShapeEntry::Lookup;
-  auto protoPointer =
-      MakeDependentAddPtr(cx, table, Lookup(clasp, proto, nfixed, objectFlags));
+  auto protoPointer = MakeDependentAddPtr(
+      cx, table, Lookup(clasp, realm, proto, nfixed, objectFlags));
   if (protoPointer) {
     return protoPointer->shape;
   }
 
   Rooted<TaggedProto> protoRoot(cx, proto);
-  StackBaseShape base(clasp);
+  StackBaseShape base(clasp, realm);
   Rooted<BaseShape*> nbase(cx, BaseShape::get(cx, base));
   if (!nbase) {
     return nullptr;
@@ -1944,7 +1949,7 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  Lookup lookup(clasp, protoRoot, nfixed, objectFlags);
+  Lookup lookup(clasp, realm, protoRoot, nfixed, objectFlags);
   if (!protoPointer.add(cx, table, lookup,
                         InitialShapeEntry(shape, protoRoot))) {
     return nullptr;
@@ -1955,9 +1960,10 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
 
 /* static */
 Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
-                                   TaggedProto proto, gc::AllocKind kind,
+                                   JS::Realm* realm, TaggedProto proto,
+                                   gc::AllocKind kind,
                                    ObjectFlags objectFlags) {
-  return getInitialShape(cx, clasp, proto, GetGCKindSlots(kind, clasp),
+  return getInitialShape(cx, clasp, realm, proto, GetGCKindSlots(kind, clasp),
                          objectFlags);
 }
 
@@ -1986,7 +1992,7 @@ void NewObjectCache::invalidateEntriesForShape(Shape* shape, JSObject* proto) {
 void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape,
                                     HandleObject proto) {
   using Lookup = InitialShapeEntry::Lookup;
-  Lookup lookup(shape->getObjectClass(), TaggedProto(proto),
+  Lookup lookup(shape->getObjectClass(), shape->realm(), TaggedProto(proto),
                 shape->numFixedSlots(), shape->objectFlags());
 
   InitialShapeSet::Ptr p = cx->zone()->initialShapes().lookup(lookup);
@@ -2043,8 +2049,8 @@ void Zone::fixupInitialShapeTable() {
     if (proto.isObject() && IsForwarded(proto.toObject())) {
       entry.proto = TaggedProto(Forwarded(proto.toObject()));
       using Lookup = InitialShapeEntry::Lookup;
-      Lookup relookup(shape->getObjectClass(), proto, shape->numFixedSlots(),
-                      shape->objectFlags());
+      Lookup relookup(shape->getObjectClass(), shape->realm(), proto,
+                      shape->numFixedSlots(), shape->objectFlags());
       e.rekeyFront(relookup, entry);
     }
   }

@@ -138,7 +138,7 @@ class JSObject
 
   void initGroup(js::ObjectGroup* group) { initHeaderPtr(group); }
 
-  JS::Compartment* compartment() const { return group()->compartment(); }
+  JS::Compartment* compartment() const { return shape()->compartment(); }
   JS::Compartment* maybeCompartment() const { return compartment(); }
 
   void initShape(js::Shape* shape) {
@@ -148,7 +148,7 @@ class JSObject
     shape_.init(shape);
   }
   void setShape(js::Shape* shape) {
-    MOZ_ASSERT(zone() == shape->zone());
+    MOZ_ASSERT(maybeCCWRealm() == shape->realm());
     shape_ = shape;
   }
   js::Shape* shape() const { return shape_; }
@@ -363,14 +363,14 @@ class JSObject
 
   JS::Realm* nonCCWRealm() const {
     MOZ_ASSERT(!js::UninlinedIsCrossCompartmentWrapper(this));
-    return group()->realm();
+    return shape()->realm();
   }
   bool hasSameRealmAs(JSContext* cx) const;
 
   // Returns the object's realm even if the object is a CCW (be careful, in
   // this case the realm is not very meaningful because wrappers are shared by
   // all realms in the compartment).
-  JS::Realm* maybeCCWRealm() const { return group()->realm(); }
+  JS::Realm* maybeCCWRealm() const { return shape()->realm(); }
 
   /*
    * ES5 meta-object properties and operations.

@@ -524,7 +524,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
     // dictionary mode.
     RootedShape last(
         cx, EmptyShape::getInitialShape(
-                cx, nobj->getClass(), nobj->taggedProto(),
+                cx, nobj->getClass(), nobj->realm(), nobj->taggedProto(),
                 nobj->numFixedSlots(), nobj->lastProperty()->objectFlags()));
     if (!last) {
       return false;
@@ -771,8 +771,9 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
                       ? GetGCKindSlots(gc::GetGCObjectKind(clasp), clasp)
                       : GetGCKindSlots(kind, clasp);
 
-  RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, group->proto(),
-                                                    nfixed, objectFlags));
+  RootedShape shape(
+      cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(), group->proto(),
+                                      nfixed, objectFlags));
   if (!shape) {
     return nullptr;
   }
@@ -1194,7 +1195,8 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     // We need to generate a new shape for dst that has dst's proto but all
     // the property information from src.  Note that we asserted above that
     // dst's object flags are empty.
-    shape = EmptyShape::getInitialShape(cx, dst->getClass(), dst->taggedProto(),
+    shape = EmptyShape::getInitialShape(cx, dst->getClass(), dst->realm(),
+                                        dst->taggedProto(),
                                         dst->numFixedSlots(), ObjectFlags());
     if (!shape) {
       return false;
@@ -1806,11 +1808,9 @@ static bool SetProto(JSContext* cx, HandleObject obj,
     }
   }
 
-  RootedObjectGroup oldGroup(cx, obj->group());
-
   ObjectGroup* newGroup;
   {
-    AutoRealm ar(cx, oldGroup);
+    AutoRealm ar(cx, obj->shape());
     newGroup = ObjectGroup::defaultNewGroup(cx, obj->getClass(), proto);
     if (!newGroup) {
       return false;
@@ -3813,7 +3813,7 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
                     CanNurseryAllocateFinalizedClass(clasp) ||
                     clasp->isProxyObject());
 
-  MOZ_ASSERT(!group->realm()->hasObjectPendingMetadata());
+  MOZ_ASSERT(!shape->realm()->hasObjectPendingMetadata());
 
   // Non-native classes manage their own data and slots, so numFixedSlots and
   // slotSpan are always 0. Note that proxy classes can have reserved slots
