@@ -903,7 +903,6 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
   font-weight: 300;
   line-height: 1.3em;
   margin: 0;
-  user-select: none;
 }
 
 /* List boxes */
