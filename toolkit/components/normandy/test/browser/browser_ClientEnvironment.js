@@ -193,10 +193,7 @@ decorate_task(
       branch: "b-test-branch",
     }),
   ]),
-  async function testStudies({
-    prefExperiments: [prefExperiment],
-    addonStudies: [addonStudy],
-  }) {
+  async function testStudies([prefExperiment], [addonStudy]) {
     Assert.deepEqual(
       await ClientEnvironment.studies,
       {

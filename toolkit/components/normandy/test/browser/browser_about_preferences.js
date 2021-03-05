@@ -2,21 +2,19 @@
 
 const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
-function withPrivacyPrefs() {
-  return function(testFunc) {
-    return async args =>
-      BrowserTestUtils.withNewTab("about:preferences#privacy", async browser =>
-        testFunc({ ...args, browser })
-      );
-  };
+function withPrivacyPrefs(testFunc) {
+  return async (...args) =>
+    BrowserTestUtils.withNewTab("about:preferences#privacy", async browser =>
+      testFunc(...args, browser)
+    );
 }
 
 decorate_task(
   withPrefEnv({
     set: [[OPT_OUT_PREF, true]],
   }),
-  withPrivacyPrefs(),
-  async function testCheckedOnLoad({ browser }) {
+  withPrivacyPrefs,
+  async function testCheckedOnLoad(browser) {
     const checkbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -31,8 +29,8 @@ decorate_task(
   withPrefEnv({
     set: [[OPT_OUT_PREF, false]],
   }),
-  withPrivacyPrefs(),
-  async function testUncheckedOnLoad({ browser }) {
+  withPrivacyPrefs,
+  async function testUncheckedOnLoad(browser) {
     const checkbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -47,8 +45,8 @@ decorate_task(
   withPrefEnv({
     set: [[OPT_OUT_PREF, true]],
   }),
-  withPrivacyPrefs(),
-  async function testCheckboxes({ browser }) {
+  withPrivacyPrefs,
+  async function testCheckboxes(browser) {
     const optOutCheckbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -70,8 +68,8 @@ decorate_task(
   withPrefEnv({
     set: [[OPT_OUT_PREF, true]],
   }),
-  withPrivacyPrefs(),
-  async function testPrefWatchers({ browser }) {
+  withPrivacyPrefs,
+  async function testPrefWatchers(browser) {
     const optOutCheckbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -89,9 +87,7 @@ decorate_task(
   }
 );
 
-decorate_task(withPrivacyPrefs(), async function testViewStudiesLink({
-  browser,
-}) {
+decorate_task(withPrivacyPrefs, async function testViewStudiesLink(browser) {
   browser.contentDocument.getElementById("viewShieldStudies").click();
   await BrowserTestUtils.waitForLocationChange(gBrowser);
 
