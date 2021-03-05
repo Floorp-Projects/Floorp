@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import pytest
 
 
@@ -31,7 +36,7 @@ def test_setup_func_with_setup_decorator():
 
     values = []
 
-    class A:
+    class A(object):
         @pytest.fixture(autouse=True)
         def f(self):
             values.append(1)
@@ -43,7 +48,7 @@ def test_setup_func_with_setup_decorator():
 def test_setup_func_not_callable():
     from _pytest.nose import call_optional
 
-    class A:
+    class A(object):
         f = 1
 
     call_optional(A(), "f")
@@ -229,7 +234,7 @@ def test_nose_setup_ordering(testdir):
 
 def test_apiwrapper_problem_issue260(testdir):
     # this would end up trying a call an optional teardown on the class
-    # for plain unittests we don't want nose behaviour
+    # for plain unittests we dont want nose behaviour
     testdir.makepyfile(
         """
         import unittest
@@ -253,7 +258,7 @@ def test_apiwrapper_problem_issue260(testdir):
 
 
 def test_setup_teardown_linking_issue265(testdir):
-    # we accidentally didn't integrate nose setupstate with normal setupstate
+    # we accidentally didnt integrate nose setupstate with normal setupstate
     # this test ensures that won't happen again
     testdir.makepyfile(
         '''
@@ -366,59 +371,13 @@ def test_nottest_class_decorator(testdir):
 
 def test_skip_test_with_unicode(testdir):
     testdir.makepyfile(
-        """\
+        """
+        # -*- coding: utf-8 -*-
         import unittest
         class TestClass():
             def test_io(self):
-                raise unittest.SkipTest('😊')
-        """
+                raise unittest.SkipTest(u'😊')
+    """
     )
     result = testdir.runpytest()
     result.stdout.fnmatch_lines(["* 1 skipped *"])
-
-
-def test_raises(testdir):
-    testdir.makepyfile(
-        """
-        from nose.tools import raises
-
-        @raises(RuntimeError)
-        def test_raises_runtimeerror():
-            raise RuntimeError
-
-        @raises(Exception)
-        def test_raises_baseexception_not_caught():
-            raise BaseException
-
-        @raises(BaseException)
-        def test_raises_baseexception_caught():
-            raise BaseException
-        """
-    )
-    result = testdir.runpytest("-vv")
-    result.stdout.fnmatch_lines(
-        [
-            "test_raises.py::test_raises_runtimeerror PASSED*",
-            "test_raises.py::test_raises_baseexception_not_caught FAILED*",
-            "test_raises.py::test_raises_baseexception_caught PASSED*",
-            "*= FAILURES =*",
-            "*_ test_raises_baseexception_not_caught _*",
-            "",
-            "arg = (), kw = {}",
-            "",
-            "    def newfunc(*arg, **kw):",
-            "        try:",
-            ">           func(*arg, **kw)",
-            "",
-            "*/nose/*: ",
-            "_ _ *",
-            "",
-            "    @raises(Exception)",
-            "    def test_raises_baseexception_not_caught():",
-            ">       raise BaseException",
-            "E       BaseException",
-            "",
-            "test_raises.py:9: BaseException",
-            "* 1 failed, 2 passed *",
-        ]
-    )

@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 """
 This is the script that is actually frozen into an executable: simply executes
-pytest main().
+py.test main().
 """
 
 if __name__ == "__main__":

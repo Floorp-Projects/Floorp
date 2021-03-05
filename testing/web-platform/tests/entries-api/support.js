@@ -11,14 +11,15 @@ window.addEventListener('DOMContentLoaded', e => {
   document.body.appendChild(header);
   const elem = document.createElement('div');
   elem.style.cssText = 'height: 50px; border: 1px dotted red;';
-  elem.innerHTML = 'Drop or paste the <b>support/upload</b> directory here.</div>';
+  elem.innerHTML = 'Drop the <b>support/upload</b> directory here.</div>';
   document.body.appendChild(elem);
   elem.addEventListener('dragover', e => {
     e.preventDefault();
   });
-  const onDropOrPaste = dataTransfer => {
-    for (let i = 0; i < dataTransfer.items.length; ++i) {
-      const item = dataTransfer.items[i];
+  elem.addEventListener('drop', e => {
+    e.preventDefault();
+    for (let i = 0; i < e.dataTransfer.items.length; ++i) {
+      const item = e.dataTransfer.items[i];
       if (item.kind !== 'file')
         continue;
       const entry = item.webkitGetAsEntry();
@@ -26,14 +27,6 @@ window.addEventListener('DOMContentLoaded', e => {
       tests.forEach(f => f(entry, item));
       break;
     }
-  };
-  elem.addEventListener('drop', e => {
-    e.preventDefault();
-    onDropOrPaste(e.dataTransfer);
-  });
-  elem.addEventListener('paste', e => {
-    e.preventDefault();
-    onDropOrPaste(e.clipboardData);
   });
 });
 

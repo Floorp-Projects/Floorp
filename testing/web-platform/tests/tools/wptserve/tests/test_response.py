@@ -1,5 +1,5 @@
 import mock
-from io import BytesIO
+from six import BytesIO
 
 from wptserve.response import Response
 

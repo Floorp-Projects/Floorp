@@ -505,9 +505,6 @@ class Session(object):
     def __del__(self):
         self.end()
 
-    def match(self, capabilities):
-        return self.requested_capabilities == capabilities
-
     def start(self):
         """Start a new WebDriver session.
 
@@ -754,6 +751,7 @@ class Session(object):
     @command
     def screenshot(self):
         return self.send_session_command("GET", "screenshot")
+
 
 class Element(object):
     """

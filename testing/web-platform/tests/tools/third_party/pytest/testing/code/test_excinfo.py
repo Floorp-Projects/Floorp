@@ -1,24 +1,23 @@
-import io
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import operator
 import os
-import queue
 import sys
 import textwrap
-from typing import Any
-from typing import Dict
-from typing import Tuple
-from typing import Union
 
 import py
+import six
+from six.moves import queue
 
 import _pytest
 import pytest
 from _pytest._code.code import ExceptionChainRepr
 from _pytest._code.code import ExceptionInfo
 from _pytest._code.code import FormattedExcinfo
-from _pytest._io import TerminalWriter
-from _pytest.compat import TYPE_CHECKING
-from _pytest.pytester import LineMatcher
+from _pytest._code.code import ReprExceptionInfo
 
 try:
     import importlib
@@ -27,8 +26,9 @@ except ImportError:
 else:
     invalidate_import_caches = getattr(importlib, "invalidate_caches", None)
 
-if TYPE_CHECKING:
-    from _pytest._code.code import _TracebackStyle
+failsonjython = pytest.mark.xfail("sys.platform.startswith('java')")
+
+pytest_version_info = tuple(map(int, pytest.__version__.split(".")[:3]))
 
 
 @pytest.fixture
@@ -39,20 +39,38 @@ def limited_recursion_depth():
     sys.setrecursionlimit(before)
 
 
-def test_excinfo_simple() -> None:
+class TWMock(object):
+    WRITE = object()
+
+    def __init__(self):
+        self.lines = []
+        self.is_writing = False
+
+    def sep(self, sep, line=None):
+        self.lines.append((sep, line))
+
+    def write(self, msg, **kw):
+        self.lines.append((TWMock.WRITE, msg))
+
+    def line(self, line, **kw):
+        self.lines.append(line)
+
+    def markup(self, text, **kw):
+        return text
+
+    def get_write_msg(self, idx):
+        flag, msg = self.lines[idx]
+        assert flag == TWMock.WRITE
+        return msg
+
+    fullwidth = 80
+
+
+def test_excinfo_simple():
     try:
         raise ValueError
     except ValueError:
         info = _pytest._code.ExceptionInfo.from_current()
-    assert info.type == ValueError
-
-
-def test_excinfo_from_exc_info_simple() -> None:
-    try:
-        raise ValueError
-    except ValueError as e:
-        assert e.__traceback__ is not None
-        info = _pytest._code.ExceptionInfo.from_exc_info((type(e), e, e.__traceback__))
     assert info.type == ValueError
 
 
@@ -68,9 +86,9 @@ def test_excinfo_getstatement():
     except ValueError:
         excinfo = _pytest._code.ExceptionInfo.from_current()
     linenumbers = [
-        f.__code__.co_firstlineno - 1 + 4,
-        f.__code__.co_firstlineno - 1 + 1,
-        g.__code__.co_firstlineno - 1 + 1,
+        _pytest._code.getrawcode(f).co_firstlineno - 1 + 4,
+        _pytest._code.getrawcode(f).co_firstlineno - 1 + 1,
+        _pytest._code.getrawcode(g).co_firstlineno - 1 + 1,
     ]
     values = list(excinfo.traceback)
     foundlinenumbers = [x.lineno for x in values]
@@ -102,7 +120,7 @@ def h():
     #
 
 
-class TestTraceback_f_g_h:
+class TestTraceback_f_g_h(object):
     def setup_method(self, method):
         try:
             h()
@@ -128,29 +146,26 @@ class TestTraceback_f_g_h:
         assert s.startswith("def f():")
         assert s.endswith("raise ValueError")
 
+    @failsonjython
     def test_traceback_entry_getsource_in_construct(self):
-        def xyz():
-            try:
-                raise ValueError
-            except somenoname:  # type: ignore[name-defined] # noqa: F821
-                pass  # pragma: no cover
-
-        try:
+        source = _pytest._code.Source(
+            """\
+            def xyz():
+                try:
+                    raise ValueError
+                except somenoname:
+                    pass
             xyz()
+            """
+        )
+        try:
+            exec(source.compile())
         except NameError:
-            excinfo = _pytest._code.ExceptionInfo.from_current()
-        else:
-            assert False, "did not raise NameError"
-
-        tb = excinfo.traceback
-        source = tb[-1].getsource()
-        assert source is not None
-        assert source.deindent().lines == [
-            "def xyz():",
-            "    try:",
-            "        raise ValueError",
-            "    except somenoname:  # type: ignore[name-defined] # noqa: F821",
-        ]
+            tb = _pytest._code.ExceptionInfo.from_current().traceback
+            print(tb[-1].getsource())
+            s = str(tb[-1].getsource())
+            assert s.startswith("def xyz():\n    try:")
+            assert s.strip().endswith("except somenoname:")
 
     def test_traceback_cut(self):
         co = _pytest._code.Code(f)
@@ -237,25 +252,23 @@ class TestTraceback_f_g_h:
         repr = excinfo.getrepr()
         assert "RuntimeError: hello" in str(repr.reprcrash)
 
-    def test_traceback_no_recursion_index(self) -> None:
-        def do_stuff() -> None:
+    def test_traceback_no_recursion_index(self):
+        def do_stuff():
             raise RuntimeError
 
-        def reraise_me() -> None:
+        def reraise_me():
             import sys
 
             exc, val, tb = sys.exc_info()
-            assert val is not None
-            raise val.with_traceback(tb)
+            six.reraise(exc, val, tb)
 
-        def f(n: int) -> None:
+        def f(n):
             try:
                 do_stuff()
-            except BaseException:
+            except:  # noqa
                 reraise_me()
 
         excinfo = pytest.raises(RuntimeError, f, 8)
-        assert excinfo is not None
         traceback = excinfo.traceback
         recindex = traceback.recursionindex()
         assert recindex is None
@@ -329,25 +342,22 @@ def test_excinfo_exconly():
     assert msg.endswith("world")
 
 
-def test_excinfo_repr_str() -> None:
-    excinfo1 = pytest.raises(ValueError, h)
-    assert repr(excinfo1) == "<ExceptionInfo ValueError() tblen=4>"
-    assert str(excinfo1) == "<ExceptionInfo ValueError() tblen=4>"
-
-    class CustomException(Exception):
-        def __repr__(self):
-            return "custom_repr"
-
-    def raises() -> None:
-        raise CustomException()
-
-    excinfo2 = pytest.raises(CustomException, raises)
-    assert repr(excinfo2) == "<ExceptionInfo custom_repr tblen=2>"
-    assert str(excinfo2) == "<ExceptionInfo custom_repr tblen=2>"
+def test_excinfo_repr():
+    excinfo = pytest.raises(ValueError, h)
+    s = repr(excinfo)
+    assert s == "<ExceptionInfo ValueError tblen=4>"
 
 
-def test_excinfo_for_later() -> None:
-    e = ExceptionInfo[BaseException].for_later()
+def test_excinfo_str():
+    excinfo = pytest.raises(ValueError, h)
+    s = str(excinfo)
+    assert s.startswith(__file__[:-9])  # pyc file and $py.class
+    assert s.endswith("ValueError")
+    assert len(s.split(":")) >= 3  # on windows it's 4
+
+
+def test_excinfo_for_later():
+    e = ExceptionInfo.for_later()
     assert "for raises" in repr(e)
     assert "for raises" in str(e)
 
@@ -377,8 +387,8 @@ def test_excinfo_no_python_sourcecode(tmpdir):
     excinfo = pytest.raises(ValueError, template.render, h=h)
     for item in excinfo.traceback:
         print(item)  # XXX: for some reason jinja.Template.render is printed in full
-        item.source  # shouldn't fail
-        if isinstance(item.path, py.path.local) and item.path.basename == "test.txt":
+        item.source  # shouldnt fail
+        if item.path.basename == "test.txt":
             assert str(item.source) == "{{ h()}}:"
 
 
@@ -424,19 +434,10 @@ def test_match_raises_error(testdir):
     )
     result = testdir.runpytest()
     assert result.ret != 0
-
-    exc_msg = "Regex pattern '[[]123[]]+' does not match 'division by zero'."
-    result.stdout.fnmatch_lines(["E * AssertionError: {}".format(exc_msg)])
-    result.stdout.no_fnmatch_line("*__tracebackhide__ = True*")
-
-    result = testdir.runpytest("--fulltrace")
-    assert result.ret != 0
-    result.stdout.fnmatch_lines(
-        ["*__tracebackhide__ = True*", "E * AssertionError: {}".format(exc_msg)]
-    )
+    result.stdout.fnmatch_lines(["*AssertionError*Pattern*[123]*not found*"])
 
 
-class TestFormattedExcinfo:
+class TestFormattedExcinfo(object):
     @pytest.fixture
     def importasmod(self, request, _sys_snapshot):
         def importasmod(source):
@@ -450,6 +451,16 @@ class TestFormattedExcinfo:
             return modpath.pyimport()
 
         return importasmod
+
+    def excinfo_from_exec(self, source):
+        source = _pytest._code.Source(source).strip()
+        try:
+            exec(source.compile())
+        except KeyboardInterrupt:
+            raise
+        except:  # noqa
+            return _pytest._code.ExceptionInfo.from_current()
+        assert 0, "did not raise"
 
     def test_repr_source(self):
         pr = FormattedExcinfo()
@@ -465,31 +476,20 @@ class TestFormattedExcinfo:
         assert lines[0] == "|   def f(x):"
         assert lines[1] == "        pass"
 
-    def test_repr_source_excinfo(self) -> None:
-        """Check if indentation is right."""
-        try:
-
-            def f():
-                1 / 0
-
-            f()
-
-        except BaseException:
-            excinfo = _pytest._code.ExceptionInfo.from_current()
-        else:
-            assert False, "did not raise"
-
+    def test_repr_source_excinfo(self):
+        """ check if indentation is right """
+        pr = FormattedExcinfo()
+        excinfo = self.excinfo_from_exec(
+            """
+                def f():
+                    assert 0
+                f()
+        """
+        )
         pr = FormattedExcinfo()
         source = pr._getentrysource(excinfo.traceback[-1])
-        assert source is not None
         lines = pr.get_source(source, 1, excinfo)
-        for line in lines:
-            print(line)
-        assert lines == [
-            "    def f():",
-            ">       1 / 0",
-            "E       ZeroDivisionError: division by zero",
-        ]
+        assert lines == ["    def f():", ">       assert 0", "E       AssertionError"]
 
     def test_repr_source_not_existing(self):
         pr = FormattedExcinfo()
@@ -500,7 +500,8 @@ class TestFormattedExcinfo:
             excinfo = _pytest._code.ExceptionInfo.from_current()
         repr = pr.repr_excinfo(excinfo)
         assert repr.reprtraceback.reprentries[1].lines[0] == ">   ???"
-        assert repr.chain[0][0].reprentries[1].lines[0] == ">   ???"
+        if sys.version_info[0] >= 3:
+            assert repr.chain[0][0].reprentries[1].lines[0] == ">   ???"
 
     def test_repr_many_line_source_not_existing(self):
         pr = FormattedExcinfo()
@@ -518,35 +519,84 @@ raise ValueError()
             excinfo = _pytest._code.ExceptionInfo.from_current()
         repr = pr.repr_excinfo(excinfo)
         assert repr.reprtraceback.reprentries[1].lines[0] == ">   ???"
-        assert repr.chain[0][0].reprentries[1].lines[0] == ">   ???"
+        if sys.version_info[0] >= 3:
+            assert repr.chain[0][0].reprentries[1].lines[0] == ">   ???"
 
-    def test_repr_source_failing_fullsource(self, monkeypatch) -> None:
+    def test_repr_source_failing_fullsource(self):
         pr = FormattedExcinfo()
 
-        try:
-            1 / 0
-        except ZeroDivisionError:
-            excinfo = ExceptionInfo.from_current()
+        class FakeCode(object):
+            class raw(object):
+                co_filename = "?"
 
-        with monkeypatch.context() as m:
-            m.setattr(_pytest._code.Code, "fullsource", property(lambda self: None))
-            repr = pr.repr_excinfo(excinfo)
+            path = "?"
+            firstlineno = 5
 
+            def fullsource(self):
+                return None
+
+            fullsource = property(fullsource)
+
+        class FakeFrame(object):
+            code = FakeCode()
+            f_locals = {}
+            f_globals = {}
+
+        class FakeTracebackEntry(_pytest._code.Traceback.Entry):
+            def __init__(self, tb, excinfo=None):
+                self.lineno = 5 + 3
+
+            @property
+            def frame(self):
+                return FakeFrame()
+
+        class Traceback(_pytest._code.Traceback):
+            Entry = FakeTracebackEntry
+
+        class FakeExcinfo(_pytest._code.ExceptionInfo):
+            typename = "Foo"
+            value = Exception()
+
+            def __init__(self):
+                pass
+
+            def exconly(self, tryshort):
+                return "EXC"
+
+            def errisinstance(self, cls):
+                return False
+
+        excinfo = FakeExcinfo()
+
+        class FakeRawTB(object):
+            tb_next = None
+
+        tb = FakeRawTB()
+        excinfo.traceback = Traceback(tb)
+
+        fail = IOError()
+        repr = pr.repr_excinfo(excinfo)
         assert repr.reprtraceback.reprentries[0].lines[0] == ">   ???"
-        assert repr.chain[0][0].reprentries[0].lines[0] == ">   ???"
+        if sys.version_info[0] >= 3:
+            assert repr.chain[0][0].reprentries[0].lines[0] == ">   ???"
 
-    def test_repr_local(self) -> None:
+        fail = py.error.ENOENT  # noqa
+        repr = pr.repr_excinfo(excinfo)
+        assert repr.reprtraceback.reprentries[0].lines[0] == ">   ???"
+        if sys.version_info[0] >= 3:
+            assert repr.chain[0][0].reprentries[0].lines[0] == ">   ???"
+
+    def test_repr_local(self):
         p = FormattedExcinfo(showlocals=True)
         loc = {"y": 5, "z": 7, "x": 3, "@x": 2, "__builtins__": {}}
         reprlocals = p.repr_locals(loc)
-        assert reprlocals is not None
         assert reprlocals.lines
         assert reprlocals.lines[0] == "__builtins__ = <builtins>"
         assert reprlocals.lines[1] == "x          = 3"
         assert reprlocals.lines[2] == "y          = 5"
         assert reprlocals.lines[3] == "z          = 7"
 
-    def test_repr_local_with_error(self) -> None:
+    def test_repr_local_with_error(self):
         class ObjWithErrorInRepr:
             def __repr__(self):
                 raise NotImplementedError
@@ -554,15 +604,13 @@ raise ValueError()
         p = FormattedExcinfo(showlocals=True, truncate_locals=False)
         loc = {"x": ObjWithErrorInRepr(), "__builtins__": {}}
         reprlocals = p.repr_locals(loc)
-        assert reprlocals is not None
         assert reprlocals.lines
         assert reprlocals.lines[0] == "__builtins__ = <builtins>"
-        assert "[NotImplementedError() raised in repr()]" in reprlocals.lines[1]
+        assert '[NotImplementedError("") raised in repr()]' in reprlocals.lines[1]
 
-    def test_repr_local_with_exception_in_class_property(self) -> None:
+    def test_repr_local_with_exception_in_class_property(self):
         class ExceptionWithBrokenClass(Exception):
-            # Type ignored because it's bypassed intentionally.
-            @property  # type: ignore
+            @property
             def __class__(self):
                 raise TypeError("boom!")
 
@@ -573,26 +621,23 @@ raise ValueError()
         p = FormattedExcinfo(showlocals=True, truncate_locals=False)
         loc = {"x": ObjWithErrorInRepr(), "__builtins__": {}}
         reprlocals = p.repr_locals(loc)
-        assert reprlocals is not None
         assert reprlocals.lines
         assert reprlocals.lines[0] == "__builtins__ = <builtins>"
-        assert "[ExceptionWithBrokenClass() raised in repr()]" in reprlocals.lines[1]
+        assert '[ExceptionWithBrokenClass("") raised in repr()]' in reprlocals.lines[1]
 
-    def test_repr_local_truncated(self) -> None:
+    def test_repr_local_truncated(self):
         loc = {"l": [i for i in range(10)]}
         p = FormattedExcinfo(showlocals=True)
         truncated_reprlocals = p.repr_locals(loc)
-        assert truncated_reprlocals is not None
         assert truncated_reprlocals.lines
         assert truncated_reprlocals.lines[0] == "l          = [0, 1, 2, 3, 4, 5, ...]"
 
         q = FormattedExcinfo(showlocals=True, truncate_locals=False)
         full_reprlocals = q.repr_locals(loc)
-        assert full_reprlocals is not None
         assert full_reprlocals.lines
         assert full_reprlocals.lines[0] == "l          = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"
 
-    def test_repr_tracebackentry_lines(self, importasmod) -> None:
+    def test_repr_tracebackentry_lines(self, importasmod):
         mod = importasmod(
             """
             def func1():
@@ -619,13 +664,13 @@ raise ValueError()
         assert lines[3] == "E       world"
         assert not lines[4:]
 
+        loc = repr_entry.reprlocals is not None
         loc = repr_entry.reprfileloc
-        assert loc is not None
         assert loc.path == mod.__file__
         assert loc.lineno == 3
         # assert loc.message == "ValueError: hello"
 
-    def test_repr_tracebackentry_lines2(self, importasmod, tw_mock) -> None:
+    def test_repr_tracebackentry_lines2(self, importasmod):
         mod = importasmod(
             """
             def func1(m, x, y, z):
@@ -637,7 +682,6 @@ raise ValueError()
         entry = excinfo.traceback[-1]
         p = FormattedExcinfo(funcargs=True)
         reprfuncargs = p.repr_args(entry)
-        assert reprfuncargs is not None
         assert reprfuncargs.args[0] == ("m", repr("m" * 90))
         assert reprfuncargs.args[1] == ("x", "5")
         assert reprfuncargs.args[2] == ("y", "13")
@@ -645,14 +689,14 @@ raise ValueError()
 
         p = FormattedExcinfo(funcargs=True)
         repr_entry = p.repr_traceback_entry(entry)
-        assert repr_entry.reprfuncargs is not None
         assert repr_entry.reprfuncargs.args == reprfuncargs.args
-        repr_entry.toterminal(tw_mock)
-        assert tw_mock.lines[0] == "m = " + repr("m" * 90)
-        assert tw_mock.lines[1] == "x = 5, y = 13"
-        assert tw_mock.lines[2] == "z = " + repr("z" * 120)
+        tw = TWMock()
+        repr_entry.toterminal(tw)
+        assert tw.lines[0] == "m = " + repr("m" * 90)
+        assert tw.lines[1] == "x = 5, y = 13"
+        assert tw.lines[2] == "z = " + repr("z" * 120)
 
-    def test_repr_tracebackentry_lines_var_kw_args(self, importasmod, tw_mock) -> None:
+    def test_repr_tracebackentry_lines_var_kw_args(self, importasmod):
         mod = importasmod(
             """
             def func1(x, *y, **z):
@@ -664,19 +708,18 @@ raise ValueError()
         entry = excinfo.traceback[-1]
         p = FormattedExcinfo(funcargs=True)
         reprfuncargs = p.repr_args(entry)
-        assert reprfuncargs is not None
         assert reprfuncargs.args[0] == ("x", repr("a"))
         assert reprfuncargs.args[1] == ("y", repr(("b",)))
         assert reprfuncargs.args[2] == ("z", repr({"c": "d"}))
 
         p = FormattedExcinfo(funcargs=True)
         repr_entry = p.repr_traceback_entry(entry)
-        assert repr_entry.reprfuncargs
         assert repr_entry.reprfuncargs.args == reprfuncargs.args
-        repr_entry.toterminal(tw_mock)
-        assert tw_mock.lines[0] == "x = 'a', y = ('b',), z = {'c': 'd'}"
+        tw = TWMock()
+        repr_entry.toterminal(tw)
+        assert tw.lines[0] == "x = 'a', y = ('b',), z = {'c': 'd'}"
 
-    def test_repr_tracebackentry_short(self, importasmod) -> None:
+    def test_repr_tracebackentry_short(self, importasmod):
         mod = importasmod(
             """
             def func1():
@@ -691,7 +734,6 @@ raise ValueError()
         lines = reprtb.lines
         basename = py.path.local(mod.__file__).basename
         assert lines[0] == "    func1()"
-        assert reprtb.reprfileloc is not None
         assert basename in str(reprtb.reprfileloc.path)
         assert reprtb.reprfileloc.lineno == 5
 
@@ -701,7 +743,6 @@ raise ValueError()
         lines = reprtb.lines
         assert lines[0] == '    raise ValueError("hello")'
         assert lines[1] == "E   ValueError: hello"
-        assert reprtb.reprfileloc is not None
         assert basename in str(reprtb.reprfileloc.path)
         assert reprtb.reprfileloc.lineno == 3
 
@@ -741,7 +782,7 @@ raise ValueError()
         reprtb = p.repr_traceback(excinfo)
         assert len(reprtb.reprentries) == 3
 
-    def test_traceback_short_no_source(self, importasmod, monkeypatch) -> None:
+    def test_traceback_short_no_source(self, importasmod, monkeypatch):
         mod = importasmod(
             """
             def func1():
@@ -754,7 +795,7 @@ raise ValueError()
         from _pytest._code.code import Code
 
         monkeypatch.setattr(Code, "path", "bogus")
-        excinfo.traceback[0].frame.code.path = "bogus"  # type: ignore[misc]
+        excinfo.traceback[0].frame.code.path = "bogus"
         p = FormattedExcinfo(style="short")
         reprtb = p.repr_traceback_entry(excinfo.traceback[-2])
         lines = reprtb.lines
@@ -767,7 +808,7 @@ raise ValueError()
         assert last_lines[0] == '    raise ValueError("hello")'
         assert last_lines[1] == "E   ValueError: hello"
 
-    def test_repr_traceback_and_excinfo(self, importasmod) -> None:
+    def test_repr_traceback_and_excinfo(self, importasmod):
         mod = importasmod(
             """
             def f(x):
@@ -778,8 +819,7 @@ raise ValueError()
         )
         excinfo = pytest.raises(ValueError, mod.entry)
 
-        styles = ("long", "short")  # type: Tuple[_TracebackStyle, ...]
-        for style in styles:
+        for style in ("long", "short"):
             p = FormattedExcinfo(style=style)
             reprtb = p.repr_traceback(excinfo)
             assert len(reprtb.reprentries) == 2
@@ -788,14 +828,13 @@ raise ValueError()
             repr = p.repr_excinfo(excinfo)
             assert repr.reprtraceback
             assert len(repr.reprtraceback.reprentries) == len(reprtb.reprentries)
-
-            assert repr.chain[0][0]
-            assert len(repr.chain[0][0].reprentries) == len(reprtb.reprentries)
-            assert repr.reprcrash is not None
+            if sys.version_info[0] >= 3:
+                assert repr.chain[0][0]
+                assert len(repr.chain[0][0].reprentries) == len(reprtb.reprentries)
             assert repr.reprcrash.path.endswith("mod.py")
             assert repr.reprcrash.message == "ValueError: 0"
 
-    def test_repr_traceback_with_invalid_cwd(self, importasmod, monkeypatch) -> None:
+    def test_repr_traceback_with_invalid_cwd(self, importasmod, monkeypatch):
         mod = importasmod(
             """
             def f(x):
@@ -806,47 +845,16 @@ raise ValueError()
         )
         excinfo = pytest.raises(ValueError, mod.entry)
 
-        p = FormattedExcinfo(abspath=False)
-
-        raised = 0
-
-        orig_getcwd = os.getcwd
+        p = FormattedExcinfo()
 
         def raiseos():
-            nonlocal raised
-            upframe = sys._getframe().f_back
-            assert upframe is not None
-            if upframe.f_code.co_name == "checked_call":
-                # Only raise with expected calls, but not via e.g. inspect for
-                # py38-windows.
-                raised += 1
-                raise OSError(2, "custom_oserror")
-            return orig_getcwd()
+            raise OSError(2)
 
         monkeypatch.setattr(os, "getcwd", raiseos)
         assert p._makepath(__file__) == __file__
-        assert raised == 1
-        repr_tb = p.repr_traceback(excinfo)
+        p.repr_traceback(excinfo)
 
-        matcher = LineMatcher(str(repr_tb).splitlines())
-        matcher.fnmatch_lines(
-            [
-                "def entry():",
-                ">       f(0)",
-                "",
-                "{}:5: ".format(mod.__file__),
-                "_ _ *",
-                "",
-                "    def f(x):",
-                ">       raise ValueError(x)",
-                "E       ValueError: 0",
-                "",
-                "{}:3: ValueError".format(mod.__file__),
-            ]
-        )
-        assert raised == 3
-
-    def test_repr_excinfo_addouterr(self, importasmod, tw_mock):
+    def test_repr_excinfo_addouterr(self, importasmod):
         mod = importasmod(
             """
             def entry():
@@ -856,11 +864,12 @@ raise ValueError()
         excinfo = pytest.raises(ValueError, mod.entry)
         repr = excinfo.getrepr()
         repr.addsection("title", "content")
-        repr.toterminal(tw_mock)
-        assert tw_mock.lines[-1] == "content"
-        assert tw_mock.lines[-2] == ("-", "title")
+        twmock = TWMock()
+        repr.toterminal(twmock)
+        assert twmock.lines[-1] == "content"
+        assert twmock.lines[-2] == ("-", "title")
 
-    def test_repr_excinfo_reprcrash(self, importasmod) -> None:
+    def test_repr_excinfo_reprcrash(self, importasmod):
         mod = importasmod(
             """
             def entry():
@@ -869,7 +878,6 @@ raise ValueError()
         )
         excinfo = pytest.raises(ValueError, mod.entry)
         repr = excinfo.getrepr()
-        assert repr.reprcrash is not None
         assert repr.reprcrash.path.endswith("mod.py")
         assert repr.reprcrash.lineno == 3
         assert repr.reprcrash.message == "ValueError"
@@ -894,7 +902,7 @@ raise ValueError()
             assert reprtb.extraline == "!!! Recursion detected (same locals & position)"
             assert str(reprtb)
 
-    def test_reprexcinfo_getrepr(self, importasmod) -> None:
+    def test_reprexcinfo_getrepr(self, importasmod):
         mod = importasmod(
             """
             def f(x):
@@ -905,27 +913,28 @@ raise ValueError()
         )
         excinfo = pytest.raises(ValueError, mod.entry)
 
-        styles = ("short", "long", "no")  # type: Tuple[_TracebackStyle, ...]
-        for style in styles:
+        for style in ("short", "long", "no"):
             for showlocals in (True, False):
                 repr = excinfo.getrepr(style=style, showlocals=showlocals)
+                if sys.version_info[0] < 3:
+                    assert isinstance(repr, ReprExceptionInfo)
                 assert repr.reprtraceback.style == style
-
-                assert isinstance(repr, ExceptionChainRepr)
-                for r in repr.chain:
-                    assert r[0].style == style
+                if sys.version_info[0] >= 3:
+                    assert isinstance(repr, ExceptionChainRepr)
+                    for repr in repr.chain:
+                        assert repr[0].style == style
 
     def test_reprexcinfo_unicode(self):
         from _pytest._code.code import TerminalRepr
 
         class MyRepr(TerminalRepr):
-            def toterminal(self, tw: TerminalWriter) -> None:
-                tw.line("я")
+            def toterminal(self, tw):
+                tw.line(u"я")
 
-        x = str(MyRepr())
-        assert x == "я"
+        x = six.text_type(MyRepr())
+        assert x == u"я"
 
-    def test_toterminal_long(self, importasmod, tw_mock):
+    def test_toterminal_long(self, importasmod):
         mod = importasmod(
             """
             def g(x):
@@ -937,26 +946,27 @@ raise ValueError()
         excinfo = pytest.raises(ValueError, mod.f)
         excinfo.traceback = excinfo.traceback.filter()
         repr = excinfo.getrepr()
-        repr.toterminal(tw_mock)
-        assert tw_mock.lines[0] == ""
-        tw_mock.lines.pop(0)
-        assert tw_mock.lines[0] == "    def f():"
-        assert tw_mock.lines[1] == ">       g(3)"
-        assert tw_mock.lines[2] == ""
-        line = tw_mock.get_write_msg(3)
+        tw = TWMock()
+        repr.toterminal(tw)
+        assert tw.lines[0] == ""
+        tw.lines.pop(0)
+        assert tw.lines[0] == "    def f():"
+        assert tw.lines[1] == ">       g(3)"
+        assert tw.lines[2] == ""
+        line = tw.get_write_msg(3)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[4] == (":5: ")
-        assert tw_mock.lines[5] == ("_ ", None)
-        assert tw_mock.lines[6] == ""
-        assert tw_mock.lines[7] == "    def g(x):"
-        assert tw_mock.lines[8] == ">       raise ValueError(x)"
-        assert tw_mock.lines[9] == "E       ValueError: 3"
-        assert tw_mock.lines[10] == ""
-        line = tw_mock.get_write_msg(11)
+        assert tw.lines[4] == (":5: ")
+        assert tw.lines[5] == ("_ ", None)
+        assert tw.lines[6] == ""
+        assert tw.lines[7] == "    def g(x):"
+        assert tw.lines[8] == ">       raise ValueError(x)"
+        assert tw.lines[9] == "E       ValueError: 3"
+        assert tw.lines[10] == ""
+        line = tw.get_write_msg(11)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[12] == ":3: ValueError"
+        assert tw.lines[12] == ":3: ValueError"
 
-    def test_toterminal_long_missing_source(self, importasmod, tmpdir, tw_mock):
+    def test_toterminal_long_missing_source(self, importasmod, tmpdir):
         mod = importasmod(
             """
             def g(x):
@@ -969,24 +979,25 @@ raise ValueError()
         tmpdir.join("mod.py").remove()
         excinfo.traceback = excinfo.traceback.filter()
         repr = excinfo.getrepr()
-        repr.toterminal(tw_mock)
-        assert tw_mock.lines[0] == ""
-        tw_mock.lines.pop(0)
-        assert tw_mock.lines[0] == ">   ???"
-        assert tw_mock.lines[1] == ""
-        line = tw_mock.get_write_msg(2)
+        tw = TWMock()
+        repr.toterminal(tw)
+        assert tw.lines[0] == ""
+        tw.lines.pop(0)
+        assert tw.lines[0] == ">   ???"
+        assert tw.lines[1] == ""
+        line = tw.get_write_msg(2)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[3] == ":5: "
-        assert tw_mock.lines[4] == ("_ ", None)
-        assert tw_mock.lines[5] == ""
-        assert tw_mock.lines[6] == ">   ???"
-        assert tw_mock.lines[7] == "E   ValueError: 3"
-        assert tw_mock.lines[8] == ""
-        line = tw_mock.get_write_msg(9)
+        assert tw.lines[3] == ":5: "
+        assert tw.lines[4] == ("_ ", None)
+        assert tw.lines[5] == ""
+        assert tw.lines[6] == ">   ???"
+        assert tw.lines[7] == "E   ValueError: 3"
+        assert tw.lines[8] == ""
+        line = tw.get_write_msg(9)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[10] == ":3: ValueError"
+        assert tw.lines[10] == ":3: ValueError"
 
-    def test_toterminal_long_incomplete_source(self, importasmod, tmpdir, tw_mock):
+    def test_toterminal_long_incomplete_source(self, importasmod, tmpdir):
         mod = importasmod(
             """
             def g(x):
@@ -999,24 +1010,25 @@ raise ValueError()
         tmpdir.join("mod.py").write("asdf")
         excinfo.traceback = excinfo.traceback.filter()
         repr = excinfo.getrepr()
-        repr.toterminal(tw_mock)
-        assert tw_mock.lines[0] == ""
-        tw_mock.lines.pop(0)
-        assert tw_mock.lines[0] == ">   ???"
-        assert tw_mock.lines[1] == ""
-        line = tw_mock.get_write_msg(2)
+        tw = TWMock()
+        repr.toterminal(tw)
+        assert tw.lines[0] == ""
+        tw.lines.pop(0)
+        assert tw.lines[0] == ">   ???"
+        assert tw.lines[1] == ""
+        line = tw.get_write_msg(2)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[3] == ":5: "
-        assert tw_mock.lines[4] == ("_ ", None)
-        assert tw_mock.lines[5] == ""
-        assert tw_mock.lines[6] == ">   ???"
-        assert tw_mock.lines[7] == "E   ValueError: 3"
-        assert tw_mock.lines[8] == ""
-        line = tw_mock.get_write_msg(9)
+        assert tw.lines[3] == ":5: "
+        assert tw.lines[4] == ("_ ", None)
+        assert tw.lines[5] == ""
+        assert tw.lines[6] == ">   ???"
+        assert tw.lines[7] == "E   ValueError: 3"
+        assert tw.lines[8] == ""
+        line = tw.get_write_msg(9)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[10] == ":3: ValueError"
+        assert tw.lines[10] == ":3: ValueError"
 
-    def test_toterminal_long_filenames(self, importasmod, tw_mock):
+    def test_toterminal_long_filenames(self, importasmod):
         mod = importasmod(
             """
             def f():
@@ -1024,22 +1036,23 @@ raise ValueError()
         """
         )
         excinfo = pytest.raises(ValueError, mod.f)
+        tw = TWMock()
         path = py.path.local(mod.__file__)
         old = path.dirpath().chdir()
         try:
             repr = excinfo.getrepr(abspath=False)
-            repr.toterminal(tw_mock)
+            repr.toterminal(tw)
             x = py.path.local().bestrelpath(path)
             if len(x) < len(str(path)):
-                msg = tw_mock.get_write_msg(-2)
+                msg = tw.get_write_msg(-2)
                 assert msg == "mod.py"
-                assert tw_mock.lines[-1] == ":3: ValueError"
+                assert tw.lines[-1] == ":3: ValueError"
 
             repr = excinfo.getrepr(abspath=True)
-            repr.toterminal(tw_mock)
-            msg = tw_mock.get_write_msg(-2)
+            repr.toterminal(tw)
+            msg = tw.get_write_msg(-2)
             assert msg == path
-            line = tw_mock.lines[-1]
+            line = tw.lines[-1]
             assert line == ":3: ValueError"
         finally:
             old.chdir()
@@ -1047,41 +1060,34 @@ raise ValueError()
     @pytest.mark.parametrize(
         "reproptions",
         [
-            pytest.param(
-                {
-                    "style": style,
-                    "showlocals": showlocals,
-                    "funcargs": funcargs,
-                    "tbfilter": tbfilter,
-                },
-                id="style={},showlocals={},funcargs={},tbfilter={}".format(
-                    style, showlocals, funcargs, tbfilter
-                ),
-            )
-            for style in ["long", "short", "line", "no", "native", "value", "auto"]
+            {
+                "style": style,
+                "showlocals": showlocals,
+                "funcargs": funcargs,
+                "tbfilter": tbfilter,
+            }
+            for style in ("long", "short", "no")
             for showlocals in (True, False)
             for tbfilter in (True, False)
             for funcargs in (True, False)
         ],
     )
-    def test_format_excinfo(self, reproptions: Dict[str, Any]) -> None:
-        def bar():
-            assert False, "some error"
-
-        def foo():
-            bar()
-
-        # using inline functions as opposed to importasmod so we get source code lines
-        # in the tracebacks (otherwise getinspect doesn't find the source code).
-        with pytest.raises(AssertionError) as excinfo:
-            foo()
-        file = io.StringIO()
-        tw = TerminalWriter(file=file)
+    def test_format_excinfo(self, importasmod, reproptions):
+        mod = importasmod(
+            """
+            def g(x):
+                raise ValueError(x)
+            def f():
+                g(3)
+        """
+        )
+        excinfo = pytest.raises(ValueError, mod.f)
+        tw = py.io.TerminalWriter(stringio=True)
         repr = excinfo.getrepr(**reproptions)
         repr.toterminal(tw)
-        assert file.getvalue()
+        assert tw.stringio.getvalue()
 
-    def test_traceback_repr_style(self, importasmod, tw_mock):
+    def test_traceback_repr_style(self, importasmod):
         mod = importasmod(
             """
             def f():
@@ -1099,34 +1105,36 @@ raise ValueError()
         excinfo.traceback[1].set_repr_style("short")
         excinfo.traceback[2].set_repr_style("short")
         r = excinfo.getrepr(style="long")
-        r.toterminal(tw_mock)
-        for line in tw_mock.lines:
+        tw = TWMock()
+        r.toterminal(tw)
+        for line in tw.lines:
             print(line)
-        assert tw_mock.lines[0] == ""
-        assert tw_mock.lines[1] == "    def f():"
-        assert tw_mock.lines[2] == ">       g()"
-        assert tw_mock.lines[3] == ""
-        msg = tw_mock.get_write_msg(4)
+        assert tw.lines[0] == ""
+        assert tw.lines[1] == "    def f():"
+        assert tw.lines[2] == ">       g()"
+        assert tw.lines[3] == ""
+        msg = tw.get_write_msg(4)
         assert msg.endswith("mod.py")
-        assert tw_mock.lines[5] == ":3: "
-        assert tw_mock.lines[6] == ("_ ", None)
-        tw_mock.get_write_msg(7)
-        assert tw_mock.lines[8].endswith("in g")
-        assert tw_mock.lines[9] == "    h()"
-        tw_mock.get_write_msg(10)
-        assert tw_mock.lines[11].endswith("in h")
-        assert tw_mock.lines[12] == "    i()"
-        assert tw_mock.lines[13] == ("_ ", None)
-        assert tw_mock.lines[14] == ""
-        assert tw_mock.lines[15] == "    def i():"
-        assert tw_mock.lines[16] == ">       raise ValueError()"
-        assert tw_mock.lines[17] == "E       ValueError"
-        assert tw_mock.lines[18] == ""
-        msg = tw_mock.get_write_msg(19)
+        assert tw.lines[5] == ":3: "
+        assert tw.lines[6] == ("_ ", None)
+        tw.get_write_msg(7)
+        assert tw.lines[8].endswith("in g")
+        assert tw.lines[9] == "    h()"
+        tw.get_write_msg(10)
+        assert tw.lines[11].endswith("in h")
+        assert tw.lines[12] == "    i()"
+        assert tw.lines[13] == ("_ ", None)
+        assert tw.lines[14] == ""
+        assert tw.lines[15] == "    def i():"
+        assert tw.lines[16] == ">       raise ValueError()"
+        assert tw.lines[17] == "E       ValueError"
+        assert tw.lines[18] == ""
+        msg = tw.get_write_msg(19)
         msg.endswith("mod.py")
-        assert tw_mock.lines[20] == ":9: ValueError"
+        assert tw.lines[20] == ":9: ValueError"
 
-    def test_exc_chain_repr(self, importasmod, tw_mock):
+    @pytest.mark.skipif("sys.version_info[0] < 3")
+    def test_exc_chain_repr(self, importasmod):
         mod = importasmod(
             """
             class Err(Exception):
@@ -1147,71 +1155,73 @@ raise ValueError()
         )
         excinfo = pytest.raises(AttributeError, mod.f)
         r = excinfo.getrepr(style="long")
-        r.toterminal(tw_mock)
-        for line in tw_mock.lines:
+        tw = TWMock()
+        r.toterminal(tw)
+        for line in tw.lines:
             print(line)
-        assert tw_mock.lines[0] == ""
-        assert tw_mock.lines[1] == "    def f():"
-        assert tw_mock.lines[2] == "        try:"
-        assert tw_mock.lines[3] == ">           g()"
-        assert tw_mock.lines[4] == ""
-        line = tw_mock.get_write_msg(5)
+        assert tw.lines[0] == ""
+        assert tw.lines[1] == "    def f():"
+        assert tw.lines[2] == "        try:"
+        assert tw.lines[3] == ">           g()"
+        assert tw.lines[4] == ""
+        line = tw.get_write_msg(5)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[6] == ":6: "
-        assert tw_mock.lines[7] == ("_ ", None)
-        assert tw_mock.lines[8] == ""
-        assert tw_mock.lines[9] == "    def g():"
-        assert tw_mock.lines[10] == ">       raise ValueError()"
-        assert tw_mock.lines[11] == "E       ValueError"
-        assert tw_mock.lines[12] == ""
-        line = tw_mock.get_write_msg(13)
+        assert tw.lines[6] == ":6: "
+        assert tw.lines[7] == ("_ ", None)
+        assert tw.lines[8] == ""
+        assert tw.lines[9] == "    def g():"
+        assert tw.lines[10] == ">       raise ValueError()"
+        assert tw.lines[11] == "E       ValueError"
+        assert tw.lines[12] == ""
+        line = tw.get_write_msg(13)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[14] == ":12: ValueError"
-        assert tw_mock.lines[15] == ""
+        assert tw.lines[14] == ":12: ValueError"
+        assert tw.lines[15] == ""
         assert (
-            tw_mock.lines[16]
+            tw.lines[16]
             == "The above exception was the direct cause of the following exception:"
         )
-        assert tw_mock.lines[17] == ""
-        assert tw_mock.lines[18] == "    def f():"
-        assert tw_mock.lines[19] == "        try:"
-        assert tw_mock.lines[20] == "            g()"
-        assert tw_mock.lines[21] == "        except Exception as e:"
-        assert tw_mock.lines[22] == ">           raise Err() from e"
-        assert tw_mock.lines[23] == "E           test_exc_chain_repr0.mod.Err"
-        assert tw_mock.lines[24] == ""
-        line = tw_mock.get_write_msg(25)
+        assert tw.lines[17] == ""
+        assert tw.lines[18] == "    def f():"
+        assert tw.lines[19] == "        try:"
+        assert tw.lines[20] == "            g()"
+        assert tw.lines[21] == "        except Exception as e:"
+        assert tw.lines[22] == ">           raise Err() from e"
+        assert tw.lines[23] == "E           test_exc_chain_repr0.mod.Err"
+        assert tw.lines[24] == ""
+        line = tw.get_write_msg(25)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[26] == ":8: Err"
-        assert tw_mock.lines[27] == ""
+        assert tw.lines[26] == ":8: Err"
+        assert tw.lines[27] == ""
         assert (
-            tw_mock.lines[28]
+            tw.lines[28]
             == "During handling of the above exception, another exception occurred:"
         )
-        assert tw_mock.lines[29] == ""
-        assert tw_mock.lines[30] == "    def f():"
-        assert tw_mock.lines[31] == "        try:"
-        assert tw_mock.lines[32] == "            g()"
-        assert tw_mock.lines[33] == "        except Exception as e:"
-        assert tw_mock.lines[34] == "            raise Err() from e"
-        assert tw_mock.lines[35] == "        finally:"
-        assert tw_mock.lines[36] == ">           h()"
-        assert tw_mock.lines[37] == ""
-        line = tw_mock.get_write_msg(38)
+        assert tw.lines[29] == ""
+        assert tw.lines[30] == "    def f():"
+        assert tw.lines[31] == "        try:"
+        assert tw.lines[32] == "            g()"
+        assert tw.lines[33] == "        except Exception as e:"
+        assert tw.lines[34] == "            raise Err() from e"
+        assert tw.lines[35] == "        finally:"
+        assert tw.lines[36] == ">           h()"
+        assert tw.lines[37] == ""
+        line = tw.get_write_msg(38)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[39] == ":10: "
-        assert tw_mock.lines[40] == ("_ ", None)
-        assert tw_mock.lines[41] == ""
-        assert tw_mock.lines[42] == "    def h():"
-        assert tw_mock.lines[43] == ">       raise AttributeError()"
-        assert tw_mock.lines[44] == "E       AttributeError"
-        assert tw_mock.lines[45] == ""
-        line = tw_mock.get_write_msg(46)
+        assert tw.lines[39] == ":10: "
+        assert tw.lines[40] == ("_ ", None)
+        assert tw.lines[41] == ""
+        assert tw.lines[42] == "    def h():"
+        assert tw.lines[43] == ">       raise AttributeError()"
+        assert tw.lines[44] == "E       AttributeError"
+        assert tw.lines[45] == ""
+        line = tw.get_write_msg(46)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[47] == ":15: AttributeError"
+        assert tw.lines[47] == ":15: AttributeError"
 
+    @pytest.mark.skipif("sys.version_info[0] < 3")
     @pytest.mark.parametrize("mode", ["from_none", "explicit_suppress"])
-    def test_exc_repr_chain_suppression(self, importasmod, mode, tw_mock):
+    def test_exc_repr_chain_suppression(self, importasmod, mode):
         """Check that exc repr does not show chained exceptions in Python 3.
         - When the exception is raised with "from None"
         - Explicitly suppressed with "chain=False" to ExceptionInfo.getrepr().
@@ -1232,36 +1242,36 @@ raise ValueError()
         )
         excinfo = pytest.raises(AttributeError, mod.f)
         r = excinfo.getrepr(style="long", chain=mode != "explicit_suppress")
-        r.toterminal(tw_mock)
-        for line in tw_mock.lines:
+        tw = TWMock()
+        r.toterminal(tw)
+        for line in tw.lines:
             print(line)
-        assert tw_mock.lines[0] == ""
-        assert tw_mock.lines[1] == "    def f():"
-        assert tw_mock.lines[2] == "        try:"
-        assert tw_mock.lines[3] == "            g()"
-        assert tw_mock.lines[4] == "        except Exception:"
-        assert tw_mock.lines[5] == ">           raise AttributeError(){}".format(
+        assert tw.lines[0] == ""
+        assert tw.lines[1] == "    def f():"
+        assert tw.lines[2] == "        try:"
+        assert tw.lines[3] == "            g()"
+        assert tw.lines[4] == "        except Exception:"
+        assert tw.lines[5] == ">           raise AttributeError(){}".format(
             raise_suffix
         )
-        assert tw_mock.lines[6] == "E           AttributeError"
-        assert tw_mock.lines[7] == ""
-        line = tw_mock.get_write_msg(8)
+        assert tw.lines[6] == "E           AttributeError"
+        assert tw.lines[7] == ""
+        line = tw.get_write_msg(8)
         assert line.endswith("mod.py")
-        assert tw_mock.lines[9] == ":6: AttributeError"
-        assert len(tw_mock.lines) == 10
+        assert tw.lines[9] == ":6: AttributeError"
+        assert len(tw.lines) == 10
 
+    @pytest.mark.skipif("sys.version_info[0] < 3")
     @pytest.mark.parametrize(
         "reason, description",
         [
-            pytest.param(
+            (
                 "cause",
                 "The above exception was the direct cause of the following exception:",
-                id="cause",
             ),
-            pytest.param(
+            (
                 "context",
                 "During handling of the above exception, another exception occurred:",
-                id="context",
             ),
         ],
     )
@@ -1271,6 +1281,8 @@ raise ValueError()
         real traceback, such as those raised in a subprocess submitted by the multiprocessing
         module (#1984).
         """
+        from _pytest.pytester import LineMatcher
+
         exc_handling_code = " from e" if reason == "cause" else ""
         mod = importasmod(
             """
@@ -1294,12 +1306,11 @@ raise ValueError()
         getattr(excinfo.value, attr).__traceback__ = None
 
         r = excinfo.getrepr()
-        file = io.StringIO()
-        tw = TerminalWriter(file=file)
+        tw = py.io.TerminalWriter(stringio=True)
         tw.hasmarkup = False
         r.toterminal(tw)
 
-        matcher = LineMatcher(file.getvalue().splitlines())
+        matcher = LineMatcher(tw.stringio.getvalue().splitlines())
         matcher.fnmatch_lines(
             [
                 "ValueError: invalid value",
@@ -1310,7 +1321,8 @@ raise ValueError()
             ]
         )
 
-    def test_exc_chain_repr_cycle(self, importasmod, tw_mock):
+    @pytest.mark.skipif("sys.version_info[0] < 3")
+    def test_exc_chain_repr_cycle(self, importasmod):
         mod = importasmod(
             """
             class Err(Exception):
@@ -1331,8 +1343,9 @@ raise ValueError()
         )
         excinfo = pytest.raises(ZeroDivisionError, mod.unreraise)
         r = excinfo.getrepr(style="short")
-        r.toterminal(tw_mock)
-        out = "\n".join(line for line in tw_mock.lines if isinstance(line, str))
+        tw = TWMock()
+        r.toterminal(tw)
+        out = "\n".join(line for line in tw.lines if isinstance(line, str))
         expected_out = textwrap.dedent(
             """\
             :13: in unreraise
@@ -1352,27 +1365,13 @@ raise ValueError()
         )
         assert out == expected_out
 
-    def test_exec_type_error_filter(self, importasmod):
-        """See #7742"""
-        mod = importasmod(
-            """\
-            def f():
-                exec("a = 1", {}, [])
-            """
-        )
-        with pytest.raises(TypeError) as excinfo:
-            mod.f()
-        # previously crashed with `AttributeError: list has no attribute get`
-        excinfo.traceback.filter()
-
 
 @pytest.mark.parametrize("style", ["short", "long"])
 @pytest.mark.parametrize("encoding", [None, "utf8", "utf16"])
 def test_repr_traceback_with_unicode(style, encoding):
-    if encoding is None:
-        msg = "☹"  # type: Union[str, bytes]
-    else:
-        msg = "☹".encode(encoding)
+    msg = u"☹"
+    if encoding is not None:
+        msg = msg.encode(encoding)
     try:
         raise RuntimeError(msg)
     except RuntimeError:
@@ -1393,8 +1392,7 @@ def test_cwd_deleted(testdir):
     )
     result = testdir.runpytest()
     result.stdout.fnmatch_lines(["* 1 failed in *"])
-    result.stdout.no_fnmatch_line("*INTERNALERROR*")
-    result.stderr.no_fnmatch_line("*INTERNALERROR*")
+    assert "INTERNALERROR" not in result.stdout.str() + result.stderr.str()
 
 
 @pytest.mark.usefixtures("limited_recursion_depth")
@@ -1403,8 +1401,9 @@ def test_exception_repr_extraction_error_on_recursion():
     Ensure we can properly detect a recursion error even
     if some locals raise error on comparison (#2459).
     """
+    from _pytest.pytester import LineMatcher
 
-    class numpy_like:
+    class numpy_like(object):
         def __eq__(self, other):
             if type(other) is numpy_like:
                 raise ValueError(
@@ -1438,7 +1437,7 @@ def test_no_recursion_index_on_recursion_error():
     during a recursion error (#2486).
     """
 
-    class RecursionDepthError:
+    class RecursionDepthError(object):
         def __getattr__(self, attr):
             return getattr(self, "_" + attr)
 

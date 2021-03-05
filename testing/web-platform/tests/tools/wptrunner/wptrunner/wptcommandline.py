@@ -5,7 +5,7 @@ import sys
 from collections import OrderedDict
 from distutils.spawn import find_executable
 from datetime import timedelta
-from six import ensure_text
+from six import ensure_text, iterkeys, itervalues, iteritems
 
 from . import config
 from . import wpttest
@@ -16,7 +16,7 @@ def abs_path(path):
 
 
 def url_or_path(path):
-    from urllib.parse import urlparse
+    from six.moves.urllib.parse import urlparse
 
     parsed = urlparse(path)
     if len(parsed.scheme) > 2:
@@ -131,8 +131,6 @@ scheme host and port.""")
                                       help="Test types to run")
     test_selection_group.add_argument("--include", action="append",
                                       help="URL prefix to include")
-    test_selection_group.add_argument("--include-file", action="store",
-                                      help="A file listing URL prefix for tests")
     test_selection_group.add_argument("--exclude", action="append",
                                       help="URL prefix to exclude")
     test_selection_group.add_argument("--include-manifest", type=abs_path,
@@ -414,7 +412,7 @@ def set_from_config(kwargs):
                     ("host_cert_path", "host_cert_path", True),
                     ("host_key_path", "host_key_path", True)]}
 
-    for section, values in keys.items():
+    for section, values in iteritems(keys):
         for config_value, kw_value, is_path in values:
             if kw_value in kwargs and kwargs[kw_value] is None:
                 if not is_path:
@@ -450,7 +448,7 @@ def get_test_paths(config):
     # Set up test_paths
     test_paths = OrderedDict()
 
-    for section in config.keys():
+    for section in iterkeys(config):
         if section.startswith("manifest:"):
             manifest_opts = config.get(section)
             url_base = manifest_opts.get("url_base", "/")
@@ -476,7 +474,7 @@ def exe_path(name):
 
 
 def check_paths(kwargs):
-    for test_paths in kwargs["test_paths"].values():
+    for test_paths in itervalues(kwargs["test_paths"]):
         if not ("tests_path" in test_paths and
                 "metadata_path" in test_paths):
             print("Fatal: must specify both a test path and metadata path")
@@ -484,7 +482,7 @@ def check_paths(kwargs):
         if "manifest_path" not in test_paths:
             test_paths["manifest_path"] = os.path.join(test_paths["metadata_path"],
                                                        "MANIFEST.json")
-        for key, path in test_paths.items():
+        for key, path in iteritems(test_paths):
             name = key.split("_", 1)[0]
 
             if name == "manifest":

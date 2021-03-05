@@ -1,10 +1,13 @@
+# -*- coding: utf-8 -*-
+import sys
+
 import pytest
 
 
 @pytest.fixture
 def stepwise_testdir(testdir):
     # Rather than having to modify our testfile between tests, we introduce
-    # a flag for whether or not the second test should fail.
+    # a flag for wether or not the second test should fail.
     testdir.makeconftest(
         """
 def pytest_addoption(parser):
@@ -75,16 +78,6 @@ def broken_testdir(testdir):
     return testdir
 
 
-def _strip_resource_warnings(lines):
-    # Strip unreliable ResourceWarnings, so no-output assertions on stderr can work.
-    # (https://github.com/pytest-dev/pytest/issues/5088)
-    return [
-        x
-        for x in lines
-        if not x.startswith(("Exception ignored in:", "ResourceWarning"))
-    ]
-
-
 def test_run_without_stepwise(stepwise_testdir):
     result = stepwise_testdir.runpytest("-v", "--strict-markers", "--fail")
 
@@ -98,7 +91,7 @@ def test_fail_and_continue_with_stepwise(stepwise_testdir):
     result = stepwise_testdir.runpytest(
         "-v", "--strict-markers", "--stepwise", "--fail"
     )
-    assert _strip_resource_warnings(result.stderr.lines) == []
+    assert not result.stderr.str()
 
     stdout = result.stdout.str()
     # Make sure we stop after first failing test.
@@ -108,7 +101,7 @@ def test_fail_and_continue_with_stepwise(stepwise_testdir):
 
     # "Fix" the test that failed in the last run and run it again.
     result = stepwise_testdir.runpytest("-v", "--strict-markers", "--stepwise")
-    assert _strip_resource_warnings(result.stderr.lines) == []
+    assert not result.stderr.str()
 
     stdout = result.stdout.str()
     # Make sure the latest failing test runs and then continues.
@@ -126,7 +119,7 @@ def test_run_with_skip_option(stepwise_testdir):
         "--fail",
         "--fail-last",
     )
-    assert _strip_resource_warnings(result.stderr.lines) == []
+    assert not result.stderr.str()
 
     stdout = result.stdout.str()
     # Make sure first fail is ignore and second fail stops the test run.
@@ -139,7 +132,7 @@ def test_run_with_skip_option(stepwise_testdir):
 def test_fail_on_errors(error_testdir):
     result = error_testdir.runpytest("-v", "--strict-markers", "--stepwise")
 
-    assert _strip_resource_warnings(result.stderr.lines) == []
+    assert not result.stderr.str()
     stdout = result.stdout.str()
 
     assert "test_error ERROR" in stdout
@@ -150,7 +143,7 @@ def test_change_testfile(stepwise_testdir):
     result = stepwise_testdir.runpytest(
         "-v", "--strict-markers", "--stepwise", "--fail", "test_a.py"
     )
-    assert _strip_resource_warnings(result.stderr.lines) == []
+    assert not result.stderr.str()
 
     stdout = result.stdout.str()
     assert "test_fail_on_flag FAILED" in stdout
@@ -160,7 +153,7 @@ def test_change_testfile(stepwise_testdir):
     result = stepwise_testdir.runpytest(
         "-v", "--strict-markers", "--stepwise", "test_b.py"
     )
-    assert _strip_resource_warnings(result.stderr.lines) == []
+    assert not result.stderr.str()
 
     stdout = result.stdout.str()
     assert "test_success PASSED" in stdout
@@ -174,16 +167,14 @@ def test_stop_on_collection_errors(broken_testdir, broken_first):
     if broken_first:
         files.reverse()
     result = broken_testdir.runpytest("-v", "--strict-markers", "--stepwise", *files)
-    result.stdout.fnmatch_lines("*error during collection*")
+    result.stdout.fnmatch_lines("*errors during collection*")
 
 
-def test_xfail_handling(testdir, monkeypatch):
+def test_xfail_handling(testdir):
     """Ensure normal xfail is ignored, and strict xfail interrupts the session in sw mode
 
     (#5547)
     """
-    monkeypatch.setattr("sys.dont_write_bytecode", True)
-
     contents = """
         import pytest
         def test_a(): pass
@@ -217,6 +208,10 @@ def test_xfail_handling(testdir, monkeypatch):
         ]
     )
 
+    # because we are writing to the same file, mtime might not be affected enough to
+    # invalidate the cache, making this next run flaky
+    if not sys.dont_write_bytecode:
+        testdir.tmpdir.join("__pycache__").remove()
     testdir.makepyfile(contents.format(assert_value="0", strict="True"))
     result = testdir.runpytest("--sw", "-v")
     result.stdout.fnmatch_lines(

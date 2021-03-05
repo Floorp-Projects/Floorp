@@ -39,8 +39,7 @@ dictionary ContentIndexEventInit : ExtendableEventInit {
   required DOMString id;
 };
 
-[Exposed=ServiceWorker]
+[Constructor(DOMString type, ContentIndexEventInit init), Exposed=ServiceWorker]
 interface ContentIndexEvent : ExtendableEvent {
-  constructor(DOMString type, ContentIndexEventInit init);
   readonly attribute DOMString id;
 };

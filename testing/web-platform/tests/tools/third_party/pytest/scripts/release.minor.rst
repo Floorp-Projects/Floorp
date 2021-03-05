@@ -3,22 +3,25 @@ pytest-{version}
 
 The pytest team is proud to announce the {version} release!
 
-This release contains new features, improvements, bug fixes, and breaking changes, so users
-are encouraged to take a look at the CHANGELOG carefully:
+pytest is a mature Python testing tool with more than a 2000 tests
+against itself, passing on many different interpreters and platforms.
 
-    https://docs.pytest.org/en/stable/changelog.html
+This release contains a number of bugs fixes and improvements, so users are encouraged
+to take a look at the CHANGELOG:
+
+    https://docs.pytest.org/en/latest/changelog.html
 
 For complete documentation, please visit:
 
-    https://docs.pytest.org/en/stable/
+    https://docs.pytest.org/en/latest/
 
-As usual, you can upgrade from PyPI via:
+As usual, you can upgrade from pypi via:
 
     pip install -U pytest
 
-Thanks to all of the contributors to this release:
+Thanks to all who contributed to this release, among them:
 
 {contributors}
 
 Happy testing,
-The pytest Development Team
+The Pytest Development Team
