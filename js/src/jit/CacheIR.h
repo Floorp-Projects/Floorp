@@ -531,7 +531,9 @@ bool CallAnyNative(JSContext* cx, unsigned argc, Value* vp);
 
 // Class to record CacheIR + some additional metadata for code generation.
 class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
+#ifdef DEBUG
   JSContext* cx_;
+#endif
   CompactBufferWriter buffer_;
 
   uint32_t nextOperandId_;
@@ -566,7 +568,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   size_t currentOpArgsStart_ = 0;
 #endif
 
-  void assertSameCompartment(JSObject*);
+#ifdef DEBUG
+  void assertSameCompartment(JSObject* obj);
+  void assertSameZone(Shape* shape);
+#else
+  void assertSameCompartment(JSObject* obj) {}
+  void assertSameZone(Shape* shape) {}
+#endif
 
   void writeOp(CacheOp op) {
     buffer_.writeUnsigned15Bit(uint32_t(op));
@@ -626,6 +634,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void writeShapeField(Shape* shape) {
     MOZ_ASSERT(shape);
+    assertSameZone(shape);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
   }
   void writeGroupField(ObjectGroup* group) {
@@ -722,14 +731,17 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
  public:
   explicit CacheIRWriter(JSContext* cx)
       : CustomAutoRooter(cx),
+#ifdef DEBUG
         cx_(cx),
+#endif
         nextOperandId_(0),
         nextInstructionId_(0),
         numInputOperands_(0),
         stubDataSize_(0),
         tooLarge_(false),
         lastOffset_(0),
-        lastIndex_(0) {}
+        lastIndex_(0) {
+  }
 
   bool failed() const { return buffer_.oom() || tooLarge_; }
 
