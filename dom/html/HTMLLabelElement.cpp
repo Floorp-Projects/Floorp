@@ -162,8 +162,8 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         // will actually create a new event.
         EventFlags eventFlags;
         eventFlags.mMultipleActionsPrevented = true;
-        DispatchClickEvent(MOZ_KnownLive(aVisitor.mPresContext), mouseEvent,
-                           content, false, &eventFlags, &status);
+        DispatchClickEvent(aVisitor.mPresContext, mouseEvent, content, false,
+                           &eventFlags, &status);
         // Do we care about the status this returned?  I don't think we do...
         // Don't run another <label> off of this click
         mouseEvent->mFlags.mMultipleActionsPrevented = true;

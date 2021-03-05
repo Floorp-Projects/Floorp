@@ -807,6 +807,7 @@
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN \
       __attribute__((annotate("moz_may_call_after_must_return")))
 #    define MOZ_LIFETIME_BOUND __attribute__((annotate("moz_lifetime_bound")))
+#    define MOZ_KNOWN_LIVE __attribute__((annotate("moz_known_live")))
 
 /*
  * It turns out that clang doesn't like void func() __attribute__ {} without a
@@ -860,6 +861,7 @@
 #    define MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG      /* nothing */
 #    define MOZ_MAY_CALL_AFTER_MUST_RETURN                  /* nothing */
 #    define MOZ_LIFETIME_BOUND                              /* nothing */
+#    define MOZ_KNOWN_LIVE                                  /* nothing */
 #  endif /* defined(MOZ_CLANG_PLUGIN) || defined(XGILL_PLUGIN) */
 
 #  define MOZ_RAII MOZ_NON_TEMPORARY_CLASS MOZ_STACK_CLASS
