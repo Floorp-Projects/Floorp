@@ -119,6 +119,8 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
 
     @VisibleForTesting
     internal fun updateInputResult(event: MotionEvent) {
+        @Suppress("Deprecation")
+        // Deprecation to be replaced in https://github.com/mozilla-mobile/android-components/issues/9614
         super.onTouchEventForResult(event)
             .accept {
                 // This should never be null.
