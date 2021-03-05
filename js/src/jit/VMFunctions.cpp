@@ -320,11 +320,6 @@ struct TypeToArgProperties<HandleShape> {
       TypeToArgProperties<Shape*>::result | VMFunctionData::ByRef;
 };
 template <>
-struct TypeToArgProperties<HandleObjectGroup> {
-  static const uint32_t result =
-      TypeToArgProperties<ObjectGroup*>::result | VMFunctionData::ByRef;
-};
-template <>
 struct TypeToArgProperties<HandleBigInt> {
   static const uint32_t result =
       TypeToArgProperties<BigInt*>::result | VMFunctionData::ByRef;
@@ -376,10 +371,6 @@ struct TypeToRootType<HandleId> {
 };
 template <>
 struct TypeToRootType<HandleShape> {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<HandleObjectGroup> {
   static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
