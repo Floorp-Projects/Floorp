@@ -108,8 +108,8 @@ SubDialog.prototype = {
     { features, closingCallback, closedCallback, sizeTo } = {},
     ...aParams
   ) {
-    if (sizeTo == "available") {
-      this._box.setAttribute("sizeto", "available");
+    if (["available", "limitheight"].includes(sizeTo)) {
+      this._box.setAttribute("sizeto", sizeTo);
     }
 
     // Create a promise so consumers can tell when we're done setting up.
@@ -470,6 +470,10 @@ SubDialog.prototype = {
 
   resizeVertically() {
     let docEl = this._frame.contentDocument.documentElement;
+    function getDocHeight() {
+      let { scrollHeight } = docEl.ownerDocument.body || docEl;
+      return docEl.style.height || scrollHeight + "px";
+    }
 
     // If the title bar is disabled (not in the template),
     // set its height to 0 for the calculation.
@@ -493,18 +497,22 @@ SubDialog.prototype = {
     let frameSizeDifference =
       frameRect.top - boxRect.top + (boxRect.bottom - frameRect.bottom);
 
-    if (this._box.getAttribute("sizeto") == "available") {
-      // Inform the CSS of the toolbar height so the bottom padding can be
-      // correctly calculated.
-      this._box.style.setProperty("--box-top-px", `${boxRect.top}px`);
+    let sizeTo = this._box.getAttribute("sizeto");
+    if (["available", "limitheight"].includes(sizeTo)) {
+      if (sizeTo == "limitheight") {
+        this._overlay.style.setProperty("--doc-height-px", getDocHeight());
+      } else {
+        // Inform the CSS of the toolbar height so the bottom padding can be
+        // correctly calculated.
+        this._box.style.setProperty("--box-top-px", `${boxRect.top}px`);
+      }
       return;
     }
 
     // Now do the same but for the height. We need to do this afterwards because otherwise
     // XUL assumes we'll optimize for height and gives us "wrong" values which then are no
     // longer correct after we set the width:
-    let { scrollHeight } = docEl.ownerDocument.body || docEl;
-    let frameMinHeight = docEl.style.height || scrollHeight + "px";
+    let frameMinHeight = getDocHeight();
     let frameHeight = docEl.getAttribute("height")
       ? docEl.getAttribute("height") + "px"
       : frameMinHeight;
