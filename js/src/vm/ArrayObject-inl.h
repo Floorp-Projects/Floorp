@@ -38,7 +38,6 @@ namespace js {
   }
 
   ArrayObject* aobj = static_cast<ArrayObject*>(obj);
-  aobj->initGroup(nullptr);
   aobj->initShape(shape);
   // NOTE: Dynamic slots are created internally by Allocate<JSObject>.
   if (!nDynamicSlots) {
