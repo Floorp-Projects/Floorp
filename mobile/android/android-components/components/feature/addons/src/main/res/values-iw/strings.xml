@@ -45,7 +45,7 @@
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">קריאת הטקסט של כל הלשוניות הפתוחות</string>
     <!-- Description for geolocation permission. -->
-    <string name="mozac_feature_addons_permissions_geolocation_description">גישה למיקום שלך</string>
+    <string name="mozac_feature_addons_permissions_geolocation_description">גישה לנתוני המיקום שלך</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">גישה להיסטוריית הגלישה</string>
     <!-- Description for management permission. -->
