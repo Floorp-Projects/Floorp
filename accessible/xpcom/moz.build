@@ -32,7 +32,6 @@ EXPORTS += [
 
 LOCAL_INCLUDES += [
     "/accessible/base",
-    "/accessible/basetypes",
     "/accessible/generic",
 ]
 
