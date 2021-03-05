@@ -619,3 +619,36 @@ struct DisallowMemberArgsViaReferenceAlias2 {
     }
   }
 };
+
+struct AllowMozKnownLiveMember {
+public:
+  MOZ_KNOWN_LIVE RefCountedBase* mWhatever;
+  MOZ_CAN_RUN_SCRIPT void foo(RefCountedBase* aWhatever) {}
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    foo(mWhatever);
+  }
+};
+
+struct AllowMozKnownLiveMemberParent : AllowMozKnownLiveMember {
+  MOZ_CAN_RUN_SCRIPT void baz() {
+    foo(mWhatever);
+  }
+};
+
+struct AllowMozKnownLiveParamMember {
+public:
+  MOZ_CAN_RUN_SCRIPT void foo(AllowMozKnownLiveMember& aAllow) {
+    aAllow.foo(aAllow.mWhatever);
+  }
+  MOZ_CAN_RUN_SCRIPT void bar(AllowMozKnownLiveMemberParent& aAllowParent) {
+    aAllowParent.foo(aAllowParent.mWhatever);
+  }
+};
+
+struct DisallowMozKnownLiveMemberNotFromKnownLive {
+  AllowMozKnownLiveMember* mMember;
+  MOZ_CAN_RUN_SCRIPT void foo(RefCountedBase* aWhatever) {}
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    foo(mMember->mWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mWhatever' is neither.}}
+  }
+};
