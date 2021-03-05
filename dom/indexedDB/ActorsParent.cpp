@@ -13593,7 +13593,7 @@ nsresult Maintenance::DirectoryWork() {
                   const auto& metadata,
                   quotaManager
                       ->GetDirectoryMetadataWithOriginMetadata2WithRestore(
-                          originDir, persistent),
+                          originDir),
                   // Not much we can do here...
                   Ok{});
 
