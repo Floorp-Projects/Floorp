@@ -1079,7 +1079,7 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
 
   uint32_t slot = holder->slotSpan();
   RootedShape last(cx, holder->lastProperty());
-  Rooted<UnownedBaseShape*> base(cx, last->base()->unowned());
+  Rooted<BaseShape*> base(cx, last->base());
 
   RootedId id(cx, NameToId(name));
   Rooted<StackShape> child(cx, StackShape(base, id, slot, 0));
