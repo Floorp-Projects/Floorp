@@ -34,10 +34,6 @@ xul|menulist > xul|menupopup xul|menuitem {
   padding-inline-end: 34px;
 }
 
-xul|*.help-button > xul|*.button-box > xul|*.button-icon {
-  margin-inline-start: 0;
-}
-
 xul|*.checkbox-icon,
 xul|*.radio-icon {
   margin-inline-end: 0;
