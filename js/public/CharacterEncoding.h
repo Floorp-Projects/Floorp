@@ -98,24 +98,6 @@ class UTF8Chars : public mozilla::Range<unsigned char> {
 };
 
 /*
- * Similar to UTF8Chars, but contains WTF-8.
- * https://simonsapin.github.io/wtf-8/
- */
-class WTF8Chars : public mozilla::Range<unsigned char> {
-  typedef mozilla::Range<unsigned char> Base;
-
- public:
-  using CharT = unsigned char;
-
-  WTF8Chars() = default;
-  WTF8Chars(char* aBytes, size_t aLength)
-      : Base(reinterpret_cast<unsigned char*>(aBytes), aLength) {}
-  WTF8Chars(const char* aBytes, size_t aLength)
-      : Base(reinterpret_cast<unsigned char*>(const_cast<char*>(aBytes)),
-             aLength) {}
-};
-
-/*
  * SpiderMonkey also deals directly with UTF-8 encoded text in some places.
  */
 class UTF8CharsZ : public mozilla::RangedPtr<unsigned char> {
