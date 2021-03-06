@@ -166,6 +166,13 @@ class JSObject
     return shape()->hasObjectFlag(flag);
   }
 
+  // Change this object's shape for a prototype mutation.
+  //
+  // Note: this does not reshape the proto chain to invalidate shape
+  // teleporting, check for an immutable proto, etc.
+  static bool setProtoUnchecked(JSContext* cx, JS::HandleObject obj,
+                                js::Handle<js::TaggedProto> proto);
+
   // An object is a delegate if it is (or was) another object's prototype.
   // Optimization heuristics will make use of this flag.
   // See: ReshapeForProtoMutation, ReshapeForShadowedProp
@@ -299,7 +306,7 @@ class JSObject
    *    the proto.
    */
 
-  js::TaggedProto taggedProto() const { return group()->proto(); }
+  js::TaggedProto taggedProto() const { return shape()->proto(); }
 
   bool uninlinedIsProxyObject() const;
 
