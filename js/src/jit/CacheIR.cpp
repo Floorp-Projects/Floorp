@@ -121,9 +121,14 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
 }
 #endif
 
+#ifdef DEBUG
 void CacheIRWriter::assertSameCompartment(JSObject* obj) {
   cx_->debugOnlyCheck(obj);
 }
+void CacheIRWriter::assertSameZone(Shape* shape) {
+  MOZ_ASSERT(cx_->zone() == shape->zone());
+}
+#endif
 
 StubField CacheIRWriter::readStubFieldForIon(uint32_t offset,
                                              StubField::Type type) const {

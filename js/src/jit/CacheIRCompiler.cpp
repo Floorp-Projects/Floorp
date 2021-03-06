@@ -1171,10 +1171,16 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
         break;
-      case StubField::Type::Shape:
-        TraceEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),
-                  "cacheir-shape");
+      case StubField::Type::Shape: {
+        // For CCW IC stubs, we can store same-zone but cross-compartment
+        // shapes. Use TraceSameZoneCrossCompartmentEdge to not assert in the
+        // GC. Note: CacheIRWriter::writeShapeField asserts we never store
+        // cross-zone shapes.
+        GCPtrShape& shapeField =
+            stubInfo->getStubField<T, Shape*>(stub, offset);
+        TraceSameZoneCrossCompartmentEdge(trc, &shapeField, "cacheir-shape");
         break;
+      }
       case StubField::Type::ObjectGroup:
         TraceEdge(trc, &stubInfo->getStubField<T, ObjectGroup*>(stub, offset),
                   "cacheir-group");
