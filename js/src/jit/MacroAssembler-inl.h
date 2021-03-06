@@ -69,10 +69,6 @@ inline DynFn JitPreWriteBarrier(MIRType type) {
       using Fn = void (*)(JSRuntime * rt, Shape * *shapep);
       return DynamicFunction<Fn>(JitShapePreWriteBarrier);
     }
-    case MIRType::ObjectGroup: {
-      using Fn = void (*)(JSRuntime * rt, ObjectGroup * *groupp);
-      return DynamicFunction<Fn>(JitObjectGroupPreWriteBarrier);
-    }
     default:
       MOZ_CRASH();
   }
