@@ -35,6 +35,7 @@
 #include "mozilla/Bootstrap.h"
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
 #  include "nsUpdateDriver.h"
+#  include "nsUpdateSyncManager.h"
 #endif
 #include "ProfileReset.h"
 
@@ -4199,7 +4200,7 @@ bool IsWaylandEnabled() {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-bool ShouldProcessUpdates() {
+bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
   // Do not process updates if we're launching devtools, as evidenced by
   // "--chrome ..." with the browser toolbox chrome document URL.
 
@@ -4218,6 +4219,34 @@ bool ShouldProcessUpdates() {
       return false;
     }
   }
+
+#  ifdef MOZ_BACKGROUNDTASKS
+  // Do not process updates if we're running a background task mode and another
+  // instance is already running.  This avoids periodic maintenance updating
+  // underneath a browsing session.
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // At this point we have a dir provider but no XPCOM directory service.  We
+    // launch the update sync manager using that information so that it doesn't
+    // need to ask for (and fail to find) the directory service.
+    nsCOMPtr<nsIFile> anAppFile;
+    bool persistent;
+    nsresult rv = aDirProvider.GetFile(XRE_EXECUTABLE_FILE, &persistent,
+                                       getter_AddRefs(anAppFile));
+    if (NS_FAILED(rv) || !anAppFile) {
+      // Strange, but not a reason to skip processing updates.
+      return true;
+    }
+
+    auto updateSyncManager = new nsUpdateSyncManager(anAppFile);
+
+    bool otherInstance = false;
+    updateSyncManager->IsOtherInstanceRunning(&otherInstance);
+    if (otherInstance) {
+      NS_WARNING("!ShouldProcessUpdates(): other instance is running");
+      return false;
+    }
+  }
+#  endif
 
   return true;
 }
@@ -4581,7 +4610,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-  if (ShouldProcessUpdates()) {
+  if (ShouldProcessUpdates(mDirProvider)) {
     // Check for and process any available updates
     nsCOMPtr<nsIFile> updRoot;
     bool persistent;
