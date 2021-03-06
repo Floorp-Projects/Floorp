@@ -1089,8 +1089,6 @@ GCPtr<T>& CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const {
 
 template GCPtr<Shape*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
     ICCacheIRStub* stub, uint32_t offset) const;
-template GCPtr<ObjectGroup*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
-    ICCacheIRStub* stub, uint32_t offset) const;
 template GCPtr<JSObject*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
     ICCacheIRStub* stub, uint32_t offset) const;
 template GCPtr<JSString*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
@@ -1129,9 +1127,6 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
         break;
       case StubField::Type::JSObject:
         InitGCPtr<JSObject*>(destWords, field.asWord());
-        break;
-      case StubField::Type::ObjectGroup:
-        InitGCPtr<ObjectGroup*>(destWords, field.asWord());
         break;
       case StubField::Type::Symbol:
         InitGCPtr<JS::Symbol*>(destWords, field.asWord());
@@ -1181,10 +1176,6 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
         TraceSameZoneCrossCompartmentEdge(trc, &shapeField, "cacheir-shape");
         break;
       }
-      case StubField::Type::ObjectGroup:
-        TraceEdge(trc, &stubInfo->getStubField<T, ObjectGroup*>(stub, offset),
-                  "cacheir-group");
-        break;
       case StubField::Type::JSObject:
         TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
                   "cacheir-object");
@@ -6783,9 +6774,6 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::String:
       masm.movePtr(ImmGCPtr(stringStubField(val.getOffset())), dest);
       break;
-    case StubField::Type::ObjectGroup:
-      masm.movePtr(ImmGCPtr(groupStubField(val.getOffset())), dest);
-      break;
     case StubField::Type::JSObject:
       masm.movePtr(ImmGCPtr(objectStubField(val.getOffset())), dest);
       break;
@@ -6818,7 +6806,6 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     switch (val.getStubFieldType()) {
       case StubField::Type::RawPointer:
       case StubField::Type::Shape:
-      case StubField::Type::ObjectGroup:
       case StubField::Type::JSObject:
       case StubField::Type::Symbol:
       case StubField::Type::String:

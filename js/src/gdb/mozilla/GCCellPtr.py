@@ -40,10 +40,9 @@ class GCCellPtrTypeCache(object):
             "String": "JSString",
             "Symbol": "JS::Symbol",
             "Shape": "js::Shape",
-            "ObjectGroup": "js::ObjectGroup",
+            "BaseShape": "js::BaseShape",
             "Null": "std::nullptr_t",
             # Out-of-line types.
-            "BaseShape": "js::BaseShape",
             "JitCode": "js::jit::JitCode",
             "Script": "js::BaseScript",
             "Scope": "js::Scope",
@@ -52,7 +51,6 @@ class GCCellPtrTypeCache(object):
 
         # Map from AllocKind to TraceKind for out-of-line types.
         alloc_map = {
-            "BASE_SHAPE": "BaseShape",
             "JITCODE": "JitCode",
             "SCRIPT": "Script",
             "SCOPE": "Scope",
