@@ -73,15 +73,7 @@ xul|iframe {
   }
 }
 
-/* ::::: Miscellaneous formatting ::::: */
-
-:root[lwtheme-image]:-moz-lwtheme-darktext {
-  text-shadow: 0 -0.5px 1.5px white;
-}
-
-:root[lwtheme-image]:-moz-lwtheme-brighttext {
-  text-shadow: 1px 1px 1.5px black;
-}
+/* Separators */
 
 xul|separator:not([orient="vertical"]) {
   height: 1.5em;
@@ -108,56 +100,18 @@ xul|separator.groove[orient="vertical"] {
   margin-inline: 0.4em;
 }
 
-xul|description,
-xul|label {
-  cursor: default;
-  margin-block: 1px 2px;
-  margin-inline: 6px 5px;
-}
-
-xul|description {
-  margin-bottom: 4px;
-}
-
-xul|label[disabled="true"] {
-  color: GrayText;
-}
-
-.tooltip-label {
-  margin: 0;
-}
-
-.header {
-  font-weight: bold;
-}
-
-.indent {
-  margin-inline-start: 23px;
-}
-
-.box-padded {
-  padding: 5px;
-}
-
-.text-link {
-  color: -moz-nativehyperlinktext;
-  cursor: pointer;
-}
-
-.text-link:hover {
-  text-decoration: underline;
-}
+/* Link focus outline */
 
 .text-link:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
+/* Input margins */
+
 html|input {
   margin: 4px;
 }
 
-xul|popupnotificationcontent {
-  margin-top: .5em;
-}
+/* Notification popups */
 
 %include ../../shared/notification-popup.inc.css
