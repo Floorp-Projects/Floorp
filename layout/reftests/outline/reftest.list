@@ -9,6 +9,7 @@ fuzzy-if(gtkWidget,0-136,0-120) fuzzy-if(Android,0-255,0-356) fuzzy-if(d2d,0-16,
 == outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-ref.html
 == outline-overflow-inlineblock-float.html outline-overflow-inlineblock-ref.html
 pref(layout.css.outline-style-auto.enabled,true) skip-if(!gtkWidget&&!winWidget&&!cocoaWidget) == outline-auto-001.html outline-auto-001-ref.html # only works on platforms that supports StyleAppearance::FocusOutline
+skip-if(nativeThemePref) == outline-auto-002.html outline-auto-002-ref.html
 pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001-solid-ref.html
 skip-if(nativeThemePref) != outline-auto-follows-border-radius-non-native.html outline-auto-follows-border-radius-non-native-notref.html
 skip-if(nativeThemePref) == outline-auto-follows-border-radius-non-native-02.html outline-auto-follows-border-radius-non-native.html
