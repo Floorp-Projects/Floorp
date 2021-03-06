@@ -66,7 +66,7 @@ struct js::AtomHasher::Lookup {
     LittleEndianChars littleEndianChars;
     const char* utf8Bytes;
   };
-  enum { TwoByteChar, LittleEndianTwoByte, Latin1, UTF8, WTF8 } type;
+  enum { TwoByteChar, LittleEndianTwoByte, Latin1, UTF8 } type;
   size_t length;
   size_t byteLength;
   const JSAtom* atom; /* Optional. */
@@ -174,10 +174,6 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
         JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
         return UTF8OrWTF8EqualsChars(utf8, keyChars);
       }
-      case Lookup::WTF8: {
-        JS::WTF8Chars wtf8(lookup.utf8Bytes, lookup.byteLength);
-        return UTF8OrWTF8EqualsChars(wtf8, keyChars);
-      }
     }
   }
 
@@ -192,10 +188,6 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
     case Lookup::UTF8: {
       JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
       return UTF8OrWTF8EqualsChars(utf8, keyChars);
-    }
-    case Lookup::WTF8: {
-      JS::WTF8Chars wtf8(lookup.utf8Bytes, lookup.byteLength);
-      return UTF8OrWTF8EqualsChars(wtf8, keyChars);
     }
   }
 
