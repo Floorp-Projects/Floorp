@@ -1115,7 +1115,6 @@ class Scope;
 class ScriptSourceObject;
 class Shape;
 class BaseShape;
-class UnownedBaseShape;
 class WasmInstanceObject;
 class WasmTableObject;
 
@@ -1137,7 +1136,6 @@ using GCPtrObject = GCPtr<JSObject*>;
 using GCPtrScript = GCPtr<JSScript*>;
 using GCPtrString = GCPtr<JSString*>;
 using GCPtrShape = GCPtr<Shape*>;
-using GCPtrUnownedBaseShape = GCPtr<UnownedBaseShape*>;
 using GCPtrObjectGroup = GCPtr<ObjectGroup*>;
 using GCPtrValue = GCPtr<Value>;
 using GCPtrId = GCPtr<jsid>;
