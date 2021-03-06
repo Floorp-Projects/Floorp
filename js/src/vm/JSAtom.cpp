@@ -875,13 +875,12 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
   return atom;
 }
 
-template <typename CharsT>
-struct AtomizeUTF8OrWTF8CharsWrapper {
-  CharsT utf8;
+struct AtomizeUTF8CharsWrapper {
+  JS::UTF8Chars utf8;
   JS::SmallestEncoding encoding;
 
-  AtomizeUTF8OrWTF8CharsWrapper(const CharsT& chars,
-                                JS::SmallestEncoding minEncode)
+  AtomizeUTF8CharsWrapper(const JS::UTF8Chars& chars,
+                          JS::SmallestEncoding minEncode)
       : utf8(chars), encoding(minEncode) {}
 };
 
@@ -934,11 +933,8 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
 }
 
 // Another 2 variants of MakeLinearStringForAtomization.
-// This is used by AtomizeUTF8OrWTF8CharsWrapper with UTF8Chars or WTF8Chars.
-template <typename InputCharsT>
-/* static */ MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
-    JSContext* cx, const AtomizeUTF8OrWTF8CharsWrapper<InputCharsT>* chars,
-    size_t length) {
+static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
+    JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length) {
   if (length == 0) {
     return cx->emptyString();
   }
@@ -1160,7 +1156,7 @@ JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
     return nullptr;
   }
 
-  AtomizeUTF8OrWTF8CharsWrapper<JS::UTF8Chars> chars(utf8, forCopy);
+  AtomizeUTF8CharsWrapper chars(utf8, forCopy);
   AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
   return AtomizeAndCopyCharsFromLookup(cx, &chars, length, lookup, DoNotPinAtom,
                                        Nothing());
