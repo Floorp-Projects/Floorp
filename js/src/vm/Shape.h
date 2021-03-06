@@ -676,8 +676,11 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   const JSClass* clasp() const { return headerPtr(); }
 
  private:
+  JS::Realm* realm_;
+#ifndef JS_64BIT
   // Temporary padding to respect MinCellSize.
   uint64_t padding_ = 0;
+#endif
 
   BaseShape(const BaseShape& base) = delete;
   BaseShape& operator=(const BaseShape& other) = delete;
@@ -689,6 +692,14 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   /* Not defined: BaseShapes must not be stack allocated. */
   ~BaseShape() = delete;
+
+  JS::Realm* realm() const { return realm_; }
+  JS::Compartment* compartment() const {
+    return JS::GetCompartmentForRealm(realm());
+  }
+  JS::Compartment* maybeCompartment() const { return compartment(); }
+
+  void setRealmForMergeRealms(JS::Realm* realm) { realm_ = realm; }
 
   /*
    * Lookup base shapes from the zone's baseShapes table, adding if not
@@ -702,10 +713,14 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   static constexpr size_t offsetOfClasp() { return offsetOfHeaderPtr(); }
 
+  static constexpr size_t offsetOfRealm() {
+    return offsetof(BaseShape, realm_);
+  }
+
  private:
   static void staticAsserts() {
-    static_assert(offsetOfHeaderPtr() ==
-                  offsetof(JS::shadow::BaseShape, clasp));
+    static_assert(offsetOfClasp() == offsetof(JS::shadow::BaseShape, clasp));
+    static_assert(offsetOfRealm() == offsetof(JS::shadow::BaseShape, realm));
     static_assert(sizeof(BaseShape) % gc::CellAlignBytes == 0,
                   "Things inheriting from gc::Cell must have a size that's "
                   "a multiple of gc::CellAlignBytes");
@@ -715,26 +730,28 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 /* Entries for the per-zone baseShapes set. */
 struct StackBaseShape : public DefaultHasher<WeakHeapPtr<BaseShape*>> {
   const JSClass* clasp;
+  JS::Realm* realm;
 
-  explicit inline StackBaseShape(const JSClass* clasp);
+  inline StackBaseShape(const JSClass* clasp, JS::Realm* realm);
 
   struct Lookup {
     const JSClass* clasp;
+    JS::Realm* realm;
 
-    MOZ_IMPLICIT Lookup(const StackBaseShape& base) : clasp(base.clasp) {}
+    MOZ_IMPLICIT Lookup(const StackBaseShape& base)
+        : clasp(base.clasp), realm(base.realm) {}
 
-    MOZ_IMPLICIT Lookup(BaseShape* base) : clasp(base->clasp()) {}
-
-    explicit Lookup(const WeakHeapPtr<BaseShape*>& base)
-        : clasp(base.unbarrieredGet()->clasp()) {}
+    MOZ_IMPLICIT Lookup(BaseShape* base)
+        : clasp(base->clasp()), realm(base->realm()) {}
   };
 
   static HashNumber hash(const Lookup& lookup) {
-    return mozilla::HashGeneric(lookup.clasp);
+    return mozilla::HashGeneric(lookup.clasp, lookup.realm);
   }
   static inline bool match(const WeakHeapPtr<BaseShape*>& key,
                            const Lookup& lookup) {
-    return key.unbarrieredGet()->clasp() == lookup.clasp;
+    return key.unbarrieredGet()->clasp() == lookup.clasp &&
+           key.unbarrieredGet()->realm() == lookup.realm;
   }
 };
 
@@ -1014,6 +1031,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   };
 
   const JSClass* getObjectClass() const { return base()->clasp(); }
+  JS::Realm* realm() const { return base()->realm(); }
+
+  JS::Compartment* compartment() const { return base()->compartment(); }
+  JS::Compartment* maybeCompartment() const {
+    return base()->maybeCompartment();
+  }
 
   static Shape* setObjectFlag(JSContext* cx, ObjectFlag flag, TaggedProto proto,
                               Shape* last);
@@ -1358,10 +1381,11 @@ struct EmptyShape : public js::Shape {
    * shape if none was found.
    */
   static Shape* getInitialShape(JSContext* cx, const JSClass* clasp,
-                                TaggedProto proto, size_t nfixed,
-                                ObjectFlags objectFlags = {});
+                                JS::Realm* realm, TaggedProto proto,
+                                size_t nfixed, ObjectFlags objectFlags = {});
   static Shape* getInitialShape(JSContext* cx, const JSClass* clasp,
-                                TaggedProto proto, gc::AllocKind kind,
+                                JS::Realm* realm, TaggedProto proto,
+                                gc::AllocKind kind,
                                 ObjectFlags objectFlags = {});
 
   /*
@@ -1407,13 +1431,15 @@ struct InitialShapeEntry {
   /* State used to determine a match on an initial shape. */
   struct Lookup {
     const JSClass* clasp;
+    JS::Realm* realm;
     TaggedProto proto;
     uint32_t nfixed;
     ObjectFlags objectFlags;
 
-    Lookup(const JSClass* clasp, const TaggedProto& proto, uint32_t nfixed,
-           ObjectFlags objectFlags)
+    Lookup(const JSClass* clasp, JS::Realm* realm, const TaggedProto& proto,
+           uint32_t nfixed, ObjectFlags objectFlags)
         : clasp(clasp),
+          realm(realm),
           proto(proto),
           nfixed(nfixed),
           objectFlags(objectFlags) {}
@@ -1424,13 +1450,14 @@ struct InitialShapeEntry {
 
   static HashNumber hash(const Lookup& lookup) {
     HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
-    return mozilla::AddToHash(hash,
-                              mozilla::HashGeneric(lookup.clasp, lookup.nfixed,
-                                                   lookup.objectFlags.toRaw()));
+    return mozilla::AddToHash(
+        hash, mozilla::HashGeneric(lookup.clasp, lookup.realm, lookup.nfixed,
+                                   lookup.objectFlags.toRaw()));
   }
   static inline bool match(const InitialShapeEntry& key, const Lookup& lookup) {
     const Shape* shape = key.shape.unbarrieredGet();
     return lookup.clasp == shape->getObjectClass() &&
+           lookup.realm == shape->realm() &&
            lookup.nfixed == shape->numFixedSlots() &&
            lookup.objectFlags == shape->objectFlags() &&
            key.proto.unbarrieredGet() == lookup.proto;

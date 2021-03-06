@@ -329,7 +329,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
  public:
   inline void enterRealmOf(JSObject* target);
   inline void enterRealmOf(JSScript* target);
-  inline void enterRealmOf(js::ObjectGroup* target);
+  inline void enterRealmOf(js::Shape* target);
   inline void enterNullRealm();
 
   inline void setRealmForJitExceptionHandler(JS::Realm* realm);
