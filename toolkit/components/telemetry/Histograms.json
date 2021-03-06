@@ -12634,7 +12634,7 @@
     "n_buckets": 10,
     "bug_numbers": [1689953],
     "alert_emails": ["dothayer@mozilla.com, jstutte@mozilla.com"],
-    "description": "Duration of shutdown phase quit-application, as measured by the shutdown terminator, in seconds of activity"
+    "description": "Duration of shutdown phase quit-application, as measured by the shutdown terminator in ticks of 100ms"
   },
   "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_NET_TEARDOWN": {
     "record_in_processes": ["main", "content"],
@@ -12645,7 +12645,7 @@
     "n_buckets": 10,
     "bug_numbers": [1689953],
     "alert_emails": ["dothayer@mozilla.com, jstutte@mozilla.com"],
-    "description": "Duration of shutdown phase profile-change-net-teardown, as measured by the shutdown terminator, in seconds of activity"
+    "description": "Duration of shutdown phase profile-change-net-teardown, as measured by the shutdown terminator in ticks of 100ms"
   },
   "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_TEARDOWN": {
     "record_in_processes": ["main", "content"],
@@ -12656,7 +12656,7 @@
     "n_buckets": 10,
     "bug_numbers": [1689953],
     "alert_emails": ["dothayer@mozilla.com, jstutte@mozilla.com"],
-    "description": "Duration of shutdown phase profile-change-teardown, as measured by the shutdown terminator, in seconds of activity"
+    "description": "Duration of shutdown phase profile-change-teardown, as measured by the shutdown terminator in ticks of 100ms"
   },
   "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE": {
     "record_in_processes": ["main", "content"],
@@ -12667,7 +12667,7 @@
     "n_buckets": 10,
     "bug_numbers": [1689953],
     "alert_emails": ["dothayer@mozilla.com, jstutte@mozilla.com"],
-    "description": "Duration of shutdown phase profile-before-change, as measured by the shutdown terminator, in seconds of activity"
+    "description": "Duration of shutdown phase profile-before-change, as measured by the shutdown terminator in ticks of 100ms"
   },
   "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE_QM": {
     "record_in_processes": ["main", "content"],
@@ -12678,7 +12678,7 @@
     "n_buckets": 10,
     "bug_numbers": [1689953],
     "alert_emails": ["dothayer@mozilla.com, jstutte@mozilla.com"],
-    "description": "Duration of shutdown phase profile-before-change-qm, as measured by the shutdown terminator, in seconds of activity"
+    "description": "Duration of shutdown phase profile-before-change-qm, as measured by the shutdown terminator in ticks of 100ms"
   },
   "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_WILL_SHUTDOWN": {
     "record_in_processes": ["main", "content"],
@@ -12689,7 +12689,7 @@
     "n_buckets": 10,
     "bug_numbers": [1689953],
     "alert_emails": ["dothayer@mozilla.com, jstutte@mozilla.com"],
-    "description": "Duration of shutdown phase xpcom-will-shutdown, as measured by the shutdown terminator, in seconds of activity"
+    "description": "Duration of shutdown phase xpcom-will-shutdown, as measured by the shutdown terminator in ticks of 100ms"
   },
   "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_SHUTDOWN": {
     "record_in_processes": ["main", "content"],
@@ -12700,7 +12700,7 @@
     "n_buckets": 10,
     "bug_numbers": [1689953],
     "alert_emails": ["dothayer@mozilla.com, jstutte@mozilla.com"],
-    "description": "Duration of shutdown phase xpcom-shutdown, as measured by the shutdown terminator, in seconds of activity"
+    "description": "Duration of shutdown phase xpcom-shutdown, as measured by the shutdown terminator in ticks of 100ms"
   },
   "TAP_TO_LOAD_ENABLED": {
     "record_in_processes": ["main", "content"],
