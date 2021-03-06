@@ -537,8 +537,8 @@ template bool GetUTF8AtomizationData<JS::WTF8Chars>(
     JSContext* cx, const JS::WTF8Chars utf8, size_t* outlen,
     JS::SmallestEncoding* encoding, HashNumber* hashNum);
 
-template <typename CharT, class CharsT>
-bool UTF8OrWTF8EqualsChars(const CharsT utfChars, const CharT* chars) {
+template <typename CharT>
+bool UTF8EqualsChars(const JS::UTF8Chars utfChars, const CharT* chars) {
   size_t ind = 0;
   bool isEqual = true;
 
@@ -569,14 +569,8 @@ bool UTF8OrWTF8EqualsChars(const CharsT utfChars, const CharT* chars) {
   return isEqual;
 }
 
-template bool UTF8OrWTF8EqualsChars<char16_t>(const JS::UTF8Chars,
-                                              const char16_t*);
-template bool UTF8OrWTF8EqualsChars<JS::Latin1Char>(const JS::UTF8Chars,
-                                                    const JS::Latin1Char*);
-template bool UTF8OrWTF8EqualsChars<char16_t>(const JS::WTF8Chars,
-                                              const char16_t*);
-template bool UTF8OrWTF8EqualsChars<JS::Latin1Char>(const JS::WTF8Chars,
-                                                    const JS::Latin1Char*);
+template bool UTF8EqualsChars(const JS::UTF8Chars, const char16_t*);
+template bool UTF8EqualsChars(const JS::UTF8Chars, const JS::Latin1Char*);
 
 template <typename CharT, class InputCharsT>
 void InflateUTF8CharsToBufferAndTerminate(const InputCharsT src, CharT* dst,

@@ -50,8 +50,8 @@ extern void InflateUTF8CharsToBufferAndTerminate(const InputCharsT src,
                                                  CharT* dst, size_t dstLen,
                                                  JS::SmallestEncoding encoding);
 
-template <typename CharT, typename CharsT>
-extern bool UTF8OrWTF8EqualsChars(const CharsT utf8, const CharT* chars);
+template <typename CharT>
+extern bool UTF8EqualsChars(const JS::UTF8Chars utf8, const CharT* chars);
 
 template <typename InputCharsT>
 extern bool GetUTF8AtomizationData(JSContext* cx, const InputCharsT utf8,
@@ -172,7 +172,7 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
         return EqualsLittleEndianChars(keyChars);
       case Lookup::UTF8: {
         JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-        return UTF8OrWTF8EqualsChars(utf8, keyChars);
+        return UTF8EqualsChars(utf8, keyChars);
       }
     }
   }
@@ -187,7 +187,7 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
       return EqualsLittleEndianChars(keyChars);
     case Lookup::UTF8: {
       JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-      return UTF8OrWTF8EqualsChars(utf8, keyChars);
+      return UTF8EqualsChars(utf8, keyChars);
     }
   }
 
