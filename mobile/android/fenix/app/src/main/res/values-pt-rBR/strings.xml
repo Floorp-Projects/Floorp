@@ -1200,7 +1200,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_tracking_protection_description_2">As configurações de privacidade e segurança bloqueiam rastreadores, código malicioso (malware) e empresas que seguem você.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Padrão (predefinido)</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Normal (padrão)</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_2">Bloqueia menos rastreadores. As páginas são carregadas normalmente.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1300,11 +1300,11 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saiba mais</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_default_1">Padrão (predefinido)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Normal (padrão)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_3">Bloqueia menos rastreadores. As páginas são carregadas normalmente.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_standard_info_button">O que é bloqueado pela proteção padrão contra rastreamento</string>
+    <string name="preference_enhanced_tracking_protection_standard_info_button">O que é bloqueado pela proteção normal contra rastreamento</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Rigoroso</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->

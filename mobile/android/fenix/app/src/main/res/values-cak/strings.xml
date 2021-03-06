@@ -227,6 +227,9 @@
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Tikanöx %s</string>
 
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Tikanöx pa kikajtz\'ik ochochib\'äl</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Tijaq jun k\'ak\'a\' ruwi\' Firefox</string>
