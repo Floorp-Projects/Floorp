@@ -1560,14 +1560,14 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
 }
 
 void js::ObjectGroup::traceChildren(JSTracer* trc) {
-  if (proto().isObject()) {
-    TraceEdge(trc, &proto(), "group_proto");
+  if (protoDeprecated().isObject()) {
+    TraceEdge(trc, &protoDeprecated(), "group_proto");
   }
 }
 
 void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
-  if (group->proto().isObject()) {
-    markAndTraverseEdge(group, group->proto().toObject());
+  if (group->protoDeprecated().isObject()) {
+    markAndTraverseEdge(group, group->protoDeprecated().toObject());
   }
 }
 
@@ -1575,6 +1575,10 @@ void BaseShape::traceChildren(JSTracer* trc) {
   // Note: the realm's global can be nullptr if we GC while creating the global.
   if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
     TraceManuallyBarrieredEdge(trc, &global, "baseshape_global");
+  }
+
+  if (proto_.isObject()) {
+    TraceEdge(trc, &proto_, "baseshape_proto");
   }
 }
 
