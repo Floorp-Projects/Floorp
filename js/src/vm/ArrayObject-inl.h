@@ -21,9 +21,8 @@ namespace js {
 /* static */ inline ArrayObject* ArrayObject::createArrayInternal(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
     HandleObjectGroup group, AutoSetNewObjectMetadata&) {
-  const JSClass* clasp = group->clasp();
+  const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(shape && group);
-  MOZ_ASSERT(clasp == shape->getObjectClass());
   MOZ_ASSERT(clasp == &ArrayObject::class_);
   MOZ_ASSERT(clasp->isNativeObject());
   MOZ_ASSERT_IF(clasp->hasFinalize(), heap == gc::TenuredHeap);

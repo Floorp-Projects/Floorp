@@ -3821,8 +3821,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
     loadPtr(Address(obj, JSObject::offsetOfGroup()), dest);
   }
   void loadObjClassUnsafe(Register obj, Register dest) {
-    loadPtr(Address(obj, JSObject::offsetOfGroup()), dest);
-    loadPtr(Address(dest, ObjectGroup::offsetOfClasp()), dest);
+    loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
+    loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);
+    loadPtr(Address(dest, BaseShape::offsetOfClasp()), dest);
   }
 
   template <typename EmitPreBarrier>

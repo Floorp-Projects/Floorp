@@ -532,8 +532,9 @@ void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
   MOZ_ASSERT(obj != scratch);
   MOZ_ASSERT(scratch != spectreRegToZero);
 
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp),
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  branchPtr(cond, Address(scratch, BaseShape::offsetOfClasp()), ImmPtr(clasp),
             label);
 
   if (JitOptions.spectreObjectMitigationsMisc) {
@@ -544,8 +545,9 @@ void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
 void MacroAssembler::branchTestObjClassNoSpectreMitigations(
     Condition cond, Register obj, const JSClass* clasp, Register scratch,
     Label* label) {
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp),
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  branchPtr(cond, Address(scratch, BaseShape::offsetOfClasp()), ImmPtr(clasp),
             label);
 }
 
@@ -556,8 +558,9 @@ void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
   MOZ_ASSERT(obj != scratch);
   MOZ_ASSERT(scratch != spectreRegToZero);
 
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  loadPtr(Address(scratch, ObjectGroup::offsetOfClasp()), scratch);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfClasp()), scratch);
   branchPtr(cond, clasp, scratch, label);
 
   if (JitOptions.spectreObjectMitigationsMisc) {
@@ -569,8 +572,9 @@ void MacroAssembler::branchTestObjClassNoSpectreMitigations(
     Condition cond, Register obj, const Address& clasp, Register scratch,
     Label* label) {
   MOZ_ASSERT(obj != scratch);
-  loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-  loadPtr(Address(scratch, ObjectGroup::offsetOfClasp()), scratch);
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfClasp()), scratch);
   branchPtr(cond, clasp, scratch, label);
 }
 

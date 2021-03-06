@@ -42,12 +42,10 @@ enum NewObjectKind {
   TenuredObject
 };
 
-class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
- public:
-  /* Class shared by objects in this group, stored in the cell header. */
-  const JSClass* clasp() const { return headerPtr(); }
-
- private:
+// Note: for now just store an int* in the CellHeader. We can't store the Realm*
+// because it's an incomplete type and we can't include vm/Realm.h here. This
+// class will be removed shortly anyway.
+class ObjectGroup : public gc::TenuredCellWithNonGCPointer<int> {
   /* Prototype shared by objects in this group. */
   GCPtr<TaggedProto> proto_;  // set by constructor
 
@@ -57,8 +55,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   // END OF PROPERTIES
 
  private:
-  static inline uint32_t offsetOfClasp() { return offsetOfHeaderPtr(); }
-
   static inline uint32_t offsetOfProto() {
     return offsetof(ObjectGroup, proto_);
   }
@@ -73,7 +69,7 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   friend class js::jit::MacroAssembler;
 
  public:
-  inline ObjectGroup(const JSClass* clasp, TaggedProto proto, JS::Realm* realm);
+  inline ObjectGroup(TaggedProto proto, JS::Realm* realm);
 
   const GCPtr<TaggedProto>& proto() const { return proto_; }
 

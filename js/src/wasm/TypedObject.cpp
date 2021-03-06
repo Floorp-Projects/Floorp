@@ -578,7 +578,7 @@ DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace,
     js::HandleShape shape, js::HandleObjectGroup group) {
   debugCheckNewObject(group, shape, kind, heap);
 
-  const JSClass* clasp = group->clasp();
+  const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(!clasp->isNativeObject());
   MOZ_ASSERT(::IsTypedObjectClass(clasp));
 

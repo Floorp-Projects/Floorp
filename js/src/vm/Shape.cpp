@@ -1408,7 +1408,9 @@ Shape* Shape::setObjectFlag(JSContext* cx, ObjectFlag flag, TaggedProto proto,
 }
 
 inline BaseShape::BaseShape(const StackBaseShape& base)
-    : TenuredCellWithNonGCPointer(base.clasp) {}
+    : TenuredCellWithNonGCPointer(base.clasp) {
+  MOZ_ASSERT(JS::StringIsASCII(clasp()->name));
+}
 
 /* static */
 BaseShape* BaseShape::get(JSContext* cx, StackBaseShape& base) {
