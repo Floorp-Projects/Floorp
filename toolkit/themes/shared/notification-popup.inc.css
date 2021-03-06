@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+xul|popupnotificationcontent {
+  margin-top: .5em;
+}
+
 .popup-notification-panel::part(arrowcontent) {
   /* To keep the rounded borders of the panel, we use overflow: hidden; from the
    * panel-no-padding class to ensure the contents are clipped to the border box.
