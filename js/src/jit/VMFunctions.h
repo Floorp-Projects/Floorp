@@ -30,7 +30,6 @@ class GlobalObject;
 class InterpreterFrame;
 class LexicalScope;
 class NativeObject;
-class ObjectGroup;
 class PropertyName;
 class Shape;
 class TypedArrayObject;

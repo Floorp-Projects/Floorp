@@ -518,10 +518,6 @@ class BufferGrayRootsTracer final : public GenericTracer {
     unsupportedEdge();
     return nullptr;
   }
-  js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) override {
-    unsupportedEdge();
-    return nullptr;
-  }
   js::BaseShape* onBaseShapeEdge(js::BaseShape* base) override {
     unsupportedEdge();
     return nullptr;

@@ -1067,10 +1067,6 @@ bool WarpScriptOracle::replaceNurseryPointers(ICCacheIRStub* stub,
         static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
                       "Code assumes shapes are tenured");
         break;
-      case StubField::Type::ObjectGroup:
-        static_assert(std::is_convertible_v<ObjectGroup*, gc::TenuredCell*>,
-                      "Code assumes groups are tenured");
-        break;
       case StubField::Type::Symbol:
         static_assert(std::is_convertible_v<JS::Symbol*, gc::TenuredCell*>,
                       "Code assumes symbols are tenured");

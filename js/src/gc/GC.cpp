@@ -401,8 +401,7 @@ static constexpr FinalizePhase BackgroundFinalizePhases[] = {
       AllocKind::EXTERNAL_STRING, AllocKind::FAT_INLINE_ATOM, AllocKind::ATOM,
       AllocKind::SYMBOL, AllocKind::BIGINT}},
     {gcstats::PhaseKind::SWEEP_SHAPE,
-     {AllocKind::SHAPE, AllocKind::ACCESSOR_SHAPE, AllocKind::BASE_SHAPE,
-      AllocKind::OBJECT_GROUP}}};
+     {AllocKind::SHAPE, AllocKind::ACCESSOR_SHAPE, AllocKind::BASE_SHAPE}}};
 
 void Arena::unmarkAll() {
   MarkBitmapWord* arenaBits = chunk()->markBits.arenaBits(this);
@@ -2312,9 +2311,6 @@ RegExpShared* MovingTracer::onRegExpSharedEdge(RegExpShared* shared) {
   return onEdge(shared);
 }
 BigInt* MovingTracer::onBigIntEdge(BigInt* bi) { return onEdge(bi); }
-ObjectGroup* MovingTracer::onObjectGroupEdge(ObjectGroup* group) {
-  return onEdge(group);
-}
 JS::Symbol* MovingTracer::onSymbolEdge(JS::Symbol* sym) {
   MOZ_ASSERT(!sym->isForwarded());
   return sym;
@@ -2598,9 +2594,9 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds) {
 // arbitrary phases.
 
 static constexpr AllocKinds UpdatePhaseOne{
-    AllocKind::SCRIPT,         AllocKind::BASE_SHAPE,    AllocKind::SHAPE,
-    AllocKind::ACCESSOR_SHAPE, AllocKind::OBJECT_GROUP,  AllocKind::STRING,
-    AllocKind::JITCODE,        AllocKind::REGEXP_SHARED, AllocKind::SCOPE};
+    AllocKind::SCRIPT,         AllocKind::BASE_SHAPE, AllocKind::SHAPE,
+    AllocKind::ACCESSOR_SHAPE, AllocKind::STRING,     AllocKind::JITCODE,
+    AllocKind::REGEXP_SHARED,  AllocKind::SCOPE};
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
@@ -8040,22 +8036,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   MOZ_ASSERT(global);
   AssertTargetIsNotGray(global);
 
-  for (auto group = source->zone()->cellIterUnsafe<ObjectGroup>();
-       !group.done(); group.next()) {
-    // Replace placeholder object prototypes with the correct prototype in
-    // the target realm.
-    TaggedProto proto(group->protoDeprecated());
-    if (proto.isObject()) {
-      JSObject* obj = proto.toObject();
-      if (GlobalObject::isOffThreadPrototypePlaceholder(obj)) {
-        JSObject* targetProto =
-            global->getPrototypeForOffThreadPlaceholder(obj);
-        MOZ_ASSERT(targetProto->isDelegate());
-        group->setProtoUncheckedDeprecated(TaggedProto(targetProto));
-      }
-    }
-  }
-
   for (auto baseShape = source->zone()->cellIterUnsafe<BaseShape>();
        !baseShape.done(); baseShape.next()) {
     baseShape->setRealmForMergeRealms(target);
@@ -8429,7 +8409,6 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
 
   for (CompartmentsIter c(this); !c.done(); c.next()) {
     for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
-      r->checkObjectGroupTablesAfterMovingGC();
       r->dtoaCache.checkCacheAfterMovingGC();
       if (r->debugEnvs()) {
         r->debugEnvs()->checkHashTablesAfterMovingGC();
@@ -9092,10 +9071,6 @@ js::BaseScript* js::gc::ClearEdgesTracer::onScriptEdge(js::BaseScript* script) {
 }
 js::Shape* js::gc::ClearEdgesTracer::onShapeEdge(js::Shape* shape) {
   return onEdge(shape);
-}
-js::ObjectGroup* js::gc::ClearEdgesTracer::onObjectGroupEdge(
-    js::ObjectGroup* group) {
-  return onEdge(group);
 }
 js::BaseShape* js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape* base) {
   return onEdge(base);
