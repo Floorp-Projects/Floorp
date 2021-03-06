@@ -17,10 +17,9 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Class.h"  // js::ESClass, JSCLASS_RESERVED_SLOTS, JSCLASS_HAS_PRIVATE
-#include "js/Realm.h"               // JS::GetCompartmentForRealm
-#include "js/RootingAPI.h"          // JS::{,Mutable}Handle
-#include "js/shadow/ObjectGroup.h"  // JS::shadow::ObjectGroup
-#include "js/Value.h"               // JS::Value
+#include "js/Realm.h"       // JS::GetCompartmentForRealm
+#include "js/RootingAPI.h"  // JS::{,Mutable}Handle
+#include "js/Value.h"       // JS::Value
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
