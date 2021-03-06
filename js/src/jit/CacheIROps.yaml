@@ -232,14 +232,6 @@
     obj: ObjId
     shape: ShapeField
 
-- name: GuardGroup
-  shared: false
-  transpile: true
-  cost_estimate: 1
-  args:
-    obj: ObjId
-    group: GroupField
-
 - name: GuardTypeDescr
   shared: false
   transpile: false

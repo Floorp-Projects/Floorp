@@ -1569,34 +1569,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                                      Register shape,
                                                      Label* label);
 
-  inline void branchTestObjGroup(Condition cond, Register obj,
-                                 const ObjectGroup* group, Register scratch,
-                                 Register spectreRegToZero, Label* label);
-  inline void branchTestObjGroupNoSpectreMitigations(Condition cond,
-                                                     Register obj,
-                                                     const ObjectGroup* group,
-                                                     Label* label);
-
-  inline void branchTestObjGroup(Condition cond, Register obj, Register group,
-                                 Register scratch, Register spectreRegToZero,
-                                 Label* label);
-  inline void branchTestObjGroupNoSpectreMitigations(Condition cond,
-                                                     Register obj,
-                                                     Register group,
-                                                     Label* label);
-
-  void branchTestObjGroup(Condition cond, Register obj, const Address& group,
-                          Register scratch, Register spectreRegToZero,
-                          Label* label);
-  void branchTestObjGroupNoSpectreMitigations(Condition cond, Register obj,
-                                              const Address& group,
-                                              Register scratch, Label* label);
-
   // TODO: audit/fix callers to be Spectre safe.
   inline void branchTestObjShapeUnsafe(Condition cond, Register obj,
                                        Register shape, Label* label);
-  inline void branchTestObjGroupUnsafe(Condition cond, Register obj,
-                                       const ObjectGroup* group, Label* label);
 
   void branchTestObjTypeDescr(Condition cond, Register obj, Register descr,
                               Register scratch, Register spectreRegToZero,
@@ -3816,10 +3791,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //}}} check_macroassembler_decl_style
  public:
   // Unsafe here means the caller is responsible for Spectre mitigations if
-  // needed. Prefer branchTestObjGroup or one of the other masm helpers!
-  void loadObjGroupUnsafe(Register obj, Register dest) {
-    loadPtr(Address(obj, JSObject::offsetOfGroup()), dest);
-  }
+  // needed. Prefer branchTestObjClass or one of the other masm helpers!
   void loadObjClassUnsafe(Register obj, Register dest) {
     loadPtr(Address(obj, JSObject::offsetOfShape()), dest);
     loadPtr(Address(dest, Shape::offsetOfBaseShape()), dest);
