@@ -1541,21 +1541,18 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
   if (proto().isObject()) {
     TraceEdge(trc, &proto(), "group_proto");
   }
-
-  // Note: the realm's global can be nullptr if we GC while creating the global.
-  if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
-    TraceManuallyBarrieredEdge(trc, &global, "group_global");
-  }
 }
 
 void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
   if (group->proto().isObject()) {
     markAndTraverseEdge(group, group->proto().toObject());
   }
+}
 
+void BaseShape::traceChildren(JSTracer* trc) {
   // Note: the realm's global can be nullptr if we GC while creating the global.
-  if (GlobalObject* global = group->realm()->unsafeUnbarrieredMaybeGlobal()) {
-    markAndTraverseEdge(group, static_cast<JSObject*>(global));
+  if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
+    TraceManuallyBarrieredEdge(trc, &global, "baseshape_global");
   }
 }
 
