@@ -17,14 +17,6 @@ xul|radio {
   padding-inline-start: 0;
 }
 
-@media (-moz-windows-default-theme: 0) {
-  xul|checkbox[checked] > xul|*.checkbox-check,
-  xul|*.radio-check[selected] {
-    fill: FieldText;
-    background-color: Field;
-  }
-}
-
 /* Override menulist.css */
 xul|menulist[disabled="true"] {
   background-color: var(--in-content-button-background);
@@ -34,25 +26,15 @@ xul|menulist:-moz-focusring > xul|*.menulist-label-box {
   outline: none !important;
 }
 
-html|input[type="checkbox"]:-moz-focusring + html|label:before {
-  outline: 1px dotted;
-}
-
-/* Use a 2px border so that selected row highlight is still visible behind
-    an existing high-contrast border that uses the background color */
-@media (-moz-windows-default-theme: 0) {
-  xul|treechildren::-moz-tree-row(selected) {
-     border: 2px dotted Highlight;
-  }
-}
-
 html|button {
   /* XUL button min-width */
   min-width: 6.3em;
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 xul|button > xul|*.button-box {
   padding-inline: 0;
+}
 }
 
 @supports -moz-bool-pref("browser.proton.contextmenus.enabled") {

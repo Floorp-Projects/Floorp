@@ -46,21 +46,17 @@ xul|*.text-link:-moz-focusring {
 }
 
 xul|checkbox:-moz-focusring > .checkbox-check,
-html|input[type="checkbox"]:-moz-focusring + html|label:before,
 xul|radio[focused="true"] > .radio-check,
 xul|tab:-moz-focusring > .tab-middle > .tab-text {
-  outline: 2px solid rgba(0,149,221,0.5);
-  outline-offset: 1px;
-  -moz-outline-radius: 2px;
+  outline: 2px solid var(--in-content-focus-outline-color);
+  /* offset outline to align with 1px border-width set for buttons/menulists above. */
+  outline-offset: var(--in-content-focus-outline-offset);
+  -moz-outline-radius: var(--in-content-focus-outline-radius);
+  box-shadow: 0 0 0 4px var(--in-content-button-box-shadow);
 }
 
 xul|radio[focused="true"] > .radio-check {
   -moz-outline-radius: 100%;
-}
-
-xul|search-textbox {
-  appearance: none;
-  padding-inline: 8px;
 }
 
 xul|search-textbox::part(search-sign) {
