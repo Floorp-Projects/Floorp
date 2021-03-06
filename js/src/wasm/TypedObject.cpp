@@ -575,8 +575,8 @@ DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace,
 
 /* static */ JS::Result<TypedObject*, JS::OOM> TypedObject::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-    js::HandleShape shape, js::HandleObjectGroup group) {
-  debugCheckNewObject(group, shape, kind, heap);
+    js::HandleShape shape) {
+  debugCheckNewObject(shape, kind, heap);
 
   const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(!clasp->isNativeObject());
@@ -589,7 +589,7 @@ DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace,
   }
 
   TypedObject* tobj = static_cast<TypedObject*>(obj);
-  tobj->initGroup(group);
+  tobj->initGroup(nullptr);
   tobj->initShape(shape);
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());

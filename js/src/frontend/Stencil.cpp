@@ -756,7 +756,6 @@ static bool CreateLazyScript(JSContext* cx, const CompilationInput& input,
 //
 // NOTE: Keep this in sync with `js::NewFunctionWithProto`.
 static JSFunction* CreateFunctionFast(JSContext* cx, CompilationInput& input,
-                                      HandleObjectGroup group,
                                       HandleShape shape,
                                       const ScriptStencil& script,
                                       const ScriptStencilExtra& scriptExtra) {
@@ -773,8 +772,7 @@ static JSFunction* CreateFunctionFast(JSContext* cx, CompilationInput& input,
 
   JSFunction* fun;
   JS_TRY_VAR_OR_RETURN_NULL(
-      cx, fun,
-      JSFunction::create(cx, allocKind, gc::TenuredHeap, shape, group));
+      cx, fun, JSFunction::create(cx, allocKind, gc::TenuredHeap, shape));
 
   fun->setArgCount(scriptExtra.nargs);
   fun->setFlags(flags);
@@ -922,11 +920,6 @@ static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
   if (!proto) {
     return false;
   }
-  RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(
-                                  cx, &JSFunction::class_, TaggedProto(proto)));
-  if (!group) {
-    return false;
-  }
   RootedShape shape(
       cx, EmptyShape::getInitialShape(cx, &JSFunction::class_, cx->realm(),
                                       TaggedProto(proto),
@@ -949,11 +942,11 @@ static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
         !scriptExtra.immutableFlags.hasFlag(ImmutableFlags::IsGenerator) &&
         !scriptStencil.functionFlags.isAsmJSNative();
 
-    JSFunction* fun = useFastPath
-                          ? CreateFunctionFast(cx, input, group, shape,
-                                               scriptStencil, scriptExtra)
-                          : CreateFunction(cx, input, stencil, scriptStencil,
-                                           scriptExtra, index);
+    JSFunction* fun =
+        useFastPath
+            ? CreateFunctionFast(cx, input, shape, scriptStencil, scriptExtra)
+            : CreateFunction(cx, input, stencil, scriptStencil, scriptExtra,
+                             index);
     if (!fun) {
       return false;
     }

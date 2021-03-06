@@ -1003,9 +1003,8 @@ bool InterruptCheck(JSContext* cx) {
   return CheckForInterrupt(cx);
 }
 
-JSObject* NewCallObject(JSContext* cx, HandleShape shape,
-                        HandleObjectGroup group) {
-  JSObject* obj = CallObject::create(cx, shape, group);
+JSObject* NewCallObject(JSContext* cx, HandleShape shape) {
+  JSObject* obj = CallObject::create(cx, shape);
   if (!obj) {
     return nullptr;
   }
@@ -1382,7 +1381,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
     Rooted<ArrayObject*> arrRes(cx, &objRes->as<ArrayObject>());
 
     MOZ_ASSERT(!arrRes->getDenseInitializedLength());
-    MOZ_ASSERT(arrRes->group() == templateObj->group());
+    MOZ_ASSERT(arrRes->shape() == templateObj->shape());
 
     // Fast path: we managed to allocate the array inline; initialize the
     // slots.
