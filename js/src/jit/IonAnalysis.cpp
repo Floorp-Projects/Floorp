@@ -2951,7 +2951,6 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Elements:
     case MIRType::Pointer:
     case MIRType::Shape:
-    case MIRType::ObjectGroup:
     case MIRType::Int64:
     case MIRType::RefOrNull:
     case MIRType::StackResults:
