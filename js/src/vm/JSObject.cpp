@@ -756,10 +756,9 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 /* * */
 
 static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
-                                  gc::AllocKind kind, NewObjectKind newKind,
+                                  const JSClass* clasp, gc::AllocKind kind,
+                                  NewObjectKind newKind,
                                   ObjectFlags objectFlags = {}) {
-  const JSClass* clasp = group->clasp();
-
   MOZ_ASSERT(clasp != &ArrayObject::class_);
   MOZ_ASSERT_IF(clasp == &JSFunction::class_,
                 kind == gc::AllocKind::FUNCTION ||
@@ -778,7 +777,7 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
     return nullptr;
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, group);
+  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
 
   JSObject* obj;
   if (clasp->isJSFunction()) {
@@ -842,7 +841,8 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  RootedObject obj(cx, NewObject(cx, group, allocKind, newKind, objectFlags));
+  RootedObject obj(
+      cx, NewObject(cx, group, clasp, allocKind, newKind, objectFlags));
   if (!obj) {
     return nullptr;
   }
@@ -909,7 +909,7 @@ JSObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  JSObject* obj = NewObject(cx, group, allocKind, newKind);
+  JSObject* obj = NewObject(cx, group, clasp, allocKind, newKind);
   if (!obj) {
     return nullptr;
   }
@@ -3642,7 +3642,7 @@ void JSObject::traceChildren(JSTracer* trc) {
 
   TraceEdge(trc, shapePtr(), "shape");
 
-  const JSClass* clasp = group()->clasp();
+  const JSClass* clasp = getClass();
   if (clasp->isNativeObject()) {
     NativeObject* nobj = &as<NativeObject>();
 
@@ -3784,10 +3784,8 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
 void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
                                    js::gc::AllocKind allocKind,
                                    js::gc::InitialHeap heap) {
-  const JSClass* clasp = group->clasp();
+  const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(clasp != &ArrayObject::class_);
-
-  MOZ_ASSERT_IF(shape, clasp == shape->getObjectClass());
 
   if (!ClassCanHaveFixedData(clasp)) {
     MOZ_ASSERT(shape);

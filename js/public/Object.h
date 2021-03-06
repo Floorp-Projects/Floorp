@@ -45,7 +45,7 @@ extern JS_PUBLIC_API bool GetBuiltinClass(JSContext* cx, Handle<JSObject*> obj,
 
 /** Get the |JSClass| of an object. */
 inline const JSClass* GetClass(const JSObject* obj) {
-  return reinterpret_cast<const shadow::Object*>(obj)->group->clasp;
+  return reinterpret_cast<const shadow::Object*>(obj)->shape->base->clasp;
 }
 
 /**

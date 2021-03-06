@@ -105,7 +105,7 @@ class JSObject
   void setGroupRaw(js::ObjectGroup* group) { setHeaderPtr(group); }
 
  public:
-  const JSClass* getClass() const { return group()->clasp(); }
+  const JSClass* getClass() const { return shape_->getObjectClass(); }
   bool hasClass(const JSClass* c) const { return getClass() == c; }
 
   js::LookupPropertyOp getOpsLookupProperty() const {

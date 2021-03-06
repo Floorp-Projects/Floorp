@@ -39,8 +39,7 @@ using namespace js;
 // ObjectGroup
 /////////////////////////////////////////////////////////////////////
 
-static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
-                              Handle<TaggedProto> proto) {
+static ObjectGroup* MakeGroup(JSContext* cx, Handle<TaggedProto> proto) {
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
 
@@ -48,17 +47,15 @@ static ObjectGroup* MakeGroup(JSContext* cx, const JSClass* clasp,
   if (!group) {
     return nullptr;
   }
-  new (group) ObjectGroup(clasp, proto, cx->realm());
+  new (group) ObjectGroup(proto, cx->realm());
 
   return group;
 }
 
-ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
-                         JS::Realm* realm)
-    : TenuredCellWithNonGCPointer(clasp), proto_(proto), realm_(realm) {
+ObjectGroup::ObjectGroup(TaggedProto proto, JS::Realm* realm)
+    : TenuredCellWithNonGCPointer(nullptr), proto_(proto), realm_(realm) {
   /* Windows may not appear on prototype chains. */
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
-  MOZ_ASSERT(JS::StringIsASCII(clasp->name));
 
 #ifdef DEBUG
   GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal();
@@ -100,7 +97,7 @@ bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
     }
   }
 
-  ObjectGroup* group = MakeGroup(cx, global->getClass(), proto);
+  ObjectGroup* group = MakeGroup(cx, proto);
   if (!group) {
     return false;
   }
@@ -125,17 +122,12 @@ struct ObjectGroupRealm::NewEntry {
   explicit NewEntry(ObjectGroup* group) : group(group) {}
 
   struct Lookup {
-    const JSClass* clasp;
     TaggedProto proto;
 
-    Lookup(const JSClass* clasp, TaggedProto proto)
-        : clasp(clasp), proto(proto) {
-      MOZ_ASSERT(clasp);
-    }
+    explicit Lookup(TaggedProto proto) : proto(proto) {}
 
     explicit Lookup(const NewEntry& entry)
-        : clasp(entry.group.unbarrieredGet()->clasp()),
-          proto(entry.group.unbarrieredGet()->proto()) {}
+        : proto(entry.group.unbarrieredGet()->proto()) {}
   };
 
   bool needsSweep() { return IsAboutToBeFinalized(&group); }
@@ -158,16 +150,11 @@ struct MovableCellHasher<ObjectGroupRealm::NewEntry> {
   }
 
   static inline HashNumber hash(const Lookup& lookup) {
-    HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
-    return mozilla::AddToHash(hash, mozilla::HashGeneric(lookup.clasp));
+    return MovableCellHasher<TaggedProto>::hash(lookup.proto);
   }
 
   static inline bool match(const ObjectGroupRealm::NewEntry& key,
                            const Lookup& lookup) {
-    if (key.group.unbarrieredGet()->clasp() != lookup.clasp) {
-      return false;
-    }
-
     TaggedProto proto = key.group.unbarrieredGet()->proto();
     return MovableCellHasher<TaggedProto>::match(proto, lookup.proto);
   }
@@ -191,7 +178,7 @@ class ObjectGroupRealm::NewTable
 
 MOZ_ALWAYS_INLINE ObjectGroup* ObjectGroupRealm::DefaultNewGroupCache::lookup(
     const JSClass* clasp, TaggedProto proto) {
-  if (group_ && group_->proto() == proto && group_->clasp() == clasp) {
+  if (group_ && group_->proto() == proto) {
     return group_;
   }
   return nullptr;
@@ -229,17 +216,16 @@ ObjectGroup* ObjectGroup::defaultNewGroup(JSContext* cx, const JSClass* clasp,
   }
 
   ObjectGroupRealm::NewTable::AddPtr p =
-      table->lookupForAdd(ObjectGroupRealm::NewEntry::Lookup(clasp, proto));
+      table->lookupForAdd(ObjectGroupRealm::NewEntry::Lookup(proto));
   if (p) {
     ObjectGroup* group = p->group;
-    MOZ_ASSERT(group->clasp() == clasp);
     MOZ_ASSERT(group->proto() == proto);
     groups.defaultNewGroupCache.put(group);
     return group;
   }
 
   Rooted<TaggedProto> protoRoot(cx, proto);
-  ObjectGroup* group = MakeGroup(cx, clasp, protoRoot);
+  ObjectGroup* group = MakeGroup(cx, protoRoot);
   if (!group) {
     return nullptr;
   }

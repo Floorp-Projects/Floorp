@@ -362,11 +362,6 @@ inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
   return gc::DefaultHeap;
 }
 
-inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
-                                      ObjectGroup* group) {
-  return GetInitialHeap(newKind, group->clasp());
-}
-
 /*
  * Make an object with the specified prototype. If parent is null, it will
  * default to the prototype's global if the prototype is non-null.

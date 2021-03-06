@@ -119,13 +119,13 @@ static T* CreateEnvironmentObject(JSContext* cx, HandleShape shape,
     return nullptr;
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, group);
+  gc::InitialHeap heap = GetInitialHeap(newKind, &T::class_);
   return CreateEnvironmentObject<T>(cx, shape, group, heap);
 }
 
 CallObject* CallObject::create(JSContext* cx, HandleShape shape,
                                HandleObjectGroup group) {
-  gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
+  gc::InitialHeap heap = GetInitialHeap(GenericObject, &class_);
   return CreateEnvironmentObject<CallObject>(cx, shape, group, heap);
 }
 
