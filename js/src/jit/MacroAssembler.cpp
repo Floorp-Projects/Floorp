@@ -3854,7 +3854,7 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
     unboxGCThingForGCBarrier(Address(PreBarrierReg, 0), temp1);
   } else {
     MOZ_ASSERT(type == MIRType::Object || type == MIRType::String ||
-               type == MIRType::Shape || type == MIRType::ObjectGroup);
+               type == MIRType::Shape);
     loadPtr(Address(PreBarrierReg, 0), temp1);
   }
 
