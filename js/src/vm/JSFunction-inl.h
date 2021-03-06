@@ -52,7 +52,7 @@ inline JSFunction* CloneFunctionObject(JSContext* cx, HandleFunction fun,
 
   debugCheckNewObject(group, shape, kind, heap);
 
-  const JSClass* clasp = group->clasp();
+  const JSClass* clasp = shape->getObjectClass();
   MOZ_ASSERT(clasp->isNativeObject());
   MOZ_ASSERT(clasp->isJSFunction());
 

@@ -101,7 +101,7 @@ class NewProxyCache {
     }
     for (size_t i = 0; i < NumEntries; i++) {
       const Entry& entry = entries_[i];
-      if (entry.group && entry.group->clasp() == clasp &&
+      if (entry.group && entry.shape->getObjectClass() == clasp &&
           entry.group->proto() == proto) {
         *group = entry.group;
         *shape = entry.shape;

@@ -21,7 +21,7 @@ class JS_PUBLIC_API Realm;
 namespace shadow {
 
 struct ObjectGroup {
-  const JSClass* clasp;
+  int* unused;
   JSObject* proto;
   JS::Realm* realm;
 };
