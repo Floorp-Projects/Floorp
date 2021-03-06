@@ -39,7 +39,6 @@ using JS::Latin1CharsZ;
 using JS::TwoByteCharsZ;
 using JS::UTF8Chars;
 using JS::UTF8CharsZ;
-using JS::WTF8Chars;
 
 using namespace js;
 using namespace js::unicode;
