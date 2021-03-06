@@ -2289,6 +2289,14 @@ class ReturnAbortOnError {
     if (NS_SUCCEEDED(aRv) || aRv == NS_ERROR_LAUNCHED_CHILD_PROCESS) {
       return aRv;
     }
+#ifdef MOZ_BACKGROUNDTASKS
+    // A background task that fails to lock its profile will return
+    // NS_ERROR_UNEXPECTED and this will allow the task to exit with a
+    // non-zero exit code.
+    if (aRv == NS_ERROR_UNEXPECTED && BackgroundTasks::IsBackgroundTaskMode()) {
+      return aRv;
+    }
+#endif
     return NS_ERROR_ABORT;
   }
 
@@ -2399,6 +2407,14 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
     nsAutoString killTitle;
     rv = sb->FormatStringFromName("restartTitle", params, killTitle);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+#ifdef MOZ_BACKGROUNDTASKS
+    if (BackgroundTasks::IsBackgroundTaskMode()) {
+      // This error is handled specially to exit with a non-zero exit code.
+      printf_stderr("%s\n", NS_LossyConvertUTF16toASCII(killMessage).get());
+      return NS_ERROR_UNEXPECTED;
+    }
+#endif
 
     if (gfxPlatform::IsHeadless()) {
       // TODO: make a way to turn off all dialogs when headless.
@@ -4496,14 +4512,17 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
 #ifdef MOZ_BACKGROUNDTASKS
   if (BackgroundTasks::IsBackgroundTaskMode()) {
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = BackgroundTasks::GetOrCreateTemporaryProfileDirectory(
-        getter_AddRefs(file));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return 1;
-    }
+    if (!EnvHasValue("XRE_PROFILE_PATH")) {
+      // Allow tests to specify profile path via the environment.
+      nsCOMPtr<nsIFile> file;
+      nsresult rv = BackgroundTasks::GetOrCreateTemporaryProfileDirectory(
+          getter_AddRefs(file));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return 1;
+      }
 
-    SaveFileToEnv("XRE_PROFILE_PATH", file);
+      SaveFileToEnv("XRE_PROFILE_PATH", file);
+    }
   }
 #endif
 
