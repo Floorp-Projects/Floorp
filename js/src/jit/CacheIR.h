@@ -851,12 +851,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
  public:
-  // Instead of calling guardGroup manually, use (or create) a specialization
-  // below to clarify what constraint the group guard is implying.
-  void guardGroupForProto(ObjOperandId obj, ObjectGroup* group) {
-    guardGroup(obj, group);
-  }
-
   static uint32_t encodeNargsAndFlags(JSFunction* fun) {
     static_assert(JSFunction::NArgsBits == 16);
     static_assert(sizeof(decltype(fun->flags().toRaw())) == sizeof(uint16_t));

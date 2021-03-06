@@ -1765,11 +1765,20 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   // invalidation, we apply heuristics to decide when to apply this and when
   // to require a guard.
   //
-  // Heuristics:
-  //  - Set UncacheableProto flag on shape to avoid creating too many private
-  //    shape copies.
-  //  - Only propagate along proto chain if we are marked Delegate. This avoids
-  //    reshaping in normal object access cases.
+  // There are two cases:
+  //
+  // (1) The object is not marked Delegate. This is the common case. Because
+  //     shape implies proto, we rely on the caller changing the object's shape.
+  //     The JIT guards on this object's shape or prototype so there's nothing
+  //     we have to do here for objects on the proto chain.
+  //
+  // (2) The object is marked Delegate. This implies the object may be
+  //     participating in shape teleporting. To invalidate JIT ICs depending on
+  //     the proto chain being unchanged, set the UncacheableProto shape flag
+  //     for this object and objects on its proto chain.
+  //
+  //     This flag disables future shape teleporting attempts, so next time this
+  //     happens the loop below will be a no-op.
   //
   // NOTE: We only handle NativeObjects and don't propagate reshapes through
   //       any non-native objects on the chain.
@@ -1777,19 +1786,19 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   // See Also:
   //  - GeneratePrototypeGuards
   //  - GeneratePrototypeHoleGuards
-  //  - ObjectGroup::defaultNewGroup
+
+  if (!obj->isDelegate()) {
+    return true;
+  }
 
   RootedObject pobj(cx, obj);
 
   while (pobj && pobj->is<NativeObject>()) {
-    if (!JSObject::setUncacheableProto(cx, pobj)) {
-      return false;
+    if (!pobj->hasUncacheableProto()) {
+      if (!JSObject::setUncacheableProto(cx, pobj)) {
+        return false;
+      }
     }
-
-    if (!obj->isDelegate()) {
-      break;
-    }
-
     pobj = pobj->staticPrototype();
   }
 
@@ -1798,8 +1807,8 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
 
 static bool SetProto(JSContext* cx, HandleObject obj,
                      Handle<js::TaggedProto> proto) {
-  // Regenerate object shape (and possibly prototype shape) to invalidate JIT
-  // code that is affected by a prototype mutation.
+  // Update prototype shapes if needed to invalidate JIT code that is affected
+  // by a prototype mutation.
   if (!ReshapeForProtoMutation(cx, obj)) {
     return false;
   }
