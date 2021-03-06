@@ -3621,12 +3621,11 @@ void MacroAssembler::branchIfNonNativeObj(Register obj, Register scratch,
 void MacroAssembler::branchIfObjectNotExtensible(Register obj, Register scratch,
                                                  Label* label) {
   loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
-  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
 
   // Spectre-style checks are not needed here because we do not interpret data
   // based on this check.
   static_assert(sizeof(ObjectFlags) == sizeof(uint16_t));
-  load16ZeroExtend(Address(scratch, BaseShape::offsetOfFlags()), scratch);
+  load16ZeroExtend(Address(scratch, Shape::offsetOfObjectFlags()), scratch);
   branchTest32(Assembler::NonZero, scratch,
                Imm32(uint32_t(ObjectFlag::NotExtensible)), label);
 }

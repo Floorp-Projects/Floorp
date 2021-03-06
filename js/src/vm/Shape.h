@@ -676,12 +676,8 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   /* Class of referring object, stored in the cell header */
   const JSClass* clasp() const { return headerPtr(); }
 
-  ObjectFlags flags;
-
-#ifndef JS_64BIT
   // Temporary padding to respect MinCellSize.
   uint64_t padding_ = 0;
-#endif
 
   BaseShape(const BaseShape& base) = delete;
   BaseShape& operator=(const BaseShape& other) = delete;
@@ -694,16 +690,11 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   /* Not defined: BaseShapes must not be stack allocated. */
   ~BaseShape() = delete;
 
-  ObjectFlags objectFlags() const { return flags; }
-
   /*
    * Lookup base shapes from the zone's baseShapes table, adding if not
    * already found.
    */
   static BaseShape* get(JSContext* cx, StackBaseShape& base);
-
-  /* For JIT usage */
-  static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
   static const JS::TraceKind TraceKind = JS::TraceKind::BaseShape;
 
@@ -721,37 +712,27 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
 /* Entries for the per-zone baseShapes set. */
 struct StackBaseShape : public DefaultHasher<WeakHeapPtr<BaseShape*>> {
-  ObjectFlags flags;
   const JSClass* clasp;
 
-  explicit StackBaseShape(BaseShape* base)
-      : flags(base->flags), clasp(base->clasp()) {}
-
-  inline StackBaseShape(const JSClass* clasp, ObjectFlags objectFlags);
-  explicit inline StackBaseShape(Shape* shape);
+  explicit inline StackBaseShape(const JSClass* clasp);
 
   struct Lookup {
-    ObjectFlags flags;
     const JSClass* clasp;
 
-    MOZ_IMPLICIT Lookup(const StackBaseShape& base)
-        : flags(base.flags), clasp(base.clasp) {}
+    MOZ_IMPLICIT Lookup(const StackBaseShape& base) : clasp(base.clasp) {}
 
-    MOZ_IMPLICIT Lookup(BaseShape* base)
-        : flags(base->objectFlags()), clasp(base->clasp()) {}
+    MOZ_IMPLICIT Lookup(BaseShape* base) : clasp(base->clasp()) {}
 
     explicit Lookup(const WeakHeapPtr<BaseShape*>& base)
-        : flags(base.unbarrieredGet()->objectFlags()),
-          clasp(base.unbarrieredGet()->clasp()) {}
+        : clasp(base.unbarrieredGet()->clasp()) {}
   };
 
   static HashNumber hash(const Lookup& lookup) {
-    return mozilla::HashGeneric(lookup.flags.toRaw(), lookup.clasp);
+    return mozilla::HashGeneric(lookup.clasp);
   }
   static inline bool match(const WeakHeapPtr<BaseShape*>& key,
                            const Lookup& lookup) {
-    return key.unbarrieredGet()->flags == lookup.flags &&
-           key.unbarrieredGet()->clasp() == lookup.clasp;
+    return key.unbarrieredGet()->clasp() == lookup.clasp;
   }
 };
 
@@ -843,9 +824,11 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE = 0x10,
   };
 
-  uint32_t immutableFlags; /* immutable flags, see above */
-  uint8_t attrs;           /* attributes, see jsapi.h JSPROP_* */
-  uint8_t mutableFlags;    /* mutable flags, see below for defines */
+ private:
+  uint32_t immutableFlags;  /* immutable flags, see above */
+  ObjectFlags objectFlags_; /* immutable object flags, see ObjectFlags */
+  uint8_t attrs;            /* attributes, see jsapi.h JSPROP_* */
+  uint8_t mutableFlags;     /* mutable flags, see below for defines */
 
   GCPtrShape parent; /* parent node, reverse for..in order */
   friend class DictionaryShapeLink;
@@ -884,9 +867,9 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   inline void initDictionaryShape(const StackShape& child, uint32_t nfixed,
                                   DictionaryShapeLink next);
 
-  // Replace the base shape of the last shape in a non-dictionary lineage with
-  // base.
-  static Shape* replaceLastProperty(JSContext* cx, StackBaseShape& base,
+  // Replace the last shape in a non-dictionary lineage with a shape that has
+  // the passed objectFlags and proto.
+  static Shape* replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
                                     TaggedProto proto, HandleShape shape);
 
   /*
@@ -911,6 +894,11 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   MOZ_ALWAYS_INLINE void updateDictionaryTable(ShapeTable* table,
                                                ShapeTable::Entry* entry,
                                                const AutoKeepShapeCaches& keep);
+
+  void setObjectFlags(ObjectFlags flags) {
+    MOZ_ASSERT(inDictionary());
+    objectFlags_ = flags;
+  }
 
  public:
   bool hasTable() const { return cache_.isTable(); }
@@ -1028,9 +1016,9 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   static Shape* setObjectFlag(JSContext* cx, ObjectFlag flag, TaggedProto proto,
                               Shape* last);
 
-  ObjectFlags objectFlags() const { return base()->objectFlags(); }
+  ObjectFlags objectFlags() const { return objectFlags_; }
   bool hasObjectFlag(ObjectFlag flag) const {
-    return base()->objectFlags().hasFlag(flag);
+    return objectFlags_.hasFlag(flag);
   }
 
  protected:
@@ -1038,7 +1026,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   inline Shape(const StackShape& other, uint32_t nfixed);
 
   /* Used by EmptyShape (see jsscopeinlines.h). */
-  inline Shape(BaseShape* base, uint32_t nfixed);
+  inline Shape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed);
 
   /* Copy constructor disabled, to avoid misuse of the above form. */
   Shape(const Shape& other) = delete;
@@ -1107,16 +1095,19 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   bool matches(const Shape* other) const {
     return propid_.get() == other->propid_.get() &&
-           matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
+           matchesParamsAfterId(other->base(), other->objectFlags(),
+                                other->maybeSlot(), other->attrs,
                                 other->getter(), other->setter());
   }
 
   inline bool matches(const StackShape& other) const;
 
-  bool matchesParamsAfterId(BaseShape* base, uint32_t aslot, unsigned aattrs,
-                            GetterOp rawGetter, SetterOp rawSetter) const {
-    return base == this->base() && maybeSlot() == aslot && attrs == aattrs &&
-           getter() == rawGetter && setter() == rawSetter;
+  bool matchesParamsAfterId(BaseShape* base, ObjectFlags aobjectFlags,
+                            uint32_t aslot, unsigned aattrs, GetterOp rawGetter,
+                            SetterOp rawSetter) const {
+    return base == this->base() && objectFlags() == aobjectFlags &&
+           maybeSlot() == aslot && attrs == aattrs && getter() == rawGetter &&
+           setter() == rawSetter;
   }
 
   static bool isDataProperty(unsigned attrs, GetterOp getter, SetterOp setter) {
@@ -1287,6 +1278,10 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   // For JIT usage.
   static constexpr size_t offsetOfBaseShape() { return offsetOfHeaderPtr(); }
 
+  static constexpr size_t offsetOfObjectFlags() {
+    return offsetof(Shape, objectFlags_);
+  }
+
 #ifdef DEBUG
   static inline size_t offsetOfImmutableFlags() {
     return offsetof(Shape, immutableFlags);
@@ -1328,9 +1323,6 @@ class AccessorShape : public Shape {
   inline AccessorShape(const StackShape& other, uint32_t nfixed);
 };
 
-inline StackBaseShape::StackBaseShape(Shape* shape)
-    : flags(shape->objectFlags()), clasp(shape->getObjectClass()) {}
-
 class MOZ_RAII AutoRooterGetterSetter {
   class Inner {
    public:
@@ -1353,9 +1345,11 @@ class MOZ_RAII AutoRooterGetterSetter {
 };
 
 struct EmptyShape : public js::Shape {
-  EmptyShape(BaseShape* base, uint32_t nfixed) : js::Shape(base, nfixed) {}
+  EmptyShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed)
+      : js::Shape(base, objectFlags, nfixed) {}
 
-  static Shape* new_(JSContext* cx, Handle<BaseShape*> base, uint32_t nfixed);
+  static Shape* new_(JSContext* cx, Handle<BaseShape*> base,
+                     ObjectFlags objectFlags, uint32_t nfixed);
 
   /*
    * Lookup an initial shape matching the given parameters, creating an empty
@@ -1428,8 +1422,9 @@ struct InitialShapeEntry {
 
   static HashNumber hash(const Lookup& lookup) {
     HashNumber hash = MovableCellHasher<TaggedProto>::hash(lookup.proto);
-    return mozilla::AddToHash(
-        hash, mozilla::HashGeneric(lookup.clasp, lookup.nfixed));
+    return mozilla::AddToHash(hash,
+                              mozilla::HashGeneric(lookup.clasp, lookup.nfixed,
+                                                   lookup.objectFlags.toRaw()));
   }
   static inline bool match(const InitialShapeEntry& key, const Lookup& lookup) {
     const Shape* shape = key.shape.unbarrieredGet();
@@ -1466,16 +1461,18 @@ struct StackShape {
   GetterOp rawGetter;
   SetterOp rawSetter;
   uint32_t immutableFlags;
+  ObjectFlags objectFlags;
   uint8_t attrs;
   uint8_t mutableFlags;
 
-  explicit StackShape(BaseShape* base, jsid propid, uint32_t slot,
-                      unsigned attrs)
+  explicit StackShape(BaseShape* base, ObjectFlags objectFlags, jsid propid,
+                      uint32_t slot, unsigned attrs)
       : base(base),
         propid(propid),
         rawGetter(nullptr),
         rawSetter(nullptr),
         immutableFlags(slot),
+        objectFlags(objectFlags),
         attrs(uint8_t(attrs)),
         mutableFlags(0) {
     MOZ_ASSERT(base);
@@ -1489,6 +1486,7 @@ struct StackShape {
         rawGetter(shape->getter()),
         rawSetter(shape->setter()),
         immutableFlags(shape->immutableFlags),
+        objectFlags(shape->objectFlags()),
         attrs(shape->attrs),
         mutableFlags(shape->mutableFlags) {}
 
@@ -1527,8 +1525,8 @@ struct StackShape {
   HashNumber hash() const {
     HashNumber hash = HashId(propid);
     return mozilla::AddToHash(
-        hash,
-        mozilla::HashGeneric(base, attrs, maybeSlot(), rawGetter, rawSetter));
+        hash, mozilla::HashGeneric(base, objectFlags.toRaw(), attrs,
+                                   maybeSlot(), rawGetter, rawSetter));
   }
 
   // StructGCPolicy implementation.
@@ -1549,6 +1547,7 @@ class WrappedPtrOperations<StackShape, Wrapper> {
   uint32_t slotSpan() const { return ss().slotSpan(); }
   bool isAccessorShape() const { return ss().isAccessorShape(); }
   uint8_t attrs() const { return ss().attrs; }
+  ObjectFlags objectFlags() const { return ss().objectFlags; }
 };
 
 template <typename Wrapper>
@@ -1563,12 +1562,16 @@ class MutableWrappedPtrOperations<StackShape, Wrapper>
   void setSlot(uint32_t slot) { ss().setSlot(slot); }
   void setBase(BaseShape* base) { ss().base = base; }
   void setAttrs(uint8_t attrs) { ss().attrs = attrs; }
+  void setObjectFlags(ObjectFlags objectFlags) {
+    ss().objectFlags = objectFlags;
+  }
 };
 
 inline Shape::Shape(const StackShape& other, uint32_t nfixed)
     : CellWithTenuredGCPointer(other.base),
       propid_(other.propid),
       immutableFlags(other.immutableFlags),
+      objectFlags_(other.objectFlags),
       attrs(other.attrs),
       mutableFlags(other.mutableFlags),
       parent(nullptr) {
@@ -1597,10 +1600,11 @@ class NurseryShapesRef : public gc::BufferableRef {
   void trace(JSTracer* trc) override;
 };
 
-inline Shape::Shape(BaseShape* base, uint32_t nfixed)
+inline Shape::Shape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed)
     : CellWithTenuredGCPointer(base),
       propid_(JSID_EMPTY),
       immutableFlags(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
+      objectFlags_(objectFlags),
       attrs(0),
       mutableFlags(0),
       parent(nullptr) {
@@ -1639,8 +1643,8 @@ inline Shape* Shape::searchLinear(jsid id) {
 
 inline bool Shape::matches(const StackShape& other) const {
   return propid_.get() == other.propid &&
-         matchesParamsAfterId(other.base, other.maybeSlot(), other.attrs,
-                              other.rawGetter, other.rawSetter);
+         matchesParamsAfterId(other.base, other.objectFlags, other.maybeSlot(),
+                              other.attrs, other.rawGetter, other.rawSetter);
 }
 
 template <MaybeAdding Adding>
