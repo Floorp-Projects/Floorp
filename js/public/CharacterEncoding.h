@@ -268,13 +268,6 @@ UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen,
                             arena_id_t destArenaId);
 
 /*
- * Like UTF8CharsToNewTwoByteCharsZ, but for WTF8Chars.
- */
-extern JS_PUBLIC_API TwoByteCharsZ
-WTF8CharsToNewTwoByteCharsZ(JSContext* cx, const WTF8Chars wtf8, size_t* outlen,
-                            arena_id_t destArenaId);
-
-/*
  * Like UTF8CharsToNewTwoByteCharsZ, but for ConstUTF8CharsZ.
  */
 extern JS_PUBLIC_API TwoByteCharsZ
