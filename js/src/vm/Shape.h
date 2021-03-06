@@ -1406,8 +1406,7 @@ struct EmptyShape : public js::Shape {
    * getInitialShape calls, until the new shape becomes unreachable in a GC
    * and the table entry is purged.
    */
-  static void insertInitialShape(JSContext* cx, HandleShape shape,
-                                 HandleObject proto);
+  static void insertInitialShape(JSContext* cx, HandleShape shape);
 
   /*
    * Some object subclasses are allocated with a built-in set of properties.
