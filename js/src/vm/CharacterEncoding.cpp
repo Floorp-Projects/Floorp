@@ -433,14 +433,6 @@ TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
       cx, utf8, outlen, destArenaId);
 }
 
-TwoByteCharsZ JS::WTF8CharsToNewTwoByteCharsZ(JSContext* cx,
-                                              const WTF8Chars wtf8,
-                                              size_t* outlen,
-                                              arena_id_t destArenaId) {
-  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(
-      cx, wtf8, outlen, destArenaId);
-}
-
 TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
                                               const ConstUTF8CharsZ& utf8,
                                               size_t* outlen,
