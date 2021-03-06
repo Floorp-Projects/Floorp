@@ -17,7 +17,6 @@ class JSLinearString;
 namespace js {
 class BaseScript;
 class BaseShape;
-class ObjectGroup;
 class RegExpShared;
 class Shape;
 class Scope;
@@ -49,15 +48,12 @@ enum class TraceKind {
   // Shape details are exposed through JS_TraceShapeCycleCollectorChildren.
   Shape = 0x04,
 
-  // ObjectGroup details are exposed through
-  // JS_TraceObjectGroupCycleCollectorChildren.
-  ObjectGroup = 0x05,
+  BaseShape = 0x05,
 
   // The kind associated with a nullptr.
   Null = 0x06,
 
   // The following kinds do not have an exposed C++ idiom.
-  BaseShape,
   JitCode,
   Script,
   Scope,
@@ -93,7 +89,6 @@ struct MapTypeToTraceKind {
   D(JitCode,      js::jit::JitCode, true,           false)       \
   D(Scope,        js::Scope,        true,           true)        \
   D(Object,       JSObject,         true,           true)        \
-  D(ObjectGroup,  js::ObjectGroup,  true,           false)       \
   D(Script,       js::BaseScript,   true,           true)        \
   D(Shape,        js::Shape,        true,           false)       \
   D(String,       JSString,         false,          false)       \

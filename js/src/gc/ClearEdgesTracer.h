@@ -25,7 +25,6 @@ struct ClearEdgesTracer final : public GenericTracer {
   JS::BigInt* onBigIntEdge(JS::BigInt* bi) override;
   js::BaseScript* onScriptEdge(js::BaseScript* script) override;
   js::Shape* onShapeEdge(js::Shape* shape) override;
-  js::ObjectGroup* onObjectGroupEdge(js::ObjectGroup* group) override;
   js::BaseShape* onBaseShapeEdge(js::BaseShape* base) override;
   js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) override;
   js::Scope* onScopeEdge(js::Scope* scope) override;
