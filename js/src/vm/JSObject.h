@@ -102,8 +102,6 @@ class JSObject
   friend bool js::SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
                                         bool* succeeded);
 
-  void setGroupRaw(js::ObjectGroup* group) { setHeaderPtr(group); }
-
  public:
   const JSClass* getClass() const { return shape_->getObjectClass(); }
   bool hasClass(const JSClass* c) const { return getClass() == c; }
@@ -142,9 +140,9 @@ class JSObject
   JS::Compartment* maybeCompartment() const { return compartment(); }
 
   void initShape(js::Shape* shape) {
-    // Note: JSObject::zone() uses the group and we require it to be
-    // initialized before the shape.
-    MOZ_ASSERT(zone() == shape->zone());
+    // Note: use Cell::Zone() instead of zone() because zone() relies on the
+    // shape we still have to initialize.
+    MOZ_ASSERT(Cell::zone() == shape->zone());
     shape_.init(shape);
   }
   void setShape(js::Shape* shape) {
@@ -236,21 +234,21 @@ class JSObject
 
   void traceChildren(JSTracer* trc);
 
-  void fixupAfterMovingGC();
+  void fixupAfterMovingGC() {}
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Object;
 
   MOZ_ALWAYS_INLINE JS::Zone* zone() const {
-    MOZ_ASSERT_IF(!isTenured(), nurseryZone() == group()->zone());
-    return group()->zone();
+    MOZ_ASSERT_IF(!isTenured(), nurseryZone() == shape()->zone());
+    return shape()->zone();
   }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
     return JS::shadow::Zone::from(zone());
   }
   MOZ_ALWAYS_INLINE JS::Zone* zoneFromAnyThread() const {
     MOZ_ASSERT_IF(!isTenured(),
-                  nurseryZoneFromAnyThread() == group()->zoneFromAnyThread());
-    return group()->zoneFromAnyThread();
+                  nurseryZoneFromAnyThread() == shape()->zoneFromAnyThread());
+    return shape()->zoneFromAnyThread();
   }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
     return JS::shadow::Zone::from(zoneFromAnyThread());
@@ -278,12 +276,10 @@ class JSObject
   size_t sizeOfIncludingThisInNursery() const;
 
 #ifdef DEBUG
-  static void debugCheckNewObject(js::ObjectGroup* group, js::Shape* shape,
-                                  js::gc::AllocKind allocKind,
+  static void debugCheckNewObject(js::Shape* shape, js::gc::AllocKind allocKind,
                                   js::gc::InitialHeap heap);
 #else
-  static void debugCheckNewObject(js::ObjectGroup* group, js::Shape* shape,
-                                  js::gc::AllocKind allocKind,
+  static void debugCheckNewObject(js::Shape* shape, js::gc::AllocKind allocKind,
                                   js::gc::InitialHeap heap) {}
 #endif
 
@@ -336,8 +332,6 @@ class JSObject
   // True iff this object's [[Prototype]] is immutable.  Must be called only
   // on objects with a static [[Prototype]]!
   inline bool staticPrototypeIsImmutable() const;
-
-  inline void setGroup(js::ObjectGroup* group);
 
   /*
    * Environment chains.
