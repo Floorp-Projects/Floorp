@@ -159,8 +159,8 @@ class NewObjectCache {
                          js::GlobalObject* global, gc::AllocKind kind,
                          NativeObject* obj);
 
-  /* Invalidate any entries which might produce an object with shape/proto. */
-  void invalidateEntriesForShape(Shape* shape, JSObject* proto);
+  /* Invalidate any entries which might produce an object with shape. */
+  void invalidateEntriesForShape(Shape* shape);
 
  private:
   EntryIndex makeIndex(const JSClass* clasp, gc::Cell* key,
