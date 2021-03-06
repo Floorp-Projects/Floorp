@@ -1469,6 +1469,7 @@ inline BaseShape::BaseShape(const StackBaseShape& base)
 
   MOZ_ASSERT_IF(proto().isObject(),
                 compartment() == proto().toObject()->compartment());
+  MOZ_ASSERT_IF(proto().isObject(), proto().toObject()->isDelegate());
 
   // Windows may not appear on prototype chains.
   MOZ_ASSERT_IF(proto().isObject(), !IsWindow(proto().toObject()));
@@ -1983,6 +1984,14 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
   MOZ_ASSERT(cx->compartment() == realm->compartment());
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
+
+  if (proto.isObject() && !proto.toObject()->isDelegate()) {
+    RootedObject protoObj(cx, proto.toObject());
+    if (!JSObject::setDelegate(cx, protoObj)) {
+      return nullptr;
+    }
+    proto = TaggedProto(protoObj);
+  }
 
   auto& table = realm->zone()->initialShapes();
 
