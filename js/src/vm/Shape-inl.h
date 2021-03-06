@@ -265,8 +265,7 @@ template <class ObjectSubclass>
 
   // Cache the initial shape for non-prototype objects, however, so that
   // future instances will begin life with that shape.
-  RootedObject proto(cx, obj->staticPrototype());
-  EmptyShape::insertInitialShape(cx, shape, proto);
+  EmptyShape::insertInitialShape(cx, shape);
   return true;
 }
 
