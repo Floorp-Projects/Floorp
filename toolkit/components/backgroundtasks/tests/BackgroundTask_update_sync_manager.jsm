@@ -10,6 +10,13 @@ async function runBackgroundTask(commandLine) {
     Ci.nsIUpdateSyncManager
   );
 
+  if (commandLine.length) {
+    let appPath = commandLine.getArgument(0);
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    file.initWithPath(appPath);
+    syncManager.resetLock(file);
+  }
+
   let exitCode = syncManager.isOtherInstanceRunning() ? 80 : 81;
   console.error(
     `runBackgroundTask: update_sync_manager exiting with exitCode ${exitCode}`
