@@ -45,16 +45,15 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::RangedPtr;
 
-template <typename CharT, typename InputCharsT>
-extern void InflateUTF8CharsToBufferAndTerminate(const InputCharsT src,
+template <typename CharT>
+extern void InflateUTF8CharsToBufferAndTerminate(const JS::UTF8Chars src,
                                                  CharT* dst, size_t dstLen,
                                                  JS::SmallestEncoding encoding);
 
 template <typename CharT>
 extern bool UTF8EqualsChars(const JS::UTF8Chars utf8, const CharT* chars);
 
-template <typename InputCharsT>
-extern bool GetUTF8AtomizationData(JSContext* cx, const InputCharsT utf8,
+extern bool GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars utf8,
                                    size_t* outlen,
                                    JS::SmallestEncoding* encoding,
                                    HashNumber* hashNum);
@@ -891,9 +890,9 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
   return NewStringFromLittleEndianNoGC(cx, chars, length, gc::TenuredHeap);
 }
 
-template <typename CharT, typename WrapperT>
+template <typename CharT>
 static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
-    JSContext* cx, const WrapperT* chars, size_t length) {
+    JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length) {
   if (JSInlineString::lengthFits<CharT>(length)) {
     CharT* storage;
     JSInlineString* str =
