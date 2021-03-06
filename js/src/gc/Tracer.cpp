@@ -97,7 +97,6 @@ void js::gc::TraceIncomingCCWs(JSTracer* trc,
 void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
   do {
     MOZ_ASSERT(shape->base());
-    shape->base()->assertConsistency();
 
     // Don't trace the propid because the CC doesn't care about jsid.
 
