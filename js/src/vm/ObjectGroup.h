@@ -55,10 +55,6 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<int> {
   // END OF PROPERTIES
 
  private:
-  static inline uint32_t offsetOfProto() {
-    return offsetof(ObjectGroup, proto_);
-  }
-
   friend class gc::GCRuntime;
 
   // See JSObject::offsetOfGroup() comment.
@@ -67,11 +63,11 @@ class ObjectGroup : public gc::TenuredCellWithNonGCPointer<int> {
  public:
   inline explicit ObjectGroup(TaggedProto proto);
 
-  const GCPtr<TaggedProto>& proto() const { return proto_; }
+  const GCPtr<TaggedProto>& protoDeprecated() const { return proto_; }
 
-  GCPtr<TaggedProto>& proto() { return proto_; }
+  GCPtr<TaggedProto>& protoDeprecated() { return proto_; }
 
-  void setProtoUnchecked(TaggedProto proto);
+  void setProtoUncheckedDeprecated(TaggedProto proto);
 
   /* Helpers */
 

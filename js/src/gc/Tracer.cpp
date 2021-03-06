@@ -96,7 +96,7 @@ void js::gc::TraceIncomingCCWs(JSTracer* trc,
 // simplicity and performance of FireFox's embedding of this engine.
 void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
   do {
-    MOZ_ASSERT(shape->base());
+    shape->base()->traceChildren(trc);
 
     // Don't trace the propid because the CC doesn't care about jsid.
 

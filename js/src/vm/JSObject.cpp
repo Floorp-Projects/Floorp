@@ -771,9 +771,9 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
                       ? GetGCKindSlots(gc::GetGCObjectKind(clasp), clasp)
                       : GetGCKindSlots(kind, clasp);
 
-  RootedShape shape(
-      cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(), group->proto(),
-                                      nfixed, objectFlags));
+  RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(),
+                                                    group->protoDeprecated(),
+                                                    nfixed, objectFlags));
   if (!shape) {
     return nullptr;
   }
@@ -1202,6 +1202,8 @@ static bool InitializePropertiesFromCompatibleNativeObject(
       return false;
     }
 
+    Rooted<BaseShape*> nbase(cx, shape->base());
+
     // Get an in-order list of the shapes in the src object.
     Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
     for (Shape::Range<NoGC> r(src->lastProperty()); !r.empty(); r.popFront()) {
@@ -1213,6 +1215,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
 
     for (Shape* shapeToClone : shapes) {
       Rooted<StackShape> child(cx, StackShape(shapeToClone));
+      child.setBase(nbase);
       shape = cx->zone()->propertyTree().getChild(cx, shape, child);
       if (!shape) {
         return false;
@@ -1818,7 +1821,8 @@ static bool SetProto(JSContext* cx, HandleObject obj,
   }
 
   obj->setGroup(newGroup);
-  return true;
+
+  return JSObject::setProtoUnchecked(cx, obj, proto);
 }
 
 /**
