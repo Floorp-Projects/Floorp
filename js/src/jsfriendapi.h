@@ -364,7 +364,7 @@ JS_FRIEND_API bool UninlinedIsCrossCompartmentWrapper(const JSObject* obj);
 // getting a wrapper's realm usually doesn't make sense.
 static MOZ_ALWAYS_INLINE JS::Realm* GetNonCCWObjectRealm(JSObject* obj) {
   MOZ_ASSERT(!js::UninlinedIsCrossCompartmentWrapper(obj));
-  return reinterpret_cast<JS::shadow::Object*>(obj)->group->realm;
+  return reinterpret_cast<JS::shadow::Object*>(obj)->shape->base->realm;
 }
 
 JS_FRIEND_API void AssertSameCompartment(JSContext* cx, JSObject* obj);
