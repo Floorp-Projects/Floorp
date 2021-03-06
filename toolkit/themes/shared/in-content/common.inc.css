@@ -955,6 +955,15 @@ xul|treechildren::-moz-tree-row(selected) {
   background-color: var(--in-content-item-selected);
 }
 
+/* Use a 2px border so that selected row highlight is still visible behind
+    an existing high-contrast border that uses the background color */
+@media (prefers-contrast) {
+  xul|treechildren::-moz-tree-row(selected) {
+     border: 2px solid currentColor;
+     border-radius: 4px;
+  }
+}
+
 xul|panel[type="autocomplete-richlistbox"] {
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);

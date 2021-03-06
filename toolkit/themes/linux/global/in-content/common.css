@@ -43,10 +43,6 @@ xul|menulist:-moz-focusring::part(label-box) {
   outline: none;
 }
 
-html|input[type="checkbox"]:-moz-focusring + html|label:before {
-  outline: 1px dotted;
-}
-
 html|button {
   /* XUL button min-width */
   min-width: 6.3em;
