@@ -1175,11 +1175,6 @@ JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
   return AtomizeUTF8OrWTF8Chars<JS::UTF8Chars>(cx, utf8Chars, utf8ByteLength);
 }
 
-JSAtom* js::AtomizeWTF8Chars(JSContext* cx, const char* wtf8Chars,
-                             size_t wtf8ByteLength) {
-  return AtomizeUTF8OrWTF8Chars<JS::WTF8Chars>(cx, wtf8Chars, wtf8ByteLength);
-}
-
 bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
   MOZ_ASSERT(index > JSID_INT_MAX);
 

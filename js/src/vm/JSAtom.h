@@ -68,15 +68,6 @@ extern JSAtom* AtomizeChars(JSContext* cx, mozilla::HashNumber hash,
 extern JSAtom* AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
                                 size_t utf8ByteLength);
 
-/**
- * Create an atom whose contents are those of the |wtf8ByteLength| code units
- * starting at |wtf8Chars|, interpreted as WTF-8.
- *
- * Throws if the code units do not contain valid WTF-8.
- */
-extern JSAtom* AtomizeWTF8Chars(JSContext* cx, const char* wtf8Chars,
-                                size_t wtf8ByteLength);
-
 extern JSAtom* AtomizeString(JSContext* cx, JSString* str,
                              js::PinningBehavior pin = js::DoNotPinAtom);
 
