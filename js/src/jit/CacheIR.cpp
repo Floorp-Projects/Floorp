@@ -602,14 +602,16 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
   return CanAttachNone;
 }
 
-static void GuardGroupProto(CacheIRWriter& writer, JSObject* obj,
-                            ObjOperandId objId) {
-  // Uses the group to determine if the prototype is unchanged. This works
-  // because groups have an immutable prototype. This can be used if the shape
-  // has the UncacheableProto flag set.
+static void GuardReceiverProto(CacheIRWriter& writer, JSObject* obj,
+                               ObjOperandId objId) {
+  // Note: we guard on the actual prototype and not on the shape because this is
+  // used for sparse elements where we expect shape changes.
 
-  ObjectGroup* group = obj->group();
-  writer.guardGroupForProto(objId, group);
+  if (JSObject* proto = obj->staticPrototype()) {
+    writer.guardProto(objId, proto);
+  } else {
+    writer.guardNullProto(objId);
+  }
 }
 
 // Guard that a given object has same class and same OwnProperties (excluding
@@ -640,24 +642,6 @@ static void TestMatchingNativeReceiver(CacheIRWriter& writer, NativeObject* obj,
 static void TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj,
                                       ObjOperandId objId) {
   writer.guardShapeForClass(objId, obj->shape());
-}
-
-// Adds additional guards if TestMatchingReceiver* does not also imply the
-// prototype.
-static void GeneratePrototypeGuardsForReceiver(CacheIRWriter& writer,
-                                               JSObject* obj,
-                                               ObjOperandId objId) {
-  // If receiver was marked UncacheableProto, the previous shape guard
-  // doesn't ensure the prototype is unchanged. In this case we must use the
-  // group to check the prototype.
-  if (obj->hasUncacheableProto()) {
-    MOZ_ASSERT(obj->is<NativeObject>());
-    GuardGroupProto(writer, obj, objId);
-  }
-
-  // The following cases already guaranteed the prototype is unchanged.
-  MOZ_ASSERT_IF(obj->is<TypedObject>() || obj->is<ProxyObject>(),
-                !obj->hasUncacheableProto());
 }
 
 static bool ProtoChainSupportsTeleporting(JSObject* obj, JSObject* holder) {
@@ -715,13 +699,12 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   // mutated. The same mechanism as above is used. When the prototype link is
   // changed, we generate a new shape for the object. If the object whose
   // link we are mutating is itself a prototype, we regenerate shapes down
-  // the chain. This means the same two shape checks as above are sufficient.
+  // the chain by setting the UncacheableProto flag on them. This means the same
+  // two shape checks as above are sufficient.
   //
-  // An additional wrinkle is the UncacheableProto shape flag. This
-  // indicates that the shape no longer implies any specific prototype. As
-  // well, the shape will not be updated by the teleporting optimization.
-  // If any shape from receiver to holder (inclusive) is UncacheableProto,
-  // we don't apply the optimization.
+  // Once the UncacheableProto flag is set, it means the shape will no longer be
+  // updated by ReshapeForProtoMutation. If any shape from receiver to holder
+  // (inclusive) is UncacheableProto, we don't apply the optimization.
   //
   // See:
   //  - ReshapeForProtoMutation
@@ -734,10 +717,6 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   // object in the chain if needed and handle it directly.
   JSObject* pobj = obj;
   if (!obj->isDelegate()) {
-    // TestMatchingReceiver does not always ensure the prototype is
-    // unchanged, so generate extra guards as needed.
-    GeneratePrototypeGuardsForReceiver(writer, obj, objId);
-
     pobj = obj->staticPrototype();
   }
   MOZ_ASSERT(pobj->isDelegate());
@@ -751,10 +730,6 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   if (pobj == holder) {
     return;
   }
-
-  // NOTE: We could be clever and look for a middle prototype to shape check
-  //       and elide some (but not all) of the group checks. Unless we have
-  //       real-world examples, let's avoid the complexity.
 
   // Synchronize pobj and protoId.
   MOZ_ASSERT(pobj == obj || pobj == obj->staticPrototype());
@@ -774,21 +749,17 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
 static void GeneratePrototypeHoleGuards(CacheIRWriter& writer, JSObject* obj,
                                         ObjOperandId objId,
                                         bool alwaysGuardFirstProto) {
-  if (alwaysGuardFirstProto || obj->hasUncacheableProto()) {
-    GuardGroupProto(writer, obj, objId);
+  if (alwaysGuardFirstProto) {
+    GuardReceiverProto(writer, obj, objId);
   }
 
   JSObject* pobj = obj->staticPrototype();
   while (pobj) {
     ObjOperandId protoId = writer.loadObject(pobj);
 
-    // If shape doesn't imply proto, additional guards are needed.
-    if (pobj->hasUncacheableProto()) {
-      GuardGroupProto(writer, pobj, protoId);
-    }
-
-    // Make sure the shape matches, to avoid non-dense elements or anything
-    // else that is being checked by CanAttachDenseElementHole.
+    // Make sure the shape matches, to ensure the proto is unchanged and to
+    // avoid non-dense elements or anything else that is being checked by
+    // CanAttachDenseElementHole.
     writer.guardShape(protoId, pobj->as<NativeObject>().lastProperty());
 
     // Also make sure there are no dense elements.
@@ -825,20 +796,15 @@ static bool UncacheableProtoOnChain(JSObject* obj) {
   }
 }
 
+// Emit a shape guard for all objects on the proto chain. This does NOT include
+// the receiver; callers must ensure the receiver's proto is the first proto by
+// either emitting a shape guard or a prototype guard for |objId|.
+//
+// Note: this relies on shape implying proto.
 static void ShapeGuardProtoChain(CacheIRWriter& writer, JSObject* obj,
                                  ObjOperandId objId) {
   while (true) {
     JSObject* proto = obj->staticPrototype();
-
-    // Guard on the proto if the shape does not imply the proto.
-    if (obj->hasUncacheableProto()) {
-      if (proto) {
-        writer.guardProto(objId, proto);
-      } else {
-        writer.guardNullProto(objId);
-      }
-    }
-
     if (!proto) {
       return;
     }
@@ -4130,7 +4096,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
   // Shape guard the prototype chain to avoid shadowing indexes from appearing.
   // Guard the prototype of the receiver explicitly, because the receiver's
   // shape is not being guarded as a proxy for that.
-  GuardGroupProto(writer, obj, objId);
+  GuardReceiverProto(writer, obj, objId);
 
   // Dense elements may appear on the prototype chain (and prototypes may
   // have a different notion of which elements are dense), but they can
@@ -4979,9 +4945,6 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
   // Guard the object is a packed array with Array.prototype as proto.
   writer.guardShape(objId, obj->as<ArrayObject>().lastProperty());
   writer.guardArrayIsPacked(objId);
-  if (obj->hasUncacheableProto()) {
-    writer.guardProto(objId, arrProto);
-  }
 
   // Guard on Array.prototype[@@iterator].
   ObjOperandId arrProtoId = writer.loadObject(arrProto);
