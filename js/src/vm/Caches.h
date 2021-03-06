@@ -80,11 +80,9 @@ typedef GCHashSet<EvalCacheEntry, EvalCacheHashPolicy, SystemAllocPolicy>
  * below, an entry is filled with the resulting object.
  */
 class NewObjectCache {
-  /* Statically asserted to be equal to sizeof(JSObject_Slots16) */
-  static const unsigned MAX_OBJ_SIZE = 4 * sizeof(void*) + 16 * sizeof(Value);
+  static constexpr unsigned MAX_OBJ_SIZE = sizeof(JSObject_Slots16);
 
   static void staticAsserts() {
-    static_assert(NewObjectCache::MAX_OBJ_SIZE == sizeof(JSObject_Slots16));
     static_assert(gc::AllocKind::OBJECT_LAST ==
                   gc::AllocKind::OBJECT16_BACKGROUND);
   }
@@ -201,7 +199,6 @@ class NewObjectCache {
     js_memcpy(dst, src, gc::Arena::thingSize(kind));
 
     // Initialize with barriers
-    dst->initGroup(src->group());
     dst->initShape(src->shape());
   }
 };

@@ -589,7 +589,6 @@ DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace,
   }
 
   TypedObject* tobj = static_cast<TypedObject*>(obj);
-  tobj->initGroup(nullptr);
   tobj->initShape(shape);
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
