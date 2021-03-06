@@ -1629,7 +1629,7 @@ void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
 
   nscoord cssRadii[8];
   if (!aFrame->GetBorderRadii(cssRadii)) {
-    return PaintRoundedRectWithRadius(aPaintData, aRect, sRGBColor::White(0.0f),
+    return PaintRoundedRectWithRadius(aPaintData, rect, sRGBColor::White(0.0f),
                                       innerColor, kInnerFocusOutlineWidth,
                                       /* aRadius = */ 0.0f, aDpiRatio);
   }
