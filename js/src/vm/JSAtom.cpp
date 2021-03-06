@@ -1113,9 +1113,8 @@ template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
 template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
                                   const char16_t* chars, size_t length);
 
-template <typename CharsT>
-JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
-                               size_t utf8ByteLength) {
+JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
+                             size_t utf8ByteLength) {
   {
     // Permanent atoms,|JSRuntime::atoms_|, and  static strings are disjoint
     // sets.  |AtomizeAndCopyCharsFromLookup| only consults the first two sets,
@@ -1156,23 +1155,15 @@ JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
   size_t length;
   HashNumber hash;
   JS::SmallestEncoding forCopy;
-  CharsT utf8(utf8Chars, utf8ByteLength);
+  JS::UTF8Chars utf8(utf8Chars, utf8ByteLength);
   if (!GetUTF8AtomizationData(cx, utf8, &length, &forCopy, &hash)) {
     return nullptr;
   }
 
-  AtomizeUTF8OrWTF8CharsWrapper<CharsT> chars(utf8, forCopy);
+  AtomizeUTF8OrWTF8CharsWrapper<JS::UTF8Chars> chars(utf8, forCopy);
   AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
-  if (std::is_same_v<CharsT, JS::WTF8Chars>) {
-    lookup.type = AtomHasher::Lookup::WTF8;
-  }
   return AtomizeAndCopyCharsFromLookup(cx, &chars, length, lookup, DoNotPinAtom,
                                        Nothing());
-}
-
-JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
-                             size_t utf8ByteLength) {
-  return AtomizeUTF8OrWTF8Chars<JS::UTF8Chars>(cx, utf8Chars, utf8ByteLength);
 }
 
 bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
