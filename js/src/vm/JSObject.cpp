@@ -3624,7 +3624,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<JSObject>::size(
 const char16_t JS::ubi::Concrete<JSObject>::concreteTypeName[] = u"JSObject";
 
 void JSObject::traceChildren(JSTracer* trc) {
-  TraceEdge(trc, shapePtr(), "shape");
+  TraceCellHeaderEdge(trc, this, "shape");
 
   const JSClass* clasp = getClass();
   if (clasp->isNativeObject()) {

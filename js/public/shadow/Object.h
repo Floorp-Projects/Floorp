@@ -26,16 +26,16 @@ class JS_PUBLIC_API Value;
 
 namespace shadow {
 
-struct ObjectGroup;
-
 /**
  * This layout is shared by all native objects. For non-native objects, the
- * group may always be accessed safely, and other members may be as well,
+ * shape may always be accessed safely, and other members may be as well,
  * depending on the object's specific layout.
  */
 struct Object {
-  shadow::ObjectGroup* group;
   shadow::Shape* shape;
+#ifndef JS_64BIT
+  uint32_t padding_;
+#endif
   Value* slots;
   void* _1;
 
