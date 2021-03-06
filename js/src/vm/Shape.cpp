@@ -148,23 +148,19 @@ void Shape::handoffTableTo(Shape* shape) {
     return;
   }
 
-  MOZ_ASSERT(base()->isOwned() && !shape->base()->isOwned());
+  ShapeTable* table = cache_.getTablePointer();
+  shape->setTable(table);
+  cache_ = ShapeCachePtr();
 
-  BaseShape* nbase = base();
-
-  setBase(nbase->baseUnowned());
-  nbase->adoptUnowned(shape->base()->toUnowned());
-
-  shape->setBase(nbase);
+  // Note: for shape tables only sizeof(ShapeTable) is tracked. See the TODO in
+  // Shape::hashify.
+  RemoveCellMemory(this, sizeof(ShapeTable), MemoryUse::ShapeCache);
+  AddCellMemory(shape, sizeof(ShapeTable), MemoryUse::ShapeCache);
 }
 
 /* static */
 bool Shape::hashify(JSContext* cx, Shape* shape) {
   MOZ_ASSERT(!shape->hasTable());
-
-  if (!shape->ensureOwnBaseShape(cx)) {
-    return false;
-  }
 
   UniquePtr<ShapeTable> table =
       cx->make_unique<ShapeTable>(shape->entryCount());
@@ -176,24 +172,23 @@ bool Shape::hashify(JSContext* cx, Shape* shape) {
     return false;
   }
 
-  BaseShape* base = shape->base();
-  base->maybePurgeCache(cx->defaultFreeOp());
-  base->setTable(table.release());
+  shape->maybePurgeCache(cx->defaultFreeOp());
+  shape->setTable(table.release());
   // TODO: The contents of ShapeTable is not currently tracked, only the object
   // itself.
-  AddCellMemory(base, sizeof(ShapeTable), MemoryUse::ShapeCache);
+  AddCellMemory(shape, sizeof(ShapeTable), MemoryUse::ShapeCache);
   return true;
 }
 
-void ShapeCachePtr::maybePurgeCache(JSFreeOp* fop, BaseShape* base) {
+void ShapeCachePtr::maybePurgeCache(JSFreeOp* fop, Shape* shape) {
   if (isTable()) {
     ShapeTable* table = getTablePointer();
     if (table->freeList() == SHAPE_INVALID_SLOT) {
-      fop->delete_(base, getTablePointer(), MemoryUse::ShapeCache);
+      fop->delete_(shape, getTablePointer(), MemoryUse::ShapeCache);
       p = 0;
     }
   } else if (isIC()) {
-    fop->delete_<ShapeIC>(base, getICPointer(), MemoryUse::ShapeCache);
+    fop->delete_<ShapeIC>(shape, getICPointer(), MemoryUse::ShapeCache);
     p = 0;
   }
 }
@@ -201,10 +196,6 @@ void ShapeCachePtr::maybePurgeCache(JSFreeOp* fop, BaseShape* base) {
 /* static */
 bool Shape::cachify(JSContext* cx, Shape* shape) {
   MOZ_ASSERT(!shape->hasTable() && !shape->hasIC());
-
-  if (!shape->ensureOwnBaseShape(cx)) {
-    return false;
-  }
 
   UniquePtr<ShapeIC> ic = cx->make_unique<ShapeIC>();
   if (!ic) {
@@ -215,8 +206,8 @@ bool Shape::cachify(JSContext* cx, Shape* shape) {
     return false;
   }
 
-  shape->base()->setIC(ic.release());
-  AddCellMemory(shape->base(), sizeof(ShapeIC), MemoryUse::ShapeCache);
+  shape->setIC(ic.release());
+  AddCellMemory(shape, sizeof(ShapeIC), MemoryUse::ShapeCache);
   return true;
 }
 
@@ -309,11 +300,11 @@ void ShapeTable::trace(JSTracer* trc) {
   }
 }
 
-inline void ShapeCachePtr::destroy(JSFreeOp* fop, BaseShape* base) {
+inline void ShapeCachePtr::destroy(JSFreeOp* fop, Shape* shape) {
   if (isTable()) {
-    fop->delete_(base, getTablePointer(), MemoryUse::ShapeCache);
+    fop->delete_(shape, getTablePointer(), MemoryUse::ShapeCache);
   } else if (isIC()) {
-    fop->delete_(base, getICPointer(), MemoryUse::ShapeCache);
+    fop->delete_(shape, getICPointer(), MemoryUse::ShapeCache);
   }
   p = 0;
 }
@@ -1034,11 +1025,8 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
       }
     }
 
-    if (updateLast) {
-      shape->base()->adoptUnowned(nbase);
-    } else {
-      shape->setBase(nbase);
-    }
+    MOZ_ASSERT(!shape->base()->isOwned());
+    shape->setBase(nbase);
 
     shape->setSlot(slot);
     shape->attrs = uint8_t(attrs);
@@ -1140,11 +1128,8 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
       return nullptr;
     }
 
-    if (updateLast) {
-      shape->base()->adoptUnowned(nbase);
-    } else {
-      shape->setBase(nbase);
-    }
+    MOZ_ASSERT(!shape->base()->isOwned());
+    shape->setBase(nbase);
 
     shape->setSlot(SHAPE_INVALID_SLOT);
     shape->attrs = uint8_t(attrs);
@@ -1430,7 +1415,8 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
       return false;
     }
 
-    obj->as<NativeObject>().lastProperty()->base()->adoptUnowned(nbase);
+    MOZ_ASSERT(!obj->as<NativeObject>().lastProperty()->base()->isOwned());
+    obj->as<NativeObject>().lastProperty()->setBase(nbase);
     return true;
   }
 
@@ -1462,7 +1448,8 @@ bool NativeObject::clearFlag(JSContext* cx, HandleNativeObject obj,
     return false;
   }
 
-  obj->lastProperty()->base()->adoptUnowned(nbase);
+  MOZ_ASSERT(!obj->lastProperty()->base()->isOwned());
+  obj->lastProperty()->setBase(nbase);
   return true;
 }
 
@@ -1536,25 +1523,13 @@ void BaseShape::assertConsistency() {
 }
 
 void BaseShape::traceChildren(JSTracer* trc) {
-  traceChildrenSkipShapeCache(trc);
-  traceShapeCache(trc);
-}
-
-void BaseShape::traceChildrenSkipShapeCache(JSTracer* trc) {
   if (isOwned()) {
     TraceEdge(trc, &unowned_, "base");
   }
-
-  assertConsistency();
-}
-
-void BaseShape::traceShapeCache(JSTracer* trc) {
-  AutoCheckCannotGC nogc;
-  cache_.trace(trc);
 }
 
 #ifdef DEBUG
-bool BaseShape::canSkipMarkingShapeCache(Shape* lastShape) {
+bool Shape::canSkipMarkingShapeCache() {
   // Check that every shape in the shape table will be marked by marking
   // |lastShape|.
   AutoCheckCannotGC nogc;
@@ -1564,7 +1539,7 @@ bool BaseShape::canSkipMarkingShapeCache(Shape* lastShape) {
   }
 
   uint32_t count = 0;
-  for (Shape::Range<NoGC> r(lastShape); !r.empty(); r.popFront()) {
+  for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront()) {
     Shape* shape = &r.front();
     ShapeTable::Entry& entry =
         cache.getTablePointer()->search<MaybeAdding::NotAdding>(shape->propid(),
@@ -1591,12 +1566,6 @@ void Zone::checkBaseShapeTableAfterMovingGC() {
 }
 
 #endif  // JSGC_HASH_TABLE_CHECKS
-
-void BaseShape::finalize(JSFreeOp* fop) {
-  if (cache_.isInitialized()) {
-    cache_.destroy(fop, this);
-  }
-}
 
 inline InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto() {}
 
@@ -1821,6 +1790,9 @@ void Shape::sweep(JSFreeOp* fop) {
 void Shape::finalize(JSFreeOp* fop) {
   if (!inDictionary() && children.isShapeSet()) {
     fop->delete_(this, children.toShapeSet(), MemoryUse::ShapeChildren);
+  }
+  if (cache_.isInitialized()) {
+    cache_.destroy(fop, this);
   }
 }
 

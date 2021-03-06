@@ -573,9 +573,9 @@ class ShapeCachePtr {
     p = icptr;
   }
 
-  void destroy(JSFreeOp* fop, BaseShape* base);
+  void destroy(JSFreeOp* fop, Shape* shape);
 
-  void maybePurgeCache(JSFreeOp* fop, BaseShape* base);
+  void maybePurgeCache(JSFreeOp* fop, Shape* shape);
 
   void trace(JSTracer* trc);
 
@@ -706,14 +706,11 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   /* For owned BaseShapes, the canonical unowned BaseShape. */
   GCPtrUnownedBaseShape unowned_;
 
-  /* For owned BaseShapes, the shape's shape table. */
-  ShapeCachePtr cache_;
-
   BaseShape(const BaseShape& base) = delete;
   BaseShape& operator=(const BaseShape& other) = delete;
 
  public:
-  void finalize(JSFreeOp* fop);
+  void finalize(JSFreeOp* fop) {}
 
   explicit inline BaseShape(const StackBaseShape& base);
 
@@ -731,58 +728,6 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   }
 
   ObjectFlags objectFlags() const { return flags; }
-
-  bool hasTable() const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return cache_.isTable();
-  }
-
-  bool hasIC() const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return cache_.isIC();
-  }
-
-  void setTable(ShapeTable* table) {
-    MOZ_ASSERT(isOwned());
-    cache_.initializeTable(table);
-  }
-
-  void setIC(ShapeIC* ic) {
-    MOZ_ASSERT(isOwned());
-    cache_.initializeIC(ic);
-  }
-
-  ShapeCachePtr getCache(const AutoKeepShapeCaches&) const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return cache_;
-  }
-
-  ShapeCachePtr getCache(const JS::AutoCheckCannotGC&) const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return cache_;
-  }
-
-  ShapeTable* maybeTable(const AutoKeepShapeCaches&) const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return (cache_.isTable()) ? cache_.getTablePointer() : nullptr;
-  }
-
-  ShapeTable* maybeTable(const JS::AutoCheckCannotGC&) const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return (cache_.isTable()) ? cache_.getTablePointer() : nullptr;
-  }
-
-  ShapeIC* maybeIC(const AutoKeepShapeCaches&) const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return (cache_.isIC()) ? cache_.getICPointer() : nullptr;
-  }
-
-  ShapeIC* maybeIC(const JS::AutoCheckCannotGC&) const {
-    MOZ_ASSERT_IF(cache_.isInitialized(), isOwned());
-    return (cache_.isIC()) ? cache_.getICPointer() : nullptr;
-  }
-
-  void maybePurgeCache(JSFreeOp* fop) { cache_.maybePurgeCache(fop, this); }
 
   /*
    * Lookup base shapes from the zone's baseShapes table, adding if not
@@ -808,11 +753,6 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
   static const JS::TraceKind TraceKind = JS::TraceKind::BaseShape;
 
   void traceChildren(JSTracer* trc);
-  void traceChildrenSkipShapeCache(JSTracer* trc);
-
-#ifdef DEBUG
-  bool canSkipMarkingShapeCache(Shape* lastShape);
-#endif
 
  private:
   static void staticAsserts() {
@@ -822,8 +762,6 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
                   "Things inheriting from gc::Cell must have a size that's "
                   "a multiple of gc::CellAlignBytes");
   }
-
-  void traceShapeCache(JSTracer* trc);
 };
 
 class UnownedBaseShape : public BaseShape {};
@@ -978,6 +916,9 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   GCPtrShape parent; /* parent node, reverse for..in order */
   friend class DictionaryShapeLink;
 
+  // The shape's ShapeTable or ShapeIC.
+  ShapeCachePtr cache_;
+
   union {
     // Valid when !inDictionary().
     ShapeChildren children;
@@ -1047,27 +988,35 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
                                                const AutoKeepShapeCaches& keep);
 
  public:
-  bool hasTable() const { return base()->hasTable(); }
-  bool hasIC() const { return base()->hasIC(); }
+  bool hasTable() const { return cache_.isTable(); }
 
-  ShapeIC* maybeIC(const AutoKeepShapeCaches& keep) const {
-    return base()->maybeIC(keep);
+  bool hasIC() const { return cache_.isIC(); }
+
+  void setTable(ShapeTable* table) { cache_.initializeTable(table); }
+
+  void setIC(ShapeIC* ic) { cache_.initializeIC(ic); }
+
+  ShapeCachePtr getCache(const AutoKeepShapeCaches&) const { return cache_; }
+
+  ShapeCachePtr getCache(const JS::AutoCheckCannotGC&) const { return cache_; }
+
+  ShapeTable* maybeTable(const AutoKeepShapeCaches&) const {
+    return cache_.isTable() ? cache_.getTablePointer() : nullptr;
   }
-  ShapeIC* maybeIC(const JS::AutoCheckCannotGC& check) const {
-    return base()->maybeIC(check);
+
+  ShapeTable* maybeTable(const JS::AutoCheckCannotGC&) const {
+    return cache_.isTable() ? cache_.getTablePointer() : nullptr;
   }
-  ShapeTable* maybeTable(const AutoKeepShapeCaches& keep) const {
-    return base()->maybeTable(keep);
+
+  ShapeIC* maybeIC(const AutoKeepShapeCaches&) const {
+    return cache_.isIC() ? cache_.getICPointer() : nullptr;
   }
-  ShapeTable* maybeTable(const JS::AutoCheckCannotGC& check) const {
-    return base()->maybeTable(check);
+
+  ShapeIC* maybeIC(const JS::AutoCheckCannotGC&) const {
+    return cache_.isIC() ? cache_.getICPointer() : nullptr;
   }
-  ShapeCachePtr getCache(const AutoKeepShapeCaches& keep) const {
-    return base()->getCache(keep);
-  }
-  ShapeCachePtr getCache(const JS::AutoCheckCannotGC& check) const {
-    return base()->getCache(check);
-  }
+
+  void maybePurgeCache(JSFreeOp* fop) { cache_.maybePurgeCache(fop, this); }
 
   bool appendShapeToIC(jsid id, Shape* shape,
                        const JS::AutoCheckCannotGC& check) {
@@ -1397,6 +1346,10 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   static const JS::TraceKind TraceKind = JS::TraceKind::Shape;
 
   void traceChildren(JSTracer* trc);
+
+#ifdef DEBUG
+  bool canSkipMarkingShapeCache();
+#endif
 
   MOZ_ALWAYS_INLINE Shape* search(JSContext* cx, jsid id);
   MOZ_ALWAYS_INLINE Shape* searchLinear(jsid id);
