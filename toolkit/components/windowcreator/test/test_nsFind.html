@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812837
 https://bugzilla.mozilla.org/show_bug.cgi?id=969980
 https://bugzilla.mozilla.org/show_bug.cgi?id=1589786
 https://bugzilla.mozilla.org/show_bug.cgi?id=1611568
+https://bugzilla.mozilla.org/show_bug.cgi?id=1649187
 -->
 <head>
   <meta charset="UTF-8">
@@ -63,13 +64,29 @@ async function runTests() {
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(!retRange, "\"" + searchValue + "\" found (not caseSensitive)");
 
+  searchValue = "కె";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(!retRange, "\"" + searchValue + "\" found (not caseSensitive)");
+
   searchValue = "istanbul";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
+  searchValue = "wroclaw";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
+  searchValue = "goteborg";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
 
   searchValue = "degrees k";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
+  searchValue = "≠";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(!retRange, "\"" + searchValue + "\" found (not caseSensitive)");
 
   searchValue = "guahe";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
@@ -138,7 +155,7 @@ async function runTests() {
 
   // Curly quotes and straight quotes should match.
 
-  rf.caseSensitive = false;
+  rf.matchDiacritics = false;
   rf.findBackwards = false;
 
   function find(node, value) {
@@ -218,7 +235,7 @@ async function runTests() {
   assertNotFound(quotes, "\u201Cdoesn't\u201D");
 
   // Curly quotes and straight quotes should not match.
-  rf.caseSensitive = true;
+  rf.matchDiacritics = true;
 
   assertFound(quotes, "\"straight\"");
   assertNotFound(quotes, "\u201Cstraight\u201D");
@@ -301,8 +318,12 @@ async function runTests() {
 <p id="nullcharsinjected"></p>
 <p id="greek">ΛΌΓΟΣ</p>
 <p id="korean">위</p>
+<p id="telugu">కై</p>
 <p id="turkish">İstanbul</p>
+<p id="polish">Wrocław</p>
+<p id="norwegian">Gøteborg</p>
 <p id="kelvin">degrees &#x212A;</p>
+<p id="math">=</p>
 <p id="guarani">G̃uahe</p>
 <p id="deseret">𐐐𐐯𐑊𐐬 𐐶𐐯𐑉𐑊𐐼!</p>
 <div id="content" style="display: none">
