@@ -93,6 +93,8 @@ class TCPSocket final : public DOMEventTargetHelper,
 
   static bool ShouldTCPSocketExist(JSContext* aCx, JSObject* aGlobal);
 
+  nsISocketTransport* GetTransport() const { return mTransport.get(); }
+
   void GetHost(nsAString& aHost);
   uint32_t Port();
   bool Ssl();
