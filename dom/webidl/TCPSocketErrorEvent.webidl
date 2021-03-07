@@ -17,10 +17,12 @@ interface TCPSocketErrorEvent : Event {
 
   readonly attribute DOMString name;
   readonly attribute DOMString message;
+  readonly attribute unsigned long errorCode; // The internal nsresult error code.
 };
 
 dictionary TCPSocketErrorEventInit : EventInit
 {
   DOMString name = "";
   DOMString message = "";
+  unsigned long errorCode = 0;
 };

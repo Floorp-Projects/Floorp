@@ -130,7 +130,7 @@ mozilla::ipc::IPCResult TCPSocketChild::RecvCallback(
 
   } else if (aData.type() == CallbackData::TTCPError) {
     const TCPError& err(aData.get_TCPError());
-    mSocket->FireErrorEvent(err.name(), err.message());
+    mSocket->FireErrorEvent(err.name(), err.message(), err.errorCode());
 
   } else if (aData.type() == CallbackData::TSendableData) {
     const SendableData& data = aData.get_SendableData();

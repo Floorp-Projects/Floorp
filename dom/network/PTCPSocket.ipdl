@@ -14,6 +14,7 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 struct TCPError {
   nsString name;
   nsString message;
+  nsresult errorCode;
 };
 
 union SendableData {
