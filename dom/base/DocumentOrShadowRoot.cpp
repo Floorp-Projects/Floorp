@@ -313,7 +313,7 @@ Element* DocumentOrShadowRoot::GetPointerLockElement() {
              : nullptr;
 }
 
-Element* DocumentOrShadowRoot::GetFullscreenElement() {
+Element* DocumentOrShadowRoot::GetFullscreenElement() const {
   if (!AsNode().IsInComposedDoc()) {
     return nullptr;
   }

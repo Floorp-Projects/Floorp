@@ -121,7 +121,7 @@ class DocumentOrShadowRoot {
   ~DocumentOrShadowRoot();
 
   Element* GetPointerLockElement();
-  Element* GetFullscreenElement();
+  Element* GetFullscreenElement() const;
 
   Element* ElementFromPoint(float aX, float aY);
   nsINode* NodeFromPoint(float aX, float aY);
