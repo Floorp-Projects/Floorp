@@ -39,12 +39,12 @@ struct CommonType;
 
 template <class units, class primitive>
 struct CommonType<IntCoordTyped<units>, primitive> {
-  typedef decltype(int32_t() + primitive()) type;
+  using type = decltype(int32_t() + primitive());
 };
 
 template <class units, class F, class primitive>
 struct CommonType<CoordTyped<units, F>, primitive> {
-  typedef decltype(F() + primitive()) type;
+  using type = decltype(F() + primitive());
 };
 
 // This is a base class that provides mixed-type operator overloads between
@@ -67,7 +67,7 @@ struct CoordOperatorsHelper<true, coord, primitive> {
   friend bool operator!=(coord aA, primitive aB) { return aA.value != aB; }
   friend bool operator!=(primitive aA, coord aB) { return aA != aB.value; }
 
-  typedef typename CommonType<coord, primitive>::type result_type;
+  using result_type = typename CommonType<coord, primitive>::type;
 
   friend result_type operator+(coord aA, primitive aB) { return aA.value + aB; }
   friend result_type operator+(primitive aA, coord aB) { return aA + aB.value; }
@@ -87,21 +87,21 @@ struct CoordOperatorsHelper<true, coord, primitive> {
 
 template <class units>
 struct IntCoordTyped
-    : public BaseCoord<int32_t, IntCoordTyped<units> >,
+    : public BaseCoord<int32_t, IntCoordTyped<units>>,
       public units,
       public CoordOperatorsHelper<true, IntCoordTyped<units>, float>,
       public CoordOperatorsHelper<true, IntCoordTyped<units>, double> {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BaseCoord<int32_t, IntCoordTyped<units> > Super;
+  using Super = BaseCoord<int32_t, IntCoordTyped<units>>;
 
   constexpr IntCoordTyped() : Super() {}
   constexpr MOZ_IMPLICIT IntCoordTyped(int32_t aValue) : Super(aValue) {}
 };
 
 template <class units, class F>
-struct CoordTyped : public BaseCoord<F, CoordTyped<units, F> >,
+struct CoordTyped : public BaseCoord<F, CoordTyped<units, F>>,
                     public units,
                     public CoordOperatorsHelper<!std::is_same_v<F, int32_t>,
                                                 CoordTyped<units, F>, int32_t>,
@@ -114,7 +114,7 @@ struct CoordTyped : public BaseCoord<F, CoordTyped<units, F> >,
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BaseCoord<F, CoordTyped<units, F> > Super;
+  using Super = BaseCoord<F, CoordTyped<units, F>>;
 
   constexpr CoordTyped() : Super() {}
   constexpr MOZ_IMPLICIT CoordTyped(F aValue) : Super(aValue) {}
