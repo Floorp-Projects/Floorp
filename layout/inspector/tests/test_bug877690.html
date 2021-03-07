@@ -243,6 +243,11 @@ function do_test() {
   var values = InspectorUtils.getCSSValuesForProperty("list-style-type");
   ok(testValues(values, expected), "property list-style-type's values");
 
+  // Regression test for bug 1696677.
+  var values = InspectorUtils.getCSSValuesForProperty("cursor");
+  ok(values.includes("url"), "property cursor values include url");
+  ok(values.includes("image-set"), "property cursor values include image-set");
+
   SimpleTest.finish();
 }
 
