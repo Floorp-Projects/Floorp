@@ -14,3 +14,4 @@ platform(linux,mac) == mask-perspective.yaml mask-perspective.png
 platform(linux,mac) == checkerboard.yaml checkerboard.png
 skip_on(android,device) == checkerboard.yaml checkerboard-tiling.yaml  # Fails on a Pixel2
 == missing-mask.yaml missing-mask-ref.yaml
+platform(linux) == scaled-filter-raster-root.yaml scaled-filter-raster-root.png
