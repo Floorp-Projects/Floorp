@@ -512,12 +512,20 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
   MOZ_ASSERT(JS::GetPromiseState(aPromise) == JS::PromiseState::Rejected);
 
   bool isChrome = false;
-  nsGlobalWindowInner* win = nullptr;
   uint64_t innerWindowID = 0;
+  nsGlobalWindowInner* winForDispatch = nullptr;
   if (MOZ_LIKELY(NS_IsMainThread())) {
     isChrome = nsContentUtils::ObjectPrincipal(aPromise)->IsSystemPrincipal();
-    win = xpc::WindowGlobalOrNull(aPromise);
-    innerWindowID = win ? win->WindowID() : 0;
+
+    if (nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aPromise)) {
+      winForDispatch = win;
+      innerWindowID = win->WindowID();
+    } else if (nsGlobalWindowInner* win = xpc::SandboxWindowOrNull(
+                   JS::GetNonCCWObjectGlobal(aPromise), aCx)) {
+      // Don't dispatch rejections from the sandbox to the associated DOM
+      // window.
+      innerWindowID = win->WindowID();
+    }
   } else if (const WorkerPrivate* wp = GetCurrentThreadWorkerPrivate()) {
     isChrome = wp->UsesSystemPrincipal();
     innerWindowID = wp->WindowID();
@@ -574,15 +582,15 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
 
   // Now post an event to do the real reporting async
   RefPtr<AsyncErrorReporter> event = new AsyncErrorReporter(xpcReport);
-  if (win) {
-    if (!win->IsDying()) {
+  if (winForDispatch) {
+    if (!winForDispatch->IsDying()) {
       // Exceptions from a dying window will cause the window to leak.
       event->SetException(aCx, result);
       if (resolutionSite) {
         event->SerializeStack(aCx, resolutionSite);
       }
     }
-    win->Dispatch(mozilla::TaskCategory::Other, event.forget());
+    winForDispatch->Dispatch(mozilla::TaskCategory::Other, event.forget());
   } else {
     NS_DispatchToMainThread(event);
   }
