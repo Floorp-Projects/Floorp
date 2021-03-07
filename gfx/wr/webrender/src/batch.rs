@@ -3389,7 +3389,7 @@ impl ClipBatcher {
         clip_spatial_node_index: SpatialNodeIndex,
         spatial_tree: &SpatialTree,
         world_rect: &WorldRect,
-        device_pixel_scale: DevicePixelScale,
+        global_device_pixel_scale: DevicePixelScale,
         common: &ClipMaskInstanceCommon,
         is_first_clip: bool,
     ) -> bool {
@@ -3425,7 +3425,7 @@ impl ClipBatcher {
 
         // Work out how many tiles to draw this clip mask in, stretched across the
         // device rect of the primitive clip mask.
-        let world_device_rect = world_clip_rect * device_pixel_scale;
+        let world_device_rect = world_clip_rect * global_device_pixel_scale;
         let x_tiles = (mask_screen_rect_size.width + CLIP_RECTANGLE_TILE_SIZE-1) / CLIP_RECTANGLE_TILE_SIZE;
         let y_tiles = (mask_screen_rect_size.height + CLIP_RECTANGLE_TILE_SIZE-1) / CLIP_RECTANGLE_TILE_SIZE;
 
@@ -3499,7 +3499,8 @@ impl ClipBatcher {
         clip_data_store: &ClipDataStore,
         actual_rect: DeviceRect,
         world_rect: &WorldRect,
-        device_pixel_scale: DevicePixelScale,
+        surface_device_pixel_scale: DevicePixelScale,
+        global_device_pixel_scale: DevicePixelScale,
         task_origin: DevicePoint,
         screen_origin: DevicePoint,
     ) {
@@ -3528,7 +3529,7 @@ impl ClipBatcher {
                 ),
                 task_origin,
                 screen_origin,
-                device_pixel_scale: device_pixel_scale.0,
+                device_pixel_scale: surface_device_pixel_scale.0,
                 clip_transform_id,
                 prim_transform_id,
             };
@@ -3583,7 +3584,7 @@ impl ClipBatcher {
                                     let tile_world_rect = map_local_to_world
                                         .map(&tile.tile_rect)
                                         .expect("bug: should always map as axis-aligned");
-                                    let tile_device_rect = tile_world_rect * device_pixel_scale;
+                                    let tile_device_rect = tile_world_rect * global_device_pixel_scale;
                                     tile_device_rect
                                         .translate(-actual_rect.origin.to_vector())
                                         .round_out()
@@ -3654,7 +3655,7 @@ impl ClipBatcher {
                             clip_instance.spatial_node_index,
                             spatial_tree,
                             world_rect,
-                            device_pixel_scale,
+                            global_device_pixel_scale,
                             &common,
                             is_first_clip,
                         ) {
