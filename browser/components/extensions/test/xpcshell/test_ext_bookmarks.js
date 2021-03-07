@@ -495,7 +495,7 @@ add_task(async function test_bookmarks() {
         // test bookmarks.search
         return Promise.all([
           browser.bookmarks.create({
-            title: "MØzillä",
+            title: "Μοζιλλας",
             url: "http://møzîllä.örg/",
           }),
           browser.bookmarks.create({
@@ -567,7 +567,7 @@ add_task(async function test_bookmarks() {
           results[0].id,
           bookmarkGuids.unfiledGuid,
           0,
-          "MØzillä",
+          "Μοζιλλας",
           "http://xn--mzll-ooa1dud.xn--rg-eka/",
           results[0].dateAdded
         );
@@ -908,7 +908,7 @@ add_task(async function test_bookmarks() {
         );
 
         // is case-insensitive for non-ascii
-        return browser.bookmarks.search("MøZILLÄ");
+        return browser.bookmarks.search("ΜοΖΙΛΛΑς");
       })
       .then(results => {
         browser.test.assertEq(
@@ -917,7 +917,7 @@ add_task(async function test_bookmarks() {
           "Expected number of results returned for non-ascii search"
         );
         browser.test.assertEq(
-          "MØzillä",
+          "Μοζιλλας",
           results[0].title,
           "Bookmark has the expected title"
         );

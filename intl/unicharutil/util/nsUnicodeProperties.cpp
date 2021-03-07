@@ -11,8 +11,7 @@
 #include "mozilla/HashTable.h"
 #include "nsCharTraits.h"
 
-#include "unicode/uchar.h"
-#include "unicode/unorm2.h"
+#include "BaseChars.h"
 
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT 0x110000
@@ -310,76 +309,20 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength) {
 }
 
 uint32_t GetNaked(uint32_t aCh) {
-  using namespace mozilla;
-
-  static const UNormalizer2* normalizer;
-  static HashMap<uint32_t, uint32_t> nakedCharCache;
-
-  NS_ASSERTION(!IsCombiningDiacritic(aCh),
-               "This character needs to be skipped");
-
-  HashMap<uint32_t, uint32_t>::Ptr entry = nakedCharCache.lookup(aCh);
-  if (entry.found()) {
-    return entry->value();
-  }
-
-  UErrorCode error = U_ZERO_ERROR;
-  if (!normalizer) {
-    normalizer = unorm2_getNFDInstance(&error);
-    if (U_FAILURE(error)) {
-      return aCh;
-    }
-  }
-
-  static const size_t MAX_DECOMPOSITION_SIZE = 16;
-  UChar decomposition[MAX_DECOMPOSITION_SIZE];
-  UChar* combiners;
-  int32_t decompositionLen;
-  uint32_t baseChar, nextChar;
-  decompositionLen = unorm2_getDecomposition(normalizer, aCh, decomposition,
-                                             MAX_DECOMPOSITION_SIZE, &error);
-  if (decompositionLen < 1) {
-    // The character does not decompose.
+  MOZ_ASSERT(!IsCombiningDiacritic(aCh), "This character needs to be skipped");
+  if (!IS_IN_BMP(aCh)) {
     return aCh;
   }
-
-  if (NS_IS_HIGH_SURROGATE(decomposition[0])) {
-    baseChar = SURROGATE_TO_UCS4(decomposition[0], decomposition[1]);
-    combiners = decomposition + 2;
-  } else {
-    baseChar = decomposition[0];
-    combiners = decomposition + 1;
+  uint8_t index = BASE_CHAR_MAPPING_BLOCK_INDEX[aCh >> 8];
+  if (index == 0xff) {
+    return aCh;
   }
-
-  if (IS_IN_BMP(baseChar) != IS_IN_BMP(aCh)) {
-    // Mappings that would change the length of a UTF-16 string are not
-    // currently supported.
-    baseChar = aCh;
-    goto cache;
+  const BaseCharMappingBlock& block = BASE_CHAR_MAPPING_BLOCKS[index];
+  uint8_t lo = aCh & 0xff;
+  if (lo < block.mFirst || lo > block.mLast) {
+    return aCh;
   }
-
-  if (decompositionLen > 1) {
-    if (NS_IS_HIGH_SURROGATE(combiners[0])) {
-      nextChar = SURROGATE_TO_UCS4(combiners[0], combiners[1]);
-    } else {
-      nextChar = combiners[0];
-    }
-    if (!IsCombiningDiacritic(nextChar)) {
-      // Hangul syllables decompose but do not actually have diacritics.
-      // This also excludes decompositions with the Japanese marks U+3099 and
-      // U+309A (COMBINING KATAKANA-HIRAGANA [SEMI-]VOICED SOUND MARK), which
-      // we should not ignore for searching (bug 1624244).
-      baseChar = aCh;
-    }
-  }
-
-cache:
-  if (!nakedCharCache.putNew(aCh, baseChar)) {
-    // We're out of memory, so delete the cache to free some up.
-    nakedCharCache.clearAndCompact();
-  }
-
-  return baseChar;
+  return BASE_CHAR_MAPPING_LIST[block.mMappingStartOffset + lo - block.mFirst];
 }
 
 }  // end namespace unicode
