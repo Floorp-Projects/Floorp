@@ -10335,20 +10335,9 @@ nsGlobalWindowInner* nsContentUtils::CallerInnerWindow() {
     AutoJSAPI jsapi;
     MOZ_ALWAYS_TRUE(jsapi.Init(scope));
     JSContext* cx = jsapi.cx();
-
-    JS::Rooted<JSObject*> scopeProto(cx);
-    bool ok = JS_GetPrototype(cx, scope, &scopeProto);
-    NS_ENSURE_TRUE(ok, nullptr);
-    if (scopeProto && xpc::IsSandboxPrototypeProxy(scopeProto) &&
-        // Our current Realm on aCx is the sandbox.  Using that for the
-        // CheckedUnwrapDynamic call makes sense: if the sandbox can unwrap the
-        // window, we can use it.  And we do want CheckedUnwrapDynamic, because
-        // the whole point is to unwrap windows.
-        (scopeProto = js::CheckedUnwrapDynamic(
-             scopeProto, cx, /* stopAtWindowProxy = */ false))) {
-      global = xpc::NativeGlobal(scopeProto);
-      NS_ENSURE_TRUE(global, nullptr);
-    }
+    // Our current Realm on aCx is the sandbox.  Using that for unwrapping
+    // makes sense: if the sandbox can unwrap the window, we can use it.
+    return xpc::SandboxWindowOrNull(scope, cx);
   }
 
   // The calling window must be holding a reference, so we can return a weak

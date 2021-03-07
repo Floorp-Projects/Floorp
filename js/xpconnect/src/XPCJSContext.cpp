@@ -699,19 +699,11 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
   // running in a non-DOM scope, we have to just let it keep running.
   RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
   RefPtr<nsGlobalWindowInner> win = WindowOrNull(global);
-  if (!win && IsSandbox(global)) {
+  if (!win) {
     // If this is a sandbox associated with a DOMWindow via a
-    // sandboxPrototype, use that DOMWindow. This supports GreaseMonkey
-    // and JetPack content scripts.
-    JS::Rooted<JSObject*> proto(cx);
-    if (!JS_GetPrototype(cx, global, &proto)) {
-      return false;
-    }
-    if (proto && xpc::IsSandboxPrototypeProxy(proto) &&
-        (proto = js::CheckedUnwrapDynamic(proto, cx,
-                                          /* stopAtWindowProxy = */ false))) {
-      win = WindowGlobalOrNull(proto);
-    }
+    // sandboxPrototype, use that DOMWindow. This supports WebExtension
+    // content scripts.
+    win = SandboxWindowOrNull(global, cx);
   }
 
   if (!win) {
