@@ -552,7 +552,9 @@ nsresult HeadlessWidget::SynthesizeNativeTouchPadPinch(
   PinchGestureInput inputToDispatch(
       pinchGestureType, PinchGestureInput::TRACKPAD, PR_IntervalNow(),
       TimeStamp::Now(), ExternalPoint(0, 0),
-      ScreenPoint(touchpadPoint.x, touchpadPoint.y), CurrentSpan, PreviousSpan,
+      ScreenPoint(touchpadPoint.x, touchpadPoint.y),
+      100.0 * ((aEventPhase == PHASE_END) ? ScreenCoord(1.f) : CurrentSpan),
+      100.0 * ((aEventPhase == PHASE_END) ? ScreenCoord(1.f) : PreviousSpan),
       0);
   DispatchPinchGestureInput(inputToDispatch);
   return NS_OK;

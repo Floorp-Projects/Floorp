@@ -11,22 +11,61 @@
   <script type="application/javascript">
 
 async function test() {
-
+  // Scenario 1: zoom in
   var initial_resolution = getResolution();
   ok(initial_resolution > 0,
       "The initial_resolution is " + initial_resolution + ", which is some sane value");
-
   await pinchZoomInWithTouchpad(641, 465);
-
   // Flush state and get the resolution we're at now
   await promiseApzFlushedRepaints();
   let final_resolution = getResolution();
   ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
+
+  // Scenario 2: zoom out
+  initial_resolution = final_resolution;
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+  await pinchZoomOutWithTouchpad(641, 465);
+  await promiseApzFlushedRepaints();
+  final_resolution = getResolution();
+  ok(final_resolution < initial_resolution, "The final resolution (" + final_resolution + ") is smaller after zooming Out");
+
+  // Scenario 3: zoom in and out in the same gesture
+  initial_resolution = final_resolution;
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+  await pinchZoomInOutWithTouchpad (641, 465);
+  await promiseApzFlushedRepaints();
+  final_resolution = getResolution();
+  isfuzzy(initial_resolution, final_resolution, 0.0001, "The final resolution approximatly the same after zooming In and Out");
+
+  // Scenario 4: zoom in, with the page using preventDefault()
+  var deltaSum = 0;
+  initial_resolution = final_resolution;
+  var onWheel = function(e) {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      deltaSum += e.deltaY;
+      // We observed that deltaSum will be around -42 by the time all wheel events have arrived.
+      if (deltaSum < -40) {
+        ok(true, "Accumulated a deltaY of -40");
+        document.removeEventListener("wheel", onWheel, { passive: false });
+        final_resolution = getResolution();
+        ok(final_resolution === initial_resolution, "The final resolution (" + final_resolution + ") is equal after prevent default");
+        subtestDone();
+      }
+    }
+  };
+
+  document.addEventListener("wheel", onWheel, { passive: false });
+  // Do not use `await` because calling preventDefault() means
+  // the APZ:TransformEnd notification will never be sent.
+  pinchZoomInWithTouchpad(641, 465);
 }
 
 waitUntilApzStable()
 .then(test)
-.then(subtestDone, subtestFailed);
+.catch(subtestFailed);
 
   </script>
 </head>
