@@ -2281,7 +2281,7 @@
 
       let { uriIsAboutBlank, usingPreloadedContent } = aTab._browserParams;
       delete aTab._browserParams;
-      delete aTab._cachedCurrentURI;
+      delete browser._cachedCurrentURI;
 
       let panel = this.getPanel(browser);
       let uniqueId = this._generateUniquePanelID();
