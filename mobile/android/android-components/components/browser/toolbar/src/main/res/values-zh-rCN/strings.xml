@@ -12,7 +12,7 @@
     <!-- Content description: For the site security information icon (the site security icon).-->
     <string name="mozac_browser_toolbar_content_description_site_info">网站信息</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
-    <string name="mozac_browser_toolbar_progress_loading">载入中</string>
+    <string name="mozac_browser_toolbar_progress_loading">正在载入</string>
     <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
     <string name="mozac_browser_toolbar_content_description_autoplay_blocked">某些内容已被自动播放设置阻止</string>
 </resources>
