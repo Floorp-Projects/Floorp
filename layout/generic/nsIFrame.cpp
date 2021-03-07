@@ -9304,7 +9304,7 @@ static nsRect UnionBorderBoxes(
         u = childRect;
         aOutValid = true;
       } else {
-        u.UnionRectEdges(u, childRect);
+        u = u.UnionEdges(childRect);
       }
     }
   }
@@ -9405,7 +9405,7 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
   }
 
   nsRect& vo = aOverflowAreas.InkOverflow();
-  vo.UnionRectEdges(vo, innerRect.Union(outerRect));
+  vo = vo.UnionEdges(innerRect.Union(outerRect));
 }
 
 bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
@@ -9527,7 +9527,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
       !HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     for (const auto otype : AllOverflowTypes()) {
       nsRect& o = aOverflowAreas.Overflow(otype);
-      o.UnionRectEdges(o, bounds);
+      o = o.UnionEdges(bounds);
     }
   }
 
@@ -9540,7 +9540,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
             presContext->DeviceContext(), this, disp->EffectiveAppearance(),
             &r)) {
       nsRect& vo = aOverflowAreas.InkOverflow();
-      vo.UnionRectEdges(vo, r);
+      vo = vo.UnionEdges(r);
     }
   }
 
