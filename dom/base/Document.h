@@ -3395,8 +3395,8 @@ class Document : public nsINode,
 
   Element* GetTopLayerTop();
   // Return the fullscreen element in the top layer
-  Element* GetUnretargetedFullScreenElement();
-  bool Fullscreen() { return !!GetFullscreenElement(); }
+  Element* GetUnretargetedFullScreenElement() const;
+  bool Fullscreen() const { return !!GetUnretargetedFullScreenElement(); }
   already_AddRefed<Promise> ExitFullscreen(ErrorResult&);
   void ExitPointerLock() { PointerLockManager::Unlock(this); }
   void GetFgColor(nsAString& aFgColor);
