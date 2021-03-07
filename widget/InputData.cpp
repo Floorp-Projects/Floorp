@@ -613,7 +613,7 @@ double PinchGestureInput::ComputeDeltaY(nsIWidget* aWidget) const {
   return (mPreviousSpan - 100.0) *
          (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
 #else
-  // This calculation is based on what the Windows widget code does.
+  // This calculation is based on what the Windows and Linux widget code does.
   // Specifically, it creates a PinchGestureInput with |mCurrentSpan == 100.0 *
   // currentScale| and |mPreviousSpan == 100.0 * lastScale| where currentScale
   // is the scale from the current OS event and lastScale is the scale when the
@@ -624,9 +624,6 @@ double PinchGestureInput::ComputeDeltaY(nsIWidget* aWidget) const {
   // currentScale - lastScale = (mCurrentSpan-mPreviousSpan)/100| and use the
   // same formula as the macOS code
   // (|-100.0 * M * GetDefaultScaleInternal()|).
-
-  // XXX When we write the code for other platforms to do the same we'll need to
-  // make sure this calculation is reasonable.
 
   return (mPreviousSpan - mCurrentSpan) *
          (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
