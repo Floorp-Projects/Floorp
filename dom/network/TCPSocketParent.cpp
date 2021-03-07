@@ -152,9 +152,9 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvClose() {
 }
 
 void TCPSocketParent::FireErrorEvent(const nsAString& aName,
-                                     const nsAString& aType,
+                                     const nsAString& aType, nsresult aError,
                                      TCPReadyState aReadyState) {
-  SendEvent(u"error"_ns, TCPError(nsString(aName), nsString(aType)),
+  SendEvent(u"error"_ns, TCPError(nsString(aName), nsString(aType), aError),
             aReadyState);
 }
 

@@ -30,7 +30,7 @@ interface nsITCPSocketCallback : nsISupports {
   const unsigned long BUFFER_SIZE = 65536;
 
   // Dispatch an "error" event at this object with the given name and type.
-  void fireErrorEvent(in AString name, in AString type);
+  void fireErrorEvent(in AString name, in AString type, in nsresult errorCode);
 
   // Dispatch a "data" event at this object with a string
   void fireDataStringEvent(in AString type, in ACString data);
