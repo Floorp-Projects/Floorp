@@ -62,7 +62,7 @@ class TCPSocketParent : public mozilla::net::PTCPSocketParent,
   mozilla::ipc::IPCResult RecvRequestDelete();
 
   void FireErrorEvent(const nsAString& aName, const nsAString& aType,
-                      TCPReadyState aReadyState);
+                      nsresult aError, TCPReadyState aReadyState);
   void FireEvent(const nsAString& aType, TCPReadyState aReadyState);
   void FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer,
                                 TCPReadyState aReadyState);
