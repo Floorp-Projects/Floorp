@@ -224,6 +224,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ਹੋਰ ਜਾਣੋ</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s ਖੋਜ</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚੋਂ ਸਿ਼ੱਧਾ ਖੋਜੋ</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">ਨਵੀਂ Firefox ਟੈਬ ਖੋਲ੍ਹੋ</string>
@@ -902,16 +907,22 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ਬੰਦ</string>
 
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ਆਡੀਓ ਅਤੇ ਵੀਡਿਓ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">ਆਡੀਓ ਤੇ ਵੀਡੀਓ ਦੀ ਮਨਜ਼ੂਰੀ ਦਿਓ</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ਸਿਰਫ਼ ਸੈਲੂਲਰ ਡਾਟਾ ਤੋਂ ਆਡੀਓ ਅਤੇ ਵੀਡੀਓ ਉੱਤੇ ਰੋਕ ਲਾਓ</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Wi-Fi ਉੱਤੇ ਆਡੀਓ ਤੇ ਵੀਡੀਓ ਚਲਾਏ ਜਾਣਗੇ</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ਸਿਰਫ਼ ਆਡੀਓ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">ਸਿਰਫ਼ ਆਡੀਓ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">ਆਡੀਓ ਅਤੇ ਵੀਡਿਓ ਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">ਆਡੀਓ ਅਤੇ ਵੀਡਿਓ \'ਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ਚਾਲੂ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
