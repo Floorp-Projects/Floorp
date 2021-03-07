@@ -4324,8 +4324,14 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
     PinchGestureInput event(
         pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
         GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
-        ScreenPoint(touchpadPoint.x, touchpadPoint.y), CurrentSpan,
-        PreviousSpan, KeymapWrapper::ComputeKeyModifiers(aEvent->state));
+        ScreenPoint(touchpadPoint.x, touchpadPoint.y),
+        100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
+                     ? ScreenCoord(1.f)
+                     : CurrentSpan),
+        100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
+                     ? ScreenCoord(1.f)
+                     : PreviousSpan),
+        KeymapWrapper::ComputeKeyModifiers(aEvent->state));
 
     DispatchPinchGestureInput(event);
   }
