@@ -104,9 +104,6 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
   [[nodiscard]] nsRect UnionEdges(const nsRect& aRect) const {
     return SaturatingUnionEdges(aRect);
   }
-  void UnionRectEdges(const nsRect& aRect1, const nsRect& aRect2) {
-    *this = aRect1.UnionEdges(aRect2);
-  }
   [[nodiscard]] nsRect Union(const nsRect& aRect) const {
     return SaturatingUnion(aRect);
   }

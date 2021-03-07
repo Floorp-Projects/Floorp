@@ -979,12 +979,12 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
   // for now, but it's possible that we may need to update both in the future.
   AdjustForPerspective(aState.mContentsOverflowAreas.ScrollableOverflow());
 
-  nsRect scrolledArea;
   // Preserve the width or height of empty rects
   nsSize portSize = mHelper.mScrollPort.Size();
   nsRect scrolledRect = mHelper.GetUnsnappedScrolledRectInternal(
       aState.mContentsOverflowAreas.ScrollableOverflow(), portSize);
-  scrolledArea.UnionRectEdges(scrolledRect, nsRect(nsPoint(0, 0), portSize));
+  nsRect scrolledArea =
+      scrolledRect.UnionEdges(nsRect(nsPoint(0, 0), portSize));
 
   // Store the new overflow area. Note that this changes where an outline
   // of the scrolled frame would be painted, but scrolled frames can't have
