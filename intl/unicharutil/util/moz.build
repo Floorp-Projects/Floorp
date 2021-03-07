@@ -25,4 +25,10 @@ UNIFIED_SOURCES += [
     "nsUnicodeProperties.cpp",
 ]
 
+GeneratedFile(
+    "BaseChars.h",
+    script="base_chars.py",
+    inputs=["../../icu/source/data/translit/Latin_ASCII.txt"],
+)
+
 FINAL_LIBRARY = "xul"

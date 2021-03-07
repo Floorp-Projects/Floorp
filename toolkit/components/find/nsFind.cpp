@@ -40,13 +40,6 @@ using namespace mozilla::unicode;
 // Yikes!  Casting a char to unichar can fill with ones!
 #define CHAR_TO_UNICHAR(c) ((char16_t)(unsigned char)c)
 
-#define CH_QUOTE ((char16_t)0x22)
-#define CH_APOSTROPHE ((char16_t)0x27)
-#define CH_LEFT_SINGLE_QUOTE ((char16_t)0x2018)
-#define CH_RIGHT_SINGLE_QUOTE ((char16_t)0x2019)
-#define CH_LEFT_DOUBLE_QUOTE ((char16_t)0x201C)
-#define CH_RIGHT_DOUBLE_QUOTE ((char16_t)0x201D)
-
 #define CH_SHY ((char16_t)0xAD)
 
 // nsFind::Find casts CH_SHY to char before calling StripChars
@@ -780,7 +773,8 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     // diacritics, don't leave c set to a combining diacritical mark. (patc is
     // already guaranteed to not be a combining diacritical mark.)
     c = (t2b ? DecodeChar(t2b, &findex) : CHAR_TO_UNICHAR(t1b[findex]));
-    if (!mMatchDiacritics && IsCombiningDiacritic(c)) {
+    if (!mMatchDiacritics && IsCombiningDiacritic(c) &&
+        !IsMathSymbol(prevChar)) {
       continue;
     }
     patc = DecodeChar(patStr, &pindex);
@@ -820,32 +814,6 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     if (c == CH_SHY) {
       // ignore soft hyphens in the document
       continue;
-    }
-
-    if (!mCaseSensitive) {
-      switch (c) {
-        // treat curly and straight quotes as identical
-        case CH_LEFT_SINGLE_QUOTE:
-        case CH_RIGHT_SINGLE_QUOTE:
-          c = CH_APOSTROPHE;
-          break;
-        case CH_LEFT_DOUBLE_QUOTE:
-        case CH_RIGHT_DOUBLE_QUOTE:
-          c = CH_QUOTE;
-          break;
-      }
-
-      switch (patc) {
-        // treat curly and straight quotes as identical
-        case CH_LEFT_SINGLE_QUOTE:
-        case CH_RIGHT_SINGLE_QUOTE:
-          patc = CH_APOSTROPHE;
-          break;
-        case CH_LEFT_DOUBLE_QUOTE:
-        case CH_RIGHT_DOUBLE_QUOTE:
-          patc = CH_QUOTE;
-          break;
-      }
     }
 
     if (pindex != (mFindBackward ? patLen : 0) && c != patc && !inWhitespace) {
