@@ -591,12 +591,6 @@ class nsLineBox final : public nsLineLink {
     mBounds =
         mozilla::LogicalRect(aWritingMode, aIStart, aBStart, aISize, aBSize);
   }
-  void SetBounds(mozilla::WritingMode aWritingMode, nsRect aRect,
-                 const nsSize& aContainerSize) {
-    mWritingMode = aWritingMode;
-    mContainerSize = aContainerSize;
-    mBounds = mozilla::LogicalRect(aWritingMode, aRect, aContainerSize);
-  }
 
   // mFlags.mHasHashedFrames says which one to use
   union {
