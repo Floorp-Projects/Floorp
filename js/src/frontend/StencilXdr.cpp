@@ -461,8 +461,8 @@ template <XDRMode mode>
 }
 
 template <XDRMode mode>
-static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
-                                          StencilModuleMetadata& stencil) {
+/* static */ XDRResult StencilXDR::codeModuleMetadata(
+    XDRState<mode>* xdr, StencilModuleMetadata& stencil) {
   MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
   MOZ_TRY(XDRVectorContent(xdr, stencil.importEntries));
   MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
@@ -644,7 +644,7 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
       }
     }
 
-    MOZ_TRY(XDRStencilModuleMetadata(xdr, *stencil.moduleMetadata));
+    MOZ_TRY(StencilXDR::codeModuleMetadata(xdr, *stencil.moduleMetadata));
   }
 
   return Ok();
