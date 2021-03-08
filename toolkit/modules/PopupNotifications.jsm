@@ -999,6 +999,12 @@ PopupNotifications.prototype = {
         "closebuttoncommand",
         `PopupNotifications._dismiss(event, true);`
       );
+
+      popupnotification.toggleAttribute(
+        "hasicon",
+        !!(n.options.popupIconURL || n.options.popupIconClass)
+      );
+
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute(

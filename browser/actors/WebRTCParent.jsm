@@ -45,6 +45,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIOSPermissionRequest"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProtonDoorhangersEnabled",
+  "browser.proton.doorhangers.enabled",
+  false
+);
+
 // Keep in sync with defines at base_capturer_pipewire.cc
 // With PipeWire we can't select which system resource is shared so
 // we don't create a window/screen list. Instead we place these constants
@@ -1221,11 +1228,13 @@ function prompt(aActor, aBrowser, aRequest) {
   }
   let anchorId = "webRTC-share" + iconType + "-notification-icon";
 
-  let iconClass = iconType.toLowerCase();
-  if (iconClass == "devices") {
-    iconClass = "camera";
+  if (!gProtonDoorhangersEnabled) {
+    let iconClass = iconType.toLowerCase();
+    if (iconClass == "devices") {
+      iconClass = "camera";
+    }
+    options.popupIconClass = iconClass + "-icon";
   }
-  options.popupIconClass = iconClass + "-icon";
 
   if (aRequest.secondOrigin) {
     options.secondName = webrtcUI.getHostOrExtensionName(

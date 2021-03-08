@@ -142,4 +142,12 @@
   flex: unset;
 }
 
+.popup-notification-icon:not([hasicon]) {
+  display: none;
+}
+
+.popup-notification-icon {
+  height: 16px;
+  width: 16px;
+}
 } /*** END proton ***/
