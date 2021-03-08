@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* exported defer, DevToolsClient, initTestDevToolsServer */
+/* exported DevToolsClient, initTestDevToolsServer */
 
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
