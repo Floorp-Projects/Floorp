@@ -87,7 +87,7 @@ fuzzy-if(webrender&&Android,0-8,0-1) == mask-layer-2.html mask-layer-ref.html
 fuzzy-if(webrender,0-16,0-132) == mask-layer-3.html mask-layer-ref.html
 == split-intersect1.html split-intersect1-ref.html
 fuzzy(0-255,0-150) == split-intersect2.html split-intersect2-ref.html
-fuzzy(0-255,0-100) fuzzy-if(webrender&&swgl,255-255,990-990) == split-non-ortho1.html split-non-ortho1-ref.html
+fuzzy(0-255,0-100) == split-non-ortho1.html split-non-ortho1-ref.html
 fuzzy-if(winWidget,0-150,0-120) == component-alpha-1.html component-alpha-1-ref.html
 == nested-transform-1.html nested-transform-1-ref.html
 fuzzy-if(winWidget&&!nativeThemePref,0-4,0-51) == transform-geometry-1.html transform-geometry-1-ref.html
