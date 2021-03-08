@@ -49,9 +49,8 @@
     $("f3").setAttribute("src", doc2);
 
     async function doTheTest() {
-      var s1 = await snapshotWindow($("f1").contentWindow);
       var s2 = await snapshotWindow($("f2").contentWindow);
-      var s3 = await snapshotWindow($("f3").contentWindow);
+      // var s3 = await snapshotWindow($("f3").contentWindow);
 
       // This test is broken - see bug 1090274
       //ok(!compareSnapshots(s2, s3, true)[0],
