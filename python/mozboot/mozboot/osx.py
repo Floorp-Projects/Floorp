@@ -28,18 +28,6 @@ XCODE_LEGACY = (
     "xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg"
 )
 
-MACPORTS_URL = {
-    "14": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.14-Mojave.pkg",
-    "13": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.13-HighSierra.pkg",
-    "12": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.12-Sierra.pkg",
-    "11": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.11-ElCapitan.pkg",
-    "10": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.10-Yosemite.pkg",
-    "9": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.9-Mavericks.pkg",
-    "8": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.8-MountainLion.pkg",
-    "7": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.7-Lion.pkg",
-    "6": "https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.6-SnowLeopard.pkg",
-}
-
 RE_CLANG_VERSION = re.compile("Apple (?:clang|LLVM) version (\d+\.\d+)")
 
 APPLE_CLANG_MINIMUM_VERSION = StrictVersion("4.2")
@@ -95,67 +83,20 @@ available, so if you are seeing this message multiple times, please update
 Xcode first.
 """
 
-PACKAGE_MANAGER_INSTALL = """
-We will install the %s package manager to install required packages.
+BREW_INSTALL = """
+We will install the Homebrew package manager to install required packages.
 
-You will be prompted to install %s with its default settings. If you
-would prefer to do this manually, hit CTRL+c, install %s yourself, ensure
-"%s" is in your $PATH, and relaunch bootstrap.
+You will be prompted to install Homebrew with its default settings. If you
+would prefer to do this manually, hit CTRL+c, install Homebrew yourself, ensure
+"brew" is in your $PATH, and relaunch bootstrap.
 """
 
-PACKAGE_MANAGER_PACKAGES = """
-We are now installing all required packages via %s. You will see a lot of
+BREW_PACKAGES = """
+We are now installing all required packages via Homebrew. You will see a lot of
 output as packages are built.
 """
 
-PACKAGE_MANAGER_OLD_CLANG = """
-We require a newer compiler than what is provided by your version of Xcode.
-
-We will install a modern version of Clang through %s.
-"""
-
-PACKAGE_MANAGER_CHOICE = """
-Please choose a package manager you'd like:
-  1. Homebrew
-  2. MacPorts (Does not yet support bootstrapping GeckoView/Firefox for Android.)
-Your choice: """
-
-NO_PACKAGE_MANAGER_WARNING = """
-It seems you don't have any supported package manager installed.
-"""
-
-PACKAGE_MANAGER_EXISTS = """
-Looks like you have %s installed. We will install all required packages via %s.
-"""
-
-MULTI_PACKAGE_MANAGER_EXISTS = """
-It looks like you have multiple package managers installed.
-"""
-
-# May add support for other package manager on os x.
-PACKAGE_MANAGER = {"Homebrew": "brew", "MacPorts": "port"}
-
-PACKAGE_MANAGER_CHOICES = ["Homebrew", "MacPorts"]
-
-PACKAGE_MANAGER_BIN_MISSING = """
-A package manager is installed. However, your current shell does
-not know where to find '%s' yet. You'll need to start a new shell
-to pick up the environment changes so it can be found.
-
-Please start a new shell or terminal window and run this
-bootstrapper again.
-
-If this problem persists, you will likely want to adjust your
-shell's init script (e.g. ~/.bash_profile) to export a PATH
-environment variable containing the location of your package
-manager binary. e.g.
-
-Homebrew:
-    export PATH=/usr/local/bin:$PATH
-
-MacPorts:
-    export PATH=/opt/local/bin:$PATH
-"""
+NO_BREW_INSTALLED = "It seems you don't have Homebrew installed."
 
 BAD_PATH_ORDER = """
 Your environment's PATH variable lists a system path directory (%s)
@@ -201,15 +142,18 @@ class OSXBootstrapper(BaseBootstrapper):
     def install_system_packages(self):
         self.ensure_xcode()
 
-        choice = self.ensure_package_manager()
-        self.package_manager = choice
+        self.ensure_homebrew_installed()
         _, hg_modern, _ = self.is_mercurial_modern()
         if not hg_modern:
             print(
                 "Mercurial wasn't found or is not sufficiently modern. "
-                "It will be installed with %s" % self.package_manager
+                "It will be installed with brew"
             )
-        getattr(self, "ensure_%s_system_packages" % self.package_manager)(not hg_modern)
+
+        packages = ["git", "gnu-tar", "terminal-notifier", "watchman"]
+        if not hg_modern:
+            packages.append("mercurial")
+        self._ensure_homebrew_packages(packages)
 
     def install_browser_packages(self, mozconfig_builder):
         pass
@@ -218,12 +162,10 @@ class OSXBootstrapper(BaseBootstrapper):
         pass
 
     def install_mobile_android_packages(self, mozconfig_builder):
-        getattr(self, "ensure_%s_mobile_android_packages" % self.package_manager)(
-            mozconfig_builder
-        )
+        self.ensure_homebrew_mobile_android_packages(mozconfig_builder)
 
     def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
-        getattr(self, "ensure_%s_mobile_android_packages" % self.package_manager)(
+        self.ensure_homebrew_mobile_android_packages(
             mozconfig_builder, artifact_mode=True
         )
 
@@ -321,16 +263,13 @@ class OSXBootstrapper(BaseBootstrapper):
         sys.exit(1)
 
     def _ensure_homebrew_found(self):
-        if not hasattr(self, "brew"):
-            self.brew = which("brew")
-        # Earlier code that checks for valid package managers ensures
-        # which('brew') is found.
-        assert self.brew is not None
+        self.brew = which("brew")
+
+        return self.brew is not None
 
     def _ensure_homebrew_packages(self, packages, is_for_cask=False):
         package_type_flag = "--cask" if is_for_cask else "--formula"
-        self._ensure_homebrew_found()
-        self._ensure_package_manager_updated()
+        self.ensure_homebrew_installed()
 
         def create_homebrew_cmd(*parameters):
             base_cmd = [self.brew]
@@ -352,7 +291,7 @@ class OSXBootstrapper(BaseBootstrapper):
         to_upgrade = set(package for package in packages if package in outdated)
 
         if to_install or to_upgrade:
-            print(PACKAGE_MANAGER_PACKAGES % ("Homebrew",))
+            print(BREW_PACKAGES)
         if to_install:
             subprocess.check_call(create_homebrew_cmd("install") + list(to_install))
         if to_upgrade:
@@ -376,15 +315,9 @@ class OSXBootstrapper(BaseBootstrapper):
 
         self._ensure_homebrew_packages(casks, is_for_cask=True)
 
-    def ensure_homebrew_system_packages(self, install_mercurial):
-        packages = [
-            "git",
-            "gnu-tar",
-            "terminal-notifier",
-            "watchman",
-        ]
-        if install_mercurial:
-            packages.append("mercurial")
+    def ensure_homebrew_browser_packages(self):
+        # TODO: Figure out what not to install for artifact mode
+        packages = ["yasm"]
         self._ensure_homebrew_packages(packages)
 
     def ensure_homebrew_mobile_android_packages(
@@ -395,14 +328,10 @@ class OSXBootstrapper(BaseBootstrapper):
         # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
 
         # 1. System packages.
-        packages = [
-            "wget",
-        ]
+        packages = ["wget"]
         self._ensure_homebrew_packages(packages)
 
-        casks = [
-            "adoptopenjdk8",
-        ]
+        casks = ["adoptopenjdk8"]
         self._ensure_homebrew_casks(casks)
 
         is_64bits = sys.maxsize > 2 ** 32
@@ -422,120 +351,25 @@ class OSXBootstrapper(BaseBootstrapper):
             "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
         )
 
-    def _ensure_macports_packages(self, packages):
-        self.port = which("port")
-        assert self.port is not None
-
-        installed = set(
-            subprocess.check_output(
-                [self.port, "installed"], universal_newlines=True
-            ).split()
-        )
-
-        missing = [package for package in packages if package not in installed]
-        if missing:
-            print(PACKAGE_MANAGER_PACKAGES % ("MacPorts",))
-            self.run_as_root([self.port, "-v", "install"] + missing)
-
-    def ensure_macports_system_packages(self, install_mercurial):
-        packages = ["gnutar", "watchman"]
-        if install_mercurial:
-            packages.append("mercurial")
-
-        self._ensure_macports_packages(packages)
-
-        pythons = set(
-            subprocess.check_output(
-                [self.port, "select", "--list", "python"], universal_newlines=True
-            ).split("\n")
-        )
-        active = ""
-        for python in pythons:
-            if "active" in python:
-                active = python
-        if "python27" not in active:
-            self.run_as_root([self.port, "select", "--set", "python", "python27"])
-        else:
-            print("The right python version is already active.")
-
-    def ensure_macports_mobile_android_packages(
-        self, mozconfig_builder, artifact_mode=False
-    ):
-        # Multi-part process:
-        # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-
-        # 1. System packages.
-        packages = [
-            "wget",
-        ]
-        self._ensure_macports_packages(packages)
-
-        is_64bits = sys.maxsize > 2 ** 32
-        if not is_64bits:
-            raise Exception(
-                "You need a 64-bit version of Mac OS X to build "
-                "GeckoView/Firefox for Android."
-            )
-
-        # 2. Android pieces.
-        self.ensure_java(mozconfig_builder)
-        from mozboot import android
-
-        android.ensure_android(
-            "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
-        )
-
-    def ensure_package_manager(self):
+    def ensure_homebrew_installed(self):
         """
-        Search package mgr in sys.path, if none is found, prompt the user to install one.
-        If only one is found, use that one. If both are found, prompt the user to choose
-        one.
+        Search for Homebrew in sys.path, if not found, prompt the user to install it.
+        Then assert our PATH ordering is correct.
         """
-        installed = []
-        for name, cmd in PACKAGE_MANAGER.items():
-            if which(cmd) is not None:
-                installed.append(name)
+        homebrew_found = self._ensure_homebrew_found()
+        if not homebrew_found:
+            self.install_homebrew()
 
-        active_name, active_cmd = None, None
-
-        if not installed:
-            print(NO_PACKAGE_MANAGER_WARNING)
-            choice = self.prompt_int(prompt=PACKAGE_MANAGER_CHOICE, low=1, high=2)
-            active_name = PACKAGE_MANAGER_CHOICES[choice - 1]
-            active_cmd = PACKAGE_MANAGER[active_name]
-            getattr(self, "install_%s" % active_name.lower())()
-        elif len(installed) == 1:
-            print(PACKAGE_MANAGER_EXISTS % (installed[0], installed[0]))
-            active_name = installed[0]
-            active_cmd = PACKAGE_MANAGER[active_name]
-        else:
-            print(MULTI_PACKAGE_MANAGER_EXISTS)
-            choice = self.prompt_int(prompt=PACKAGE_MANAGER_CHOICE, low=1, high=2)
-
-            active_name = PACKAGE_MANAGER_CHOICES[choice - 1]
-            active_cmd = PACKAGE_MANAGER[active_name]
-
-        # Ensure the active package manager is in $PATH and it comes before
-        # /usr/bin. If it doesn't come before /usr/bin, we'll pick up system
-        # packages before package manager installed packages and the build may
-        # break.
-        p = which(active_cmd)
-        if not p:
-            print(PACKAGE_MANAGER_BIN_MISSING % active_cmd)
-            sys.exit(1)
-
-        p_dir = os.path.dirname(p)
+        # Check for correct $PATH ordering.
+        brew_dir = os.path.dirname(self.brew)
         for path in os.environ["PATH"].split(os.pathsep):
-            if path == p_dir:
+            if path == brew_dir:
                 break
 
             for check in ("/bin", "/usr/bin"):
                 if path == check:
-                    print(BAD_PATH_ORDER % (check, p_dir, p_dir, check, p_dir))
+                    print(BAD_PATH_ORDER % (check, brew_dir, brew_dir, check, brew_dir))
                     sys.exit(1)
-
-        return active_name.lower()
 
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         from mozboot import static_analysis
@@ -594,7 +428,7 @@ class OSXBootstrapper(BaseBootstrapper):
         )
 
     def install_homebrew(self):
-        print(PACKAGE_MANAGER_INSTALL % ("Homebrew", "Homebrew", "Homebrew", "brew"))
+        print(BREW_INSTALL)
         bootstrap = urlopen(url=HOMEBREW_BOOTSTRAP, timeout=20).read()
         with tempfile.NamedTemporaryFile() as tf:
             tf.write(bootstrap)
@@ -602,44 +436,27 @@ class OSXBootstrapper(BaseBootstrapper):
 
             subprocess.check_call(["ruby", tf.name])
 
-    def install_macports(self):
-        url = MACPORTS_URL.get(self.minor_version, None)
-        if not url:
-            raise Exception(
-                "We do not have a MacPorts install URL for your "
-                "OS X version. You will need to install MacPorts manually."
+        homebrew_found = self._ensure_homebrew_found()
+        if not homebrew_found:
+            print(
+                "Homebrew was just installed but can't be found on PATH. "
+                "Please file a bug."
             )
-
-        print(PACKAGE_MANAGER_INSTALL % ("MacPorts", "MacPorts", "MacPorts", "port"))
-        pkg = urlopen(url=url, timeout=300).read()
-        with tempfile.NamedTemporaryFile(suffix=".pkg") as tf:
-            tf.write(pkg)
-            tf.flush()
-
-            self.run_as_root(["installer", "-pkg", tf.name, "-target", "/"])
+            sys.exit(1)
 
     def _update_package_manager(self):
-        if self.package_manager == "homebrew":
-            subprocess.check_call([self.brew, "-v", "update"])
-        else:
-            assert self.package_manager == "macports"
-            self.run_as_root([self.port, "selfupdate"])
+        subprocess.check_call([self.brew, "-v", "update"])
 
     def _upgrade_package(self, package):
-        self._ensure_package_manager_updated()
+        self._ensure_homebrew_installed()
 
-        if self.package_manager == "homebrew":
-            try:
-                subprocess.check_output(
-                    [self.brew, "-v", "upgrade", package], stderr=subprocess.STDOUT
-                )
-            except subprocess.CalledProcessError as e:
-                if b"already installed" not in e.output:
-                    raise
-        else:
-            assert self.package_manager == "macports"
-
-            self.run_as_root([self.port, "upgrade", package])
+        try:
+            subprocess.check_output(
+                [self.brew, "-v", "upgrade", package], stderr=subprocess.STDOUT
+            )
+        except subprocess.CalledProcessError as e:
+            if b"already installed" not in e.output:
+                raise
 
     def upgrade_mercurial(self, current):
         self._upgrade_package("mercurial")
