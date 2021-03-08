@@ -8,7 +8,8 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-    var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror" ];
+    /* globals SimpleTest, is */
+    var imports = [ "SimpleTest", "is" ];
     for (var name of imports) {
       window[name] = window.arguments[0][name];
     }

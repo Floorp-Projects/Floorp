@@ -394,7 +394,6 @@ module.exports = {
         "no-redeclare": "off",
         "no-sequences": "off",
         "no-shadow": "off",
-        "no-undef": "off",
         "no-useless-call": "off",
       },
     },
