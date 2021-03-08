@@ -209,7 +209,7 @@ decorate_task(
 );
 
 decorate_task(
-  withMockNormandyApi,
+  withMockNormandyApi(),
   withStub(ClientEnvironment, "getClientClassification"),
   async function testClientClassificationCache(api, getStub) {
     getStub.returns(Promise.resolve(false));

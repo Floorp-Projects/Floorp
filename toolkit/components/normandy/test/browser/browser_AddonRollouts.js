@@ -10,39 +10,42 @@ const { AddonRollouts } = ChromeUtils.import(
   "resource://normandy/lib/AddonRollouts.jsm"
 );
 
-decorate_task(AddonRollouts.withTestMock, async function testGetMissing() {
+decorate_task(AddonRollouts.withTestMock(), async function testGetMissing() {
   ok(
     !(await AddonRollouts.get("does-not-exist")),
     "get should return null when the requested rollout does not exist"
   );
 });
 
-decorate_task(AddonRollouts.withTestMock, async function testAddUpdateAndGet() {
-  const rollout = {
-    slug: "test-rollout",
-    state: AddonRollouts.STATE_ACTIVE,
-    extension: {},
-  };
-  await AddonRollouts.add(rollout);
-  let storedRollout = await AddonRollouts.get(rollout.slug);
-  Assert.deepEqual(
-    rollout,
-    storedRollout,
-    "get should retrieve a rollout from storage."
-  );
+decorate_task(
+  AddonRollouts.withTestMock(),
+  async function testAddUpdateAndGet() {
+    const rollout = {
+      slug: "test-rollout",
+      state: AddonRollouts.STATE_ACTIVE,
+      extension: {},
+    };
+    await AddonRollouts.add(rollout);
+    let storedRollout = await AddonRollouts.get(rollout.slug);
+    Assert.deepEqual(
+      rollout,
+      storedRollout,
+      "get should retrieve a rollout from storage."
+    );
 
-  rollout.state = AddonRollouts.STATE_ROLLED_BACK;
-  await AddonRollouts.update(rollout);
-  storedRollout = await AddonRollouts.get(rollout.slug);
-  Assert.deepEqual(
-    rollout,
-    storedRollout,
-    "get should retrieve a rollout from storage."
-  );
-});
+    rollout.state = AddonRollouts.STATE_ROLLED_BACK;
+    await AddonRollouts.update(rollout);
+    storedRollout = await AddonRollouts.get(rollout.slug);
+    Assert.deepEqual(
+      rollout,
+      storedRollout,
+      "get should retrieve a rollout from storage."
+    );
+  }
+);
 
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   async function testCantUpdateNonexistent() {
     const rollout = {
       slug: "test-rollout",
@@ -61,7 +64,7 @@ decorate_task(
   }
 );
 
-decorate_task(AddonRollouts.withTestMock, async function testGetAll() {
+decorate_task(AddonRollouts.withTestMock(), async function testGetAll() {
   const rollout1 = { slug: "test-rollout-1", extension: {} };
   const rollout2 = { slug: "test-rollout-2", extension: {} };
   await AddonRollouts.add(rollout1);
@@ -75,7 +78,7 @@ decorate_task(AddonRollouts.withTestMock, async function testGetAll() {
   );
 });
 
-decorate_task(AddonRollouts.withTestMock, async function testGetAllActive() {
+decorate_task(AddonRollouts.withTestMock(), async function testGetAllActive() {
   const rollout1 = {
     slug: "test-rollout-1",
     state: AddonRollouts.STATE_ACTIVE,
@@ -95,7 +98,7 @@ decorate_task(AddonRollouts.withTestMock, async function testGetAllActive() {
   );
 });
 
-decorate_task(AddonRollouts.withTestMock, async function testHas() {
+decorate_task(AddonRollouts.withTestMock(), async function testHas() {
   const rollout = { slug: "test-rollout", extensions: {} };
   await AddonRollouts.add(rollout);
   ok(
@@ -110,7 +113,7 @@ decorate_task(AddonRollouts.withTestMock, async function testHas() {
 
 // init should mark active rollouts in telemetry
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   withStub(TelemetryEnvironment, "setExperimentActive"),
   async function testInitTelemetry(setExperimentActiveStub) {
     await AddonRollouts.add({
