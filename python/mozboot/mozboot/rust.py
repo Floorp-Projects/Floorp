@@ -90,9 +90,9 @@ def unquote(s):
 
 def rustup_latest_version():
     """Query the latest version of the rustup installer."""
-    import urllib2
+    import requests
 
-    f = urllib2.urlopen(RUSTUP_MANIFEST)
+    r = requests.get(RUSTUP_MANIFEST)
     # The manifest is toml, but we might not have the toml4 python module
     # available, so use ad-hoc parsing to obtain the current release version.
     #
@@ -101,8 +101,9 @@ def rustup_latest_version():
     # schema-version = '1'
     # version = '0.6.5'
     #
-    for line in f:
-        key, value = map(str.strip, line.split(b"=", 2))
+    for line in r.iter_lines():
+        line = line.decode("utf-8")
+        key, value = map(str.strip, line.split("=", 2))
         if key == "schema-version":
             schema = int(unquote(value))
             if schema != 1:
@@ -128,9 +129,9 @@ def make_checksums(version, validate=False):
     hashes = []
     for platform in RUSTUP_HASHES.keys():
         if validate:
-            print("Checking %s... " % platform, end="")
+            print("Checking %s... " % platform, end="", flush=True)
         else:
-            print("Fetching %s... " % platform, end="")
+            print("Fetching %s... " % platform, end="", flush=True)
         checksum = http_download_and_hash(rustup_url(platform, version))
         if validate and checksum != rustup_hash(platform):
             print(
@@ -145,10 +146,6 @@ def make_checksums(version, validate=False):
 
 if __name__ == "__main__":
     """Allow invoking the module as a utility to update checksums."""
-
-    # Unbuffer stdout so our two-part 'Checking...' messages print correctly
-    # even if there's network delay.
-    sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 0)
 
     # Hook the requests module from the greater source tree. We can't import
     # this at the module level since we might be imported into the bootstrap
@@ -166,7 +163,7 @@ if __name__ == "__main__":
             print(USAGE)
             sys.exit(1)
 
-    print("Checking latest installer version... ", end="")
+    print("Checking latest installer version... ", end="", flush=True)
     version = rustup_latest_version()
     if not version:
         print("ERROR: Could not query current rustup installer version.")
