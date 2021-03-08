@@ -74,7 +74,7 @@ double WheelEvent::ToWebExposedDelta(const WidgetWheelEvent& aWidgetEvent,
     if (mDeltaModeCheckingState == DeltaModeCheckingState::Unchecked &&
         aWidgetEvent.mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE &&
         StaticPrefs::dom_event_wheel_deltaMode_lines_disabled()) {
-      return aDelta * CSSPixel::FromAppUnits(aLineOrPageAmount);
+      return aDelta * CSSPixel::FromAppUnits(aLineOrPageAmount).Rounded();
     }
   }
   if (!mAppUnitsPerDevPixel) {
