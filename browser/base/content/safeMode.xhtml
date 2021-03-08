@@ -9,12 +9,12 @@
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            data-l10n-id="safe-mode-window"
+            data-l10n-id="troubleshoot-mode-window"
             data-l10n-attrs="title,style"
             onload="onLoad()">
 <dialog id="safeModeDialog"
             buttons="accept,extra1"
-            buttonidaccept="start-safe-mode"
+            buttonidaccept="start-troubleshoot-mode"
             buttonidextra1="refresh-profile">
 
   <linkset>
@@ -30,11 +30,11 @@
   </vbox>
 
   <vbox id="safeMode">
-    <label data-l10n-id="safe-mode-description" />
+    <label data-l10n-id="troubleshoot-mode-description" />
     <separator class="thin"/>
     <label data-l10n-id="safe-mode-description-details" />
     <separator class="thin"/>
-    <label id="resetProfileInstead" data-l10n-id="refresh-profile-instead"/>
+    <label id="resetProfileInstead" data-l10n-id="skip-troubleshoot-refresh-profile"/>
   </vbox>
 
   <vbox id="resetProfile" hidden="true">
