@@ -30,14 +30,21 @@ add_task(async function() {
   // Grab our cert, instead of relying on a discovery advertisement
   const serverCert = await cert.local.getOrCreate();
 
-  const oobData = defer();
   const AuthenticatorType = DevToolsServer.Authenticators.get("OOB_CERT");
   const serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {
     return DevToolsServer.AuthenticationResult.ALLOW;
   };
   // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
+  const clientAuth = new AuthenticatorType.Client();
+  serverAuth.receiveOOB = () =>
+    new Promise(resolve => {
+      clientAuth.sendOOB = ({ oob }) => {
+        info(oob);
+        // Pass to server, skipping prompt for tests
+        resolve(oob);
+      };
+    });
 
   const socketOptions = {
     authenticator: serverAuth,
@@ -48,13 +55,6 @@ add_task(async function() {
   ok(listener, "Socket listener created");
   await listener.open();
   equal(DevToolsServer.listeningSockets, 1, "1 listening socket");
-
-  const clientAuth = new AuthenticatorType.Client();
-  clientAuth.sendOOB = ({ oob }) => {
-    info(oob);
-    // Pass to server, skipping prompt for tests
-    oobData.resolve(oob);
-  };
 
   const transport = await DevToolsClient.socketConnect({
     host: "127.0.0.1",
@@ -89,14 +89,21 @@ add_task(async function() {
 add_task(async function() {
   equal(DevToolsServer.listeningSockets, 0, "0 listening sockets");
 
-  const oobData = defer();
   const AuthenticatorType = DevToolsServer.Authenticators.get("OOB_CERT");
   const serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {
     return DevToolsServer.AuthenticationResult.ALLOW;
   };
   // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
+  const clientAuth = new AuthenticatorType.Client();
+  serverAuth.receiveOOB = () =>
+    new Promise(resolve => {
+      clientAuth.sendOOB = ({ oob }) => {
+        info(oob);
+        // Pass to server, skipping prompt for tests
+        resolve(oob);
+      };
+    });
 
   const socketOptions = {
     authenticator: serverAuth,
@@ -118,16 +125,17 @@ add_task(async function() {
   });
 
   // Attempt to use the transport
-  const deferred = defer();
   const client = new DevToolsClient(transport);
-  client.onPacket = packet => {
-    // Client did not authenticate, so it ends up seeing the server's auth data
-    // which is effectively malformed data from the client's perspective
-    ok(!packet.from && packet.authResult, "Got auth packet instead of data");
-    deferred.resolve();
-  };
+  const promise = new Promise(resolve => {
+    client.onPacket = packet => {
+      // Client did not authenticate, so it ends up seeing the server's auth data
+      // which is effectively malformed data from the client's perspective
+      ok(!packet.from && packet.authResult, "Got auth packet instead of data");
+      resolve();
+    };
+  });
   client.connect();
-  await deferred.promise;
+  await promise;
 
   // Try to send a message the server will echo back
   const message = "secrets";
@@ -155,25 +163,25 @@ add_task(async function() {
   // Grab our cert, instead of relying on a discovery advertisement
   const serverCert = await cert.local.getOrCreate();
 
-  const oobData = defer();
   const AuthenticatorType = DevToolsServer.Authenticators.get("OOB_CERT");
   const serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {
     return DevToolsServer.AuthenticationResult.ALLOW;
   };
   // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
-
   const clientAuth = new AuthenticatorType.Client();
-  clientAuth.sendOOB = ({ oob }) => {
-    info(oob);
-    info("Modifying K value, should fail");
-    // Pass to server, skipping prompt for tests
-    oobData.resolve({
-      k: oob.k + 1,
-      sha256: oob.sha256,
+  serverAuth.receiveOOB = () =>
+    new Promise(resolve => {
+      clientAuth.sendOOB = ({ oob }) => {
+        info(oob);
+        info("Modifying K value, should fail");
+        // Pass to server, skipping prompt for tests
+        resolve({
+          k: oob.k + 1,
+          sha256: oob.sha256,
+        });
+      };
     });
-  };
 
   const socketOptions = {
     authenticator: serverAuth,
@@ -212,25 +220,25 @@ add_task(async function() {
   // Grab our cert, instead of relying on a discovery advertisement
   const serverCert = await cert.local.getOrCreate();
 
-  const oobData = defer();
   const AuthenticatorType = DevToolsServer.Authenticators.get("OOB_CERT");
   const serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {
     return DevToolsServer.AuthenticationResult.ALLOW;
   };
   // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
-
   const clientAuth = new AuthenticatorType.Client();
-  clientAuth.sendOOB = ({ oob }) => {
-    info(oob);
-    info("Modifying cert hash, should fail");
-    // Pass to server, skipping prompt for tests
-    oobData.resolve({
-      k: oob.k,
-      sha256: oob.sha256 + 1,
+  serverAuth.receiveOOB = () =>
+    new Promise(resolve => {
+      clientAuth.sendOOB = ({ oob }) => {
+        info(oob);
+        info("Modifying cert hash, should fail");
+        // Pass to server, skipping prompt for tests
+        resolve({
+          k: oob.k,
+          sha256: oob.sha256 + 1,
+        });
+      };
     });
-  };
 
   const socketOptions = {
     authenticator: serverAuth,
