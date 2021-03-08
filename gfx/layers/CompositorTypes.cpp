@@ -34,7 +34,6 @@ std::ostream& operator<<(std::ostream& aStream, const TextureFlags& aFlags) {
     AppendFlag(TextureFlags::RECYCLE);
     AppendFlag(TextureFlags::DEALLOCATE_CLIENT);
     AppendFlag(TextureFlags::DEALLOCATE_SYNC);
-    AppendFlag(TextureFlags::DEALLOCATE_MAIN_THREAD);
     AppendFlag(TextureFlags::IMMUTABLE);
     AppendFlag(TextureFlags::IMMEDIATE_UPLOAD);
     AppendFlag(TextureFlags::COMPONENT_ALPHA);

@@ -117,7 +117,6 @@ class TextureChild final : PTextureChild {
         mTextureClient(nullptr),
         mTextureData(nullptr),
         mDestroyed(false),
-        mMainThreadOnly(false),
         mIPCOpen(false),
         mOwnsTextureData(false),
         mOwnerCalledDestroy(false),
@@ -237,7 +236,6 @@ class TextureChild final : PTextureChild {
   TextureClient* mTextureClient;
   TextureData* mTextureData;
   Atomic<bool> mDestroyed;
-  bool mMainThreadOnly;
   bool mIPCOpen;
   bool mOwnsTextureData;
   bool mOwnerCalledDestroy;
@@ -424,21 +422,8 @@ bool TextureData::IsRemote(KnowsCompositor* aKnowsCompositor,
 }
 
 static void DestroyTextureData(TextureData* aTextureData,
-                               LayersIPCChannel* aAllocator, bool aDeallocate,
-                               bool aMainThreadOnly) {
+                               LayersIPCChannel* aAllocator, bool aDeallocate) {
   if (!aTextureData) {
-    return;
-  }
-
-  if (aMainThreadOnly && !NS_IsMainThread()) {
-    RefPtr<LayersIPCChannel> allocatorRef = aAllocator;
-    SchedulerGroup::Dispatch(
-        TaskCategory::Other,
-        NS_NewRunnableFunction(
-            "layers::DestroyTextureData",
-            [aTextureData, allocatorRef, aDeallocate]() -> void {
-              DestroyTextureData(aTextureData, allocatorRef, aDeallocate, true);
-            }));
     return;
   }
 
@@ -456,8 +441,7 @@ void TextureChild::ActorDestroy(ActorDestroyReason why) {
   mIPCOpen = false;
 
   if (mTextureData) {
-    DestroyTextureData(mTextureData, GetAllocator(), mOwnsTextureData,
-                       mMainThreadOnly);
+    DestroyTextureData(mTextureData, GetAllocator(), mOwnsTextureData);
     mTextureData = nullptr;
   }
 }
@@ -472,7 +456,7 @@ void TextureChild::Destroy(const TextureDeallocParams& aParams) {
 
   if (!IPCOpen()) {
     DestroyTextureData(aParams.data, aParams.allocator,
-                       aParams.clientDeallocation, mMainThreadOnly);
+                       aParams.clientDeallocation);
     return;
   }
 
@@ -557,8 +541,7 @@ void DeallocateTextureClient(TextureDeallocParams params) {
     // TextureClient before sharing it with the compositor. It means the data
     // cannot be owned by the TextureHost since we never created the
     // TextureHost...
-    DestroyTextureData(params.data, params.allocator, /* aDeallocate */ true,
-                       /* aMainThreadOnly */ false);
+    DestroyTextureData(params.data, params.allocator, /* aDeallocate */ true);
     return;
   }
 
@@ -1105,7 +1088,6 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
   mActor->mCompositableForwarder = aForwarder;
   mActor->mTextureForwarder = aForwarder->GetTextureForwarder();
   mActor->mTextureClient = this;
-  mActor->mMainThreadOnly = !!(mFlags & TextureFlags::DEALLOCATE_MAIN_THREAD);
 
   // If the TextureClient is already locked, we have to lock TextureChild's
   // mutex since it will be unlocked in TextureClient::Unlock.
@@ -1171,7 +1153,6 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor) {
   mActor = static_cast<TextureChild*>(actor);
   mActor->mTextureForwarder = fwd;
   mActor->mTextureClient = this;
-  mActor->mMainThreadOnly = !!(mFlags & TextureFlags::DEALLOCATE_MAIN_THREAD);
 
   // If the TextureClient is already locked, we have to lock TextureChild's
   // mutex since it will be unlocked in TextureClient::Unlock.
