@@ -1758,20 +1758,10 @@ def set_worker_type(config, tasks):
         elif test_platform.startswith("macosx1014-64"):
             if "--power-test" in task["mozharness"]["extra-options"]:
                 task["worker-type"] = MACOSX_WORKER_TYPES["macosx1014-64-power"]
-            elif task.get("suite", "") in ["talos", "raptor", "awsy"]:
-                # TODO: duplicate tasks for macosx 10.15 (remove 2021-03-08)
-                task1015 = copy.deepcopy(task)
-                task1015["test-platform"] = test_platform.replace(
-                    "macosx1014-64", "macosx1015-64"
-                )
-                task1015["treeherder-machine-platform"] = task1015[
-                    "treeherder-machine-platform"
-                ].replace("macosx1014-64", "macosx1015-64")
-                task1015["worker-type"] = MACOSX_WORKER_TYPES["macosx1015-64"]
-                yield task1015
-                task["worker-type"] = MACOSX_WORKER_TYPES["macosx1014-64"]
             else:
                 task["worker-type"] = MACOSX_WORKER_TYPES["macosx1014-64"]
+        elif test_platform.startswith("macosx1015-64"):
+            task["worker-type"] = MACOSX_WORKER_TYPES["macosx1015-64"]
         elif test_platform.startswith("win"):
             # figure out what platform the job needs to run on
             if task["virtualization"] == "hardware":
