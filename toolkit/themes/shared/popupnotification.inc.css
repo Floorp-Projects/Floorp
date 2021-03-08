@@ -107,3 +107,39 @@
 .popup-notification-warning {
   color: #d74345;
 }
+
+/** PopupNotifications **/
+@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+.panel-footer.popup-notification-button-container {
+  justify-content: flex-end;
+  margin-inline: 16px;
+  margin-bottom: 16px;
+}
+
+.panel-footer > .popup-notification-button {
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: 600;
+  margin-inline-start: 8px;
+}
+
+.panel-footer > .popup-notification-button:not([disabled]) {
+  color: var(--buttons-secondary-color);
+  background-color: var(--buttons-secondary-bgcolor, var(--arrowpanel-dimmed));
+}
+
+.panel-footer > .popup-notification-button:not([disabled]):hover {
+  background-color: var(--buttons-secondary-hover-bgcolor, var(--arrowpanel-dimmed-further));
+}
+
+.panel-footer > .popup-notification-button:not([disabled]):hover:active {
+  background-color: var(--buttons-secondary-active-bgcolor, var(--arrowpanel-dimmed-even-further));
+}
+
+.popup-notification-button,
+.popup-notification-primary-button {
+  flex: unset;
+}
+
+} /*** END proton ***/
