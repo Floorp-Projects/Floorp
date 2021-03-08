@@ -222,6 +222,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">詳細情報</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s で検索</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">アドレスバーから直接検索します</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">新しい Firefox タブを開く</string>
