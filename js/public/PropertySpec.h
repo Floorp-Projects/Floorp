@@ -354,31 +354,32 @@ struct JSPropertySpec {
 // - AccessorsOrValue (4 words, native + JSJitInfo for both getter and setter)
 static_assert(sizeof(JSPropertySpec) == 6 * sizeof(uintptr_t));
 
-#define JS_CHECK_ACCESSOR_FLAGS(attributes)                               \
-  (static_cast<std::enable_if_t<                                          \
-       ((attributes) & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)) == 0>>(0), \
-   (attributes))
+template <unsigned Attributes>
+constexpr uint8_t CheckAccessorAttrs() {
+  static_assert((Attributes & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)) == 0,
+                "Unexpected flag (not JSPROP_ENUMERATE or JSPROP_PERMANENT)");
+  return uint8_t(Attributes);
+}
 
-#define JS_PSG(name, getter, attributes)                                     \
-  JSPropertySpec::nativeAccessors(name, JS_CHECK_ACCESSOR_FLAGS(attributes), \
+#define JS_PSG(name, getter, attributes)                                  \
+  JSPropertySpec::nativeAccessors(name, CheckAccessorAttrs<attributes>(), \
                                   getter, nullptr)
-#define JS_PSGS(name, getter, setter, attributes)                            \
-  JSPropertySpec::nativeAccessors(name, JS_CHECK_ACCESSOR_FLAGS(attributes), \
+#define JS_PSGS(name, getter, setter, attributes)                         \
+  JSPropertySpec::nativeAccessors(name, CheckAccessorAttrs<attributes>(), \
                                   getter, nullptr, setter, nullptr)
-#define JS_SYM_GET(symbol, getter, attributes)                                 \
-  JSPropertySpec::nativeAccessors(::JS::SymbolCode::symbol,                    \
-                                  JS_CHECK_ACCESSOR_FLAGS(attributes), getter, \
+#define JS_SYM_GET(symbol, getter, attributes)                              \
+  JSPropertySpec::nativeAccessors(::JS::SymbolCode::symbol,                 \
+                                  CheckAccessorAttrs<attributes>(), getter, \
                                   nullptr)
-#define JS_SELF_HOSTED_GET(name, getterName, attributes) \
-  JSPropertySpec::selfHostedAccessors(                   \
-      name, JS_CHECK_ACCESSOR_FLAGS(attributes), getterName)
-#define JS_SELF_HOSTED_GETSET(name, getterName, setterName, attributes) \
-  JSPropertySpec::selfHostedAccessors(                                  \
-      name, JS_CHECK_ACCESSOR_FLAGS(attributes), getterName, setterName)
-#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, attributes)             \
-  JSPropertySpec::selfHostedAccessors(::JS::SymbolCode::symbol,            \
-                                      JS_CHECK_ACCESSOR_FLAGS(attributes), \
+#define JS_SELF_HOSTED_GET(name, getterName, attributes)                      \
+  JSPropertySpec::selfHostedAccessors(name, CheckAccessorAttrs<attributes>(), \
                                       getterName)
+#define JS_SELF_HOSTED_GETSET(name, getterName, setterName, attributes)       \
+  JSPropertySpec::selfHostedAccessors(name, CheckAccessorAttrs<attributes>(), \
+                                      getterName, setterName)
+#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, attributes) \
+  JSPropertySpec::selfHostedAccessors(                         \
+      ::JS::SymbolCode::symbol, CheckAccessorAttrs<attributes>(), getterName)
 #define JS_STRING_PS(name, string, attributes) \
   JSPropertySpec::stringValue(name, attributes, string)
 #define JS_STRING_SYM_PS(symbol, string, attributes) \
