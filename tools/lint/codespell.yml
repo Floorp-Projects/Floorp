@@ -30,6 +30,7 @@ codespell:
         - mobile/android/locales/en-US/
         - mobile/locales/en-US/
         - netwerk/locales/en-US/
+        - netwerk/docs/
         - python/docs/
         - python/mach/docs/
         - python/mozlint/
