@@ -114,7 +114,7 @@ browsertime-tp6:
         by-app:
             chrome:
                 - linux.*shippable[^-qr].*
-                - macosx1014-64-shippable-qr/opt
+                - macosx1015-64-shippable-qr/opt
                 - windows10.*shippable[^-qr].*
             chromium:
                 # Run on non-QR shippable, but test-platforms.yml doesn't have
@@ -122,7 +122,7 @@ browsertime-tp6:
                 # to run it on shippable-qr, otherwise there's nothing running
                 # this on macosx at all.
                 - .*shippable[^-qr].*
-                - macosx1014-64-shippable-qr/opt
+                - macosx1015-64-shippable-qr/opt
                 - windows10.*shippable[^-qr].*
             default: []
     treeherder-symbol: Btime(tp6)

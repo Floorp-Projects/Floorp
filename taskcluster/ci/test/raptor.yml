@@ -49,12 +49,12 @@ job-defaults:
                 - linux64-shippable/opt
                 - windows7-32-shippable/opt
                 - windows10-64-shippable/opt
-                - macosx1014-64-shippable/opt
+                - macosx1015-64-shippable/opt
             chromium:
                 - linux64-shippable/opt
                 - windows7-32-shippable/opt
                 - windows10-64-shippable/opt
-                - macosx1014-64-shippable/opt
+                - macosx1015-64-shippable/opt
             default:
                 - .*
     tier:
@@ -568,7 +568,7 @@ raptor-youtube-playback-av1-sfr-firefox:
             default: ['mozilla-central']
     limit-platforms:
         - windows10-64-ref-hw-2017/opt
-        - macosx1014-64-shippable-qr/opt
+        - macosx1015-64-shippable-qr/opt
     max-run-time:
         by-test-platform:
             windows10-aarch64/opt: 3600
