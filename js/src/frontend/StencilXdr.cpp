@@ -455,6 +455,11 @@ template <XDRMode mode>
     uint32_t index;
     MOZ_TRY(xdr->codeUint32(&index));
     MOZ_TRY(codeParserAtom(xdr, &entry));
+    if (mode == XDR_DECODE) {
+      if (index >= atomVectorLength) {
+        return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
+      }
+    }
     builder.set(frontend::ParserAtomIndex(index), entry);
   }
 
