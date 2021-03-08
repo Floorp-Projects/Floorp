@@ -432,11 +432,14 @@ struct Texture {
   // Set an external backing buffer of this texture.
   void set_buffer(void* new_buf, size_t new_stride) {
     assert(!should_free());
-    // Ensure that the supplied stride is at least as big as the internally
-    // calculated aligned stride.
+    // Ensure that the supplied stride is at least as big as the row data and
+    // is aligned to the smaller of either the BPP or word-size. We need to at
+    // least be able to sample data from within a row and sample whole pixels
+    // of smaller formats without risking unaligned access.
     set_bpp();
     set_stride();
-    assert(new_stride >= buf_stride);
+    assert(new_stride >= size_t(bpp() * width) &&
+           new_stride % min(bpp(), sizeof(uint32_t)) == 0);
 
     buf = (char*)new_buf;
     buf_size = 0;

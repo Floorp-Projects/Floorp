@@ -201,3 +201,4 @@ load 1651882.html
 skip-if(!webrender) load 1678938-1.html
 load 1679477-1.html
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1685009-1.html
+load 1694783-1.html
