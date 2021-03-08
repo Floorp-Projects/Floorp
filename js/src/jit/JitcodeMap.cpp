@@ -136,14 +136,6 @@ void JitcodeGlobalEntry::IonEntry::destroy() {
   scriptList_ = nullptr;
 }
 
-void JitcodeGlobalEntry::BaselineEntry::trackIonAbort(jsbytecode* pc,
-                                                      const char* message) {
-  MOZ_ASSERT(script_->containsPC(pc));
-  MOZ_ASSERT(message);
-  ionAbortPc_ = pc;
-  ionAbortMessage_ = message;
-}
-
 void* JitcodeGlobalEntry::BaselineEntry::canonicalNativeAddrFor(
     void* ptr) const {
   // TODO: We can't yet normalize Baseline addresses until we unify
@@ -677,10 +669,6 @@ void JitcodeGlobalEntry::BaselineEntry::sweepChildren() {
   MOZ_ALWAYS_FALSE(IsAboutToBeFinalizedUnbarriered(&script_));
 }
 
-bool JitcodeGlobalEntry::BaselineEntry::isMarkedFromAnyThread(JSRuntime* rt) {
-  return IsMarkedUnbarriered(rt, &script_);
-}
-
 bool JitcodeGlobalEntry::IonEntry::trace(JSTracer* trc) {
   bool tracedAny = false;
 
@@ -701,16 +689,6 @@ void JitcodeGlobalEntry::IonEntry::sweepChildren() {
     MOZ_ALWAYS_FALSE(
         IsAboutToBeFinalizedUnbarriered(&sizedScriptList()->pairs[i].script));
   }
-}
-
-bool JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread(JSRuntime* rt) {
-  for (unsigned i = 0; i < numScripts(); i++) {
-    if (!IsMarkedUnbarriered(rt, &sizedScriptList()->pairs[i].script)) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 /* static */
