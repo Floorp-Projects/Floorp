@@ -23,7 +23,7 @@ pref("dom.ipc.keepProcessesAlive.web", 1);
 #ifdef RELEASE_OR_BETA
   pref("dom.ipc.processCount", 1);
 #else
-  pref("dom.ipc.processCount", 3);
+  pref("dom.ipc.processCount", 40);
 #endif
 
 pref("dom.ipc.processPrelaunch.enabled", false);
