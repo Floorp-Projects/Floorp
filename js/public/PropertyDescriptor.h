@@ -52,10 +52,7 @@ static constexpr uint8_t JSPROP_GETTER = 0x10;
 /** The property has a setter function. */
 static constexpr uint8_t JSPROP_SETTER = 0x20;
 
-/* (0x40 is unused; add to JSPROP_FLAGS_MASK if ever defined) */
-
-/** A bit for internal JS engine use only. */
-static constexpr uint8_t JSPROP_INTERNAL_USE_BIT = 0x80;
+/* (0x40 and 0x80 are unused; add to JSPROP_FLAGS_MASK if ever defined) */
 
 /* (0x1000 is unused; add to JSPROP_FLAGS_MASK if ever defined) */
 
@@ -101,9 +98,8 @@ static constexpr unsigned JSPROP_IGNORE_VALUE = 0x20000;
 
 static constexpr unsigned JSPROP_FLAGS_MASK =
     JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_GETTER |
-    JSPROP_SETTER | JSPROP_INTERNAL_USE_BIT | JSPROP_RESOLVING |
-    JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT |
-    JSPROP_IGNORE_VALUE;
+    JSPROP_SETTER | JSPROP_RESOLVING | JSPROP_IGNORE_ENUMERATE |
+    JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_VALUE;
 
 namespace JS {
 
@@ -211,19 +207,17 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
 
   void assertValid() const {
 #ifdef DEBUG
-    MOZ_ASSERT(
-        (attributes() &
-         ~(JSPROP_ENUMERATE | JSPROP_IGNORE_ENUMERATE | JSPROP_PERMANENT |
-           JSPROP_IGNORE_PERMANENT | JSPROP_READONLY | JSPROP_IGNORE_READONLY |
-           JSPROP_IGNORE_VALUE | JSPROP_GETTER | JSPROP_SETTER |
-           JSPROP_RESOLVING | JSPROP_INTERNAL_USE_BIT)) == 0);
+    MOZ_ASSERT((attributes() &
+                ~(JSPROP_ENUMERATE | JSPROP_IGNORE_ENUMERATE |
+                  JSPROP_PERMANENT | JSPROP_IGNORE_PERMANENT | JSPROP_READONLY |
+                  JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE | JSPROP_GETTER |
+                  JSPROP_SETTER | JSPROP_RESOLVING)) == 0);
     MOZ_ASSERT(!hasAll(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
     MOZ_ASSERT(!hasAll(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
     if (isAccessorDescriptor()) {
       MOZ_ASSERT(!has(JSPROP_READONLY));
       MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
       MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
-      MOZ_ASSERT(!has(JSPROP_INTERNAL_USE_BIT));
       MOZ_ASSERT(value().isUndefined());
       MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter());
       MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter());
@@ -242,10 +236,9 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
   void assertComplete() const {
 #ifdef DEBUG
     assertValid();
-    MOZ_ASSERT(
-        (attributes() & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                          JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER |
-                          JSPROP_RESOLVING | JSPROP_INTERNAL_USE_BIT)) == 0);
+    MOZ_ASSERT((attributes() &
+                ~(JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY |
+                  JSPROP_GETTER | JSPROP_SETTER | JSPROP_RESOLVING)) == 0);
     MOZ_ASSERT_IF(isAccessorDescriptor(),
                   has(JSPROP_GETTER) && has(JSPROP_SETTER));
 #endif
