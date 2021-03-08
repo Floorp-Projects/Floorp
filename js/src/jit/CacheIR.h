@@ -1114,7 +1114,6 @@ class MOZ_RAII CacheIRReader {
 
   uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
   GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
-  JSValueType jsValueType() { return JSValueType(buffer_.readByte()); }
   ValueType valueType() { return ValueType(buffer_.readByte()); }
   wasm::ValType::Kind wasmValType() {
     return wasm::ValType::Kind(buffer_.readByte());
@@ -1127,11 +1126,6 @@ class MOZ_RAII CacheIRReader {
   int32_t int32Immediate() { return int32_t(buffer_.readFixedUint32_t()); }
   uint32_t uint32Immediate() { return buffer_.readFixedUint32_t(); }
   void* pointer() { return buffer_.readRawPointer(); }
-
-  template <typename MetaKind>
-  MetaKind metaKind() {
-    return MetaKind(buffer_.readByte());
-  }
 
   UnaryMathFunction unaryMathFunction() {
     return UnaryMathFunction(buffer_.readByte());
@@ -1170,33 +1164,6 @@ class MOZ_RAII CacheIRReader {
     return bool(b);
   }
 
-  bool matchOp(CacheOp op) {
-    const uint8_t* pos = buffer_.currentPosition();
-    if (readOp() == op) {
-      return true;
-    }
-    buffer_.seek(pos, 0);
-    return false;
-  }
-
-  bool matchOp(CacheOp op, OperandId id) {
-    const uint8_t* pos = buffer_.currentPosition();
-    if (readOp() == op && buffer_.readByte() == id.id()) {
-      return true;
-    }
-    buffer_.seek(pos, 0);
-    return false;
-  }
-
-  bool matchOpEither(CacheOp op1, CacheOp op2) {
-    const uint8_t* pos = buffer_.currentPosition();
-    CacheOp op = readOp();
-    if (op == op1 || op == op2) {
-      return true;
-    }
-    buffer_.seek(pos, 0);
-    return false;
-  }
   const uint8_t* currentPosition() const { return buffer_.currentPosition(); }
 };
 
