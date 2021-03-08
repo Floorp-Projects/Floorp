@@ -41,26 +41,9 @@ class Requirement {
     MOZ_ASSERT(kind != FIXED && kind != MUST_REUSE_INPUT);
   }
 
-  Requirement(Kind kind, CodePosition at) : kind_(kind), position_(at) {
-    // These have dedicated constructors.
-    MOZ_ASSERT(kind != FIXED && kind != MUST_REUSE_INPUT);
-  }
-
   explicit Requirement(LAllocation fixed) : kind_(FIXED), allocation_(fixed) {
     MOZ_ASSERT(!fixed.isBogus() && !fixed.isUse());
   }
-
-  // Only useful as a hint, encodes where the fixed requirement is used to
-  // avoid allocating a fixed register too early.
-  Requirement(LAllocation fixed, CodePosition at)
-      : kind_(FIXED), allocation_(fixed), position_(at) {
-    MOZ_ASSERT(!fixed.isBogus() && !fixed.isUse());
-  }
-
-  Requirement(uint32_t vreg, CodePosition at)
-      : kind_(MUST_REUSE_INPUT),
-        allocation_(LUse(vreg, LUse::ANY)),
-        position_(at) {}
 
   Kind kind() const { return kind_; }
 
@@ -68,14 +51,6 @@ class Requirement {
     MOZ_ASSERT(!allocation_.isBogus() && !allocation_.isUse());
     return allocation_;
   }
-
-  uint32_t virtualRegister() const {
-    MOZ_ASSERT(allocation_.isUse());
-    MOZ_ASSERT(kind() == MUST_REUSE_INPUT);
-    return allocation_.toUse()->virtualRegister();
-  }
-
-  CodePosition pos() const { return position_; }
 
   [[nodiscard]] bool merge(const Requirement& newRequirement) {
     // Merge newRequirement with any existing requirement, returning false
@@ -102,7 +77,6 @@ class Requirement {
  private:
   Kind kind_;
   LAllocation allocation_;
-  CodePosition position_;
 };
 
 struct UsePosition : public TempObject,
