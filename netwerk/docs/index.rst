@@ -7,3 +7,4 @@ These linked pages contain design documents for the Networking stack implementat
    :maxdepth: 1
 
    cache2/doc
+   http/logging
