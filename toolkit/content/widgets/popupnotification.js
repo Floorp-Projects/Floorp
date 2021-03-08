@@ -10,7 +10,7 @@
   class MozPopupNotification extends MozXULElement {
     static get inheritedAttributes() {
       return {
-        ".popup-notification-icon": "popupid,src=icon,class=iconclass",
+        ".popup-notification-icon": "popupid,src=icon,class=iconclass,hasicon",
         ".popup-notification-origin": "value=origin,tooltiptext=origin",
         ".popup-notification-description": "popupid",
         ".popup-notification-description > span:first-of-type":
