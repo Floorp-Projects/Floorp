@@ -49,6 +49,8 @@ const uint64_t HTTP3_APP_ERROR_VERSION_FALLBACK = 0x110;
 const uint32_t UDP_MAX_PACKET_SIZE = 4096;
 const uint32_t MAX_PTO_COUNTS = 16;
 
+const uint32_t TRANSPORT_ERROR_STATELESS_RESET = 20;
+
 NS_IMPL_ADDREF(Http3Session)
 NS_IMPL_RELEASE(Http3Session)
 NS_INTERFACE_MAP_BEGIN(Http3Session)
@@ -526,6 +528,34 @@ nsresult Http3Session::ProcessEvents() {
         if (NS_SUCCEEDED(mError) && !IsClosing()) {
           mError = NS_ERROR_NET_HTTP3_PROTOCOL_ERROR;
           CloseConnectionTelemetry(event.connection_closing.error, true);
+
+          auto isStatelessResetOrNoError = [](CloseError& aError) -> bool {
+            if (aError.tag == CloseError::Tag::TransportInternalErrorOther &&
+                aError.transport_internal_error_other._0 ==
+                    TRANSPORT_ERROR_STATELESS_RESET) {
+              return true;
+            }
+            if (aError.tag == CloseError::Tag::TransportError &&
+                aError.transport_error._0 == 0) {
+              return true;
+            }
+            if (aError.tag == CloseError::Tag::PeerError &&
+                aError.peer_error._0 == 0) {
+              return true;
+            }
+            if (aError.tag == CloseError::Tag::AppError &&
+                aError.app_error._0 == HTTP3_APP_ERROR_NO_ERROR) {
+              return true;
+            }
+            if (aError.tag == CloseError::Tag::PeerAppError &&
+                aError.peer_app_error._0 == HTTP3_APP_ERROR_NO_ERROR) {
+              return true;
+            }
+            return false;
+          };
+          if (isStatelessResetOrNoError(event.connection_closing.error)) {
+            mError = NS_ERROR_NET_RESET;
+          }
         }
         return mError;
         break;
