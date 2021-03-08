@@ -1888,9 +1888,6 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
   AttachDecision tryAttachStub();
 };
 
-// Returns whether obj is a WindowProxy wrapping the script's global.
-extern bool IsWindowProxyForScriptGlobal(JSScript* script, JSObject* obj);
-
 // Retrieve Xray JIT info set by the embedder.
 extern JS::XrayJitInfo* GetXrayJitInfo();
 
