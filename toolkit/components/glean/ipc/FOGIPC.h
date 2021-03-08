@@ -9,7 +9,6 @@
 #include <functional>
 
 #include "mozilla/Maybe.h"
-#include "mozilla/MozPromise.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
@@ -37,7 +36,7 @@ void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver);
  * @param aResolver - The function that'll be called with the results.
  */
 void FlushAllChildData(
-    std::function<void(nsTArray<ipc::ByteBuf>&&)>&& aResolver);
+    std::function<void(const nsTArray<ipc::ByteBuf>&&)>&& aResolver);
 
 /**
  * A child process has sent you this buf as a treat.
@@ -50,14 +49,6 @@ void FOGData(ipc::ByteBuf&& buf);
  * @param buf - a bincoded serialized payload that the Rust impl understands.
  */
 void SendFOGData(ipc::ByteBuf&& buf);
-
-/**
- * Called on the parent process to ask all child processes for data,
- * sending it all down into Rust to be used.
- *
- * @returns a Promise that resolves when the data has made it to the parent.
- */
-RefPtr<GenericPromise> FlushAndUseFOGData();
 
 }  // namespace glean
 }  // namespace mozilla

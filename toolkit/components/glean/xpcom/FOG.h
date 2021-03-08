@@ -7,13 +7,11 @@
 #define mozilla_FOG_h
 
 #include "nsIFOG.h"
-#include "nsIObserver.h"
 
 namespace mozilla {
-class FOG final : public nsIFOG, public nsIObserver {
+class FOG final : public nsIFOG {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFOG
-  NS_DECL_NSIOBSERVER
 
  public:
   FOG() = default;
