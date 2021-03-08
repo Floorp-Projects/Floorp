@@ -97,6 +97,13 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   );
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "protonDoorhangersEnabled",
+  "browser.proton.doorhangers.enabled",
+  false
+);
+
 var PermissionUI = {};
 
 /**
@@ -587,6 +594,13 @@ var PermissionPromptPrototype = {
       // Permission prompts are always persistent; the close button is controlled by a pref.
       options.persistent = true;
       options.hideClose = true;
+    }
+
+    if (
+      protonDoorhangersEnabled &&
+      !mainAction.hasOwnProperty("disableHighlight")
+    ) {
+      mainAction.disableHighlight = true;
     }
 
     options.eventCallback = (topic, nextRemovalReason, isCancel) => {
