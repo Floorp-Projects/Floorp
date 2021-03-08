@@ -650,6 +650,10 @@ class Document : public nsINode,
   // inheriting the document/storage principal.
   nsIPrincipal* PartitionedPrincipal() final { return mPartitionedPrincipal; }
 
+  // Gets the appropriate principal to check the URI against a blocklist /
+  // allowlist.
+  nsIPrincipal* GetPrincipalForPrefBasedHacks() const;
+
   void ClearActiveStoragePrincipal() { mActiveStoragePrincipal = nullptr; }
 
   // EventTarget
