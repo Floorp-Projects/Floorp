@@ -12,27 +12,28 @@ namespace mozilla {
 
 already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
     const CallbackType& aCallback, const char* aRunnableName,
-    uint32_t aMaxDelay, int64_t aNonIdleBudget, bool aRepeating,
+    uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
     const MayStopProcessingCallbackType& aMayStopProcessing) {
   if (aMayStopProcessing && aMayStopProcessing()) {
     return nullptr;
   }
 
   RefPtr<IdleTaskRunner> runner =
-      new IdleTaskRunner(aCallback, aRunnableName, aMaxDelay, aNonIdleBudget,
-                         aRepeating, aMayStopProcessing);
+      new IdleTaskRunner(aCallback, aRunnableName, aMaxDelay,
+                         aMinimumUsefulBudget, aRepeating, aMayStopProcessing);
   runner->Schedule(false);  // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
 }
 
 IdleTaskRunner::IdleTaskRunner(
     const CallbackType& aCallback, const char* aRunnableName,
-    uint32_t aMaxDelay, int64_t aNonIdleBudget, bool aRepeating,
+    uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
     const MayStopProcessingCallbackType& aMayStopProcessing)
     : CancelableIdleRunnable(aRunnableName),
       mCallback(aCallback),
       mDelay(aMaxDelay),
-      mBudget(TimeDuration::FromMilliseconds(aNonIdleBudget)),
+      mMinimumUsefulBudget(
+          TimeDuration::FromMilliseconds(aMinimumUsefulBudget)),
       mRepeating(aRepeating),
       mTimerActive(false),
       mMayStopProcessing(aMayStopProcessing),
@@ -49,7 +50,7 @@ IdleTaskRunner::Run() {
   bool deadLineWasNull = mDeadline.IsNull();
   bool didRun = false;
   bool allowIdleDispatch = false;
-  if (deadLineWasNull || ((now + mBudget) < mDeadline)) {
+  if (deadLineWasNull || ((now + mMinimumUsefulBudget) < mDeadline)) {
     CancelTimer();
     didRun = mCallback(mDeadline);
     // If we didn't do meaningful work, don't schedule using immediate
@@ -78,8 +79,8 @@ void IdleTaskRunner::SetDeadline(mozilla::TimeStamp aDeadline) {
   mDeadline = aDeadline;
 }
 
-void IdleTaskRunner::SetBudget(int64_t aBudget) {
-  mBudget = TimeDuration::FromMilliseconds(aBudget);
+void IdleTaskRunner::SetMinimumUsefulBudget(int64_t aMinimumUsefulBudget) {
+  mMinimumUsefulBudget = TimeDuration::FromMilliseconds(aMinimumUsefulBudget);
 }
 
 void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) {
