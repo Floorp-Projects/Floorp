@@ -14,6 +14,7 @@
 #include <type_traits>  // std::has_unique_object_representations
 #include <utility>      // std::forward
 
+#include "ds/LifoAlloc.h"                 // LifoAlloc
 #include "frontend/CompilationStencil.h"  // CompilationStencil
 #include "frontend/ScriptIndex.h"         // ScriptIndex
 #include "vm/JSScript.h"                  // js::CheckCompileOptionsMatch
@@ -98,14 +99,14 @@ static XDRResult XDRVectorContent(XDRState<mode>* xdr, Vector<T, N, AP>& vec) {
 }
 
 template <XDRMode mode, typename T>
-static XDRResult XDRSpanInitialized(XDRState<mode>* xdr, mozilla::Span<T>& span,
-                                    uint32_t size) {
+static XDRResult XDRSpanInitialized(XDRState<mode>* xdr, LifoAlloc& alloc,
+                                    mozilla::Span<T>& span, uint32_t size) {
   MOZ_ASSERT_IF(mode == XDR_ENCODE, size == span.size());
 
   if (mode == XDR_DECODE) {
     MOZ_ASSERT(span.empty());
     if (size > 0) {
-      auto* p = xdr->stencilAlloc().template newArrayUninitialized<T>(size);
+      auto* p = alloc.template newArrayUninitialized<T>(size);
       if (!p) {
         js::ReportOutOfMemory(xdr->cx());
         return xdr->fail(JS::TranscodeResult::Throw);
@@ -408,7 +409,7 @@ static XDRResult XDRAtomCount(XDRState<mode>* xdr, uint32_t* atomCount) {
 
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::codeParserAtomSpan(
-    XDRState<mode>* xdr, ParserAtomSpan& parserAtomData) {
+    XDRState<mode>* xdr, LifoAlloc& alloc, ParserAtomSpan& parserAtomData) {
   if (mode == XDR_ENCODE) {
     uint32_t atomVectorLength = parserAtomData.size();
     MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
@@ -442,7 +443,7 @@ template <XDRMode mode>
   MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
 
   frontend::ParserAtomSpanBuilder builder(xdr->cx()->runtime(), parserAtomData);
-  if (!builder.allocate(xdr->cx(), xdr->stencilAlloc(), atomVectorLength)) {
+  if (!builder.allocate(xdr->cx(), alloc, atomVectorLength)) {
     return xdr->fail(JS::TranscodeResult::Throw);
   }
 
@@ -576,7 +577,7 @@ template <XDRMode mode>
     stencil.hasExternalDependency = true;
   }
 
-  MOZ_TRY(codeParserAtomSpan(xdr, stencil.parserAtomData));
+  MOZ_TRY(codeParserAtomSpan(xdr, stencil.alloc, stencil.parserAtomData));
 
   MOZ_TRY(xdr->codeUint32(&stencil.functionKey));
 
@@ -602,7 +603,8 @@ template <XDRMode mode>
   // main script tree must be materialized first.
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.scopeData, scopeSize));
-  MOZ_TRY(XDRSpanInitialized(xdr, stencil.scopeNames, scopeSize));
+  MOZ_TRY(
+      XDRSpanInitialized(xdr, stencil.alloc, stencil.scopeNames, scopeSize));
   MOZ_ASSERT(stencil.scopeData.size() == stencil.scopeNames.size());
   for (uint32_t i = 0; i < scopeSize; i++) {
     MOZ_TRY(codeScopeData(xdr, stencil.scopeData[i], stencil.scopeNames[i]));
@@ -610,12 +612,14 @@ template <XDRMode mode>
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.regExpData, regExpSize));
 
-  MOZ_TRY(XDRSpanInitialized(xdr, stencil.bigIntData, bigIntSize));
+  MOZ_TRY(
+      XDRSpanInitialized(xdr, stencil.alloc, stencil.bigIntData, bigIntSize));
   for (auto& entry : stencil.bigIntData) {
     MOZ_TRY(codeBigInt(xdr, entry));
   }
 
-  MOZ_TRY(XDRSpanInitialized(xdr, stencil.objLiteralData, objLiteralSize));
+  MOZ_TRY(XDRSpanInitialized(xdr, stencil.alloc, stencil.objLiteralData,
+                             objLiteralSize));
   for (auto& entry : stencil.objLiteralData) {
     MOZ_TRY(codeObjLiteral(xdr, entry));
   }
