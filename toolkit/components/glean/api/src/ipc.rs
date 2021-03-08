@@ -118,27 +118,10 @@ pub fn take_buf() -> Option<Vec<u8>> {
 pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
     let ipc_payload: IPCPayload = bincode::deserialize(buf).map_err(|_| ())?;
     for (id, value) in ipc_payload.counters.into_iter() {
+        log::info!("Asked to replay {:?}, {:?}", id, value);
         if let Some(metric) = __glean_metric_maps::COUNTER_MAP.get(&id) {
             metric.add(value);
         }
-    }
-    for (id, _records) in ipc_payload.events.into_iter() {
-        log::info!("Cannot yet replay child process event {:?}", id);
-    }
-    for (id, samples) in ipc_payload.memory_samples.into_iter() {
-        if let Some(metric) = __glean_metric_maps::MEMORY_DISTRIBUTION_MAP.get(&id) {
-            samples
-                .into_iter()
-                .for_each(|sample| metric.accumulate(sample));
-        }
-    }
-    for (id, strings) in ipc_payload.string_lists.into_iter() {
-        if let Some(metric) = __glean_metric_maps::STRING_LIST_MAP.get(&id) {
-            strings.iter().for_each(|s| metric.add(s));
-        }
-    }
-    for (id, _samples) in ipc_payload.timing_samples.into_iter() {
-        log::info!("Cannot yet replay child process timing dist {:?}", id);
     }
     Ok(())
 }
