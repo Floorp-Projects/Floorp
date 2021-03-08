@@ -567,18 +567,21 @@ class MochitestServer(object):
     def stop(self):
         try:
             with closing(urlopen(self.shutdownURL)) as c:
-                self._log.info(six.ensure_text(c.read()))
+                c.read()
+
+            # TODO: need ProcessHandler.poll()
+            # https://bugzilla.mozilla.org/show_bug.cgi?id=912285
+            #      rtncode = self._process.poll()
+            rtncode = self._process.proc.poll()
+            if rtncode is None:
+                # TODO: need ProcessHandler.terminate() and/or .send_signal()
+                # https://bugzilla.mozilla.org/show_bug.cgi?id=912285
+                # self._process.terminate()
+                self._process.proc.terminate()
         except Exception:
             self._log.info("Failed to stop web server on %s" % self.shutdownURL)
             traceback.print_exc()
-        finally:
-            if self._process is not None:
-                # Wait briefly for normal shutdown, kill if necessary.
-                try:
-                    self._process.wait(1)
-                except TimeoutException:
-                    self._process.kill()
-                    self._log.info("Web server killed.")
+            self._process.kill()
 
 
 class WebSocketServer(object):
@@ -627,8 +630,7 @@ class WebSocketServer(object):
         self._log.info("runtests.py | Websocket server pid: %d" % pid)
 
     def stop(self):
-        if self._process is not None:
-            self._process.kill()
+        self._process.kill()
 
 
 class SSLTunnel:
