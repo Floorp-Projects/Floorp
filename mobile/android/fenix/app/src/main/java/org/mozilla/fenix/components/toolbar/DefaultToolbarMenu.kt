@@ -22,7 +22,6 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
@@ -186,7 +185,7 @@ class DefaultToolbarMenu(
         appLink(session.content.url).hasExternalApp()
     } ?: false
 
-    private fun shouldShowReaderAppearance(): Boolean = selectedSession?.let {
+    private fun shouldShowReaderViewCustomization(): Boolean = selectedSession?.let {
         store.state.findTab(it.id)?.readerState?.active
     } ?: false
     // End of predicates //
@@ -355,7 +354,7 @@ class DefaultToolbarMenu(
             if (shouldShowSaveToCollection) saveToCollection else null,
             desktopMode,
             openInApp.apply { visible = ::shouldShowOpenInApp },
-            readerAppearance.apply { visible = ::shouldShowReaderAppearance },
+            readerAppearance.apply { visible = ::shouldShowReaderViewCustomization },
             BrowserMenuDivider(),
             menuToolbar
         )
@@ -370,8 +369,8 @@ class DefaultToolbarMenu(
     private val newCoreMenuItems by lazy {
         val newTabItem = BrowserMenuImageText(
             context.getString(R.string.library_new_tab),
-            R.drawable.ic_bookmark_filled,
-            disabledTextColor()
+            R.drawable.ic_new,
+            primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.NewTab)
         }
@@ -379,7 +378,7 @@ class DefaultToolbarMenu(
         val bookmarksItem = BrowserMenuImageText(
             context.getString(R.string.library_bookmarks),
             R.drawable.ic_bookmark_filled,
-            disabledTextColor()
+            primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Bookmarks)
         }
@@ -387,7 +386,7 @@ class DefaultToolbarMenu(
         val historyItem = BrowserMenuImageText(
             context.getString(R.string.library_history),
             R.drawable.ic_history,
-            disabledTextColor()
+            primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.History)
         }
@@ -395,7 +394,7 @@ class DefaultToolbarMenu(
         val downloadsItem = BrowserMenuImageText(
             context.getString(R.string.library_downloads),
             R.drawable.ic_download,
-            disabledTextColor()
+            primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Downloads)
         }
@@ -403,15 +402,15 @@ class DefaultToolbarMenu(
         val extensionsItem = BrowserMenuImageText(
             context.getString(R.string.browser_menu_extensions),
             R.drawable.ic_addons_extensions,
-            disabledTextColor()
+            primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
         }
 
-        val syncedTabsItem = BrowserMenuImageText(
-            context.getString(R.string.library_synced_tabs),
+        val syncSignIn = BrowserMenuImageText(
+            context.getString(R.string.sync_sign_in),
             R.drawable.ic_synced_tabs,
-            disabledTextColor()
+            primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
         }
@@ -419,7 +418,7 @@ class DefaultToolbarMenu(
         val findInPageItem = BrowserMenuImageText(
             label = context.getString(R.string.browser_menu_find_in_page),
             imageResource = R.drawable.mozac_ic_search,
-            iconTintColorResource = disabledTextColor()
+            iconTintColorResource = primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
         }
@@ -434,17 +433,31 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
         }
 
-        val customizeReaderView = SimpleBrowserMenuItem(
+        val customizeReaderView = BrowserMenuImageText(
             label = context.getString(R.string.browser_menu_customize_reader_view),
-            textColorResource = primaryTextColor()
+            imageResource = R.drawable.ic_readermode_appearance,
+            iconTintColorResource = primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.CustomizeReaderView)
+        }
+
+        val openInApp = BrowserMenuHighlightableItem(
+            label = context.getString(R.string.browser_menu_open_app_link),
+            startImageResource = R.drawable.ic_open_in_app,
+            iconTintColorResource = primaryTextColor(),
+            highlight = BrowserMenuHighlight.LowPriority(
+                label = context.getString(R.string.browser_menu_open_app_link),
+                notificationTint = getColor(context, R.color.whats_new_notification_color)
+            ),
+            isHighlighted = { !context.settings().openInAppOpened }
+        ) {
+            onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
 
         val addToHomeScreenItem = BrowserMenuImageText(
             label = context.getString(R.string.browser_menu_add_to_homescreen),
             imageResource = R.drawable.ic_add_to_homescreen,
-            iconTintColorResource = disabledTextColor()
+            iconTintColorResource = primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
         }
@@ -452,7 +465,7 @@ class DefaultToolbarMenu(
         val addToTopSitesItem = BrowserMenuImageText(
             label = context.getString(R.string.browser_menu_add_to_top_sites),
             imageResource = R.drawable.ic_top_sites,
-            iconTintColorResource = disabledTextColor()
+            iconTintColorResource = primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.AddToTopSites)
         }
@@ -460,7 +473,7 @@ class DefaultToolbarMenu(
         val saveToCollectionItem = BrowserMenuImageText(
             label = context.getString(R.string.browser_menu_save_to_collection_2),
             imageResource = R.drawable.ic_tab_collection,
-            iconTintColorResource = disabledTextColor()
+            iconTintColorResource = primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.SaveToCollection)
         }
@@ -468,7 +481,7 @@ class DefaultToolbarMenu(
         val settingsItem = BrowserMenuHighlightableItem(
             label = context.getString(R.string.browser_menu_settings),
             startImageResource = R.drawable.ic_settings,
-            iconTintColorResource = disabledTextColor(),
+            iconTintColorResource = primaryTextColor(),
             textColorResource = if (hasAccountProblem)
                 ThemeManager.resolveAttribute(R.attr.primaryText, context) else
                 primaryTextColor(),
@@ -491,11 +504,12 @@ class DefaultToolbarMenu(
                 historyItem,
                 downloadsItem,
                 extensionsItem,
-                syncedTabsItem,
+                syncSignIn,
                 BrowserMenuDivider(),
                 findInPageItem,
                 desktopSiteItem,
-                customizeReaderView.apply { visible = ::shouldShowReaderAppearance },
+                customizeReaderView.apply { visible = ::shouldShowReaderViewCustomization },
+                openInApp.apply { visible = ::shouldShowOpenInApp },
                 BrowserMenuDivider(),
                 addToHomeScreenItem.apply { visible = ::canAddToHomescreen },
                 addToTopSitesItem,
@@ -512,10 +526,6 @@ class DefaultToolbarMenu(
     @ColorRes
     @VisibleForTesting
     internal fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
-
-    @ColorRes
-    @VisibleForTesting
-    internal fun disabledTextColor() = R.color.toolbar_menu_transparent
 
     @VisibleForTesting
     internal fun registerForIsBookmarkedUpdates() {
