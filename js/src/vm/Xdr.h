@@ -643,14 +643,6 @@ template <XDRMode mode>
 XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
                                 frontend::CompilationStencil& stencil);
 
-template <XDRMode mode>
-XDRResult XDRCheckCompilationStencil(XDRState<mode>* xdr,
-                                     frontend::CompilationStencil& stencil);
-
-template <XDRMode mode>
-XDRResult XDRCheckCompilationStencil(
-    XDRState<mode>* xdr, frontend::ExtensibleCompilationStencil& stencil);
-
 } /* namespace js */
 
 #endif /* vm_Xdr_h */
