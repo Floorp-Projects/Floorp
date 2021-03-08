@@ -142,7 +142,7 @@ bool OptionalEmitter::emitOptionalJumpTarget(JSOp op,
 
   if (kind == Kind::Reference) {
     if (!bce_->emit1(op)) {
-      //              [stack] JSOP JSOP
+      //            [stack] JSOP JSOP
       return false;
     }
   }

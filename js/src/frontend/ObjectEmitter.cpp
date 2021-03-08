@@ -725,10 +725,10 @@ bool ClassEmitter::emitStoreMemberInitializer() {
   MOZ_ASSERT(memberState_ == MemberState::Initializer ||
              memberState_ == MemberState::InitializerWithHomeObject);
   MOZ_ASSERT(initializerIndex_ < numInitializers_);
-  //          [stack] HOMEOBJ HERITAGE? ARRAY METHOD
+  //                [stack] HOMEOBJ HERITAGE? ARRAY METHOD
 
   if (!bce_->emitUint32Operand(JSOp::InitElemArray, initializerIndex_)) {
-    //          [stack] HOMEOBJ HERITAGE? ARRAY
+    //              [stack] HOMEOBJ HERITAGE? ARRAY
     return false;
   }
 
