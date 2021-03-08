@@ -308,22 +308,15 @@ interface nsIPrincipal : nsISerializable
     *
     * @param scheme    The scheme to be checked
     */
+    [infallible]
     boolean schemeIs(in string scheme);
 
-    // Nicer, C++ Callable Version of SchemeIs
-    %{C++
-      inline bool SchemeIs(const char* aScheme) {
-        bool ret;
-        SchemeIs(aScheme, &ret);
-        return ret;
-      }
-    %}
-
     /*
-    * Checks if the Principal's URI is contained in the given Pref
-    * @param pref    The pref to be checked
-    */
-    bool isURIInPrefList(in string pref);
+     * Checks if the Principal's URI is contained in the given Pref
+     * @param pref    The pref to be checked
+     */
+    [infallible]
+    boolean isURIInPrefList(in string pref);
 
     /*
     * Uses NS_Security Compare to determine if the
