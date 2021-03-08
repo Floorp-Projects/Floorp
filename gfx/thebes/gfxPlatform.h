@@ -535,10 +535,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   /**
    * Are we going to try color management?
    */
-  static CMSMode GetCMSMode() {
-    EnsureCMSInitialized();
-    return gCMSMode;
-  }
+  static CMSMode GetCMSMode();
 
   /**
    * Used only for testing. Override the pref setting.
@@ -566,50 +563,32 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   /**
    * Return the output device ICC profile.
    */
-  static qcms_profile* GetCMSOutputProfile() {
-    EnsureCMSInitialized();
-    return gCMSOutputProfile;
-  }
+  static qcms_profile* GetCMSOutputProfile();
 
   /**
    * Return the sRGB ICC profile.
    */
-  static qcms_profile* GetCMSsRGBProfile() {
-    EnsureCMSInitialized();
-    return gCMSsRGBProfile;
-  }
+  static qcms_profile* GetCMSsRGBProfile();
 
   /**
    * Return sRGB -> output device transform.
    */
-  static qcms_transform* GetCMSRGBTransform() {
-    EnsureCMSInitialized();
-    return gCMSRGBTransform;
-  }
+  static qcms_transform* GetCMSRGBTransform();
 
   /**
    * Return output -> sRGB device transform.
    */
-  static qcms_transform* GetCMSInverseRGBTransform() {
-    MOZ_ASSERT(gCMSInitialized);
-    return gCMSInverseRGBTransform;
-  }
+  static qcms_transform* GetCMSInverseRGBTransform();
 
   /**
    * Return sRGBA -> output device transform.
    */
-  static qcms_transform* GetCMSRGBATransform() {
-    MOZ_ASSERT(gCMSInitialized);
-    return gCMSRGBATransform;
-  }
+  static qcms_transform* GetCMSRGBATransform();
 
   /**
    * Return sBGRA -> output device transform.
    */
-  static qcms_transform* GetCMSBGRATransform() {
-    MOZ_ASSERT(gCMSInitialized);
-    return gCMSBGRATransform;
-  }
+  static qcms_transform* GetCMSBGRATransform();
 
   /**
    * Return OS RGBA -> output device transform.
@@ -978,28 +957,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static void Init();
 
   static void InitOpenGLConfig();
-
-  static mozilla::Atomic<bool, mozilla::MemoryOrdering::ReleaseAcquire>
-      gCMSInitialized;
-  static CMSMode gCMSMode;
-
-  // These two may point to the same profile
-  static qcms_profile* gCMSOutputProfile;
-  static qcms_profile* gCMSsRGBProfile;
-
-  static qcms_transform* gCMSRGBTransform;
-  static qcms_transform* gCMSInverseRGBTransform;
-  static qcms_transform* gCMSRGBATransform;
-  static qcms_transform* gCMSBGRATransform;
-
-  inline static void EnsureCMSInitialized() {
-    if (MOZ_UNLIKELY(!gCMSInitialized)) {
-      InitializeCMS();
-    }
-  }
-
-  static void InitializeCMS();
-  static void ShutdownCMS();
+  static void CreateCMSOutputProfile();
 
   friend void RecordingPrefChanged(const char* aPrefName, void* aClosure);
 
