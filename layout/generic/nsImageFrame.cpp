@@ -312,7 +312,7 @@ void nsImageFrame::MaybeRecordContentUrlOnImageTelemetry() {
     return;
   }
   const auto& item = content.ContentAt(0);
-  if (!item.IsUrl()) {
+  if (!item.IsImage()) {
     return;
   }
   PresContext()->Document()->SetUseCounter(
@@ -397,11 +397,12 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
       contentIndex = static_cast<GeneratedImageContent*>(aContent)->Index();
     }
     MOZ_RELEASE_ASSERT(contentIndex < styleContent->ContentCount());
-    MOZ_RELEASE_ASSERT(styleContent->ContentAt(contentIndex).IsUrl());
-    auto& url = const_cast<StyleComputedUrl&>(
-        styleContent->ContentAt(contentIndex).AsUrl());
+    MOZ_RELEASE_ASSERT(styleContent->ContentAt(contentIndex).IsImage());
+    auto& imageUrl = styleContent->ContentAt(contentIndex).AsImage();
+    MOZ_ASSERT(imageUrl.IsImageRequestType(),
+               "Content image should only parse url() type");
     Document* doc = PresContext()->Document();
-    if (imgRequestProxy* proxy = url.GetImage()) {
+    if (imgRequestProxy* proxy = imageUrl.GetImageRequest()) {
       proxy->Clone(mListener, doc, getter_AddRefs(mContentURLRequest));
       SetupForContentURLRequest();
     }
