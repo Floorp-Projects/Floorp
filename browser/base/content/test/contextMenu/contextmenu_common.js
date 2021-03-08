@@ -435,7 +435,11 @@ async function test_contextmenu(selector, menuItems, options = {}) {
         menuItems.includes("context-viewpartialsource-selection")
           ? []
           : ["---", null];
-      if (Services.prefs.getBoolPref("devtools.accessibility.enabled", true)) {
+      if (
+        Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
+        (Services.prefs.getBoolPref("devtools.everOpened", false) ||
+          Services.prefs.getIntPref("devtools.selfxss.count", 0) > 0)
+      ) {
         inspectItems.push("context-inspect-a11y", true);
       }
       inspectItems.push("context-inspect", true);

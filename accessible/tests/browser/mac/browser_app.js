@@ -201,7 +201,12 @@ add_task(async () => {
 
       const hasContainers =
         Services.prefs.getBoolPref("privacy.userContext.enabled") &&
-        ContextualIdentityService.getPublicIdentities().length;
+        !!ContextualIdentityService.getPublicIdentities().length;
+      info(`${hasContainers ? "Do" : "Don't"} expect containers item.`);
+      const hasInspectA11y =
+        Services.prefs.getBoolPref("devtools.everOpened", false) ||
+        Services.prefs.getIntPref("devtools.selfxss.count", 0) > 0;
+      info(`${hasInspectA11y ? "Do" : "Don't"} expect inspect a11y item.`);
 
       // synthesize a right click on the link to open the link context menu
       let menu = document.getElementById("contentAreaContextMenu");
@@ -214,12 +219,11 @@ add_task(async () => {
 
       menu = await getMacAccessible(menu);
       let menuChildren = menu.getAttributeValue("AXChildren");
-      // menu contains 14 items when containers disabled, 15 items otherwise
-      const expectedChildCount = hasContainers ? 16 : 15;
+      const expectedChildCount = 14 + +hasContainers + +hasInspectA11y;
       is(
         menuChildren.length,
         expectedChildCount,
-        "Context menu on link contains 15 or 16 items depending on release"
+        `Context menu on link contains ${expectedChildCount} items.`
       );
       // items at indicies 4, 9, 11 and 13 are the splitters when containers exist
       // everything else should be a menu item, otherwise indicies of splitters are
