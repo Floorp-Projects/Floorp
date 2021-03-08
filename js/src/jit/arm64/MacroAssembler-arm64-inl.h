@@ -3091,10 +3091,6 @@ void MacroAssemblerCompat::andToStackPtr(Imm32 imm) {
   }
 }
 
-void MacroAssemblerCompat::andStackPtrTo(Register dest) {
-  And(ARMRegister(dest, 64), ARMRegister(dest, 64), GetStackPointer64());
-}
-
 void MacroAssemblerCompat::moveToStackPtr(Register src) {
   Mov(GetStackPointer64(), ARMRegister(src, 64));
   syncStackPtr();
