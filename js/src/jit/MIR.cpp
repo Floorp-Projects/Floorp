@@ -4204,8 +4204,7 @@ MDefinition::AliasType MAsmJSLoadHeap::mightAlias(
       return AliasType::MayAlias;
     }
     const MConstant* otherBase = store->base()->toConstant();
-    if (base()->toConstant()->equals(otherBase) &&
-        offset() == store->offset()) {
+    if (base()->toConstant()->equals(otherBase)) {
       return AliasType::MayAlias;
     }
     return AliasType::NoAlias;
@@ -4218,8 +4217,7 @@ bool MAsmJSLoadHeap::congruentTo(const MDefinition* ins) const {
     return false;
   }
   const MAsmJSLoadHeap* load = ins->toAsmJSLoadHeap();
-  return load->accessType() == accessType() && load->offset() == offset() &&
-         congruentIfOperandsEqual(load);
+  return load->accessType() == accessType() && congruentIfOperandsEqual(load);
 }
 
 MDefinition::AliasType MWasmLoadGlobalVar::mightAlias(
