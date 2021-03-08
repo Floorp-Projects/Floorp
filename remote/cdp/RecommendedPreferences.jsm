@@ -7,6 +7,13 @@
 var EXPORTED_SYMBOLS = ["RecommendedPreferences"];
 
 const RecommendedPreferences = new Map([
+  // Disable automatically upgrading Firefox
+  //
+  // Note: This preference should have already been set by the client when
+  // creating the profile. But if not and to absolutely make sure that updates
+  // of Firefox aren't downloaded and applied, enforce its presence.
+  ["app.update.disabledForTesting", true],
+
   // Allow the application to have focus even when it runs in the background.
   ["focusmanager.testmode", true],
 
