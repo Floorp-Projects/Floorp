@@ -21,15 +21,15 @@ const { NormandyTestUtils } = ChromeUtils.import(
 
 // Test that a simple recipe unenrolls as expected
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
+  withMockNormandyApi(),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withSendEventSpy,
+  withSendEventSpy(),
   async function simple_recipe_unenrollment(
     mockApi,
     setExperimentInactiveStub,
-    sendEventStub
+    sendEventSpy
   ) {
     const rolloutRecipe = {
       id: 1,
@@ -101,7 +101,7 @@ decorate_task(
       "enrollmentId should be a UUID"
     );
 
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       ["enroll", "addon_rollout", rollbackRecipe.arguments.rolloutSlug],
       ["unenroll", "addon_rollback", rollbackRecipe.arguments.rolloutSlug],
     ]);
@@ -116,11 +116,11 @@ decorate_task(
 
 // Add-on already uninstalled
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
-  withSendEventSpy,
-  async function addon_already_uninstalled(mockApi, sendEventStub) {
+  withMockNormandyApi(),
+  withSendEventSpy(),
+  async function addon_already_uninstalled(mockApi, sendEventSpy) {
     const rolloutRecipe = {
       id: 1,
       arguments: {
@@ -190,7 +190,7 @@ decorate_task(
       "enrollment ID should be a UUID"
     );
 
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       ["enroll", "addon_rollout", rollbackRecipe.arguments.rolloutSlug],
       ["unenroll", "addon_rollback", rollbackRecipe.arguments.rolloutSlug],
     ]);
@@ -199,11 +199,11 @@ decorate_task(
 
 // Already rolled back, do nothing
 decorate_task(
-  AddonRollouts.withTestMock,
+  AddonRollouts.withTestMock(),
   ensureAddonCleanup,
-  withMockNormandyApi,
-  withSendEventSpy,
-  async function already_rolled_back(mockApi, sendEventStub) {
+  withMockNormandyApi(),
+  withSendEventSpy(),
+  async function already_rolled_back(mockApi, sendEventSpy) {
     const rollout = {
       recipeId: 1,
       slug: "test-rollout",
@@ -246,6 +246,6 @@ decorate_task(
       "Rollback should be stored in db"
     );
 
-    sendEventStub.assertEvents([]);
+    sendEventSpy.assertEvents([]);
   }
 );

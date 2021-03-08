@@ -177,7 +177,7 @@ decorate_task(
 
 // recordOriginalValue should graduate a study when all of its preferences are built-in
 decorate_task(
-  withSendEventSpy,
+  withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
   async function testRecordOriginalValuesGraduates(sendEventSpy) {
     await PreferenceRollouts.add({
@@ -277,7 +277,7 @@ decorate_task(
 // init should graduate rollouts in the graduation set
 decorate_task(
   withStub(TelemetryEnvironment, "setExperimentActive"),
-  withSendEventSpy,
+  withSendEventSpy(),
   PreferenceRollouts.withTestMock({
     graduationSet: new Set(["test-rollout"]),
     rollouts: [
@@ -288,7 +288,7 @@ decorate_task(
       }),
     ],
   }),
-  async function testInitGraduationSet(setExperimentActiveStub, sendEventStub) {
+  async function testInitGraduationSet(setExperimentActiveStub, sendEventSpy) {
     await PreferenceRollouts.init();
     const newRollout = await PreferenceRollouts.get("test-rollout");
     Assert.equal(
@@ -301,7 +301,7 @@ decorate_task(
       [],
       "setExperimentActive should not be called"
     );
-    sendEventStub.assertEvents([
+    sendEventSpy.assertEvents([
       [
         "graduate",
         "preference_rollout",
