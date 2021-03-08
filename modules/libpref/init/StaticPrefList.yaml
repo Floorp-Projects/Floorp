@@ -1786,7 +1786,7 @@
 - name: dom.event.wheel-deltaMode-lines.always-enabled
   type: String
   value: ""
-  mirror: always
+  mirror: never
 
 #if defined(XP_MACOSX)
 # Whether to disable treating ctrl click as right click
