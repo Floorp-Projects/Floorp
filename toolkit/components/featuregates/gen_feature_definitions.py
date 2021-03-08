@@ -145,7 +145,8 @@ def expand_feature(feature):
 
     if feature["type"] == "boolean":
         feature.setdefault("preference", "features.{}.enabled".format(feature["id"]))
-        feature.setdefault("defaultValue", False)
+        # set default value to None so that we can test for perferences where we forgot to set the default value
+        feature.setdefault("defaultValue", None)
     elif "preference" not in feature:
         raise FeatureGateException(
             "Features of type {} must specify an explicit preference name".format(
