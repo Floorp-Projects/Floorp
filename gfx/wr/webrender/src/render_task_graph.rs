@@ -816,9 +816,6 @@ pub struct RenderPass {
     pub color: RenderTargetList<ColorRenderTarget>,
     pub texture_cache: FastHashMap<CacheTextureId, TextureCacheRenderTarget>,
     pub picture_cache: Vec<PictureCacheTarget>,
-    /// The set of tasks to be performed in this pass, as indices into the
-    /// `RenderTaskGraph`.
-    pub tasks: Vec<RenderTaskId>,
     pub textures_to_invalidate: Vec<CacheTextureId>,
 }
 
@@ -834,7 +831,6 @@ impl RenderPass {
             ),
             texture_cache: FastHashMap::default(),
             picture_cache: Vec::new(),
-            tasks: vec![],
             textures_to_invalidate: src.textures_to_invalidate.clone(),
         }
     }
@@ -844,7 +840,6 @@ impl RenderPass {
 #[allow(dead_code)]
 pub fn dump_render_tasks_as_svg(
     render_tasks: &RenderTaskGraph,
-    passes: &[RenderPass],
     output: &mut dyn std::io::Write,
 ) -> std::io::Result<()> {
     use svg_fmt::*;
@@ -869,10 +864,10 @@ pub fn dump_render_tasks_as_svg(
         size: Text,
     }
 
-    for pass in passes {
+    for pass in &render_tasks.passes {
         let mut layout = VerticalLayout::new(x, margin, node_width);
 
-        for task_id in &pass.tasks {
+        for task_id in &pass.task_ids {
             let task_index = task_id.index as usize;
             let task = &render_tasks.tasks[task_index];
 

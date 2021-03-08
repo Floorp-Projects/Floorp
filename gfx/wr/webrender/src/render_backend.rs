@@ -1746,7 +1746,6 @@ impl RenderBackend {
                     .expect("Failed to open the SVG file.");
                 dump_render_tasks_as_svg(
                     &rendered_document.frame.render_tasks,
-                    &rendered_document.frame.passes,
                     &mut render_tasks_file
                 ).unwrap();
 
