@@ -12,9 +12,9 @@
       return `
       <stack class="tab-stack" flex="1">
         <vbox class="tab-background">
+          <hbox class="tab-context-line"/>
           <hbox class="tab-line"/>
           <spacer flex="1" class="tab-background-inner"/>
-          <hbox class="tab-bottom-line"/>
         </vbox>
         <hbox class="tab-loading-burst"/>
         <hbox class="tab-content" align="center">
