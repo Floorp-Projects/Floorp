@@ -47,10 +47,7 @@ class CodegenSafepointIndex {
 
   LSafepoint* safepoint() const { return safepoint_; }
   uint32_t displacement() const { return displacement_; }
-  void adjustDisplacement(uint32_t offset) {
-    MOZ_ASSERT(offset >= displacement_);
-    displacement_ = offset;
-  }
+
   inline SnapshotOffset snapshotOffset() const;
   inline bool hasSnapshotOffset() const;
 };
