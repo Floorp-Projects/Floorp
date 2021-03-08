@@ -1934,6 +1934,12 @@ public class GeckoSessionTestRule implements TestRule {
         return pids;
     }
 
+    public void killContentProcess(final int pid) {
+        webExtensionApiCall("KillContentProcess", args -> {
+            args.put("pid", pid);
+        });
+    }
+
     public boolean getActive(final @NonNull GeckoSession session) {
         final Boolean isActive = (Boolean)
                 webExtensionApiCall(session, "GetActive", null);

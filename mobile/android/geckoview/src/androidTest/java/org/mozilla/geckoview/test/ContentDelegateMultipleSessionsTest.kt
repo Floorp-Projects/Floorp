@@ -4,7 +4,6 @@
 
 package org.mozilla.geckoview.test
 
-import android.os.Process
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.util.Callbacks
@@ -29,7 +28,7 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
     fun killAllContentProcesses() {
         val contentProcessPids = sessionRule.getAllSessionPids()
         for (pid in contentProcessPids) {
-            Process.killProcess(pid)
+            sessionRule.killContentProcess(pid)
         }
     }
 
