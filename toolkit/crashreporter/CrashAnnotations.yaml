@@ -548,11 +548,6 @@ IsWayland:
     If true then the Wayland windowing system was in use.
   type: boolean
 
-IsWaylandDRM:
-  description: >
-    If true then the Wayland DRM backend was in use.
-  type: boolean
-
 IsWebRenderResourcePathOverridden:
   description: >
     If true then the WebRender resources (i.e. shaders) are loaded from a user specified path.
