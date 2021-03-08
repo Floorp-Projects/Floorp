@@ -2,9 +2,9 @@ const { NormandyMigrations } = ChromeUtils.import(
   "resource://normandy/NormandyMigrations.jsm"
 );
 
-decorate_task(withMockPreferences(), async function testApplyMigrations(
-  mockPreferences
-) {
+decorate_task(withMockPreferences(), async function testApplyMigrations({
+  mockPreferences,
+}) {
   const migrationsAppliedPref = "app.normandy.migrationsApplied";
   mockPreferences.set(migrationsAppliedPref, 0);
 
@@ -17,9 +17,9 @@ decorate_task(withMockPreferences(), async function testApplyMigrations(
   );
 });
 
-decorate_task(withMockPreferences(), async function testPrefMigration(
-  mockPreferences
-) {
+decorate_task(withMockPreferences(), async function testPrefMigration({
+  mockPreferences,
+}) {
   const legacyPref = "extensions.shield-recipe-client.test";
   const migratedPref = "app.normandy.test";
   mockPreferences.set(legacyPref, 1);
@@ -52,9 +52,9 @@ decorate_task(withMockPreferences(), async function testPrefMigration(
   Services.prefs.clearUserPref(migratedPref);
 });
 
-decorate_task(withMockPreferences(), async function testMigration0(
-  mockPreferences
-) {
+decorate_task(withMockPreferences(), async function testMigration0({
+  mockPreferences,
+}) {
   const studiesEnabledPref = "app.shield.optoutstudies.enabled";
   const healthReportUploadEnabledPref =
     "datareporting.healthreport.uploadEnabled";

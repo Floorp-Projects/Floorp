@@ -21,10 +21,10 @@ decorate_task(
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function simple_recipe_enrollment(
+  async function simple_recipe_enrollment({
     setExperimentActiveStub,
-    sendEventSpy
-  ) {
+    sendEventSpy,
+  }) {
     const recipe = {
       id: 1,
       arguments: {
@@ -130,7 +130,7 @@ decorate_task(
 decorate_task(
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function update_enrollment(sendEventSpy) {
+  async function update_enrollment({ sendEventSpy }) {
     // first enrollment
     const recipe = {
       id: 1,
@@ -243,7 +243,7 @@ decorate_task(
 decorate_task(
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function ungraduate_enrollment(sendEventSpy) {
+  async function ungraduate_enrollment({ sendEventSpy }) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
     await PreferenceRollouts.add({
       slug: "test-rollout",
@@ -308,7 +308,7 @@ decorate_task(
 decorate_task(
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function conflicting_recipes(sendEventSpy) {
+  async function conflicting_recipes({ sendEventSpy }) {
     // create two recipes that each share a pref and have a unique pref.
     const recipe1 = {
       id: 1,
@@ -421,7 +421,7 @@ decorate_task(
 decorate_task(
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function wrong_preference_value(sendEventSpy) {
+  async function wrong_preference_value({ sendEventSpy }) {
     Services.prefs.getDefaultBranch("").setCharPref("test.pref", "not an int");
     const recipe = {
       id: 1,
@@ -568,9 +568,9 @@ decorate_task(
 // When running a rollout a second time on a pref that doesn't have an existing
 // value, the previous value is handled correctly.
 decorate_task(
-  withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function(sendEventSpy) {
+  withSendEventSpy(),
+  async function({ sendEventSpy }) {
     const recipe = {
       id: 1,
       arguments: {
@@ -624,7 +624,7 @@ decorate_task(
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function no_op_new_recipe(setExperimentActiveStub, sendEventSpy) {
+  async function no_op_new_recipe({ setExperimentActiveStub, sendEventSpy }) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
 
     const recipe = {
@@ -680,7 +680,10 @@ decorate_task(
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withSendEventSpy(),
   PreferenceRollouts.withTestMock({ graduationSet: new Set(["test-rollout"]) }),
-  async function graduationSetNewRecipe(setExperimentActiveStub, sendEventSpy) {
+  async function graduationSetNewRecipe({
+    setExperimentActiveStub,
+    sendEventSpy,
+  }) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
 
     const recipe = {
