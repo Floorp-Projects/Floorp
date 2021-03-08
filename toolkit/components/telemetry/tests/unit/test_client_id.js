@@ -3,7 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["Glean"]);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
@@ -84,14 +83,6 @@ add_task(async function test_client_id() {
   let clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      clientID
-    );
-  }
   let snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
   Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
   // No file to read means no value to mismatch with pref.
@@ -106,14 +97,6 @@ add_task(async function test_client_id() {
   clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      clientID
-    );
-  }
   snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
   Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
   // Invalid file means no value to mismatch with pref.
@@ -126,14 +109,6 @@ add_task(async function test_client_id() {
     clientID = await ClientID.getClientID();
     Assert.equal(typeof clientID, "string");
     Assert.ok(uuidRegex.test(clientID));
-    if (!AppConstants.MOZ_GLEAN_ANDROID) {
-      Assert.equal(
-        Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-          "fog-validation"
-        ),
-        clientID
-      );
-    }
     snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
     Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
     Assert.equal(snapshot["telemetry.loaded_client_id_doesnt_match_pref"], 1);
@@ -145,14 +120,6 @@ add_task(async function test_client_id() {
   await CommonUtils.writeJSON({ clientID: validClientID }, drsPath);
   clientID = await ClientID.getClientID();
   Assert.equal(clientID, validClientID);
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      clientID
-    );
-  }
   snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
   Assert.ok(!("telemetry.generated_new_client_id" in snapshot));
   Assert.equal(snapshot["telemetry.loaded_client_id_doesnt_match_pref"], 1);
@@ -161,14 +128,6 @@ add_task(async function test_client_id() {
   await ClientID._reset();
   clientID = await ClientID.getClientID();
   Assert.equal(clientID, validClientID);
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      clientID
-    );
-  }
   // snapshot may be empty if no other scalars are recorded.
   snapshot =
     Services.telemetry.getSnapshotForScalars("main", true).parent || {};
@@ -206,14 +165,6 @@ add_task(async function test_setCanaryClientIDs() {
   await ClientID.setCanaryClientIDs();
   let clientID = await ClientID.getClientID();
   Assert.equal(KNOWN_UUID, clientID);
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      clientID
-    );
-  }
 });
 
 add_task(async function test_resetEcosystemClientID() {
@@ -222,14 +173,6 @@ add_task(async function test_resetEcosystemClientID() {
   let firstClientID = await ClientID.getClientID();
   let firstEcosystemClientID = await ClientID.getEcosystemClientID();
   Assert.ok(firstClientID);
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      firstClientID
-    );
-  }
   Assert.ok(firstEcosystemClientID);
 
   // We should reset the ecosystem client id, but not the main client id.
@@ -237,14 +180,6 @@ add_task(async function test_resetEcosystemClientID() {
   let secondClientID = await ClientID.getClientID();
   let secondEcosystemClientID = await ClientID.getEcosystemClientID();
   Assert.equal(firstClientID, secondClientID);
-  if (AppConstants.MOZ_GLEAN) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      firstClientID
-    );
-  }
   Assert.notEqual(firstEcosystemClientID, secondEcosystemClientID);
 
   // The new id should have been persisted to disk.
@@ -264,14 +199,6 @@ add_task(async function test_removeClientIDs() {
   Assert.equal(typeof firstEcosystemClientID, "string");
   Assert.ok(uuidRegex.test(firstClientID));
   Assert.ok(uuidRegex.test(firstEcosystemClientID));
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      firstClientID
-    );
-  }
 
   await ClientID.removeClientIDs();
 
@@ -356,14 +283,6 @@ add_task(async function test_removeParallelGet() {
     otherClientID,
     "Getting the client ID in parallel to a reset should give the same id."
   );
-  if (!AppConstants.MOZ_GLEAN_ANDROID) {
-    Assert.equal(
-      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
-        "fog-validation"
-      ),
-      newClientID
-    );
-  }
 });
 
 add_task(

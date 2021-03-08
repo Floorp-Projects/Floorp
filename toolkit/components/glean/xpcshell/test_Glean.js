@@ -82,13 +82,6 @@ add_task(function test_setup() {
   FOG.initializeFOG();
 });
 
-add_task(function test_osversion_is_set() {
-  Assert.equal(
-    "1.2.3",
-    Glean.fogValidation.osVersion.testGetValue("fog-validation")
-  );
-});
-
 add_task(function test_fog_counter_works() {
   Glean.testOnly.badCode.add(31);
   Assert.equal(31, Glean.testOnly.badCode.testGetValue("test-ping"));

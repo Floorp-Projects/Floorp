@@ -11,19 +11,3 @@
 
 ---
 $schema: moz://mozilla.org/schemas/glean/pings/1-0-0
-
-fog-validation:
-  description: |
-    This ping is intended to evaluate the behaviour of FOG before
-    it ships beyond Nightly.
-    This is a temporary ping.
-    It is sent one hour after FOG is initialized, and every hour thereafter.
-  include_client_id: true
-  send_if_empty: true
-  bugs:
-    - https://bugzilla.mozilla.org/1664461
-  data_reviews:
-    - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
-  notification_emails:
-    - chutten@mozilla.com
-    - glean-team@mozilla.com
