@@ -177,10 +177,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void setArg(uint32_t arg) { setVariable(info_.argSlot(arg)); }
   void setSlot(uint32_t slot, MDefinition* ins) { slots_[slot] = ins; }
 
-  // Rewrites a slot directly, bypassing the stack transition. This should
-  // not be used under most circumstances.
-  void rewriteSlot(uint32_t slot, MDefinition* ins) { setSlot(slot, ins); }
-
   // Tracks an instruction as being pushed onto the operand stack.
   void push(MDefinition* ins) {
     MOZ_ASSERT(stackPosition_ < nslots());
@@ -432,7 +428,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   bool isDead() const { return kind_ == DEAD; }
 
   uint32_t stackDepth() const { return stackPosition_; }
-  void setStackDepth(uint32_t depth) { stackPosition_ = depth; }
   bool isMarked() const { return mark_; }
   void mark() {
     MOZ_ASSERT(!mark_, "Marking already-marked block");
@@ -508,11 +503,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   MResumePoint* callerResumePoint() const { return callerResumePoint_; }
   void setCallerResumePoint(MResumePoint* caller) {
     callerResumePoint_ = caller;
-  }
-  size_t numEntrySlots() const { return entryResumePoint()->stackDepth(); }
-  MDefinition* getEntrySlot(size_t i) const {
-    MOZ_ASSERT(i < numEntrySlots());
-    return entryResumePoint()->getOperand(i);
   }
 
   LBlock* lir() const { return lir_; }
@@ -723,10 +713,6 @@ class MIRGraph {
     MOZ_ASSERT(block->id());
     blocks_.remove(block);
     blocks_.insertAfter(at, block);
-  }
-  void removeBlockFromList(MBasicBlock* block) {
-    blocks_.remove(block);
-    numBlocks_--;
   }
   size_t numBlocks() const { return numBlocks_; }
   uint32_t numBlockIds() const { return blockIdGen_; }
