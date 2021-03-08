@@ -127,7 +127,6 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
                                     ICEntry* prevLookedUpEntry);
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
-  ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
 
   [[nodiscard]] bool addInlinedChild(JSContext* cx,
                                      js::UniquePtr<ICScript> child,
@@ -295,10 +294,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   ICScript icScript_;
   // End of fields.
 
-  Offset icEntriesOffset() const { return offsetOfICEntries(); }
   Offset endOffset() const { return endOffset_; }
-
-  ICEntry* icEntries() { return icScript_.icEntries(); }
 
   bool hasCachedIonData() const { return !!cachedIonData_; }
 
@@ -391,13 +387,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   void trace(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
 
-  ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset) {
-    return icScript_.interpreterICEntryFromPCOffset(pcOffset);
-  }
-
-  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset) {
-    return icScript_.maybeICEntryFromPCOffset(pcOffset);
-  }
   ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
                                     ICEntry* prevLookedUpEntry) {
     return icScript_.maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
@@ -406,9 +395,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset) {
     return icScript_.icEntryFromPCOffset(pcOffset);
   };
-  ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry) {
-    return icScript_.icEntryFromPCOffset(pcOffset, prevLookedUpEntry);
-  }
 
   size_t allocBytes() const { return endOffset(); }
 
@@ -502,7 +488,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   bool hasInliningRoot() const { return !!inliningRoot_; }
   InliningRoot* inliningRoot() const { return inliningRoot_.get(); }
   InliningRoot* getOrCreateInliningRoot(JSContext* cx, JSScript* script);
-  void clearInliningRoot() { inliningRoot_.reset(); }
 
 #ifdef DEBUG
   bool hasFailedICHash() const { return failedICHash_.isSome(); }
