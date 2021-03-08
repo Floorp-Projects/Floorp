@@ -32,3 +32,5 @@ DIRS += ["locales"]
 
 DIRS += ["build"]
 TEST_DIRS += ["test"]
+
+SPHINX_TREES["/networking"] = "docs"
