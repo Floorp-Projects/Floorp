@@ -111,9 +111,11 @@ xul|label[disabled="true"] {
 
 /* Panel footers */
 
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 .panel-footer {
   background-color: var(--arrowpanel-dimmed);
 }
+} /** END not Proton **/
 
 .panel-footer > xul|button {
   appearance: none;

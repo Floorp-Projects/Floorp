@@ -5,6 +5,8 @@
 %endif
 %include ../../shared/popupnotification.inc.css
 
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 .popup-notification-secondary-button:not([hidden="true"]) ~ .popup-notification-primary-button:not([default]) {
   border-inline-start: 1px solid var(--panel-separator-color);
 }
+} /** END not Proton **/
