@@ -21,7 +21,9 @@ from distutils.version import StrictVersion
 from mozboot.base import BaseBootstrapper
 from mozfile import which
 
-HOMEBREW_BOOTSTRAP = "https://raw.githubusercontent.com/Homebrew/install/master/install"
+HOMEBREW_BOOTSTRAP = (
+    "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"
+)
 XCODE_APP_STORE = "macappstore://itunes.apple.com/app/id497799835?mt=12"
 XCODE_LEGACY = (
     "https://developer.apple.com/downloads/download.action?path=Developer_Tools/"
@@ -434,7 +436,7 @@ class OSXBootstrapper(BaseBootstrapper):
             tf.write(bootstrap)
             tf.flush()
 
-            subprocess.check_call(["ruby", tf.name])
+            subprocess.check_call(["bash", tf.name])
 
         homebrew_found = self._ensure_homebrew_found()
         if not homebrew_found:
