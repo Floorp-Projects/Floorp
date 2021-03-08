@@ -25,6 +25,12 @@ const webExtensionDescriptorSpec = generateActorSpec({
       response: { form: RetVal("json") },
     },
   },
+
+  events: {
+    "descriptor-destroyed": {
+      type: "descriptor-destroyed",
+    },
+  },
 });
 
 exports.webExtensionDescriptorSpec = webExtensionDescriptorSpec;
