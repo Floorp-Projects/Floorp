@@ -17,7 +17,6 @@
 #include "jsfriendapi.h"
 #include "NamespaceImports.h"
 
-#include "frontend/ParserAtom.h"
 #include "js/CompileOptions.h"
 #include "js/Transcoding.h"
 #include "js/TypeDecls.h"
@@ -239,9 +238,6 @@ class XDRState : public XDRCoderBase {
 
   virtual bool hasAtomTable() const { return false; }
   virtual XDRAtomTable& atomTable() { MOZ_CRASH("does not have atomTable"); }
-  virtual frontend::ParserAtomSpanBuilder& frontendAtoms() {
-    MOZ_CRASH("does not have frontendAtoms");
-  }
   virtual LifoAlloc& stencilAlloc() { MOZ_CRASH("does not have stencilAlloc"); }
   virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
 
@@ -553,17 +549,14 @@ class XDROffThreadDecoder : public XDRDecoder {
  *   b. ScriptSource
  *   d. Alignment padding
  * 2. Stencil
- *   a. ParseAtomTable
- *   b. CompilationStencil
+ *   a. CompilationStencil
  */
 
 /*
- * The stencil decoder accepts `options` and `range` as input, along
- * with a freshly initialized `parserAtoms` table.
+ * The stencil decoder accepts `options` and `range` as input.
  *
  * The decoded stencils are outputted to the default-initialized
- * `stencil` parameter of `codeStencil` method, and decoded atoms are
- * interned into the `parserAtoms` parameter of the ctor.
+ * `stencil` parameter of `codeStencil` method.
  *
  * The decoded stencils borrow the input `buffer`/`range`, and the consumer
  * has to keep the buffer alive while the decoded stencils are alive.
@@ -585,12 +578,7 @@ class XDRStencilDecoder : public XDRDecoderBase {
     MOZ_ASSERT(options_);
   }
 
-  bool hasAtomTable() const override { return hasFinishedAtomTable_; }
-  frontend::ParserAtomSpanBuilder& frontendAtoms() override {
-    return *parserAtomBuilder_;
-  }
   LifoAlloc& stencilAlloc() override { return *stencilAlloc_; }
-  void finishAtomTable() override { hasFinishedAtomTable_ = true; }
 
   bool hasOptions() const override { return true; }
   const JS::ReadOnlyCompileOptions& options() override { return *options_; }
@@ -600,8 +588,6 @@ class XDRStencilDecoder : public XDRDecoderBase {
 
  private:
   const JS::ReadOnlyCompileOptions* options_;
-  bool hasFinishedAtomTable_ = false;
-  frontend::ParserAtomSpanBuilder* parserAtomBuilder_ = nullptr;
   LifoAlloc* stencilAlloc_ = nullptr;
 };
 
@@ -652,9 +638,6 @@ XDRResult XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 template <XDRMode mode>
 XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
-
-template <XDRMode mode>
-XDRResult XDRParserAtom(XDRState<mode>* xdr, frontend::ParserAtom** atomp);
 
 template <XDRMode mode>
 XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
