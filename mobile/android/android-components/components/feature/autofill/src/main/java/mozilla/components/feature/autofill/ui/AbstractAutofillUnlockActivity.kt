@@ -21,6 +21,7 @@ import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.authenticator.Authenticator
 import mozilla.components.feature.autofill.authenticator.createAuthenticator
 import mozilla.components.feature.autofill.handler.FillRequestHandler
+import mozilla.components.feature.autofill.structure.toRawStructure
 
 /**
  * Activity responsible for unlocking the autofill service by asking the user to verify with a
@@ -40,7 +41,13 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
         val structure: AssistStructure? = intent.getParcelableExtra(AutofillManager.EXTRA_ASSIST_STRUCTURE)
 
         // While the user is asked to authenticate, we already try to build the fill response asynchronously.
-        fillResponse = lifecycleScope.async(Dispatchers.IO) { fillHandler.handle(structure, forceUnlock = true) }
+        val rawStructure = structure?.toRawStructure()
+        if (rawStructure != null) {
+            fillResponse = lifecycleScope.async(Dispatchers.IO) {
+                val builder = fillHandler.handle(rawStructure, forceUnlock = true)
+                builder?.build(this@AbstractAutofillUnlockActivity, configuration)
+            }
+        }
 
         if (authenticator == null) {
             // If no authenticator is available then we just bail here. Instead we should ask the user to

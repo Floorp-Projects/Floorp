@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.autofill.handler.FillRequestHandler
+import mozilla.components.feature.autofill.structure.toRawStructure
 
 /**
  * Service responsible for implementing Android's Autofill framework.
@@ -35,7 +36,14 @@ abstract class AbstractAutofillService : AutofillService() {
         // seems to get destroyed before we invoke a method on the callback. So we need a scope that
         // lives longer than the service.
         GlobalScope.launch(Dispatchers.IO) {
-            val response = fillHandler.handle(request)
+            // You may be wondering why we translate the AssistStructure into a RawStructure and then
+            // create a FillResponseBuilder that outputs the FillResponse. This is purely for testing.
+            // Neither AssistStructure nor FillResponse can be created by us and they do not let us
+            // inspect their data. So we create these intermediate objects that we can create and
+            // inspect in unit tests.
+            val structure = request.fillContexts.last().structure.toRawStructure()
+            val responseBuilder = fillHandler.handle(structure)
+            val response = responseBuilder?.build(this@AbstractAutofillService, configuration)
             callback.onSuccess(response)
         }
     }

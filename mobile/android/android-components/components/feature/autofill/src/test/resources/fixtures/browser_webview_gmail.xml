@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout>
+    <TextView idEntry="title" idPackage="android" idType="id" />
+    <LinearLayout idEntry="container" idPackage="org.chromium.webview_shell" idType="id">
+        <EditText idEntry="url_field" idPackage="org.chromium.webview_shell" idType="id" />
+        <form webDomain="accounts.google.com">
+            <input autofillHints="username" name="identifier" type="email" label="Forgot email?" id="identifierId" autofillId="autofillId-username"/>
+            <input name="hiddenPassword" type="password" label="Forgot email?" />
+            <input autofillHints="off" name="ca" type="text" label="Forgot email?" />
+        </form>
+    </LinearLayout>
+</FrameLayout>

@@ -24,6 +24,7 @@ import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.R
 import mozilla.components.feature.autofill.handler.EXTRA_LOGIN_ID
 import mozilla.components.feature.autofill.handler.FillRequestHandler
+import mozilla.components.feature.autofill.structure.toRawStructure
 
 /**
  * Activity responsible for asking the user to confirm before autofilling a third-party app. It is
@@ -48,8 +49,12 @@ abstract class AbstractAutofillConfirmActivity : FragmentActivity() {
         }
 
         // While the user is asked to confirm, we already try to build the fill response asynchronously.
-        dataset = lifecycleScope.async(Dispatchers.IO) {
-            fillHandler.handleConfirmation(structure, loginId)
+        val rawStructure = structure?.toRawStructure()
+        if (rawStructure != null) {
+            dataset = lifecycleScope.async(Dispatchers.IO) {
+                val builder = fillHandler.handleConfirmation(rawStructure, loginId)
+                builder?.build(this@AbstractAutofillConfirmActivity, configuration)
+            }
         }
 
         if (savedInstanceState == null) {

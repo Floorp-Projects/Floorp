@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.autofill.structure
 
-import android.app.assist.AssistStructure
 import android.content.Context
 import android.os.Build
 import android.view.autofill.AutofillId
@@ -33,6 +32,7 @@ internal data class ParsedStructure(
  * the domain into a "base" domain (public suffix + 1) before returning.
  */
 internal suspend fun ParsedStructure.getLookupDomain(publicSuffixList: PublicSuffixList): String {
+    println("Lookup: webDomain=$webDomain, packageName=$packageName")
     val domain = if (webDomain != null && Browsers.isBrowser(packageName)) {
         // If the application we are auto-filling is a known browser and it provided a webDomain
         // for the content it is displaying then we try to autofill for that.
@@ -48,14 +48,14 @@ internal suspend fun ParsedStructure.getLookupDomain(publicSuffixList: PublicSuf
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-internal fun parseStructure(context: Context, structure: AssistStructure): ParsedStructure? {
-    val activityPackageName = structure.activityComponent.packageName
+internal fun parseStructure(context: Context, structure: RawStructure): ParsedStructure? {
+    val activityPackageName = structure.activityPackageName
     if (context.packageName == activityPackageName) {
         // We do not autofill our own activities. Browser content will be auto-filled by Gecko.
         return null
     }
 
-    val nodeNavigator = ViewNodeNavigator(structure, activityPackageName)
+    val nodeNavigator = structure.createNavigator()
     val parsedStructure = ParsedStructureBuilder(nodeNavigator).build()
 
     if (parsedStructure.passwordId == null && parsedStructure.usernameId == null) {

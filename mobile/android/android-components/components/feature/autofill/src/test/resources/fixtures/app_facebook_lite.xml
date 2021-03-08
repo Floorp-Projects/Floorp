@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout>
+    <LinearLayout>
+        <View idEntry="action_mode_bar_stub" idPackage="android" idType="id"/>
+        <FrameLayout idEntry="content" idPackage="android" idType="id">
+            <FrameLayout idEntry="main_layout" idPackage="com.facebook.lite" idType="id">
+                <ImageView idEntry="image_overlay_under_content" idPackage="com.facebook.lite" idType="id"/>
+                <ViewGroup>
+                    <ViewGroup/>
+                    <ViewGroup/>
+                    <MultiAutoCompleteTextView autofillValue="" inputType="80001" autofillId="autofillId-username"/>
+                    <ViewGroup/>
+                    <MultiAutoCompleteTextView inputType="80081"/>
+                    <ViewGroup>
+                        <ViewGroup/>
+                    </ViewGroup>
+                    <ViewGroup>
+                        <ViewGroup/>
+                    </ViewGroup>
+                    <ViewGroup/>
+                    <ViewGroup>
+                        <ViewGroup/>
+                    </ViewGroup>
+                    <ViewGroup>
+                        <ViewGroup/>
+                    </ViewGroup>
+                    <ViewGroup/>
+                    <ViewGroup/>
+                    <ViewGroup>
+                        <ViewGroup/>
+                    </ViewGroup>
+                    <ViewGroup>
+                        <ViewGroup/>
+                    </ViewGroup>
+                    <ViewGroup>
+                        <ViewGroup/>
+                    </ViewGroup>
+                    <View/>
+                    <View/>
+                </ViewGroup>
+                <ImageView idEntry="image_overlay_over_content" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="webview_stub" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="inline_textbox_stub" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="floating_textbox_stub" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="screen_transition_loading_view_stub" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="zoomview_stub" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="videoview_stub" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="dummy_surfaceview" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="livestreamingview_stub" idPackage="com.facebook.lite" idType="id"/>
+                <View idEntry="snack_bar_view_stub" idPackage="com.facebook.lite" idType="id"/>
+            </FrameLayout>
+        </FrameLayout>
+    </LinearLayout>
+    <View idEntry="navigationBarBackground" idPackage="android" idType="id"/>
+    <View idEntry="statusBarBackground" idPackage="android" idType="id"/>
+</FrameLayout>
