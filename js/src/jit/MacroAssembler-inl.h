@@ -910,17 +910,6 @@ void MacroAssembler::storeObjShape(Shape* shape, Register obj,
   storePtr(ImmGCPtr(shape), shapeAddr);
 }
 
-template <typename T>
-void MacroAssembler::storeObjectOrNull(Register src, const T& dest) {
-  Label notNull, done;
-  branchTestPtr(Assembler::NonZero, src, src, &notNull);
-  storeValue(NullValue(), dest);
-  jump(&done);
-  bind(&notNull);
-  storeValue(JSVAL_TYPE_OBJECT, src, dest);
-  bind(&done);
-}
-
 void MacroAssembler::assertStackAlignment(uint32_t alignment,
                                           int32_t offset /* = 0 */) {
 #ifdef DEBUG

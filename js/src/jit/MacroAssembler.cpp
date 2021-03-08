@@ -440,15 +440,6 @@ void MacroAssembler::createGCObject(Register obj, Register temp,
   initGCThing(obj, temp, templateObj, initContents);
 }
 
-// Inlined equivalent of gc::AllocateNonObject, without failure case handling.
-// Non-object allocation does not need to worry about slots, so can take a
-// simpler path.
-void MacroAssembler::allocateNonObject(Register result, Register temp,
-                                       gc::AllocKind allocKind, Label* fail) {
-  checkAllocatorState(fail);
-  freeListAllocate(result, temp, allocKind, fail);
-}
-
 // Inline version of Nursery::allocateString.
 void MacroAssembler::nurseryAllocateString(Register result, Register temp,
                                            gc::AllocKind allocKind,
@@ -2064,20 +2055,6 @@ void MacroAssembler::assumeUnreachable(const char* output) {
   breakpoint();
 }
 
-template <typename T>
-void MacroAssembler::assertTestInt32(Condition cond, const T& value,
-                                     const char* output) {
-#ifdef DEBUG
-  Label ok;
-  branchTestInt32(cond, value, &ok);
-  assumeUnreachable(output);
-  bind(&ok);
-#endif
-}
-
-template void MacroAssembler::assertTestInt32(Condition, const Address&,
-                                              const char*);
-
 void MacroAssembler::printf(const char* output) {
 #ifdef JS_MASM_VERBOSE
   AllocatableRegisterSet regs(RegisterSet::Volatile());
@@ -2229,15 +2206,6 @@ void MacroAssembler::tracelogStopId(Register logger, Register textId) {
   PopRegsInMask(save);
 }
 #endif
-
-void MacroAssembler::convertInt32ValueToDouble(const Address& address,
-                                               Register scratch, Label* done) {
-  branchTestInt32(Assembler::NotEqual, address, done);
-  unboxInt32(address, scratch);
-  ScratchDoubleScope fpscratch(*this);
-  convertInt32ToDouble(scratch, fpscratch);
-  storeDouble(fpscratch, address);
-}
 
 void MacroAssembler::convertInt32ValueToDouble(ValueOperand val) {
   Label done;
@@ -2835,12 +2803,6 @@ void MacroAssembler::Push(const Register64 reg) {
   Push(reg.high);
   Push(reg.low);
 #endif
-}
-
-void MacroAssembler::PushValue(const Address& addr) {
-  MOZ_ASSERT(addr.base != getStackPointer());
-  pushValue(addr);
-  framePushed_ += sizeof(Value);
 }
 
 void MacroAssembler::PushEmptyRooted(VMFunctionData::RootType rootType) {
@@ -4044,11 +4006,6 @@ void MacroAssembler::memoryBarrierBefore(const Synchronization& sync) {
 
 void MacroAssembler::memoryBarrierAfter(const Synchronization& sync) {
   memoryBarrier(sync.barrierAfter);
-}
-
-void MacroAssembler::BranchGCPtr::emit(MacroAssembler& masm) {
-  MOZ_ASSERT(isInitialized());
-  masm.branchPtr(cond(), reg(), ptr_, jump());
 }
 
 void MacroAssembler::debugAssertIsObject(const ValueOperand& val) {
