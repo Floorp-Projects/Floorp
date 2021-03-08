@@ -197,18 +197,18 @@ var tests = [
           }),
         ],
       }),
-      async function testNormandyInfoInTroubleshooting(
-        prefStudies,
+      async function testNormandyInfoInTroubleshooting({
+        prefExperiments,
         addonStudies,
-        prefRollouts
-      ) {
+        prefRollouts,
+      }) {
         await new Promise(resolve => {
           Troubleshoot.snapshot(function(snapshot) {
             let info = snapshot.normandy;
             // The order should be flipped, since each category is sorted by slug.
             Assert.deepEqual(
               info.prefStudies,
-              [prefStudies[1], prefStudies[0]],
+              [prefExperiments[1], prefExperiments[0]],
               "prefs studies should exist in the right order"
             );
             Assert.deepEqual(

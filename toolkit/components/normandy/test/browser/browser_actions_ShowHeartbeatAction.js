@@ -49,7 +49,7 @@ class MockEventEmitter {
 
 function withStubbedHeartbeat() {
   return function(testFunction) {
-    return async function wrappedTestFunction(...args) {
+    return async function wrappedTestFunction(args) {
       const backstage = ChromeUtils.import(
         "resource://normandy/actions/ShowHeartbeatAction.jsm",
         null
@@ -61,10 +61,11 @@ function withStubbedHeartbeat() {
       backstage.Heartbeat = heartbeatClassStub;
 
       try {
-        await testFunction(
-          { heartbeatClassStub, heartbeatInstanceStub },
-          ...args
-        );
+        await testFunction({
+          ...args,
+          heartbeatClassStub,
+          heartbeatInstanceStub,
+        });
       } finally {
         backstage.Heartbeat = originalHeartbeat;
       }
@@ -74,10 +75,10 @@ function withStubbedHeartbeat() {
 
 function withClearStorage() {
   return function(testFunction) {
-    return async function wrappedTestFunction(...args) {
+    return async function wrappedTestFunction(args) {
       Storage.clearAllStorage();
       try {
-        await testFunction(...args);
+        await testFunction(args);
       } finally {
         Storage.clearAllStorage();
       }
@@ -396,7 +397,7 @@ add_task(async function postAnswerUrlUserIdIfRequested() {
 decorate_task(
   withStubbedHeartbeat(),
   withClearStorage(),
-  async function testGenerateSurveyId({ heartbeatClassStub }) {
+  async function testGenerateSurveyId() {
     const recipeWithoutId = heartbeatRecipeFactory({
       arguments: { surveyId: "test-id", includeTelemetryUUID: false },
     });
