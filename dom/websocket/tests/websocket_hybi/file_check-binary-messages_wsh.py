@@ -1,4 +1,5 @@
 from mod_pywebsocket import msgutil
+import six
 
 
 def web_socket_do_extra_handshake(request):
@@ -9,8 +10,9 @@ def web_socket_transfer_data(request):
     expected_messages = ["Hello, world!", "", all_distinct_bytes()]
 
     for test_number, expected_message in enumerate(expected_messages):
+        expected_message = six.b(expected_message)
         message = msgutil.receive_message(request)
-        if type(message) == str and message == expected_message:
+        if message == expected_message:
             msgutil.send_message(request, "PASS: Message #{:d}.".format(test_number))
         else:
             msgutil.send_message(
