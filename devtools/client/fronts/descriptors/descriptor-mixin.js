@@ -21,6 +21,13 @@ function DescriptorMixin(parentClass) {
       super(client, targetFront, parentFront);
 
       this._client = client;
+
+      // Pass a true value in order to distinguish this event reception
+      // from any manual destroy caused by the frontend
+      this.on(
+        "descriptor-destroyed",
+        this.destroy.bind(this, { isServerDestroyEvent: true })
+      );
     }
 
     get client() {
