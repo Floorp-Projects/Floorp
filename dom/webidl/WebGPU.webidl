@@ -876,7 +876,7 @@ enum GPUStoreOp {
 };
 
 dictionary GPURenderPassColorAttachmentDescriptor {
-    required GPUTextureView attachment;
+    required GPUTextureView view;
     GPUTextureView resolveTarget;
 
     required (GPULoadOp or GPUColor) loadValue;
@@ -884,7 +884,7 @@ dictionary GPURenderPassColorAttachmentDescriptor {
 };
 
 dictionary GPURenderPassDepthStencilAttachmentDescriptor {
-    required GPUTextureView attachment;
+    required GPUTextureView view;
 
     required (GPULoadOp or float) depthLoadValue;
     required GPUStoreOp depthStoreOp;
