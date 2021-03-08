@@ -168,7 +168,7 @@ already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
 already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     const dom::GPURenderPassDescriptor& aDesc) {
   for (const auto& at : aDesc.mColorAttachments) {
-    auto* targetCanvasElement = at.mAttachment->GetTargetCanvasElement();
+    auto* targetCanvasElement = at.mView->GetTargetCanvasElement();
     if (targetCanvasElement) {
       if (mTargetCanvasElement) {
         NS_WARNING("Command encoder touches more than one canvas");
