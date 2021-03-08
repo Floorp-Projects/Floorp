@@ -39,9 +39,9 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
-use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsStr, nsString};
+use nsstring::{nsACString, nsCStr, nsCString, nsString};
 use xpcom::interfaces::{
-    mozIViaduct, nsIFile, nsIObserver, nsIPrefBranch, nsIPropertyBag2, nsISupports, nsIXULAppInfo,
+    mozIViaduct, nsIFile, nsIObserver, nsIPrefBranch, nsISupports, nsIXULAppInfo,
 };
 use xpcom::{RefPtr, XpCom};
 
@@ -76,13 +76,6 @@ pub unsafe extern "C" fn fog_init(data_path_override: &nsACString) -> nsresult {
         Ok(ai) => ai,
         Err(e) => return e,
     };
-
-    let (os_version, _architecture) = match get_system_info() {
-        Ok(si) => si,
-        Err(e) => return e,
-    };
-
-    fog::metrics::fog_validation::os_version.set(os_version);
 
     let client_info = ClientInfoMetrics {
         app_build,
@@ -150,7 +143,6 @@ pub unsafe extern "C" fn fog_init(data_path_override: &nsACString) -> nsresult {
         fog::pings::register_pings();
 
         fog::metrics::fog::initialization.stop();
-        schedule_fog_validation_ping();
     }
 
     NS_OK
@@ -227,32 +219,6 @@ fn get_app_info() -> Result<(String, String, String), nsresult> {
         version.to_string(),
         channel.to_string(),
     ))
-}
-
-/// Return a tuple of os_version and architecture, or an error.
-fn get_system_info() -> Result<(String, String), nsresult> {
-    let info_service = xpcom::get_service::<nsIPropertyBag2>(cstr!("@mozilla.org/system-info;1"))
-        .ok_or(NS_ERROR_FAILURE)?;
-
-    let os_version_key: Vec<u16> = "version".encode_utf16().collect();
-    let os_version_key = &nsStr::from(&os_version_key) as &nsAString;
-    let mut os_version = nsCString::new();
-    unsafe {
-        info_service
-            .GetPropertyAsACString(os_version_key, &mut *os_version)
-            .to_result()?;
-    }
-
-    let arch_key: Vec<u16> = "arch".encode_utf16().collect();
-    let arch_key = &nsStr::from(&arch_key) as &nsAString;
-    let mut arch = nsCString::new();
-    unsafe {
-        info_service
-            .GetPropertyAsACString(arch_key, &mut *arch)
-            .to_result()?;
-    }
-
-    Ok((os_version.to_string(), arch.to_string()))
 }
 
 // Partially cargo-culted from https://searchfox.org/mozilla-central/rev/598e50d2c3cd81cd616654f16af811adceb08f9f/security/manager/ssl/cert_storage/src/lib.rs#1192
@@ -374,17 +340,4 @@ pub unsafe extern "C" fn fog_submit_ping(ping_name: &nsACString) -> nsresult {
 pub unsafe extern "C" fn fog_set_log_pings(value: bool) -> nsresult {
     glean::set_log_pings(value);
     NS_OK
-}
-
-fn schedule_fog_validation_ping() {
-    std::thread::Builder::new()
-        .name("fog.validation.ping".into())
-        .spawn(|| {
-            loop {
-                // Sleep for an hour before and between submissions.
-                std::thread::sleep(std::time::Duration::from_secs(60 * 60));
-                fog::pings::fog_validation.submit(None);
-            }
-        })
-        .unwrap();
 }

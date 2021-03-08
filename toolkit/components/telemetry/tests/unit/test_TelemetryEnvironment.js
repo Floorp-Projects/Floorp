@@ -33,7 +33,6 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { SearchTestUtils } = ChromeUtils.import(
   "resource://testing-common/SearchTestUtils.jsm"
 );
-Cu.importGlobalProperties(["Glean"]);
 
 // AttributionCode is only needed for Firefox
 ChromeUtils.defineModuleGetter(
@@ -2521,20 +2520,6 @@ if (gIsWindows) {
       checkString(data.system.hdd[k].model);
       checkString(data.system.hdd[k].revision);
       checkString(data.system.hdd[k].type);
-    }
-
-    if (data.system.hdd.profile.type == "SSD") {
-      Assert.equal(
-        true,
-        Glean.fogValidation.profileDiskIsSsd.testGetValue(),
-        "SSDness should be recorded in Glean"
-      );
-    } else {
-      Assert.equal(
-        false,
-        Glean.fogValidation.profileDiskIsSsd.testGetValue(),
-        "nonSSDness should be recorded in Glean"
-      );
     }
   });
 
