@@ -47,7 +47,7 @@ function WebProgressListener() {
 }
 
 WebProgressListener.prototype = {
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
         aIID.equals(Ci.nsISupportsWeakReference) ||
         aIID.equals(Ci.nsISupports))
@@ -55,7 +55,7 @@ WebProgressListener.prototype = {
     throw Components.Exception("", Cr.NS_NOINTERFACE);
   },
 
-  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     setTimeout(this._callback, 0, aWebProgress, aRequest, aLocation, aFlags);
   },
 

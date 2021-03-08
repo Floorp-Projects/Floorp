@@ -46,10 +46,10 @@
           if (strs[node.id]) strs[node.id] += " ";
           strs[node.id] += node.id + ".page" + type;
         }
-        node.addEventListener("page" + type, listener, false);
+        node.addEventListener("page" + type, listener);
 
         listener.detach = function() {
-          node.removeEventListener("page" + type, listener, false);
+          node.removeEventListener("page" + type, listener);
         }
         return listener;
       }
@@ -61,34 +61,34 @@
 
       $("f1").swapDocShells($("f2"));
 
-      is(strs["f1"], "f1.pagehide f1.pageshow",
+      is(strs.f1, "f1.pagehide f1.pageshow",
               "Expected hide then show on first loaded page");
-      is(strs["f2"], "f2.pagehide f2.pageshow",
+      is(strs.f2, "f2.pagehide f2.pageshow",
               "Expected hide then show on second loaded page");
 
       function listener2() {
-        $("f2").removeEventListener("testEvt", listener2, false);
+        $("f2").removeEventListener("testEvt", listener2);
 
         strs = { "f1": "", "f2" : "" };
 
         $("f1").swapDocShells($("f2"));
-        is(strs["f1"], "f1.pagehide",
+        is(strs.f1, "f1.pagehide",
            "Expected hide on already-loaded page, then nothing");
-        is(strs["f2"], "f2.pageshow f2.pagehide f2.pageshow",
+        is(strs.f2, "f2.pageshow f2.pagehide f2.pageshow",
            "Expected show on still-loading page, then hide on it, then show " +
            "on already-loaded page");
 
         strs = { "f1": "", "f2" : "" };
 
-        $("f1").addEventListener("pageshow", listener3, false);
+        $("f1").addEventListener("pageshow", listener3);
       }
 
       function listener3() {
-        $("f1").removeEventListener("pageshow", listener3, false);
+        $("f1").removeEventListener("pageshow", listener3);
 
-        is(strs["f1"], "f1.pageshow",
+        is(strs.f1, "f1.pageshow",
            "Expected show as our page finishes loading");
-        is(strs["f2"], "", "Expected no more events here.");
+        is(strs.f2, "", "Expected no more events here.");
 
         l1.detach();
         l2.detach();

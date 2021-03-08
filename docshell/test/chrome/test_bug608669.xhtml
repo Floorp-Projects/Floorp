@@ -33,7 +33,7 @@ let chromeWindow = window.browsingContext.topChromeWindow;
 function* doTest() {
   var notificationCount = 0;
   var observer = {
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       is(aTopic, "chrome-document-global-created",
          "correct topic");
       is(aData, "null",

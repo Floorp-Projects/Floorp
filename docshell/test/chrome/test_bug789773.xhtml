@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
   var calledListenerForBrowserChromeURL = false;
   var testProgressListener = {
     START_DOC: Ci.nsIWebProgressListener.STATE_START | Ci.nsIWebProgressListener.STATE_IS_DOCUMENT,
-    onStateChange: function(wp, req, stateFlags, status) {
+    onStateChange(wp, req, stateFlags, status) {
       let browserChromeFileName = AppConstants.BROWSER_CHROME_URL.split("/").reverse()[0];
       if (req.name.includes(browserChromeFileName)) {
         wp.DOMWindow; // Force the lazy creation of a DOM window.
@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
       if (req.name.includes("mozilla.html") && (stateFlags & Ci.nsIWebProgressListener.STATE_STOP))
         finishTest();
     },
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsISupportsWeakReference) ||
           iid.equals(Ci.nsIWebProgressListener))
         return this;

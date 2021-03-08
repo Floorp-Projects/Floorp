@@ -34,7 +34,7 @@
 
       var notificationCount = 0;
       var observer = {
-        observe: function(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic, aData) {
           is(aSubject, browser.contentWindow,
              "correct subject");
           is(aTopic, "content-document-global-created",

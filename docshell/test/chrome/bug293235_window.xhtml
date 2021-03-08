@@ -66,7 +66,7 @@
 
         // Because adding visits is async, we will not be notified immediately.
         let visitObserver = {
-          observe: function(aSubject, aTopic, aData)
+          observe(aSubject, aTopic, aData)
           {
             if (!testURI.equals(aSubject.QueryInterface(Ci.nsIURI))) {
               return;
@@ -80,7 +80,7 @@
         // Load the page that the link on the previous page points to.
         doPageNavigation({
           uri: getHttpUrl("bug293235_p2.html"),
-          onNavComplete: function() {
+          onNavComplete() {
             observedPageShow = true;
             maybeResolve();
           }
