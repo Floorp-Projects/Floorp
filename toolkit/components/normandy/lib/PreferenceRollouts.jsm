@@ -201,18 +201,21 @@ var PreferenceRollouts = {
    * Test wrapper that temporarily replaces the stored rollout data with fake
    * data for testing.
    */
-  withTestMock({ graduationSet = new Set(), rollouts = [] } = {}) {
+  withTestMock({
+    graduationSet = new Set(),
+    rollouts: prefRollouts = [],
+  } = {}) {
     return testFunction => {
-      return async (...args) => {
+      return async args => {
         let db = await getDatabase();
         const oldData = await getStore(db, "readonly").getAll();
         await getStore(db, "readwrite").clear();
-        await Promise.all(rollouts.map(r => this.add(r)));
+        await Promise.all(prefRollouts.map(r => this.add(r)));
         const oldGraduationSet = this.GRADUATION_SET;
         this.GRADUATION_SET = graduationSet;
 
         try {
-          await testFunction(...args, rollouts);
+          await testFunction({ ...args, prefRollouts });
         } finally {
           this.GRADUATION_SET = oldGraduationSet;
           db = await getDatabase();

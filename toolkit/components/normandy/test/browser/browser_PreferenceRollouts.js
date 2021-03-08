@@ -179,7 +179,7 @@ decorate_task(
 decorate_task(
   withSendEventSpy(),
   PreferenceRollouts.withTestMock(),
-  async function testRecordOriginalValuesGraduates(sendEventSpy) {
+  async function testRecordOriginalValuesGraduates({ sendEventSpy }) {
     await PreferenceRollouts.add({
       slug: "test-rollout",
       state: PreferenceRollouts.STATE_ACTIVE,
@@ -231,7 +231,7 @@ decorate_task(
 decorate_task(
   withStub(TelemetryEnvironment, "setExperimentActive"),
   PreferenceRollouts.withTestMock(),
-  async function testInitTelemetry(setExperimentActiveStub) {
+  async function testInitTelemetry({ setExperimentActiveStub }) {
     await PreferenceRollouts.add({
       slug: "test-rollout-active-1",
       state: PreferenceRollouts.STATE_ACTIVE,
@@ -288,7 +288,10 @@ decorate_task(
       }),
     ],
   }),
-  async function testInitGraduationSet(setExperimentActiveStub, sendEventSpy) {
+  async function testInitGraduationSet({
+    setExperimentActiveStub,
+    sendEventSpy,
+  }) {
     await PreferenceRollouts.init();
     const newRollout = await PreferenceRollouts.get("test-rollout");
     Assert.equal(

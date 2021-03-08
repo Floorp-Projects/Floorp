@@ -4,9 +4,9 @@ const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 function withPrivacyPrefs() {
   return function(testFunc) {
-    return async (...args) =>
+    return async args =>
       BrowserTestUtils.withNewTab("about:preferences#privacy", async browser =>
-        testFunc(...args, browser)
+        testFunc({ ...args, browser })
       );
   };
 }
@@ -16,7 +16,7 @@ decorate_task(
     set: [[OPT_OUT_PREF, true]],
   }),
   withPrivacyPrefs(),
-  async function testCheckedOnLoad(browser) {
+  async function testCheckedOnLoad({ browser }) {
     const checkbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -32,7 +32,7 @@ decorate_task(
     set: [[OPT_OUT_PREF, false]],
   }),
   withPrivacyPrefs(),
-  async function testUncheckedOnLoad(browser) {
+  async function testUncheckedOnLoad({ browser }) {
     const checkbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -48,7 +48,7 @@ decorate_task(
     set: [[OPT_OUT_PREF, true]],
   }),
   withPrivacyPrefs(),
-  async function testCheckboxes(browser) {
+  async function testCheckboxes({ browser }) {
     const optOutCheckbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -71,7 +71,7 @@ decorate_task(
     set: [[OPT_OUT_PREF, true]],
   }),
   withPrivacyPrefs(),
-  async function testPrefWatchers(browser) {
+  async function testPrefWatchers({ browser }) {
     const optOutCheckbox = browser.contentDocument.getElementById(
       "optOutStudiesEnabled"
     );
@@ -89,7 +89,9 @@ decorate_task(
   }
 );
 
-decorate_task(withPrivacyPrefs(), async function testViewStudiesLink(browser) {
+decorate_task(withPrivacyPrefs(), async function testViewStudiesLink({
+  browser,
+}) {
   browser.contentDocument.getElementById("viewShieldStudies").click();
   await BrowserTestUtils.waitForLocationChange(gBrowser);
 

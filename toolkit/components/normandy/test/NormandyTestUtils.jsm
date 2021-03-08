@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 const { AddonStudies } = ChromeUtils.import(
   "resource://normandy/lib/AddonStudies.jsm"
 );
@@ -24,6 +27,11 @@ let _preferenceStudyFactoryId = 0;
 let _preferenceRolloutFactoryId = 0;
 
 let testGlobals = {};
+
+const preferenceBranches = {
+  user: Preferences,
+  default: new Preferences({ defaultBranch: true }),
+};
 
 const NormandyTestUtils = {
   init({ add_task } = {}) {
@@ -211,7 +219,7 @@ const NormandyTestUtils = {
 
   withMockRecipeCollection(recipes = []) {
     return function wrapper(testFunc) {
-      return async function inner(...args) {
+      return async function inner(args) {
         let recipeIds = new Set();
         for (const recipe of recipes) {
           if (!recipe.id || recipeIds.has(recipe.id)) {
@@ -238,7 +246,7 @@ const NormandyTestUtils = {
         let lastModified = await db.getLastModified();
         await db.importChanges({}, lastModified + 1);
 
-        const collectionHelper = {
+        const mockRecipeCollection = {
           async addRecipes(newRecipes) {
             for (const recipe of newRecipes) {
               if (!recipe.id || recipeIds.has(recipe)) {
@@ -262,12 +270,58 @@ const NormandyTestUtils = {
         };
 
         try {
-          await testFunc(...args, collectionHelper);
+          await testFunc({ ...args, mockRecipeCollection });
         } finally {
           db = await RecipeRunner._remoteSettingsClientForTesting.db;
           await db.clear();
           lastModified = await db.getLastModified();
           await db.importChanges({}, lastModified + 1);
+        }
+      };
+    };
+  },
+
+  MockPreferences: class {
+    constructor() {
+      this.oldValues = { user: {}, default: {} };
+    }
+
+    set(name, value, branch = "user") {
+      this.preserve(name, branch);
+      preferenceBranches[branch].set(name, value);
+    }
+
+    preserve(name, branch) {
+      if (!(name in this.oldValues[branch])) {
+        this.oldValues[branch][name] = preferenceBranches[branch].get(
+          name,
+          undefined
+        );
+      }
+    }
+
+    cleanup() {
+      for (const [branchName, values] of Object.entries(this.oldValues)) {
+        const preferenceBranch = preferenceBranches[branchName];
+        for (const [name, value] of Object.entries(values)) {
+          if (value !== undefined) {
+            preferenceBranch.set(name, value);
+          } else {
+            preferenceBranch.reset(name);
+          }
+        }
+      }
+    }
+  },
+
+  withMockPreferences() {
+    return function(testFunction) {
+      return async function inner(args) {
+        const mockPreferences = new NormandyTestUtils.MockPreferences();
+        try {
+          await testFunction({ ...args, mockPreferences });
+        } finally {
+          mockPreferences.cleanup();
         }
       };
     };
