@@ -353,13 +353,6 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
   return maybeICEntryFromPCOffset(pcOffset);
 }
 
-ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset,
-                                       ICEntry* prevLookedUpEntry) {
-  ICEntry* entry = maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
-  MOZ_RELEASE_ASSERT(entry);
-  return *entry;
-}
-
 ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
   // We have to return the entry to store in BaselineFrame::interpreterICEntry
   // when resuming in the Baseline Interpreter at pcOffset. The bytecode op at
