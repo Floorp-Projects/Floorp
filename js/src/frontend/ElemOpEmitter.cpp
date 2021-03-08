@@ -64,7 +64,7 @@ bool ElemOpEmitter::emitPrivateGuard() {
   }
 
   if (isPropInit()) {
-    //            [stack] OBJ KEY
+    //              [stack] OBJ KEY
     if (!bce_->emitCheckPrivateField(ThrowCondition::ThrowHas,
                                      ThrowMsgKind::PrivateDoubleInit)) {
       //            [stack] OBJ KEY BOOL
@@ -82,7 +82,7 @@ bool ElemOpEmitter::emitPrivateGuard() {
 
   // CheckPrivate leaves the result of the HasOwnCheck on the stack. Pop it off.
   return bce_->emit1(JSOp::Pop);
-  //            [stack] OBJ KEY
+  //                [stack] OBJ KEY
 }
 
 bool ElemOpEmitter::emitPrivateGuardForAssignment() {
@@ -90,19 +90,19 @@ bool ElemOpEmitter::emitPrivateGuardForAssignment() {
     return true;
   }
 
-  //            [stack] OBJ KEY RHS
+  //                [stack] OBJ KEY RHS
   if (!bce_->emitUnpickN(2)) {
-    //            [stack] RHS OBJ KEY
+    //              [stack] RHS OBJ KEY
     return false;
   }
 
   if (!emitPrivateGuard()) {
-    //            [stack] RHS OBJ KEY
+    //              [stack] RHS OBJ KEY
     return false;
   }
 
   if (!bce_->emitPickN(2)) {
-    //            [stack] OBJ KEY RHS
+    //              [stack] OBJ KEY RHS
     return false;
   }
 

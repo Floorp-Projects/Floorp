@@ -70,19 +70,19 @@ bool AsyncEmitter::prepareForModule() {
   NameOpEmitter noe(bce_, TaggedParserAtomIndex::WellKnown::dotGenerator(),
                     NameOpEmitter::Kind::Initialize);
   if (!noe.prepareForRhs()) {
-    //        [stack]
+    //              [stack]
     return false;
   }
   if (!bce_->emit1(JSOp::Generator)) {
-    //        [stack] GEN
+    //              [stack] GEN
     return false;
   }
   if (!noe.emitAssignment()) {
-    //        [stack] GEN
+    //              [stack] GEN
     return false;
   }
   if (!bce_->emit1(JSOp::Pop)) {
-    //        [stack]
+    //              [stack]
     return false;
   }
 
@@ -125,33 +125,33 @@ bool AsyncEmitter::emitEnd() {
 
 bool AsyncEmitter::emitFinalYield() {
   if (!bce_->emit1(JSOp::Undefined)) {
-    //            [stack] UNDEF
+    //              [stack] UNDEF
     return false;
   }
 
   if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-    //          [stack] UNDEF GEN
+    //              [stack] UNDEF GEN
     return false;
   }
 
   if (!bce_->emit2(JSOp::AsyncResolve,
                    uint8_t(AsyncFunctionResolveKind::Fulfill))) {
-    //          [stack] PROMISE
+    //              [stack] PROMISE
     return false;
   }
 
   if (!bce_->emit1(JSOp::SetRval)) {
-    //            [stack]
+    //              [stack]
     return false;
   }
 
   if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-    //            [stack] GEN
+    //              [stack] GEN
     return false;
   }
 
   if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
-    //            [stack]
+    //              [stack]
     return false;
   }
 

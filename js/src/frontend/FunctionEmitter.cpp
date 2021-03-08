@@ -537,7 +537,7 @@ bool FunctionScriptEmitter::emitEndBody() {
       }
 
       if (!bce_->emit1(JSOp::Undefined)) {
-        //            [stack] RESULT? UNDEF
+        //          [stack] RESULT? UNDEF
         return false;
       }
 
@@ -547,18 +547,18 @@ bool FunctionScriptEmitter::emitEndBody() {
       }
 
       if (!bce_->emit1(JSOp::SetRval)) {
-        //            [stack]
+        //          [stack]
         return false;
       }
 
       if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-        //            [stack] GEN
+        //          [stack] GEN
         return false;
       }
 
       // No need to check for finally blocks, etc as in EmitReturn.
       if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
-        //            [stack]
+        //          [stack]
         return false;
       }
     } else if (funbox_->needsPromiseResult()) {
@@ -571,23 +571,23 @@ bool FunctionScriptEmitter::emitEndBody() {
       // Emit final yield bytecode for async generators, for example:
       // async function asyncgen * () { ... }
       if (!bce_->emit1(JSOp::Undefined)) {
-        //            [stack] RESULT? UNDEF
+        //          [stack] RESULT? UNDEF
         return false;
       }
 
       if (!bce_->emit1(JSOp::SetRval)) {
-        //            [stack]
+        //          [stack]
         return false;
       }
 
       if (!bce_->emitGetDotGeneratorInInnermostScope()) {
-        //            [stack] GEN
+        //          [stack] GEN
         return false;
       }
 
       // No need to check for finally blocks, etc as in EmitReturn.
       if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
-        //            [stack]
+        //          [stack]
         return false;
       }
     }
