@@ -378,6 +378,89 @@ template <XDRMode mode>
 }
 
 template <XDRMode mode>
+/* static */ XDRResult StencilXDR::codeParserAtom(XDRState<mode>* xdr,
+                                                  ParserAtom** atomp) {
+  static_assert(CanCopyDataToDisk<ParserAtom>::value,
+                "ParserAtom cannot be bulk-copied to disk.");
+
+  MOZ_TRY(xdr->align32());
+
+  const ParserAtom* header;
+  if (mode == XDR_ENCODE) {
+    header = *atomp;
+  } else {
+    MOZ_TRY(xdr->peekData(&header));
+  }
+
+  const uint32_t CharSize =
+      header->hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
+  uint32_t totalLength = sizeof(ParserAtom) + (CharSize * header->length());
+
+  MOZ_TRY(xdr->borrowedData(atomp, totalLength));
+
+  return Ok();
+}
+
+template <XDRMode mode>
+static XDRResult XDRAtomCount(XDRState<mode>* xdr, uint32_t* atomCount) {
+  return xdr->codeUint32(atomCount);
+}
+
+template <XDRMode mode>
+/* static */ XDRResult StencilXDR::codeParserAtomSpan(
+    XDRState<mode>* xdr, ParserAtomSpan& parserAtomData) {
+  if (mode == XDR_ENCODE) {
+    uint32_t atomVectorLength = parserAtomData.size();
+    MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
+
+    uint32_t atomCount = 0;
+    for (const auto& entry : parserAtomData) {
+      if (!entry) {
+        continue;
+      }
+      if (entry->isUsedByStencil()) {
+        atomCount++;
+      }
+    }
+    MOZ_TRY(XDRAtomCount(xdr, &atomCount));
+
+    for (uint32_t i = 0; i < atomVectorLength; i++) {
+      auto& entry = parserAtomData[i];
+      if (!entry) {
+        continue;
+      }
+      if (entry->isUsedByStencil()) {
+        MOZ_TRY(xdr->codeUint32(&i));
+        MOZ_TRY(codeParserAtom(xdr, &entry));
+      }
+    }
+
+    return Ok();
+  }
+
+  uint32_t atomVectorLength;
+  MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
+
+  frontend::ParserAtomSpanBuilder builder(xdr->cx()->runtime(), parserAtomData);
+  if (!builder.allocate(xdr->cx(), xdr->stencilAlloc(), atomVectorLength)) {
+    return xdr->fail(JS::TranscodeResult::Throw);
+  }
+
+  uint32_t atomCount;
+  MOZ_TRY(XDRAtomCount(xdr, &atomCount));
+
+  for (uint32_t i = 0; i < atomCount; i++) {
+    frontend::ParserAtom* entry = nullptr;
+    uint32_t index;
+    MOZ_TRY(xdr->codeUint32(&index));
+    MOZ_TRY(codeParserAtom(xdr, &entry));
+    builder.set(frontend::ParserAtomIndex(index), entry);
+  }
+
+  return Ok();
+}
+
+template <XDRMode mode>
 static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
                                           StencilModuleMetadata& stencil) {
   MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
@@ -494,6 +577,8 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   if (mode == XDR_DECODE) {
     stencil.hasExternalDependency = true;
   }
+
+  MOZ_TRY(StencilXDR::codeParserAtomSpan(xdr, stencil.parserAtomData));
 
   MOZ_TRY(xdr->codeUint32(&stencil.functionKey));
 
