@@ -87,7 +87,7 @@
         _afterFirst: false,
         _removedDispatched: false,
         _addedDispatched: false,
-        handleEvent: async function(aEvent) {
+        async handleEvent(aEvent) {
           if (!this._afterFirst) {
             is(aEvent.type, "DOMLinkAdded");
 
@@ -97,10 +97,10 @@
                 if (strs[node.id]) strs[node.id] += " ";
                 strs[node.id] += node.id + ".page" + type;
               }
-              node.addEventListener("page" + type, listener, false);
+              node.addEventListener("page" + type, listener);
 
               listener.detach = function() {
-                node.removeEventListener("page" + type, listener, false);
+                node.removeEventListener("page" + type, listener);
               }
               return listener;
             }
@@ -125,8 +125,8 @@
             var [same, first, second] = compareSnapshots(s1_new, s2, true);
             ok(same, "Should reflow on swap. Expected " + second + " but got " + first);
 
-            is(strs["f1"], "f1.pagehide f1.pageshow");
-            is(strs["f3"], "f3.pagehide f3.pageshow");
+            is(strs.f1, "f1.pagehide f1.pageshow");
+            is(strs.f3, "f3.pagehide f3.pageshow");
             this._afterFirst = true;
             return;
           }
@@ -140,20 +140,20 @@
           }
 
           if (this._addedDispatched && this._removedDispatched) {
-            $("f1").removeEventListener("DOMLinkAdded", this, false);
-            $("f1").removeEventListener("DOMLinkRemoved", this, false);
-            $("f3").removeEventListener("DOMLinkAdded", this, false);
-            $("f3").removeEventListener("DOMLinkRemoved", this, false);
+            $("f1").removeEventListener("DOMLinkAdded", this);
+            $("f1").removeEventListener("DOMLinkRemoved", this);
+            $("f3").removeEventListener("DOMLinkAdded", this);
+            $("f3").removeEventListener("DOMLinkRemoved", this);
             window.close();
             SimpleTest.finish();
           }
         }
       };
 
-      $("f1").addEventListener("DOMLinkAdded", DOMLinkListener, false);
-      $("f1").addEventListener("DOMLinkRemoved", DOMLinkListener, false);
-      $("f3").addEventListener("DOMLinkAdded", DOMLinkListener, false);
-      $("f3").addEventListener("DOMLinkRemoved", DOMLinkListener, false);
+      $("f1").addEventListener("DOMLinkAdded", DOMLinkListener);
+      $("f1").addEventListener("DOMLinkRemoved", DOMLinkListener);
+      $("f3").addEventListener("DOMLinkAdded", DOMLinkListener);
+      $("f3").addEventListener("DOMLinkRemoved", DOMLinkListener);
 
       var linkElement = $("f1").contentDocument.createElement("link");
       linkElement.setAttribute("rel", "alternate");

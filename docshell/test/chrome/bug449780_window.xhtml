@@ -54,9 +54,9 @@
       yield undefined;
 
       // Ignore the notifications during swap
-      $("f1").removeEventListener("pageshow", testDriver, false);
+      $("f1").removeEventListener("pageshow", testDriver);
       $("f1").swapDocShells($("f2"));
-      $("f2").addEventListener("pageshow", testDriver, false);
+      $("f2").addEventListener("pageshow", testDriver);
       $("f2").goBack();
       yield undefined;
 
@@ -70,7 +70,7 @@
     }
 
     function doTheTest() {
-      $("f1").addEventListener("pageshow", testDriver, false);
+      $("f1").addEventListener("pageshow", testDriver);
       $("f1").setAttribute("src", doc1);
     }
   ]]></script>
