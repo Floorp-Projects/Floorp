@@ -1206,7 +1206,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   // NOTE: The script data is rooted by the script.
   MOZ_TRY(PrivateScriptData::XDR<mode>(xdr, script, sourceObject,
                                        scriptEnclosingScope, funOrMod));
-  MOZ_TRY(frontend::StencilXDR::SharedData<mode>(xdr, script->sharedData_));
+  MOZ_TRY(frontend::StencilXDR::codeSharedData<mode>(xdr, script->sharedData_));
 
   if (mode == XDR_DECODE) {
     if (!SharedImmutableScriptData::shareScriptData(cx, script->sharedData_)) {
