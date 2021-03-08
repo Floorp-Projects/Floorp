@@ -3406,11 +3406,11 @@
     "n_values": 3,
     "description": "Does a response has a h3(1), other quic(2) or non(0) alt-protocol advertisement."
   },
-  "HTTP3_CONNECTION_CLOSE_CODE_2": {
-    "record_in_processes": ["main", "content"],
+  "HTTP3_CONNECTION_CLOSE_CODE_3": {
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1605099, 1688091, 1693738],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com", "kershaw@mozilla.com"],
+    "bug_numbers": [1605099, 1688091, 1693738, 1695785],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "enumerated",
