@@ -1399,6 +1399,17 @@
     "n_buckets": 50,
     "description": "Time(ms) spent on reading family names from all fonts"
   },
+  "FONTLIST_BUNDLEDFONTS_ACTIVATE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1696162],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "description": "Time(ms) spent activating additional fonts bundled with the product"
+  },
   "DWRITEFONT_DELAYEDINITFONTLIST_TOTAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

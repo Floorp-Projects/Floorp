@@ -833,7 +833,11 @@ gfxMacPlatformFontList::gfxMacPlatformFontList()
     // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
     // explicit value of 0 (off) will disable them.
     if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+      TimeStamp start = TimeStamp::Now();
       ActivateBundledFonts();
+      TimeStamp end = TimeStamp::Now();
+      Telemetry::Accumulate(Telemetry::FONTLIST_BUNDLEDFONTS_ACTIVATE,
+                            (end - start).ToMilliseconds());
     }
 #endif
 

@@ -1493,9 +1493,11 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
 #ifdef MOZ_BUNDLED_FONTS
   // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
   // explicit value of 0 (off) will disable them.
+  TimeStamp start1 = TimeStamp::Now();
   if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
     mBundledFonts = CreateBundledFontsCollection(factory);
   }
+  TimeStamp end1 = TimeStamp::Now();
 #endif
 
   if (XRE_IsParentProcess()) {
@@ -1516,7 +1518,12 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
     AppendFamiliesFromCollection(mSystemFonts, families, &forceClassicFams);
 #ifdef MOZ_BUNDLED_FONTS
     if (mBundledFonts) {
+      TimeStamp start2 = TimeStamp::Now();
       AppendFamiliesFromCollection(mBundledFonts, families);
+      TimeStamp end2 = TimeStamp::Now();
+      Telemetry::Accumulate(Telemetry::FONTLIST_BUNDLEDFONTS_ACTIVATE,
+                            (end1 - start1).ToMilliseconds() +
+                            (end2 - start2).ToMilliseconds());
     }
 #endif
     SharedFontList()->SetFamilyNames(families);
@@ -1580,10 +1587,14 @@ nsresult gfxDWriteFontList::InitFontListForPlatform() {
   // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
   // explicit value of 0 (off) will disable them.
   if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+    TimeStamp start = TimeStamp::Now();
     mBundledFonts = CreateBundledFontsCollection(factory);
-  }
-  if (mBundledFonts) {
-    GetFontsFromCollection(mBundledFonts);
+    if (mBundledFonts) {
+      GetFontsFromCollection(mBundledFonts);
+    }
+    TimeStamp end = TimeStamp::Now();
+    Telemetry::Accumulate(Telemetry::FONTLIST_BUNDLEDFONTS_ACTIVATE,
+                          (end - start).ToMilliseconds());
   }
 #endif
   const uint32_t kBundledCount = mFontFamilies.Count();
