@@ -696,6 +696,36 @@ static inline void prepare_row(Texture& colortex, int y, int startx, int endx,
   }
 }
 
+// Perpendicular dot-product is the dot-product of a vector with the
+// perpendicular vector of the other, i.e. dot(a, {-b.y, b.x})
+template <typename T>
+static ALWAYS_INLINE auto perpDot(T a, T b) {
+  return a.x * b.y - a.y * b.x;
+}
+
+// Check if the winding of the initial edges is flipped, requiring us to swap
+// the edges to avoid spans having negative lengths.
+template <typename T>
+static ALWAYS_INLINE bool checkIfEdgesFlipped(T l0, T l1, T r0, T r1) {
+  // If the starting point of the left edge is to the right of the starting
+  // point of the right edge, then just assume the edges are flipped.
+  if (l0.x > r0.x) {
+    return true;
+  }
+  // The left starting point is either at or to the left of the right starting
+  // point. Now we need to check if the edges possibly intersect at some point.
+  float side = perpDot(l1 - l0, r1 - r0);
+  if (side <= 0.0f) {
+    // If the edges are simply facing away from each other, then they won't
+    // intersect.
+    return false;
+  }
+  // If the lines intersect inside an edge but before the end, we assume they
+  // crossed each other and require flipping any resulting spans.
+  float t = perpDot(r0 - l0, r1 - r0);
+  return t >= 0.0f && t < side;
+}
+
 // Draw spans for each row of a given quad (or triangle) with a constant Z
 // value. The quad is assumed convex. It is clipped to fall within the given
 // clip rect. In short, this function rasterizes a quad by first finding a
@@ -820,7 +850,7 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
   Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i], l1i);
   Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i], r0i);
   // WR does not use backface culling, so check if edges are flipped.
-  bool flipped = l0.x > r0.x || l1.x > r1.x;
+  bool flipped = checkIfEdgesFlipped(l0, l1, r0, r1);
   if (flipped) swap(left, right);
   // Get pointer to color buffer and depth buffer at current Y
   P* fbuf = (P*)colortex.sample_ptr(0, int(y));
@@ -1084,7 +1114,7 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i], l1i);
   Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i], r0i);
   // WR does not use backface culling, so check if edges are flipped.
-  bool flipped = l0.x > r0.x || l1.x > r1.x;
+  bool flipped = checkIfEdgesFlipped(l0, l1, r0, r1);
   if (flipped) swap(left, right);
   // Get pointer to color buffer and depth buffer at current Y
   P* fbuf = (P*)colortex.sample_ptr(0, int(y));
