@@ -572,7 +572,7 @@ var ProcessHangMonitor = {
 
       let addonName = aps.getExtensionName(report.addonId);
 
-      message = bundle.getFormattedString("processHang.add-on.label", [
+      message = bundle.getFormattedString("processHang.add-on.label2", [
         addonName,
         brandShortName,
       ]);
@@ -584,7 +584,7 @@ var ProcessHangMonitor = {
             "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
         },
         {
-          label: bundle.getString("processHang.button_stop_sandbox.label"),
+          label: bundle.getString("processHang.button_stop_sandbox.label2"),
           accessKey: bundle.getString(
             "processHang.button_stop_sandbox.accessKey"
           ),
