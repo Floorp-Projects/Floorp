@@ -62,7 +62,8 @@ struct JSPropertySpec {
   };
 
   struct ValueWrapper {
-    uintptr_t type;
+    enum class Type : uint8_t { String, Int32, Double };
+    Type type;
     union {
       const char* string;
       int32_t int32;
@@ -72,14 +73,13 @@ struct JSPropertySpec {
    private:
     ValueWrapper() = delete;
 
-    explicit constexpr ValueWrapper(int32_t n)
-        : type(JSVAL_TYPE_INT32), int32(n) {}
+    explicit constexpr ValueWrapper(int32_t n) : type(Type::Int32), int32(n) {}
 
     explicit constexpr ValueWrapper(const char* s)
-        : type(JSVAL_TYPE_STRING), string(s) {}
+        : type(Type::String), string(s) {}
 
     explicit constexpr ValueWrapper(double d)
-        : type(JSVAL_TYPE_DOUBLE), double_(d) {}
+        : type(Type::Double), double_(d) {}
 
    public:
     ValueWrapper(const ValueWrapper& other) = default;
