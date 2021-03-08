@@ -8782,7 +8782,6 @@ nsresult nsHttpChannel::ContinueDoAuthRetry(
     const std::function<nsresult(nsHttpChannel*, nsresult)>&
         aContinueOnStopRequestFunc) {
   LOG(("nsHttpChannel::ContinueDoAuthRetry [this=%p]\n", this));
-
   StoreIsPending(true);
 
   // get rid of the old response headers
@@ -8791,9 +8790,16 @@ nsresult nsHttpChannel::ContinueDoAuthRetry(
   // rewind the upload stream
   if (mUploadStream) {
     nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
+    nsresult rv = NS_ERROR_NO_INTERFACE;
     if (seekable) {
-      seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+      rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
     }
+
+    // This should not normally happen, but it's possible that big memory
+    // blobs originating in the other process can't be rewinded.
+    // In that case we just fail the request, otherwise the content length
+    // will not match and this load will never complete.
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // always set sticky connection flag
