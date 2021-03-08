@@ -124,6 +124,17 @@
   margin-inline-start: 8px;
 }
 
+.panel-footer > .popup-notification-dropmarker {
+  margin-inline-start: 0;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.popup-notification-button-container > toolbarseparator {
+  margin-block: 0;
+  border-color: transparent;
+}
+
 .panel-footer > .popup-notification-button:not([disabled]) {
   color: var(--buttons-secondary-color);
   background-color: var(--buttons-secondary-bgcolor, var(--arrowpanel-dimmed));
@@ -140,6 +151,11 @@
 .popup-notification-button,
 .popup-notification-primary-button {
   flex: unset;
+}
+
+.panel-footer > .popup-notification-secondary-button:not([dropmarkerhidden="true"]) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
 }
 
 .popup-notification-icon:not([hasicon]) {
