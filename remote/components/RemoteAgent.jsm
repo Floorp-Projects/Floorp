@@ -29,6 +29,10 @@ const FORCE_LOCAL = "remote.force-local";
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
 class RemoteAgentClass {
+  constructor() {
+    this.alteredPrefs = new Set();
+  }
+
   get listening() {
     return !!this.server && !this.server.isStopped();
   }
@@ -76,7 +80,13 @@ class RemoteAgentClass {
       port = -1;
     }
 
-    Preferences.set(RecommendedPreferences);
+    for (let [k, v] of RecommendedPreferences) {
+      if (!Preferences.isSet(k)) {
+        log.debug(`Setting recommended pref ${k} to ${v}`);
+        Preferences.set(k, v);
+        this.alteredPrefs.add(k);
+      }
+    }
 
     this.server = new HttpServer();
     this.server.registerPrefixHandler("/json/", new JSONHandler(this));
@@ -114,10 +124,11 @@ class RemoteAgentClass {
 
   close() {
     try {
-      // if called early at startup, preferences may not be available
-      try {
-        Preferences.reset(Object.keys(RecommendedPreferences));
-      } catch (e) {}
+      for (let k of this.alteredPrefs) {
+        log.debug(`Resetting recommended pref ${k}`);
+        Preferences.reset(k);
+      }
+      this.alteredPrefs.clear();
 
       // destroy targets before stopping server,
       // otherwise the HTTP will fail to stop
