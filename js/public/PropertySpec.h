@@ -339,6 +339,14 @@ struct JSPropertySpec {
   }
 };
 
+// There can be many JSPropertySpec instances so verify the size is what we
+// expect:
+//
+// - Name (1 word)
+// - Flags (1 word)
+// - AccessorsOrValue (4 words, native + JSJitInfo for both getter and setter)
+static_assert(sizeof(JSPropertySpec) == 6 * sizeof(uintptr_t));
+
 #define JS_CHECK_ACCESSOR_FLAGS(flags)                                     \
   (static_cast<std::enable_if_t<((flags) & ~(JSPROP_ENUMERATE |            \
                                              JSPROP_PERMANENT)) == 0>>(0), \
