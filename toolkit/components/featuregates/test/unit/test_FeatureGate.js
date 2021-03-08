@@ -410,35 +410,3 @@ add_task(async function testGetValue() {
   // cleanup
   Services.prefs.getDefaultBranch("").deleteBranch(preference);
 });
-
-// All preferences should have default values.
-add_task(async function testAllHaveDefault() {
-  const featuresList = await FeatureGate.all();
-  for (let feature of featuresList) {
-    notEqual(
-      typeof feature.defaultValue,
-      "undefined",
-      `Feature ${feature.id} should have a defined default value!`
-    );
-    notEqual(
-      feature.defaultValue,
-      null,
-      `Feature ${feature.id} should have a non-null default value!`
-    );
-  }
-});
-
-// All preference defaults should match service pref defaults
-add_task(async function testAllDefaultsMatchSettings() {
-  const featuresList = await FeatureGate.all();
-  for (let feature of featuresList) {
-    let value = Services.prefs
-      .getDefaultBranch("")
-      .getBoolPref(feature.preference);
-    equal(
-      feature.defaultValue,
-      value,
-      `Feature ${feature.preference} should match runtime value.`
-    );
-  }
-});
