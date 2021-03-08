@@ -1139,7 +1139,7 @@ def geckodriver(enabled):
         return True
 
 
-set_config("ENABLE_GECKODRIVER", geckodriver)
+set_config("MOZ_GECKODRIVER", geckodriver)
 
 
 # WebRTC

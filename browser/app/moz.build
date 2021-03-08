@@ -59,7 +59,7 @@ if CONFIG["LIBFUZZER"]:
         "/tools/fuzzing/libfuzzer",
     ]
 
-if CONFIG["ENABLE_GECKODRIVER"]:
+if CONFIG["MOZ_GECKODRIVER"]:
     DEFINES["MOZ_GECKODRIVER"] = True
 
 if CONFIG["CC_TYPE"] == "clang-cl":
