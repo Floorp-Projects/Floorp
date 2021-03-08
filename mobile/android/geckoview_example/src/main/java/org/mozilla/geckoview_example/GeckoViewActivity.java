@@ -1538,8 +1538,9 @@ public class GeckoViewActivity
 
         @Override
         public void onCloseRequest(final GeckoSession session) {
-            if (session == mTabSessionManager.getCurrentSession()) {
-                finish();
+            final TabSession currentSession = mTabSessionManager.getCurrentSession();
+            if (session == currentSession) {
+                closeTab(currentSession);
             }
         }
 
