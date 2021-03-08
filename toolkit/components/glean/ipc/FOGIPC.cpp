@@ -6,6 +6,7 @@
 #include "FOGIPC.h"
 
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/MozPromise.h"
@@ -47,7 +48,7 @@ void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver) {
  * @param aResolver - The function that'll be called with the results.
  */
 void FlushAllChildData(
-    std::function<void(const nsTArray<ipc::ByteBuf>&&)>&& aResolver) {
+    std::function<void(nsTArray<ipc::ByteBuf>&&)>&& aResolver) {
 #ifndef MOZ_GLEAN_ANDROID
   nsTArray<ContentParent*> parents;
   ContentParent::GetAll(parents);
@@ -57,8 +58,9 @@ void FlushAllChildData(
     return;
   }
 
+  auto timerId = fog_ipc::flush_durations.Start();
   nsTArray<RefPtr<FlushFOGDataPromise>> promises;
-  for (auto parent : parents) {
+  for (auto* parent : parents) {
     promises.EmplaceBack(parent->SendFlushFOGData());
   }
   // TODO: Don't throw away resolved data if some of the promises reject.
@@ -66,9 +68,10 @@ void FlushAllChildData(
   // AllPromiseHolder? Might be impossible outside MozPromise.h)
   FlushFOGDataPromise::All(GetCurrentSerialEventTarget(), promises)
       ->Then(GetCurrentSerialEventTarget(), __func__,
-             [&aResolver](
+             [aResolver = std::move(aResolver), timerId](
                  FlushFOGDataPromise::AllPromiseType::ResolveOrRejectValue&&
                      aValue) {
+               fog_ipc::flush_durations.StopAndAccumulate(std::move(timerId));
                if (aValue.IsResolve()) {
                  aResolver(std::move(aValue.ResolveValue()));
                } else {
@@ -85,6 +88,7 @@ void FlushAllChildData(
  */
 void FOGData(ipc::ByteBuf&& buf) {
 #ifndef MOZ_GLEAN_ANDROID
+  fog_ipc::buffer_sizes.Accumulate(buf.mLen);
   impl::fog_use_ipc_buf(buf.mData, buf.mLen);
 #endif
 }
@@ -103,6 +107,23 @@ void SendFOGData(ipc::ByteBuf&& buf) {
       MOZ_ASSERT_UNREACHABLE("Unsuppored process type");
   }
 #endif
+}
+
+/**
+ * Called on the parent process to ask all child processes for data,
+ * sending it all down into Rust to be used.
+ */
+RefPtr<GenericPromise> FlushAndUseFOGData() {
+  RefPtr<GenericPromise::Private> ret = new GenericPromise::Private(__func__);
+  std::function<void(nsTArray<ByteBuf> &&)> resolver =
+      [ret](nsTArray<ByteBuf>&& bufs) {
+        for (ByteBuf& buf : bufs) {
+          FOGData(std::move(buf));
+        }
+        ret->Resolve(true, __func__);
+      };
+  FlushAllChildData(std::move(resolver));
+  return ret;
 }
 
 }  // namespace glean

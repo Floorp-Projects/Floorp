@@ -4,15 +4,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIFOG.h"
 #include "mozilla/FOG.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/FOGIPC.h"
+#include "mozilla/glean/fog_ffi_generated.h"
+#include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/MozPromise.h"
+#include "nsContentUtils.h"
+#include "nsIFOG.h"
+#include "nsIUserIdleService.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 
 static StaticRefPtr<FOG> gFOG;
+
+// We wait for 5s of idle before dumping IPC.
+// This number hasn't been tuned, so if you have a reason to change it,
+// please by all means do.
+const uint32_t kIdleSecs = 5;
 
 // static
 already_AddRefed<FOG> FOG::GetSingleton() {
@@ -21,6 +33,16 @@ already_AddRefed<FOG> FOG::GetSingleton() {
   }
 
   gFOG = new FOG();
+
+  nsresult rv;
+  nsCOMPtr<nsIUserIdleService> idleService =
+      do_GetService("@mozilla.org/widget/useridleservice;1", &rv);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  MOZ_ASSERT(idleService);
+  if (NS_WARN_IF(NS_FAILED(idleService->AddIdleObserver(gFOG, kIdleSecs)))) {
+    glean::fog::failed_idle_registration.Set(true);
+  }
+
   RunOnShutdown([&] {
     gFOG->Shutdown();
     gFOG = nullptr;
@@ -70,6 +92,42 @@ FOG::SendPing(const nsACString& aPingName) {
 #endif
 }
 
-NS_IMPL_ISUPPORTS(FOG, nsIFOG)
+NS_IMETHODIMP
+FOG::TestFlushAllChildren(JSContext* aCx, mozilla::dom::Promise** aOutPromise) {
+  NS_ENSURE_ARG(aOutPromise);
+  *aOutPromise = nullptr;
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult erv;
+  RefPtr<dom::Promise> promise = dom::Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  glean::FlushAndUseFOGData()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise]() { promise->MaybeResolveWithUndefined(); });
+
+  promise.forget(aOutPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FOG::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // On idle, opportunistically flush child process data to the parent.
+  if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE)) {
+    glean::FlushAndUseFOGData();
+  }
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(FOG, nsIFOG, nsIObserver)
 
 }  //  namespace mozilla
