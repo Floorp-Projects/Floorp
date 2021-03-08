@@ -587,33 +587,35 @@ class XDRStencilEncoder : public XDREncoder {
     MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(buffer.length()));
   }
 
-  XDRResult codeStencil(frontend::CompilationInput& input,
-                        frontend::CompilationStencil& stencil);
+ private:
+  XDRResult codeStencil(const JS::ReadOnlyCompileOptions* options,
+                        const RefPtr<ScriptSource>& source,
+                        const frontend::CompilationStencil& stencil);
+
+ public:
+  XDRResult codeStencil(const frontend::CompilationInput& input,
+                        const frontend::CompilationStencil& stencil);
+
+  XDRResult codeStencil(const RefPtr<ScriptSource>& source,
+                        const frontend::CompilationStencil& stencil);
 };
 
-class XDRIncrementalStencilEncoder : public XDREncoder {
-  // The target buffer isn't available until linearize.
-  // Hold dummy buffer to initialize XDREncoder.
-  JS::TranscodeBuffer dummy_;
-
+class XDRIncrementalStencilEncoder {
   frontend::CompilationStencilMerger* merger_ = nullptr;
 
  public:
-  explicit XDRIncrementalStencilEncoder(JSContext* cx)
-      : XDREncoder(cx, dummy_, 0) {}
+  XDRIncrementalStencilEncoder() = default;
 
-  virtual ~XDRIncrementalStencilEncoder();
+  ~XDRIncrementalStencilEncoder();
 
-  XDRResult linearize(JS::TranscodeBuffer& buffer, js::ScriptSource* ss);
+  XDRResult linearize(JSContext* cx, JS::TranscodeBuffer& buffer,
+                      js::ScriptSource* ss);
 
   XDRResult setInitial(
-      const JS::ReadOnlyCompileOptions& options,
+      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
       UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
   XDRResult addDelazification(
-      const frontend::CompilationStencil& delazification);
-
- private:
-  void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }
+      JSContext* cx, const frontend::CompilationStencil& delazification);
 };
 
 template <XDRMode mode>
