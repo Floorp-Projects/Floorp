@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform as platform_mod
 import sys
 
 # Base url for pulling the rustup installer.
@@ -21,6 +22,7 @@ RUSTUP_VERSION = "1.23.1"
 # SHA-256 checksums of the installers, per platform.
 RUSTUP_HASHES = {
     "x86_64-unknown-freebsd": "3fb56018ec6009c5a3e345f07d7ea2fbc67d4c6768e528c6d990c7ebe2388d09",
+    "aarch64-apple-darwin": "6d56735284181b2eb804ed7f57f76cf5ff924251e8ab69d9b5822c3be1ca1dc7",
     "x86_64-apple-darwin": "39101feb178a7e3e4443b09b36338e794a9e00385e5f44a2f7789aefb91354a9",
     "x86_64-unknown-linux-gnu": "ed7773edaf1d289656bdec2aacad12413b38ad0193fff54b2231f5140a4b07c5",
     "x86_64-pc-windows-msvc": "a586cf9de3e4aa791fd5796b6a5f99ca05591ccef8bb94e53af5b69f0261fb03",
@@ -52,6 +54,8 @@ def rustup_hash(host):
 def platform():
     """Determine the appropriate rust platform string for the current host"""
     if sys.platform.startswith("darwin"):
+        if platform_mod.machine() == "arm64":
+            return "aarch64-apple-darwin"
         return "x86_64-apple-darwin"
     elif sys.platform.startswith(("win32", "msys")):
         # Bravely assume we'll be building 64-bit Firefox.
