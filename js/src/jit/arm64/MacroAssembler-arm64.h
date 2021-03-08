@@ -1010,7 +1010,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   inline void subStackPtrFrom(Register dest);
 
   inline void andToStackPtr(Imm32 t);
-  inline void andStackPtrTo(Register dest);
 
   inline void moveToStackPtr(Register src);
   inline void moveStackPtrTo(Register dest);
