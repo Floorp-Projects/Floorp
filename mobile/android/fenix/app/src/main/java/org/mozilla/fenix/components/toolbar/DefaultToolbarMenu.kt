@@ -22,6 +22,7 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
@@ -292,7 +293,7 @@ class DefaultToolbarMenu(
             imageResource = R.drawable.ic_readermode_appearance,
             iconTintColorResource = primaryTextColor()
         ) {
-            onItemTapped.invoke(ToolbarMenu.Item.ReaderModeAppearance)
+            onItemTapped.invoke(ToolbarMenu.Item.CustomizeReaderView)
         }
 
         val openInApp = BrowserMenuHighlightableItem(
@@ -433,6 +434,13 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
         }
 
+        val customizeReaderView = SimpleBrowserMenuItem(
+            label = context.getString(R.string.browser_menu_customize_reader_view),
+            textColorResource = primaryTextColor()
+        ) {
+            onItemTapped.invoke(ToolbarMenu.Item.CustomizeReaderView)
+        }
+
         val addToHomeScreenItem = BrowserMenuImageText(
             label = context.getString(R.string.browser_menu_add_to_homescreen),
             imageResource = R.drawable.ic_add_to_homescreen,
@@ -487,6 +495,7 @@ class DefaultToolbarMenu(
                 BrowserMenuDivider(),
                 findInPageItem,
                 desktopSiteItem,
+                customizeReaderView.apply { visible = ::shouldShowReaderAppearance },
                 BrowserMenuDivider(),
                 addToHomeScreenItem.apply { visible = ::canAddToHomescreen },
                 addToTopSitesItem,

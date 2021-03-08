@@ -143,7 +143,7 @@ class DefaultBrowserToolbarMenuController(
 
                 deleteAndQuit(activity, scope, snackbar)
             }
-            is ToolbarMenu.Item.ReaderModeAppearance -> {
+            is ToolbarMenu.Item.CustomizeReaderView -> {
                 readerModeController.showControls()
                 metrics.track(Event.ReaderModeAppearanceOpened)
             }
@@ -361,7 +361,7 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
             is ToolbarMenu.Item.InstallToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             is ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
-            is ToolbarMenu.Item.ReaderModeAppearance ->
+            is ToolbarMenu.Item.CustomizeReaderView ->
                 Event.BrowserMenuItemTapped.Item.READER_MODE_APPEARANCE
             is ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP
             // todo === End ===

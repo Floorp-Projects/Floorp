@@ -237,7 +237,7 @@ class DefaultBrowserToolbarMenuControllerTest {
 
     @Test
     fun `WHEN reader mode menu item is pressed THEN handle appearance change`() = runBlockingTest {
-        val item = ToolbarMenu.Item.ReaderModeAppearance
+        val item = ToolbarMenu.Item.CustomizeReaderView
 
         val controller = createController(scope = this, store = browserStore)
 
