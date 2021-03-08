@@ -443,7 +443,6 @@ void CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(
 
 void CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins) {
   const MAsmJSStoreHeap* mir = ins->mir();
-  MOZ_ASSERT(mir->offset() == 0);
 
   const LAllocation* ptr = ins->ptr();
   const LAllocation* value = ins->value();
