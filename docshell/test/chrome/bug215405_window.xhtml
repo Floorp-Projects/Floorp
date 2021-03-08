@@ -18,6 +18,7 @@
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
 
+    /* globals SimpleTest, is, isnot, ok */
     var imports = [ "SimpleTest", "is", "isnot", "ok"];
     for (var name of imports) {
       window[name] = window.arguments[0][name];

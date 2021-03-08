@@ -91,7 +91,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
         SimpleTest.finish();
       })
       .catch(function(e) {
-        ok(false, "Unexpected exception thrown getting reference error message", exception);
+        ok(false, "Unexpected exception thrown getting reference error message", e);
       });
 
     refIframe.src = "wibble://example.com";
@@ -112,14 +112,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
         testIframe.src = "about:blank";
       })
       .catch(function(e) {
-        ok(false, testCase.desc + " - unexpected exception thrown", exception);
+        ok(false, testCase.desc + " - unexpected exception thrown", e);
       });
 
     testIframe.src = testCase.protocols + "://example.com/!/";
   }
 
   var testCaseIndex = -1;
-  testCases = [
+  let testCases = [
     {
       desc: "Test 1: view-source should not be allowed in an iframe",
       protocols: "view-source:http",

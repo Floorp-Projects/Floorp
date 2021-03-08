@@ -11,7 +11,7 @@
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
-  
+
     // Define the generator-iterator for the tests.
     var tests = testIterator();
 
@@ -25,7 +25,7 @@
     function $(id) { return TestWindow.getDocument().getElementById(id); }
 
     ////
-    // Generator function for test steps for bug 294258:  
+    // Generator function for test steps for bug 294258:
     // Form values should be preserved on reload.
     //
     function* testIterator()
@@ -36,7 +36,7 @@
           onNavComplete: nextTest
         } );
       yield undefined;
-      
+
       // Change the data for each of the form fields, and reload.
       $("text").value = "text value";
       $("checkbox").checked = true;
@@ -45,7 +45,7 @@
              .get("TmpD", Ci.nsIFile);
       file.append("294258_test.file");
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-      filePath = file.path;
+      let filePath = file.path;
       $("file").value = filePath;
       $("textarea").value = "textarea value";
       $("radio1").checked = true;
@@ -55,7 +55,7 @@
           onNavComplete: nextTest
         } );
       yield undefined;
-      
+
       // Verify that none of the form data has changed.
       is($("text").value, "text value", "Text value changed");
       is($("checkbox").checked, true, "Checkbox value changed");
@@ -67,7 +67,7 @@
       // Tell the framework the test is finished.
       finish();
     }
-    
+
   ]]></script>
 
   <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>

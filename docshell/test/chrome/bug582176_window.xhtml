@@ -45,7 +45,7 @@
         }
       };
 
-      os = Cc["@mozilla.org/observer-service;1"].
+      let os = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
       os.addObserver(observer, "content-document-global-created");
 
@@ -79,7 +79,7 @@
       // Tell the framework the test is finished.
       finish();
     }
-    
+
   ]]></script>
   <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
 </window>
