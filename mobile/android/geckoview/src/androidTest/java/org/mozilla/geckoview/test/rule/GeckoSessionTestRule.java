@@ -1921,6 +1921,19 @@ public class GeckoSessionTestRule implements TestRule {
         return dblPid.intValue();
     }
 
+    public int[] getAllSessionPids() {
+        final JSONArray jsonPids = (JSONArray) webExtensionApiCall("GetAllBrowserPids", null);
+        final int[] pids = new int[jsonPids.length()];
+        for (int i = 0; i < jsonPids.length(); i++) {
+            try {
+                pids[i] = jsonPids.getInt(i);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return pids;
+    }
+
     public boolean getActive(final @NonNull GeckoSession session) {
         final Boolean isActive = (Boolean)
                 webExtensionApiCall(session, "GetActive", null);

@@ -140,6 +140,17 @@ this.test = class extends ExtensionAPI {
           return pids[0];
         },
 
+        async getAllBrowserPids() {
+          const pids = [];
+          const processes = ChromeUtils.getAllDOMProcesses();
+          for (const process of processes) {
+            if (process.remoteType && process.remoteType.startsWith("web")) {
+              pids.push(process.osPid);
+            }
+          }
+          return pids;
+        },
+
         async addHistogram(id, value) {
           return Services.telemetry.getHistogramById(id).add(value);
         },
