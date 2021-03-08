@@ -989,6 +989,16 @@ static const struct EVInfo kEVInfos[] = {
     "VQQDExNHbG9iYWxTaWduIFJvb3QgRTQ2",
     "EdK7ujNu1LzmJGjFDYQdmOhD",
   },
+  {
+    // "CN=AC RAIZ FNMT-RCM SERVIDORES SEGUROS,OID.2.5.4.97=VATES-Q2826004J,OU=Ceres,O=FNMT-RCM,C=E
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x55, 0x41, 0x53, 0xB1, 0x3D, 0x2C, 0xF9, 0xDD, 0xB7, 0x53, 0xBF, 0xBE, 0x1A, 0x4E, 0x0A, 0xE0, 0x8D, 0x0A, 0xA4, 0x18, 0x70, 0x58, 0xFE, 0x60, 0xA2, 0xB8, 0x62, 0xB2, 0xE4, 0xB8, 0x7B, 0xCB },
+    "MHgxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEOMAwGA1UECwwFQ2Vy"
+    "ZXMxGDAWBgNVBGEMD1ZBVEVTLVEyODI2MDA0SjEsMCoGA1UEAwwjQUMgUkFJWiBG"
+    "Tk1ULVJDTSBTRVJWSURPUkVTIFNFR1VST1M=",
+    "YvYybOXE42hcG2LdnC6dlQ==",
+  },
     // clang-format on
 };
 
