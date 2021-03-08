@@ -4538,3 +4538,18 @@ engine_tab:
       - fenix-core@mozilla.com
       - skaspari@mozilla.com
     expires: "2021-12-31"
+
+synced_tabs:
+  synced_tabs_suggestion_clicked:
+    type: event
+    description: |
+      The synced tab suggestion in awesomebar was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18163
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18172
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"

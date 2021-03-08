@@ -227,4 +227,18 @@ class MetricControllerTest {
 
         assertEquals(controller.factToEvent(fact), Event.HaveNoTopSites)
     }
+
+    @Test
+    fun `tracking synced tab event should be sent to enabled service`() {
+        val controller = ReleaseMetricController(
+            listOf(marketingService1),
+            isDataTelemetryEnabled = { true },
+            isMarketingDataTelemetryEnabled = { true }
+        )
+        every { marketingService1.shouldTrack(Event.SyncedTabSuggestionClicked) } returns true
+        controller.start(MetricServiceType.Marketing)
+
+        controller.track(Event.SyncedTabSuggestionClicked)
+        verify { marketingService1.track(Event.SyncedTabSuggestionClicked) }
+    }
 }

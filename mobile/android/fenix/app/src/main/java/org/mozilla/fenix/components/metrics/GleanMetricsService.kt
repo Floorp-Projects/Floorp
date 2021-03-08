@@ -53,6 +53,7 @@ import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
+import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
@@ -748,6 +749,9 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.BannerOpenInAppGoToSettings -> EventWrapper<NoExtraKeys>(
             { BannerOpenInApp.goToSettings.record(it) }
+        )
+        is Event.SyncedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
+            { SyncedTabs.syncedTabsSuggestionClicked.record(it) }
         )
 
         // Don't record other events in Glean:

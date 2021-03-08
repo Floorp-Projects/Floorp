@@ -214,6 +214,8 @@ sealed class Event {
     object HaveTopSites : Event()
     object HaveNoTopSites : Event()
 
+    object SyncedTabSuggestionClicked : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {

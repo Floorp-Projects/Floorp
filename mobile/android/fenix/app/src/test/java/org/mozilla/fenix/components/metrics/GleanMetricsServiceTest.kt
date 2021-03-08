@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.BrowsersCache
 
@@ -84,5 +85,12 @@ class GleanMetricsServiceTest {
         // We only expect 1 extra key.
         assertEquals(1, events[0].extra!!.size)
         assertEquals("APP_ICON", events[0].extra!!["source"])
+    }
+
+    @Test
+    fun `synced tab events is correctly recorded`() {
+        assertFalse(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
+        gleanService.track(Event.SyncedTabSuggestionClicked)
+        assertTrue(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
     }
 }

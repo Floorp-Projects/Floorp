@@ -22,6 +22,7 @@ import mozilla.components.feature.findinpage.facts.FindInPageFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
+import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
@@ -266,6 +267,9 @@ internal class ReleaseMetricController(
                 }
             }
             null
+        }
+        Component.FEATURE_SYNCEDTABS to SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED -> {
+            Event.SyncedTabSuggestionClicked
         }
         else -> null
     }
