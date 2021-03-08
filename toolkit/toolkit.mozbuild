@@ -170,7 +170,7 @@ if CONFIG['ENABLE_MARIONETTE']:
         '/toolkit/components/telemetry/tests/marionette',
     ]
 
-if CONFIG['ENABLE_GECKODRIVER'] and not CONFIG['MOZ_TSAN'] and not CONFIG['FUZZING_INTERFACES']:
+if CONFIG['MOZ_GECKODRIVER'] and not CONFIG['MOZ_TSAN'] and not CONFIG['FUZZING_INTERFACES']:
     DIRS += ['/testing/geckodriver']
 
 DIRS += [
