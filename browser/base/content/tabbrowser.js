@@ -3089,7 +3089,7 @@
       // see bug #350299 for more details
       window.focus();
       let warningMessage = gTabBrowserBundle.GetStringFromName(
-        "tabs.closeWarningMultiple"
+        "tabs.closeWarningMultipleTabs"
       );
       warningMessage = PluralForm.get(tabsToClose, warningMessage).replace(
         "#1",
@@ -3100,7 +3100,7 @@
         ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1;
       let checkboxLabel =
         aCloseTabs == this.closingTabsEnum.ALL
-          ? gTabBrowserBundle.GetStringFromName("tabs.closeWarningPromptMe")
+          ? gTabBrowserBundle.GetStringFromName("tabs.closeWarningPrompt")
           : null;
       var buttonPressed = ps.confirmEx(
         window,
