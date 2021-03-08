@@ -162,7 +162,7 @@ static int sWindowWidth;
 static int sWindowHeight;
 static double sCSSToDevPixelScaling;
 
-static Maybe<PreXULSkeletonUIError> sDisabledReason;
+static Maybe<PreXULSkeletonUIError> sErrorReason;
 
 static const int kAnimationCSSPixelsPerFrame = 21;
 static const int kAnimationCSSExtraWindowSize = 300;
@@ -248,9 +248,9 @@ Result<UniquePtr<wchar_t[]>, PreXULSkeletonUIError> GetBinaryPath() {
 // don't mess with registry values in these scenarios that we may use in
 // other scenarios in which the skeleton UI is actually enabled.
 static bool PreXULSkeletonUIDisallowed() {
-  return sDisabledReason.isSome() &&
-         (*sDisabledReason == PreXULSkeletonUIError::Cmdline ||
-          *sDisabledReason == PreXULSkeletonUIError::EnvVars);
+  return sErrorReason.isSome() &&
+         (*sErrorReason == PreXULSkeletonUIError::Cmdline ||
+          *sErrorReason == PreXULSkeletonUIError::EnvVars);
 }
 
 static UniquePtr<wchar_t, LoadedCoTaskMemFreeDeleter> GetKnownFolderPath(
@@ -2072,13 +2072,13 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   auto result = CreateAndStorePreXULSkeletonUIImpl(hInstance, argc, argv);
 
   if (result.isErr()) {
-    sDisabledReason.emplace(result.unwrapErr());
+    sErrorReason.emplace(result.unwrapErr());
   }
 }
 
 bool WasPreXULSkeletonUIMaximized() { return sMaximized; }
 
-Result<HWND, PreXULSkeletonUIError> ConsumePreXULSkeletonUIHandle() {
+HWND ConsumePreXULSkeletonUIHandle() {
   // NOTE: we need to make sure that everything that runs here is a no-op if
   // it failed to be set, which is a possibility. If anything fails to be set
   // we don't want to clean everything up right away, because if we have a
@@ -2102,16 +2102,11 @@ Result<HWND, PreXULSkeletonUIError> ConsumePreXULSkeletonUIHandle() {
   delete sAnimatedRects;
   sAnimatedRects = nullptr;
 
-  // Regardless of whether we're disabled or not, we want to do the cleanup
-  // above. It should generally be a no-op if we've been disabled, but it's
-  // possible it wasn't.
-  if (sDisabledReason.isSome()) {
-    return Err(*sDisabledReason);
-  }
-  if (!result) {
-    return Err(PreXULSkeletonUIError::Unknown);
-  }
   return result;
+}
+
+Maybe<PreXULSkeletonUIError> GetPreXULSkeletonUIErrorReason() {
+  return sErrorReason;
 }
 
 Result<Ok, PreXULSkeletonUIError> PersistPreXULSkeletonUIValues(

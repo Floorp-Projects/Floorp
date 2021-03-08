@@ -897,15 +897,16 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (aInitData->mWindowType == eWindowType_toplevel && !aParent &&
       !sFirstTopLevelWindowCreated) {
     sFirstTopLevelWindowCreated = true;
-    auto skeletonUIResult = ConsumePreXULSkeletonUIHandle();
-    if (skeletonUIResult.isErr()) {
+    mWnd = ConsumePreXULSkeletonUIHandle();
+    auto skeletonUIError = GetPreXULSkeletonUIErrorReason();
+    if (skeletonUIError) {
       nsAutoString errorString(
-          GetPreXULSkeletonUIErrorString(skeletonUIResult.unwrapErr()));
+          GetPreXULSkeletonUIErrorString(skeletonUIError.value()));
       Telemetry::ScalarSet(
           Telemetry::ScalarID::STARTUP_SKELETON_UI_DISABLED_REASON,
           errorString);
-    } else {
-      mWnd = skeletonUIResult.unwrap();
+    }
+    if (mWnd) {
       MOZ_ASSERT(style == kPreXULSkeletonUIWindowStyle,
                  "The skeleton UI window style should match the expected "
                  "style for the first window created");

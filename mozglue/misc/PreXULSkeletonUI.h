@@ -9,6 +9,7 @@
 
 #include <windows.h>
 #include "mozilla/EnumSet.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
@@ -156,7 +157,8 @@ enum class PreXULSkeletonUIProgress : uint32_t {
 
 MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                                              char** argv);
-MFBT_API Result<HWND, PreXULSkeletonUIError> ConsumePreXULSkeletonUIHandle();
+MFBT_API HWND ConsumePreXULSkeletonUIHandle();
+MFBT_API Maybe<PreXULSkeletonUIError> GetPreXULSkeletonUIErrorReason();
 MFBT_API bool WasPreXULSkeletonUIMaximized();
 MFBT_API Result<Ok, PreXULSkeletonUIError> PersistPreXULSkeletonUIValues(
     const SkeletonUISettings& settings);
