@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Autofill: Text shown in popup in third-party app if the browser app needs to be unlocked before
+     a username or password can be autofilled for the highlighted text field. %1$s will be replaced
+     with the name of the browser application (e.g. Firefox) -->
+    <string name="mozac_feature_autofill_popup_unlock_application">Dibrennañ %1$s</string>
+
+    <!-- Autofill: Text shown in popup in third-party app if we found a matching account, but no
+    username is saved (e.g. we only have a password). This text will be shown in place where otherwise
+    the username would be displayed. -->
+    <string name="mozac_feature_autofill_popup_no_username">(anv arveriad ebet)</string>
+
+    <!-- Autofill: Text shown in popup in third-party app to autofill the password for an account.
+    %1$s will be replaced with the login/username of the account. -->
+    <string name="mozac_feature_autofill_popup_password">Ger-tremen evit %1$s</string>
+</resources>
