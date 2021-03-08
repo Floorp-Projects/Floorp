@@ -4277,11 +4277,7 @@ class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
 
 class MTypeOf : public MUnaryInstruction,
                 public BoxExceptPolicy<0, MIRType::Object>::Data {
-  bool inputMaybeCallableOrEmulatesUndefined_;
-
-  explicit MTypeOf(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def),
-        inputMaybeCallableOrEmulatesUndefined_(true) {
+  explicit MTypeOf(MDefinition* def) : MUnaryInstruction(classOpcode, def) {
     setResultType(MIRType::String);
     setMovable();
   }
@@ -4291,25 +4287,10 @@ class MTypeOf : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
-  void cacheInputMaybeCallableOrEmulatesUndefined();
-
-  bool inputMaybeCallableOrEmulatesUndefined() const {
-    return inputMaybeCallableOrEmulatesUndefined_;
-  }
-  void markInputNotCallableOrEmulatesUndefined() {
-    inputMaybeCallableOrEmulatesUndefined_ = false;
-  }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isTypeOf()) {
-      return false;
-    }
-    if (inputMaybeCallableOrEmulatesUndefined() !=
-        ins->toTypeOf()->inputMaybeCallableOrEmulatesUndefined()) {
-      return false;
-    }
     return congruentIfOperandsEqual(ins);
   }
 
