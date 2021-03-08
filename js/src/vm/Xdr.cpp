@@ -350,7 +350,7 @@ XDRResult XDRStencilEncoder::codeStencil(
   MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, stencil));
 
   MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
-  MOZ_TRY(XDRCompilationStencil(this, stencil));
+  MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(this, stencil));
 
   return Ok();
 }
@@ -427,7 +427,8 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
   {
     frontend::BorrowingCompilationStencil borrowingStencil(
         merger_->getResult());
-    MOZ_TRY(XDRCompilationStencil(this, borrowingStencil));
+    MOZ_TRY(
+        frontend::StencilXDR::codeCompilationStencil(this, borrowingStencil));
   }
 
   switchToBuffer(&mainBuf);
@@ -447,7 +448,7 @@ XDRResult XDRStencilDecoder::codeStencil(
   stencilAlloc_ = &stencil.alloc;
 
   MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
-  MOZ_TRY(XDRCompilationStencil(this, stencil));
+  MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(this, stencil));
 
   return Ok();
 }

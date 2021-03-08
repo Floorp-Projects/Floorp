@@ -81,6 +81,10 @@ class StencilXDR {
   template <XDRMode mode>
   static XDRResult checkCompilationStencil(
       XDRState<mode>* xdr, ExtensibleCompilationStencil& stencil);
+
+  template <XDRMode mode>
+  static XDRResult codeCompilationStencil(XDRState<mode>* xdr,
+                                          CompilationStencil& stencil);
 };
 
 } /* namespace frontend */
