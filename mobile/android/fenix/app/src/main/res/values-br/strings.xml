@@ -128,6 +128,8 @@
     <string name="browser_menu_edit_bookmark">Embann ar sined</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Askouezhioù</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Askouezhioù</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nʼeus tamm askouezh ebet amañ</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -211,6 +213,11 @@
     <string name="search_suggestions_onboarding_text">%s a ranno ar pezh a vizskrivit er varrenn chomlecʼhioù gant ho lusker enklask dre ziouer.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Gouzout hirocʼh</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Klask %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Klask war-eeun eus ar varrenn chomlec’h</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -523,6 +530,10 @@
     <string name="library_desktop_bookmarks_unfiled">Sinedoù all</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Roll istor</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Ivinell nevez</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Kavout er bajenn</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Ivinelloù goubredet</string>
     <!-- Option in Library to open Reading List -->
@@ -873,17 +884,23 @@
     <string name="tracking_protection_on">Gweredekaet</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Diweredekaet</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Aotren an aodio ha video</string>
 
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Aotren an aodio ha video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Stankañ an aodio hag ar video pa vez war ar roadennoù hezoug nemetken</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">An aodio hag ar video a vo lennet war ar Wi-Fi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Stankañ an aodio nemetken</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Stankañ an aodio nemetken</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Stankañ an aodio hag ar video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Stankañ an aodio hag ar video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Gweredekaet</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
