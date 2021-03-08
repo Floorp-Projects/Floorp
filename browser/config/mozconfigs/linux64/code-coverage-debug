@@ -2,3 +2,8 @@
 
 ac_add_options --enable-debug=-g1
 ac_add_options --enable-rust-tests
+
+# https://bugs.llvm.org/show_bug.cgi?id=49226
+# LLD 12.0.0 had a behavior change that breaks coverage builds.
+# Passing --no-fortran-common restores the old behavior.
+export LDFLAGS="$LDFLAGS -Wl,--no-fortran-common"
