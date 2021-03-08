@@ -444,8 +444,6 @@ XDRResult XDRStencilDecoder::codeStencil(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
 
-  stencilAlloc_ = &stencil.alloc;
-
   MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
   MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(this, stencil));
 
