@@ -224,20 +224,10 @@ function* testDeltaMultiplierPrefs()
           break;
       }
     }
-    if (currentEvent.skipDeltaModeCheck) {
-      let linesToPixel = SpecialPowers.getIntPref("dom.event.wheel-deltaMode-lines-to-pixel-scale");
-      expectedDeltaX *= linesToPixel;
-      expectedDeltaY *= linesToPixel;
-      expectedDeltaZ *= linesToPixel;
-    } else {
-      is(aEvent.deltaMode, currentEvent.deltaMode, description + "deltaMode (" + currentEvent.deltaMode + ") was invalid");
-    }
+    is(aEvent.deltaMode, currentEvent.deltaMode, description + "deltaMode (" + currentEvent.deltaMode + ") was invalid");
     is(aEvent.deltaX, expectedDeltaX, description + "deltaX (" + currentEvent.deltaX + ") was invalid");
     is(aEvent.deltaY, expectedDeltaY, description + "deltaY (" + currentEvent.deltaY + ") was invalid");
     is(aEvent.deltaZ, expectedDeltaZ, description + "deltaZ (" + currentEvent.deltaZ + ") was invalid");
-    if (currentEvent.skipDeltaModeCheck) {
-      isnot(SpecialPowers.wrap(aEvent).deltaMode, aEvent.deltaMode, description + "deltaMode should be changed for content if unchecked");
-    }
 
     if (expectedAsyncHandlerCalls > 0 && --expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
