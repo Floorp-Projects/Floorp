@@ -7,7 +7,6 @@ preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"
 bug-numbers = [1607954]
 is-public = true
-default-value = {default = false, nightly = true}
 
 [web-api-webgpu]
 title = "experimental-features-web-gpu2"
@@ -18,7 +17,6 @@ preference = "dom.webgpu.enabled"
 type = "boolean"
 bug-numbers = [1602129]
 is-public = {default = false, nightly = true}
-default-value = false
 
 [web-api-inputmode]
 title = "experimental-features-web-api-inputmode"
@@ -29,7 +27,6 @@ preference = "dom.forms.inputmode"
 type = "boolean"
 bug-numbers = [1205133]
 is-public = {default = false, nightly = true}
-default-value = {default = true, android = true, release = false, beta = false}
 
 [css-constructable-stylesheets]
 title = "experimental-features-css-constructable-stylesheets"
@@ -40,7 +37,6 @@ preference = "layout.css.constructable-stylesheets.enabled"
 type = "boolean"
 bug-numbers = [1520690]
 is-public = {default = false, nightly = true}
-default-value = false
 
 [devtools-color-scheme-simulation]
 title = "experimental-features-devtools-color-scheme-simulation"
@@ -51,7 +47,6 @@ preference = "devtools.inspector.color-scheme-simulation.enabled"
 type = "boolean"
 bug-numbers = [1550804, 1137699]
 is-public = {default = false, nightly = true}
-default-value = true
 
 [devtools-execution-context-selector]
 title = "experimental-features-devtools-execution-context-selector"
@@ -62,7 +57,6 @@ preference = "devtools.webconsole.input.context"
 type = "boolean"
 bug-numbers = [1605154, 1605153]
 is-public = {default = false, nightly = true}
-default-value = {default = false, nightly = true}
 
 [devtools-compatibility-panel]
 title = "experimental-features-devtools-compatibility-panel"
@@ -73,7 +67,6 @@ preference = "devtools.inspector.compatibility.enabled"
 type = "boolean"
 bug-numbers = [1605154, 1605153]
 is-public = true
-default-value = {default = false, nightly = true, dev-edition = true}
 
 [cookie-samesite-lax-by-default]
 title = "experimental-features-cookie-samesite-lax-by-default2"
@@ -103,7 +96,7 @@ preference = "browser.startup.homepage.abouthome_cache.enabled"
 type = "boolean"
 bug-numbers = [1614351]
 is-public = true
-default-value = {default = false, nightly = true}
+default-value = false
 
 [cookie-samesite-schemeful]
 title = "experimental-features-cookie-samesite-schemeful"
@@ -133,7 +126,6 @@ preference = "privacy.webrtc.globalMuteToggles"
 type = "boolean"
 bug-numbers = [1643027]
 is-public = true
-default-value = false
 
 [fission]
 title = "experimental-features-fission"
@@ -154,7 +146,7 @@ preference = "media.videocontrols.picture-in-picture.allow-multiple"
 type = "boolean"
 bug-numbers = [1676162]
 is-public = true
-default-value = true
+default-value = false
 
 [http3]
 title = "experimental-features-http3"
