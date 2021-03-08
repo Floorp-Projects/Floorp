@@ -69,7 +69,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return (
       this._helpUrl ||
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
-        "sponsored-search"
+        "firefox-suggest"
     );
   }
 
