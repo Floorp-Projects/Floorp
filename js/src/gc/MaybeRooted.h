@@ -127,11 +127,6 @@ class MaybeRooted<T, CanGC> {
   using HandleType = JS::Handle<T>;
   using RootType = JS::Rooted<T>;
   using MutableHandleType = JS::MutableHandle<T>;
-
-  template <typename T2>
-  static JS::Handle<T2*> downcastHandle(HandleType v) {
-    return v.template as<T2>();
-  }
 };
 
 template <typename T>
@@ -140,11 +135,6 @@ class MaybeRooted<T, NoGC> {
   using HandleType = const T&;
   using RootType = FakeRooted<T>;
   using MutableHandleType = FakeMutableHandle<T>;
-
-  template <typename T2>
-  static T2* downcastHandle(HandleType v) {
-    return &v->template as<T2>();
-  }
 };
 
 }  // namespace js
