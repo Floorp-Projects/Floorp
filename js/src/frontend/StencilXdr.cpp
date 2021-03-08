@@ -486,8 +486,6 @@ template <XDRMode mode>
   return Ok();
 }
 
-namespace js {
-
 template <XDRMode mode>
 XDRResult XDRCompilationStencilSpanSize(
     XDRState<mode>* xdr, uint32_t* scriptSize, uint32_t* gcThingSize,
@@ -570,15 +568,15 @@ XDRResult XDRCompilationStencilSpanSize(
 }
 
 template <XDRMode mode>
-XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
-                                CompilationStencil& stencil) {
+/* static */ XDRResult StencilXDR::codeCompilationStencil(
+    XDRState<mode>* xdr, CompilationStencil& stencil) {
   MOZ_ASSERT(!stencil.asmJS);
 
   if (mode == XDR_DECODE) {
     stencil.hasExternalDependency = true;
   }
 
-  MOZ_TRY(StencilXDR::codeParserAtomSpan(xdr, stencil.parserAtomData));
+  MOZ_TRY(codeParserAtomSpan(xdr, stencil.parserAtomData));
 
   MOZ_TRY(xdr->codeUint32(&stencil.functionKey));
 
@@ -607,23 +605,22 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.scopeNames, scopeSize));
   MOZ_ASSERT(stencil.scopeData.size() == stencil.scopeNames.size());
   for (uint32_t i = 0; i < scopeSize; i++) {
-    MOZ_TRY(StencilXDR::codeScopeData(xdr, stencil.scopeData[i],
-                                      stencil.scopeNames[i]));
+    MOZ_TRY(codeScopeData(xdr, stencil.scopeData[i], stencil.scopeNames[i]));
   }
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.regExpData, regExpSize));
 
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.bigIntData, bigIntSize));
   for (auto& entry : stencil.bigIntData) {
-    MOZ_TRY(StencilXDR::codeBigInt(xdr, entry));
+    MOZ_TRY(codeBigInt(xdr, entry));
   }
 
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.objLiteralData, objLiteralSize));
   for (auto& entry : stencil.objLiteralData) {
-    MOZ_TRY(StencilXDR::codeObjLiteral(xdr, entry));
+    MOZ_TRY(codeObjLiteral(xdr, entry));
   }
 
-  MOZ_TRY(StencilXDR::codeSharedDataContainer(xdr, stencil.sharedData));
+  MOZ_TRY(codeSharedDataContainer(xdr, stencil.sharedData));
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.gcThingData, gcThingSize));
 
@@ -644,19 +641,17 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
       }
     }
 
-    MOZ_TRY(StencilXDR::codeModuleMetadata(xdr, *stencil.moduleMetadata));
+    MOZ_TRY(codeModuleMetadata(xdr, *stencil.moduleMetadata));
   }
 
   return Ok();
 }
 
-template XDRResult XDRCompilationStencil(XDRState<XDR_ENCODE>* xdr,
-                                         CompilationStencil& stencil);
+template /* static */ XDRResult StencilXDR::codeCompilationStencil(
+    XDRState<XDR_ENCODE>* xdr, CompilationStencil& stencil);
 
-template XDRResult XDRCompilationStencil(XDRState<XDR_DECODE>* xdr,
-                                         CompilationStencil& stencil);
-
-}  // namespace js
+template /* static */ XDRResult StencilXDR::codeCompilationStencil(
+    XDRState<XDR_DECODE>* xdr, CompilationStencil& stencil);
 
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::checkCompilationStencil(
