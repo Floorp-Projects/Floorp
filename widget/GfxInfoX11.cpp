@@ -52,7 +52,6 @@ nsresult GfxInfo::Init() {
   mIsMesa = false;
   mIsAccelerated = true;
   mIsWayland = false;
-  mIsWaylandDRM = false;
   mIsXWayland = false;
   mHasMultipleGPUs = false;
   mGlxTestError = false;
@@ -70,8 +69,6 @@ void GfxInfo::AddCrashReportAnnotations() {
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWayland,
                                      mIsWayland);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWaylandDRM,
-                                     mIsWaylandDRM);
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::DesktopEnvironment, mDesktopEnvironment);
 
@@ -464,11 +461,6 @@ void GfxInfo::GetData() {
 #ifdef MOZ_WAYLAND
   mIsWayland = gdk_display_get_default() &&
                !GDK_IS_X11_DISPLAY(gdk_display_get_default());
-  if (mIsWayland) {
-    mIsWaylandDRM = GetDMABufDevice()->IsDMABufVAAPIEnabled() ||
-                    GetDMABufDevice()->IsDMABufWebGLEnabled() ||
-                    GetDMABufDevice()->IsDMABufTexturesEnabled();
-  }
 #endif
 
   // Make a best effort guess at whether or not we are using the XWayland compat
@@ -991,13 +983,7 @@ NS_IMETHODIMP
 GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
   GetData();
   if (mIsWayland) {
-    if (mIsWaylandDRM) {
-      aWindowProtocol =
-          GfxDriverInfo::GetWindowProtocol(WindowProtocol::WaylandDRM);
-    } else {
-      aWindowProtocol =
-          GfxDriverInfo::GetWindowProtocol(WindowProtocol::Wayland);
-    }
+    aWindowProtocol = GfxDriverInfo::GetWindowProtocol(WindowProtocol::Wayland);
   } else if (mIsXWayland) {
     aWindowProtocol =
         GfxDriverInfo::GetWindowProtocol(WindowProtocol::XWayland);
