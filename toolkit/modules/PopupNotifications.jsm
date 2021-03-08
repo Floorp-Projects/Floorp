@@ -88,10 +88,6 @@ function Notification(
   this.owner = owner;
   this.options = options || {};
 
-  if (!this.options.hasOwnProperty("opinionated")) {
-    this.options.opinionated = true;
-  }
-
   this._dismissed = false;
   // Will become a boolean when manually toggled by the user.
   this._checkboxChecked = null;
@@ -533,12 +529,6 @@ PopupNotifications.prototype = {
    *        extraAttr:
    *                     An optional string value which will be given to the
    *                     extraAttr attribute on the notification's anchorElement
-   *        opinionated:
-   *                     A boolean. If true, the main action button will be styled
-   *                     differently from other actions. If false, the main action
-   *                     will look the same as other actions. Defaults to true if
-   *                     omitted.
-   *
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(
@@ -1009,9 +999,6 @@ PopupNotifications.prototype = {
         "closebuttoncommand",
         `PopupNotifications._dismiss(event, true);`
       );
-
-      popupnotification.toggleAttribute("opinionated", n.options.opinionated);
-
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute(
