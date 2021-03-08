@@ -824,23 +824,26 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
   }
 
   if (NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
-    if (gfxPlatform::GetCMSMode() == CMSMode::All &&
-        !IsSpecialColor(aID, aResult)) {
-      qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
-      if (transform) {
-        uint8_t color[4];
-        color[0] = NS_GET_R(aResult);
-        color[1] = NS_GET_G(aResult);
-        color[2] = NS_GET_B(aResult);
-        color[3] = NS_GET_A(aResult);
-        qcms_transform_data(transform, color, color, 1);
-        aResult = NS_RGBA(color[0], color[1], color[2], color[3]);
+    // TODO(bug 1678487): We should color-correct style colors as well when in
+    // the traversal.
+    if (!mozilla::ServoStyleSet::IsInServoTraversal()) {
+      MOZ_ASSERT(NS_IsMainThread());
+      if (gfxPlatform::GetCMSMode() == CMSMode::All &&
+          !IsSpecialColor(aID, aResult)) {
+        qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
+        if (transform) {
+          uint8_t color[4];
+          color[0] = NS_GET_R(aResult);
+          color[1] = NS_GET_G(aResult);
+          color[2] = NS_GET_B(aResult);
+          color[3] = NS_GET_A(aResult);
+          qcms_transform_data(transform, color, color, 1);
+          aResult = NS_RGBA(color[0], color[1], color[2], color[3]);
+        }
       }
-    }
 
-    // NOTE: Servo holds a lock and the main thread is paused, so writing to the
-    // global cache here is fine.
-    CACHE_COLOR(aID, aResult);
+      CACHE_COLOR(aID, aResult);
+    }
     return NS_OK;
   }
 
