@@ -358,7 +358,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     // Ensure closing the connection in order to cleanup
     // the devtools client and also the server created in the
     // content process
-    target.on("close", () => {
+    target.on("target-destroyed", () => {
       client.close();
     });
     return target;

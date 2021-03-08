@@ -139,14 +139,14 @@ async function initToolbox(url, host) {
 
     // Display an error page if we are connected to a remote target and we lose it
     const onTargetDestroyed = function() {
-      target.off("close", onTargetDestroyed);
+      target.off("target-destroyed", onTargetDestroyed);
       // Prevent trying to display the error page if the toolbox tab is being destroyed
       if (host.contentDocument) {
         const error = new Error("Debug target was disconnected");
         showErrorPage(host.contentDocument, `${error}`);
       }
     };
-    target.on("close", onTargetDestroyed);
+    target.on("target-destroyed", onTargetDestroyed);
 
     const options = { customIframe: host };
     await gDevTools.showToolbox(target, tool, Toolbox.HostType.PAGE, options);
