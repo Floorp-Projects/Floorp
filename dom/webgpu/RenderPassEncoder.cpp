@@ -57,7 +57,7 @@ ffi::WGPURenderPass* BeginRenderPass(
   ffi::WGPUDepthStencilAttachmentDescriptor dsDesc = {};
   if (aDesc.mDepthStencilAttachment.WasPassed()) {
     const auto& dsa = aDesc.mDepthStencilAttachment.Value();
-    dsDesc.attachment = dsa.mAttachment->mId;
+    dsDesc.attachment = dsa.mView->mId;
 
     if (dsa.mDepthLoadValue.IsFloat()) {
       dsDesc.depth.load_op = ffi::WGPULoadOp_Clear;
@@ -91,7 +91,7 @@ ffi::WGPURenderPass* BeginRenderPass(
   for (size_t i = 0; i < aDesc.mColorAttachments.Length(); ++i) {
     const auto& ca = aDesc.mColorAttachments[i];
     ffi::WGPUColorAttachmentDescriptor& cd = colorDescs[i];
-    cd.attachment = ca.mAttachment->mId;
+    cd.attachment = ca.mView->mId;
     cd.channel.store_op = ConvertStoreOp(ca.mStoreOp);
 
     if (ca.mResolveTarget.WasPassed()) {
@@ -130,11 +130,11 @@ RenderPassEncoder::RenderPassEncoder(CommandEncoder* const aParent,
                                      const dom::GPURenderPassDescriptor& aDesc)
     : ChildOf(aParent), mPass(BeginRenderPass(aParent->mId, aDesc)) {
   for (const auto& at : aDesc.mColorAttachments) {
-    mUsedTextureViews.AppendElement(at.mAttachment);
+    mUsedTextureViews.AppendElement(at.mView);
   }
   if (aDesc.mDepthStencilAttachment.WasPassed()) {
     mUsedTextureViews.AppendElement(
-        aDesc.mDepthStencilAttachment.Value().mAttachment);
+        aDesc.mDepthStencilAttachment.Value().mView);
   }
 }
 
