@@ -236,6 +236,10 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
     return true;
   }
 
+  if (!mRenderCompositor->mCurrentStagingTexture) {
+    return false;
+  }
+
   RefPtr<ID3D11DeviceContext> context;
   mRenderCompositor->GetDevice()->GetImmediateContext(getter_AddRefs(context));
 
@@ -277,6 +281,9 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
     if (hr == DXGI_ERROR_WAS_STILL_DRAWING) {
       mRenderCompositor->mCurrentStagingTexture =
           mRenderCompositor->CreateStagingTexture(tileSize);
+      if (!mRenderCompositor->mCurrentStagingTexture) {
+        return false;
+      }
       hr = context->Map(mRenderCompositor->mCurrentStagingTexture, 0,
                         D3D11_MAP_READ_WRITE, 0, &mappedSubresource);
     }
@@ -316,6 +323,10 @@ void RenderCompositorD3D11SWGL::TileD3D11::Unmap(
     // We could possible do this call on a background thread so that sw-wr can
     // start drawing the next tile while the memcpy is in progress.
     mTexture->Update(mSurface, &dirty);
+    return;
+  }
+
+  if (!mRenderCompositor->mCurrentStagingTexture) {
     return;
   }
 
@@ -366,6 +377,9 @@ RenderCompositorD3D11SWGL::CreateStagingTexture(const gfx::IntSize aSize) {
   DebugOnly<HRESULT> hr =
       GetDevice()->CreateTexture2D(&desc, nullptr, getter_AddRefs(cpuTexture));
   MOZ_ASSERT(SUCCEEDED(hr));
+  if (!cpuTexture) {
+    gfxCriticalNote << "Failed to create StagingTexture: " << aSize;
+  }
   return cpuTexture.forget();
 }
 
