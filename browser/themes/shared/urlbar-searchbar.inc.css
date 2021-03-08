@@ -7,24 +7,20 @@
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarMarginInline 5px
-%define urlbarSearchButtonWidth calc(16px + 2 * var(--identity-box-padding-inline))
-
-:root {
-  /* 28x28 box - 16x16 image = 12x12 padding, 6 on each side */
-  --urlbar-icon-padding: 6px;
-}
+%define urlbarSearchButtonWidth calc(16px + 2 * var(--urlbar-icon-padding))
 
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 :root {
   --toolbar-field-focus-border-color: -moz-accent-color;
-  --urlbar-container-padding: 0;
+  /* px because it's used in calc */
+  --urlbar-container-padding: 0px;
 }
 } /*** END !proton ***/
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 :root {
   --toolbar-field-focus-border-color: var(--focus-outline-color);
-  --urlbar-container-padding: 2px;
+  --urlbar-container-padding: 1px;
 }
 /* Override this value in the default dark theme. This value should be moved
     to default-theme/manifest.json when the Proton prefs are removed. */
@@ -35,16 +31,6 @@
   [lwt-default-theme-in-dark-mode]. */
 } /*** END proton ***/
 
-:root[uidensity=compact] {
-  /* 24x24 box - 16x16 image = 8x8 padding, 4 on each side */
-  --urlbar-icon-padding: 4px;
-}
-
-:root[uidensity=touch] {
-  /* 30x30 box - 16x16 image = 14x14 padding, 7 on each side */
-  --urlbar-icon-padding: 7px;
-}
-
 #urlbar-container,
 #search-container {
   padding-block: 3px;
@@ -53,7 +39,7 @@
 
 #urlbar,
 #searchbar {
-  min-height: 30px;
+  min-height: var(--urlbar-min-height);
   text-shadow: none;
   color: FieldText;
 }
@@ -81,6 +67,7 @@
 #urlbar-background,
 #searchbar {
   border-color: transparent;
+  background-clip: border-box;
 }
 
 #urlbar:not([focused="true"]) > #urlbar-background,
@@ -343,16 +330,6 @@
   }
 }
 
-:root[uidensity=compact] #urlbar,
-:root[uidensity=compact] #searchbar {
-  min-height: 26px;
-}
-
-:root[uidensity=touch] #urlbar,
-:root[uidensity=touch] #searchbar {
-  min-height: 32px;
-}
-
 :root[chromehidden~="toolbar"] #urlbar-container {
   /* Remove excess space between the address bar and the menu button in popups. */
   padding-inline-end: 0;
@@ -608,16 +585,8 @@
   border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
   border-image-slice: 1;
   width: 1px;
-  height: 28px;
+  height: calc(var(--urlbar-min-height) - 2px);
   visibility: hidden;
-}
-
-:root[uidensity=compact] #pageActionSeparator {
-  height: 24px;
-}
-
-:root[uidensity=touch] #pageActionSeparator {
-  height: 30px;
 }
 
 #page-action-buttons > :not([hidden], toolbartabstop) ~ #pageActionSeparator {
@@ -633,34 +602,36 @@
 }
 
 .urlbar-icon {
-  width: 28px;
-  height: 28px;
-  padding-inline: var(--urlbar-icon-padding);
+  width: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
+  height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
+  padding: var(--urlbar-icon-padding);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
   color: inherit;
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 .urlbar-icon,
 .urlbar-icon-wrapper {
   border-radius: var(--toolbarbutton-border-radius);
 }
-} /*** END proton ***/
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+.urlbar-icon {
+  width: calc(var(--urlbar-min-height) - 2px);
+  /* The 0.5px solves a rounding problem where the
+    icon hover may not touch the borders */
+  height: calc(var(--urlbar-min-height) - 2px + 0.5px);
+}
+
+.urlbar-icon,
+.urlbar-icon-wrapper {
+  border-radius: 0;
+}
+} /*** END !proton ***/
 
 .urlbar-page-action[disabled] {
   fill-opacity: 0.3;
-}
-
-:root[uidensity=compact] .urlbar-icon {
-  width: 24px;
-  height: 24px;
-}
-
-:root[uidensity=touch] .urlbar-icon {
-  width: 30px;
-  height: 30px;
 }
 
 :not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled]):hover,

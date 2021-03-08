@@ -6,9 +6,7 @@
 
 %filter substitution
 %define urlbarViewPadding 4px
-%define urlbarViewIconMarginEnd (var(--identity-box-padding-inline) + var(--identity-box-margin-inline))
-%define urlbarViewMarginInline 7px
-%define urlbarViewItemInlinePadding 6px
+%define urlbarViewIconMarginEnd (var(--urlbar-icon-padding) + var(--identity-box-margin-inline))
 %define urlbarViewFaviconWidth 16px
 
 %include ../shared/urlbar/dynamicResults.inc.css
@@ -31,6 +29,8 @@
   --urlbarView-primary-button-background-hover: #003eaa;
   --urlbarView-primary-button-background-active: #002275;
   --urlbarView-action-slide-in-distance: 200px;
+
+  --urlbarView-item-inline-padding: calc(var(--urlbar-icon-padding) / 2 + 3px);
 }
 
 :root:-moz-lwtheme[lwt-toolbar-field-focus-brighttext] {
@@ -46,6 +46,7 @@
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 :root {
   --urlbar-popup-action-color: #005e5e;
+  --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
 }
 
 @media not (prefers-contrast) {
@@ -80,20 +81,23 @@
   display: block;
   text-shadow: none;
   overflow: clip;
-  margin-inline: @urlbarViewMarginInline@;
-  width: calc(100% - 2 * @urlbarViewMarginInline@);
-
+  margin-inline: calc(5px + var(--urlbar-container-padding));
+  width: calc(100% - 2 * (5px + var(--urlbar-container-padding)));
   /* Match urlbar-background's border. */
   border-inline: 1px solid transparent;
 }
 
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+.urlbarView {
+  margin-inline: calc(4px + var(--identity-box-margin-inline));
+  width: calc(100% - 2 * (4px + var(--identity-box-margin-inline)));
+}
 /* If the view is open, offset the toolbar overlap so the view's top border
    aligns with the toolbar. */
 #urlbar[open] > .urlbarView {
   margin-block-start: -@urlbarBreakoutExtend@;
 }
-}
+} /*** END !proton ***/
 
 .urlbarView-body-inner {
   width: 100%;
@@ -128,7 +132,7 @@
   flex-shrink: 1;
   overflow: hidden;
   border-radius: 2px;
-  padding-inline-start: @urlbarViewItemInlinePadding@;
+  padding-inline-start: var(--urlbarView-item-inline-padding);
   padding-block: 6px;
 }
 
@@ -190,10 +194,10 @@
   }
   /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on the browser's directionality. */
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(ltr) {
-    padding-left: calc(@urlbarViewItemInlinePadding@ + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
+    padding-left: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
   }
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(rtl) {
-    padding-right: calc(@urlbarViewItemInlinePadding@ + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
+    padding-right: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
   }
   /* Note: switchtab entries show the url only in override mode,
      remotetab and sponsored ones only when selected or :hover. */
@@ -208,7 +212,7 @@
   }
   .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
     flex-basis: 100%;
-    margin-inline-start: calc(@urlbarViewItemInlinePadding@ + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
+    margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
   }
 }
 

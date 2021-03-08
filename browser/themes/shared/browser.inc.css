@@ -22,11 +22,13 @@
   --buttons-secondary-active-bgcolor: hsla(0,0%,80%,.8);
   --buttons-secondary-color: currentColor;
 
-  --identity-box-padding-inline: 6px;
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
   --urlbar-box-bg-overlay: hsla(0,0%,70%,.2);
   --urlbar-box-unfocused-bg-overlay: hsla(0,0%,100%,.7);
+
+  --urlbar-min-height: 32px;
+  --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
@@ -38,6 +40,26 @@
 }
 
 /*** END !proton ***/
+
+:root[uidensity=compact] {
+  --urlbar-min-height: 26px;
+  --urlbar-icon-padding: 3px; /* (26px - 2px border - 2px padding - 16px icon) / 2 */
+}
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root {
+  --urlbar-min-height: 30px;
+  --urlbar-icon-padding: 6px; /* (30px - 2px border - 16px icon) / 2 */
+}
+:root[uidensity=compact] {
+  --urlbar-min-height: 26px;
+  --urlbar-icon-padding: 4px; /* (26px - 2px border - 16px icon) / 2 */
+}
+:root[uidensity=touch] {
+  --urlbar-min-height: 32px;
+  --urlbar-icon-padding: 7px; /* (32px - 2px border - 16px icon) / 2 */
+}
+} /*** END !proton ***/
 
 @supports -moz-bool-pref("browser.proton.enabled") {
 :root {

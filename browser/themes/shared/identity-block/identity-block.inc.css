@@ -81,13 +81,13 @@
 }
 
 .identity-box-button {
-  padding-inline: var(--identity-box-padding-inline);
+  padding-inline: var(--urlbar-icon-padding);
   border-radius: var(--toolbarbutton-border-radius);
 }
 
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 .identity-box-button {
-  padding-inline: calc(var(--identity-box-padding-inline) / 2);
+  padding-inline: calc(var(--urlbar-icon-padding) / 2);
   border-radius: 0;
 }
 } /*** END !proton ***/
@@ -296,7 +296,7 @@
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon-container {
-  padding-inline: var(--identity-box-padding-inline);
+  padding-inline: var(--urlbar-icon-padding);
   border-radius: var(--toolbarbutton-border-radius);
   /* This is needed in order to position the blue dot indicator. */
   position: relative;
