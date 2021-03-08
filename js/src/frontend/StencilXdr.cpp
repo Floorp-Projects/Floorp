@@ -238,35 +238,9 @@ template <XDRMode mode>
 }
 
 template <XDRMode mode>
-static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
-                                          StencilModuleMetadata& stencil) {
-  MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.importEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.indirectExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.starExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.functionDecls));
-
-  uint8_t isAsync = 0;
-  if (mode == XDR_ENCODE) {
-    if (stencil.isAsync) {
-      isAsync = stencil.isAsync ? 1 : 0;
-    }
-  }
-
-  MOZ_TRY(xdr->codeUint8(&isAsync));
-
-  if (mode == XDR_DECODE) {
-    stencil.isAsync = isAsync == 1;
-  }
-
-  return Ok();
-}
-
-template <XDRMode mode>
 /* static */
-XDRResult StencilXDR::SharedData(XDRState<mode>* xdr,
-                                 RefPtr<SharedImmutableScriptData>& sisd) {
+XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
+                                     RefPtr<SharedImmutableScriptData>& sisd) {
   if (mode == XDR_ENCODE) {
     MOZ_TRY(XDRImmutableScriptData<mode>(xdr, sisd->isd_));
   } else {
@@ -283,26 +257,18 @@ XDRResult StencilXDR::SharedData(XDRState<mode>* xdr,
   return Ok();
 }
 
-template
-    /* static */
-    XDRResult
-    StencilXDR::SharedData(XDRState<XDR_ENCODE>* xdr,
-                           RefPtr<SharedImmutableScriptData>& sisd);
-
-template
-    /* static */
-    XDRResult
-    StencilXDR::SharedData(XDRState<XDR_DECODE>* xdr,
-                           RefPtr<SharedImmutableScriptData>& sisd);
-
-namespace js {
+// Called from js::XDRScript.
+template /* static */ XDRResult StencilXDR::codeSharedData(
+    XDRState<XDR_ENCODE>* xdr, RefPtr<SharedImmutableScriptData>& sisd);
+template /* static */ XDRResult StencilXDR::codeSharedData(
+    XDRState<XDR_DECODE>* xdr, RefPtr<SharedImmutableScriptData>& sisd);
 
 template <XDRMode mode>
-XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
-                                 SharedDataContainer& sharedData) {
+/* static */ XDRResult StencilXDR::codeSharedDataContainer(
+    XDRState<mode>* xdr, SharedDataContainer& sharedData) {
   if (mode == XDR_ENCODE) {
     if (sharedData.isBorrow()) {
-      return XDRSharedDataContainer(xdr, *sharedData.asBorrow());
+      return codeSharedDataContainer(xdr, *sharedData.asBorrow());
     }
   }
 
@@ -331,7 +297,7 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
       if (mode == XDR_ENCODE) {
         ref = sharedData.asSingle();
       }
-      MOZ_TRY(StencilXDR::SharedData<mode>(xdr, ref));
+      MOZ_TRY(codeSharedData<mode>(xdr, ref));
       if (mode == XDR_DECODE) {
         sharedData.setSingle(ref.forget());
       }
@@ -357,7 +323,7 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
         MOZ_TRY(xdr->codeUint8(&exists));
 
         if (exists) {
-          MOZ_TRY(StencilXDR::SharedData<mode>(xdr, entry));
+          MOZ_TRY(codeSharedData<mode>(xdr, entry));
         }
       }
       break;
@@ -387,7 +353,7 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
           uint32_t index = iter.get().key().index;
           auto& data = iter.get().value();
           MOZ_TRY(xdr->codeUint32(&index));
-          MOZ_TRY(StencilXDR::SharedData<mode>(xdr, data));
+          MOZ_TRY(codeSharedData<mode>(xdr, data));
         }
       } else {
         for (uint32_t i = 0; i < count; i++) {
@@ -395,7 +361,7 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
           MOZ_TRY(xdr->codeUint32(&index.index));
 
           RefPtr<SharedImmutableScriptData> data;
-          MOZ_TRY(StencilXDR::SharedData<mode>(xdr, data));
+          MOZ_TRY(codeSharedData<mode>(xdr, data));
 
           if (!map.putNew(index, data)) {
             js::ReportOutOfMemory(xdr->cx());
@@ -410,6 +376,34 @@ XDRResult XDRSharedDataContainer(XDRState<mode>* xdr,
 
   return Ok();
 }
+
+template <XDRMode mode>
+static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
+                                          StencilModuleMetadata& stencil) {
+  MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.importEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.indirectExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.starExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.functionDecls));
+
+  uint8_t isAsync = 0;
+  if (mode == XDR_ENCODE) {
+    if (stencil.isAsync) {
+      isAsync = stencil.isAsync ? 1 : 0;
+    }
+  }
+
+  MOZ_TRY(xdr->codeUint8(&isAsync));
+
+  if (mode == XDR_DECODE) {
+    stencil.isAsync = isAsync == 1;
+  }
+
+  return Ok();
+}
+
+namespace js {
 
 template <XDRMode mode>
 XDRResult XDRCompilationStencilSpanSize(
@@ -544,7 +538,7 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
     MOZ_TRY(StencilXDR::codeObjLiteral(xdr, entry));
   }
 
-  MOZ_TRY(XDRSharedDataContainer(xdr, stencil.sharedData));
+  MOZ_TRY(StencilXDR::codeSharedDataContainer(xdr, stencil.sharedData));
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.gcThingData, gcThingSize));
 
