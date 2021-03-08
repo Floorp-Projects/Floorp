@@ -191,6 +191,9 @@ private val Event.wrapper: EventWrapper<*>?
             { Events.browserMenuAction.record(it) },
             { Events.browserMenuActionKeys.valueOf(it) }
         )
+        is Event.OpenedBookmark -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.open.record(it) }
+        )
         is Event.OpenedBookmarkInNewTab -> EventWrapper<NoExtraKeys>(
             { BookmarksManagement.openInNewTab.record(it) }
         )
@@ -776,7 +779,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
-        is Event.OpenedBookmark -> null
         is Event.OpenedAppFirstRun -> null
         is Event.InteractWithSearchURLArea -> null
         is Event.ClearedPrivateData -> null

@@ -275,4 +275,59 @@ class MetricControllerTest {
         controller.track(Event.OpenedTabSuggestionClicked)
         verify { marketingService1.track(Event.OpenedTabSuggestionClicked) }
     }
+
+    @Test
+    fun `tracking bookmark events should be sent to enabled service`() {
+        val controller = ReleaseMetricController(
+            listOf(marketingService1),
+            isDataTelemetryEnabled = { true },
+            isMarketingDataTelemetryEnabled = { true }
+        )
+        every { marketingService1.shouldTrack(Event.AddBookmark) } returns true
+        every { marketingService1.shouldTrack(Event.RemoveBookmark) } returns true
+        every { marketingService1.shouldTrack(Event.OpenedBookmark) } returns true
+        every { marketingService1.shouldTrack(Event.OpenedBookmarkInNewTab) } returns true
+        every { marketingService1.shouldTrack(Event.OpenedBookmarksInNewTabs) } returns true
+        every { marketingService1.shouldTrack(Event.OpenedBookmarkInPrivateTab) } returns true
+        every { marketingService1.shouldTrack(Event.OpenedBookmarksInPrivateTabs) } returns true
+        every { marketingService1.shouldTrack(Event.EditedBookmark) } returns true
+        every { marketingService1.shouldTrack(Event.MovedBookmark) } returns true
+        every { marketingService1.shouldTrack(Event.ShareBookmark) } returns true
+        every { marketingService1.shouldTrack(Event.CopyBookmark) } returns true
+        every { marketingService1.shouldTrack(Event.AddBookmarkFolder) } returns true
+        every { marketingService1.shouldTrack(Event.RemoveBookmarkFolder) } returns true
+        every { marketingService1.shouldTrack(Event.RemoveBookmarks) } returns true
+
+        controller.start(MetricServiceType.Marketing)
+
+        controller.track(Event.AddBookmark)
+        controller.track(Event.RemoveBookmark)
+        controller.track(Event.OpenedBookmark)
+        controller.track(Event.OpenedBookmarkInNewTab)
+        controller.track(Event.OpenedBookmarksInNewTabs)
+        controller.track(Event.OpenedBookmarkInPrivateTab)
+        controller.track(Event.OpenedBookmarksInPrivateTabs)
+        controller.track(Event.EditedBookmark)
+        controller.track(Event.MovedBookmark)
+        controller.track(Event.ShareBookmark)
+        controller.track(Event.CopyBookmark)
+        controller.track(Event.AddBookmarkFolder)
+        controller.track(Event.RemoveBookmarkFolder)
+        controller.track(Event.RemoveBookmarks)
+
+        verify { marketingService1.track(Event.AddBookmark) }
+        verify { marketingService1.track(Event.RemoveBookmark) }
+        verify { marketingService1.track(Event.OpenedBookmark) }
+        verify { marketingService1.track(Event.OpenedBookmarkInNewTab) }
+        verify { marketingService1.track(Event.OpenedBookmarksInNewTabs) }
+        verify { marketingService1.track(Event.OpenedBookmarkInPrivateTab) }
+        verify { marketingService1.track(Event.OpenedBookmarksInPrivateTabs) }
+        verify { marketingService1.track(Event.EditedBookmark) }
+        verify { marketingService1.track(Event.MovedBookmark) }
+        verify { marketingService1.track(Event.ShareBookmark) }
+        verify { marketingService1.track(Event.CopyBookmark) }
+        verify { marketingService1.track(Event.AddBookmarkFolder) }
+        verify { marketingService1.track(Event.RemoveBookmarkFolder) }
+        verify { marketingService1.track(Event.RemoveBookmarks) }
+    }
 }

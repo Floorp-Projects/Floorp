@@ -18,6 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Awesomebar
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
@@ -120,5 +121,60 @@ class GleanMetricsServiceTest {
         assertFalse(Awesomebar.openedTabSuggestionClicked.testHasValue())
         gleanService.track(Event.OpenedTabSuggestionClicked)
         assertTrue(Awesomebar.openedTabSuggestionClicked.testHasValue())
+    }
+
+    @Test
+    fun `bookmark events is correctly recorded`() {
+        assertFalse(BookmarksManagement.open.testHasValue())
+        gleanService.track(Event.OpenedBookmark)
+        assertTrue(BookmarksManagement.open.testHasValue())
+
+        assertFalse(BookmarksManagement.openInNewTab.testHasValue())
+        gleanService.track(Event.OpenedBookmarkInNewTab)
+        assertTrue(BookmarksManagement.openInNewTab.testHasValue())
+
+        assertFalse(BookmarksManagement.openInNewTabs.testHasValue())
+        gleanService.track(Event.OpenedBookmarksInNewTabs)
+        assertTrue(BookmarksManagement.openInNewTabs.testHasValue())
+
+        assertFalse(BookmarksManagement.openInPrivateTab.testHasValue())
+        gleanService.track(Event.OpenedBookmarkInPrivateTab)
+        assertTrue(BookmarksManagement.openInPrivateTab.testHasValue())
+
+        assertFalse(BookmarksManagement.openInPrivateTabs.testHasValue())
+        gleanService.track(Event.OpenedBookmarksInPrivateTabs)
+        assertTrue(BookmarksManagement.openInPrivateTabs.testHasValue())
+
+        assertFalse(BookmarksManagement.edited.testHasValue())
+        gleanService.track(Event.EditedBookmark)
+        assertTrue(BookmarksManagement.edited.testHasValue())
+
+        assertFalse(BookmarksManagement.moved.testHasValue())
+        gleanService.track(Event.MovedBookmark)
+        assertTrue(BookmarksManagement.moved.testHasValue())
+
+        assertFalse(BookmarksManagement.removed.testHasValue())
+        gleanService.track(Event.RemoveBookmark)
+        assertTrue(BookmarksManagement.removed.testHasValue())
+
+        assertFalse(BookmarksManagement.multiRemoved.testHasValue())
+        gleanService.track(Event.RemoveBookmarks)
+        assertTrue(BookmarksManagement.multiRemoved.testHasValue())
+
+        assertFalse(BookmarksManagement.shared.testHasValue())
+        gleanService.track(Event.ShareBookmark)
+        assertTrue(BookmarksManagement.shared.testHasValue())
+
+        assertFalse(BookmarksManagement.copied.testHasValue())
+        gleanService.track(Event.CopyBookmark)
+        assertTrue(BookmarksManagement.copied.testHasValue())
+
+        assertFalse(BookmarksManagement.folderAdd.testHasValue())
+        gleanService.track(Event.AddBookmarkFolder)
+        assertTrue(BookmarksManagement.folderAdd.testHasValue())
+
+        assertFalse(BookmarksManagement.folderRemove.testHasValue())
+        gleanService.track(Event.RemoveBookmarkFolder)
+        assertTrue(BookmarksManagement.folderRemove.testHasValue())
     }
 }

@@ -1545,6 +1545,19 @@ search.default_engine:
     expires: "2021-08-01"
 
 bookmarks_management:
+  open:
+    type: event
+    description: |
+      A user opened a bookmark.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18173
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18174
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
   open_in_new_tab:
     type: event
     description: |
