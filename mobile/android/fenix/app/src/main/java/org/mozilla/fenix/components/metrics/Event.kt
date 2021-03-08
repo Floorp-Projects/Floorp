@@ -215,6 +215,12 @@ sealed class Event {
     object HaveNoTopSites : Event()
 
     object SyncedTabSuggestionClicked : Event()
+    object BookmarkSuggestionClicked : Event()
+    object ClipboardSuggestionClicked : Event()
+    object HistorySuggestionClicked : Event()
+    object SearchActionClicked : Event()
+    object SearchSuggestionClicked : Event()
+    object OpenedTabSuggestionClicked : Event()
 
     // Interaction events with extras
 

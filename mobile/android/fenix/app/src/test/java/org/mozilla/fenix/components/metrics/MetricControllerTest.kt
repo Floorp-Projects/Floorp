@@ -241,4 +241,38 @@ class MetricControllerTest {
         controller.track(Event.SyncedTabSuggestionClicked)
         verify { marketingService1.track(Event.SyncedTabSuggestionClicked) }
     }
+
+    @Test
+    fun `tracking awesomebar events should be sent to enabled service`() {
+        val controller = ReleaseMetricController(
+            listOf(marketingService1),
+            isDataTelemetryEnabled = { true },
+            isMarketingDataTelemetryEnabled = { true }
+        )
+        every { marketingService1.shouldTrack(Event.BookmarkSuggestionClicked) } returns true
+        every { marketingService1.shouldTrack(Event.ClipboardSuggestionClicked) } returns true
+        every { marketingService1.shouldTrack(Event.HistorySuggestionClicked) } returns true
+        every { marketingService1.shouldTrack(Event.SearchActionClicked) } returns true
+        every { marketingService1.shouldTrack(Event.SearchSuggestionClicked) } returns true
+        every { marketingService1.shouldTrack(Event.OpenedTabSuggestionClicked) } returns true
+        controller.start(MetricServiceType.Marketing)
+
+        controller.track(Event.BookmarkSuggestionClicked)
+        verify { marketingService1.track(Event.BookmarkSuggestionClicked) }
+
+        controller.track(Event.ClipboardSuggestionClicked)
+        verify { marketingService1.track(Event.ClipboardSuggestionClicked) }
+
+        controller.track(Event.HistorySuggestionClicked)
+        verify { marketingService1.track(Event.HistorySuggestionClicked) }
+
+        controller.track(Event.SearchActionClicked)
+        verify { marketingService1.track(Event.SearchActionClicked) }
+
+        controller.track(Event.SearchSuggestionClicked)
+        verify { marketingService1.track(Event.SearchSuggestionClicked) }
+
+        controller.track(Event.OpenedTabSuggestionClicked)
+        verify { marketingService1.track(Event.OpenedTabSuggestionClicked) }
+    }
 }

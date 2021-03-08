@@ -10,6 +10,7 @@ import mozilla.components.browser.awesomebar.facts.BrowserAwesomeBarFacts
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
@@ -270,6 +271,24 @@ internal class ReleaseMetricController(
         }
         Component.FEATURE_SYNCEDTABS to SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED -> {
             Event.SyncedTabSuggestionClicked
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED -> {
+            Event.BookmarkSuggestionClicked
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED -> {
+            Event.ClipboardSuggestionClicked
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED -> {
+            Event.HistorySuggestionClicked
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED -> {
+            Event.SearchActionClicked
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED -> {
+            Event.SearchSuggestionClicked
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED -> {
+            Event.OpenedTabSuggestionClicked
         }
         else -> null
     }

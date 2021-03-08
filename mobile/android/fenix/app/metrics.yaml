@@ -4553,3 +4553,83 @@ synced_tabs:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+
+awesomebar:
+  bookmark_suggestion_clicked:
+    type: event
+    description: |
+      The bookmark suggestion in awesomebar was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18068
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18090
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  clipboard_suggestion_clicked:
+    type: event
+    description: |
+      The clipboard suggestion in awesomebar was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18068
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18090
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  history_suggestion_clicked:
+    type: event
+    description: |
+      The history suggestion in awesomebar was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18068
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18090
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  search_action_clicked:
+    type: event
+    description: |
+      The search action in awesomebar was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18068
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18090
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  search_suggestion_clicked:
+    type: event
+    description: |
+      The search suggestion in awesomebar was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18068
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18090
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
+  opened_tab_suggestion_clicked:
+    type: event
+    description: |
+      The opened tab suggestion in awesomebar was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18068
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18090
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"

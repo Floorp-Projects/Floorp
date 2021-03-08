@@ -17,6 +17,7 @@ import org.mozilla.fenix.GleanMetrics.AboutPage
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
+import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BannerOpenInApp
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
@@ -752,6 +753,25 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.SyncedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
             { SyncedTabs.syncedTabsSuggestionClicked.record(it) }
+        )
+
+        is Event.BookmarkSuggestionClicked -> EventWrapper<NoExtraKeys>(
+            { Awesomebar.bookmarkSuggestionClicked.record(it) }
+        )
+        is Event.ClipboardSuggestionClicked -> EventWrapper<NoExtraKeys>(
+            { Awesomebar.clipboardSuggestionClicked.record(it) }
+        )
+        is Event.HistorySuggestionClicked -> EventWrapper<NoExtraKeys>(
+            { Awesomebar.historySuggestionClicked.record(it) }
+        )
+        is Event.SearchActionClicked -> EventWrapper<NoExtraKeys>(
+            { Awesomebar.searchActionClicked.record(it) }
+        )
+        is Event.SearchSuggestionClicked -> EventWrapper<NoExtraKeys>(
+            { Awesomebar.searchSuggestionClicked.record(it) }
+        )
+        is Event.OpenedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
+            { Awesomebar.openedTabSuggestionClicked.record(it) }
         )
 
         // Don't record other events in Glean:

@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
@@ -88,9 +89,36 @@ class GleanMetricsServiceTest {
     }
 
     @Test
-    fun `synced tab events is correctly recorded`() {
+    fun `synced tab event is correctly recorded`() {
         assertFalse(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
         gleanService.track(Event.SyncedTabSuggestionClicked)
         assertTrue(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
+    }
+
+    @Test
+    fun `awesomebar events are correctly recorded`() {
+        assertFalse(Awesomebar.bookmarkSuggestionClicked.testHasValue())
+        gleanService.track(Event.BookmarkSuggestionClicked)
+        assertTrue(Awesomebar.bookmarkSuggestionClicked.testHasValue())
+
+        assertFalse(Awesomebar.clipboardSuggestionClicked.testHasValue())
+        gleanService.track(Event.ClipboardSuggestionClicked)
+        assertTrue(Awesomebar.clipboardSuggestionClicked.testHasValue())
+
+        assertFalse(Awesomebar.historySuggestionClicked.testHasValue())
+        gleanService.track(Event.HistorySuggestionClicked)
+        assertTrue(Awesomebar.historySuggestionClicked.testHasValue())
+
+        assertFalse(Awesomebar.searchActionClicked.testHasValue())
+        gleanService.track(Event.SearchActionClicked)
+        assertTrue(Awesomebar.searchActionClicked.testHasValue())
+
+        assertFalse(Awesomebar.searchSuggestionClicked.testHasValue())
+        gleanService.track(Event.SearchSuggestionClicked)
+        assertTrue(Awesomebar.searchSuggestionClicked.testHasValue())
+
+        assertFalse(Awesomebar.openedTabSuggestionClicked.testHasValue())
+        gleanService.track(Event.OpenedTabSuggestionClicked)
+        assertTrue(Awesomebar.openedTabSuggestionClicked.testHasValue())
     }
 }
