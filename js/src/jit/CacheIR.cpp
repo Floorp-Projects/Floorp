@@ -1078,7 +1078,8 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
   MOZ_CRASH("Bad NativeGetPropCacheability");
 }
 
-bool js::jit::IsWindowProxyForScriptGlobal(JSScript* script, JSObject* obj) {
+// Returns whether obj is a WindowProxy wrapping the script's global.
+static bool IsWindowProxyForScriptGlobal(JSScript* script, JSObject* obj) {
   if (!IsWindowProxy(obj)) {
     return false;
   }
