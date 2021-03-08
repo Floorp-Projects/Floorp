@@ -20,7 +20,7 @@
 SimpleTest.waitForExplicitFinish();
 
 function getOneMessage(frame) {
-  info("querying " + frame.src);
+  info(`querying ${frame.src} (${frame.id})`);
   let resolve;
   let promise = new Promise(r => { resolve = r; });
   window.addEventListener("message", function(e) {
@@ -38,24 +38,27 @@ async function ticks(n) {
 }
 
 async function checkFrame(frame, shouldThrottle) {
-  let message = await getOneMessage(frame);
+  let message = null;
+  do {
+    if (message) {
+      await ticks(2);
+    }
+    message = await getOneMessage(frame);
+  } while (message.throttledFrameRequests != shouldThrottle);
   is(message.throttledFrameRequests, shouldThrottle, frame.id);
 }
 
 onload = async function() {
   await SimpleTest.promiseFocus(window);
-  await ticks(2);
   is(SpecialPowers.DOMWindowUtils.effectivelyThrottlesFrameRequests, false, "Should not be throttling main page");
   for (let frame of document.querySelectorAll("iframe")) {
     let shouldThrottle = frame.style.display == "none";
     await checkFrame(frame, shouldThrottle);
     info("Switching display of " + frame.id);
     frame.style.display = shouldThrottle ? "" : "none";
-    await ticks(2);
     await checkFrame(frame, !shouldThrottle);
     info("And switching display back for " + frame.id);
     frame.style.display = shouldThrottle ? "none" : "";
-    await ticks(2);
     await checkFrame(frame, shouldThrottle);
   }
 
