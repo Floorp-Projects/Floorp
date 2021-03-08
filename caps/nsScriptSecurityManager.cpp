@@ -622,16 +622,21 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
   if (!sourceURI) {
     if (basePrin->Is<ExpandedPrincipal>()) {
       auto expanded = basePrin->As<ExpandedPrincipal>();
-      for (auto& prin : expanded->AllowList()) {
-        nsresult rv =
-            CheckLoadURIWithPrincipal(prin, aTargetURI, aFlags, aInnerWindowID);
+      const auto& allowList = expanded->AllowList();
+      // Only report errors when all principals fail.
+      uint32_t flags = aFlags | nsIScriptSecurityManager::DONT_REPORT_ERRORS;
+      for (size_t i = 0; i < allowList.Length() - 1; i++) {
+        nsresult rv = CheckLoadURIWithPrincipal(allowList[i], aTargetURI, flags,
+                                                aInnerWindowID);
         if (NS_SUCCEEDED(rv)) {
           // Allow access if it succeeded with one of the allowlisted principals
           return NS_OK;
         }
       }
-      // None of our allowlisted principals worked.
-      return NS_ERROR_DOM_BAD_URI;
+
+      // Report errors (if requested) for the last principal.
+      return CheckLoadURIWithPrincipal(allowList.LastElement(), aTargetURI,
+                                       aFlags, aInnerWindowID);
     }
     NS_ERROR(
         "Non-system principals or expanded principal passed to "
