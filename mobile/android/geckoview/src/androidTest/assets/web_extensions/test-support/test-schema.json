@@ -158,6 +158,13 @@
         ]
       },
       {
+        "name":  "getAllBrowserPids",
+        "type": "function",
+        "async": true,
+        "description": "Gets the list of pids of the running browser processes",
+        "parameters": []
+      },
+      {
         "name": "flushApzRepaints",
         "type": "function",
         "async": true,
