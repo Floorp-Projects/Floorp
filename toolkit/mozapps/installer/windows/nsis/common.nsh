@@ -3694,10 +3694,27 @@
             Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-newest-backup-update.log"
           ${EndIf}
 
-          ; Remove the new updates directory, which is shared by all users of the installation
-          ${If} ${FileExists} "$R0\updates"
-            RmDir /r "$R0"
-          ${EndIf}
+          ; The update directory is shared across all users of this
+          ; installation, and it contains a number of things. Which files we
+          ; want to keep and which we want to delete depends on if we are
+          ; installing or uninstalling.
+          ; If we are installing, we want to clear out any in-progress updates.
+          ; Otherwise we could potentially install an old, pending update when
+          ; Firefox first launches. The updates themselves live in the "updates"
+          ; subdirectory, and the update metadata lives in active-update.xml.
+          ; If we are uninstalling, we want to clear out the updates, the
+          ; update history, and the per-installation update configuration data.
+          ; In this case, we can just delete the whole update directory.
+          !if "${_MOZFUNC_UN}" == "un."
+            ${If} ${FileExists} "$R0"
+              RmDir /r "$R0"
+            ${EndIf}
+          !else
+            ${If} ${FileExists} "$R0\updates"
+              RmDir /r "$R0\updates"
+            ${EndIf}
+            Delete "$R0\active-update.xml"
+          !endif
 
           ; Also remove the secure log files that our updater may have created
           ; inside the maintenance service path. There are several files named
