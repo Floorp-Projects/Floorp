@@ -24,9 +24,11 @@ class WorkerDescriptorFront extends DescriptorMixin(
 
     this.traits = {};
 
-    // @backward-compat { version 88 } Fx88 now emits descriptor-destroyed event,
-    // which is generic to all descriptor actors and listened from the DescriptorFrontMixin.
-    // Once we support 88+, we can remove this listener.
+    // The actor sends a "close" event, which is translated to "worker-close" by
+    // the specification in order to not conflict with Target's "close" event.
+    // This event is similar to tabDetached and means that the worker is destroyed.
+    // So that we should destroy the target in order to significate that the target
+    // is no longer debuggable.
     this.once("worker-close", this.destroy.bind(this));
   }
 

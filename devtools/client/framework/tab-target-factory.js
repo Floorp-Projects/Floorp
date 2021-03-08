@@ -47,7 +47,7 @@ exports.TabTargetFactory = {
     target = await promise;
     // Then replace the promise with the target object
     targets.set(tab, target);
-    target.once("target-destroyed", () => {
+    target.once("close", () => {
       targets.delete(tab);
     });
     return target;
@@ -107,8 +107,10 @@ exports.TabTargetFactory = {
   },
 
   /**
-   * This function allows us to ask if there is a known
-   * target for a tab without creating a target.
+   * Creating a target for a tab that is being closed is a problem because it
+   * allows a leak as a result of coming after the close event which normally
+   * clears things up. This function allows us to ask if there is a known
+   * target for a tab without creating a target
    * @return true/false
    */
   isKnownTab: function(tab) {

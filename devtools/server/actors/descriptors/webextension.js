@@ -211,8 +211,6 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
 
       this._browser = null;
       this._childActorID = null;
-
-      this.emit("descriptor-destroyed");
     },
 
     /**
