@@ -31,6 +31,24 @@ fog:
       - glean-team@mozilla.com
     expires: never
 
+  failed_idle_registration:
+    type: boolean
+    lifetime: application
+    description: |
+      True if we failed to register with the idle service. Absent otherwise.
+      Means IPC probably isn't working well.
+      Child-process data will likely be absent, or incomplete.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
 fog.ipc:
   replay_failures:
     type: counter
@@ -41,6 +59,39 @@ fog.ipc:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+  buffer_sizes:
+    type: memory_distribution
+    memory_unit: byte
+    description: |
+      The number and size of the IPC buffers being received over FOG IPC.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+  flush_durations:
+    type: timing_distribution
+    time_unit: microsecond
+    description: |
+      The length of time between asking the child processes for their
+      IPC buffers and all of them being received by the parent.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739#c5
     data_sensitivity:
       - technical
     notification_emails:

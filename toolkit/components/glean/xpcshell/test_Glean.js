@@ -73,7 +73,7 @@ add_task(function test_setup() {
   // Mock SysInfo.
   SysInfo.overrides = {
     version: "1.2.3",
-    arc: "x64",
+    arch: "x64",
   };
   MockRegistrar.register("@mozilla.org/system-info;1", SysInfo);
 
