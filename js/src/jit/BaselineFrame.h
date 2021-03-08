@@ -147,12 +147,6 @@ class BaselineFrame {
     return (Value*)this - (slot + 1);
   }
 
-  Value topStackValue(uint32_t frameSize) const {
-    size_t numSlots = numValueSlots(frameSize);
-    MOZ_ASSERT(numSlots > 0);
-    return *valueSlot(numSlots - 1);
-  }
-
   static size_t frameSizeForNumValueSlots(size_t numValueSlots) {
     return BaselineFrame::FramePointerOffset + BaselineFrame::Size() +
            numValueSlots * sizeof(Value);
@@ -229,16 +223,6 @@ class BaselineFrame {
     flags_ &= ~RUNNING_IN_INTERPRETER;
     interpreterScript_ = nullptr;
     interpreterPC_ = nullptr;
-  }
-
-  void initInterpFieldsForGeneratorThrowOrReturn(JSScript* script,
-                                                 jsbytecode* pc) {
-    // Note: we can initialize interpreterICEntry_ to nullptr because it won't
-    // be used anyway (we are going to enter the exception handler).
-    flags_ |= RUNNING_IN_INTERPRETER;
-    interpreterScript_ = script;
-    interpreterPC_ = pc;
-    interpreterICEntry_ = nullptr;
   }
 
  private:
@@ -325,7 +309,6 @@ class BaselineFrame {
   inline CallObject& callObj() const;
 
   void setFlags(uint32_t flags) { flags_ = flags; }
-  uint32_t* addressOfFlags() { return &flags_; }
 
   [[nodiscard]] inline bool pushLexicalEnvironment(JSContext* cx,
                                                    Handle<LexicalScope*> scope);
