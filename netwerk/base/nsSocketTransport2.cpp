@@ -1376,45 +1376,45 @@ nsresult nsSocketTransport::InitiateSocket() {
         PR_GetError() != PR_OPERATION_NOT_SUPPORTED_ERROR) {
       SOCKET_LOG(("  Couldn't set reuse port socket option: %d\n", status));
     }
+  }
 
-    // disable the nagle algorithm - if we rely on it to coalesce writes into
-    // full packets the final packet of a multi segment POST/PUT or pipeline
-    // sequence is delayed a full rtt
-    opt.option = PR_SockOpt_NoDelay;
-    opt.value.no_delay = true;
+  // disable the nagle algorithm - if we rely on it to coalesce writes into
+  // full packets the final packet of a multi segment POST/PUT or pipeline
+  // sequence is delayed a full rtt
+  opt.option = PR_SockOpt_NoDelay;
+  opt.value.no_delay = true;
+  PR_SetSocketOption(fd, &opt);
+
+  // if the network.tcp.sendbuffer preference is set, use it to size SO_SNDBUF
+  // The Windows default of 8KB is too small and as of vista sp1, autotuning
+  // only applies to receive window
+  int32_t sndBufferSize;
+  mSocketTransportService->GetSendBufferSize(&sndBufferSize);
+  if (sndBufferSize > 0) {
+    opt.option = PR_SockOpt_SendBufferSize;
+    opt.value.send_buffer_size = sndBufferSize;
     PR_SetSocketOption(fd, &opt);
+  }
 
-    // if the network.tcp.sendbuffer preference is set, use it to size SO_SNDBUF
-    // The Windows default of 8KB is too small and as of vista sp1, autotuning
-    // only applies to receive window
-    int32_t sndBufferSize;
-    mSocketTransportService->GetSendBufferSize(&sndBufferSize);
-    if (sndBufferSize > 0) {
-      opt.option = PR_SockOpt_SendBufferSize;
-      opt.value.send_buffer_size = sndBufferSize;
-      PR_SetSocketOption(fd, &opt);
-    }
-
-    if (mQoSBits) {
-      opt.option = PR_SockOpt_IpTypeOfService;
-      opt.value.tos = mQoSBits;
-      PR_SetSocketOption(fd, &opt);
-    }
+  if (mQoSBits) {
+    opt.option = PR_SockOpt_IpTypeOfService;
+    opt.value.tos = mQoSBits;
+    PR_SetSocketOption(fd, &opt);
+  }
 
 #if defined(XP_WIN)
-    // The linger is turned off by default. This is not a hard close, but
-    // closesocket should return immediately and operating system tries to send
-    // remaining data for certain, implementation specific, amount of time.
-    // https://msdn.microsoft.com/en-us/library/ms739165.aspx
-    //
-    // Turn the linger option on an set the interval to 0. This will cause hard
-    // close of the socket.
-    opt.option = PR_SockOpt_Linger;
-    opt.value.linger.polarity = 1;
-    opt.value.linger.linger = 0;
-    PR_SetSocketOption(fd, &opt);
+  // The linger is turned off by default. This is not a hard close, but
+  // closesocket should return immediately and operating system tries to send
+  // remaining data for certain, implementation specific, amount of time.
+  // https://msdn.microsoft.com/en-us/library/ms739165.aspx
+  //
+  // Turn the linger option on an set the interval to 0. This will cause hard
+  // close of the socket.
+  opt.option = PR_SockOpt_Linger;
+  opt.value.linger.polarity = 1;
+  opt.value.linger.linger = 0;
+  PR_SetSocketOption(fd, &opt);
 #endif
-  }
 
   // inform socket transport about this newly created socket...
   rv = mSocketTransportService->AttachSocket(fd, this);
