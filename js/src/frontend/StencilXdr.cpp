@@ -573,6 +573,33 @@ XDRResult XDRCompilationStencilSpanSize(
   return Ok();
 }
 
+// Marker between each section inside CompilationStencil.
+//
+// These values should meet the following requirement:
+//   * No same value (differ more than single bit flip)
+//   * Bit pattern that won't frequently appear inside other XDR data
+//
+// Currently they're randomly chosen prime numbers that doesn't have same
+// byte pattern.
+enum class SectionMarker : uint32_t {
+  ParserAtomData = 0xD9C098D3,
+  ScopeData = 0x892C25EF,
+  ScopeNames = 0x638C4FB3,
+  RegExpData = 0xB030C2AF,
+  BigIntData = 0x4B24F449,
+  ObjLiteralData = 0x9AFAAE45,
+  SharedData = 0xAAD52687,
+  GCThingData = 0x1BD8F533,
+  ScriptData = 0x840458FF,
+  ScriptExtra = 0xA90E489D,
+  ModuleMetadata = 0x94FDCE6D,
+};
+
+template <XDRMode mode>
+static XDRResult CodeMarker(XDRState<mode>* xdr, SectionMarker marker) {
+  return xdr->codeMarker(uint32_t(marker));
+}
+
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::codeCompilationStencil(
     XDRState<mode>* xdr, CompilationStencil& stencil) {
@@ -582,6 +609,7 @@ template <XDRMode mode>
     stencil.hasExternalDependency = true;
   }
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::ParserAtomData));
   MOZ_TRY(codeParserAtomSpan(xdr, stencil.alloc, stencil.parserAtomData));
 
   MOZ_TRY(xdr->codeUint32(&stencil.functionKey));
@@ -607,7 +635,10 @@ template <XDRMode mode>
   // All of the vector-indexed data elements referenced by the
   // main script tree must be materialized first.
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::ScopeData));
   MOZ_TRY(XDRSpanContent(xdr, stencil.scopeData, scopeSize));
+
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::ScopeNames));
   MOZ_TRY(
       XDRSpanInitialized(xdr, stencil.alloc, stencil.scopeNames, scopeSize));
   MOZ_ASSERT(stencil.scopeData.size() == stencil.scopeNames.size());
@@ -615,27 +646,34 @@ template <XDRMode mode>
     MOZ_TRY(codeScopeData(xdr, stencil.scopeData[i], stencil.scopeNames[i]));
   }
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::RegExpData));
   MOZ_TRY(XDRSpanContent(xdr, stencil.regExpData, regExpSize));
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::BigIntData));
   MOZ_TRY(
       XDRSpanInitialized(xdr, stencil.alloc, stencil.bigIntData, bigIntSize));
   for (auto& entry : stencil.bigIntData) {
     MOZ_TRY(codeBigInt(xdr, entry));
   }
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::ObjLiteralData));
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.alloc, stencil.objLiteralData,
                              objLiteralSize));
   for (auto& entry : stencil.objLiteralData) {
     MOZ_TRY(codeObjLiteral(xdr, entry));
   }
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::SharedData));
   MOZ_TRY(codeSharedDataContainer(xdr, stencil.sharedData));
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::GCThingData));
   MOZ_TRY(XDRSpanContent(xdr, stencil.gcThingData, gcThingSize));
 
   // Now serialize the vector of ScriptStencils.
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::ScriptData));
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptData, scriptSize));
 
+  MOZ_TRY(CodeMarker(xdr, SectionMarker::ScriptExtra));
   MOZ_TRY(XDRSpanContent(xdr, stencil.scriptExtra, scriptExtraSize));
 
   // We don't support coding non-initial CompilationStencil.
@@ -650,6 +688,7 @@ template <XDRMode mode>
       }
     }
 
+    MOZ_TRY(CodeMarker(xdr, SectionMarker::ModuleMetadata));
     MOZ_TRY(codeModuleMetadata(xdr, *stencil.moduleMetadata));
   }
 
