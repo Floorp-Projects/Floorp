@@ -513,6 +513,12 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
   double mDeltaY;
   double mDeltaZ;
 
+  // The amount of scrolling per line or page, without accounting for mouse
+  // wheel transactions etc.
+  //
+  // Computed by EventStateManager::DeltaAccumulator::InitLineOrPageDelta.
+  nsSize mScrollAmount;
+
   // overflowed delta values for scroll, these values are set by
   // EventStateManger.  If the default action of the wheel event isn't scroll,
   // these values are always zero.  Otherwise, remaining delta values which are
@@ -609,6 +615,7 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
     mDeltaY = aEvent.mDeltaY;
     mDeltaZ = aEvent.mDeltaZ;
     mDeltaMode = aEvent.mDeltaMode;
+    mScrollAmount = aEvent.mScrollAmount;
     mCustomizedByUserPrefs = aEvent.mCustomizedByUserPrefs;
     mMayHaveMomentum = aEvent.mMayHaveMomentum;
     mIsMomentum = aEvent.mIsMomentum;

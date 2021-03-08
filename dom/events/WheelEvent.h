@@ -49,7 +49,8 @@ class WheelEvent : public MouseEvent {
  protected:
   ~WheelEvent() = default;
 
-  double ToWebExposedDelta(const WidgetWheelEvent&, double aDelta, CallerType);
+  double ToWebExposedDelta(const WidgetWheelEvent&, double aDelta,
+                           nscoord aLineOrPageAmount, CallerType);
 
  private:
   int32_t mAppUnitsPerDevPixel;

@@ -2373,18 +2373,9 @@ void EventStateManager::DispatchLegacyMouseScrollEvents(
 
   // Ignore mouse wheel transaction for computing legacy mouse wheel
   // events' delta value.
-  nsIFrame* scrollFrame = ComputeScrollTargetAndMayAdjustWheelEvent(
-      aTargetFrame, aEvent, COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET);
-
-  nsIScrollableFrame* scrollTarget = do_QueryFrame(scrollFrame);
-  nsPresContext* pc =
-      scrollFrame ? scrollFrame->PresContext() : aTargetFrame->PresContext();
-
   // DOM event's delta vales are computed from CSS pixels.
-  nsSize scrollAmount = GetScrollAmount(pc, aEvent, scrollTarget);
-  nsIntSize scrollAmountInCSSPixels(
-      nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.width),
-      nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.height));
+  auto scrollAmountInCSSPixels =
+      CSSIntSize::FromAppUnits(aEvent->mScrollAmount);
 
   // XXX We don't deal with fractional amount in legacy event, though the
   //     default action handler (DoScrollText()) deals with it.
@@ -5936,6 +5927,15 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   mHandlingDeltaMode = aEvent->mDeltaMode;
   mIsNoLineOrPageDeltaDevice = aEvent->mIsNoLineOrPageDelta;
 
+  {
+    nsIFrame* frame = aESM->ComputeScrollTarget(
+        aTargetFrame, aEvent, COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET);
+    nsPresContext* pc =
+        frame ? frame->PresContext() : aTargetFrame->PresContext();
+    nsIScrollableFrame* scrollTarget = do_QueryFrame(frame);
+    aEvent->mScrollAmount = aESM->GetScrollAmount(pc, aEvent, scrollTarget);
+  }
+
   // If it's handling neither a device that does not provide line or page deltas
   // nor delta values multiplied by prefs, we must not modify lineOrPageDelta
   // values.
@@ -5968,15 +5968,8 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
     // eMouseScrollEventClass (DOMMouseScroll) but not be used for scrolling
     // of default action.  The transaction should be used only for the default
     // action.
-    nsIFrame* frame = aESM->ComputeScrollTarget(
-        aTargetFrame, aEvent, COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET);
-    nsPresContext* pc =
-        frame ? frame->PresContext() : aTargetFrame->PresContext();
-    nsIScrollableFrame* scrollTarget = do_QueryFrame(frame);
-    nsSize scrollAmount = aESM->GetScrollAmount(pc, aEvent, scrollTarget);
-    nsIntSize scrollAmountInCSSPixels(
-        nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.width),
-        nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.height));
+    auto scrollAmountInCSSPixels =
+        CSSIntSize::FromAppUnits(aEvent->mScrollAmount);
 
     aEvent->mLineOrPageDeltaX = RoundDown(mX) / scrollAmountInCSSPixels.width;
     aEvent->mLineOrPageDeltaY = RoundDown(mY) / scrollAmountInCSSPixels.height;
