@@ -152,6 +152,9 @@ static const uint32_t kDefaultGlyphCacheSize = -1;
 #include "mozilla/gfx/GPUParent.h"
 #include "prsystem.h"
 
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/SourceSurfaceCairo.h"
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -166,23 +169,17 @@ const ContentDeviceData* gContentDeviceInitData = nullptr;
 
 static Mutex* gGfxPlatformPrefsLock = nullptr;
 
+Atomic<bool, MemoryOrdering::ReleaseAcquire> gfxPlatform::gCMSInitialized;
+CMSMode gfxPlatform::gCMSMode = CMSMode::Off;
+
 // These two may point to the same profile
-static qcms_profile* gCMSOutputProfile = nullptr;
-static qcms_profile* gCMSsRGBProfile = nullptr;
+qcms_profile* gfxPlatform::gCMSOutputProfile = nullptr;
+qcms_profile* gfxPlatform::gCMSsRGBProfile = nullptr;
 
-static bool gCMSRGBTransformFailed = false;
-static qcms_transform* gCMSRGBTransform = nullptr;
-static qcms_transform* gCMSInverseRGBTransform = nullptr;
-static qcms_transform* gCMSRGBATransform = nullptr;
-static qcms_transform* gCMSBGRATransform = nullptr;
-
-static bool gCMSInitialized = false;
-static CMSMode gCMSMode = CMSMode::Off;
-
-static void ShutdownCMS();
-
-#include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/SourceSurfaceCairo.h"
+qcms_transform* gfxPlatform::gCMSRGBTransform = nullptr;
+qcms_transform* gfxPlatform::gCMSInverseRGBTransform = nullptr;
+qcms_transform* gfxPlatform::gCMSRGBATransform = nullptr;
+qcms_transform* gfxPlatform::gCMSBGRATransform = nullptr;
 
 /// This override of the LogForwarder, initially used for the critical graphics
 /// errors, is sending the log to the crash annotations as well, but only
@@ -1002,13 +999,9 @@ void gfxPlatform::Init() {
   Preferences::RegisterCallbackAndCall(RecordingPrefChanged,
                                        "gfx.2d.recording");
 
-  CreateCMSOutputProfile();
-
   // Create the sRGB to output display profile transforms. They can be accessed
   // off the main thread so we want to avoid a race condition.
-  GetCMSRGBTransform();
-  GetCMSRGBATransform();
-  GetCMSBGRATransform();
+  InitializeCMS();
 
   // Listen to memory pressure event so we can purge DrawTarget caches
   gPlatform->mMemoryPressureObserver =
@@ -2042,22 +2035,6 @@ bool gfxPlatform::OffMainThreadCompositingEnabled() {
   return UsesOffMainThreadCompositing();
 }
 
-CMSMode gfxPlatform::GetCMSMode() {
-  if (!gCMSInitialized) {
-    int32_t mode = StaticPrefs::gfx_color_management_mode();
-    if (mode >= 0 && mode < int32_t(CMSMode::AllCount)) {
-      gCMSMode = CMSMode(mode);
-    }
-
-    bool enableV4 = StaticPrefs::gfx_color_management_enablev4();
-    if (enableV4) {
-      qcms_enable_iccv4();
-    }
-    gCMSInitialized = true;
-  }
-  return gCMSMode;
-}
-
 void gfxPlatform::SetCMSModeOverride(CMSMode aMode) {
   MOZ_ASSERT(gCMSInitialized);
   gCMSMode = aMode;
@@ -2132,121 +2109,85 @@ const mozilla::gfx::ContentDeviceData* gfxPlatform::GetInitContentDeviceData() {
   return gContentDeviceInitData;
 }
 
-void gfxPlatform::CreateCMSOutputProfile() {
+void gfxPlatform::InitializeCMS() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
+                        "CMS should be initialized on the main thread");
+  if (gCMSInitialized) {
+    return;
+  }
+
+  {
+    int32_t mode = StaticPrefs::gfx_color_management_mode();
+    if (mode >= 0 && mode < int32_t(CMSMode::AllCount)) {
+      gCMSMode = CMSMode(mode);
+    }
+
+    bool enableV4 = StaticPrefs::gfx_color_management_enablev4();
+    if (enableV4) {
+      qcms_enable_iccv4();
+    }
+  }
+
+  gCMSsRGBProfile = qcms_profile_sRGB();
+
+  /* Determine if we're using the internal override to force sRGB as
+     an output profile for reftests. See Bug 452125.
+
+     Note that we don't normally (outside of tests) set a default value
+     of this preference, which means nsIPrefBranch::GetBoolPref will
+     typically throw (and leave its out-param untouched).
+   */
+  if (StaticPrefs::gfx_color_management_force_srgb()) {
+    gCMSOutputProfile = gCMSsRGBProfile;
+  }
+
   if (!gCMSOutputProfile) {
-    /* Determine if we're using the internal override to force sRGB as
-       an output profile for reftests. See Bug 452125.
-
-       Note that we don't normally (outside of tests) set a default value
-       of this preference, which means nsIPrefBranch::GetBoolPref will
-       typically throw (and leave its out-param untouched).
-     */
-    if (StaticPrefs::gfx_color_management_force_srgb()) {
-      gCMSOutputProfile = GetCMSsRGBProfile();
-    }
-
-    if (!gCMSOutputProfile) {
-      nsTArray<uint8_t> outputProfileData =
-          gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
-      if (!outputProfileData.IsEmpty()) {
-        gCMSOutputProfile = qcms_profile_from_memory(
-            outputProfileData.Elements(), outputProfileData.Length());
-      }
-    }
-
-    /* Determine if the profile looks bogus. If so, close the profile
-     * and use sRGB instead. See bug 460629, */
-    if (gCMSOutputProfile && qcms_profile_is_bogus(gCMSOutputProfile)) {
-      NS_ASSERTION(gCMSOutputProfile != GetCMSsRGBProfile(),
-                   "Builtin sRGB profile tagged as bogus!!!");
-      qcms_profile_release(gCMSOutputProfile);
-      gCMSOutputProfile = nullptr;
-    }
-
-    if (!gCMSOutputProfile) {
-      gCMSOutputProfile = GetCMSsRGBProfile();
-    }
-    /* Precache the LUT16 Interpolations for the output profile. See
-       bug 444661 for details. */
-    qcms_profile_precache_output_transform(gCMSOutputProfile);
-  }
-}
-
-qcms_profile* gfxPlatform::GetCMSOutputProfile() { return gCMSOutputProfile; }
-
-qcms_profile* gfxPlatform::GetCMSsRGBProfile() {
-  if (!gCMSsRGBProfile) {
-    /* Create the profile using qcms. */
-    gCMSsRGBProfile = qcms_profile_sRGB();
-  }
-  return gCMSsRGBProfile;
-}
-
-qcms_transform* gfxPlatform::GetCMSRGBTransform() {
-  if (!gCMSRGBTransform && !gCMSRGBTransformFailed) {
-    qcms_profile *inProfile, *outProfile;
-    outProfile = GetCMSOutputProfile();
-    inProfile = GetCMSsRGBProfile();
-
-    if (!inProfile || !outProfile) return nullptr;
-
-    gCMSRGBTransform =
-        qcms_transform_create(inProfile, QCMS_DATA_RGB_8, outProfile,
-                              QCMS_DATA_RGB_8, QCMS_INTENT_PERCEPTUAL);
-    if (!gCMSRGBTransform) {
-      gCMSRGBTransformFailed = true;
+    nsTArray<uint8_t> outputProfileData =
+        gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
+    if (!outputProfileData.IsEmpty()) {
+      gCMSOutputProfile = qcms_profile_from_memory(outputProfileData.Elements(),
+                                                   outputProfileData.Length());
     }
   }
 
-  return gCMSRGBTransform;
-}
-
-qcms_transform* gfxPlatform::GetCMSInverseRGBTransform() {
-  if (!gCMSInverseRGBTransform) {
-    qcms_profile *inProfile, *outProfile;
-    inProfile = GetCMSOutputProfile();
-    outProfile = GetCMSsRGBProfile();
-
-    if (!inProfile || !outProfile) return nullptr;
-
-    gCMSInverseRGBTransform =
-        qcms_transform_create(inProfile, QCMS_DATA_RGB_8, outProfile,
-                              QCMS_DATA_RGB_8, QCMS_INTENT_PERCEPTUAL);
+  /* Determine if the profile looks bogus. If so, close the profile
+   * and use sRGB instead. See bug 460629, */
+  if (gCMSOutputProfile && qcms_profile_is_bogus(gCMSOutputProfile)) {
+    NS_ASSERTION(gCMSOutputProfile != gCMSsRGBProfile,
+                 "Builtin sRGB profile tagged as bogus!!!");
+    qcms_profile_release(gCMSOutputProfile);
+    gCMSOutputProfile = nullptr;
   }
 
-  return gCMSInverseRGBTransform;
-}
-
-qcms_transform* gfxPlatform::GetCMSRGBATransform() {
-  if (!gCMSRGBATransform) {
-    qcms_profile *inProfile, *outProfile;
-    outProfile = GetCMSOutputProfile();
-    inProfile = GetCMSsRGBProfile();
-
-    if (!inProfile || !outProfile) return nullptr;
-
-    gCMSRGBATransform =
-        qcms_transform_create(inProfile, QCMS_DATA_RGBA_8, outProfile,
-                              QCMS_DATA_RGBA_8, QCMS_INTENT_PERCEPTUAL);
+  if (!gCMSOutputProfile) {
+    gCMSOutputProfile = gCMSsRGBProfile;
   }
 
-  return gCMSRGBATransform;
-}
+  /* Precache the LUT16 Interpolations for the output profile. See
+     bug 444661 for details. */
+  qcms_profile_precache_output_transform(gCMSOutputProfile);
 
-qcms_transform* gfxPlatform::GetCMSBGRATransform() {
-  if (!gCMSBGRATransform) {
-    qcms_profile *inProfile, *outProfile;
-    outProfile = GetCMSOutputProfile();
-    inProfile = GetCMSsRGBProfile();
+  // Create the RGB transform.
+  gCMSRGBTransform =
+      qcms_transform_create(gCMSsRGBProfile, QCMS_DATA_RGB_8, gCMSOutputProfile,
+                            QCMS_DATA_RGB_8, QCMS_INTENT_PERCEPTUAL);
 
-    if (!inProfile || !outProfile) return nullptr;
+  // And the inverse.
+  gCMSInverseRGBTransform =
+      qcms_transform_create(gCMSOutputProfile, QCMS_DATA_RGB_8, gCMSsRGBProfile,
+                            QCMS_DATA_RGB_8, QCMS_INTENT_PERCEPTUAL);
 
-    gCMSBGRATransform =
-        qcms_transform_create(inProfile, QCMS_DATA_BGRA_8, outProfile,
-                              QCMS_DATA_BGRA_8, QCMS_INTENT_PERCEPTUAL);
-  }
+  // The RGBA transform.
+  gCMSRGBATransform = qcms_transform_create(gCMSsRGBProfile, QCMS_DATA_RGBA_8,
+                                            gCMSOutputProfile, QCMS_DATA_RGBA_8,
+                                            QCMS_INTENT_PERCEPTUAL);
 
-  return gCMSBGRATransform;
+  // And the BGRA one.
+  gCMSBGRATransform = qcms_transform_create(gCMSsRGBProfile, QCMS_DATA_BGRA_8,
+                                            gCMSOutputProfile, QCMS_DATA_BGRA_8,
+                                            QCMS_INTENT_PERCEPTUAL);
+
+  gCMSInitialized = true;
 }
 
 qcms_transform* gfxPlatform::GetCMSOSRGBATransform() {
@@ -2274,7 +2215,7 @@ qcms_data_type gfxPlatform::GetCMSOSRGBAType() {
 }
 
 /* Shuts down various transforms and profiles for CMS. */
-static void ShutdownCMS() {
+void gfxPlatform::ShutdownCMS() {
   if (gCMSRGBTransform) {
     qcms_transform_release(gCMSRGBTransform);
     gCMSRGBTransform = nullptr;
@@ -2295,7 +2236,9 @@ static void ShutdownCMS() {
     qcms_profile_release(gCMSOutputProfile);
 
     // handle the aliased case
-    if (gCMSsRGBProfile == gCMSOutputProfile) gCMSsRGBProfile = nullptr;
+    if (gCMSsRGBProfile == gCMSOutputProfile) {
+      gCMSsRGBProfile = nullptr;
+    }
     gCMSOutputProfile = nullptr;
   }
   if (gCMSsRGBProfile) {
