@@ -395,7 +395,6 @@ module.exports = {
         "no-sequences": "off",
         "no-shadow": "off",
         "no-undef": "off",
-        "no-unused-vars": "off",
         "no-useless-call": "off",
       },
     },
