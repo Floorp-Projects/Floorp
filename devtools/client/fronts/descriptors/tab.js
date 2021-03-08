@@ -58,25 +58,7 @@ class TabDescriptorFront extends DescriptorMixin(
     this.traits = json.traits || {};
   }
 
-  /**
-   * Destroy the front.
-   *
-   * @param Boolean If true, it means that we destroy the front when receiving the descriptor-destroyed
-   *                event from the server.
-   */
-  destroy({ isServerDestroyEvent = false } = {}) {
-    if (this.isDestroyed()) {
-      return;
-    }
-
-    // The descriptor may be destroyed first by the frontend.
-    // When closing the tab, the toolbox document is almost immediately removed from the DOM.
-    // The `unload` event fires and toolbox destroys itself, as well as its related client.
-    //
-    // In such case, we emit the descriptor-destroyed event
-    if (!isServerDestroyEvent) {
-      this.emit("descriptor-destroyed");
-    }
+  destroy() {
     if (this.isLocalTab) {
       this._teardownLocalTabListeners();
     }
@@ -156,15 +138,6 @@ class TabDescriptorFront extends DescriptorMixin(
     // Note that we are also checking that _targetFront has a valid actorID
     // in getTarget, this acts as an additional security to avoid races.
     this._targetFront = null;
-
-    // @backward-compat { version 88 } Descriptor actors now emit descriptor-destroyed.
-    // But about:debugging / remote debugging tabs doesn't support top level target switching
-    // so that we also have to remove the descriptor when the target is destroyed.
-    // Should be kept until about:debugging supports target switching and we remove the
-    // !isLocalTab check.
-    if (!this.traits.emitDescriptorDestroyed || !this.isLocalTab) {
-      this.destroy();
-    }
   }
 
   /**

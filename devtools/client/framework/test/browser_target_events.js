@@ -18,8 +18,8 @@ add_task(async function() {
   await navigate;
   ok(true, "navigate event received");
 
-  const onTargetDestroyed = once(target, "target-destroyed");
+  const close = once(target, "close");
   gBrowser.removeCurrentTab();
-  await onTargetDestroyed;
-  ok(true, "target destroyed received");
+  await close;
+  ok(true, "close event received");
 });

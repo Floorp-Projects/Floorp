@@ -166,8 +166,6 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
   },
 
   destroy() {
-    this.emit("descriptor-destroyed");
-
     this._browsingContextTargetActor = null;
     Actor.prototype.destroy.call(this);
   },

@@ -112,8 +112,6 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
 
       this._detach();
 
-      this.emit("descriptor-destroyed");
-
       return { type: "detached" };
     },
 
@@ -121,8 +119,6 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
       if (this._attached) {
         this._detach();
       }
-
-      this.emit("descriptor-destroyed");
       protocol.Actor.prototype.destroy.call(this);
     },
 
@@ -178,7 +174,7 @@ const WorkerDescriptorActor = protocol.ActorClassWithSpec(
         this._detach();
       }
 
-      this.emit("descriptor-destroyed");
+      this.conn.sendActorEvent(this.actorID, "close");
     },
 
     _onWorkerError(filename, lineno, message) {
