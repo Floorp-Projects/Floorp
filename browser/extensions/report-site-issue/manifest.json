@@ -43,14 +43,6 @@
         "paths": [["l10n"]]
       }
     },
-    "pageActionExtras": {
-      "schema": "experimentalAPIs/pageActionExtras.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experimentalAPIs/pageActionExtras.js",
-        "paths": [["pageActionExtras"]]
-      }
-    },
     "tabExtras": {
       "schema": "experimentalAPIs/tabExtras.json",
       "parent": {
