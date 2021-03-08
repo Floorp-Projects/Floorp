@@ -1271,13 +1271,9 @@ void WebrtcVideoConduit::DetachRenderer() {
   }
 }
 
-// XXX we need to figure out how to feed back changes in preferred capture
-// resolution to the getUserMedia source.
 void WebrtcVideoConduit::SelectSendResolution(unsigned short width,
                                               unsigned short height) {
   mMutex.AssertCurrentThreadOwns();
-  // XXX This will do bandwidth-resolution adaptation as well - bug 877954
-  // Enforce constraints
   if (mCurSendCodecConfig) {
     int max_fs = std::numeric_limits<int>::max();
     if (!mLockScaling) {
