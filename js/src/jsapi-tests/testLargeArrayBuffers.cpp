@@ -21,6 +21,7 @@ BEGIN_TEST(testLargeArrayBuffers) {
   constexpr size_t nbytes = size_t(6) * 1024 * 1024 * 1024;  // 6 GB.
 
   RootedObject buffer(cx, JS::NewArrayBuffer(cx, nbytes));
+  CHECK(buffer);
   CHECK(JS::IsArrayBufferObject(buffer));
 
   size_t length;
@@ -146,6 +147,7 @@ BEGIN_TEST(testLargeSharedArrayBuffers) {
   constexpr size_t nbytes = size_t(5) * 1024 * 1024 * 1024;  // 5 GB.
 
   RootedObject buffer(cx, JS::NewSharedArrayBuffer(cx, nbytes));
+  CHECK(buffer);
   CHECK(JS::IsSharedArrayBufferObject(buffer));
   CHECK_EQUAL(GetSharedArrayBufferByteLength(buffer), nbytes);
 
