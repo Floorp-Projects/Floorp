@@ -63,7 +63,7 @@ function argumentsFactory(args) {
   };
 }
 
-function preferenceExperimentFactory(args) {
+function prefExperimentRecipeFactory(args) {
   return recipeFactory({
     name: "preference-experiment",
     arguments: argumentsFactory(args),
@@ -75,7 +75,7 @@ decorate_task(
   withStub(Uptake, "reportRecipe"),
   async function run_without_errors({ reportRecipeStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory();
+    const recipe = prefExperimentRecipeFactory();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
     await action.finalize();
     // Errors thrown in actions are caught and silenced, so instead check for an
@@ -93,7 +93,7 @@ decorate_task(
     const action = new PreferenceExperimentAction();
     action.log = mockLogger();
 
-    const recipe = preferenceExperimentFactory();
+    const recipe = prefExperimentRecipeFactory();
     await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
 
     Assert.ok(action.log.debug.args.length === 1);
@@ -127,7 +127,7 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([]),
   async function enroll_user_if_never_been_in_experiment({ startStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       slug: "test",
       branches: [
         {
@@ -190,7 +190,7 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([{ slug: "test", expired: false }]),
   async function markSeen_if_experiment_active({ markLastSeenStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       name: "test",
     });
 
@@ -207,7 +207,7 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([{ slug: "test", expired: true }]),
   async function dont_markSeen_if_experiment_expired({ markLastSeenStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       name: "test",
     });
 
@@ -223,7 +223,7 @@ decorate_task(
   withStub(PreferenceExperiments, "start"),
   async function do_nothing_if_enrollment_paused({ startStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       isEnrollmentPaused: true,
     });
 
@@ -247,7 +247,7 @@ decorate_task(
   ]),
   async function stop_experiments_not_seen({ stopStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       slug: "seen",
     });
 
@@ -284,7 +284,7 @@ decorate_task(
   ]),
   async function dont_stop_experiments_for_other_action({ stopStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       name: "seen",
     });
 
@@ -317,7 +317,7 @@ decorate_task(
     reportRecipeStub,
   }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       name: "new",
       branches: [
         {
@@ -348,7 +348,7 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([]),
   async function experimentType_with_isHighPopulation_false({ startStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       isHighPopulation: false,
     });
 
@@ -365,7 +365,7 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([]),
   async function experimentType_with_isHighPopulation_true({ startStub }) {
     const action = new PreferenceExperimentAction();
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       isHighPopulation: true,
     });
 
@@ -422,7 +422,7 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([]),
   async function integration_test_enroll_and_unenroll({ mockPreferences }) {
     mockPreferences.set("fake.preference", "oldvalue", "user");
-    const recipe = preferenceExperimentFactory({
+    const recipe = prefExperimentRecipeFactory({
       slug: "integration test experiment",
       branches: [
         {
@@ -538,7 +538,7 @@ decorate_task(
     let minDeadline = new Date(expectedDeadline - 2 * hour);
     let maxDeadline = new Date(expectedDeadline + 2 * hour);
 
-    // For each suitability, build a decorator that sets up a suitabilty
+    // For each suitability, build a decorator that sets up a suitable
     // environment, and then call that decorator with a sub-test that asserts
     // the suitability is handled correctly.
     for (const { suitability, isTemporaryError } of suitabilities) {
@@ -547,7 +547,7 @@ decorate_task(
       ]);
       await decorator(async ({ prefExperiments: [experiment] }) => {
         let action = new PreferenceExperimentAction();
-        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        let recipe = prefExperimentRecipeFactory({ slug: experiment.slug });
         await action.processRecipe(recipe, suitability);
         let modifiedExperiment = await PreferenceExperiments.get(
           experiment.slug
@@ -603,7 +603,7 @@ decorate_task(
       ]);
       await decorator(async ({ prefExperiments: [experiment] }) => {
         let action = new PreferenceExperimentAction();
-        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        let recipe = prefExperimentRecipeFactory({ slug: experiment.slug });
         await action.processRecipe(recipe, suitability);
         let modifiedExperiment = await PreferenceExperiments.get(
           experiment.slug
@@ -647,7 +647,7 @@ decorate_task(
       ]);
       await decorator(async ({ prefExperiments: [experiment] }) => {
         let action = new PreferenceExperimentAction();
-        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        let recipe = prefExperimentRecipeFactory({ slug: experiment.slug });
         await action.processRecipe(recipe, suitability);
         let modifiedExperiment = await PreferenceExperiments.get(
           experiment.slug
@@ -692,7 +692,7 @@ decorate_task(
       ]);
       await decorator(async ({ prefExperiments: [experiment] }) => {
         let action = new PreferenceExperimentAction();
-        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        let recipe = prefExperimentRecipeFactory({ slug: experiment.slug });
         await action.processRecipe(recipe, suitability);
         let modifiedExperiment = await PreferenceExperiments.get(
           experiment.slug
@@ -738,7 +738,7 @@ decorate_task(
       ]);
       await decorator(async ({ prefExperiments: [experiment] }) => {
         let action = new PreferenceExperimentAction();
-        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        let recipe = prefExperimentRecipeFactory({ slug: experiment.slug });
         await action.processRecipe(recipe, suitability);
         is(action.lastError, null, "No errors should be reported");
         let modifiedExperiment = await PreferenceExperiments.get(
@@ -754,6 +754,45 @@ decorate_task(
           `The temporary failure deadline should be reset to a valid deadline for ${suitability}`
         );
       })();
+    }
+  }
+);
+
+// Check that an already unenrolled experiment doesn't try to unenroll again if
+// the filter does not match.
+decorate_task(
+  withStudiesEnabled(),
+  withSpy(PreferenceExperiments, "stop"),
+  async function test_stop_when_already_expired({ stopSpy }) {
+    // Use a deadline that is already past
+    const now = new Date();
+    const hour = 1000 * 60 * 60;
+    const temporaryErrorDeadline = new Date(now - hour * 2).toJSON();
+
+    const suitabilitiesToCheck = Object.values(BaseAction.suitability);
+
+    const subtest = decorate(
+      PreferenceExperiments.withMockExperiments([
+        NormandyTestUtils.factories.preferenceStudyFactory({
+          expired: true,
+          temporaryErrorDeadline,
+        }),
+      ]),
+
+      async ({ prefExperiments: [experiment], suitability }) => {
+        const recipe = prefExperimentRecipeFactory({ slug: experiment.slug });
+        const action = new PreferenceExperimentAction();
+        await action.processRecipe(recipe, suitability);
+        Assert.deepEqual(
+          stopSpy.args,
+          [],
+          `Stop should not be called for ${suitability}`
+        );
+      }
+    );
+
+    for (const suitability of suitabilitiesToCheck) {
+      await subtest({ suitability });
     }
   }
 );
