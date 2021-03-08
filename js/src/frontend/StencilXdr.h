@@ -46,11 +46,12 @@ class StencilXDR {
   static XDRResult codeBigInt(XDRState<mode>* xdr, BigIntStencil& stencil);
 
   template <XDRMode mode>
-  static XDRResult ScopeData(XDRState<mode>* xdr, ScopeStencil& stencil,
-                             BaseParserScopeData*& baseScopeData);
+  static XDRResult codeObjLiteral(XDRState<mode>* xdr,
+                                  ObjLiteralStencil& stencil);
 
   template <XDRMode mode>
-  static XDRResult ObjLiteral(XDRState<mode>* xdr, ObjLiteralStencil& stencil);
+  static XDRResult ScopeData(XDRState<mode>* xdr, ScopeStencil& stencil,
+                             BaseParserScopeData*& baseScopeData);
 
   template <XDRMode mode>
   static XDRResult SharedData(js::XDRState<mode>* xdr,
