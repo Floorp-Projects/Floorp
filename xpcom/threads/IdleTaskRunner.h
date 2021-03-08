@@ -29,13 +29,12 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
   using MayStopProcessingCallbackType = std::function<bool()>;
 
  public:
-  // An IdleTaskRunner will attempt to run in idle time, with a budget computed
-  // based on a (capped) estimate for how much idle time is available. If there
-  // is no idle time within `aMaxDelay` ms, it will fall back to running using
-  // a specified `aNonIdleBudget`.
+  // An IdleTaskRunner will attempt to run in any idle time period large enough
+  // to fit `aMinimumUsefulBudget`. If no such window occurs within `aMaxDelay`
+  // ms, it will stop waiting for idle time and run from a TYPE_ONE_SHOT timer.
   static already_AddRefed<IdleTaskRunner> Create(
       const CallbackType& aCallback, const char* aRunnableName,
-      uint32_t aMaxDelay, int64_t aNonIdleBudget, bool aRepeating,
+      uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
       const MayStopProcessingCallbackType& aMayStopProcessing);
 
   NS_IMETHOD Run() override;
@@ -46,9 +45,8 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
 
   void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override;
 
-  // Update the non-idle time budgeted for this callback. This really only
-  // makes sense for a repeating runner.
-  void SetBudget(int64_t aBudget);
+  // Update the minimum idle time that this callback would be invoked for.
+  void SetMinimumUsefulBudget(int64_t aMinimumUsefulBudget);
 
   nsresult Cancel() override;
   void Schedule(bool aAllowIdleDispatch);
@@ -56,7 +54,7 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
  private:
   explicit IdleTaskRunner(
       const CallbackType& aCallback, const char* aRunnableName,
-      uint32_t aMaxDelay, int64_t aNonIdleBudget, bool aRepeating,
+      uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
       const MayStopProcessingCallbackType& aMayStopProcessing);
   ~IdleTaskRunner();
   void CancelTimer();
@@ -74,9 +72,8 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
   // The null timestamp when the run is triggered by aMaxDelay instead of idle.
   TimeStamp mDeadline;
 
-  // The expected amount of time the callback will run for, when not running
-  // during idle time.
-  TimeDuration mBudget;
+  // The least duration worth calling the callback for during idle time.
+  TimeDuration mMinimumUsefulBudget;
 
   bool mRepeating;
   bool mTimerActive;

@@ -1683,7 +1683,7 @@ void nsJSContext::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
         CCRunnerFired, "EnsureCCRunner::CCRunnerFired", aDelay.ToMilliseconds(),
         aBudget.ToMilliseconds(), true, [] { return sShuttingDown; });
   } else {
-    sCCRunner->SetBudget(aBudget.ToMilliseconds());
+    sCCRunner->SetMinimumUsefulBudget(aBudget.ToMilliseconds());
     nsIEventTarget* target = mozilla::GetCurrentEventTarget();
     if (target) {
       sCCRunner->SetTimer(aDelay.ToMilliseconds(), target);
