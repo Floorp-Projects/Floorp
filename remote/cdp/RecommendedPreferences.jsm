@@ -6,23 +6,25 @@
 
 var EXPORTED_SYMBOLS = ["RecommendedPreferences"];
 
-const RecommendedPreferences = {
+const RecommendedPreferences = new Map([
   // Allow the application to have focus even when it runs in the background.
-  "focusmanager.testmode": true,
+  ["focusmanager.testmode", true],
 
   // Avoid breaking odd-runs of firefox because of it running in safe mode.
   // Firefox will run in safe mode alsmost on every even/odd runs as
   // Puppeteer may very easily shutdown Firefox process brutaly and force
   // it to run in safe mode in the next run.
-  "toolkit.startup.max_resumed_crashes": -1,
+  ["toolkit.startup.max_resumed_crashes", -1],
 
   // Prevent various error message on the console
   // jest-puppeteer asserts that no error message is emitted by the console
-  "browser.contentblocking.features.standard":
+  [
+    "browser.contentblocking.features.standard",
     "-tp,tpPrivate,cookieBehavior0,-cm,-fp",
-  "network.cookie.cookieBehavior": 0,
+  ],
+  ["network.cookie.cookieBehavior", 0],
 
   // Only allow the old modal dialogs. This should be removed when there is
   // support for the new modal UI (see Bug 1686743).
-  "prompts.contentPromptSubDialog": false,
-};
+  ["prompts.contentPromptSubDialog", false],
+]);
