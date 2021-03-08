@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+      window.addEventListener('load', () => {
+        const canvas = document.createElement('canvas')
+        canvas.getContext('2d', {})
+
+        const stream = canvas.captureStream(5.908449372916826)
+        const track = stream.getTracks()[0]
+        const video = document.createElement('video')
+        document.documentElement.appendChild(video)
+        video.srcObject = stream
+        track.enabled = false
+      })
+    </script>
+</head>
+</html>
