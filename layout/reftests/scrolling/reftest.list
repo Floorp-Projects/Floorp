@@ -35,7 +35,7 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,0-149,0-4520) == less-than-scrollbar-he
 == huge-horizontal-overflow.html huge-horizontal-overflow-ref.html
 == huge-vertical-overflow.html huge-vertical-overflow-ref.html
 fuzzy-if(cocoaWidget&&!webrender,0-1,0-110) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-80) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-170) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-6818) == iframe-scrolling-attr-1.html iframe-scrolling-attr-ref.html
-fuzzy-if(cocoaWidget&&!webrender,0-1,0-110) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-80) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-72) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-140,0-6818) == iframe-scrolling-attr-2.html iframe-scrolling-attr-ref.html
+fuzzy-if(cocoaWidget&&!webrender,0-1,0-110) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-80) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-170) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-140,0-6818) == iframe-scrolling-attr-2.html iframe-scrolling-attr-ref.html
 fuzzy(0-1,0-2) fuzzy-if(geckoview,0-1,0-15) fuzzy-if(cocoaWidget&&!webrender,0-1,0-13) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-48) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-108) == frame-scrolling-attr-1.html frame-scrolling-attr-ref.html
 fuzzy(0-1,0-2) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-2420) fuzzy-if(geckoview,0-1,0-88) fuzzy-if(cocoaWidget&&!webrender,0-1,0-39) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-48) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-108) == frame-scrolling-attr-2.html frame-scrolling-attr-ref.html
 == move-item.html move-item-ref.html # bug 1125750
