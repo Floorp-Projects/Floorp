@@ -3039,13 +3039,6 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
         AssertKnownClass(alloc, this, unboxed);
         break;
       }
-
-      if (!inputMaybeCallableOrEmulatesUndefined()) {
-        // Object is not callable and does not emulate undefined, so it's
-        // safe to fold to "object".
-        type = JSTYPE_OBJECT;
-        break;
-      }
       [[fallthrough]];
     }
     default:
@@ -3584,13 +3577,7 @@ bool MCompare::tryFoldTypeOf(bool* result) {
   }
 
   const JSAtomState& names = GetJitContext()->runtime->names();
-  if (constant->toString() == TypeName(JSTYPE_UNDEFINED, names)) {
-    if (!typeOf->input()->mightBeType(MIRType::Undefined) &&
-        !typeOf->inputMaybeCallableOrEmulatesUndefined()) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
-    }
-  } else if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
+  if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
     if (!typeOf->input()->mightBeType(MIRType::Boolean)) {
       *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
       return true;
@@ -3620,11 +3607,6 @@ bool MCompare::tryFoldTypeOf(bool* result) {
   } else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
     if (!typeOf->input()->mightBeType(MIRType::Object) &&
         !typeOf->input()->mightBeType(MIRType::Null)) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
-    }
-  } else if (constant->toString() == TypeName(JSTYPE_FUNCTION, names)) {
-    if (!typeOf->inputMaybeCallableOrEmulatesUndefined()) {
       *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
       return true;
     }
