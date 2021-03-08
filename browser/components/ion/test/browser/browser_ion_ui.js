@@ -800,9 +800,9 @@ add_task(async function testEnrollmentPings() {
   // Clear any pending pings.
   await TelemetryStorage.testClearPendingPings();
 
-  // Clear any previously generated archived ping before moving on
-  // with this test.
-  await TelemetryStorage.runCleanPingArchiveTask();
+  // Check how many archived pings we already have, so that we can count new pings.
+  let beginPingCount = (await TelemetryArchive.promiseArchivedPingList())
+    .length;
 
   await BrowserTestUtils.withNewTab(
     {
@@ -855,6 +855,13 @@ add_task(async function testEnrollmentPings() {
           });
       });
 
+      // When a modal dialog is cancelled, the inertness for other elements
+      // is reverted. However, in order to have the new state (non-inert)
+      // effective, Firefox needs to do a frame flush. This flush is taken
+      // place when it's really needed.
+      // getBoundingClientRect forces a frame flush here to ensure the
+      // following click is going to work properly.
+      joinButton.getBoundingClientRect();
       joinButton.click();
 
       await joinDialogOpen;
@@ -870,7 +877,7 @@ add_task(async function testEnrollmentPings() {
       let pings;
       await TestUtils.waitForCondition(async function() {
         pings = await TelemetryArchive.promiseArchivedPingList();
-        return pings.length >= 2;
+        return pings.length - beginPingCount >= 2;
       }, "Wait until we have at least 2 pings in the telemetry archive");
 
       let pingDetails = [];
