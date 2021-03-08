@@ -771,13 +771,6 @@ bool InliningRoot::addInlinedScript(UniquePtr<ICScript> icScript) {
   return inlinedScripts_.append(std::move(icScript));
 }
 
-void InliningRoot::removeInlinedScript(ICScript* icScript) {
-  inlinedScripts_.eraseIf(
-      [icScript](const UniquePtr<ICScript>& script) -> bool {
-        return script.get() == icScript;
-      });
-}
-
 void InliningRoot::trace(JSTracer* trc) {
   TraceEdge(trc, &owningScript_, "inlining-root-owning-script");
   for (auto& inlinedScript : inlinedScripts_) {
