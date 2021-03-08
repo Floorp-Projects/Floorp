@@ -2375,7 +2375,7 @@ void EventStateManager::DispatchLegacyMouseScrollEvents(
   // events' delta value.
   // DOM event's delta vales are computed from CSS pixels.
   auto scrollAmountInCSSPixels =
-      CSSIntSize::FromAppUnits(aEvent->mScrollAmount);
+      CSSIntSize::FromAppUnitsRounded(aEvent->mScrollAmount);
 
   // XXX We don't deal with fractional amount in legacy event, though the
   //     default action handler (DoScrollText()) deals with it.
@@ -5969,7 +5969,7 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
     // of default action.  The transaction should be used only for the default
     // action.
     auto scrollAmountInCSSPixels =
-        CSSIntSize::FromAppUnits(aEvent->mScrollAmount);
+        CSSIntSize::FromAppUnitsRounded(aEvent->mScrollAmount);
 
     aEvent->mLineOrPageDeltaX = RoundDown(mX) / scrollAmountInCSSPixels.width;
     aEvent->mLineOrPageDeltaY = RoundDown(mY) / scrollAmountInCSSPixels.height;
