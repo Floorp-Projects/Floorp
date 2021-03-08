@@ -144,16 +144,16 @@ xul|label[disabled="true"] {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
-.panel-footer[opinionated] > xul|button:not([disabled])[default] {
+.panel-footer > xul|button:not([disabled])[default] {
   color: white !important;
   background-color: #0060df;
 }
 
-.panel-footer[opinionated] > xul|button:not([disabled])[default]:hover {
+.panel-footer > xul|button:not([disabled])[default]:hover {
   background-color: #003eaa;
 }
 
-.panel-footer[opinionated] > xul|button:not([disabled])[default]:hover:active {
+.panel-footer > xul|button:not([disabled])[default]:hover:active {
   background-color: #002275;
 }
 
