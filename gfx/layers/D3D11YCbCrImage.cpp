@@ -172,6 +172,10 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   desc.Usage = D3D11_USAGE_STAGING;
 
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexY));
+  if (!softTexY) {
+    gfxCriticalNote << "Failed to allocate softTexY";
+    return nullptr;
+  }
 
   texCb->GetDesc(&desc);
   desc.BindFlags = 0;
@@ -180,6 +184,10 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   desc.Usage = D3D11_USAGE_STAGING;
 
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexCb));
+  if (!softTexCb) {
+    gfxCriticalNote << "Failed to allocate softTexCb";
+    return nullptr;
+  }
 
   texCr->GetDesc(&desc);
   desc.BindFlags = 0;
@@ -188,6 +196,10 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   desc.Usage = D3D11_USAGE_STAGING;
 
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexCr));
+  if (!softTexCr) {
+    gfxCriticalNote << "Failed to allocate softTexCr";
+    return nullptr;
+  }
 
   RefPtr<ID3D11DeviceContext> ctx;
   dev->GetImmediateContext(getter_AddRefs(ctx));
