@@ -100,7 +100,9 @@ add_task(async function test_webextension_addon_debugging_reload() {
   // is finally uninstalled.
 
   const {client} = addonTarget;
-  const waitDebuggingClientClosed = addonTarget.once("target-destroyed");
+  const waitDebuggingClientClosed = new Promise(resolve => {
+    addonTarget.once("close", resolve);
+  });
 
   const waitShutdown = promiseWebExtensionShutdown();
   addon.uninstall();

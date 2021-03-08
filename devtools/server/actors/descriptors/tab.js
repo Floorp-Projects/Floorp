@@ -62,9 +62,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       traits: {
         // Supports the Watcher actor. Can be removed as part of Bug 1680280.
         watcher: true,
-        // @backward-compat { version 88 } Descriptor actors now emit descriptor-destroyed.
-        // Once we only support 88, we can drop this.
-        emitDescriptorDestroyed: true,
       },
       url: this._getUrl(),
     };
@@ -210,7 +207,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   },
 
   destroy() {
-    this.emit("descriptor-destroyed");
     this._browser = null;
 
     Actor.prototype.destroy.call(this);

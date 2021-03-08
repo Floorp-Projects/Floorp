@@ -85,12 +85,4 @@ add_task(async function() {
       "Without Fission, the example.com target is reused"
     );
   }
-
-  const onDescriptorDestroyed = tabDescriptor.once("descriptor-destroyed");
-
-  await removeTab(tab);
-
-  info("Wait for descriptor destroyed event");
-  await onDescriptorDestroyed;
-  ok(tabDescriptor.isDestroyed(), "the descriptor front is really destroyed");
 });
