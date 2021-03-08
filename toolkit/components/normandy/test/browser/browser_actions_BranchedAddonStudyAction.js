@@ -1580,3 +1580,42 @@ decorate_task(
     }
   }
 );
+
+// Check that an already unenrolled study doesn't try to unenroll again if
+// the recipe doesn't apply the client anymore.
+decorate_task(
+  withStudiesEnabled(),
+  async function test_unenroll_when_already_expired() {
+    // Use a deadline that is already past
+    const now = new Date();
+    const hour = 1000 * 60 * 60;
+    const temporaryErrorDeadline = new Date(now - hour * 2).toJSON();
+
+    const suitabilitiesToCheck = Object.values(BaseAction.suitability);
+
+    const subtest = decorate(
+      AddonStudies.withStudies([
+        branchedAddonStudyFactory({
+          active: false,
+          temporaryErrorDeadline,
+        }),
+      ]),
+
+      async ({ addonStudies: [study], suitability }) => {
+        const recipe = recipeFromStudy(study);
+        const action = new BranchedAddonStudyAction();
+        const unenrollSpy = sinon.spy(action.unenroll);
+        await action.processRecipe(recipe, suitability);
+        Assert.deepEqual(
+          unenrollSpy.args,
+          [],
+          `Stop should not be called for ${suitability}`
+        );
+      }
+    );
+
+    for (const suitability of suitabilitiesToCheck) {
+      await subtest({ suitability });
+    }
+  }
+);
