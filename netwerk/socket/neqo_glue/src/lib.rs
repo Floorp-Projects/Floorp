@@ -32,7 +32,6 @@ pub struct NeqoHttp3Conn {
     conn: Http3Client,
     local_addr: SocketAddr,
     refcnt: AtomicRefcnt,
-    packets_to_send: Vec<Datagram>,
 }
 
 impl NeqoHttp3Conn {
@@ -136,7 +135,6 @@ impl NeqoHttp3Conn {
             conn,
             local_addr: local,
             refcnt: unsafe { AtomicRefcnt::new() },
-            packets_to_send: Vec::new(),
         }));
         unsafe { Ok(RefPtr::from_raw(conn).unwrap()) }
     }
@@ -220,53 +218,40 @@ pub extern "C" fn neqo_http3conn_process_input(
     return NS_OK;
 }
 
-/* Process output and store data to be sent into conn.packets_to_send.
- * neqo_http3conn_get_data_to_send will be called to pick up this data.
+/* Process output:
+ * this may return a packet that needs to be sent or a timeout.
+ * if it returns a packet the function returns true, otherwise it returns false.
  */
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_process_output(conn: &mut NeqoHttp3Conn) -> u64 {
-    loop {
-        let out = conn.conn.process_output(Instant::now());
-        match out {
-            Output::Datagram(dg) => {
-                conn.packets_to_send.push(dg);
-            }
-            Output::Callback(to) => {
-                let timeout = to.as_millis() as u64;
-                // Necko resolution is in milliseconds whereas neqo resolution
-                // is in nanoseconds. If we called process_output too soon due
-                // to this difference, we might do few unnecessary loops until
-                // we waste the remaining time. To avoid it, we return 1ms when
-                // the timeout is less than 1ms.
-                if timeout == 0 {
-                    break 1;
-                }
-                break timeout;
-            }
-            Output::None => break std::u64::MAX,
-        }
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn neqo_http3conn_has_data_to_send(conn: &mut NeqoHttp3Conn) -> bool {
-    !conn.packets_to_send.is_empty()
-}
-
-#[no_mangle]
-pub extern "C" fn neqo_http3conn_get_data_to_send(
+pub extern "C" fn neqo_http3conn_process_output(
     conn: &mut NeqoHttp3Conn,
     remote_addr: &mut nsACString,
     remote_port: &mut u16,
     packet: &mut ThinVec<u8>,
-) -> nsresult {
-    match conn.packets_to_send.pop() {
-        None => NS_BASE_STREAM_WOULD_BLOCK,
-        Some(d) => {
-            packet.extend_from_slice(&d);
-            remote_addr.append(&d.destination().ip().to_string());
-            *remote_port = d.destination().port();
-            NS_OK
+    timeout: &mut u64,
+) -> bool {
+    match conn.conn.process_output(Instant::now()) {
+        Output::Datagram(dg) => {
+            packet.extend_from_slice(&dg);
+            remote_addr.append(&dg.destination().ip().to_string());
+            *remote_port = dg.destination().port();
+            true
+        }
+        Output::Callback(to) => {
+            *timeout = to.as_millis() as u64;
+            // Necko resolution is in milliseconds whereas neqo resolution
+            // is in nanoseconds. If we called process_output too soon due
+            // to this difference, we might do few unnecessary loops until
+            // we waste the remaining time. To avoid it, we return 1ms when
+            // the timeout is less than 1ms.
+            if *timeout == 0 {
+                *timeout = 1;
+            }
+            false
+        }
+        Output::None => {
+            *timeout = std::u64::MAX;
+            false
         }
     }
 }
@@ -526,7 +511,7 @@ pub extern "C" fn neqo_http3conn_close_stream(
 
 #[repr(C)]
 pub enum Http3Event {
-    /// A request stream has space for more data to be send.
+    /// A request stream has space for more data to be sent.
     DataWritable {
         stream_id: u64,
     },

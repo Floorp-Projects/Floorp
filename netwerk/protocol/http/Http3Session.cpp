@@ -573,17 +573,16 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
   LOG(("Http3Session::ProcessOutput reader=%p, [this=%p]", mUdpConn.get(),
        this));
 
-  // Process neqo.
-  uint64_t timeout = mHttp3Connection->ProcessOutput();
-
   // Check if we have a packet that could not have been sent in a previous
   // iteration or maybe get new packets to send.
   while (true) {
     nsTArray<uint8_t> packetToSend;
     nsAutoCString remoteAddrStr;
     uint16_t port = 0;
-    if (NS_FAILED(mHttp3Connection->GetDataToSend(&remoteAddrStr, &port,
-                                                  packetToSend))) {
+    uint64_t timeout = 0;
+    if (!mHttp3Connection->ProcessOutput(&remoteAddrStr, &port,
+                                         packetToSend, &timeout)) {
+      SetupTimer(timeout);
       break;
     }
     MOZ_ASSERT(packetToSend.Length());
@@ -612,7 +611,6 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
     mLastWriteTime = PR_IntervalNow();
   }
 
-  SetupTimer(timeout);
   return NS_OK;
 }
 
