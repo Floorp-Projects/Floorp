@@ -165,6 +165,18 @@
         "parameters": []
       },
       {
+        "name": "killContentProcess",
+        "type": "function",
+        "async": true,
+        "description": "Crash all content processes",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "pid"
+          }
+        ]
+      },
+      {
         "name": "flushApzRepaints",
         "type": "function",
         "async": true,

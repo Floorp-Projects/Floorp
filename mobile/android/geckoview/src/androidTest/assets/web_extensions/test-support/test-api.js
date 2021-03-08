@@ -56,6 +56,12 @@ this.test = class extends ExtensionAPI {
       },
       allFrames: true,
     });
+    ChromeUtils.registerProcessActor("TestSupportProcess", {
+      child: {
+        moduleURI:
+          "resource://android/assets/web_extensions/test-support/TestSupportProcessChild.jsm",
+      },
+    });
   }
 
   onShutdown(isAppShutdown) {
@@ -149,6 +155,17 @@ this.test = class extends ExtensionAPI {
             }
           }
           return pids;
+        },
+
+        async killContentProcess(pid) {
+          const procs = ChromeUtils.getAllDOMProcesses();
+          for (const proc of procs) {
+            if (pid === proc.osPid) {
+              proc
+                .getActor("TestSupportProcess")
+                .sendAsyncMessage("KillContentProcess");
+            }
+          }
         },
 
         async addHistogram(id, value) {
