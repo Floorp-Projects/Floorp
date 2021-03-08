@@ -4026,7 +4026,7 @@ void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   if (zone->isGCMarking()) {
     if (!cell->isMarkedBlack()) {
       // Skip disptaching on known tracer type.
-      BarrierTracer* trc = BarrierTracer::fromTracer(zone->barrierTracer());
+      BarrierTracer* trc = &runtime()->gc.barrierTracer;
       trc->performBarrier(thing);
       unmarkedAny = true;
     }
