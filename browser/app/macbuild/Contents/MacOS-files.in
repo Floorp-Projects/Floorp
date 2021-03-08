@@ -10,6 +10,7 @@
 /geckodriver
 #endif
 /gtest/***
+/http3server
 #if defined(MOZ_ASAN) || defined(MOZ_TSAN)
 /llvm-symbolizer
 #endif
