@@ -28,6 +28,17 @@
   border-block-end: 1px solid var(--in-content-box-border-color);
 }
 
+/* Crop the label at the end using CSS. This isn't using XUL crop
+ * and a value attribute because those labels cannot be highlighted
+ * by the prefs' find-in-page feature.
+ */
+.userContext-label-inprefs {
+  display: -moz-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 #containersView richlistitem:last-of-type {
   border-block-end: 0 none;
   margin-block-end: 8px;
