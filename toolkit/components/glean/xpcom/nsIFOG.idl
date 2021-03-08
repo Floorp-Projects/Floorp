@@ -50,4 +50,14 @@ interface nsIFOG : nsISupports
    *                    (e.g if it is empty), no ping will be sent.
    */
   void sendPing(in ACString aPingName);
+
+  /**
+   * ** Test-only Method **
+   *
+   * Flush all data from all child processes.
+   *
+   * @returns A promise that resolves when the data's been stored.
+   */
+  [implicit_jscontext]
+  Promise testFlushAllChildren();
 };
