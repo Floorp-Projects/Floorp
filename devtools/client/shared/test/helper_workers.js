@@ -123,7 +123,7 @@ function waitForWorkerListChanged(targetFront) {
 
 async function waitForWorkerClose(workerDescriptorFront) {
   info("Waiting for worker to close.");
-  await workerDescriptorFront.once("close");
+  await workerDescriptorFront.once("descriptor-destroyed");
   info("Worker did close.");
 }
 

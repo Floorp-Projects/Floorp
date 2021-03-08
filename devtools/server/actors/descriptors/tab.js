@@ -207,6 +207,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   },
 
   destroy() {
+    this.emit("descriptor-destroyed");
     this._browser = null;
 
     Actor.prototype.destroy.call(this);
