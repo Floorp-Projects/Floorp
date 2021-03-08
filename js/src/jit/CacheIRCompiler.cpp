@@ -1513,26 +1513,6 @@ bool CacheIRCompiler::emitGuardIsUndefined(ValOperandId inputId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsObjectOrNull(ValOperandId inputId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  JSValueType knownType = allocator.knownType(inputId);
-  if (knownType == JSVAL_TYPE_OBJECT || knownType == JSVAL_TYPE_NULL) {
-    return true;
-  }
-
-  ValueOperand input = allocator.useValueRegister(masm, inputId);
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  Label done;
-  masm.branchTestObject(Assembler::Equal, input, &done);
-  masm.branchTestNull(Assembler::NotEqual, input, failure->label());
-  masm.bind(&done);
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardBooleanToInt32(ValOperandId inputId,
                                               Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -3422,31 +3402,6 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength(
   masm.jump(failure->label());
   masm.bind(&outOfBounds);
 
-  return true;
-}
-
-bool CacheIRCompiler::emitGuardIndexGreaterThanArrayLength(
-    ObjOperandId objId, Int32OperandId indexId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  Register index = allocator.useRegister(masm, indexId);
-  AutoScratchRegister scratch(allocator, masm);
-  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Load obj->elements.
-  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-
-  // Ensure index >= length;
-  Label outOfBounds;
-  Address length(scratch, ObjectElements::offsetOfLength());
-  masm.spectreBoundsCheck32(index, length, spectreScratch, &outOfBounds);
-  masm.jump(failure->label());
-  masm.bind(&outOfBounds);
   return true;
 }
 
@@ -6819,21 +6774,6 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
         MOZ_CRASH("Unhandled stub field constant type");
     }
   }
-}
-
-Address CacheIRCompiler::emitAddressFromStubField(StubFieldOffset val,
-                                                  Register base) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  MOZ_ASSERT(val.getStubFieldType() == StubField::Type::RawInt32);
-
-  if (stubFieldPolicy_ == StubFieldPolicy::Constant) {
-    int32_t offset = int32StubField(val.getOffset());
-    return Address(base, offset);
-  }
-
-  Address offsetAddr(ICStubReg, stubDataOffset_ + val.getOffset());
-  masm.addPtr(offsetAddr, base);
-  return Address(base, 0);
 }
 
 bool CacheIRCompiler::emitLoadInstanceOfObjectResult(ValOperandId lhsId,
