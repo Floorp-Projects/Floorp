@@ -344,12 +344,16 @@ void gc::GCRuntime::endVerifyPreBarriers() {
 
   MOZ_ASSERT(!JS::IsGenerationalGCEnabled(rt));
 
+  // Flush the barrier tracer's buffer to ensure the pre-barrier has marked
+  // everything it's going to. This usually happens as part of GC.
+  SliceBudget budget = SliceBudget::unlimited();
+  marker.traceBarrieredCells(budget);
+
+  // Now that barrier marking has finished, prepare the heap to allow this
+  // method to trace cells and discover their outgoing edges.
   AutoPrepareForTracing prep(rt->mainContextFromOwnThread());
 
   bool compartmentCreated = false;
-
-  SliceBudget budget = SliceBudget::unlimited();
-  marker.traceBarrieredCells(budget);
 
   /* We need to disable barriers before tracing, which may invoke barriers. */
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
