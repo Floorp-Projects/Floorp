@@ -53,6 +53,10 @@ void WheelEvent::InitWheelEvent(
                              aScreenX, aScreenY, aClientX, aClientY, aButton,
                              aRelatedTarget, aModifiersList);
 
+  // When specified by the caller (for JS-created events), don't mess with the
+  // delta mode.
+  mDeltaModeCheckingState = DeltaModeCheckingState::Checked;
+
   WidgetWheelEvent* wheelEvent = mEvent->AsWheelEvent();
   wheelEvent->mDeltaX = aDeltaX;
   wheelEvent->mDeltaY = aDeltaY;
@@ -61,7 +65,8 @@ void WheelEvent::InitWheelEvent(
 }
 
 double WheelEvent::ToWebExposedDelta(const WidgetWheelEvent& aWidgetEvent,
-                                     double aDelta, CallerType aCallerType) {
+                                     double aDelta, nscoord aLineOrPageAmount,
+                                     CallerType aCallerType) {
   if (aCallerType != CallerType::System) {
     if (mDeltaModeCheckingState == DeltaModeCheckingState::Unknown) {
       mDeltaModeCheckingState = DeltaModeCheckingState::Unchecked;
@@ -69,9 +74,7 @@ double WheelEvent::ToWebExposedDelta(const WidgetWheelEvent& aWidgetEvent,
     if (mDeltaModeCheckingState == DeltaModeCheckingState::Unchecked &&
         aWidgetEvent.mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE &&
         StaticPrefs::dom_event_wheel_deltaMode_lines_disabled()) {
-      // TODO(emilio, bug 1675949): Consider not using a fixed multiplier here?
-      return aDelta *
-             StaticPrefs::dom_event_wheel_deltaMode_lines_to_pixel_scale();
+      return aDelta * CSSPixel::FromAppUnits(aLineOrPageAmount);
     }
   }
   if (!mAppUnitsPerDevPixel) {
@@ -82,17 +85,21 @@ double WheelEvent::ToWebExposedDelta(const WidgetWheelEvent& aWidgetEvent,
 
 double WheelEvent::DeltaX(CallerType aCallerType) {
   WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  return ToWebExposedDelta(*ev, ev->mDeltaX, aCallerType);
+  return ToWebExposedDelta(*ev, ev->mDeltaX, ev->mScrollAmount.width,
+                           aCallerType);
 }
 
 double WheelEvent::DeltaY(CallerType aCallerType) {
   WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  return ToWebExposedDelta(*ev, ev->mDeltaY, aCallerType);
+  return ToWebExposedDelta(*ev, ev->mDeltaY, ev->mScrollAmount.height,
+                           aCallerType);
 }
 
 double WheelEvent::DeltaZ(CallerType aCallerType) {
   WidgetWheelEvent* ev = mEvent->AsWheelEvent();
-  return ToWebExposedDelta(*ev, ev->mDeltaZ, aCallerType);
+  // XXX Unclear what scroll amount we should use for deltaZ...
+  auto amount = std::max(ev->mScrollAmount.width, ev->mScrollAmount.height);
+  return ToWebExposedDelta(*ev, ev->mDeltaZ, amount, aCallerType);
 }
 
 uint32_t WheelEvent::DeltaMode(CallerType aCallerType) {
