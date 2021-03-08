@@ -23,8 +23,6 @@ FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"].experimentalAPIs +
     "experimentalAPIs/helpMenu.json",
     "experimentalAPIs/l10n.js",
     "experimentalAPIs/l10n.json",
-    "experimentalAPIs/pageActionExtras.js",
-    "experimentalAPIs/pageActionExtras.json",
     "experimentalAPIs/tabExtras.js",
     "experimentalAPIs/tabExtras.json",
 ]
