@@ -163,8 +163,6 @@ class ICEntry {
     return offsetof(ICEntry, firstStub_);
   }
 
-  inline ICStub** addressOfFirstStub() { return &firstStub_; }
-
   void trace(JSTracer* trc);
 };
 
@@ -185,13 +183,6 @@ class ICStubConstIterator {
  public:
   explicit ICStubConstIterator(ICStub* currentStub)
       : currentStub_(currentStub) {}
-
-  static ICStubConstIterator StartingAt(ICStub* stub) {
-    return ICStubConstIterator(stub);
-  }
-  static ICStubConstIterator End(ICStub* stub) {
-    return ICStubConstIterator(nullptr);
-  }
 
   bool operator==(const ICStubConstIterator& other) const {
     return currentStub_ == other.currentStub_;
@@ -289,19 +280,6 @@ class ICStub {
   };
 
   template <typename T, typename... Args>
-  static T* New(JSContext* cx, ICStubSpace* space, JitCode* code,
-                Args&&... args) {
-    if (!code) {
-      return nullptr;
-    }
-    T* result = space->allocate<T>(code, std::forward<Args>(args)...);
-    if (!result) {
-      ReportOutOfMemory(cx);
-    }
-    return result;
-  }
-
-  template <typename T, typename... Args>
   static T* NewFallback(JSContext* cx, ICStubSpace* space, TrampolinePtr code,
                         Args&&... args) {
     T* result = space->allocate<T>(code, std::forward<Args>(args)...);
@@ -363,17 +341,11 @@ class ICStub {
     return JitCode::FromExecutable(stubCode_);
   }
 
-  inline uint8_t* rawStubCode() const { return stubCode_; }
-
   uint32_t enteredCount() const { return enteredCount_; }
   inline void incrementEnteredCount() { enteredCount_++; }
   void resetEnteredCount() { enteredCount_ = 0; }
 
   inline ICFallbackStub* getChainFallback();
-
-  inline ICStubConstIterator beginHere() {
-    return ICStubConstIterator::StartingAt(this);
-  }
 
   static constexpr size_t offsetOfStubCode() {
     return offsetof(ICStub, stubCode_);
