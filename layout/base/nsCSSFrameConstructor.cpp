@@ -1379,7 +1379,7 @@ static bool ShouldCreateImageFrameForContent(const Element& aElement,
     return false;
   }
   Span<const StyleContentItem> items = content.AsItems().AsSpan();
-  return items.Length() == 1 && items[0].IsUrl();
+  return items.Length() == 1 && items[0].IsImage();
 }
 
 //----------------------------------------------------------------------
@@ -1502,7 +1502,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
   const Type type = item.tag;
 
   switch (type) {
-    case Type::Url:
+    case Type::Image:
       return GeneratedImageContent::Create(*mDocument, aContentIndex);
 
     case Type::String:
