@@ -189,32 +189,6 @@ template <XDRMode mode>
   return Ok();
 }
 
-template <XDRMode mode>
-static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
-                                          StencilModuleMetadata& stencil) {
-  MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.importEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.indirectExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.starExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.functionDecls));
-
-  uint8_t isAsync = 0;
-  if (mode == XDR_ENCODE) {
-    if (stencil.isAsync) {
-      isAsync = stencil.isAsync ? 1 : 0;
-    }
-  }
-
-  MOZ_TRY(xdr->codeUint8(&isAsync));
-
-  if (mode == XDR_DECODE) {
-    stencil.isAsync = isAsync == 1;
-  }
-
-  return Ok();
-}
-
 template <typename ScopeT>
 /* static */ void AssertScopeSpecificDataIsEncodable() {
   using ScopeDataT = typename ScopeT::ParserData;
@@ -225,7 +199,7 @@ template <typename ScopeT>
 }
 
 template <XDRMode mode>
-/* static */ XDRResult StencilXDR::ScopeData(
+/* static */ XDRResult StencilXDR::codeScopeData(
     XDRState<mode>* xdr, ScopeStencil& stencil,
     BaseParserScopeData*& baseScopeData) {
   // WasmInstanceScope & WasmFunctionScope should not appear in stencils.
@@ -259,6 +233,32 @@ template <XDRMode mode>
   // a distinguishing prefix.
   uint32_t totalLength = SizeOfParserScopeData(stencil.kind_, length);
   MOZ_TRY(xdr->borrowedData(&baseScopeData, totalLength));
+
+  return Ok();
+}
+
+template <XDRMode mode>
+static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
+                                          StencilModuleMetadata& stencil) {
+  MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.importEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.indirectExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.starExportEntries));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.functionDecls));
+
+  uint8_t isAsync = 0;
+  if (mode == XDR_ENCODE) {
+    if (stencil.isAsync) {
+      isAsync = stencil.isAsync ? 1 : 0;
+    }
+  }
+
+  MOZ_TRY(xdr->codeUint8(&isAsync));
+
+  if (mode == XDR_DECODE) {
+    stencil.isAsync = isAsync == 1;
+  }
 
   return Ok();
 }
@@ -528,8 +528,8 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.scopeNames, scopeSize));
   MOZ_ASSERT(stencil.scopeData.size() == stencil.scopeNames.size());
   for (uint32_t i = 0; i < scopeSize; i++) {
-    MOZ_TRY(StencilXDR::ScopeData(xdr, stencil.scopeData[i],
-                                  stencil.scopeNames[i]));
+    MOZ_TRY(StencilXDR::codeScopeData(xdr, stencil.scopeData[i],
+                                      stencil.scopeNames[i]));
   }
 
   MOZ_TRY(XDRSpanContent(xdr, stencil.regExpData, regExpSize));
