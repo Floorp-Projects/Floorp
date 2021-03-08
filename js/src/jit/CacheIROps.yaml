@@ -88,13 +88,6 @@
   args:
     input: ValId
 
-- name: GuardIsObjectOrNull
-  shared: true
-  transpile: false
-  cost_estimate: 1
-  args:
-    input: ValId
-
 - name: GuardIsNullOrUndefined
   shared: true
   transpile: true
@@ -551,14 +544,6 @@
   transpile: true
   cost_estimate: 1
   args:
-    index: Int32Id
-
-- name: GuardIndexGreaterThanArrayLength
-  shared: true
-  transpile: false
-  cost_estimate: 1
-  args:
-    obj: ObjId
     index: Int32Id
 
 - name: GuardIndexIsValidUpdateOrAdd
