@@ -169,7 +169,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
             Some(0) => Ok(read.abort()),
             _ => Ok(()),
         }
-    };
+    }
 
     fn maybe_commit<I: Iterator<Item = u8>>(
         fuzz: &mut I,
@@ -180,7 +180,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
             Some(1) => Ok(write.abort()),
             _ => Ok(()),
         }
-    };
+    }
 
     fn get_static_data<'a, I: Iterator<Item = u8>>(fuzz: &mut I) -> Option<&'a String> {
         fuzz.next().map(|byte| {
@@ -188,7 +188,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
             let n = byte as usize;
             data.get(n % data.len()).unwrap()
         })
-    };
+    }
 
     fn get_fuzz_data<I: Iterator<Item = u8> + Clone>(
         fuzz: &mut I,
@@ -198,7 +198,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
             let n = byte as usize;
             fuzz.clone().take((n * n) % max_len).collect()
         })
-    };
+    }
 
     fn get_any_data<I: Iterator<Item = u8> + Clone>(
         fuzz: &mut I,
@@ -209,7 +209,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
             Some(1) => get_fuzz_data(fuzz, max_len),
             _ => None,
         }
-    };
+    }
 
     fn store_put<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &Rkv, store: &SingleStore) {
         let key = match get_any_data(fuzz, 1024) {
@@ -281,7 +281,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     fn store_resize<I: Iterator<Item = u8>>(fuzz: &mut I, env: &Rkv) {
         let n = fuzz.next().unwrap_or(1) as usize;
         env.set_map_size(1_048_576 * (n % 100)).unwrap() // 1,048,576 bytes, i.e. 1MiB.
-    };
+    }
 
     let root = Builder::new().prefix("fuzz_rkv_calls").tempdir().unwrap();
     fs::create_dir_all(root.path()).unwrap();
