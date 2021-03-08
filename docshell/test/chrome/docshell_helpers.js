@@ -4,6 +4,7 @@ if (!window.opener && window.arguments) {
 /**
  * Import common SimpleTest methods so that they're usable in this window.
  */
+/* globals SimpleTest, is, isnot, ok, onerror, todo, todo_is, todo_isnot */
 var imports = [
   "SimpleTest",
   "is",

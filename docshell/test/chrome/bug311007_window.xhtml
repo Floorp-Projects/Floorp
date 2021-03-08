@@ -10,6 +10,8 @@
 
   <script type="application/javascript" src="docshell_helpers.js"></script>
   <script type="application/javascript"><![CDATA[
+  // `content` is the id of the browser element used for the test.
+  /* global content */
 /*
    Regression test for bug 283733 and bug 307027.
 
@@ -105,7 +107,7 @@ function step1B(aWebProgress, aRequest, aLocation, aFlags) {
 }
 
 /******************************************************************************
- * Step 2: Load a HTTPS page, and confirm it's secure. 
+ * Step 2: Load a HTTPS page, and confirm it's secure.
  ******************************************************************************/
 
 function step2A() {
