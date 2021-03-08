@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
   }
 
   var progressListener = {
-    add: function(docShell, callback) {
+    add(docShell, callback) {
       this.callback = callback;
       this.docShell = docShell;
       docShell.
@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
             addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
     },
 
-    finish: function(success) {
+    finish(success) {
       this.docShell.
             QueryInterface(Ci.nsIInterfaceRequestor).
             getInterface(Ci.nsIWebProgress).
@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
       this.callback(success);
     },
 
-    onStateChange: function (webProgress, req, flags, status) {
+    onStateChange (webProgress, req, flags, status) {
       if (!(flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) &&
           !(flags & Ci.nsIWebProgressListener.STATE_IS_REDIRECTED_DOCUMENT))
         return;
@@ -60,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
         this.finish(false);
     },
 
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsIWebProgressListener) ||
           iid.equals(Ci.nsISupportsWeakReference))
         return this;

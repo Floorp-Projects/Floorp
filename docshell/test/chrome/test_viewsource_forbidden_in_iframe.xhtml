@@ -30,14 +30,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
       // Error pages do not fire "load" events, so use a progressListener.
       var originalDocumentURI = frame.contentDocument.documentURI;
       var progressListener = {
-        onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+        onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
           // Make sure nothing other than an error page is loaded.
           if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE)) {
             reject("location change was not to an error page");
           }
         },
 
-        onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+        onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
           // Wait until the documentURI changes (from about:blank) this should
           // be the error page URI.
           var documentURI = frame.contentDocument.documentURI;

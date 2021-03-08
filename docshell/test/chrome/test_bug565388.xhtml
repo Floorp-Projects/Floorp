@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565388
 
 function test() {
   var progressListener = {
-    add: function(docShell, callback) {
+    add(docShell, callback) {
       this.callback = callback;
       this.docShell = docShell;
       docShell.
@@ -27,7 +27,7 @@ function test() {
             addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
     },
 
-    finish: function() {
+    finish() {
       this.docShell.
             QueryInterface(Ci.nsIInterfaceRequestor).
             getInterface(Ci.nsIWebProgress).
@@ -35,14 +35,14 @@ function test() {
       this.callback();
     },
 
-    onStateChange: function (webProgress, req, flags, status) {
+    onStateChange (webProgress, req, flags, status) {
       if (req.name.startsWith("data:application/vnd.mozilla.xul")) {
         if (flags & Ci.nsIWebProgressListener.STATE_STOP)
           this.finish();
       }
     },
 
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsIWebProgressListener) ||
           iid.equals(Ci.nsISupportsWeakReference))
         return this;
