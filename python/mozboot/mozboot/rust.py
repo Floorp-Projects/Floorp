@@ -16,14 +16,14 @@ RUSTUP_URL_BASE = "https://static-rust-lang-org.s3.amazonaws.com/rustup"
 RUSTUP_MANIFEST = RUSTUP_URL_BASE + "/release-stable.toml"
 
 # We bake in a known version number so we can verify a checksum.
-RUSTUP_VERSION = "1.21.1"
+RUSTUP_VERSION = "1.23.1"
 
 # SHA-256 checksums of the installers, per platform.
 RUSTUP_HASHES = {
-    "x86_64-unknown-freebsd": "a6bfc71c58b7ac3dad0d6ea0937990ca72f3b636096244c0c9ba814a627cbcc1",
-    "x86_64-apple-darwin": "fd76f7093bd810f9ee9050786678c74155d6f5fcc3aac958d24c0783e435a994",
-    "x86_64-unknown-linux-gnu": "ad1f8b5199b3b9e231472ed7aa08d2e5d1d539198a15c5b1e53c746aad81d27b",
-    "x86_64-pc-windows-msvc": "9f9e33fa4759075ec60e4da13798d1d66a4c2f43c5500e08714399313409dcf5",
+    "x86_64-unknown-freebsd": "3fb56018ec6009c5a3e345f07d7ea2fbc67d4c6768e528c6d990c7ebe2388d09",
+    "x86_64-apple-darwin": "39101feb178a7e3e4443b09b36338e794a9e00385e5f44a2f7789aefb91354a9",
+    "x86_64-unknown-linux-gnu": "ed7773edaf1d289656bdec2aacad12413b38ad0193fff54b2231f5140a4b07c5",
+    "x86_64-pc-windows-msvc": "a586cf9de3e4aa791fd5796b6a5f99ca05591ccef8bb94e53af5b69f0261fb03",
 }
 
 NO_PLATFORM = """
