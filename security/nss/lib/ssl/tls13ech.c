@@ -788,6 +788,8 @@ tls13_ClientSetupEch(sslSocket *ss, sslClientHelloType type)
     PORT_Memset(&hpkeInfo.data[strlen(kHpkeInfoEch)], 0, 1);
     PORT_Memcpy(&hpkeInfo.data[strlen(kHpkeInfoEch) + 1], cfg->raw.data, cfg->raw.len);
 
+    PRINT_BUF(50, (ss, "Info", hpkeInfo.data, hpkeInfo.len));
+
     /* Setup with an ephemeral sender keypair. */
     rv = PK11_HPKE_SetupS(cx, NULL, NULL, pkR, &hpkeInfo);
     if (rv != SECSuccess) {
@@ -852,6 +854,8 @@ tls13_EncryptClientHello(sslSocket *ss, sslBuffer *outerAAD, sslBuffer *chInner)
 
     SSL_TRC(50, ("%d: TLS13[%d]: Encrypting Client Hello Inner",
                  SSL_GETPID(), ss->fd));
+    PRINT_BUF(50, (ss, "aad", outerAAD->buf, outerAAD->len));
+    PRINT_BUF(50, (ss, "inner", chInner->buf, chInner->len));
 
     hpkeEnc = PK11_HPKE_GetEncapPubKey(ss->ssl3.hs.echHpkeCtx);
     if (!hpkeEnc) {
@@ -864,6 +868,7 @@ tls13_EncryptClientHello(sslSocket *ss, sslBuffer *outerAAD, sslBuffer *chInner)
     if (rv != SECSuccess) {
         goto loser;
     }
+    PRINT_BUF(50, (ss, "cipher", chCt->data, chCt->len));
 #else
     /* Fake a tag. */
     SECITEM_AllocItem(NULL, chCt, chPt.len + 16);
@@ -1206,7 +1211,7 @@ tls13_ConstructInnerExtensionsFromOuter(sslSocket *ss, sslBuffer *chOuterXtnsBuf
     unsigned int tmpLen;
     unsigned int srcXtnBase; /* To truncate CHOuter and remove the PSK extension. */
     SSL_TRC(50, ("%d: TLS13[%d]: Constructing ECH inner extensions %s compression",
-                 SSL_GETPID(), compress ? "with" : "without"));
+                 SSL_GETPID(), ss->fd, compress ? "with" : "without"));
 
     /* When offering the "encrypted_client_hello" extension in its
      * ClientHelloOuter, the client MUST also offer an empty
@@ -1435,7 +1440,8 @@ tls13_ConstructClientHelloWithEch(sslSocket *ss, const sslSessionID *sid, PRBool
     unsigned int preambleLen;
     const SECItem *hpkeEnc = NULL;
     unsigned int savedOffset;
-    SSL_TRC(50, ("%d: TLS13[%d]: Constructing ECH inner", SSL_GETPID()));
+
+    SSL_TRC(50, ("%d: TLS13[%d]: Constructing ECH inner", SSL_GETPID(), ss->fd));
 
     /* Create the full (uncompressed) inner extensions and steal any PSK extension.
      * NB: Neither chOuterXtnsBuf nor chInnerXtns are length-prefixed. */

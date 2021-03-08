@@ -730,8 +730,6 @@ int
 NSS_PutEnv(const char *envVarName, const char *envValue)
 {
     SECStatus result = SECSuccess;
-    char *encoded;
-    int putEnvFailed;
 #ifdef _WIN32
     PRBool setOK;
 
@@ -740,22 +738,29 @@ NSS_PutEnv(const char *envVarName, const char *envValue)
         SET_ERROR_CODE
         return SECFailure;
     }
-#endif
-
-    encoded = (char *)PORT_ZAlloc(strlen(envVarName) + 2 + strlen(envValue));
+#elif defined(__GNUC__) && __GNUC__ >= 7
+    int setEnvFailed;
+    setEnvFailed = setenv(envVarName, envValue, 1);
+    if (setEnvFailed) {
+        SET_ERROR_CODE
+        return SECFailure;
+    }
+#else
+    char *encoded = (char *)PORT_ZAlloc(strlen(envVarName) + 2 + strlen(envValue));
     if (!encoded) {
         return SECFailure;
     }
     strcpy(encoded, envVarName);
     strcat(encoded, "=");
     strcat(encoded, envValue);
+    int putEnvFailed = putenv(encoded); /* adopt. */
 
-    putEnvFailed = putenv(encoded); /* adopt. */
     if (putEnvFailed) {
         SET_ERROR_CODE
         result = SECFailure;
         PORT_Free(encoded);
     }
+#endif
     return result;
 }
 
