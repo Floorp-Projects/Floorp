@@ -7,40 +7,60 @@
 // test_cert_isBuiltInRoot.js in that this test uses a preexisting NSS
 // certificate DB that already contains some of the certificates in question.
 //
-// To create the necessary preexisting files, obtain the "GeoTrust Primary
-// Certification Authority - G2" certificate and the "Let's Encrypt Authority
+// To create the necessary preexisting files, obtain the "NAVER Global Root
+// Certification Authority" certificate and the "Let's Encrypt Authority
 // X1" certificate (copied below for reference) and perform the following steps:
 //
 // `certutil -d . -N` (use an empty password)
-// `certutil -d . -A -n "GeoTrust Primary Certification Authority - G2" -t ,, \
-//   -a -i GeoTrust.pem`
+// `certutil -d . -A -n "NAVER Global Root Certification Authority" -t ,, \
+//   -a -i naverrc1.pem`
 // `certutil -d . -A -n "Let's Encrypt Authority X1" -t ,, -a \
 //   -i LetsEncrypt.pem`
 //
 // This should create the cert9.db and key4.db files.
+//
+// To determine the new DBKey associated to the replacement root,
+// one can print builtInRoot.dbKey in test_cert_isBuiltInRoot.js.
 //
 // (The crucial property of the first certificate is that it is a built-in trust
 // anchor, so any replacement must also have this property. The second
 // certificate is not a built-in trust anchor, so any replacement must not be a
 // built-in trust anchor.)
 //
-// GeoTrust Primary Certification Authority - G2:
+//
+// NAVER Global Root Certification Authority:
 // -----BEGIN CERTIFICATE-----
-// MIICrjCCAjWgAwIBAgIQPLL0SAoA4v7rJDteYD7DazAKBggqhkjOPQQDAzCBmDEL
-// MAkGA1UEBhMCVVMxFjAUBgNVBAoTDUdlb1RydXN0IEluYy4xOTA3BgNVBAsTMChj
-// KSAyMDA3IEdlb1RydXN0IEluYy4gLSBGb3IgYXV0aG9yaXplZCB1c2Ugb25seTE2
-// MDQGA1UEAxMtR2VvVHJ1c3QgUHJpbWFyeSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0
-// eSAtIEcyMB4XDTA3MTEwNTAwMDAwMFoXDTM4MDExODIzNTk1OVowgZgxCzAJBgNV
-// BAYTAlVTMRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMTkwNwYDVQQLEzAoYykgMjAw
-// NyBHZW9UcnVzdCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxNjA0BgNV
-// BAMTLUdlb1RydXN0IFByaW1hcnkgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgLSBH
-// MjB2MBAGByqGSM49AgEGBSuBBAAiA2IABBWx6P0DFUPlrOuHNxFi79KDNlJ9RVcL
-// So17VDs6bl8VAsBQps8lL33KSLjHUGMcKiEIfJo22Av+0SbFWDEwKCXzXV2juLal
-// tJLtbCyf691DiaI8S0iRHVDsJt/WYC69IaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAO
-// BgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFBVfNVdRVfslsq0DafwBo/q+EVXVMAoG
-// CCqGSM49BAMDA2cAMGQCMGSWWaboCd6LuvpaiIjwH5HTRqjySkwCY/tsXzjbLkGT
-// qQ7mndwxHLKgpxgceeHHNgIwOlavmnRs9vuD4DPTCF+hnMJbn0bWtsuRBmOiBucz
-// rD6ogRLQy7rQkgu2npaqBA+K
+// MIIFojCCA4qgAwIBAgIUAZQwHqIL3fXFMyqxQ0Rx+NZQTQ0wDQYJKoZIhvcNAQEM
+// BQAwaTELMAkGA1UEBhMCS1IxJjAkBgNVBAoMHU5BVkVSIEJVU0lORVNTIFBMQVRG
+// T1JNIENvcnAuMTIwMAYDVQQDDClOQVZFUiBHbG9iYWwgUm9vdCBDZXJ0aWZpY2F0
+// aW9uIEF1dGhvcml0eTAeFw0xNzA4MTgwODU4NDJaFw0zNzA4MTgyMzU5NTlaMGkx
+// CzAJBgNVBAYTAktSMSYwJAYDVQQKDB1OQVZFUiBCVVNJTkVTUyBQTEFURk9STSBD
+// b3JwLjEyMDAGA1UEAwwpTkFWRVIgR2xvYmFsIFJvb3QgQ2VydGlmaWNhdGlvbiBB
+// dXRob3JpdHkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQC21PGTXLVA
+// iQqrDZBbUGOukJR0F0Vy1ntlWilLp1agS7gvQnXp2XskWjFlqxcX0TM62RHcQDaH
+// 38dq6SZeWYp34+hInDEW+j6RscrJo+KfziFTowI2MMtSAuXaMl3Dxeb57hHHi8lE
+// HoSTGEq0n+USZGnQJoViAbbJAh2+g1G7XNr4rRVqmfeSVPc0W+m/6imBEtRTkZaz
+// kVrd/pBzKPswRrXKCAfHcXLJZtM0l/aM9BhK4dA9WkW2aacp+yPOiNgSnABIqKYP
+// szuSjXEOdMWLyEz59JuOuDxp7W87UC9Y7cSw0BwbagzivESq2M0UXZR4Yb8Obtoq
+// vC8MC3GmsxY/nOb5zJ9TNeIDoKAYv7vxvvTWjIcNQvcGufFt7QSUqP620wbGQGHf
+// nZ3zVHbOUzoBppJB7ASjjw2i1QnK1sua8e9DXcCrpUHPXFNwcMmIpi3Ua2FzUCaG
+// YQ5fG8Ir4ozVu53BA0K6lNpfqbDKzE0K70dpAy8i+/Eozr9dUGWokG2zdLAIx6yo
+// 0es+nPxdGoMuK8u180SdOqcXYZaicdNwlhVNt0xz7hlcxVs+Qf6sdWA7G2POAN3a
+// CJBitOUt7kinaxeZVL6HSuOpXgRM6xBtVNbv8ejyYhbLgGvtPe31HzClrkvJE+2K
+// AQHJuFFYwGY6sWZLxNUxAmLpdIQM201GLQIDAQABo0IwQDAdBgNVHQ4EFgQU0p+I
+// 36HNLL3s9TsBAZMzJ7LrYEswDgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB/wQFMAMB
+// Af8wDQYJKoZIhvcNAQEMBQADggIBADLKgLOdPVQG3dLSLvCkASELZ0jKbY7gyKoN
+// qo0hV4/GPnrK21HUUrPUloSlWGB/5QuOH/XcChWB5Tu2tyIvCZwTFrFsDDUIbatj
+// cu3cvuzHV+YwIHHW1xDBE1UBjCpD5EHxzzp6U5LOogMFDTjfArsQLtk70pt6wKGm
+// +LUx5vR1yblTmXVHIloUFcd4G7ad6Qz4G3bxhYTeodoS76TiEJd6eN4MUZeoIUCL
+// hr0N8F5OSza7OyAfikJW4Qsav3vQIkMsRIz75Sq0bBwcupTgE34h5prCy8VCZLQe
+// lHsIJchxzIdFV4XTnyliIoNRlwAYl3dqmJLJfGBs32x9SuRwTMKeuB330DTHD8z7
+// p/8Dvq1wkNoL3chtl1+afwkyQf3NosxabUzyqkn+Zvjp2DXrDige7kgvOtB5CTh8
+// piKCk5XQA76+AqAF3SAi428diDRgxuYKuQl1C/AH6GmWNcf7I4GOODm4RStDeKLR
+// LBT/DShycpWbXgnbiUSYqqFJu3FS8r/2/yehNq+4tneI3TqkbZs0kNwUXTC/t+sX
+// 5Ie3cdCh13cV1ELX8vMxmV2b3RZtP+oGI/hGoiLtk/bdmuYqh7GYVPEi92tF4+KO
+// dh2ajcQGjTa3FPOdVGm3jjzVpG2Tgbet9r1ke8LJaDmgkpzNNIaRkPpkUZ3+/uul
+// 9XXeifdy
 // -----END CERTIFICATE-----
 //
 // Let's Encrypt Authority X1:
@@ -104,14 +124,13 @@ function run_test() {
 
   // This is a built-in root. It was added to the preexisting certificate DB. It
   // should still be considered a built-in.
-  const geoTrustCertDBKey = `AAAAAAAAAAAAAAAQAAAAmzyy9EgK
-    AOL+6yQ7XmA+w2swgZgxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1HZW9UcnVzdCBJ
-    bmMuMTkwNwYDVQQLEzAoYykgMjAwNyBHZW9UcnVzdCBJbmMuIC0gRm9yIGF1dGhv
-    cml6ZWQgdXNlIG9ubHkxNjA0BgNVBAMTLUdlb1RydXN0IFByaW1hcnkgQ2VydGlm
-    aWNhdGlvbiBBdXRob3JpdHkgLSBHMg==`;
-  let geoTrustCert = certdb.findCertByDBKey(geoTrustCertDBKey);
-  ok(geoTrustCert, "Should be able to find GeoTrust root");
-  ok(geoTrustCert.isBuiltInRoot, "GeoTrust root is a built-in");
+  const naverCertDBKey = `AAAAAAAAAAAAAAAUAAAAawGUMB6iC93
+    1xTMqsUNEcfjWUE0NMGkxCzAJBgNVBAYTAktSMSYwJAYDVQQKDB1OQVZFUiBCVVN
+    JTkVTUyBQTEFURk9STSBDb3JwLjEyMDAGA1UEAwwpTkFWRVIgR2xvYmFsIFJvb3Q
+    gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=`;
+  let naverCert = certdb.findCertByDBKey(naverCertDBKey);
+  ok(naverCert, "Should be able to find NAVER root");
+  ok(naverCert.isBuiltInRoot, "NAVER root is a built-in");
 
   // This is not a built-in root. It was added to the preexisting certificate
   // DB. It should not be considered a built-in root.
