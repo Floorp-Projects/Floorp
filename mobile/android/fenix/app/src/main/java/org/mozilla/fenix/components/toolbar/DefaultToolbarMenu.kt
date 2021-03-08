@@ -454,6 +454,10 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
 
+        val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
+            id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID
+        )
+
         val addToHomeScreenItem = BrowserMenuImageText(
             label = context.getString(R.string.browser_menu_add_to_homescreen),
             imageResource = R.drawable.ic_add_to_homescreen,
@@ -510,6 +514,7 @@ class DefaultToolbarMenu(
                 desktopSiteItem,
                 customizeReaderView.apply { visible = ::shouldShowReaderViewCustomization },
                 openInApp.apply { visible = ::shouldShowOpenInApp },
+                reportSiteIssuePlaceholder,
                 BrowserMenuDivider(),
                 addToHomeScreenItem.apply { visible = ::canAddToHomescreen },
                 addToTopSitesItem,
