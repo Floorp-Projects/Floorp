@@ -706,11 +706,6 @@ class BrowserParent final : public PBrowserParent,
                           uint32_t aPresShellId);
   void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
 
-  // Suspend nsIWebProgressListener events. This is used to block any further
-  // progress events from the old process when process switching away.
-  void SuspendProgressEvents() { mSuspendedProgressEvents = true; }
-  void ResumeProgressEvents() { mSuspendedProgressEvents = false; }
-
   bool CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
                           int32_t aNavigationIndex,
                           nsIURI* aNavigationURI) const;
@@ -985,11 +980,6 @@ class BrowserParent final : public PBrowserParent,
   // BrowserChild was not ready to handle it. We will resend it when the next
   // time we fire a mouse event and the BrowserChild is ready.
   bool mIsMouseEnterIntoWidgetEventSuppressed : 1;
-
-  // Set to true if we're currently suspending nsIWebProgress events.
-  // We do this when we are process switching and want to suspend events
-  // from the old BrowserParent after it sent STATE_START event.
-  bool mSuspendedProgressEvents : 1;
 };
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {

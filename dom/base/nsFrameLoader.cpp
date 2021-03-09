@@ -1861,11 +1861,6 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
   // is its last chance to remove them while we're still in the document.
   if (auto* browserParent = GetBrowserParent()) {
     browserParent->RemoveWindowListeners();
-    if (aForProcessSwitch) {
-      // This should suspend all future progress events from this BrowserParent,
-      // since we're going to tear it down after stopping the docshell in it.
-      browserParent->SuspendProgressEvents();
-    }
   }
 
   nsCOMPtr<Document> doc;
