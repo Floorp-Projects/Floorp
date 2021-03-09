@@ -11,6 +11,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  addDebuggerToGlobal: "resource://gre/modules/jsdebugger.jsm",
   Services: "resource://gre/modules/Services.jsm",
 
   ContentProcessDomain:
@@ -19,11 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExecutionContext:
     "chrome://remote/content/cdp/domains/content/runtime/ExecutionContext.jsm",
 });
-
-const { addDebuggerToGlobal } = ChromeUtils.import(
-  "resource://gre/modules/jsdebugger.jsm",
-  {}
-);
 
 // Import the `Debugger` constructor in the current scope
 addDebuggerToGlobal(Cu.getGlobalForObject(this));
