@@ -38,6 +38,51 @@ add_task(async function() {
   await client.close();
 });
 
+add_task(async function() {
+  const client = await createLocalClient();
+  const targetDescriptor = await client.mainRoot.getMainProcess();
+
+  const targetList = new TargetList(targetDescriptor);
+  await targetList.startListening();
+
+  const created = [];
+  const destroyed = [];
+  const onAvailable = ({ targetFront }) => {
+    created.push(targetFront);
+  };
+  const onDestroyed = ({ targetFront }) => {
+    destroyed.push(targetFront);
+  };
+  await targetList.watchTargets(
+    [TargetList.TYPES.PROCESS],
+    onAvailable,
+    onDestroyed
+  );
+  ok(created.length > 1, "We get many content process targets");
+
+  targetList.stopListening();
+
+  await waitFor(
+    () => created.length == destroyed.length,
+    "Wait for the destruction of all content process targets when calling stopListening"
+  );
+  is(
+    created.length,
+    destroyed.length,
+    "Got notification of destruction for all previously reported targets"
+  );
+
+  targetList.destroy();
+  // Wait for all the targets to be fully attached so we don't have pending requests.
+  await Promise.all(
+    targetList
+      .getAllTargets(targetList.ALL_TYPES)
+      .map(t => t.attachAndInitThread(targetList))
+  );
+
+  await client.close();
+});
+
 async function testProcesses(targetList, target) {
   info("Test TargetList against processes");
 

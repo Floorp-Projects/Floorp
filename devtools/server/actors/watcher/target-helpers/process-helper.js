@@ -105,7 +105,13 @@ function closeWatcherTransports(watcher) {
     const matchingTargetActorDescriptions = targetActorDescriptions.filter(
       item => item.watcher === watcher
     );
-    for (const { prefix, childTransport } of matchingTargetActorDescriptions) {
+    for (const {
+      prefix,
+      childTransport,
+      actor,
+    } of matchingTargetActorDescriptions) {
+      watcher.notifyTargetDestroyed(actor);
+
       childTransport.close();
       watcher.conn.cancelForwarding(prefix);
     }
