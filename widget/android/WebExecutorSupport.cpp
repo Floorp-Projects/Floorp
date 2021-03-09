@@ -414,9 +414,7 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally, open the channel
-  rv = channel->AsyncOpen(listener);
-
-  return NS_OK;
+  return channel->AsyncOpen(listener);
 }
 
 void WebExecutorSupport::Fetch(jni::Object::Param aRequest, int32_t aFlags,
