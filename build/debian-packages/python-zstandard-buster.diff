@@ -3,7 +3,7 @@ index 84028db..d6c86c4 100644
 --- a/debian/changelog
 +++ b/debian/changelog
 @@ -1,3 +1,10 @@
-+python-zstandard (0.15.1-1.deb10moz1) buster; urgency=low
++python-zstandard (0.15.2-1.deb10moz1) buster; urgency=low
 +
 +  * Mozilla backport for buster.
 +  * Apply https://github.com/indygreg/python-zstandard/pull/139.
