@@ -76,6 +76,7 @@ EXPORTS += [
     "nsTArray-inl.h",
     "nsTArray.h",
     "nsTArrayForwardDeclare.h",
+    "nsTHashMap.h",
     "nsTHashtable.h",
     "nsTObserverArray.h",
     "nsTPriorityQueue.h",
