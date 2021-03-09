@@ -69,7 +69,7 @@ if (isApzEnabled()) {
 
   if (getPlatform() == "linux") {
         subtests.push(
-          {file: "helper_zoom_with_touchpad.html"}
+          {file: "helper_zoom_with_touchpad.html", "prefs": prefs}
         );
   }
   window.onload = function() {
