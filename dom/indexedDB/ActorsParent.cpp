@@ -5095,12 +5095,12 @@ class DeleteFilesRunnable final : public Runnable,
 
 class Maintenance final : public Runnable, public OpenDirectoryListener {
   struct DirectoryInfo final {
-    InitializedOnce<const FullOriginMetadata> mFullOriginMetadata;
+    InitializedOnce<const OriginMetadata> mOriginMetadata;
     InitializedOnce<const nsTArray<nsString>> mDatabasePaths;
     const PersistenceType mPersistenceType;
 
     DirectoryInfo(PersistenceType aPersistenceType,
-                  FullOriginMetadata aFullOriginMetadata,
+                  OriginMetadata aOriginMetadata,
                   nsTArray<nsString>&& aDatabasePaths);
 
     DirectoryInfo(const DirectoryInfo& aOther) = delete;
@@ -5254,15 +5254,15 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
   void DirectoryLockFailed() override;
 };
 
-Maintenance::DirectoryInfo::DirectoryInfo(
-    PersistenceType aPersistenceType, FullOriginMetadata aFullOriginMetadata,
-    nsTArray<nsString>&& aDatabasePaths)
-    : mFullOriginMetadata(std::move(aFullOriginMetadata)),
+Maintenance::DirectoryInfo::DirectoryInfo(PersistenceType aPersistenceType,
+                                          OriginMetadata aOriginMetadata,
+                                          nsTArray<nsString>&& aDatabasePaths)
+    : mOriginMetadata(std::move(aOriginMetadata)),
       mDatabasePaths(std::move(aDatabasePaths)),
       mPersistenceType(aPersistenceType) {
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-  MOZ_ASSERT(!mFullOriginMetadata->mGroup.IsEmpty());
-  MOZ_ASSERT(!mFullOriginMetadata->mOrigin.IsEmpty());
+  MOZ_ASSERT(!mOriginMetadata->mGroup.IsEmpty());
+  MOZ_ASSERT(!mOriginMetadata->mOrigin.IsEmpty());
 #ifdef DEBUG
   MOZ_ASSERT(!mDatabasePaths->IsEmpty());
   for (const nsString& databasePath : *mDatabasePaths) {
@@ -13586,18 +13586,21 @@ nsresult Maintenance::DirectoryWork() {
 
             case nsIFileKind::ExistsAsDirectory: {
               // Get the necessary information about the origin
-              // (LoadFullOriginMetadataWithRestore also checks if it's a valid
+              // (GetDirectoryMetadata2WithRestore also checks if it's a valid
               // origin).
 
               IDB_TRY_INSPECT(
                   const auto& metadata,
-                  quotaManager->LoadFullOriginMetadataWithRestore(originDir),
+                  quotaManager
+                      ->GetDirectoryMetadataWithOriginMetadata2WithRestore(
+                          originDir),
                   // Not much we can do here...
                   Ok{});
 
               // Don't do any maintenance for private browsing databases, which
               // are only temporary.
-              if (OriginAttributes::IsPrivateBrowsing(metadata.mOrigin)) {
+              if (OriginAttributes::IsPrivateBrowsing(
+                      metadata.mOriginMetadata.mOrigin)) {
                 return Ok{};
               }
 
@@ -13610,7 +13613,9 @@ nsresult Maintenance::DirectoryWork() {
 
                 IDB_TRY_UNWRAP(
                     const DebugOnly<bool> created,
-                    quotaManager->EnsurePersistentOriginIsInitialized(metadata)
+                    quotaManager
+                        ->EnsurePersistentOriginIsInitialized(
+                            metadata.mOriginMetadata)
                         .map([](const auto& res) { return res.second; }),
                     // Not much we can do here...
                     Ok{});
@@ -13682,7 +13687,8 @@ nsresult Maintenance::DirectoryWork() {
                   }));
 
               if (!databasePaths.IsEmpty()) {
-                mDirectoryInfos.EmplaceBack(persistenceType, metadata,
+                mDirectoryInfos.EmplaceBack(persistenceType,
+                                            metadata.mOriginMetadata,
                                             std::move(databasePaths));
               }
 
@@ -13758,8 +13764,8 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
         if (!directoryLock) {
           directoryLock = mDirectoryLock->Specialize(
-              directoryInfo.mPersistenceType,
-              *directoryInfo.mFullOriginMetadata, Client::IDB);
+              directoryInfo.mPersistenceType, *directoryInfo.mOriginMetadata,
+              Client::IDB);
           MOZ_ASSERT(directoryLock);
         }
 
@@ -13768,7 +13774,7 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
         // mode.
         const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
             this, directoryLock, directoryInfo.mPersistenceType,
-            *directoryInfo.mFullOriginMetadata, databasePath, Nothing{});
+            *directoryInfo.mOriginMetadata, databasePath, Nothing{});
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
