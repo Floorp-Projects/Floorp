@@ -361,7 +361,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             primaryImageTintResource = R.color.photonBlue90,
             primaryContentDescription = "Back",
             isInPrimaryState = {
-                sessionManager.selectedSession?.canGoBack ?: true
+                store.state.selectedTab?.content?.canGoBack ?: true
             },
             disableInSecondaryState = true,
             secondaryImageTintResource = R.color.photonGrey40
@@ -374,7 +374,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             primaryContentDescription = "Forward",
             primaryImageTintResource = R.color.photonBlue90,
             isInPrimaryState = {
-                sessionManager.selectedSession?.canGoForward ?: true
+                store.state.selectedTab?.content?.canGoForward ?: true
             },
             disableInSecondaryState = true,
             secondaryImageTintResource = R.color.photonGrey40

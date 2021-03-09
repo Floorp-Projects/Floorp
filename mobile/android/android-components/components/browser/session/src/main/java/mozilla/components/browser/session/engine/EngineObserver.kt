@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Environment
 import androidx.core.net.toUri
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
@@ -140,8 +141,12 @@ internal class EngineObserver(
     }
 
     override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
-        canGoBack?.let { session.canGoBack = canGoBack }
-        canGoForward?.let { session.canGoForward = canGoForward }
+        canGoBack?.let {
+            store?.syncDispatch(ContentAction.UpdateBackNavigationStateAction(session.id, canGoBack))
+        }
+        canGoForward?.let {
+            store?.syncDispatch(ContentAction.UpdateForwardNavigationStateAction(session.id, canGoForward))
+        }
     }
 
     override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {

@@ -12,9 +12,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.AppIntentState
@@ -94,15 +96,20 @@ class EngineObserverTest {
                 notifyObservers { onNavigationStateChange(true, true) }
             }
         }
-        engineSession.register(EngineObserver(session, mock()))
+        val store = BrowserStore()
+        store.dispatch(TabListAction.AddTabAction(session.toTabSessionState()))
+        engineSession.register(EngineObserver(session, store))
 
         engineSession.loadUrl("http://mozilla.org")
         engineSession.toggleDesktopMode(true)
         assertEquals("http://mozilla.org", session.url)
         assertEquals(100, session.progress)
         assertEquals(true, session.loading)
-        assertEquals(true, session.canGoForward)
-        assertEquals(true, session.canGoBack)
+
+        val tab = store.state.findTab(session.id)
+        assertNotNull(tab!!)
+        assertTrue(tab.content.canGoForward)
+        assertTrue(tab.content.canGoBack)
     }
 
     @Test
@@ -1051,7 +1058,6 @@ class EngineObserverTest {
     fun `onNavigateBack clears search terms when navigating back`() {
         val url = "https://www.mozilla.org"
         val session = Session(url, id = "test-id")
-        session.canGoBack = true
 
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(

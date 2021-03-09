@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.lib.state.Store
 
 /**
  * Dispatches [action] on [BrowserStore] and blocks the current thread until the [action] was processed and a new
@@ -16,7 +17,7 @@ import mozilla.components.browser.state.state.BrowserState
  * This is helpful for the migration phase where we want to keep `SessionManager` / `Session` and `BrowserState` in
  * sync when a legacy method returns.
  */
-internal fun BrowserStore.syncDispatch(action: BrowserAction) {
+internal fun Store<BrowserState, BrowserAction>.syncDispatch(action: BrowserAction) {
     runBlocking {
         dispatch(action).join()
     }

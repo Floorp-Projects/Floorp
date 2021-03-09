@@ -34,7 +34,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -153,24 +152,6 @@ class SessionTest {
 
         verify(store).dispatch(ContentAction.UpdateLoadingStateAction(session.id, session.loading))
         verifyNoMoreInteractions(store)
-    }
-
-    @Test
-    fun `observer is notified when navigation state changes`() {
-        val observer = mock(Session.Observer::class.java)
-
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-
-        session.canGoBack = true
-        assertEquals(true, session.canGoBack)
-        verify(observer).onNavigationStateChanged(eq(session), eq(true), eq(false))
-
-        session.canGoForward = true
-        assertEquals(true, session.canGoForward)
-        verify(observer).onNavigationStateChanged(eq(session), eq(true), eq(true))
-
-        verifyNoMoreInteractions(observer)
     }
 
     @Test
@@ -500,21 +481,17 @@ class SessionTest {
         val session = Session("")
         val defaultObserver = object : Session.Observer {}
         val contentPermissionRequest: PermissionRequest = mock()
-        val appPermissionRequest: PermissionRequest = mock()
 
         defaultObserver.onUrlChanged(session, "")
         defaultObserver.onTitleChanged(session, "")
         defaultObserver.onProgress(session, 0)
         defaultObserver.onLoadingStateChanged(session, true)
-        defaultObserver.onNavigationStateChanged(session, true, true)
         defaultObserver.onLoadRequest(session, "https://www.mozilla.org", true, true)
-        defaultObserver.onSearch(session, "")
         defaultObserver.onSecurityChanged(session, Session.SecurityInfo())
         defaultObserver.onCustomTabConfigChanged(session, null)
         defaultObserver.onTrackerBlockingEnabledChanged(session, true)
         defaultObserver.onTrackerBlocked(session, mock(), emptyList())
         defaultObserver.onContentPermissionRequested(session, contentPermissionRequest)
-        defaultObserver.onAppPermissionRequested(session, appPermissionRequest)
         defaultObserver.onWebAppManifestChanged(session, mock())
         defaultObserver.onRecordingDevicesChanged(session, emptyList())
     }
@@ -601,37 +578,5 @@ class SessionTest {
 
         assertFalse(parentSession.hasParentSession)
         assertTrue(session.hasParentSession)
-    }
-
-    @Test
-    fun `action is dispatched when back navigation state changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-        session.canGoBack = true
-        verify(store).dispatch(ContentAction.UpdateBackNavigationStateAction(session.id, true))
-
-        session.canGoBack = false
-        verify(store).dispatch(ContentAction.UpdateBackNavigationStateAction(session.id, false))
-
-        verifyNoMoreInteractions(store)
-    }
-
-    @Test
-    fun `action is dispatched when forward navigation state changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-        session.canGoForward = true
-        verify(store).dispatch(ContentAction.UpdateForwardNavigationStateAction(session.id, true))
-
-        session.canGoForward = false
-        verify(store).dispatch(ContentAction.UpdateForwardNavigationStateAction(session.id, false))
-
-        verifyNoMoreInteractions(store)
     }
 }

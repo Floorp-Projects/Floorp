@@ -10,8 +10,6 @@ import android.graphics.Bitmap
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.state.action.ContentAction.RemoveWebAppManifestAction
-import mozilla.components.browser.state.action.ContentAction.UpdateBackNavigationStateAction
-import mozilla.components.browser.state.action.ContentAction.UpdateForwardNavigationStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
@@ -63,14 +61,12 @@ class Session(
         fun onTitleChanged(session: Session, title: String) = Unit
         fun onProgress(session: Session, progress: Int) = Unit
         fun onLoadingStateChanged(session: Session, loading: Boolean) = Unit
-        fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) = Unit
         fun onLoadRequest(
             session: Session,
             url: String,
             triggeredByRedirect: Boolean,
             triggeredByWebContent: Boolean
         ) = Unit
-        fun onSearch(session: Session, searchTerms: String) = Unit
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
         fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) = Unit
@@ -78,7 +74,6 @@ class Session(
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
-        fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
     }
 
@@ -126,22 +121,6 @@ class Session(
         if (notifyObservers(old, new) { onLoadingStateChanged(this@Session, new) }) {
             store?.syncDispatch(UpdateLoadingStateAction(id, new))
         }
-    }
-
-    /**
-     * Navigation state, true if there's an history item to go back to, otherwise false.
-     */
-    var canGoBack: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onNavigationStateChanged(this@Session, new, canGoForward) }
-        store?.syncDispatch(UpdateBackNavigationStateAction(id, canGoBack))
-    }
-
-    /**
-     * Navigation state, true if there's an history item to go forward to, otherwise false.
-     */
-    var canGoForward: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onNavigationStateChanged(this@Session, canGoBack, new) }
-        store?.syncDispatch(UpdateForwardNavigationStateAction(id, canGoForward))
     }
 
     /**
