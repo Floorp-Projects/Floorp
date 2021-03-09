@@ -224,6 +224,16 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         actor = null;
       }
 
+      // Notify the tab descriptor about the destruction before the call to
+      // `cancelForwarding`, so that we notify about the target destruction
+      // *before* we purge all request for this prefix.
+      // When we purge the requests, we also destroy all related fronts,
+      // including the target front. This clears all event listeners
+      // and ultimately prevent target-destroyed from firing.
+      if (onDestroy) {
+        onDestroy(mm);
+      }
+
       if (childTransport) {
         // If we have a child transport, the actor has already
         // been created. We need to stop using this message manager.
@@ -244,10 +254,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
         // had a chance to be created, so we are not able to create
         // the actor.
         resolve(null);
-      }
-
-      if (onDestroy) {
-        onDestroy(mm);
       }
 
       // Cleanup all listeners
