@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+interface URI;
 interface nsIDocShell;
 interface nsISecureBrowserUI;
 interface nsIWebProgress;
@@ -265,6 +266,10 @@ interface CanonicalBrowsingContext : BrowsingContext {
   readonly attribute MediaController? mediaController;
 
   void resetScalingZoom();
+
+  // The current URI loaded in this BrowsingContext according to nsDocShell.
+  // This may not match the current window global's document URI in some cases.
+  readonly attribute URI? currentURI;
 };
 
 [Exposed=Window, ChromeOnly]

@@ -70,6 +70,10 @@ CanonicalBrowsingContext::CanonicalBrowsingContext(WindowContext* aParentWindow,
   // You are only ever allowed to create CanonicalBrowsingContexts in the
   // parent process.
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+
+  // The initial URI in a BrowsingContext is always "about:blank".
+  MOZ_ALWAYS_SUCCEEDS(
+      NS_NewURI(getter_AddRefs(mCurrentRemoteURI), "about:blank"));
 }
 
 /* static */
@@ -1654,6 +1658,22 @@ void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {
     // has no effect when a document load has finished.
     Unused << SetCurrentLoadIdentifier(Nothing());
   }
+}
+
+already_AddRefed<nsIURI> CanonicalBrowsingContext::GetCurrentURI() const {
+  nsCOMPtr<nsIURI> currentURI;
+  if (nsIDocShell* docShell = GetDocShell()) {
+    MOZ_ALWAYS_SUCCEEDS(
+        nsDocShell::Cast(docShell)->GetCurrentURI(getter_AddRefs(currentURI)));
+  } else {
+    currentURI = mCurrentRemoteURI;
+  }
+  return currentURI.forget();
+}
+
+void CanonicalBrowsingContext::SetCurrentRemoteURI(nsIURI* aCurrentRemoteURI) {
+  MOZ_ASSERT(!GetDocShell());
+  mCurrentRemoteURI = aCurrentRemoteURI;
 }
 
 void CanonicalBrowsingContext::ResetSHEntryHasUserInteractionCache() {
