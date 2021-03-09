@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <script>
+    window.onpageshow = function() {
+      let bc = new BroadcastChannel("test_reload");
+      bc.onmessage = function(event) {
+        if (event.data == "reload") {
+          bc.close();
+          location.reload(true);
+        } else if (event.data == "close") {
+          bc.postMessage("closed");
+          bc.close();
+          window.close();
+        }
+      }
+
+      bc.postMessage("pageshow");
+    }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
