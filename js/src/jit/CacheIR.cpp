@@ -778,19 +778,6 @@ static void TestMatchingHolder(CacheIRWriter& writer, JSObject* obj,
                                     obj->as<NativeObject>().lastProperty());
 }
 
-static bool UncacheableProtoOnChain(JSObject* obj) {
-  while (true) {
-    if (obj->hasUncacheableProto()) {
-      return true;
-    }
-
-    obj = obj->staticPrototype();
-    if (!obj) {
-      return false;
-    }
-  }
-}
-
 // Emit a shape guard for all objects on the proto chain. This does NOT include
 // the receiver; callers must ensure the receiver's proto is the first proto by
 // either emitting a shape guard or a prototype guard for |objId|.
@@ -1225,8 +1212,8 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
   RootedShape shape(cx_);
   RootedNativeObject holder(cx_);
 
-  // Enter realm of target since some checks have side-effects
-  // such as de-lazifying type info.
+  // Enter realm of target to prevent failing compartment assertions when doing
+  // the lookup.
   {
     AutoRealm ar(cx_, unwrapped);
 
@@ -1234,15 +1221,6 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
         CanAttachNativeGetProp(cx_, unwrapped, id, &holder, &shape, pc_);
     if (canCache != CanAttachReadSlot) {
       return AttachDecision::NoAction;
-    }
-
-    if (!holder) {
-      // ObjectFlag::UncacheableProto may result in guards against specific
-      // (cross-compartment) prototype objects, so don't try to attach IC if we
-      // see the flag at all.
-      if (UncacheableProtoOnChain(unwrapped)) {
-        return AttachDecision::NoAction;
-      }
     }
   }
 
