@@ -489,6 +489,15 @@ class MachCommands(MachCommandBase):
         self.log_manager.enable_unstructured()
 
     def show_taskgraph(self, graph_attr, options):
+        self.setup_logging(quiet=options["quiet"], verbose=options["verbose"])
+        out = self.format_taskgraph(graph_attr, options)
+
+        fh = options["output_file"]
+        if fh:
+            fh = open(fh, "w")
+        print(out, file=fh)
+
+    def format_taskgraph(self, graph_attr, options):
         import taskgraph
         import taskgraph.generator
         import taskgraph.parameters
@@ -497,7 +506,6 @@ class MachCommands(MachCommandBase):
             taskgraph.fast = True
 
         try:
-            self.setup_logging(quiet=options["quiet"], verbose=options["verbose"])
             parameters = taskgraph.parameters.parameters_loader(
                 options["parameters"],
                 overrides={"target-kind": options.get("target_kind")},
@@ -510,30 +518,24 @@ class MachCommands(MachCommandBase):
             )
 
             tg = getattr(tgg, graph_attr)
-
-            show_method = getattr(
-                self, "show_taskgraph_" + (options["format"] or "labels")
-            )
             tg = self.get_filtered_taskgraph(tg, options["tasks_regex"])
 
-            fh = options["output_file"]
-            if fh:
-                fh = open(fh, "w")
-            show_method(tg, file=fh)
+            format_method = getattr(
+                self, "format_taskgraph_" + (options["format"] or "labels")
+            )
+            return format_method(tg)
         except Exception:
             traceback.print_exc()
             sys.exit(1)
 
-    def show_taskgraph_labels(self, taskgraph, file=None):
-        for index in taskgraph.graph.visit_postorder():
-            print(taskgraph.tasks[index].label, file=file)
+    def format_taskgraph_labels(self, taskgraph):
+        return "\n".join(
+            taskgraph.tasks[index].label for index in taskgraph.graph.visit_postorder()
+        )
 
-    def show_taskgraph_json(self, taskgraph, file=None):
-        print(
-            json.dumps(
-                taskgraph.to_json(), sort_keys=True, indent=2, separators=(",", ": ")
-            ),
-            file=file,
+    def format_taskgraph_json(self, taskgraph):
+        return json.dumps(
+            taskgraph.to_json(), sort_keys=True, indent=2, separators=(",", ": ")
         )
 
     def get_filtered_taskgraph(self, taskgraph, tasksregex):
