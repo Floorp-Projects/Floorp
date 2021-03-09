@@ -75,7 +75,7 @@
 }
 
 #tabbrowser-tabs {
-  --tab-line-color: #0a84ff;
+  --tab-line-color: -moz-accent-color;
 }
 
 #navigator-toolbox toolbarbutton:-moz-lwtheme {
