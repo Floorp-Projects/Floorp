@@ -28,6 +28,18 @@ function doTest() {
     ] };
   testAccessibleTree("ul", tree);
 
+  tree =
+    { TABLE: [
+      { ROW: [
+        { CELL: [{ TEXT_LEAF: [] } ] },
+        { CELL: [{ TEXT_LEAF: [] } ] },
+      ]},
+    ] };
+  testAccessibleTree("tableTableContents", tree);
+  testAccessibleTree("tableTbodyContents", tree);
+  testAccessibleTree("tableTrContents", tree);
+  testAccessibleTree("tableTdContents", tree);
+
   SimpleTest.finish();
 }
 
@@ -45,5 +57,25 @@ addA11yLoadEvent(doTest);
     <li>Supermarket 1</li>
     <li>Supermarket 2</li>
   </ul>
+
+  <!-- The summary attribute in these tables ensures they are treated as data
+    tables. -->
+  <table id="tableTableContents" summary="summary" style="display: contents;">
+    <tr><td>a</td><td>b</td></tr>
+  </table>
+  <table id="tableTbodyContents" summary="summary" style="display: block;">
+    <tbody style="display: contents;">
+      <tr><td>a</td><td>b</td></tr>
+    </tbody>
+  </table>
+  <table id="tableTrContents" summary="table" style="display: block;">
+    <tr style="display: contents;"><td>a</td><td>b</td></tr>
+  </table>
+  <table id="tableTdContents" summary="summary">
+    <tr>
+      <td style="display: contents;">a</td>
+      <td style="display: contents;">b</td>
+    </tr>
+  </table>
 </body>
 </html>
