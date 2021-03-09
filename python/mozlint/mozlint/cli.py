@@ -343,6 +343,20 @@ def run(
                 return 1
             paths = lint.linters[0]["local_exclude"]
 
+        if (
+            not linters
+            and not paths
+            and os.getcwd() == lint.root
+            and not (outgoing or workdir)
+        ):
+            print(
+                "warning: linting the entire repo takes a long time, using --outgoing and "
+                "--workdir instead. If you want to lint the entire repo, run `./mach lint .`"
+            )
+            # Setting the default values
+            outgoing = "default"
+            workdir = "all"
+
         # Always run bootstrapping, but return early if --setup was passed in.
         ret = lint.setup(virtualenv_manager=virtualenv_manager)
         if setup:
