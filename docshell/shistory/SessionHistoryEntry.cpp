@@ -199,6 +199,12 @@ bool SessionHistoryInfo::IsSubFrame() const {
   return mSharedState.Get()->mIsFrameNavigation;
 }
 
+void SessionHistoryInfo::SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  static_cast<SHEntrySharedParentState*>(mSharedState.Get())->mSaveLayoutState =
+      aSaveLayoutStateFlag;
+}
+
 void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
   aLoadState.SetOriginalURI(mOriginalURI);
   aLoadState.SetMaybeResultPrincipalURI(Some(mResultPrincipalURI));
