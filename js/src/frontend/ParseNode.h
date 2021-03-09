@@ -1323,10 +1323,6 @@ class ListNode : public ParseNode {
 
   void append(ParseNode* item) {
     MOZ_ASSERT(item->pn_pos.begin >= pn_pos.begin);
-    appendWithoutOrderAssumption(item);
-  }
-
-  void appendWithoutOrderAssumption(ParseNode* item) {
     pn_pos.end = item->pn_pos.end;
     *tail_ = item;
     tail_ = &item->pn_next;
