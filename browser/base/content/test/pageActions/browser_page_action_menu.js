@@ -96,9 +96,9 @@ add_task(async function bookmark() {
     // Open the panel.
     await promisePageActionPanelOpen();
 
-    // The bookmark button should read "Bookmark This Page" and not be starred.
+    // The bookmark button should read "Bookmark Current Tab" and not be starred.
     let bookmarkButton = document.getElementById("pageAction-panel-bookmark");
-    Assert.equal(bookmarkButton.label, "Bookmark This Page");
+    Assert.equal(bookmarkButton.label, "Bookmark Current Tab");
     Assert.ok(!bookmarkButton.hasAttribute("starred"));
 
     // Click the button.
@@ -162,8 +162,8 @@ add_task(async function bookmark() {
     // Open the panel again.
     await promisePageActionPanelOpen();
 
-    // The bookmark button should read "Bookmark This Page" and not be starred.
-    Assert.equal(bookmarkButton.label, "Bookmark This Page");
+    // The bookmark button should read "Bookmark Current Tab" and not be starred.
+    Assert.equal(bookmarkButton.label, "Bookmark Current Tab");
     Assert.ok(!bookmarkButton.hasAttribute("starred"));
 
     // Done.

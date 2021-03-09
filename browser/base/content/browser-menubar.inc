@@ -120,7 +120,7 @@
                 <menuseparator/>
                 <menuitem id="menu_find"
                           key="key_find"
-                          command="cmd_find" data-l10n-id="menu-edit-find-on"/>
+                          command="cmd_find" data-l10n-id="menu-edit-find-in-page"/>
                 <menuitem id="menu_findAgain"
                           class="show-only-for-keyboard"
                           key="key_findAgain"
@@ -134,7 +134,7 @@
 #ifndef XP_MACOSX
                 <menuseparator/>
                 <menuitem id="menu_preferences"
-                          oncommand="openPreferences(undefined);" data-l10n-id="menu-preferences"/>
+                          oncommand="openPreferences(undefined);" data-l10n-id="menu-settings"/>
 #endif
 #endif
               </menupopup>
@@ -147,7 +147,7 @@
                   <menupopup id="view-menu-popup" onpopupshowing="onViewToolbarsPopupShowing(event);">
                     <menuseparator/>
                     <menuitem id="menu_customizeToolbars"
-                              command="cmd_CustomizeToolbars" data-l10n-id="menu-view-customize-toolbar"/>
+                              command="cmd_CustomizeToolbars" data-l10n-id="menu-view-customize-toolbar2"/>
                   </menupopup>
                 </menu>
                 <menu id="viewSidebarMenuMenu" data-l10n-id="menu-view-sidebar">
@@ -325,7 +325,7 @@
       <menuitem id="menu_bookmarkThisPage"
                 command="Browser:AddBookmarkAs"
                 key="addBookmarkAsKb"
-                data-l10n-id="menu-bookmark-this-page"/>
+                data-l10n-id="menu-bookmark-current-tab"/>
       <menuitem id="menu_bookmarkAllTabs"
                 class="show-only-for-keyboard"
                 command="Browser:BookmarkAllTabs"
@@ -384,13 +384,13 @@
                         command="Tools:Downloads" data-l10n-id="menu-tools-downloads"/>
               <menuitem id="menu_openAddons"
                         key="key_openAddons"
-                        command="Tools:Addons" data-l10n-id="menu-tools-addons"/>
+                        command="Tools:Addons" data-l10n-id="menu-tools-extensions"/>
 
               <!-- only one of sync-setup, sync-enable, sync-unverifieditem, sync-syncnowitem or sync-reauthitem will be showing at once -->
               <menuitem id="sync-setup"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in"/>
+                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in2"/>
               <menuitem id="sync-enable"
                         class="sync-ui-item"
                         hidden="true"
@@ -398,7 +398,7 @@
               <menuitem id="sync-unverifieditem"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in"/>
+                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-fxa-sign-in2"/>
               <menuitem id="sync-syncnowitem"
                         class="sync-ui-item"
                         hidden="true"
@@ -421,7 +421,7 @@
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
-                        oncommand="openPreferences(undefined);" data-l10n-id="menu-preferences"/>
+                        oncommand="openPreferences(undefined);" data-l10n-id="menu-settings"/>
 #endif
 #ifdef MOZ_DEBUG
               <menuitem id="menu_layout_debugger"
@@ -431,7 +431,7 @@
 #endif
 #ifdef XP_MACOSX
 <!-- nsMenuBarX hides these and uses them to build the Application menu. -->
-              <menuitem id="menu_preferences" data-l10n-id="menu-preferences" key="key_preferencesCmdMac" oncommand="openPreferences(undefined);"/>
+              <menuitem id="menu_preferences" data-l10n-id="menu-settings" key="key_preferencesCmdMac" oncommand="openPreferences(undefined);"/>
               <menuitem id="menu_mac_services" data-l10n-id="menu-application-services"/>
               <menuitem id="menu_mac_hide_app" data-l10n-id="menu-application-hide-this" key="key_hideThisAppCmdMac"/>
               <menuitem id="menu_mac_hide_others" data-l10n-id="menu-application-hide-other" key="key_hideOtherAppsCmdMac"/>
