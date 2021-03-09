@@ -242,9 +242,6 @@ OnlyJSJitFrameIter::OnlyJSJitFrameIter(jit::JitActivation* act)
   settle();
 }
 
-OnlyJSJitFrameIter::OnlyJSJitFrameIter(JSContext* cx)
-    : OnlyJSJitFrameIter(cx->activation()->asJit()) {}
-
 OnlyJSJitFrameIter::OnlyJSJitFrameIter(const ActivationIterator& iter)
     : OnlyJSJitFrameIter(iter->asJit()) {}
 
