@@ -24,6 +24,7 @@ NS_IMPL_ISUPPORTS(MobileViewportManager, nsIDOMEventListener, nsIObserver)
 
 #define DOM_META_ADDED u"DOMMetaAdded"_ns
 #define DOM_META_CHANGED u"DOMMetaChanged"_ns
+#define FULLSCREEN_CHANGED u"fullscreenchange"_ns
 #define LOAD u"load"_ns
 #define BEFORE_FIRST_PAINT "before-first-paint"_ns
 
@@ -43,6 +44,7 @@ MobileViewportManager::MobileViewportManager(MVMContext* aContext,
 
   mContext->AddEventListener(DOM_META_ADDED, this, false);
   mContext->AddEventListener(DOM_META_CHANGED, this, false);
+  mContext->AddEventListener(FULLSCREEN_CHANGED, this, false);
   mContext->AddEventListener(LOAD, this, true);
 
   mContext->AddObserver(this, BEFORE_FIRST_PAINT.Data(), false);
@@ -55,6 +57,7 @@ void MobileViewportManager::Destroy() {
 
   mContext->RemoveEventListener(DOM_META_ADDED, this, false);
   mContext->RemoveEventListener(DOM_META_CHANGED, this, false);
+  mContext->RemoveEventListener(FULLSCREEN_CHANGED, this, false);
   mContext->RemoveEventListener(LOAD, this, true);
 
   mContext->RemoveObserver(this, BEFORE_FIRST_PAINT.Data());
@@ -133,6 +136,9 @@ MobileViewportManager::HandleEvent(dom::Event* event) {
     HandleDOMMetaAdded();
   } else if (type.Equals(DOM_META_CHANGED)) {
     MVM_LOG("%p: got a dom-meta-changed event\n", this);
+    RefreshViewportSize(mPainted);
+  } else if (type.Equals(FULLSCREEN_CHANGED)) {
+    MVM_LOG("%p: got a fullscreenchange event\n", this);
     RefreshViewportSize(mPainted);
   } else if (type.Equals(LOAD)) {
     MVM_LOG("%p: got a load event\n", this);
