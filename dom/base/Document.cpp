@@ -16869,23 +16869,6 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   return mActiveStoragePrincipal = mPartitionedPrincipal;
 }
 
-nsIPrincipal* Document::GetPrincipalForPrefBasedHacks() const {
-  // If the document is sandboxed document or data: document, we should
-  // get URI of the parent document.
-  for (const Document* document = this;
-       document && document->IsContentDocument();
-       document = document->GetInProcessParentDocument()) {
-    // The document URI may be about:blank even if it comes from actual web
-    // site.  Therefore, we need to check the URI of its principal.
-    nsIPrincipal* principal = document->NodePrincipal();
-    if (principal->GetIsNullPrincipal()) {
-      continue;
-    }
-    return principal;
-  }
-  return nullptr;
-}
-
 void Document::SetIsInitialDocument(bool aIsInitialDocument) {
   mIsInitialDocumentInWindow = aIsInitialDocument;
 
