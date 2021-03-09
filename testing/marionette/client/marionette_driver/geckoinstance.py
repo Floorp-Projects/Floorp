@@ -587,9 +587,6 @@ class DesktopInstance(GeckoInstance):
         "browser.urlbar.suggest.searches": False,
         # Don't warn when exiting the browser
         "browser.warnOnQuit": False,
-        # Only allow the old modal dialogs. This should be removed when there is
-        # support for the new modal UI (see Bug 1686741).
-        "prompts.contentPromptSubDialog": False,
         # Disable first-run welcome page
         "startup.homepage_welcome_url": "about:blank",
         "startup.homepage_welcome_url.additional": "",
