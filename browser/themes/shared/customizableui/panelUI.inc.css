@@ -793,6 +793,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
     background-color: var(--buttons-secondary-active-bgcolor);
   }
 
+  :root[fxadisabled=true] #appMenu-fxa-status2,
+  :root[fxadisabled=true] #appMenu-fxa-separator {
+    display: none;
+  }
+
   #fxa-manage-account-button > vbox > label,
   #PanelUI-fxa-menu-syncnow-button > vbox > label,
   #PanelUI-fxa-menu-syncnow-button > vbox > hbox > label {
