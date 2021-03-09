@@ -8,7 +8,7 @@
 #define ScreenHelperAndroid_h___
 
 #include "mozilla/widget/ScreenManager.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 namespace widget {
@@ -31,7 +31,7 @@ class ScreenHelperAndroid final : public ScreenManager::Helper {
   already_AddRefed<Screen> ScreenForId(uint32_t aScreenId);
 
  private:
-  nsDataHashtable<nsUint32HashKey, RefPtr<Screen>> mScreens;
+  nsTHashMap<uint32_t, RefPtr<Screen>> mScreens;
 };
 
 }  // namespace widget

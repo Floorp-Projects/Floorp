@@ -10,6 +10,7 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/Mutex.h"
 #include "nsRefPtrHashtable.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 class ChildProfilerController;
@@ -153,7 +154,7 @@ class SocketProcessChild final
   bool mShuttingDown;
   // Protect the table below.
   Mutex mMutex;
-  nsDataHashtable<nsUint64HashKey, RefPtr<BackgroundDataBridgeParent>>
+  nsTHashMap<uint64_t, RefPtr<BackgroundDataBridgeParent>>
       mBackgroundDataBridgeMap;
 };
 

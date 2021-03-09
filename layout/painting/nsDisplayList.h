@@ -56,6 +56,7 @@
 #include <stdint.h>
 #include "nsClassHashtable.h"
 #include "nsTHashtable.h"
+#include "nsTHashMap.h"
 
 #include <stdlib.h>
 #include <algorithm>
@@ -1848,7 +1849,7 @@ class nsDisplayListBuilder {
       nsIFrame* aAnimatedGeometryRoot, bool aIsAsync,
       AnimatedGeometryRoot* aParent = nullptr);
 
-  nsDataHashtable<nsPtrHashKey<nsIFrame>, RefPtr<AnimatedGeometryRoot>>
+  nsTHashMap<nsIFrame*, RefPtr<AnimatedGeometryRoot>>
       mFrameToAnimatedGeometryRootMap;
 
   /**

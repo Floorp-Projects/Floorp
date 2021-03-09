@@ -91,9 +91,8 @@ void ScreenHelperAndroid::Refresh() {
   mScreens.Remove(0);
 
   AutoTArray<RefPtr<Screen>, 1> screenList;
-  RefPtr<Screen> screen = MakePrimaryScreen();
-  if (screen) {
-    mScreens.InsertOrUpdate(0, screen);
+  if (RefPtr<Screen> screen = MakePrimaryScreen()) {
+    mScreens.InsertOrUpdate(0, std::move(screen));
   }
 
   for (auto iter = mScreens.ConstIter(); !iter.Done(); iter.Next()) {
@@ -110,11 +109,10 @@ void ScreenHelperAndroid::AddScreen(uint32_t aScreenId,
   MOZ_ASSERT(aScreenId > 0);
   MOZ_ASSERT(!mScreens.Get(aScreenId, nullptr));
 
-  RefPtr<Screen> screen =
-      new Screen(aRect, aRect, 24, 24, DesktopToLayoutDeviceScale(aDensity),
-                 CSSToLayoutDeviceScale(1.0f), 160.0f);
-
-  mScreens.InsertOrUpdate(aScreenId, screen);
+  mScreens.InsertOrUpdate(
+      aScreenId, MakeRefPtr<Screen>(aRect, aRect, 24, 24,
+                                    DesktopToLayoutDeviceScale(aDensity),
+                                    CSSToLayoutDeviceScale(1.0f), 160.0f));
   Refresh();
 }
 

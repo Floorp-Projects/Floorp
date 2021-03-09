@@ -31,6 +31,7 @@
 #include "nsCRT.h"
 #include "nsTHashtable.h"
 #include "nsQueryObject.h"
+#include "nsTHashMap.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -165,7 +166,7 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
   void ObserveContentParentCreated(nsISupports* aContentParent);
   void ObserveContentParentDestroyed(nsISupports* aSubject);
 
-  nsDataHashtable<nsUint64HashKey, RefPtr<ParticularProcessPriorityManager> >
+  nsTHashMap<uint64_t, RefPtr<ParticularProcessPriorityManager> >
       mParticularManagers;
 
   /** Contains the PIDs of child processes holding high-priority wakelocks */

@@ -16,28 +16,26 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "nsFocusManager.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 namespace dom {
 
 static StaticRefPtr<BrowsingContextGroup> sChromeGroup;
 
-static StaticAutoPtr<
-    nsDataHashtable<nsUint64HashKey, RefPtr<BrowsingContextGroup>>>
+static StaticAutoPtr<nsTHashMap<uint64_t, RefPtr<BrowsingContextGroup>>>
     sBrowsingContextGroups;
 
 already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetOrCreate(
     uint64_t aId) {
   if (!sBrowsingContextGroups) {
     sBrowsingContextGroups =
-        new nsDataHashtable<nsUint64HashKey, RefPtr<BrowsingContextGroup>>();
+        new nsTHashMap<nsUint64HashKey, RefPtr<BrowsingContextGroup>>();
     ClearOnShutdown(&sBrowsingContextGroups);
   }
 
-  RefPtr<BrowsingContextGroup> group =
-      sBrowsingContextGroups->LookupOrInsertWith(
-          aId, [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); });
-  return group.forget();
+  return do_AddRef(sBrowsingContextGroups->LookupOrInsertWith(
+      aId, [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); }));
 }
 
 already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create() {
@@ -226,7 +224,8 @@ void BrowsingContextGroup::Destroy() {
     MOZ_ASSERT(mHosts.Count() == 0);
     MOZ_ASSERT(mSubscribers.Count() == 0);
     MOZ_ASSERT_IF(sBrowsingContextGroups,
-                  sBrowsingContextGroups->Get(Id()) != this);
+                  !sBrowsingContextGroups->Contains(Id()) ||
+                      *sBrowsingContextGroups->Lookup(Id()) != this);
   }
   mDestroyed = true;
 #endif

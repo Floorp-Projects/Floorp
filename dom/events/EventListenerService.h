@@ -13,7 +13,7 @@
 #include "nsIEventListenerService.h"
 #include "nsString.h"
 #include "nsTObserverArray.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsGkAtoms.h"
 
 class nsIMutableArray;
@@ -93,7 +93,7 @@ class EventListenerService final : public nsIEventListenerService {
                                                    nsAtom* aName);
   nsTObserverArray<nsCOMPtr<nsIListenerChangeListener>> mChangeListeners;
   nsCOMPtr<nsIMutableArray> mPendingListenerChanges;
-  nsDataHashtable<nsISupportsHashKey, RefPtr<EventListenerChange>>
+  nsTHashMap<nsISupportsHashKey, RefPtr<EventListenerChange>>
       mPendingListenerChangesSet;
 
   static EventListenerService* sInstance;
