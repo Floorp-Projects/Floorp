@@ -1377,6 +1377,7 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
   switch (aAppearance) {
     case StyleAppearance::ButtonFocus:
     case StyleAppearance::Toolbarbutton:
+    case StyleAppearance::Tooltip:
     case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
