@@ -13,7 +13,8 @@
 #include "xpcAccessibleValue.h"
 
 #include "LocalAccessible.h"
-#include "AccessibleOrProxy.h"
+#include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -26,7 +27,7 @@ class xpcAccessibleGeneric : public xpcAccessible,
                              public xpcAccessibleSelectable,
                              public xpcAccessibleValue {
  public:
-  explicit xpcAccessibleGeneric(LocalAccessible* aInternal)
+  explicit xpcAccessibleGeneric(Accessible* aInternal)
       : mIntl(aInternal), mSupportedIfaces(0) {
     if (aInternal->IsSelect()) mSupportedIfaces |= eSelectable;
     if (aInternal->HasNumericValue()) mSupportedIfaces |= eValue;
@@ -47,7 +48,7 @@ class xpcAccessibleGeneric : public xpcAccessible,
  protected:
   virtual ~xpcAccessibleGeneric();
 
-  AccessibleOrProxy mIntl;
+  Accessible* mIntl;
 
   enum {
     eSelectable = 1 << 0,
@@ -69,22 +70,28 @@ class xpcAccessibleGeneric : public xpcAccessible,
 };
 
 inline LocalAccessible* xpcAccessible::Intl() {
-  return static_cast<xpcAccessibleGeneric*>(this)->mIntl.AsAccessible();
+  if (!static_cast<xpcAccessibleGeneric*>(this)->mIntl) {
+    return nullptr;
+  }
+  return static_cast<xpcAccessibleGeneric*>(this)->mIntl->AsLocal();
 }
 
-inline AccessibleOrProxy xpcAccessible::IntlGeneric() {
+inline Accessible* xpcAccessible::IntlGeneric() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 
-inline AccessibleOrProxy xpcAccessibleHyperLink::Intl() {
+inline Accessible* xpcAccessibleHyperLink::Intl() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 
 inline LocalAccessible* xpcAccessibleSelectable::Intl() {
-  return static_cast<xpcAccessibleGeneric*>(this)->mIntl.AsAccessible();
+  if (!static_cast<xpcAccessibleGeneric*>(this)->mIntl) {
+    return nullptr;
+  }
+  return static_cast<xpcAccessibleGeneric*>(this)->mIntl->AsLocal();
 }
 
-inline AccessibleOrProxy xpcAccessibleValue::Intl() {
+inline Accessible* xpcAccessibleValue::Intl() {
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 

@@ -527,8 +527,18 @@ uint16_t RuleCache::Match(const AccessibleOrProxy& aAccOrProxy) {
   }
 
   uint16_t matchResult = nsIAccessibleTraversalRule::FILTER_IGNORE;
-  DebugOnly<nsresult> rv = mRule->Match(ToXPC(aAccOrProxy), &matchResult);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  // XXX: ToXPC takes an Accessible. This can go away when pivot
+  // removes AoP too.
+  if (aAccOrProxy.IsProxy()) {
+    DebugOnly<nsresult> rv =
+        mRule->Match(ToXPC(aAccOrProxy.AsProxy()), &matchResult);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  } else {
+    DebugOnly<nsresult> rv =
+        mRule->Match(ToXPC(aAccOrProxy.AsAccessible()), &matchResult);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
 
   return result | matchResult;
 }
