@@ -619,15 +619,6 @@ void TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber,
   ReportCompileErrorLatin1(cx, std::move(metadata), nullptr, errorNumber, args);
 }
 
-// Use the fastest available getc.
-#if defined(HAVE_GETC_UNLOCKED)
-#  define fast_getc getc_unlocked
-#elif defined(HAVE__GETC_NOLOCK)
-#  define fast_getc _getc_nolock
-#else
-#  define fast_getc getc
-#endif
-
 [[nodiscard]] MOZ_ALWAYS_INLINE bool
 TokenStreamAnyChars::internalUpdateLineInfoForEOL(uint32_t lineStartOffset) {
   prevLinebase = linebase;
@@ -3835,30 +3826,3 @@ template class TokenStreamSpecific<
 }  // namespace frontend
 
 }  // namespace js
-
-JS_FRIEND_API int js_fgets(char* buf, int size, FILE* file) {
-  int n, i, c;
-  bool crflag;
-
-  n = size - 1;
-  if (n < 0) {
-    return -1;
-  }
-
-  crflag = false;
-  for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
-    buf[i] = c;
-    if (c == '\n') {  // any \n ends a line
-      i++;            // keep the \n; we know there is room for \0
-      break;
-    }
-    if (crflag) {  // \r not followed by \n ends line at the \r
-      ungetc(c, file);
-      break;  // and overwrite c in buf with \0
-    }
-    crflag = (c == '\r');
-  }
-
-  buf[i] = '\0';
-  return i;
-}

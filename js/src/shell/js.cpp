@@ -2827,6 +2827,44 @@ static bool Run(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static int js_fgets(char* buf, int size, FILE* file) {
+  int n, i, c;
+  bool crflag;
+
+  n = size - 1;
+  if (n < 0) {
+    return -1;
+  }
+
+  // Use the fastest available getc.
+  auto fast_getc =
+#if defined(HAVE_GETC_UNLOCKED)
+      getc_unlocked
+#elif defined(HAVE__GETC_NOLOCK)
+      _getc_nolock
+#else
+      getc
+#endif
+      ;
+
+  crflag = false;
+  for (i = 0; i < n && (c = fast_getc(file)) != EOF; i++) {
+    buf[i] = c;
+    if (c == '\n') {  // any \n ends a line
+      i++;            // keep the \n; we know there is room for \0
+      break;
+    }
+    if (crflag) {  // \r not followed by \n ends line at the \r
+      ungetc(c, file);
+      break;  // and overwrite c in buf with \0
+    }
+    crflag = (c == '\r');
+  }
+
+  buf[i] = '\0';
+  return i;
+}
+
 /*
  * function readline()
  * Provides a hook for scripts to read a line from stdin.
@@ -2834,7 +2872,7 @@ static bool Run(JSContext* cx, unsigned argc, Value* vp) {
 static bool ReadLine(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-#define BUFSIZE 256
+  static constexpr size_t BUFSIZE = 256;
   FILE* from = stdin;
   size_t buflength = 0;
   size_t bufsize = BUFSIZE;
