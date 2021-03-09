@@ -115,3 +115,31 @@ that's easily searched with ``grep``
     gron taskgraph.json | grep -E 'test.*machine.platform = "linux64";'
     ./mach taskgraph --json | gron | grep ...
 
+
+Diffing Taskgraphs
+------------------
+
+A common use case for running ``./mach taskgraph`` is to examine what changed
+in the taskgraph from one revision to the next. The ``--diff`` flag can
+facilitate this by automatically updating to the base revision of your stack
+(or a specified revision) and generating the taskgraph there. It will then
+update back to the current revision, generate the taskgraph again and produce a
+diff of the two. It can work with both labels and JSON (``-J``). All flags
+(such as ``--target-kind``, ``--parameters`` or ``--target-tasks-filter``) will
+apply to both graphs so can therefore be used in conjunction with ``--diff``.
+
+
+For example:
+
+.. code-block:: shell
+
+    ./mach taskgraph target --target-kind test --fast -J --diff
+
+The above will display a diff of the current taskgraph compared to the base
+revision of your stack. To compare against arbitrary revisions you can use
+``--diff <specifier>``. E.g:
+
+.. code-block:: shell
+
+    ./mach taskgraph target --diff .~1    # hg
+    ./mach taskgraph target --dif HEAD~1  # git
