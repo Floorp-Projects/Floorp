@@ -9,8 +9,6 @@
 			<dict>
 				<key>closeClicked</key>
 				<string>id</string>
-				<key>emailMeClicked</key>
-				<string>id</string>
 				<key>includeURLClicked</key>
 				<string>id</string>
 				<key>restartClicked</key>

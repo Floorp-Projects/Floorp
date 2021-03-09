@@ -25,11 +25,7 @@ using namespace CrashReporter;
 static GtkWidget* gViewReportButton = 0;
 static GtkWidget* gCommentTextLabel = 0;
 static GtkWidget* gCommentText = 0;
-static GtkWidget* gEmailMeCheck = 0;
-static GtkWidget* gEmailEntryLabel = 0;
-static GtkWidget* gEmailEntry = 0;
 
-static bool gEmailFieldHint = true;
 static bool gCommentFieldHint = true;
 
 // handle from dlopen'ing libgnome
@@ -45,14 +41,6 @@ static void LoadSettings() {
 
   StringTable settings;
   if (ReadStringsFromFile(gSettingsPath + "/" + kIniFile, settings, true)) {
-    if (settings.find("Email") != settings.end()) {
-      gtk_entry_set_text(GTK_ENTRY(gEmailEntry), settings["Email"].c_str());
-      gEmailFieldHint = false;
-    }
-    if (settings.find("EmailMe") != settings.end()) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck),
-                                   settings["EmailMe"][0] != '0');
-    }
     if (settings.find("IncludeURL") != settings.end() &&
         gIncludeURLCheck != 0) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck),
@@ -122,14 +110,6 @@ void SaveSettings() {
   StringTable settings;
 
   ReadStringsFromFile(gSettingsPath + "/" + kIniFile, settings, true);
-  if (!gEmailFieldHint)
-    settings["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
-  else
-    settings.erase("Email");
-
-  settings["EmailMe"] =
-      gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck)) ? "1"
-                                                                     : "0";
   if (gIncludeURLCheck != 0)
     settings["IncludeURL"] =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck)) ? "1"
@@ -155,8 +135,6 @@ void DisableGUIAndSendReport() {
   gtk_widget_set_sensitive(gViewReportButton, FALSE);
   gtk_widget_set_sensitive(gCommentText, FALSE);
   if (gIncludeURLCheck) gtk_widget_set_sensitive(gIncludeURLCheck, FALSE);
-  gtk_widget_set_sensitive(gEmailMeCheck, FALSE);
-  gtk_widget_set_sensitive(gEmailEntry, FALSE);
   gtk_widget_set_sensitive(gCloseButton, FALSE);
   if (gRestartButton) gtk_widget_set_sensitive(gRestartButton, FALSE);
   gtk_widget_show_all(gThrobber);
@@ -202,18 +180,12 @@ void UpdateSubmit() {
     gtk_widget_set_sensitive(gViewReportButton, TRUE);
     gtk_widget_set_sensitive(gCommentText, TRUE);
     if (gIncludeURLCheck) gtk_widget_set_sensitive(gIncludeURLCheck, TRUE);
-    gtk_widget_set_sensitive(gEmailMeCheck, TRUE);
-    gtk_widget_set_sensitive(
-        gEmailEntry,
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck)));
     gtk_label_set_text(GTK_LABEL(gProgressLabel),
                        gStrings[ST_REPORTPRESUBMIT].c_str());
   } else {
     gtk_widget_set_sensitive(gViewReportButton, FALSE);
     gtk_widget_set_sensitive(gCommentText, FALSE);
     if (gIncludeURLCheck) gtk_widget_set_sensitive(gIncludeURLCheck, FALSE);
-    gtk_widget_set_sensitive(gEmailMeCheck, FALSE);
-    gtk_widget_set_sensitive(gEmailEntry, FALSE);
     gtk_label_set_text(GTK_LABEL(gProgressLabel), "");
   }
 }
@@ -320,37 +292,6 @@ static gboolean CommentFocusChange(GtkWidget* widget, GdkEventFocus* event,
                                    gpointer userData) {
   UpdateHintText(widget, event->in, &gCommentFieldHint,
                  gStrings[ST_COMMENTGRAYTEXT].c_str());
-
-  return FALSE;
-}
-
-static void UpdateEmail() {
-  const char* email = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
-  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck))) {
-    gtk_widget_set_sensitive(gEmailEntry, TRUE);
-  } else {
-    email = "";
-    gtk_widget_set_sensitive(gEmailEntry, FALSE);
-  }
-  if (email[0] == '\0' || gEmailFieldHint) {
-    gQueryParameters.removeMember("Email");
-  } else {
-    gQueryParameters["Email"] = email;
-  }
-}
-
-static void EmailMeClicked(GtkButton* sender, gpointer userData) {
-  UpdateEmail();
-}
-
-static void EmailChanged(GtkEditable* editable, gpointer userData) {
-  UpdateEmail();
-}
-
-static gboolean EmailFocusChange(GtkWidget* widget, GdkEventFocus* event,
-                                 gpointer userData) {
-  UpdateHintText(widget, event->in, &gEmailFieldHint,
-                 gStrings[ST_EMAILGRAYTEXT].c_str());
 
   return FALSE;
 }
@@ -523,26 +464,6 @@ bool UIShowCrashUI(const StringTable& files, const Json::Value& queryParameters,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck), TRUE);
   }
 
-  gEmailMeCheck =
-      gtk_check_button_new_with_label(gStrings[ST_CHECKEMAIL].c_str());
-  gtk_box_pack_start(GTK_BOX(innerVBox), gEmailMeCheck, FALSE, FALSE, 0);
-  g_signal_connect(gEmailMeCheck, "clicked", G_CALLBACK(EmailMeClicked), 0);
-
-  GtkWidget* emailIndentBox = gtk_hbox_new(FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(innerVBox), emailIndentBox, FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(emailIndentBox), gtk_label_new(""), FALSE, FALSE,
-                     9);
-
-  gEmailEntryLabel = gtk_label_new(gStrings[ST_EMAILGRAYTEXT].c_str());
-  gEmailEntry = gtk_entry_new();
-  gtk_label_set_mnemonic_widget(GTK_LABEL(gEmailEntryLabel), gEmailEntry);
-  gtk_box_pack_start(GTK_BOX(emailIndentBox), gEmailEntry, TRUE, TRUE, 0);
-  g_signal_connect(gEmailEntry, "changed", G_CALLBACK(EmailChanged), 0);
-  g_signal_connect(gEmailEntry, "focus-in-event", G_CALLBACK(EmailFocusChange),
-                   0);
-  g_signal_connect(gEmailEntry, "focus-out-event", G_CALLBACK(EmailFocusChange),
-                   0);
-
   GtkWidget* progressBox = gtk_hbox_new(FALSE, 6);
   gtk_box_pack_start(GTK_BOX(vbox), progressBox, TRUE, TRUE, 0);
 
@@ -584,13 +505,10 @@ bool UIShowCrashUI(const StringTable& files, const Json::Value& queryParameters,
 
   LoadSettings();
 
-  UpdateEmail();
   UpdateSubmit();
 
   UpdateHintText(gCommentText, FALSE, &gCommentFieldHint,
                  gStrings[ST_COMMENTGRAYTEXT].c_str());
-  UpdateHintText(gEmailEntry, FALSE, &gEmailFieldHint,
-                 gStrings[ST_EMAILGRAYTEXT].c_str());
 
   gtk_widget_show_all(gWindow);
   // stick this here to avoid the show_all above...

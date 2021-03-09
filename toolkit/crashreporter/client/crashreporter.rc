@@ -84,9 +84,6 @@ BEGIN
     EDITTEXT        IDC_COMMENTTEXT,24,59,210,43,ES_MULTILINE | ES_WANTRETURN | WS_VSCROLL
     CONTROL         "include the address of the page i was on",IDC_INCLUDEURLCHECK,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,107,210,10
-    CONTROL         "tell mozilla to email me with more information",IDC_EMAILMECHECK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,120,210,10
-    EDITTEXT        IDC_EMAILTEXT,36,133,198,14,ES_AUTOHSCROLL
     CONTROL         "",IDC_THROBBER,"SysAnimate32",ACS_TRANSPARENT | NOT WS_VISIBLE | WS_TABSTOP,4,152,16,16
     LTEXT           "your crash report will be submitted when you restart",IDC_PROGRESSTEXT,24,152,210,10,SS_NOPREFIX
     DEFPUSHBUTTON   "restart firefox",IDC_RESTARTBUTTON,84,166,68,14
