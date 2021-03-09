@@ -1387,7 +1387,7 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
     *succeededOut = false;
   }
   MOZ_ASSERT(parserAtomData.empty());
-  XDRStencilDecoder decoder(cx, range);
+  XDRStencilDecoder decoder(cx, &input.options, range);
 
   XDRResult res = decoder.codeStencil(input, *this);
   if (res.isErr()) {
@@ -3502,7 +3502,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   if (!stencil) {
     return TranscodeResult::Throw;
   }
-  XDRStencilDecoder decoder(cx, range);
+  XDRStencilDecoder decoder(cx, &options, range);
   XDRResult res = decoder.codeStencil(input.get(), *stencil);
   if (res.isErr()) {
     return res.unwrapErr();
