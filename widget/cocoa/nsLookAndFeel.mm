@@ -40,7 +40,6 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorTextSelectBackground(0),
       mColorTextSelectBackgroundDisabled(0),
       mColorHighlight(0),
-      mColorMenuHover(0),
       mColorTextSelectForeground(0),
       mColorMenuHoverText(0),
       mColorButtonText(0),
@@ -99,18 +98,17 @@ void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
 
   // We should only clear the cache if we're in the main browser process.
-  // Otherwise, we should wait for the parent to inform us of new values
-  // to cache via LookAndFeel::SetIntCache.
+  // Otherwise, we should wait for the parent to inform us of new values to
+  // cache via SetCacheImpl.
   if (XRE_IsParentProcess()) {
     mUseOverlayScrollbarsCached = false;
     mAllowOverlayScrollbarsOverlapCached = false;
     mPrefersReducedMotionCached = false;
     mSystemUsesDarkThemeCached = false;
     mUseAccessibilityThemeCached = false;
+    // Fetch colors next time they are requested.
+    mInitialized = false;
   }
-
-  // Fetch colors next time they are requested.
-  mInitialized = false;
 }
 
 // Turns an opaque selection color into a partially transparent selection color,
@@ -192,10 +190,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
     case ColorID::Highlight:  // CSS2 color
     case ColorID::MozAccentColor:
-      aColor = mColorHighlight;
-      break;
     case ColorID::MozMenuhover:
-      aColor = mColorMenuHover;
+      aColor = mColorHighlight;
       break;
     case ColorID::TextSelectForeground:
       aColor = mColorTextSelectForeground;
@@ -574,11 +570,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       // information, so we get the information only on the parent processes
       // or when it's the initial query on child processes.  Otherwise we will
       // get the info via LookAndFeel::SetIntCache on child processes.
-      if (!mPrefersReducedMotionCached &&
-          [[NSWorkspace sharedWorkspace]
-              respondsToSelector:@selector(accessibilityDisplayShouldReduceMotion)]) {
+      if (!mPrefersReducedMotionCached) {
         mPrefersReducedMotion =
-            [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldReduceMotion] ? 1 : 0;
+            [[NSWorkspace sharedWorkspace]
+                respondsToSelector:@selector(accessibilityDisplayShouldReduceMotion)] &&
+            [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldReduceMotion];
         mPrefersReducedMotionCached = true;
       }
       aResult = mPrefersReducedMotion;
@@ -589,11 +585,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       // information, so we get the information only on the parent processes
       // or when it's the initial query on child processes.  Otherwise we will
       // get the info via LookAndFeel::SetIntCache on child processes.
-      if (!mUseAccessibilityThemeCached &&
-          [[NSWorkspace sharedWorkspace]
-              respondsToSelector:@selector(accessibilityDisplayShouldIncreaseContrast)]) {
+      if (!mUseAccessibilityThemeCached) {
         mUseAccessibilityTheme =
-            [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldIncreaseContrast] ? 1 : 0;
+            [[NSWorkspace sharedWorkspace]
+                respondsToSelector:@selector(accessibilityDisplayShouldIncreaseContrast)] &&
+            [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldIncreaseContrast];
         mUseAccessibilityThemeCached = true;
       }
       aResult = mUseAccessibilityTheme;
@@ -667,30 +663,53 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
 mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
 
-  LookAndFeelInt useOverlayScrollbars;
-  useOverlayScrollbars.id() = IntID::UseOverlayScrollbars;
-  useOverlayScrollbars.value() = GetInt(IntID::UseOverlayScrollbars);
-  cache.mInts().AppendElement(useOverlayScrollbars);
+  constexpr IntID kIntIdsToCache[] = {
+      IntID::UseOverlayScrollbars, IntID::AllowOverlayScrollbarsOverlap,
+      IntID::PrefersReducedMotion, IntID::SystemUsesDarkTheme, IntID::UseAccessibilityTheme};
 
-  LookAndFeelInt allowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.id() = IntID::AllowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.value() = GetInt(IntID::AllowOverlayScrollbarsOverlap);
-  cache.mInts().AppendElement(allowOverlayScrollbarsOverlap);
+  constexpr ColorID kColorIdsToCache[] = {
+      ColorID::Highlight,
+      ColorID::Highlighttext,
+      ColorID::Menutext,
+      ColorID::TextSelectBackground,
+      ColorID::TextSelectForeground,
+      ColorID::MozMacDefaultbuttontext,
+      ColorID::MozButtonhovertext,
+      ColorID::Windowtext,
+      ColorID::Activecaption,
+      ColorID::Activeborder,
+      ColorID::Graytext,
+      ColorID::Inactiveborder,
+      ColorID::Inactivecaption,
+      ColorID::Scrollbar,
+      ColorID::Threedhighlight,
+      ColorID::Menu,
+      ColorID::Windowframe,
+      ColorID::Fieldtext,
+      ColorID::MozDialog,
+      ColorID::MozDialogtext,
+      ColorID::MozDragtargetzone,
+      ColorID::MozMacChromeActive,
+      ColorID::MozMacChromeInactive,
+      ColorID::MozMacFocusring,
+      ColorID::MozMacMenutextselect,
+      ColorID::MozMacDisabledtoolbartext,
+      ColorID::MozMacMenuselect,
+      ColorID::MozCellhighlight,
+      ColorID::MozEventreerow,
+      ColorID::MozOddtreerow,
+      ColorID::MozMacActiveMenuitem,
+  };
 
-  LookAndFeelInt prefersReducedMotion;
-  prefersReducedMotion.id() = IntID::PrefersReducedMotion;
-  prefersReducedMotion.value() = GetInt(IntID::PrefersReducedMotion);
-  cache.mInts().AppendElement(prefersReducedMotion);
+  for (IntID id : kIntIdsToCache) {
+    cache.mInts().AppendElement(LookAndFeelInt(id, GetInt(id)));
+  }
 
-  LookAndFeelInt useAccessibilityTheme;
-  useAccessibilityTheme.id() = IntID::UseAccessibilityTheme;
-  useAccessibilityTheme.value() = GetInt(IntID::UseAccessibilityTheme);
-  cache.mInts().AppendElement(useAccessibilityTheme);
-
-  LookAndFeelInt systemUsesDarkTheme;
-  systemUsesDarkTheme.id() = IntID::SystemUsesDarkTheme;
-  systemUsesDarkTheme.value() = GetInt(IntID::SystemUsesDarkTheme);
-  cache.mInts().AppendElement(systemUsesDarkTheme);
+  for (ColorID id : kColorIdsToCache) {
+    nscolor color = 0;
+    NativeGetColor(id, color);
+    cache.mColors().AppendElement(LookAndFeelColor(id, color));
+  }
 
   return cache;
 }
@@ -725,6 +744,79 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
         break;
     }
   }
+  for (const auto& entry : aCache.mColors()) {
+    nscolor& slot = [&]() -> nscolor& {
+      switch (entry.id()) {
+        case ColorID::Highlight:
+          return mColorHighlight;
+        case ColorID::Highlighttext:
+          return mColorMenuHoverText;
+        case ColorID::Menutext:
+          return mColorText;
+        case ColorID::TextSelectBackground:
+          return mColorTextSelectBackground;
+        case ColorID::TextSelectForeground:
+          return mColorTextSelectForeground;
+        case ColorID::MozMacDefaultbuttontext:
+          return mColorButtonText;
+        case ColorID::MozButtonhovertext:
+          return mColorButtonHoverText;
+        case ColorID::Windowtext:
+          return mColorWindowText;
+        case ColorID::Activecaption:
+          return mColorActiveCaption;
+        case ColorID::Activeborder:
+          return mColorActiveBorder;
+        case ColorID::Graytext:
+          return mColorGrayText;
+        case ColorID::Inactiveborder:
+          return mColorInactiveBorder;
+        case ColorID::Inactivecaption:
+          return mColorInactiveCaption;
+        case ColorID::Scrollbar:
+          return mColorScrollbar;
+        case ColorID::Threedhighlight:
+          return mColorThreeDHighlight;
+        case ColorID::Menu:
+          return mColorMenu;
+        case ColorID::Windowframe:
+          return mColorWindowFrame;
+        case ColorID::Fieldtext:
+          return mColorFieldText;
+        case ColorID::MozDialog:
+          return mColorDialog;
+        case ColorID::MozDialogtext:
+          return mColorDialogText;
+        case ColorID::MozDragtargetzone:
+          return mColorDragTargetZone;
+        case ColorID::MozMacChromeActive:
+          return mColorChromeActive;
+        case ColorID::MozMacChromeInactive:
+          return mColorChromeInactive;
+        case ColorID::MozMacFocusring:
+          return mColorFocusRing;
+        case ColorID::MozMacMenutextselect:
+          return mColorTextSelect;
+        case ColorID::MozMacDisabledtoolbartext:
+          return mColorDisabledToolbarText;
+        case ColorID::MozMacMenuselect:
+          return mColorMenuSelect;
+        case ColorID::MozCellhighlight:
+          return mColorCellHighlight;
+        case ColorID::MozEventreerow:
+          return mColorEvenTreeRow;
+        case ColorID::MozOddtreerow:
+          return mColorOddTreeRow;
+        case ColorID::MozMacActiveMenuitem:
+          return mColorActiveSourceListSelection;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unknown color in the cache");
+          return mColorOddTreeRow;
+      }
+    }();
+    slot = entry.color();
+  }
+  mInitialized = true;
 }
 
 void nsLookAndFeel::EnsureInit() {
@@ -741,7 +833,6 @@ void nsLookAndFeel::EnsureInit() {
   mColorTextSelectBackgroundDisabled = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
 
   mColorHighlight = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
-  mColorMenuHover = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
 
   GetColor(ColorID::TextSelectBackground, color);
   if (color == 0x000000) {
