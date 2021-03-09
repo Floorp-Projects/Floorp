@@ -1243,6 +1243,10 @@ function prompt(aActor, aBrowser, aRequest) {
     );
   }
 
+  if (gProtonDoorhangersEnabled) {
+    mainAction.disableHighlight = true;
+  }
+
   notification = chromeDoc.defaultView.PopupNotifications.show(
     aBrowser,
     "webRTC-shareDevices",
