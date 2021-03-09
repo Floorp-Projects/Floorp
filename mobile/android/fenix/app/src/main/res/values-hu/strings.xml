@@ -182,6 +182,8 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Megjelenés</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Olvasó nézet testreszabása</string>
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Nem tud csatlakozni. Felismerhetetlen URL-séma.</string>

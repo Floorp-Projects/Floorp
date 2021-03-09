@@ -132,6 +132,8 @@
     <string name="browser_menu_edit_bookmark">Editatu laster-marka</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Gehigarriak</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Hedapenak</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Gehigarririk ez hemen</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -183,6 +185,8 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Itxura</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Pertsonalizatu irakurtzeko ikuspegia</string>
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Ezin da konektatu. URL eskema ezagutezina.</string>
@@ -219,6 +223,11 @@
     <string name="search_suggestions_onboarding_text">Helbide-barran idazten duzun oro bilaketa-motor lehenetsiarekin partekatuko du %s(e)k.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Argibide gehiago</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Bilatu %s erabiliz</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Bilatu helbide-barratik zuzenean</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -538,6 +547,10 @@
     <string name="library_desktop_bookmarks_unfiled">Beste laster-markak</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historia</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Fitxa berria</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Bilatu orrian</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Sinkronizatutako fitxak</string>
     <!-- Option in Library to open Reading List -->
@@ -893,16 +906,22 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desaktibatuta</string>
 
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Baimendu audioa eta bideoa</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Baimendu audioa eta bideoa</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Blokeatu audioa eta bideoa datu mugikorretan soilik</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Audioa eta bideoa WiFi bidez erreproduzituko dira soilik</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Blokeatu audioa soilik</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Blokeatu audioa soilik</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Blokeatu audioa eta bideoa</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Blokeatu audioa eta bideoa</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Aktibatuta</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->

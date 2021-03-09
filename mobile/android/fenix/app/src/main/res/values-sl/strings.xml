@@ -181,6 +181,8 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Videz</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Prilagodi bralni pogled</string>
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Povezava ni mogoča. Neprepoznavna URL shema.</string>
@@ -217,6 +219,8 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Več o tem</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Išči z %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Iščite neposredno iz naslovne vrstice</string>
 
