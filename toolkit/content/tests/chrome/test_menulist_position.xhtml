@@ -43,11 +43,12 @@ function popupShown()
   if (menulist.selectedItem && navigator.platform.includes("Mac")) {
     let menulistlabel = menulist.shadowRoot.getElementById("label");
     let mitemlabel = menulist.selectedItem.querySelector(".menu-iconic-text");
+    let paddingTop = parseFloat(getComputedStyle(menulist.selectedItem).paddingTop);
 
     ok(isWithinHalfPixel(menulistlabel.getBoundingClientRect().left,
                          mitemlabel.getBoundingClientRect().left),
        "Labels horizontally aligned for index " + index);
-    ok(isWithinHalfPixel(menulistlabel.getBoundingClientRect().top,
+    ok(isWithinHalfPixel(menulistlabel.getBoundingClientRect().top + paddingTop,
                          mitemlabel.getBoundingClientRect().top),
        "Labels vertically aligned for index " + index);
 
