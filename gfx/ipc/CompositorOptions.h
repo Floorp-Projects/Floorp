@@ -34,6 +34,7 @@ class CompositorOptions {
         mUseWebRender(false),
         mUseSoftwareWebRender(false),
         mAllowSoftwareWebRenderD3D11(false),
+        mAllowSoftwareWebRenderOGL(false),
         mUseAdvancedLayers(false),
         mInitiallyPaused(false) {}
 
@@ -43,6 +44,7 @@ class CompositorOptions {
         mUseWebRender(aUseWebRender),
         mUseSoftwareWebRender(aUseSoftwareWebRender),
         mAllowSoftwareWebRenderD3D11(false),
+        mAllowSoftwareWebRenderOGL(false),
         mUseAdvancedLayers(false),
         mInitiallyPaused(false) {
     MOZ_ASSERT_IF(aUseSoftwareWebRender, aUseWebRender);
@@ -54,6 +56,7 @@ class CompositorOptions {
   bool AllowSoftwareWebRenderD3D11() const {
     return mAllowSoftwareWebRenderD3D11;
   }
+  bool AllowSoftwareWebRenderOGL() const { return mAllowSoftwareWebRenderOGL; }
   bool UseAdvancedLayers() const { return mUseAdvancedLayers; }
   bool InitiallyPaused() const { return mInitiallyPaused; }
 
@@ -61,6 +64,10 @@ class CompositorOptions {
 
   void SetAllowSoftwareWebRenderD3D11(bool aAllowSoftwareWebRenderD3D11) {
     mAllowSoftwareWebRenderD3D11 = aAllowSoftwareWebRenderD3D11;
+  }
+
+  void SetAllowSoftwareWebRenderOGL(bool aAllowSoftwareWebRenderOGL) {
+    mAllowSoftwareWebRenderOGL = aAllowSoftwareWebRenderOGL;
   }
 
   void SetUseAdvancedLayers(bool aUseAdvancedLayers) {
@@ -76,6 +83,7 @@ class CompositorOptions {
            mUseSoftwareWebRender == aOther.mUseSoftwareWebRender &&
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
+           mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL &&
            mUseAdvancedLayers == aOther.mUseAdvancedLayers;
   }
 
@@ -86,6 +94,7 @@ class CompositorOptions {
   bool mUseWebRender;
   bool mUseSoftwareWebRender;
   bool mAllowSoftwareWebRenderD3D11;
+  bool mAllowSoftwareWebRenderOGL;
   bool mUseAdvancedLayers;
   bool mInitiallyPaused;
 

@@ -859,6 +859,7 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
     WriteParam(aMsg, aParam.mUseWebRender);
     WriteParam(aMsg, aParam.mUseSoftwareWebRender);
     WriteParam(aMsg, aParam.mAllowSoftwareWebRenderD3D11);
+    WriteParam(aMsg, aParam.mAllowSoftwareWebRenderOGL);
     WriteParam(aMsg, aParam.mUseAdvancedLayers);
     WriteParam(aMsg, aParam.mInitiallyPaused);
   }
@@ -869,6 +870,7 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
            ReadParam(aMsg, aIter, &aResult->mUseWebRender) &&
            ReadParam(aMsg, aIter, &aResult->mUseSoftwareWebRender) &&
            ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderD3D11) &&
+           ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderOGL) &&
            ReadParam(aMsg, aIter, &aResult->mUseAdvancedLayers) &&
            ReadParam(aMsg, aIter, &aResult->mInitiallyPaused);
   }

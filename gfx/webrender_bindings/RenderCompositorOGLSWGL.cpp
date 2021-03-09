@@ -36,38 +36,38 @@ namespace wr {
 
 UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
+  if (!aWidget->GetCompositorOptions().AllowSoftwareWebRenderOGL()) {
+    return nullptr;
+  }
+
   RefPtr<Compositor> compositor;
 #ifdef MOZ_WIDGET_ANDROID
-  if (StaticPrefs::gfx_webrender_software_opengl_AtStartup()) {
-    RefPtr<gl::GLContext> context = RenderThread::Get()->SharedGL();
-    if (!context) {
-      gfxCriticalNote << "SharedGL does not exist for SWGL";
-      return nullptr;
-    }
-    nsCString log;
-    RefPtr<CompositorOGL> compositorOGL;
-    compositorOGL = new CompositorOGL(nullptr, aWidget, /* aSurfaceWidth */ -1,
-                                      /* aSurfaceHeight */ -1,
-                                      /* aUseExternalSurfaceSize */ true);
-    if (!compositorOGL->Initialize(context, &log)) {
-      gfxCriticalNote << "Failed to initialize CompositorOGL for SWGL: "
-                      << log.get();
-      return nullptr;
-    }
-    compositor = compositorOGL;
+  RefPtr<gl::GLContext> context = RenderThread::Get()->SharedGL();
+  if (!context) {
+    gfxCriticalNote << "SharedGL does not exist for SWGL";
+    return nullptr;
   }
+  nsCString log;
+  RefPtr<CompositorOGL> compositorOGL;
+  compositorOGL = new CompositorOGL(nullptr, aWidget, /* aSurfaceWidth */ -1,
+                                    /* aSurfaceHeight */ -1,
+                                    /* aUseExternalSurfaceSize */ true);
+  if (!compositorOGL->Initialize(context, &log)) {
+    gfxCriticalNote << "Failed to initialize CompositorOGL for SWGL: "
+                    << log.get();
+    return nullptr;
+  }
+  compositor = compositorOGL;
 #elif defined(MOZ_WIDGET_GTK)
-  if (StaticPrefs::gfx_webrender_software_opengl_AtStartup()) {
-    nsCString log;
-    RefPtr<CompositorOGL> compositorOGL;
-    compositorOGL = new CompositorOGL(nullptr, aWidget);
-    if (!compositorOGL->Initialize(&log)) {
-      gfxCriticalNote << "Failed to initialize CompositorOGL for SWGL: "
-                      << log.get();
-      return nullptr;
-    }
-    compositor = compositorOGL;
+  nsCString log;
+  RefPtr<CompositorOGL> compositorOGL;
+  compositorOGL = new CompositorOGL(nullptr, aWidget);
+  if (!compositorOGL->Initialize(&log)) {
+    gfxCriticalNote << "Failed to initialize CompositorOGL for SWGL: "
+                    << log.get();
+    return nullptr;
   }
+  compositor = compositorOGL;
 #endif
 
   if (!compositor) {
