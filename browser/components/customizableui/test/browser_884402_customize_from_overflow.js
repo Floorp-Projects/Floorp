@@ -14,6 +14,16 @@ registerCleanupFunction(function() {
 // show a context menu with options to move it.
 add_task(async function() {
   overflowPanel.setAttribute("animate", "false");
+  let fxaButton = document.getElementById("fxa-toolbar-menu-button");
+  if (BrowserTestUtils.is_hidden(fxaButton)) {
+    // FxA button is likely hidden since the user is logged out.
+    let initialFxaStatus = document.documentElement.getAttribute("fxastatus");
+    document.documentElement.setAttribute("fxastatus", "signed_in");
+    registerCleanupFunction(() =>
+      document.documentElement.setAttribute("fxastatus", initialFxaStatus)
+    );
+    ok(BrowserTestUtils.is_visible(fxaButton), "FxA button is now visible");
+  }
 
   originalWindowWidth = window.outerWidth;
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
@@ -35,14 +45,13 @@ add_task(async function() {
     "customizationPanelItemContextMenu"
   );
   let shownContextPromise = popupShown(contextMenu);
-  let sidebarButton = document.getElementById("sidebar-button");
-  ok(sidebarButton, "sidebar-button was found");
+  ok(fxaButton, "fxa-toolbar-menu-button was found");
   is(
-    sidebarButton.getAttribute("overflowedItem"),
+    fxaButton.getAttribute("overflowedItem"),
     "true",
-    "Sidebar button is overflowing"
+    "FxA button is overflowing"
   );
-  EventUtils.synthesizeMouse(sidebarButton, 2, 2, {
+  EventUtils.synthesizeMouse(fxaButton, 2, 2, {
     type: "contextmenu",
     button: 2,
   });
@@ -72,36 +81,36 @@ add_task(async function() {
   await hiddenContextPromise;
   await hiddenPromise;
 
-  let sidebarButtonPlacement = CustomizableUI.getPlacementOfWidget(
-    "sidebar-button"
+  let fxaButtonPlacement = CustomizableUI.getPlacementOfWidget(
+    "fxa-toolbar-menu-button"
   );
-  ok(sidebarButtonPlacement, "Sidebar button should still have a placement");
+  ok(fxaButtonPlacement, "FxA button should still have a placement");
   is(
-    sidebarButtonPlacement && sidebarButtonPlacement.area,
+    fxaButtonPlacement && fxaButtonPlacement.area,
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
-    "Sidebar button should be pinned now"
+    "FxA button should be pinned now"
   );
   CustomizableUI.reset();
 
   // In some cases, it can take a tick for the navbar to overflow again. Wait for it:
   await TestUtils.waitForCondition(() =>
-    sidebarButton.hasAttribute("overflowedItem")
+    fxaButton.hasAttribute("overflowedItem")
   );
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
-  sidebarButtonPlacement = CustomizableUI.getPlacementOfWidget(
-    "sidebar-button"
+  fxaButtonPlacement = CustomizableUI.getPlacementOfWidget(
+    "fxa-toolbar-menu-button"
   );
-  ok(sidebarButtonPlacement, "Sidebar button should still have a placement");
+  ok(fxaButtonPlacement, "FxA button should still have a placement");
   is(
-    sidebarButtonPlacement && sidebarButtonPlacement.area,
+    fxaButtonPlacement && fxaButtonPlacement.area,
     "nav-bar",
-    "Sidebar button should be back in the navbar now"
+    "FxA button should be back in the navbar now"
   );
 
   is(
-    sidebarButton.getAttribute("overflowedItem"),
+    fxaButton.getAttribute("overflowedItem"),
     "true",
-    "Sidebar button should still be overflowed"
+    "FxA button should still be overflowed"
   );
 });
