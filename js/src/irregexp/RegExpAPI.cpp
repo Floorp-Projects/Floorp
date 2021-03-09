@@ -684,6 +684,8 @@ RegExpRunStatus ExecuteRaw(jit::JitCode* code, const CharT* chars,
 RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
                           HandleLinearString input, size_t startIndex,
                           VectorMatchPairs* matches) {
+  MOZ_ASSERT(re->getByteCode(input->hasLatin1Chars()));
+
   HandleScope handleScope(cx->isolate);
   V8HandleRegExp wrappedRegExp(v8::internal::JSRegExp(re), cx->isolate);
   V8HandleString wrappedInput(v8::internal::String(input), cx->isolate);
