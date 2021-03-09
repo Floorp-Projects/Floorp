@@ -1,16 +1,7 @@
 "use strict";
 
 let contextMenu;
-let LOGIN_FILL_ITEMS = [
-  "---",
-  null,
-  "fill-login",
-  null,
-  ["fill-login-no-logins", false],
-  null,
-  "manage-saved-logins",
-  true,
-];
+let LOGIN_FILL_ITEMS = ["---", null, "manage-saved-logins", true];
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 let hasContainers =
   Services.prefs.getBoolPref("privacy.userContext.enabled") &&

@@ -83,7 +83,6 @@ function getVisibleMenuItems(aMenu, aData) {
         item.id != "spell-no-suggestions" &&
         item.id != "spell-add-dictionaries-main" &&
         item.id != "context-savelinktopocket" &&
-        item.id != "fill-login-no-logins" &&
         // XXX Screenshots doesn't have an access key. This needs
         // at least bug 1320462 fixing first.
         item.id != "screenshots_mozilla_org-menuitem-_create-screenshot" &&
