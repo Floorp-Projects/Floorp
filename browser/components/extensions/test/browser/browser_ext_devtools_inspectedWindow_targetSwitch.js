@@ -86,7 +86,7 @@ add_task(async () => {
   await extension.startup();
 
   info("Open the developer toolbox");
-  const { toolbox } = await openToolboxForTab(tab);
+  const toolbox = await openToolboxForTab(tab);
 
   info("Wait the devtools page load");
   await extension.awaitMessage("devtools-page-loaded");

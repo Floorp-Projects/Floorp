@@ -135,7 +135,7 @@ async function test_theme_name(testWithPanel = false) {
 
   await extension.startup();
 
-  const { toolbox, target } = await openToolboxForTab(tab);
+  const toolbox = await openToolboxForTab(tab);
 
   info("Waiting initial theme from devtools_page");
   is(
@@ -154,7 +154,7 @@ async function test_theme_name(testWithPanel = false) {
 
     let panelId = toolboxAdditionalTools[0].id;
 
-    await gDevTools.showToolbox(target, panelId);
+    await gDevTools.showToolboxForTab(tab, { toolId: panelId });
     is(
       await extension.awaitMessage("initial_theme_panel"),
       "light",
@@ -297,14 +297,14 @@ add_task(async function test_devtools_page_panels_create() {
 
   // Test the devtools panel shown and hide events.
   const testPanelShowAndHide = async ({
-    target,
+    tab,
     panelId,
     isFirstPanelLoad,
     expectedResults,
   }) => {
     info("Wait Addon Devtools Panel to be shown");
 
-    await gDevTools.showToolbox(target, panelId);
+    await gDevTools.showToolboxForTab(tab, { toolId: panelId });
     const { devtoolsPageTabId } = await extension.awaitMessage(
       "devtools_panel_shown"
     );
@@ -325,7 +325,7 @@ add_task(async function test_devtools_page_panels_create() {
 
     info("Wait Addon Devtools Panel to be shown");
 
-    await gDevTools.showToolbox(target, "testBlankPanel");
+    await gDevTools.showToolboxForTab(tab, { toolId: "testBlankPanel" });
     const results = await extension.awaitMessage("devtools_panel_hidden");
 
     // We already checked the tabId, remove it from the results, so that we can check
@@ -402,13 +402,13 @@ add_task(async function test_devtools_page_panels_create() {
 
   // Wait that the devtools_page has created its devtools panel and retrieve its
   // panel id.
-  let { toolbox, target } = await openToolboxForTab(tab);
+  let toolbox = await openToolboxForTab(tab);
   await extension.awaitMessage("devtools_panel_created");
   let panelId = getPanelInfo(toolbox).id;
 
   info("Test panel show and hide - first cycle");
   await testPanelShowAndHide({
-    target,
+    tab,
     panelId,
     isFirstPanelLoad: true,
     expectedResults: {
@@ -420,7 +420,7 @@ add_task(async function test_devtools_page_panels_create() {
 
   info("Test panel show and hide - second cycle");
   await testPanelShowAndHide({
-    target,
+    tab,
     panelId,
     isFirstPanelLoad: false,
     expectedResults: {
@@ -431,7 +431,7 @@ add_task(async function test_devtools_page_panels_create() {
   });
 
   // Go back to the extension devtools panel.
-  await gDevTools.showToolbox(target, panelId);
+  await gDevTools.showToolboxForTab(tab, { toolId: panelId });
   await extension.awaitMessage("devtools_panel_shown");
 
   // Check that the aria-label has been set on the devtools panel.
@@ -461,7 +461,7 @@ add_task(async function test_devtools_page_panels_create() {
   // devtools_page and the devtools panel.
   info("Re-open the toolbox and expect no extension devtools panel");
   await closeToolboxForTab(tab);
-  ({ toolbox, target } = await openToolboxForTab(tab));
+  toolbox = await openToolboxForTab(tab);
 
   let toolboxAdditionalTools = toolbox.getAdditionalTools();
   is(
@@ -474,7 +474,7 @@ add_task(async function test_devtools_page_panels_create() {
   // devtools_page and the devtools panel again.
   info("Restart the toolbox and enable the extension devtools panel");
   await closeToolboxForTab(tab);
-  ({ toolbox, target } = await openToolboxForTab(tab));
+  toolbox = await openToolboxForTab(tab);
 
   // Turn the addon devtools panel back on using the preference that enable/disable the
   // devtools page for a given installed WebExtension.
@@ -489,7 +489,7 @@ add_task(async function test_devtools_page_panels_create() {
 
   info("Test panel show and hide - after disabling/enabling devtools_page");
   await testPanelShowAndHide({
-    target,
+    tab,
     panelId,
     isFirstPanelLoad: true,
     expectedResults: {
@@ -565,7 +565,7 @@ add_task(async function test_devtools_page_panels_switch_toolbox_host() {
 
   await extension.startup();
 
-  let { toolbox, target } = await openToolboxForTab(tab);
+  let toolbox = await openToolboxForTab(tab);
   await extension.awaitMessage("devtools_panel_created");
 
   const toolboxAdditionalTools = toolbox.getAdditionalTools();
@@ -580,7 +580,7 @@ add_task(async function test_devtools_page_panels_switch_toolbox_host() {
   const panelId = panelDef.id;
 
   info("Selecting the addon devtools panel");
-  await gDevTools.showToolbox(target, panelId);
+  await gDevTools.showToolboxForTab(tab, { toolId: panelId });
 
   info("Wait for the panel to show and load for the first time");
   const panelShownURL = await extension.awaitMessage("devtools_panel_shown");
@@ -785,7 +785,7 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
 
   await extension.startup();
 
-  let { toolbox, target } = await openToolboxForTab(tab);
+  let toolbox = await openToolboxForTab(tab);
   info("developer toolbox opened");
 
   await extension.awaitMessage("devtools_page_ready");
@@ -801,7 +801,7 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
     const toolboxAdditionalTools = toolbox.getAdditionalTools();
     const lastTool = toolboxAdditionalTools[toolboxAdditionalTools.length - 1];
 
-    gDevTools.showToolbox(target, lastTool.id);
+    gDevTools.showToolboxForTab(tab, { toolId: lastTool.id });
     info("Last created panel selected");
   }
 
