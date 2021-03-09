@@ -116,7 +116,7 @@ namespace dom {
 
 struct WebProgressData
 {
-  bool isTopLevel;
+  MaybeDiscardedBrowsingContext browsingContext;
   bool isLoadingDocument;
   uint32_t loadType;
 };
@@ -548,25 +548,26 @@ parent:
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
 
-    async OnStateChange(WebProgressData? aWebProgressData,
+    async OnStateChange(WebProgressData aWebProgressData,
                         RequestData aRequestData, uint32_t aStateFlags,
                         nsresult aStatus,
                         WebProgressStateChangeData? aStateChangeData);
 
-    async OnProgressChange(WebProgressData? aWebProgressData,
-                           RequestData aRequestData, int32_t aCurSelfProgress,
-                           int32_t aMaxSelfProgress, int32_t aCurTotalProgress,
-                           int32_t aMaxTotalProgress);
-
-    async OnLocationChange(WebProgressData? aWebProgressData,
+    async OnLocationChange(WebProgressData aWebProgressData,
                            RequestData aRequestData, nsIURI aLocation,
                            uint32_t aFlags, bool aCanGoBack,
                            bool aCanGoForward,
                            WebProgressLocationChangeData? aLocationChangeData);
 
-    async OnStatusChange(WebProgressData? aWebProgressData,
-                         RequestData aRequestData, nsresult aStatus,
-                         nsString aMessage);
+    // We only track information about total progress in the parent process.
+    // This value is throttled using nsBrowserStatusFilter, and records the full
+    // total progress for nsDocShells managed by this actor.
+    async OnProgressChange(int32_t aCurTotalProgress, int32_t aMaxTotalProgress);
+
+    // Calls to OnStatusChange are throttled by nsBrowserStatusFilter, meaning
+    // they are only called with a status of `NS_OK`, and with no webProgress or
+    // request.
+    async OnStatusChange(nsString aMessage);
 
     async NotifyContentBlockingEvent(uint32_t aEvent, RequestData aRequestData,
                                      bool aBlocked, nsCString aTrackingOrigin,

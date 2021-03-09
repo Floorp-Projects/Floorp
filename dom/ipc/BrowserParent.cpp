@@ -2615,145 +2615,153 @@ mozilla::ipc::IPCResult BrowserParent::RecvRegisterProtocolHandler(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, const uint32_t aStateFlags,
-    const nsresult aStatus,
+    const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+    const uint32_t aStateFlags, const nsresult aStatus,
     const Maybe<WebProgressStateChangeData>& aStateChangeData) {
   if (mSuspendedProgressEvents) {
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIBrowser> browser = GetBrowser();
-  if (!GetBrowsingContext()->GetWebProgress() || !browser) {
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsIRequest> request;
+  RefPtr<CanonicalBrowsingContext> browsingContext;
+
+  if (!ReconstructWebProgressAndRequest(
+          aWebProgressData, aRequestData, getter_AddRefs(webProgress),
+          getter_AddRefs(request), getter_AddRefs(browsingContext))) {
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
+  if (aStateChangeData.isSome()) {
+    if (!browsingContext->IsTopContent()) {
+      return IPC_FAIL(
+          this,
+          "Unexpected WebProgressStateChangeData for non toplevel webProgress");
+    }
 
-  if (aWebProgressData && aWebProgressData->isTopLevel() &&
-      aStateChangeData.isSome()) {
-    Unused << browser->SetIsNavigating(aStateChangeData->isNavigating());
-    Unused << browser->SetMayEnableCharacterEncodingMenu(
-        aStateChangeData->mayEnableCharacterEncodingMenu());
-    Unused << browser->SetCharsetAutodetected(
-        aStateChangeData->charsetAutodetected());
-    Unused << browser->UpdateForStateChange(aStateChangeData->charset(),
-                                            aStateChangeData->documentURI(),
-                                            aStateChangeData->contentType());
-  } else if (aStateChangeData.isSome()) {
-    return IPC_FAIL(
-        this,
-        "Unexpected WebProgressStateChangeData for non-top-level WebProgress");
+    if (nsCOMPtr<nsIBrowser> browser = GetBrowser()) {
+      Unused << browser->SetIsNavigating(aStateChangeData->isNavigating());
+      Unused << browser->SetMayEnableCharacterEncodingMenu(
+          aStateChangeData->mayEnableCharacterEncodingMenu());
+      Unused << browser->SetCharsetAutodetected(
+          aStateChangeData->charsetAutodetected());
+      Unused << browser->UpdateForStateChange(aStateChangeData->charset(),
+                                              aStateChangeData->documentURI(),
+                                              aStateChangeData->contentType());
+    }
   }
 
-  GetBrowsingContext()->Top()->GetWebProgress()->OnStateChange(
-      webProgress, request, aStateFlags, aStatus);
+  if (nsCOMPtr<nsIWebProgressListener> listener =
+          GetBrowsingContext()->Top()->GetWebProgress()) {
+    listener->OnStateChange(webProgress, request, aStateFlags, aStatus);
+  }
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvOnProgressChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, const int32_t aCurSelfProgress,
-    const int32_t aMaxSelfProgress, const int32_t aCurTotalProgress,
-    const int32_t aMaxTotalProgress) {
+    const int32_t aCurTotalProgress, const int32_t aMaxTotalProgress) {
   if (mSuspendedProgressEvents) {
     return IPC_OK();
   }
 
-  if (!GetBrowsingContext()->GetWebProgress()) {
+  // We only collect progress change notifications for the toplevel
+  // BrowserParent.
+  // FIXME: In the future, consider merging in progress change information from
+  // oop subframes.
+  if (!GetBrowsingContext()->IsTopContent() ||
+      !GetBrowsingContext()->GetWebProgress()) {
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
-
-  GetBrowsingContext()->Top()->GetWebProgress()->OnProgressChange(
-      webProgress, request, aCurSelfProgress, aMaxSelfProgress,
-      aCurTotalProgress, aMaxTotalProgress);
+  GetBrowsingContext()->GetWebProgress()->OnProgressChange(
+      nullptr, nullptr, 0, 0, aCurTotalProgress, aMaxTotalProgress);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, nsIURI* aLocation, const uint32_t aFlags,
-    const bool aCanGoBack, const bool aCanGoForward,
+    const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+    nsIURI* aLocation, const uint32_t aFlags, const bool aCanGoBack,
+    const bool aCanGoForward,
     const Maybe<WebProgressLocationChangeData>& aLocationChangeData) {
   if (mSuspendedProgressEvents) {
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIBrowser> browser = GetBrowser();
-  if (!GetBrowsingContext()->GetWebProgress() || !browser) {
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsIRequest> request;
+  RefPtr<CanonicalBrowsingContext> browsingContext;
+
+  if (!ReconstructWebProgressAndRequest(
+          aWebProgressData, aRequestData, getter_AddRefs(webProgress),
+          getter_AddRefs(request), getter_AddRefs(browsingContext))) {
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
-
-  Unused << browser->UpdateWebNavigationForLocationChange(aCanGoBack,
-                                                          aCanGoForward);
-
-  if (aWebProgressData && aWebProgressData->isTopLevel() &&
-      aLocationChangeData.isSome()) {
-    Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
-    Unused << browser->UpdateForLocationChange(
-        aLocation, aLocationChangeData->charset(),
-        aLocationChangeData->mayEnableCharacterEncodingMenu(),
-        aLocationChangeData->charsetAutodetected(),
-        aLocationChangeData->documentURI(), aLocationChangeData->title(),
-        aLocationChangeData->contentPrincipal(),
-        aLocationChangeData->contentPartitionedPrincipal(),
-        aLocationChangeData->csp(), aLocationChangeData->referrerInfo(),
-        aLocationChangeData->isSyntheticDocument(),
-        aLocationChangeData->requestContextID().isSome(),
-        aLocationChangeData->requestContextID().valueOr(0),
-        aLocationChangeData->contentType());
+  nsCOMPtr<nsIBrowser> browser = GetBrowser();
+  if (!mozilla::SessionHistoryInParent() && browser) {
+    Unused << browser->UpdateWebNavigationForLocationChange(aCanGoBack,
+                                                            aCanGoForward);
   }
 
-  GetBrowsingContext()->Top()->GetWebProgress()->OnLocationChange(
-      webProgress, request, aLocation, aFlags);
+  if (aLocationChangeData.isSome()) {
+    if (!browsingContext->IsTopContent()) {
+      return IPC_FAIL(this,
+                      "Unexpected WebProgressLocationChangeData for non "
+                      "toplevel webProgress");
+    }
+
+    if (browser) {
+      Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
+      Unused << browser->UpdateForLocationChange(
+          aLocation, aLocationChangeData->charset(),
+          aLocationChangeData->mayEnableCharacterEncodingMenu(),
+          aLocationChangeData->charsetAutodetected(),
+          aLocationChangeData->documentURI(), aLocationChangeData->title(),
+          aLocationChangeData->contentPrincipal(),
+          aLocationChangeData->contentPartitionedPrincipal(),
+          aLocationChangeData->csp(), aLocationChangeData->referrerInfo(),
+          aLocationChangeData->isSyntheticDocument(),
+          aLocationChangeData->requestContextID().isSome(),
+          aLocationChangeData->requestContextID().valueOr(0),
+          aLocationChangeData->contentType());
+    }
+  }
+
+  if (nsCOMPtr<nsIWebProgressListener> listener =
+          browsingContext->Top()->GetWebProgress()) {
+    listener->OnLocationChange(webProgress, request, aLocation, aFlags);
+  }
 
   // Since we've now changed Documents, notify the BrowsingContext that we've
   // changed. Ideally we'd just let the BrowsingContext do this when it changes
   // the current window global, but that happens before this and we have a lot
   // of tests that depend on the specific ordering of messages.
-  if (!(aFlags & nsIWebProgressListener::LOCATION_CHANGE_SAME_DOCUMENT)) {
-    GetBrowsingContext()->UpdateSecurityState();
+  if (browsingContext->IsTopContent() &&
+      !(aFlags & nsIWebProgressListener::LOCATION_CHANGE_SAME_DOCUMENT)) {
+    browsingContext->UpdateSecurityState();
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, const nsresult aStatus,
     const nsString& aMessage) {
   if (mSuspendedProgressEvents) {
     return IPC_OK();
   }
 
-  if (!GetBrowsingContext()->GetWebProgress()) {
+  // We only collect status change notifications for the toplevel
+  // BrowserParent.
+  // FIXME: In the future, consider merging in status change information from
+  // oop subframes.
+  if (!GetBrowsingContext()->IsTopContent() ||
+      !GetBrowsingContext()->GetWebProgress()) {
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
-
-  GetBrowsingContext()->Top()->GetWebProgress()->OnStatusChange(
-      webProgress, request, aStatus, aMessage.get());
+  GetBrowsingContext()->GetWebProgress()->OnStatusChange(nullptr, nullptr,
+                                                         NS_OK, aMessage.get());
 
   return IPC_OK();
 }
@@ -2830,32 +2838,63 @@ already_AddRefed<nsIBrowser> BrowserParent::GetBrowser() {
   return browser.forget();
 }
 
-void BrowserParent::ReconstructWebProgressAndRequest(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, nsIWebProgress** aOutWebProgress,
-    nsIRequest** aOutRequest) {
+bool BrowserParent::ReconstructWebProgressAndRequest(
+    const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+    nsIWebProgress** aOutWebProgress, nsIRequest** aOutRequest,
+    CanonicalBrowsingContext** aOutBrowsingContext) {
   MOZ_DIAGNOSTIC_ASSERT(aOutWebProgress,
                         "aOutWebProgress should never be null");
   MOZ_DIAGNOSTIC_ASSERT(aOutRequest, "aOutRequest should never be null");
+  MOZ_DIAGNOSTIC_ASSERT(aOutBrowsingContext,
+                        "aOutBrowsingContext should never be null");
 
-  nsCOMPtr<nsIWebProgress> webProgress;
-  if (aWebProgressData) {
-    webProgress = new RemoteWebProgress(aWebProgressData->loadType(),
-                                        aWebProgressData->isLoadingDocument(),
-                                        aWebProgressData->isTopLevel());
-  } else {
-    webProgress = new RemoteWebProgress(0, false, false);
+  // Look up the BrowsingContext which this notification was fired for.
+  if (aWebProgressData.browsingContext().IsNullOrDiscarded()) {
+    NS_WARNING("WebProgress Ignored: BrowsingContext is null or discarded");
+    return false;
   }
-  webProgress.forget(aOutWebProgress);
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      aWebProgressData.browsingContext().get_canonical();
 
+  // Double-check that we actually manage this BrowsingContext, and are not
+  // receiving a malformed or out-of-date request. browsingContext should either
+  // be the toplevel one managed by this BrowserParent, or embedded within a
+  // WindowGlobalParent managed by this BrowserParent.
+  if (browsingContext != mBrowsingContext) {
+    WindowGlobalParent* embedder = browsingContext->GetParentWindowContext();
+    if (!embedder || embedder->GetBrowserParent() != this) {
+      NS_WARNING("WebProgress Ignored: wrong embedder process");
+      return false;
+    }
+  }
+
+  // The current process for this BrowsingContext may have changed since the
+  // notification was fired. Don't fire events for it anymore, as ownership of
+  // the BrowsingContext has been moved elsewhere.
+  if (RefPtr<WindowGlobalParent> current =
+          browsingContext->GetCurrentWindowGlobal();
+      current && current->GetBrowserParent() != this) {
+    NS_WARNING("WebProgress Ignored: no longer current window global");
+    return false;
+  }
+
+  // Construct a temporary RemoteWebProgress and RemoteWebProgressRequest which
+  // contains relevant state used by our in-parent callbacks.
+  nsCOMPtr<nsIWebProgress> webProgress = MakeAndAddRef<RemoteWebProgress>(
+      aWebProgressData.loadType(), aWebProgressData.isLoadingDocument(),
+      browsingContext->IsTopContent());
+
+  nsCOMPtr<nsIRequest> request;
   if (aRequestData.requestURI()) {
-    nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
+    request = MakeAndAddRef<RemoteWebProgressRequest>(
         aRequestData.requestURI(), aRequestData.originalRequestURI(),
         aRequestData.matchedList());
-    request.forget(aOutRequest);
-  } else {
-    *aOutRequest = nullptr;
   }
+
+  webProgress.forget(aOutWebProgress);
+  request.forget(aOutRequest);
+  browsingContext.forget(aOutBrowsingContext);
+  return true;
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
