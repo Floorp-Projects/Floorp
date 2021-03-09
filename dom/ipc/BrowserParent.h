@@ -279,27 +279,20 @@ class BrowserParent final : public PBrowserParent,
                                                       nsIURI* aDocURI);
 
   mozilla::ipc::IPCResult RecvOnStateChange(
-      const Maybe<WebProgressData>& awebProgressData,
-      const RequestData& aRequestData, const uint32_t aStateFlags,
-      const nsresult aStatus,
+      const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+      const uint32_t aStateFlags, const nsresult aStatus,
       const Maybe<WebProgressStateChangeData>& aStateChangeData);
 
-  mozilla::ipc::IPCResult RecvOnProgressChange(
-      const Maybe<WebProgressData>& aWebProgressData,
-      const RequestData& aRequestData, const int32_t aCurSelfProgress,
-      const int32_t aMaxSelfProgress, const int32_t aCurTotalProgres,
-      const int32_t aMaxTotalProgress);
+  mozilla::ipc::IPCResult RecvOnProgressChange(const int32_t aCurTotalProgres,
+                                               const int32_t aMaxTotalProgress);
 
   mozilla::ipc::IPCResult RecvOnLocationChange(
-      const Maybe<WebProgressData>& aWebProgressData,
-      const RequestData& aRequestData, nsIURI* aLocation, const uint32_t aFlags,
-      const bool aCanGoBack, const bool aCanGoForward,
+      const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+      nsIURI* aLocation, const uint32_t aFlags, const bool aCanGoBack,
+      const bool aCanGoForward,
       const Maybe<WebProgressLocationChangeData>& aLocationChangeData);
 
-  mozilla::ipc::IPCResult RecvOnStatusChange(
-      const Maybe<WebProgressData>& aWebProgressData,
-      const RequestData& aRequestData, const nsresult aStatus,
-      const nsString& aMessage);
+  mozilla::ipc::IPCResult RecvOnStatusChange(const nsString& aMessage);
 
   mozilla::ipc::IPCResult RecvNotifyContentBlockingEvent(
       const uint32_t& aEvent, const RequestData& aRequestData,
@@ -314,10 +307,10 @@ class BrowserParent final : public PBrowserParent,
 
   already_AddRefed<nsIBrowser> GetBrowser();
 
-  void ReconstructWebProgressAndRequest(
-      const Maybe<WebProgressData>& aWebProgressData,
-      const RequestData& aRequestData, nsIWebProgress** aOutWebProgress,
-      nsIRequest** aOutRequest);
+  bool ReconstructWebProgressAndRequest(
+      const WebProgressData& aWebProgressData, const RequestData& aRequestData,
+      nsIWebProgress** aOutWebProgress, nsIRequest** aOutRequest,
+      CanonicalBrowsingContext** aOutBrowsingContext);
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
