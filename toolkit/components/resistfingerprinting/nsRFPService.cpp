@@ -631,7 +631,14 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
   userAgent.AppendLiteral("; rv:");
   userAgent.AppendInt(spoofedVersion);
   userAgent.AppendLiteral(".0) Gecko/");
+
+#if defined(ANDROID)
+  userAgent.AppendInt(spoofedVersion);
+  userAgent.AppendLiteral(".0");
+#else
   userAgent.AppendLiteral(LEGACY_UA_GECKO_TRAIL);
+#endif
+
   userAgent.AppendLiteral(" Firefox/");
   userAgent.AppendInt(spoofedVersion);
   userAgent.AppendLiteral(".0");
