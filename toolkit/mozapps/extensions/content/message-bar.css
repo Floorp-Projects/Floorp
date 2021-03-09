@@ -33,6 +33,13 @@
   --in-content-button-background-hover: var(--yellow-70);
   --in-content-button-background-active: var(--yellow-80);
 }
+:host([type=warning]) ::slotted(button:enabled:hover),
+:host([type=warning]) ::slotted(button:enabled:hover),
+:host([type=warning]) .close:enabled:hover,
+:host([type=warning]) .close:enabled:hover:active {
+  /* common.css sets color: inherit !important... */
+  color: white !important;
+}
 
 :host([type=success]) {
   background-color: var(--green-50);
