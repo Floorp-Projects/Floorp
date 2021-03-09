@@ -1,0 +1,3 @@
+. "$topsrcdir/build/mozconfig.wasm-sandboxing"
+. "$topsrcdir/build/unix/mozconfig.linux"
+. "$topsrcdir/tools/rusttests/config/mozconfigs/common"

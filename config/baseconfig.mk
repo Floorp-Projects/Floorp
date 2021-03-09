@@ -37,8 +37,14 @@ endif # WINNT
 ifndef INCLUDED_AUTOCONF_MK
 default::
 else
+
+ifeq ($(MOZ_BUILD_APP),tools/rusttests)
+# Rusttest tiers aren't a subset of regular ALL_TIERS, so define them separately
+ALL_TIERS := pre-export export rusttests
+else
 # All possible tiers
 ALL_TIERS := artifact win32-artifact android-fat-aar-artifact pre-export export pre-compile rust compile misc libs android-stage-package android-archive-geckoview tools check
+endif
 
 # All tiers that may be used manually via `mach build $tier`
 RUNNABLE_TIERS := $(ALL_TIERS)
