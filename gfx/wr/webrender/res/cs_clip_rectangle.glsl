@@ -279,19 +279,6 @@ void swgl_drawSpanR8() {
     float aa_start = opaque_start;
     float aa_end = opaque_end;
 
-    // We need to intersect the corner ellipse segments. Significantly, we need
-    // to know where the apex of the ellipse segment is and how far to push the
-    // outer diagonal of the octagon from the inner diagonal. The position of
-    // the inner diagonal simply runs diagonal across the corner box and has a
-    // constant offset from vertex on the inner bounding box. The apex also has
-    // a constant offset along the opposite diagonal (sqrt(2)/2 assuming unit
-    // length for the box sides). We then need to project the vector to the
-    // apex onto the local-space steps scale, so we collapse all these down to
-    // a projection vector to transform the apex vector with.
-    vec2 apex_scale = (0.7071 - 0.25) * local_step * recip(step_scale);
-    vec4 start_plane = vec4(1.0e6);
-    vec4 end_plane = vec4(1.0e6);
-
     // Here we actually intersect with the half-space of the corner. We get the
     // plane distance of the local-space position from the diagonal bounding
     // ellipse segment from the opaque region. The half-space is defined by the
@@ -309,23 +296,41 @@ void swgl_drawSpanR8() {
     // offset of the outer octagon where AA starts from the inner octagon of
     // where the opaque region starts using the apex vector (which is transpose
     // of the half-space's direction).
-    #define CLIP_CORNER(offset, normal, info) do {               \
-        float dist = dot(local_pos0 - (offset), (normal));       \
-        float scale = -dot(local_step, (normal));                \
-        vec2 apex = abs(normal).yx * sign(normal);               \
-        if (dist > 0.0 && scale >= 0.0) {                        \
-            if (dist > opaque_start * scale) {                   \
-                start_corner = info;                             \
-                start_plane = vec4(offset, normal);              \
-                opaque_start = dist * recip(max(scale, 1.0e-6)); \
-                aa_start = opaque_start + dot(apex, apex_scale); \
-            }                                                    \
-        } else if (dist > opaque_end * scale) {                  \
-            end_corner = info;                                   \
-            end_plane = vec4(offset, normal);                    \
-            opaque_end = dist * recip(min(scale, -1.0e-6));      \
-            aa_end = opaque_end + dot(apex, apex_scale);         \
-        }                                                        \
+    //
+    // We need to intersect the corner ellipse segments. Significantly, we need
+    // to know where the apex of the ellipse segment is and how far to push the
+    // outer diagonal of the octagon from the inner diagonal. The position of
+    // the inner diagonal simply runs diagonal across the corner box and has a
+    // constant offset from vertex on the inner bounding box. The apex also has
+    // a constant offset along the opposite diagonal relative to the diagonal
+    // intersect which is 1/sqrt(2) - 0.5 assuming unit length for the diagonal.
+    // We then need to project the vector to the apex onto the local-space step
+    // scale, but we do this with reference to the normal vector of the diagonal
+    // using dot(normal, apex) / dot(normal, local_step), where the apex vector
+    // is (0.7071 - 0.5) * abs(normal).yx * sign(normal).
+    vec4 start_plane = vec4(1.0e6);
+    vec4 end_plane = vec4(1.0e6);
+
+    #define CLIP_CORNER(offset, normal, info) do {                            \
+        float dist = dot(local_pos0 - (offset), (normal));                    \
+        float scale = -dot(local_step, (normal));                             \
+        if (scale >= 0.0) {                                                   \
+            if (dist > opaque_start * scale) {                                \
+                start_corner = info;                                          \
+                start_plane = vec4(offset, normal);                           \
+                float inv_scale = recip(max(scale, 1.0e-6));                  \
+                opaque_start = dist * inv_scale;                              \
+                float apex = (0.7071 - 0.5) * 2.0 * abs(normal.x * normal.y); \
+                aa_start = opaque_start - apex * inv_scale;                   \
+            }                                                                 \
+        } else if (dist > opaque_end * scale) {                               \
+            end_corner = info;                                                \
+            end_plane = vec4(offset, normal);                                 \
+            float inv_scale = recip(min(scale, -1.0e-6));                     \
+            opaque_end = dist * inv_scale;                                    \
+            float apex = (0.7071 - 0.5) * 2.0 * abs(normal.x * normal.y);     \
+            aa_end = opaque_end - apex * inv_scale;                           \
+        }                                                                     \
     } while (false)
 
     #ifdef WR_FEATURE_FAST_PATH
@@ -388,7 +393,7 @@ void swgl_drawSpanR8() {
     // pixel centers, but AA actually starts half a pixel away from the center.
     // If the AA region narrows to nothing, be careful not to inflate so much
     // that we start processing AA for fragments that don't need it.
-    aa_margin = 0.5 * max(aa_margin - max(aa_start - aa_end, 0.0), 0.0);
+    aa_margin = max(aa_margin - max(aa_start - aa_end, 0.0), 0.0);
     aa_start -= aa_margin;
     aa_end += aa_margin;
 
