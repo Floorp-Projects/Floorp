@@ -40,7 +40,8 @@ add_task(async function test_context_menu_iframe_fill() {
         browser,
         "#form-basic-password",
         () => true,
-        browser.browsingContext.children[0]
+        browser.browsingContext.children[0],
+        true
       );
 
       let popupMenu = document.getElementById("fill-login-popup");
