@@ -552,7 +552,7 @@ class XDROffThreadDecoder : public XDRDecoder {
  */
 
 /*
- * The stencil decoder accepts `options` and `range` as input.
+ * The stencil decoder accepts `range` as input.
  *
  * The decoded stencils are outputted to the default-initialized
  * `stencil` parameter of `codeStencil` method.
@@ -562,29 +562,19 @@ class XDROffThreadDecoder : public XDRDecoder {
  */
 class XDRStencilDecoder : public XDRDecoderBase {
  public:
-  XDRStencilDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-                    JS::TranscodeBuffer& buffer, size_t cursor)
-      : XDRDecoderBase(cx, buffer, cursor), options_(options) {
+  XDRStencilDecoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor)
+      : XDRDecoderBase(cx, buffer, cursor) {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(buffer.begin()));
     MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(cursor));
-    MOZ_ASSERT(options_);
   }
 
-  XDRStencilDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
-                    const JS::TranscodeRange& range)
-      : XDRDecoderBase(cx, range), options_(options) {
+  XDRStencilDecoder(JSContext* cx, const JS::TranscodeRange& range)
+      : XDRDecoderBase(cx, range) {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
-    MOZ_ASSERT(options_);
   }
-
-  bool hasOptions() const override { return true; }
-  const JS::ReadOnlyCompileOptions& options() override { return *options_; }
 
   XDRResult codeStencil(frontend::CompilationInput& input,
                         frontend::CompilationStencil& stencil);
-
- private:
-  const JS::ReadOnlyCompileOptions* options_;
 };
 
 class XDRStencilEncoder : public XDREncoder {
