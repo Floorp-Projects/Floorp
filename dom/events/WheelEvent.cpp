@@ -7,7 +7,6 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/WheelEvent.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "prtime.h"
 
 namespace mozilla::dom {
@@ -19,10 +18,6 @@ WheelEvent::WheelEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                      ? aWheelEvent
                      : new WidgetWheelEvent(false, eVoidEvent, nullptr)),
       mAppUnitsPerDevPixel(0) {
-  if (StaticPrefs::dom_event_wheel_deltaMode_lines_always_disabled()) {
-    mDeltaModeCheckingState = DeltaModeCheckingState::Unchecked;
-  }
-
   if (aWheelEvent) {
     mEventIsInternal = false;
     // If the delta mode is pixel, the WidgetWheelEvent's delta values are in
@@ -53,27 +48,29 @@ void WheelEvent::InitWheelEvent(
                              aScreenX, aScreenY, aClientX, aClientY, aButton,
                              aRelatedTarget, aModifiersList);
 
+  WidgetWheelEvent* wheelEvent = mEvent->AsWheelEvent();
   // When specified by the caller (for JS-created events), don't mess with the
   // delta mode.
-  mDeltaModeCheckingState = DeltaModeCheckingState::Checked;
-
-  WidgetWheelEvent* wheelEvent = mEvent->AsWheelEvent();
+  wheelEvent->mDeltaModeCheckingState =
+      WidgetWheelEvent::DeltaModeCheckingState::Checked;
   wheelEvent->mDeltaX = aDeltaX;
   wheelEvent->mDeltaY = aDeltaY;
   wheelEvent->mDeltaZ = aDeltaZ;
   wheelEvent->mDeltaMode = aDeltaMode;
 }
 
-double WheelEvent::ToWebExposedDelta(const WidgetWheelEvent& aWidgetEvent,
+double WheelEvent::ToWebExposedDelta(WidgetWheelEvent& aWidgetEvent,
                                      double aDelta, nscoord aLineOrPageAmount,
                                      CallerType aCallerType) {
+  using DeltaModeCheckingState = WidgetWheelEvent::DeltaModeCheckingState;
   if (aCallerType != CallerType::System) {
-    if (mDeltaModeCheckingState == DeltaModeCheckingState::Unknown) {
-      mDeltaModeCheckingState = DeltaModeCheckingState::Unchecked;
+    if (aWidgetEvent.mDeltaModeCheckingState ==
+        DeltaModeCheckingState::Unknown) {
+      aWidgetEvent.mDeltaModeCheckingState = DeltaModeCheckingState::Unchecked;
     }
-    if (mDeltaModeCheckingState == DeltaModeCheckingState::Unchecked &&
-        aWidgetEvent.mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE &&
-        StaticPrefs::dom_event_wheel_deltaMode_lines_disabled()) {
+    if (aWidgetEvent.mDeltaModeCheckingState ==
+            DeltaModeCheckingState::Unchecked &&
+        aWidgetEvent.mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE) {
       return aDelta * CSSPixel::FromAppUnits(aLineOrPageAmount).Rounded();
     }
   }
@@ -103,13 +100,16 @@ double WheelEvent::DeltaZ(CallerType aCallerType) {
 }
 
 uint32_t WheelEvent::DeltaMode(CallerType aCallerType) {
-  uint32_t mode = mEvent->AsWheelEvent()->mDeltaMode;
+  using DeltaModeCheckingState = WidgetWheelEvent::DeltaModeCheckingState;
+
+  WidgetWheelEvent* ev = mEvent->AsWheelEvent();
+  uint32_t mode = ev->mDeltaMode;
   if (aCallerType != CallerType::System) {
-    if (mDeltaModeCheckingState == DeltaModeCheckingState::Unknown) {
-      mDeltaModeCheckingState = DeltaModeCheckingState::Checked;
-    } else if (mDeltaModeCheckingState == DeltaModeCheckingState::Unchecked &&
-               mode == WheelEvent_Binding::DOM_DELTA_LINE &&
-               StaticPrefs::dom_event_wheel_deltaMode_lines_disabled()) {
+    if (ev->mDeltaModeCheckingState == DeltaModeCheckingState::Unknown) {
+      ev->mDeltaModeCheckingState = DeltaModeCheckingState::Checked;
+    } else if (ev->mDeltaModeCheckingState ==
+                   DeltaModeCheckingState::Unchecked &&
+               mode == WheelEvent_Binding::DOM_DELTA_LINE) {
       return WheelEvent_Binding::DOM_DELTA_PIXEL;
     }
   }

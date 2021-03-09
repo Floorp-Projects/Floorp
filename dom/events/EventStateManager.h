@@ -1188,6 +1188,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   uint32_t mMClickCount;
   uint32_t mRClickCount;
 
+  bool mShouldAlwaysUseLineDeltas : 1;
+  bool mShouldAlwaysUseLineDeltasInitialized : 1;
+
   bool mInTouchDrag;
 
   bool m_haveShutdown;
@@ -1195,6 +1198,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   RefPtr<OverOutElementsWrapper> mMouseEnterLeaveHelper;
   nsRefPtrHashtable<nsUint32HashKey, OverOutElementsWrapper>
       mPointersEnterLeaveHelper;
+
+  bool ShouldAlwaysUseLineDeltas();
 
  public:
   static nsresult UpdateUserActivityTimer(void);
