@@ -11,6 +11,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
+#  include "mozilla/WidgetUtilsGtk.h"
 #  include "nsGTKRemoteServer.h"
 #  include "nsXRemoteClient.h"
 #  ifdef MOZ_ENABLE_DBUS
@@ -103,7 +104,7 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
   UniquePtr<nsRemoteClient> client;
 
 #ifdef MOZ_WIDGET_GTK
-  bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  bool useX11Remote = mozilla::widget::GdkIsX11Display();
 
 #  if defined(MOZ_ENABLE_DBUS)
   if (!useX11Remote || getenv(DBUS_REMOTE_ENV)) {
@@ -152,7 +153,7 @@ void nsRemoteService::StartupServer() {
   }
 
 #ifdef MOZ_WIDGET_GTK
-  bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  bool useX11Remote = mozilla::widget::GdkIsX11Display();
 
 #  if defined(MOZ_ENABLE_DBUS)
   if (!useX11Remote || getenv(DBUS_REMOTE_ENV)) {

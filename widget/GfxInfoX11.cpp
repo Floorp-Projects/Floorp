@@ -26,6 +26,7 @@
 
 #include <gdk/gdkx.h>
 #ifdef MOZ_WAYLAND
+#  include "mozilla/WidgetUtilsGtk.h"
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
@@ -459,8 +460,7 @@ void GfxInfo::GetData() {
 
   mAdapterDescription.Assign(glRenderer);
 #ifdef MOZ_WAYLAND
-  mIsWayland = gdk_display_get_default() &&
-               !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  mIsWayland = GdkIsWaylandDisplay();
 #endif
 
   // Make a best effort guess at whether or not we are using the XWayland compat
