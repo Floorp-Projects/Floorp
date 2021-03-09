@@ -28,3 +28,4 @@ skip-if(!asyncPan||!webrender||Android) fuzzy-if(winWidget,94-94,3415-3419) fuzz
 pref(apz.allow_zooming,true) == 1662062-1-no-blurry.html 1662062-1-ref.html
 == 1681610.html 1681610-ref.html
 skip-if(!webrender) fuzzy-if(webrender&&!geckoview,0-255,0-60) fuzzy-if(webrender&&geckoview,0-255,0-1123) == 1687157-1.html 1687157-1-ref.html
+skip-if(!webrender) fuzzy-if(webrender,64-64,520-520) == 1696439-1.html 1696439-1-ref.html
