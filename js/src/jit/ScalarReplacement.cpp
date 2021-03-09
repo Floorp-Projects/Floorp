@@ -1210,6 +1210,7 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
 
   void visitGuardToClass(MGuardToClass* ins);
   void visitGuardArgumentsObjectFlags(MGuardArgumentsObjectFlags* ins);
+  void visitUnbox(MUnbox* ins);
   void visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins);
   void visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins);
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
@@ -1267,6 +1268,18 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
 
       case MDefinition::Opcode::GuardArgumentsObjectFlags: {
         if (escapes(def->toInstruction(), guardedForMapped)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::Unbox: {
+        if (def->type() != MIRType::Object) {
+          JitSpewDef(JitSpew_Escape, "has an invalid unbox\n", def);
+          return true;
+        }
+        if (escapes(def->toInstruction())) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
           return true;
         }
@@ -1397,6 +1410,20 @@ void ArgumentsReplacer::visitGuardArgumentsObjectFlags(
   ins->replaceAllUsesWith(args_);
 
   // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitUnbox(MUnbox* ins) {
+  // Skip unrelated unboxes.
+  if (ins->getOperand(0) != args_) {
+    return;
+  }
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  // Replace the unbox with the args object.
+  ins->replaceAllUsesWith(args_);
+
+  // Remove the unbox.
   ins->block()->discard(ins);
 }
 
