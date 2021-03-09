@@ -13,7 +13,7 @@ menucaption {
   -moz-box-align: center;
   list-style-image: none;
   -moz-image-region: auto;
-  padding: 0 21px 2px;
+  padding: 2px 21px;
 }
 
 menu[disabled="true"], menuitem[disabled="true"],
