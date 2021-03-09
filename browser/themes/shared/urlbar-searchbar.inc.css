@@ -33,8 +33,13 @@
 
 #urlbar-container,
 #search-container {
-  padding-block: 3px;
+  padding-block: 8px;
   margin-inline: @urlbarMarginInline@;
+}
+
+:root[uidensity=compact] #urlbar-container,
+:root[uidensity=compact] #search-container {
+  padding-block: 5px;
 }
 
 #urlbar,
@@ -44,16 +49,12 @@
   color: FieldText;
 }
 
-@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 #urlbar-container,
 #search-container {
-  padding-block: 8px;
+  padding-block: 3px;
 }
-#urlbar,
-#searchbar {
-  min-height: 32px;
-}
-} /* END proton */
+} /* END !proton */
 
 #urlbar-background,
 #searchbar {
