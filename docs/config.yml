@@ -28,6 +28,7 @@ categories:
         - code-quality
         - writing-rust-code
         - tools/profiler
+        - xpcom
     build_doc:
         - mach
         - tools/try
@@ -82,3 +83,4 @@ redirects:
     tools/lint: code-quality/lint
     tools/lint/coding-style: code-quality/coding-style
     tools/static-analysis/index.html: code-quality/static-analysis.html
+    xpcom/xpcom: xpcom
