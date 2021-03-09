@@ -110,8 +110,8 @@ menu-file-go-offline =
 menu-edit =
     .label = Edit
     .accesskey = E
-menu-edit-find-on =
-    .label = Find in This Page…
+menu-edit-find-in-page =
+    .label = Find in Page…
     .accesskey = F
 menu-edit-find-again =
     .label = Find Again
@@ -128,8 +128,8 @@ menu-view =
 menu-view-toolbars-menu =
     .label = Toolbars
     .accesskey = T
-menu-view-customize-toolbar =
-    .label = Customize…
+menu-view-customize-toolbar2 =
+    .label = Customize Toolbar…
     .accesskey = C
 menu-view-sidebar =
     .label = Sidebar
@@ -219,8 +219,8 @@ menu-bookmarks-menu =
     .accesskey = B
 menu-bookmarks-show-all =
     .label = Show All Bookmarks
-menu-bookmark-this-page =
-    .label = Bookmark This Page
+menu-bookmark-current-tab =
+    .label = Bookmark Current Tab
 menu-bookmark-edit =
     .label = Edit This Bookmark
 menu-bookmarks-all-tabs =
@@ -240,18 +240,18 @@ menu-tools =
 menu-tools-downloads =
     .label = Downloads
     .accesskey = D
-menu-tools-addons =
-    .label = Add-ons
-    .accesskey = A
-menu-tools-fxa-sign-in =
-    .label = Sign In To { -brand-product-name }…
+menu-tools-extensions =
+    .label = Extensions and Themes
+    .accesskey = E
+menu-tools-fxa-sign-in2 =
+    .label = Sign In
     .accesskey = g
 menu-tools-turn-on-sync =
     .label = Turn on { -sync-brand-short-name }…
     .accesskey = n
 menu-tools-sync-now =
     .label = Sync Now
-    .accesskey = S
+    .accesskey = o
 menu-tools-fxa-re-auth =
     .label = Reconnect to { -brand-product-name }…
     .accesskey = R
@@ -264,15 +264,11 @@ menu-tools-page-source =
 menu-tools-page-info =
     .label = Page Info
     .accesskey = I
-menu-preferences =
-    .label =
-        { PLATFORM() ->
-            [windows] Options
-           *[other] Preferences
-        }
+menu-settings =
+    .label = Settings
     .accesskey =
         { PLATFORM() ->
-            [windows] O
+            [windows] S
            *[other] n
         }
 menu-tools-layout-debugger =
