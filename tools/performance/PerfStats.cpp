@@ -26,7 +26,12 @@ static const char* const sMetricNames[] = {"DisplayList Building",
                                            "Layer Transactions",
                                            "Compositing",
                                            "Reflowing",
-                                           "Styling"};
+                                           "Styling",
+                                           "HttpChannelCompletion_Network",
+                                           "HttpChannelCompletion_Cache"};
+
+static_assert(sizeof(sMetricNames) / sizeof(sMetricNames[0]) ==
+              static_cast<uint64_t>(PerfStats::Metric::Max));
 
 PerfStats::MetricMask PerfStats::sCollectionMask = 0;
 StaticMutex PerfStats::sMutex;
@@ -88,6 +93,16 @@ void PerfStats::RecordMeasurementEndInternal(Metric aMetric) {
       (TimeStamp::Now() -
        sSingleton->mRecordedStarts[static_cast<size_t>(aMetric)])
           .ToMilliseconds();
+}
+
+void PerfStats::RecordMeasurementInternal(Metric aMetric,
+                                          TimeDuration aDuration) {
+  StaticMutexAutoLock lock(sMutex);
+
+  MOZ_ASSERT(sSingleton);
+
+  sSingleton->mRecordedTimes[static_cast<size_t>(aMetric)] +=
+      aDuration.ToMilliseconds();
 }
 
 struct StringWriteFunc : public JSONWriteFunc {
