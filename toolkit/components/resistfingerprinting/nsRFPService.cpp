@@ -607,11 +607,36 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
   // https://developer.mozilla.org/en-US/docs/Web/API/NavigatorID/userAgent
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 
+  // These magic numbers are the lengths of the UA string literals below.
+  // Assume three-digit Firefox version numbers so we have room to grow.
+  size_t preallocatedLength =
+      13 +
+      (isForHTTPHeader ? mozilla::ArrayLength(SPOOFED_HTTP_UA_OS)
+                       : mozilla::ArrayLength(SPOOFED_UA_OS)) -
+      1 + 5 + 3 + 10 + mozilla::ArrayLength(LEGACY_UA_GECKO_TRAIL) - 1 + 9 + 3 +
+      2;
+  userAgent.SetCapacity(preallocatedLength);
+
   uint32_t spoofedVersion = GetSpoofedVersion();
-  const char* spoofedOS = isForHTTPHeader ? SPOOFED_HTTP_UA_OS : SPOOFED_UA_OS;
-  userAgent.Assign(nsPrintfCString(
-      "Mozilla/5.0 (%s; rv:%d.0) Gecko/%s Firefox/%d.0", spoofedOS,
-      spoofedVersion, LEGACY_UA_GECKO_TRAIL, spoofedVersion));
+
+  // "Mozilla/5.0 (%s; rv:%d.0) Gecko/%d Firefox/%d.0"
+  userAgent.AssignLiteral("Mozilla/5.0 (");
+
+  if (isForHTTPHeader) {
+    userAgent.AppendLiteral(SPOOFED_HTTP_UA_OS);
+  } else {
+    userAgent.AppendLiteral(SPOOFED_UA_OS);
+  }
+
+  userAgent.AppendLiteral("; rv:");
+  userAgent.AppendInt(spoofedVersion);
+  userAgent.AppendLiteral(".0) Gecko/");
+  userAgent.AppendLiteral(LEGACY_UA_GECKO_TRAIL);
+  userAgent.AppendLiteral(" Firefox/");
+  userAgent.AppendInt(spoofedVersion);
+  userAgent.AppendLiteral(".0");
+
+  MOZ_ASSERT(userAgent.Length() <= preallocatedLength);
 }
 
 static const char* gCallbackPrefs[] = {
