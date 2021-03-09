@@ -13,7 +13,7 @@ menucaption {
   -moz-box-align: center;
   list-style-image: none;
   -moz-image-region: auto;
-  padding: 2px 21px;
+  padding: 0 21px 2px;
 }
 
 menu[disabled="true"], menuitem[disabled="true"],
@@ -155,9 +155,7 @@ menulist > menupopup > menu {
 menulist > menupopup > menuitem[checked="true"]::before,
 menulist > menupopup > menuitem[selected="true"]::before {
   content: '\2713'; /* a checkmark */
-  display: inline-block;
-  vertical-align: middle;
-  line-height: 0;
+  display: block;
   width: 15px;
   margin-inline-start: -15px;
 }
