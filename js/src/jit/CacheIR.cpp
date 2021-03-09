@@ -645,7 +645,7 @@ static void TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj,
 static bool ProtoChainSupportsTeleporting(JSObject* obj, JSObject* holder) {
   // The receiver should already have been handled since its checks are always
   // required.
-  MOZ_ASSERT(obj->isDelegate());
+  MOZ_ASSERT(obj->isUsedAsPrototype());
 
   // Prototype chain must have cacheable prototypes to ensure the cached
   // holder is the current holder.
@@ -714,7 +714,7 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   // Receiver guards (see TestMatchingReceiver) ensure the receiver's proto is
   // unchanged so peel off the receiver.
   JSObject* pobj = obj->staticPrototype();
-  MOZ_ASSERT(pobj->isDelegate());
+  MOZ_ASSERT(pobj->isUsedAsPrototype());
 
   // If teleporting is supported for this prototype chain, we are done.
   if (ProtoChainSupportsTeleporting(pobj, holder)) {

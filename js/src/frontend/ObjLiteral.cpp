@@ -151,7 +151,7 @@ bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
     }
 
     if (kind == PropertySetKind::UniqueNames) {
-      if (!AddDataPropertyNonDelegate(cx, obj, propId, propVal)) {
+      if (!AddDataPropertyNonPrototype(cx, obj, propId, propVal)) {
         return false;
       }
     } else {

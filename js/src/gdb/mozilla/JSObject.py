@@ -17,8 +17,8 @@ prettyprinters.clear_module_printers(__name__)
 class JSObjectTypeCache(object):
     def __init__(self, value, cache):
         object_flag = gdb.lookup_type("js::ObjectFlag")
-        self.objectflag_Delegate = prettyprinters.enum_value(
-            object_flag, "js::ObjectFlag::Delegate"
+        self.objectflag_IsUsedAsPrototype = prettyprinters.enum_value(
+            object_flag, "js::ObjectFlag::IsUsedAsPrototype"
         )
         self.func_ptr_type = gdb.lookup_type("JSFunction").pointer()
         self.class_NON_NATIVE = gdb.parse_and_eval("JSClass::NON_NATIVE")
@@ -60,7 +60,7 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
             return "[object {}]".format(class_name)
         else:
             flags = shape["objectFlags_"]["flags_"]
-            is_delegate = bool(flags & self.otc.objectflag_Delegate)
+            used_as_prototype = bool(flags & self.otc.objectflag_IsUsedAsPrototype)
             name = None
             if class_name == "Function":
                 function = self.value
@@ -73,7 +73,7 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
             return "[object {}{}]{}".format(
                 class_name,
                 " " + name if name else "",
-                " delegate" if is_delegate else "",
+                " used_as_prototype" if used_as_prototype else "",
             )
 
 

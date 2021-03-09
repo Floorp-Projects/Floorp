@@ -1223,7 +1223,7 @@ static bool WouldDefinePastNonwritableLength(ArrayObject* arr, uint32_t index) {
 
 static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
                                        HandleId id) {
-  MOZ_ASSERT(obj->isDelegate());
+  MOZ_ASSERT(obj->isUsedAsPrototype());
 
   // Lookups on integer ids cannot be cached through prototypes.
   if (JSID_IS_INT(id)) {
@@ -1257,7 +1257,7 @@ static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
   // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
 
   // Inlined fast path for non-prototype/non-native objects.
-  if (!obj->isDelegate() || !obj->is<NativeObject>()) {
+  if (!obj->isUsedAsPrototype() || !obj->is<NativeObject>()) {
     return true;
   }
 
@@ -2767,7 +2767,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
                                   Handle<PlainObject*> excludedItems,
                                   bool* optimized) {
   MOZ_ASSERT(
-      !target->isDelegate(),
+      !target->isUsedAsPrototype(),
       "CopyDataPropertiesNative should only be called during object literal "
       "construction"
       "which precludes that |target| is the prototype of any other object");
@@ -2837,7 +2837,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
       MOZ_ASSERT(!target->contains(cx, key),
                  "didn't expect to find an existing property");
 
-      if (!AddDataPropertyNonDelegate(cx, target, key, value)) {
+      if (!AddDataPropertyNonPrototype(cx, target, key, value)) {
         return false;
       }
     } else {
