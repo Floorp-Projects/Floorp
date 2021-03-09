@@ -128,18 +128,6 @@ add_test(function test_handleCallbackOpenTabModalDialog() {
   observer.observe(mockTabModalDialog, "tabmodal-dialog-loaded");
 });
 
-add_test(function test_dialogClosed() {
-  let observer = new modal.DialogObserver();
-
-  observer.dialogClosed(mockTabModalDialog.ownerGlobal).then(() => {
-    run_next_test();
-  });
-  observer.handleEvent({
-    type: "DOMModalDialogClosed",
-    target: mockTabModalDialog,
-  });
-});
-
 add_test(function test_handleCallbackCloseTabModalDialog() {
   let observer = new modal.DialogObserver();
 
