@@ -702,6 +702,8 @@
 }
 } /*** END proton ***/
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar,
 %endif
@@ -725,6 +727,7 @@
   background-image: var(--toolbar-bgimage);
   background-repeat: repeat-x;
 }
+} /*** END !proton ***/
 
 /* Add a translucent color on top of multiselected tabs */
 .tab-background[multiselected=true]:not([selected=true]) > .tab-background-inner {
