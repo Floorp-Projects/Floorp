@@ -64,6 +64,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #define kNanosecondsPerSecond 1000000000.0
 
 #if defined(XP_WIN)
+#  include "mozilla/PreXULSkeletonUI.h"
+
 #  include "mozilla/perfprobe.h"
 /**
  * Events sent to the system for profiling purposes
@@ -577,6 +579,16 @@ nsAppStartup::GetSecondsSinceLastOSRestart(int64_t* aResult) {
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetShowedPreXULSkeletonUI(bool* aResult) {
+#if defined(XP_WIN)
+  *aResult = GetPreXULSkeletonUIWasShown();
+#else
+  *aResult = false;
+#endif
+  return NS_OK;
 }
 
 NS_IMETHODIMP

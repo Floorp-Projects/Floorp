@@ -96,6 +96,7 @@ static const wchar_t kPreXULSkeletonUIKeyPath[] =
     L"SOFTWARE"
     L"\\" MOZ_APP_VENDOR L"\\" MOZ_APP_BASENAME L"\\PreXULSkeletonUISettings";
 
+static bool sPreXULSkeletonUIShown = false;
 static bool sPreXULSkeletonUIEnabled = false;
 static HWND sPreXULSkeletonUIWindow;
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
@@ -2077,6 +2078,10 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
 }
 
 bool WasPreXULSkeletonUIMaximized() { return sMaximized; }
+
+bool GetPreXULSkeletonUIWasShown() {
+  return sPreXULSkeletonUIShown || !!sPreXULSkeletonUIWindow;
+}
 
 HWND ConsumePreXULSkeletonUIHandle() {
   // NOTE: we need to make sure that everything that runs here is a no-op if
