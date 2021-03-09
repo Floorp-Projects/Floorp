@@ -953,7 +953,7 @@ class nsDocShell final : public nsDocLoader,
   bool IsFrame() { return mBrowsingContext->IsFrame(); }
   bool CanSetOriginAttributes();
   bool ShouldBlockLoadingForBackButton();
-  bool ShouldDiscardLayoutState(nsIHttpChannel* aChannel);
+  static bool ShouldDiscardLayoutState(nsIHttpChannel* aChannel);
   bool HasUnloadedParent();
   bool JustStartedNetworkLoad();
   bool NavigationBlockedByPrinting(bool aDisplayErrorDialog = true);
