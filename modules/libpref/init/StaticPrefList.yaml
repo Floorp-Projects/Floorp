@@ -1780,6 +1780,14 @@
   value: false
   mirror: always
 
+# A blocklist (list of domains) for the
+# dom.event.wheel-deltaMode-lines.disabled behavior, in case potential
+# unforeseen problems with it arrive.
+- name: dom.event.wheel-deltaMode-lines.always-enabled
+  type: String
+  value: ""
+  mirror: always
+
 #if defined(XP_MACOSX)
 # Whether to disable treating ctrl click as right click
 - name: dom.event.treat_ctrl_click_as_right_click.disabled
