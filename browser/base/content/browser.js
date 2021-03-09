@@ -9415,12 +9415,15 @@ var gDialogBox = {
       Cu.reportError(ex);
     } finally {
       let dialog = document.getElementById("window-modal-dialog");
-      dialog.close();
+      if (dialog.open) {
+        dialog.close();
+      }
       dialog.style.visibility = "hidden";
       dialog.style.height = "0";
       dialog.style.width = "0";
       document.documentElement.removeAttribute("window-modal-open");
       dialog.removeEventListener("dialogopen", this);
+      dialog.removeEventListener("close", this);
       this._updateMenuAndCommandState(true /* to enable */);
       this._dialog = null;
     }
@@ -9428,8 +9431,13 @@ var gDialogBox = {
   },
 
   handleEvent(event) {
-    if (event.type == "dialogopen") {
-      this._dialog.focus(true);
+    switch (event.type) {
+      case "dialogopen":
+        this._dialog.focus(true);
+        break;
+      case "close":
+        this._dialog.close();
+        break;
     }
   },
 
@@ -9457,6 +9465,7 @@ var gDialogBox = {
     let template = document.getElementById("window-modal-dialog-template")
       .content.firstElementChild;
     parentElement.addEventListener("dialogopen", this);
+    parentElement.addEventListener("close", this);
     this._dialog = new SubDialog({
       template,
       parentElement,
