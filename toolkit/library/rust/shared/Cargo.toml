@@ -9,7 +9,7 @@ description = "Shared Rust code for libxul"
 geckoservo = { path = "../../../../servo/ports/geckolib" }
 kvstore = { path = "../../../components/kvstore" }
 lmdb-rkv-sys = { version = "0.11", features = ["mdb_idl_logn_9"] }
-mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "ccbe4eb8a96d64e58414ec70d2479c7f363e6763" }
+mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "94c3b1f368c82aefcbf51967f6aa296a9ccceb69" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }

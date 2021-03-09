@@ -3346,9 +3346,14 @@ fn read_dc_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
 
     esds.audio_codec = match object_profile {
         0x40 | 0x41 => CodecType::AAC,
-        0x6B => CodecType::MP3,
+        0x69 | 0x6B => CodecType::MP3,
         _ => CodecType::Unknown,
     };
+
+    debug!(
+        "read_dc_descriptor: esds.audio_codec = {:?}",
+        esds.audio_codec
+    );
 
     Ok(())
 }
