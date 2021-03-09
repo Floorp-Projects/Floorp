@@ -843,12 +843,11 @@ var gTests = [
         ok(!notification.button.disabled, "Allow button is not disabled");
       } else {
         ok(notification.button.disabled, "Allow button is disabled");
+        ok(
+          !notification.hasAttribute("warninghidden"),
+          "warning message is shown"
+        );
       }
-
-      ok(
-        !notification.hasAttribute("warninghidden"),
-        "warning message is shown"
-      );
 
       menulist.getItemAtIndex(3).doCommand();
       ok(checkbox.checked, "checkbox still checked");
@@ -859,12 +858,11 @@ var gTests = [
         ok(!notification.button.disabled, "Allow button remains not disabled");
       } else {
         ok(notification.button.disabled, "Allow button remains disabled");
+        ok(
+          !notification.hasAttribute("warninghidden"),
+          "warning message is still shown"
+        );
       }
-
-      ok(
-        !notification.hasAttribute("warninghidden"),
-        "warning message is still shown"
-      );
 
       await disableObserverVerification();
 
