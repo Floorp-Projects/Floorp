@@ -69,34 +69,19 @@ modal.findModalDialogs = function(context) {
   // No dialog found yet, check the TabDialogBox.
   // This is for prompts that are shown in SubDialogs in the browser chrome.
   if (context.tab && context.tabBrowser.getTabDialogBox) {
-    const contentBrowser = context.contentBrowser;
-    const dialogBox = context.tabBrowser.getTabDialogBox(contentBrowser);
+    let contentBrowser = context.contentBrowser;
+    let dialogManager = context.tabBrowser
+      .getTabDialogBox(contentBrowser)
+      .getTabDialogManager();
+    let dialogs = dialogManager._dialogs.filter(
+      dialog => dialog._openedURL === COMMON_DIALOG
+    );
 
-    function checkForPrompts(dialogManager) {
-      const dialogs = dialogManager._dialogs.filter(
-        dialog => dialog._openedURL === COMMON_DIALOG
+    if (dialogs.length) {
+      return new modal.Dialog(
+        () => context,
+        Cu.getWeakReference(dialogs[0]._frame.contentWindow)
       );
-
-      if (dialogs.length) {
-        return new modal.Dialog(
-          () => context,
-          Cu.getWeakReference(dialogs[0]._frame.contentWindow)
-        );
-      }
-
-      return null;
-    }
-
-    // Check for tab-modals that are tab prompts (opened on the tab-level),
-    // like for HTTP authentication.
-    let dialog = checkForPrompts(dialogBox.getTabDialogManager());
-    if (!dialog) {
-      // Check for tab-modals that are content prompts (eg. alert)
-      dialog = checkForPrompts(dialogBox.getContentDialogManager());
-    }
-
-    if (dialog) {
-      return dialog;
     }
   }
 
@@ -204,25 +189,6 @@ modal.DialogObserver = class {
       return;
     }
     this.callbacks.delete(callback);
-  }
-
-  /**
-   * Returns a promise that waits for the dialog to be closed.
-   *
-   * @param {window} win
-   *     The window containing the modal dialog to close.
-   */
-  async dialogClosed(win) {
-    return new Promise(resolve => {
-      const dialogClosed = (action, dialog, window) => {
-        if (action == modal.ACTION_CLOSED && window == win) {
-          this.remove(dialogClosed);
-          resolve();
-        }
-      };
-
-      this.add(dialogClosed);
-    });
   }
 };
 

@@ -56,6 +56,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   unregisterEventsActor:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
+  waitForEvent: "chrome://marionette/content/sync.js",
   waitForLoadEvent: "chrome://marionette/content/sync.js",
   waitForObserverTopic: "chrome://marionette/content/sync.js",
   WebElement: "chrome://marionette/content/element.js",
@@ -1504,9 +1505,6 @@ GeckoDriver.prototype.setWindowHandle = async function(
     this.contentBrowsingContext = tab?.linkedBrowser.browsingContext;
   }
 
-  // Check for existing dialogs for the new window
-  this.dialog = modal.findModalDialogs(this.curBrowser);
-
   if (focus) {
     await this.curBrowser.focusWindow();
   }
@@ -2665,7 +2663,7 @@ GeckoDriver.prototype.dismissDialog = async function() {
   this._checkIfAlertIsPresent();
 
   const win = this.getCurrentWindow();
-  const dialogClosed = this.dialogObserver.dialogClosed(win);
+  const dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
   const { button0, button1 } = this.dialog.ui;
   (button1 ? button1 : button0).click();
@@ -2686,7 +2684,7 @@ GeckoDriver.prototype.acceptDialog = async function() {
   this._checkIfAlertIsPresent();
 
   const win = this.getCurrentWindow();
-  const dialogClosed = this.dialogObserver.dialogClosed(win);
+  const dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
   const { button0 } = this.dialog.ui;
   button0.click();
