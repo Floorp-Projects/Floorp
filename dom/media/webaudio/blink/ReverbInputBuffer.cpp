@@ -50,8 +50,9 @@ void ReverbInputBuffer::write(const float* sourceP, size_t numberOfFrames) {
   memcpy(m_buffer.Elements() + index, sourceP, sizeof(float) * numberOfFrames);
 
   if (newIndex >= bufferLength) {
-    m_writeIndex = 0;
+    newIndex = 0;
   }
+  m_writeIndex = newIndex;
 }
 
 float* ReverbInputBuffer::directReadFrom(int* readIndex,
