@@ -82,10 +82,6 @@ add_task(async function test_text_input_spellcheck_loginform() {
   await test_contextmenu(
     "#login_text",
     [
-      "fill-login",
-      null,
-      ["fill-login-no-logins", false],
-      null,
       "manage-saved-logins",
       true,
       "---",

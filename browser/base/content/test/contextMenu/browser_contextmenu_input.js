@@ -86,10 +86,6 @@ add_task(async function test_password_input() {
   await test_contextmenu(
     "#input_password",
     [
-      "fill-login",
-      null,
-      ["fill-login-no-logins", false],
-      null,
       "manage-saved-logins",
       true,
       "---",

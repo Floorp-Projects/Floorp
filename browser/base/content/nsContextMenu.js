@@ -920,7 +920,7 @@ class nsContextMenu {
   }
 
   initPasswordManagerItems() {
-    let showFill = false;
+    let showUseSavedLogin = false;
     let showGenerate = false;
     let showManage = false;
     let enableGeneration = Services.logins.isLoggedIn;
@@ -930,7 +930,6 @@ class nsContextMenu {
       if (!this.isLoginForm()) {
         return;
       }
-      showFill = true;
       showManage = true;
 
       // Disable the fill option if the user hasn't unlocked with their master password
@@ -972,6 +971,8 @@ class nsContextMenu {
         Services.logins.getLoginSavingEnabled(formOrigin);
 
       if (disableFill) {
+        showUseSavedLogin = true;
+
         // No need to update the submenu if the fill item is disabled.
         return;
       }
@@ -983,22 +984,25 @@ class nsContextMenu {
         formOrigin
       );
 
-      this.showItem("fill-login-no-logins", !fragment);
-
       if (!fragment) {
         return;
       }
+
+      showUseSavedLogin = true;
       let popup = document.getElementById("fill-login-popup");
-      let insertBeforeElement = document.getElementById("fill-login-no-logins");
-      popup.insertBefore(fragment, insertBeforeElement);
+      popup.appendChild(fragment);
     } finally {
-      this.showItem("fill-login", showFill);
+      this.showItem("fill-login", showUseSavedLogin);
       this.showItem("fill-login-generated-password", showGenerate);
       this.showItem("manage-saved-logins", showManage);
       this.setItemAttr(
         "fill-login-generated-password",
         "disabled",
         !enableGeneration
+      );
+      this.showItem(
+        "passwordmgr-items-separator",
+        showUseSavedLogin || showGenerate || showManage
       );
     }
   }
