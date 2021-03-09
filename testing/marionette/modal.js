@@ -190,6 +190,25 @@ modal.DialogObserver = class {
     }
     this.callbacks.delete(callback);
   }
+
+  /**
+   * Returns a promise that waits for the dialog to be closed.
+   *
+   * @param {window} win
+   *     The window containing the modal dialog to close.
+   */
+  async dialogClosed(win) {
+    return new Promise(resolve => {
+      const dialogClosed = (action, dialog, window) => {
+        if (action == modal.ACTION_CLOSED && window == win) {
+          this.remove(dialogClosed);
+          resolve();
+        }
+      };
+
+      this.add(dialogClosed);
+    });
+  }
 };
 
 /**
