@@ -27,7 +27,7 @@ const log = console.createInstance({
 const RS_COLLECTION = "quicksuggest";
 const RS_PREF = "quicksuggest.enabled";
 
-// Categories that should show "Firefox Suggests" instead of "Sponsored"
+// Categories that should show "Firefox Suggest" instead of "Sponsored"
 const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
 
 /**
