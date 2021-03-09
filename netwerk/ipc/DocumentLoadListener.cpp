@@ -1634,7 +1634,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       (mLoadStateLoadType == LOAD_NORMAL ||
        mLoadStateLoadType == LOAD_HISTORY || mLoadStateLoadType == LOAD_LINK ||
        mLoadStateLoadType == LOAD_STOP_CONTENT ||
-       mLoadStateLoadType == LOAD_STOP_CONTENT_AND_REPLACE)) {
+       mLoadStateLoadType == LOAD_STOP_CONTENT_AND_REPLACE) &&
+      (!browsingContext->GetActiveSessionHistoryEntry() ||
+       browsingContext->GetActiveSessionHistoryEntry()
+           ->GetSaveLayoutStateFlag())) {
     options.mReplaceBrowsingContext = true;
     options.mTryUseBFCache = true;
   }
@@ -2133,6 +2136,11 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
       uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
       httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS;
       loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+    }
+
+    if (mLoadingSessionHistoryInfo &&
+        nsDocShell::ShouldDiscardLayoutState(httpChannel)) {
+      mLoadingSessionHistoryInfo->mInfo.SetSaveLayoutStateFlag(false);
     }
   }
 

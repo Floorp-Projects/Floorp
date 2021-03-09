@@ -1199,6 +1199,71 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
     RefPtr<nsFrameLoader> frameLoader = she->GetFrameLoader();
     if (canonicalBC->Group()->Toplevels().Length() == 1 && frameLoader &&
         (!currentShe || she->SharedInfo() != currentShe->SharedInfo())) {
+      auto restore = [canonicalBC, loadState,
+                      she](const nsTArray<bool> aCanSaves) {
+        bool canSave = !aCanSaves.Contains(false);
+        MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+                ("nsSHistory::LoadURIOrBFCache "
+                 "saving presentation=%i",
+                 canSave));
+
+        nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
+            do_QueryInterface(canonicalBC->GetEmbedderElement());
+        if (frameLoaderOwner) {
+          RefPtr<nsFrameLoader> fl = she->GetFrameLoader();
+          if (fl) {
+            she->SetFrameLoader(nullptr);
+            RefPtr<BrowsingContext> loadingBC =
+                fl->GetMaybePendingBrowsingContext();
+            if (loadingBC) {
+              RefPtr<nsFrameLoader> currentFrameLoader =
+                  frameLoaderOwner->GetFrameLoader();
+              // The current page can be bfcached, store the
+              // nsFrameLoader in the current SessionHistoryEntry.
+              if (canSave && canonicalBC->GetActiveSessionHistoryEntry()) {
+                canonicalBC->GetActiveSessionHistoryEntry()->SetFrameLoader(
+                    currentFrameLoader);
+                Unused << canonicalBC->SetIsInBFCache(true);
+              }
+
+              // ReplacedBy will swap the entry back.
+              canonicalBC->SetActiveSessionHistoryEntry(she);
+              loadingBC->Canonical()->SetActiveSessionHistoryEntry(nullptr);
+              RemotenessChangeOptions options;
+              canonicalBC->ReplacedBy(loadingBC->Canonical(), options);
+              frameLoaderOwner->ReplaceFrameLoader(fl);
+
+              // The old page can't be stored in the bfcache,
+              // destroy the nsFrameLoader.
+              if (!canSave && currentFrameLoader) {
+                currentFrameLoader->Destroy();
+              }
+              // The current active entry should not store
+              // nsFrameLoader.
+              loadingBC->Canonical()->GetSessionHistory()->UpdateIndex();
+              loadingBC->Canonical()->HistoryCommitIndexAndLength();
+              Unused << loadingBC->SetIsInBFCache(false);
+              // ResetSHEntryHasUserInteractionCache(); ?
+              // browser.navigation.requireUserInteraction is still
+              // disabled everywhere.
+              return;
+            }
+          }
+        }
+
+        // Fall back to do a normal load.
+        canonicalBC->LoadURI(loadState, false);
+      };
+
+      if (currentShe && !currentShe->GetSaveLayoutStateFlag()) {
+        // Current page can't enter bfcache because of
+        // SaveLayoutStateFlag, just run the restore immediately.
+        nsTArray<bool> canSaves;
+        canSaves.AppendElement(false);
+        restore(std::move(canSaves));
+        return;
+      }
+
       nsTArray<RefPtr<PContentParent::CanSavePresentationPromise>>
           canSavePromises;
       canonicalBC->Group()->EachParent([&](ContentParent* aParent) {
@@ -1210,72 +1275,13 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
       // Check if the current page can enter bfcache.
       PContentParent::CanSavePresentationPromise::All(
           GetCurrentSerialEventTarget(), canSavePromises)
-          ->Then(
-              GetMainThreadSerialEventTarget(), __func__,
-              [canonicalBC, loadState, she](const nsTArray<bool> aCanSaves) {
-                bool canSave = !aCanSaves.Contains(false);
-                MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                        ("nsSHistory::LoadURIOrBFCache "
-                         "saving presentation=%i",
-                         canSave));
-
-                nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
-                    do_QueryInterface(canonicalBC->GetEmbedderElement());
-                if (frameLoaderOwner) {
-                  RefPtr<nsFrameLoader> fl = she->GetFrameLoader();
-                  if (fl) {
-                    she->SetFrameLoader(nullptr);
-                    RefPtr<BrowsingContext> loadingBC =
-                        fl->GetMaybePendingBrowsingContext();
-                    if (loadingBC) {
-                      RefPtr<nsFrameLoader> currentFrameLoader =
-                          frameLoaderOwner->GetFrameLoader();
-                      // The current page can be bfcached, store the
-                      // nsFrameLoader in the current SessionHistoryEntry.
-                      if (canSave &&
-                          canonicalBC->GetActiveSessionHistoryEntry()) {
-                        canonicalBC->GetActiveSessionHistoryEntry()
-                            ->SetFrameLoader(currentFrameLoader);
-                        Unused << canonicalBC->SetIsInBFCache(true);
-                      }
-
-                      // ReplacedBy will swap the entry back.
-                      canonicalBC->SetActiveSessionHistoryEntry(she);
-                      loadingBC->Canonical()->SetActiveSessionHistoryEntry(
-                          nullptr);
-                      RemotenessChangeOptions options;
-                      canonicalBC->ReplacedBy(loadingBC->Canonical(), options);
-                      frameLoaderOwner->ReplaceFrameLoader(fl);
-
-                      // The old page can't be stored in the bfcache,
-                      // destroy the nsFrameLoader.
-                      if (!canSave && currentFrameLoader) {
-                        currentFrameLoader->Destroy();
-                      }
-                      // The current active entry should not store
-                      // nsFrameLoader.
-                      loadingBC->Canonical()
-                          ->GetSessionHistory()
-                          ->UpdateIndex();
-                      loadingBC->Canonical()->HistoryCommitIndexAndLength();
-                      Unused << loadingBC->SetIsInBFCache(false);
-                      // ResetSHEntryHasUserInteractionCache(); ?
-                      // browser.navigation.requireUserInteraction is still
-                      // disabled everywhere.
-                      return;
-                    }
-                  }
-                }
-
-                // Fall back to do a normal load.
-                canonicalBC->LoadURI(loadState, false);
-              },
-              [canonicalBC, loadState](mozilla::ipc::ResponseRejectReason) {
-                MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                        ("nsSHistory::LoadURIOrBFCache "
-                         "error in trying to save presentation"));
-                canonicalBC->LoadURI(loadState, false);
-              });
+          ->Then(GetMainThreadSerialEventTarget(), __func__, std::move(restore),
+                 [canonicalBC, loadState](mozilla::ipc::ResponseRejectReason) {
+                   MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+                           ("nsSHistory::LoadURIOrBFCache "
+                            "error in trying to save presentation"));
+                   canonicalBC->LoadURI(loadState, false);
+                 });
       return;
     }
     if (frameLoader) {

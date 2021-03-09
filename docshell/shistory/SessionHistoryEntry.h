@@ -135,6 +135,8 @@ class SessionHistoryInfo {
 
   uint32_t LoadType() { return mLoadType; }
 
+  void SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag);
+
  private:
   friend class SessionHistoryEntry;
   friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
