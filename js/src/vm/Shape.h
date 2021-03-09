@@ -646,7 +646,7 @@ struct StackBaseShape;
 // If you add a new flag here, please add appropriate code to JSObject::dump to
 // dump it as part of the object representation.
 enum class ObjectFlag : uint16_t {
-  Delegate = 1 << 0,
+  IsUsedAsPrototype = 1 << 0,
   NotExtensible = 1 << 1,
   Indexed = 1 << 2,
   HasInterestingSymbol = 1 << 3,

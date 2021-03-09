@@ -162,12 +162,22 @@ class JSObject
   static bool setProtoUnchecked(JSContext* cx, JS::HandleObject obj,
                                 js::Handle<js::TaggedProto> proto);
 
-  // An object is a delegate if it is (or was) another object's prototype.
-  // Optimization heuristics will make use of this flag.
+  // An object is marked IsUsedAsPrototype if it is (or was) another object's
+  // prototype. Optimization heuristics will make use of this flag.
+  //
+  // This flag is only relevant for static prototypes. Proxy traps can return
+  // objects without this flag set.
+  //
+  // NOTE: it's important to call setIsUsedAsPrototype *after* initializing the
+  // object's properties, because that avoids unnecessary shadowing checks and
+  // reshaping.
+  //
   // See: ReshapeForProtoMutation, ReshapeForShadowedProp
-  inline bool isDelegate() const;
-  static bool setDelegate(JSContext* cx, JS::HandleObject obj) {
-    return setFlag(cx, obj, js::ObjectFlag::Delegate, GENERATE_SHAPE);
+  bool isUsedAsPrototype() const {
+    return hasFlag(js::ObjectFlag::IsUsedAsPrototype);
+  }
+  static bool setIsUsedAsPrototype(JSContext* cx, JS::HandleObject obj) {
+    return setFlag(cx, obj, js::ObjectFlag::IsUsedAsPrototype, GENERATE_SHAPE);
   }
 
   inline bool isBoundFunction() const;
@@ -202,12 +212,13 @@ class JSObject
   // exist on the scope chain) are kept.
   inline bool isUnqualifiedVarObj() const;
 
-  // An object with an "uncacheable proto" is a Delegate object that either had
+  // An object with an "uncacheable proto" is a prototype object that either had
   // its own proto mutated or it was on the proto chain of an object that had
   // its proto mutated. This is used to opt-out of the shape teleporting
   // optimization. See: ReshapeForProtoMutation, ProtoChainSupportsTeleporting.
   inline bool hasUncacheableProto() const;
   static bool setUncacheableProto(JSContext* cx, JS::HandleObject obj) {
+    MOZ_ASSERT(obj->isUsedAsPrototype());
     MOZ_ASSERT(obj->hasStaticPrototype(),
                "uncacheability as a concept is only applicable to static "
                "(not dynamically-computed) prototypes");

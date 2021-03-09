@@ -1523,9 +1523,9 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   // teleporting optimizations.
   //
   // See: ReshapeForProtoMutation, ReshapeForShadowedProp
-  MOZ_ASSERT_IF(a->is<NativeObject>() && a->isDelegate(),
+  MOZ_ASSERT_IF(a->is<NativeObject>() && a->isUsedAsPrototype(),
                 a->taggedProto() == TaggedProto());
-  MOZ_ASSERT_IF(b->is<NativeObject>() && b->isDelegate(),
+  MOZ_ASSERT_IF(b->is<NativeObject>() && b->isUsedAsPrototype(),
                 b->taggedProto() == TaggedProto());
 
   bool aIsProxyWithInlineValues =
@@ -1751,12 +1751,12 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   //
   // There are two cases:
   //
-  // (1) The object is not marked Delegate. This is the common case. Because
-  //     shape implies proto, we rely on the caller changing the object's shape.
-  //     The JIT guards on this object's shape or prototype so there's nothing
-  //     we have to do here for objects on the proto chain.
+  // (1) The object is not marked IsUsedAsPrototype. This is the common case.
+  //     Because shape implies proto, we rely on the caller changing the
+  //     object's shape. The JIT guards on this object's shape or prototype so
+  //     there's nothing we have to do here for objects on the proto chain.
   //
-  // (2) The object is marked Delegate. This implies the object may be
+  // (2) The object is marked IsUsedAsPrototype. This implies the object may be
   //     participating in shape teleporting. To invalidate JIT ICs depending on
   //     the proto chain being unchanged, set the UncacheableProto shape flag
   //     for this object and objects on its proto chain.
@@ -1771,7 +1771,7 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   //  - GeneratePrototypeGuards
   //  - GeneratePrototypeHoleGuards
 
-  if (!obj->isDelegate()) {
+  if (!obj->isUsedAsPrototype()) {
     return true;
   }
 
@@ -1799,7 +1799,7 @@ static bool SetProto(JSContext* cx, HandleObject obj,
 
   if (proto.isObject()) {
     RootedObject protoObj(cx, proto.toObject());
-    if (!JSObject::setDelegate(cx, protoObj)) {
+    if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
       return false;
     }
   }
@@ -3209,15 +3209,27 @@ void JSObject::dump(js::GenericPrinter& out) const {
   out.printf("  shape %p\n", shape);
 
   out.put("  flags:");
-  if (obj->isDelegate()) out.put(" delegate");
-  if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible())
+  if (obj->isUsedAsPrototype()) {
+    out.put(" used_as_prototype");
+  }
+  if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) {
     out.put(" not_extensible");
-  if (obj->maybeHasInterestingSymbolProperty())
+  }
+  if (obj->maybeHasInterestingSymbolProperty()) {
     out.put(" maybe_has_interesting_symbol");
-  if (obj->isBoundFunction()) out.put(" bound_function");
-  if (obj->isQualifiedVarObj()) out.put(" varobj");
-  if (obj->isUnqualifiedVarObj()) out.put(" unqualified_varobj");
-  if (obj->hasUncacheableProto()) out.put(" has_uncacheable_proto");
+  }
+  if (obj->isBoundFunction()) {
+    out.put(" bound_function");
+  }
+  if (obj->isQualifiedVarObj()) {
+    out.put(" varobj");
+  }
+  if (obj->isUnqualifiedVarObj()) {
+    out.put(" unqualified_varobj");
+  }
+  if (obj->hasUncacheableProto()) {
+    out.put(" has_uncacheable_proto");
+  }
   if (obj->hasStaticPrototype() && obj->staticPrototypeIsImmutable()) {
     out.put(" immutable_prototype");
   }

@@ -8048,7 +8048,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
       if (GlobalObject::isOffThreadPrototypePlaceholder(obj)) {
         JSObject* targetProto =
             global->getPrototypeForOffThreadPlaceholder(obj);
-        MOZ_ASSERT(targetProto->isDelegate());
+        MOZ_ASSERT(targetProto->isUsedAsPrototype());
         baseShape->setProtoForMergeRealms(TaggedProto(targetProto));
       }
     }

@@ -1390,7 +1390,7 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
 bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
                                  Handle<TaggedProto> proto) {
   MOZ_ASSERT(cx->compartment() == obj->compartment());
-  MOZ_ASSERT_IF(proto.isObject(), proto.toObject()->isDelegate());
+  MOZ_ASSERT_IF(proto.isObject(), proto.toObject()->isUsedAsPrototype());
 
   if (obj->shape()->proto() == proto) {
     return true;
@@ -1469,7 +1469,7 @@ inline BaseShape::BaseShape(const StackBaseShape& base)
 
   MOZ_ASSERT_IF(proto().isObject(),
                 compartment() == proto().toObject()->compartment());
-  MOZ_ASSERT_IF(proto().isObject(), proto().toObject()->isDelegate());
+  MOZ_ASSERT_IF(proto().isObject(), proto().toObject()->isUsedAsPrototype());
 
   // Windows may not appear on prototype chains.
   MOZ_ASSERT_IF(proto().isObject(), !IsWindow(proto().toObject()));
@@ -1985,9 +1985,9 @@ Shape* EmptyShape::getInitialShape(JSContext* cx, const JSClass* clasp,
   MOZ_ASSERT_IF(proto.isObject(),
                 cx->isInsideCurrentCompartment(proto.toObject()));
 
-  if (proto.isObject() && !proto.toObject()->isDelegate()) {
+  if (proto.isObject() && !proto.toObject()->isUsedAsPrototype()) {
     RootedObject protoObj(cx, proto.toObject());
-    if (!JSObject::setDelegate(cx, protoObj)) {
+    if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
       return nullptr;
     }
     proto = TaggedProto(protoObj);
