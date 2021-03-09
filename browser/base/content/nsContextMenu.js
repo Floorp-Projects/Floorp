@@ -946,20 +946,19 @@ class nsContextMenu {
       let onPasswordLikeField = PASSWORD_FIELDNAME_HINTS.includes(
         loginFillInfo.activeField.fieldNameHint
       );
+
       // Set the correct label for the fill menu
       let fillMenu = document.getElementById("fill-login");
       if (onPasswordLikeField) {
-        fillMenu.setAttribute("label", fillMenu.getAttribute("label-password"));
         fillMenu.setAttribute(
-          "accesskey",
-          fillMenu.getAttribute("accesskey-password")
+          "data-l10n-id",
+          "main-context-menu-use-saved-password"
         );
       } else {
         // On a username field
-        fillMenu.setAttribute("label", fillMenu.getAttribute("label-login"));
         fillMenu.setAttribute(
-          "accesskey",
-          fillMenu.getAttribute("accesskey-login")
+          "data-l10n-id",
+          "main-context-menu-use-saved-login"
         );
       }
 

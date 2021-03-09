@@ -236,16 +236,7 @@
         <menupopup id="context-sendpagetodevice-popup"
                    onpopupshowing="(() => { gSync.populateSendTabToDevicesMenu(event.target, gBrowser.currentURI.spec, gBrowser.contentTitle); })()"/>
       </menu>
-      <menu id="fill-login"
-            label="&fillLoginMenu.label;"
-            label-login="&fillLoginMenu.label;"
-            label-password="&fillPasswordMenu.label;"
-            label-username="&fillUsernameMenu.label;"
-            accesskey="&fillLoginMenu.accesskey;"
-            accesskey-login="&fillLoginMenu.accesskey;"
-            accesskey-password="&fillPasswordMenu.accesskey;"
-            accesskey-username="&fillUsernameMenu.accesskey;"
-            hidden="true">
+      <menu id="fill-login" hidden="true">
         <menupopup id="fill-login-popup">
           <menuitem id="fill-login-no-logins"
                     label="&noLoginSuggestions.label;"
@@ -254,7 +245,7 @@
         </menupopup>
       </menu>
      <menuitem id="fill-login-generated-password"
-               data-l10n-id="main-context-menu-generate-new-password"
+               data-l10n-id="main-context-menu-suggest-strong-password"
                hidden="true"
                oncommand="gContextMenu.useGeneratedPassword();"/>
      <menuitem id="manage-saved-logins"
