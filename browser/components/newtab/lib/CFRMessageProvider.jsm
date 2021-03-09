@@ -568,7 +568,7 @@ const CFR_MESSAGES = [
           },
         ],
         primary: {
-          label: { string_id: "cfr-doorhanger-doh-primary-button" },
+          label: { string_id: "cfr-doorhanger-doh-primary-button-2" },
           action: {
             type: "ACCEPT_DOH",
           },
