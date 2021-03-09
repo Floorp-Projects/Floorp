@@ -22,6 +22,7 @@ add_task(async function test_slow_content_script() {
       ["dom.ipc.processCount", DEFAULT_PROCESS_COUNT * 2],
       ["dom.ipc.processPrelaunch.enabled", false],
       ["dom.ipc.reportProcessHangs", true],
+      ["dom.max_script_run_time.require_critical_input", false],
     ],
   });
 
