@@ -19,6 +19,7 @@
 #include "X11UndefineNone.h"
 #include "IMContextWrapper.h"
 #include "WidgetUtils.h"
+#include "WidgetUtilsGtk.h"
 #include "keysym2ucs.h"
 #include "nsContentUtils.h"
 #include "nsGtkUtils.h"
@@ -1761,7 +1762,7 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   // key release events, the result isn't what we want.
   guint modifierState = aGdkKeyEvent->state;
   GdkDisplay* gdkDisplay = gdk_display_get_default();
-  if (aGdkKeyEvent->is_modifier && GDK_IS_X11_DISPLAY(gdkDisplay)) {
+  if (aGdkKeyEvent->is_modifier && GdkIsX11Display(gdkDisplay)) {
     Display* display = gdk_x11_display_get_xdisplay(gdkDisplay);
     if (XEventsQueued(display, QueuedAfterReading)) {
       XEvent nextEvent;

@@ -13,6 +13,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 
 #ifdef MOZ_WIDGET_GTK
+#  include "mozilla/WidgetUtilsGtk.h"
 #  include <gtk/gtk.h>
 #  include <gdk/gdkx.h>
 #endif
@@ -1551,7 +1552,7 @@ NPError PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings) {
 
 #ifdef MOZ_X11
 #  ifdef MOZ_WIDGET_GTK
-  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+  if (!GdkIsX11Display()) {
     // We don't support NPAPI plugins on Wayland.
     return NPERR_GENERIC_ERROR;
   }
