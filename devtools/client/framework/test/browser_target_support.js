@@ -39,8 +39,8 @@ function test() {
 }
 
 function close(target, client) {
-  target.on("close", () => {
-    ok(true, "Target was closed");
+  target.on("target-destroyed", () => {
+    ok(true, "Target was destroyed");
     finish();
   });
   client.close();
