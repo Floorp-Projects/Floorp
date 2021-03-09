@@ -1973,8 +1973,7 @@ class StorageOperationBase {
   struct OriginProps {
     enum Type { eChrome, eContent, eObsolete, eInvalid };
 
-    // XXX Change to NotNull<nsCOMPtr<nsIFile>> mDirectory;
-    nsCOMPtr<nsIFile> mDirectory;
+    NotNull<nsCOMPtr<nsIFile>> mDirectory;
     nsString mLeafName;
     nsCString mSpec;
     OriginAttributes mAttrs;
@@ -1990,16 +1989,16 @@ class StorageOperationBase {
     bool mIgnore;
 
    public:
-    explicit OriginProps()
-        : mTimestamp(0),
+    explicit OriginProps(MovingNotNull<nsCOMPtr<nsIFile>> aDirectory)
+        : mDirectory(std::move(aDirectory)),
+          mTimestamp(0),
           mType(eContent),
           mNeedsRestore(false),
           mNeedsRestore2(false),
           mIgnore(false) {}
 
     template <typename PersistenceTypeFunc>
-    nsresult Init(nsIFile* aDirectory,
-                  PersistenceTypeFunc&& aPersistenceTypeFunc);
+    nsresult Init(PersistenceTypeFunc&& aPersistenceTypeFunc);
   };
 
   nsTArray<OriginProps> mOriginProps;
@@ -9722,7 +9721,6 @@ int64_t StorageOperationBase::GetOriginLastModifiedTime(
 nsresult StorageOperationBase::RemoveObsoleteOrigin(
     const OriginProps& aOriginProps) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
 
   QM_WARNING(
       "Deleting obsolete %s directory that is no longer a legal "
@@ -9737,7 +9735,6 @@ nsresult StorageOperationBase::RemoveObsoleteOrigin(
 Result<bool, nsresult> StorageOperationBase::MaybeRenameOrigin(
     const OriginProps& aOriginProps) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
 
   const nsAString& oldLeafName = aOriginProps.mLeafName;
 
@@ -9758,7 +9755,7 @@ Result<bool, nsresult> StorageOperationBase::MaybeRenameOrigin(
 
   QM_TRY_INSPECT(const auto& newFile,
                  MOZ_TO_RESULT_INVOKE_TYPED(
-                     nsCOMPtr<nsIFile>, aOriginProps.mDirectory, GetParent));
+                     nsCOMPtr<nsIFile>, *aOriginProps.mDirectory, GetParent));
 
   QM_TRY(newFile->Append(newLeafName));
 
@@ -9889,13 +9886,12 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
 // normal constructor instead.
 template <typename PersistenceTypeFunc>
 nsresult StorageOperationBase::OriginProps::Init(
-    nsIFile* aDirectory, PersistenceTypeFunc&& aPersistenceTypeFunc) {
+    PersistenceTypeFunc&& aPersistenceTypeFunc) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
 
   QM_TRY_INSPECT(
       const auto& leafName,
-      MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, aDirectory, GetLeafName));
+      MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, *mDirectory, GetLeafName));
 
   nsCString spec;
   OriginAttributes attrs;
@@ -9919,7 +9915,6 @@ nsresult StorageOperationBase::OriginProps::Init(
     return std::forward<PersistenceTypeFunc>(aPersistenceTypeFunc)(spec);
   }();
 
-  mDirectory = aDirectory;
   mLeafName = leafName;
   mSpec = spec;
   mAttrs = attrs;
@@ -10424,8 +10419,8 @@ nsresult RepositoryOperationBase::ProcessRepository() {
         return mozilla::Ok{};
       },
       [&self = *this](const auto& originDir) -> Result<mozilla::Ok, nsresult> {
-        OriginProps originProps;
-        QM_TRY(originProps.Init(originDir, [&self](const auto& aSpec) {
+        OriginProps originProps(WrapMovingNotNullUnchecked(originDir));
+        QM_TRY(originProps.Init([&self](const auto& aSpec) {
           return self.PersistenceTypeFromSpec(aSpec);
         }));
         // Bypass invalid origins while upgrading
@@ -10458,7 +10453,6 @@ template <typename UpgradeMethod>
 nsresult RepositoryOperationBase::MaybeUpgradeClients(
     const OriginProps& aOriginProps, UpgradeMethod aMethod) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aMethod);
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -10630,11 +10624,10 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
 nsresult CreateOrUpgradeDirectoryMetadataHelper::PrepareOriginDirectory(
     OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aRemoved);
 
   if (*mLegacyPersistenceType == LegacyPersistenceType::Persistent) {
-    QM_TRY(MaybeUpgradeOriginDirectory(aOriginProps.mDirectory));
+    QM_TRY(MaybeUpgradeOriginDirectory(aOriginProps.mDirectory.get()));
 
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
   } else {
@@ -10642,7 +10635,7 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::PrepareOriginDirectory(
     nsCString group;
     nsCString origin;
     Nullable<bool> isApp;
-    nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory, timestamp,
+    nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
                                        group, origin, isApp);
     if (NS_FAILED(rv)) {
       aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
@@ -10740,15 +10733,14 @@ PersistenceType UpgradeStorageHelperBase::PersistenceTypeFromSpec(
 nsresult UpgradeStorageFrom0_0To1_0Helper::PrepareOriginDirectory(
     OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aRemoved);
 
   int64_t timestamp;
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory, timestamp, group,
-                                     origin, isApp);
+  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                     group, origin, isApp);
   if (NS_FAILED(rv) || isApp.IsNull()) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore = true;
@@ -10788,7 +10780,6 @@ nsresult UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
 nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveMorgueDirectory(
     const OriginProps& aOriginProps) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
 
   // The Cache API was creating top level morgue directories by accident for
   // a short time in nightly.  This unfortunately prevents all storage from
@@ -10797,7 +10788,7 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveMorgueDirectory(
 
   QM_TRY_INSPECT(const auto& morgueDir,
                  MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
-                                            aOriginProps.mDirectory, Clone));
+                                            *aOriginProps.mDirectory, Clone));
 
   QM_TRY(morgueDir->Append(u"morgue"_ns));
 
@@ -10848,7 +10839,6 @@ Result<bool, nsresult> UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
 nsresult UpgradeStorageFrom1_0To2_0Helper::PrepareOriginDirectory(
     OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aRemoved);
 
   QM_TRY(MaybeRemoveMorgueDirectory(aOriginProps));
@@ -10866,15 +10856,15 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::PrepareOriginDirectory(
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory, timestamp, group,
-                                     origin, isApp);
+  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                     group, origin, isApp);
   if (NS_FAILED(rv) || isApp.IsNull()) {
     aOriginProps.mNeedsRestore = true;
   }
 
   nsCString suffix;
-  rv = GetDirectoryMetadata2(aOriginProps.mDirectory, timestamp, suffix, group,
-                             origin, isApp.SetValue());
+  rv = GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp, suffix,
+                             group, origin, isApp.SetValue());
   if (NS_FAILED(rv)) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore2 = true;
@@ -10915,7 +10905,6 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
 nsresult UpgradeStorageFrom2_0To2_1Helper::PrepareOriginDirectory(
     OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aRemoved);
 
   QM_TRY(
@@ -10925,15 +10914,15 @@ nsresult UpgradeStorageFrom2_0To2_1Helper::PrepareOriginDirectory(
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory, timestamp, group,
-                                     origin, isApp);
+  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                     group, origin, isApp);
   if (NS_FAILED(rv) || isApp.IsNull()) {
     aOriginProps.mNeedsRestore = true;
   }
 
   nsCString suffix;
-  rv = GetDirectoryMetadata2(aOriginProps.mDirectory, timestamp, suffix, group,
-                             origin, isApp.SetValue());
+  rv = GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp, suffix,
+                             group, origin, isApp.SetValue());
   if (NS_FAILED(rv)) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore2 = true;
@@ -10967,7 +10956,6 @@ nsresult UpgradeStorageFrom2_0To2_1Helper::ProcessOriginDirectory(
 nsresult UpgradeStorageFrom2_1To2_2Helper::PrepareOriginDirectory(
     OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginProps.mDirectory);
   MOZ_ASSERT(aRemoved);
 
   QM_TRY(
@@ -10977,15 +10965,15 @@ nsresult UpgradeStorageFrom2_1To2_2Helper::PrepareOriginDirectory(
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory, timestamp, group,
-                                     origin, isApp);
+  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                     group, origin, isApp);
   if (NS_FAILED(rv) || isApp.IsNull()) {
     aOriginProps.mNeedsRestore = true;
   }
 
   nsCString suffix;
-  rv = GetDirectoryMetadata2(aOriginProps.mDirectory, timestamp, suffix, group,
-                             origin, isApp.SetValue());
+  rv = GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp, suffix,
+                             group, origin, isApp.SetValue());
   if (NS_FAILED(rv)) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore2 = true;
@@ -11051,10 +11039,9 @@ nsresult RestoreDirectoryMetadata2Helper::Init() {
 }
 
 nsresult RestoreDirectoryMetadata2Helper::RestoreMetadata2File() {
-  OriginProps originProps;
-  QM_TRY(originProps.Init(mDirectory, [&self = *this](const auto& aSpec) {
-    return *self.mPersistenceType;
-  }));
+  OriginProps originProps(WrapMovingNotNull(mDirectory));
+  QM_TRY(originProps.Init(
+      [&self = *this](const auto& aSpec) { return *self.mPersistenceType; }));
 
   QM_TRY(OkIf(originProps.mType != OriginProps::eInvalid), NS_ERROR_FAILURE);
 
