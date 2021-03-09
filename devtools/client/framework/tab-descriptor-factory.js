@@ -38,10 +38,21 @@ exports.TabDescriptorFactory = {
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new descriptor.
+   * @param {Object} options
+   *        - forceCreationForWebextension {Boolean}
+   *          Only used from webextension codebase. When set to true, the
+   *          factory will always create a new descriptor, even if we already
+   *          created one for the provided tab. This descriptor will not be
+   *          cached, and will not be returned via subsequent calls to this
+   *          method.
    *
    * @return {TabDescriptorFront} The tab descriptor for the provided tab.
    */
-  async createDescriptorForTab(tab) {
+  async createDescriptorForTab(tab, { forceCreationForWebextension } = {}) {
+    if (forceCreationForWebextension) {
+      return this._createDescriptorForTab(tab);
+    }
+
     let descriptor = descriptors.get(tab);
     if (descriptor) {
       return descriptor;
