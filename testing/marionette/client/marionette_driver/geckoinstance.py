@@ -275,10 +275,9 @@ class GeckoInstance(object):
             args["preferences"].update(
                 {
                     "devtools.browsertoolbox.panel": "jsdebugger",
-                    "devtools.debugger.remote-enabled": True,
                     "devtools.chrome.enabled": True,
                     "devtools.debugger.prompt-connection": False,
-                    "marionette.debugging.clicktostart": True,
+                    "devtools.debugger.remote-enabled": True,
                 }
             )
 
