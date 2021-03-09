@@ -332,7 +332,6 @@ void nsFrameLoaderOwner::ReplaceFrameLoader(nsFrameLoader* aNewFrameLoader) {
 
   if (auto* browserParent = mFrameLoader->GetBrowserParent()) {
     browserParent->AddWindowListeners();
-    browserParent->ResumeProgressEvents();
   }
 
   RefPtr<Element> owner = do_QueryObject(this);
