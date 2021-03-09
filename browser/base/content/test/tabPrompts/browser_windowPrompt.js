@@ -68,3 +68,52 @@ add_task(async function test_check_window_modal_prompt_service() {
     ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
   }
 });
+
+/**
+ * Check that the dialog's own closing methods being invoked don't break things.
+ */
+add_task(async function test_check_window_modal_prompt_service() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.windowPromptSubDialog", true]],
+  });
+  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(null);
+  // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
+  setTimeout(
+    () => Services.prompt.alert(window, "Some title", "some message"),
+    0
+  );
+  let dialogWin = await dialogPromise;
+
+  // Check circumstances of opening.
+  ok(
+    dialogWin?.docShell?.chromeEventHandler,
+    "Should have embedded the dialog."
+  );
+  is(
+    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
+    "none",
+    "Browser window should be inert."
+  );
+
+  let container = dialogWin.docShell.chromeEventHandler.closest("dialog");
+  let closedPromise = BrowserTestUtils.waitForMutationCondition(
+    container,
+    { childList: true, attributes: true },
+    () => !container.hasChildNodes() && !container.open
+  );
+
+  // This can also be invoked by the user if the escape key is handled
+  // outside of our embedded dialog.
+  container.close();
+  await closedPromise;
+
+  // Check we cleaned up:
+  is(
+    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
+    "auto",
+    "Browser window should no longer be inert."
+  );
+  for (let menu of document.querySelectorAll("menubar > menu")) {
+    ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
+  }
+});
