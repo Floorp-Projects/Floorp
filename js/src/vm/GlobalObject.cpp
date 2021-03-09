@@ -665,9 +665,6 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   if (!JSObject::setQualifiedVarObj(cx, global)) {
     return nullptr;
   }
-  if (!JSObject::setDelegate(cx, global)) {
-    return nullptr;
-  }
 
   return global;
 }
