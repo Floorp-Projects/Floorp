@@ -29,11 +29,6 @@ namespace frontend {
 
 class TokenStreamAnyChars;
 
-enum class SourceKind {
-  // We are parsing from a text source (Parser.h)
-  Text,
-};
-
 // Parse handler used when generating a full parse tree for all code which the
 // parser encounters.
 class FullParseHandler {
@@ -59,8 +54,6 @@ class FullParseHandler {
   size_t lazyInnerFunctionIndex;
 
   size_t lazyClosedOverBindingIndex;
-
-  const SourceKind sourceKind_;
 
  public:
   /* new_ methods for creating parse nodes. These report OOM on context. */
@@ -106,13 +99,11 @@ class FullParseHandler {
   }
 
   FullParseHandler(JSContext* cx, LifoAlloc& alloc,
-                   BaseScript* lazyOuterFunction,
-                   SourceKind kind = SourceKind::Text)
+                   BaseScript* lazyOuterFunction)
       : allocator(cx, alloc),
         lazyOuterFunction_(cx, lazyOuterFunction),
         lazyInnerFunctionIndex(0),
-        lazyClosedOverBindingIndex(0),
-        sourceKind_(kind) {
+        lazyClosedOverBindingIndex(0) {
     // The BaseScript::gcthings() array contains the inner function list
     // followed by the closed-over bindings data. Advance the index for
     // closed-over bindings to the end of the inner functions. The
@@ -135,13 +126,6 @@ class FullParseHandler {
   static longTypeName asMethodName(Node node) { return &node->as<typeName>(); }
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 #undef DECLARE_AS
-
-  // The FullParseHandler may be used to create nodes for text sources (from
-  // Parser.h). With previous binary source formats, some common assumptions on
-  // offsets are incorrect, e.g. in `a + b`, `a`, `b` and `+` may be stored in
-  // any order. We use `sourceKind()` to determine whether we need to check
-  // these assumptions.
-  SourceKind sourceKind() const { return sourceKind_; }
 
   NameNodeType newName(TaggedParserAtomIndex name, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::Name, name, pos);
@@ -703,7 +687,7 @@ class FullParseHandler {
   }
 
   UnaryNodeType newExprStatement(Node expr, uint32_t end) {
-    MOZ_ASSERT_IF(sourceKind() == SourceKind::Text, expr->pn_pos.end <= end);
+    MOZ_ASSERT(expr->pn_pos.end <= end);
     return new_<UnaryNode>(ParseNodeKind::ExpressionStmt,
                            TokenPos(expr->pn_pos.begin, end), expr);
   }
@@ -772,8 +756,7 @@ class FullParseHandler {
   }
 
   UnaryNodeType newReturnStatement(Node expr, const TokenPos& pos) {
-    MOZ_ASSERT_IF(expr && sourceKind() == SourceKind::Text,
-                  pos.encloses(expr->pn_pos));
+    MOZ_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
     return new_<UnaryNode>(ParseNodeKind::ReturnStmt, pos, expr);
   }
 
@@ -792,7 +775,7 @@ class FullParseHandler {
   }
 
   UnaryNodeType newThrowStatement(Node expr, const TokenPos& pos) {
-    MOZ_ASSERT_IF(sourceKind() == SourceKind::Text, pos.encloses(expr->pn_pos));
+    MOZ_ASSERT(pos.encloses(expr->pn_pos));
     return new_<UnaryNode>(ParseNodeKind::ThrowStmt, pos, expr);
   }
 
@@ -983,8 +966,7 @@ class FullParseHandler {
   }
   void setBeginPosition(Node pn, uint32_t begin) {
     pn->pn_pos.begin = begin;
-    MOZ_ASSERT_IF(sourceKind() == SourceKind::Text,
-                  pn->pn_pos.begin <= pn->pn_pos.end);
+    MOZ_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
   }
 
   void setEndPosition(Node pn, Node oth) {
@@ -992,8 +974,7 @@ class FullParseHandler {
   }
   void setEndPosition(Node pn, uint32_t end) {
     pn->pn_pos.end = end;
-    MOZ_ASSERT_IF(sourceKind() == SourceKind::Text,
-                  pn->pn_pos.begin <= pn->pn_pos.end);
+    MOZ_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
   }
 
   uint32_t getFunctionNameOffset(Node func, TokenStreamAnyChars& ts) {
@@ -1035,13 +1016,7 @@ class FullParseHandler {
     return new_<ListNode>(ParseNodeKind::CommaExpr, kid);
   }
 
-  void addList(ListNodeType list, Node kid) {
-    if (sourceKind_ == SourceKind::Text) {
-      list->append(kid);
-    } else {
-      list->appendWithoutOrderAssumption(kid);
-    }
-  }
+  void addList(ListNodeType list, Node kid) { list->append(kid); }
 
   void setListHasNonConstInitializer(ListNodeType literal) {
     literal->setHasNonConstInitializer();
