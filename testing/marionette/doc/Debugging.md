@@ -56,11 +56,11 @@ whenever the `WebDriver:GetPageSource` command is called:
 	  …
 	}
 
-To not be prompted at the start of the test run or between tests,
+To be prompted at the start of the test run or between tests,
 you can set the `marionette.debugging.clicktostart` preference to
-false this way:
+`true` this way:
 
-	% ./mach marionette-test --pref 'marionette.debugging.clicktostart:false' --jsdebugger
+	% ./mach marionette-test --setpref='marionette.debugging.clicktostart=true' --jsdebugger
 
 For reference, below is the list of preferences that enables the
 chrome debugger for Marionette.  These are all set implicitly when
@@ -69,14 +69,18 @@ are the default when built using `./mach build`, you will find that
 the chrome debugger won’t prompt for connection and will allow
 remote connections.
 
-  * `devtools.debugger.prompt-connection` → true
+  * `devtools.browsertoolbox.panel` -> `jsdebugger`
 
-    Controls the remote connection prompt.  Note that this will
-    automatically expose your Firefox instance to the network.
+    Selects the Debugger panel by default.
 
   * `devtools.chrome.enabled` → true
 
     Enables debugging of chrome code.
+
+  * `devtools.debugger.prompt-connection` → false
+
+    Controls the remote connection prompt.  Note that this will
+    automatically expose your Firefox instance to localhost.
 
   * `devtools.debugger.remote-enabled` → true
 

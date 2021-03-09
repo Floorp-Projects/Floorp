@@ -309,7 +309,6 @@ impl MarionetteHandler {
             prefs.insert("devtools.debugger.remote-enabled", Pref::new(true));
             prefs.insert("devtools.chrome.enabled", Pref::new(true));
             prefs.insert("devtools.debugger.prompt-connection", Pref::new(false));
-            prefs.insert("marionette.debugging.clicktostart", Pref::new(true));
         }
 
         prefs.insert("marionette.log.level", logging::max_level().into());
