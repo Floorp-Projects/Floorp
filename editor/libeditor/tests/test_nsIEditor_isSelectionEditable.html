@@ -1,0 +1,16 @@
+<!doctype html>
+<title>Test for nsIEditor.isSelectionEditable</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<input>
+<textarea></textarea>
+<script>
+for (let tag of ["input", "textarea"]) {
+  let node = document.querySelector(tag);
+  ok(SpecialPowers.wrap(node).editor.isSelectionEditable, "Empty editor selection should be editable");
+  node.value = "abcd";
+  ok(SpecialPowers.wrap(node).editor.isSelectionEditable, "Non-empty editor selection should be editable");
+  node.value = "";
+  ok(SpecialPowers.wrap(node).editor.isSelectionEditable, "Empty editor selection should be editable after setting value");
+}
+</script>
