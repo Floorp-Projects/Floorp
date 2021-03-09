@@ -1484,31 +1484,15 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     mHasLoadedNonBlankURI = true;
   }
 
-  bool isRoot = mBrowsingContext->IsTop();
-  bool isSubFrame = false;  // Is this a subframe navigation?
-
-  if (mozilla::SessionHistoryInParent()) {
-    if (mLoadingEntry) {
-      isSubFrame = mLoadingEntry->mInfo.IsSubFrame();
-    } else {
-      isSubFrame = !mBrowsingContext->IsTop() && mActiveEntry;
-    }
-    MOZ_LOG(gSHLog, LogLevel::Debug,
-            ("nsDocShell %p SetCurrentURI, isSubFrame=%d", this, isSubFrame));
-  } else {
-    if (mLSHE) {
-      isSubFrame = mLSHE->GetIsSubFrame();
-    }
-  }
-
-  if (!isSubFrame && !isRoot) {
-    /*
-     * We don't want to send OnLocationChange notifications when
-     * a subframe is being loaded for the first time, while
-     * visiting a frameset page
-     */
+  // Don't bother firing onLocationChange when creating a subframe's initial
+  // about:blank document, as this can happen when it's not safe for us to run
+  // script.
+  if (!(mLoadingEntry || mLSHE) && !mHasLoadedNonBlankURI && !aRequest &&
+      aLocationFlags == 0 && !mBrowsingContext->IsTop()) {
     return false;
   }
+
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   if (aFireOnLocationChange) {
     FireOnLocationChange(this, aRequest, aURI, aLocationFlags);
@@ -5939,14 +5923,15 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
 NS_IMETHODIMP
 nsDocShell::OnLocationChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
                              nsIURI* aURI, uint32_t aFlags) {
-  if (XRE_IsParentProcess()) {
-    // Since we've now changed Documents, notify the BrowsingContext that we've
-    // changed. Ideally we'd just let the BrowsingContext do this when it
-    // changes the current window global, but that happens before this and we
-    // have a lot of tests that depend on the specific ordering of messages.
-    if (!(aFlags & nsIWebProgressListener::LOCATION_CHANGE_SAME_DOCUMENT)) {
-      GetBrowsingContext()->Canonical()->UpdateSecurityState();
-    }
+  // Since we've now changed Documents, notify the BrowsingContext that we've
+  // changed. Ideally we'd just let the BrowsingContext do this when it
+  // changes the current window global, but that happens before this and we
+  // have a lot of tests that depend on the specific ordering of messages.
+  bool isTopLevel = false;
+  if (XRE_IsParentProcess() &&
+      !(aFlags & nsIWebProgressListener::LOCATION_CHANGE_SAME_DOCUMENT) &&
+      NS_SUCCEEDED(aProgress->GetIsTopLevel(&isTopLevel)) && isTopLevel) {
+    GetBrowsingContext()->Canonical()->UpdateSecurityState();
   }
   return NS_OK;
 }
@@ -11522,12 +11507,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
   // can't load into a docshell that is being destroyed.
   if (!aEqualURIs && !mIsBeingDestroyed) {
     aDocument->SetDocumentURI(aNewURI);
-    // We can't trust SetCurrentURI to do always fire locationchange events
-    // when we expect it to, so we hack around that by doing it ourselves...
-    SetCurrentURI(aNewURI, nullptr, false, LOCATION_CHANGE_SAME_DOCUMENT);
-    if (mLoadType != LOAD_ERROR_PAGE) {
-      FireDummyOnLocationChange();
-    }
+    SetCurrentURI(aNewURI, nullptr, true, LOCATION_CHANGE_SAME_DOCUMENT);
 
     AddURIVisit(aNewURI, aCurrentURI, 0);
 
