@@ -1239,6 +1239,10 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
       options.SetAllowSoftwareWebRenderD3D11(
           StaticPrefs::gfx_webrender_software_d3d11_AtStartup());
     }
+#elif defined(MOZ_WIDGET_ANDROID)
+    MOZ_ASSERT(supportsAcceleration);
+    options.SetAllowSoftwareWebRenderOGL(
+        StaticPrefs::gfx_webrender_software_opengl_AtStartup());
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
