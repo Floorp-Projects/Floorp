@@ -71,7 +71,6 @@ class TCPListener {
    *     A driver instance.
    */
   driverFactory() {
-    MarionettePrefs.contentListener = false;
     return new GeckoDriver(this);
   }
 

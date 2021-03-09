@@ -39,7 +39,6 @@ DEFAULT_PREFS = {
     "marionette.port": 2828,
     "marionette.log.level": "Trace",
     "marionette.log.truncate": False,
-    "marionette.contentListener": False,
     "extensions.autoDisableScopes": 10,
     "devtools.debugger.remote-enabled": True,
     "devtools.console.stdout.content": True,
