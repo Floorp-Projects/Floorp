@@ -85,6 +85,10 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
     return false;
   }
 
+  ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
+                                               StyleAppearance) override;
+  bool ThemeSupportsWidget(nsPresContext*, nsIFrame*, StyleAppearance) override;
+
  protected:
   virtual ~nsNativeBasicThemeCocoa() = default;
 };

@@ -31,24 +31,6 @@ class DrawTarget;
 
 class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
  public:
-  enum {
-    eThemeGeometryTypeTitlebar = eThemeGeometryTypeUnknown + 1,
-    eThemeGeometryTypeToolbar,
-    eThemeGeometryTypeToolbox,
-    eThemeGeometryTypeWindowButtons,
-    eThemeGeometryTypeMenu,
-    eThemeGeometryTypeHighlightedMenuItem,
-    eThemeGeometryTypeVibrancyLight,
-    eThemeGeometryTypeVibrancyDark,
-    eThemeGeometryTypeVibrantTitlebarLight,
-    eThemeGeometryTypeVibrantTitlebarDark,
-    eThemeGeometryTypeTooltip,
-    eThemeGeometryTypeSheet,
-    eThemeGeometryTypeSourceList,
-    eThemeGeometryTypeSourceListSelection,
-    eThemeGeometryTypeActiveSourceListSelection
-  };
-
   enum class MenuIcon : uint8_t {
     eCheckmark,
     eMenuArrow,
