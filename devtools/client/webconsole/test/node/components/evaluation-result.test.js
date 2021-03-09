@@ -120,7 +120,7 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get(`eval throw Symbol`);
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe("Uncaught Symbol(potato)");
+    expect(text).toBe('Uncaught Symbol("potato")');
     expect(wrapper.hasClass("error")).toBe(true);
   });
 

@@ -75,7 +75,7 @@ describe("GripMap - Symbol-keyed Map", () => {
   it("renders as expected", () => {
     const renderRep = props => shallowRenderRep(object, props);
     let length = getMapLengthBubbleText(object);
-    const out = `Map${length} { Symbol(a) → "value-a", Symbol(b) → "value-b" }`;
+    const out = `Map${length} { Symbol("a") → "value-a", Symbol("b") → "value-b" }`;
 
     expect(renderRep({ mode: undefined }).text()).toBe(out);
 

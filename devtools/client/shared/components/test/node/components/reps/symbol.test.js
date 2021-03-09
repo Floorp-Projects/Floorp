@@ -23,7 +23,7 @@ describe("test Symbol", () => {
       })
     );
 
-    expect(renderedComponent.text()).toEqual("Symbol(foo)");
+    expect(renderedComponent.text()).toEqual('Symbol("foo")');
     expect(renderedComponent.prop("title")).toBe("Symbol(foo)");
     expectActorAttribute(renderedComponent, stub.actor);
   });
@@ -55,7 +55,7 @@ describe("test Symbol with long string", () => {
     );
 
     expect(renderedComponent.text()).toEqual(
-      "Symbol(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…)"
+      'Symbol("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…")'
     );
     expectActorAttribute(renderedComponent, stub.actor);
   });
