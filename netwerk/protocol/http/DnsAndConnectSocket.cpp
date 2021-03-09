@@ -10,7 +10,7 @@
 #include "DnsAndConnectSocket.h"
 #include "nsHttpConnection.h"
 #include "nsIDNSRecord.h"
-#include "nsIDNSService.h"
+#include "nsDNSService2.h"
 #include "nsQueryObject.h"
 #include "nsURLHelper.h"
 #include "mozilla/Components.h"
@@ -1219,22 +1219,7 @@ nsresult DnsAndConnectSocket::TransportSetup::ResolveHost(
        PromiseFlatCString(mHost).get(),
        (mDnsFlags & nsIDNSService::RESOLVE_BYPASS_CACHE) ? " bypass cache"
                                                          : ""));
-  nsCOMPtr<nsIDNSService> dns = nullptr;
-  auto initTask = [&dns]() { dns = do_GetService(NS_DNSSERVICE_CID); };
-  if (!NS_IsMainThread()) {
-    // Forward to the main thread synchronously.
-    RefPtr<nsIThread> mainThread = do_GetMainThread();
-    if (!mainThread) {
-      return NS_ERROR_FAILURE;
-    }
-
-    SyncRunnable::DispatchToThread(
-        mainThread,
-        new SyncRunnable(NS_NewRunnableFunction(
-            "nsSocketTransport::ResolveHost->GetDNSService", initTask)));
-  } else {
-    initTask();
-  }
+  nsCOMPtr<nsIDNSService> dns = GetOrInitDNSService();
   if (!dns) {
     return NS_ERROR_FAILURE;
   }
