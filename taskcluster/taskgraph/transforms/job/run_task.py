@@ -208,9 +208,14 @@ def generic_worker_run_task(config, job, taskdesc):
             )
         )
 
-    if isinstance(run_command, text_type):
+    # dict is for the case of `{'task-reference': text_type}`.
+    if isinstance(run_command, (text_type, dict)):
         if is_win:
-            run_command = '"{}"'.format(run_command)
+            if isinstance(run_command, dict):
+                for k in run_command.keys():
+                    run_command[k] = '"{}"'.format(run_command[k])
+            else:
+                run_command = '"{}"'.format(run_command)
         run_command = ["bash", "-cx", run_command]
 
     if run["comm-checkout"]:
@@ -230,7 +235,22 @@ def generic_worker_run_task(config, job, taskdesc):
     command.extend(run_command)
 
     if is_win:
-        worker["command"] = [" ".join(command)]
+        taskref = False
+        for c in command:
+            if isinstance(c, dict):
+                taskref = True
+
+        if taskref:
+            cmd = []
+            for c in command:
+                if isinstance(c, dict):
+                    for v in c.values():
+                        cmd.append(v)
+                else:
+                    cmd.append(c)
+            worker["command"] = [{"artifact-reference": " ".join(cmd)}]
+        else:
+            worker["command"] = [" ".join(command)]
     else:
         worker["command"] = [
             ["chmod", "+x", "run-task"],
