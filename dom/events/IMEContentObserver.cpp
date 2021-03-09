@@ -735,7 +735,10 @@ bool IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
 
 void IMEContentObserver::CharacterDataWillChange(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
-  NS_ASSERTION(aContent->IsText(), "character data changed for non-text node");
+  if (!aContent->IsText()) {
+    return;  // Ignore if it's a comment node or something other invisible data
+             // node.
+  }
   MOZ_ASSERT(mPreCharacterDataChangeLength < 0,
              "CharacterDataChanged() should've reset "
              "mPreCharacterDataChangeLength");
@@ -763,7 +766,10 @@ void IMEContentObserver::CharacterDataWillChange(
 
 void IMEContentObserver::CharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
-  NS_ASSERTION(aContent->IsText(), "character data changed for non-text node");
+  if (!aContent->IsText()) {
+    return;  // Ignore if it's a comment node or something other invisible data
+             // node.
+  }
 
   if (!NeedsTextChangeNotification() ||
       !nsContentUtils::IsInSameAnonymousTree(mRootContent, aContent)) {
