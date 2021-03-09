@@ -110,4 +110,6 @@ class nsDNSService final : public nsPIDNSService,
   nsClassHashtable<nsCStringHashKey, nsTArray<nsCString>> mFailedSVCDomainNames;
 };
 
+already_AddRefed<nsIDNSService> GetOrInitDNSService();
+
 #endif  // nsDNSService2_h__
