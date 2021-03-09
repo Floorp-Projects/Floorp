@@ -527,7 +527,7 @@ contextual.services.topsites.*
 
 contextual.services.quicksuggest.*
   These keyed scalars record impressions and clicks on Quick Suggest results,
-  also called Firefox Suggests results, in the address bar. The keys for each
+  also called Firefox Suggest results, in the address bar. The keys for each
   scalar are the 1-based indexes of the Quick Suggest results, and the values
   are the number of impressions or clicks for the corresponding indexes. For
   example, for a Quick Suggest impression at 0-based index 9, the value for key
@@ -552,9 +552,9 @@ contextservices.quicksuggest
   It's enabled only when the ``browser.urlbar.quicksuggest.enabled`` pref is
   true. An event is recorded when the user toggles the
   ``browser.urlbar.suggest.quicksuggest`` pref, which corresponds to the
-  checkbox in about:preferences#search labeled "Show suggested and sponsored
-  results in the address bar". If the user never toggles the pref, then this
-  event is never recorded.
+  checkbox in about:preferences#search labeled "Show Firefox Suggest in the
+  address bar (suggested and sponsored results)". If the user never toggles
+  the pref, then this event is never recorded.
 
   The full spec for this event is:
 
