@@ -266,13 +266,6 @@ class FunctionFlags {
     setFlags(CONSTRUCTOR);
   }
 
-  void setIsClassConstructor() {
-    MOZ_ASSERT(!isClassConstructor());
-    MOZ_ASSERT(isConstructor());
-
-    setKind(ClassConstructor);
-  }
-
   void setIsBoundFunction() {
     MOZ_ASSERT(!isBoundFunction());
     setFlags(BOUND_FUN);
