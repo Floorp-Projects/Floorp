@@ -338,6 +338,11 @@ static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
     uint32_t index;
     MOZ_TRY(xdr->codeUint32(&index));
     MOZ_TRY(XDRParserAtom(xdr, &entry));
+    if (mode == XDR_DECODE) {
+      if (index >= atomVectorLength) {
+        return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
+      }
+    }
     xdr->frontendAtoms().set(frontend::ParserAtomIndex(index), entry);
   }
   xdr->finishAtomTable();
