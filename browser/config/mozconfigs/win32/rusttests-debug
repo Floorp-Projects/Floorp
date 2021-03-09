@@ -1,8 +1,0 @@
-MOZ_AUTOMATION_BUILD_SYMBOLS=0
-
-. "$topsrcdir/browser/config/mozconfigs/win32/debug"
-
-unset ENABLE_CLANG_PLUGIN
-
-# Test geckodriver, which isn't built as part of the build jobs
-ac_add_options --enable-geckodriver

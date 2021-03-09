@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file is included by all "tools/rusttests" mozconfigs
+
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_PACKAGE=0
+MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0
+MOZ_AUTOMATION_UPLOAD=0
+MOZ_AUTOMATION_CHECK=0
+ac_add_options --enable-application=tools/rusttests
+mk_add_options MOZ_MAKE_FLAGS=--output-sync=line
+. "$topsrcdir/build/mozconfig.common"
+. "$topsrcdir/build/mozconfig.common.override"
+
+unset ENABLE_CLANG_PLUGIN
+
+# Test geckodriver, which isn't built as part of the build jobs
+ac_add_options --enable-geckodriver
