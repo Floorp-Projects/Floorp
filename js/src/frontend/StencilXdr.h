@@ -77,13 +77,11 @@ class StencilXDR {
   static XDRResult codeModuleMetadata(XDRState<mode>* xdr,
                                       StencilModuleMetadata& stencil);
 
-  template <XDRMode mode>
-  static XDRResult checkCompilationStencil(XDRState<mode>* xdr,
-                                           CompilationStencil& stencil);
+  static XDRResult checkCompilationStencil(XDRStencilEncoder* encoder,
+                                           const CompilationStencil& stencil);
 
-  template <XDRMode mode>
   static XDRResult checkCompilationStencil(
-      XDRState<mode>* xdr, ExtensibleCompilationStencil& stencil);
+      const ExtensibleCompilationStencil& stencil);
 
   template <XDRMode mode>
   static XDRResult codeCompilationStencil(XDRState<mode>* xdr,

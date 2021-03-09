@@ -657,28 +657,20 @@ template /* static */ XDRResult StencilXDR::codeCompilationStencil(
 template /* static */ XDRResult StencilXDR::codeCompilationStencil(
     XDRState<XDR_DECODE>* xdr, CompilationStencil& stencil);
 
-template <XDRMode mode>
 /* static */ XDRResult StencilXDR::checkCompilationStencil(
-    XDRState<mode>* xdr, CompilationStencil& stencil) {
+    XDRStencilEncoder* encoder, const CompilationStencil& stencil) {
   if (stencil.asmJS) {
-    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
+    return encoder->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
   }
 
   return Ok();
 }
 
-template XDRResult StencilXDR::checkCompilationStencil(
-    XDRState<XDR_ENCODE>* xdr, CompilationStencil& stencil);
-
-template <XDRMode mode>
 /* static */ XDRResult StencilXDR::checkCompilationStencil(
-    XDRState<mode>* xdr, ExtensibleCompilationStencil& stencil) {
+    const ExtensibleCompilationStencil& stencil) {
   if (stencil.asmJS) {
-    return xdr->fail(JS::TranscodeResult::Failure_AsmJSNotSupported);
+    return mozilla::Err(JS::TranscodeResult::Failure_AsmJSNotSupported);
   }
 
   return Ok();
 }
-
-template XDRResult StencilXDR::checkCompilationStencil(
-    XDRState<XDR_ENCODE>* xdr, ExtensibleCompilationStencil& stencil);
