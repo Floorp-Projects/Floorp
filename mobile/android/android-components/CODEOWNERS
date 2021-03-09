@@ -62,6 +62,7 @@
 /components/feature/accounts/               @grigoryk
 /components/feature/addons/                 @csadilek @amejia481
 /components/feature/app-links/              @rocketsroger
+/components/feature/autofill/               @pocmo @grigoryk
 /components/feature/awesomebar/             @csadilek
 /components/feature/containers/             @gabrielluong
 /components/feature/contextmenu/            @pocmo
@@ -71,17 +72,17 @@
 /components/feature/intent/                 @mozilla-mobile/act
 /components/feature/media/                  @pocmo @rocketsroger
 /components/feature/privatemode/            @mozilla-mobile/act
-/components/feature/prompts/                @amejia481 @ekager
+/components/feature/prompts/                @amejia481
 /components/feature/push/                   @jonalmeida @grigoryk
 /components/feature/pwa/                    @mozilla-mobile/act
 /components/feature/qr/                     @csadilek
 /components/feature/readerview/             @csadilek
-/components/feature/recentlyclosed/         @ekager
+/components/feature/recentlyclosed/         @mozilla-mobile/act
 /components/feature/search/                 @pocmo
 /components/feature/session/                @pocmo @csadilek
 /components/feature/share/                  @mozilla-mobile/act
 /components/feature/sitepermissions/        @amejia481
-/components/feature/syncedtabs/             @jonalmeida @eoger
+/components/feature/syncedtabs/             @jonalmeida
 /components/feature/tab-collections/        @pocmo
 /components/feature/tabs/                   @jonalmeida
 /components/feature/toolbar/                @pocmo
@@ -108,7 +109,8 @@
 /components/service/location/               @pocmo
 /components/service/nimbus/                 @mozilla-mobile/telemetry @mozilla-mobile/ast
 /components/service/pocket/                 @mcomella
-/components/service/sync-logins/            @grigoryk @ekager
+/components/service/sync-autofill/          @gabrielluong
+/components/service/sync-logins/            @grigoryk
 
 /components/support/android-test/           @amejia481
 /components/support/base/                   @pocmo @amejia481
@@ -116,8 +118,8 @@
 /components/support/ktx/                    @amejia481
 /components/support/locale/                 @amejia481
 /components/support/migration/              @pocmo @grigoryk
-/components/support/rusthttp/               @eoger
-/components/support/rustlog/                @eoger
+/components/support/rusthttp/               @mozilla-mobile/ast
+/components/support/rustlog/                @mozilla-mobile/ast
 /components/support/sync-telemetry/         @grigoryk
 /components/support/test-appservices/       @pocmo
 /components/support/test-libstate/          @pocmo @csadilek
@@ -128,7 +130,7 @@
 /components/tooling/detekt/
 /components/tooling/fetch-tests/            @csadilek
 /components/tooling/glean-gradle-plugin/    @mozilla-mobile/telemetry
-/components/tooling/lint/                   @ekager
+/components/tooling/lint/                   @mozilla-mobile/act
 
 /components/ui/autocomplete/                @mozilla-mobile/act
 /components/ui/colors/                      @mozilla-mobile/act
@@ -142,7 +144,7 @@
 /samples/dataprotect/                       @mozilla-mobile/act
 /samples/firefox-accounts/                  @grigoryk
 /samples/glean/                             @mozilla-mobile/telemetry
-/samples/sync-logins/                       @ekager
+/samples/sync-logins/                       @grigoryk
 /samples/sync/                              @grigoryk
 /samples/toolbar/                           @pocmo
 
