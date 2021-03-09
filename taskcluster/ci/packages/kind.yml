@@ -193,10 +193,10 @@ jobs:
         run:
             using: debian-package
             tarball:
-                url: https://github.com/indygreg/python-zstandard/releases/download/0.15.1/zstandard-0.15.1.tar.gz
-                sha256: cb7c6a6f7d62350b9f5539045da54422975630e34dd9069584cc776b9917115f
+                url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
+                sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
             name: python-zstandard
-            patch: python-zstandard-jessie.diff
+            pre-build-command: debchange -v 0.15.2-1.deb8moz --distribution jessie-backports "Mozilla backport for jessie"
             packages:
                 - deb8-dh-python
                 - deb8-python3.6
@@ -210,10 +210,10 @@ jobs:
             using: debian-package
             dist: buster
             tarball:
-                url: https://github.com/indygreg/python-zstandard/releases/download/0.15.1/zstandard-0.15.1.tar.gz
-                sha256: cb7c6a6f7d62350b9f5539045da54422975630e34dd9069584cc776b9917115f
+                url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
+                sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+            pre-build-command: debchange -v 0.15.2-1.deb10moz --distribution buster "Mozilla backport for buster"
             name: python-zstandard
-            patch: python-zstandard-buster.diff
 
     deb10-mmdebstrap:
         # Only a more recent version of mmdebstrap than what is in buster has the
