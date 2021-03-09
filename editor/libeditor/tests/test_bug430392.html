@@ -167,10 +167,10 @@ async function test() {
   SimpleTest.finish();
 }
 
-// In WSRunScanner::GetEditableBlockParentOrTopmotEditableInlineContent().
+// In WSRunScanner::GetEditableBlockParentOrTopmostEditableInlineContent().
 // Before it, HTMLEditor must be able to stop handling edit action at
 // non-editable content.
-SimpleTest.expectAssertions(18);
+SimpleTest.expectAssertions(6);
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(test);
