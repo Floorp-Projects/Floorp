@@ -4,6 +4,7 @@
 
 %include ../shared/compacttheme.inc.css
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 /**
  * macOS vibrancy effects only work when there is no background colour behind
  * the effect.
@@ -22,3 +23,4 @@
 .tabbrowser-tab[visuallyselected=true]:-moz-lwtheme-darktext {
   -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
 }
+} /* END !proton */
