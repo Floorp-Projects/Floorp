@@ -477,11 +477,6 @@ class Activation {
   }
   bool scriptedCallerIsHidden() const { return hideScriptedCallerCount_ > 0; }
 
-  static size_t offsetOfPrev() { return offsetof(Activation, prev_); }
-  static size_t offsetOfPrevProfiling() {
-    return offsetof(Activation, prevProfiling_);
-  }
-
   SavedFrame* asyncStack() { return asyncStack_; }
 
   const char* asyncCause() const { return asyncCause_; }
