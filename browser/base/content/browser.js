@@ -7632,7 +7632,7 @@ var CanvasPermissionPromptHelper = {
     }
 
     let message = gNavigatorBundle.getFormattedString(
-      "canvas.siteprompt",
+      "canvas.siteprompt2",
       ["<>"],
       1
     );
@@ -7653,8 +7653,8 @@ var CanvasPermissionPromptHelper = {
     }
 
     let mainAction = {
-      label: gNavigatorBundle.getString("canvas.allow"),
-      accessKey: gNavigatorBundle.getString("canvas.allow.accesskey"),
+      label: gNavigatorBundle.getString("canvas.allow2"),
+      accessKey: gNavigatorBundle.getString("canvas.allow2.accesskey"),
       callback(state) {
         setCanvasPermission(
           Ci.nsIPermissionManager.ALLOW_ACTION,
@@ -7666,8 +7666,8 @@ var CanvasPermissionPromptHelper = {
 
     let secondaryActions = [
       {
-        label: gNavigatorBundle.getString("canvas.notAllow"),
-        accessKey: gNavigatorBundle.getString("canvas.notAllow.accesskey"),
+        label: gNavigatorBundle.getString("canvas.block"),
+        accessKey: gNavigatorBundle.getString("canvas.block.accesskey"),
         callback(state) {
           setCanvasPermission(
             Ci.nsIPermissionManager.DENY_ACTION,
@@ -7683,7 +7683,7 @@ var CanvasPermissionPromptHelper = {
     };
     if (checkbox.show) {
       checkbox.checked = true;
-      checkbox.label = gBrowserBundle.GetStringFromName("canvas.remember");
+      checkbox.label = gBrowserBundle.GetStringFromName("canvas.remember2");
     }
 
     let options = {
@@ -7693,6 +7693,15 @@ var CanvasPermissionPromptHelper = {
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
         "fingerprint-permission",
       dismissed: aTopic == this._permissionsPromptHideDoorHanger,
+      eventCallback(e) {
+        if (e == "showing") {
+          this.browser.ownerDocument.getElementById(
+            "canvas-permissions-prompt-warning"
+          ).textContent = gBrowserBundle.GetStringFromName(
+            "canvas.siteprompt2.warning"
+          );
+        }
+      },
     };
     PopupNotifications.show(
       browser,
