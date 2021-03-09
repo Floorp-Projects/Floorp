@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 troubleshoot-mode-window =
-    .title = Open { -brand-full-name } in Troubleshoot Mode?
+    .title = Open { -brand-short-name } in Troubleshoot Mode?
     .style = max-width: 400px
 start-troubleshoot-mode =
     .label = Open
