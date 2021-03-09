@@ -7,9 +7,9 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 namespace dom {
@@ -131,7 +131,7 @@ class MediaPlaybackStatus final {
   bool ShouldAbandonAudioFocusForInfo(const ContextMediaInfo& aInfo) const;
 
   // This contains all the media status of browsing contexts within a tab.
-  nsDataHashtable<nsUint64HashKey, UniquePtr<ContextMediaInfo>> mContextInfoMap;
+  nsTHashMap<uint64_t, UniquePtr<ContextMediaInfo>> mContextInfoMap;
   Maybe<uint64_t> mOwningAudioFocusContextId;
 };
 

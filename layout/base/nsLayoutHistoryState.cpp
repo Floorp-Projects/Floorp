@@ -11,11 +11,10 @@
 
 #include "nsILayoutHistoryState.h"
 #include "nsWeakReference.h"
-#include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
 #include "mozilla/PresState.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "nsTHashMap.h"
 
 using namespace mozilla;
 
@@ -31,7 +30,7 @@ class nsLayoutHistoryState final : public nsILayoutHistoryState,
   ~nsLayoutHistoryState() = default;
   bool mScrollPositionOnly;
 
-  nsDataHashtable<nsCStringHashKey, UniquePtr<PresState>> mStates;
+  nsTHashMap<nsCString, UniquePtr<PresState>> mStates;
 };
 
 already_AddRefed<nsILayoutHistoryState> NS_NewLayoutHistoryState() {
