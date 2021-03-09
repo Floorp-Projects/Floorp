@@ -8,7 +8,6 @@
 #define vm_GlobalObject_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/DebugOnly.h"
 
 #include <stdint.h>
 #include <type_traits>
@@ -758,14 +757,6 @@ class GlobalObject : public NativeObject {
 
     *vp = holder->getSlot(shape->slot());
     return true;
-  }
-
-  Value existingIntrinsicValue(PropertyName* name) {
-    Value val;
-    mozilla::DebugOnly<bool> exists = maybeExistingIntrinsicValue(name, &val);
-    MOZ_ASSERT(exists, "intrinsic must already have been added to holder");
-
-    return val;
   }
 
   static bool maybeGetIntrinsicValue(JSContext* cx,
