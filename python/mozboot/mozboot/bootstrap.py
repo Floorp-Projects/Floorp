@@ -334,7 +334,7 @@ class Bootstrapper(object):
             return False
         choice = self.instance.prompt_yesno(prompt=TELEMETRY_OPT_IN_PROMPT)
         if choice:
-            cfg_file = os.path.join(state_dir, "machrc")
+            cfg_file = os.environ.get("MACHRC", os.path.join(state_dir, "machrc"))
             if update_or_create_build_telemetry_config(cfg_file):
                 print(
                     "\nThanks for enabling build telemetry! You can change this setting at "
