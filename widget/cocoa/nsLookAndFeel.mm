@@ -44,7 +44,6 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorTextSelectForeground(0),
       mColorMenuHoverText(0),
       mColorButtonText(0),
-      mHasColorButtonText(false),
       mColorButtonHoverText(0),
       mColorText(0),
       mColorWindowText(0),
@@ -159,6 +158,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::WidgetBackground:
+    case ColorID::Infobackground:
       aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     case ColorID::WidgetForeground:
@@ -242,12 +242,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       //
     case ColorID::MozMacButtonactivetext:
     case ColorID::MozMacDefaultbuttontext:
-      if (mHasColorButtonText) {
-        aColor = mColorButtonText;
-        break;
-      }
-      // Otherwise fall through and return the regular button text:
-      [[fallthrough]];
+      aColor = mColorButtonText;
+      break;
     case ColorID::Buttontext:
     case ColorID::MozButtonhovertext:
       aColor = mColorButtonHoverText;
@@ -315,9 +311,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
     case ColorID::Menu:
       aColor = mColorMenu;
-      break;
-    case ColorID::Infobackground:
-      aColor = NS_RGB(0xFF, 0xFF, 0xC7);
       break;
     case ColorID::Windowframe:
       aColor = mColorWindowFrame;
@@ -760,8 +753,6 @@ void nsLookAndFeel::EnsureInit() {
   mColorMenuHoverText = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
 
   mColorButtonText = NS_RGB(0xFF, 0xFF, 0xFF);
-  mHasColorButtonText = true;
-
   mColorButtonHoverText = GetColorFromNSColor([NSColor controlTextColor]);
   mColorText = GetColorFromNSColor([NSColor textColor]);
   mColorWindowText = GetColorFromNSColor([NSColor windowFrameTextColor]);
