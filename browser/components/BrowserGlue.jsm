@@ -1454,12 +1454,18 @@ BrowserGlue.prototype = {
 
   _onSafeModeRestart: function BG_onSafeModeRestart() {
     // prompt the user to confirm
+    let productName = gBrandBundle.GetStringFromName("brandShortName");
     let strings = gBrowserBundle;
-    let promptTitle = strings.GetStringFromName("safeModeRestartPromptTitle");
-    let promptMessage = strings.GetStringFromName(
-      "safeModeRestartPromptMessage"
+    let promptTitle = strings.formatStringFromName(
+      "troubleshootModeRestartPromptTitle",
+      [productName]
     );
-    let restartText = strings.GetStringFromName("safeModeRestartButton");
+    let promptMessage = strings.GetStringFromName(
+      "troubleshootModeRestartPromptMessage"
+    );
+    let restartText = strings.GetStringFromName(
+      "troubleshootModeRestartButton"
+    );
     let buttonFlags =
       Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
       Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
