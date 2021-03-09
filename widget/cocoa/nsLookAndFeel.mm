@@ -672,6 +672,7 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
       ColorID::Highlighttext,
       ColorID::Menutext,
       ColorID::TextSelectBackground,
+      ColorID::TextSelectBackgroundDisabled,
       ColorID::TextSelectForeground,
       ColorID::MozMacDefaultbuttontext,
       ColorID::MozButtonhovertext,
@@ -755,6 +756,8 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
           return mColorText;
         case ColorID::TextSelectBackground:
           return mColorTextSelectBackground;
+        case ColorID::TextSelectBackgroundDisabled:
+          return mColorTextSelectBackgroundDisabled;
         case ColorID::TextSelectForeground:
           return mColorTextSelectForeground;
         case ColorID::MozMacDefaultbuttontext:
