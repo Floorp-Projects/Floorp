@@ -8,7 +8,7 @@
 %include ../shared/browser-custom-colors.inc.css
 
 :root {
-  --toolbar-non-lwt-bgcolor: #f9f9fa;
+  --toolbar-non-lwt-bgcolor: #f9f9fb;
   --toolbar-non-lwt-textcolor: #0c0c0d;
   --toolbar-non-lwt-bgimage: none;
 
@@ -48,6 +48,12 @@
   appearance: none;
   --tabs-border-color: rgba(0,0,0,.2);
 }
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+#navigator-toolbox:not(:-moz-lwtheme) {
+  background-color: #f0f0f4;
+}
+} /* END proton */
 
 #navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
   --tabs-border-color: rgba(0,0,0,.05);
@@ -119,11 +125,20 @@
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-.browser-toolbar:not(.titlebar-color) {
+.browser-toolbar {
   appearance: none;
+}
+
+.browser-toolbar:not(.titlebar-color) {
   background: var(--toolbar-bgcolor);
   color: var(--toolbar-color);
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.browser-toolbar.titlebar-color {
+  appearance: auto;
+}
+} /* END !proton */
 
 /* Draw the bottom border of the tabs toolbar when titlebar isn't using vibrancy */
 :root:not([inFullscreen], [tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
@@ -137,10 +152,12 @@
   position: relative;
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
 #nav-bar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
 }
+} /* END !proton */
 
 /* ----- BOOKMARK TOOLBAR ----- */
 
@@ -527,6 +544,7 @@
   padding-top: var(--space-above-tabbar);
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #TabsToolbar:not(:-moz-lwtheme) {
   color: #333;
 }
@@ -544,6 +562,7 @@
 .tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
   -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
 }
+} /* END !proton */
 
 #tabbrowser-tabs {
   -moz-box-align: stretch;
