@@ -140,20 +140,6 @@ class MarionetteBranch extends Branch {
   }
 
   /**
-   * Whether content scripts can be safely reused.
-   *
-   * @deprecated
-   * @return {boolean}
-   */
-  get contentListener() {
-    return this.get("contentListener", false);
-  }
-
-  set contentListener(value) {
-    this.set("contentListener", value);
-  }
-
-  /**
    * The `marionette.port` preference, detailing which port
    * the TCP server should listen on.
    *
