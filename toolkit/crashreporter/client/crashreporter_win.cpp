@@ -27,9 +27,6 @@
 #define SUBMIT_REPORT_VALUE L"SubmitCrashReport"
 #define SUBMIT_REPORT_OLD L"SubmitReport"
 #define INCLUDE_URL_VALUE L"IncludeURL"
-#define EMAIL_ME_VALUE L"EmailMe"
-#define EMAIL_VALUE L"Email"
-#define MAX_EMAIL_LENGTH 1024
 
 #define SENDURL_ORIGINAL L"https://crash-reports.mozilla.com/submit"
 #define SENDURL_XPSP2 L"https://crash-reports-xpsp2.mozilla.com/submit"
@@ -94,9 +91,8 @@ static set<UINT> gAttachedBottom;
 // Default set of items for gAttachedBottom
 static const UINT kDefaultAttachedBottom[] = {
     IDC_SUBMITREPORTCHECK, IDC_VIEWREPORTBUTTON, IDC_COMMENTTEXT,
-    IDC_INCLUDEURLCHECK,   IDC_EMAILMECHECK,     IDC_EMAILTEXT,
-    IDC_PROGRESSTEXT,      IDC_THROBBER,         IDC_CLOSEBUTTON,
-    IDC_RESTARTBUTTON,
+    IDC_INCLUDEURLCHECK,   IDC_PROGRESSTEXT,     IDC_THROBBER,
+    IDC_CLOSEBUTTON,       IDC_RESTARTBUTTON,
 };
 
 static wstring UTF8ToWide(const string& utf8, bool* success = 0);
@@ -187,54 +183,6 @@ static void SetBoolKey(const wchar_t* key, const wchar_t* value, bool enabled) {
   if (RegCreateKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
     DWORD data = (enabled ? 1 : 0);
     RegSetValueEx(hRegKey, value, 0, REG_DWORD, (LPBYTE)&data, sizeof(data));
-    RegCloseKey(hRegKey);
-  }
-}
-
-static bool GetStringValue(HKEY hRegKey, LPCTSTR valueName, wstring& value) {
-  DWORD type, dataSize;
-  wchar_t buf[2048] = {};
-  dataSize = sizeof(buf) - 1;
-  if (RegQueryValueEx(hRegKey, valueName, nullptr, &type, (LPBYTE)buf,
-                      &dataSize) == ERROR_SUCCESS &&
-      type == REG_SZ) {
-    value = buf;
-    return true;
-  }
-
-  return false;
-}
-
-static bool GetStringKey(const wchar_t* key, const wchar_t* valueName,
-                         wstring& value) {
-  value = L"";
-  bool found = false;
-  HKEY hRegKey;
-  // see if our reg key is set globally
-  if (RegOpenKey(HKEY_LOCAL_MACHINE, key, &hRegKey) == ERROR_SUCCESS) {
-    if (GetStringValue(hRegKey, valueName, value)) {
-      found = true;
-    }
-    RegCloseKey(hRegKey);
-  } else {
-    // look for it in user settings
-    if (RegOpenKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
-      if (GetStringValue(hRegKey, valueName, value)) {
-        found = true;
-      }
-      RegCloseKey(hRegKey);
-    }
-  }
-
-  return found;
-}
-
-static void SetStringKey(const wchar_t* key, const wchar_t* valueName,
-                         const wstring& value) {
-  HKEY hRegKey;
-  if (RegCreateKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
-    RegSetValueEx(hRegKey, valueName, 0, REG_SZ, (LPBYTE)value.c_str(),
-                  (value.length() + 1) * sizeof(wchar_t));
     RegCloseKey(hRegKey);
   }
 }
@@ -382,15 +330,8 @@ static DWORD WINAPI SendThreadProc(LPVOID param) {
 
 static void EndCrashReporterDialog(HWND hwndDlg, int code) {
   // Save the current values to the registry
-  wchar_t email[MAX_EMAIL_LENGTH];
-  GetDlgItemTextW(hwndDlg, IDC_EMAILTEXT, email,
-                  sizeof(email) / sizeof(email[0]));
-  SetStringKey(gCrashReporterKey.c_str(), EMAIL_VALUE, email);
-
   SetBoolKey(gCrashReporterKey.c_str(), INCLUDE_URL_VALUE,
              IsDlgButtonChecked(hwndDlg, IDC_INCLUDEURLCHECK) != 0);
-  SetBoolKey(gCrashReporterKey.c_str(), EMAIL_ME_VALUE,
-             IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK) != 0);
   SetBoolKey(gCrashReporterKey.c_str(), SUBMIT_REPORT_VALUE,
              IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK) != 0);
 
@@ -445,8 +386,6 @@ static void MaybeSendReport(HWND hwndDlg) {
   EnableWindow(GetDlgItem(hwndDlg, IDC_VIEWREPORTBUTTON), false);
   EnableWindow(GetDlgItem(hwndDlg, IDC_COMMENTTEXT), false);
   EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), false);
-  EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), false);
-  EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), false);
   EnableWindow(GetDlgItem(hwndDlg, IDC_CLOSEBUTTON), false);
   EnableWindow(GetDlgItem(hwndDlg, IDC_RESTARTBUTTON), false);
 
@@ -517,20 +456,6 @@ static void UpdateURL(HWND hwndDlg) {
     gQueryParameters["URL"] = gURLParameter;
   } else {
     gQueryParameters.removeMember("URL");
-  }
-}
-
-static void UpdateEmail(HWND hwndDlg) {
-  if (IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK)) {
-    wchar_t email[MAX_EMAIL_LENGTH];
-    GetDlgItemTextW(hwndDlg, IDC_EMAILTEXT, email,
-                    sizeof(email) / sizeof(email[0]));
-    gQueryParameters["Email"] = WideToUTF8(email);
-    if (IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK))
-      EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), true);
-  } else {
-    gQueryParameters.removeMember("Email");
-    EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), false);
   }
 }
 
@@ -738,8 +663,7 @@ static int ResizeControl(HWND hwndButton, RECT& rect, wstring text,
 // controls to make use of the space
 static void StretchControlsToFit(HWND hwndDlg) {
   int controls[] = {IDC_DESCRIPTIONTEXT, IDC_SUBMITREPORTCHECK, IDC_COMMENTTEXT,
-                    IDC_INCLUDEURLCHECK, IDC_EMAILMECHECK,      IDC_EMAILTEXT,
-                    IDC_PROGRESSTEXT};
+                    IDC_INCLUDEURLCHECK, IDC_PROGRESSTEXT};
 
   RECT dlgRect;
   GetClientRect(hwndDlg, &dlgRect);
@@ -762,9 +686,6 @@ static void SubmitReportChecked(HWND hwndDlg) {
   EnableWindow(GetDlgItem(hwndDlg, IDC_VIEWREPORTBUTTON), enabled);
   EnableWindow(GetDlgItem(hwndDlg, IDC_COMMENTTEXT), enabled);
   EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), enabled);
-  EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
-  EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT),
-               enabled && (IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK) != 0));
   SetDlgItemVisible(hwndDlg, IDC_PROGRESSTEXT, enabled);
 }
 
@@ -866,36 +787,6 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
         CheckDlgButton(hwndDlg, IDC_INCLUDEURLCHECK, BST_CHECKED);
       }
 
-      hwnd = GetDlgItem(hwndDlg, IDC_EMAILMECHECK);
-      GetRelativeRect(hwnd, hwndDlg, &rect);
-      diff = ResizeControl(hwnd, rect, Str(ST_CHECKEMAIL), false,
-                           gCheckboxPadding);
-      maxdiff = std::max(diff, maxdiff);
-      SetDlgItemText(hwndDlg, IDC_EMAILMECHECK, Str(ST_CHECKEMAIL).c_str());
-
-      if (CheckBoolKey(gCrashReporterKey.c_str(), EMAIL_ME_VALUE, &enabled) &&
-          enabled) {
-        CheckDlgButton(hwndDlg, IDC_EMAILMECHECK, BST_CHECKED);
-      } else {
-        CheckDlgButton(hwndDlg, IDC_EMAILMECHECK, BST_UNCHECKED);
-      }
-
-      wstring email;
-      if (GetStringKey(gCrashReporterKey.c_str(), EMAIL_VALUE, email)) {
-        SetDlgItemText(hwndDlg, IDC_EMAILTEXT, email.c_str());
-      }
-
-      // Subclass email edit control to get placeholder text
-      HWND hwndEmail = GetDlgItem(hwndDlg, IDC_EMAILTEXT);
-      OldWndProc = (WNDPROC)SetWindowLongPtr(hwndEmail, GWLP_WNDPROC,
-                                             (LONG_PTR)EditSubclassProc);
-      SetWindowLongPtr(hwndEmail, GWLP_USERDATA, (LONG_PTR)OldWndProc);
-      wstring emailGrayText = Str(ST_EMAILGRAYTEXT);
-      hMem = (wchar_t*)GlobalAlloc(
-          GPTR, (emailGrayText.length() + 1) * sizeof(wchar_t));
-      wcscpy(hMem, emailGrayText.c_str());
-      SetProp(hwndEmail, L"PROP_GRAYTEXT", hMem);
-
       SetDlgItemText(hwndDlg, IDC_PROGRESSTEXT,
                      Str(ST_REPORTPRESUBMIT).c_str());
 
@@ -982,9 +873,8 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
 
       // if no URL was given, hide the URL checkbox
       if (!gQueryParameters.isMember("URL")) {
-        RECT urlCheckRect, emailCheckRect;
+        RECT urlCheckRect;
         GetWindowRect(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), &urlCheckRect);
-        GetWindowRect(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), &emailCheckRect);
 
         SetDlgItemVisible(hwndDlg, IDC_INCLUDEURLCHECK, false);
 
@@ -992,7 +882,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
         gAttachedBottom.erase(IDC_SUBMITREPORTCHECK);
         gAttachedBottom.erase(IDC_COMMENTTEXT);
 
-        StretchDialog(hwndDlg, urlCheckRect.top - emailCheckRect.top);
+        StretchDialog(hwndDlg, urlCheckRect.top);
 
         gAttachedBottom.insert(IDC_VIEWREPORTBUTTON);
         gAttachedBottom.insert(IDC_SUBMITREPORTCHECK);
@@ -1006,7 +896,6 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
                    MAKEINTRESOURCE(IDR_THROBBER));
 
       UpdateURL(hwndDlg);
-      UpdateEmail(hwndDlg);
 
       SetFocus(GetDlgItem(hwndDlg, IDC_SUBMITREPORTCHECK));
       return FALSE;
@@ -1049,9 +938,6 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
           case IDC_INCLUDEURLCHECK:
             UpdateURL(hwndDlg);
             break;
-          case IDC_EMAILMECHECK:
-            UpdateEmail(hwndDlg);
-            break;
           case IDC_CLOSEBUTTON:
             MaybeSendReport(hwndDlg);
             break;
@@ -1062,9 +948,6 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
         }
       } else if (HIWORD(wParam) == EN_CHANGE) {
         switch (LOWORD(wParam)) {
-          case IDC_EMAILTEXT:
-            UpdateEmail(hwndDlg);
-            break;
           case IDC_COMMENTTEXT:
             UpdateComment(hwndDlg);
         }
@@ -1088,22 +971,6 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
       SetTimer(hwndDlg, 0, 5000, nullptr);
       //
       return TRUE;
-    }
-
-    case WM_LBUTTONDOWN: {
-      HWND hwndEmail = GetDlgItem(hwndDlg, IDC_EMAILTEXT);
-      POINT p = {LOWORD(lParam), HIWORD(lParam)};
-      // if the email edit control is clicked, enable it,
-      // check the email checkbox, and focus the email edit control
-      if (ChildWindowFromPoint(hwndDlg, p) == hwndEmail &&
-          IsWindowEnabled(GetDlgItem(hwndDlg, IDC_RESTARTBUTTON)) &&
-          !IsWindowEnabled(hwndEmail) &&
-          IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK) != 0) {
-        CheckDlgButton(hwndDlg, IDC_EMAILMECHECK, BST_CHECKED);
-        UpdateEmail(hwndDlg);
-        SetFocus(hwndEmail);
-      }
-      break;
     }
 
     case WM_TIMER: {

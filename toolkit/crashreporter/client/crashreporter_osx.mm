@@ -122,12 +122,10 @@ static bool RestartApplication() {
 
   [mSubmitReportButton setTitle:Str(ST_CHECKSUBMIT)];
   [mIncludeURLButton setTitle:Str(ST_CHECKURL)];
-  [mEmailMeButton setTitle:Str(ST_CHECKEMAIL)];
   [mViewReportOkButton setTitle:Str(ST_OK)];
 
   [mCommentText setPlaceholder:Str(ST_COMMENTGRAYTEXT)];
   if (gRTLlayout) [mCommentText toggleBaseWritingDirection:self];
-  [[mEmailText cell] setPlaceholderString:Str(ST_EMAILGRAYTEXT)];
 
   if (gQueryParameters.isMember("URL")) {
     // save the URL value in case the checkbox gets unchecked
@@ -280,14 +278,6 @@ static bool RestartApplication() {
   [self updateURL];
 }
 
-- (IBAction)emailMeClicked:(id)sender {
-  [self updateEmail];
-}
-
-- (void)controlTextDidChange:(NSNotification*)note {
-  [self updateEmail];
-}
-
 - (void)textDidChange:(NSNotification*)aNotification {
   // update comment parameter
   if ([[[mCommentText textStorage] mutableString] length] > 0)
@@ -362,17 +352,17 @@ static bool RestartApplication() {
     [mRestartButton setKeyEquivalent:@"\r"];
   }
 
-  NSButton* checkboxes[] = {mSubmitReportButton, mIncludeURLButton, mEmailMeButton};
+  NSButton* checkboxes[] = {mSubmitReportButton, mIncludeURLButton};
 
-  for (int i = 0; i < 3; i++) {
-    NSRect frame = [checkboxes[i] frame];
-    [checkboxes[i] sizeToFit];
+  for (auto checkbox : checkboxes) {
+    NSRect frame = [checkbox frame];
+    [checkbox sizeToFit];
     if (gRTLlayout) {
       // sizeToFit will keep the left side fixed, so realign
       float oldWidth = frame.size.width;
-      frame = [checkboxes[i] frame];
+      frame = [checkbox frame];
       frame.origin.x += oldWidth - frame.size.width;
-      [checkboxes[i] setFrame:frame];
+      [checkbox setFrame:frame];
     }
     // keep existing spacing on left side, + 20 px spare on right
     float neededWidth = frame.origin.x + frame.size.width + 20;
@@ -391,10 +381,10 @@ static bool RestartApplication() {
   // now pin all the controls (except quit/submit) in place,
   // if we lengthen the window after this, it's just to lengthen
   // the progress text, so nothing above that text should move.
-  NSView* views[] = {mSubmitReportButton, mViewReportButton, mCommentScrollView, mIncludeURLButton,
-                     mEmailMeButton,      mEmailText,        mProgressIndicator, mProgressText};
-  for (unsigned int i = 0; i < sizeof(views) / sizeof(views[0]); i++) {
-    [views[i] setAutoresizingMask:NSViewMinYMargin];
+  NSView* views[] = {mSubmitReportButton, mViewReportButton,  mCommentScrollView,
+                     mIncludeURLButton,   mProgressIndicator, mProgressText};
+  for (auto view : views) {
+    [view setAutoresizingMask:NSViewMinYMargin];
   }
 }
 
@@ -444,10 +434,8 @@ static bool RestartApplication() {
 - (void)enableControls:(BOOL)enabled {
   [mViewReportButton setEnabled:enabled];
   [mIncludeURLButton setEnabled:enabled];
-  [mEmailMeButton setEnabled:enabled];
   [mCommentText setEnabled:enabled];
   [mCommentScrollView setHasVerticalScroller:enabled];
-  [self updateEmail];
 }
 
 - (void)updateSubmit {
@@ -473,14 +461,11 @@ static bool RestartApplication() {
 }
 
 - (void)updateEmail {
-  if ([mEmailMeButton state] == NSOnState && [mSubmitReportButton state] == NSOnState) {
-    NSString* email = [mEmailText stringValue];
-    gQueryParameters["Email"] = [email UTF8String];
-    [mEmailText setEnabled:YES];
-  } else {
-    gQueryParameters.removeMember("Email");
-    [mEmailText setEnabled:NO];
-  }
+  // In order to remove the email fields, we have to edit the .nib files which
+  // we can't do with current xcode so we make them hidden; updating the
+  // crashreporter interface for mac is covered in bug #1696164
+  [mEmailMeButton setHidden:YES];
+  [mEmailText setHidden:YES];
 }
 
 - (void)sendReport {

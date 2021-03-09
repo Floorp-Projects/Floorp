@@ -60,9 +60,7 @@
 - (IBAction)closeClicked:(id)sender;
 - (IBAction)restartClicked:(id)sender;
 - (IBAction)includeURLClicked:(id)sender;
-- (IBAction)emailMeClicked:(id)sender;
 
-- (void)controlTextDidChange:(NSNotification*)note;
 - (void)textDidChange:(NSNotification*)aNotification;
 - (BOOL)textView:(NSTextView*)aTextView
     shouldChangeTextInRange:(NSRange)affectedCharRange

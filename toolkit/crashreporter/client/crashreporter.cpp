@@ -574,10 +574,6 @@ void RewriteStrings(Json::Value& aExtraData) {
               vendor.c_str());
   gStrings[ST_CHECKSUBMIT] = buf;
 
-  UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_CHECKEMAIL].c_str(),
-              vendor.c_str());
-  gStrings[ST_CHECKEMAIL] = buf;
-
   UI_SNPRINTF(buf, sizeof(buf), gStrings[ST_RESTART].c_str(), product.c_str());
   gStrings[ST_RESTART] = buf;
 

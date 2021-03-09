@@ -58,8 +58,6 @@ typedef std::map<std::string, std::string> StringTable;
 #define ST_EXTRAREPORTINFO "ExtraReportInfo"
 #define ST_CHECKSUBMIT "CheckSendReport"
 #define ST_CHECKURL "CheckIncludeURL"
-#define ST_CHECKEMAIL "CheckAllowEmail"
-#define ST_EMAILGRAYTEXT "EmailGrayText"
 #define ST_REPORTPRESUBMIT "ReportPreSubmit2"
 #define ST_REPORTDURINGSUBMIT "ReportDuringSubmit2"
 #define ST_REPORTSUBMITSUCCESS "ReportSubmitSuccess"
