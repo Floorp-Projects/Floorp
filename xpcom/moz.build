@@ -45,3 +45,8 @@ CONFIGURE_DEFINE_FILES += [
 EXPORTS += [
     "!xpcom-config.h",
 ]
+
+SPHINX_TREES["/xpcom"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
