@@ -14,29 +14,13 @@
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
 #
 #######################################################################
-# Defines
 
-ifdef MACH
-ifndef NO_BUILDSTATUS_MESSAGES
-define BUILDSTATUS
-@echo 'BUILDSTATUS $1'
-
-endef
-endif
+ifndef MACH
+$(error client.mk must be used via `mach`. Try running \
+`./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
 endif
 
-
-CWD := $(CURDIR)
-
-ifeq "$(CWD)" "/"
-CWD   := /.
-endif
-
-PYTHON3 ?= python3
-
-####################################
-# Load mozconfig Options
-
+### Load mozconfig options
 include $(OBJDIR)/.mozconfig-client-mk
 
 ifdef MOZ_PARALLEL_BUILD
@@ -46,10 +30,11 @@ endif
 
 # Automatically add -jN to make flags if not defined. N defaults to number of cores.
 ifeq (,$(findstring -j,$(MOZ_MAKE_FLAGS)))
-  cores=$(shell $(PYTHON3) -c 'import multiprocessing; print(multiprocessing.cpu_count())')
+  cores=$(shell python3 -c 'import multiprocessing; print(multiprocessing.cpu_count())')
   MOZ_MAKE_FLAGS += -j$(cores)
 endif
 
+### Set up make flags
 ifdef MOZ_AUTOMATION
 ifeq (4.0,$(firstword $(sort 4.0 $(MAKE_VERSION))))
 MOZ_MAKE_FLAGS += --output-sync=line
@@ -58,16 +43,9 @@ endif
 
 MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 
-#######################################################################
-# Rules
-
+### Rules
 # The default rule is build
 build::
-
-ifndef MACH
-$(error client.mk must be used via `mach`. Try running \
-`./mach $(firstword $(MAKECMDGOALS) $(.DEFAULT_GOAL))`)
-endif
 
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
@@ -82,9 +60,7 @@ build::
 	$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env SCCACHE_LOG=sccache=debug SCCACHE_ERROR_LOG=$(UPLOAD_PATH)/sccache.log $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --start-server
 endif
 
-####################################
-# Build it
-
+### Build it
 build::
 	+$(MOZ_MAKE)
 
