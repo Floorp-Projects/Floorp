@@ -134,7 +134,7 @@ describe("PageError component:", () => {
     const message = stubPreparedMessages.get(`throw Symbol`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught Symbol(potato)`);
+    expect(text).toBe(`Uncaught Symbol("potato")`);
   });
 
   it("renders thrown object", () => {
@@ -215,7 +215,7 @@ describe("PageError component:", () => {
     const message = stubPreparedMessages.get(`Promise reject Symbol`);
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
-    expect(text).toBe(`Uncaught (in promise) Symbol(potato)`);
+    expect(text).toBe(`Uncaught (in promise) Symbol("potato")`);
   });
 
   it("renders uncaught rejected Promise with object", () => {

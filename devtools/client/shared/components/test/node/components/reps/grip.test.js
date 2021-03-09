@@ -559,7 +559,7 @@ describe("Grip - Object with symbol properties", () => {
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(
       'Object { x: 10, Symbol(): "first unnamed symbol", ' +
-        'Symbol(): "second unnamed symbol", Symbol(named): "named symbol", ' +
+        'Symbol(): "second unnamed symbol", Symbol("named"): "named symbol", ' +
         "Symbol(Symbol.iterator): () }"
     );
   });
@@ -575,18 +575,18 @@ describe("Grip - Object with more than max symbol properties", () => {
   it("renders as expected", () => {
     const renderRep = props => shallowRenderRep(object, props);
     const defaultOutput =
-      'Object { Symbol(i-0): "value-0", Symbol(i-1): "value-1", ' +
-      'Symbol(i-2): "value-2", … }';
+      'Object { Symbol("i-0"): "value-0", Symbol("i-1"): "value-1", ' +
+      'Symbol("i-2"): "value-2", … }';
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(
-      'Object { Symbol(i-0): "value-0", Symbol(i-1): "value-1", ' +
-        'Symbol(i-2): "value-2", Symbol(i-3): "value-3", ' +
-        'Symbol(i-4): "value-4", Symbol(i-5): "value-5", ' +
-        'Symbol(i-6): "value-6", Symbol(i-7): "value-7", ' +
-        'Symbol(i-8): "value-8", Symbol(i-9): "value-9", … }'
+      'Object { Symbol("i-0"): "value-0", Symbol("i-1"): "value-1", ' +
+        'Symbol("i-2"): "value-2", Symbol("i-3"): "value-3", ' +
+        'Symbol("i-4"): "value-4", Symbol("i-5"): "value-5", ' +
+        'Symbol("i-6"): "value-6", Symbol("i-7"): "value-7", ' +
+        'Symbol("i-8"): "value-8", Symbol("i-9"): "value-9", … }'
     );
   });
 });
