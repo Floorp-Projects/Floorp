@@ -120,9 +120,8 @@ notification[type="critical"] > hbox > .messageImage {
 
 .messageCloseButton > .toolbarbutton-icon {
   padding: 6px;
-  /* Override width and height from close-icon.css */
+  /* Override width from close-icon.css */
   width: 32px !important;
-  height: 32px !important;
   /* Close button needs to be clickable from the edge of the window */
   margin-inline-end: 8px;
 }
