@@ -886,7 +886,7 @@ static NativeObject* CreateBlankProto(JSContext* cx, const JSClass* clasp,
   MOZ_ASSERT(clasp != &JSFunction::class_);
 
   RootedObject blankProto(cx, NewTenuredObjectWithGivenProto(cx, clasp, proto));
-  if (!blankProto || !JSObject::setDelegate(cx, blankProto)) {
+  if (!blankProto) {
     return nullptr;
   }
 
