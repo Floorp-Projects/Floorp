@@ -662,9 +662,7 @@ bool EditorBase::IsSelectionEditable() {
     // XXX we just check that the anchor node is editable at the moment
     //     we should check that all nodes in the selection are editable
     nsCOMPtr<nsINode> anchorNode = SelectionRefPtr()->GetAnchorNode();
-    return anchorNode && anchorNode->IsContent() &&
-           EditorUtils::IsEditableContent(*anchorNode->AsContent(),
-                                          GetEditorType());
+    return anchorNode && anchorNode->IsContent() && anchorNode->IsEditable();
   }
 
   nsINode* anchorNode = SelectionRefPtr()->GetAnchorNode();
