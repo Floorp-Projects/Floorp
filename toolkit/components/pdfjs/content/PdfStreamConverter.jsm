@@ -853,6 +853,7 @@ class RangedChromeActions extends ChromeActions {
         length: this.contentLength,
         data,
         done,
+        filename: this.contentDispositionFilename,
       },
       PDF_VIEWER_ORIGIN
     );
@@ -941,6 +942,7 @@ class StandardChromeActions extends ChromeActions {
           pdfjsLoadAction: "complete",
           data,
           errorCode,
+          filename: this.contentDispositionFilename,
         },
         PDF_VIEWER_ORIGIN
       );
