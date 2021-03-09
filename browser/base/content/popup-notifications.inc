@@ -110,6 +110,13 @@
       </popupnotificationcontent>
     </popupnotification>
 
+    <popupnotification id="canvas-permissions-prompt-notification" hidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description class="popup-notification-description"/>
+        <label id="canvas-permissions-prompt-warning"/>
+      </popupnotificationcontent>
+    </popupnotification>
+
     <popupnotification id="contextual-feature-recommendation-notification" hidden="true">
       <popupnotificationheader id="cfr-notification-header">
         <stack id="cfr-notification-header-stack">
