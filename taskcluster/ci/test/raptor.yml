@@ -20,14 +20,11 @@ job-defaults:
     run-on-projects:
         by-app:
             firefox:
-                by-test-name:
-                    raptor-tp6-firefox: []
-                    default:
-                        by-test-platform:
-                            windows7-32.*/opt: []
-                            macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                            (linux|windows10|macos)(?!.*shippable).*: []
-                            default: ["trunk", "mozilla-beta"]
+                by-test-platform:
+                    windows7-32.*/opt: []
+                    macosx.*64(?:-qr)?/opt: ["mozilla-central"]
+                    (linux|windows10|macos)(?!.*shippable).*: []
+                    default: ["trunk", "mozilla-beta"]
             chrome: []
             chromium: []
             default:  # tests that dont have "apps: []"
@@ -114,67 +111,6 @@ job-defaults:
                         default:
                             - linux64-chromium
                 default: []
-
-raptor-tp6:
-    description: "Raptor (webextension) tp6"
-    apps: ["firefox", "chrome", "chromium"]
-    variants: []
-    pageload:
-        by-app:
-            firefox: "both"
-            chrome: "both"
-            chromium: "both"
-            default: "cold"
-    run-on-projects: []
-    limit-platforms: []
-    treeherder-symbol: Rap(tp6)
-    max-run-time: 4000
-    raptor-test: tp6
-    raptor-subtests:
-        - amazon
-        - apple
-        - bing
-        - ebay
-        - [facebook, fb]
-        - [facebook-redesign, fb-r]
-        - fandom
-        - [docs, gdoc]
-        - google
-        - [google-mail, gmail]
-        - [sheets, gsheets]
-        - [slides, gslides]
-        - imdb
-        - imgur
-        - instagram
-        - linkedin
-        - microsoft
-        - netflix
-        - office
-        - outlook
-        - paypal
-        - pinterest
-        - reddit
-        - tumblr
-        - twitch
-        - twitter
-        - wikipedia
-        - yahoo-mail
-        - yahoo-news
-        - yandex
-        - youtube
-    tier:
-        by-app:
-            firefox:
-                by-subtest:
-                    amazon: 1
-                    .*gmail.*: 1
-                    .*gslides.*: 1
-                    imgur: 1
-                    tumblr: 1
-                    twitch: 1
-                    twitter: 1
-                    default: 2
-            default: 2
 
 raptor-tp6-live:
     description: "Raptor (webextension) tp6 on live-sites"
