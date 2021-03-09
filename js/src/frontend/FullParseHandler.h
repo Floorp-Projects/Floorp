@@ -692,10 +692,6 @@ class FullParseHandler {
                            TokenPos(expr->pn_pos.begin, end), expr);
   }
 
-  UnaryNodeType newExprStatement(Node expr) {
-    return newExprStatement(expr, expr->pn_pos.end);
-  }
-
   TernaryNodeType newIfStatement(uint32_t begin, Node cond, Node thenBranch,
                                  Node elseBranch) {
     TernaryNode* node =
@@ -849,16 +845,6 @@ class FullParseHandler {
     MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
     return new_<PropertyDefinition>(key, value, atype);
-  }
-
-  BinaryNodeType newShorthandPropertyDefinition(Node key, Node value) {
-    MOZ_ASSERT(isUsableAsObjectPropertyName(key));
-
-    return newBinary(ParseNodeKind::Shorthand, key, value);
-  }
-
-  ListNodeType newParamsBody(const TokenPos& pos) {
-    return new_<ListNode>(ParseNodeKind::ParamsBody, pos);
   }
 
   void setFunctionFormalParametersAndBody(FunctionNodeType funNode,
