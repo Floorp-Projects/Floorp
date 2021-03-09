@@ -24,19 +24,11 @@ android {
 }
 
 dependencies {
-    // These dependencies are part of this module's public API.
-    api(Dependencies.mozilla_places) {
-        // Use our own version of the Glean dependency,
-        // which might be different from the version declared by A-S.
-        exclude group: 'org.mozilla.components', module: 'service-glean'
-    }
+    api Dependencies.mozilla_sync_autofill
 
-    api Dependencies.mozilla_remote_tabs
     api project(':concept-storage')
-    api project(':concept-sync')
 
     implementation project(':support-utils')
-    implementation project(':support-sync-telemetry')
 
     implementation Dependencies.kotlin_stdlib
 
@@ -46,13 +38,8 @@ dependencies {
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
-
-    testImplementation Dependencies.mozilla_places
-    testImplementation Dependencies.mozilla_remote_tabs
-    testImplementation Dependencies.testing_mockwebserver
-
+    testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.mozilla_full_megazord_forUnitTests
-    testImplementation Dependencies.mozilla_glean_forUnitTests
 }
 
 apply from: '../../../publish.gradle'

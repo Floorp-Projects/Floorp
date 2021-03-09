@@ -287,6 +287,10 @@ projects:
     path: components/service/location
     description: 'A library for providing location-based services.'
     publish: true
+  service-sync-autofill:
+    path: components/service/sync-autofill
+    description: 'A library for autofilling addresses and credit cards.'
+    publish: true
   service-sync-logins:
     path: components/service/sync-logins
     description: 'A library for integrating with Firefox Sync - Logins.'

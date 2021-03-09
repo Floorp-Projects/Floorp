@@ -35,6 +35,9 @@ permalink: /changelog/
 * **feature-top-sites**
   * ⚠️ **This is a breaking change**: Replace `TopSitesUseCases.renameTopSites` with `TopSitesUseCases.updateTopSites` which allows for updating the title and the url of a top site. [#9599](https://github.com/mozilla-mobile/android-components/issues/9599)
 
+* **service-sync-autofill**
+  * Refactors `AutofillCreditCardsAddressesStorage` from **browser-storage-sync** into its own component. [#9801](https://github.com/mozilla-mobile/android-components/issues/9801)
+
 # 73.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v72.0.0...v73.0.0)
