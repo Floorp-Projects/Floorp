@@ -11,30 +11,30 @@ add_task(async function() {
   await startCustomizing();
   let panelContainer = document.getElementById("customization-panel-container");
   // Try dragging an item from the navbar:
-  let homeButton = document.getElementById("home-button");
+  let stopReloadButton = document.getElementById("stop-reload-button");
   let oldNavbarPlacements = CustomizableUI.getWidgetIdsInArea("nav-bar");
-  simulateItemDrag(homeButton, panelContainer);
+  simulateItemDrag(stopReloadButton, panelContainer);
   assertAreaPlacements(
     CustomizableUI.AREA_NAVBAR,
-    oldNavbarPlacements.filter(w => w != "home-button")
+    oldNavbarPlacements.filter(w => w != "stop-reload-button")
   );
   ok(
-    homeButton.closest("#customization-palette"),
+    stopReloadButton.closest("#customization-palette"),
     "Button should be in the palette"
   );
 
   // Put it in the panel and try again from there:
   let panelHolder = document.getElementById("customization-panelHolder");
-  simulateItemDrag(homeButton, panelHolder);
+  simulateItemDrag(stopReloadButton, panelHolder);
   assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, [
-    "home-button",
+    "stop-reload-button",
   ]);
 
-  simulateItemDrag(homeButton, panelContainer);
+  simulateItemDrag(stopReloadButton, panelContainer);
   assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, []);
 
   ok(
-    homeButton.closest("#customization-palette"),
+    stopReloadButton.closest("#customization-palette"),
     "Button should be in the palette"
   );
 
@@ -43,7 +43,7 @@ add_task(async function() {
   simulateItemDrag(urlbar, panelContainer);
   assertAreaPlacements(
     CustomizableUI.AREA_NAVBAR,
-    oldNavbarPlacements.filter(w => w != "home-button")
+    oldNavbarPlacements.filter(w => w != "stop-reload-button")
   );
 });
 

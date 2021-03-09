@@ -68,7 +68,7 @@ add_task(async function() {
  */
 add_task(async function() {
   await startCustomizing();
-  let button = document.getElementById("home-button");
+  let button = document.getElementById("stop-reload-button");
   ok(
     !button.hasAttribute(kAnchorAttribute),
     "Button (" + button.id + ") has no anchor in toolbar"

@@ -20,10 +20,15 @@ add_task(async function test_menubar_visbility() {
 
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
-  EventUtils.synthesizeMouse(document.getElementById("home-button"), 2, 2, {
-    type: "contextmenu",
-    button: 2,
-  });
+  EventUtils.synthesizeMouse(
+    document.getElementById("stop-reload-button"),
+    2,
+    2,
+    {
+      type: "contextmenu",
+      button: 2,
+    }
+  );
   await shownPromise;
   let attrChanged = BrowserTestUtils.waitForAttribute(
     "autohide",

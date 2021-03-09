@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Create a new window, then move the home button to the menu and check both windows have
+// Create a new window, then move the stop/reload button to the menu and check both windows have
 // customizationchange events fire on the toolbox:
 add_task(async function() {
   let newWindow = await openAndLoadWindow();
@@ -15,17 +15,17 @@ add_task(async function() {
     handlerCalledCount++;
   };
 
-  let homeButton = document.getElementById("home-button");
+  let stopReloadButton = document.getElementById("stop-reload-button");
 
   gNavToolbox.addEventListener("customizationchange", handler);
   otherToolbox.addEventListener("customizationchange", handler);
 
-  await gCustomizeMode.addToPanel(homeButton);
+  await gCustomizeMode.addToPanel(stopReloadButton);
 
   is(handlerCalledCount, 2, "Should be called for both windows.");
 
   handlerCalledCount = 0;
-  gCustomizeMode.addToToolbar(homeButton);
+  gCustomizeMode.addToToolbar(stopReloadButton);
   is(handlerCalledCount, 2, "Should be called for both windows.");
 
   gNavToolbox.removeEventListener("customizationchange", handler);
