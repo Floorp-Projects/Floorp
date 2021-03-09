@@ -256,6 +256,10 @@ class Repository(object):
         if git cinnabar is not present.
         """
 
+    @abc.abstractmethod
+    def update(self, ref):
+        """Update the working directory to the specified reference."""
+
     def commit(self, message, author=None, date=None, paths=None):
         """Create a commit using the provided commit message. The author, date,
         and files/paths to be included may also be optionally provided. The
@@ -477,6 +481,9 @@ class HgRepository(Repository):
             else:
                 shutil.rmtree(f)
 
+    def update(self, ref):
+        return self._run("update", "--check", ref)
+
     def push_to_try(self, message):
         try:
             subprocess.check_call(
@@ -616,6 +623,9 @@ class GitRepository(Repository):
             raise CannotDeleteFromRootOfRepositoryException()
         self._run("checkout", "--", path)
         self._run("clean", "-df", path)
+
+    def update(self, ref):
+        self._run("checkout", ref)
 
     def push_to_try(self, message):
         if not self.has_git_cinnabar:
