@@ -60,7 +60,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nscolor mColorTextSelectForeground;
   nscolor mColorMenuHoverText;
   nscolor mColorButtonText;
-  bool mHasColorButtonText;
   nscolor mColorButtonHoverText;
   nscolor mColorText;
   nscolor mColorWindowText;
