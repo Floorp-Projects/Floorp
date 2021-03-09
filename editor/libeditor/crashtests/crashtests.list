@@ -104,6 +104,8 @@ needs-focus load 1423776.html
 needs-focus load 1424450.html
 load 1425091.html
 load 1426709.html
+needs-focus load 1429523.html
+needs-focus load 1429523.xhtml
 load 1441619.html
 load 1443664.html
 skip-if(Android) needs-focus load 1444630.html
