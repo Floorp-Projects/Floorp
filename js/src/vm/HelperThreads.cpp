@@ -1013,9 +1013,9 @@ static bool EnsureConstructor(JSContext* cx, Handle<GlobalObject*> global,
     return false;
   }
 
-  // Mark the prototype as delegate here because we can't GC in mergeRealms.
+  // Set the used-as-prototype flag here because we can't GC in mergeRealms.
   RootedObject proto(cx, &global->getPrototype(key).toObject());
-  return JSObject::setDelegate(cx, proto);
+  return JSObject::setIsUsedAsPrototype(cx, proto);
 }
 
 // Initialize all classes potentially created during parsing for use in parser

@@ -235,10 +235,6 @@ inline bool JSObject::isBoundFunction() const {
   return is<JSFunction>() && as<JSFunction>().isBoundFunction();
 }
 
-inline bool JSObject::isDelegate() const {
-  return hasFlag(js::ObjectFlag::Delegate);
-}
-
 inline bool JSObject::hasUncacheableProto() const {
   return hasFlag(js::ObjectFlag::UncacheableProto);
 }

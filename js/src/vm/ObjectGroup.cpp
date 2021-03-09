@@ -56,7 +56,7 @@ bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
 
   if (proto.isObject()) {
     RootedObject protoObj(cx, proto.toObject());
-    if (!JSObject::setDelegate(cx, protoObj)) {
+    if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
       return false;
     }
   }
