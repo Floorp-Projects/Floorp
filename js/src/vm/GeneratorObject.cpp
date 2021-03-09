@@ -359,14 +359,7 @@ JSObject* js::NewTenuredObjectWithFunctionPrototype(
   if (!proto) {
     return nullptr;
   }
-  RootedObject obj(cx, NewTenuredObjectWithGivenProto<PlainObject>(cx, proto));
-  if (!obj) {
-    return nullptr;
-  }
-  if (!JSObject::setDelegate(cx, obj)) {
-    return nullptr;
-  }
-  return obj;
+  return NewTenuredObjectWithGivenProto<PlainObject>(cx, proto);
 }
 
 static JSObject* CreateGeneratorFunction(JSContext* cx, JSProtoKey key) {

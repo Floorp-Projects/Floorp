@@ -3821,8 +3821,7 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
   RootedArrayObject arrayProto(
       cx, ArrayObject::createArray(cx, gc::AllocKind::OBJECT4, gc::TenuredHeap,
                                    shape, 0, metadata));
-  if (!arrayProto || !JSObject::setDelegate(cx, arrayProto) ||
-      !AddLengthProperty(cx, arrayProto)) {
+  if (!arrayProto || !AddLengthProperty(cx, arrayProto)) {
     return nullptr;
   }
 
