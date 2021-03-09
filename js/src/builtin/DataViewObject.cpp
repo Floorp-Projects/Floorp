@@ -936,11 +936,6 @@ bool DataViewObject::byteOffsetGetter(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<is, byteOffsetGetterImpl>(cx, args);
 }
 
-JSObject* DataViewObject::CreatePrototype(JSContext* cx, JSProtoKey key) {
-  return GlobalObject::createBlankPrototype(cx, cx->global(),
-                                            &DataViewObject::protoClass_);
-}
-
 static const JSClassOps DataViewObjectClassOps = {
     nullptr,                       // addProperty
     nullptr,                       // delProperty
