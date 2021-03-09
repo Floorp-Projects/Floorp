@@ -46,6 +46,13 @@ struct OriginMetadata : public PrincipalMetadata {
         mPersistenceType(aPersistenceType) {}
 };
 
+struct FullOriginMetadata : OriginMetadata {
+  bool mPersisted;
+  int64_t mTimestamp;
+
+  // XXX Only default construction is needed for now.
+};
+
 }  // namespace mozilla::dom::quota
 
 #endif  // DOM_QUOTA_ORIGINMETADATA_H_
