@@ -48,12 +48,21 @@ test-verify:
     loopback-video: true
     max-run-time: 10800
     allow-software-gl-layers: false
+    variants: ["fission"]
     run-on-projects:
         by-test-platform:
-            # do not run on ccov or asan
-            .*-ccov.*/.*: []
-            .*-asan/.*: []
-            .*shippable.*: []
+            # do not run on ccov or asan or shippable
+            .*(-ccov|-asan|-shippable).*: []
+            # linux / windows -qr skipped because they were previously skipped via test-platforms.yml
+            .*(linux|windows)(?!.*(-ccov|-asan|-shippable)).*-qr.*: []
+            # do not run on mozilla-central, beta or release: usually just confirms earlier results
+            default: ['integration']
+    fission-run-on-projects:
+        by-test-platform:
+            # do not run on ccov or asan or shippable
+            .*(-ccov|-asan|-shippable).*: []
+            # we prefer -qr platforms with fission, no need to run on both
+            (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
             # do not run on mozilla-central, beta or release: usually just confirms earlier results
             default: ['integration']
     built-projects-only: true
@@ -64,6 +73,7 @@ test-verify:
     optimization:
         test-verify: ["test-verify"]
     tier: 2
+    fission-tier: 2
     mozharness:
         script:
             by-test-platform:
