@@ -158,7 +158,17 @@ void PreferenceSheet::Initialize() {
   }
 
   Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_THEME, useDocumentColorPref,
-                       UseAccessibilityTheme(false));
+                       sContentPrefs.mUseAccessibilityTheme);
+  if (!sContentPrefs.mUseDocumentColors) {
+    // If a user has chosen to override doc colors through OS HCM or our HCM,
+    // we should log the user's current forground (text) color and background
+    // color. Note, the document color use pref is the inverse of the HCM
+    // dropdown option in preferences.
+    Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_HCM_FOREGROUND,
+                         sContentPrefs.mDefaultColor);
+    Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_HCM_BACKGROUND,
+                         sContentPrefs.mDefaultBackgroundColor);
+  }
 
   Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_BACKPLATE,
                        StaticPrefs::browser_display_permit_backplate());

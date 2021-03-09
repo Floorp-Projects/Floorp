@@ -7,6 +7,44 @@
 
 # The following section contains the accessibility scalars.
 a11y:
+  HCM_background:
+    bug_numbers:
+      - 1694717
+    description: >
+      Unsigned int tracking the user's prefered background color \
+      (logged when HCM is enabled).
+    expires: never
+    kind: uint
+    notification_emails:
+      - accessibility@mozilla.com
+      - mreschenberg@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+    keyed: false
+
+  HCM_foreground:
+    bug_numbers:
+      - 1694717
+    description: >
+      Unsigned int tracking the user's prefered foreground color \
+      (logged when HCM is enabled).
+    expires: never
+    kind: uint
+    notification_emails:
+      - accessibility@mozilla.com
+      - mreschenberg@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+    keyed: false
+
   backplate:
     bug_numbers:
       - 1539212
@@ -2279,7 +2317,7 @@ dom.contentprocess:
   crash_subframe_ui_presented:
     bug_numbers:
       - 1676943
-    description: >  
+    description: >
       The number of times the subframe crash UI is shown to the user. This
       only triggers when a tab containing the subframe is switched to.
     expires: "98"
