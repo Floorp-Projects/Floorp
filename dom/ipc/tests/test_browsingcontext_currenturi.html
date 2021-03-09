@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<iframe id="tls1frame" src="https://tls1.example.com/"></iframe>
+
+<script>
+"use strict";
+/* eslint-env mozilla/frame-script */
+
+add_task(async function test_frame() {
+  let win = SpecialPowers.wrap(window);
+  info(`id=${win.browsingContext.id}`);
+  let [docURI, curURI] = await SpecialPowers.spawnChrome([win.browsingContext.id], async id => {
+    let bc = BrowsingContext.get(id);
+    return [
+      bc.currentWindowGlobal.documentURI.spec,
+      bc.currentURI.spec,
+    ];
+  });
+  info(`docURI=${docURI}, curURI=${curURI}`);
+  is(window.location.href, curURI, "curURI has the expected value");
+  is(window.location.href, docURI, "documentURI has the expected value");
+});
+
+add_task(async function test_tls1_frame() {
+  let expframe = SpecialPowers.wrap(document.getElementById("tls1frame"));
+  let [docURI, curURI] = await SpecialPowers.spawnChrome(
+    [expframe.browsingContext.id], async id => {
+      const { TestUtils } = ChromeUtils.import(
+        "resource://testing-common/TestUtils.jsm"
+      );
+
+      let bc = BrowsingContext.get(id);
+
+      // awkwardly wait for the current window global to update to the error page.
+      // would be nice to do just about anything else here...
+      await TestUtils.waitForCondition(
+        () => bc.currentWindowGlobal && bc.currentWindowGlobal.documentURI.spec != "about:blank",
+        "waiting for current window global to be non-initial");
+
+      info(`currentWindowGlobal has updated in the parent!`);
+      return [
+        bc.currentWindowGlobal.documentURI.spec,
+        bc.currentURI.spec,
+      ];
+    });
+
+  info(`docURI=${docURI}, curURI=${curURI}`);
+  is("https://tls1.example.com/", curURI, "curURI has expected value");
+  ok(docURI.startsWith("about:neterror"), "documentURI starts with about:neterror");
+});
+
+let BROADCAST_ONLOAD_URL =
+    new URL("file_broadcast_currenturi_onload.html", location.href);
+
+async function broadcastLoadTest(baseURI, callback) {
+  let loaded = new Promise(resolve => {
+    let chan = new BroadcastChannel("test_broadcast_onload");
+    chan.onmessage = event => {
+      resolve(event.data);
+    };
+  });
+
+  let srcURL = new URL(BROADCAST_ONLOAD_URL.pathname, baseURI);
+  callback(srcURL.href);
+
+  let results = await loaded;
+  for (let { location, curURI, docURI } of results) {
+    info(`location=${location}, docURI=${docURI}, curURI=${curURI}`);
+    is(location, curURI, "curURI has expected value");
+    is(location, docURI, "documentURI has expected value");
+  }
+}
+
+async function normalFrameLoadTest(base) {
+  await broadcastLoadTest(base, src => {
+    let frame = document.createElement("iframe");
+    frame.src = src;
+    document.body.appendChild(frame);
+  });
+}
+
+async function normalPopupLoadTest(base, flags = "") {
+  await broadcastLoadTest(base, src => {
+    window.open(src, null, flags);
+  });
+}
+
+add_task(async function test_sameorigin_frame() {
+  await normalFrameLoadTest(location.href);
+})
+
+add_task(async function test_crossorigin_frame() {
+  await normalFrameLoadTest("https://example.com");
+});
+
+add_task(async function test_sameorigin_popup() {
+  await normalPopupLoadTest(location.href);
+  await normalPopupLoadTest(location.href, "noopener");
+});
+
+add_task(async function test_crossorigin_popup() {
+  await normalPopupLoadTest("https://example.com");
+  await normalPopupLoadTest("https://example.com", "noopener");
+});
+
+</script>
+</body>
+</html>

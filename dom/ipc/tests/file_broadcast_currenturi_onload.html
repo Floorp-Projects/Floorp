@@ -1,0 +1,66 @@
+
+<!doctype html>
+<body>
+<script>
+
+const url = new URL(location.href);
+
+// Create a popup to broadcast the load's completion to the test document.
+//
+// NOTE: We're using a popup to ensure that the new document has the same origin
+// (http://mochi.test:8888/) as the original test document, so that we can use a
+// BroadcastChannel to communicate with the test page. We can't use an iframe as
+// the mixed content blocker will prevent embedding this URL in https://
+// documents.
+function sendPayload(payload) {
+  let broadcastURL = new URL(url.pathname, "http://mochi.test:8888/");
+  broadcastURL.search = "?payload=" + encodeURIComponent(JSON.stringify(payload));
+  window.open(broadcastURL.href);
+}
+
+async function getURIs() {
+  // Run the test and fetch the relevant information.
+  const browsingContext = SpecialPowers.wrap(window).browsingContext;
+  let [docURI, curURI] = await SpecialPowers.spawnChrome(
+    [browsingContext.id], async id => {
+      let bc = BrowsingContext.get(id);
+      return [
+        bc.currentWindowGlobal.documentURI.spec,
+        bc.currentURI.spec,
+      ];
+    }
+  );
+  return { location: location.href, docURI, curURI };
+}
+
+addEventListener("load", async e => {
+  // If a payload parameter was included, just send the message.
+  const payloadStr = url.searchParams.get("payload");
+  if (payloadStr) {
+    const chan = new BroadcastChannel("test_broadcast_onload");
+    chan.postMessage(JSON.parse(payloadStr));
+    window.close();
+    return;
+  }
+
+  // collect the initial set of URIs
+  const result1 = await getURIs();
+
+  const pushstateURL = new URL("after_pushstate", url.href);
+  history.pushState({}, "After PushState!", pushstateURL.href);
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  // Collect the set of URIs after pushstate
+  const result2 = await getURIs();
+
+  window.location.hash = "#after_hashchange";
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  // Collect the set of URIs after a hash change
+  const result3 = await getURIs();
+
+  sendPayload([result1, result2, result3]);
+  window.close();
+});
+</script>
+</body>
