@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
@@ -176,5 +177,24 @@ class GleanMetricsServiceTest {
         assertFalse(BookmarksManagement.folderRemove.testHasValue())
         gleanService.track(Event.RemoveBookmarkFolder)
         assertTrue(BookmarksManagement.folderRemove.testHasValue())
+    }
+
+    @Test
+    fun `History events is correctly recorded`() {
+        assertFalse(History.openedItemInNewTab.testHasValue())
+        gleanService.track(Event.HistoryOpenedInNewTab)
+        assertTrue(History.openedItemInNewTab.testHasValue())
+
+        assertFalse(History.openedItemsInNewTabs.testHasValue())
+        gleanService.track(Event.HistoryOpenedInNewTabs)
+        assertTrue(History.openedItemsInNewTabs.testHasValue())
+
+        assertFalse(History.openedItemInPrivateTab.testHasValue())
+        gleanService.track(Event.HistoryOpenedInPrivateTab)
+        assertTrue(History.openedItemInPrivateTab.testHasValue())
+
+        assertFalse(History.openedItemsInPrivateTabs.testHasValue())
+        gleanService.track(Event.HistoryOpenedInPrivateTabs)
+        assertTrue(History.openedItemsInPrivateTabs.testHasValue())
     }
 }

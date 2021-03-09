@@ -307,6 +307,18 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HistoryItemOpened -> EventWrapper<NoExtraKeys>(
             { History.openedItem.record(it) }
         )
+        is Event.HistoryOpenedInNewTab -> EventWrapper<NoExtraKeys>(
+            { History.openedItemInNewTab.record(it) }
+        )
+        is Event.HistoryOpenedInNewTabs -> EventWrapper<NoExtraKeys>(
+            { History.openedItemsInNewTabs.record(it) }
+        )
+        is Event.HistoryOpenedInPrivateTab -> EventWrapper<NoExtraKeys>(
+            { History.openedItemInPrivateTab.record(it) }
+        )
+        is Event.HistoryOpenedInPrivateTabs -> EventWrapper<NoExtraKeys>(
+            { History.openedItemsInPrivateTabs.record(it) }
+        )
         is Event.HistoryItemRemoved -> EventWrapper<NoExtraKeys>(
             { History.removed.record(it) }
         )

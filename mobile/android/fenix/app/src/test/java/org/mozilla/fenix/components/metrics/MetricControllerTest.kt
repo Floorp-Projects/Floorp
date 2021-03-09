@@ -330,4 +330,29 @@ class MetricControllerTest {
         verify { marketingService1.track(Event.RemoveBookmarkFolder) }
         verify { marketingService1.track(Event.RemoveBookmarks) }
     }
+
+    @Test
+    fun `history events should be sent to enabled service`() {
+        val controller = ReleaseMetricController(
+            listOf(marketingService1),
+            isDataTelemetryEnabled = { true },
+            isMarketingDataTelemetryEnabled = { true }
+        )
+        every { marketingService1.shouldTrack(Event.HistoryOpenedInNewTab) } returns true
+        every { marketingService1.shouldTrack(Event.HistoryOpenedInNewTabs) } returns true
+        every { marketingService1.shouldTrack(Event.HistoryOpenedInPrivateTab) } returns true
+        every { marketingService1.shouldTrack(Event.HistoryOpenedInPrivateTabs) } returns true
+
+        controller.start(MetricServiceType.Marketing)
+
+        controller.track(Event.HistoryOpenedInNewTab)
+        controller.track(Event.HistoryOpenedInNewTabs)
+        controller.track(Event.HistoryOpenedInPrivateTab)
+        controller.track(Event.HistoryOpenedInPrivateTabs)
+
+        verify { marketingService1.track(Event.HistoryOpenedInNewTab) }
+        verify { marketingService1.track(Event.HistoryOpenedInNewTabs) }
+        verify { marketingService1.track(Event.HistoryOpenedInPrivateTab) }
+        verify { marketingService1.track(Event.HistoryOpenedInPrivateTabs) }
+    }
 }

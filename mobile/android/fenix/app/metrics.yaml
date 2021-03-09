@@ -2117,15 +2117,66 @@ history:
     description: |
       A user opened a history item
     bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/2362
+      - https://github.com/mozilla-mobile/fenix/issues/18178
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/3940
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
+      - https://github.com/mozilla-mobile/fenix/pull/18261
     data_sensitivity:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-08-01"
+    expires: "2022-08-01"
+  opened_item_in_new_tab:
+    type: event
+    description: |
+      A user opened a history item in a new tab
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18178
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18261
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
+  opened_items_in_new_tabs:
+    type: event
+    description: |
+      A user opened multiple history items in new tabs
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18178
+    data_reviews:
+      - https://gith ub.com/mozilla-mobile/fenix/pull/18261
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
+  opened_item_in_private_tab:
+    type: event
+    description: |
+      A user opened a history item in a private tab
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18178
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18261
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
+  opened_items_in_private_tabs:
+    type: event
+    description: |
+      A user opened multiple history items in private tabs
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18178
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18261
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
 
 tip:
   displayed:
