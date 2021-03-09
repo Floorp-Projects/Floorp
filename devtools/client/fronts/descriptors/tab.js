@@ -58,7 +58,25 @@ class TabDescriptorFront extends DescriptorMixin(
     this.traits = json.traits || {};
   }
 
-  destroy() {
+  /**
+   * Destroy the front.
+   *
+   * @param Boolean If true, it means that we destroy the front when receiving the descriptor-destroyed
+   *                event from the server.
+   */
+  destroy({ isServerDestroyEvent = false } = {}) {
+    if (this.isDestroyed()) {
+      return;
+    }
+
+    // The descriptor may be destroyed first by the frontend.
+    // When closing the tab, the toolbox document is almost immediately removed from the DOM.
+    // The `unload` event fires and toolbox destroys itself, as well as its related client.
+    //
+    // In such case, we emit the descriptor-destroyed event
+    if (!isServerDestroyEvent) {
+      this.emit("descriptor-destroyed");
+    }
     if (this.isLocalTab) {
       this._teardownLocalTabListeners();
     }
