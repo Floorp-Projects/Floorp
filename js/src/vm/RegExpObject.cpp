@@ -591,10 +591,14 @@ bool RegExpShared::compileIfNecessary(JSContext* cx,
     // We start by interpreting regexps, then compile them once they are
     // sufficiently hot. For very long input strings, we tier up eagerly.
     codeKind = RegExpShared::CodeKind::Bytecode;
-    if (IsNativeRegExpEnabled() &&
-        (re->markedForTierUp() || input->length() > 1000)) {
+    if (re->markedForTierUp() || input->length() > 1000) {
       codeKind = RegExpShared::CodeKind::Jitcode;
     }
+  }
+
+  // Fall back to bytecode if native codegen is not available.
+  if (!IsNativeRegExpEnabled() && codeKind == RegExpShared::CodeKind::Jitcode) {
+    codeKind = RegExpShared::CodeKind::Bytecode;
   }
 
   bool needsCompile = false;
@@ -669,6 +673,14 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
           return RegExpRunStatus_Error;
         }
         if (interruptRetries++ < maxInterruptRetries) {
+          // The initial execution may have been interpreted, or the
+          // interrupt may have triggered a GC that discarded jitcode.
+          // To maximize the chance of succeeding before being
+          // interrupted again, we want to ensure we are compiled.
+          if (!compileIfNecessary(cx, re, input,
+                                  RegExpShared::CodeKind::Jitcode)) {
+            return RegExpRunStatus_Error;
+          }
           continue;
         }
       }
