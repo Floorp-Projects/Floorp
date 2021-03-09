@@ -6951,7 +6951,6 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
   // Only save presentation for "normal" loads and link loads.  Anything else
   // probably wants to refetch the page, so caching the old presentation
   // would be incorrect.
-  // XXXBFCache in parent needs something like this!
   if (aLoadType != LOAD_NORMAL && aLoadType != LOAD_HISTORY &&
       aLoadType != LOAD_LINK && aLoadType != LOAD_STOP_CONTENT &&
       aLoadType != LOAD_STOP_CONTENT_AND_REPLACE &&
