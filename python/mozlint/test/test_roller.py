@@ -104,6 +104,7 @@ def test_roll_with_local_excluded_path(lint, linters, files):
     lint.read(linters("excludes"))
     result = lint.roll(files)
 
+    assert "**/foobar.js" in lint.linters[0]["local_exclude"]
     assert len(result.issues) == 0
     assert result.failed == set([])
 
