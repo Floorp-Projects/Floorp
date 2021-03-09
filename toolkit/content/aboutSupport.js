@@ -1800,8 +1800,8 @@ function setupEventListeners() {
         promptBody,
         restartButtonLabel,
       ] = await document.l10n.formatValues([
-        { id: "startup-cache-dialog-title" },
-        { id: "startup-cache-dialog-body" },
+        { id: "startup-cache-dialog-title2" },
+        { id: "startup-cache-dialog-body2" },
         { id: "restart-button-label" },
       ]);
       const buttonFlags =
@@ -1809,7 +1809,7 @@ function setupEventListeners() {
         Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
         Services.prompt.BUTTON_POS_0_DEFAULT;
       const result = Services.prompt.confirmEx(
-        window,
+        window.docShell.chromeEventHandler.ownerGlobal,
         promptTitle,
         promptBody,
         buttonFlags,
