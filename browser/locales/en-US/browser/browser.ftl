@@ -374,23 +374,23 @@ bookmarks-toolbar-empty-message = For quick access, place your bookmarks here on
 
 ## WebRTC Pop-up notifications
 
-popup-select-camera =
-    .value = Camera to share:
+popup-select-camera-device =
+    .value = Camera:
     .accesskey = C
-popup-select-microphone =
-    .value = Microphone to share:
+popup-select-microphone-device =
+    .value = Microphone:
     .accesskey = M
 popup-all-windows-shared = All visible windows on your screen will be shared.
 
-popup-screen-sharing-not-now =
-  .label = Not Now
+popup-screen-sharing-block =
+  .label = Block
+  .accesskey = B
+
+popup-screen-sharing-always-block =
+  .label = Always block
   .accesskey = w
 
-popup-screen-sharing-never =
-  .label = Never Allow
-  .accesskey = N
-
-popup-silence-notifications-checkbox = Disable notifications from { -brand-short-name } while sharing
+popup-mute-notifications-checkbox = Mute website notifications while sharing
 
 ## WebRTC window or screen share tab switch warning
 

@@ -10,7 +10,7 @@
 
     <popupnotification id="webRTC-shareDevices-notification" hidden="true">
       <popupnotificationcontent id="webRTC-selectCamera" orient="vertical">
-        <label data-l10n-id="popup-select-camera"
+        <label data-l10n-id="popup-select-camera-device"
                control="webRTC-selectCamera-menulist"/>
         <deck id="webRTC-selectCamera-deck">
           <menulist id="webRTC-selectCamera-menulist">
@@ -39,7 +39,7 @@
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
-        <label data-l10n-id="popup-select-microphone"
+        <label data-l10n-id="popup-select-microphone-device"
                control="webRTC-selectMicrophone-menulist"/>
         <deck id="webRTC-selectMicrophone-deck">
           <menulist id="webRTC-selectMicrophone-menulist">
