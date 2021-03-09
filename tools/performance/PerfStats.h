@@ -29,6 +29,8 @@ class PerfStats {
     Compositing,
     Reflowing,
     Styling,
+    HttpChannelCompletion_Network,
+    HttpChannelCompletion_Cache,
     Max
   };
 
@@ -48,6 +50,13 @@ class PerfStats {
       return;
     }
     RecordMeasurementEndInternal(aMetric);
+  }
+
+  static void RecordMeasurement(Metric aMetric, TimeDuration aDuration) {
+    if (!(sCollectionMask & (1 << static_cast<uint64_t>(aMetric)))) {
+      return;
+    }
+    RecordMeasurementInternal(aMetric, aDuration);
   }
 
   template <Metric N>
@@ -71,6 +80,7 @@ class PerfStats {
   static PerfStats* GetSingleton();
   static void RecordMeasurementStartInternal(Metric aMetric);
   static void RecordMeasurementEndInternal(Metric aMetric);
+  static void RecordMeasurementInternal(Metric aMetric, TimeDuration aDuration);
 
   RefPtr<PerfStatsPromise> CollectPerfStatsJSONInternal();
   nsCString CollectLocalPerfStatsJSONInternal();
