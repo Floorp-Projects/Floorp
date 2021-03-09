@@ -13,6 +13,7 @@
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "nsIGfxInfo.h"
+#include "nsIXULRuntime.h"  // for FissionAutostart
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 
@@ -125,6 +126,8 @@ void gfxConfigManager::ConfigureWebRenderSoftware() {
   // (hardware). See bug 1656811.
   if (mWrSoftwareForceEnabled) {
     mFeatureWrSoftware->UserForceEnable("Force enabled by pref");
+  } else if (FissionAutostart()) {
+    mFeatureWrSoftware->UserForceEnable("Force enabled by fission");
   } else if (mWrForceDisabled || mWrEnvForceDisabled) {
     // If the user set the pref to force-disable, let's do that. This
     // will override all the other enabling prefs
