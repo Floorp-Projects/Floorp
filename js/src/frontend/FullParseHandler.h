@@ -1033,19 +1033,19 @@ class FullParseHandler {
 
   bool isName(Node node) { return node->isKind(ParseNodeKind::Name); }
 
-  bool isArgumentsName(Node node, JSContext* cx) {
+  bool isArgumentsName(Node node) {
     return node->isKind(ParseNodeKind::Name) &&
            node->as<NameNode>().atom() ==
                TaggedParserAtomIndex::WellKnown::arguments();
   }
 
-  bool isEvalName(Node node, JSContext* cx) {
+  bool isEvalName(Node node) {
     return node->isKind(ParseNodeKind::Name) &&
            node->as<NameNode>().atom() ==
                TaggedParserAtomIndex::WellKnown::eval();
   }
 
-  bool isAsyncKeyword(Node node, JSContext* cx) {
+  bool isAsyncKeyword(Node node) {
     return node->isKind(ParseNodeKind::Name) &&
            node->pn_pos.begin + strlen("async") == node->pn_pos.end &&
            node->as<NameNode>().atom() ==

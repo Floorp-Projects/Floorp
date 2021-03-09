@@ -701,15 +701,9 @@ class SyntaxParseHandler {
            node == NodeEvalName || node == NodePotentialAsyncKeyword;
   }
 
-  bool isArgumentsName(Node node, JSContext* cx) {
-    return node == NodeArgumentsName;
-  }
-
-  bool isEvalName(Node node, JSContext* cx) { return node == NodeEvalName; }
-
-  bool isAsyncKeyword(Node node, JSContext* cx) {
-    return node == NodePotentialAsyncKeyword;
-  }
+  bool isArgumentsName(Node node) { return node == NodeArgumentsName; }
+  bool isEvalName(Node node) { return node == NodeEvalName; }
+  bool isAsyncKeyword(Node node) { return node == NodePotentialAsyncKeyword; }
 
   bool isPrivateName(Node node) { return node == NodePrivateName; }
   bool isPrivateField(Node node) { return node == NodePrivateElement; }
