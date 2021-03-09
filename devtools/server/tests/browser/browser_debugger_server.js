@@ -30,16 +30,17 @@ async function testDevToolsServerInitialized() {
     "By default, the DevToolsServer isn't initialized not in content process"
   );
 
-  const target = await TabTargetFactory.forTab(tab);
+  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
+  const target = await descriptor.getTarget();
 
   ok(
     DevToolsServer.initialized,
-    "TabTargetFactory.forTab will initialize the DevToolsServer in parent process"
+    "Creating the target will initialize the DevToolsServer in parent process"
   );
   await assertServerInitialized(
     browser,
     true,
-    "TabTargetFactory.forTab will initialize the DevToolsServer in content process"
+    "Creating the target will initialize the DevToolsServer in content process"
   );
 
   await target.destroy();
@@ -72,7 +73,9 @@ async function testDevToolsServerKeepAlive() {
     "Server not started in content process"
   );
 
-  const target = await TabTargetFactory.forTab(tab);
+  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
+  const target = await descriptor.getTarget();
+
   await assertServerInitialized(
     browser,
     true,
@@ -95,7 +98,9 @@ async function testDevToolsServerKeepAlive() {
   await setContentServerKeepAlive(browser, false);
 
   info("Create and destroy a target again");
-  const newTarget = await TabTargetFactory.forTab(tab);
+  const newDescriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
+  const newTarget = await newDescriptor.getTarget();
+
   await newTarget.destroy();
 
   await assertServerInitialized(
