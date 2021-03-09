@@ -10,8 +10,8 @@ assert_subprinter_registered("SpiderMonkey", "instantiations-of-js::BarrieredBas
 
 run_fragment("Root.handle")
 
-assert_pretty("obj", "(JSObject * const)  [object global] delegate")
-assert_pretty("mutableObj", "(JSObject *)  [object global] delegate")
+assert_pretty("obj", "(JSObject * const)  [object global]")
+assert_pretty("mutableObj", "(JSObject *)  [object global]")
 
 run_fragment("Root.HeapSlot")
 
