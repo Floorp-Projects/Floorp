@@ -26,8 +26,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const EXPERIMENT_PREF = "quicksuggest.enabled";
 const SUGGEST_PREF = "suggest.quicksuggest";
 
-const NONSPONSORED_ACTION_TEXT = "Firefox Suggests";
-const HELP_TITLE = "Learn more about Firefox Suggests";
+const NONSPONSORED_ACTION_TEXT = "Firefox Suggest";
+const HELP_TITLE = "Learn more about Firefox Suggest";
 
 const TELEMETRY_SCALAR_IMPRESSION =
   "contextual.services.quicksuggest.impression";

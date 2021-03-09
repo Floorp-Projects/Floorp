@@ -6731,7 +6731,7 @@ contextual.services.quicksuggest:
     bug_numbers:
       - 1693927
     description: >
-      A keyed uint recording how many times the user has viewed Firefox Suggests
+      A keyed uint recording how many times the user has viewed Firefox Suggest
       (a.k.a. Quick Suggest) results in the urlbar. The key is the 1-based index
       of each result.
     expires: never
