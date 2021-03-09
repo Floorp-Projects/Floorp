@@ -636,22 +636,8 @@ nsRect LocalAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
     }
 
     *aBoundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-    nsRect unionRect = nsLayoutUtils::GetAllInFlowRectsUnion(
+    return nsLayoutUtils::GetAllInFlowRectsUnion(
         frame, *aBoundingFrame, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
-
-    if (unionRect.IsEmpty()) {
-      // If we end up with a 0x0 rect from above (or one with negative
-      // height/width) we should try using the ink overflow rect instead. If we
-      // use this rect, our relative bounds will match the bounds of what
-      // appears visually. We do this because some web authors (icloud.com for
-      // example) employ things like 0x0 buttons with visual overflow. Without
-      // this, such frames aren't navigable by screen readers.
-      nsRect overflow = frame->InkOverflowRectRelativeToSelf();
-      nsLayoutUtils::TransformRect(frame, *aBoundingFrame, overflow);
-      return overflow;
-    }
-
-    return unionRect;
   }
 
   return nsRect();

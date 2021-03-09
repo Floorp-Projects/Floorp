@@ -1682,13 +1682,11 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvExtents(
         screenRect.y -= winCoords.y;
       }
 
+      *aX = screenRect.x;
+      *aY = screenRect.y;
       *aWidth = screenRect.width;
       *aHeight = screenRect.height;
     }
-    // We should always report the position of our acc, even if
-    // the returned screenRect is empty.
-    *aX = screenRect.x;
-    *aY = screenRect.y;
   }
   return IPC_OK();
 }
@@ -1704,13 +1702,11 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvExtentsInCSSPixels(
   if (acc && !acc->IsDefunct()) {
     nsIntRect screenRect = acc->BoundsInCSSPixels();
     if (!screenRect.IsEmpty()) {
+      *aX = screenRect.x;
+      *aY = screenRect.y;
       *aWidth = screenRect.width;
       *aHeight = screenRect.height;
     }
-    // We should always report the position of our acc, even if
-    // the returned screenRect is empty.
-    *aX = screenRect.x;
-    *aY = screenRect.y;
   }
   return IPC_OK();
 }
