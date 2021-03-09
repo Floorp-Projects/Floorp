@@ -619,7 +619,6 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
 
   nsString addonId;
   const char* prefName;
-  bool runningContentJS = false;
   auto principal = BasePrincipal::Cast(nsContentUtils::SubjectPrincipal(cx));
   bool chrome = principal->Is<SystemPrincipal>();
   if (chrome) {
@@ -633,7 +632,6 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
   } else {
     prefName = PREF_MAX_SCRIPT_RUN_TIME_CONTENT;
     limit = StaticPrefs::dom_max_script_run_time();
-    runningContentJS = true;
   }
 
   // When the parent process slow script dialog is disabled, we still want
@@ -660,9 +658,13 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     return true;
   }
 
-  // For content scripts, we only want to show the slow script dialogue if the
-  // user is actually trying to perform an important interaction.
-  if (runningContentJS && XRE_IsContentProcess() &&
+  // For scripts in content processes, we only want to show the slow script
+  // dialogue if the user is actually trying to perform an important
+  // interaction. In theory this could be a chrome script running in the
+  // content process, which we probably don't want to give the user the ability
+  // to terminate. However, if this is the case we won't be able to map the
+  // script global to a window and we'll bail out below.
+  if (XRE_IsContentProcess() &&
       StaticPrefs::dom_max_script_run_time_require_critical_input()) {
     // Call possibly slow PeekMessages after the other common early returns in
     // this method.
