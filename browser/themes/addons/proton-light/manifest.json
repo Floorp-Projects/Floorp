@@ -16,18 +16,22 @@
 
   "theme": {
     "colors": {
-      "tab_background_text": "rgb(24, 25, 26)",
+      "tab_background_text": "#15141a",
       "icons": "rgb(24, 25, 26, 0.7)",
-      "frame": "#E3E4E6",
+      "frame": "#f0f0f4",
       "popup": "#fff",
       "popup_text": "#0c0c0d",
       "popup_border": "#ccc",
+      "popup_highlight": "#e0e0e6",
+      "popup_highlight_text": "#15141a",
       "tab_line": "#0a84ff",
-      "toolbar": "#f5f6f7",
+      "toolbar": "#f9f9fb",
+      "toolbar_top_separator": "transparent",
       "toolbar_bottom_separator": "#ccc",
-      "toolbar_field": "#fff",
+      "toolbar_field": "#f0f0f4",
       "toolbar_field_text": "rgb(24, 25, 26)",
-      "toolbar_field_border": "#ccc"
+      "toolbar_field_border": "transparent",
+      "toolbar_field_focus": "#fff"
     }
   },
 
