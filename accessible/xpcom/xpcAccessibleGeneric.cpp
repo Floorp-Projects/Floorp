@@ -28,19 +28,19 @@ NS_IMPL_ADDREF(xpcAccessibleGeneric)
 NS_IMPL_RELEASE(xpcAccessibleGeneric)
 
 xpcAccessibleGeneric::~xpcAccessibleGeneric() {
-  if (mIntl.IsNull()) {
+  if (!mIntl) {
     return;
   }
 
   xpcAccessibleDocument* xpcDoc = nullptr;
-  if (mIntl.IsAccessible()) {
-    LocalAccessible* acc = mIntl.AsAccessible();
+  if (mIntl->IsLocal()) {
+    LocalAccessible* acc = mIntl->AsLocal();
     if (!acc->IsDoc() && !acc->IsApplication()) {
       xpcDoc = GetAccService()->GetXPCDocument(acc->Document());
       xpcDoc->NotifyOfShutdown(acc);
     }
   } else {
-    RemoteAccessible* proxy = mIntl.AsProxy();
+    RemoteAccessible* proxy = mIntl->AsRemote();
     if (!proxy->IsDoc()) {
       xpcDoc = GetAccService()->GetXPCDocument(proxy->Document());
       xpcDoc->NotifyOfShutdown(proxy);
@@ -52,7 +52,7 @@ xpcAccessibleGeneric::~xpcAccessibleGeneric() {
 // nsIAccessible
 
 LocalAccessible* xpcAccessibleGeneric::ToInternalAccessible() const {
-  return mIntl.AsAccessible();
+  return mIntl->AsLocal();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

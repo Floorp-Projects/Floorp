@@ -22,6 +22,14 @@ namespace a11y {
  */
 class AccessibleOrProxy {
  public:
+  // XXX: A temporary constructor to aid in the transition to
+  // an Accessible base class.
+  MOZ_IMPLICIT AccessibleOrProxy(Accessible* aAcc)
+      : mBits(aAcc ? (aAcc->IsRemote()
+                          ? reinterpret_cast<uintptr_t>(aAcc->AsRemote()) |
+                                IS_PROXY
+                          : reinterpret_cast<uintptr_t>(aAcc->AsLocal()))
+                   : 0) {}
   MOZ_IMPLICIT AccessibleOrProxy(LocalAccessible* aAcc)
       : mBits(reinterpret_cast<uintptr_t>(aAcc)) {}
   MOZ_IMPLICIT AccessibleOrProxy(RemoteAccessible* aProxy)

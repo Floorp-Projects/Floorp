@@ -20,7 +20,7 @@ namespace a11y {
 class xpcAccessibleTableCell : public xpcAccessibleHyperText,
                                public nsIAccessibleTableCell {
  public:
-  explicit xpcAccessibleTableCell(LocalAccessible* aIntl)
+  explicit xpcAccessibleTableCell(Accessible* aIntl)
       : xpcAccessibleHyperText(aIntl) {}
 
   xpcAccessibleTableCell(RemoteAccessible* aProxy, uint32_t aInterfaces)
@@ -43,7 +43,7 @@ class xpcAccessibleTableCell : public xpcAccessibleHyperText,
 
  private:
   TableCellAccessible* Intl() {
-    if (LocalAccessible* acc = mIntl.AsAccessible()) {
+    if (LocalAccessible* acc = mIntl->AsLocal()) {
       return acc->AsTableCell();
     }
 
