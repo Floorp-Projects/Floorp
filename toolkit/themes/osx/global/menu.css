@@ -155,7 +155,9 @@ menulist > menupopup > menu {
 menulist > menupopup > menuitem[checked="true"]::before,
 menulist > menupopup > menuitem[selected="true"]::before {
   content: '\2713'; /* a checkmark */
-  display: block;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 0;
   width: 15px;
   margin-inline-start: -15px;
 }
