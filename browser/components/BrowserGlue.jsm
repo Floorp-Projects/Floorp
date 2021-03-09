@@ -762,6 +762,7 @@ let JSWINDOWACTORS = {
   // Until bug 1450626 and bug 1488384 are fixed, skip the blank window when
   // using a non-default theme.
   if (
+    !Services.startup.showedPreXULSkeletonUI &&
     Services.prefs.getCharPref(
       "extensions.activeThemeID",
       "default-theme@mozilla.org"
