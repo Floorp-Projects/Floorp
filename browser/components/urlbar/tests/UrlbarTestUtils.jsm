@@ -391,6 +391,37 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * Open the input field context menu and run a task on it.
+   * @param {nsIWindow} win the current window
+   * @param {function} task a task function to run, gets the contextmenu popup
+   *        as argument.
+   */
+  async withContextMenu(win, task) {
+    let textBox = win.gURLBar.querySelector("moz-input-box");
+    let cxmenu = textBox.menupopup;
+    let openPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
+    this.EventUtils.synthesizeMouseAtCenter(
+      win.gURLBar.inputField,
+      {
+        type: "contextmenu",
+        button: 2,
+      },
+      win
+    );
+    await openPromise;
+    try {
+      await task(cxmenu);
+    } finally {
+      // Close the context menu if the task didn't pick anything.
+      if (cxmenu.state == "open" || cxmenu.state == "showing") {
+        let closePromise = BrowserTestUtils.waitForEvent(cxmenu, "popuphidden");
+        cxmenu.hidePopup();
+        await closePromise;
+      }
+    }
+  },
+
+  /**
    * @param {object} win The browser window
    * @returns {boolean} Whether the popup is open
    */
