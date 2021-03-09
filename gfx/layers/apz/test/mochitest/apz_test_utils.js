@@ -347,22 +347,18 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           );
         }
 
-        let promiseFocus = SimpleTest.promiseFocus(window);
-
         if (test.prefs) {
           // We pushed some prefs for this test, pop them, and re-invoke
           // advanceSubtestExecution() after that's been processed
-          SpecialPowers.popPrefEnv(async function() {
+          SpecialPowers.popPrefEnv(function() {
             w.close();
             w = null;
-            await promiseFocus;
             advanceSubtestExecution();
           });
           return;
         }
 
         w.close();
-        await promiseFocus;
       }
 
       testIndex++;
@@ -370,6 +366,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         resolve();
         return;
       }
+
+      await SimpleTest.promiseFocus(window);
 
       test = aSubtests[testIndex];
 
