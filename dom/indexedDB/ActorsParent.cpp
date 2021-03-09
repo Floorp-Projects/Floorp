@@ -13586,14 +13586,12 @@ nsresult Maintenance::DirectoryWork() {
 
             case nsIFileKind::ExistsAsDirectory: {
               // Get the necessary information about the origin
-              // (GetDirectoryMetadata2WithRestore also checks if it's a valid
+              // (LoadFullOriginMetadataWithRestore also checks if it's a valid
               // origin).
 
               IDB_TRY_INSPECT(
                   const auto& metadata,
-                  quotaManager
-                      ->GetDirectoryMetadataWithOriginMetadata2WithRestore(
-                          originDir),
+                  quotaManager->LoadFullOriginMetadataWithRestore(originDir),
                   // Not much we can do here...
                   Ok{});
 
