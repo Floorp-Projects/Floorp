@@ -11,7 +11,9 @@ import json
 import logging
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import time
 import traceback
 
@@ -20,6 +22,8 @@ from six import text_type
 
 from mach.decorators import Command, CommandArgument, CommandProvider, SubCommand
 from mozbuild.base import MachCommandBase
+
+logger = logging.getLogger("taskcluster")
 
 
 def strtobool(value):
@@ -112,6 +116,15 @@ class ShowTaskGraphSubCommand(SubCommand):
                 "--output-file",
                 default=None,
                 help="file path to store generated output.",
+            ),
+            CommandArgument(
+                "--diff",
+                const="default",
+                nargs="?",
+                default=None,
+                help="Generate and diff the current taskgraph against another revision. "
+                "Without args the base revision will be used. A revision specifier such as "
+                "the hash or `.~1` (hg) or `HEAD~1` (git) can be used as well.",
             ),
         ]
         for arg in args:
@@ -490,7 +503,63 @@ class MachCommands(MachCommandBase):
 
     def show_taskgraph(self, graph_attr, options):
         self.setup_logging(quiet=options["quiet"], verbose=options["verbose"])
+
+        base_out = ""
+        base_ref = None
+        cur_ref = None
+        if options["diff"]:
+            from mozversioncontrol import get_repository_object
+
+            vcs = get_repository_object(self.topsrcdir)
+            with vcs:
+                if not vcs.working_directory_clean():
+                    print("abort: can't diff taskgraph with dirty working directory")
+                    return 1
+
+                cur_ref = vcs.head_ref[:12]
+                if options["diff"] == "default":
+                    base_ref = vcs.base_ref
+                else:
+                    base_ref = options["diff"]
+
+                try:
+                    vcs.update(base_ref)
+                    base_ref = vcs.head_ref[:12]
+                    logger.info("Generating {} @ {}".format(graph_attr, base_ref))
+                    base_out = self.format_taskgraph(graph_attr, options)
+                finally:
+                    vcs.update(cur_ref)
+                    logger.info("Generating {} @ {}".format(graph_attr, cur_ref))
+
+            # Some transforms use global state for checks, so will fail when
+            # running taskgraph a second time in the same session. Reload all
+            # taskgraph modules to avoid this.
+            for mod in sys.modules.copy():
+                if mod.startswith("taskgraph"):
+                    del sys.modules[mod]
+
         out = self.format_taskgraph(graph_attr, options)
+
+        if options["diff"]:
+            with tempfile.NamedTemporaryFile(mode="w") as base:
+                base.write(base_out)
+
+                with tempfile.NamedTemporaryFile(mode="w") as cur:
+                    cur.write(out)
+                    out = subprocess.run(
+                        [
+                            "diff",
+                            "--report-identical-files",
+                            "--color=always",
+                            "--label={}@{}".format(graph_attr, base_ref),
+                            "--label={}@{}".format(graph_attr, cur_ref),
+                            "-U20",
+                            base.name,
+                            cur.name,
+                        ],
+                        capture_output=True,
+                        universal_newlines=True,
+                    ).stdout
 
         fh = options["output_file"]
         if fh:
