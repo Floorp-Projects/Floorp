@@ -255,6 +255,7 @@ linux1804-qr-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
+    - test-verify
     - xpcshell
 
 linux1804-ccov-tests:
@@ -283,6 +284,7 @@ windows-qr-tests:
     - mochitest-webgl1-core
     - mochitest-webgl2-core
     - reftest
+    - test-verify
 
 windows-reftest-gpu:
     - reftest-gpu
