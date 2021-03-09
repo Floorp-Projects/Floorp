@@ -143,3 +143,10 @@ revision of your stack. To compare against arbitrary revisions you can use
 
     ./mach taskgraph target --diff .~1    # hg
     ./mach taskgraph target --dif HEAD~1  # git
+
+The command used to perform the diff can be set via the ``taskgraph.diffcmd`` setting. For example, add the following to your ``~/.mozbuild/machrc`` file:
+
+.. code-block:: ini
+
+    [taskgraph]
+    diffcmd = diff --side-by-side

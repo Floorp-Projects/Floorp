@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -20,10 +21,32 @@ import traceback
 import six
 from six import text_type
 
-from mach.decorators import Command, CommandArgument, CommandProvider, SubCommand
+from mach.decorators import (
+    Command,
+    CommandArgument,
+    CommandProvider,
+    SettingsProvider,
+    SubCommand,
+)
 from mozbuild.base import MachCommandBase
 
 logger = logging.getLogger("taskcluster")
+
+
+@SettingsProvider
+class TaskgraphConfig(object):
+    @classmethod
+    def config_settings(cls):
+        return [
+            (
+                "taskgraph.diffcmd",
+                "string",
+                "The command to run with `./mach taskgraph --diff`",
+                "diff --report-identical-files --color=always "
+                "--label={attr}@{base} --label={attr}@{cur} -U20",
+                {},
+            )
+        ]
 
 
 def strtobool(value):
@@ -541,19 +564,17 @@ class MachCommands(MachCommandBase):
         out = self.format_taskgraph(graph_attr, options)
 
         if options["diff"]:
+            diffcmd = self._mach_context.settings["taskgraph"]["diffcmd"]
+            diffcmd = diffcmd.format(attr=graph_attr, base=base_ref, cur=cur_ref)
+
             with tempfile.NamedTemporaryFile(mode="w") as base:
                 base.write(base_out)
 
                 with tempfile.NamedTemporaryFile(mode="w") as cur:
                     cur.write(out)
                     out = subprocess.run(
-                        [
-                            "diff",
-                            "--report-identical-files",
-                            "--color=always",
-                            "--label={}@{}".format(graph_attr, base_ref),
-                            "--label={}@{}".format(graph_attr, cur_ref),
-                            "-U20",
+                        shlex.split(diffcmd)
+                        + [
                             base.name,
                             cur.name,
                         ],
