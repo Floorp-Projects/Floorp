@@ -135,7 +135,7 @@
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
-.browser-toolbar.titlebar-color {
+.browser-toolbar.titlebar-color:not(:-moz-lwtheme) {
   appearance: auto;
 }
 } /* END !proton */
