@@ -403,7 +403,7 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
 
   await extension.startup();
 
-  const { toolbox } = await openToolboxForTab(tab);
+  const toolbox = await openToolboxForTab(tab);
 
   info("Wait for devtools_panel_created event");
   await extension.awaitMessage("devtools_panel_created");
