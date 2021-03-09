@@ -864,10 +864,11 @@ function prompt(aActor, aBrowser, aRequest) {
 
           let scary = event.target.scary;
           let warning = doc.getElementById("webRTC-previewWarning");
-          warning.hidden = !scary;
+          let warningBox = doc.getElementById("webRTC-previewWarningBox");
+          warningBox.hidden = !scary;
           let chromeWin = doc.defaultView;
           if (scary) {
-            warning.hidden = false;
+            warningBox.hidden = false;
             let string;
             let bundle = chromeWin.gNavigatorBundle;
 
@@ -878,31 +879,27 @@ function prompt(aActor, aBrowser, aRequest) {
               "app.support.baseURL"
             );
 
-            let learnMore = chromeWin.document.createXULElement("label", {
-              is: "text-link",
-            });
-            learnMore.setAttribute("href", baseURL + "screenshare-safety");
-            learnMore.textContent = learnMoreText;
-
             if (type == "screen") {
-              string = bundle.getFormattedString(
-                "getUserMedia.shareScreenWarning.message",
-                ["<>"]
+              string = bundle.getString(
+                "getUserMedia.shareScreenWarning2.message"
               );
             } else {
               let brand = doc
                 .getElementById("bundle_brand")
                 .getString("brandShortName");
               string = bundle.getFormattedString(
-                "getUserMedia.shareFirefoxWarning.message",
-                [brand, "<>"]
+                "getUserMedia.shareFirefoxWarning2.message",
+                [brand]
               );
             }
 
-            let [pre, post] = string.split("<>");
-            warning.textContent = pre;
-            warning.appendChild(learnMore);
-            warning.appendChild(chromeWin.document.createTextNode(post));
+            warning.textContent = string;
+
+            let learnMore = doc.getElementById(
+              "webRTC-previewWarning-learnMore"
+            );
+            learnMore.setAttribute("href", baseURL + "screenshare-safety");
+            learnMore.textContent = learnMoreText;
 
             // On Catalina, we don't want to blow our chance to show the
             // OS-level helper prompt to enable screen recording if the user
