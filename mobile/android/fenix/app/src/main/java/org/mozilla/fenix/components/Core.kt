@@ -56,6 +56,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
+import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
@@ -288,6 +289,7 @@ class Core(
     val lazyHistoryStorage = lazyMonitored { PlacesHistoryStorage(context, crashReporter) }
     val lazyBookmarksStorage = lazyMonitored { PlacesBookmarksStorage(context) }
     val lazyPasswordsStorage = lazyMonitored { SyncableLoginsStorage(context, passwordsEncryptionKey) }
+    val lazyAutofillStorage = lazyMonitored { AutofillCreditCardsAddressesStorage(context) }
 
     /**
      * The storage component to sync and persist tabs in a Firefox Sync account.
@@ -298,6 +300,7 @@ class Core(
     val historyStorage: PlacesHistoryStorage get() = lazyHistoryStorage.value
     val bookmarksStorage: PlacesBookmarksStorage get() = lazyBookmarksStorage.value
     val passwordsStorage: SyncableLoginsStorage get() = lazyPasswordsStorage.value
+    val autofillStorage: AutofillCreditCardsAddressesStorage get() = lazyAutofillStorage.value
 
     val tabCollectionStorage by lazyMonitored {
         TabCollectionStorage(
