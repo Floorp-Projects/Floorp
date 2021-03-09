@@ -171,6 +171,11 @@ interface nsIAppStartup : nsISupports
     readonly attribute int64_t secondsSinceLastOSRestart;
 
     /**
+     * Whether or not we showed the startup skeleton UI.
+     */
+    readonly attribute bool showedPreXULSkeletonUI;
+
+    /**
      * Returns an object with main, process, firstPaint, sessionRestored properties.
      * Properties may not be available depending on platform or application
      */
