@@ -725,3 +725,8 @@ fuzzing
 -------
 
 Performs fuzzing smoke tests
+
+startup-test
+------------
+
+Runs Firefox for a short period of time to see if it crashes
