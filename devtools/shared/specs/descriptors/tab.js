@@ -26,6 +26,12 @@ const tabDescriptorSpec = generateActorSpec({
       response: RetVal("watcher"),
     },
   },
+
+  events: {
+    "descriptor-destroyed": {
+      type: "descriptor-destroyed",
+    },
+  },
 });
 
 exports.tabDescriptorSpec = tabDescriptorSpec;
