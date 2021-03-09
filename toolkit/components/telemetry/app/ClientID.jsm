@@ -287,7 +287,7 @@ var ClientIDImpl = {
       try {
         await IOUtils.makeDirectory(gDatareportingPath);
       } catch (ex) {
-        if (ex.name != "NotAllowedError") {
+        if (!(ex instanceof DOMException) || ex.name !== "AbortError") {
           throw ex;
         }
       }
