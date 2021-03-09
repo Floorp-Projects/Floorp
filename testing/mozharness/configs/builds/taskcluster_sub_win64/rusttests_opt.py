@@ -10,6 +10,6 @@ config = {
     "env": {
         "XPCOM_DEBUG_BREAK": "stack-and-abort",
     },
-    "build_targets": ["pre-export", "export", "recurse_rusttests"],
+    "app_name": "tools/rusttests",
     "disable_package_metrics": True,
 }
