@@ -1769,7 +1769,7 @@
 # bug 1392460.
 - name: dom.event.wheel-deltaMode-lines.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Mostly for debugging. Whether we should do the same as
