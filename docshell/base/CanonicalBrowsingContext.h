@@ -208,6 +208,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void Reload(uint32_t aReloadFlags);
   void Stop(uint32_t aStopFlags);
 
+  // Get the publicly exposed current URI loaded in this BrowsingContext.
+  already_AddRefed<nsIURI> GetCurrentURI() const;
+  void SetCurrentRemoteURI(nsIURI* aCurrentRemoteURI);
+
   BrowserParent* GetBrowserParent() const;
 
   // Internal method to change which process a BrowsingContext is being loaded
@@ -359,6 +363,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // setting user interaction on SH entries. Should be called anytime SH
   // entries are added or replaced.
   void ResetSHEntryHasUserInteractionCache();
+
+  // The current URI loaded in this BrowsingContext. This value is only set for
+  // BrowsingContexts loaded in content processes.
+  nsCOMPtr<nsIURI> mCurrentRemoteURI;
 
   // The current remoteness change which is in a pending state.
   RefPtr<PendingRemotenessChange> mPendingRemotenessChange;
