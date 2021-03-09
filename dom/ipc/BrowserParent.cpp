@@ -2686,6 +2686,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
     return IPC_OK();
   }
 
+  browsingContext->SetCurrentRemoteURI(aLocation);
+
   nsCOMPtr<nsIBrowser> browser = GetBrowser();
   if (!mozilla::SessionHistoryInParent() && browser) {
     Unused << browser->UpdateWebNavigationForLocationChange(aCanGoBack,
