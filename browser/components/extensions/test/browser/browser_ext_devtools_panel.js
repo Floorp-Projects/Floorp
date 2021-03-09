@@ -71,7 +71,7 @@ async function test_theme_name(testWithPanel = false) {
 
   async function devtools_page(createPanel) {
     if (createPanel) {
-      browser.devtools.panels.create(
+      await browser.devtools.panels.create(
         "Test Panel Theme",
         "fake-icon.png",
         "devtools_panel.html"
