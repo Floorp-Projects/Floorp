@@ -152,6 +152,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 
 #include "nsIGfxInfo.h"
+#include "nsIXULRuntime.h"  // for FissionAutostart
 #include "nsUXThemeConstants.h"
 #include "KeyboardLayout.h"
 #include "nsNativeDragTarget.h"
@@ -8539,8 +8540,9 @@ void nsWindow::PickerClosed() {
 }
 
 bool nsWindow::WidgetTypePrefersSoftwareWebRender() const {
-  return (StaticPrefs::gfx_webrender_software_unaccelerated_widget_allow() &&
-          mTransparencyMode == eTransparencyTransparent) ||
+  return (mTransparencyMode == eTransparencyTransparent &&
+          (StaticPrefs::gfx_webrender_software_unaccelerated_widget_allow() ||
+           FissionAutostart())) ||
          nsBaseWidget::WidgetTypePrefersSoftwareWebRender();
 }
 
