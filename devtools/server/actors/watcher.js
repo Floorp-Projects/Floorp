@@ -519,8 +519,15 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
     await Promise.all(
       Object.values(Targets.TYPES)
-        .filter(targetType =>
-          WatcherRegistry.isWatchingTargets(this, targetType)
+        .filter(
+          targetType =>
+            // We process frame targets even if we aren't watching them,
+            // because frame target helper codepath handles the top level target, if it runs in the *content* process.
+            // It will do another check to `isWatchingTargets(FRAME)` internally.
+            // Note that the workaround at the end of this method, using TargetActorRegistry
+            // is specific to top level target running in the *parent* process.
+            WatcherRegistry.isWatchingTargets(this, targetType) ||
+            targetType === Targets.TYPES.FRAME
         )
         .map(async targetType => {
           const targetHelperModule = TARGET_HELPERS[targetType];
@@ -553,7 +560,12 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     WatcherRegistry.removeWatcherDataEntry(this, type, entries);
 
     Object.values(Targets.TYPES)
-      .filter(targetType => WatcherRegistry.isWatchingTargets(this, targetType))
+      .filter(
+        targetType =>
+          // See comment in addDataEntry
+          WatcherRegistry.isWatchingTargets(this, targetType) ||
+          targetType === Targets.TYPES.FRAME
+      )
       .forEach(targetType => {
         const targetHelperModule = TARGET_HELPERS[targetType];
         targetHelperModule.removeWatcherDataEntry({
@@ -563,7 +575,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         });
       });
 
-    // See comment in watchResources
+    // See comment in addDataEntry
     const targetActor = this._getTargetActorInParentProcess();
     if (targetActor) {
       targetActor.removeWatcherDataEntry(type, entries);
