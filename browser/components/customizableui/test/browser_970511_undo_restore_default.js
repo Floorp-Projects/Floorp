@@ -8,14 +8,14 @@ requestLongerTimeout(2);
 
 // Restoring default should reset theme and show an "undo" option which undoes the restoring operation.
 add_task(async function() {
-  let homeButtonId = "home-button";
-  CustomizableUI.removeWidgetFromArea(homeButtonId);
+  let stopReloadButtonId = "stop-reload-button";
+  CustomizableUI.removeWidgetFromArea(stopReloadButtonId);
   await startCustomizing();
   ok(!CustomizableUI.inDefaultState, "Not in default state to begin with");
   is(
-    CustomizableUI.getPlacementOfWidget(homeButtonId),
+    CustomizableUI.getPlacementOfWidget(stopReloadButtonId),
     null,
-    "Home button is in palette"
+    "Stop/reload button is in palette"
   );
   let undoResetButton = document.getElementById(
     "customization-undo-reset-button"
@@ -64,9 +64,9 @@ add_task(async function() {
     "The undo button is hidden after clicking on the undo button"
   );
   is(
-    CustomizableUI.getPlacementOfWidget(homeButtonId),
+    CustomizableUI.getPlacementOfWidget(stopReloadButtonId),
     null,
-    "Home button is in palette"
+    "Stop/reload button is in palette"
   );
 
   await gCustomizeMode.reset();
@@ -74,13 +74,13 @@ add_task(async function() {
 
 // Performing an action after a reset will hide the undo button.
 add_task(async function action_after_reset_hides_undo() {
-  let homeButtonId = "home-button";
-  CustomizableUI.removeWidgetFromArea(homeButtonId);
+  let stopReloadButtonId = "stop-reload-button";
+  CustomizableUI.removeWidgetFromArea(stopReloadButtonId);
   ok(!CustomizableUI.inDefaultState, "Not in default state to begin with");
   is(
-    CustomizableUI.getPlacementOfWidget(homeButtonId),
+    CustomizableUI.getPlacementOfWidget(stopReloadButtonId),
     null,
-    "Home button is in palette"
+    "Stop/reload button is in palette"
   );
   let undoResetButton = document.getElementById(
     "customization-undo-reset-button"
@@ -93,7 +93,7 @@ add_task(async function action_after_reset_hides_undo() {
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
 
   CustomizableUI.addWidgetToArea(
-    homeButtonId,
+    stopReloadButtonId,
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
   );
   is(

@@ -4620,6 +4620,10 @@ var CustomizableUI = {
   getCustomizationTarget(aElement) {
     return CustomizableUIInternal.getCustomizationTarget(aElement);
   },
+
+  get protonToolbarEnabled() {
+    return gProtonToolbarEnabled;
+  },
 };
 Object.freeze(CustomizableUI);
 Object.freeze(CustomizableUI.windows);

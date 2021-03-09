@@ -46,7 +46,7 @@ add_task(async function addremove_after_newtab_customizemode() {
   await startCustomizing();
   await waitForElementShown(kGlobalNewTabButton);
   simulateItemDrag(
-    document.getElementById("home-button"),
+    document.getElementById("stop-reload-button"),
     kGlobalNewTabButton,
     "end"
   );
@@ -58,9 +58,13 @@ add_task(async function addremove_after_newtab_customizemode() {
   assertNewTabButton("inner");
 
   await startCustomizing();
-  let dropTarget = document.getElementById("stop-reload-button");
+  let dropTarget = document.getElementById("forward-button");
   await waitForElementShown(dropTarget);
-  simulateItemDrag(document.getElementById("home-button"), dropTarget, "end");
+  simulateItemDrag(
+    document.getElementById("stop-reload-button"),
+    dropTarget,
+    "end"
+  );
   ok(
     gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),
     "tabs should still have the adjacent newtab attribute"
@@ -77,7 +81,7 @@ add_task(async function addremove_before_newtab_customizemode() {
   await startCustomizing();
   await waitForElementShown(kGlobalNewTabButton);
   simulateItemDrag(
-    document.getElementById("home-button"),
+    document.getElementById("stop-reload-button"),
     kGlobalNewTabButton,
     "start"
   );
@@ -88,9 +92,13 @@ add_task(async function addremove_before_newtab_customizemode() {
   await endCustomizing();
   assertNewTabButton("global");
   await startCustomizing();
-  let dropTarget = document.getElementById("stop-reload-button");
+  let dropTarget = document.getElementById("forward-button");
   await waitForElementShown(dropTarget);
-  simulateItemDrag(document.getElementById("home-button"), dropTarget, "end");
+  simulateItemDrag(
+    document.getElementById("stop-reload-button"),
+    dropTarget,
+    "end"
+  );
   ok(
     gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),
     "tabs should have the adjacent newtab attribute again"
@@ -104,7 +112,7 @@ add_task(async function addremove_before_newtab_customizemode() {
  * Add and remove items *after* the new tab button outside of customize mode.
  */
 add_task(async function addremove_after_newtab_api() {
-  CustomizableUI.addWidgetToArea("home-button", "TabsToolbar");
+  CustomizableUI.addWidgetToArea("stop-reload-button", "TabsToolbar");
   ok(
     gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),
     "tabs should have the adjacent newtab attribute"
@@ -127,14 +135,14 @@ add_task(async function addremove_before_newtab_api() {
   let index = CustomizableUI.getWidgetIdsInArea("TabsToolbar").indexOf(
     "new-tab-button"
   );
-  CustomizableUI.addWidgetToArea("home-button", "TabsToolbar", index);
+  CustomizableUI.addWidgetToArea("stop-reload-button", "TabsToolbar", index);
   ok(
     !gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),
     "tabs should no longer have the adjacent newtab attribute"
   );
   assertNewTabButton("global");
 
-  CustomizableUI.removeWidgetFromArea("home-button");
+  CustomizableUI.removeWidgetFromArea("stop-reload-button");
   ok(
     gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),
     "tabs should have the adjacent newtab attribute again"
@@ -152,7 +160,7 @@ add_task(async function reset_before_newtab_customizemode() {
   await startCustomizing();
   await waitForElementShown(kGlobalNewTabButton);
   simulateItemDrag(
-    document.getElementById("home-button"),
+    document.getElementById("stop-reload-button"),
     kGlobalNewTabButton,
     "start"
   );

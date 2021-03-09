@@ -127,45 +127,68 @@ function test() {
       "PanelUI-contents": ["panic-button", "edit-controls"],
     },
   };
+  Services.prefs.setIntPref("browser.proton.toolbar.version", 0);
   CustomizableUIInternal._updateForNewVersion();
+  CustomizableUIInternal._updateForNewProtonVersion();
   let navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
   let springs = navbarPlacements.filter(id => id.includes("spring"));
   is(springs.length, 2, "Should have 2 toolbarsprings in placements now");
   navbarPlacements = navbarPlacements.filter(id => !id.includes("spring"));
-  is(navbarPlacements[0], "back-button", "Back button is in the right place.");
+  let expectedItemLength = CustomizableUI.protonToolbarEnabled ? 6 : 9;
   is(
-    navbarPlacements[1],
+    navbarPlacements.length,
+    expectedItemLength,
+    `Should have ${expectedItemLength} items`
+  );
+  is(
+    navbarPlacements.shift(),
+    "back-button",
+    "Back button is in the right place."
+  );
+  is(
+    navbarPlacements.shift(),
     "forward-button",
     "Fwd button is in the right place."
   );
   is(
-    navbarPlacements[2],
+    navbarPlacements.shift(),
     "stop-reload-button",
     "Stop/reload button is in the right place."
   );
-  is(navbarPlacements[3], "home-button", "Home button is in the right place.");
-  is(navbarPlacements[4], "urlbar-container", "URL bar is in the right place.");
+  if (!CustomizableUI.protonToolbarEnabled) {
+    is(
+      navbarPlacements.shift(),
+      "home-button",
+      "Home button is in the right place."
+    );
+  }
   is(
-    navbarPlacements[5],
+    navbarPlacements.shift(),
+    "urlbar-container",
+    "URL bar is in the right place."
+  );
+  is(
+    navbarPlacements.shift(),
     "downloads-button",
     "Downloads button is in the right place."
   );
+  if (!CustomizableUI.protonToolbarEnabled) {
+    is(
+      navbarPlacements.shift(),
+      "library-button",
+      "Library button is in the right place."
+    );
+    is(
+      navbarPlacements.shift(),
+      "sidebar-button",
+      "Sidebar button is in the right place."
+    );
+  }
   is(
-    navbarPlacements[6],
-    "library-button",
-    "Library button is in the right place."
-  );
-  is(
-    navbarPlacements[7],
-    "sidebar-button",
-    "Sidebar button is in the right place."
-  );
-  is(
-    navbarPlacements[8],
+    navbarPlacements.shift(),
     "fxa-toolbar-menu-button",
     "FxA button is in the right place."
   );
-  is(navbarPlacements.length, 9, "Should have 9 items");
 
   let overflowPlacements =
     CustomizableUIBSPass.gSavedState.placements["widget-overflow-fixed-list"];
