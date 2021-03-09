@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for always-enabling lines deltaMode</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<p id="display"></p>
+<div id="overflow" style="height: 300vh"></div>
+<pre id="test"></pre>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+const HACK_PREF = "dom.event.wheel-deltaMode-lines.always-enabled";
+const testEl = document.getElementById("test");
+const linkEl = document.getElementById("link-test");
+
+(async function() {
+  await SimpleTest.promiseFocus(window);
+  await SpecialPowers.pushPrefEnv({
+    set: [[HACK_PREF, document.domain]]
+  });
+
+  document.addEventListener("wheel", e => {
+    e.deltaY; /* access the delta unchecked */
+    is(e.deltaMode, WheelEvent.DOM_DELTA_LINE, "Accessing wheel event data should return lines even if unchecked, if the pref is enabled for that domain");
+    SimpleTest.finish();
+  }, { once: true });
+
+  synthesizeWheel(document.scrollingElement, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+}());
+</script>

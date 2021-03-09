@@ -513,6 +513,23 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
   double mDeltaY;
   double mDeltaZ;
 
+  enum class DeltaModeCheckingState : uint8_t {
+    // Neither deltaMode nor the delta values have been accessed.
+    Unknown,
+    // The delta values have been accessed, without checking deltaMode first.
+    Unchecked,
+    // The deltaMode has been checked.
+    Checked,
+  };
+
+  // For compat reasons, we might expose a DOM_DELTA_LINE event as
+  // DOM_DELTA_PIXEL instead. Whether we do that depends on whether the event
+  // has been asked for the deltaMode before the deltas. If it has, we assume
+  // that the page will correctly handle DOM_DELTA_LINE. This variable tracks
+  // that state. See bug 1392460.
+  DeltaModeCheckingState mDeltaModeCheckingState =
+      DeltaModeCheckingState::Unknown;
+
   // The amount of scrolling per line or page, without accounting for mouse
   // wheel transactions etc.
   //
