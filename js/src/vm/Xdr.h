@@ -238,7 +238,6 @@ class XDRState : public XDRCoderBase {
 
   virtual bool hasAtomTable() const { return false; }
   virtual XDRAtomTable& atomTable() { MOZ_CRASH("does not have atomTable"); }
-  virtual LifoAlloc& stencilAlloc() { MOZ_CRASH("does not have stencilAlloc"); }
   virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
 
   template <typename T = mozilla::Ok>
@@ -578,8 +577,6 @@ class XDRStencilDecoder : public XDRDecoderBase {
     MOZ_ASSERT(options_);
   }
 
-  LifoAlloc& stencilAlloc() override { return *stencilAlloc_; }
-
   bool hasOptions() const override { return true; }
   const JS::ReadOnlyCompileOptions& options() override { return *options_; }
 
@@ -588,7 +585,6 @@ class XDRStencilDecoder : public XDRDecoderBase {
 
  private:
   const JS::ReadOnlyCompileOptions* options_;
-  LifoAlloc* stencilAlloc_ = nullptr;
 };
 
 class XDRStencilEncoder : public XDREncoder {
