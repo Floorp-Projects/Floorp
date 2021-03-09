@@ -105,16 +105,8 @@
   padding-inline: var(--proton-tab-inline-padding) !important;
 }
 
-.tabbrowser-tab[first-visible-tab] {
-  padding-inline-start: 0 !important;
-}
-
 :root[sizemode=maximized] .tabbrowser-tab[first-visible-tab] {
   padding-inline-start: calc(2 * var(--proton-tab-inline-padding)) !important;
-}
-
-.tabbrowser-tab[last-visible-tab] {
-  padding-inline-end: 0 !important;
 }
 
 :root[sizemode=maximized] .tabbrowser-tab[last-visible-tab] {
