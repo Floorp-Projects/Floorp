@@ -37,15 +37,6 @@ interface nsIBrowserChild : nsISupports
   attribute boolean hasSiblings;
 
   /**
-   * Tell the nsIBrowserChild that it should begin sending its nsIWebProgress
-   * events to its nsIBrowserParent.
-   *
-   * This should be called once the frame script for the nsIBrowserChild has
-   * loaded.
-   */
-  void beginSendingWebProgressEventsToParent();
-
-  /**
    * Send a message from the BrowserChild to the BrowserParent that a
    * nsIWebNavigation navigation finished in the child.
    */

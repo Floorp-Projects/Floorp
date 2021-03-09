@@ -2629,6 +2629,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvNavigateByKey(
 }
 
 bool BrowserChild::InitBrowserChildMessageManager() {
+  mShouldSendWebProgressEventsToParent = true;
+
   if (!mBrowserChildMessageManager) {
     nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
     NS_ENSURE_TRUE(window, false);
@@ -3524,11 +3526,6 @@ nsresult BrowserChild::CanCancelContentJS(
     entry = nextEntry;
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP BrowserChild::BeginSendingWebProgressEventsToParent() {
-  mShouldSendWebProgressEventsToParent = true;
   return NS_OK;
 }
 
