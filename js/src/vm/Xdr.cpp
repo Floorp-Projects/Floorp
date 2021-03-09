@@ -319,7 +319,6 @@ static XDRResult XDRStencilHeader(
 
   MOZ_TRY(VersionCheck(xdr, XDRFormatType::Stencil));
   MOZ_TRY(ScriptSource::XDR(xdr, maybeOptions, source));
-  MOZ_TRY(xdr->align32());
 
   return Ok();
 }
