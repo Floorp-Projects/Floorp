@@ -11,6 +11,7 @@
 
 #include "frontend/CompilationStencil.h"  // SharedDataContainer
 #include "frontend/ObjLiteral.h"          // ObjLiteralStencil
+#include "frontend/ParserAtom.h"          // ParserAtom, ParserAtomSpan
 #include "frontend/Stencil.h"  // BitIntStencil, ScopeStencil, BaseParserScopeData
 #include "vm/SharedStencil.h"  // SharedImmutableScriptData
 #include "vm/Xdr.h"            // XDRMode, XDRResult, XDRState
@@ -61,6 +62,13 @@ class StencilXDR {
   template <XDRMode mode>
   static XDRResult codeSharedDataContainer(XDRState<mode>* xdr,
                                            SharedDataContainer& sharedData);
+
+  template <XDRMode mode>
+  static XDRResult codeParserAtom(XDRState<mode>* xdr, ParserAtom** atomp);
+
+  template <XDRMode mode>
+  static XDRResult codeParserAtomSpan(XDRState<mode>* xdr,
+                                      ParserAtomSpan& parserAtomData);
 };
 
 } /* namespace frontend */

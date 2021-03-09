@@ -20,7 +20,6 @@
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, BorrowingCompilationStencil}
-#include "frontend/ParserAtom.h"          // frontend::ParserAtom
 #include "js/BuildId.h"                   // JS::BuildIdCharVector
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
@@ -285,67 +284,6 @@ XDRResult XDRState<mode>::codeModuleObject(MutableHandleModuleObject modp) {
 }
 
 template <XDRMode mode>
-static XDRResult XDRAtomCount(XDRState<mode>* xdr, uint32_t* atomCount) {
-  return xdr->codeUint32(atomCount);
-}
-
-template <XDRMode mode>
-static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
-                                    frontend::CompilationStencil& stencil) {
-  if (mode == XDR_ENCODE) {
-    uint32_t atomVectorLength = stencil.parserAtomData.size();
-    MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
-
-    uint32_t atomCount = 0;
-    for (const auto& entry : stencil.parserAtomData) {
-      if (!entry) {
-        continue;
-      }
-      if (entry->isUsedByStencil()) {
-        atomCount++;
-      }
-    }
-    MOZ_TRY(XDRAtomCount(xdr, &atomCount));
-
-    for (uint32_t i = 0; i < atomVectorLength; i++) {
-      auto& entry = stencil.parserAtomData[i];
-      if (!entry) {
-        continue;
-      }
-      if (entry->isUsedByStencil()) {
-        MOZ_TRY(xdr->codeUint32(&i));
-        MOZ_TRY(XDRParserAtom(xdr, &entry));
-      }
-    }
-
-    return Ok();
-  }
-
-  uint32_t atomVectorLength;
-  MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
-
-  if (!xdr->frontendAtoms().allocate(xdr->cx(), xdr->stencilAlloc(),
-                                     atomVectorLength)) {
-    return xdr->fail(JS::TranscodeResult::Throw);
-  }
-
-  uint32_t atomCount;
-  MOZ_TRY(XDRAtomCount(xdr, &atomCount));
-  MOZ_ASSERT(!xdr->hasAtomTable());
-
-  for (uint32_t i = 0; i < atomCount; i++) {
-    frontend::ParserAtom* entry = nullptr;
-    uint32_t index;
-    MOZ_TRY(xdr->codeUint32(&index));
-    MOZ_TRY(XDRParserAtom(xdr, &entry));
-    xdr->frontendAtoms().set(frontend::ParserAtomIndex(index), entry);
-  }
-  xdr->finishAtomTable();
-
-  return Ok();
-}
-
-template <XDRMode mode>
 XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx());
   TraceLoggerTextId event =
@@ -411,7 +349,6 @@ XDRResult XDRStencilEncoder::codeStencil(
   MOZ_TRY(XDRCheckCompilationStencil(this, stencil));
 
   MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
-  MOZ_TRY(XDRParserAtomTable(this, stencil));
   MOZ_TRY(XDRCompilationStencil(this, stencil));
 
   return Ok();
@@ -489,7 +426,6 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
   {
     frontend::BorrowingCompilationStencil borrowingStencil(
         merger_->getResult());
-    MOZ_TRY(XDRParserAtomTable(this, borrowingStencil));
     MOZ_TRY(XDRCompilationStencil(this, borrowingStencil));
   }
 
@@ -507,13 +443,9 @@ XDRResult XDRStencilDecoder::codeStencil(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
 
-  frontend::ParserAtomSpanBuilder parserAtomBuilder(cx()->runtime(),
-                                                    stencil.parserAtomData);
-  parserAtomBuilder_ = &parserAtomBuilder;
   stencilAlloc_ = &stencil.alloc;
 
   MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
-  MOZ_TRY(XDRParserAtomTable(this, stencil));
   MOZ_TRY(XDRCompilationStencil(this, stencil));
 
   return Ok();
