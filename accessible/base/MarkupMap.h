@@ -450,7 +450,7 @@ MARKUPMAP(
 MARKUPMAP(
     table,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
-      if (aElement->GetPrimaryFrame() &&
+      if (!aElement->GetPrimaryFrame() ||
           aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
         return new ARIAGridAccessibleWrap(aElement, aContext->Document());
       }
@@ -488,10 +488,9 @@ MARKUPMAP(
         // cell accessible, because there's no underlying table layout and
         // thus native HTML table cell class doesn't work. The same is
         // true if the cell itself has CSS display:block;.
-        if (!aContext->IsHTMLTableRow() ||
-            (aElement->GetPrimaryFrame() &&
-             aElement->GetPrimaryFrame()->AccessibleType() !=
-                 eHTMLTableCellType)) {
+        if (!aContext->IsHTMLTableRow() || !aElement->GetPrimaryFrame() ||
+            aElement->GetPrimaryFrame()->AccessibleType() !=
+                eHTMLTableCellType) {
           return new ARIAGridCellAccessibleWrap(aElement, aContext->Document());
         }
         if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::scope)) {
@@ -538,14 +537,14 @@ MARKUPMAP(
       if (table) {
         nsIContent* parentContent = aElement->GetParent();
         nsIFrame* parentFrame = parentContent->GetPrimaryFrame();
-        if (parentFrame && !parentFrame->IsTableWrapperFrame()) {
+        if (!parentFrame || !parentFrame->IsTableWrapperFrame()) {
           parentContent = parentContent->GetParent();
           parentFrame = parentContent->GetPrimaryFrame();
           if (table->GetContent() == parentContent &&
-              ((parentFrame && !parentFrame->IsTableWrapperFrame()) ||
-               (aElement->GetPrimaryFrame() &&
-                aElement->GetPrimaryFrame()->AccessibleType() !=
-                    eHTMLTableRowType))) {
+              ((!parentFrame || !parentFrame->IsTableWrapperFrame()) ||
+               !aElement->GetPrimaryFrame() ||
+               aElement->GetPrimaryFrame()->AccessibleType() !=
+                   eHTMLTableRowType)) {
             return new ARIARowAccessible(aElement, aContext->Document());
           }
         }
