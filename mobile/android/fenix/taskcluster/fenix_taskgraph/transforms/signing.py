@@ -26,6 +26,7 @@ def resolve_keys(config, tasks):
                 **{
                     'build-type': task["attributes"]["build-type"],
                     'level': config.params["level"],
+                    'tasks-for': config.params["tasks_for"],
                 }
             )
         yield task

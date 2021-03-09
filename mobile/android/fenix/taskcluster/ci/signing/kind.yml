@@ -40,9 +40,12 @@ job-template:
                 default: dep-signing
     signing-format: autograph_apk
     index:
-        by-build-type:
-            (nightly|debug|nightly-simulation|beta|release):
-                type: signing
+        by-tasks-for:
+            (action|cron|github-release):
+                by-build-type:
+                    (nightly|debug|nightly-simulation|beta|release):
+                        type: signing
+                    default: {}
             default: {}
     run-on-tasks-for:
         by-build-type:
