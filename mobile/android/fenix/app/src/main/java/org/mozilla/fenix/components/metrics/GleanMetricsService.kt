@@ -12,7 +12,6 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.AboutPage
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
@@ -847,13 +846,6 @@ class GleanMetricsService(
             mozillaProductDetector.getMozillaBrowserDefault(context)?.also {
                 defaultMozBrowser.set(it)
             }
-
-            distributionId.set(
-                when (Config.channel.isMozillaOnline) {
-                    true -> "MozillaOnline"
-                    false -> "Mozilla"
-                }
-            )
 
             mozillaProducts.set(mozillaProductDetector.getInstalledMozillaProducts(context))
 
