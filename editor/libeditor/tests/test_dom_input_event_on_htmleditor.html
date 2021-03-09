@@ -69,10 +69,8 @@ async function runTests() {
 
     // Root element never can be edit target.  If the editTarget is the root
     // element, replace with its body.
-    let isEditTargetIsDescendantOfEditingHost = false;
     if (editTarget == aDocument.documentElement) {
       editTarget = body;
-      isEditTargetIsDescendantOfEditingHost = true;
     }
 
     editTarget.innerHTML = "";
@@ -397,9 +395,7 @@ async function runTests() {
           synthesizeKey("KEY_Enter", {}, aWindow);
         },
         {
-          innerHTML: !isEditTargetIsDescendantOfEditingHost
-            ? "<div>B</div><div><br></div>"
-            : "B<br><br>",
+          innerHTML:  "<div>B</div><div><br></div>",
           beforeInputEvent: {
             cancelable: true,
             inputType: "insertParagraph",
@@ -423,13 +419,8 @@ async function runTests() {
     });
 
     function test_typing_C_in_empty_last_line(aTestData) {
-      if (!isEditTargetIsDescendantOfEditingHost) {
-        editTarget.innerHTML = "<div>B</div><div><br></div>";
-        selection.collapse(editTarget.querySelector("div + div"), 0);
-      } else {
-        editTarget.innerHTML = "B<br><br>";
-        selection.collapse(editTarget, 2);
-      }
+      editTarget.innerHTML = "<div>B</div><div><br></div>";
+      selection.collapse(editTarget.querySelector("div + div"), 0);
 
       runTest(
         aTestData,
@@ -437,9 +428,7 @@ async function runTests() {
           synthesizeKey("C", {shiftKey: true}, aWindow);
         },
         {
-          innerHTML: !isEditTargetIsDescendantOfEditingHost
-            ? "<div>B</div><div>C<br></div>"
-            : "B<br>C<br>",
+          innerHTML: "<div>B</div><div>C<br></div>",
           beforeInputEvent: {
             cancelable: true,
             inputType: "insertText",
@@ -463,13 +452,8 @@ async function runTests() {
     });
 
     function test_typing_enter_in_non_empty_last_line(aTestData) {
-      if (!isEditTargetIsDescendantOfEditingHost) {
-        editTarget.innerHTML = "<div>B</div><div>C<br></div>";
-        selection.collapse(editTarget.querySelector("div + div").firstChild, 1);
-      } else {
-        editTarget.innerHTML = "B<br>C<br>";
-        selection.collapse(editTarget.querySelector("br").nextSibling, 1);
-      }
+      editTarget.innerHTML = "<div>B</div><div>C<br></div>";
+      selection.collapse(editTarget.querySelector("div + div").firstChild, 1);
 
       runTest(
         aTestData,
@@ -477,9 +461,7 @@ async function runTests() {
           synthesizeKey("KEY_Enter", {}, aWindow);
         },
         {
-          innerHTML: !isEditTargetIsDescendantOfEditingHost
-            ? "<div>B</div><div>C</div><div><br></div>"
-            : "B<br>C<br><br>",
+          innerHTML: "<div>B</div><div>C</div><div><br></div>",
           beforeInputEvent: {
             cancelable: true,
             inputType: "insertParagraph",

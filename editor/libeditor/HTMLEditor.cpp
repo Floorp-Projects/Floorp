@@ -6118,7 +6118,9 @@ bool HTMLEditor::IsActiveInDOMWindow() const {
   return true;
 }
 
-Element* HTMLEditor::GetActiveEditingHost() const {
+Element* HTMLEditor::GetActiveEditingHost(
+    LimitInBodyElement aLimitInBodyElement /* = LimitInBodyElement::Yes */)
+    const {
   Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
@@ -6145,7 +6147,17 @@ Element* HTMLEditor::GetActiveEditingHost() const {
       content->HasIndependentSelection()) {
     return nullptr;
   }
-  return content->GetEditingHost();
+  Element* candidateEditingHost = content->GetEditingHost();
+  if (!candidateEditingHost) {
+    return nullptr;
+  }
+  // Currently, we don't support editing outside of `<body>` element.
+  return aLimitInBodyElement != LimitInBodyElement::Yes ||
+                 (document->GetBodyElement() &&
+                  nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+                      candidateEditingHost, document->GetBodyElement()))
+             ? candidateEditingHost
+             : document->GetBodyElement();
 }
 
 void HTMLEditor::NotifyEditingHostMaybeChanged() {
@@ -6408,7 +6420,7 @@ nsresult HTMLEditor::GetPreferredIMEState(IMEState* aState) {
 }
 
 already_AddRefed<Element> HTMLEditor::GetInputEventTargetElement() const {
-  RefPtr<Element> target = GetActiveEditingHost();
+  RefPtr<Element> target = GetActiveEditingHost(LimitInBodyElement::No);
   if (target) {
     return target.forget();
   }

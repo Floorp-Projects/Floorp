@@ -1247,6 +1247,19 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   if (NS_WARN_IF(!editingHost)) {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
+  // If the editing host parent element is editable, it means that the editing
+  // host must be a <body> element and the selection may be outside the body
+  // element.  If the selection is outside the editing host, we should not
+  // insert new paragraph nor <br> element.
+  // XXX Currently, we don't support editing outside <body> element, but Blink
+  //     does it.
+  if (editingHost->GetParentElement() &&
+      HTMLEditUtils::IsSimplyEditableNode(*editingHost->GetParentElement()) &&
+      (!atStartOfSelection.IsInContentNode() ||
+       !nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+           atStartOfSelection.ContainerAsContent(), editingHost))) {
+    return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
+  }
 
   // Look for the nearest parent block.  However, don't return error even if
   // there is no block parent here because in such case, i.e., editing host

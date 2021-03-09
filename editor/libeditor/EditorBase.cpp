@@ -5385,6 +5385,11 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
           NS_WARNING("HTMLEditor::ComputeTargetRanges() destroyed the editor");
           return NS_ERROR_EDITOR_DESTROYED;
         }
+        if (rv == NS_ERROR_EDITOR_NO_EDITABLE_RANGE) {
+          // For now, keep dispatching `beforeinput` event even if no selection
+          // range can be editable.
+          rv = NS_OK;
+        }
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rv),
             "HTMLEditor::ComputeTargetRanges() failed, but ignored");
