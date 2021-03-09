@@ -16,7 +16,7 @@ add_task(async () => {
   const target = await createAndAttachTargetForTab(tab);
 
   await testNavigate(target);
-  await testDetach(target);
+  await testTargetDestroyed(target);
 });
 
 function testNavigate(target) {
@@ -45,10 +45,10 @@ function testNavigate(target) {
   });
 }
 
-async function testDetach(target) {
+async function testTargetDestroyed(target) {
   // We can't listen for tabDetached at it is received by Target first
   // and target is destroyed
-  const onDetached = target.once("close");
+  const onDetached = target.once("target-destroyed");
 
   removeTab(gBrowser.selectedTab);
 
