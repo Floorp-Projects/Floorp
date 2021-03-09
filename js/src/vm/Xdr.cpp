@@ -336,22 +336,40 @@ static bool IsOptionCompatibleWithEncoding(
 }
 
 XDRResult XDRStencilEncoder::codeStencil(
-    frontend::CompilationInput& input, frontend::CompilationStencil& stencil) {
+    const JS::ReadOnlyCompileOptions* options,
+    const RefPtr<ScriptSource>& source,
+    const frontend::CompilationStencil& stencil) {
 #ifdef DEBUG
   auto sanityCheck = mozilla::MakeScopeExit(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
 
-  if (!IsOptionCompatibleWithEncoding(input.options)) {
-    return fail(JS::TranscodeResult::Failure);
+  if (options) {
+    if (!IsOptionCompatibleWithEncoding(*options)) {
+      return fail(JS::TranscodeResult::Failure);
+    }
   }
 
   MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, stencil));
 
-  MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
-  MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(this, stencil));
+  MOZ_TRY(XDRStencilHeader(this, options,
+                           const_cast<RefPtr<ScriptSource>&>(source)));
+  MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(
+      this, const_cast<frontend::CompilationStencil&>(stencil)));
 
   return Ok();
+}
+
+XDRResult XDRStencilEncoder::codeStencil(
+    const frontend::CompilationInput& input,
+    const frontend::CompilationStencil& stencil) {
+  return codeStencil(&input.options, stencil.source, stencil);
+}
+
+XDRResult XDRStencilEncoder::codeStencil(
+    const RefPtr<ScriptSource>& source,
+    const frontend::CompilationStencil& stencil) {
+  return codeStencil(nullptr, source, stencil);
 }
 
 XDRIncrementalStencilEncoder::~XDRIncrementalStencilEncoder() {
@@ -361,76 +379,47 @@ XDRIncrementalStencilEncoder::~XDRIncrementalStencilEncoder() {
 }
 
 XDRResult XDRIncrementalStencilEncoder::setInitial(
-    const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
-#ifdef DEBUG
-  auto sanityCheck = mozilla::MakeScopeExit(
-      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
-#endif
-
   if (!IsOptionCompatibleWithEncoding(options)) {
-    return fail(JS::TranscodeResult::Failure);
+    return mozilla::Err(JS::TranscodeResult::Failure);
   }
 
-  MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, *initial));
+  MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(*initial));
 
-  merger_ = cx()->new_<frontend::CompilationStencilMerger>();
+  merger_ = cx->new_<frontend::CompilationStencilMerger>();
   if (!merger_) {
-    return fail(JS::TranscodeResult::Throw);
+    return mozilla::Err(JS::TranscodeResult::Throw);
   }
 
   if (!merger_->setInitial(
-          cx(), std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(
-                    initial))) {
-    return fail(JS::TranscodeResult::Throw);
+          cx, std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(
+                  initial))) {
+    return mozilla::Err(JS::TranscodeResult::Throw);
   }
 
   return Ok();
 }
 
 XDRResult XDRIncrementalStencilEncoder::addDelazification(
-    const frontend::CompilationStencil& delazification) {
-#ifdef DEBUG
-  auto sanityCheck = mozilla::MakeScopeExit(
-      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
-#endif
-
-  if (!merger_->addDelazification(cx(), delazification)) {
-    return fail(JS::TranscodeResult::Throw);
+    JSContext* cx, const frontend::CompilationStencil& delazification) {
+  if (!merger_->addDelazification(cx, delazification)) {
+    return mozilla::Err(JS::TranscodeResult::Throw);
   }
 
   return Ok();
 }
 
-XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
+XDRResult XDRIncrementalStencilEncoder::linearize(JSContext* cx,
+                                                  JS::TranscodeBuffer& buffer,
                                                   ScriptSource* ss) {
-#ifdef DEBUG
-  auto sanityCheck = mozilla::MakeScopeExit(
-      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
-#endif
-
-  // NOTE: If buffer is empty, buffer.begin() doesn't point valid buffer.
-  MOZ_ASSERT_IF(!buffer.empty(),
-                JS::IsTranscodingBytecodeAligned(buffer.begin()));
-  MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(buffer.length()));
-
-  // Use the output buffer directly. The caller may have already have data in
-  // the buffer so ensure we skip over it.
-  XDRBuffer<XDR_ENCODE> outputBuf(cx(), buffer, buffer.length());
-
-  switchToBuffer(&outputBuf);
-
+  XDRStencilEncoder encoder(cx, buffer);
   RefPtr<ScriptSource> source(ss);
-  MOZ_TRY(XDRStencilHeader(this, nullptr, source));
-
   {
     frontend::BorrowingCompilationStencil borrowingStencil(
         merger_->getResult());
-    MOZ_TRY(
-        frontend::StencilXDR::codeCompilationStencil(this, borrowingStencil));
+    MOZ_TRY(encoder.codeStencil(source, borrowingStencil));
   }
-
-  switchToBuffer(&mainBuf);
 
   return Ok();
 }
