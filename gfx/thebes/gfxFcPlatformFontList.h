@@ -13,6 +13,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
+#include "nsTHashMap.h"
 
 #include <fontconfig/fontconfig.h>
 #include "ft2build.h"
@@ -350,7 +351,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
 
   // to avoid enumerating all fonts, maintain a mapping of local font
   // names to family
-  nsBaseHashtable<nsCStringHashKey, RefPtr<FcPattern>, FcPattern*> mLocalNames;
+  nsTHashMap<nsCString, RefPtr<FcPattern>> mLocalNames;
 
   // caching generic/lang ==> font family list
   nsClassHashtable<nsCStringHashKey, PrefFontList> mGenericMappings;

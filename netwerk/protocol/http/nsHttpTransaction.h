@@ -17,6 +17,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsITimer.h"
+#include "nsTHashMap.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
 #include "mozilla/net/DNS.h"
@@ -517,8 +518,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   Atomic<int32_t> mProxyConnectResponseCode;
 
   OnPushCallback mOnPushCallback;
-  nsDataHashtable<nsUint32HashKey, RefPtr<Http2PushedStreamWrapper>>
-      mIDToStreamMap;
+  nsTHashMap<uint32_t, RefPtr<Http2PushedStreamWrapper>> mIDToStreamMap;
 
   nsCOMPtr<nsICancelable> mDNSRequest;
   Atomic<uint32_t, Relaxed> mHTTPSSVCReceivedStage;

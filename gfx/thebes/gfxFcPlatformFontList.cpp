@@ -1381,11 +1381,11 @@ void gfxFcPlatformFontList::AddPatternToFontList(
   GetFaceNames(aFont, aFamilyName, psname, fullname);
   if (!psname.IsEmpty()) {
     ToLowerCase(psname);
-    mLocalNames.InsertOrUpdate(psname, aFont);
+    mLocalNames.InsertOrUpdate(psname, RefPtr{aFont});
   }
   if (!fullname.IsEmpty()) {
     ToLowerCase(fullname);
-    mLocalNames.InsertOrUpdate(fullname, aFont);
+    mLocalNames.InsertOrUpdate(fullname, RefPtr{aFont});
   }
 }
 
@@ -1909,12 +1909,12 @@ gfxFontEntry* gfxFcPlatformFontList::LookupLocalFont(
   }
 
   // if name is not in the global list, done
-  FcPattern* fontPattern = mLocalNames.Get(keyName);
+  const auto fontPattern = mLocalNames.Lookup(keyName);
   if (!fontPattern) {
     return nullptr;
   }
 
-  return new gfxFontconfigFontEntry(aFontName, fontPattern, aWeightForEntry,
+  return new gfxFontconfigFontEntry(aFontName, *fontPattern, aWeightForEntry,
                                     aStretchForEntry, aStyleForEntry);
 }
 
