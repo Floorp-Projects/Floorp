@@ -1,0 +1,1982 @@
+<!DOCTYPE html><html class="">
+<head><meta charset="UTF-8">
+
+<style>html, body {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+  margin: 0;
+  perspective: 32em;
+}
+
+.torus, .torus *, .torus :before, .torus :after {
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+}
+
+.torus {
+  transform: rotateX(-45deg) rotateY(0deg);
+}
+
+.ring--penta:nth-child(160) {
+  transform: rotateY(0deg) translate(10.51462em) rotate(0deg);
+}
+.ring--penta:nth-child(159) {
+  transform: rotateY(2.25deg) translate(10.23069em) rotate(2.25deg);
+}
+.ring--penta:nth-child(158) {
+  transform: rotateY(4.5deg) translate(9.97667em) rotate(4.5deg);
+}
+.ring--penta:nth-child(157) {
+  transform: rotateY(6.75deg) translate(9.74962em) rotate(6.75deg);
+}
+.ring--penta:nth-child(156) {
+  transform: rotateY(9deg) translate(9.54708em) rotate(9deg);
+}
+.ring--penta:nth-child(155) {
+  transform: rotateY(11.25deg) translate(9.36692em) rotate(11.25deg);
+}
+.ring--penta:nth-child(154) {
+  transform: rotateY(13.5deg) translate(9.20738em) rotate(13.5deg);
+}
+.ring--penta:nth-child(153) {
+  transform: rotateY(15.75deg) translate(9.06692em) rotate(15.75deg);
+}
+.ring--penta:nth-child(152) {
+  transform: rotateY(18deg) translate(8.94427em) rotate(18deg);
+}
+.ring--penta:nth-child(151) {
+  transform: rotateY(20.25deg) translate(8.83834em) rotate(20.25deg);
+}
+.ring--penta:nth-child(150) {
+  transform: rotateY(22.5deg) translate(8.74822em) rotate(22.5deg);
+}
+.ring--penta:nth-child(149) {
+  transform: rotateY(24.75deg) translate(8.67316em) rotate(24.75deg);
+}
+.ring--penta:nth-child(148) {
+  transform: rotateY(27deg) translate(8.61254em) rotate(27deg);
+}
+.ring--penta:nth-child(147) {
+  transform: rotateY(29.25deg) translate(8.56588em) rotate(29.25deg);
+}
+.ring--penta:nth-child(146) {
+  transform: rotateY(31.5deg) translate(8.53281em) rotate(31.5deg);
+}
+.ring--penta:nth-child(145) {
+  transform: rotateY(33.75deg) translate(8.51307em) rotate(33.75deg);
+}
+.ring--penta:nth-child(144) {
+  transform: rotateY(36deg) translate(8.50651em) rotate(36deg);
+}
+.ring--penta:nth-child(143) {
+  transform: rotateY(38.25deg) translate(8.51307em) rotate(38.25deg);
+}
+.ring--penta:nth-child(142) {
+  transform: rotateY(40.5deg) translate(8.53281em) rotate(40.5deg);
+}
+.ring--penta:nth-child(141) {
+  transform: rotateY(42.75deg) translate(8.56588em) rotate(42.75deg);
+}
+.ring--penta:nth-child(140) {
+  transform: rotateY(45deg) translate(8.61254em) rotate(45deg);
+}
+.ring--penta:nth-child(139) {
+  transform: rotateY(47.25deg) translate(8.67316em) rotate(47.25deg);
+}
+.ring--penta:nth-child(138) {
+  transform: rotateY(49.5deg) translate(8.74822em) rotate(49.5deg);
+}
+.ring--penta:nth-child(137) {
+  transform: rotateY(51.75deg) translate(8.83834em) rotate(51.75deg);
+}
+.ring--penta:nth-child(136) {
+  transform: rotateY(54deg) translate(8.94427em) rotate(54deg);
+}
+.ring--penta:nth-child(135) {
+  transform: rotateY(56.25deg) translate(9.06692em) rotate(56.25deg);
+}
+.ring--penta:nth-child(134) {
+  transform: rotateY(58.5deg) translate(9.20738em) rotate(58.5deg);
+}
+.ring--penta:nth-child(133) {
+  transform: rotateY(60.75deg) translate(9.36692em) rotate(60.75deg);
+}
+.ring--penta:nth-child(132) {
+  transform: rotateY(63deg) translate(9.54708em) rotate(63deg);
+}
+.ring--penta:nth-child(131) {
+  transform: rotateY(65.25deg) translate(9.74962em) rotate(65.25deg);
+}
+.ring--penta:nth-child(130) {
+  transform: rotateY(67.5deg) translate(9.97667em) rotate(67.5deg);
+}
+.ring--penta:nth-child(129) {
+  transform: rotateY(69.75deg) translate(10.23069em) rotate(69.75deg);
+}
+.ring--penta:nth-child(128) {
+  transform: rotateY(72deg) translate(10.51462em) rotate(72deg);
+}
+.ring--penta:nth-child(127) {
+  transform: rotateY(74.25deg) translate(10.23069em) rotate(74.25deg);
+}
+.ring--penta:nth-child(126) {
+  transform: rotateY(76.5deg) translate(9.97667em) rotate(76.5deg);
+}
+.ring--penta:nth-child(125) {
+  transform: rotateY(78.75deg) translate(9.74962em) rotate(78.75deg);
+}
+.ring--penta:nth-child(124) {
+  transform: rotateY(81deg) translate(9.54708em) rotate(81deg);
+}
+.ring--penta:nth-child(123) {
+  transform: rotateY(83.25deg) translate(9.36692em) rotate(83.25deg);
+}
+.ring--penta:nth-child(122) {
+  transform: rotateY(85.5deg) translate(9.20738em) rotate(85.5deg);
+}
+.ring--penta:nth-child(121) {
+  transform: rotateY(87.75deg) translate(9.06692em) rotate(87.75deg);
+}
+.ring--penta:nth-child(120) {
+  transform: rotateY(90deg) translate(8.94427em) rotate(90deg);
+}
+.ring--penta:nth-child(119) {
+  transform: rotateY(92.25deg) translate(8.83834em) rotate(92.25deg);
+}
+.ring--penta:nth-child(118) {
+  transform: rotateY(94.5deg) translate(8.74822em) rotate(94.5deg);
+}
+.ring--penta:nth-child(117) {
+  transform: rotateY(96.75deg) translate(8.67316em) rotate(96.75deg);
+}
+.ring--penta:nth-child(116) {
+  transform: rotateY(99deg) translate(8.61254em) rotate(99deg);
+}
+.ring--penta:nth-child(115) {
+  transform: rotateY(101.25deg) translate(8.56588em) rotate(101.25deg);
+}
+.ring--penta:nth-child(114) {
+  transform: rotateY(103.5deg) translate(8.53281em) rotate(103.5deg);
+}
+.ring--penta:nth-child(113) {
+  transform: rotateY(105.75deg) translate(8.51307em) rotate(105.75deg);
+}
+.ring--penta:nth-child(112) {
+  transform: rotateY(108deg) translate(8.50651em) rotate(108deg);
+}
+.ring--penta:nth-child(111) {
+  transform: rotateY(110.25deg) translate(8.51307em) rotate(110.25deg);
+}
+.ring--penta:nth-child(110) {
+  transform: rotateY(112.5deg) translate(8.53281em) rotate(112.5deg);
+}
+.ring--penta:nth-child(109) {
+  transform: rotateY(114.75deg) translate(8.56588em) rotate(114.75deg);
+}
+.ring--penta:nth-child(108) {
+  transform: rotateY(117deg) translate(8.61254em) rotate(117deg);
+}
+.ring--penta:nth-child(107) {
+  transform: rotateY(119.25deg) translate(8.67316em) rotate(119.25deg);
+}
+.ring--penta:nth-child(106) {
+  transform: rotateY(121.5deg) translate(8.74822em) rotate(121.5deg);
+}
+.ring--penta:nth-child(105) {
+  transform: rotateY(123.75deg) translate(8.83834em) rotate(123.75deg);
+}
+.ring--penta:nth-child(104) {
+  transform: rotateY(126deg) translate(8.94427em) rotate(126deg);
+}
+.ring--penta:nth-child(103) {
+  transform: rotateY(128.25deg) translate(9.06692em) rotate(128.25deg);
+}
+.ring--penta:nth-child(102) {
+  transform: rotateY(130.5deg) translate(9.20738em) rotate(130.5deg);
+}
+.ring--penta:nth-child(101) {
+  transform: rotateY(132.75deg) translate(9.36692em) rotate(132.75deg);
+}
+.ring--penta:nth-child(100) {
+  transform: rotateY(135deg) translate(9.54708em) rotate(135deg);
+}
+.ring--penta:nth-child(99) {
+  transform: rotateY(137.25deg) translate(9.74962em) rotate(137.25deg);
+}
+.ring--penta:nth-child(98) {
+  transform: rotateY(139.5deg) translate(9.97667em) rotate(139.5deg);
+}
+.ring--penta:nth-child(97) {
+  transform: rotateY(141.75deg) translate(10.23069em) rotate(141.75deg);
+}
+.ring--penta:nth-child(96) {
+  transform: rotateY(144deg) translate(10.51462em) rotate(144deg);
+}
+.ring--penta:nth-child(95) {
+  transform: rotateY(146.25deg) translate(10.23069em) rotate(146.25deg);
+}
+.ring--penta:nth-child(94) {
+  transform: rotateY(148.5deg) translate(9.97667em) rotate(148.5deg);
+}
+.ring--penta:nth-child(93) {
+  transform: rotateY(150.75deg) translate(9.74962em) rotate(150.75deg);
+}
+.ring--penta:nth-child(92) {
+  transform: rotateY(153deg) translate(9.54708em) rotate(153deg);
+}
+.ring--penta:nth-child(91) {
+  transform: rotateY(155.25deg) translate(9.36692em) rotate(155.25deg);
+}
+.ring--penta:nth-child(90) {
+  transform: rotateY(157.5deg) translate(9.20738em) rotate(157.5deg);
+}
+.ring--penta:nth-child(89) {
+  transform: rotateY(159.75deg) translate(9.06692em) rotate(159.75deg);
+}
+.ring--penta:nth-child(88) {
+  transform: rotateY(162deg) translate(8.94427em) rotate(162deg);
+}
+.ring--penta:nth-child(87) {
+  transform: rotateY(164.25deg) translate(8.83834em) rotate(164.25deg);
+}
+.ring--penta:nth-child(86) {
+  transform: rotateY(166.5deg) translate(8.74822em) rotate(166.5deg);
+}
+.ring--penta:nth-child(85) {
+  transform: rotateY(168.75deg) translate(8.67316em) rotate(168.75deg);
+}
+.ring--penta:nth-child(84) {
+  transform: rotateY(171deg) translate(8.61254em) rotate(171deg);
+}
+.ring--penta:nth-child(83) {
+  transform: rotateY(173.25deg) translate(8.56588em) rotate(173.25deg);
+}
+.ring--penta:nth-child(82) {
+  transform: rotateY(175.5deg) translate(8.53281em) rotate(175.5deg);
+}
+.ring--penta:nth-child(81) {
+  transform: rotateY(177.75deg) translate(8.51307em) rotate(177.75deg);
+}
+.ring--penta:nth-child(80) {
+  transform: rotateY(180deg) translate(8.50651em) rotate(180deg);
+}
+.ring--penta:nth-child(79) {
+  transform: rotateY(182.25deg) translate(8.51307em) rotate(182.25deg);
+}
+.ring--penta:nth-child(78) {
+  transform: rotateY(184.5deg) translate(8.53281em) rotate(184.5deg);
+}
+.ring--penta:nth-child(77) {
+  transform: rotateY(186.75deg) translate(8.56588em) rotate(186.75deg);
+}
+.ring--penta:nth-child(76) {
+  transform: rotateY(189deg) translate(8.61254em) rotate(189deg);
+}
+.ring--penta:nth-child(75) {
+  transform: rotateY(191.25deg) translate(8.67316em) rotate(191.25deg);
+}
+.ring--penta:nth-child(74) {
+  transform: rotateY(193.5deg) translate(8.74822em) rotate(193.5deg);
+}
+.ring--penta:nth-child(73) {
+  transform: rotateY(195.75deg) translate(8.83834em) rotate(195.75deg);
+}
+.ring--penta:nth-child(72) {
+  transform: rotateY(198deg) translate(8.94427em) rotate(198deg);
+}
+.ring--penta:nth-child(71) {
+  transform: rotateY(200.25deg) translate(9.06692em) rotate(200.25deg);
+}
+.ring--penta:nth-child(70) {
+  transform: rotateY(202.5deg) translate(9.20738em) rotate(202.5deg);
+}
+.ring--penta:nth-child(69) {
+  transform: rotateY(204.75deg) translate(9.36692em) rotate(204.75deg);
+}
+.ring--penta:nth-child(68) {
+  transform: rotateY(207deg) translate(9.54708em) rotate(207deg);
+}
+.ring--penta:nth-child(67) {
+  transform: rotateY(209.25deg) translate(9.74962em) rotate(209.25deg);
+}
+.ring--penta:nth-child(66) {
+  transform: rotateY(211.5deg) translate(9.97667em) rotate(211.5deg);
+}
+.ring--penta:nth-child(65) {
+  transform: rotateY(213.75deg) translate(10.23069em) rotate(213.75deg);
+}
+.ring--penta:nth-child(64) {
+  transform: rotateY(216deg) translate(10.51462em) rotate(216deg);
+}
+.ring--penta:nth-child(63) {
+  transform: rotateY(218.25deg) translate(10.23069em) rotate(218.25deg);
+}
+.ring--penta:nth-child(62) {
+  transform: rotateY(220.5deg) translate(9.97667em) rotate(220.5deg);
+}
+.ring--penta:nth-child(61) {
+  transform: rotateY(222.75deg) translate(9.74962em) rotate(222.75deg);
+}
+.ring--penta:nth-child(60) {
+  transform: rotateY(225deg) translate(9.54708em) rotate(225deg);
+}
+.ring--penta:nth-child(59) {
+  transform: rotateY(227.25deg) translate(9.36692em) rotate(227.25deg);
+}
+.ring--penta:nth-child(58) {
+  transform: rotateY(229.5deg) translate(9.20738em) rotate(229.5deg);
+}
+.ring--penta:nth-child(57) {
+  transform: rotateY(231.75deg) translate(9.06692em) rotate(231.75deg);
+}
+.ring--penta:nth-child(56) {
+  transform: rotateY(234deg) translate(8.94427em) rotate(234deg);
+}
+.ring--penta:nth-child(55) {
+  transform: rotateY(236.25deg) translate(8.83834em) rotate(236.25deg);
+}
+.ring--penta:nth-child(54) {
+  transform: rotateY(238.5deg) translate(8.74822em) rotate(238.5deg);
+}
+.ring--penta:nth-child(53) {
+  transform: rotateY(240.75deg) translate(8.67316em) rotate(240.75deg);
+}
+.ring--penta:nth-child(52) {
+  transform: rotateY(243deg) translate(8.61254em) rotate(243deg);
+}
+.ring--penta:nth-child(51) {
+  transform: rotateY(245.25deg) translate(8.56588em) rotate(245.25deg);
+}
+.ring--penta:nth-child(50) {
+  transform: rotateY(247.5deg) translate(8.53281em) rotate(247.5deg);
+}
+.ring--penta:nth-child(49) {
+  transform: rotateY(249.75deg) translate(8.51307em) rotate(249.75deg);
+}
+.ring--penta:nth-child(48) {
+  transform: rotateY(252deg) translate(8.50651em) rotate(252deg);
+}
+.ring--penta:nth-child(47) {
+  transform: rotateY(254.25deg) translate(8.51307em) rotate(254.25deg);
+}
+.ring--penta:nth-child(46) {
+  transform: rotateY(256.5deg) translate(8.53281em) rotate(256.5deg);
+}
+.ring--penta:nth-child(45) {
+  transform: rotateY(258.75deg) translate(8.56588em) rotate(258.75deg);
+}
+.ring--penta:nth-child(44) {
+  transform: rotateY(261deg) translate(8.61254em) rotate(261deg);
+}
+.ring--penta:nth-child(43) {
+  transform: rotateY(263.25deg) translate(8.67316em) rotate(263.25deg);
+}
+.ring--penta:nth-child(42) {
+  transform: rotateY(265.5deg) translate(8.74822em) rotate(265.5deg);
+}
+.ring--penta:nth-child(41) {
+  transform: rotateY(267.75deg) translate(8.83834em) rotate(267.75deg);
+}
+.ring--penta:nth-child(40) {
+  transform: rotateY(270deg) translate(8.94427em) rotate(270deg);
+}
+.ring--penta:nth-child(39) {
+  transform: rotateY(272.25deg) translate(9.06692em) rotate(272.25deg);
+}
+.ring--penta:nth-child(38) {
+  transform: rotateY(274.5deg) translate(9.20738em) rotate(274.5deg);
+}
+.ring--penta:nth-child(37) {
+  transform: rotateY(276.75deg) translate(9.36692em) rotate(276.75deg);
+}
+.ring--penta:nth-child(36) {
+  transform: rotateY(279deg) translate(9.54708em) rotate(279deg);
+}
+.ring--penta:nth-child(35) {
+  transform: rotateY(281.25deg) translate(9.74962em) rotate(281.25deg);
+}
+.ring--penta:nth-child(34) {
+  transform: rotateY(283.5deg) translate(9.97667em) rotate(283.5deg);
+}
+.ring--penta:nth-child(33) {
+  transform: rotateY(285.75deg) translate(10.23069em) rotate(285.75deg);
+}
+.ring--penta:nth-child(32) {
+  transform: rotateY(288deg) translate(10.51462em) rotate(288deg);
+}
+.ring--penta:nth-child(31) {
+  transform: rotateY(290.25deg) translate(10.23069em) rotate(290.25deg);
+}
+.ring--penta:nth-child(30) {
+  transform: rotateY(292.5deg) translate(9.97667em) rotate(292.5deg);
+}
+.ring--penta:nth-child(29) {
+  transform: rotateY(294.75deg) translate(9.74962em) rotate(294.75deg);
+}
+.ring--penta:nth-child(28) {
+  transform: rotateY(297deg) translate(9.54708em) rotate(297deg);
+}
+.ring--penta:nth-child(27) {
+  transform: rotateY(299.25deg) translate(9.36692em) rotate(299.25deg);
+}
+.ring--penta:nth-child(26) {
+  transform: rotateY(301.5deg) translate(9.20738em) rotate(301.5deg);
+}
+.ring--penta:nth-child(25) {
+  transform: rotateY(303.75deg) translate(9.06692em) rotate(303.75deg);
+}
+.ring--penta:nth-child(24) {
+  transform: rotateY(306deg) translate(8.94427em) rotate(306deg);
+}
+.ring--penta:nth-child(23) {
+  transform: rotateY(308.25deg) translate(8.83834em) rotate(308.25deg);
+}
+.ring--penta:nth-child(22) {
+  transform: rotateY(310.5deg) translate(8.74822em) rotate(310.5deg);
+}
+.ring--penta:nth-child(21) {
+  transform: rotateY(312.75deg) translate(8.67316em) rotate(312.75deg);
+}
+.ring--penta:nth-child(20) {
+  transform: rotateY(315deg) translate(8.61254em) rotate(315deg);
+}
+.ring--penta:nth-child(19) {
+  transform: rotateY(317.25deg) translate(8.56588em) rotate(317.25deg);
+}
+.ring--penta:nth-child(18) {
+  transform: rotateY(319.5deg) translate(8.53281em) rotate(319.5deg);
+}
+.ring--penta:nth-child(17) {
+  transform: rotateY(321.75deg) translate(8.51307em) rotate(321.75deg);
+}
+.ring--penta:nth-child(16) {
+  transform: rotateY(324deg) translate(8.50651em) rotate(324deg);
+}
+.ring--penta:nth-child(15) {
+  transform: rotateY(326.25deg) translate(8.51307em) rotate(326.25deg);
+}
+.ring--penta:nth-child(14) {
+  transform: rotateY(328.5deg) translate(8.53281em) rotate(328.5deg);
+}
+.ring--penta:nth-child(13) {
+  transform: rotateY(330.75deg) translate(8.56588em) rotate(330.75deg);
+}
+.ring--penta:nth-child(12) {
+  transform: rotateY(333deg) translate(8.61254em) rotate(333deg);
+}
+.ring--penta:nth-child(11) {
+  transform: rotateY(335.25deg) translate(8.67316em) rotate(335.25deg);
+}
+.ring--penta:nth-child(10) {
+  transform: rotateY(337.5deg) translate(8.74822em) rotate(337.5deg);
+}
+.ring--penta:nth-child(9) {
+  transform: rotateY(339.75deg) translate(8.83834em) rotate(339.75deg);
+}
+.ring--penta:nth-child(8) {
+  transform: rotateY(342deg) translate(8.94427em) rotate(342deg);
+}
+.ring--penta:nth-child(7) {
+  transform: rotateY(344.25deg) translate(9.06692em) rotate(344.25deg);
+}
+.ring--penta:nth-child(6) {
+  transform: rotateY(346.5deg) translate(9.20738em) rotate(346.5deg);
+}
+.ring--penta:nth-child(5) {
+  transform: rotateY(348.75deg) translate(9.36692em) rotate(348.75deg);
+}
+.ring--penta:nth-child(4) {
+  transform: rotateY(351deg) translate(9.54708em) rotate(351deg);
+}
+.ring--penta:nth-child(3) {
+  transform: rotateY(353.25deg) translate(9.74962em) rotate(353.25deg);
+}
+.ring--penta:nth-child(2) {
+  transform: rotateY(355.5deg) translate(9.97667em) rotate(355.5deg);
+}
+.ring--penta:nth-child(1) {
+  transform: rotateY(357.75deg) translate(10.23069em) rotate(357.75deg);
+}
+
+.strip {
+  margin: -2.5em -0.125em;
+  width: 0.25em;
+  height: 5em;
+}
+.strip:before, .strip:after {
+  margin: -2.5em -0.125em;
+  width: 0.25em;
+  height: 5em;
+  transform: rotateY(-90deg);
+  background: green;
+  content: '';
+}
+.strip:after {
+  transform: rotateY(90deg);
+}
+.strip:nth-child(1) {
+  transform: rotate(0deg) translate(3.44095em);
+}
+.strip:nth-child(2) {
+  transform: rotate(72deg) translate(3.44095em);
+}
+.strip:nth-child(3) {
+  transform: rotate(144deg) translate(3.44095em);
+}
+.strip:nth-child(4) {
+  transform: rotate(216deg) translate(3.44095em);
+}
+.strip:nth-child(5) {
+  transform: rotate(288deg) translate(3.44095em);
+}
+
+</style></head><body>
+<div class='torus torus--polygonal'>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+  <div class='ring ring--penta'>
+    <div class='rotor'>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+      <div class='strip'></div>
+    </div>
+  </div>
+</div>
+</body></html>
