@@ -55,6 +55,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
 #include "NativeKeyBindings.h"
+#include "MacThemeGeometryType.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -1627,9 +1628,9 @@ static int32_t FindTitlebarBottom(const nsTArray<nsIWidget::ThemeGeometry>& aThe
                                   int32_t aWindowWidth) {
   int32_t titlebarBottom = 0;
   for (auto& g : aThemeGeometries) {
-    if ((g.mType == nsNativeThemeCocoa::eThemeGeometryTypeTitlebar ||
-         g.mType == nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarLight ||
-         g.mType == nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarDark) &&
+    if ((g.mType == eThemeGeometryTypeTitlebar ||
+         g.mType == eThemeGeometryTypeVibrantTitlebarLight ||
+         g.mType == eThemeGeometryTypeVibrantTitlebarDark) &&
         g.mRect.X() <= 0 && g.mRect.XMost() >= aWindowWidth && g.mRect.Y() <= 0) {
       titlebarBottom = std::max(titlebarBottom, g.mRect.YMost());
     }
@@ -1642,7 +1643,7 @@ static int32_t FindUnifiedToolbarBottom(const nsTArray<nsIWidget::ThemeGeometry>
   int32_t unifiedToolbarBottom = aTitlebarBottom;
   for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
     const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
-    if ((g.mType == nsNativeThemeCocoa::eThemeGeometryTypeToolbar) && g.mRect.X() <= 0 &&
+    if ((g.mType == eThemeGeometryTypeToolbar) && g.mRect.X() <= 0 &&
         g.mRect.XMost() >= aWindowWidth && g.mRect.Y() <= aTitlebarBottom) {
       unifiedToolbarBottom = std::max(unifiedToolbarBottom, g.mRect.YMost());
     }
@@ -1674,8 +1675,7 @@ void nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeo
   int32_t titlebarBottom = FindTitlebarBottom(aThemeGeometries, windowWidth);
   int32_t unifiedToolbarBottom =
       FindUnifiedToolbarBottom(aThemeGeometries, windowWidth, titlebarBottom);
-  int32_t toolboxBottom =
-      FindFirstRectOfType(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeToolbox).YMost();
+  int32_t toolboxBottom = FindFirstRectOfType(aThemeGeometries, eThemeGeometryTypeToolbox).YMost();
 
   ToolbarWindow* win = (ToolbarWindow*)[mView window];
   int32_t titlebarHeight = CocoaPointsToDevPixels([win titlebarHeight]);
@@ -1689,32 +1689,32 @@ void nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeo
 
   // Update titlebar control offsets.
   LayoutDeviceIntRect windowButtonRect =
-      FindFirstRectOfType(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeWindowButtons);
+      FindFirstRectOfType(aThemeGeometries, eThemeGeometryTypeWindowButtons);
   [win placeWindowButtons:[mView convertRect:DevPixelsToCocoaPoints(windowButtonRect) toView:nil]];
 }
 
 static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
     nsITheme::ThemeGeometryType aThemeGeometryType) {
   switch (aThemeGeometryType) {
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyLight:
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarLight:
+    case eThemeGeometryTypeVibrancyLight:
+    case eThemeGeometryTypeVibrantTitlebarLight:
       return Some(VibrancyType::LIGHT);
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrancyDark:
-    case nsNativeThemeCocoa::eThemeGeometryTypeVibrantTitlebarDark:
+    case eThemeGeometryTypeVibrancyDark:
+    case eThemeGeometryTypeVibrantTitlebarDark:
       return Some(VibrancyType::DARK);
-    case nsNativeThemeCocoa::eThemeGeometryTypeSheet:
+    case eThemeGeometryTypeSheet:
       return Some(VibrancyType::SHEET);
-    case nsNativeThemeCocoa::eThemeGeometryTypeTooltip:
+    case eThemeGeometryTypeTooltip:
       return Some(VibrancyType::TOOLTIP);
-    case nsNativeThemeCocoa::eThemeGeometryTypeMenu:
+    case eThemeGeometryTypeMenu:
       return Some(VibrancyType::MENU);
-    case nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem:
+    case eThemeGeometryTypeHighlightedMenuItem:
       return Some(VibrancyType::HIGHLIGHTED_MENUITEM);
-    case nsNativeThemeCocoa::eThemeGeometryTypeSourceList:
+    case eThemeGeometryTypeSourceList:
       return Some(VibrancyType::SOURCE_LIST);
-    case nsNativeThemeCocoa::eThemeGeometryTypeSourceListSelection:
+    case eThemeGeometryTypeSourceListSelection:
       return Some(VibrancyType::SOURCE_LIST_SELECTION);
-    case nsNativeThemeCocoa::eThemeGeometryTypeActiveSourceListSelection:
+    case eThemeGeometryTypeActiveSourceListSelection:
       return Some(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION);
     default:
       return Nothing();

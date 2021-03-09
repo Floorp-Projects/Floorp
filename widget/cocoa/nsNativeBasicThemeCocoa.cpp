@@ -7,6 +7,8 @@
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/ServoStyleConsts.h"
+#include "MacThemeGeometryType.h"
 
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   static mozilla::StaticRefPtr<nsITheme> gInstance;
@@ -31,6 +33,29 @@ nsNativeBasicThemeCocoa::GetMinimumWidgetSize(
   *aResult = ScrollbarDrawingMac::GetMinimumWidgetSize(aAppearance, aFrame,
                                                        dpiRatio.scale);
   return NS_OK;
+}
+
+bool nsNativeBasicThemeCocoa::ThemeSupportsWidget(nsPresContext* aPc,
+                                                  nsIFrame* aFrame,
+                                                  StyleAppearance aAppearance) {
+  switch (aAppearance) {
+    case StyleAppearance::Tooltip:
+      return true;
+    default:
+      break;
+  }
+  return nsNativeBasicTheme::ThemeSupportsWidget(aPc, aFrame, aAppearance);
+}
+
+nsITheme::ThemeGeometryType nsNativeBasicThemeCocoa::ThemeGeometryTypeForWidget(
+    nsIFrame* aFrame, StyleAppearance aAppearance) {
+  switch (aAppearance) {
+    case StyleAppearance::Tooltip:
+      return eThemeGeometryTypeTooltip;
+    default:
+      break;
+  }
+  return nsNativeBasicTheme::ThemeGeometryTypeForWidget(aFrame, aAppearance);
 }
 
 auto nsNativeBasicThemeCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
