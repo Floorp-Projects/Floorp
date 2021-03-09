@@ -16,6 +16,7 @@ tooltip {
   padding: 2px 3px;
   max-width: 40em;
   color: InfoText;
+  background-color: InfoBackground;
   font: message-box;
   cursor: default;
 }
