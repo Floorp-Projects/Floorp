@@ -27,7 +27,7 @@ load 499844-1.html
 load 503709-1.xhtml
 load 513375-1.xhtml
 load 535632-1.xhtml
-load 574558-1.xhtml
+asserts(1) load 574558-1.xhtml # assertion in constructor of TextFragmentData (initialized for non-editable content)
 load 580151-1.xhtml
 load 582138-1.xhtml
 load 612565-1.html
@@ -82,7 +82,7 @@ load 1348851.html
 load 1350772.html
 load 1364133.html
 load 1366176.html
-asserts(2) load 1375131.html # assertion in WSRunScanner::GetEditableBlockParentOrTopmostEditableInlineContent()
+load 1375131.html
 load 1381541.html
 load 1383747.html
 load 1383755.html
@@ -138,4 +138,4 @@ load 1659717.html
 load 1663725.html # throws
 load 1655508.html
 pref(dom.document.exec_command.nested_calls_allowed,true) load 1666556.html
-asserts(2) load 1677566.html # assertion in constructor of TextFragmentData (initialized for non-editable content)
+asserts(1) load 1677566.html # assertion in constructor of TextFragmentData (initialized for non-editable content)

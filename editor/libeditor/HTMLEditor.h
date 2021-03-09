@@ -631,7 +631,9 @@ class HTMLEditor final : public TextEditor,
    * Get an active editor's editing host in DOM window.  If this editor isn't
    * active in the DOM window, this returns NULL.
    */
-  Element* GetActiveEditingHost() const;
+  enum class LimitInBodyElement { No, Yes };
+  Element* GetActiveEditingHost(
+      LimitInBodyElement aLimitInBodyElement = LimitInBodyElement::Yes) const;
 
   /**
    * Retruns true if we're in designMode.
