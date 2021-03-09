@@ -39,12 +39,12 @@ define(function(require, exports, module) {
     const { name } = object;
 
     let symbolText = name || "";
-    if (name && name.type && name.type === "longString") {
+    if (name && name !== "Symbol.iterator" && name !== "Symbol.asyncIterator") {
       symbolText = StringRep({
         object: symbolText,
         shouldCrop: true,
         cropLimit: MAX_STRING_LENGTH,
-        useQuotes: false,
+        useQuotes: true,
       });
     }
 
@@ -52,7 +52,7 @@ define(function(require, exports, module) {
       {
         shouldRenderTooltip,
         className,
-        symbolText,
+        name,
       },
       object
     );
@@ -61,12 +61,12 @@ define(function(require, exports, module) {
   }
 
   function getElementConfig(opts, object) {
-    const { shouldRenderTooltip, className, symbolText } = opts;
+    const { shouldRenderTooltip, className, name } = opts;
 
     return {
       "data-link-actor-id": object.actor,
       className: className,
-      title: shouldRenderTooltip ? `Symbol(${symbolText})` : null,
+      title: shouldRenderTooltip ? `Symbol(${name})` : null,
     };
   }
 

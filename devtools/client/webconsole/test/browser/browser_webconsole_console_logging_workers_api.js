@@ -75,7 +75,7 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
     });
 
     const symbolMessage = await waitFor(() =>
-      findMessage(hud, "Symbol(logged-symbol-from-worker)")
+      findMessage(hud, 'Symbol("logged-symbol-from-worker")')
     );
     ok(symbolMessage, "Symbol logged from worker is visible in the console");
   }
