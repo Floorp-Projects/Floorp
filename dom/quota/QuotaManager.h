@@ -229,11 +229,11 @@ class QuotaManager final : public BackgroundThreadObject {
 
   // XXX Remove aPersistenceType argument once the persistence type is stored
   // in the metadata file.
-  Result<FullOriginMetadata, nsresult> GetDirectoryMetadataWithOriginMetadata2(
+  Result<FullOriginMetadata, nsresult> LoadFullOriginMetadata(
       nsIFile* aDirectory, PersistenceType aPersistenceType);
 
-  Result<FullOriginMetadata, nsresult>
-  GetDirectoryMetadataWithOriginMetadata2WithRestore(nsIFile* aDirectory);
+  Result<FullOriginMetadata, nsresult> LoadFullOriginMetadataWithRestore(
+      nsIFile* aDirectory);
 
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in
