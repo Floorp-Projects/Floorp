@@ -8,6 +8,7 @@
 
 #include "sandboxBroker.h"
 
+#include <shlobj.h>
 #include <string>
 
 #include "base/win/windows_version.h"
@@ -777,6 +778,42 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   MOZ_RELEASE_ASSERT(
       sandbox::SBOX_ALL_OK == result,
       "With these static arguments AddRule should never fail, what happened?");
+
+  if (aSandboxLevel >= 20) {
+    // Content process still needs to be able to read fonts.
+    wchar_t* fontsPath;
+    if (SUCCEEDED(
+            ::SHGetKnownFolderPath(FOLDERID_Fonts, 0, nullptr, &fontsPath))) {
+      std::wstring fontsStr = fontsPath;
+      ::CoTaskMemFree(fontsPath);
+      result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                                sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                                fontsStr.c_str());
+      if (sandbox::SBOX_ALL_OK != result) {
+        NS_ERROR("Failed to add fonts dir read access policy rule.");
+        LOG_E("Failed (ResultCode %d) to add read access to: %S", result,
+              fontsStr.c_str());
+      }
+
+      fontsStr += L"\\*";
+      result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                                sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                                fontsStr.c_str());
+      if (sandbox::SBOX_ALL_OK != result) {
+        NS_ERROR("Failed to add fonts read access policy rule.");
+        LOG_E("Failed (ResultCode %d) to add read access to: %S", result,
+              fontsStr.c_str());
+      }
+    }
+
+    // We still currently create IPC named pipes in the content process.
+    result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_NAMED_PIPES,
+                              sandbox::TargetPolicy::NAMEDPIPES_ALLOW_ANY,
+                              L"\\\\.\\pipe\\chrome.*");
+    MOZ_RELEASE_ASSERT(
+        sandbox::SBOX_ALL_OK == result,
+        "With these static arguments AddRule should never fail.");
+  }
 }
 
 void SandboxBroker::SetSecurityLevelForGPUProcess(
