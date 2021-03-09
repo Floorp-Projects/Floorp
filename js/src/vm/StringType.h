@@ -1518,20 +1518,18 @@ using PropertyNameVector = JS::GCVector<PropertyName*>;
 template <typename CharT>
 void CopyChars(CharT* dest, const JSLinearString& str);
 
-static inline UniqueChars StringToNewUTF8CharsZ(JSContext* maybecx,
-                                                JSString& str) {
+static inline UniqueChars StringToNewUTF8CharsZ(JSContext* cx, JSString& str) {
   JS::AutoCheckCannotGC nogc;
 
-  JSLinearString* linear = str.ensureLinear(maybecx);
+  JSLinearString* linear = str.ensureLinear(cx);
   if (!linear) {
     return nullptr;
   }
 
   return UniqueChars(
       linear->hasLatin1Chars()
-          ? JS::CharsToNewUTF8CharsZ(maybecx, linear->latin1Range(nogc)).c_str()
-          : JS::CharsToNewUTF8CharsZ(maybecx, linear->twoByteRange(nogc))
-                .c_str());
+          ? JS::CharsToNewUTF8CharsZ(cx, linear->latin1Range(nogc)).c_str()
+          : JS::CharsToNewUTF8CharsZ(cx, linear->twoByteRange(nogc)).c_str());
 }
 
 /**
