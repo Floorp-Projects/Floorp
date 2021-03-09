@@ -15,7 +15,7 @@ const workerDescriptorSpec = generateActorSpec({
     },
     detach: {
       request: {},
-      response: RetVal("json"),
+      response: {},
     },
     getTarget: {
       request: {},

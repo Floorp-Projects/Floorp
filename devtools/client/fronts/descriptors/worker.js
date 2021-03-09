@@ -107,9 +107,8 @@ class WorkerDescriptorFront extends DescriptorMixin(
   }
 
   async detach() {
-    let response;
     try {
-      response = await super.detach();
+      await super.detach();
 
       if (this.registration) {
         // Bug 1644772 - Sometimes, the Browser Toolbox fails opening with a connection timeout
@@ -120,8 +119,6 @@ class WorkerDescriptorFront extends DescriptorMixin(
     } catch (e) {
       this.logDetachError(e, "worker");
     }
-
-    return response;
   }
 
   async _getRegistrationIfActive() {
