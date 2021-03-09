@@ -158,6 +158,18 @@ static XDRResult XDRSpanContent(XDRState<mode>* xdr, mozilla::Span<T>& span) {
 }
 
 template <XDRMode mode>
+/* static */ XDRResult StencilXDR::codeBigInt(XDRState<mode>* xdr,
+                                              BigIntStencil& stencil) {
+  uint32_t size;
+  if (mode == XDR_ENCODE) {
+    size = stencil.source_.size();
+  }
+  MOZ_TRY(xdr->codeUint32(&size));
+
+  return XDRSpanContent(xdr, stencil.source_, size);
+}
+
+template <XDRMode mode>
 static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
                                           StencilModuleMetadata& stencil) {
   MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
@@ -249,18 +261,6 @@ template <XDRMode mode>
   MOZ_TRY(XDRSpanContent(xdr, stencil.code_));
 
   return Ok();
-}
-
-template <XDRMode mode>
-/* static */ XDRResult StencilXDR::BigInt(XDRState<mode>* xdr,
-                                          BigIntStencil& stencil) {
-  uint32_t size;
-  if (mode == XDR_ENCODE) {
-    size = stencil.source_.size();
-  }
-  MOZ_TRY(xdr->codeUint32(&size));
-
-  return XDRSpanContent(xdr, stencil.source_, size);
 }
 
 template <XDRMode mode>
@@ -536,7 +536,7 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
 
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.bigIntData, bigIntSize));
   for (auto& entry : stencil.bigIntData) {
-    MOZ_TRY(StencilXDR::BigInt(xdr, entry));
+    MOZ_TRY(StencilXDR::codeBigInt(xdr, entry));
   }
 
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.objLiteralData, objLiteralSize));
