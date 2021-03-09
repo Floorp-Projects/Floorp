@@ -1137,12 +1137,9 @@ def include_project_configure(project, build_env, help):
     return path
 
 
-@depends(include_project_configure, check_build_environment)
-def build_project(include_project_configure, build_env):
-    ret = os.path.dirname(
-        os.path.relpath(include_project_configure, build_env.topsrcdir)
-    )
-    return ret
+@depends("--enable-project")
+def build_project(project):
+    return project[0]
 
 
 set_config("MOZ_BUILD_APP", build_project)
