@@ -1102,18 +1102,13 @@ class EditorUtils final {
    */
   static bool IsEditableContent(const nsIContent& aContent,
                                 EditorType aEditorType) {
-    if ((aEditorType == EditorType::HTML && !aContent.IsEditable()) ||
-        EditorUtils::IsPaddingBRElementForEmptyEditor(aContent)) {
+    if (aEditorType == EditorType::HTML && !aContent.IsEditable()) {
+      // FIXME(emilio): Why only for HTML editors? All content from the root
+      // content in text editors is also editable, so afaict we can remove the
+      // special-case.
       return false;
     }
-
-    // In HTML editors, if we're dealing with an element, then ask it
-    // whether it's editable.
-    if (aContent.IsElement()) {
-      return aEditorType == EditorType::HTML ? aContent.IsEditable() : true;
-    }
-    // Text nodes are considered to be editable by both typed of editors.
-    return aContent.IsText();
+    return IsElementOrText(aContent);
   }
 
   /**
@@ -1125,8 +1120,7 @@ class EditorUtils final {
     if (aContent.IsText()) {
       return true;
     }
-    return aContent.IsElement() &&
-           !EditorUtils::IsPaddingBRElementForEmptyEditor(aContent);
+    return aContent.IsElement() && !IsPaddingBRElementForEmptyEditor(aContent);
   }
 
   /**
