@@ -9,8 +9,6 @@ minutes of work, spread out over an hour or two.
 Requirements
 ------------
 
--  **Processor:** Intel CPUs are supported (ARM is possible if you follow
-   `these technical instructions <https://wiki.mozilla.org/Build/Firefox_For_Apple_Arm>`_).
 -  **Memory:** 4GB RAM minimum, 8GB+ recommended.
 -  **Disk Space:** At least 30GB of free disk space.
 -  **Operating System:** macOS 10.12 or later. It is advisable to
