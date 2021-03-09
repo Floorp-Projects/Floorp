@@ -177,8 +177,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
       nsIFrame*, StyleAppearance) override;*/
   ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
                                                StyleAppearance) override;
-  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame*,
-                           StyleAppearance) override;
+  bool ThemeSupportsWidget(nsPresContext*, nsIFrame*, StyleAppearance) override;
   bool WidgetIsContainer(StyleAppearance) override;
   bool ThemeDrawsFocusForWidget(StyleAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
