@@ -35,8 +35,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "TabTargetFactory",
-  "devtools/client/framework/tab-target-factory",
+  "TabDescriptorFactory",
+  "devtools/client/framework/tab-descriptor-factory",
   true
 );
 loader.lazyRequireGetter(
@@ -129,7 +129,11 @@ exports.menuitems = [
     l10nKey: "eyedropper",
     async oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
-      const target = await TabTargetFactory.forTab(window.gBrowser.selectedTab);
+
+      const descriptor = await TabDescriptorFactory.createDescriptorForTab(
+        window.gBrowser.selectedTab
+      );
+      const target = await descriptor.getTarget();
       await target.attach();
       const inspectorFront = await target.getFront("inspector");
 
