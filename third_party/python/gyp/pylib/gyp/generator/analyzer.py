@@ -524,11 +524,6 @@ def _WriteOutput(params, **values):
     print('The following targets were not found:')
     for target in values['invalid_targets']:
       print('\t', target)
-  if 'build_targets' in values:
-    values['build_targets'].sort()
-    print('Targets that require a build:')
-    for target in values['build_targets']:
-      print('\t', target)
   if 'compile_targets' in values:
     values['compile_targets'].sort()
     print('Targets that need to be built:')

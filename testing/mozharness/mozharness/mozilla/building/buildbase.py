@@ -785,10 +785,6 @@ items from that key's value."
 
         args = ["build", "-v"]
 
-        custom_build_targets = self.config.get("build_targets")
-        if custom_build_targets:
-            args += custom_build_targets
-
         # This will error on non-0 exit code.
         self._run_mach_command_in_build_env(args)
 
