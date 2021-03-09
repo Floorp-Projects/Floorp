@@ -43,6 +43,7 @@ py2:
         - python/mozlint
         - python/mozperftest
         - python/mozrelease/mozrelease/partner_repack.py
+        - taskcluster/mach_commands.py
         - taskcluster/taskgraph/actions/isolate_test.py
         - taskcluster/test
         - testing/performance
