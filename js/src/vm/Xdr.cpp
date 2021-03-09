@@ -20,6 +20,7 @@
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, BorrowingCompilationStencil}
+#include "frontend/StencilXdr.h"          // frontend::StencilXDR
 #include "js/BuildId.h"                   // JS::BuildIdCharVector
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
@@ -346,7 +347,7 @@ XDRResult XDRStencilEncoder::codeStencil(
     return fail(JS::TranscodeResult::Failure);
   }
 
-  MOZ_TRY(XDRCheckCompilationStencil(this, stencil));
+  MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, stencil));
 
   MOZ_TRY(XDRStencilHeader(this, &input.options, stencil.source));
   MOZ_TRY(XDRCompilationStencil(this, stencil));
@@ -372,7 +373,7 @@ XDRResult XDRIncrementalStencilEncoder::setInitial(
     return fail(JS::TranscodeResult::Failure);
   }
 
-  MOZ_TRY(XDRCheckCompilationStencil(this, *initial));
+  MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, *initial));
 
   merger_ = cx()->new_<frontend::CompilationStencilMerger>();
   if (!merger_) {
