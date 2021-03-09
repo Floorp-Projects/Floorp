@@ -41,6 +41,7 @@ class CookieEntry : public CookieKey {
   ~CookieEntry() = default;
 
   inline ArrayType& GetCookies() { return mCookies; }
+  inline const ArrayType& GetCookies() const { return mCookies; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 

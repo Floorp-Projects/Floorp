@@ -808,7 +808,7 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
   });
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAdoptedStyleSheets);
 
-  for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = tmp->mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
     iter.Get()->Traverse(&cb);
   }
 

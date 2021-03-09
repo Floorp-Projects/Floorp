@@ -377,6 +377,31 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   }
 
  public:
+  class ConstIterator {
+   public:
+    explicit ConstIterator(nsTHashtable* aTable)
+        : mBaseIterator(&aTable->mTable) {}
+    ~ConstIterator() = default;
+
+    KeyType Key() const { return Get()->GetKey(); }
+
+    const EntryType* Get() const {
+      return static_cast<const EntryType*>(mBaseIterator.Get());
+    }
+
+    bool Done() const { return mBaseIterator.Done(); }
+    void Next() { mBaseIterator.Next(); }
+
+    ConstIterator() = delete;
+    ConstIterator(const ConstIterator&) = delete;
+    ConstIterator(ConstIterator&& aOther) = delete;
+    ConstIterator& operator=(const ConstIterator&) = delete;
+    ConstIterator& operator=(ConstIterator&&) = delete;
+
+   protected:
+    PLDHashTable::Iterator mBaseIterator;
+  };
+
   // This is an iterator that also allows entry removal. Example usage:
   //
   //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
@@ -385,27 +410,23 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   //     // ... possibly call iter.Remove() once ...
   //   }
   //
-  class Iterator : public PLDHashTable::Iterator {
+  class Iterator final : public ConstIterator {
    public:
-    typedef PLDHashTable::Iterator Base;
+    using ConstIterator::ConstIterator;
 
-    explicit Iterator(nsTHashtable* aTable) : Base(&aTable->mTable) {}
-    Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
-    ~Iterator() = default;
+    using ConstIterator::Get;
 
-    EntryType* Get() const { return static_cast<EntryType*>(Base::Get()); }
+    EntryType* Get() const {
+      return static_cast<EntryType*>(this->mBaseIterator.Get());
+    }
 
-   private:
-    Iterator() = delete;
-    Iterator(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&&) = delete;
+    void Remove() { this->mBaseIterator.Remove(); }
   };
 
   Iterator Iter() { return Iterator(this); }
 
-  Iterator ConstIter() const {
-    return Iterator(const_cast<nsTHashtable*>(this));
+  ConstIterator ConstIter() const {
+    return ConstIterator(const_cast<nsTHashtable*>(this));
   }
 
   using const_iterator = ::detail::nsTHashtable_base_iterator<const EntryType>;
@@ -772,27 +793,48 @@ class nsTHashtable<nsPtrHashKey<T>>
   }
 
  public:
-  class Iterator : public Base::Iterator {
+  class ConstIterator {
    public:
-    typedef nsTHashtable::Base::Iterator Base;
+    explicit ConstIterator(nsTHashtable* aTable)
+        : mBaseIterator(&aTable->mTable) {}
+    ~ConstIterator() = default;
 
-    explicit Iterator(nsTHashtable* aTable) : Base(aTable) {}
-    Iterator(Iterator&& aOther) : Base(std::move(aOther)) {}
-    ~Iterator() = default;
+    KeyType Key() const { return Get()->GetKey(); }
 
-    EntryType* Get() const { return reinterpret_cast<EntryType*>(Base::Get()); }
+    const EntryType* Get() const {
+      return static_cast<const EntryType*>(mBaseIterator.Get());
+    }
 
-   private:
-    Iterator() = delete;
-    Iterator(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&) = delete;
-    Iterator& operator=(Iterator&&) = delete;
+    bool Done() const { return mBaseIterator.Done(); }
+    void Next() { mBaseIterator.Next(); }
+
+    ConstIterator() = delete;
+    ConstIterator(const ConstIterator&) = delete;
+    ConstIterator(ConstIterator&& aOther) = delete;
+    ConstIterator& operator=(const ConstIterator&) = delete;
+    ConstIterator& operator=(ConstIterator&&) = delete;
+
+   protected:
+    PLDHashTable::Iterator mBaseIterator;
+  };
+
+  class Iterator final : public ConstIterator {
+   public:
+    using ConstIterator::ConstIterator;
+
+    using ConstIterator::Get;
+
+    EntryType* Get() const {
+      return static_cast<EntryType*>(this->mBaseIterator.Get());
+    }
+
+    void Remove() { this->mBaseIterator.Remove(); }
   };
 
   Iterator Iter() { return Iterator(this); }
 
-  Iterator ConstIter() const {
-    return Iterator(const_cast<nsTHashtable*>(this));
+  ConstIterator ConstIter() const {
+    return ConstIterator(const_cast<nsTHashtable*>(this));
   }
 
   using const_iterator = ::detail::nsTHashtable_base_iterator<const EntryType>;

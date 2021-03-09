@@ -3964,7 +3964,7 @@ static unsigned MediaElementTableCount(HTMLMediaElement* aElement,
   uint32_t uriCount = 0;
   uint32_t otherCount = 0;
   for (auto it = gElementTable->ConstIter(); !it.Done(); it.Next()) {
-    MediaElementSetForURI* entry = it.Get();
+    const MediaElementSetForURI* entry = it.Get();
     uint32_t count = 0;
     for (const auto& elem : entry->mElements) {
       if (elem == aElement) {
