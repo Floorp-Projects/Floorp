@@ -9,6 +9,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 var gAutocompletePopup = Services.ww.activeWindow.document.getElementById(
   "PopupAutoComplete"
@@ -132,11 +135,29 @@ var ParentUtils = {
   },
 
   getPopupState() {
-    sendAsyncMessage("gotPopupState", {
-      open: gAutocompletePopup.popupOpen,
-      selectedIndex: gAutocompletePopup.selectedIndex,
-      direction: gAutocompletePopup.style.direction,
-    });
+    function reply() {
+      sendAsyncMessage("gotPopupState", {
+        open: gAutocompletePopup.popupOpen,
+        selectedIndex: gAutocompletePopup.selectedIndex,
+        direction: gAutocompletePopup.style.direction,
+      });
+    }
+    // If the popup state is stable, we can reply immediately.  However, if
+    // it's showing or hiding, we should wait its finish and then, send the
+    // reply.
+    if (
+      gAutocompletePopup.state == "open" ||
+      gAutocompletePopup.state == "closed"
+    ) {
+      reply();
+      return;
+    }
+    const stablerState =
+      gAutocompletePopup.state == "showing" ? "open" : "closed";
+    TestUtils.waitForCondition(
+      () => gAutocompletePopup.state == stablerState,
+      `Waiting for autocomplete popup getting "${stablerState}" state`
+    ).then(reply);
   },
 
   observe(subject, topic, data) {
