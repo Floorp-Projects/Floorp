@@ -112,6 +112,10 @@ if (
     "firefox-compact-proton-dark@mozilla.org",
     "chrome://mozapps/content/extensions/firefox-compact-dark.svg"
   );
+  BUILTIN_THEME_PREVIEWS.set(
+    "firefox-compact-proton-light@mozilla.org",
+    "chrome://mozapps/content/extensions/firefox-compact-light.svg"
+  );
 }
 
 const PERMISSION_MASKS = {

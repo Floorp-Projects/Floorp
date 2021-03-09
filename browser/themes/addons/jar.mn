@@ -19,3 +19,7 @@ browser.jar:
   content/builtin-themes/light                     (light/*.svg)
   content/builtin-themes/light                     (light/*.css)
   content/builtin-themes/light/manifest.json       (light/manifest.json)
+
+  content/builtin-themes/proton-light               (proton-light/*.svg)
+  content/builtin-themes/proton-light               (proton-light/*.css)
+  content/builtin-themes/proton-light/manifest.json (proton-light/manifest.json)
