@@ -40,6 +40,7 @@ job-defaults:
             linux1804-64-shippable-qr/opt: ['mozilla-central']
             windows10-64-shippable-qr/opt: ['mozilla-central']
             default: []
+    python-3: true
 
 
 awsy:
