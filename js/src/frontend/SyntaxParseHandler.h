@@ -258,8 +258,6 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-  Node newElision() { return NodeGeneric; }
-
   UnaryNodeType newDelete(uint32_t begin, Node expr) {
     return NodeUnparenthesizedUnary;
   }
