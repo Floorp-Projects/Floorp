@@ -170,6 +170,26 @@ template <XDRMode mode>
 }
 
 template <XDRMode mode>
+/* static */ XDRResult StencilXDR::codeObjLiteral(XDRState<mode>* xdr,
+                                                  ObjLiteralStencil& stencil) {
+  uint8_t flags = 0;
+
+  if (mode == XDR_ENCODE) {
+    flags = stencil.flags_.serialize();
+  }
+  MOZ_TRY(xdr->codeUint8(&flags));
+  if (mode == XDR_DECODE) {
+    stencil.flags_.deserialize(flags);
+  }
+
+  MOZ_TRY(xdr->codeUint32(&stencil.propertyCount_));
+
+  MOZ_TRY(XDRSpanContent(xdr, stencil.code_));
+
+  return Ok();
+}
+
+template <XDRMode mode>
 static XDRResult XDRStencilModuleMetadata(XDRState<mode>* xdr,
                                           StencilModuleMetadata& stencil) {
   MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
@@ -239,26 +259,6 @@ template <XDRMode mode>
   // a distinguishing prefix.
   uint32_t totalLength = SizeOfParserScopeData(stencil.kind_, length);
   MOZ_TRY(xdr->borrowedData(&baseScopeData, totalLength));
-
-  return Ok();
-}
-
-template <XDRMode mode>
-/* static */ XDRResult StencilXDR::ObjLiteral(XDRState<mode>* xdr,
-                                              ObjLiteralStencil& stencil) {
-  uint8_t flags = 0;
-
-  if (mode == XDR_ENCODE) {
-    flags = stencil.flags_.serialize();
-  }
-  MOZ_TRY(xdr->codeUint8(&flags));
-  if (mode == XDR_DECODE) {
-    stencil.flags_.deserialize(flags);
-  }
-
-  MOZ_TRY(xdr->codeUint32(&stencil.propertyCount_));
-
-  MOZ_TRY(XDRSpanContent(xdr, stencil.code_));
 
   return Ok();
 }
@@ -541,7 +541,7 @@ XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
 
   MOZ_TRY(XDRSpanInitialized(xdr, stencil.objLiteralData, objLiteralSize));
   for (auto& entry : stencil.objLiteralData) {
-    MOZ_TRY(StencilXDR::ObjLiteral(xdr, entry));
+    MOZ_TRY(StencilXDR::codeObjLiteral(xdr, entry));
   }
 
   MOZ_TRY(XDRSharedDataContainer(xdr, stencil.sharedData));
