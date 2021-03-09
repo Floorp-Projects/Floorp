@@ -62,6 +62,7 @@
 #include "nsPrintfCString.h"
 #include "nsSubDocumentFrame.h"
 #include "nsTransitionManager.h"
+#include "nsTHashMap.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -1692,7 +1693,7 @@ class ContainerState {
     Maybe<size_t> mAncestorIndex;
   };
 
-  nsDataHashtable<nsGenericHashKey<MaskLayerKey>, RefPtr<ImageLayer>>
+  nsTHashMap<nsGenericHashKey<MaskLayerKey>, RefPtr<ImageLayer>>
       mRecycledMaskImageLayers;
   // Keep display port of AGR to avoid wasting time on doing the same
   // thing repeatly.
@@ -5609,7 +5610,8 @@ void ContainerState::CollectOldLayers() {
       NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
                    "Could not recycle mask layer, unsupported layer type.");
       mRecycledMaskImageLayers.InsertOrUpdate(
-          MaskLayerKey(layer, Nothing()), static_cast<ImageLayer*>(maskLayer));
+          MaskLayerKey(layer, Nothing()),
+          RefPtr{static_cast<ImageLayer*>(maskLayer)});
     }
     for (size_t i = 0; i < layer->GetAncestorMaskLayerCount(); i++) {
       Layer* maskLayer = layer->GetAncestorMaskLayerAt(i);
@@ -5617,7 +5619,8 @@ void ContainerState::CollectOldLayers() {
       NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
                    "Could not recycle mask layer, unsupported layer type.");
       mRecycledMaskImageLayers.InsertOrUpdate(
-          MaskLayerKey(layer, Some(i)), static_cast<ImageLayer*>(maskLayer));
+          MaskLayerKey(layer, Some(i)),
+          RefPtr{static_cast<ImageLayer*>(maskLayer)});
     }
   }
 }

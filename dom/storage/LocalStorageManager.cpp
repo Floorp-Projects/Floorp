@@ -110,7 +110,7 @@ LocalStorageCache* LocalStorageManager::GetCache(
 
 already_AddRefed<StorageUsage> LocalStorageManager::GetOriginUsage(
     const nsACString& aOriginNoSuffix, const uint32_t aPrivateBrowsingId) {
-  RefPtr<StorageUsage> usage = mUsages.LookupOrInsertWith(aOriginNoSuffix, [&] {
+  return do_AddRef(mUsages.LookupOrInsertWith(aOriginNoSuffix, [&] {
     auto usage = MakeRefPtr<StorageUsage>(aOriginNoSuffix);
 
     StorageDBChild* storageChild =
@@ -120,9 +120,7 @@ already_AddRefed<StorageUsage> LocalStorageManager::GetOriginUsage(
     }
 
     return usage;
-  });
-
-  return usage.forget();
+  }));
 }
 
 already_AddRefed<LocalStorageCache> LocalStorageManager::PutCache(

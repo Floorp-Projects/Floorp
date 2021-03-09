@@ -429,7 +429,7 @@ void SocketProcessChild::AddDataBridgeToMap(
     uint64_t aChannelId, BackgroundDataBridgeParent* aActor) {
   ipc::AssertIsOnBackgroundThread();
   MutexAutoLock lock(mMutex);
-  mBackgroundDataBridgeMap.InsertOrUpdate(aChannelId, aActor);
+  mBackgroundDataBridgeMap.InsertOrUpdate(aChannelId, RefPtr{aActor});
 }
 
 void SocketProcessChild::RemoveDataBridgeFromMap(uint64_t aChannelId) {

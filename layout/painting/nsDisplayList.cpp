@@ -653,7 +653,8 @@ static PresShell* GetFocusedPresShell() {
 void nsDisplayListBuilder::BeginFrame() {
   nsCSSRendering::BeginFrameTreesLocked();
   mCurrentAGR = mRootAGR;
-  mFrameToAnimatedGeometryRootMap.InsertOrUpdate(mReferenceFrame, mRootAGR);
+  mFrameToAnimatedGeometryRootMap.InsertOrUpdate(mReferenceFrame,
+                                                 RefPtr{mRootAGR});
 
   mIsPaintingToWindow = false;
   mUseHighQualityScaling = false;
@@ -777,8 +778,9 @@ AnimatedGeometryRoot* nsDisplayListBuilder::WrapAGRForFrame(
   DebugOnly<bool> dummy;
   MOZ_ASSERT(IsAnimatedGeometryRoot(aAnimatedGeometryRoot, dummy) == AGR_YES);
 
-  RefPtr<AnimatedGeometryRoot> result;
-  if (!mFrameToAnimatedGeometryRootMap.Get(aAnimatedGeometryRoot, &result)) {
+  RefPtr<AnimatedGeometryRoot> result =
+      mFrameToAnimatedGeometryRootMap.Get(aAnimatedGeometryRoot);
+  if (!result) {
     MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(RootReferenceFrame(),
                                                       aAnimatedGeometryRoot));
     RefPtr<AnimatedGeometryRoot> parent = aParent;
@@ -795,7 +797,7 @@ AnimatedGeometryRoot* nsDisplayListBuilder::WrapAGRForFrame(
     result = AnimatedGeometryRoot::CreateAGRForFrame(
         aAnimatedGeometryRoot, parent, aIsAsync, IsRetainingDisplayList());
     mFrameToAnimatedGeometryRootMap.InsertOrUpdate(aAnimatedGeometryRoot,
-                                                   result);
+                                                   RefPtr{result});
   }
   MOZ_ASSERT(!aParent || result->mParentAGR == aParent);
   return result;
@@ -818,15 +820,17 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
   if (aFrame == mCurrentFrame) {
     return mCurrentAGR;
   }
-  RefPtr<AnimatedGeometryRoot> result;
-  if (mFrameToAnimatedGeometryRootMap.Get(aFrame, &result)) {
+
+  RefPtr<AnimatedGeometryRoot> result =
+      mFrameToAnimatedGeometryRootMap.Get(aFrame);
+  if (result) {
     return result;
   }
 
   bool isAsync;
   nsIFrame* agrFrame = FindAnimatedGeometryRootFrameFor(aFrame, isAsync);
   result = WrapAGRForFrame(agrFrame, isAsync);
-  mFrameToAnimatedGeometryRootMap.InsertOrUpdate(aFrame, result);
+  mFrameToAnimatedGeometryRootMap.InsertOrUpdate(aFrame, RefPtr{result});
   return result;
 }
 
