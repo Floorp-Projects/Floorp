@@ -164,7 +164,7 @@ NS_IMETHODIMP InsertNodeTransaction::UndoTransaction() {
   OwningNonNull<nsIContent> contentToInsert = *mContentToInsert;
   ErrorResult error;
   container->RemoveChild(contentToInsert, error);
-  NS_WARNING("nsINode::RemoveChild() failed");
+  NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
   return error.StealNSResult();
 }
 
