@@ -70,8 +70,8 @@ class TemporaryAccessGrantObserver final : public nsIObserver {
   ~TemporaryAccessGrantObserver() = default;
 
  private:
-  typedef nsDataHashtable<TemporaryAccessGrantCacheKey, nsCOMPtr<nsITimer>>
-      ObserversTable;
+  using ObserversTable =
+      nsTHashMap<TemporaryAccessGrantCacheKey, nsCOMPtr<nsITimer>>;
   static UniquePtr<ObserversTable> sObservers;
   nsCOMPtr<nsITimer> mTimer;
   RefPtr<PermissionManager> mPM;
