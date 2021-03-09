@@ -96,21 +96,28 @@ function onMessageManagerClose(messageManager, topic, data) {
 function closeWatcherTransports(watcher) {
   for (let i = 0; i < Services.ppmm.childCount; i++) {
     const messageManager = Services.ppmm.getChildAt(i);
-    let list = actors.get(messageManager);
-    if (!list || list.length == 0) {
+    const targetActorDescriptions = actors.get(messageManager);
+    if (!targetActorDescriptions || targetActorDescriptions.length == 0) {
       continue;
     }
-    list = list.filter(item => item.watcher != watcher);
-    for (const item of list) {
-      // If we have a child transport, the actor has already
-      // been created. We need to stop using this message manager.
-      item.childTransport.close();
-      watcher.conn.cancelForwarding(item.prefix);
+
+    // Destroy all transports related to this watcher and tells the client to purge all related actors
+    const matchingTargetActorDescriptions = targetActorDescriptions.filter(
+      item => item.watcher === watcher
+    );
+    for (const { prefix, childTransport } of matchingTargetActorDescriptions) {
+      childTransport.close();
+      watcher.conn.cancelForwarding(prefix);
     }
-    if (list.length == 0) {
+
+    // Then update global `actors` WeakMap by stripping all data about this watcher
+    const remainingTargetActorDescriptions = targetActorDescriptions.filter(
+      item => item.watcher !== watcher
+    );
+    if (remainingTargetActorDescriptions.length == 0) {
       actors.delete(messageManager);
     } else {
-      actors.set(messageManager, list);
+      actors.set(messageManager, remainingTargetActorDescriptions);
     }
   }
 }
