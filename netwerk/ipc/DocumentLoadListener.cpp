@@ -1631,7 +1631,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       browsingContext->Group()->Toplevels().Length() == 1 &&
       !options.mRemoteType.IsEmpty() &&
       browsingContext->GetHasLoadedNonInitialDocument() &&
-      mLoadStateLoadType != LOAD_ERROR_PAGE) {
+      (mLoadStateLoadType == LOAD_NORMAL ||
+       mLoadStateLoadType == LOAD_HISTORY || mLoadStateLoadType == LOAD_LINK ||
+       mLoadStateLoadType == LOAD_STOP_CONTENT ||
+       mLoadStateLoadType == LOAD_STOP_CONTENT_AND_REPLACE)) {
     options.mReplaceBrowsingContext = true;
     options.mTryUseBFCache = true;
   }
