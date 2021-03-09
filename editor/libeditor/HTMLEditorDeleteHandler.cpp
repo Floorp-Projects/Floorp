@@ -1033,6 +1033,12 @@ nsresult HTMLEditor::ComputeTargetRanges(
     AutoRangeArray& aRangesToDelete) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    aRangesToDelete.RemoveAllRanges();
+    return NS_ERROR_EDITOR_NO_EDITABLE_RANGE;
+  }
+
   // First check for table selection mode.  If so, hand off to table editor.
   SelectedTableCellScanner scanner(aRangesToDelete);
   if (scanner.IsInTableCellSelectionMode()) {
@@ -1047,6 +1053,7 @@ nsresult HTMLEditor::ComputeTargetRanges(
       if (HTMLEditUtils::GetTableCellElementIfOnlyOneSelected(
               aRangesToDelete.Ranges()[i - removedRanges]) !=
           scanner.ElementsRef()[i]) {
+        // XXX Need to manage anchor-focus range too!
         aRangesToDelete.Ranges().RemoveElementAt(i - removedRanges);
         removedRanges++;
       }
@@ -1054,7 +1061,14 @@ nsresult HTMLEditor::ComputeTargetRanges(
     return NS_OK;
   }
 
+  aRangesToDelete.EnsureOnlyEditableRanges(*editingHost);
+  if (aRangesToDelete.Ranges().IsEmpty()) {
+    NS_WARNING(
+        "There is no range which we can delete entire of or around the caret");
+    return NS_ERROR_EDITOR_NO_EDITABLE_RANGE;
+  }
   AutoDeleteRangesHandler deleteHandler;
+  // Should we delete target ranges which cannot delete actually?
   nsresult rv = deleteHandler.ComputeRangesToDelete(*this, aDirectionAndAmount,
                                                     aRangesToDelete);
   NS_WARNING_ASSERTION(
@@ -1071,7 +1085,12 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
              aStripWrappers == nsIEditor::eNoStrip);
 
   if (!SelectionRefPtr()->RangeCount()) {
-    return EditActionCanceled();
+    return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
+  }
+
+  Element* editingHost = GetActiveEditingHost();
+  if (!editingHost) {
+    return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
   }
 
   // Remember that we did a selection deletion.  Used by
@@ -1097,6 +1116,13 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   }
 
   AutoRangeArray rangesToDelete(*SelectionRefPtr());
+  rangesToDelete.EnsureOnlyEditableRanges(*editingHost);
+  if (rangesToDelete.Ranges().IsEmpty()) {
+    NS_WARNING(
+        "There is no range which we can delete entire the ranges or around the "
+        "caret");
+    return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
+  }
   AutoDeleteRangesHandler deleteHandler;
   EditActionResult result = deleteHandler.Run(*this, aDirectionAndAmount,
                                               aStripWrappers, rangesToDelete);

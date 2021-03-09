@@ -2084,6 +2084,13 @@ class EditorBase : public nsIEditor,
       // DOM_SUCCESS_DOM_NO_OPERATION here.
       case NS_ERROR_EDITOR_ACTION_CANCELED:
         return NS_SUCCESS_DOM_NO_OPERATION;
+      // If there is no selection range or editable selection ranges, editor
+      // needs to stop handling it.  However, editor shouldn't return error for
+      // the callers to avoid throwing exception.  However, they may want to
+      // check whether it works or not.  Therefore, we should return
+      // NS_SUCCESS_DOM_NO_OPERATION instead.
+      case NS_ERROR_EDITOR_NO_EDITABLE_RANGE:
+        return NS_SUCCESS_DOM_NO_OPERATION;
       default:
         return aRv;
     }

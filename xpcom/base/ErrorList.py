@@ -829,6 +829,11 @@ with modules["EDITOR"]:
     # and may keep handling the operation unexpectedly.
     errors["NS_ERROR_EDITOR_ACTION_CANCELED"] = FAILURE(3)
 
+    # An error code that indicates that there is no editable selection ranges.
+    # E.g., Selection has no range, caret is in non-editable element,
+    # non-collapsed range crosses editing host boundaries.
+    errors["NS_ERROR_EDITOR_NO_EDITABLE_RANGE"] = FAILURE(4)
+
     errors["NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND"] = SUCCESS(1)
     errors["NS_SUCCESS_EDITOR_FOUND_TARGET"] = SUCCESS(2)
 
