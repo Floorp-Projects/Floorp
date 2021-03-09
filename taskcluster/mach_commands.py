@@ -6,25 +6,19 @@
 
 
 from __future__ import absolute_import, print_function, unicode_literals
-
 import argparse
 import json
 import logging
 import os
-from six import text_type
-import six
+import re
 import sys
 import time
 import traceback
-import re
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-    SubCommand,
-)
+import six
+from six import text_type
 
+from mach.decorators import Command, CommandArgument, CommandProvider, SubCommand
 from mozbuild.base import MachCommandBase
 
 
@@ -427,8 +421,8 @@ class MachCommands(MachCommandBase):
         "callback", default=None, help="Action callback name (Python function name)"
     )
     def test_action_callback(self, **options):
-        import taskgraph.parameters
         import taskgraph.actions
+        import taskgraph.parameters
         from taskgraph.util import yaml
 
         def load_data(filename):
@@ -495,9 +489,9 @@ class MachCommands(MachCommandBase):
         self.log_manager.enable_unstructured()
 
     def show_taskgraph(self, graph_attr, options):
-        import taskgraph.parameters
-        import taskgraph.generator
         import taskgraph
+        import taskgraph.generator
+        import taskgraph.parameters
 
         if options["fast"]:
             taskgraph.fast = True
@@ -571,10 +565,10 @@ class MachCommands(MachCommandBase):
         return filtered_taskgraph
 
     def show_actions(self, options):
-        import taskgraph.parameters
-        import taskgraph.generator
         import taskgraph
         import taskgraph.actions
+        import taskgraph.generator
+        import taskgraph.parameters
 
         try:
             self.setup_logging(quiet=options["quiet"], verbose=options["verbose"])
@@ -654,7 +648,7 @@ class TaskClusterImagesProvider(MachCommandBase):
         metavar="context.tar",
     )
     def build_image(self, image_name, tag, context_only):
-        from taskgraph.docker import build_image, build_context
+        from taskgraph.docker import build_context, build_image
 
         try:
             if context_only is None:
