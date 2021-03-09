@@ -1004,3 +1004,26 @@
 .searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
   margin-inline: -26px 20px;
 }
+
+moz-input-box > menupopup .context-menu-add-engine:not([image]) {
+  list-style-image: url("chrome://browser/skin/search-engine-placeholder.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  moz-input-box > menupopup .context-menu-add-engine:not([image]) {
+    list-style-image: url("chrome://browser/skin/search-engine-placeholder@2x.png");
+  }
+}
+
+moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
+  content: "";
+  position: relative;
+  display: -moz-box;
+  background: url(chrome://browser/skin/search-indicator-badge-add.svg) no-repeat center;
+  height: 11px;
+  width: 11px;
+  /* These differ from the search bar (-7x, -13px) because the contextual menu
+     may not have enough vertical space */
+  margin-inline-start: -6px;
+  margin-top: -8px;
+}
