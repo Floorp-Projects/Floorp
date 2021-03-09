@@ -27,4 +27,4 @@ fuzzy-if(webrender,2-7,17500-36908) == 1523776.html 1523776-ref.html
 skip-if(!asyncPan||!webrender||Android) fuzzy-if(winWidget,94-94,3415-3419) fuzzy-if(cocoaWidget&&swgl,1-1,1-1) pref(apz.allow_zooming,true) == picture-caching-on-async-zoom.html picture-caching-on-async-zoom.html?ref
 pref(apz.allow_zooming,true) == 1662062-1-no-blurry.html 1662062-1-ref.html
 == 1681610.html 1681610-ref.html
-skip-if(!webrender) fuzzy-if(webrender,0-255,0-60) == 1687157-1.html 1687157-1-ref.html
+skip-if(!webrender) fuzzy-if(webrender&&!geckoview,0-255,0-60) fuzzy-if(webrender&&geckoview,0-255,0-1123) == 1687157-1.html 1687157-1-ref.html
