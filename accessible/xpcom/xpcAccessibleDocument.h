@@ -51,8 +51,7 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
   /**
    * Return XPCOM wrapper for the internal accessible.
    */
-  xpcAccessibleGeneric* GetAccessible(LocalAccessible* aAccessible);
-  xpcAccessibleGeneric* GetXPCAccessible(RemoteAccessible* aProxy);
+  xpcAccessibleGeneric* GetAccessible(Accessible* aAccessible);
 
   virtual void Shutdown() override;
 
@@ -61,15 +60,14 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
 
  private:
   DocAccessible* Intl() {
-    if (LocalAccessible* acc = mIntl.AsAccessible()) {
+    if (LocalAccessible* acc = mIntl->AsLocal()) {
       return acc->AsDoc();
     }
 
     return nullptr;
   }
 
-  void NotifyOfShutdown(LocalAccessible* aAccessible) {
-    MOZ_ASSERT(!mRemote);
+  void NotifyOfShutdown(Accessible* aAccessible) {
     xpcAccessibleGeneric* xpcAcc = mCache.Get(aAccessible);
     if (xpcAcc) {
       xpcAcc->Shutdown();
@@ -77,22 +75,12 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
 
     mCache.Remove(aAccessible);
     if (mCache.Count() == 0 && mRefCnt == 1) {
-      GetAccService()->RemoveFromXPCDocumentCache(
-          mIntl.AsAccessible()->AsDoc());
-    }
-  }
-
-  void NotifyOfShutdown(RemoteAccessible* aProxy) {
-    MOZ_ASSERT(mRemote);
-    xpcAccessibleGeneric* xpcAcc = mCache.Get(aProxy);
-    if (xpcAcc) {
-      xpcAcc->Shutdown();
-    }
-
-    mCache.Remove(aProxy);
-    if (mCache.Count() == 0 && mRefCnt == 1) {
-      GetAccService()->RemoveFromRemoteXPCDocumentCache(
-          mIntl.AsProxy()->AsDoc());
+      if (mIntl->IsLocal()) {
+        GetAccService()->RemoveFromXPCDocumentCache(mIntl->AsLocal()->AsDoc());
+      } else {
+        GetAccService()->RemoveFromRemoteXPCDocumentCache(
+            mIntl->AsRemote()->AsDoc());
+      }
     }
   }
 
@@ -109,17 +97,18 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
   bool mRemote;
 };
 
-inline xpcAccessibleGeneric* ToXPC(LocalAccessible* aAccessible) {
+inline xpcAccessibleGeneric* ToXPC(Accessible* aAccessible) {
   if (!aAccessible) return nullptr;
 
   if (aAccessible->IsApplication()) return XPCApplicationAcc();
 
   xpcAccessibleDocument* xpcDoc =
-      GetAccService()->GetXPCDocument(aAccessible->Document());
+      aAccessible->IsLocal()
+          ? GetAccService()->GetXPCDocument(aAccessible->AsLocal()->Document())
+          : GetAccService()->GetXPCDocument(
+                aAccessible->AsRemote()->Document());
   return xpcDoc ? xpcDoc->GetAccessible(aAccessible) : nullptr;
 }
-
-xpcAccessibleGeneric* ToXPC(AccessibleOrProxy aAcc);
 
 inline xpcAccessibleHyperText* ToXPCText(HyperTextAccessible* aAccessible) {
   if (!aAccessible) return nullptr;
