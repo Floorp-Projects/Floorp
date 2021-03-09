@@ -70,7 +70,8 @@ namespace mozilla {
 
 using namespace dom;
 
-using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
+using LeafNodeType = HTMLEditUtils::LeafNodeType;
+using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 
 TextEditor::TextEditor()
     : mMaxTextLength(-1),
@@ -1018,7 +1019,7 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       // and redo are relatively rare, it makes sense to take the (small)
       // performance hit here.
       nsIContent* firstLeafChild = HTMLEditUtils::GetFirstLeafChild(
-          *mRootElement, ChildBlockBoundary::Ignore);
+          *mRootElement, {LeafNodeType::OnlyLeafNode});
       if (firstLeafChild &&
           EditorUtils::IsPaddingBRElementForEmptyEditor(*firstLeafChild)) {
         mPaddingBRElementForEmptyEditor =

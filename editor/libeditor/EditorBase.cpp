@@ -126,7 +126,8 @@ namespace mozilla {
 using namespace dom;
 using namespace widget;
 
-using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
+using LeafNodeType = HTMLEditUtils::LeafNodeType;
+using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 
 /*****************************************************************************
  * mozilla::EditorBase
@@ -2585,7 +2586,7 @@ nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
 
   EditorType editorType = GetEditorType();
   nsIContent* content =
-      HTMLEditUtils::GetFirstLeafChild(*aRoot, ChildBlockBoundary::TreatAsLeaf);
+      HTMLEditUtils::GetFirstLeafChild(*aRoot, {LeafNodeType::OnlyLeafNode});
   if (content && !EditorUtils::IsEditableContent(*content, editorType)) {
     content = GetNextEditableNode(*content);
   }
@@ -2830,8 +2831,9 @@ nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
   // unless there isn't one, in which case we are at the end of the node
   // and want the deep-right child.
   nsIContent* lastLeafContent = HTMLEditUtils::GetLastLeafChild(
-      *aPoint.GetContainer(), aNoBlockCrossing ? ChildBlockBoundary::TreatAsLeaf
-                                               : ChildBlockBoundary::Ignore);
+      *aPoint.GetContainer(),
+      {aNoBlockCrossing ? LeafNodeType::LeafNodeOrChildBlock
+                        : LeafNodeType::OnlyLeafNode});
   if (!lastLeafContent) {
     return nullptr;
   }
@@ -2884,8 +2886,9 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
     }
 
     nsIContent* firstLeafContent = HTMLEditUtils::GetFirstLeafChild(
-        *point.GetChild(), aNoBlockCrossing ? ChildBlockBoundary::TreatAsLeaf
-                                            : ChildBlockBoundary::Ignore);
+        *point.GetChild(),
+        {aNoBlockCrossing ? LeafNodeType::LeafNodeOrChildBlock
+                          : LeafNodeType::OnlyLeafNode});
     if (!firstLeafContent) {
       return point.GetChild();
     }
@@ -2936,13 +2939,12 @@ nsIContent* EditorBase::FindNextLeafNode(const nsINode* aCurrentNode,
         // don't look inside prevsib, since it is a block
         return sibling;
       }
-      ChildBlockBoundary childBlockBoundary =
-          bNoBlockCrossing ? ChildBlockBoundary::TreatAsLeaf
-                           : ChildBlockBoundary::Ignore;
+      const LeafNodeTypes leafNodeTypes = {
+          bNoBlockCrossing ? LeafNodeType::LeafNodeOrChildBlock
+                           : LeafNodeType::OnlyLeafNode};
       nsIContent* leafContent =
-          aGoForward
-              ? HTMLEditUtils::GetFirstLeafChild(*sibling, childBlockBoundary)
-              : HTMLEditUtils::GetLastLeafChild(*sibling, childBlockBoundary);
+          aGoForward ? HTMLEditUtils::GetFirstLeafChild(*sibling, leafNodeTypes)
+                     : HTMLEditUtils::GetLastLeafChild(*sibling, leafNodeTypes);
       return leafContent ? leafContent : sibling;
     }
 
