@@ -1385,23 +1385,6 @@ class SourceUnits {
     ptr++;
   }
 
-  /**
-   * Unget the '\n' (CR) that precedes a '\n' (LF), when ungetting a line
-   * terminator that's a full "\r\n" sequence.  If the prior code unit isn't
-   * '\r', do nothing.
-   */
-  void ungetOptionalCRBeforeLF() {
-    MOZ_ASSERT(!isPoisoned(),
-               "shouldn't unget a '\\r' from poisoned SourceUnits");
-    MOZ_ASSERT(*ptr == Unit('\n'),
-               "function should only be called when a '\\n' was just "
-               "ungotten, and any '\\r' preceding it must also be "
-               "ungotten");
-    if (*(ptr - 1) == Unit('\r')) {
-      ptr--;
-    }
-  }
-
   /** Unget U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR. */
   inline void ungetLineOrParagraphSeparator();
 
@@ -1633,24 +1616,6 @@ class TokenStreamCharsShared {
  public:
   CharBuffer& getCharBuffer() { return charBuffer; }
 };
-
-inline auto ToCharSpan(mozilla::Span<const mozilla::Utf8Unit> codeUnits) {
-  static_assert(alignof(char) == alignof(mozilla::Utf8Unit),
-                "must have equal alignment to reinterpret_cast<>");
-  static_assert(sizeof(char) == sizeof(mozilla::Utf8Unit),
-                "must have equal size to reinterpret_cast<>");
-
-  // This cast is safe for two reasons.
-  //
-  // First, per C++11 [basic.lval]p10 it is permitted to access any object's
-  // memory through |char|.
-  //
-  // Second, Utf8Unit *contains* a |char|.  Examining that memory as |char|
-  // is simply, per C++11 [basic.lval]p10, to access the memory according to
-  // the dynamic type of the object: essentially trivially safe.
-  return mozilla::Span{reinterpret_cast<const char*>(codeUnits.data()),
-                       codeUnits.size()};
-}
 
 template <typename Unit>
 class TokenStreamCharsBase : public TokenStreamCharsShared {
