@@ -10007,11 +10007,7 @@
 - name: toolkit.shutdown.fastShutdownStage
   type: int32_t
 #if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_TSAN) && !defined(MOZ_CODE_COVERAGE) && !defined(MOZ_VALGRIND) && !defined(MOZ_PROFILE_GENERATE) && !defined(JS_STRUCTURED_SPEW)
-  #ifdef NIGHTLY_BUILD
-  value: 3
-  #else
   value: 1
-  #endif
 #else
   value: 0
 #endif
