@@ -193,6 +193,13 @@ class TargetList extends EventEmitter {
   }
 
   _onTargetDestroyed(targetFront, isTargetSwitching = false) {
+    // The watcher actor may notify us about the destruction of the top level target.
+    // But second argument to this method, isTargetSwitching is only passed from the frontend.
+    // So automatically toggle the isTargetSwitching flag for server side destructions
+    // only if that's about the existing top level target.
+    if (targetFront == this.targetFront) {
+      isTargetSwitching = true;
+    }
     this._destroyListeners.emit(targetFront.targetType, {
       targetFront,
       isTargetSwitching,

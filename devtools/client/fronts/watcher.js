@@ -61,7 +61,12 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
   }
 
   _onTargetDestroyed(form) {
-    const front = this.getActorByID(form.actor);
+    let front = this.getActorByID(form.actor);
+    // For top level target, the target will be a child of the descriptor front,
+    // which happens to be the parent front of the watcher.
+    if (!front) {
+      front = this.parentFront.getActorByID(form.actor);
+    }
     this.emit("target-destroyed", front);
   }
 
