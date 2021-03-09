@@ -101,7 +101,7 @@ fuzzy-if(winWidget,0-1,0-10000) test-pref(svg.context-properties.content.enabled
 == img-simple-2.html  lime100x100-ref.html
 fuzzy-if(skiaContent,0-255,0-350) fuzzy-if(geckoview&&webrender,0-255,0-4063)  == img-simple-3.html  img-simple-3-ref.html #Bug 1564891, bug 1574154
 == img-simple-4.html  lime100x100-ref.html
-fuzzy-if(skiaContent,0-255,0-90) fuzzy-if(geckoview&&webrender,0-255,0-1266) == img-simple-5.html  img-simple-5-ref.html
+fuzzy-if(skiaContent,0-255,0-90) fuzzy-if(geckoview&&webrender,0-255,0-1268) == img-simple-5.html  img-simple-5-ref.html
 == img-simple-6.html  lime100x100-ref.html
 fuzzy-if(skiaContent,0-255,0-27) == img-simple-7.html  img-simple-7-ref.html
 
