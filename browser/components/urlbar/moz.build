@@ -40,6 +40,7 @@ TESTING_JS_MODULES += [
     "tests/UrlbarTestUtils.jsm",
 ]
 BROWSER_CHROME_MANIFESTS += [
+    "tests/browser-proton/browser.ini",
     "tests/browser-tips/browser.ini",
     "tests/browser/browser.ini",
     "tests/ext/browser/browser.ini",
