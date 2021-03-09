@@ -643,8 +643,8 @@ static void TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj,
 }
 
 static bool ProtoChainSupportsTeleporting(JSObject* obj, JSObject* holder) {
-  // Any non-delegate should already have been handled since its checks are
-  // always required.
+  // The receiver should already have been handled since its checks are always
+  // required.
   MOZ_ASSERT(obj->isDelegate());
 
   // Prototype chain must have cacheable prototypes to ensure the cached
@@ -711,12 +711,9 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   MOZ_ASSERT(holder);
   MOZ_ASSERT(obj != holder);
 
-  // Only Delegate objects participate in teleporting so peel off the first
-  // object in the chain if needed and handle it directly.
-  JSObject* pobj = obj;
-  if (!obj->isDelegate()) {
-    pobj = obj->staticPrototype();
-  }
+  // Receiver guards (see TestMatchingReceiver) ensure the receiver's proto is
+  // unchanged so peel off the receiver.
+  JSObject* pobj = obj->staticPrototype();
   MOZ_ASSERT(pobj->isDelegate());
 
   // If teleporting is supported for this prototype chain, we are done.
@@ -730,8 +727,8 @@ static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
   }
 
   // Synchronize pobj and protoId.
-  MOZ_ASSERT(pobj == obj || pobj == obj->staticPrototype());
-  ObjOperandId protoId = (pobj == obj) ? objId : writer.loadProto(objId);
+  MOZ_ASSERT(pobj == obj->staticPrototype());
+  ObjOperandId protoId = writer.loadProto(objId);
 
   // Guard prototype links from |pobj| to |holder|.
   while (pobj != holder) {
