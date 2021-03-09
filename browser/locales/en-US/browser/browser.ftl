@@ -391,7 +391,6 @@ popup-screen-sharing-never =
   .accesskey = N
 
 popup-silence-notifications-checkbox = Disable notifications from { -brand-short-name } while sharing
-popup-silence-notifications-checkbox-warning = { -brand-short-name } will not display notifications while you are sharing.
 
 ## WebRTC window or screen share tab switch warning
 
