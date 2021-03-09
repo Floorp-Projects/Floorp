@@ -259,10 +259,6 @@ const RECOMMENDED_PREFS = new Map([
   // Privacy and Tracking Protection
   ["privacy.trackingprotection.enabled", false],
 
-  // Only allow the old modal dialogs. This should be removed when there is
-  // support for the new modal UI (see Bug 1686741).
-  ["prompts.contentPromptSubDialog", false],
-
   // Don't do network connections for mitm priming
   ["security.certerrors.mitm.priming.enabled", false],
 
