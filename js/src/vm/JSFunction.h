@@ -267,7 +267,6 @@ class JSFunction : public js::NativeObject {
 
   // Make the function constructible.
   void setIsConstructor() { flags_.setIsConstructor(); }
-  void setIsClassConstructor() { flags_.setIsClassConstructor(); }
 
   // Can be called multiple times by the parser.
   void setArgCount(uint16_t nargs) { this->nargs_ = nargs; }
