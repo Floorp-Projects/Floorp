@@ -389,6 +389,7 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
           tryAttachXrayCrossCompartmentWrapper(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachFunction(obj, objId, id));
       TRY_ATTACH(tryAttachArgumentsObjectIterator(obj, objId, id));
+      TRY_ATTACH(tryAttachArgumentsObjectCallee(obj, objId, id));
       TRY_ATTACH(tryAttachProxy(obj, objId, id, receiverId));
 
       trackAttached(IRGenerator::NotAttached);
@@ -2340,6 +2341,36 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
   writer.returnFromIC();
 
   trackAttached("ArgumentsObjectArg");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectCallee(
+    HandleObject obj, ObjOperandId objId, HandleId id) {
+  // Only mapped arguments objects have a `callee` property.
+  if (!obj->is<MappedArgumentsObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!JSID_IS_ATOM(id, cx_->names().callee)) {
+    return AttachDecision::NoAction;
+  }
+
+  // The callee must not have been overridden or deleted.
+  if (obj->as<MappedArgumentsObject>().hasOverriddenCallee()) {
+    return AttachDecision::NoAction;
+  }
+
+  maybeEmitIdGuard(id);
+  writer.guardClass(objId, GuardClassKind::MappedArguments);
+
+  uint32_t flags = ArgumentsObject::CALLEE_OVERRIDDEN_BIT;
+  writer.guardArgumentsObjectFlags(objId, flags);
+
+  writer.loadFixedSlotResult(objId,
+                             MappedArgumentsObject::getCalleeSlotOffset());
+  writer.returnFromIC();
+
+  trackAttached("ArgumentsObjectCallee");
   return AttachDecision::Attach;
 }
 
