@@ -1517,7 +1517,7 @@ impl Compositor for SwCompositor {
                 // tile size is not bigger than what was previously allocated.
                 self.gl.set_texture_buffer(
                     self.depth_id,
-                    gl::DEPTH_COMPONENT16,
+                    gl::DEPTH_COMPONENT,
                     valid_rect.size.width,
                     valid_rect.size.height,
                     0,

@@ -1525,11 +1525,14 @@ impl Device {
         };
 
         let is_software_webrender = renderer_name.starts_with("Software WebRender");
-        let (depth_format, upload_method) = if is_software_webrender {
-            (gl::DEPTH_COMPONENT16, UploadMethod::Immediate)
+        let upload_method = if is_software_webrender {
+            // Uploads in SWGL generally reduce to simple memory copies.
+            UploadMethod::Immediate
         } else {
-            (gl::DEPTH_COMPONENT24, upload_method)
+            upload_method
         };
+        // Prefer 24-bit depth format. While 16-bit depth also works, it may exhaust depth ids easily.
+        let depth_format = gl::DEPTH_COMPONENT24;
 
         info!("GL texture cache {:?}, bgra {:?} swizzle {:?}, texture storage {:?}, depth {:?}",
             color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage, depth_format);
