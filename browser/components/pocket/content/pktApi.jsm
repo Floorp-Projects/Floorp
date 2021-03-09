@@ -175,7 +175,9 @@ var pktApi = (function() {
       pocketSiteHost,
       oa
     )) {
-      cookies[cookie.name] = cookie.value;
+      if (cookie.host === pocketSiteHost) {
+        cookies[cookie.name] = cookie.value;
+      }
     }
     return cookies;
   }
