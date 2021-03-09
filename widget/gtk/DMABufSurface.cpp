@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 #include <sys/eventfd.h>
 #include <poll.h>
+#include <sys/ioctl.h>
 
 #include "mozilla/widget/gbm.h"
 #include "mozilla/widget/va_drmcommon.h"
@@ -50,10 +51,6 @@ using namespace mozilla::gl;
 using namespace mozilla::layers;
 
 #define BUFFER_FLAGS 0
-
-#ifndef GBM_BO_USE_TEXTURING
-#  define GBM_BO_USE_TEXTURING (1 << 5)
-#endif
 
 #ifndef VA_FOURCC_NV12
 #  define VA_FOURCC_NV12 0x3231564E
@@ -298,24 +295,12 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     }
   }
 
-  // Create without modifiers - use plain/linear format.
   if (!mGbmBufferObject[0]) {
     LOGDMABUF(("    Creating without modifiers\n"));
-    mGbmBufferFlags = (GBM_BO_USE_SCANOUT | GBM_BO_USE_LINEAR);
-    if (mSurfaceFlags & DMABUF_TEXTURE) {
-      mGbmBufferFlags |= GBM_BO_USE_TEXTURING;
-    }
-
-    if (!nsGbmLib::DeviceIsFormatSupported(GetDMABufDevice()->GetGbmDevice(),
-                                           mGmbFormat->mFormat,
-                                           mGbmBufferFlags)) {
-      mGbmBufferFlags &= ~GBM_BO_USE_SCANOUT;
-    }
-
+    mGbmBufferFlags = GBM_BO_USE_LINEAR;
     mGbmBufferObject[0] =
         nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight,
                          mGmbFormat->mFormat, mGbmBufferFlags);
-
     mBufferModifier = DRM_FORMAT_MOD_INVALID;
   }
 
@@ -526,6 +511,38 @@ void DMABufSurfaceRGBA::ReleaseSurface() {
   ReleaseDMABuf();
 }
 
+// We should synchronize DMA Buffer object access from CPU to avoid potential
+// cache incoherency and data loss.
+// See
+// https://01.org/linuxgraphics/gfx-docs/drm/driver-api/dma-buf.html#cpu-access-to-dma-buffer-objects
+struct dma_buf_sync {
+  uint64_t flags;
+};
+#define DMA_BUF_SYNC_READ (1 << 0)
+#define DMA_BUF_SYNC_WRITE (2 << 0)
+#define DMA_BUF_SYNC_START (0 << 2)
+#define DMA_BUF_SYNC_END (1 << 2)
+#define DMA_BUF_BASE 'b'
+#define DMA_BUF_IOCTL_SYNC _IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
+
+static void SyncDmaBuf(int aFd, uint64_t aFlags) {
+  struct dma_buf_sync sync = {0};
+
+  sync.flags = aFlags | DMA_BUF_SYNC_READ | DMA_BUF_SYNC_WRITE;
+  while (true) {
+    int ret;
+    ret = ioctl(aFd, DMA_BUF_IOCTL_SYNC, &sync);
+    if (ret == -1 && errno == EINTR) {
+      continue;
+    } else if (ret == -1) {
+      LOGDMABUF(("Failed to synchronize DMA buffer: %s", strerror(errno)));
+      break;
+    } else {
+      break;
+    }
+  }
+}
+
 void* DMABufSurface::MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth,
                                  uint32_t aHeight, uint32_t* aStride,
                                  int aGbmFlags, int aPlane) {
@@ -536,17 +553,25 @@ void* DMABufSurface::MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth,
   }
 
   LOGDMABUF(
-      ("DMABufSurfaceRGBA::MapInternal() UID %d size %d x %d -> %d x %d\n",
-       mUID, aX, aY, aWidth, aHeight));
+      ("DMABufSurfaceRGBA::MapInternal() UID %d plane %d size %d x %d -> %d x "
+       "%d\n",
+       mUID, aPlane, aX, aY, aWidth, aHeight));
 
   mMappedRegionStride[aPlane] = 0;
   mMappedRegionData[aPlane] = nullptr;
   mMappedRegion[aPlane] = nsGbmLib::Map(
       mGbmBufferObject[aPlane], aX, aY, aWidth, aHeight, aGbmFlags,
       &mMappedRegionStride[aPlane], &mMappedRegionData[aPlane]);
+  if (!mMappedRegion[aPlane]) {
+    LOGDMABUF(("    Surface mapping failed: %s", strerror(errno)));
+    return nullptr;
+  }
   if (aStride) {
     *aStride = mMappedRegionStride[aPlane];
   }
+
+  SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_START);
+
   return mMappedRegion[aPlane];
 }
 
@@ -572,6 +597,8 @@ void* DMABufSurfaceRGBA::Map(uint32_t* aStride) {
 
 void DMABufSurface::Unmap(int aPlane) {
   if (mMappedRegion[aPlane]) {
+    LOGDMABUF(("DMABufSurfaceRGBA::Unmap() UID %d plane %d\n", mUID, aPlane));
+    SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_END);
     nsGbmLib::Unmap(mGbmBufferObject[aPlane], mMappedRegionData[aPlane]);
     mMappedRegion[aPlane] = nullptr;
     mMappedRegionData[aPlane] = nullptr;
@@ -733,7 +760,7 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane, int aWidth, int aHeight,
 
   mGbmBufferObject[aPlane] =
       nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), aWidth, aHeight,
-                       aDrmFormat, GBM_BO_USE_LINEAR | GBM_BO_USE_TEXTURING);
+                       aDrmFormat, GBM_BO_USE_LINEAR);
   if (!mGbmBufferObject[aPlane]) {
     NS_WARNING("Failed to create GbmBufferObject!");
     return false;
