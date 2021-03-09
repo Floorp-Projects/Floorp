@@ -69,6 +69,10 @@ class StencilXDR {
   template <XDRMode mode>
   static XDRResult codeParserAtomSpan(XDRState<mode>* xdr,
                                       ParserAtomSpan& parserAtomData);
+
+  template <XDRMode mode>
+  static XDRResult codeModuleMetadata(XDRState<mode>* xdr,
+                                      StencilModuleMetadata& stencil);
 };
 
 } /* namespace frontend */
