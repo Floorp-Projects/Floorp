@@ -18,9 +18,8 @@
 #include "mozilla/widget/CompositorWidget.h"
 
 #ifdef MOZ_WAYLAND
+#  include "mozilla/WidgetUtilsGtk.h"
 #  include "mozilla/widget/GtkCompositorWidget.h"
-#  include <gdk/gdk.h>
-#  include <gdk/gdkx.h>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -37,8 +36,7 @@ namespace mozilla::wr {
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     RefPtr<widget::CompositorWidget> aWidget, nsACString& aError) {
 #ifdef MOZ_WAYLAND
-  if (!gdk_display_get_default() ||
-      GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+  if (!mozilla::widget::GdkIsWaylandDisplay()) {
     return nullptr;
   }
 #endif

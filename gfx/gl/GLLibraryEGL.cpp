@@ -37,13 +37,12 @@
 #include "GLReadTexImageHelper.h"
 #include "ScopedGLHelpers.h"
 #ifdef MOZ_WIDGET_GTK
-#  include <gdk/gdk.h>
+#  include "mozilla/WidgetUtilsGtk.h"
 #  ifdef MOZ_WAYLAND
-#    include <gdk/gdkwayland.h>
-#    include <dlfcn.h>
 #    include "mozilla/widget/nsWaylandDisplay.h"
 #  endif  // MOZ_WIDGET_GTK
-#endif    // MOZ_WAYLAND
+#  include <gdk/gdk.h>
+#endif  // MOZ_WAYLAND
 
 namespace mozilla {
 namespace gl {
@@ -784,7 +783,7 @@ std::shared_ptr<EglDisplay> GLLibraryEGL::CreateDisplay(
 #ifdef MOZ_WAYLAND
     // Some drivers doesn't support EGL_DEFAULT_DISPLAY
     GdkDisplay* gdkDisplay = gdk_display_get_default();
-    if (gdkDisplay && !GDK_IS_X11_DISPLAY(gdkDisplay)) {
+    if (widget::GdkIsWaylandDisplay(gdkDisplay)) {
       nativeDisplay = widget::WaylandDisplayGetWLDisplay(gdkDisplay);
       if (!nativeDisplay) {
         NS_WARNING("Failed to get wl_display.");

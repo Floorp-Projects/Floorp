@@ -7,6 +7,7 @@
 #define WidgetUtilsGtk_h__
 
 #include <stdint.h>
+#include <gdk/gdk.h>
 
 namespace mozilla {
 namespace widget {
@@ -18,6 +19,12 @@ class WidgetUtilsGTK {
 };
 
 bool IsMainWindowTransparent();
+
+bool GdkIsWaylandDisplay(GdkDisplay* display);
+bool GdkIsX11Display(GdkDisplay* display);
+
+bool GdkIsWaylandDisplay();
+bool GdkIsX11Display();
 
 }  // namespace widget
 
