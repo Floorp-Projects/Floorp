@@ -501,6 +501,10 @@ class MappedArgumentsObject : public ArgumentsObject {
     setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
   }
 
+  static size_t getCalleeSlotOffset() {
+    return getFixedSlotOffset(CALLEE_SLOT);
+  }
+
  private:
   static bool obj_enumerate(JSContext* cx, HandleObject obj);
   static bool obj_resolve(JSContext* cx, HandleObject obj, HandleId id,
