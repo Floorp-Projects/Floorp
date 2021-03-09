@@ -50,8 +50,8 @@ class StencilXDR {
                                   ObjLiteralStencil& stencil);
 
   template <XDRMode mode>
-  static XDRResult ScopeData(XDRState<mode>* xdr, ScopeStencil& stencil,
-                             BaseParserScopeData*& baseScopeData);
+  static XDRResult codeScopeData(XDRState<mode>* xdr, ScopeStencil& stencil,
+                                 BaseParserScopeData*& baseScopeData);
 
   template <XDRMode mode>
   static XDRResult SharedData(js::XDRState<mode>* xdr,
