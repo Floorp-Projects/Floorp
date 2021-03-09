@@ -639,10 +639,6 @@ XDRResult XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 template <XDRMode mode>
 XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
-template <XDRMode mode>
-XDRResult XDRCompilationStencil(XDRState<mode>* xdr,
-                                frontend::CompilationStencil& stencil);
-
 } /* namespace js */
 
 #endif /* vm_Xdr_h */
