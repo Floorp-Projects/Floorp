@@ -119,8 +119,7 @@
   background-color: var(--identity-icon-color);
   height: 2px;
   border-radius: 2px;
-  margin-top: -2px;
-  margin: -2px 2px 0;
+  margin: -3px 2px 0;
 }
 } /*** END proton ***/
 
