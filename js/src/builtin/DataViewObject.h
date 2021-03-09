@@ -27,8 +27,6 @@ class DataViewObject : public ArrayBufferViewObject {
  private:
   static const ClassSpec classSpec_;
 
-  static JSObject* CreatePrototype(JSContext* cx, JSProtoKey key);
-
   static bool is(HandleValue v) {
     return v.isObject() && v.toObject().hasClass(&class_);
   }
