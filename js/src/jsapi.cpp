@@ -5726,7 +5726,7 @@ static JS::TranscodeResult DecodeStencil(JSContext* cx,
                                          frontend::CompilationInput& input,
                                          frontend::CompilationStencil& stencil,
                                          size_t cursorIndex) {
-  XDRStencilDecoder decoder(cx, buffer, cursorIndex);
+  XDRStencilDecoder decoder(cx, &input.options, buffer, cursorIndex);
 
   if (!input.initForGlobal(cx)) {
     return JS::TranscodeResult::Throw;

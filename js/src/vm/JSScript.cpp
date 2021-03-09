@@ -1206,7 +1206,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   // NOTE: The script data is rooted by the script.
   MOZ_TRY(PrivateScriptData::XDR<mode>(xdr, script, sourceObject,
                                        scriptEnclosingScope, funOrMod));
-  MOZ_TRY(frontend::StencilXDR::codeSharedData<mode>(xdr, script->sharedData_));
+  MOZ_TRY(frontend::StencilXDR::SharedData<mode>(xdr, script->sharedData_));
 
   if (mode == XDR_DECODE) {
     if (!SharedImmutableScriptData::shareScriptData(cx, script->sharedData_)) {
@@ -2699,7 +2699,7 @@ bool ScriptSource::startIncrementalEncoding(
   // Remove the reference to the source, to avoid the circular reference.
   initial->source = nullptr;
 
-  xdrEncoder_ = js::MakeUnique<XDRIncrementalStencilEncoder>();
+  xdrEncoder_ = js::MakeUnique<XDRIncrementalStencilEncoder>(cx);
   if (!xdrEncoder_) {
     ReportOutOfMemory(cx);
     return false;
@@ -2710,7 +2710,7 @@ bool ScriptSource::startIncrementalEncoding(
       mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
 
   XDRResult res = xdrEncoder_->setInitial(
-      cx, options,
+      options,
       std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(initial));
   if (res.isErr()) {
     // On encoding failure, let failureCase destroy encoder and return true
@@ -2729,7 +2729,7 @@ bool ScriptSource::addDelazificationToIncrementalEncoding(
   auto failureCase =
       mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
 
-  XDRResult res = xdrEncoder_->addDelazification(cx, stencil);
+  XDRResult res = xdrEncoder_->addDelazification(stencil);
   if (res.isErr()) {
     // On encoding failure, let failureCase destroy encoder and return true
     // to avoid failing any currently executing script.
@@ -2749,7 +2749,7 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
 
   auto cleanup = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
 
-  XDRResult res = xdrEncoder_->linearize(cx, buffer, this);
+  XDRResult res = xdrEncoder_->linearize(buffer, this);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       JS_ReportErrorASCII(cx, "XDR encoding failure");

@@ -820,7 +820,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
       return;
     }
 
-    XDRStencilDecoder decoder(cx, range);
+    XDRStencilDecoder decoder(cx, &options, range);
     XDRResult res = decoder.codeStencil(*stencilInput_, *stencil_);
     if (!res.isOk()) {
       stencil_.reset();
