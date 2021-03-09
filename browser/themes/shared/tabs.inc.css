@@ -134,8 +134,15 @@
 }
 
 :root:not([uidensity=compact]) .tab-content[pinned] {
+  padding: 0 10px;
+}
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+:root:not([uidensity=compact]) .tab-content[pinned] {
   padding: 0 12px;
 }
+} /*** END !proton ***/
+
 
 @media (prefers-reduced-motion: no-preference) {
   :root[sessionrestored] .tab-loading-burst {
