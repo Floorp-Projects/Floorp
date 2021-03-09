@@ -877,23 +877,28 @@ void HangMonitorParent::ClearHangNotification() {
 bool HangMonitorParent::TakeBrowserMinidump(const PluginHangData& aPhd,
                                             nsString& aCrashId) {
   MutexAutoLock lock(mBrowserCrashDumpHashLock);
-  if (!mBrowserCrashDumpIds.Get(aPhd.pluginId(), &aCrashId)) {
-    nsCOMPtr<nsIFile> browserDump;
-    if (CrashReporter::TakeMinidump(getter_AddRefs(browserDump), true)) {
-      if (!CrashReporter::GetIDFromMinidump(browserDump, aCrashId) ||
-          aCrashId.IsEmpty()) {
-        browserDump->Remove(false);
-        NS_WARNING(
-            "Failed to generate timely browser stack, "
-            "this is bad for plugin hang analysis!");
-      } else {
-        mBrowserCrashDumpIds.InsertOrUpdate(aPhd.pluginId(), aCrashId);
-        return true;
-      }
-    }
-  }
+  return mBrowserCrashDumpIds.WithEntryHandle(
+      aPhd.pluginId(), [&](auto&& entry) {
+        if (entry) {
+          aCrashId = entry.Data();
+        } else {
+          nsCOMPtr<nsIFile> browserDump;
+          if (CrashReporter::TakeMinidump(getter_AddRefs(browserDump), true)) {
+            if (!CrashReporter::GetIDFromMinidump(browserDump, aCrashId) ||
+                aCrashId.IsEmpty()) {
+              browserDump->Remove(false);
+              NS_WARNING(
+                  "Failed to generate timely browser stack, "
+                  "this is bad for plugin hang analysis!");
+            } else {
+              entry.Insert(aCrashId);
+              return true;
+            }
+          }
+        }
 
-  return false;
+        return false;
+      });
 }
 
 mozilla::ipc::IPCResult HangMonitorParent::RecvHangEvidence(
