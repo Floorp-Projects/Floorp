@@ -625,3 +625,10 @@ eme-notifications-drm-content-playing-manage = Manage Settings
 eme-notifications-drm-content-playing-manage-accesskey = M
 eme-notifications-drm-content-playing-dismiss = Dismiss
 eme-notifications-drm-content-playing-dismiss-accesskey = D
+
+## Add-on removal warning
+
+# Variables:
+#  $name (String): The name of the addon that will be removed.
+addon-removal-title = Remove { $name }?
+addon-removal-abuse-report-checkbox = Report this extension to { -vendor-short-name }
