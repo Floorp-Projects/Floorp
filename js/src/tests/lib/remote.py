@@ -22,8 +22,10 @@ def push_libs(options, device, dest_dir):
 
     for file in os.listdir(options.local_lib):
         if file in required_libs:
+            local_file = os.path.join(options.local_lib, file)
             remote_file = posixpath.join(dest_dir, file)
-            device.push(os.path.join(options.local_lib, file), remote_file)
+            assert os.path.isfile(local_file)
+            device.push(local_file, remote_file)
             device.chmod(remote_file)
 
 
@@ -31,6 +33,7 @@ def push_progs(options, device, progs, dest_dir):
     assert isinstance(progs, list)
     for local_file in progs:
         remote_file = posixpath.join(dest_dir, os.path.basename(local_file))
+        assert os.path.isfile(local_file)
         device.push(local_file, remote_file)
         device.chmod(remote_file)
 
