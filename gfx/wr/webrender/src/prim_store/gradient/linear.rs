@@ -14,7 +14,7 @@
 //! TODO: The plan is to always use render tasks + image brush for linear gradients.
 
 use euclid::approxeq::ApproxEq;
-use api::{ExtendMode, GradientStop, LineOrientation, PremultipliedColorF};
+use api::{ExtendMode, GradientStop, LineOrientation, PremultipliedColorF, ColorF};
 use api::units::*;
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
@@ -307,6 +307,41 @@ pub struct CachedGradientSegment {
     pub local_rect: LayoutRect,
 }
 
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct FastLinearGradientTask {
+    pub stops: [GradientStopKey; GRADIENT_FP_STOPS],
+    pub orientation: LineOrientation,
+    pub start_point: f32,
+    pub end_point: f32,
+}
+
+impl FastLinearGradientTask {
+    pub fn to_instance(&self, target_rect: &DeviceIntRect) -> FastLinearGradientInstance {
+        let mut stops = [0.0; 4];
+        let mut colors = [PremultipliedColorF::BLACK; 4];
+
+        let axis_select = match self.orientation {
+            LineOrientation::Horizontal => 0.0,
+            LineOrientation::Vertical => 1.0,
+        };
+
+        for (stop, (offset, color)) in self.stops.iter().zip(stops.iter_mut().zip(colors.iter_mut())) {
+            *offset = stop.offset;
+            *color = ColorF::from(stop.color).premultiplied();
+        }
+
+        FastLinearGradientInstance {
+            task_rect: target_rect.to_f32(),
+            axis_select,
+            stops,
+            colors,
+            start_stop: [self.start_point, self.end_point],
+        }
+    }
+}
+
 /// The per-instance shader input of a fast-path linear gradient render task.
 ///
 /// Must match the FAST_LINEAR_GRADIENT instance description in renderer/vertex.rs.
@@ -321,3 +356,4 @@ pub struct FastLinearGradientInstance {
     pub axis_select: f32,
     pub start_stop: [f32; 2],
 }
+
