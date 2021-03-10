@@ -1,0 +1,36 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Test backward/forward navigation</title>
+    <script>
+      // Add stylesheet, script and dom nodes so it triggers multiple actions in the toolbox.
+      function addContent() {
+        const now = Date.now();
+
+        const styleSheetEl = document.createElement("link");
+        styleSheetEl.href = "./doc_theme.css?id=" + now;
+        document.head.append(styleSheetEl);
+
+        const scriptEl = document.createElement("script");
+        scriptEl.src = "./code_inline_bundle.js?id=" + now;
+        document.body.append(scriptEl);
+
+        const li = document.createElement("li");
+        li.textContent = now;
+        document.querySelector("ul.logs").append(li);
+      }
+
+      const params = new URLSearchParams(document.location.search);
+      if (!params.has("no-mutation")){
+        setInterval(addContent, 200);
+      }
+    </script>
+  </head>
+  <body>
+    <ul class="logs"></ul>
+  </body>
+</html>
