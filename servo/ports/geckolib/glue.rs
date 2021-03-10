@@ -1713,19 +1713,19 @@ pub unsafe extern "C" fn Servo_AuthorStyles_RemoveStyleSheet(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AuthorStyles_ForceDirty(styles: &mut RawServoAuthorStyles) {
+pub extern "C" fn Servo_AuthorStyles_ForceDirty(styles: &mut RawServoAuthorStyles) {
     let styles = AuthorStyles::<GeckoStyleSheet>::from_ffi_mut(styles);
     styles.stylesheets.force_dirty();
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AuthorStyles_IsDirty(styles: &RawServoAuthorStyles) -> bool {
+pub extern "C" fn Servo_AuthorStyles_IsDirty(styles: &RawServoAuthorStyles) -> bool {
     let styles = AuthorStyles::<GeckoStyleSheet>::from_ffi(styles);
     styles.stylesheets.dirty()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AuthorStyles_Flush(
+pub extern "C" fn Servo_AuthorStyles_Flush(
     styles: &mut RawServoAuthorStyles,
     document_set: &RawServoStyleSet,
 ) {
@@ -1738,13 +1738,19 @@ pub unsafe extern "C" fn Servo_AuthorStyles_Flush(
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
 
-    let document_data = PerDocumentStyleData::from_ffi(document_set).borrow();
-
-    let stylist = &document_data.stylist;
+    let mut document_data = PerDocumentStyleData::from_ffi(document_set).borrow_mut();
 
     // TODO(emilio): This is going to need an element or something to do proper
     // invalidation in Shadow roots.
-    styles.flush::<GeckoElement>(stylist.device(), stylist.quirks_mode(), &guard);
+    styles.flush::<GeckoElement>(&mut document_data.stylist, &guard);
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_RemoveUniqueEntriesFromAuthorStylesCache(
+    document_set: &RawServoStyleSet,
+) {
+    let mut document_data = PerDocumentStyleData::from_ffi(document_set).borrow_mut();
+    document_data.stylist.remove_unique_author_data_cache_entries();
 }
 
 #[no_mangle]
@@ -6820,7 +6826,7 @@ pub unsafe extern "C" fn Servo_InvalidateStyleForDocStateChanges(
         .map(|(data, _origin)| data)
         .chain(non_document_styles.iter().map(|author_styles| {
             let styles: &_ = AuthorStyles::<GeckoStyleSheet>::from_ffi(author_styles);
-            &styles.data
+            &*styles.data
         }));
 
     let root = GeckoElement(root);
