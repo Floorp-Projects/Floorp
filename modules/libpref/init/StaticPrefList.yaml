@@ -3483,6 +3483,11 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+ 
+- name: dom.workers.testing.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 
 - name: dom.worklet.enabled
   type: bool
