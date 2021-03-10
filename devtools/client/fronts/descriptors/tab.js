@@ -218,15 +218,10 @@ class TabDescriptorFront extends DescriptorMixin(
   async _handleTabEvent(event) {
     switch (event.type) {
       case "TabClose":
-        // Always destroy the toolbox opened for this local tab target.
-        // Toolboxes are no longer destroyed on target destruction.
+        // Always destroy the toolbox opened for this local tab descriptor.
         // When the toolbox is in a Window Host, it won't be removed from the
         // DOM when the tab is closed.
-        const toolbox = gDevTools.getToolbox(this._targetFront);
-        // A few tests are using TabTargetFactory.forTab, but aren't spawning any
-        // toolbox. In this case, the toobox won't destroy the target, so we
-        // do it from here. But ultimately, the target should destroy itself
-        // from the actor side anyway.
+        const toolbox = gDevTools.getToolboxForDescriptor(this);
         if (toolbox) {
           // Toolbox.destroy will call target.destroy eventually.
           await toolbox.destroy();
