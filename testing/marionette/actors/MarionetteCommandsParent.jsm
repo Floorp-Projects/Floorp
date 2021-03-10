@@ -125,10 +125,6 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     return this.sendQuery("MarionetteCommandsParent:getActiveElement");
   }
 
-  async getCurrentUrl() {
-    return this.sendQuery("MarionetteCommandsParent:getCurrentUrl");
-  }
-
   async getElementAttribute(webEl, name) {
     return this.sendQuery("MarionetteCommandsParent:getElementAttribute", {
       elem: webEl,
