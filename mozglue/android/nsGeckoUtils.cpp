@@ -44,24 +44,6 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_verifyCRCs(JNIEnv* jenv, jclass,
   return jboolean(valid);
 }
 
-extern "C" __attribute__((visibility("default"))) jobject MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeAllocateDirectBuffer(
-    JNIEnv* jenv, jclass, jlong size) {
-  jobject buffer = nullptr;
-  void* mem = malloc(size);
-  if (mem) {
-    buffer = jenv->NewDirectByteBuffer(mem, size);
-    if (!buffer) free(mem);
-  }
-  return buffer;
-}
-
-extern "C" __attribute__((visibility("default"))) void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeFreeDirectBuffer(
-    JNIEnv* jenv, jclass, jobject buf) {
-  free(jenv->GetDirectBufferAddress(buf));
-}
-
 extern "C" __attribute__((visibility("default"))) jlong MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv* jenv, jclass,
                                                 jstring path) {
