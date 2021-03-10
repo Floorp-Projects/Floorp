@@ -39,7 +39,7 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
       MOZ_ASSERT(gfx::gfxVars::UseWebRender());
       if (gfx::gfxVars::UseSoftwareWebRender()) {
 #ifdef XP_WIN
-        if (StaticPrefs::gfx_webrender_software_d3d11_AtStartup() &&
+        if (gfx::gfxVars::AllowSoftwareWebRenderD3D11() &&
             gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING)) {
           return "webrender_software_d3d11";
         }
