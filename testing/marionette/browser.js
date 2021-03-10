@@ -13,6 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
   Log: "chrome://marionette/content/log.js",
@@ -22,6 +24,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebElementEventTarget: "chrome://marionette/content/dom.js",
 });
 
+XPCOMUtils.defineLazyGetter(
+  this,
+  "isAndroid",
+  () => AppConstants.platform === "android"
+);
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 /** @namespace */
@@ -128,7 +135,7 @@ browser.getBrowserForTab = function(tab) {
  */
 browser.getTabBrowser = function(window) {
   // GeckoView
-  if (Services.androidBridge) {
+  if (isAndroid) {
     return new MobileTabBrowser(window);
     // Firefox
   } else if ("gBrowser" in window) {
