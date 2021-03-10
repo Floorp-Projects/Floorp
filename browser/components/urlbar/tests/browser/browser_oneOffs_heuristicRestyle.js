@@ -229,12 +229,11 @@ async function assertState(
 
 add_task(async function init() {
   let oldDefaultEngine = await Services.search.getDefault();
-  let engine = await Services.search.addEngineWithDetails(
-    TEST_DEFAULT_ENGINE_NAME,
-    {
-      template: `http://example.com/?search={searchTerms}`,
-    }
-  );
+  await SearchTestUtils.installSearchExtension({
+    name: TEST_DEFAULT_ENGINE_NAME,
+    keyword: "@test",
+  });
+  let engine = Services.search.getEngineByName(TEST_DEFAULT_ENGINE_NAME);
   await Services.search.setDefault(engine);
   await Services.search.moveEngine(engine, 0);
 
@@ -249,7 +248,6 @@ add_task(async function init() {
 
   registerCleanupFunction(async function() {
     await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(engine);
     await PlacesUtils.history.clear();
     await PlacesUtils.keywords.remove(KEYWORD);
   });

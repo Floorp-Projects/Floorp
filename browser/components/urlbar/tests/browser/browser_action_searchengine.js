@@ -14,24 +14,19 @@ add_task(async function setup() {
     ],
   });
 
-  const engine = await Services.search.addEngineWithDetails("MozSearch", {
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({ name: "MozSearch" });
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearchPrivate",
+    search_url: "https://example.com/private",
   });
-  const engine2 = await Services.search.addEngineWithDetails(
-    "MozSearchPrivate",
-    {
-      method: "GET",
-      template: "http://example.com/private?q={searchTerms}",
-    }
-  );
+
   let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(
+    Services.search.getEngineByName("MozSearch")
+  );
 
   registerCleanupFunction(async function() {
     await Services.search.setDefault(originalEngine);
-    await Services.search.removeEngine(engine);
-    await Services.search.removeEngine(engine2);
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
   });
@@ -94,7 +89,7 @@ add_task(async function test_search_normal_window() {
     }
   });
 
-  await testSearch(window, "MozSearch", "http://example.com/");
+  await testSearch(window, "MozSearch", "https://example.com/");
 });
 
 add_task(async function test_search_private_window_no_separate_default() {
@@ -104,7 +99,7 @@ add_task(async function test_search_private_window_no_separate_default() {
     await BrowserTestUtils.closeWindow(win);
   });
 
-  await testSearch(win, "MozSearch", "http://example.com/");
+  await testSearch(win, "MozSearch", "https://example.com/");
 });
 
 add_task(async function test_search_private_window() {
@@ -123,5 +118,5 @@ add_task(async function test_search_private_window() {
 
   const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-  await testSearch(win, "MozSearchPrivate", "http://example.com/private");
+  await testSearch(win, "MozSearchPrivate", "https://example.com/private");
 });

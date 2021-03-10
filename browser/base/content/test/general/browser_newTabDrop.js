@@ -1,12 +1,16 @@
 const ANY_URL = undefined;
 
+const { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
+
+SearchTestUtils.init(this);
+
 registerCleanupFunction(async function cleanup() {
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   }
   await Services.search.setDefault(originalEngine);
-  let engine = Services.search.getEngineByName("MozSearch");
-  await Services.search.removeEngine(engine);
 });
 
 let originalEngine;
@@ -15,9 +19,10 @@ add_task(async function test_setup() {
   requestLongerTimeout(2);
 
   // Stop search-engine loads from hitting the network
-  await Services.search.addEngineWithDetails("MozSearch", {
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearch",
+    search_url: "https://example.com/",
+    search_url_get_params: "q={searchTerms}",
   });
   let engine = Services.search.getEngineByName("MozSearch");
   originalEngine = await Services.search.getDefault();
