@@ -240,7 +240,7 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   nsTArray<OpDestroy> mDestroyedActors;
   nsTArray<WebRenderParentCommand> mParentCommands;
-  nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
+  nsTHashMap<nsUint64HashKey, CompositableClient*> mCompositables;
   bool mIsInTransaction;
   bool mIsInClearCachedResources;
   wr::IdNamespace mIdNamespace;
@@ -255,10 +255,10 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   bool mSentDisplayList;
 
   uint32_t mFontKeysDeleted;
-  nsDataHashtable<UnscaledFontHashKey, wr::FontKey> mFontKeys;
+  nsTHashMap<UnscaledFontHashKey, wr::FontKey> mFontKeys;
 
   uint32_t mFontInstanceKeysDeleted;
-  nsDataHashtable<ScaledFontHashKey, wr::FontInstanceKey> mFontInstanceKeys;
+  nsTHashMap<ScaledFontHashKey, wr::FontInstanceKey> mFontInstanceKeys;
 
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
 

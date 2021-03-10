@@ -46,7 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCoord.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsHashKeys.h"
@@ -101,7 +101,7 @@ NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
-nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>*
+nsTHashMap<KeyboardHashKey, const SpoofingKeyboardCode*>*
     nsRFPService::sSpoofingKeyboardCodes = nullptr;
 static mozilla::StaticMutex sLock;
 
@@ -778,7 +778,7 @@ void nsRFPService::MaybeCreateSpoofingKeyCodes(const KeyboardLangs aLang,
                                                const KeyboardRegions aRegion) {
   if (sSpoofingKeyboardCodes == nullptr) {
     sSpoofingKeyboardCodes =
-        new nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>();
+        new nsTHashMap<KeyboardHashKey, const SpoofingKeyboardCode*>();
   }
 
   if (KeyboardLang::EN == aLang) {

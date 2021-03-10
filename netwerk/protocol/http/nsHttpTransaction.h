@@ -535,7 +535,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   RefPtr<HTTPSRecordResolver> mResolver;
   TRANSACTION_RESTART_REASON mRestartReason = TRANSACTION_RESTART_NONE;
 
-  nsDataHashtable<nsUint32HashKey, uint32_t> mEchRetryCounterMap;
+  nsTHashMap<nsUint32HashKey, uint32_t> mEchRetryCounterMap;
 
   bool mSupportsHTTP3 = false;
 };

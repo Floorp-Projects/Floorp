@@ -15,7 +15,7 @@ using namespace mozilla::a11y;
 
 #define PREF_ACCESSIBILITY_MAC_DEBUG "accessibility.mac.debug"
 
-static nsDataHashtable<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
+static nsTHashMap<nsUint64HashKey, MOXTextMarkerDelegate*> sDelegates;
 
 @implementation MOXTextMarkerDelegate
 

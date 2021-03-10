@@ -15,7 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
@@ -42,11 +42,11 @@ class ClientHandleParent;
 class ClientManagerService final {
   // Store the ClientSourceParent objects in a hash table.  We want to
   // optimize for insertion, removal, and lookup by UUID.
-  nsDataHashtable<nsIDHashKey, ClientSourceParent*> mSourceTable;
+  nsTHashMap<nsIDHashKey, ClientSourceParent*> mSourceTable;
 
   // The set of handles waiting for their corresponding ClientSourceParent
   // to be created.
-  nsDataHashtable<nsIDHashKey, nsTArray<ClientHandleParent*>> mPendingHandles;
+  nsTHashMap<nsIDHashKey, nsTArray<ClientHandleParent*>> mPendingHandles;
 
   nsTArray<ClientManagerParent*> mManagerList;
 

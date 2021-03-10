@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_StorageActivityService_h
 #define mozilla_dom_StorageActivityService_h
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsIObserver.h"
 #include "nsIStorageActivityService.h"
 #include "nsITimer.h"
@@ -58,7 +58,7 @@ class StorageActivityService final : public nsIStorageActivityService,
   void MaybeStopTimer();
 
   // Activities grouped by origin (+OriginAttributes).
-  nsDataHashtable<nsCStringHashKey, PRTime> mActivities;
+  nsTHashMap<nsCStringHashKey, PRTime> mActivities;
 
   nsCOMPtr<nsITimer> mTimer;
 };

@@ -24,7 +24,7 @@ namespace dom = mozilla::dom;
 
 namespace {
 uint64_t gSHEntrySharedID = 0;
-nsDataHashtable<nsUint64HashKey, mozilla::dom::SHEntrySharedParentState*>*
+nsTHashMap<nsUint64HashKey, mozilla::dom::SHEntrySharedParentState*>*
     sIdToSharedState = nullptr;
 }  // namespace
 
@@ -49,7 +49,7 @@ static void AddSHEntrySharedParentState(
 
   if (!sIdToSharedState) {
     sIdToSharedState =
-        new nsDataHashtable<nsUint64HashKey, SHEntrySharedParentState*>();
+        new nsTHashMap<nsUint64HashKey, SHEntrySharedParentState*>();
   }
   sIdToSharedState->InsertOrUpdate(aSharedState->mId, aSharedState);
 }

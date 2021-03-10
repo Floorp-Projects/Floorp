@@ -151,7 +151,7 @@
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsEscape.h"
@@ -1230,8 +1230,7 @@ class DatabaseConnection::UpdateRefcountFunction final
   DatabaseConnection* const mConnection;
   FileManager& mFileManager;
   nsClassHashtable<nsUint64HashKey, FileInfoEntry> mFileInfoEntries;
-  nsDataHashtable<nsUint64HashKey, NotNull<FileInfoEntry*>>
-      mSavepointEntriesIndex;
+  nsTHashMap<nsUint64HashKey, NotNull<FileInfoEntry*>> mSavepointEntriesIndex;
 
   nsTArray<int64_t> mJournalsToCreateBeforeCommit;
   nsTArray<int64_t> mJournalsToRemoveAfterCommit;
@@ -1783,7 +1782,7 @@ class DatabaseOperationBase : public Runnable,
  protected:
   class AutoSetProgressHandler;
 
-  typedef nsDataHashtable<nsUint64HashKey, bool> UniqueIndexTable;
+  typedef nsTHashMap<nsUint64HashKey, bool> UniqueIndexTable;
 
   const nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   const nsID mBackgroundChildLoggingId;
@@ -5155,7 +5154,7 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
   PRTime mStartTime;
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTArray<DirectoryInfo> mDirectoryInfos;
-  nsDataHashtable<nsStringHashKey, DatabaseMaintenance*> mDatabaseMaintenances;
+  nsTHashMap<nsStringHashKey, DatabaseMaintenance*> mDatabaseMaintenances;
   nsresult mResultCode;
   Atomic<bool> mAborted;
   State mState;
@@ -5968,8 +5967,7 @@ typedef nsClassHashtable<nsCStringHashKey, DatabaseActorInfo>
 
 StaticAutoPtr<DatabaseActorHashtable> gLiveDatabaseHashtable;
 
-using PrivateBrowsingInfoHashtable =
-    nsDataHashtable<nsCStringHashKey, CipherKey>;
+using PrivateBrowsingInfoHashtable = nsTHashMap<nsCStringHashKey, CipherKey>;
 // XXX Maybe we can avoid a mutex here by moving all accesses to the background
 // thread.
 StaticAutoPtr<DataMutex<PrivateBrowsingInfoHashtable>>
@@ -5979,12 +5977,12 @@ StaticRefPtr<ConnectionPool> gConnectionPool;
 
 StaticRefPtr<FileHandleThreadPool> gFileHandleThreadPool;
 
-typedef nsDataHashtable<nsIDHashKey, DatabaseLoggingInfo*>
+typedef nsTHashMap<nsIDHashKey, DatabaseLoggingInfo*>
     DatabaseLoggingInfoHashtable;
 
 StaticAutoPtr<DatabaseLoggingInfoHashtable> gLoggingInfoHashtable;
 
-typedef nsDataHashtable<nsUint32HashKey, uint32_t> TelemetryIdHashtable;
+typedef nsTHashMap<nsUint32HashKey, uint32_t> TelemetryIdHashtable;
 
 StaticAutoPtr<TelemetryIdHashtable> gTelemetryIdHashtable;
 

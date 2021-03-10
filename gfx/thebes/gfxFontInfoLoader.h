@@ -112,11 +112,10 @@ class FontInfoData {
   bool mLoadCmaps;
 
   // face name ==> per-face data
-  nsDataHashtable<nsCStringHashKey, FontFaceData> mFontFaceData;
+  nsTHashMap<nsCStringHashKey, FontFaceData> mFontFaceData;
 
   // canonical family name ==> array of localized family names
-  nsDataHashtable<nsCStringHashKey, CopyableTArray<nsCString> >
-      mOtherFamilyNames;
+  nsTHashMap<nsCStringHashKey, CopyableTArray<nsCString> > mOtherFamilyNames;
 };
 
 // gfxFontInfoLoader - helper class for loading font info on async thread

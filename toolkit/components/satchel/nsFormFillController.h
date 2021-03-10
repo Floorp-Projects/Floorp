@@ -15,7 +15,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIFormAutoComplete.h"
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIDocShell.h"
 #include "nsILoginAutoCompleteSearch.h"
@@ -127,8 +127,8 @@ class nsFormFillController final : public nsIFormFillController,
   nsCOMPtr<nsIFormAutoComplete> mLastFormAutoComplete;
   nsString mLastSearchString;
 
-  nsDataHashtable<nsPtrHashKey<const nsINode>, bool> mPwmgrInputs;
-  nsDataHashtable<nsPtrHashKey<const nsINode>, bool> mAutofillInputs;
+  nsTHashMap<nsPtrHashKey<const nsINode>, bool> mPwmgrInputs;
+  nsTHashMap<nsPtrHashKey<const nsINode>, bool> mAutofillInputs;
 
   uint16_t mFocusAfterRightClickThreshold;
   uint32_t mTimeout;

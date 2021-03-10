@@ -636,8 +636,7 @@ const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
     uint16_t aGID, IntRect* aBounds) {
   if (!mGlyphMetrics) {
     mGlyphMetrics =
-        mozilla::MakeUnique<nsDataHashtable<nsUint32HashKey, GlyphMetrics>>(
-            128);
+        mozilla::MakeUnique<nsTHashMap<nsUint32HashKey, GlyphMetrics>>(128);
   }
 
   return mGlyphMetrics->LookupOrInsertWith(aGID, [&] {

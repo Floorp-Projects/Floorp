@@ -173,7 +173,7 @@ typedef mozilla::Vector<HistogramSnapshotInfo> HistogramSnapshotsArray;
 typedef mozilla::Vector<HistogramSnapshotsArray> HistogramProcessSnapshotsArray;
 
 // The following is used to handle snapshot information for keyed histograms.
-typedef nsDataHashtable<nsCStringHashKey, HistogramSnapshotData>
+typedef nsTHashMap<nsCStringHashKey, HistogramSnapshotData>
     KeyedHistogramSnapshotData;
 
 struct KeyedHistogramSnapshotInfo {

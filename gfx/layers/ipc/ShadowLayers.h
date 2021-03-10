@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"                // for already_AddRefed
 #include "nsRegion.h"                // for nsIntRegion
 #include "nsTArrayForwardDeclare.h"  // for nsTArray
+#include "nsTHashMap.h"
 #include "nsIWidget.h"
 #include <vector>
 
@@ -423,7 +424,7 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   nsTArray<PluginWindowData> mPluginWindowData;
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
   uint64_t mNextLayerHandle;
-  nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
+  nsTHashMap<nsUint64HashKey, CompositableClient*> mCompositables;
   PaintTiming mPaintTiming;
   /**
    * ShadowLayerForwarder might dispatch tasks to main while puppet widget and

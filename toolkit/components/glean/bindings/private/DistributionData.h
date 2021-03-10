@@ -6,13 +6,13 @@
 #ifndef mozilla_glean_DistributionData_h
 #define mozilla_glean_DistributionData_h
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 namespace mozilla::glean {
 
 struct DistributionData final {
   uint64_t sum;
-  nsDataHashtable<nsUint64HashKey, uint64_t> values;
+  nsTHashMap<nsUint64HashKey, uint64_t> values;
 };
 
 }  // namespace mozilla::glean

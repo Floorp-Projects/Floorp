@@ -10,7 +10,7 @@
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/StyleSheet.h"
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 struct RawServoStyleRule;
 
@@ -54,8 +54,8 @@ class ServoStyleRuleMap {
   void FillTableFromRuleList(ServoCSSRuleList&);
   void FillTableFromStyleSheet(StyleSheet&);
 
-  typedef nsDataHashtable<nsPtrHashKey<const RawServoStyleRule>,
-                          WeakPtr<dom::CSSStyleRule>>
+  typedef nsTHashMap<nsPtrHashKey<const RawServoStyleRule>,
+                     WeakPtr<dom::CSSStyleRule>>
       Hashtable;
   Hashtable mTable;
 };

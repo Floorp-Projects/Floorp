@@ -70,7 +70,7 @@ void JSActor::AfterDestroy() {
 
   // Take our queries out, in case somehow rejecting promises can trigger
   // additions or removals.
-  nsDataHashtable<nsUint64HashKey, PendingQuery> pendingQueries;
+  nsTHashMap<nsUint64HashKey, PendingQuery> pendingQueries;
   mPendingQueries.SwapElements(pendingQueries);
   for (auto& entry : pendingQueries) {
     nsPrintfCString message(

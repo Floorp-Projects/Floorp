@@ -125,7 +125,7 @@ class WaylandGLSurface {
   struct wl_egl_window* mEGLWindow;
 };
 
-static nsDataHashtable<nsPtrHashKey<void>, WaylandGLSurface*> sWaylandGLSurface;
+static nsTHashMap<nsPtrHashKey<void>, WaylandGLSurface*> sWaylandGLSurface;
 
 void DeleteWaylandGLSurface(EGLSurface surface) {
   // We're running on Wayland which means our EGLSurface may

@@ -17,7 +17,7 @@
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
@@ -302,7 +302,7 @@ class WindowGlobalParent final : public WindowContext,
     void UpdateSiteOriginsFrom(WindowGlobalParent* aParent, bool aIncrease);
     void Accumulate();
 
-    nsDataHashtable<nsCStringHashKey, int32_t> mOriginMap;
+    nsTHashMap<nsCStringHashKey, int32_t> mOriginMap;
     uint32_t mMaxOrigins = 0;
   };
 

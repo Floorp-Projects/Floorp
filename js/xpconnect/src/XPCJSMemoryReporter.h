@@ -13,7 +13,7 @@ class nsIHandleReportCallback;
 namespace xpc {
 
 // The key is the window ID.
-typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;
+typedef nsTHashMap<nsUint64HashKey, nsCString> WindowPaths;
 
 // This is very nearly an instance of nsIMemoryReporter, but it's not,
 // because it's invoked by nsWindowMemoryReporter in order to get |windowPaths|

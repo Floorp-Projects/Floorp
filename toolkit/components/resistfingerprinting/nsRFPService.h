@@ -250,7 +250,7 @@ class nsRFPService final : public nsIObserver {
                                     const WidgetKeyboardEvent* aKeyboardEvent,
                                     SpoofingKeyboardCode& aOut);
 
-  static nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>*
+  static nsTHashMap<KeyboardHashKey, const SpoofingKeyboardCode*>*
       sSpoofingKeyboardCodes;
 
   static TimerPrecisionType GetTimerPrecisionType(bool aIsSystemPrincipal,

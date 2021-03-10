@@ -15,7 +15,7 @@ namespace widget {
 NS_IMPL_ISUPPORTS(AndroidAlerts, nsIAlertsService)
 
 StaticAutoPtr<AndroidAlerts::ListenerMap> AndroidAlerts::sListenerMap;
-nsDataHashtable<nsStringHashKey, java::WebNotification::GlobalRef>
+nsTHashMap<nsStringHashKey, java::WebNotification::GlobalRef>
     AndroidAlerts::mNotificationsMap;
 
 NS_IMETHODIMP

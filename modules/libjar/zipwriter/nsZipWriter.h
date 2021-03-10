@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "mozilla/Attributes.h"
 
 #define ZIPWRITER_CONTRACTID "@mozilla.org/zipwriter;1"
@@ -59,7 +59,7 @@ class nsZipWriter final : public nsIZipWriter, public nsIRequestObserver {
   nsCOMPtr<nsIOutputStream> mStream;
   nsCOMArray<nsZipHeader> mHeaders;
   nsTArray<nsZipQueueItem> mQueue;
-  nsDataHashtable<nsCStringHashKey, int32_t> mEntryHash;
+  nsTHashMap<nsCStringHashKey, int32_t> mEntryHash;
   nsCString mComment;
 
   nsresult SeekCDS();

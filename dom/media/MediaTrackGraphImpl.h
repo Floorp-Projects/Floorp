@@ -770,7 +770,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   // used to deliver audio input frames and to notify the listeners that the
   // audio device that delivers the audio frames has changed.
   // This is only touched on the graph thread.
-  nsDataHashtable<nsVoidPtrHashKey, nsTArray<RefPtr<AudioDataListener>>>
+  nsTHashMap<nsVoidPtrHashKey, nsTArray<RefPtr<AudioDataListener>>>
       mInputDeviceUsers;
 
   /**

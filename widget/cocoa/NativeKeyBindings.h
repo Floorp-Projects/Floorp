@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsIWidget.h"
 
 struct objc_selector;
@@ -21,7 +21,7 @@ class Maybe;
 
 namespace widget {
 
-typedef nsDataHashtable<nsPtrHashKey<objc_selector>, Command>
+typedef nsTHashMap<nsPtrHashKey<objc_selector>, Command>
     SelectorCommandHashtable;
 
 class NativeKeyBindings final {

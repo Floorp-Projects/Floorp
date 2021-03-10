@@ -11,7 +11,7 @@
 #include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/Maybe.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -262,7 +262,7 @@ class MediaStatusManager : public IMediaInfoUpdater {
   MediaSessionPlaybackState mActualPlaybackState =
       MediaSessionPlaybackState::None;
 
-  nsDataHashtable<nsUint64HashKey, MediaSessionInfo> mMediaSessionInfoMap;
+  nsTHashMap<nsUint64HashKey, MediaSessionInfo> mMediaSessionInfoMap;
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
   MediaEventProducer<nsTArray<MediaSessionAction>>
       mSupportedActionsChangedEvent;

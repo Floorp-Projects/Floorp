@@ -25,7 +25,7 @@
 #include "nsIURI.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsSHEntry.h"
 #include "SessionHistoryEntry.h"
 #include "nsTArray.h"
@@ -994,7 +994,7 @@ void nsSHistory::WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
 
 static void MarkAsInitialEntry(
     SessionHistoryEntry* aEntry,
-    nsDataHashtable<nsIDHashKey, SessionHistoryEntry*>& aHashtable) {
+    nsTHashMap<nsIDHashKey, SessionHistoryEntry*>& aHashtable) {
   if (!aEntry->BCHistoryLength().Modified()) {
     ++(aEntry->BCHistoryLength());
   }
@@ -1030,7 +1030,7 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
   // Set all the entries hanging of the first entry that we keep
   // (mEntries[aNumEntries]) as being created as the result of a load
   // (so contributing one to their BCHistoryLength).
-  nsDataHashtable<nsIDHashKey, SessionHistoryEntry*> docshellIDToEntry;
+  nsTHashMap<nsIDHashKey, SessionHistoryEntry*> docshellIDToEntry;
   if (aNumEntries != Length()) {
     nsCOMPtr<SessionHistoryEntry> she =
         do_QueryInterface(mEntries[aNumEntries]);
@@ -2206,7 +2206,7 @@ nsSHistory::IsEmptyOrHasEntriesForSingleTopLevelPage() {
 }
 
 static void CollectEntries(
-    nsDataHashtable<nsIDHashKey, SessionHistoryEntry*>& aHashtable,
+    nsTHashMap<nsIDHashKey, SessionHistoryEntry*>& aHashtable,
     SessionHistoryEntry* aEntry) {
   aHashtable.InsertOrUpdate(aEntry->DocshellID(), aEntry);
   for (const RefPtr<SessionHistoryEntry>& entry : aEntry->Children()) {
@@ -2217,7 +2217,7 @@ static void CollectEntries(
 }
 
 static void UpdateEntryLength(
-    nsDataHashtable<nsIDHashKey, SessionHistoryEntry*>& aHashtable,
+    nsTHashMap<nsIDHashKey, SessionHistoryEntry*>& aHashtable,
     SessionHistoryEntry* aNewEntry, bool aMove) {
   SessionHistoryEntry* oldEntry = aHashtable.Get(aNewEntry->DocshellID());
   if (oldEntry) {
@@ -2256,7 +2256,7 @@ void nsSHistory::UpdateEntryLength(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry,
     return;
   }
 
-  nsDataHashtable<nsIDHashKey, SessionHistoryEntry*> docshellIDToEntry;
+  nsTHashMap<nsIDHashKey, SessionHistoryEntry*> docshellIDToEntry;
   CollectEntries(docshellIDToEntry, oldSHE);
 
   ::UpdateEntryLength(docshellIDToEntry, newSHE, aMove);

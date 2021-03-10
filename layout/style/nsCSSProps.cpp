@@ -36,8 +36,7 @@ using namespace mozilla;
 static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
-static nsDataHashtable<nsCStringHashKey, nsCSSPropertyID>*
-    gPropertyIDLNameTable;
+static nsTHashMap<nsCStringHashKey, nsCSSPropertyID>* gPropertyIDLNameTable;
 
 static const char* const kCSSRawFontDescs[] = {
 #define CSS_FONT_DESC(name_, method_) #name_,
@@ -96,8 +95,7 @@ void nsCSSProps::AddRefTable(void) {
     gCounterDescTable =
         CreateStaticTable(kCSSRawCounterDescs, eCSSCounterDesc_COUNT);
 
-    gPropertyIDLNameTable =
-        new nsDataHashtable<nsCStringHashKey, nsCSSPropertyID>;
+    gPropertyIDLNameTable = new nsTHashMap<nsCStringHashKey, nsCSSPropertyID>;
     for (nsCSSPropertyID p = nsCSSPropertyID(0);
          size_t(p) < ArrayLength(kIDLNameTable); p = nsCSSPropertyID(p + 1)) {
       if (kIDLNameTable[p]) {

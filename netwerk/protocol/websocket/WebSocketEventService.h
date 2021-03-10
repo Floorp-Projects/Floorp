@@ -91,7 +91,7 @@ class WebSocketEventService final : public nsIWebSocketEventService,
 
   typedef nsTArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
 
-  nsDataHashtable<nsUint32HashKey, nsWeakPtr> mWebSocketImplMap;
+  nsTHashMap<nsUint32HashKey, nsWeakPtr> mWebSocketImplMap;
 
   struct WindowListener {
     WindowListeners mListeners;

@@ -112,7 +112,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDeckFrame.h"
 #include "nsDisplayList.h"
 #include "nsFlexContainerFrame.h"
@@ -188,7 +188,7 @@ typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 static ViewID sScrollIdCounter = ScrollableLayerGuid::START_SCROLL_ID;
 
-typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
+typedef nsTHashMap<nsUint64HashKey, nsIContent*> ContentMap;
 static ContentMap* sContentMap = nullptr;
 static ContentMap& GetContentMap() {
   if (!sContentMap) {
@@ -2942,7 +2942,7 @@ void PrintHitTestInfoStats(nsDisplayList* aList) {
 // Apply a batch of effects updates generated during a paint to their
 // respective remote browsers.
 static void ApplyEffectsUpdates(
-    const nsDataHashtable<nsPtrHashKey<RemoteBrowser>, EffectsInfo>& aUpdates) {
+    const nsTHashMap<nsPtrHashKey<RemoteBrowser>, EffectsInfo>& aUpdates) {
   for (auto iter = aUpdates.ConstIter(); !iter.Done(); iter.Next()) {
     auto browser = iter.Key();
     auto update = iter.Data();

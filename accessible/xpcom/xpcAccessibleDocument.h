@@ -93,7 +93,7 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
   xpcAccessibleDocument(const xpcAccessibleDocument&) = delete;
   xpcAccessibleDocument& operator=(const xpcAccessibleDocument&) = delete;
 
-  nsDataHashtable<nsPtrHashKey<const void>, xpcAccessibleGeneric*> mCache;
+  nsTHashMap<nsPtrHashKey<const void>, xpcAccessibleGeneric*> mCache;
   bool mRemote;
 };
 

@@ -12,7 +12,7 @@
 #include "nsISHEntry.h"
 #include "nsSHEntryShared.h"
 #include "nsStructuredCloneContainer.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 class nsDocShellLoadState;
 class nsIChannel;
@@ -395,7 +395,7 @@ class SessionHistoryEntry : public nsISHEntry {
 
   HistoryEntryCounterForBrowsingContext mBCHistoryLength;
 
-  static nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>* sLoadIdToEntry;
+  static nsTHashMap<nsUint64HashKey, SessionHistoryEntry*>* sLoadIdToEntry;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SessionHistoryEntry, NS_SESSIONHISTORYENTRY_IID)

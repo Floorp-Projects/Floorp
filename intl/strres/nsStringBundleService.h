@@ -7,7 +7,7 @@
 #define nsStringBundleService_h__
 
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsIStringBundle.h"
 #include "nsIObserver.h"
@@ -70,7 +70,7 @@ class nsStringBundleService : public nsIStringBundleService,
   bundleCacheEntry_t* insertIntoCache(already_AddRefed<nsIStringBundle> aBundle,
                                       const nsACString& aHashKey);
 
-  nsDataHashtable<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
+  nsTHashMap<nsCStringHashKey, bundleCacheEntry_t*> mBundleMap;
   // LRU list of cached entries, with the least-recently-used entry first.
   mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
   // List of cached shared-memory string bundles, in arbitrary order.

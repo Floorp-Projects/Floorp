@@ -12,7 +12,7 @@
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsIChannel.h"
 #include "BackgroundUtils.h"
 
@@ -46,8 +46,8 @@ class ChildProcessChannelListener final {
   };
 
   // TODO Backtrack.
-  nsDataHashtable<nsUint64HashKey, Callback> mCallbacks;
-  nsDataHashtable<nsUint64HashKey, CallbackArgs> mChannelArgs;
+  nsTHashMap<nsUint64HashKey, Callback> mCallbacks;
+  nsTHashMap<nsUint64HashKey, CallbackArgs> mChannelArgs;
 };
 
 }  // namespace dom

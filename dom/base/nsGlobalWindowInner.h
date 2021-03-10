@@ -17,7 +17,7 @@
 // Helper Classes
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsCycleCollectionParticipant.h"
 
 // Interfaces Needed
@@ -189,7 +189,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowInner*>
+  typedef nsTHashMap<nsUint64HashKey, nsGlobalWindowInner*>
       InnerWindowByIdTable;
 
   static void AssertIsOnMainThread()

@@ -19,15 +19,14 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-nsDataHashtable<nsUint32HashKey, TouchManager::TouchInfo>*
+nsTHashMap<nsUint32HashKey, TouchManager::TouchInfo>*
     TouchManager::sCaptureTouchList;
 layers::LayersId TouchManager::sCaptureTouchLayersId;
 
 /*static*/
 void TouchManager::InitializeStatics() {
   NS_ASSERTION(!sCaptureTouchList, "InitializeStatics called multiple times!");
-  sCaptureTouchList =
-      new nsDataHashtable<nsUint32HashKey, TouchManager::TouchInfo>;
+  sCaptureTouchList = new nsTHashMap<nsUint32HashKey, TouchManager::TouchInfo>;
   sCaptureTouchLayersId = layers::LayersId{0};
 }
 

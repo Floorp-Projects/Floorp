@@ -158,7 +158,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   nsAutoString mBuffer;
   AutoTArray<char16_t, 16> mEmbeddingStack;
   AutoTArray<FrameInfo, 16> mLogicalFrames;
-  nsDataHashtable<nsPtrHashKey<const nsIContent>, int32_t> mContentToFrameIndex;
+  nsTHashMap<nsPtrHashKey<const nsIContent>, int32_t> mContentToFrameIndex;
   // Cached presentation context for the frames we're processing.
   nsPresContext* mPresContext;
   bool mIsVisual;

@@ -130,7 +130,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // We cache all data for the current drag context,
   // because waiting for the data in GetTargetDragData can be very slow.
-  nsDataHashtable<nsCStringHashKey, nsTArray<uint8_t>> mCachedData;
+  nsTHashMap<nsCStringHashKey, nsTArray<uint8_t>> mCachedData;
 
 #ifdef MOZ_WAYLAND
   RefPtr<nsWaylandDragContext> mPendingWaylandDragContext;

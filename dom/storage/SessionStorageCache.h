@@ -9,7 +9,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/LSWriteOptimizerImpl.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 namespace dom {
@@ -92,7 +92,7 @@ class SessionStorageCache final {
 
     bool ProcessUsageDelta(int64_t aDelta);
 
-    nsDataHashtable<nsStringHashKey, nsString> mKeys;
+    nsTHashMap<nsStringHashKey, nsString> mKeys;
 
     SSWriteOptimizer mWriteOptimizer;
 

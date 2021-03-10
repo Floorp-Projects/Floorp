@@ -11,7 +11,7 @@
 #include "nsMenuBaseX.h"
 #include "nsIMutationObserver.h"
 #include "nsHashKeys.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsString.h"
 
 class nsMenuItemX;
@@ -46,10 +46,10 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
                                // give to next item that asks
 
   // stores observers for content change notification
-  nsDataHashtable<nsPtrHashKey<nsIContent>, nsChangeObserver*> mContentToObserverTable;
+  nsTHashMap<nsPtrHashKey<nsIContent>, nsChangeObserver*> mContentToObserverTable;
 
   // stores mapping of command IDs to menu objects
-  nsDataHashtable<nsUint32HashKey, nsMenuItemX*> mCommandToMenuObjectTable;
+  nsTHashMap<nsUint32HashKey, nsMenuItemX*> mCommandToMenuObjectTable;
 
   // Stores references to all the MenuItemInfo objects created with weak
   // references to us.  They may live longer than we do, so when we're

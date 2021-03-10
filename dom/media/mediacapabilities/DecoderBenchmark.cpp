@@ -189,8 +189,8 @@ RefPtr<BenchmarkScorePromise> DecoderBenchmark::Get(
                          KeyUtil::CreateKey(aBenchInfo));
 }
 
-static nsDataHashtable<nsCStringHashKey, int32_t> DecoderVersionTable() {
-  nsDataHashtable<nsCStringHashKey, int32_t> decoderVersionTable;
+static nsTHashMap<nsCStringHashKey, int32_t> DecoderVersionTable() {
+  nsTHashMap<nsCStringHashKey, int32_t> decoderVersionTable;
 
   /*
    * For the decoders listed here, the benchmark version number will be checked.

@@ -6,7 +6,7 @@
 
 #include "nsTHashtable.h"
 #include "nsBaseHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -1019,7 +1019,7 @@ INSTANTIATE_TYPED_TEST_CASE_P(Hashtables, BaseHashtableTest,
 TEST(Hashtables, DataHashtable)
 {
   // check a data-hashtable
-  nsDataHashtable<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
+  nsTHashMap<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     UniToEntity.InsertOrUpdate(entity.mUnicode, entity.mStr);
@@ -1053,14 +1053,14 @@ TEST(Hashtables, DataHashtable_STLIterators)
 {
   using mozilla::Unused;
 
-  nsDataHashtable<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
+  nsTHashMap<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     UniToEntity.InsertOrUpdate(entity.mUnicode, entity.mStr);
   }
 
   // operators, including conversion from iterator to const_iterator
-  nsDataHashtable<nsUint32HashKey, const char*>::const_iterator ci =
+  nsTHashMap<nsUint32HashKey, const char*>::const_iterator ci =
       UniToEntity.begin();
   ++ci;
   ASSERT_EQ(1, std::distance(UniToEntity.cbegin(), ci++));
@@ -1092,7 +1092,7 @@ TEST(Hashtables, DataHashtable_STLIterators)
   {
     std::set<EntityNode> entities(gEntities, gEntities + ENTITY_COUNT);
     for (const auto& entity :
-         const_cast<const nsDataHashtable<nsUint32HashKey, const char*>&>(
+         const_cast<const nsTHashMap<nsUint32HashKey, const char*>&>(
              UniToEntity)) {
       ASSERT_EQ(1u,
                 entities.erase(EntityNode{entity.GetData(), entity.GetKey()}));
@@ -1117,7 +1117,7 @@ TEST(Hashtables, DataHashtable_STLIterators)
 TEST(Hashtables, DataHashtable_RemoveIf)
 {
   // check a data-hashtable
-  nsDataHashtable<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
+  nsTHashMap<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     UniToEntity.InsertOrUpdate(entity.mUnicode, entity.mStr);
@@ -1207,7 +1207,7 @@ TEST(Hashtables, ClassHashtable_RangeBasedFor)
 TEST(Hashtables, DataHashtableWithInterfaceKey)
 {
   // check a data-hashtable with an interface key
-  nsDataHashtable<nsISupportsHashKey, uint32_t> EntToUniClass2(ENTITY_COUNT);
+  nsTHashMap<nsISupportsHashKey, uint32_t> EntToUniClass2(ENTITY_COUNT);
 
   nsCOMArray<IFoo> fooArray;
 
@@ -1296,7 +1296,7 @@ TEST(Hashtables, InterfaceHashtable)
 TEST(Hashtables, DataHashtable_WithEntryHandle)
 {
   // check WithEntryHandle/OrInsertWith
-  nsDataHashtable<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
+  nsTHashMap<nsUint32HashKey, const char*> UniToEntity(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
     UniToEntity.WithEntryHandle(entity.mUnicode, [&entity](auto&& entry) {

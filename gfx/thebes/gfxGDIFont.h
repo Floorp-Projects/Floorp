@@ -10,7 +10,7 @@
 #include "gfxFont.h"
 #include "gfxGDIFontList.h"
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 
 #include "usp10.h"
@@ -82,11 +82,11 @@ class gfxGDIFont : public gfxFont {
   bool mNeedsSyntheticBold;
 
   // cache of glyph IDs (used for non-sfnt fonts only)
-  mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey, uint32_t> > mGlyphIDs;
+  mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, uint32_t> > mGlyphIDs;
   SCRIPT_CACHE mScriptCache;
 
   // cache of glyph widths in 16.16 fixed-point pixels
-  mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey, int32_t> > mGlyphWidths;
+  mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, int32_t> > mGlyphWidths;
 };
 
 #endif /* GFX_GDIFONT_H */

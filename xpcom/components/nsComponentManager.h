@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsCOMArray.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
@@ -102,8 +102,8 @@ class nsComponentManagerImpl final : public nsIComponentManager,
 
   already_AddRefed<nsIFactory> LoadFactory(nsFactoryEntry* aEntry);
 
-  nsDataHashtable<nsIDPointerHashKey, nsFactoryEntry*> mFactories;
-  nsDataHashtable<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
+  nsTHashMap<nsIDPointerHashKey, nsFactoryEntry*> mFactories;
+  nsTHashMap<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
   mozilla::Monitor mLock;
 

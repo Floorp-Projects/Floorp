@@ -797,8 +797,7 @@ class BrowserParent final : public PBrowserParent,
  private:
   // This is used when APZ needs to find the BrowserParent associated with a
   // layer to dispatch events.
-  typedef nsDataHashtable<nsUint64HashKey, BrowserParent*>
-      LayerToBrowserParentTable;
+  typedef nsTHashMap<nsUint64HashKey, BrowserParent*> LayerToBrowserParentTable;
   static LayerToBrowserParentTable* sLayerToBrowserParentTable;
 
   static void AddBrowserParentToTable(layers::LayersId aLayersId,

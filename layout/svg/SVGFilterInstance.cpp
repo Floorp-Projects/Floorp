@@ -321,7 +321,7 @@ int32_t SVGFilterInstance::GetOrCreateSourceAlphaIndex(
 nsresult SVGFilterInstance::GetSourceIndices(
     SVGFE* aPrimitiveElement,
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
-    const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
+    const nsTHashMap<nsStringHashKey, int32_t>& aImageTable,
     nsTArray<int32_t>& aSourceIndices) {
   AutoTArray<SVGStringInfo, 2> sources;
   aPrimitiveElement->GetSourceImageNames(sources);
@@ -381,7 +381,7 @@ nsresult SVGFilterInstance::BuildPrimitives(
   }
 
   // Maps source image name to source index.
-  nsDataHashtable<nsStringHashKey, int32_t> imageTable(8);
+  nsTHashMap<nsStringHashKey, int32_t> imageTable(8);
 
   // The principal that we check principals of any loaded images against.
   nsCOMPtr<nsIPrincipal> principal = mTargetContent->NodePrincipal();

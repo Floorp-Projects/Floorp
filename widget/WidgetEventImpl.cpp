@@ -196,7 +196,7 @@ SelectionType ToSelectionType(TextRangeType aTextRangeType) {
  * non class method implementation
  ******************************************************************************/
 
-static nsDataHashtable<nsDepCharHashKey, Command>* sCommandHashtable = nullptr;
+static nsTHashMap<nsDepCharHashKey, Command>* sCommandHashtable = nullptr;
 
 Command GetInternalCommand(const char* aCommandName,
                            const nsCommandParams* aCommandParams) {
@@ -242,7 +242,7 @@ Command GetInternalCommand(const char* aCommandName,
   }
 
   if (!sCommandHashtable) {
-    sCommandHashtable = new nsDataHashtable<nsDepCharHashKey, Command>();
+    sCommandHashtable = new nsTHashMap<nsDepCharHashKey, Command>();
 #define NS_DEFINE_COMMAND(aName, aCommandStr) \
   sCommandHashtable->InsertOrUpdate(#aCommandStr, Command::aName);
 

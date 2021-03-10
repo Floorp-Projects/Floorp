@@ -11,7 +11,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumeratedRange.h"
