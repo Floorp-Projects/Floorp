@@ -7,6 +7,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/PathHelpers.h"
 #include "nsChildView.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
@@ -2815,9 +2816,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
   AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
 
   gfx::Rect dirtyRect = aDirtyRect;
-  gfx::Rect widgetRect = aWidgetRect;
-  dirtyRect.Scale(1.0f / aScale);
-  widgetRect.Scale(1.0f / aScale);
   aDrawTarget.SetTransform(aDrawTarget.GetTransform().PreScale(aScale, aScale));
 
   const Widget widget = aWidgetInfo.Widget();
@@ -2826,25 +2824,51 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
   switch (widget) {
     case Widget::eColorFill: {
       sRGBColor color = aWidgetInfo.Params<sRGBColor>();
-      aDrawTarget.FillRect(widgetRect, ColorPattern(ToDeviceColor(color)));
+      aDrawTarget.FillRect(aWidgetRect, ColorPattern(ToDeviceColor(color)));
       break;
     }
     case Widget::eScrollbarThumb: {
       ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
-      ScrollbarDrawingMac::DrawScrollbarThumb(aDrawTarget, widgetRect, params);
+      auto thumb = ScrollbarDrawingMac::GetThumbRect(aWidgetRect, params, aScale);
+      float cornerRadius = (params.horizontal ? thumb.mRect.Height() : thumb.mRect.Width()) / 2.0f;
+      aDrawTarget.FillRoundedRect(RoundedRect(thumb.mRect, RectCornerRadii(cornerRadius)),
+                                  ColorPattern(ToDeviceColor(thumb.mFillColor)));
+      if (thumb.mStrokeColor) {
+        auto strokeRect = thumb.mRect;
+        strokeRect.Inflate(thumb.mStrokeOutset);
+        float strokeRadius = (params.horizontal ? strokeRect.Height() : strokeRect.Width()) / 2.0f;
+        RefPtr<Path> path =
+            MakePathForRoundedRect(aDrawTarget, strokeRect, RectCornerRadii(strokeRadius));
+        aDrawTarget.Stroke(path, ColorPattern(ToDeviceColor(thumb.mStrokeColor)),
+                           StrokeOptions(thumb.mStrokeWidth));
+      }
       break;
     }
     case Widget::eScrollbarTrack: {
       ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
-      ScrollbarDrawingMac::DrawScrollbarTrack(aDrawTarget, widgetRect, params);
+      ScrollbarDrawingMac::ScrollbarTrackRects rects;
+      if (ScrollbarDrawingMac::GetScrollbarTrackRects(aWidgetRect, params, aScale, rects)) {
+        for (const auto& rect : rects) {
+          aDrawTarget.FillRect(rect.mRect, ColorPattern(ToDeviceColor(rect.mColor)));
+        }
+      }
       break;
     }
     case Widget::eScrollCorner: {
       ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
-      ScrollbarDrawingMac::DrawScrollCorner(aDrawTarget, widgetRect, params);
+      ScrollbarDrawingMac::ScrollCornerRects rects;
+      if (ScrollbarDrawingMac::GetScrollCornerRects(aWidgetRect, params, aScale, rects)) {
+        for (const auto& rect : rects) {
+          aDrawTarget.FillRect(rect.mRect, ColorPattern(ToDeviceColor(rect.mColor)));
+        }
+      }
       break;
     }
     default: {
+      gfx::Rect widgetRect = aWidgetRect;
+      dirtyRect.Scale(1.0f / aScale);
+      widgetRect.Scale(1.0f / aScale);
+
       // The remaining widgets require a CGContext.
       CGRect macRect =
           CGRectMake(widgetRect.X(), widgetRect.Y(), widgetRect.Width(), widgetRect.Height());
