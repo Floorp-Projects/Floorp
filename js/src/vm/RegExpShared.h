@@ -312,12 +312,28 @@ class RegExpZone {
 };
 
 class RegExpRealm {
+ public:
+  enum ResultTemplateKind { Normal, WithIndices, Indices, NumKinds };
+
+ private:
   /*
-   * This is the template object where the result of re.exec() is based on,
-   * if there is a result. This is used in CreateRegExpMatchResult to set
-   * the input/index properties faster.
+   * The template objects that the result of re.exec() is based on, if
+   * there is a result. These are used in CreateRegExpMatchResult.
+   * There are three template objects, each of which is an ArrayObject
+   * with some additional properties. We decide which to use based on
+   * the |hasIndices| (/d) flag.
+   *
+   *  Normal: Has |index|, |input|, and |groups| properties.
+   *          Used for the result object if |hasIndices| is not set.
+   *
+   *  WithIndices: Has |index|, |input|, |groups|, and |indices| properties.
+   *               Used for the result object if |hasIndices| is set.
+   *
+   *  Indices: Has a |groups| property. If |hasIndices| is set, used
+   *           for the |.indices| property of the result object.
    */
-  WeakHeapPtr<ArrayObject*> matchResultTemplateObject_;
+  WeakHeapPtr<ArrayObject*>
+      matchResultTemplateObjects_[ResultTemplateKind::NumKinds];
 
   /*
    * The shape of RegExp.prototype object that satisfies following:
@@ -341,7 +357,8 @@ class RegExpRealm {
    */
   WeakHeapPtr<Shape*> optimizableRegExpInstanceShape_;
 
-  ArrayObject* createMatchResultTemplateObject(JSContext* cx);
+  ArrayObject* createMatchResultTemplateObject(JSContext* cx,
+                                               ResultTemplateKind kind);
 
  public:
   explicit RegExpRealm();
@@ -351,6 +368,7 @@ class RegExpRealm {
   static const size_t MatchResultObjectIndexSlot = 0;
   static const size_t MatchResultObjectInputSlot = 1;
   static const size_t MatchResultObjectGroupsSlot = 2;
+  static const size_t MatchResultObjectIndicesSlot = 3;
 
   static size_t offsetOfMatchResultObjectIndexSlot() {
     return sizeof(Value) * MatchResultObjectIndexSlot;
@@ -361,13 +379,17 @@ class RegExpRealm {
   static size_t offsetOfMatchResultObjectGroupsSlot() {
     return sizeof(Value) * MatchResultObjectGroupsSlot;
   }
+  static size_t offsetOfMatchResultObjectIndicesSlot() {
+    return sizeof(Value) * MatchResultObjectIndicesSlot;
+  }
 
   /* Get or create template object used to base the result of .exec() on. */
-  ArrayObject* getOrCreateMatchResultTemplateObject(JSContext* cx) {
-    if (matchResultTemplateObject_) {
-      return matchResultTemplateObject_;
+  ArrayObject* getOrCreateMatchResultTemplateObject(
+      JSContext* cx, ResultTemplateKind kind = ResultTemplateKind::Normal) {
+    if (matchResultTemplateObjects_[kind]) {
+      return matchResultTemplateObjects_[kind];
     }
-    return createMatchResultTemplateObject(cx);
+    return createMatchResultTemplateObject(cx, kind);
   }
 
   Shape* getOptimizableRegExpPrototypeShape() {
