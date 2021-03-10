@@ -594,18 +594,6 @@ nsAndroidBridge::GetDispatcherByName(const char* aName,
 
 nsAndroidBridge::~nsAndroidBridge() {}
 
-NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged(
-    mozIDOMWindowProxy* aWindow) {
-  AndroidBridge::Bridge()->ContentDocumentChanged(aWindow);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(
-    mozIDOMWindowProxy* aWindow, bool* aRet) {
-  *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed(aWindow);
-  return NS_OK;
-}
-
 uint32_t AndroidBridge::GetScreenOrientation() {
   ALOG_BRIDGE("AndroidBridge::GetScreenOrientation");
 
@@ -660,43 +648,9 @@ bool AndroidBridge::PumpMessageLoop() {
   return java::GeckoThread::PumpMessageLoop(msg);
 }
 
-NS_IMETHODIMP nsAndroidBridge::GetIsFennec(bool* aIsFennec) {
-  *aIsFennec = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAndroidBridge::GetBrowserApp(
-    nsIAndroidBrowserApp** aBrowserApp) {
-  nsAppShell* const appShell = nsAppShell::Get();
-  if (appShell) NS_IF_ADDREF(*aBrowserApp = appShell->GetBrowserApp());
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAndroidBridge::SetBrowserApp(
-    nsIAndroidBrowserApp* aBrowserApp) {
-  nsAppShell* const appShell = nsAppShell::Get();
-  if (appShell) appShell->SetBrowserApp(aBrowserApp);
-  return NS_OK;
-}
-
 extern "C" __attribute__((visibility("default"))) jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv* env, jclass,
                                                           jlong size);
-
-void AndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow) {
-  if (RefPtr<nsWindow> widget =
-          nsWindow::From(nsPIDOMWindowOuter::From(aWindow))) {
-    widget->SetContentDocumentDisplayed(false);
-  }
-}
-
-bool AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow) {
-  if (RefPtr<nsWindow> widget =
-          nsWindow::From(nsPIDOMWindowOuter::From(aWindow))) {
-    return widget->IsContentDocumentDisplayed();
-  }
-  return false;
-}
 
 jni::Object::LocalRef AndroidBridge::ChannelCreate(jni::Object::Param stream) {
   JNIEnv* const env = jni::GetEnvForThread();

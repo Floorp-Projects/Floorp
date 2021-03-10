@@ -139,12 +139,6 @@ class nsAppShell : public nsBaseAppShell {
 
   static already_AddRefed<nsIURI> ResolveURI(const nsCString& aUriStr);
 
-  void SetBrowserApp(nsIAndroidBrowserApp* aBrowserApp) {
-    mBrowserApp = aBrowserApp;
-  }
-
-  nsIAndroidBrowserApp* GetBrowserApp() { return mBrowserApp; }
-
  protected:
   static nsAppShell* sAppShell;
   static mozilla::StaticAutoPtr<mozilla::Mutex> sAppShellLock;
@@ -243,7 +237,6 @@ class nsAppShell : public nsBaseAppShell {
   mozilla::CondVar mSyncRunFinished;
   bool mSyncRunQuit;
 
-  nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
   nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
 };
 
