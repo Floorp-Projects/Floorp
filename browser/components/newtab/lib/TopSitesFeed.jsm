@@ -474,8 +474,7 @@ this.TopSitesFeed = class TopSitesFeed {
   async getLinksWithDefaults(isStartup = false) {
     const prefValues = this.store.getState().Prefs.values;
     const numItems = prefValues[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
-    const searchShortcutsExperiment =
-      !this._useRemoteSetting && prefValues[SEARCH_SHORTCUTS_EXPERIMENT];
+    const searchShortcutsExperiment = prefValues[SEARCH_SHORTCUTS_EXPERIMENT];
     // We must wait for search services to initialize in order to access default
     // search engine properties without triggering a synchronous initialization
     await Services.search.init();
