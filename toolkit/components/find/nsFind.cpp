@@ -774,7 +774,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     // already guaranteed to not be a combining diacritical mark.)
     c = (t2b ? DecodeChar(t2b, &findex) : CHAR_TO_UNICHAR(t1b[findex]));
     if (!mMatchDiacritics && IsCombiningDiacritic(c) &&
-        !IsMathSymbol(prevChar)) {
+        !IsMathOrMusicSymbol(prevChar)) {
       continue;
     }
     patc = DecodeChar(patStr, &pindex);

@@ -259,8 +259,8 @@ inline bool IsCombiningDiacritic(uint32_t aCh) {
 }
 
 // Keep this function in sync with is_math_symbol in base_chars.py.
-inline bool IsMathSymbol(uint32_t aCh) {
-  return u_charType(aCh) == U_MATH_SYMBOL;
+inline bool IsMathOrMusicSymbol(uint32_t aCh) {
+  return u_charType(aCh) == U_MATH_SYMBOL || u_charType(aCh) == U_OTHER_SYMBOL;
 }
 
 // Remove diacritics from a character

@@ -68,6 +68,10 @@ async function runTests() {
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(!retRange, "\"" + searchValue + "\" found (not caseSensitive)");
 
+  searchValue = "𑂥";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
   searchValue = "istanbul";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
@@ -319,6 +323,7 @@ async function runTests() {
 <p id="greek">ΛΌΓΟΣ</p>
 <p id="korean">위</p>
 <p id="telugu">కై</p>
+<p id="kaithi">𑂫</p>
 <p id="turkish">İstanbul</p>
 <p id="polish">Wrocław</p>
 <p id="norwegian">Gøteborg</p>
