@@ -110,7 +110,7 @@ pkix::Result BuildRevocationCheckArrays(pkix::Input certDER,
                                         /*out*/ nsTArray<uint8_t>& subjectBytes,
                                         /*out*/ nsTArray<uint8_t>& pubKeyBytes);
 
-void SaveIntermediateCerts(const UniqueCERTCertList& certList);
+void SaveIntermediateCerts(const nsTArray<nsTArray<uint8_t>>& certList);
 
 class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
  public:

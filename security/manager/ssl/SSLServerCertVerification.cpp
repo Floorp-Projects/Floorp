@@ -837,7 +837,6 @@ static void AuthCertificateSetResults(
     uint16_t aCertificateTransparencyStatus, EVStatus aEvStatus,
     bool aSucceeded, bool aIsCertChainRootBuiltInRoot) {
   MOZ_ASSERT(aInfoObject);
-
   if (aSucceeded) {
     // Certificate verification succeeded. Delete any potential record of
     // certificate error bits.
@@ -876,11 +875,6 @@ Result AuthCertificate(
     /*out*/ bool& aIsCertChainRootBuiltInRoot) {
   MOZ_ASSERT(cert);
 
-  // We want to avoid storing any intermediate cert information when browsing
-  // in private, transient contexts.
-  bool saveIntermediates =
-      !(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE);
-
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
       CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
@@ -900,8 +894,8 @@ Result AuthCertificate(
   Result rv = certVerifier.VerifySSLServerCert(
       cert, time, aPinArg, aHostName, builtCertChain, certVerifierFlags,
       Some(std::move(peerCertsBytes)), stapledOCSPResponse,
-      sctsFromTLSExtension, dcInfo, aOriginAttributes, saveIntermediates,
-      &evOidPolicy, &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
+      sctsFromTLSExtension, dcInfo, aOriginAttributes, &evOidPolicy,
+      &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
       &pinningTelemetryInfo, &certificateTransparencyInfo, &crliteTelemetryInfo,
       &aIsCertChainRootBuiltInRoot);
 
@@ -1116,7 +1110,7 @@ SSLServerCertVerificationJob::Run() {
         nsc, std::move(certBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
-        evStatus, true, 0, 0, isCertChainRootBuiltInRoot);
+        evStatus, true, 0, 0, isCertChainRootBuiltInRoot, mProviderFlags);
     return NS_OK;
   }
 
@@ -1134,7 +1128,8 @@ SSLServerCertVerificationJob::Run() {
   mResultTask->Dispatch(
       nsc, std::move(certBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      EVStatus::NotEV, false, finalError, collectedErrors, false);
+      EVStatus::NotEV, false, finalError, collectedErrors, false,
+      mProviderFlags);
   return NS_OK;
 }
 
@@ -1365,14 +1360,15 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
       mEVStatus(EVStatus::NotEV),
       mSucceeded(false),
       mFinalError(0),
-      mCollectedErrors(0) {}
+      mCollectedErrors(0),
+      mProviderFlags(0) {}
 
 void SSLServerCertVerificationResult::Dispatch(
     nsNSSCertificate* aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
-    bool aIsCertChainRootBuiltInRoot) {
+    bool aIsCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
   mCert = aCert;
   mBuiltChain = std::move(aBuiltChain);
   mPeerCertChain = std::move(aPeerCertChain);
@@ -1382,6 +1378,7 @@ void SSLServerCertVerificationResult::Dispatch(
   mFinalError = aFinalError;
   mCollectedErrors = aCollectedErrors;
   mIsBuiltCertChainRootBuiltInRoot = aIsCertChainRootBuiltInRoot;
+  mProviderFlags = aProviderFlags;
 
   nsresult rv;
   nsCOMPtr<nsIEventTarget> stsTarget =
@@ -1405,6 +1402,12 @@ SSLServerCertVerificationResult::Run() {
 
   MOZ_ASSERT(onSTSThread);
 #endif
+
+  if (mSucceeded && !XRE_IsSocketProcess() &&
+      !(mProviderFlags & nsISocketProvider::NO_PERMANENT_STORAGE)) {
+    // This dispatches an event that will run when the socket thread is idle.
+    SaveIntermediateCerts(mBuiltChain);
+  }
 
   AuthCertificateSetResults(mInfoObject, mCert, std::move(mBuiltChain),
                             std::move(mPeerCertChain),
