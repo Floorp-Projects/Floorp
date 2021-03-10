@@ -2443,6 +2443,14 @@ void nsObjectLoadingContent::Traverse(nsObjectLoadingContent* tmp,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader);
 }
 
+/* static */
+void nsObjectLoadingContent::Unlink(nsObjectLoadingContent* tmp) {
+  if (tmp->mFrameLoader) {
+    tmp->mFrameLoader->Destroy();
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader);
+}
+
 void nsObjectLoadingContent::UnloadObject(bool aResetState) {
   // Don't notify in CancelImageRequests until we transition to a new loaded
   // state

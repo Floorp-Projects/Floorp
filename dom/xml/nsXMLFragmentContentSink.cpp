@@ -37,8 +37,8 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXMLFragmentContentSink,
-                                                     nsXMLContentSink)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLFragmentContentSink,
+                                           nsXMLContentSink)
 
   // nsIExpatSink
   NS_IMETHOD HandleDoctypeDecl(const nsAString& aSubset, const nsAString& aName,
@@ -130,13 +130,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsXMLContentSink)
 NS_IMPL_ADDREF_INHERITED(nsXMLFragmentContentSink, nsXMLContentSink)
 NS_IMPL_RELEASE_INHERITED(nsXMLFragmentContentSink, nsXMLContentSink)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLFragmentContentSink)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLFragmentContentSink,
-                                                  nsXMLContentSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTargetDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsXMLFragmentContentSink, nsXMLContentSink,
+                                   mTargetDocument, mRoot)
 
 NS_IMETHODIMP
 nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode) {
