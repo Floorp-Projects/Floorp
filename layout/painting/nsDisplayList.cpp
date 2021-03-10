@@ -4020,13 +4020,11 @@ bool nsDisplayBackgroundImage::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   return mBackgroundStyle;
 }
 
-/* static */
-nsRegion nsDisplayBackgroundImage::GetInsideClipRegion(
-    const nsDisplayItem* aItem, StyleGeometryBox aClip, const nsRect& aRect,
-    const nsRect& aBackgroundRect) {
-  nsRegion result;
+static nsRect GetInsideClipRect(const nsDisplayItem* aItem,
+                                StyleGeometryBox aClip, const nsRect& aRect,
+                                const nsRect& aBackgroundRect) {
   if (aRect.IsEmpty()) {
-    return result;
+    return {};
   }
 
   nsIFrame* frame = aItem->Frame();
@@ -4073,7 +4071,7 @@ nsRegion nsDisplayBackgroundImage::GetOpaqueRegion(
         layer.mRepeat.mXRepeat != StyleImageLayerRepeat::Space &&
         layer.mRepeat.mYRepeat != StyleImageLayerRepeat::Space &&
         layer.mClip != StyleGeometryBox::Text) {
-      result = GetInsideClipRegion(this, layer.mClip, mBounds, mBackgroundRect);
+      result = GetInsideClipRect(this, layer.mClip, mBounds, mBackgroundRect);
     }
   }
 
@@ -4734,8 +4732,8 @@ nsRegion nsDisplayBackgroundColor::GetOpaqueRegion(
   }
 
   *aSnap = true;
-  return nsDisplayBackgroundImage::GetInsideClipRegion(
-      this, mBottomLayerClip, mBackgroundRect, mBackgroundRect);
+  return GetInsideClipRect(this, mBottomLayerClip, mBackgroundRect,
+                           mBackgroundRect);
 }
 
 Maybe<nscolor> nsDisplayBackgroundColor::IsUniform(

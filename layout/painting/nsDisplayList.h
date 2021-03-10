@@ -4576,11 +4576,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
     nsDisplayBackgroundGeometry::UpdateDrawResult(this, aResult);
   }
 
-  static nsRegion GetInsideClipRegion(const nsDisplayItem* aItem,
-                                      StyleGeometryBox aClip,
-                                      const nsRect& aRect,
-                                      const nsRect& aBackgroundRect);
-
   bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) const override {
     return mShouldFixToViewport;
   }
