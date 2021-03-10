@@ -25,6 +25,10 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     SOURCES += [
         "nsUniscribeBreaker.cpp",
     ]
+    if CONFIG["NIGHTLY_BUILD"]:
+        SOURCES += [
+            "rulebrk.c",
+        ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
         "nsCarbonBreaker.cpp",
