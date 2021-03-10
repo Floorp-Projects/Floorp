@@ -406,7 +406,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
                                  uint32_t aLength) override;
 
   IDWriteGdiInterop* GetGDIInterop() { return mGDIInterop; }
-  bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
+  bool UseGDIFontTableAccess() const;
 
   bool FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
                           const nsACString& aFamily,
