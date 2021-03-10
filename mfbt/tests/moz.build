@@ -91,9 +91,6 @@ if not CONFIG["MOZ_ASAN"]:
         ]
     )
 
-# Since we link directly with MFBT object files, define IMPL_MFBT
-DEFINES["IMPL_MFBT"] = True
-
 DisableStlWrapping()
 
 if CONFIG["CC_TYPE"] == "clang-cl":
@@ -103,7 +100,7 @@ if CONFIG["CC_TYPE"] == "clang-cl":
     ]
 
 USE_LIBS += [
-    "mfbt",
+    "mozglue",
 ]
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
