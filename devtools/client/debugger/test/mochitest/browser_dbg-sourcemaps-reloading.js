@@ -28,10 +28,10 @@ add_task(async function() {
 
   // Test reloading the debugger
   await reload(dbg, "opts.js");
-  await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  await waitForDispatch(dbg.store, "LOAD_SOURCE_TEXT");
 
   await waitForPaused(dbg);
-  await waitForDispatch(dbg, "ADD_INLINE_PREVIEW");
+  await waitForDispatch(dbg.store, "ADD_INLINE_PREVIEW");
   assertPausedLocation(dbg);
 
   await waitForBreakpointCount(dbg, 2);

@@ -26,7 +26,7 @@ function grips(state = getInitialState(), action) {
   switch (action.status) {
     case "start":
       return onRequestProperties(state, action);
-    case "end":
+    case "done":
       return onReceiveProperties(state, action);
   }
 

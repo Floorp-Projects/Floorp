@@ -45,7 +45,7 @@ add_task(async function() {
     "Click on the watch expression refresh button and wait for the " +
       "expression to update."
   );
-  const refreshed = waitForDispatch(dbg, "EVALUATE_EXPRESSIONS");
+  const refreshed = waitForDispatch(dbg.store, "EVALUATE_EXPRESSIONS");
   await clickElement(dbg, "expressionRefresh");
   await refreshed;
 

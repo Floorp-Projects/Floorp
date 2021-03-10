@@ -28,7 +28,7 @@ add_task(async function() {
   addonFile = updateTemporaryXPI({ id: EXTENSION_ID }, addonFile);
 
   info("Click on the reload button for the invalid temporary extension");
-  const waitForError = aboutDebugging_waitForDispatch(
+  const waitForError = waitForDispatch(
     window.AboutDebugging.store,
     "TEMPORARY_EXTENSION_RELOAD_FAILURE"
   );
@@ -43,7 +43,7 @@ add_task(async function() {
   );
 
   info("Click on the reload button for the valid temporary extension");
-  const waitForSuccess = aboutDebugging_waitForDispatch(
+  const waitForSuccess = waitForDispatch(
     window.AboutDebugging.store,
     "TEMPORARY_EXTENSION_RELOAD_SUCCESS"
   );

@@ -18,7 +18,7 @@ add_task(async function() {
   await waitForInlinePreviews(dbg);
 
   pressKey(dbg, "commandKeyDown");
-  await waitForDispatch(dbg, "HIGHLIGHT_CALLS");
+  await waitForDispatch(dbg.store, "HIGHLIGHT_CALLS");
   const calls = dbg.win.document.querySelectorAll(".highlight-function-calls");
   is(calls.length, 2);
   pressKey(dbg, "commandKeyUp");

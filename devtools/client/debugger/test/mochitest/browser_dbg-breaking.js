@@ -19,7 +19,7 @@ add_task(async function() {
 
   reload(dbg);
 
-  await waitForDispatch(dbg, "NAVIGATE");
+  await waitForDispatch(dbg.store, "NAVIGATE");
   await waitForSelectedSource(dbg, "doc-scripts.html");
   await waitForPaused(dbg);
 

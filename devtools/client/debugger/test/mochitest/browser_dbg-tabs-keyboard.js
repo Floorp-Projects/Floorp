@@ -10,12 +10,12 @@ add_task(async function() {
   await selectSource(dbg, "simple1");
   await selectSource(dbg, "simple2");
   is(countTabs(dbg), 2);
-  
+
   pressKey(dbg, "close");
-  waitForDispatch(dbg, "CLOSE_TAB");
+  waitForDispatch(dbg.store, "CLOSE_TAB");
   is(countTabs(dbg), 1);
 
   pressKey(dbg, "close");
-  waitForDispatch(dbg, "CLOSE_TAB");
+  waitForDispatch(dbg.store, "CLOSE_TAB");
   is(countTabs(dbg), 0);
 });

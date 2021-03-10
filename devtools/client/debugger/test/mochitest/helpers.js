@@ -58,42 +58,6 @@ function waitForNextDispatch(store, actionType) {
 }
 
 /**
- * Wait for a specific action type to be dispatch.
- * If an async action, will wait for it to be done.
- *
- * @memberof mochitest/waits
- * @param {Object} dbg
- * @param {String} type
- * @param {Number} eventRepeat
- * @return {Promise}
- * @static
- */
-function waitForDispatch(dbg, actionType, eventRepeat = 1) {
-  let count = 0;
-  return new Promise(resolve => {
-    dbg.store.dispatch({
-      // Normally we would use `services.WAIT_UNTIL`, but use the
-      // internal name here so tests aren't forced to always pass it
-      // in
-      type: "@@service/waitUntil",
-      predicate: action => {
-        const isDone =
-          !action.status ||
-          action.status === "done" ||
-          action.status === "error";
-
-        if (action.type === actionType && isDone && ++count == eventRepeat) {
-          return true;
-        }
-      },
-      run: (dispatch, getState, action) => {
-        resolve(action);
-      },
-    });
-  });
-}
-
-/**
  * Waits for `predicate()` to be true. `state` is the redux app state.
  *
  * @memberof mochitest/waits
@@ -815,7 +779,7 @@ function deleteExpression(dbg, input) {
  * @static
  */
 async function reload(dbg, ...sources) {
-  const navigated = waitForDispatch(dbg, "NAVIGATE");
+  const navigated = waitForDispatch(dbg.store, "NAVIGATE");
   await dbg.client.reload();
   await navigated;
   return waitForSources(dbg, ...sources);
@@ -833,7 +797,7 @@ async function reload(dbg, ...sources) {
  */
 async function navigate(dbg, url, ...sources) {
   info(`Navigating to ${url}`);
-  const navigated = waitForDispatch(dbg, "NAVIGATE");
+  const navigated = waitForDispatch(dbg.store, "NAVIGATE");
   await dbg.client.navigate(url);
   await navigated;
   return waitForSources(dbg, ...sources);
@@ -865,7 +829,7 @@ async function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   const bpCount = dbg.selectors.getBreakpointCount();
-  const onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await dbg.actions.addBreakpoint(
     getContext(dbg),
     { sourceId, line, column },
@@ -1980,7 +1944,7 @@ async function addExpression(dbg, input) {
   }
   findElementWithSelector(dbg, selectors.expressionInput).focus();
   type(dbg, input);
-  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
+  const evaluated = waitForDispatch(dbg.store, "EVALUATE_EXPRESSION");
   pressKey(dbg, "Enter");
   await evaluated;
 }
@@ -1991,7 +1955,7 @@ async function editExpression(dbg, input) {
   // Position cursor reliably at the end of the text.
   pressKey(dbg, "End");
   type(dbg, input);
-  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSIONS");
+  const evaluated = waitForDispatch(dbg.store, "EVALUATE_EXPRESSIONS");
   pressKey(dbg, "Enter");
   await evaluated;
 }
@@ -2144,7 +2108,7 @@ async function setLogPoint(dbg, index, value) {
     dbg,
     `${selectors.addLogItem},${selectors.editLogItem}`
   );
-  const onBreakpointSet = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const onBreakpointSet = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await typeInPanel(dbg, value);
   await onBreakpointSet;
 }

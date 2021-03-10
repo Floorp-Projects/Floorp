@@ -36,7 +36,7 @@ add_task(async function() {
 
   // Test for the retained query
   is(getCM(dbg).state.search.query, "con");
-  await waitForDispatch(dbg, "UPDATE_FILE_SEARCH_QUERY");
+  await waitForDispatch(dbg.store, "UPDATE_FILE_SEARCH_QUERY");
   is(getFileSearchQuery(), "con");
 });
 

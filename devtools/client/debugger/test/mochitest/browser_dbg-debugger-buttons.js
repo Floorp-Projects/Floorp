@@ -41,7 +41,7 @@ add_task(async function() {
 });
 
 function clickButton(dbg, button) {
-  const resumeFired = waitForDispatch(dbg, "COMMAND");
+  const resumeFired = waitForDispatch(dbg.store, "COMMAND");
   clickElement(dbg, button);
   return resumeFired;
 }

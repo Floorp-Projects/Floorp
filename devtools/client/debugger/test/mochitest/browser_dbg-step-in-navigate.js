@@ -13,7 +13,7 @@ add_task(async function() {
     async function toggleBlackbox() {
       await selectSource(dbg, "simple3.js");
       await clickElement(dbg, "blackbox");
-      await waitForDispatch(dbg, "BLACKBOX");
+      await waitForDispatch(dbg.store, "BLACKBOX");
     }
 
     // With the debugger stopped at a breakpoint, blackbox the current source and step in
