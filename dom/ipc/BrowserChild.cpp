@@ -2957,13 +2957,6 @@ BrowserChild::GetTabId(uint64_t* aId) {
   return NS_OK;
 }
 
-void BrowserChild::SetTabId(const TabId& aTabId) {
-  MOZ_ASSERT(mUniqueId == 0);
-
-  mUniqueId = aTabId;
-  NestedBrowserChildMap()[mUniqueId] = this;
-}
-
 NS_IMETHODIMP
 BrowserChild::GetChromeOuterWindowID(uint64_t* aId) {
   *aId = ChromeOuterWindowID();
