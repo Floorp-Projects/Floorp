@@ -79,6 +79,10 @@
       }
     },
 
+    "BackgroundAppUpdate": {
+      "type": "boolean"
+    },
+
     "BlockAboutAddons": {
       "type": "boolean"
     },

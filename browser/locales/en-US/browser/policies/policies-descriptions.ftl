@@ -17,6 +17,8 @@ policy-AppUpdateURL = Set custom app update URL.
 
 policy-Authentication = Configure integrated authentication for websites that support it.
 
+policy-BackgroundAppUpdate = Enable or disable the background updater, which updates the browser when it is not running.
+
 policy-BlockAboutAddons = Block access to the Add-ons Manager (about:addons).
 
 policy-BlockAboutConfig = Block access to the about:config page.

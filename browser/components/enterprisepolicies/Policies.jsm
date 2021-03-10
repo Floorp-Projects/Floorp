@@ -205,6 +205,16 @@ var Policies = {
     },
   },
 
+  BackgroundAppUpdate: {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("app-background-update-off");
+      } else {
+        manager.disallowFeature("app-background-update-on");
+      }
+    },
+  },
+
   BlockAboutAddons: {
     onBeforeUIStartup(manager, param) {
       if (param) {
