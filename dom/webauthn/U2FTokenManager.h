@@ -10,7 +10,6 @@
 #include "nsIU2FTokenManager.h"
 #include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
-#include "mozilla/Tainting.h"
 
 /*
  * Parent process manager for U2F and WebAuthn API transactions. Handles process
@@ -41,7 +40,7 @@ class U2FTokenManager final : public nsIU2FTokenManager {
             const uint64_t& aTransactionId,
             const WebAuthnGetAssertionInfo& aTransactionInfo);
   void Cancel(PWebAuthnTransactionParent* aTransactionParent,
-              const Tainted<uint64_t>& aTransactionId);
+              const uint64_t& aTransactionId);
   void MaybeClearTransaction(PWebAuthnTransactionParent* aParent);
   static void Initialize();
 
