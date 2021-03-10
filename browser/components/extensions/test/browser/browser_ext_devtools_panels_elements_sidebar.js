@@ -157,7 +157,7 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   await extension.startup();
 
-  const toolbox = await openToolboxForTab(tab);
+  const { toolbox, target } = await openToolboxForTab(tab);
 
   await extension.awaitMessage("devtools_page_loaded");
 
@@ -315,7 +315,7 @@ add_task(async function test_devtools_panels_elements_sidebar() {
     "The fourth registered sidebar has been removed"
   );
 
-  await expectNoSuchActorIDs(toolbox.target.client, actors);
+  await expectNoSuchActorIDs(target.client, actors);
 
   await closeToolboxForTab(tab);
 

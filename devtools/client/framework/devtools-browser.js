@@ -343,7 +343,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     gBrowser.selectedTab = gBrowser.addTrustedTab(url);
   },
 
-  async _getContentProcessDescriptor(processId) {
+  async _getContentProcessTarget(processId) {
     // Create a DevToolsServer in order to connect locally to it
     DevToolsServer.init();
     DevToolsServer.registerAllActors();
@@ -353,7 +353,15 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     const client = new DevToolsClient(transport);
 
     await client.connect();
-    return client.mainRoot.getProcess(processId);
+    const targetDescriptor = await client.mainRoot.getProcess(processId);
+    const target = await targetDescriptor.getTarget();
+    // Ensure closing the connection in order to cleanup
+    // the devtools client and also the server created in the
+    // content process
+    target.on("target-destroyed", () => {
+      client.close();
+    });
+    return target;
   },
 
   /**
@@ -363,7 +371,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
    *
    * Used by menus.js
    */
-  async openContentProcessToolbox(gBrowser) {
+  openContentProcessToolbox(gBrowser) {
     const { childCount } = Services.ppmm;
     // Get the process message manager for the current tab
     const mm = gBrowser.selectedBrowser.messageManager.processMessageManager;
@@ -376,34 +384,22 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       }
     }
     if (processId) {
-      try {
-        const descriptor = await this._getContentProcessDescriptor(processId);
-        // Display a new toolbox in a new window
-        const toolbox = await gDevTools.showToolbox(
-          descriptor,
-          null,
-          Toolbox.HostType.WINDOW
-        );
-
-        // Ensure closing the connection in order to cleanup
-        // the devtools client and also the server created in the
-        // content process
-        toolbox.target.on("target-destroyed", () => {
-          toolbox.target.client.close();
+      return this._getContentProcessTarget(processId)
+        .then(target => {
+          // Display a new toolbox in a new window
+          return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
+        })
+        .catch(e => {
+          console.error(
+            "Exception while opening the browser content toolbox:",
+            e
+          );
         });
-
-        return toolbox;
-      } catch (e) {
-        console.error(
-          "Exception while opening the browser content toolbox:",
-          e
-        );
-      }
-    } else {
-      const msg = L10N.getStr("toolbox.noContentProcessForTab.message");
-      Services.prompt.alert(null, "", msg);
-      throw new Error(msg);
     }
+
+    const msg = L10N.getStr("toolbox.noContentProcessForTab.message");
+    Services.prompt.alert(null, "", msg);
+    return Promise.reject(msg);
   },
 
   /**

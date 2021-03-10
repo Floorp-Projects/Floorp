@@ -27,7 +27,6 @@ DIRS += [
 
 DevToolsModules(
     "browser-menus.js",
-    "descriptor-from-url.js",
     "devtools-browser.js",
     "devtools.js",
     "enable-devtools-popup.js",
@@ -37,7 +36,8 @@ DevToolsModules(
     "source-map-url-service.js",
     "store-provider.js",
     "store.js",
-    "tab-descriptor-factory.js",
+    "tab-target-factory.js",
+    "target-from-url.js",
     "toolbox-context-menu.js",
     "toolbox-host-manager.js",
     "toolbox-hosts.js",

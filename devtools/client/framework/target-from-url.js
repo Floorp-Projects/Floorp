@@ -11,36 +11,35 @@ const {
 } = require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 /**
- * Construct a Target Descriptor for a given URL with various query parameters:
+ * Construct a Target for a given URL object having various query parameters:
  *
  * - host, port & ws: See the documentation for clientFromURL
  *
- * - type: "tab", "extension", "worker" or "process"
+ * - type: tab, process, window
  *      {String} The type of target to connect to.
  *
  * If type == "tab":
  * - id:
  *      {Number} the tab outerWindowID
- *
- * If type == "extension":
- * - id:
- *      {String} the addonID of the webextension to debug.
- *
- * If type == "worker":
- * - id:
- *      {String} the unique Worker id of the Worker to debug.
+ * - chrome: Optional
+ *      {Boolean} Force the creation of a chrome target. Gives more privileges to
+ *      the target actor. Allows chrome execution in the webconsole and see chrome
+ *      files in the debugger. (handy when contributing to firefox)
  *
  * If type == "process":
  * - id:
  *      {Number} the process id to debug. Default to 0, which is the parent process.
  *
+ * If type == "window":
+ * - id:
+ *      {Number} the window outerWindowID
  *
  * @param {URL} url
  *        The url to fetch query params from.
  *
- * @return A target descriptor
+ * @return A target object
  */
-exports.descriptorFromURL = async function descriptorFromURL(url) {
+exports.targetFromURL = async function targetFromURL(url) {
   const client = await clientFromURL(url);
   const params = url.searchParams;
 
@@ -53,10 +52,11 @@ exports.descriptorFromURL = async function descriptorFromURL(url) {
 
   const id = params.get("id");
   const type = params.get("type");
+  const chrome = params.has("chrome");
 
-  let descriptorFront;
+  let target;
   try {
-    descriptorFront = await _descriptorFromURL(client, id, type);
+    target = await _targetFromURL(client, id, type, chrome);
   } catch (e) {
     if (!isCachedClient) {
       // If the client was not cached, then the client was created here. If the target
@@ -66,71 +66,84 @@ exports.descriptorFromURL = async function descriptorFromURL(url) {
     throw e;
   }
 
-  return descriptorFront;
+  // If this isn't a cached client, it means that we just created a new client
+  // in `clientFromURL` and we have to destroy it at some point.
+  // In such case, force the Target to destroy the client as soon as it gets
+  // destroyed. This typically happens only for about:debugging toolboxes
+  // opened for local Firefox's targets.
+  target.shouldCloseClient = !isCachedClient;
+
+  return target;
 };
 
-async function _descriptorFromURL(client, id, type) {
+async function _targetFromURL(client, id, type, chrome) {
   if (!type) {
-    throw new Error("descriptorFromURL, missing type parameter");
+    throw new Error("targetFromURL, missing type parameter");
   }
 
-  let descriptorFront;
+  let front;
   if (type === "tab") {
     // Fetch target for a remote tab
     id = parseInt(id, 10);
     if (isNaN(id)) {
       throw new Error(
-        `descriptorFromURL, wrong tab id '${id}', should be a number`
+        `targetFromURL, wrong tab id '${id}', should be a number`
       );
     }
     try {
-      descriptorFront = await client.mainRoot.getTab({ outerWindowID: id });
+      const tabDescriptor = await client.mainRoot.getTab({ outerWindowID: id });
+      front = await tabDescriptor.getTarget();
     } catch (ex) {
       if (ex.message.startsWith("Protocol error (noTab)")) {
         throw new Error(
-          `descriptorFromURL, tab with outerWindowID '${id}' doesn't exist`
+          `targetFromURL, tab with outerWindowID '${id}' doesn't exist`
         );
       }
       throw ex;
     }
   } else if (type === "extension") {
-    descriptorFront = await client.mainRoot.getAddon({ id });
+    const addonDescriptor = await client.mainRoot.getAddon({ id });
 
-    if (!descriptorFront) {
-      throw new Error(
-        `descriptorFromURL, extension with id '${id}' doesn't exist`
-      );
+    if (!addonDescriptor) {
+      throw new Error(`targetFromURL, extension with id '${id}' doesn't exist`);
     }
-  } else if (type === "worker") {
-    descriptorFront = await client.mainRoot.getWorker(id);
 
-    if (!descriptorFront) {
+    front = await addonDescriptor.getTarget();
+  } else if (type === "worker") {
+    front = await client.mainRoot.getWorker(id);
+
+    if (!front) {
       throw new Error(
-        `descriptorFromURL, worker with id '${id}' doesn't exist`
+        `targetFromURL, worker with actor id '${id}' doesn't exist`
       );
     }
   } else if (type == "process") {
-    // Fetch descriptor for a remote chrome actor
+    // Fetch target for a remote chrome actor
     DevToolsServer.allowChromeProcess = true;
     try {
       id = parseInt(id, 10);
       if (isNaN(id)) {
         id = 0;
       }
-      descriptorFront = await client.mainRoot.getProcess(id);
+      const frontDescriptor = await client.mainRoot.getProcess(id);
+      front = await frontDescriptor.getTarget(id);
     } catch (ex) {
       if (ex.error == "noProcess") {
-        throw new Error(
-          `descriptorFromURL, process with id '${id}' doesn't exist`
-        );
+        throw new Error(`targetFromURL, process with id '${id}' doesn't exist`);
       }
       throw ex;
     }
   } else {
-    throw new Error(`descriptorFromURL, unsupported type '${type}' parameter`);
+    throw new Error(`targetFromURL, unsupported type '${type}' parameter`);
   }
 
-  return descriptorFront;
+  // Allows to spawn a chrome enabled target for any context
+  // (handy to debug chrome stuff in a content process)
+  if (chrome) {
+    front.forceChrome();
+  }
+
+  return front;
 }
 
 /**
@@ -177,3 +190,5 @@ async function clientFromURL(url) {
   }
   return new DevToolsClient(transport);
 }
+
+exports.clientFromURL = clientFromURL;

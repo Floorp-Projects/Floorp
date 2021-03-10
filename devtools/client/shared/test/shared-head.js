@@ -49,8 +49,8 @@ const { loader, require } = ChromeUtils.import(
 
 const { gDevTools } = require("devtools/client/framework/devtools");
 const {
-  TabDescriptorFactory,
-} = require("devtools/client/framework/tab-descriptor-factory");
+  TabTargetFactory,
+} = require("devtools/client/framework/tab-target-factory");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // This is overridden in files that load shared-head via loadSubScript.
@@ -527,9 +527,7 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
  */
 async function createAndAttachTargetForTab(tab) {
   info("Creating and attaching to a local tab target");
-
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-  const target = await descriptor.getTarget();
+  const target = await TabTargetFactory.forTab(tab);
   await target.attach();
   return target;
 }
@@ -872,7 +870,7 @@ var openNewTabAndToolbox = async function(url, toolId, hostType) {
  * closed.
  */
 var closeTabAndToolbox = async function(tab = gBrowser.selectedTab) {
-  if (TabDescriptorFactory.isKnownTab(tab)) {
+  if (TabTargetFactory.isKnownTab(tab)) {
     await gDevTools.closeToolboxForTab(tab);
   }
 

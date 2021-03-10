@@ -7,9 +7,7 @@ const TEST_URI =
 const { DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );
-const {
-  descriptorFromURL,
-} = require("devtools/client/framework/descriptor-from-url");
+const { targetFromURL } = require("devtools/client/framework/target-from-url");
 
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
@@ -29,40 +27,43 @@ function assertTarget(target, url, chrome = false) {
 add_task(async function() {
   const tab = await addTab(TEST_URI);
   const browser = tab.linkedBrowser;
-  let descriptor, target;
+  let target;
 
   info("Test invalid type");
   try {
-    await descriptorFromURL(new URL("http://foo?type=x"));
+    await targetFromURL(new URL("http://foo?type=x"));
     ok(false, "Shouldn't pass");
   } catch (e) {
-    is(e.message, "descriptorFromURL, unsupported type 'x' parameter");
+    is(e.message, "targetFromURL, unsupported type 'x' parameter");
   }
 
   info("Test tab");
   let windowId = window.docShell.outerWindowID;
   windowId = browser.outerWindowID;
-  descriptor = await descriptorFromURL(
-    new URL("http://foo?type=tab&id=" + windowId)
-  );
-  target = await descriptor.getTarget();
+  target = await targetFromURL(new URL("http://foo?type=tab&id=" + windowId));
   assertTarget(target, TEST_URI);
+  await target.client.close();
+
+  info("Test tab with chrome privileges");
+  target = await targetFromURL(
+    new URL("http://foo?type=tab&id=" + windowId + "&chrome")
+  );
+  assertTarget(target, TEST_URI, true);
   await target.client.close();
 
   info("Test invalid tab id");
   try {
-    await descriptorFromURL(new URL("http://foo?type=tab&id=10000"));
+    await targetFromURL(new URL("http://foo?type=tab&id=10000"));
     ok(false, "Shouldn't pass");
   } catch (e) {
     is(
       e.message,
-      "descriptorFromURL, tab with outerWindowID '10000' doesn't exist"
+      "targetFromURL, tab with outerWindowID '10000' doesn't exist"
     );
   }
 
   info("Test parent process");
-  descriptor = await descriptorFromURL(new URL("http://foo?type=process"));
-  target = await descriptor.getTarget();
+  target = await targetFromURL(new URL("http://foo?type=process"));
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
   await target.client.close();
@@ -111,10 +112,9 @@ async function testRemoteTCP() {
   const server = await setupDevToolsServer(false);
 
   const { port } = server.listener;
-  const descriptor = await descriptorFromURL(
+  const target = await targetFromURL(
     new URL("http://foo?type=process&host=127.0.0.1&port=" + port)
   );
-  const target = await descriptor.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 
@@ -134,10 +134,9 @@ async function testRemoteWebSocket() {
   const server = await setupDevToolsServer(true);
 
   const { port } = server.listener;
-  const descriptor = await descriptorFromURL(
+  const target = await targetFromURL(
     new URL("http://foo?type=process&host=127.0.0.1&port=" + port + "&ws=true")
   );
-  const target = await descriptor.getTarget();
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   assertTarget(target, topWindow.location.href, true);
 
