@@ -858,12 +858,16 @@ size_t RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
 /* RegExpRealm */
 
 RegExpRealm::RegExpRealm()
-    : matchResultTemplateObject_(nullptr),
-      optimizableRegExpPrototypeShape_(nullptr),
-      optimizableRegExpInstanceShape_(nullptr) {}
+    : optimizableRegExpPrototypeShape_(nullptr),
+      optimizableRegExpInstanceShape_(nullptr) {
+  for (auto& templateObj : matchResultTemplateObjects_) {
+    templateObj = nullptr;
+  }
+}
 
-ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
-  MOZ_ASSERT(!matchResultTemplateObject_);
+ArrayObject* RegExpRealm::createMatchResultTemplateObject(
+    JSContext* cx, ResultTemplateKind kind) {
+  MOZ_ASSERT(!matchResultTemplateObjects_[kind]);
 
   /* Create template array object */
   RootedArrayObject templateObject(
@@ -873,12 +877,27 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
     return nullptr;
   }
 
+  if (kind == ResultTemplateKind::Indices) {
+    /* The |indices| array only has a |groups| property. */
+    RootedValue groupsVal(cx, UndefinedValue());
+    if (!NativeDefineDataProperty(cx, templateObject, cx->names().groups,
+                                  groupsVal, JSPROP_ENUMERATE)) {
+      return nullptr;
+    }
+    MOZ_ASSERT(templateObject->lastProperty()->slot() == IndicesGroupsSlot);
+
+    matchResultTemplateObjects_[kind].set(templateObject);
+    return matchResultTemplateObjects_[kind];
+  }
+
   /* Set dummy index property */
   RootedValue index(cx, Int32Value(0));
   if (!NativeDefineDataProperty(cx, templateObject, cx->names().index, index,
                                 JSPROP_ENUMERATE)) {
     return nullptr;
   }
+  MOZ_ASSERT(templateObject->lastProperty()->slot() ==
+             MatchResultObjectIndexSlot);
 
   /* Set dummy input property */
   RootedValue inputVal(cx, StringValue(cx->runtime()->emptyString));
@@ -886,6 +905,8 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
                                 JSPROP_ENUMERATE)) {
     return nullptr;
   }
+  MOZ_ASSERT(templateObject->lastProperty()->slot() ==
+             MatchResultObjectInputSlot);
 
   /* Set dummy groups property */
   RootedValue groupsVal(cx, UndefinedValue());
@@ -893,29 +914,31 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
                                 groupsVal, JSPROP_ENUMERATE)) {
     return nullptr;
   }
+  MOZ_ASSERT(templateObject->lastProperty()->slot() ==
+             MatchResultObjectGroupsSlot);
 
-  // Make sure that the properties are in the right slots.
-#ifdef DEBUG
-  Shape* groupsShape = templateObject->lastProperty();
-  MOZ_ASSERT(groupsShape->slot() == MatchResultObjectGroupsSlot &&
-             groupsShape->propidRef() == NameToId(cx->names().groups));
-  Shape* inputShape = groupsShape->previous().get();
-  MOZ_ASSERT(inputShape->slot() == MatchResultObjectInputSlot &&
-             inputShape->propidRef() == NameToId(cx->names().input));
-  Shape* indexShape = inputShape->previous().get();
-  MOZ_ASSERT(indexShape->slot() == MatchResultObjectIndexSlot &&
-             indexShape->propidRef() == NameToId(cx->names().index));
-#endif
+  if (kind == ResultTemplateKind::WithIndices) {
+    /* Set dummy indices property */
+    RootedValue indicesVal(cx, UndefinedValue());
+    if (!NativeDefineDataProperty(cx, templateObject, cx->names().indices,
+                                  indicesVal, JSPROP_ENUMERATE)) {
+      return nullptr;
+    }
+    MOZ_ASSERT(templateObject->lastProperty()->slot() ==
+               MatchResultObjectIndicesSlot);
+  }
 
-  matchResultTemplateObject_.set(templateObject);
+  matchResultTemplateObjects_[kind].set(templateObject);
 
-  return matchResultTemplateObject_;
+  return matchResultTemplateObjects_[kind];
 }
 
 void RegExpRealm::traceWeak(JSTracer* trc) {
-  if (matchResultTemplateObject_) {
-    TraceWeakEdge(trc, &matchResultTemplateObject_,
-                  "RegExpRealm::matchResultTemplateObject_");
+  for (auto& templateObject : matchResultTemplateObjects_) {
+    if (templateObject) {
+      TraceWeakEdge(trc, &templateObject,
+                    "RegExpRealm::matchResultTemplateObject_");
+    }
   }
 
   if (optimizableRegExpPrototypeShape_) {
