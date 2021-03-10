@@ -300,6 +300,7 @@ for var in (
     "MOZ_SYSTEM_NSS",
     "MOZ_UNSIGNED_APP_SCOPE",
     "MOZ_UNSIGNED_SYSTEM_SCOPE",
+    "MOZ_UPDATE_AGENT",
     "MOZ_UPDATER",
 ):
     if CONFIG[var]:
