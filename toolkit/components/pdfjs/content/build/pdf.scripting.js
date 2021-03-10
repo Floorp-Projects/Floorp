@@ -891,6 +891,10 @@ class RadioButtonField extends Field {
   }
 
   set value(value) {
+    if (value === null) {
+      this._value = "";
+    }
+
     const i = this.exportValues.indexOf(value);
 
     if (0 <= i && i < this._radioIds.length) {
@@ -4652,8 +4656,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.8.126';
-const pdfjsBuild = 'fafe03984';
+const pdfjsVersion = '2.8.188';
+const pdfjsBuild = '5e3af62d5';
 })();
 
 /******/ 	return __webpack_exports__;
