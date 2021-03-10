@@ -634,7 +634,35 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
       return true;
     }
 
-    return false;
+    nsAutoCString uriHost;
+    mURI->GetAsciiHost(uriHost);
+
+    if (gHttpHandler->IsHostExcludedForHTTPSRR(uriHost)) {
+      return true;
+    }
+
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+        mLoadInfo->TriggeringPrincipal();
+    // If the security context that triggered the load is not https, then it's
+    // not a downgrade scenario.
+    if (!triggeringPrincipal->SchemeIs("https")) {
+      return false;
+    }
+
+    nsAutoCString triggeringHost;
+    triggeringPrincipal->GetAsciiHost(triggeringHost);
+
+    // If the initial request's host is not the same, we should upgrade this
+    // request.
+    if (!triggeringHost.Equals(uriHost)) {
+      return false;
+    }
+
+    // Add the host to a excluded list because:
+    // 1. We don't need to do the same check again.
+    // 2. Other subresources in the same host will be also excluded.
+    gHttpHandler->ExcludeHTTPSRRHost(uriHost);
+    return true;
   };
 
   if (shouldSkipUpgradeWithHTTPSRR()) {
