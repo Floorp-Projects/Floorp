@@ -575,7 +575,13 @@ def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
         if not os.path.isdir(f):
             raise Exception("Expected %s to be a directory" % f)
 
-    kept_binaries = ["clang-apply-replacements", "clang-format", "clang-tidy", "clangd"]
+    kept_binaries = [
+        "clang-apply-replacements",
+        "clang-format",
+        "clang-tidy",
+        "clangd",
+        "clang-query",
+    ]
     re_clang_tidy = re.compile(r"^(" + "|".join(kept_binaries) + r")(\.exe)?$", re.I)
     for f in glob.glob("%s/bin/*" % final_dir):
         if re_clang_tidy.search(os.path.basename(f)) is None:
