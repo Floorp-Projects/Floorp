@@ -17,7 +17,6 @@ enum MacThemeGeometryType {
   eThemeGeometryTypeVibrantTitlebarLight,
   eThemeGeometryTypeVibrantTitlebarDark,
   eThemeGeometryTypeTooltip,
-  eThemeGeometryTypeSheet,
   eThemeGeometryTypeSourceList,
   eThemeGeometryTypeSourceListSelection,
   eThemeGeometryTypeActiveSourceListSelection
