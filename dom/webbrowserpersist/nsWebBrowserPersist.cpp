@@ -582,69 +582,56 @@ void nsWebBrowserPersist::SerializeNextFile() {
   MOZ_ASSERT(mWalkStack.Length() == 0);
 
   // First, handle gathered URIs.
-  // Count how many URIs in the URI map require persisting
-  uint32_t urisToPersist = 0;
-  if (mURIMap.Count() > 0) {
-    // This is potentially O(n^2), when taking into account the
-    // number of times this method is called.  If it becomes a
-    // bottleneck, the count of not-yet-persisted URIs could be
-    // maintained separately.
-    for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
-      URIData* data = iter.UserData();
-      if (data->mNeedsPersisting && !data->mSaved) {
-        urisToPersist++;
-      }
+  // This is potentially O(n^2), when taking into account the
+  // number of times this method is called.  If it becomes a
+  // bottleneck, the count of not-yet-persisted URIs could be
+  // maintained separately, and we can skip iterating mURIMap if there are none.
+
+  // Persist each file in the uri map. The document(s)
+  // will be saved after the last one of these is saved.
+  for (const auto& entry : mURIMap) {
+    URIData* data = entry.GetWeak();
+
+    if (!data->mNeedsPersisting || data->mSaved) {
+      continue;
     }
-  }
 
-  if (urisToPersist > 0) {
-    NS_ENSURE_SUCCESS_VOID(rv);
-    // Persist each file in the uri map. The document(s)
-    // will be saved after the last one of these is saved.
-    for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
-      URIData* data = iter.UserData();
+    // Create a URI from the key.
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), entry.GetKey(), data->mCharset.get());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
 
-      if (!data->mNeedsPersisting || data->mSaved) {
-        continue;
-      }
+    // Make a URI to save the data to.
+    nsCOMPtr<nsIURI> fileAsURI = data->mDataPath;
+    rv = AppendPathToURI(fileAsURI, data->mFilename, fileAsURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
 
-      // Create a URI from the key.
-      nsCOMPtr<nsIURI> uri;
-      rv = NS_NewURI(getter_AddRefs(uri), iter.Key(), data->mCharset.get());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        break;
-      }
+    rv = SaveURIInternal(uri, data->mTriggeringPrincipal,
+                         data->mContentPolicyType, 0, nullptr,
+                         data->mCookieJarSettings, nullptr, nullptr, fileAsURI,
+                         true, mIsPrivate);
+    // If SaveURIInternal fails, then it will have called EndDownload,
+    // which means that |data| is no longer valid memory. We MUST bail.
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
 
-      // Make a URI to save the data to.
-      nsCOMPtr<nsIURI> fileAsURI = data->mDataPath;
-      rv = AppendPathToURI(fileAsURI, data->mFilename, fileAsURI);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        break;
-      }
+    if (rv == NS_OK) {
+      // URIData.mFile will be updated to point to the correct
+      // URI object when it is fixed up with the right file extension
+      // in OnStartRequest
+      data->mFile = fileAsURI;
+      data->mSaved = true;
+    } else {
+      data->mNeedsFixup = false;
+    }
 
-      rv = SaveURIInternal(uri, data->mTriggeringPrincipal,
-                           data->mContentPolicyType, 0, nullptr,
-                           data->mCookieJarSettings, nullptr, nullptr,
-                           fileAsURI, true, mIsPrivate);
-      // If SaveURIInternal fails, then it will have called EndDownload,
-      // which means that |data| is no longer valid memory. We MUST bail.
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        break;
-      }
-
-      if (rv == NS_OK) {
-        // URIData.mFile will be updated to point to the correct
-        // URI object when it is fixed up with the right file extension
-        // in OnStartRequest
-        data->mFile = fileAsURI;
-        data->mSaved = true;
-      } else {
-        data->mNeedsFixup = false;
-      }
-
-      if (mSerializingOutput) {
-        break;
-      }
+    if (mSerializingOutput) {
+      break;
     }
   }
 
