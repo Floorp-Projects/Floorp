@@ -7,6 +7,7 @@
 #include "RenderTextureHostSWGL.h"
 
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/TextureHost.h"
 #include "RenderThread.h"
 
 namespace mozilla {
@@ -112,8 +113,16 @@ wr::WrExternalImage RenderTextureHostSWGL::LockSWGL(
     return InvalidToWrExternalImage();
   }
   const PlaneInfo& plane = mPlanes[aChannelIndex];
-  return NativeTextureToWrExternalImage(plane.mTexture, 0, 0, plane.mSize.width,
-                                        plane.mSize.height);
+
+  // Prefer native textures, unless our backend forbids it.
+  layers::TextureHost::NativeTexturePolicy policy =
+      layers::TextureHost::BackendNativeTexturePolicy(
+          layers::WebRenderBackend::SOFTWARE, plane.mSize);
+  return policy == layers::TextureHost::NativeTexturePolicy::FORBID
+             ? RawDataToWrExternalImage((uint8_t*)plane.mData,
+                                        plane.mStride * plane.mSize.height)
+             : NativeTextureToWrExternalImage(
+                   plane.mTexture, 0, 0, plane.mSize.width, plane.mSize.height);
 }
 
 void RenderTextureHostSWGL::UnlockSWGL() {
