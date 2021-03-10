@@ -50,6 +50,6 @@ fuzzy-if(Android,0-8,0-630) fuzzy-if(OSX,0-1,0-11) fuzzy-if(skiaContent,0-1,0-22
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == iframe-1.html iframe-1-ref.html
 == transformed-1.html transformed-1-ref.html
-fuzzy-if(Android,0-4,0-4) fuzzy-if(webrender&&gtkWidget,10-17,12-32) fuzzy-if(webrender&&cocoaWidget,7-8,20-42) skip-if(!asyncPan) == transformed-2.html transformed-2-ref.html # Bug 1604644
-skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,13-16,20-44) == nested-sticky-1.html nested-sticky-1-ref.html # Bug 1604644
-skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,13-16,20-44) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-4,0-104) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644
+fuzzy-if(Android,0-4,0-4) fuzzy-if(webrender&&gtkWidget,10-17,12-32) fuzzy-if(webrender&&cocoaWidget,8-8,38-42) skip-if(!asyncPan) == transformed-2.html transformed-2-ref.html # Bug 1604644
+skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,15-16,44-44) == nested-sticky-1.html nested-sticky-1-ref.html # Bug 1604644
+skip-if(!asyncPan) fuzzy-if(Android,0-10,0-4) fuzzy-if(webrender&&gtkWidget,19-30,12-32) fuzzy-if(webrender&&cocoaWidget,15-16,44-44) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-4,0-104) == nested-sticky-2.html nested-sticky-2-ref.html # Bug 1604644

@@ -6,6 +6,7 @@
 
 #include "ScrollbarDrawingMac.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
@@ -126,12 +127,8 @@ ScrollbarParams ScrollbarDrawingMac::ComputeScrollbarParams(
   return params;
 }
 
-auto ScrollbarDrawingMac::GetThumbRect(const Rect& aRect,
-                                       const ScrollbarParams& aParams,
-                                       float aScale) -> ThumbRect {
-  // This matches the sizing checks in GetMinimumWidgetSize etc.
-  aScale = aScale >= 2.0f ? 2.0f : 1.0f;
-
+void ScrollbarDrawingMac::DrawScrollbarThumb(DrawTarget& aDT, const Rect& aRect,
+                                             const ScrollbarParams& aParams) {
   // Compute the thumb thickness. This varies based on aParams.small,
   // aParams.overlay and aParams.rolledOver. non-overlay: 6 / 8, overlay
   // non-hovered: 5 / 7, overlay hovered: 9 / 11
@@ -142,13 +139,11 @@ auto ScrollbarDrawingMac::GetThumbRect(const Rect& aRect,
       thickness += 4.0f;
     }
   }
-  thickness *= aScale;
 
   // Compute the thumb rect.
-  const float outerSpacing =
-      ((aParams.overlay || aParams.small) ? 1.0f : 2.0f) * aScale;
+  float outerSpacing = (aParams.overlay || aParams.small) ? 1.0f : 2.0f;
   Rect thumbRect = aRect;
-  thumbRect.Deflate(1.0f * aScale);
+  thumbRect.Deflate(1.0f);
   if (aParams.horizontal) {
     float bottomEdge = thumbRect.YMost() - outerSpacing;
     thumbRect.SetBoxY(bottomEdge - thickness, bottomEdge);
@@ -176,20 +171,29 @@ auto ScrollbarDrawingMac::GetThumbRect(const Rect& aRect,
     }
   }
 
-  nscolor strokeColor = 0;
-  float strokeOutset = 0.0f;
-  float strokeWidth = 0.0f;
+  // Fill the thumb shape with the color.
+  float cornerRadius =
+      (aParams.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+  aDT.FillRoundedRect(RoundedRect(thumbRect, RectCornerRadii(cornerRadius)),
+                      ColorPattern(ToDeviceColor(faceColor)));
 
   // Overlay scrollbars have an additional stroke around the fill.
   if (aParams.overlay) {
-    strokeOutset = (aParams.onDarkBackground ? 0.3f : 0.5f) * aScale;
-    strokeWidth = (aParams.onDarkBackground ? 0.6f : 0.8f) * aScale;
+    float strokeOutset = aParams.onDarkBackground ? 0.3f : 0.5f;
+    float strokeWidth = aParams.onDarkBackground ? 0.6f : 0.8f;
+    nscolor strokeColor = aParams.onDarkBackground ? NS_RGBA(0, 0, 0, 48)
+                                                   : NS_RGBA(255, 255, 255, 48);
+    Rect thumbStrokeRect = thumbRect;
+    thumbStrokeRect.Inflate(strokeOutset);
+    float strokeRadius = (aParams.horizontal ? thumbStrokeRect.Height()
+                                             : thumbStrokeRect.Width()) /
+                         2.0f;
 
-    strokeColor = aParams.onDarkBackground ? NS_RGBA(0, 0, 0, 48)
-                                           : NS_RGBA(255, 255, 255, 48);
+    RefPtr<Path> path = MakePathForRoundedRect(aDT, thumbStrokeRect,
+                                               RectCornerRadii(strokeRadius));
+    aDT.Stroke(path, ColorPattern(ToDeviceColor(strokeColor)),
+               StrokeOptions(strokeWidth));
   }
-
-  return {thumbRect, faceColor, strokeColor, strokeWidth, strokeOutset};
 }
 
 struct ScrollbarTrackDecorationColors {
@@ -220,17 +224,12 @@ static ScrollbarTrackDecorationColors ComputeScrollbarTrackDecorationColors(
   return result;
 }
 
-bool ScrollbarDrawingMac::GetScrollbarTrackRects(const Rect& aRect,
-                                                 const ScrollbarParams& aParams,
-                                                 float aScale,
-                                                 ScrollbarTrackRects& aRects) {
+void ScrollbarDrawingMac::DrawScrollbarTrack(DrawTarget& aDT, const Rect& aRect,
+                                             const ScrollbarParams& aParams) {
   if (aParams.overlay && !aParams.rolledOver) {
     // Non-hovered overlay scrollbars don't have a track. Draw nothing.
-    return false;
+    return;
   }
-
-  // This matches the sizing checks in GetMinimumWidgetSize etc.
-  aScale = aScale >= 2.0f ? 2.0f : 1.0f;
 
   nscolor trackColor;
   if (aParams.custom) {
@@ -254,17 +253,16 @@ bool ScrollbarDrawingMac::GetScrollbarTrackRects(const Rect& aRect,
     nscolor color;
     float thickness;
   } segments[] = {
-      {colors.mInnerColor, 1.0f * aScale},
-      {colors.mShadowColor, 1.0f * aScale},
-      {trackColor, thickness - 3.0f * aScale},
-      {colors.mOuterColor, 1.0f * aScale},
+      {colors.mInnerColor, 1.0f},
+      {colors.mShadowColor, 1.0f},
+      {trackColor, thickness - 3.0f},
+      {colors.mOuterColor, 1.0f},
   };
 
   // Iterate over the segments "from inside to outside" and fill each segment.
   // For horizontal scrollbars, iterate top to bottom.
   // For vertical scrollbars, iterate left to right or right to left based on
   // aParams.rtl.
-  auto current = aRects.begin();
   float accumulatedThickness = 0.0f;
   for (const auto& segment : segments) {
     Rect segmentRect = aRect;
@@ -281,24 +279,17 @@ bool ScrollbarDrawingMac::GetScrollbarTrackRects(const Rect& aRect,
                             aRect.X() + endThickness);
       }
     }
+    aDT.FillRect(segmentRect, ColorPattern(ToDeviceColor(segment.color)));
     accumulatedThickness = endThickness;
-    *current++ = {segmentRect, segment.color};
   }
-
-  return true;
 }
 
-bool ScrollbarDrawingMac::GetScrollCornerRects(const Rect& aRect,
-                                               const ScrollbarParams& aParams,
-                                               float aScale,
-                                               ScrollCornerRects& aRects) {
+void ScrollbarDrawingMac::DrawScrollCorner(DrawTarget& aDT, const Rect& aRect,
+                                           const ScrollbarParams& aParams) {
   if (aParams.overlay && !aParams.rolledOver) {
     // Non-hovered overlay scrollbars don't have a corner. Draw nothing.
-    return false;
+    return;
   }
-
-  // This matches the sizing checks in GetMinimumWidgetSize etc.
-  aScale = aScale >= 2.0f ? 2.0f : 1.0f;
 
   // Draw the following scroll corner.
   //
@@ -325,29 +316,22 @@ bool ScrollbarDrawingMac::GetScrollCornerRects(const Rect& aRect,
     nscolor color;
     Rect relativeRect;
   } pieces[] = {
-      {colors.mInnerColor, {0.0f, 0.0f, 1.0f * aScale, 1.0f * aScale}},
-      {colors.mShadowColor,
-       {1.0f * aScale, 0.0f, 1.0f * aScale, 1.0f * aScale}},
-      {colors.mShadowColor,
-       {0.0f, 1.0f * aScale, 2.0f * aScale, 1.0f * aScale}},
-      {trackColor, {2.0f * aScale, 0.0f, width - 3.0f * aScale, 2.0f * aScale}},
-      {trackColor,
-       {0.0f, 2.0f * aScale, width - 1.0f * aScale, height - 3.0f * aScale}},
-      {colors.mOuterColor,
-       {width - 1.0f * aScale, 0.0f, 1.0f * aScale, height - 1.0f * aScale}},
-      {colors.mOuterColor,
-       {0.0f, height - 1.0f * aScale, width, 1.0f * aScale}},
+      {colors.mInnerColor, {0.0f, 0.0f, 1.0f, 1.0f}},
+      {colors.mShadowColor, {1.0f, 0.0f, 1.0f, 1.0f}},
+      {colors.mShadowColor, {0.0f, 1.0f, 2.0f, 1.0f}},
+      {trackColor, {2.0f, 0.0f, width - 3.0f, 2.0f}},
+      {trackColor, {0.0f, 2.0f, width - 1.0f, height - 3.0f}},
+      {colors.mOuterColor, {width - 1.0f, 0.0f, 1.0f, height - 1.0f}},
+      {colors.mOuterColor, {0.0f, height - 1.0f, width, 1.0f}},
   };
 
-  auto current = aRects.begin();
   for (const auto& piece : pieces) {
     Rect pieceRect = piece.relativeRect + aRect.TopLeft();
     if (aParams.rtl) {
       pieceRect.x = aRect.XMost() - piece.relativeRect.XMost();
     }
-    *current++ = {pieceRect, piece.color};
+    aDT.FillRect(pieceRect, ColorPattern(ToDeviceColor(piece.color)));
   }
-  return true;
 }
 
 }  // namespace widget
