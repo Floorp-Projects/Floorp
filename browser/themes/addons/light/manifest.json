@@ -27,7 +27,9 @@
       "toolbar_bottom_separator": "#ccc",
       "toolbar_field": "#fff",
       "toolbar_field_text": "rgb(24, 25, 26)",
-      "toolbar_field_border": "#ccc"
+      "toolbar_field_border": "#ccc",
+      "ntp_background": "#F9F9FA",
+      "ntp_text": "rgb(12, 12, 13)"
     }
   },
 

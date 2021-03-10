@@ -31,7 +31,9 @@
       "toolbar_field": "#f0f0f4",
       "toolbar_field_text": "rgb(24, 25, 26)",
       "toolbar_field_border": "transparent",
-      "toolbar_field_focus": "#fff"
+      "toolbar_field_focus": "#fff",
+      "ntp_background": "#F9F9FA",
+      "ntp_text": "rgb(12, 12, 13)"
     }
   },
 
