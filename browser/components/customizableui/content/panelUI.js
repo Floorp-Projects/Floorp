@@ -735,32 +735,6 @@ const PanelUI = {
     items.appendChild(fragment);
   },
 
-  _updateQuitTooltip() {
-    if (AppConstants.platform == "win") {
-      return;
-    }
-
-    let tooltipId =
-      AppConstants.platform == "macosx"
-        ? "quit-button.tooltiptext.mac"
-        : "quit-button.tooltiptext.linux2";
-
-    let brands = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties"
-    );
-    let stringArgs = [brands.GetStringFromName("brandShortName")];
-
-    let key = document.getElementById("key_quitApplication");
-    stringArgs.push(ShortcutUtils.prettifyShortcut(key));
-    let tooltipString = CustomizableUI.getLocalizedProperty(
-      { x: tooltipId },
-      "x",
-      stringArgs
-    );
-    let quitButton = document.getElementById("PanelUI-quit");
-    quitButton.setAttribute("tooltiptext", tooltipString);
-  },
-
   _hidePopup() {
     if (!this._notificationPanel) {
       return;
