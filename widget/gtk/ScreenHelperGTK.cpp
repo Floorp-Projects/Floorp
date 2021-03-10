@@ -18,7 +18,6 @@
 #include "gfxPlatformGtk.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/Logging.h"
-#include "mozilla/WidgetUtilsGtk.h"
 #include "nsGtkUtils.h"
 #include "nsTArray.h"
 
@@ -94,7 +93,7 @@ ScreenHelperGTK::ScreenHelperGTK()
                          G_CALLBACK(screen_resolution_changed), this);
 #ifdef MOZ_X11
   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
-  if (GdkIsX11Display()) {
+  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     mNetWorkareaAtom = XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow),
                                    "_NET_WORKAREA", X11False);
   }
@@ -151,7 +150,8 @@ static already_AddRefed<Screen> MakeScreen(GdkScreen* aScreen,
   // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
   DesktopToLayoutDeviceScale contentsScale(1.0);
 #ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay()) {
+  GdkDisplay* gdkDisplay = gdk_display_get_default();
+  if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
     contentsScale.scale = gdkScaleFactor;
   }
 #endif
