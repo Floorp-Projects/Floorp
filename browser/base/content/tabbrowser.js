@@ -806,15 +806,59 @@
       return (aBrowser || this.selectedBrowser).parentNode.parentNode;
     },
 
+    getTabNotificationDeck() {
+      if (!this._tabNotificationDeck) {
+        let template = document.getElementById(
+          "tab-notification-deck-template"
+        );
+        template.replaceWith(template.content);
+        this._tabNotificationDeck = document.getElementById(
+          "tab-notification-deck"
+        );
+      }
+      return this._tabNotificationDeck;
+    },
+
+    _nextNotificationBoxId: 0,
     getNotificationBox(aBrowser) {
       let browser = aBrowser || this.selectedBrowser;
       if (!browser._notificationBox) {
         browser._notificationBox = new MozElements.NotificationBox(element => {
           element.setAttribute("notificationside", "top");
-          this.getBrowserContainer(browser).prepend(element);
+          if (
+            Services.prefs.getBoolPref("browser.proton.infobars.enabled", false)
+          ) {
+            element.setAttribute(
+              "name",
+              `tab-notification-box-${this._nextNotificationBoxId++}`
+            );
+            // With Proton enabled all notification boxes are at the top, built into the browser chrome.
+            this.getTabNotificationDeck().append(element);
+            if (browser == this.selectedBrowser) {
+              this._updateVisibleNotificationBox(browser);
+            }
+          } else {
+            this.getBrowserContainer(browser).prepend(element);
+          }
         });
       }
       return browser._notificationBox;
+    },
+
+    readNotificationBox(aBrowser) {
+      let browser = aBrowser || this.selectedBrowser;
+      return browser._notificationBox || null;
+    },
+
+    _updateVisibleNotificationBox(aBrowser) {
+      if (!this._tabNotificationDeck) {
+        // If the deck hasn't been created we don't need to create it here.
+        return;
+      }
+      let notificationBox = this.readNotificationBox(aBrowser);
+      this.getTabNotificationDeck().selectedViewName = notificationBox
+        ? notificationBox.stack.getAttribute("name")
+        : "";
     },
 
     getTabModalPromptBox(aBrowser) {
@@ -1068,6 +1112,12 @@
       this.showTab(newTab);
 
       this._appendStatusPanel();
+
+      if (
+        Services.prefs.getBoolPref("browser.proton.infobars.enabled", false)
+      ) {
+        this._updateVisibleNotificationBox(newBrowser);
+      }
 
       let oldBrowserPopupsBlocked = oldBrowser.popupBlocker.getBlockedPopupCount();
       let newBrowserPopupsBlocked = newBrowser.popupBlocker.getBlockedPopupCount();
@@ -3752,6 +3802,9 @@
           "BrowserTab"
         );
       }
+
+      let notificationBox = this.readNotificationBox(browser);
+      notificationBox?.stack.remove();
 
       if (aTab.linkedPanel) {
         if (!adoptedByTab && !gMultiProcessBrowser) {

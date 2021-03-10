@@ -40,8 +40,8 @@
             this._finishAnimation();
           }
         });
-        this._insertElementFn(stack);
         this._stack = stack;
+        this._insertElementFn(stack);
       }
       return this._stack;
     }
