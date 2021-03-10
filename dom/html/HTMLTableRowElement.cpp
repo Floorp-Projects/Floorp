@@ -25,12 +25,8 @@ JSObject* HTMLTableRowElement::WrapNode(JSContext* aCx,
   return HTMLTableRowElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableRowElement)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTableRowElement,
-                                                  nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCells)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLTableRowElement, nsGenericHTMLElement,
+                                   mCells)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLTableRowElement,
                                                nsGenericHTMLElement)

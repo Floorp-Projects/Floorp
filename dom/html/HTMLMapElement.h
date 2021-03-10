@@ -25,8 +25,7 @@ class HTMLMapElement final : public nsGenericHTMLElement {
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLMapElement,
-                                                     nsGenericHTMLElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMapElement, nsGenericHTMLElement)
 
   void GetName(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::name, aValue); }
   void SetName(const nsAString& aName, ErrorResult& aError) {
@@ -34,8 +33,7 @@ class HTMLMapElement final : public nsGenericHTMLElement {
   }
   nsIHTMLCollection* Areas();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   ~HTMLMapElement() = default;
