@@ -34,6 +34,18 @@ const TEST_DATA = [
     input: "javasc\nript:\nalert(1)",
     expected: "alert(1)",
   },
+  {
+    input: "a\nb\nc",
+    expected: "a b c",
+  },
+  {
+    input: "lo\ncal\nhost",
+    expected: "localhost",
+  },
+  {
+    input: "data:text/html,<iframe\n src='example\n.com'>\n</iframe>",
+    expected: "data:text/html,<iframe src='example.com'></iframe>",
+  },
 ];
 
 add_task(async function test_paste_multi_lines() {
