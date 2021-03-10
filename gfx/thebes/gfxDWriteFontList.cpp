@@ -18,6 +18,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -966,6 +967,12 @@ gfxFontEntry* gfxDWriteFontList::MakePlatformFont(
   }
 
   return entry.release();
+}
+
+bool gfxDWriteFontList::UseGDIFontTableAccess() const {
+  // Using GDI font table access for DWrite is controlled by a pref, but also we
+  // must be able to make win32k calls.
+  return mGDIFontTableAccess && !IsWin32kLockedDown();
 }
 
 static void GetPostScriptNameFromNameTable(IDWriteFontFace* aFace,
