@@ -763,8 +763,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   bool HasValidInnerSize();
 
-  void SetTabId(const TabId& aTabId);
-
   ScreenIntRect GetOuterRect();
 
   void SetUnscaledInnerSize(const CSSSize& aSize) {
