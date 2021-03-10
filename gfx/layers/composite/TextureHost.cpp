@@ -703,15 +703,15 @@ void BufferTextureHost::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
 
-  // Use native textures if our backend requires it, or if our backend doesn't
-  // forbid it and we want to use them.
-  NativeTexturePolicy policy =
-      BackendNativeTexturePolicy(aResources.GetBackendType(), GetSize());
-  bool useNativeTexture =
-      (policy == REQUIRE) || (policy != FORBID && UseExternalTextures());
-  auto imageType = useNativeTexture ? wr::ExternalImageType::TextureHandle(
-                                          wr::ImageBufferKind::TextureRect)
-                                    : wr::ExternalImageType::Buffer();
+  // Even if we cannot use external textures, if the backend is Software
+  // WebRender, we need to ensure that we use external texture style updates.
+  // This is because we always represent mapped buffers as external "native"
+  // textures for that backend.
+  auto imageType = UseExternalTextures() || aResources.GetBackendType() ==
+                                                WebRenderBackend::SOFTWARE
+                       ? wr::ExternalImageType::TextureHandle(
+                             wr::ImageBufferKind::TextureRect)
+                       : wr::ExternalImageType::Buffer();
 
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
