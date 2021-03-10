@@ -23,4 +23,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     OS_LIBS += ["taskschd"]
     DEFINES["UNICODE"] = True
 
+if CONFIG["OS_TARGET"] == "Darwin":
+    EXTRA_JS_MODULES += ["TaskSchedulerMacOSImpl.jsm"]
+
 FINAL_LIBRARY = "xul"
