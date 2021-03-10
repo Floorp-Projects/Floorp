@@ -828,9 +828,14 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void ExcludeHttp3(const nsHttpConnectionInfo* ci);
   [[nodiscard]] bool IsHttp3Excluded(const nsACString& aRoutedHost);
 
+  void ExcludeHTTPSRRHost(const nsACString& aHost);
+  [[nodiscard]] bool IsHostExcludedForHTTPSRR(const nsACString& aHost);
+
  private:
   nsTHashtable<nsCStringHashKey> mExcludedHttp2Origins;
   nsTHashtable<nsCStringHashKey> mExcludedHttp3Origins;
+  // A set of hosts that we should not upgrade to HTTPS with HTTPS RR.
+  nsTHashtable<nsCStringHashKey> mExcludedHostsForHTTPSRRUpgrade;
 
   Atomic<bool, Relaxed> mThroughCaptivePortal;
 
