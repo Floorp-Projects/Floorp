@@ -3116,10 +3116,8 @@ class AddonCard extends HTMLElement {
         case "remove":
           {
             this.panel.hide();
-            let {
-              remove,
-              report,
-            } = windowRoot.ownerGlobal.BrowserAddonUI.promptRemoveExtension(
+            let { BrowserAddonUI } = windowRoot.ownerGlobal;
+            let { remove, report } = BrowserAddonUI.promptRemoveExtension(
               addon
             );
             let value = remove ? "accepted" : "cancelled";

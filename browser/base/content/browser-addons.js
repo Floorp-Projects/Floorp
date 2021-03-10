@@ -1028,17 +1028,12 @@ var gExtensionsNotifications = {
 };
 
 var BrowserAddonUI = {
-  promptRemoveExtension(addon) {
+  async promptRemoveExtension(addon) {
     let { name } = addon;
-    let brand = document
-      .getElementById("bundle_brand")
-      .getString("brandShorterName");
-    let { getFormattedString, getString } = gNavigatorBundle;
-    let title = getFormattedString("webext.remove.confirmation.title", [name]);
-    let message = getFormattedString("webext.remove.confirmation.message", [
+    let title = await document.l10n.formatValue("addon-removal-title", {
       name,
-      brand,
-    ]);
+    });
+    let { getFormattedString, getString } = gNavigatorBundle;
     let btnTitle = getString("webext.remove.confirmation.button");
     let {
       BUTTON_TITLE_IS_STRING: titleString,
@@ -1058,22 +1053,32 @@ var BrowserAddonUI = {
       gAddonAbuseReportEnabled &&
       ["extension", "theme"].includes(addon.type)
     ) {
-      checkboxMessage = getFormattedString(
-        "webext.remove.abuseReportCheckbox.message",
-        [document.getElementById("bundle_brand").getString("vendorShortName")]
+      checkboxMessage = await document.l10n.formatValue(
+        "addon-removal-abuse-report-checkbox"
       );
     }
-    const result = confirmEx(
-      null,
+
+    let message = null;
+
+    if (!Services.prefs.getBoolPref("prompts.windowPromptSubDialog", false)) {
+      message = getFormattedString("webext.remove.confirmation.message", [
+        name,
+        document.getElementById("bundle_brand").getString("brandShorterName"),
+      ]);
+    }
+
+    let result = confirmEx(
+      window,
       title,
       message,
       btnFlags,
       btnTitle,
-      null,
-      null,
+      /* button1 */ null,
+      /* button2 */ null,
       checkboxMessage,
       checkboxState
     );
+
     return { remove: result === 0, report: checkboxState.value };
   },
 
@@ -1089,7 +1094,7 @@ var BrowserAddonUI = {
       return;
     }
 
-    let { remove, report } = this.promptRemoveExtension(addon);
+    let { remove, report } = await this.promptRemoveExtension(addon);
 
     AMTelemetry.recordActionEvent({
       object: eventObject,
