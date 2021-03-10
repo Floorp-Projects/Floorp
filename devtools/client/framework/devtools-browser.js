@@ -343,7 +343,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     gBrowser.selectedTab = gBrowser.addTrustedTab(url);
   },
 
-  async _getContentProcessTarget(processId) {
+  async _getContentProcessDescriptor(processId) {
     // Create a DevToolsServer in order to connect locally to it
     DevToolsServer.init();
     DevToolsServer.registerAllActors();
@@ -353,15 +353,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     const client = new DevToolsClient(transport);
 
     await client.connect();
-    const targetDescriptor = await client.mainRoot.getProcess(processId);
-    const target = await targetDescriptor.getTarget();
-    // Ensure closing the connection in order to cleanup
-    // the devtools client and also the server created in the
-    // content process
-    target.on("target-destroyed", () => {
-      client.close();
-    });
-    return target;
+    return client.mainRoot.getProcess(processId);
   },
 
   /**
@@ -371,7 +363,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
    *
    * Used by menus.js
    */
-  openContentProcessToolbox(gBrowser) {
+  async openContentProcessToolbox(gBrowser) {
     const { childCount } = Services.ppmm;
     // Get the process message manager for the current tab
     const mm = gBrowser.selectedBrowser.messageManager.processMessageManager;
@@ -384,22 +376,34 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       }
     }
     if (processId) {
-      return this._getContentProcessTarget(processId)
-        .then(target => {
-          // Display a new toolbox in a new window
-          return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
-        })
-        .catch(e => {
-          console.error(
-            "Exception while opening the browser content toolbox:",
-            e
-          );
-        });
-    }
+      try {
+        const descriptor = await this._getContentProcessDescriptor(processId);
+        // Display a new toolbox in a new window
+        const toolbox = await gDevTools.showToolbox(
+          descriptor,
+          null,
+          Toolbox.HostType.WINDOW
+        );
 
-    const msg = L10N.getStr("toolbox.noContentProcessForTab.message");
-    Services.prompt.alert(null, "", msg);
-    return Promise.reject(msg);
+        // Ensure closing the connection in order to cleanup
+        // the devtools client and also the server created in the
+        // content process
+        toolbox.target.on("target-destroyed", () => {
+          toolbox.target.client.close();
+        });
+
+        return toolbox;
+      } catch (e) {
+        console.error(
+          "Exception while opening the browser content toolbox:",
+          e
+        );
+      }
+    } else {
+      const msg = L10N.getStr("toolbox.noContentProcessForTab.message");
+      Services.prompt.alert(null, "", msg);
+      throw new Error(msg);
+    }
   },
 
   /**
@@ -580,8 +584,8 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
 
   hasToolboxOpened(win) {
     const tab = win.gBrowser.selectedTab;
-    for (const [target] of gDevTools._toolboxes) {
-      if (target.localTab == tab) {
+    for (const [descriptor] of gDevTools._toolboxes) {
+      if (descriptor.localTab == tab) {
         return true;
       }
     }
@@ -679,8 +683,11 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     BrowserMenus.removeMenus(win.document);
 
     // Destroy toolboxes for closed window
-    for (const [target, toolbox] of gDevTools._toolboxes) {
-      if (target.localTab && target.localTab.ownerDocument.defaultView == win) {
+    for (const [descriptor, toolbox] of gDevTools._toolboxes) {
+      if (
+        descriptor.localTab &&
+        descriptor.localTab.ownerDocument.defaultView == win
+      ) {
         toolbox.destroy();
       }
     }

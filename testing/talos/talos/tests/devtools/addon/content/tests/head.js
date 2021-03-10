@@ -155,7 +155,7 @@ exports.closeToolboxAndLog = async function(name, toolbox) {
   await target.client.waitForRequestsToSettle();
 
   let test = runTest(`${name}.close.DAMP`);
-  await gDevTools.closeToolbox(target);
+  await toolbox.destroy();
   test.done();
 };
 
