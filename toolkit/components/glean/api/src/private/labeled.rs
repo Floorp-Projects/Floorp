@@ -4,14 +4,20 @@
 
 use inherent::inherent;
 
-use super::{BooleanMetric, CommonMetricData, CounterMetric, ErrorType, MetricId, StringMetric};
+use super::{
+    CommonMetricData, ErrorType, LabeledBooleanMetric, LabeledCounterMetric, LabeledStringMetric,
+    MetricId,
+};
 use crate::ipc::need_ipc;
 
 /// Sealed traits protect against downstream implementations.
 ///
 /// We wrap it in a private module that is inaccessible outside of this module.
 mod private {
-    use super::{BooleanMetric, CounterMetric, MetricId, StringMetric};
+    use super::{
+        need_ipc, LabeledBooleanMetric, LabeledCounterMetric, LabeledStringMetric, MetricId,
+    };
+    use crate::private::CounterMetric;
 
     /// The sealed trait.
     ///
@@ -19,36 +25,53 @@ mod private {
     /// as labeled types.
     pub trait Sealed {
         type GleanMetric: glean::private::AllowLabeled + Clone;
-        fn from_glean_metric(id: MetricId, metric: Self::GleanMetric) -> Self;
+        fn from_glean_metric(id: MetricId, metric: Self::GleanMetric, label: &str) -> Self;
     }
 
-    // `LabeledMetric<BooleanMetric>` is possible.
+    // `LabeledMetric<LabeledBooleanMetric>` is possible.
     //
     // See [Labeled Booleans](https://mozilla.github.io/glean/book/user/metrics/labeled_booleans.html).
-    impl Sealed for BooleanMetric {
+    impl Sealed for LabeledBooleanMetric {
         type GleanMetric = glean::private::BooleanMetric;
-        fn from_glean_metric(_id: MetricId, metric: Self::GleanMetric) -> Self {
-            BooleanMetric::Parent(metric)
+        fn from_glean_metric(_id: MetricId, metric: Self::GleanMetric, _label: &str) -> Self {
+            if need_ipc() {
+                // TODO: Instrument this error.
+                LabeledBooleanMetric::Child(crate::private::boolean::BooleanMetricIpc)
+            } else {
+                LabeledBooleanMetric::Parent(metric)
+            }
         }
     }
 
-    // `LabeledMetric<StringMetric>` is possible.
+    // `LabeledMetric<LabeledStringMetric>` is possible.
     //
     // See [Labeled Strings](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html).
-    impl Sealed for StringMetric {
+    impl Sealed for LabeledStringMetric {
         type GleanMetric = glean::private::StringMetric;
-        fn from_glean_metric(_id: MetricId, metric: Self::GleanMetric) -> Self {
-            StringMetric::Parent(metric)
+        fn from_glean_metric(_id: MetricId, metric: Self::GleanMetric, _label: &str) -> Self {
+            if need_ipc() {
+                // TODO: Instrument this error.
+                LabeledStringMetric::Child(crate::private::string::StringMetricIpc)
+            } else {
+                LabeledStringMetric::Parent(metric)
+            }
         }
     }
 
-    // `LabeledMetric<CounterMetric>` is possible.
+    // `LabeledMetric<LabeledCounterMetric>` is possible.
     //
     // See [Labeled Counters](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html).
-    impl Sealed for CounterMetric {
+    impl Sealed for LabeledCounterMetric {
         type GleanMetric = glean::private::CounterMetric;
-        fn from_glean_metric(id: MetricId, metric: Self::GleanMetric) -> Self {
-            CounterMetric::Parent { id, inner: metric }
+        fn from_glean_metric(id: MetricId, metric: Self::GleanMetric, label: &str) -> Self {
+            if need_ipc() {
+                LabeledCounterMetric::Child {
+                    id,
+                    label: label.to_string(),
+                }
+            } else {
+                LabeledCounterMetric::Parent(CounterMetric::Parent { id, inner: metric })
+            }
         }
     }
 }
@@ -134,11 +157,7 @@ where
     /// Labels must be `snake_case` and less than 30 characters.
     /// If an invalid label is used, the metric will be recorded in the special `OTHER_LABEL` label.
     fn get(&self, label: &str) -> U {
-        if need_ipc() {
-            panic!("Use of labeled metrics in IPC land not yet implemented!");
-        } else {
-            U::from_glean_metric(self.id, self.core.get(label))
-        }
+        U::from_glean_metric(self.id, self.core.get(label), label)
     }
 
     /// **Exported for test purposes.**
@@ -175,7 +194,7 @@ mod test {
     use crate::common_test::*;
 
     // Smoke test for what should be the generated code.
-    static GLOBAL_METRIC: Lazy<LabeledMetric<BooleanMetric>> = Lazy::new(|| {
+    static GLOBAL_METRIC: Lazy<LabeledMetric<LabeledBooleanMetric>> = Lazy::new(|| {
         LabeledMetric::new(
             0.into(),
             CommonMetricData {
@@ -205,7 +224,7 @@ mod test {
         let _lock = lock_test();
         let store_names: Vec<String> = vec!["store1".into()];
 
-        let metric: LabeledMetric<BooleanMetric> = LabeledMetric::new(
+        let metric: LabeledMetric<LabeledBooleanMetric> = LabeledMetric::new(
             0.into(),
             CommonMetricData {
                 name: "bool".into(),
@@ -228,7 +247,7 @@ mod test {
         let _lock = lock_test();
         let store_names: Vec<String> = vec!["store1".into()];
 
-        let metric: LabeledMetric<StringMetric> = LabeledMetric::new(
+        let metric: LabeledMetric<LabeledStringMetric> = LabeledMetric::new(
             0.into(),
             CommonMetricData {
                 name: "string".into(),
@@ -254,7 +273,7 @@ mod test {
         let _lock = lock_test();
         let store_names: Vec<String> = vec!["store1".into()];
 
-        let metric: LabeledMetric<CounterMetric> = LabeledMetric::new(
+        let metric: LabeledMetric<LabeledCounterMetric> = LabeledMetric::new(
             0.into(),
             CommonMetricData {
                 name: "counter".into(),
@@ -277,7 +296,7 @@ mod test {
         let _lock = lock_test();
         let store_names: Vec<String> = vec!["store1".into()];
 
-        let metric: LabeledMetric<BooleanMetric> = LabeledMetric::new(
+        let metric: LabeledMetric<LabeledBooleanMetric> = LabeledMetric::new(
             0.into(),
             CommonMetricData {
                 name: "bool".into(),
@@ -304,7 +323,7 @@ mod test {
         let _lock = lock_test();
         let store_names: Vec<String> = vec!["store1".into()];
 
-        let metric: LabeledMetric<BooleanMetric> = LabeledMetric::new(
+        let metric: LabeledMetric<LabeledBooleanMetric> = LabeledMetric::new(
             0.into(),
             CommonMetricData {
                 name: "bool".into(),

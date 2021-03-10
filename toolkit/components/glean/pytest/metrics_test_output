@@ -33,7 +33,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_boolean_metric: Lazy<LabeledMetric<BooleanMetric>> = Lazy::new(|| {
+    pub static labeled_boolean_metric: Lazy<LabeledMetric<LabeledBooleanMetric>> = Lazy::new(|| {
         LabeledMetric::new(2.into(), CommonMetricData {
             name: "labeled_boolean_metric".into(),
             category: "test".into(),
@@ -49,7 +49,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_boolean_metric_labels: Lazy<LabeledMetric<BooleanMetric>> = Lazy::new(|| {
+    pub static labeled_boolean_metric_labels: Lazy<LabeledMetric<LabeledBooleanMetric>> = Lazy::new(|| {
         LabeledMetric::new(3.into(), CommonMetricData {
             name: "labeled_boolean_metric_labels".into(),
             category: "test".into(),
@@ -81,7 +81,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_counter_metric: Lazy<LabeledMetric<CounterMetric>> = Lazy::new(|| {
+    pub static labeled_counter_metric: Lazy<LabeledMetric<LabeledCounterMetric>> = Lazy::new(|| {
         LabeledMetric::new(5.into(), CommonMetricData {
             name: "labeled_counter_metric".into(),
             category: "test".into(),
@@ -97,7 +97,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_counter_metric_labels: Lazy<LabeledMetric<CounterMetric>> = Lazy::new(|| {
+    pub static labeled_counter_metric_labels: Lazy<LabeledMetric<LabeledCounterMetric>> = Lazy::new(|| {
         LabeledMetric::new(6.into(), CommonMetricData {
             name: "labeled_counter_metric_labels".into(),
             category: "test".into(),
@@ -129,7 +129,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_string_metric: Lazy<LabeledMetric<StringMetric>> = Lazy::new(|| {
+    pub static labeled_string_metric: Lazy<LabeledMetric<LabeledStringMetric>> = Lazy::new(|| {
         LabeledMetric::new(8.into(), CommonMetricData {
             name: "labeled_string_metric".into(),
             category: "test".into(),
@@ -145,7 +145,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_string_metric_labels: Lazy<LabeledMetric<StringMetric>> = Lazy::new(|| {
+    pub static labeled_string_metric_labels: Lazy<LabeledMetric<LabeledStringMetric>> = Lazy::new(|| {
         LabeledMetric::new(9.into(), CommonMetricData {
             name: "labeled_string_metric_labels".into(),
             category: "test".into(),
@@ -346,7 +346,7 @@ pub(crate) mod __glean_metric_maps {
         map
     });
 
-    pub static LABELED_BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<BooleanMetric>>>> = Lazy::new(|| {
+    pub static LABELED_BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledBooleanMetric>>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(2);
         map.insert(2.into(), &super::test::labeled_boolean_metric);
         map.insert(3.into(), &super::test::labeled_boolean_metric_labels);
@@ -359,7 +359,7 @@ pub(crate) mod __glean_metric_maps {
         map
     });
 
-    pub static LABELED_COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<CounterMetric>>>> = Lazy::new(|| {
+    pub static LABELED_COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledCounterMetric>>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(2);
         map.insert(5.into(), &super::test::labeled_counter_metric);
         map.insert(6.into(), &super::test::labeled_counter_metric_labels);
@@ -372,7 +372,7 @@ pub(crate) mod __glean_metric_maps {
         map
     });
 
-    pub static LABELED_STRING_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<StringMetric>>>> = Lazy::new(|| {
+    pub static LABELED_STRING_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledStringMetric>>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(2);
         map.insert(8.into(), &super::test::labeled_string_metric);
         map.insert(9.into(), &super::test::labeled_string_metric_labels);
@@ -552,13 +552,13 @@ pub(crate) mod __glean_metric_maps {
             RwLock::new(HashMap::new())
         );
 
-        pub static BOOLEAN_MAP: Lazy<RwLock<HashMap<MetricId, BooleanMetric>>> = Lazy::new(||
+        pub static BOOLEAN_MAP: Lazy<RwLock<HashMap<MetricId, LabeledBooleanMetric>>> = Lazy::new(||
             RwLock::new(HashMap::new())
         );
-        pub static COUNTER_MAP: Lazy<RwLock<HashMap<MetricId, CounterMetric>>> = Lazy::new(||
+        pub static COUNTER_MAP: Lazy<RwLock<HashMap<MetricId, LabeledCounterMetric>>> = Lazy::new(||
             RwLock::new(HashMap::new())
         );
-        pub static STRING_MAP: Lazy<RwLock<HashMap<MetricId, StringMetric>>> = Lazy::new(||
+        pub static STRING_MAP: Lazy<RwLock<HashMap<MetricId, LabeledStringMetric>>> = Lazy::new(||
             RwLock::new(HashMap::new())
         );
     }
