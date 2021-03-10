@@ -24,6 +24,14 @@
         "parameters": [],
         "async": true
       }
+    ],
+    "events": [
+      {
+        "name": "onScreenshotCommand",
+        "type": "function",
+        "description": "Fired when the command event for the Screenshots menuitem is fired.",
+        "parameters": []
+      }
     ]
   }
 ]

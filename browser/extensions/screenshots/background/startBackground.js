@@ -62,21 +62,16 @@ this.startBackground = (function() {
     });
   });
 
-  this.getStrings([{id: "screenshots-context-menu"}]).then(msgs => {
-    browser.contextMenus.create({
-      id: "create-screenshot",
-      title: msgs[0],
-      contexts: ["page", "selection"],
-      documentUrlPatterns: ["<all_urls>", "about:reader*"],
-    });
-  });
-
-  browser.contextMenus.onClicked.addListener((info, tab) => {
-    loadIfNecessary().then(() => {
-      main.onClickedContextMenu(info, tab);
-    }).catch((error) => {
+  browser.experiments.screenshots.onScreenshotCommand.addListener(async () => {
+    try {
+      let [[tab]] = await Promise.all([
+        browser.tabs.query({currentWindow: true, active: true}),
+        loadIfNecessary(),
+      ]);
+      main.onClickedContextMenu(tab);
+    } catch (error) {
       console.error("Error loading Screenshots:", error);
-    });
+    }
   });
 
   browser.commands.onCommand.addListener((cmd) => {

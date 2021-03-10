@@ -83,9 +83,7 @@ function getVisibleMenuItems(aMenu, aData) {
         item.id != "spell-no-suggestions" &&
         item.id != "spell-add-dictionaries-main" &&
         item.id != "context-savelinktopocket" &&
-        // XXX Screenshots doesn't have an access key. This needs
-        // at least bug 1320462 fixing first.
-        item.id != "screenshots_mozilla_org-menuitem-_create-screenshot" &&
+        item.id != "fill-login-no-logins" &&
         // Inspect accessibility properties does not have an access key. See
         // bug 1630717 for more details.
         item.id != "context-inspect-a11y"
@@ -344,9 +342,6 @@ let lastElementSelector = null;
  *                  to true if offsetX and offsetY are not provided
  *        waitForSpellCheck: wait until spellcheck is initialized before
  *                           starting test
- *        maybeScreenshotsPresent: if true, the screenshots menu entry is
- *                                 expected to be present in the menu if
- *                                 screenshots is enabled, optional
  *        preCheckContextMenuFn: callback to run before opening menu
  *        onContextMenuShown: callback to run when the context menu is shown
  *        postCheckContextMenuFn: callback to run after opening menu
@@ -444,20 +439,6 @@ async function test_contextmenu(selector, menuItems, options = {}) {
       inspectItems.push("context-inspect", true);
 
       menuItems = menuItems.concat(inspectItems);
-    }
-
-    if (
-      options.maybeScreenshotsPresent &&
-      !Services.prefs.getBoolPref("extensions.screenshots.disabled", false)
-    ) {
-      let screenshotItems = [
-        "---",
-        null,
-        "screenshots_mozilla_org-menuitem-_create-screenshot",
-        true,
-      ];
-
-      menuItems = menuItems.concat(screenshotItems);
     }
 
     checkContextMenu(menuItems);
