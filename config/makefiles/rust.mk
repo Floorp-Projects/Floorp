@@ -118,11 +118,17 @@ ifdef MOZ_USING_SCCACHE
 export RUSTC_WRAPPER=$(CCACHE)
 endif
 
-ifneq (,$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
+ifdef MOZ_TSAN
 ifndef CROSS_COMPILE
-NATIVE_SANITIZERS=1
+NATIVE_TSAN=1
 endif # CROSS_COMPILE
-endif
+endif # MOZ_TSAN
+
+ifeq (WINNT,$(HOST_OS_ARCH))
+ifdef MOZ_CODE_COVERAGE
+WIN_CODE_COVERAGE=1
+endif # MOZ_CODE_COVERAGE
+endif # WINNT
 
 # We start with host variables because the rust host and the rust target might be the same,
 # in which case we want the latter to take priority.
@@ -154,7 +160,7 @@ CC_BASE_FLAGS += -DUNICODE
 CXX_BASE_FLAGS += -DUNICODE
 endif
 
-ifeq (,$(NATIVE_SANITIZERS)$(MOZ_CODE_COVERAGE))
+ifeq (,$(NATIVE_TSAN)$(WIN_CODE_COVERAGE))
 # -DMOZILLA_CONFIG_H is added to prevent mozilla-config.h from injecting anything
 # in C/C++ compiles from rust. That's not needed in the other branch because the
 # base flags don't force-include mozilla-config.h.
@@ -167,8 +173,8 @@ else
 # scripts/procedural macros vs. those happening for the rust target,
 # we can't blindly pass all our flags down for cc-rs to use them, because of the
 # side effects they can have on what otherwise should be host builds.
-# So for sanitizer and coverage builds, we only pass the base compiler flags.
-# This means C code built by rust is not going to be covered by sanitizer
+# So for thread-sanitizer and coverage builds, we only pass the base compiler flags.
+# This means C code built by rust is not going to be covered by thread-sanitizer
 # and coverage. But at least we control what compiler is being used,
 # rather than relying on cc-rs guesses, which, sometimes fail us.
 export CFLAGS_$(rust_host_cc_env_name)=$(HOST_CC_BASE_FLAGS)
@@ -308,12 +314,12 @@ export $(cargo_linker_env_var):=$(topsrcdir)/build/cargo-linker
 WRAP_HOST_LINKER_LIBPATHS:=$(HOST_LINKER_LIBPATHS)
 endif
 
-# Defining all of this for ASan/TSan builds results in crashes while running
+# Defining all of this for TSan builds results in crashes while running
 # some crates's build scripts (!), so disable it for now.
 # See https://github.com/rust-lang/cargo/issues/5754
-ifndef NATIVE_SANITIZERS
+ifndef NATIVE_TSAN
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))
-endif # NATIVE_SANITIZERS
+endif # NATIVE_TSAN
 
 $(HOST_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LDFLAGS:=$(HOST_LDFLAGS) $(WRAP_HOST_LINKER_LIBPATHS)
