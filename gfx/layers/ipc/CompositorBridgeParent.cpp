@@ -423,6 +423,11 @@ LayersId CompositorBridgeParent::RootLayerTreeId() {
 }
 
 CompositorBridgeParent::~CompositorBridgeParent() {
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mCanSend,
+      "ActorDestroy or RecvWillClose should have been called first.");
+  MOZ_DIAGNOSTIC_ASSERT(mRefCnt == 0,
+                        "ActorDealloc should have been called first.");
   nsTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
   // We expect all textures to be destroyed by now.
