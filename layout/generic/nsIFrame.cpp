@@ -7421,13 +7421,14 @@ nsRect nsIFrame::GetOverflowRect(OverflowType aType) const {
   // areas will invalidate the appropriate area, so any (mis)uses of
   // this method will be fixed up.
 
-  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+  if (mOverflow.mType == OverflowStorageType::Large) {
     // there is an overflow rect, and it's not stored as deltas but as
     // a separately-allocated rect
     return GetOverflowAreasProperty()->Overflow(aType);
   }
 
-  if (aType == OverflowType::Ink && mOverflow.mType != NS_FRAME_OVERFLOW_NONE) {
+  if (aType == OverflowType::Ink &&
+      mOverflow.mType != OverflowStorageType::None) {
     return InkOverflowFromDeltas();
   }
 
@@ -7435,7 +7436,7 @@ nsRect nsIFrame::GetOverflowRect(OverflowType aType) const {
 }
 
 OverflowAreas nsIFrame::GetOverflowAreas() const {
-  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+  if (mOverflow.mType == OverflowStorageType::Large) {
     // there is an overflow rect, and it's not stored as deltas but as
     // a separately-allocated rect
     return *GetOverflowAreasProperty();
@@ -9118,18 +9119,18 @@ a11y::AccType nsIFrame::AccessibleType() {
 #endif
 
 bool nsIFrame::ClearOverflowRects() {
-  if (mOverflow.mType == NS_FRAME_OVERFLOW_NONE) {
+  if (mOverflow.mType == OverflowStorageType::None) {
     return false;
   }
-  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+  if (mOverflow.mType == OverflowStorageType::Large) {
     RemoveProperty(OverflowAreasProperty());
   }
-  mOverflow.mType = NS_FRAME_OVERFLOW_NONE;
+  mOverflow.mType = OverflowStorageType::None;
   return true;
 }
 
 bool nsIFrame::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
-  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+  if (mOverflow.mType == OverflowStorageType::Large) {
     OverflowAreas* overflow = GetOverflowAreasProperty();
     bool changed = *overflow != aOverflowAreas;
     *overflow = aOverflowAreas;
@@ -9175,7 +9176,7 @@ bool nsIFrame::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
         !aOverflowAreas.InkOverflow().IsEqualEdges(InkOverflowFromDeltas());
 
     // it's a large overflow area that we need to store as a property
-    mOverflow.mType = NS_FRAME_OVERFLOW_LARGE;
+    mOverflow.mType = OverflowStorageType::Large;
     AddProperty(OverflowAreasProperty(), new OverflowAreas(aOverflowAreas));
     return changed;
   }
