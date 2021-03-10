@@ -2785,13 +2785,6 @@
   value: true
   mirror: always
 
-# If true, tries to break upgrade downgrade cycles where https-only tries
-# to upgrad ethe connection, but the website tries to downgrade again.
-- name: dom.security.https_only_mode_break_upgrade_downgrade_endless_loop
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # If true and HTTPS-only mode is enabled, requests
 # to local IP addresses are also upgraded
 - name: dom.security.https_only_mode.upgrade_local

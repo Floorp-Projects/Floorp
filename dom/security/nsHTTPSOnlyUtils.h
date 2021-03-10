@@ -50,20 +50,6 @@ class nsHTTPSOnlyUtils {
   static bool ShouldUpgradeWebSocket(nsIURI* aURI, nsILoadInfo* aLoadInfo);
 
   /**
-   * Determines if we might get stuck in an upgrade-downgrade-endless loop
-   * where https-only upgrades the request to https and the website downgrades
-   * the scheme to http again causing an endless upgrade downgrade loop. E.g.
-   * https-only upgrades to https and the website answers with a meta-refresh
-   * to downgrade to same-origin http version. Similarly this method breaks
-   * the endless cycle for JS based redirects and 302 based redirects.
-   * @param  aURI      nsIURI of request
-   * @param  aLoadInfo nsILoadInfo of request
-   * @return           true if an endless loop is detected
-   */
-  static bool IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
-                                            nsILoadInfo* aLoadInfo);
-
-  /**
    * Checks if the error code is on a block-list of codes that are probably not
    * related to a HTTPS-Only Mode upgrade.
    * @param  aChannel The failed Channel.
