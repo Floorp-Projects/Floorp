@@ -741,10 +741,12 @@ class ContentChild final : public PContentChild,
       bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId);
   mozilla::ipc::IPCResult RecvSetupFocusedAndActive(
       const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
-      const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext);
-  mozilla::ipc::IPCResult RecvReviseActiveBrowsingContext(
       const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext,
       uint64_t aActionId);
+  mozilla::ipc::IPCResult RecvReviseActiveBrowsingContext(
+      uint64_t aOldActionId,
+      const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext,
+      uint64_t aNewActionId);
   mozilla::ipc::IPCResult RecvMaybeExitFullscreen(
       const MaybeDiscarded<BrowsingContext>& aContext);
 

@@ -3847,7 +3847,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetActiveBrowsingContext(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->SetActiveBrowsingContextFromOtherProcess(aContext.get());
+    fm->SetActiveBrowsingContextFromOtherProcess(aContext.get(), aActionId);
   }
   return IPC_OK();
 }
@@ -3874,7 +3874,7 @@ mozilla::ipc::IPCResult ContentChild::RecvUnsetActiveBrowsingContext(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->UnsetActiveBrowsingContextFromOtherProcess(aContext.get());
+    fm->UnsetActiveBrowsingContextFromOtherProcess(aContext.get(), aActionId);
   }
   return IPC_OK();
 }
@@ -3943,12 +3943,13 @@ mozilla::ipc::IPCResult ContentChild::RecvBlurToChild(
 
 mozilla::ipc::IPCResult ContentChild::RecvSetupFocusedAndActive(
     const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
-    const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext) {
+    const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext,
+    uint64_t aActionId) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     if (!aActiveBrowsingContext.IsNullOrDiscarded()) {
-      fm->SetActiveBrowsingContextFromOtherProcess(
-          aActiveBrowsingContext.get());
+      fm->SetActiveBrowsingContextFromOtherProcess(aActiveBrowsingContext.get(),
+                                                   aActionId);
     }
     if (!aFocusedBrowsingContext.IsNullOrDiscarded()) {
       fm->SetFocusedBrowsingContextFromOtherProcess(
@@ -3959,11 +3960,13 @@ mozilla::ipc::IPCResult ContentChild::RecvSetupFocusedAndActive(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvReviseActiveBrowsingContext(
+    uint64_t aOldActionId,
     const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext,
-    uint64_t aActionId) {
+    uint64_t aNewActionId) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm && !aActiveBrowsingContext.IsNullOrDiscarded()) {
-    fm->ReviseActiveBrowsingContext(aActiveBrowsingContext.get(), aActionId);
+    fm->ReviseActiveBrowsingContext(aOldActionId, aActiveBrowsingContext.get(),
+                                    aNewActionId);
   }
   return IPC_OK();
 }
