@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: t-osx-1014
+    worker-type: t-osx-1015-r8
     fetches:
         build:
             - artifact: target.mozinfo.json
