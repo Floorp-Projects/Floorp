@@ -122,8 +122,7 @@ media/libyuv/
 media/mp4parse-rust/
 media/openmax_dl/
 media/openmax_il/
-media/webrtc/signaling/src/sdp/sipcc/
-media/webrtc/trunk/
+media/webrtc/signaling/gtest/MockCall.h
 mfbt/double-conversion/double-conversion/
 mfbt/lz4/.*
 mobile/android/geckoview/src/thirdparty/
