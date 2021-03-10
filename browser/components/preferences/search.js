@@ -447,14 +447,9 @@ var gSearchPane = {
           gSearchPane.buildDefaultEngineDropDowns();
           break;
         case "engine-changed":
-          gEngineView._engineStore.reloadIcons();
-          // Only bother invalidating if the tree is valid. It might not be
-          // if we're here because we saved an engine keyword change when
-          // the input got blurred as a result of changing categories, which
-          // destroys the tree.
-          if (gEngineView.tree) {
-            gEngineView.invalidate();
-          }
+          gSearchPane.buildDefaultEngineDropDowns();
+          gEngineView._engineStore.updateEngine(engine);
+          gEngineView.invalidate();
           break;
         case "engine-removed":
           gSearchPane.remove(engine);
@@ -728,6 +723,18 @@ EngineStore.prototype = {
 
   addEngine(aEngine) {
     this._engines.push(this._cloneEngine(aEngine));
+  },
+
+  updateEngine(newEngine) {
+    let engineToUpdate = this._engines.findIndex(
+      e => e.originalEngine == newEngine
+    );
+    if (engineToUpdate == -1) {
+      console.error("Could not find engine to update");
+      return;
+    }
+
+    this.engines[engineToUpdate] = this._cloneEngine(newEngine);
   },
 
   moveEngine(aEngine, aNewIndex) {
