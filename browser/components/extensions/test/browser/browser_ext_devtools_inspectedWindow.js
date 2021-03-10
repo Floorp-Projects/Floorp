@@ -203,7 +203,6 @@ add_task(async function test_devtools_inspectedWindow_eval() {
         browser.test.fail(`Error: ${err} :: ${err.stack}`);
       }
     });
-    browser.test.sendMessage("devtools-page-loaded");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -227,9 +226,6 @@ add_task(async function test_devtools_inspectedWindow_eval() {
   await extension.startup();
 
   await openToolboxForTab(tab);
-
-  info("Wait the devtools page load");
-  await extension.awaitMessage("devtools-page-loaded");
 
   const evalTestCases = [
     // Successful evaluation results.
@@ -407,7 +403,7 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
 
   await extension.startup();
 
-  const toolbox = await openToolboxForTab(tab);
+  const { toolbox } = await openToolboxForTab(tab);
 
   info("Wait for devtools_panel_created event");
   await extension.awaitMessage("devtools_panel_created");
@@ -487,7 +483,6 @@ add_task(async function test_devtools_inspectedWindow_eval_target_lifecycle() {
       await Promise.all(promises);
       browser.test.sendMessage("inspectedWindow-eval-requests-done");
     });
-    browser.test.sendMessage("devtools-page-loaded");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -511,7 +506,6 @@ add_task(async function test_devtools_inspectedWindow_eval_target_lifecycle() {
   await extension.startup();
 
   await openToolboxForTab(tab);
-  await extension.awaitMessage("devtools-page-loaded");
 
   let targetsCount = await getTargetActorsCount(tab);
   is(

@@ -22,6 +22,14 @@ const {
   LegacyWorkersWatcher,
 } = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
 
+// eslint-disable-next-line mozilla/reject-some-requires
+loader.lazyRequireGetter(
+  this,
+  "TabTargetFactory",
+  "devtools/client/framework/tab-target-factory",
+  true
+);
+
 class TargetList extends EventEmitter {
   /**
    * This class helps managing, iterating over and listening for Targets.
@@ -530,6 +538,10 @@ class TargetList extends EventEmitter {
    *        The BrowsingContextTargetFront instance that navigated to another process
    */
   async onLocalTabRemotenessChange(targetFront) {
+    // Cache the tab & client as this property will be nullified when the target is closed
+    const client = targetFront.client;
+    const localTab = targetFront.localTab;
+
     // By default, we do close the DevToolsClient when the target is destroyed.
     // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
     // or when the tab is closes, the server emits tabDetached and the target
@@ -539,11 +551,11 @@ class TargetList extends EventEmitter {
     // the same client.
     targetFront.shouldCloseClient = false;
 
-    // Wait for the target to be destroyed so that TabDescriptorFactory clears its memoized target for this tab
+    // Wait for the target to be destroyed so that TabTargetFactory clears its memoized target for this tab
     await targetFront.once("target-destroyed");
 
-    // Fetch the new target from the descriptor.
-    const newTarget = await this.descriptorFront.getTarget();
+    // Fetch the new target from the existing client so that the new target uses the same client.
+    const newTarget = await TabTargetFactory.forTab(localTab, client);
 
     this.switchToTarget(newTarget);
   }

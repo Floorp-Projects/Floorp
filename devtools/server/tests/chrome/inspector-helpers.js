@@ -7,8 +7,8 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {
-  TabDescriptorFactory,
-} = require("devtools/client/framework/tab-descriptor-factory");
+  TabTargetFactory,
+} = require("devtools/client/framework/tab-target-factory");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   BrowserTestUtils,
@@ -55,10 +55,7 @@ SimpleTest.registerCleanupFunction(function() {
 async function getTargetForSelectedTab(gBrowser) {
   const selectedTab = gBrowser.selectedTab;
   await BrowserTestUtils.browserLoaded(selectedTab.linkedBrowser);
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(
-    selectedTab
-  );
-  return descriptor.getTarget();
+  return TabTargetFactory.forTab(selectedTab);
 }
 
 /**

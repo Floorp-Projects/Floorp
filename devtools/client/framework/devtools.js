@@ -13,8 +13,8 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "TabDescriptorFactory",
-  "devtools/client/framework/tab-descriptor-factory",
+  "TabTargetFactory",
+  "devtools/client/framework/tab-target-factory",
   true
 );
 loader.lazyRequireGetter(
@@ -58,9 +58,9 @@ const MAX_ORDINAL = 99;
 function DevTools() {
   this._tools = new Map(); // Map<toolId, tool>
   this._themes = new Map(); // Map<themeId, theme>
-  this._toolboxes = new Map(); // Map<descriptor, toolbox>
+  this._toolboxes = new Map(); // Map<target, toolbox>
   // List of toolboxes that are still in process of creation
-  this._creatingToolboxes = new Map(); // Map<descriptor, toolbox Promise>
+  this._creatingToolboxes = new Map(); // Map<target, toolbox Promise>
 
   EventEmitter.decorate(this);
   this._telemetry = new Telemetry();
@@ -447,19 +447,15 @@ DevTools.prototype = {
   _firstShowToolbox: true,
 
   /**
-   * Show a Toolbox for a descriptor (either by creating a new one, or if a
-   * toolbox already exists for the descriptor, by bringing to the front the
-   * existing one).
+   * Show a Toolbox for a target (either by creating a new one, or if a toolbox
+   * already exists for the target, by bring to the front the existing one)
+   * If |toolId| is specified then the displayed toolbox will have the
+   * specified tool selected.
+   * If |hostType| is specified then the toolbox will be displayed using the
+   * specified HostType.
    *
-   * If a Toolbox already exists, we will still update it based on some of the
-   * provided parameters:
-   *   - if |toolId| is provided then the toolbox will switch to the specified
-   *     tool.
-   *   - if |hostType| is provided then the toolbox will be switched to the
-   *     specified HostType.
-   *
-   * @param {TargetDescriptor} descriptor
-   *         The target descriptor the toolbox will debug
+   * @param {Target} target
+   *         The target the toolbox will debug
    * @param {string} toolId
    *        The id of the tool to show
    * @param {Toolbox.HostType} hostType
@@ -478,7 +474,7 @@ DevTools.prototype = {
    *        The toolbox that was opened
    */
   async showToolbox(
-    descriptor,
+    target,
     toolId,
     hostType,
     hostOptions,
@@ -486,7 +482,7 @@ DevTools.prototype = {
     reason = "toolbox_show",
     shouldRaiseToolbox = true
   ) {
-    let toolbox = this._toolboxes.get(descriptor);
+    let toolbox = this._toolboxes.get(target);
 
     if (toolbox) {
       if (hostType != null && toolbox.hostType != hostType) {
@@ -503,22 +499,22 @@ DevTools.prototype = {
         toolbox.raise();
       }
     } else {
-      // Toolbox creation is async, we have to be careful about races.
-      // Check if we are already waiting for a Toolbox for the provided
-      // descriptor before creating a new one.
-      const promise = this._creatingToolboxes.get(descriptor);
+      // As toolbox object creation is async, we have to be careful about races
+      // Check for possible already in process of loading toolboxes before
+      // actually trying to create a new one.
+      const promise = this._creatingToolboxes.get(target);
       if (promise) {
         return promise;
       }
-      const toolboxPromise = this._createToolbox(
-        descriptor,
+      const toolboxPromise = this.createToolbox(
+        target,
         toolId,
         hostType,
         hostOptions
       );
-      this._creatingToolboxes.set(descriptor, toolboxPromise);
+      this._creatingToolboxes.set(target, toolboxPromise);
       toolbox = await toolboxPromise;
-      this._creatingToolboxes.delete(descriptor);
+      this._creatingToolboxes.delete(target);
 
       if (startTime) {
         this.logToolboxOpenTime(toolbox, startTime);
@@ -564,9 +560,9 @@ DevTools.prototype = {
     tab,
     { toolId, hostType, startTime, raise, reason, hostOptions } = {}
   ) {
-    const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
+    const target = await TabTargetFactory.forTab(tab);
     return this.showToolbox(
-      descriptor,
+      target,
       toolId,
       hostType,
       hostOptions,
@@ -630,16 +626,16 @@ DevTools.prototype = {
     return toolId;
   },
 
-  /**
-   * Unconditionally create a new Toolbox instance for the provided descriptor.
-   * See `showToolbox` for the arguments' jsdoc.
-   */
-  async _createToolbox(descriptor, toolId, hostType, hostOptions) {
-    const manager = new ToolboxHostManager(descriptor, hostType, hostOptions);
+  async createToolbox(target, toolId, hostType, hostOptions) {
+    const manager = new ToolboxHostManager(
+      target.descriptorFront,
+      hostType,
+      hostOptions
+    );
 
     const toolbox = await manager.create(toolId);
 
-    this._toolboxes.set(descriptor, toolbox);
+    this._toolboxes.set(target, toolbox);
 
     this.emit("toolbox-created", toolbox);
 
@@ -648,8 +644,15 @@ DevTools.prototype = {
     });
 
     toolbox.once("destroyed", () => {
-      this._toolboxes.delete(descriptor);
+      this._toolboxes.delete(target);
       this.emit("toolbox-destroyed", toolbox);
+    });
+    // If the document navigates to another process, the current target will be
+    // destroyed in favor of a new one. So acknowledge this swap here.
+    toolbox.on("switch-target", newTarget => {
+      this._toolboxes.delete(target);
+      this._toolboxes.set(newTarget, toolbox);
+      target = newTarget;
     });
 
     await toolbox.open();
@@ -659,16 +662,36 @@ DevTools.prototype = {
   },
 
   /**
-   * Return the toolbox for a given descriptor.
+   * Return the toolbox for a given target.
    *
-   * @param  {Descriptor} descriptor
-   *         Target descriptor that owns this toolbox
+   * @param  {object} target
+   *         Target value e.g. the target that owns this toolbox
    *
    * @return {Toolbox} toolbox
-   *         The toolbox that is debugging the given target descriptor
+   *         The toolbox that is debugging the given target
    */
-  getToolboxForDescriptor(descriptor) {
-    return this._toolboxes.get(descriptor);
+  getToolbox(target) {
+    return this._toolboxes.get(target);
+  },
+
+  /**
+   * Close the toolbox for a given target
+   *
+   * @return promise
+   *         This promise will resolve to false if no toolbox was found
+   *         associated to the target. true, if the toolbox was successfully
+   *         closed.
+   */
+  async closeToolbox(target) {
+    let toolbox = await this._creatingToolboxes.get(target);
+    if (!toolbox) {
+      toolbox = this._toolboxes.get(target);
+    }
+    if (!toolbox) {
+      return false;
+    }
+    await toolbox.destroy();
+    return true;
   },
 
   /**
@@ -676,28 +699,13 @@ DevTools.prototype = {
    * Returns null otherwise.
    */
   async getToolboxForTab(tab) {
-    const descriptor = await TabDescriptorFactory.getDescriptorForTab(tab);
-    return this.getToolboxForDescriptor(descriptor);
+    const target = await TabTargetFactory.forTab(tab);
+    return this._toolboxes.get(target);
   },
 
-  /**
-   * Close the toolbox for a given tab.
-   *
-   * @return {Promise} Returns a promise that resolves either:
-   *         - immediately if no Toolbox was found
-   *         - or after toolbox.destroy() resolved if a Toolbox was found
-   */
   async closeToolboxForTab(tab) {
-    const descriptor = await TabDescriptorFactory.getDescriptorForTab(tab);
-
-    let toolbox = await this._creatingToolboxes.get(descriptor);
-    if (!toolbox) {
-      toolbox = this._toolboxes.get(descriptor);
-    }
-    if (!toolbox) {
-      return;
-    }
-    await toolbox.destroy();
+    const target = await TabTargetFactory.forTab(tab);
+    return this.closeToolbox(target);
   },
 
   /**
@@ -707,10 +715,8 @@ DevTools.prototype = {
    * web-extensions need to use dedicated instances of Target and cannot reuse the
    * cached instances managed by DevTools target factory.
    */
-  createDescriptorForTabForWebExtension: function(tab) {
-    return TabDescriptorFactory.createDescriptorForTab(tab, {
-      forceCreationForWebextension: true,
-    });
+  createDescriptorForTab: function(tab) {
+    return TabTargetFactory.createDescriptorForTab(tab);
   },
 
   /**
