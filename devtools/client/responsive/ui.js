@@ -227,32 +227,23 @@ class ResponsiveUI {
     this.resizeHandleY = resizeHandleY;
     this.resizeHandleY.addEventListener("mousedown", this.onResizeStart);
 
-    // Setup a ResizeObserver that sets the width of the toolbar to the width of the
-    // .browserStack.
-    this.resizeToolbarObserver = new this.browserWindow.ResizeObserver(
-      entries => {
-        for (const entry of entries) {
-          const { width } = entry.contentRect;
+    // Setup a ResizeObserver that stores the width and height of the
+    // .browserStack size as properties. These set properties are then used
+    // to out-of-grid elements that are affected by RDM.
+    this.resizeToolbarObserver = new this.browserWindow.ResizeObserver(() => {
+      const style = this.browserWindow.getComputedStyle(this.browserStackEl);
 
-          this.rdmFrame.style.setProperty("width", `${width}px`);
-
-          // If the device modal/selector is opened, resize the toolbar height to
-          // the size of the stack.
-          if (this.browserStackEl.classList.contains("device-modal-opened")) {
-            const style = this.browserWindow.getComputedStyle(
-              this.browserStackEl
-            );
-            this.rdmFrame.style.height = style.height;
-          } else {
-            // If the toolbar needs extra space for the UA input, then set a class that
-            // will accomodate its height. We should also make sure to keep the width
-            // value we're toggling against in sync with the media-query in
-            // devtools/client/responsive/index.css
-            this.rdmFrame.classList.toggle("accomodate-ua", width < 520);
-          }
-        }
-      }
-    );
+      this.browserStackEl.style.setProperty("--rdm-stack-width", style.width);
+      this.browserStackEl.style.setProperty("--rdm-stack-height", style.height);
+      // If the toolbar needs extra space for the UA input, then set a class that
+      // will accomodate its height. We should also make sure to keep the width
+      // value we're toggling against in sync with the media-query in
+      // devtools/client/responsive/index.css
+      this.rdmFrame.classList.toggle(
+        "accomodate-ua",
+        parseFloat(style.width) < 520
+      );
+    });
 
     this.resizeToolbarObserver.observe(this.browserStackEl);
   }
@@ -325,6 +316,8 @@ class ResponsiveUI {
     this.browserStackEl.style.removeProperty("--rdm-width");
     this.browserStackEl.style.removeProperty("--rdm-height");
     this.browserStackEl.style.removeProperty("--rdm-zoom");
+    this.browserStackEl.style.removeProperty("--rdm-stack-height");
+    this.browserStackEl.style.removeProperty("--rdm-stack-width");
 
     // Ensure the tab is reloaded if required when exiting RDM so that no emulated
     // settings are left in a customized state.
@@ -736,10 +729,7 @@ class ResponsiveUI {
   onUpdateDeviceModal(event) {
     if (event.data.isOpen) {
       this.browserStackEl.classList.add("device-modal-opened");
-      const style = this.browserWindow.getComputedStyle(this.browserStackEl);
-      this.rdmFrame.style.height = style.height;
     } else {
-      this.rdmFrame.style.removeProperty("height");
       this.browserStackEl.classList.remove("device-modal-opened");
     }
   }
