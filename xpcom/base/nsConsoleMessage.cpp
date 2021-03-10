@@ -18,6 +18,7 @@ nsConsoleMessage::nsConsoleMessage() : mTimeStamp(0), mMessage() {}
 nsConsoleMessage::nsConsoleMessage(const char16_t* aMessage) {
   mTimeStamp = JS_Now() / 1000;
   mMessage.Assign(aMessage);
+  mIsForwardedFromContentProcess = false;
 }
 
 NS_IMETHODIMP
@@ -42,5 +43,19 @@ NS_IMETHODIMP
 nsConsoleMessage::ToString(nsACString& /*UTF8*/ aResult) {
   CopyUTF16toUTF8(mMessage, aResult);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsConsoleMessage::GetIsForwardedFromContentProcess(
+    bool* aIsForwardedFromContentProcess) {
+  *aIsForwardedFromContentProcess = mIsForwardedFromContentProcess;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsConsoleMessage::SetIsForwardedFromContentProcess(
+    bool aIsForwardedFromContentProcess) {
+  mIsForwardedFromContentProcess = aIsForwardedFromContentProcess;
   return NS_OK;
 }

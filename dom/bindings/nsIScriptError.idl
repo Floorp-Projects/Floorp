@@ -88,8 +88,6 @@ interface nsIScriptError : nsIConsoleMessage
 
     readonly attribute boolean isFromChromeContext;
 
-    attribute boolean isForwardedFromContentProcess;
-
     // Error created from a Promise rejection.
     readonly attribute boolean isPromiseRejection;
 
