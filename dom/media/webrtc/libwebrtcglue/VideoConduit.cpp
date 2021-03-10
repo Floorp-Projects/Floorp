@@ -335,20 +335,24 @@ WebrtcVideoConduit::WebrtcVideoConduit(
   mRecvStreamConfig.renderer = this;
 
   mSendPluginCreated = mEncoderFactory->CreatedGmpPluginEvent().Connect(
-      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
-        mSendCodecPluginIDs.AppendElement(aPluginID);
+      GetMainThreadSerialEventTarget(),
+      [self = detail::RawPtr(this)](uint64_t aPluginID) {
+        self.get()->mSendCodecPluginIDs.AppendElement(aPluginID);
       });
   mSendPluginReleased = mEncoderFactory->ReleasedGmpPluginEvent().Connect(
-      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
-        mSendCodecPluginIDs.RemoveElement(aPluginID);
+      GetMainThreadSerialEventTarget(),
+      [self = detail::RawPtr(this)](uint64_t aPluginID) {
+        self.get()->mSendCodecPluginIDs.RemoveElement(aPluginID);
       });
   mRecvPluginCreated = mDecoderFactory->CreatedGmpPluginEvent().Connect(
-      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
-        mRecvCodecPluginIDs.AppendElement(aPluginID);
+      GetMainThreadSerialEventTarget(),
+      [self = detail::RawPtr(this)](uint64_t aPluginID) {
+        self.get()->mRecvCodecPluginIDs.AppendElement(aPluginID);
       });
   mRecvPluginReleased = mDecoderFactory->ReleasedGmpPluginEvent().Connect(
-      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
-        mRecvCodecPluginIDs.RemoveElement(aPluginID);
+      GetMainThreadSerialEventTarget(),
+      [self = detail::RawPtr(this)](uint64_t aPluginID) {
+        self.get()->mRecvCodecPluginIDs.RemoveElement(aPluginID);
       });
 }
 
