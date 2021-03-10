@@ -11,13 +11,11 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.net.Proxy;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
-import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
@@ -30,7 +28,6 @@ import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.R;
 
 import android.annotation.SuppressLint;
-import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -740,13 +737,6 @@ public class GeckoAppShell {
     @WrapForJNI(calledFrom = "gecko")
     private static void moveTaskToBack() {
         // This is a vestige, to be removed as full-screen support for GeckoView is implemented.
-    }
-
-    @JNITarget
-    static public int getPreferredIconSize() {
-        ActivityManager am = (ActivityManager)
-            getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
-        return am.getLauncherLargeIconSize();
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -1644,8 +1634,6 @@ public class GeckoAppShell {
         }
         return Integer.parseInt(prop);
     }
-
-    static private int sPreviousAudioMode = -2;
 
     @WrapForJNI(calledFrom = "any")
     public static void setCommunicationAudioModeOn(final boolean on) {
