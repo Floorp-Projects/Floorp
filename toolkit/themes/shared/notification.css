@@ -183,3 +183,10 @@ notification[type="critical"] > hbox > .messageImage {
 .notification-button.primary:not([disabled]):hover:active {
   background-color: var(--notification-primary-button-background-active);
 }
+
+@supports -moz-bool-pref("browser.proton.infobars.enabled") {
+.notificationbox-stack,
+notification {
+  width: 100%;
+}
+}
