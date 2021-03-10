@@ -132,6 +132,7 @@ class RegExpObject : public NativeObject {
     setFixedSlot(FLAGS_SLOT, Int32Value(flags.value()));
   }
 
+  bool hasIndices() const { return getFlags().hasIndices(); }
   bool global() const { return getFlags().global(); }
   bool ignoreCase() const { return getFlags().ignoreCase(); }
   bool multiline() const { return getFlags().multiline(); }

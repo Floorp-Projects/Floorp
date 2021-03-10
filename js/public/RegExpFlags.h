@@ -19,7 +19,7 @@ namespace JS {
 /**
  * Regular expression flag values, suitable for initializing a collection of
  * regular expression flags as defined below in |RegExpFlags|.  Flags are listed
- * in alphabetical order by syntax -- /g, /i, /m, /s, /u, /y.
+ * in alphabetical order by syntax -- /d, /g, /i, /m, /s, /u, /y.
  */
 class RegExpFlag {
   // WARNING TO SPIDERMONKEY HACKERS (embedders must assume these values can
@@ -31,34 +31,39 @@ class RegExpFlag {
 
  public:
   /**
+   * Add .indices property to the match result, i.e. /d
+   */
+  static constexpr uint8_t HasIndices = 0b100'0000;
+
+  /**
    * Act globally and find *all* matches (rather than stopping after just the
    * first one), i.e. /g.
    */
-  static constexpr uint8_t Global = 0b00'0010;
+  static constexpr uint8_t Global = 0b000'0010;
 
   /**
    * Interpret regular expression source text case-insensitively by folding
    * uppercase letters to lowercase, i.e. /i.
    */
-  static constexpr uint8_t IgnoreCase = 0b00'0001;
+  static constexpr uint8_t IgnoreCase = 0b000'0001;
 
   /** Treat ^ and $ as begin and end of line, i.e. /m. */
-  static constexpr uint8_t Multiline = 0b00'0100;
+  static constexpr uint8_t Multiline = 0b000'0100;
 
   /* Allow . to match newline characters, i.e. /s. */
-  static constexpr uint8_t DotAll = 0b10'0000;
+  static constexpr uint8_t DotAll = 0b010'0000;
 
   /** Use Unicode semantics, i.e. /u. */
-  static constexpr uint8_t Unicode = 0b01'0000;
+  static constexpr uint8_t Unicode = 0b001'0000;
 
   /** Only match starting from <regular expression>.lastIndex, i.e. /y. */
-  static constexpr uint8_t Sticky = 0b00'1000;
+  static constexpr uint8_t Sticky = 0b000'1000;
 
   /** No regular expression flags. */
-  static constexpr uint8_t NoFlags = 0b00'0000;
+  static constexpr uint8_t NoFlags = 0b000'0000;
 
   /** All regular expression flags. */
-  static constexpr uint8_t AllFlags = 0b11'1111;
+  static constexpr uint8_t AllFlags = 0b111'1111;
 };
 
 /**
@@ -108,6 +113,7 @@ class RegExpFlags {
     return RegExpFlags(~flags_ & RegExpFlag::AllFlags);
   }
 
+  bool hasIndices() const { return flags_ & RegExpFlag::HasIndices; }
   bool global() const { return flags_ & RegExpFlag::Global; }
   bool ignoreCase() const { return flags_ & RegExpFlag::IgnoreCase; }
   bool multiline() const { return flags_ & RegExpFlag::Multiline; }
