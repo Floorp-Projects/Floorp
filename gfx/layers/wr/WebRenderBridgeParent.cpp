@@ -42,6 +42,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/webrender/RenderTextureHostSWGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
@@ -765,11 +766,16 @@ bool WebRenderBridgeParent::AddSharedExternalImage(
 
   mSharedSurfaceIds.insert(std::make_pair(key, aExtId));
 
+  // Prefer raw buffers, unless our backend requires native textures.
+  IntSize surfaceSize = dSurf->GetSize();
+  TextureHost::NativeTexturePolicy policy =
+      TextureHost::BackendNativeTexturePolicy(mApi->GetBackendType(),
+                                              surfaceSize);
   auto imageType =
-      mApi->GetBackendType() == WebRenderBackend::SOFTWARE
+      policy == TextureHost::NativeTexturePolicy::REQUIRE
           ? wr::ExternalImageType::TextureHandle(wr::ImageBufferKind::Texture2D)
           : wr::ExternalImageType::Buffer();
-  wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
+  wr::ImageDescriptor descriptor(surfaceSize, dSurf->Stride(),
                                  dSurf->GetFormat());
   aResources.AddExternalImage(aKey, descriptor, aExtId, imageType, 0);
   return true;
@@ -878,11 +884,16 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
     it->second = aExtId;
   }
 
+  // Prefer raw buffers, unless our backend requires native textures.
+  IntSize surfaceSize = dSurf->GetSize();
+  TextureHost::NativeTexturePolicy policy =
+      TextureHost::BackendNativeTexturePolicy(mApi->GetBackendType(),
+                                              surfaceSize);
   auto imageType =
-      mApi->GetBackendType() == WebRenderBackend::SOFTWARE
+      policy == TextureHost::NativeTexturePolicy::REQUIRE
           ? wr::ExternalImageType::TextureHandle(wr::ImageBufferKind::Texture2D)
           : wr::ExternalImageType::Buffer();
-  wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
+  wr::ImageDescriptor descriptor(surfaceSize, dSurf->Stride(),
                                  dSurf->GetFormat());
   aResources.UpdateExternalImageWithDirtyRect(
       aKey, descriptor, aExtId, imageType, wr::ToDeviceIntRect(aDirtyRect), 0);
