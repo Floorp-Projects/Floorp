@@ -94,6 +94,9 @@ with Files("test/sync/**"):
 with Files("test/tabdialogs/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
+with Files("test/tabnotificationbox/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
 with Files("test/tabPrompts/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 

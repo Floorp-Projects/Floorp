@@ -56,6 +56,7 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/tabcrashed/browser.ini",
     "content/test/tabdialogs/browser.ini",
     "content/test/tabMediaIndicator/browser.ini",
+    "content/test/tabnotificationbox/browser.ini",
     "content/test/tabPrompts/browser.ini",
     "content/test/tabs/browser.ini",
     "content/test/touch/browser.ini",
