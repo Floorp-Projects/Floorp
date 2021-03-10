@@ -26,11 +26,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "UITelemetry",
-  "resource://gre/modules/UITelemetry.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "PluralForm",
   "resource://gre/modules/PluralForm.jsm"
 );
@@ -1025,10 +1020,6 @@ AboutReader.prototype = {
           if (!aEvent.isTrusted) {
             return;
           }
-
-          // Just pass the ID of the button as an extra and hope the ID doesn't change
-          // unless the context changes
-          UITelemetry.addEvent("action.1", "button", null, id);
 
           let labels = segmentedButton.children;
           for (let label of labels) {

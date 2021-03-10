@@ -11,24 +11,10 @@ interface nsIBrowserTab : nsISupports {
   readonly attribute mozIDOMWindowProxy window;
 };
 
-[scriptable, uuid(08426a73-e70b-4680-9282-630932e2b2bb)]
-interface nsIUITelemetryObserver : nsISupports {
-  void startSession(in wstring name,
-                    in long long timestamp);
-  void stopSession(in wstring name,
-                   in wstring reason,
-                   in long long timestamp);
-  void addEvent(in wstring action,
-                in wstring method,
-                in long long timestamp,
-                in wstring extras);
-};
-
 [scriptable, uuid(0370450f-2e9c-4d16-b333-8ca6ce31a5ff)]
 interface nsIAndroidBrowserApp : nsISupports {
   readonly attribute nsIBrowserTab selectedTab;
   nsIBrowserTab getBrowserTab(in int32_t tabId);
-  nsIUITelemetryObserver getUITelemetryObserver();
 };
 
 [scriptable, uuid(e64c39b8-b8ec-477d-aef5-89d517ff9219)]
