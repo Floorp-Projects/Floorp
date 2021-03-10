@@ -543,7 +543,7 @@ pub struct Shaders {
     pub cs_border_solid: LazilyCompiledShader,
     pub cs_scale: Vec<Option<LazilyCompiledShader>>,
     pub cs_line_decoration: LazilyCompiledShader,
-    pub cs_gradient: LazilyCompiledShader,
+    pub cs_fast_linear_gradient: LazilyCompiledShader,
     pub cs_svg_filter: LazilyCompiledShader,
 
     // Brush shaders
@@ -961,9 +961,9 @@ impl Shaders {
             &shader_list,
         )?;
 
-        let cs_gradient = LazilyCompiledShader::new(
+        let cs_fast_linear_gradient = LazilyCompiledShader::new(
             ShaderKind::Cache(VertexArrayKind::Gradient),
-            "cs_gradient",
+            "cs_fast_linear_gradient",
             &[],
             device,
             options.precache_flags,
@@ -993,7 +993,7 @@ impl Shaders {
             cs_blur_rgba8,
             cs_border_segment,
             cs_line_decoration,
-            cs_gradient,
+            cs_fast_linear_gradient,
             cs_border_solid,
             cs_scale,
             cs_svg_filter,
@@ -1190,7 +1190,7 @@ impl Shaders {
             }
         }
         self.cs_border_solid.deinit(device);
-        self.cs_gradient.deinit(device);
+        self.cs_fast_linear_gradient.deinit(device);
         self.cs_line_decoration.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);

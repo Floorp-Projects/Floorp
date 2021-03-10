@@ -3970,7 +3970,7 @@ impl Renderer {
 
             self.set_blend(false, FramebufferKind::Other);
 
-            self.shaders.borrow_mut().cs_gradient.bind(
+            self.shaders.borrow_mut().cs_fast_linear_gradient.bind(
                 &mut self.device,
                 &projection,
                 &mut self.renderer_errors,
