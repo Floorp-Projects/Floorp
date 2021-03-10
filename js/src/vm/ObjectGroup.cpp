@@ -35,35 +35,6 @@
 
 using namespace js;
 
-/////////////////////////////////////////////////////////////////////
-// GlobalObject
-/////////////////////////////////////////////////////////////////////
-
-bool GlobalObject::shouldSplicePrototype() {
-  // During bootstrapping, we need to make sure not to splice a new prototype in
-  // for the global object if its __proto__ had previously been set to non-null,
-  // as this will change the prototype for all other objects with the same type.
-  return staticPrototype() == nullptr;
-}
-
-/* static */
-bool GlobalObject::splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
-                                   Handle<TaggedProto> proto) {
-  MOZ_ASSERT(cx->realm() == global->realm());
-
-  // Windows may not appear on prototype chains.
-  MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
-
-  if (proto.isObject()) {
-    RootedObject protoObj(cx, proto.toObject());
-    if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
-      return false;
-    }
-  }
-
-  return JSObject::setProtoUnchecked(cx, global, proto);
-}
-
 static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
                                      IdValuePair* properties,
                                      size_t nproperties) {

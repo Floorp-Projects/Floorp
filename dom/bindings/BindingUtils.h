@@ -2893,7 +2893,7 @@ bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
   }
 
   JS::Handle<JSObject*> proto = GetProto(aCx);
-  if (!proto || !JS_SplicePrototype(aCx, aGlobal, proto)) {
+  if (!proto || !JS_SetPrototype(aCx, aGlobal, proto)) {
     NS_WARNING("Failed to set proto");
     return false;
   }

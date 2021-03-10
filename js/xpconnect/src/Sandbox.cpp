@@ -1326,7 +1326,7 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
         }
       }
 
-      ok = JS_SplicePrototype(cx, sandbox, options.proto);
+      ok = JS_SetPrototype(cx, sandbox, options.proto);
       if (!ok) {
         return NS_ERROR_XPC_UNEXPECTED;
       }

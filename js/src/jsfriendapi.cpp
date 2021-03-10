@@ -110,17 +110,6 @@ JS_FRIEND_API JSFunction* JS_GetObjectFunction(JSObject* obj) {
   return nullptr;
 }
 
-JS_FRIEND_API bool JS_SplicePrototype(JSContext* cx, HandleObject global,
-                                      HandleObject proto) {
-  CHECK_THREAD(cx);
-  cx->check(global, proto);
-
-  MOZ_ASSERT(global->is<GlobalObject>());
-
-  Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-  return GlobalObject::splicePrototype(cx, global.as<GlobalObject>(), tagged);
-}
-
 JS_FRIEND_API JSObject* JS_NewObjectWithoutMetadata(
     JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto) {
   cx->check(proto);

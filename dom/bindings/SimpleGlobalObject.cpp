@@ -140,7 +140,7 @@ JSObject* SimpleGlobalObject::Create(GlobalType globalType,
         return nullptr;
       }
 
-      if (!JS_SplicePrototype(cx, global, protoObj)) {
+      if (!JS_SetPrototype(cx, global, protoObj)) {
         jsapi.ClearException();
         return nullptr;
       }
