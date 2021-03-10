@@ -49,6 +49,8 @@ using mozilla::PodCopy;
 
 using JS::AutoCheckCannotGC;
 
+static_assert(RegExpFlag::HasIndices == REGEXP_HASINDICES_FLAG,
+              "self-hosted JS and /d flag bits must agree");
 static_assert(RegExpFlag::Global == REGEXP_GLOBAL_FLAG,
               "self-hosted JS and /g flag bits must agree");
 static_assert(RegExpFlag::IgnoreCase == REGEXP_IGNORECASE_FLAG,
@@ -120,6 +122,10 @@ RegExpShared* RegExpObject::getShared(JSContext* cx,
 
 /* static */
 bool RegExpObject::isOriginalFlagGetter(JSNative native, RegExpFlags* mask) {
+  if (native == regexp_hasIndices) {
+    *mask = RegExpFlag::HasIndices;
+    return true;
+  }
   if (native == regexp_global) {
     *mask = RegExpFlag::Global;
     return true;
@@ -465,6 +471,9 @@ JSLinearString* RegExpObject::toString(JSContext* cx,
   sb.infallibleAppend('/');
 
   // Steps 5-7.
+  if (obj->hasIndices() && !sb.append('d')) {
+    return nullptr;
+  }
   if (obj->global() && !sb.append('g')) {
     return nullptr;
   }
@@ -984,6 +993,9 @@ static bool ParseRegExpFlags(const CharT* chars, size_t length,
   for (size_t i = 0; i < length; i++) {
     uint8_t flag;
     switch (chars[i]) {
+      case 'd':
+        flag = RegExpFlag::HasIndices;
+        break;
       case 'g':
         flag = RegExpFlag::Global;
         break;

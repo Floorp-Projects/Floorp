@@ -1,7 +1,7 @@
 const t = RegExp.prototype;
 
 let properties = "toString,compile,exec,test," +
-                 "flags,dotAll,global,ignoreCase,multiline,source,sticky,unicode," +
+                 "flags,dotAll,global,hasIndices,ignoreCase,multiline,source,sticky,unicode," +
                  "constructor," +
                  "Symbol(Symbol.match),Symbol(Symbol.replace),Symbol(Symbol.search),Symbol(Symbol.split)";
 if (Object.prototype.toSource) {

@@ -2649,7 +2649,9 @@ template <typename Unit, class AnyCharsAccess>
   while (true) {
     uint8_t flag;
     unit = getCodeUnit();
-    if (unit == 'g') {
+    if (unit == 'd') {
+      flag = RegExpFlag::HasIndices;
+    } else if (unit == 'g') {
       flag = RegExpFlag::Global;
     } else if (unit == 'i') {
       flag = RegExpFlag::IgnoreCase;
