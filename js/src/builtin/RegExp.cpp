@@ -706,6 +706,14 @@ static bool RegExpGetter(JSContext* cx, CallArgs& args, const char* methodName,
   return false;
 }
 
+bool js::regexp_hasIndices(JSContext* cx, unsigned argc, JS::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return RegExpGetter(cx, args, "hasIndices", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->hasIndices());
+    return true;
+  });
+}
+
 // ES2021 draft rev 0b3a808af87a9123890767152a26599cc8fde161
 // 21.2.5.5 get RegExp.prototype.global
 bool js::regexp_global(JSContext* cx, unsigned argc, JS::Value* vp) {
@@ -794,6 +802,7 @@ bool js::regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp) {
 
 const JSPropertySpec js::regexp_properties[] = {
     JS_SELF_HOSTED_GET("flags", "$RegExpFlagsGetter", 0),
+    JS_PSG("hasIndices", regexp_hasIndices, 0),
     JS_PSG("global", regexp_global, 0),
     JS_PSG("ignoreCase", regexp_ignoreCase, 0),
     JS_PSG("multiline", regexp_multiline, 0),
@@ -1817,6 +1826,16 @@ bool js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto) {
   }
 
   if (globalGetter != regexp_global) {
+    return false;
+  }
+
+  JSNative hasIndicesGetter;
+  if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().hasIndices),
+                              &hasIndicesGetter)) {
+    return false;
+  }
+
+  if (hasIndicesGetter != regexp_hasIndices) {
     return false;
   }
 

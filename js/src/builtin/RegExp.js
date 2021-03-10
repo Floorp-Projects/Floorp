@@ -16,30 +16,34 @@ function $RegExpFlagsGetter() {
     var result = "";
 
     // Steps 4-5.
+    if (R.hasIndices)
+        result += "d";
+
+    // Steps 6-7.
     if (R.global)
         result += "g";
 
-    // Steps 6-7.
+    // Steps 8-9.
     if (R.ignoreCase)
         result += "i";
 
-    // Steps 8-9.
+    // Steps 10-11.
     if (R.multiline)
         result += "m";
 
-    // Steps 10-11.
+    // Steps 12-13.
     if (R.dotAll)
         result += "s";
 
-    // Steps 12-13.
+    // Steps 14-15.
     if (R.unicode)
          result += "u";
 
-    // Steps 14-15.
+    // Steps 16-17
     if (R.sticky)
         result += "y";
 
-    // Step 16.
+    // Step 18.
     return result;
 }
 _SetCanonicalName($RegExpFlagsGetter, "get flags");
@@ -229,6 +233,7 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
 // Checks if following properties and getters are not modified, and accessing
 // them not observed by content script:
 //   * flags
+//   * hasIndices
 //   * global
 //   * ignoreCase
 //   * multiline

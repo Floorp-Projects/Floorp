@@ -211,6 +211,7 @@ class RegExpShared
 
   JS::RegExpFlags getFlags() const { return flags; }
 
+  bool hasIndices() const { return flags.hasIndices(); }
   bool global() const { return flags.global(); }
   bool ignoreCase() const { return flags.ignoreCase(); }
   bool multiline() const { return flags.multiline(); }

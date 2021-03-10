@@ -186,6 +186,9 @@ class JSAPITest {
 
   JSAPITestString toSource(JS::RegExpFlags flags) {
     JSAPITestString str;
+    if (flags.hasIndices()) {
+      str += "d";
+    }
     if (flags.global()) {
       str += "g";
     }
