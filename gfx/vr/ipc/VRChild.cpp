@@ -61,7 +61,7 @@ class OpenVRControllerManifestManager {
   }
 
   nsCString mAction;
-  nsDataHashtable<nsUint32HashKey, nsCString> mManifest;
+  nsTHashMap<nsUint32HashKey, nsCString> mManifest;
   OpenVRControllerManifestManager(const OpenVRControllerManifestManager&) =
       delete;
 

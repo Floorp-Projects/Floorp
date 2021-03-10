@@ -23,7 +23,7 @@
 #include "mozilla/dom/PBackgroundLSDatabase.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsHashKeys.h"
@@ -39,7 +39,7 @@ namespace {
 
 #define XPCOM_SHUTDOWN_OBSERVER_TOPIC "xpcom-shutdown"
 
-typedef nsDataHashtable<nsCStringHashKey, LSDatabase*> LSDatabaseHashtable;
+typedef nsTHashMap<nsCStringHashKey, LSDatabase*> LSDatabaseHashtable;
 
 StaticAutoPtr<LSDatabaseHashtable> gLSDatabases;
 

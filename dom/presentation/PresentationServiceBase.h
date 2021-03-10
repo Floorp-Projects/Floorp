@@ -15,7 +15,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsThread.h"
 
 namespace mozilla {
@@ -114,7 +114,7 @@ class PresentationServiceBase {
 
    private:
     nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mRespondingSessionIds;
-    nsDataHashtable<nsStringHashKey, uint64_t> mRespondingWindowIds;
+    nsTHashMap<nsStringHashKey, uint64_t> mRespondingWindowIds;
   };
 
   class AvailabilityManager final {

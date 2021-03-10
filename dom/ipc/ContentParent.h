@@ -34,7 +34,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsPluginTags.h"
 #include "nsHashKeys.h"
 #include "nsIAsyncShutdown.h"
@@ -754,7 +754,7 @@ class ContentParent final
   static nsClassHashtable<nsCStringHashKey, nsTArray<ContentParent*>>*
       sBrowserContentParents;
   static UniquePtr<nsTArray<ContentParent*>> sPrivateContent;
-  static UniquePtr<nsDataHashtable<nsUint32HashKey, ContentParent*>>
+  static UniquePtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
       sJSPluginContentParents;
   static UniquePtr<LinkedList<ContentParent>> sContentParents;
 

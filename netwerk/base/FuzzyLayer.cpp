@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FuzzyLayer.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDeque.h"
 #include "nsIRunnable.h"
 #include "nsSocketTransportService2.h"
@@ -39,7 +39,7 @@ typedef struct {
 } NetworkFuzzingBuffer;
 
 // This holds all connections we have currently open.
-static nsDataHashtable<nsPtrHashKey<PRFileDesc>, NetworkFuzzingBuffer*>
+static nsTHashMap<nsPtrHashKey<PRFileDesc>, NetworkFuzzingBuffer*>
     gConnectedNetworkFuzzingBuffers;
 
 // This holds all buffers for connections we can still open.

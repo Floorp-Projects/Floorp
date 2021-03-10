@@ -304,7 +304,7 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   bool mShutdownDone;
   // Map from plugin ID to crash dump ID. Protected by
   // mBrowserCrashDumpHashLock.
-  nsDataHashtable<nsUint32HashKey, nsString> mBrowserCrashDumpIds;
+  nsTHashMap<nsUint32HashKey, nsString> mBrowserCrashDumpIds;
   Mutex mBrowserCrashDumpHashLock;
   mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory;
 };

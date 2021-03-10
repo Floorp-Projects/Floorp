@@ -11,7 +11,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -225,7 +225,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
   Maybe<PVOID> kernelObject;
   static Maybe<USHORT> sectionObjTypeIndex;
   nsTHashtable<nsUint32HashKey> nonSectionObjTypes;
-  nsDataHashtable<nsVoidPtrHashKey, DWORD> objMap;
+  nsTHashMap<nsVoidPtrHashKey, DWORD> objMap;
 
   auto handleInfo =
       reinterpret_cast<SYSTEM_HANDLE_INFORMATION_EX*>(handleInfoBuf.get());

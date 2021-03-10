@@ -8,7 +8,7 @@
 #define DOM_SVG_SVGATTRTEAROFFTABLE_H_
 
 #include "mozilla/DebugOnly.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsHashKeys.h"
 
@@ -39,7 +39,7 @@ class SVGAttrTearoffTable {
 
  private:
   using SimpleTypePtrKey = nsPtrHashKey<SimpleType>;
-  using TearoffTable = nsDataHashtable<SimpleTypePtrKey, TearoffType*>;
+  using TearoffTable = nsTHashMap<SimpleTypePtrKey, TearoffType*>;
 
   TearoffTable* mTable;
 };

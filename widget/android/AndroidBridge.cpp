@@ -52,7 +52,7 @@ using namespace mozilla::gfx;
 
 AndroidBridge* AndroidBridge::sBridge = nullptr;
 static jobject sGlobalContext = nullptr;
-nsDataHashtable<nsStringHashKey, nsString> AndroidBridge::sStoragePaths;
+nsTHashMap<nsStringHashKey, nsString> AndroidBridge::sStoragePaths;
 
 jmethodID AndroidBridge::GetMethodID(JNIEnv* env, jclass jClass,
                                      const char* methodName,

@@ -7,7 +7,7 @@
 #define nsHTMLTags_h___
 
 #include "nsString.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 
 /*
@@ -40,8 +40,8 @@ enum nsHTMLTag {
 
 class nsHTMLTags {
  public:
-  using TagStringHash = nsDataHashtable<nsStringHashKey, nsHTMLTag>;
-  using TagAtomHash = nsDataHashtable<nsPtrHashKey<nsAtom>, nsHTMLTag>;
+  using TagStringHash = nsTHashMap<nsStringHashKey, nsHTMLTag>;
+  using TagAtomHash = nsTHashMap<nsPtrHashKey<nsAtom>, nsHTMLTag>;
 
   static nsresult AddRefTable(void);
   static void ReleaseTable(void);

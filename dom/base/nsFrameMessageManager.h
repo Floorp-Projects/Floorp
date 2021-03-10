@@ -25,7 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsIMessageManager.h"
 #include "nsIObserver.h"
@@ -349,7 +349,7 @@ class nsMessageManagerScriptExecutor {
   // optimize their script loading to avoid unnecessary duplication.
   virtual bool IsProcessScoped() const { return false; }
 
-  static nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>*
+  static nsTHashMap<nsStringHashKey, nsMessageManagerScriptHolder*>*
       sCachedScripts;
   static mozilla::StaticRefPtr<nsScriptCacheCleaner> sScriptCacheCleaner;
 };

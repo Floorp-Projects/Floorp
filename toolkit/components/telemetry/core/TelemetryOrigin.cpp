@@ -7,7 +7,7 @@
 #include "Telemetry.h"
 #include "TelemetryOrigin.h"
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
@@ -112,14 +112,14 @@ static StaticMutex gTelemetryOriginMutex;
 typedef nsTArray<Tuple<const char*, const char*>> OriginHashesList;
 UniquePtr<OriginHashesList> gOriginHashesList;
 
-typedef nsDataHashtable<nsCStringHashKey, size_t> OriginToIndexMap;
+typedef nsTHashMap<nsCStringHashKey, size_t> OriginToIndexMap;
 UniquePtr<OriginToIndexMap> gOriginToIndexMap;
 
-typedef nsDataHashtable<nsCStringHashKey, size_t> HashToIndexMap;
+typedef nsTHashMap<nsCStringHashKey, size_t> HashToIndexMap;
 UniquePtr<HashToIndexMap> gHashToIndexMap;
 
-typedef nsDataHashtable<nsCStringHashKey, uint32_t> OriginBag;
-typedef nsDataHashtable<OriginMetricIDHashKey, OriginBag> IdToOriginBag;
+typedef nsTHashMap<nsCStringHashKey, uint32_t> OriginBag;
+typedef nsTHashMap<OriginMetricIDHashKey, OriginBag> IdToOriginBag;
 
 UniquePtr<IdToOriginBag> gMetricToOriginBag;
 

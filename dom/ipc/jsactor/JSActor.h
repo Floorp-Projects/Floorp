@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsWrapperCache.h"
 
 class nsIGlobalObject;
@@ -156,7 +156,7 @@ class JSActor : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsISupports> mWrappedJS;
   nsCString mName;
-  nsDataHashtable<nsUint64HashKey, PendingQuery> mPendingQueries;
+  nsTHashMap<nsUint64HashKey, PendingQuery> mPendingQueries;
   uint64_t mNextQueryId = 0;
   bool mCanSend = true;
 };

@@ -72,7 +72,7 @@ struct RetainedDisplayListData {
   bool Remove(nsIFrame* aFrame) { return mFrames.Remove(aFrame); }
 
  private:
-  nsDataHashtable<nsPtrHashKey<nsIFrame>, FrameFlags> mFrames;
+  nsTHashMap<nsPtrHashKey<nsIFrame>, FrameFlags> mFrames;
   uint32_t mModifiedFramesCount;
 };
 

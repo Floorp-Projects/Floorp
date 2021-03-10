@@ -26,7 +26,7 @@
 #include "mozilla/gfx/Point.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsExpirationTracker.h"
 #include "nsFontMetrics.h"
 #include "nsHashKeys.h"
@@ -2033,7 +2033,7 @@ class gfxFont {
   bool HasFeatureSet(uint32_t aFeature, bool& aFeatureOn);
 
   // used when analyzing whether a font has space contextual lookups
-  static nsDataHashtable<nsUint32HashKey, Script>* sScriptTagToCode;
+  static nsTHashMap<nsUint32HashKey, Script>* sScriptTagToCode;
   static nsTHashtable<nsUint32HashKey>* sDefaultFeatures;
 
   RefPtr<gfxFontEntry> mFontEntry;

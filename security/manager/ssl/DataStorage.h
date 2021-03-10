@@ -15,7 +15,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsRefPtrHashtable.h"
@@ -202,7 +202,7 @@ class DataStorage : public nsIObserver {
     Entry mEntry;
   };
 
-  typedef nsDataHashtable<nsCStringHashKey, Entry> DataStorageTable;
+  typedef nsTHashMap<nsCStringHashKey, Entry> DataStorageTable;
   typedef nsRefPtrHashtable<nsStringHashKey, DataStorage> DataStorages;
 
   void WaitForReady();

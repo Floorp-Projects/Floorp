@@ -828,8 +828,7 @@ void FontList::SetAliases(
 }
 
 void FontList::SetLocalNames(
-    nsDataHashtable<nsCStringHashKey, LocalFaceRec::InitData>&
-        aLocalNameTable) {
+    nsTHashMap<nsCStringHashKey, LocalFaceRec::InitData>& aLocalNameTable) {
   MOZ_ASSERT(XRE_IsParentProcess());
   Header& header = GetHeader();
   if (header.mLocalFaceCount > 0) {

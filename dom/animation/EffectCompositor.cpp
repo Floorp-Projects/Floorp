@@ -836,7 +836,7 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
       (aFlags & ServoTraversalFlags::FlushThrottledAnimations);
 
   using ElementsToRestyleIterType =
-      nsDataHashtable<PseudoElementHashEntry, bool>::Iterator;
+      nsTHashMap<PseudoElementHashEntry, bool>::Iterator;
   auto getNeededRestyleTarget =
       [&](const ElementsToRestyleIterType& aIter) -> NonOwningAnimationTarget {
     NonOwningAnimationTarget returnTarget;

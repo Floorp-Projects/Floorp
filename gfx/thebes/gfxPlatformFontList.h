@@ -7,7 +7,7 @@
 #define GFXPLATFORMFONTLIST_H_
 
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTHashtable.h"
 
@@ -874,7 +874,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   mozilla::UniquePtr<mozilla::fontlist::FontList> mSharedFontList;
 
   nsClassHashtable<nsCStringHashKey, mozilla::fontlist::AliasData> mAliasTable;
-  nsDataHashtable<nsCStringHashKey, mozilla::fontlist::LocalFaceRec::InitData>
+  nsTHashMap<nsCStringHashKey, mozilla::fontlist::LocalFaceRec::InitData>
       mLocalNameTable;
 
   nsRefPtrHashtable<nsPtrHashKey<mozilla::fontlist::Face>, gfxFontEntry>

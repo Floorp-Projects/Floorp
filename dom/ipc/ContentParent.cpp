@@ -599,7 +599,7 @@ ProcessID GetTelemetryProcessID(const nsACString& remoteType) {
 
 }  // anonymous namespace
 
-UniquePtr<nsDataHashtable<nsUint32HashKey, ContentParent*>>
+UniquePtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
     ContentParent::sJSPluginContentParents;
 UniquePtr<nsTArray<ContentParent*>> ContentParent::sPrivateContent;
 UniquePtr<LinkedList<ContentParent>> ContentParent::sContentParents;
@@ -1208,7 +1208,7 @@ already_AddRefed<ContentParent> ContentParent::GetNewOrUsedJSPluginProcess(
     p = sJSPluginContentParents->Get(aPluginID);
   } else {
     sJSPluginContentParents =
-        MakeUnique<nsDataHashtable<nsUint32HashKey, ContentParent*>>();
+        MakeUnique<nsTHashMap<nsUint32HashKey, ContentParent*>>();
   }
 
   if (p) {
@@ -6865,7 +6865,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
         ("ParentIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
-  nsDataHashtable<nsPtrHashKey<ContentParent>, bool> processes(2);
+  nsTHashMap<nsPtrHashKey<ContentParent>, bool> processes(2);
   processes.InsertOrUpdate(this, true);
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();

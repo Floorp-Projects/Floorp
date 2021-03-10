@@ -20,7 +20,7 @@
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsITelemetry.h"
 #include "nsIVariant.h"
@@ -1175,13 +1175,13 @@ typedef nsClassHashtable<ProcessIDHashKey, KeyedScalarStorageMapType>
 typedef mozilla::Tuple<const char*, nsCOMPtr<nsIVariant>, uint32_t>
     ScalarDataTuple;
 typedef nsTArray<ScalarDataTuple> ScalarTupleArray;
-typedef nsDataHashtable<ProcessIDHashKey, ScalarTupleArray> ScalarSnapshotTable;
+typedef nsTHashMap<ProcessIDHashKey, ScalarTupleArray> ScalarSnapshotTable;
 
 typedef mozilla::Tuple<const char*, nsTArray<KeyedScalar::KeyValuePair>,
                        uint32_t>
     KeyedScalarDataTuple;
 typedef nsTArray<KeyedScalarDataTuple> KeyedScalarTupleArray;
-typedef nsDataHashtable<ProcessIDHashKey, KeyedScalarTupleArray>
+typedef nsTHashMap<ProcessIDHashKey, KeyedScalarTupleArray>
     KeyedScalarSnapshotTable;
 
 }  // namespace
@@ -3894,7 +3894,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
 
   typedef std::pair<nsCString, nsCOMPtr<nsIVariant>> PersistedScalarPair;
   typedef nsTArray<PersistedScalarPair> PersistedScalarArray;
-  typedef nsDataHashtable<ProcessIDHashKey, PersistedScalarArray>
+  typedef nsTHashMap<ProcessIDHashKey, PersistedScalarArray>
       PeristedScalarStorage;
 
   PeristedScalarStorage scalarsToUpdate;
@@ -4036,7 +4036,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
   typedef mozilla::Tuple<nsCString, nsString, nsCOMPtr<nsIVariant>>
       PersistedKeyedScalarTuple;
   typedef nsTArray<PersistedKeyedScalarTuple> PersistedKeyedScalarArray;
-  typedef nsDataHashtable<ProcessIDHashKey, PersistedKeyedScalarArray>
+  typedef nsTHashMap<ProcessIDHashKey, PersistedKeyedScalarArray>
       PeristedKeyedScalarStorage;
 
   PeristedKeyedScalarStorage scalarsToUpdate;

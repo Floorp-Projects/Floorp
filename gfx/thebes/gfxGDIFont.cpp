@@ -378,7 +378,7 @@ uint32_t gfxGDIFont::GetGlyph(uint32_t aUnicode, uint32_t aVarSelector) {
   }
 
   if (!mGlyphIDs) {
-    mGlyphIDs = MakeUnique<nsDataHashtable<nsUint32HashKey, uint32_t>>(64);
+    mGlyphIDs = MakeUnique<nsTHashMap<nsUint32HashKey, uint32_t>>(64);
   }
 
   uint32_t gid;
@@ -413,7 +413,7 @@ uint32_t gfxGDIFont::GetGlyph(uint32_t aUnicode, uint32_t aVarSelector) {
 
 int32_t gfxGDIFont::GetGlyphWidth(uint16_t aGID) {
   if (!mGlyphWidths) {
-    mGlyphWidths = MakeUnique<nsDataHashtable<nsUint32HashKey, int32_t>>(128);
+    mGlyphWidths = MakeUnique<nsTHashMap<nsUint32HashKey, int32_t>>(128);
   }
 
   return mGlyphWidths->WithEntryHandle(aGID, [&](auto&& entry) {

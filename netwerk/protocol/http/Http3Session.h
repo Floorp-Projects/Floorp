@@ -180,7 +180,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   nsCOMPtr<nsITimer> mTimer;
 
-  nsDataHashtable<nsCStringHashKey, bool> mJoinConnectionCache;
+  nsTHashMap<nsCStringHashKey, bool> mJoinConnectionCache;
 
   RefPtr<QuicSocketControl> mSocketControl;
 

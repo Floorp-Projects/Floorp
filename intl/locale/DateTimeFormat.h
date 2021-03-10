@@ -9,7 +9,7 @@
 
 #include <time.h>
 #include "gtest/MozGtestFriend.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsString.h"
 #include "prtime.h"
 #include "unicode/udat.h"
@@ -89,7 +89,7 @@ class DateTimeFormat {
                                   nsAString& aStringOut);
 
   static nsCString* mLocale;
-  static nsDataHashtable<nsCStringHashKey, UDateFormat*>* mFormatCache;
+  static nsTHashMap<nsCStringHashKey, UDateFormat*>* mFormatCache;
 };
 
 }  // namespace mozilla

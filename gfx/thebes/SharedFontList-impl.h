@@ -11,7 +11,7 @@
 
 #include "gfxFontUtils.h"
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/UniquePtr.h"
 
@@ -139,8 +139,8 @@ class FontList {
    *
    * Only used in the parent process.
    */
-  void SetLocalNames(nsDataHashtable<nsCStringHashKey, LocalFaceRec::InitData>&
-                         aLocalNameTable);
+  void SetLocalNames(
+      nsTHashMap<nsCStringHashKey, LocalFaceRec::InitData>& aLocalNameTable);
 
   /**
    * Look up a Family record by name, typically to satisfy the font-family

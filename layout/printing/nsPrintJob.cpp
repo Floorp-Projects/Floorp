@@ -1991,7 +1991,7 @@ struct MOZ_STACK_CLASS SelectionRangeState {
 
   // A map from subtree root (document or shadow root) to the start position of
   // the non-selected content (so far).
-  nsDataHashtable<nsPtrHashKey<nsINode>, Position> mPositions;
+  nsTHashMap<nsPtrHashKey<nsINode>, Position> mPositions;
 
   // The selection we're adding the ranges to.
   const RefPtr<Selection> mSelection;

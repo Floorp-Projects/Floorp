@@ -16,7 +16,7 @@
 #include "nsAHttpConnection.h"
 #include "nsCOMArray.h"
 #include "nsRefPtrHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDeque.h"
 #include "nsHashKeys.h"
 #include "nsHttpRequestHead.h"
@@ -378,7 +378,7 @@ class Http2Session final : public ASpdySession,
   // There are also several lists of streams: ready to write, queued due to
   // max parallelism, streams that need to force a read for push, and the full
   // set of pushed streams.
-  nsDataHashtable<nsUint32HashKey, Http2Stream*> mStreamIDHash;
+  nsTHashMap<nsUint32HashKey, Http2Stream*> mStreamIDHash;
   nsRefPtrHashtable<nsPtrHashKey<nsAHttpTransaction>, Http2Stream>
       mStreamTransactionHash;
 
@@ -557,9 +557,9 @@ class Http2Session final : public ASpdySession,
   bool RealJoinConnection(const nsACString& hostname, int32_t port, bool jk);
   bool TestOriginFrame(const nsACString& name, int32_t port);
   bool mOriginFrameActivated;
-  nsDataHashtable<nsCStringHashKey, bool> mOriginFrame;
+  nsTHashMap<nsCStringHashKey, bool> mOriginFrame;
 
-  nsDataHashtable<nsCStringHashKey, bool> mJoinConnectionCache;
+  nsTHashMap<nsCStringHashKey, bool> mJoinConnectionCache;
 
   uint64_t mCurrentForegroundTabOuterContentWindowId;
 
@@ -582,7 +582,7 @@ class Http2Session final : public ASpdySession,
   void UnRegisterTunnel(Http2Stream*);
   uint32_t FindTunnelCount(nsHttpConnectionInfo*);
   uint32_t FindTunnelCount(nsCString const&);
-  nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
+  nsTHashMap<nsCStringHashKey, uint32_t> mTunnelHash;
   uint32_t mTrrStreams;
 
   // websockets

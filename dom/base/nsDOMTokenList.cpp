@@ -11,7 +11,7 @@
 #include "nsDOMTokenList.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsError.h"
 #include "nsHashKeys.h"
 #include "mozilla/dom/Document.h"
@@ -54,7 +54,7 @@ const nsAttrValue* nsDOMTokenList::GetParsedAttr() {
 }
 
 static void RemoveDuplicatesInternal(AtomArray* aArray, uint32_t aStart) {
-  nsDataHashtable<nsPtrHashKey<nsAtom>, bool> tokens;
+  nsTHashMap<nsPtrHashKey<nsAtom>, bool> tokens;
 
   for (uint32_t i = 0; i < aArray->Length(); i++) {
     nsAtom* atom = aArray->ElementAt(i);

@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMArray.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsRefPtrHashtable.h"
 #include "mozilla/ComputedStyle.h"
 
@@ -49,8 +49,7 @@ class nsTreeStyleCache {
     RefPtr<nsAtom> mInputSymbol;
   };
 
-  typedef nsDataHashtable<nsGenericHashKey<Transition>, DFAState>
-      TransitionTable;
+  typedef nsTHashMap<nsGenericHashKey<Transition>, DFAState> TransitionTable;
 
   // A transition table for a deterministic finite automaton.  The DFA
   // takes as its input a single pseudoelement and an ordered set of properties.

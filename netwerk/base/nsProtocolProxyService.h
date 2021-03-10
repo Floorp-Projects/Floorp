@@ -13,7 +13,7 @@
 #include "nsIProtocolProxyFilter.h"
 #include "nsIProxyInfo.h"
 #include "nsIObserver.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsITimer.h"
 #include "prio.h"
@@ -25,7 +25,7 @@ class nsISystemProxySettings;
 namespace mozilla {
 namespace net {
 
-typedef nsDataHashtable<nsCStringHashKey, uint32_t> nsFailedProxyTable;
+typedef nsTHashMap<nsCStringHashKey, uint32_t> nsFailedProxyTable;
 
 class nsPACMan;
 class nsProxyInfo;

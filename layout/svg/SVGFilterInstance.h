@@ -186,7 +186,7 @@ class SVGFilterInstance {
   nsresult GetSourceIndices(
       SVGFE* aPrimitiveElement,
       nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
-      const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
+      const nsTHashMap<nsStringHashKey, int32_t>& aImageTable,
       nsTArray<int32_t>& aSourceIndices);
 
   /**

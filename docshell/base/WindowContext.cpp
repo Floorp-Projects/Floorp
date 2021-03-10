@@ -36,7 +36,7 @@ extern mozilla::LazyLogModule gUserInteractionPRLog;
 #define USER_ACTIVATION_LOG(msg, ...) \
   MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
-using WindowContextByIdMap = nsDataHashtable<nsUint64HashKey, WindowContext*>;
+using WindowContextByIdMap = nsTHashMap<nsUint64HashKey, WindowContext*>;
 static StaticAutoPtr<WindowContextByIdMap> gWindowContexts;
 
 /* static */

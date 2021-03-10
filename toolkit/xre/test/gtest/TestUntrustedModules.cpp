@@ -17,7 +17,7 @@
 #include "UntrustedModulesDataSerializer.h"
 
 class ModuleLoadCounter final {
-  nsDataHashtable<nsStringCaseInsensitiveHashKey, int> mCounters;
+  nsTHashMap<nsStringCaseInsensitiveHashKey, int> mCounters;
 
  public:
   template <int N>

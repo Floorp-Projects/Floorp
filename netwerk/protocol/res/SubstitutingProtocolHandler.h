@@ -9,7 +9,7 @@
 
 #include "nsISubstitutingProtocolHandler.h"
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsStandardURL.h"
 #include "nsJARURI.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
@@ -104,7 +104,7 @@ class SubstitutingProtocolHandler {
   Maybe<uint32_t> mFlags;
 
   RWLock mSubstitutionsLock;
-  nsDataHashtable<nsCStringHashKey, SubstitutionEntry> mSubstitutions;
+  nsTHashMap<nsCStringHashKey, SubstitutionEntry> mSubstitutions;
   nsCOMPtr<nsIIOService> mIOService;
 
   // Returns a SubstitutingJARURI if |aUrl| maps to a |jar:| URI,

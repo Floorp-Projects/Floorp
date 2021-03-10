@@ -12,7 +12,7 @@
 #  include "MediaSystemResourceTypes.h"
 #  include "mozilla/ReentrantMonitor.h"
 #  include "mozilla/StaticPtr.h"
-#  include "nsDataHashtable.h"
+#  include "nsTHashMap.h"
 #  include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -71,7 +71,7 @@ class MediaSystemResourceManager {
 
   media::MediaSystemResourceManagerChild* mChild;
 
-  nsDataHashtable<nsUint32HashKey, MediaSystemResourceClient*> mResourceClients;
+  nsTHashMap<nsUint32HashKey, MediaSystemResourceClient*> mResourceClients;
 
   static StaticRefPtr<MediaSystemResourceManager> sSingleton;
 };

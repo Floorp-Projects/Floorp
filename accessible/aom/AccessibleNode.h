@@ -7,7 +7,7 @@
 #ifndef A11Y_AOM_ACCESSIBLENODE_H
 #define A11Y_AOM_ACCESSIBLENODE_H
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -76,7 +76,7 @@ struct ParentObject;
   MOZ_FOR_EACH(ANODE_RELATION_FUNC, (), (__VA_ARGS__))
 
 #define ANODE_ACCESSOR_MUTATOR(typeName, type, defVal)                      \
-  nsDataHashtable<nsUint32HashKey, type> m##typeName##Properties;           \
+  nsTHashMap<nsUint32HashKey, type> m##typeName##Properties;                \
                                                                             \
   dom::Nullable<type> GetProperty(AOM##typeName##Property aProperty) {      \
     type value = defVal;                                                    \
@@ -199,7 +199,7 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
   // not(0) and 2k+1'th bit contains the property's value(1:true, 0:false)
   uint32_t mBooleanProperties;
   nsRefPtrHashtable<nsUint32HashKey, AccessibleNode> mRelationProperties;
-  nsDataHashtable<nsUint32HashKey, nsString> mStringProperties;
+  nsTHashMap<nsUint32HashKey, nsString> mStringProperties;
 
   RefPtr<a11y::LocalAccessible> mIntl;
   RefPtr<nsINode> mDOMNode;

@@ -25,7 +25,7 @@
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserver.h"
 #include "nsISpeculativeConnect.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #ifdef DEBUG
 #  include "nsIOService.h"
 #endif
@@ -835,7 +835,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   Atomic<bool, Relaxed> mThroughCaptivePortal;
 
   // The mapping of channel id and the weak pointer of nsHttpChannel.
-  nsDataHashtable<nsUint64HashKey, nsWeakPtr> mIDToHttpChannelMap;
+  nsTHashMap<nsUint64HashKey, nsWeakPtr> mIDToHttpChannelMap;
 
   // This is parsed pref network.http.http3.alt-svc-mapping-for-testing.
   // The pref set artificial altSvc-s for origin for testing.

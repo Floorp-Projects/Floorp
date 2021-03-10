@@ -454,7 +454,7 @@ void gfxFontShaper::MergeFontFeatures(
     return;
   }
 
-  nsDataHashtable<nsUint32HashKey, uint32_t> mergedFeatures;
+  nsTHashMap<nsUint32HashKey, uint32_t> mergedFeatures;
 
   // add feature values from font
   for (const gfxFontFeature& feature : aFontFeatures) {
@@ -1073,7 +1073,7 @@ static void HasLookupRuleWithGlyph(hb_face_t* aFace, hb_tag_t aTableTag,
   hb_set_destroy(otherLookups);
 }
 
-nsDataHashtable<nsUint32HashKey, Script>* gfxFont::sScriptTagToCode = nullptr;
+nsTHashMap<nsUint32HashKey, Script>* gfxFont::sScriptTagToCode = nullptr;
 nsTHashtable<nsUint32HashKey>* gfxFont::sDefaultFeatures = nullptr;
 
 static inline bool HasSubstitution(uint32_t* aBitVector, Script aScript) {
@@ -1126,7 +1126,7 @@ void gfxFont::CheckForFeaturesInvolvingSpace() {
   if (hb_ot_layout_has_substitution(face)) {
     // set up the script ==> code hashtable if needed
     if (!sScriptTagToCode) {
-      sScriptTagToCode = new nsDataHashtable<nsUint32HashKey, Script>(
+      sScriptTagToCode = new nsTHashMap<nsUint32HashKey, Script>(
           size_t(Script::NUM_SCRIPT_CODES));
       sScriptTagToCode->InsertOrUpdate(HB_TAG('D', 'F', 'L', 'T'),
                                        Script::COMMON);

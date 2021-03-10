@@ -7,7 +7,7 @@
 #include "MozLocale.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsPrintfCString.h"
 
 using namespace mozilla;
@@ -21,7 +21,7 @@ struct LangQuotesRec {
 
 #include "cldr-quotes.inc"
 
-static StaticAutoPtr<nsDataHashtable<nsCStringHashKey, Quotes>> sQuotesForLang;
+static StaticAutoPtr<nsTHashMap<nsCStringHashKey, Quotes>> sQuotesForLang;
 }  // anonymous namespace
 
 namespace mozilla {
@@ -32,7 +32,7 @@ const Quotes* QuotesForLang(const nsAtom* aLang) {
 
   // On first use, initialize the hashtable from our CLDR-derived data array.
   if (!sQuotesForLang) {
-    sQuotesForLang = new nsDataHashtable<nsCStringHashKey, Quotes>(32);
+    sQuotesForLang = new nsTHashMap<nsCStringHashKey, Quotes>(32);
     ClearOnShutdown(&sQuotesForLang);
     for (const auto& i : sLangQuotes) {
       const char* s = i.mLangs;

@@ -103,7 +103,7 @@
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsError.h"
@@ -854,7 +854,7 @@ class OriginInfo final {
 
   void LockedPersist();
 
-  nsDataHashtable<nsStringHashKey, NotNull<QuotaObject*>> mQuotaObjects;
+  nsTHashMap<nsStringHashKey, NotNull<QuotaObject*>> mQuotaObjects;
   ClientUsageArray mClientUsages;
   GroupInfo* mGroupInfo;
   const nsCString mOrigin;
@@ -1347,7 +1347,7 @@ class TraverseRepositoryHelper {
 class GetUsageOp final : public QuotaUsageRequestBase,
                          public TraverseRepositoryHelper {
   nsTArray<OriginUsage> mOriginUsages;
-  nsDataHashtable<nsCStringHashKey, uint32_t> mOriginUsagesIndex;
+  nsTHashMap<nsCStringHashKey, uint32_t> mOriginUsagesIndex;
 
   bool mGetAll;
 
@@ -3340,7 +3340,7 @@ void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
 
     // XXX It seems that the contents of the array are never actually used, we
     // just use that like an inefficient use counter. Can't we just change
-    // DirectoryLockTable to a nsDataHashtable<nsCStringHashKey, uint32_t>?
+    // DirectoryLockTable to a nsTHashMap<nsCStringHashKey, uint32_t>?
     directoryLockTable
         .LookupOrInsertWith(
             aLock.Origin(),

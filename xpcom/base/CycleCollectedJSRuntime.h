@@ -19,7 +19,7 @@
 #include "js/TypeDecls.h"
 
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsStringFwd.h"
 #include "nsTHashtable.h"
@@ -373,7 +373,7 @@ class CycleCollectedJSRuntime {
 
   JSHolderMap mJSHolders;
 
-  typedef nsDataHashtable<nsFuncPtrHashKey<DeferredFinalizeFunction>, void*>
+  typedef nsTHashMap<nsFuncPtrHashKey<DeferredFinalizeFunction>, void*>
       DeferredFinalizerTable;
   DeferredFinalizerTable mDeferredFinalizerTable;
 

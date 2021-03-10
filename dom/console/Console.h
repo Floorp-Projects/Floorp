@@ -11,7 +11,7 @@
 #include "mozilla/dom/ConsoleBinding.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -398,8 +398,8 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // Touched on the owner thread.
-  nsDataHashtable<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
-  nsDataHashtable<nsStringHashKey, uint32_t> mCounterRegistry;
+  nsTHashMap<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
+  nsTHashMap<nsStringHashKey, uint32_t> mCounterRegistry;
 
   nsTArray<RefPtr<ConsoleCallData>> mCallDataStorage;
   // These are references to the arguments we received in each call

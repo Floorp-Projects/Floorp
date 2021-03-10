@@ -25,7 +25,7 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
@@ -581,7 +581,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // all modifications (including those on the owning thread) and all reads off
   // the owning thread must be protected by mQuotaMutex. In other words, only
   // reads on the owning thread don't have to be protected by mQuotaMutex.
-  nsDataHashtable<nsUint64HashKey, NotNull<DirectoryLockImpl*>>
+  nsTHashMap<nsUint64HashKey, NotNull<DirectoryLockImpl*>>
       mDirectoryLockIdTable;
 
   // Directory lock tables that are used to update origin access time.
@@ -595,7 +595,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // A hash table that is used to cache origin parser results for given
   // sanitized origin strings. This hash table isn't protected by any mutex but
   // it is only ever touched on the IO thread.
-  nsDataHashtable<nsCStringHashKey, bool> mValidOrigins;
+  nsTHashMap<nsCStringHashKey, bool> mValidOrigins;
 
   struct OriginInitializationInfo {
     bool mPersistentOriginAttempted : 1;
@@ -605,7 +605,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // A hash table that is currently used to track origin initialization
   // attempts. This hash table isn't protected by any mutex but it is only ever
   // touched on the IO thread.
-  nsDataHashtable<nsCStringHashKey, OriginInitializationInfo>
+  nsTHashMap<nsCStringHashKey, OriginInitializationInfo>
       mOriginInitializationInfos;
 
   // This array is populated at initialization time and then never modified, so

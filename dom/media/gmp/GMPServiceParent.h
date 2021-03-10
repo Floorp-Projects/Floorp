@@ -10,7 +10,7 @@
 #include "mozilla/gmp/PGMPServiceParent.h"
 #include "mozIGeckoMediaPluginChromeService.h"
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "mozilla/Atomics.h"
 #include "nsIAsyncShutdown.h"
 #include "nsRefPtrHashtable.h"
@@ -191,7 +191,7 @@ class GeckoMediaPluginServiceParent final
 
   // Hashes node id to whether that node id is allowed to store data
   // persistently on disk.
-  nsDataHashtable<nsCStringHashKey, bool> mPersistentStorageAllowed;
+  nsTHashMap<nsCStringHashKey, bool> mPersistentStorageAllowed;
 
   // Synchronization for barrier that ensures we've loaded GMPs from
   // MOZ_GMP_PATH before allowing GetContentParentFrom() to proceed.

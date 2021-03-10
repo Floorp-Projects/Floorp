@@ -16,7 +16,7 @@
 #include "nsTArray.h"
 #include "nsMaybeWeakPtr.h"
 #include "nsInterfaceHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/storage.h"
 #include "Helpers.h"
@@ -137,8 +137,7 @@ class nsNavHistoryResult final
   QueryObserverList mMobilePrefObservers;
 
   typedef nsTArray<RefPtr<nsNavHistoryFolderResultNode> > FolderObserverList;
-  nsDataHashtable<nsTrimInt64HashKey, FolderObserverList*>
-      mBookmarkFolderObservers;
+  nsTHashMap<nsTrimInt64HashKey, FolderObserverList*> mBookmarkFolderObservers;
   FolderObserverList* BookmarkFolderObserversForId(int64_t aFolderId,
                                                    bool aCreate);
 

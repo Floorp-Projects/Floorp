@@ -59,7 +59,7 @@ class BaseHistory : public IHistory {
  protected:
   // A map from URI to links that depend on that URI, and whether that URI is
   // known-to-be-visited-or-unvisited already.
-  nsDataHashtable<nsURIHashKey, ObservingLinks> mTrackedURIs;
+  nsTHashMap<nsURIHashKey, ObservingLinks> mTrackedURIs;
 
  private:
   // The set of pending URIs that we haven't queried yet but need to.
