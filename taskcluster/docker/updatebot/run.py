@@ -174,17 +174,6 @@ config = open("localconfig.py", "w")
 config.write("localconfig = " + str(localconfig))
 config.close()
 
-if OPERATING_MODE == "dev":
-    log("Rewriting $gecko/.arcconfig because we're pointing at phab dev")
-    subprocess.check_call(
-        [
-            "sed",
-            "-i",
-            "s#" + PROD_PHAB_URL + "#" + DEV_PHAB_URL + "#",
-            os.path.join(GECKO_DEV_PATH, ".arcconfig"),
-        ]
-    )
-
 log("Running updatebot")
 subprocess.check_call(["poetry", "run", "./automation.py"])
 
