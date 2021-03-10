@@ -156,22 +156,24 @@ RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
   return nullptr;
 }
 
-bool OverscrollHandoffChain::ScrollingDownWillMoveDynamicToolbar(
+std::tuple<bool, const AsyncPanZoomController*>
+OverscrollHandoffChain::ScrollingDownWillMoveDynamicToolbar(
     const AsyncPanZoomController* aApzc) const {
   MOZ_ASSERT(aApzc && !aApzc->IsRootContent(),
              "Should be used for non-root APZC");
 
   for (uint32_t i = IndexOf(aApzc); i < Length(); i++) {
     if (mChain[i]->IsRootContent()) {
-      return mChain[i]->CanVerticalScrollWithDynamicToolbar();
+      bool scrollable = mChain[i]->CanVerticalScrollWithDynamicToolbar();
+      return {scrollable, scrollable ? mChain[i].get() : nullptr};
     }
 
     if (mChain[i]->CanScrollDownwards()) {
-      return false;
+      return {false, nullptr};
     }
   }
 
-  return false;
+  return {false, nullptr};
 }
 
 }  // namespace layers
