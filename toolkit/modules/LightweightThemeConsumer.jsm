@@ -217,11 +217,8 @@ function LightweightThemeConsumer(aDocument) {
 
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
-  // In Linux, the default theme picks up the right colors from dark GTK themes.
-  if (AppConstants.platform != "linux") {
-    this.darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
-    this.darkThemeMediaQuery.addListener(this);
-  }
+  this.darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
+  this.darkThemeMediaQuery.addListener(this);
 
   const { LightweightThemeManager } = ChromeUtils.import(
     "resource://gre/modules/LightweightThemeManager.jsm"
@@ -266,17 +263,17 @@ LightweightThemeConsumer.prototype = {
     }
   },
 
-  get darkMode() {
-    return this.darkThemeMediaQuery && this.darkThemeMediaQuery.matches;
-  },
-
   _update(themeData) {
     this._lastData = themeData;
 
-    let theme = themeData.theme;
-    if (themeData.darkTheme && this.darkMode) {
-      theme = themeData.darkTheme;
-    }
+    // In Linux, the default theme picks up the right colors from dark GTK themes.
+    const useDarkTheme =
+      themeData.darkTheme &&
+      this.darkThemeMediaQuery?.matches &&
+      (themeData.darkTheme.id != DEFAULT_THEME_ID ||
+        AppConstants.platform != "linux");
+
+    let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
     }
@@ -301,13 +298,13 @@ LightweightThemeConsumer.prototype = {
     );
     _setProperties(root, active, theme);
 
-    if (theme.id != DEFAULT_THEME_ID || this.darkMode) {
+    if (theme.id != DEFAULT_THEME_ID || useDarkTheme) {
       root.setAttribute("lwtheme", "true");
     } else {
       root.removeAttribute("lwtheme");
       root.removeAttribute("lwthemetextcolor");
     }
-    if (theme.id == DEFAULT_THEME_ID && this.darkMode) {
+    if (theme.id == DEFAULT_THEME_ID && useDarkTheme) {
       root.setAttribute("lwt-default-theme-in-dark-mode", "true");
     } else {
       root.removeAttribute("lwt-default-theme-in-dark-mode");
