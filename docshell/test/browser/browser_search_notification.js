@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
+
+SearchTestUtils.init(this);
+
 add_task(async function() {
   // Our search would be handled by the urlbar normally and not by the docshell,
   // thus we must force going through dns first, so that the urlbar thinks
@@ -10,10 +16,10 @@ add_task(async function() {
     set: [["browser.fixup.dns_first_for_single_words", true]],
   });
   const kSearchEngineID = "test_urifixup_search_engine";
-  const kSearchEngineURL = "http://localhost/?search={searchTerms}";
-  await Services.search.addEngineWithDetails(kSearchEngineID, {
-    method: "get",
-    template: kSearchEngineURL,
+  await SearchTestUtils.installSearchExtension({
+    name: kSearchEngineID,
+    search_url: "http://localhost/",
+    search_url_get_params: "search={searchTerms}",
   });
 
   let oldDefaultEngine = await Services.search.getDefault();
@@ -29,13 +35,7 @@ add_task(async function() {
   );
 
   registerCleanupFunction(async function() {
-    if (oldDefaultEngine) {
-      await Services.search.setDefault(oldDefaultEngine);
-    }
-    let engine = Services.search.getEngineByName(kSearchEngineID);
-    if (engine) {
-      await Services.search.removeEngine(engine);
-    }
+    await Services.search.setDefault(oldDefaultEngine);
   });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);

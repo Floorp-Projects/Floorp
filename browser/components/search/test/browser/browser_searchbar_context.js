@@ -14,20 +14,7 @@ add_task(async function setup() {
 
   win = await BrowserTestUtils.openNewBrowserWindow();
 
-  // Create an engine to use for the test.
-  await Services.search.addEngineWithDetails("MozSearch1", {
-    alias: "mozalias",
-    method: "GET",
-    template: "https://example.com/?q={searchTerms}",
-  });
-
-  let originalEngine = await Services.search.getDefault();
-  let engineDefault = Services.search.getEngineByName("MozSearch1");
-  await Services.search.setDefault(engineDefault);
-
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(originalEngine);
-    await Services.search.removeEngine(engineDefault);
     await BrowserTestUtils.closeWindow(win);
     gCUITestUtils.removeSearchBar();
   });
