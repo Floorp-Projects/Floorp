@@ -13,7 +13,10 @@ var basic_pan_prefs = getPrefs("TOUCH_EVENTS:PAN");
 
 var subtests = [
   // Simple tests to exercise basic panning behaviour
-  {"file": "helper_basic_pan.html", "prefs": basic_pan_prefs},
+  {"file": "helper_basic_pan.html", "prefs": [
+    ["dom.visualviewport.enabled", true],
+    ...basic_pan_prefs
+  ]},
   {"file": "helper_div_pan.html", "prefs": basic_pan_prefs},
   {"file": "helper_iframe_pan.html", "prefs": basic_pan_prefs},
 
