@@ -24,13 +24,16 @@ job-defaults:
     tier: default
     fission-run-on-projects:
         by-test-platform:
-            linux.*64/.*: ['autoland']
-            linux.*64-shippable/.*: ['mozilla-central']
-            windows10-64/.*: ['autoland']
-            windows10-64-shippable/.*: ['mozilla-central']
+            linux.*64(-qr)?/.*: ['autoland']
+            linux.*64-shippable(-qr)?/.*: ['mozilla-central']
+            windows10-64(-qr)?/.*: ['autoland']
+            windows10-64-shippable(-qr)?/.*: ['mozilla-central']
             default: []
     fission-tier: 2
-    variants: ["fission"]
+    variants:
+        by-test-platform:
+            .*-qr/debug: ['fission', 'webrender-sw']
+            default: ['fission']
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
