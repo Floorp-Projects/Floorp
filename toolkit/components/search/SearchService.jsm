@@ -1748,6 +1748,16 @@ SearchService.prototype = {
           e =>
             e.webExtension.id == extension.id && e.webExtension.locale == locale
         ) ?? {};
+
+      let originalName = engine.name;
+      let name = manifest.chrome_settings_overrides.search_provider.name.trim();
+      if (originalName != name && this._engines.has(name)) {
+        throw new Error("Can't upgrade to the same name as an existing engine");
+      }
+
+      let isDefault = engine == this.defaultEngine;
+      let isDefaultPrivate = engine == this.defaultPrivateEngine;
+
       engine._updateFromManifest(
         extension.id,
         extension.baseURI,
@@ -1755,6 +1765,18 @@ SearchService.prototype = {
         locale,
         configuration
       );
+
+      if (originalName != engine.name) {
+        this._engines.delete(originalName);
+        this._engines.set(engine.name, engine);
+        if (isDefault) {
+          this._settings.setVerifiedAttribute("current", engine.name);
+        }
+        if (isDefaultPrivate) {
+          this._settings.setVerifiedAttribute("private", engine.name);
+        }
+        this.__sortedEngines = null;
+      }
     }
     return extensionEngines;
   },

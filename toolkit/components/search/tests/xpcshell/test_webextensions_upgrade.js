@@ -11,38 +11,21 @@ const {
 
 SearchTestUtils.initXPCShellAddonManager(this);
 
-function extInfo(id, name, version, keyword) {
-  return {
-    useAddonManager: "permanent",
-    manifest: {
-      version,
-      applications: {
-        gecko: { id: `${id}@tests.mozilla.org` },
-      },
-      chrome_settings_overrides: {
-        search_provider: {
-          name,
-          keyword,
-          search_url: `https://example.com/?q={searchTerms}&version=${version}`,
-        },
-      },
-    },
-  };
-}
-
 add_task(async function setup() {
+  await SearchTestUtils.useTestEngines("data1");
   await promiseStartupManager();
-  registerCleanupFunction(promiseShutdownManager);
-});
-
-add_task(async function basic_install_test() {
   await Services.search.init();
   await promiseAfterSettings();
 
-  let info = extInfo("example", "Example", "1.0", "foo");
-  let extension = ExtensionTestUtils.loadExtension(info);
-  await extension.startup();
-  await AddonTestUtils.waitForSearchProviderStartup(extension);
+  registerCleanupFunction(promiseShutdownManager);
+});
+
+add_task(async function test_basic_upgrade() {
+  let extension = await SearchTestUtils.installSearchExtension({
+    version: "1.0",
+    search_url_get_params: `q={searchTerms}&version=1.0`,
+    keyword: "foo",
+  });
 
   let engine = await Services.search.getEngineByAlias("foo");
   Assert.ok(engine, "Can fetch engine with alias");
@@ -60,7 +43,15 @@ add_task(async function basic_install_test() {
     (eng, verb) => verb == "engine-changed"
   );
 
-  await extension.upgrade(extInfo("example", "Example", "2.0", "bar"));
+  let manifest = SearchTestUtils.createEngineManifest({
+    version: "2.0",
+    search_url_get_params: `q={searchTerms}&version=2.0`,
+    keyword: "bar",
+  });
+  await extension.upgrade({
+    useAddonManager: "permanent",
+    manifest,
+  });
   await AddonTestUtils.waitForSearchProviderStartup(extension);
   await promiseChanged;
 
@@ -75,6 +66,109 @@ add_task(async function basic_install_test() {
     "Example",
     "Should have retained the same default engine"
   );
+
+  await extension.unload();
+  await promiseAfterSettings();
+});
+
+add_task(async function test_upgrade_changes_name() {
+  let extension = await SearchTestUtils.installSearchExtension({
+    name: "engine",
+    search_url_get_params: `q={searchTerms}&version=1.0`,
+    version: "1.0",
+  });
+
+  let engine = Services.search.getEngineByName("engine");
+  Assert.ok(!!engine, "Should have loaded the engine");
+
+  await Services.search.setDefault(engine);
+
+  // When we add engines currently, we normally force using the saved order.
+  // Reset that here, so we can check the order is reset in the case this
+  // is a application provided engine change.
+  Services.search.wrappedJSObject._settings.setAttribute(
+    "useSavedOrder",
+    false
+  );
+  Services.search.getEngineByName("engine1").wrappedJSObject._orderHint = null;
+  Services.search.getEngineByName("engine2").wrappedJSObject._orderHint = null;
+
+  Assert.deepEqual(
+    (await Services.search.getVisibleEngines()).map(e => e.name),
+    ["engine1", "engine2", "engine"],
+    "Should have the expected order initially"
+  );
+
+  let promiseChanged = TestUtils.topicObserved(
+    "browser-search-engine-modified",
+    (eng, verb) => verb == "engine-changed"
+  );
+
+  let manifest = SearchTestUtils.createEngineManifest({
+    name: "Bar",
+    search_url_get_params: `q={searchTerms}&version=2.0`,
+    version: "2.0",
+  });
+  await extension.upgrade({
+    useAddonManager: "permanent",
+    manifest,
+  });
+  await AddonTestUtils.waitForSearchProviderStartup(extension);
+
+  await promiseChanged;
+
+  engine = Services.search.getEngineByName("Bar");
+  Assert.ok(!!engine, "Should be able to get the new engine");
+
+  Assert.equal(
+    (await Services.search.getDefault()).name,
+    "Bar",
+    "Should have kept the default engine the same"
+  );
+
+  Assert.deepEqual(
+    (await Services.search.getVisibleEngines()).map(e => e.name),
+    // Expected order: Default, then others in alphabetical.
+    ["engine1", "Bar", "engine2"],
+    "Should have updated the engine order"
+  );
+
+  await extension.unload();
+  await promiseAfterSettings();
+});
+
+add_task(async function test_upgrade_to_existing_name_not_allowed() {
+  let extension = await SearchTestUtils.installSearchExtension({
+    name: "engine",
+    search_url_get_params: `q={searchTerms}&version=1.0`,
+    version: "1.0",
+  });
+
+  let engine = Services.search.getEngineByName("engine");
+  Assert.ok(!!engine, "Should have loaded the engine");
+
+  let promise = AddonTestUtils.waitForSearchProviderStartup(extension);
+  let manifest = SearchTestUtils.createEngineManifest({
+    name: "engine1",
+    search_url_get_params: `q={searchTerms}&version=2.0`,
+    version: "2.0",
+  });
+  await extension.upgrade({
+    useAddonManager: "permanent",
+    manifest,
+  });
+  await promise;
+
+  Assert.equal(
+    Services.search.getEngineByName("engine1").getSubmission("").uri.spec,
+    "https://1.example.com/",
+    "Should have not changed the original engine"
+  );
+
+  console.log((await Services.search.getEngines()).map(e => e.name));
+
+  engine = Services.search.getEngineByName("engine");
+  Assert.ok(!!engine, "Should still be able to get the engine by the old name");
 
   await extension.unload();
   await promiseAfterSettings();

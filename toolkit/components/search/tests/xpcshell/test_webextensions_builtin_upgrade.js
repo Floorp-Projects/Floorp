@@ -44,11 +44,11 @@ async function getEngineNames() {
   return engines.map(engine => engine._name);
 }
 
-function makePlainExtension(version) {
+function makePlainExtension(version, name = "Plain") {
   return {
     useAddonManager: "permanent",
     manifest: {
-      name: "Plain",
+      name,
       version,
       applications: {
         gecko: {
@@ -57,7 +57,7 @@ function makePlainExtension(version) {
       },
       chrome_settings_overrides: {
         search_provider: {
-          name: "Plain",
+          name,
           search_url: "https://duckduckgo.com/",
           params: [
             {
@@ -195,6 +195,7 @@ add_task(async function upgrade_with_configuration_change_test() {
   ]);
 
   let engine = await Services.search.getEngineByName("Plain");
+  Assert.ok(engine.isAppProvided);
   Assert.equal(
     engine.getSubmission("test").uri.spec,
     // This test engine specifies the q and t params in its search_url, therefore
@@ -214,6 +215,37 @@ add_task(async function upgrade_with_configuration_change_test() {
   ]);
 
   engine = await Services.search.getEngineByName("Plain");
+  Assert.equal(
+    engine.getSubmission("test").uri.spec,
+    // This test engine specifies the q and t params in its search_url, therefore
+    // we get both those and the extra parameter specified in the test config.
+    "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
+    "Should still have the configuration applied after update."
+  );
+
+  await ext.unload();
+});
+
+add_task(async function test_upgrade_with_name_change() {
+  Assert.deepEqual(await getEngineNames(), [
+    "Multilocale AF",
+    "Multilocale AN",
+    "Plain",
+  ]);
+
+  let ext = ExtensionTestUtils.loadExtension(
+    makePlainExtension("2.0", "Plain2")
+  );
+  await ext.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext);
+
+  Assert.deepEqual(await getEngineNames(), [
+    "Multilocale AF",
+    "Multilocale AN",
+    "Plain2",
+  ]);
+
+  let engine = await Services.search.getEngineByName("Plain2");
   Assert.equal(
     engine.getSubmission("test").uri.spec,
     // This test engine specifies the q and t params in its search_url, therefore
