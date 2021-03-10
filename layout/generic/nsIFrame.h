@@ -5365,8 +5365,12 @@ class nsIFrame : public nsQueryFrame {
                   mRect.Height() + mOverflow.mInkOverflowDeltas.mBottom +
                       mOverflow.mInkOverflowDeltas.mTop);
   }
+
   /**
-   * Returns true if any overflow changed.
+   * Set the OverflowArea rect, storing it as deltas or a separate rect
+   * depending on its size in relation to the primary frame rect.
+   *
+   * @return true if any overflow changed.
    */
   bool SetOverflowAreas(const mozilla::OverflowAreas& aOverflowAreas);
 

@@ -9128,9 +9128,6 @@ bool nsIFrame::ClearOverflowRects() {
   return true;
 }
 
-/** Set the overflowArea rect, storing it as deltas or a separate rect
- * depending on its size in relation to the primary frame rect.
- */
 bool nsIFrame::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
   if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
     OverflowAreas* overflow = GetOverflowAreasProperty();
