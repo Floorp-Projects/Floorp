@@ -2810,8 +2810,7 @@ void nsContainerFrame::ConsiderChildOverflow(OverflowAreas& aOverflowAreas,
     OverflowAreas combined = OverflowAreas(childVisual, nsRect());
     aOverflowAreas.UnionWith(combined + aChildFrame->GetPosition());
   } else {
-    aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreas() +
-                             aChildFrame->GetPosition());
+    aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreasRelativeToParent());
   }
 }
 
