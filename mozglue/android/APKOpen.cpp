@@ -423,16 +423,6 @@ extern "C" APKOPEN_EXPORT mozglueresult ChildProcessInit(int argc,
   return NS_FAILED(gBootstrap->XRE_InitChildProcess(argc, argv, &childData));
 }
 
-extern "C" APKOPEN_EXPORT jboolean MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_neonCompatible(JNIEnv* jenv,
-                                                          jclass jc) {
-#ifdef __ARM_EABI__
-  return mozilla::supports_neon();
-#else
-  return true;
-#endif  // __ARM_EABI__
-}
-
 // Does current process name end with ':media'?
 static bool IsMediaProcess() {
   pid_t pid = getpid();
