@@ -679,10 +679,10 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     if (!this._currentDevToolsTarget) {
       if (!this._pendingWatchTargetsPromise) {
         // When _onTargetAvailable is called, it will create a new target,
-        // via DevToolsShim.createDescriptorForTabForWebExtension. If this function
-        // is called multiple times before this._currentDevToolsTarget is populated,
-        // we don't want to create X new, duplicated targets, so we store the Promise
-        // returned by watchTargets, in order to properly wait on subsequent calls.
+        // via DevToolsShim.createDescriptorForTab. If this function is called multiple times
+        // before this._currentDevToolsTarget is populated, we don't want to create X
+        // new, duplicated targets, so we store the Promise returned by watchTargets, in
+        // order to properly wait on subsequent calls.
         this._pendingWatchTargetsPromise = this.devToolsToolbox.targetList.watchTargets(
           [this.devToolsToolbox.targetList.TYPES.FRAME],
           this._onTargetAvailable
@@ -733,7 +733,7 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
       return;
     }
 
-    const descriptorFront = await DevToolsShim.createDescriptorForTabForWebExtension(
+    const descriptorFront = await DevToolsShim.createDescriptorForTab(
       targetFront.localTab
     );
 

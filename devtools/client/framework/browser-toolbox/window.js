@@ -107,7 +107,8 @@ var connect = async function() {
 
   appendStatusMessage("Get root form for toolbox");
   const mainProcessDescriptor = await gClient.mainRoot.getMainProcess();
-  await openToolbox(mainProcessDescriptor);
+  const mainProcessTargetFront = await mainProcessDescriptor.getTarget();
+  await openToolbox(mainProcessTargetFront);
 };
 
 // Certain options should be toggled since we can assume chrome debugging here
@@ -182,10 +183,10 @@ function onDebugBrowserToolbox() {
   BrowserToolboxLauncher.init();
 }
 
-async function openToolbox(descriptorFront) {
-  const form = descriptorFront._form;
+async function openToolbox(targetFront) {
+  const form = targetFront.targetForm;
   appendStatusMessage(
-    `Create toolbox for target descriptor: ${JSON.stringify({ form }, null, 2)}`
+    `Create toolbox target: ${JSON.stringify({ form }, null, 2)}`
   );
 
   // Remember the last panel that was used inside of this profile.
@@ -199,7 +200,7 @@ async function openToolbox(descriptorFront) {
   appendStatusMessage(`Show toolbox with ${selectedTool} selected`);
 
   gToolbox = await gDevTools.showToolbox(
-    descriptorFront,
+    targetFront,
     selectedTool,
     Toolbox.HostType.BROWSERTOOLBOX,
     toolboxOptions

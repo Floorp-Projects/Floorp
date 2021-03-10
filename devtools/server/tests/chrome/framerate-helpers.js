@@ -2,8 +2,8 @@
 "use strict";
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {
-  TabDescriptorFactory,
-} = require("devtools/client/framework/tab-descriptor-factory");
+  TabTargetFactory,
+} = require("devtools/client/framework/tab-target-factory");
 const Services = require("Services");
 
 // Always log packets when running tests.
@@ -19,13 +19,10 @@ SimpleTest.waitForExplicitFinish();
  * @return Promise a promise that resolves to the new target representing
  *         the page currently opened.
  */
-async function getTargetForSelectedTab() {
+function getTargetForSelectedTab() {
   // Get the target and get the necessary front
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(
-    gBrowser.selectedTab
-  );
-  return descriptor.getTarget();
+  return TabTargetFactory.forTab(gBrowser.selectedTab);
 }
 
 function waitFor(time) {

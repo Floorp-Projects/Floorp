@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
-/* globals XPCNativeWrapper */
+/* global XPCNativeWrapper */
 
 "use strict";
 
@@ -82,42 +82,61 @@ async function showErrorPage(doc, errorMessage) {
 
 async function initToolbox(url, host) {
   const { gDevTools } = require("devtools/client/framework/devtools");
-
   const {
-    descriptorFromURL,
-  } = require("devtools/client/framework/descriptor-from-url");
+    targetFromURL,
+  } = require("devtools/client/framework/target-from-url");
   const { Toolbox } = require("devtools/client/framework/toolbox");
+  const { DevToolsServer } = require("devtools/server/devtools-server");
+  const { DevToolsClient } = require("devtools/client/devtools-client");
 
   // Specify the default tool to open
   const tool = url.searchParams.get("tool");
 
   try {
-    let descriptor;
+    let target;
     if (url.searchParams.has("target")) {
-      descriptor = await _createTestOnlyDescriptor(host);
+      // Attach toolbox to a given browser iframe (<xul:browser> or <html:iframe
+      // mozbrowser>) whose reference is set on the host iframe.
+      // Note that so far, this is no real usage of it. It is only used by a test.
+
+      // `iframe` is the targeted document to debug
+      let iframe = host.wrappedJSObject
+        ? host.wrappedJSObject.target
+        : host.target;
+      if (!iframe) {
+        throw new Error("Unable to find the targeted iframe to debug");
+      }
+
+      // Need to use a xray to have attributes and behavior expected by
+      // devtools codebase
+      iframe = XPCNativeWrapper(iframe);
+
+      // Fake a xul:tab object as we don't have one.
+      // linkedBrowser is the only one attribute being queried by client.getTab
+      const tab = { linkedBrowser: iframe };
+
+      DevToolsServer.init();
+      DevToolsServer.registerAllActors();
+      const client = new DevToolsClient(DevToolsServer.connectPipe());
+
+      await client.connect();
+      // Creates a target for a given browser iframe.
+      const tabDescriptor = await client.mainRoot.getTab({ tab });
+      target = await tabDescriptor.getTarget();
+      // Instruct the Target to automatically close the client on destruction.
+      target.shouldCloseClient = true;
     } else {
-      descriptor = await descriptorFromURL(url);
-      const toolbox = gDevTools.getToolboxForDescriptor(descriptor);
+      target = await targetFromURL(url);
+      const toolbox = gDevTools.getToolbox(target);
       if (toolbox && toolbox.isDestroying()) {
-        // If a toolbox already exists for the descriptor, wait for current
-        // toolbox destroy to be finished.
+        // If a toolbox already exists for the target, wait for current toolbox destroy to
+        // be finished and retrieve a new valid target. The ongoing toolbox destroy will
+        // destroy the target, so it can not be reused.
         await toolbox.destroy();
+        target = await targetFromURL(url);
       }
     }
 
-    const options = { customIframe: host };
-    const newToolbox = await gDevTools.showToolbox(
-      descriptor,
-      tool,
-      Toolbox.HostType.PAGE,
-      options
-    );
-
-    // TODO: We should use an event from the descriptor instead, in order to
-    // attach to it before the toolbox was opened. Otherwise if a target
-    // disconnects before the toolbox was fully displayed, we will not navigate
-    // to the error page. See https://bugzilla.mozilla.org/show_bug.cgi?id=1695929
-    const target = newToolbox.target;
     // Display an error page if we are connected to a remote target and we lose it
     const { descriptorFront } = target;
     descriptorFront.once("descriptor-destroyed", function() {
@@ -128,61 +147,13 @@ async function initToolbox(url, host) {
       }
     });
 
-    // If this isn't a cached client, it means that we just created a new client
-    // in `clientFromURL` and we have to destroy it at some point.
-    // In such case, force the Target to destroy the client as soon as it gets
-    // destroyed. This typically happens only for about:debugging toolboxes
-    // opened for local Firefox's targets.
-    const isCachedClient = url.searchParams.get("remoteId");
-    target.shouldCloseClient = !isCachedClient;
+    const options = { customIframe: host };
+    await gDevTools.showToolbox(target, tool, Toolbox.HostType.PAGE, options);
   } catch (error) {
     // When an error occurs, show error page with message.
     console.error("Exception while loading the toolbox", error);
     showErrorPage(host.contentDocument, `${error}`);
   }
-}
-
-/**
- * Attach toolbox to a given browser iframe (<xul:browser> or <html:iframe
- * mozbrowser>) whose reference is set on the host iframe.
- *
- * Note that there is no real usage of it. It is only used by the test found at
- * devtools/client/framework/test/browser_toolbox_target.js.
- */
-async function _createTestOnlyDescriptor(host) {
-  const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DevToolsClient } = require("devtools/client/devtools-client");
-
-  // `iframe` is the targeted document to debug
-  let iframe = host.wrappedJSObject ? host.wrappedJSObject.target : host.target;
-  if (!iframe) {
-    throw new Error("Unable to find the targeted iframe to debug");
-  }
-
-  // Need to use a xray to have attributes and behavior expected by
-  // devtools codebase
-  iframe = XPCNativeWrapper(iframe);
-
-  // Fake a xul:tab object as we don't have one.
-  // linkedBrowser is the only one attribute being queried by client.getTab
-  const tab = { linkedBrowser: iframe };
-
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
-  const client = new DevToolsClient(DevToolsServer.connectPipe());
-
-  await client.connect();
-  // Creates a target for a given browser iframe.
-  const descriptor = await client.mainRoot.getTab({ tab });
-
-  // XXX: Normally we don't need to fetch the target anymore, but the test
-  // listens to an early event `toolbox-ready` which will kick in before
-  // the rest of `initToolbox` can be done.
-  const target = await descriptor.getTarget();
-  // Instruct the Target to automatically close the client on destruction.
-  target.shouldCloseClient = true;
-
-  return descriptor;
 }
 
 // Only use this method to attach the toolbox if some query parameters are given

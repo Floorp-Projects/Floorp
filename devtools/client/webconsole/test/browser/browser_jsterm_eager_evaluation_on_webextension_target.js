@@ -30,10 +30,12 @@ add_task(async function test_webextension_target_allowSource_on_eager_eval() {
   // Get AddonTarget.
   const addonDescriptor = await client.mainRoot.getAddon({ id: extension.id });
   ok(addonDescriptor, "webextension addon description has been found");
+  const addonTarget = await addonDescriptor.getTarget();
+  ok(addonTarget, "webextension target addon actor has been found");
 
   // Open a toolbox window for the addon target.
   const toolbox = await gDevTools.showToolbox(
-    addonDescriptor,
+    addonTarget,
     "webconsole",
     Toolbox.HostType.WINDOW
   );
@@ -74,6 +76,7 @@ add_task(async function test_webextension_target_allowSource_on_eager_eval() {
   await wait(2000);
 
   await toolbox.destroy();
+  await addonTarget.destroy();
   await client.close();
 
   await extension.unload();

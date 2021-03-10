@@ -67,7 +67,7 @@ add_task(async function test_devtools_panels_elements_onSelectionChanged() {
 
   await extension.startup();
 
-  const toolbox = await openToolboxForTab(tab);
+  const { toolbox } = await openToolboxForTab(tab);
 
   await extension.awaitMessage("devtools_page_loaded");
 
