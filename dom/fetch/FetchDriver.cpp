@@ -1569,6 +1569,7 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel,
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
+
   nsAutoCString method;
   mRequest->GetMethod(method);
   if (!method.EqualsLiteral("GET") && !method.EqualsLiteral("HEAD")) {

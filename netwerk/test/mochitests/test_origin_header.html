@@ -23,18 +23,15 @@ let testsToRun = [
             ["network.http.sendOriginHeader", 0],
         ],
         results: {
-            framePost: "Origin: null",
-            framePostXOrigin: "Origin: null",
+            framePost: EMPTY_ORIGIN,
+            framePostXOrigin: EMPTY_ORIGIN,
             frameGet: EMPTY_ORIGIN,
-            framePostNonSandboxed: "Origin: null",
-            framePostNonSandboxedXOrigin: "Origin: null",
-            framePostSandboxed: "Origin: null",
-            framePostSrcDoc: "Origin: null",
-            framePostSrcDocXOrigin: "Origin: null",
-            framePostDataURI: "Origin: null",
-            framePostSameOriginToXOrigin: "Origin: null",
-            framePostXOriginToSameOrigin: "Origin: null",
-            framePostXOriginToXOrigin: "Origin: null",
+            framePostNonSandboxed: EMPTY_ORIGIN,
+            framePostNonSandboxedXOrigin: EMPTY_ORIGIN,
+            framePostSandboxed: EMPTY_ORIGIN,
+            framePostSrcDoc: EMPTY_ORIGIN,
+            framePostSrcDocXOrigin: EMPTY_ORIGIN,
+            framePostDataURI: EMPTY_ORIGIN,
         },
     },
     {
@@ -44,17 +41,14 @@ let testsToRun = [
         ],
         results: {
             framePost: "Origin: http://mochi.test:8888",
-            framePostXOrigin: "Origin: null",
+            framePostXOrigin: EMPTY_ORIGIN,
             frameGet: EMPTY_ORIGIN,
             framePostNonSandboxed: "Origin: http://mochi.test:8888",
-            framePostNonSandboxedXOrigin: "Origin: null",
-            framePostSandboxed: "Origin: null",
+            framePostNonSandboxedXOrigin: EMPTY_ORIGIN,
+            framePostSandboxed: EMPTY_ORIGIN,
             framePostSrcDoc: "Origin: http://mochi.test:8888",
-            framePostSrcDocXOrigin: "Origin: null",
-            framePostDataURI: "Origin: null",
-            framePostSameOriginToXOrigin: "Origin: null",
-            framePostXOriginToSameOrigin: "Origin: null",
-            framePostXOriginToXOrigin: "Origin: null",
+            framePostSrcDocXOrigin: EMPTY_ORIGIN,
+            framePostDataURI: EMPTY_ORIGIN,
         },
     },
     {
@@ -68,13 +62,10 @@ let testsToRun = [
             frameGet: EMPTY_ORIGIN,
             framePostNonSandboxed: "Origin: http://mochi.test:8888",
             framePostNonSandboxedXOrigin: "Origin: http://mochi.test:8888",
-            framePostSandboxed: "Origin: null",
+            framePostSandboxed: EMPTY_ORIGIN,
             framePostSrcDoc: "Origin: http://mochi.test:8888",
             framePostSrcDocXOrigin: "Origin: http://mochi.test:8888",
-            framePostDataURI: "Origin: null",
-            framePostSameOriginToXOrigin: "Origin: http://mochi.test:8888",
-            framePostXOriginToSameOrigin: "Origin: null",
-            framePostXOriginToXOrigin: "Origin: http://mochi.test:8888",
+            framePostDataURI: EMPTY_ORIGIN,
         },
     },
     {
@@ -88,13 +79,10 @@ let testsToRun = [
             frameGet: EMPTY_ORIGIN,
             framePostNonSandboxed: "Origin: http://mochi.test:8888",
             framePostNonSandboxedXOrigin: "Origin: http://mochi.test:8888",
-            framePostSandboxed: "Origin: null",
+            framePostSandboxed: EMPTY_ORIGIN,
             framePostSrcDoc: "Origin: http://mochi.test:8888",
             framePostSrcDocXOrigin: "Origin: http://mochi.test:8888",
-            framePostDataURI: "Origin: null",
-            framePostSameOriginToXOrigin: "Origin: http://mochi.test:8888",
-            framePostXOriginToSameOrigin: "Origin: null",
-            framePostXOriginToXOrigin: "Origin: http://mochi.test:8888",
+            framePostDataURI: EMPTY_ORIGIN,
         },
     },
     {
@@ -109,13 +97,10 @@ let testsToRun = [
             frameGet: EMPTY_ORIGIN,
             framePostNonSandboxed: "Origin: null",
             framePostNonSandboxedXOrigin: "Origin: null",
-            framePostSandboxed: "Origin: null",
+            framePostSandboxed: EMPTY_ORIGIN,
             framePostSrcDoc: "Origin: null",
             framePostSrcDocXOrigin: "Origin: null",
-            framePostDataURI: "Origin: null",
-            framePostSameOriginToXOrigin: "Origin: null",
-            framePostXOriginToSameOrigin: "Origin: null",
-            framePostXOriginToXOrigin: "Origin: null",
+            framePostDataURI: EMPTY_ORIGIN,
         },
     },
 ];
@@ -165,21 +150,6 @@ let checksToRun = [
         name: "POST inside a data: iframe",
         frameID: "framePostDataURI",
         dataURI: "origin_header_form_post.html",
-    },
-    {
-        name: "same-origin POST redirected to cross-origin",
-        frameID: "framePostSameOriginToXOrigin",
-        formID: "formPostSameOriginToXOrigin",
-    },
-    {
-        name: "cross-origin POST redirected to same-origin",
-        frameID: "framePostXOriginToSameOrigin",
-        formID: "formPostXOriginToSameOrigin",
-    },
-    {
-        name: "cross-origin POST redirected to cross-origin",
-        frameID: "framePostXOriginToXOrigin",
-        formID: "formPostXOriginToXOrigin",
     },
 ];
 
@@ -334,33 +304,6 @@ addLoadEvent(runTests);
               id="formGet"
               target="frameGet">
             <input type="submit" value="Submit GET">
-        </form>
-    </td>
-    <td>
-        <iframe src="about:blank" name="framePostSameOriginToXOrigin" id="framePostSameOriginToXOrigin"></iframe>
-        <form action="redirect_to.sjs?http://test1.mochi.test:8888/tests/netwerk/test/mochitests/origin_header.sjs"
-              method="POST"
-              id="formPostSameOriginToXOrigin"
-              target="framePostSameOriginToXOrigin">
-            <input type="Submit" value="Submit SameOrigin POST redirected to XOrigin">
-        </form>
-    </td>
-    <td>
-        <iframe src="about:blank" name="framePostXOriginToSameOrigin" id="framePostXOriginToSameOrigin"></iframe>
-        <form action="http://test1.mochi.test:8888/tests/netwerk/test/mochitests/redirect_to.sjs?http://mochi.test:8888/tests/netwerk/test/mochitests/origin_header.sjs"
-              method="POST"
-              id="formPostXOriginToSameOrigin"
-              target="framePostXOriginToSameOrigin">
-            <input type="Submit" value="Submit XOrigin POST redirected to SameOrigin">
-        </form>
-    </td>
-    <td>
-        <iframe src="about:blank" name="framePostXOriginToXOrigin" id="framePostXOriginToXOrigin"></iframe>
-        <form action="http://test1.mochi.test:8888/tests/netwerk/test/mochitests/redirect_to.sjs?/tests/netwerk/test/mochitests/origin_header.sjs"
-              method="POST"
-              id="formPostXOriginToXOrigin"
-              target="framePostXOriginToXOrigin">
-            <input type="Submit" value="Submit XOrigin POST redirected to XOrigin">
         </form>
     </td>
 </tr>
