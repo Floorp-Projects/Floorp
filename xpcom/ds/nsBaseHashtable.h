@@ -168,8 +168,8 @@ class nsBaseHashtableET : public KeyClass {
 
 /**
  * Templated hashtable. Usually, this isn't instantiated directly but through
- * its sub-class templates nsDataHashtable, nsInterfaceHashtable,
- * nsClassHashtable and nsRefPtrHashtable.
+ * its sub-class templates nsInterfaceHashtable, nsClassHashtable,
+ * nsRefPtrHashtable and nsTHashMap.
  *
  * Originally, UserDataType used to be the only type exposed to the user in the
  * public member function signatures (hence its name), but this has proven to

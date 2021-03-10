@@ -30,18 +30,6 @@ class nsBaseHashtable;
 template <class KeyClass, class T>
 class nsClassHashtable;
 
-/**
- * templated hashtable class maps keys to simple datatypes.
- * See nsBaseHashtable for complete declaration
- * @deprecated This is going to be removed. Use nsTHashMap instead.
- * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
- *   for a complete specification.
- * @param DataType the simple datatype being wrapped
- * @see nsInterfaceHashtable, nsClassHashtable
- */
-template <class KeyClass, class DataType>
-using nsDataHashtable = nsBaseHashtable<KeyClass, DataType, DataType>;
-
 template <class KeyClass, class PtrType>
 class nsRefCountedHashtable;
 
@@ -52,7 +40,7 @@ class nsRefCountedHashtable;
  * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
  *   for a complete specification.
  * @param Interface the interface-type being wrapped
- * @see nsDataHashtable, nsClassHashtable
+ * @see nsClassHashtable, nsTHashMap
  */
 template <class KeyClass, class Interface>
 using nsInterfaceHashtable =
@@ -65,7 +53,7 @@ using nsInterfaceHashtable =
  * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
  *   for a complete specification.
  * @param PtrType the reference-type being wrapped
- * @see nsDataHashtable, nsClassHashtable
+ * @see nsClassHashtable, nsTHashMap
  */
 template <class KeyClass, class ClassType>
 using nsRefPtrHashtable = nsRefCountedHashtable<KeyClass, RefPtr<ClassType>>;
