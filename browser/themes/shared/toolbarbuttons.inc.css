@@ -59,6 +59,14 @@
   --bookmark-block-padding: 7px;
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+:root:not([uidensity=touch]) #TabsToolbar {
+  /* Override the inner padding to ensure the dimensions match the tabs, but also making sure
+     different types of buttons (combined-buttons-dropmarker or text) still look correct. */
+  --toolbarbutton-inner-padding: calc((var(--tab-min-height) - 16px) / 2);
+}
+} /*** END proton ***/
+
 /* We use :-moz-lwtheme-* for toolbarbuttons that aren't inside a toolbar, and
    [brighttext] to cater for OS themes where :-moz-lwtheme-* doesn't apply. */
 :root:-moz-lwtheme-darktext,
@@ -183,16 +191,6 @@ toolbar .toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
   padding-block: calc(var(--toolbarbutton-inner-padding) + (16px - 12px) / 2);
   width: calc(2 * 2px + 12px);
 }
-
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
-  min-height: var(--tab-min-height);
-  /* Increase the vertical padding to account for the taller button
-    and not stretch the icon. */
-  padding-block: calc((var(--tab-min-height) - 16px) / 2);
-}
-} /*** END proton ***/
 
 toolbar .toolbarbutton-1 > .toolbarbutton-text {
   padding-top: var(--toolbarbutton-vertical-text-padding);
