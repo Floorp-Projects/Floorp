@@ -748,6 +748,8 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // madvise hints used by malloc; see bug 1303813 and bug 1364533
       case __NR_madvise: {
         Arg<int> advice(2);
+        // The GMP specific sandbox duplicates this logic, so when adding
+        // allowed values here also add them to the GMP sandbox rules.
         return If(advice == MADV_DONTNEED, Allow())
             .ElseIf(advice == MADV_FREE, Allow())
             .ElseIf(advice == MADV_HUGEPAGE, Allow())
@@ -1629,6 +1631,23 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
         return Trap(UnameTrap, nullptr);
       CASES_FOR_fcntl:
         return Trap(FcntlTrap, nullptr);
+
+      // Allow the same advice values as the default policy, but return
+      // Error(ENOSYS) for other values. Because the Widevine CDM may probe
+      // advice arguments, including invalid values, we don't want to return
+      // InvalidSyscall(), as this will crash the process. So instead just
+      // indicate such calls are not available.
+      case __NR_madvise: {
+        Arg<int> advice(2);
+        return If(advice == MADV_DONTNEED, Allow())
+            .ElseIf(advice == MADV_FREE, Allow())
+            .ElseIf(advice == MADV_HUGEPAGE, Allow())
+            .ElseIf(advice == MADV_NOHUGEPAGE, Allow())
+#ifdef MOZ_ASAN
+            .ElseIf(advice == MADV_DONTDUMP, Allow())
+#endif
+            .Else(Error(ENOSYS));
+      }
 
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
