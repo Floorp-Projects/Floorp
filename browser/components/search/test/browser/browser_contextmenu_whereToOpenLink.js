@@ -14,23 +14,23 @@ const ENGINE_NAME = "mozSearch";
 const ENGINE_URL =
   "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs";
 
+let engine;
+let extension;
+let oldDefaultEngine;
+
 add_task(async function setup() {
   await Services.search.init();
 
-  await SearchTestUtils.installSearchExtension({
+  extension = await SearchTestUtils.installSearchExtension({
     name: ENGINE_NAME,
     search_url: ENGINE_URL,
     search_url_get_params: "test={searchTerms}",
   });
 
-  let engine = await Services.search.getEngineByName(ENGINE_NAME);
+  engine = await Services.search.getEngineByName(ENGINE_NAME);
   ok(engine, "Got a search engine");
-  let oldDefaultEngine = await Services.search.getDefault();
+  oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
-
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(oldDefaultEngine);
-  });
 });
 
 async function openNewSearchTab(event_args, expect_new_window = false) {
@@ -173,4 +173,13 @@ add_task(async function test_whereToOpenLink() {
 
   // cleanup
   BrowserTestUtils.removeTab(tab);
+});
+
+// We can't do the unload within registerCleanupFunction as that's too late for
+// the test to be happy. Do it into a cleanup "test" here instead.
+add_task(async function cleanup() {
+  await Services.search.setDefault(oldDefaultEngine);
+  await Services.search.removeEngine(engine);
+
+  await extension.unload();
 });

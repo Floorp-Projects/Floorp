@@ -6,16 +6,11 @@
 const { UrlbarTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlbarTestUtils.jsm"
 );
-const { SearchTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SearchTestUtils.jsm"
-);
-
-SearchTestUtils.init(this);
 
 const kSearchEngineID = "browser_urifixup_search_engine";
-const kSearchEngineURL = "https://example.com/?search={searchTerms}";
+const kSearchEngineURL = "http://example.com/?search={searchTerms}";
 const kPrivateSearchEngineID = "browser_urifixup_search_engine_private";
-const kPrivateSearchEngineURL = "https://example.com/?private={searchTerms}";
+const kPrivateSearchEngineURL = "http://example.com/?private={searchTerms}";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
@@ -29,28 +24,34 @@ add_task(async function setup() {
   let oldPrivateEngine = await Services.search.getDefaultPrivate();
 
   // Add new fake search engines.
-  await SearchTestUtils.installSearchExtension({
-    name: kSearchEngineID,
-    search_url: "https://example.com/",
-    search_url_get_params: "search={searchTerms}",
-  });
-  await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
+  let newCurrentEngine = await Services.search.addEngineWithDetails(
+    kSearchEngineID,
+    {
+      method: "get",
+      template: kSearchEngineURL,
+    }
   );
+  await Services.search.setDefault(newCurrentEngine);
 
-  await SearchTestUtils.installSearchExtension({
-    name: kPrivateSearchEngineID,
-    search_url: "https://example.com/",
-    search_url_get_params: "private={searchTerms}",
-  });
-  await Services.search.setDefaultPrivate(
-    Services.search.getEngineByName(kPrivateSearchEngineID)
+  let newPrivateEngine = await Services.search.addEngineWithDetails(
+    kPrivateSearchEngineID,
+    {
+      method: "get",
+      template: kPrivateSearchEngineURL,
+    }
   );
+  await Services.search.setDefaultPrivate(newPrivateEngine);
 
   // Remove the fake engines when done.
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(oldCurrentEngine);
-    await Services.search.setDefault(oldPrivateEngine);
+    if (oldCurrentEngine) {
+      await Services.search.setDefault(oldCurrentEngine);
+    }
+    if (oldPrivateEngine) {
+      await Services.search.setDefault(oldPrivateEngine);
+    }
+    await Services.search.removeEngine(newCurrentEngine);
+    await Services.search.removeEngine(newPrivateEngine);
   });
 });
 

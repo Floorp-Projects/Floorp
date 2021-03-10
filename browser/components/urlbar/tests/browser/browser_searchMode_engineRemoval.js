@@ -10,8 +10,9 @@
 // Tests that we exit search mode in the active tab when the search mode engine
 // is removed.
 add_task(async function activeTab() {
-  let extension = await SearchTestUtils.installSearchExtension({}, true);
-  let engine = Services.search.getEngineByName("Example");
+  let engine = await Services.search.addEngineWithDetails("Test", {
+    template: "http://example.com/?search={searchTerms}",
+  });
   await Services.search.moveEngine(engine, 0);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -24,7 +25,7 @@ add_task(async function activeTab() {
     engineName: engine.name,
     entry: "oneoff",
   });
-  await extension.unload();
+  await Services.search.removeEngine(engine);
   // Check that we are no longer in search mode.
   await UrlbarTestUtils.assertSearchMode(window, null);
 });
@@ -32,8 +33,9 @@ add_task(async function activeTab() {
 // Tests that we exit search mode in a background tab when the search mode
 // engine is removed.
 add_task(async function backgroundTab() {
-  let extension = await SearchTestUtils.installSearchExtension({}, true);
-  let engine = Services.search.getEngineByName("Example");
+  let engine = await Services.search.addEngineWithDetails("Test", {
+    template: "http://example.com/?search={searchTerms}",
+  });
   await Services.search.moveEngine(engine, 0);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -56,7 +58,7 @@ add_task(async function backgroundTab() {
   await BrowserTestUtils.switchTab(gBrowser, tab2);
   // tab2 shouldn't be in search mode.
   await UrlbarTestUtils.assertSearchMode(window, null);
-  await extension.unload();
+  await Services.search.removeEngine(engine);
 
   // tab1 should have exited search mode.
   await BrowserTestUtils.switchTab(gBrowser, tab1);
@@ -67,8 +69,9 @@ add_task(async function backgroundTab() {
 // Tests that we exit search mode in a background window when the search mode
 // engine is removed.
 add_task(async function backgroundWindow() {
-  let extension = await SearchTestUtils.installSearchExtension({}, true);
-  let engine = Services.search.getEngineByName("Example");
+  let engine = await Services.search.addEngineWithDetails("Test", {
+    template: "http://example.com/?search={searchTerms}",
+  });
   await Services.search.moveEngine(engine, 0);
 
   let win1 = window;
@@ -91,7 +94,7 @@ add_task(async function backgroundWindow() {
   win2.focus();
   // win2 shouldn't be in search mode.
   await UrlbarTestUtils.assertSearchMode(win2, null);
-  await extension.unload();
+  await Services.search.removeEngine(engine);
 
   // win1 should not be in search mode.
   win1.focus();

@@ -99,7 +99,14 @@ add_task(async function url() {
 add_task(async function tokenAlias() {
   // We have built-in engine aliases that may conflict with the one we choose
   // here in terms of autofill, so be careful and choose a weird alias.
-  await SearchTestUtils.installSearchExtension({ keyword: "@__example" });
+  await Services.search.addEngineWithDetails("Test", {
+    alias: "@__example",
+    template: "http://example.com/?search={searchTerms}",
+  });
+  registerCleanupFunction(async function() {
+    let engine = Services.search.getEngineByName("Test");
+    await Services.search.removeEngine(engine);
+  });
   // all lowercase
   await typeAndCheck([
     ["@", "@"],
