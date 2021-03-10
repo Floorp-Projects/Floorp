@@ -33,11 +33,6 @@ function runTest() {
     is(pt1.y, y, str + " y");
   }
 
-  function isPointFuzzy(pt1, x, y, str) {
-    isfuzzy(pt1.x, x, 0.05, str + " x");
-    isfuzzy(pt1.y, y, 0.05, str + " y");
-  }
-
   function ymost(r) {
     return r.y + r.height;
   }
@@ -54,20 +49,20 @@ function runTest() {
   ok(text1.getComputedTextLength() > 0, "text1 measured length");
   is(text1.getComputedTextLength(), text1.getSubStringLength(0, 3), "text1 substring length");
   isPoint(text1.getStartPositionOfChar(0), 5, 25, "text1 char 0 start offset");
-  isPointFuzzy(text1.getStartPositionOfChar(1), 5 + charWidth, 25, "text1 char 1 start offset");
-  isPointFuzzy(text1.getStartPositionOfChar(2), 5 + 2 * charWidth, 25, "text1 char 2 start offset");
-  isPointFuzzy(text1.getEndPositionOfChar(0), 5 + charWidth, 25, "text1 char 0 end offset");
-  isPointFuzzy(text1.getEndPositionOfChar(1), 5 + 2 * charWidth, 25, "text1 char 1 end offset");
-  isPointFuzzy(text1.getEndPositionOfChar(2), 5 + 3 * charWidth, 25, "text1 char 2 end offset");
-  isfuzzy(text1.getExtentOfChar(0).x, 5, 0.01, "text1 char 0 extent x");
+  isPoint(text1.getStartPositionOfChar(1), 5 + charWidth, 25, "text1 char 1 start offset");
+  isPoint(text1.getStartPositionOfChar(2), 5 + 2 * charWidth, 25, "text1 char 2 start offset");
+  isPoint(text1.getEndPositionOfChar(0), 5 + charWidth, 25, "text1 char 0 end offset");
+  isPoint(text1.getEndPositionOfChar(1), 5 + 2 * charWidth, 25, "text1 char 1 end offset");
+  isPoint(text1.getEndPositionOfChar(2), 5 + 3 * charWidth, 25, "text1 char 2 end offset");
+  is(text1.getExtentOfChar(0).x, 5, "text1 char 0 extent x");
   is(text1.getExtentOfChar(0).width, text1.getSubStringLength(0, 1), "text1 char 0 extent width");
   ok(text1.getExtentOfChar(0).y < 25, "text1 char 0 extent y");
   ok(ymost(text1.getExtentOfChar(0)) > 25, "text1 char 0 extent height");
-  isfuzzy(text1.getExtentOfChar(1).x, 5 + charWidth, 0.01, "text1 char 1 extent x");
+  is(text1.getExtentOfChar(1).x, 5 + charWidth, "text1 char 1 extent x");
   is(text1.getExtentOfChar(1).width, text1.getSubStringLength(0, 1), "text1 char 1 extent width");
   is(text1.getExtentOfChar(1).y, text1.getExtentOfChar(0).y, "text1 char 0/1 extent y");
   is(text1.getExtentOfChar(1).height, text1.getExtentOfChar(0).height, "text1 char 0/1 extent height");
-  isfuzzy(text1.getExtentOfChar(2).x, 5 + 2 * charWidth, 0.02, "text1 char 2 extent x");
+  is(text1.getExtentOfChar(2).x, 5 + 2 * charWidth, "text1 char 2 extent x");
   is(text1.getExtentOfChar(2).width, text1.getSubStringLength(0, 1), "text1 char 2 extent width");
   is(text1.getExtentOfChar(2).y, text1.getExtentOfChar(0).y, "text1 char 0/2 extent y");
   is(text1.getExtentOfChar(2).height, text1.getExtentOfChar(0).height, "text1 char 0/2 extent height");
@@ -98,21 +93,21 @@ function runTest() {
   is(text2.getNumberOfChars(), 3, "text2 length");
   ok(text2.getComputedTextLength() > 0, "text2 measured length");
   is(text2.getComputedTextLength(), text2.getSubStringLength(0, 3), "text2 substring length");
-  isPointFuzzy(text2.getStartPositionOfChar(0), 100, 125, "text2 char 0 start offset");
-  isPointFuzzy(text2.getStartPositionOfChar(1), 100, 125 + charWidth, "text2 char 1 start offset");
-  isPointFuzzy(text2.getStartPositionOfChar(2), 100, 125 + 2 * charWidth, "text2 char 2 start offset");
-  isPointFuzzy(text2.getEndPositionOfChar(0), 100, 125 + charWidth, "text2 char 0 end offset");
-  isPointFuzzy(text2.getEndPositionOfChar(1), 100, 125 + 2 * charWidth, "text2 char 1 end offset");
-  isPointFuzzy(text2.getEndPositionOfChar(2), 100, 125 + 3 * charWidth, "text2 char 2 end offset");
-  isfuzzy(text2.getExtentOfChar(0).y, 125, 0.01, "text2 char 0 extent y");
+  isPoint(text2.getStartPositionOfChar(0), 100, 125, "text2 char 0 start offset");
+  isPoint(text2.getStartPositionOfChar(1), 100, 125 + charWidth, "text2 char 1 start offset");
+  isPoint(text2.getStartPositionOfChar(2), 100, 125 + 2 * charWidth, "text2 char 2 start offset");
+  isPoint(text2.getEndPositionOfChar(0), 100, 125 + charWidth, "text2 char 0 end offset");
+  isPoint(text2.getEndPositionOfChar(1), 100, 125 + 2 * charWidth, "text2 char 1 end offset");
+  isPoint(text2.getEndPositionOfChar(2), 100, 125 + 3 * charWidth, "text2 char 2 end offset");
+  is(text2.getExtentOfChar(0).y, 125, "text2 char 0 extent y");
   isfuzzy(text2.getExtentOfChar(0).height, charWidth, 0.000001, "text2 char 0 extent height");
   ok(text2.getExtentOfChar(0).width < 100, "text2 char 0 extent x");
   ok(xmost(text2.getExtentOfChar(0)) > 100, "text2 char 0 extent width");
-  isfuzzy(text2.getExtentOfChar(1).y, 125 + charWidth, 0.01, "text2 char 1 extent x");
+  is(text2.getExtentOfChar(1).y, 125 + charWidth, "text2 char 1 extent x");
   isfuzzy(text2.getExtentOfChar(1).height, text2.getSubStringLength(0, 1), 0.000001, "text2 char 1 extent width");
   is(text2.getExtentOfChar(1).x, text2.getExtentOfChar(0).x, "text2 char 0/1 extent y");
   is(text2.getExtentOfChar(1).width, text2.getExtentOfChar(0).width, "text2 char 0/1 extent height");
-  isfuzzy(text2.getExtentOfChar(2).y, 125 + 2 * charWidth, 0.01, "text2 char 2 extent x");
+  is(text2.getExtentOfChar(2).y, 125 + 2 * charWidth, "text2 char 2 extent x");
   isfuzzy(text2.getExtentOfChar(2).height, text2.getSubStringLength(0, 1), 0.000001, "text2 char 2 extent width");
   is(text2.getExtentOfChar(2).x, text2.getExtentOfChar(0).x, "text2 char 0/2 extent y");
   is(text2.getExtentOfChar(2).width, text2.getExtentOfChar(0).width, "text2 char 0/2 extent height");

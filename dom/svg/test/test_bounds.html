@@ -113,7 +113,7 @@ function runTest() {
 
   is(text2Bounds.left, text1Bounds.left + 100, "text2.getBoundingClientRect().left");
   is(text2Bounds.top, text1Bounds.top, "text2.getBoundingClientRect().top");
-  isfuzzy(text2Bounds.width, text1Bounds.width, 0.1, "text2.getBoundingClientRect().width");
+  is(text2Bounds.width, text1Bounds.width, "text2.getBoundingClientRect().width");
   is(text2Bounds.height, text1Bounds.height, "text2.getBoundingClientRect().height");
 
   var r = (text1Bounds.width + text1Bounds.height) * sin45;
@@ -189,7 +189,7 @@ function runTest() {
   is(text1aBounds.width, text1Bounds.width + 4, "text1a.getBoundingClientRect().width");
 
   is(text2aBounds.left, text1aBounds.left + 100 - 3, "text2a.getBoundingClientRect().left");
-  isfuzzy(text2aBounds.width, text1aBounds.width + 6, 0.1, "text2a.getBoundingClientRect().width");
+  is(text2aBounds.width, text1aBounds.width + 6, "text2a.getBoundingClientRect().width");
 
   var iBounds = doc.getElementById("i").getBoundingClientRect();
   is(iBounds.left, 20, "i.getBoundingClientRect().left");

@@ -40,7 +40,7 @@ function runTests(text, charWidth) {
 
   function expectValue(charnum, nchars, expected) {
     try {
-      isfuzzy(text.getSubStringLength(charnum, nchars), expected, 0.01,
+      is(text.getSubStringLength(charnum, nchars), expected,
          "text.getSubStringLength(" + charnum + "," + nchars + ") " +
          "returned wrong value");
     } catch (e) {

@@ -4740,9 +4740,7 @@ nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
   }
 
   ContentOffsets offsets = GetContentOffsetsFromPoint(aPoint, SKIP_HIDDEN);
-  if (!offsets.content) {
-    return NS_ERROR_FAILURE;
-  }
+  if (!offsets.content) return NS_ERROR_FAILURE;
 
   int32_t offset;
   nsIFrame* frame = nsFrameSelection::GetFrameForNodeOffset(
@@ -4825,25 +4823,20 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
     }
   }
 
-  // Search backward for a boundary.
+  // Use peek offset one way then the other:
   nsPeekOffsetStruct startpos(aAmountBack, eDirPrevious, baseOffset,
                               nsPoint(0, 0), aJumpLines,
                               true,  // limit on scrolled views
                               false, false, false);
   rv = baseFrame->PeekOffset(&startpos);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
-  // Search forward from the starting position we found.
-  nsPeekOffsetStruct endpos(aAmountForward, eDirNext, startpos.mContentOffset,
-                            nsPoint(0, 0), aJumpLines,
+  nsPeekOffsetStruct endpos(aAmountForward, eDirNext, aStartPos, nsPoint(0, 0),
+                            aJumpLines,
                             true,  // limit on scrolled views
                             false, false, false);
   rv = PeekOffset(&endpos);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   // Keep frameSelection alive.
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
@@ -4856,17 +4849,13 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
       MOZ_KnownLive(startpos.mResultContent) /* bug 1636889 */,
       startpos.mContentOffset, startpos.mContentOffset, focusMode,
       CARET_ASSOCIATE_AFTER);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   rv = frameSelection->HandleClick(
       MOZ_KnownLive(endpos.mResultContent) /* bug 1636889 */,
       endpos.mContentOffset, endpos.mContentOffset,
       nsFrameSelection::FocusMode::kExtendSelection, CARET_ASSOCIATE_BEFORE);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   // maintain selection
   return frameSelection->MaintainSelection(aAmountBack);
