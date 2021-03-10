@@ -367,6 +367,22 @@ class AbsoluteSymlinkFile(File):
 
         File.__init__(self, path)
 
+    @staticmethod
+    def excluded(dest):
+        if platform.system() != "Windows":
+            return False
+
+        # Exclude local resources from symlinking since the sandbox on Windows
+        # does not allow accessing reparse points. See bug 1695556.
+        from buildconfig import topobjdir
+
+        denylist = [("dist", "bin"), ("_tests", "modules")]
+        fulllist = [os.path.join(topobjdir, *paths) for paths in denylist]
+
+        fulldest = os.path.join(os.path.abspath(os.curdir), dest)
+
+        return mozpath.basedir(fulldest, fulllist) is not None
+
     def copy(self, dest, skip_if_older=True):
         assert isinstance(dest, six.string_types)
 
@@ -377,14 +393,7 @@ class AbsoluteSymlinkFile(File):
 
         # Handle the simple case where symlinks are definitely not supported by
         # falling back to file copy.
-        # Exclude local resources from symlinking since the sandbox on Windows
-        # does not allow accessing reparse points. See:
-        # https://bugzilla.mozilla.org/show_bug.cgi?id=1635428#c10
-        distbin_on_windows = platform.system() == "Windows" and dest.startswith(
-            "dist\\bin\\"
-        )
-
-        if not hasattr(os, "symlink") or distbin_on_windows:
+        if not hasattr(os, "symlink") or AbsoluteSymlinkFile.excluded(dest):
             return File.copy(self, dest, skip_if_older=skip_if_older)
 
         # Always verify the symlink target path exists.
