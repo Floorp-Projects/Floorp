@@ -181,53 +181,6 @@ AndroidBridge::AndroidBridge() {
   jAvailable = inputStream.getMethod("available", "()I");
 }
 
-static void getHandlersFromStringArray(
-    JNIEnv* aJNIEnv, jni::ObjectArray::Param aArr, size_t aLen,
-    nsIMutableArray* aHandlersArray, nsIHandlerApp** aDefaultApp,
-    const nsAString& aAction = u""_ns, const nsACString& aMimeType = ""_ns) {
-  auto getNormalizedString = [](jni::Object::Param obj) -> nsString {
-    nsString out;
-    if (!obj) {
-      out.SetIsVoid(true);
-    } else {
-      out.Assign(jni::String::Ref::From(obj)->ToString());
-    }
-    return out;
-  };
-
-  for (size_t i = 0; i < aLen; i += 4) {
-    nsString name(getNormalizedString(aArr->GetElement(i)));
-    nsString isDefault(getNormalizedString(aArr->GetElement(i + 1)));
-    nsString packageName(getNormalizedString(aArr->GetElement(i + 2)));
-    nsString className(getNormalizedString(aArr->GetElement(i + 3)));
-
-    nsIHandlerApp* app = nsOSHelperAppService::CreateAndroidHandlerApp(
-        name, className, packageName, className, aMimeType, aAction);
-
-    aHandlersArray->AppendElement(app);
-    if (aDefaultApp && isDefault.Length() > 0) *aDefaultApp = app;
-  }
-}
-
-bool AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
-                                           nsIMutableArray* aHandlersArray,
-                                           nsIHandlerApp** aDefaultApp,
-                                           const nsAString& aAction) {
-  ALOG_BRIDGE("AndroidBridge::GetHandlersForMimeType");
-
-  auto arr = java::GeckoAppShell::GetHandlersForMimeType(aMimeType, aAction);
-  if (!arr) return false;
-
-  JNIEnv* const env = arr.Env();
-  size_t len = arr->Length();
-
-  if (!aHandlersArray) return len > 0;
-
-  getHandlersFromStringArray(env, arr, len, aHandlersArray, aDefaultApp,
-                             aAction, NS_ConvertUTF16toUTF8(aMimeType));
-  return true;
-}
-
 bool AndroidBridge::HasHWVP8Encoder() {
   ALOG_BRIDGE("AndroidBridge::HasHWVP8Encoder");
 
@@ -248,25 +201,6 @@ bool AndroidBridge::HasHWH264() {
   ALOG_BRIDGE("AndroidBridge::HasHWH264");
 
   return java::HardwareCodecCapabilityUtils::HasHWH264();
-}
-
-bool AndroidBridge::GetHandlersForURL(const nsAString& aURL,
-                                      nsIMutableArray* aHandlersArray,
-                                      nsIHandlerApp** aDefaultApp,
-                                      const nsAString& aAction) {
-  ALOG_BRIDGE("AndroidBridge::GetHandlersForURL");
-
-  auto arr = java::GeckoAppShell::GetHandlersForURL(aURL, aAction);
-  if (!arr) return false;
-
-  JNIEnv* const env = arr.Env();
-  size_t len = arr->Length();
-
-  if (!aHandlersArray) return len > 0;
-
-  getHandlersFromStringArray(env, arr, len, aHandlersArray, aDefaultApp,
-                             aAction);
-  return true;
 }
 
 void AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt,
@@ -659,37 +593,4 @@ jni::Object::LocalRef AndroidBridge::ChannelCreate(jni::Object::Param stream) {
                                        sBridge->jChannelCreate, stream.Get()));
   MOZ_CATCH_JNI_EXCEPTION(env);
   return rv;
-}
-
-void AndroidBridge::InputStreamClose(jni::Object::Param obj) {
-  JNIEnv* const env = jni::GetEnvForThread();
-  env->CallVoidMethod(obj.Get(), sBridge->jClose);
-  MOZ_CATCH_JNI_EXCEPTION(env);
-}
-
-uint32_t AndroidBridge::InputStreamAvailable(jni::Object::Param obj) {
-  JNIEnv* const env = jni::GetEnvForThread();
-  auto rv = env->CallIntMethod(obj.Get(), sBridge->jAvailable);
-  MOZ_CATCH_JNI_EXCEPTION(env);
-  return rv;
-}
-
-nsresult AndroidBridge::InputStreamRead(jni::Object::Param obj, char* aBuf,
-                                        uint32_t aCount, uint32_t* aRead) {
-  JNIEnv* const env = jni::GetEnvForThread();
-  auto arr = jni::ByteBuffer::New(aBuf, aCount);
-  jint read =
-      env->CallIntMethod(obj.Get(), sBridge->jByteBufferRead, arr.Get());
-
-  if (env->ExceptionCheck()) {
-    env->ExceptionClear();
-    return NS_ERROR_FAILURE;
-  }
-
-  if (read <= 0) {
-    *aRead = 0;
-    return NS_OK;
-  }
-  *aRead = read;
-  return NS_OK;
 }

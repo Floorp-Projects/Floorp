@@ -133,7 +133,6 @@ UNIFIED_SOURCES += [
     "GeckoProcessManager.cpp",
     "GfxInfo.cpp",
     "ImageDecoderSupport.cpp",
-    "nsAndroidProtocolHandler.cpp",
     "nsAppShell.cpp",
     "nsClipboard.cpp",
     "nsDeviceContextAndroid.cpp",
