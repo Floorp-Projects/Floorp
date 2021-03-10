@@ -271,15 +271,6 @@ class GlobalObject : public NativeObject {
                             const JS::RealmOptions& options);
 
   /*
-   * For bootstrapping, whether to splice a prototype for the global object.
-   */
-  bool shouldSplicePrototype();
-
-  /* Set a new prototype for the global object during bootstrapping. */
-  static bool splicePrototype(JSContext* cx, Handle<GlobalObject*> global,
-                              Handle<TaggedProto> proto);
-
-  /*
    * Create a constructor function with the specified name and length using
    * ctor, a method which creates objects with the given class.
    */

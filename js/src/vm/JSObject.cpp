@@ -2282,16 +2282,6 @@ bool js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto,
     return result.fail(JSMSG_CANT_SET_PROTO);
   }
 
-  // If this is a global object, resolve the Object class so that its
-  // [[Prototype]] chain is always properly immutable, even in the presence
-  // of lazy standard classes.
-  if (obj->is<GlobalObject>()) {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-    if (!GlobalObject::ensureConstructor(cx, global, JSProto_Object)) {
-      return false;
-    }
-  }
-
   /*
    * ES6 9.1.2 step 6 forbids generating cyclical prototype chains. But we
    * have to do this comparison on the observable WindowProxy, not on the
@@ -2488,6 +2478,16 @@ bool js::SetImmutablePrototype(JSContext* cx, HandleObject obj,
   if (obj->hasDynamicPrototype()) {
     MOZ_ASSERT(!cx->isHelperThreadContext());
     return Proxy::setImmutablePrototype(cx, obj, succeeded);
+  }
+
+  // If this is a global object, resolve the Object class first to ensure the
+  // global's prototype is set to Object.prototype before we mark the global as
+  // having an immutable prototype.
+  if (obj->is<GlobalObject>()) {
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    if (!GlobalObject::ensureConstructor(cx, global, JSProto_Object)) {
+      return false;
+    }
   }
 
   if (!JSObject::setFlag(cx, obj, ObjectFlag::ImmutablePrototype)) {
