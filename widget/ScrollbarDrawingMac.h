@@ -10,6 +10,7 @@
 #include "nsColor.h"
 #include "nsITheme.h"
 #include "Units.h"
+#include "mozilla/Array.h"
 
 namespace mozilla {
 namespace gfx {
@@ -33,6 +34,11 @@ struct ScrollbarParams {
 
 class ScrollbarDrawingMac final {
  public:
+  struct FillRect {
+    gfx::Rect mRect;
+    nscolor mColor;
+  };
+
   static CSSIntCoord GetScrollbarSize(StyleScrollbarWidth, bool aOverlay);
 
   static LayoutDeviceIntCoord GetScrollbarSize(StyleScrollbarWidth,
@@ -43,12 +49,28 @@ class ScrollbarDrawingMac final {
   static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
                                                 const ComputedStyle& aStyle,
                                                 bool aIsHorizontal);
-  static void DrawScrollbarThumb(gfx::DrawTarget& aDT, const gfx::Rect& aRect,
-                                 const ScrollbarParams& aParams);
-  static void DrawScrollbarTrack(gfx::DrawTarget& aDT, const gfx::Rect& aRect,
-                                 const ScrollbarParams& aParams);
-  static void DrawScrollCorner(gfx::DrawTarget& aDT, const gfx::Rect& aRect,
-                               const ScrollbarParams& aParams);
+
+  // The caller can draw this rectangle with rounded corners as appropriate.
+  struct ThumbRect {
+    gfx::Rect mRect;
+    nscolor mFillColor;
+    nscolor mStrokeColor;
+    float mStrokeWidth;
+    float mStrokeOutset;
+  };
+
+  static ThumbRect GetThumbRect(const gfx::Rect& aRect,
+                                const ScrollbarParams& aParams, float aScale);
+
+  using ScrollbarTrackRects = Array<FillRect, 4>;
+  static bool GetScrollbarTrackRects(const gfx::Rect& aRect,
+                                     const ScrollbarParams& aParams,
+                                     float aScale, ScrollbarTrackRects&);
+
+  using ScrollCornerRects = Array<FillRect, 7>;
+  static bool GetScrollCornerRects(const gfx::Rect& aRect,
+                                   const ScrollbarParams& aParams,
+                                   float aScale, ScrollCornerRects&);
 };
 
 }  // namespace widget
