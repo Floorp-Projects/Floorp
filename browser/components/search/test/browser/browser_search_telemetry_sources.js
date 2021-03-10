@@ -65,9 +65,6 @@ async function waitForIdle() {
   }
 }
 
-let extension;
-let currentEngineName;
-
 SearchTestUtils.init(this);
 UrlbarTestUtils.init(this);
 
@@ -82,9 +79,9 @@ add_task(async function setup() {
   Services.telemetry.canRecordExtended = true;
   Services.prefs.setBoolPref("browser.search.log", true);
 
-  currentEngineName = (await Services.search.getDefault()).name;
+  let currentEngineName = (await Services.search.getDefault()).name;
 
-  extension = await SearchTestUtils.installSearchExtension({
+  await SearchTestUtils.installSearchExtension({
     search_url: getPageUrl(true),
     search_url_get_params: "s={searchTerms}&abc=ff",
     suggest_url:
@@ -103,6 +100,9 @@ add_task(async function setup() {
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearScalars();
+    await Services.search.setDefault(
+      Services.search.getEngineByName(currentEngineName)
+    );
   });
 });
 
@@ -325,12 +325,4 @@ add_task(async function test_source_webextension() {
       BrowserTestUtils.removeTab(tab);
     }
   );
-});
-
-add_task(async function cleanup() {
-  await Services.search.setDefault(
-    Services.search.getEngineByName(currentEngineName)
-  );
-  // Extension must be unloaded before registerCleanupFunction is called.
-  await extension.unload();
 });

@@ -30,9 +30,10 @@ add_task(async function setup() {
   // Note that the result domain is subdomain.example.ca. We still expect to
   // match with example.com results because we ignore subdomains and the public
   // suffix in this check.
-  let engine = await Services.search.addEngineWithDetails("Test", {
-    template: `http://subdomain.example.ca/?search={searchTerms}`,
+  await SearchTestUtils.installSearchExtension({
+    search_url: "https://subdomain.example.ca/",
   });
+  let engine = Services.search.getEngineByName("Example");
   await Services.search.setDefault(engine);
   await Services.search.moveEngine(engine, 0);
 
@@ -46,7 +47,7 @@ add_task(async function setup() {
       {
         type: "tab",
         title: "Test Remote",
-        url: "http://example.com",
+        url: "https://example.com",
         icon: UrlbarUtils.ICON.DEFAULT,
         client: "7cqCr77ptzX3",
         lastUsed: 1452124677,
@@ -54,7 +55,7 @@ add_task(async function setup() {
       {
         type: "tab",
         title: "Test Remote 2",
-        url: "http://example-2.com",
+        url: "https://example-2.com",
         icon: UrlbarUtils.ICON.DEFAULT,
         client: "7cqCr77ptzX3",
         lastUsed: 1452124677,
@@ -95,7 +96,6 @@ add_task(async function setup() {
     weaveXPCService.ready = oldWeaveServiceReady;
     SyncedTabs._internal = originalSyncedTabsInternal;
     await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(engine);
     await PlacesUtils.history.clear();
   });
 });
