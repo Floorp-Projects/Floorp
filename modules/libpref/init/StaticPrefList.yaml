@@ -2295,7 +2295,7 @@
 
 # Timeout clamp in ms for timeouts we clamp.
 - name: dom.min_timeout_value
-  type: int32_t
+  type: RelaxedAtomicInt32
   value: 4
   mirror: always
 
