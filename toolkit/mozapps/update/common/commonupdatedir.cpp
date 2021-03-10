@@ -806,9 +806,6 @@ static bool GetCachedHash(const char16_t* installPath, HKEY rootKey,
     return false;
   }
   result = mozilla::MakeUnique<NS_tchar[]>(bufferSize);
-  if (!result) {
-    return false;
-  }
   // Now read the actual value from the registry.
   lrv = RegGetValueW(rootKey, regPath.String(),
                      reinterpret_cast<const wchar_t*>(installPath),
