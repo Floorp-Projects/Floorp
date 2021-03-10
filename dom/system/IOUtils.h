@@ -148,10 +148,6 @@ class IOUtils final {
   static StaticRefPtr<nsIAsyncShutdownClient> sBarrier;
   static Atomic<bool> sShutdownStarted;
 
-  template <typename OkT, typename Fn, typename... Args>
-  static RefPtr<IOUtils::IOPromise<OkT>> InvokeToIOPromise(Fn aFunc,
-                                                           Args... aArgs);
-
   static already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier();
 
   static already_AddRefed<nsISerialEventTarget> GetBackgroundEventTarget();
