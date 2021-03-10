@@ -1275,9 +1275,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
                                           Nothing(),  // stapledOCSPResponse
                                           Nothing(),  // sctsFromTLSExtension
                                           Nothing(),  // dcInfo
-                                          OriginAttributes(),
-                                          false,  // don't save intermediates
-                                          &evOidPolicy);
+                                          OriginAttributes(), &evOidPolicy);
   } else {
     const nsCString& flatHostname = PromiseFlatCString(aHostname);
     result = certVerifier->VerifyCert(

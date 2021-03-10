@@ -907,7 +907,6 @@ Result CertVerifier::VerifySSLServerCert(
     /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS,
     /*optional*/ const Maybe<DelegatedCredentialInfo>& dcInfo,
     /*optional*/ const OriginAttributes& originAttributes,
-    /*optional*/ bool saveIntermediatesInPermanentDatabase,
     /*optional out*/ SECOidTag* evOidPolicy,
     /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
     /*optional out*/ KeySizeStatus* keySizeStatus,
@@ -1030,10 +1029,6 @@ Result CertVerifier::VerifySSLServerCert(
     }
 
     return rv;
-  }
-
-  if (saveIntermediatesInPermanentDatabase) {
-    SaveIntermediateCerts(builtChain);
   }
 
   if (evOidPolicy) {
