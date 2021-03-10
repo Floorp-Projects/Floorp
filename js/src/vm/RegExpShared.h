@@ -370,6 +370,8 @@ class RegExpRealm {
   static const size_t MatchResultObjectGroupsSlot = 2;
   static const size_t MatchResultObjectIndicesSlot = 3;
 
+  static const size_t IndicesGroupsSlot = 0;
+
   static size_t offsetOfMatchResultObjectIndexSlot() {
     return sizeof(Value) * MatchResultObjectIndexSlot;
   }

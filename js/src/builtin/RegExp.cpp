@@ -39,8 +39,22 @@ using JS::CompileOptions;
 using JS::RegExpFlag;
 using JS::RegExpFlags;
 
+// Allocate an object for the |.groups| or |.indices.groups| property
+// of a regexp match result.
+static PlainObject* CreateGroupsObject(JSContext* cx,
+                                       HandlePlainObject groupsTemplate) {
+  if (groupsTemplate->inDictionaryMode()) {
+    return NewObjectWithGivenProto<PlainObject>(cx, nullptr);
+  }
+
+  PlainObject* result;
+  JS_TRY_VAR_OR_RETURN_NULL(
+      cx, result, PlainObject::createWithTemplate(cx, groupsTemplate));
+  return result;
+}
+
 /*
- * ES 2021 draft 21.2.5.2.2: Steps 16-28
+ * Implements RegExpBuiltinExec: Steps 18-35
  * https://tc39.es/ecma262/#sec-regexpbuiltinexec
  */
 bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
@@ -58,43 +72,35 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
    *  input:          input string
    *  index:          start index for the match
    *  groups:         named capture groups for the match
+   *  indices:        capture indices for the match, if required
    */
+
+  bool hasIndices = re->hasIndices();
 
   // Get the templateObject that defines the shape and type of the output
   // object.
+  RegExpRealm::ResultTemplateKind kind =
+      hasIndices ? RegExpRealm::ResultTemplateKind::WithIndices
+                 : RegExpRealm::ResultTemplateKind::Normal;
   ArrayObject* templateObject =
-      cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
+      cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx, kind);
   if (!templateObject) {
     return false;
   }
 
-  // Step 16
+  // Steps 18-19
   size_t numPairs = matches.length();
   MOZ_ASSERT(numPairs > 0);
 
-  // Steps 18-19
+  // Steps 20-21: Allocate the match result object.
   RootedArrayObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(
                                 cx, numPairs, templateObject));
   if (!arr) {
     return false;
   }
 
-  // Step 24 (reordered)
-  RootedPlainObject groups(cx);
-  bool groupsInDictionaryMode = false;
-  if (re->numNamedCaptures() > 0) {
-    RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
-    if (groupsTemplate->inDictionaryMode()) {
-      groups = NewObjectWithGivenProto<PlainObject>(cx, nullptr);
-      groupsInDictionaryMode = true;
-    } else {
-      JS_TRY_VAR_OR_RETURN_FALSE(
-          cx, groups, PlainObject::createWithTemplate(cx, groupsTemplate));
-    }
-  }
-
-  // Steps 22-23 and 27 a-e.
-  // Store a Value for each pair.
+  // Steps 28-29 and 33 a-d: Initialize the elements of the match result.
+  // Store a Value for each match pair.
   for (size_t i = 0; i < numPairs; i++) {
     const MatchPair& pair = matches[i];
 
@@ -113,18 +119,79 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
     }
   }
 
-  // Step 27 f.
-  // The groups template object stores the names of the named captures in the
-  // the order in which they are defined. The named capture indices vector
-  // stores the corresponding capture indices. If we are not in dictionary mode,
-  // we simply fill in the slots with the correct values. In dictionary mode,
-  // we have to define the properties explicitly.
-  if (!groupsInDictionaryMode) {
-    for (uint32_t i = 0; i < re->numNamedCaptures(); i++) {
-      uint32_t idx = re->getNamedCaptureIndex(i);
-      groups->setSlot(i, arr->getDenseElement(idx));
+  // Step 34a (reordered): Allocate and initialize the indices object if needed.
+  // This is an inlined implementation of MakeIndicesArray:
+  // https://tc39.es/ecma262/#sec-makeindicesarray
+  RootedArrayObject indices(cx);
+  RootedPlainObject indicesGroups(cx);
+  if (hasIndices) {
+    // MakeIndicesArray: step 8
+    ArrayObject* indicesTemplate =
+        cx->realm()->regExps.getOrCreateMatchResultTemplateObject(
+            cx, RegExpRealm::ResultTemplateKind::Indices);
+    indices =
+        NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, indicesTemplate);
+    if (!indices) {
+      return false;
     }
-  } else {
+
+    // MakeIndicesArray: steps 10-12
+    if (re->numNamedCaptures() > 0) {
+      RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
+      indicesGroups = CreateGroupsObject(cx, groupsTemplate);
+      if (!indicesGroups) {
+        return false;
+      }
+      indices->setSlot(RegExpRealm::IndicesGroupsSlot,
+                       ObjectValue(*indicesGroups));
+    } else {
+      indices->setSlot(RegExpRealm::IndicesGroupsSlot, UndefinedValue());
+    }
+
+    // MakeIndicesArray: step 13 a-d. (Step 13.e is implemented below.)
+    for (size_t i = 0; i < numPairs; i++) {
+      const MatchPair& pair = matches[i];
+
+      if (pair.isUndefined()) {
+        // Since we had a match, first pair must be present.
+        MOZ_ASSERT(i != 0);
+        indices->setDenseInitializedLength(i + 1);
+        indices->initDenseElement(i, UndefinedValue());
+      } else {
+        RootedArrayObject indexPair(cx, NewDenseFullyAllocatedArray(cx, 2));
+        if (!indexPair) {
+          return false;
+        }
+        indexPair->setDenseInitializedLength(2);
+        indexPair->initDenseElement(0, Int32Value(pair.start));
+        indexPair->initDenseElement(1, Int32Value(pair.limit));
+
+        indices->setDenseInitializedLength(i + 1);
+        indices->initDenseElement(i, ObjectValue(*indexPair));
+      }
+    }
+  }
+
+  // Steps 30-31 (reordered): Allocate the groups object (if needed).
+  RootedPlainObject groups(cx);
+  bool groupsInDictionaryMode = false;
+  if (re->numNamedCaptures() > 0) {
+    RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
+    groupsInDictionaryMode = groupsTemplate->inDictionaryMode();
+    groups = CreateGroupsObject(cx, groupsTemplate);
+    if (!groups) {
+      return false;
+    }
+  }
+
+  // Step 33 e-f: Initialize the properties of |groups| and |indices.groups|.
+  // The groups template object stores the names of the named captures
+  // in the the order in which they are defined. The named capture
+  // indices vector stores the corresponding capture indices. In
+  // dictionary mode, we have to define the properties explicitly. If
+  // we are not in dictionary mode, we simply fill in the slots with
+  // the correct values.
+  if (groupsInDictionaryMode) {
     RootedIdVector keys(cx);
     RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
     if (!GetPropertyKeys(cx, groupsTemplate, 0, &keys)) {
@@ -140,22 +207,47 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
       if (!NativeDefineDataProperty(cx, groups, key, val, JSPROP_ENUMERATE)) {
         return false;
       }
+      // MakeIndicesArray: Step 13.e (reordered)
+      if (hasIndices) {
+        val = indices->getDenseElement(idx);
+        if (!NativeDefineDataProperty(cx, indicesGroups, key, val,
+                                      JSPROP_ENUMERATE)) {
+          return false;
+        }
+      }
+    }
+  } else {
+    for (uint32_t i = 0; i < re->numNamedCaptures(); i++) {
+      uint32_t idx = re->getNamedCaptureIndex(i);
+      groups->setSlot(i, arr->getDenseElement(idx));
+
+      // MakeIndicesArray: Step 13.e (reordered)
+      if (hasIndices) {
+        indicesGroups->setSlot(i, indices->getDenseElement(idx));
+      }
     }
   }
 
-  // Step 20 (reordered).
+  // Step 22 (reordered).
   // Set the |index| property.
   arr->setSlot(RegExpRealm::MatchResultObjectIndexSlot,
                Int32Value(matches[0].start));
 
-  // Step 21 (reordered).
+  // Step 23 (reordered).
   // Set the |input| property.
   arr->setSlot(RegExpRealm::MatchResultObjectInputSlot, StringValue(input));
 
-  // Steps 25-26 (reordered)
+  // Step 32 (reordered)
   // Set the |groups| property.
   arr->setSlot(RegExpRealm::MatchResultObjectGroupsSlot,
                groups ? ObjectValue(*groups) : UndefinedValue());
+
+  // Step 34b
+  // Set the |indices| property.
+  if (re->hasIndices()) {
+    arr->setSlot(RegExpRealm::MatchResultObjectIndicesSlot,
+                 ObjectValue(*indices));
+  }
 
 #ifdef DEBUG
   RootedValue test(cx);
@@ -171,7 +263,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   MOZ_ASSERT(test == arr->getSlot(RegExpRealm::MatchResultObjectInputSlot));
 #endif
 
-  // Step 28.
+  // Step 35.
   rval.setObject(*arr);
   return true;
 }
