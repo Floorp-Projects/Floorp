@@ -2535,7 +2535,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   width: 100%;
   min-height: 24px;
   background-color: #ededf0;
-  color: #0c0c0d !important;
+  color: #0c0c0d;
   border: 1px solid transparent;
   border-radius: 2px;
   font-weight: 400;

@@ -194,7 +194,7 @@ a.perf-photon-button:focus {
   background-repeat: no-repeat;
   border-radius: 2px;
   border: 1px solid transparent;
-  color: inherit !important;
+  color: #0c0c0d;
   font-size: 12px;
   font-weight: 400;
   text-decoration: none;
