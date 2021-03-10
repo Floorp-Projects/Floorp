@@ -94,6 +94,16 @@ struct ShaderOptimizationError {
     message: String,
 }
 
+fn print_shader_source(shader_src: &str) {
+    // For some reason the glsl-opt errors are offset by 1 compared
+    // to the provided shader source string.
+    println!("0\t|");
+    for (n, line) in shader_src.split('\n').enumerate() {
+        let line_number = n + 1;
+        println!("{}\t|{}", line_number, line);
+    }
+}
+
 fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &str) -> Result<(), std::io::Error> {
     writeln!(
         shader_file,
@@ -155,15 +165,17 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
             format!("{}_{}", shader.shader_name, shader.config.replace(",", "_"))
         };
 
-        let vert = glslopt_ctx.optimize(glslopt::ShaderType::Vertex, vert_src);
+        let vert = glslopt_ctx.optimize(glslopt::ShaderType::Vertex, vert_src.clone());
         if !vert.get_status() {
+            print_shader_source(&vert_src);
             return Err(ShaderOptimizationError {
                 shader: shader.clone(),
                 message: vert.get_log().to_string(),
             });
         }
-        let frag = glslopt_ctx.optimize(glslopt::ShaderType::Fragment, frag_src);
+        let frag = glslopt_ctx.optimize(glslopt::ShaderType::Fragment, frag_src.clone());
         if !frag.get_status() {
+            print_shader_source(&frag_src);
             return Err(ShaderOptimizationError {
                 shader: shader.clone(),
                 message: frag.get_log().to_string(),
