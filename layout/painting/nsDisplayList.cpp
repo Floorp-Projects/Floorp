@@ -9173,13 +9173,16 @@ nsDisplayMasksAndClipPaths::nsDisplayMasksAndClipPaths(
       aBuilder->GetBackgroundPaintFlags() | nsCSSRendering::PAINTBG_MASK_IMAGE;
   const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, svgReset->mMask) {
-    if (!svgReset->mMask.mLayers[i].mImage.IsResolved()) {
+    const auto& layer = svgReset->mMask.mLayers[i];
+    if (!layer.mImage.IsResolved()) {
       continue;
     }
-    bool isTransformedFixed;
+    const nsRect& borderArea = mFrame->GetRectRelativeToSelf();
+    // NOTE(emilio): We only care about the dest rect so we don't bother
+    // computing a clip.
+    bool isTransformedFixed = false;
     nsBackgroundLayerState state = nsCSSRendering::PrepareImageLayer(
-        presContext, aFrame, flags, mFrame->GetRectRelativeToSelf(),
-        mFrame->GetRectRelativeToSelf(), svgReset->mMask.mLayers[i],
+        presContext, aFrame, flags, borderArea, borderArea, layer,
         &isTransformedFixed);
     mDestRects.AppendElement(state.mDestArea);
   }
