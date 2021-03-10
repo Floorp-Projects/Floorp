@@ -819,3 +819,7 @@ menupopup::part(drop-indicator) {
   margin-top: 6px;
   font-weight: 600;
 }
+
+#tab-notification-deck {
+  display: flex;
+}
