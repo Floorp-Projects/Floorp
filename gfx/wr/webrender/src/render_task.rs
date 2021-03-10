@@ -240,7 +240,7 @@ pub struct BlitTask {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GradientTask {
+pub struct FastLinearGradientTask {
     pub stops: [GradientStopKey; GRADIENT_FP_STOPS],
     pub orientation: LineOrientation,
     pub start_point: f32,
@@ -315,7 +315,7 @@ pub enum RenderTaskKind {
     Blit(BlitTask),
     Border(BorderTask),
     LineDecoration(LineDecorationTask),
-    Gradient(GradientTask),
+    FastLinearGradient(FastLinearGradientTask),
     SvgFilter(SvgFilterTask),
     #[cfg(test)]
     Test(RenderTargetKind),
@@ -344,7 +344,7 @@ impl RenderTaskKind {
             RenderTaskKind::Blit(..) => "Blit",
             RenderTaskKind::Border(..) => "Border",
             RenderTaskKind::LineDecoration(..) => "LineDecoration",
-            RenderTaskKind::Gradient(..) => "Gradient",
+            RenderTaskKind::FastLinearGradient(..) => "FastLinearGradient",
             RenderTaskKind::SvgFilter(..) => "SvgFilter",
             #[cfg(test)]
             RenderTaskKind::Test(..) => "Test",
@@ -357,7 +357,7 @@ impl RenderTaskKind {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Border(..) |
-            RenderTaskKind::Gradient(..) |
+            RenderTaskKind::FastLinearGradient(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::SvgFilter(..) => {
@@ -421,7 +421,7 @@ impl RenderTaskKind {
         start_point: f32,
         end_point: f32,
     ) -> Self {
-        RenderTaskKind::Gradient(GradientTask {
+        RenderTaskKind::FastLinearGradient(FastLinearGradientTask {
             stops,
             orientation,
             start_point,
@@ -653,7 +653,7 @@ impl RenderTaskKind {
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
-            RenderTaskKind::Gradient(..) |
+            RenderTaskKind::FastLinearGradient(..) |
             RenderTaskKind::Blit(..) => {
                 [0.0; 4]
             }
@@ -1475,8 +1475,8 @@ impl RenderTask {
                 pt.new_level("Blit".to_owned());
                 pt.add_item(format!("source: {:?}", task.source));
             }
-            RenderTaskKind::Gradient(..) => {
-                pt.new_level("Gradient".to_owned());
+            RenderTaskKind::FastLinearGradient(..) => {
+                pt.new_level("FastLinearGradient".to_owned());
             }
             RenderTaskKind::SvgFilter(ref task) => {
                 pt.new_level("SvgFilter".to_owned());

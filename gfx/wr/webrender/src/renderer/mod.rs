@@ -3965,7 +3965,7 @@ impl Renderer {
         }
 
         // Draw any gradients for this target.
-        if !target.gradients.is_empty() {
+        if !target.fast_linear_gradients.is_empty() {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_CACHE_GRADIENT);
 
             self.set_blend(false, FramebufferKind::Other);
@@ -3977,8 +3977,8 @@ impl Renderer {
             );
 
             self.draw_instanced_batch(
-                &target.gradients,
-                VertexArrayKind::Gradient,
+                &target.fast_linear_gradients,
+                VertexArrayKind::FastLinearGradient,
                 &BatchTextures::empty(),
                 stats,
             );

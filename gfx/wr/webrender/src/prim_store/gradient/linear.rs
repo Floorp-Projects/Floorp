@@ -307,14 +307,14 @@ pub struct CachedGradientSegment {
     pub local_rect: LayoutRect,
 }
 
-/// The per-instance shader input of a fast-path linear gradient segment.
+/// The per-instance shader input of a fast-path linear gradient render task.
 ///
-/// Must match the GRADIENT instance description in renderer/vertex.rs.
+/// Must match the FAST_LINEAR_GRADIENT instance description in renderer/vertex.rs.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 #[derive(Clone, Debug)]
-pub struct GradientJob {
+pub struct FastLinearGradientInstance {
     pub task_rect: DeviceRect,
     pub stops: [f32; GRADIENT_FP_STOPS],
     pub colors: [PremultipliedColorF; GRADIENT_FP_STOPS],
