@@ -161,19 +161,17 @@ browsertime-tp6-live:
     tier: 2
     apps: ["firefox"]
     variants: []
-    pageload: "cold"
+    pageload: cold
     treeherder-symbol: Btime-live(tp6)
     run-on-projects:
-        by-pageload:
-            cold:
-                by-test-platform:
-                    windows7-32.*/opt: []
-                    macosx.*64(?:-qr)?/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
-                    default: ["autoland"]
+        by-test-platform:
+            (linux|windows|macos)(?!.*shippable).*: []
+            windows7.*shippable.*: []
+            default: ["autoland"]
     mozharness:
         extra-options:
             - --chimera
+            - --live-sites
 
 browsertime-tp6-profiling:
     description: "Raptor (browsertime) tp6 page-load tests with Gecko Profiling"

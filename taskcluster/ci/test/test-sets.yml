@@ -79,7 +79,6 @@ talos-ref-hw:
     - talos-webgl
 
 raptor-firefox:
-    - raptor-tp6-live
     - raptor-speedometer-firefox
     - raptor-stylebench-firefox
     - raptor-motionmark-htmlsuite-firefox

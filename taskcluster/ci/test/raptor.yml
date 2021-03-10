@@ -112,34 +112,6 @@ job-defaults:
                             - linux64-chromium
                 default: []
 
-raptor-tp6-live:
-    description: "Raptor (webextension) tp6 on live-sites"
-    apps: ["firefox"]
-    variants: []
-    pageload: "both"
-    treeherder-symbol: Rap-live(tp6)
-    raptor-test: tp6
-    raptor-subtests:
-        - [cnn-ampstories, cnn-amp]
-    run-on-projects:
-        by-pageload:
-            warm:
-                by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
-                    default: ["mozilla-central"]
-            cold:
-                by-test-platform:
-                    windows7-32.*/opt: []
-                    macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                    (linux|windows10|macos)(?!.*shippable).*: []
-                    default: ["mozilla-central", "autoland"]
-    tier: 2
-    mozharness:
-        extra-options:
-            - --no-conditioned-profile
-            - --live-sites
-
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
     variants: ["fission"]
