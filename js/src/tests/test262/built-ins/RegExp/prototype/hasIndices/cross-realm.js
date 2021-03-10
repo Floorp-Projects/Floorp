@@ -1,4 +1,3 @@
-// |reftest| skip -- regexp-match-indices is not supported
 // Copyright (C) 2021 Ron Buckton and the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
