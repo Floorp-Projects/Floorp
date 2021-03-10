@@ -80,3 +80,16 @@ jobs:
                 - [automation/taskcluster/androidTest/ui-test.sh, x86-beta-tests, app.apk, android-test.apk, '50']
         treeherder:
             symbol: beta(ui-test-x86-beta)
+    x86-nightly:
+        attributes:
+            build-type: nightly-firebase
+        description: Test Fenix
+        run-on-tasks-for: [github-push]
+        dependencies:
+            signing: signing-nightly-firebase
+            signing-android-test: signing-android-test-nightly
+        run:
+            commands:
+                - [automation/taskcluster/androidTest/ui-test.sh, x86-start-test, app.apk, android-test.apk, '-1']
+        treeherder:
+            symbol: nightly(ui-test-x86-nightly)
