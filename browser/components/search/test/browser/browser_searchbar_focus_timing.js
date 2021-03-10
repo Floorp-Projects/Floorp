@@ -8,13 +8,17 @@
 add_task(async function setup() {
   await gCUITestUtils.addSearchBar();
 
-  await SearchTestUtils.installSearchExtension();
+  const engine = await Services.search.addEngineWithDetails("dummy", {
+    method: "GET",
+    template: "https://example.com/?q={searchTerms}",
+  });
 
   const defaultEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = Services.search.getEngineByName("Example");
+  Services.search.defaultEngine = engine;
 
   registerCleanupFunction(async function() {
     Services.search.defaultEngine = defaultEngine;
+    await Services.search.removeEngine(engine);
     gCUITestUtils.removeSearchBar();
   });
 });

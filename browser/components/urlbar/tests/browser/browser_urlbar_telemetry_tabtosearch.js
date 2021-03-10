@@ -108,9 +108,8 @@ add_task(async function setup() {
     set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
   });
 
-  await SearchTestUtils.installSearchExtension({
-    name: ENGINE_NAME,
-    search_url: `https://${ENGINE_DOMAIN}/`,
+  let engine = await Services.search.addEngineWithDetails(ENGINE_NAME, {
+    template: `http://${ENGINE_DOMAIN}/?q={searchTerms}`,
   });
 
   UrlbarTestUtils.init(this);
@@ -126,6 +125,7 @@ add_task(async function setup() {
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
     UrlbarTestUtils.uninit();
+    await Services.search.removeEngine(engine);
   });
 });
 

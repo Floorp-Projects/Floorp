@@ -13,10 +13,13 @@ add_task(async function setup() {
 
   // Add a new mock default engine so we don't hit the network.
   let oldDefaultEngine = await Services.search.getDefault();
-  await SearchTestUtils.installSearchExtension({ name: "Test" });
-  await Services.search.setDefault(Services.search.getEngineByName("Test"));
+  let engine = await Services.search.addEngineWithDetails("Test", {
+    template: "http://example.com/?search={searchTerms}",
+  });
+  await Services.search.setDefault(engine);
   registerCleanupFunction(async () => {
     await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.removeEngine(engine);
   });
 
   // Add one bookmark we'll use below.
@@ -216,7 +219,7 @@ add_task(async function remote() {
     await loadPromise;
     Assert.equal(
       gBrowser.currentURI.spec,
-      "https://example.com/?q=remote",
+      "http://example.com/?search=remote",
       "Engine's SERP should have loaded"
     );
   });
