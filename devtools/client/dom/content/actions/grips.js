@@ -25,7 +25,7 @@ function receiveProperties(grip, response, error) {
   return {
     grip: grip,
     type: constants.FETCH_PROPERTIES,
-    status: "end",
+    status: "done",
     response: response,
     error: error,
   };

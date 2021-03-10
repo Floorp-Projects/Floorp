@@ -1406,3 +1406,42 @@ function checkPoolChildrenSize(parentPool, typeName, expected) {
     `${parentPool.actorID} should have ${expected} children of type ${typeName}`
   );
 }
+
+/**
+ * Wait for a specific action type to be dispatched.
+ *
+ * If the action is async and defines a `status` property, this helper will wait
+ * for the status to reach either "error" or "done".
+ *
+ * @param {Object} store
+ *        Redux store where the action should be dispatched.
+ * @param {String} actionType
+ *        The actionType to wait for.
+ * @param {Number} repeat
+ *        Optional, number of time the action is expected to be dispatched.
+ *        Defaults to 1
+ * @return {Promise}
+ */
+function waitForDispatch(store, actionType, repeat = 1) {
+  let count = 0;
+  return new Promise(resolve => {
+    store.dispatch({
+      type: "@@service/waitUntil",
+      predicate: action => {
+        const isDone =
+          !action.status ||
+          action.status === "done" ||
+          action.status === "error";
+
+        if (action.type === actionType && isDone && ++count == repeat) {
+          return true;
+        }
+
+        return false;
+      },
+      run: (dispatch, getState, action) => {
+        resolve(action);
+      },
+    });
+  });
+}

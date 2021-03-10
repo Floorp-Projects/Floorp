@@ -21,7 +21,7 @@ add_task(async function() {
   is(breakpoint.location.line, 6);
 
   info("Reload with a new version of the file");
-  const syncBp = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const syncBp = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await navigate(dbg, "doc-sourcemaps-reload2.html", "v1.js");
 
   await syncBp;

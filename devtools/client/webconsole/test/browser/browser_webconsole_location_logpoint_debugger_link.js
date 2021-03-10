@@ -165,7 +165,7 @@ async function setLogPoint(dbg, index, expression) {
     dbg,
     `${selectors.addLogItem},${selectors.editLogItem}`
   );
-  const onBreakpointSet = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const onBreakpointSet = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await typeInPanel(dbg, expression);
   await onBreakpointSet;
 }

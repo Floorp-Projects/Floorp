@@ -44,7 +44,7 @@ add_task(async function() {
   // Test expanding properties when the debuggee is active
   // Wait for full evaluation of the expressions in order to avoid having
   // mixed up code between the location being removed and the one being re-added
-  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSIONS");
+  const evaluated = waitForDispatch(dbg.store, "EVALUATE_EXPRESSIONS");
   await resume(dbg);
   await evaluated;
 

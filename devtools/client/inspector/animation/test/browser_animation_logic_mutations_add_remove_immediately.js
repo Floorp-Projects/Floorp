@@ -13,7 +13,7 @@ add_task(async function() {
   const { inspector, panel } = await openAnimationInspector();
 
   info("Check state of the animation inspector after fast mutations");
-  const onDispatch = waitForDispatch(inspector, "UPDATE_ANIMATIONS", () => 1);
+  const onDispatch = waitForDispatch(inspector.store, "UPDATE_ANIMATIONS");
   await startMutation(tab);
   await onDispatch;
   ok(

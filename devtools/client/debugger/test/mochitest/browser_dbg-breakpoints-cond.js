@@ -49,14 +49,14 @@ add_task(async function() {
   is(bp.options.condition, "1\n2", "Hit 'Alt+Enter' adds a new line");
 
   clickElement(dbg, "gutter", 5);
-  await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
+  await waitForDispatch(dbg.store, "REMOVE_BREAKPOINT");
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp, undefined, "breakpoint was removed");
   await assertNoBreakpoint(dbg, 5);
 
   info("Adding a condition to a breakpoint");
   clickElement(dbg, "gutter", 5);
-  await waitForDispatch(dbg, "SET_BREAKPOINT");
+  await waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await setConditionalBreakpoint(dbg, 5, "1");
   await waitForCondition(dbg, 1);
 

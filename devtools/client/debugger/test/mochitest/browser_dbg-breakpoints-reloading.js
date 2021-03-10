@@ -13,7 +13,7 @@ add_task(async function() {
   await addBreakpointViaGutter(dbg, 5);
   await addBreakpointViaGutter(dbg, 4);
 
-  const syncedBps = waitForDispatch(dbg, "SET_BREAKPOINT", 2);
+  const syncedBps = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
   await reload(dbg, "simple1");
   await waitForSelectedSource(dbg, "simple1");
   await syncedBps;
@@ -60,5 +60,5 @@ function getLineEl(dbg, line) {
 
 function addBreakpointViaGutter(dbg, line) {
   clickGutter(dbg, line);
-  return waitForDispatch(dbg, "SET_BREAKPOINT");
+  return waitForDispatch(dbg.store, "SET_BREAKPOINT");
 }

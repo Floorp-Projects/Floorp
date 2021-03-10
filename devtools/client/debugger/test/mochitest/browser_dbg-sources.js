@@ -30,7 +30,7 @@ add_task(async function() {
   await clickElement(dbg, "sourceDirectoryLabel", 4);
   await assertSourceCount(dbg, 9);
 
-  const selected = waitForDispatch(dbg, "SET_SELECTED_LOCATION");
+  const selected = waitForDispatch(dbg.store, "SET_SELECTED_LOCATION");
   await clickElement(dbg, "sourceNode", 5);
   await selected;
   await waitForSelectedSource(dbg, "nested-source.js");

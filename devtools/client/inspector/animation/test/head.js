@@ -504,7 +504,7 @@ const mouseOutOnTargetNode = function(animationInspector, panel, index) {
  */
 const selectAnimationInspector = async function(inspector) {
   await inspector.toolbox.selectTool("inspector");
-  const onDispatched = waitForDispatch(inspector, "UPDATE_ANIMATIONS");
+  const onDispatched = waitForDispatch(inspector.store, "UPDATE_ANIMATIONS");
   inspector.sidebar.select("animationinspector");
   await onDispatched;
   await waitForRendering(inspector.getPanel("animationinspector"));
@@ -532,7 +532,7 @@ const selectNodeAndWaitForAnimations = async function(
   // We want to make sure the rest of the test waits for the animations to
   // be properly displayed (wait for all target DOM nodes to be previewed).
   selectNode(data, inspector, reason);
-  await waitForDispatch(inspector, "UPDATE_ANIMATIONS");
+  await waitForDispatch(inspector.store, "UPDATE_ANIMATIONS");
   await waitForRendering(inspector.getPanel("animationinspector"));
 };
 
@@ -704,51 +704,6 @@ const waitForRendering = async function(animationInspector) {
     waitForAnimationDetail(animationInspector),
   ]);
 };
-
-// Wait until an action of `type` is dispatched. If it's part of an
-// async operation, wait until the `status` field is "done" or "error"
-function _afterDispatchDone(store, type) {
-  return new Promise(resolve => {
-    store.dispatch({
-      // Normally we would use `services.WAIT_UNTIL`, but use the
-      // internal name here so tests aren't forced to always pass it
-      // in
-      type: "@@service/waitUntil",
-      predicate: action => {
-        if (action.type === type) {
-          return true;
-        }
-        return false;
-      },
-      run: (dispatch, getState, action) => {
-        resolve(action);
-      },
-    });
-  });
-}
-
-/**
- * Wait for a specific action type to be dispatch.
- * If an async action, will wait for it to be done.
- * This is a custom waitForDispatch, and rather than having a number to wait on
- * the function has a callback, that returns a number. This allows us to wait for
- * an unknown number of dispatches.
- *
- * @memberof mochitest/waits
- * @param {Object} inspector
- * @param {String} type
- * @param {Function} repeat
- * @return {Promise}
- * @static
- */
-async function waitForDispatch(inspector, type, repeat = () => 1) {
-  let count = 0;
-
-  while (count < repeat()) {
-    await _afterDispatchDone(inspector.store, type);
-    count++;
-  }
-}
 
 /**
  * Wait for rendering of animation keyframes.

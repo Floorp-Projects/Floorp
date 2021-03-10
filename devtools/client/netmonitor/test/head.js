@@ -766,27 +766,6 @@ function verifyRequestItemTarget(
 }
 
 /**
- * Wait for an action of the provided type to be dispatched on the provided
- * store.
- *
- * @param {Object} store
- *        The redux store (wait-service middleware required).
- * @param {String} type
- *        Type of the action to wait for.
- */
-function waitForDispatch(store, type) {
-  return new Promise(resolve => {
-    store.dispatch({
-      type: "@@service/waitUntil",
-      predicate: action => action.type === type,
-      run: (dispatch, getState, action) => {
-        resolve(action);
-      },
-    });
-  });
-}
-
-/**
  * Tests if a button for a filter of given type is the only one checked.
  *
  * @param string filterType

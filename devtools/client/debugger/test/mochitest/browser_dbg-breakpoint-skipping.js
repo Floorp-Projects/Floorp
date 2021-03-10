@@ -33,7 +33,7 @@ add_task(async function() {
   await waitForState(dbg, state => dbg.selectors.getSkipPausing());
   toggleBreakpoint(dbg, 0);
   await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
-  await waitForDispatch(dbg, "SET_BREAKPOINT");
+  await waitForDispatch(dbg.store, "SET_BREAKPOINT");
   invokeInTab("simple");
   await waitForPaused(dbg);
   resume(dbg);
@@ -54,14 +54,14 @@ add_task(async function() {
   await skipPausing(dbg);
   const source = findSource(dbg, "simple3.js");
   removeBreakpoint(dbg, source.id, 3);
-  const wait = waitForDispatch(dbg, "TOGGLE_SKIP_PAUSING");
+  const wait = waitForDispatch(dbg.store, "TOGGLE_SKIP_PAUSING");
   await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
   await wait;
   invokeInTab("simple");
   await waitForPaused(dbg);
   // Unfortunately required as the test harness throws if preview doesn't
   // complete before the end of the test.
-  await waitForDispatch(dbg, "ADD_INLINE_PREVIEW");
+  await waitForDispatch(dbg.store, "ADD_INLINE_PREVIEW");
   resume(dbg);
   ok(true, "Breakpoint is hit after a breakpoint was removed");
 });
@@ -79,7 +79,7 @@ function toggleBreakpoint(dbg, index) {
 }
 
 async function disableBreakpoint(dbg, index) {
-  const disabled = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const disabled = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   toggleBreakpoint(dbg, index);
   await disabled;
 }

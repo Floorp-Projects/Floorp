@@ -43,7 +43,7 @@ add_task(async function() {
 
   const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-scripts.html", "jsdebugger");
   const dbg = createDebuggerContext(toolbox);
-  const onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT", 2);
+  const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
 
   // Pending breakpoints are installed asynchronously, keep invoking the entry
   // function until the debugger pauses.

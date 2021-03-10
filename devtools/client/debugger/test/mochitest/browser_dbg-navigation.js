@@ -38,7 +38,7 @@ add_task(async function() {
 
   await waitForRequestsToSettle(dbg);
   // this test is intermittent without this
-  let onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
+  let onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...SOURCES);
   await onBreakpoint
   is(countSources(dbg), 5, "5 sources are loaded.");
@@ -46,7 +46,7 @@ add_task(async function() {
 
   await waitForRequestsToSettle(dbg);
   // this test is intermittent without this
-  onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
+  onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await navigate(dbg, "doc-scripts.html", ...SOURCES);
   await onBreakpoint
   is(countSources(dbg), 5, "5 sources are loaded.");
@@ -56,7 +56,7 @@ add_task(async function() {
 
   await waitForRequestsToSettle(dbg);
   // this test is intermittent without this
-  onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
+  onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await reload(dbg, "long.js");
   await onBreakpoint
   await waitForSelectedSource(dbg, "long.js");

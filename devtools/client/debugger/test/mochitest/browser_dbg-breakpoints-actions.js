@@ -35,7 +35,7 @@ add_task(async function() {
   // which promises get resolved. The problem seems to indicate a coverage gap
   // in waitUntilService(). Workaround this by only waiting for one dispatch,
   // though this is fragile and could break again in the future.
-  let dispatched = waitForDispatch(dbg, "SET_BREAKPOINT", /* 2*/ 1);
+  let dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT", /* 2*/ 1);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableOthers);
   await waitForState(dbg, state =>
     dbg.selectors
@@ -47,7 +47,7 @@ add_task(async function() {
 
   openFirstBreakpointContextMenu(dbg);
   // select "Disable All"
-  dispatched = waitForDispatch(dbg, "SET_BREAKPOINT");
+  dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableAll);
   await waitForState(dbg, state =>
     dbg.selectors.getBreakpointsList().every(bp => bp.disabled)
@@ -57,7 +57,7 @@ add_task(async function() {
 
   openFirstBreakpointContextMenu(dbg);
   // select "Enable Others"
-  dispatched = waitForDispatch(dbg, "SET_BREAKPOINT", 2);
+  dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.enableOthers);
   await waitForState(dbg, state =>
     dbg.selectors
@@ -69,7 +69,7 @@ add_task(async function() {
 
   openFirstBreakpointContextMenu(dbg);
   // select "Remove Others"
-  dispatched = waitForDispatch(dbg, "REMOVE_BREAKPOINT", 2);
+  dispatched = waitForDispatch(dbg.store, "REMOVE_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeOthers);
   await waitForState(
     dbg,

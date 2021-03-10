@@ -20,15 +20,15 @@ add_task(async function() {
   await waitForInlinePreviews(dbg);
 
   pressKey(dbg, "commandKeyDown");
-  await waitForDispatch(dbg, "HIGHLIGHT_CALLS");
+  await waitForDispatch(dbg.store, "HIGHLIGHT_CALLS");
   const calls = dbg.win.document.querySelectorAll(".highlight-function-calls");
   is(calls.length, 2);
 
   const funcB = calls[0];
   clickDOMElement(dbg, funcB);
-  await waitForDispatch(dbg, "RESUME");
+  await waitForDispatch(dbg.store, "RESUME");
   await waitForPaused(dbg);
-  assertDebugLine(dbg, 3, 2); 
+  assertDebugLine(dbg, 3, 2);
   const nocalls = dbg.win.document.querySelectorAll(".highlight-function-calls");
   is(nocalls.length, 0);
 });
