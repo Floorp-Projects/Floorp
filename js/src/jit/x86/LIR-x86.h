@@ -10,19 +10,22 @@
 namespace js {
 namespace jit {
 
-class LBoxFloatingPoint : public LInstructionHelper<2, 1, 1> {
+class LBoxFloatingPoint : public LInstructionHelper<2, 1, 2> {
   MIRType type_;
 
  public:
   LIR_HEADER(BoxFloatingPoint);
 
   LBoxFloatingPoint(const LAllocation& in, const LDefinition& temp,
-                    MIRType type)
+                    const LDefinition& spectreTemp, MIRType type)
       : LInstructionHelper(classOpcode), type_(type) {
     MOZ_ASSERT(IsFloatingPointType(type));
     setOperand(0, in);
     setTemp(0, temp);
+    setTemp(1, spectreTemp);
   }
+
+  const LDefinition* spectreTemp() { return getTemp(1); }
 
   MIRType type() const { return type_; }
   const char* extraName() const { return StringFromMIRType(type_); }

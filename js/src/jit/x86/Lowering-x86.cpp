@@ -45,8 +45,11 @@ void LIRGenerator::visitBox(MBox* box) {
 
   // If the box wrapped a double, it needs a new register.
   if (IsFloatingPointType(inner->type())) {
-    defineBox(new (alloc()) LBoxFloatingPoint(
-                  useRegisterAtStart(inner), tempCopy(inner, 0), inner->type()),
+    LDefinition spectreTemp =
+        JitOptions.spectreValueMasking ? temp() : LDefinition::BogusTemp();
+    defineBox(new (alloc()) LBoxFloatingPoint(useRegisterAtStart(inner),
+                                              tempCopy(inner, 0), spectreTemp,
+                                              inner->type()),
               box);
     return;
   }
