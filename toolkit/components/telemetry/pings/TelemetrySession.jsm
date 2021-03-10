@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
-  UITelemetry: "resource://gre/modules/UITelemetry.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryReportingPolicy:
     "resource://gre/modules/TelemetryReportingPolicy.jsm",
@@ -41,7 +40,6 @@ const REASON_ABORTED_SESSION = "aborted-session";
 const REASON_DAILY = "daily";
 const REASON_SAVED_SESSION = "saved-session";
 const REASON_GATHER_PAYLOAD = "gather-payload";
-const REASON_GATHER_SUBSESSION_PAYLOAD = "gather-subsession-payload";
 const REASON_TEST_PING = "test-ping";
 const REASON_ENVIRONMENT_CHANGE = "environment-change";
 const REASON_SHUTDOWN = "shutdown";
@@ -714,17 +712,6 @@ var Impl = {
       payloadObj.addonDetails = protect(() =>
         AddonManagerPrivate.getTelemetryDetails()
       );
-
-      let clearUIsession = !(
-        reason == REASON_GATHER_PAYLOAD ||
-        reason == REASON_GATHER_SUBSESSION_PAYLOAD
-      );
-
-      if (AppConstants.platform == "android") {
-        payloadObj.UIMeasurements = protect(() =>
-          UITelemetry.getUIMeasurements(clearUIsession)
-        );
-      }
 
       if (
         this._slowSQLStartup &&
