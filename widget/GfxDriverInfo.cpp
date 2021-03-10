@@ -534,14 +534,12 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0122);
       APPEND_DEVICE(0x0126);
 
-#ifdef EARLY_BETA_OR_EARLIER
       // ivybridge gen7 baytrail
       APPEND_DEVICE(0x0f30);
       APPEND_DEVICE(0x0f31);
       APPEND_DEVICE(0x0f33);
       APPEND_DEVICE(0x0155);
       APPEND_DEVICE(0x0157);
-#endif
 
       // ivybridge gen7 gt1
       APPEND_DEVICE(0x0152);
