@@ -207,7 +207,7 @@ var UpdateUtils = {
    *         Otherwise, false.
    */
   appUpdateAutoSettingIsLocked() {
-    return appUpdateSettingIsLocked("app.update.auto");
+    return this.appUpdateSettingIsLocked("app.update.auto");
   },
 
   /**
@@ -384,7 +384,7 @@ var UpdateUtils = {
       );
     }
 
-    if (appUpdateSettingIsLocked(prefName)) {
+    if (this.appUpdateSettingIsLocked(prefName)) {
       return Promise.reject(
         `UpdateUtils.writeUpdateConfigSetting: Unable to change value of ` +
           `setting '${prefName}' because it is locked by policy`
@@ -466,6 +466,30 @@ var UpdateUtils = {
     updateConfigIOPromise = writePromise;
     return writePromise;
   },
+
+  /**
+   * Returns true if the specified pref is controlled by policy and thus should
+   * not be changeable by the user.
+   */
+  appUpdateSettingIsLocked(prefName) {
+    if (!(prefName in UpdateUtils.PER_INSTALLATION_PREFS)) {
+      return Promise.reject(
+        `UpdateUtils.appUpdateSettingIsLocked: Unknown per-installation pref '${prefName}'`
+      );
+    }
+
+    // If we don't have policy support, nothing can be locked.
+    if (!Services.policies) {
+      return false;
+    }
+
+    const pref = UpdateUtils.PER_INSTALLATION_PREFS[prefName];
+    if (!pref.policyFn) {
+      return false;
+    }
+    const policyValue = pref.policyFn();
+    return policyValue !== null;
+  },
 };
 
 const PER_INSTALLATION_DEFAULTS_BRANCH = "__DEFAULTS__";
@@ -521,6 +545,22 @@ UpdateUtils.PER_INSTALLATION_PREFS = {
       }
       if (!Services.policies.isAllowed("app-auto-updates-on")) {
         // We aren't allowed to turn on auto-update - it is forced off.
+        return false;
+      }
+      return null;
+    },
+  },
+  "app.update.background.enabled": {
+    type: UpdateUtils.PER_INSTALLATION_PREF_TYPE_BOOL,
+    defaultValue: true,
+    observerTopic: "background-update-config-change",
+    policyFn: () => {
+      if (!Services.policies.isAllowed("app-background-update-off")) {
+        // We aren't allowed to turn off background update - it is forced on.
+        return true;
+      }
+      if (!Services.policies.isAllowed("app-background-update-on")) {
+        // We aren't allowed to turn on background update - it is forced off.
         return false;
       }
       return null;
@@ -757,30 +797,6 @@ function readDefaultValue(config, prefName) {
     }
   }
   return pref.defaultValue;
-}
-
-/**
- * Returns true if the specified pref is controlled by policy and thus should
- * not be changeable by the user.
- */
-function appUpdateSettingIsLocked(prefName) {
-  if (!(prefName in UpdateUtils.PER_INSTALLATION_PREFS)) {
-    return Promise.reject(
-      `appUpdateSettingIsLocked: Unknown per-installation pref '${prefName}'`
-    );
-  }
-
-  // If we don't have policy support, nothing can be locked.
-  if (!Services.policies) {
-    return false;
-  }
-
-  const pref = UpdateUtils.PER_INSTALLATION_PREFS[prefName];
-  if (!pref.policyFn) {
-    return false;
-  }
-  const policyValue = pref.policyFn();
-  return policyValue !== null;
 }
 
 /**
