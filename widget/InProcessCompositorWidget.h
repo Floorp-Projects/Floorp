@@ -41,6 +41,12 @@ class InProcessCompositorWidget : public CompositorWidget {
 
  protected:
   nsBaseWidget* mWidget;
+  // Bug 1679368: Maintain an additional widget pointer, constant, and
+  // function for sanity checking while we chase a crash.
+  static const char* CANARY_VALUE;
+  const char* mCanary;
+  nsBaseWidget* mWidgetSanity;
+  void CheckWidgetSanity();
 };
 
 }  // namespace widget
