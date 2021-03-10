@@ -29,11 +29,11 @@ function getThisFrameSubMenu(base_menu) {
 }
 
 add_task(async function init() {
-  // Ensure screenshots is really disabled (bug 1498738).
-  const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
-  await addon.disable({ allowSystemAddons: true });
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.separatePrivateDefault.ui.enabled", true]],
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["extensions.screenshots.disabled", false],
+    ],
   });
 });
 
@@ -162,12 +162,14 @@ add_task(async function test_plaintext() {
     true,
     "---",
     null,
+    "context-take-screenshot",
+    true,
+    "---",
+    null,
     "context-viewsource",
     true,
   ];
-  await test_contextmenu("#test-text", plainTextItems, {
-    maybeScreenshotsPresent: true,
-  });
+  await test_contextmenu("#test-text", plainTextItems);
 });
 
 add_task(async function test_link() {
@@ -301,22 +303,20 @@ add_task(async function test_image() {
 });
 
 add_task(async function test_canvas() {
-  await test_contextmenu(
-    "#test-canvas",
-    [
-      "context-viewimage",
-      true,
-      "context-saveimage",
-      true,
-      "---",
-      null,
-      "context-selectall",
-      true,
-    ],
-    {
-      maybeScreenshotsPresent: true,
-    }
-  );
+  await test_contextmenu("#test-canvas", [
+    "context-viewimage",
+    true,
+    "context-saveimage",
+    true,
+    "---",
+    null,
+    "context-selectall",
+    true,
+    "---",
+    null,
+    "context-take-screenshot",
+    true,
+  ]);
 });
 
 add_task(async function test_video_ok() {
@@ -1050,7 +1050,7 @@ add_task(async function test_pdf_viewer_in_iframe() {
       "context-viewsource",
       true,
     ],
-    { maybeScreenshotsPresent: true, shiftkey: true }
+    { shiftkey: true }
   );
 });
 
@@ -1117,9 +1117,7 @@ add_task(async function test_textarea_spellcheck() {
 });
 
 add_task(async function test_plaintext2() {
-  await test_contextmenu("#test-text", plainTextItems, {
-    maybeScreenshotsPresent: true,
-  });
+  await test_contextmenu("#test-text", plainTextItems);
 });
 
 add_task(async function test_undo_add_to_dictionary() {
@@ -1291,6 +1289,10 @@ add_task(async function test_pagemenu() {
       true,
       "---",
       null,
+      "context-take-screenshot",
+      true,
+      "---",
+      null,
       "context-viewsource",
       true,
     ],
@@ -1314,7 +1316,6 @@ add_task(async function test_pagemenu() {
           }
         );
       },
-      maybeScreenshotsPresent: true,
     }
   );
 });
@@ -1357,11 +1358,14 @@ add_task(async function test_dom_full_screen() {
       true,
       "---",
       null,
+      "context-take-screenshot",
+      true,
+      "---",
+      null,
       "context-viewsource",
       true,
     ],
     {
-      maybeScreenshotsPresent: true,
       shiftkey: true,
       async preCheckContextMenuFn() {
         await SpecialPowers.pushPrefEnv({
@@ -1442,10 +1446,14 @@ add_task(async function test_pagemenu2() {
       true,
       "---",
       null,
+      "context-take-screenshot",
+      true,
+      "---",
+      null,
       "context-viewsource",
       true,
     ],
-    { maybeScreenshotsPresent: true, shiftkey: true }
+    { shiftkey: true }
   );
 });
 
@@ -1466,6 +1474,10 @@ add_task(async function test_select_text() {
       "---",
       null,
       "context-print-selection",
+      true,
+      "---",
+      null,
+      "context-take-screenshot",
       true,
       "---",
       null,
@@ -1495,6 +1507,10 @@ add_task(async function test_select_text_search_service_not_initialized() {
       "---",
       null,
       "context-print-selection",
+      true,
+      "---",
+      null,
+      "context-take-screenshot",
       true,
       "---",
       null,
@@ -2051,6 +2067,10 @@ add_task(async function test_background_image() {
     true,
     "---",
     null,
+    "context-take-screenshot",
+    true,
+    "---",
+    null,
     "context-viewsource",
     true,
   ]);
@@ -2107,6 +2127,10 @@ add_task(async function test_background_image() {
       "---",
       null,
       "context-print-selection",
+      true,
+      "---",
+      null,
+      "context-take-screenshot",
       true,
       "---",
       null,

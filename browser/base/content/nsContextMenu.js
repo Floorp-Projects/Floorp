@@ -334,6 +334,7 @@ class nsContextMenu {
     this.initPasswordManagerItems();
     this.initSyncItems();
     this.initViewSourceItems();
+    this.initScreenshotItem();
 
     this.showHideSeparators(aXulMenu);
     if (!aXulMenu.showHideSeparators) {
@@ -1083,6 +1084,28 @@ class nsContextMenu {
     }
   }
 
+  initScreenshotItem() {
+    // About pages other than about:reader are not currently supported by
+    // screenshots (see Bug 1620992)
+    let uri = this.contentData?.documentURIObject;
+    let shouldShow =
+      !screenshotsDisabled &&
+      (uri.scheme != "about" || uri.spec.startsWith("about:reader")) &&
+      this.inTabBrowser &&
+      !this.onTextInput &&
+      !this.onLink &&
+      !this.onPlainTextLink &&
+      !this.onImage &&
+      !this.onVideo &&
+      !this.onAudio &&
+      !this.onEditable &&
+      !this.onPassword &&
+      !this.inFrame;
+
+    this.showItem("context-sep-screenshots", shouldShow);
+    this.showItem("context-take-screenshot", shouldShow);
+  }
+
   openPasswordManager() {
     LoginHelper.openPasswordManager(window, {
       entryPoint: "contextmenu",
@@ -1242,6 +1265,10 @@ class nsContextMenu {
       referrerInfo: this.contentData.frameReferrerInfo,
       triggeringPrincipal: this.browser.contentPrincipal,
     });
+  }
+
+  takeScreenshot() {
+    Services.obs.notifyObservers(null, "contextmenu-screenshot");
   }
 
   // View Partial Source
@@ -2145,3 +2172,10 @@ XPCOMUtils.defineLazyModuleGetters(nsContextMenu, {
   LoginManagerContextMenu: "resource://gre/modules/LoginManagerContextMenu.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "screenshotsDisabled",
+  "extensions.screenshots.disabled",
+  false
+);

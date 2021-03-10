@@ -10,10 +10,20 @@ ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionCommon",
+  "resource://gre/modules/ExtensionCommon.jsm"
+);
+
+const TOPIC = "contextmenu-screenshot";
 
 this.screenshots = class extends ExtensionAPI {
   getAPI(context) {
-    const {extension} = context;
+    const { extension } = context;
+    const { tabManager } = extension;
+    let EventManager = ExtensionCommon.EventManager;
+
     return {
       experiments: {
         screenshots: {
@@ -40,6 +50,20 @@ this.screenshots = class extends ExtensionAPI {
           isUploadDisabled() {
             return Services.prefs.getBoolPref("extensions.screenshots.upload-disabled", false);
           },
+          onScreenshotCommand: new EventManager({
+            context,
+            name: "experiments.screenshots.onScreenshotCommand",
+            register: fire => {
+              let observer = () => {
+                fire.sync();
+              };
+              Services.obs.addObserver(observer, TOPIC);
+
+              return () => {
+                Services.obs.removeObserver(observer, TOPIC);
+              };
+            },
+          }).api(),
         },
       },
     };

@@ -14,10 +14,6 @@ add_task(async function test_setup() {
   const contextmenu_common = chrome_base + "contextmenu_common.js";
   /* import-globals-from contextmenu_common.js */
   Services.scriptloader.loadSubScript(contextmenu_common, this);
-
-  // Ensure screenshots is really disabled (bug 1498738)
-  const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
-  await addon.disable({ allowSystemAddons: true });
 });
 
 add_task(async function test_text_input() {
@@ -229,10 +225,6 @@ add_task(
           true,
         ],
         {
-          // XXX Bug 1345081. Currently the Screenshots menu option is shown for
-          // various text elements even though it is set to type "page". That bug
-          // should remove the need for next line.
-          maybeScreenshotsPresent: true,
           skipFocusChange: true,
         }
       );
@@ -305,10 +297,6 @@ add_task(async function test_text_input_readonly() {
       null,
     ],
     {
-      // XXX Bug 1345081. Currently the Screenshots menu option is shown for
-      // various text elements even though it is set to type "page". That bug
-      // should remove the need for next line.
-      maybeScreenshotsPresent: true,
       skipFocusChange: true,
     }
   );

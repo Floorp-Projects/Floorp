@@ -376,6 +376,10 @@ main-context-menu-view-selection-source =
     .label = View Selection Source
     .accesskey = e
 
+main-context-menu-take-screenshot =
+    .label = Take Screenshot
+    .accesskey = T
+
 main-context-menu-view-page-source =
     .label = View Page Source
     .accesskey = V
