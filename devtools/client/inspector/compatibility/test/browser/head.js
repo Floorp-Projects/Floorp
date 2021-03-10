@@ -163,22 +163,3 @@ function waitForUpdateSelectedNodeAction(store) {
 function waitForUpdateTopLevelTargetAction(store) {
   return waitForDispatch(store, COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE);
 }
-
-/**
- * Return a promise which waits for given action type.
- *
- * @param {Object} store
- * @param {Object} type
- * @return {Promise}
- */
-function waitForDispatch(store, type) {
-  return new Promise(resolve => {
-    store.dispatch({
-      type: "@@service/waitUntil",
-      predicate: action => action.type === type,
-      run: (dispatch, getState, action) => {
-        resolve(action);
-      },
-    });
-  });
-}

@@ -61,7 +61,7 @@ add_task(async function() {
 
   // Test that we don't pause on event breakpoints when source is blackboxed.
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg, "BLACKBOX");
+  await waitForDispatch(dbg.store, "BLACKBOX");
 
   invokeInTab("clickHandler");
   is(isPaused(dbg), false);
@@ -74,7 +74,7 @@ add_task(async function() {
 
   // Cleanup - unblackbox the source
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg, "BLACKBOX");
+  await waitForDispatch(dbg.store, "BLACKBOX");
 });
 
 function assertPauseLocation(dbg, line, url = "event-breakpoints.js") {

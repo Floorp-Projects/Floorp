@@ -11,7 +11,7 @@ add_task(async function() {
 
     // MAP_FRAMES triggers a new Scopes panel render cycle, which introduces
     // a race condition with the click event on the foo node.
-    waitForDispatch(dbg, "MAP_FRAMES"),
+    waitForDispatch(dbg.store, "MAP_FRAMES"),
   ]);
   invokeInTab("firstCall");
   await ready;

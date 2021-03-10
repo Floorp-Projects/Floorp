@@ -136,7 +136,7 @@ async function addXHRBreakpoint(dbg, text, method) {
 
   pressKey(dbg, "Enter");
 
-  await waitForDispatch(dbg, "SET_XHR_BREAKPOINT");
+  await waitForDispatch(dbg.store, "SET_XHR_BREAKPOINT");
 }
 
 async function removeXHRBreakpoint(dbg, index) {
@@ -149,7 +149,7 @@ async function removeXHRBreakpoint(dbg, index) {
     closeButtons[index].click();
   }
 
-  await waitForDispatch(dbg, "REMOVE_XHR_BREAKPOINT");
+  await waitForDispatch(dbg.store, "REMOVE_XHR_BREAKPOINT");
 }
 
 function getXHRBreakpointsElements(dbg) {
@@ -171,5 +171,5 @@ function getXHRBreakpointCheckbox(dbg) {
 
 async function clickPauseOnAny(dbg, expectedEvent) {
   getXHRBreakpointCheckbox(dbg).click();
-  await waitForDispatch(dbg, expectedEvent);
+  await waitForDispatch(dbg.store, expectedEvent);
 }

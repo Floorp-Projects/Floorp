@@ -49,7 +49,7 @@ async function addExpression(dbg, input) {
     plusIcon.click();
   }
 
-  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
+  const evaluation = waitForDispatch(dbg.store, "EVALUATE_EXPRESSION");
   findElementWithSelector(dbg, EXPRESSION_SELECTORS.input).focus();
   type(dbg, input);
   pressKey(dbg, "Enter");

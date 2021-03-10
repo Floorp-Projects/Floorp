@@ -23,7 +23,7 @@ add_task(async function() {
   await selectSource(dbg, "simple2.js");
   await addBreakpoint(dbg, "simple2.js", 7);
 
-  const onBreakpoint = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   info("Reload the page to hit the breakpoint on load");
   await reload(dbg);
   await onBreakpoint

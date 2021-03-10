@@ -72,16 +72,13 @@ add_task(async function() {
 
   await updateSelectedTab(newNavigator.gBrowser, newTestTab, store);
 
-  let onTabsSuccess = aboutDebugging_waitForDispatch(
-    store,
-    "REQUEST_TABS_SUCCESS"
-  );
+  let onTabsSuccess = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
   clickInspectButton(inspectionTarget, document);
   assertDevtoolsToolboxTabState(devtoolsURL);
   await onTabsSuccess;
 
   info("Close new navigator and wait until the debug target disappears");
-  onTabsSuccess = aboutDebugging_waitForDispatch(store, "REQUEST_TABS_SUCCESS");
+  onTabsSuccess = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   newNavigator.close();
   await onToolboxDestroyed;

@@ -23,7 +23,8 @@ add_task(async function() {
 
   info("Navigate to a page that runs in the content process");
   // Wait for the DOM panel to refresh.
-  const onPropertiesFetched = waitForDispatch(panel, "FETCH_PROPERTIES");
+  const store = getReduxStoreFromPanel(panel);
+  const onPropertiesFetched = waitForDispatch(store, "FETCH_PROPERTIES");
   // Also wait for the toolbox to switch to the new target, to avoid hanging requests when
   // the test ends.
   await navigateTo(CONTENT_PROCESS_URI);

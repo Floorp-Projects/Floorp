@@ -143,7 +143,7 @@ function getPageValue(tab) {
 }
 
 async function reloadTabAndDebugger(tab, dbg) {
-  let navigated = waitForDispatch(dbg, "NAVIGATE");
+  let navigated = waitForDispatch(dbg.store, "NAVIGATE");
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await reload(dbg, "inline-cache.html");
   return Promise.all([navigated, loaded]);
