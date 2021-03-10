@@ -67,7 +67,8 @@ class IPCServerCertVerificationResult final
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
                 uint32_t aCollectedErrors,
-                bool aIsBuiltCertChainRootBuiltInRoot) override;
+                bool aIsBuiltCertChainRootBuiltInRoot,
+                uint32_t aProviderFlags) override;
 
  private:
   ~IPCServerCertVerificationResult() = default;
@@ -81,7 +82,7 @@ void IPCServerCertVerificationResult::Dispatch(
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
-    bool aIsBuiltCertChainRootBuiltInRoot) {
+    bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
   nsTArray<ByteArray> builtCertChain;
   if (aSucceeded) {
     for (auto& cert : aBuiltChain) {
@@ -94,7 +95,18 @@ void IPCServerCertVerificationResult::Dispatch(
           "psm::VerifySSLServerCertParent::OnVerifiedSSLServerCert",
           [parent(mParent), builtCertChain{std::move(builtCertChain)},
            aCertificateTransparencyStatus, aEVStatus, aSucceeded, aFinalError,
-           aCollectedErrors, aIsBuiltCertChainRootBuiltInRoot]() {
+           aCollectedErrors, aIsBuiltCertChainRootBuiltInRoot,
+           aProviderFlags]() {
+            if (aSucceeded &&
+                !(aProviderFlags & nsISocketProvider::NO_PERMANENT_STORAGE)) {
+              nsTArray<nsTArray<uint8_t>> certBytesArray;
+              for (const auto& cert : builtCertChain) {
+                certBytesArray.AppendElement(cert.data().Clone());
+              }
+              // This dispatches an event that will run when the socket thread
+              // is idle.
+              SaveIntermediateCerts(certBytesArray);
+            }
             parent->OnVerifiedSSLServerCert(
                 builtCertChain, aCertificateTransparencyStatus,
                 static_cast<uint8_t>(aEVStatus), aSucceeded, aFinalError,

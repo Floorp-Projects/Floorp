@@ -29,7 +29,7 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
   explicit VerifySSLServerCertChild(
       const UniqueCERTCertificate& aCert,
       SSLServerCertVerificationResult* aResultTask,
-      nsTArray<nsTArray<uint8_t>>&& aPeerCertChain);
+      nsTArray<nsTArray<uint8_t>>&& aPeerCertChain, uint32_t aProviderFlags);
 
   ipc::IPCResult RecvOnVerifiedSSLServerCertSuccess(
       nsTArray<ByteArray>&& aBuiltCertChain,
@@ -45,6 +45,7 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
   UniqueCERTCertificate mCert;
   RefPtr<SSLServerCertVerificationResult> mResultTask;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
+  uint32_t mProviderFlags;
 };
 
 SECStatus RemoteProcessCertVerification(

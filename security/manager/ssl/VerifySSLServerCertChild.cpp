@@ -21,10 +21,11 @@ namespace psm {
 VerifySSLServerCertChild::VerifySSLServerCertChild(
     const UniqueCERTCertificate& aCert,
     SSLServerCertVerificationResult* aResultTask,
-    nsTArray<nsTArray<uint8_t>>&& aPeerCertChain)
+    nsTArray<nsTArray<uint8_t>>&& aPeerCertChain, uint32_t aProviderFlags)
     : mCert(CERT_DupCertificate(aCert.get())),
       mResultTask(aResultTask),
-      mPeerCertChain(std::move(aPeerCertChain)) {}
+      mPeerCertChain(std::move(aPeerCertChain)),
+      mProviderFlags(aProviderFlags) {}
 
 ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
     nsTArray<ByteArray>&& aBuiltCertChain,
@@ -43,7 +44,7 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
   mResultTask->Dispatch(nsc, std::move(certBytesArray),
                         std::move(mPeerCertChain), aCertTransparencyStatus,
                         static_cast<EVStatus>(aEVStatus), true, 0, 0,
-                        aIsBuiltCertChainRootBuiltInRoot);
+                        aIsBuiltCertChainRootBuiltInRoot, mProviderFlags);
   return IPC_OK();
 }
 
@@ -59,7 +60,8 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
   mResultTask->Dispatch(
       nsc, nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      EVStatus::NotEV, false, aFinalError, aCollectedErrors, false);
+      EVStatus::NotEV, false, aFinalError, aCollectedErrors, false,
+      mProviderFlags);
   return IPC_OK();
 }
 
@@ -111,7 +113,7 @@ SECStatus RemoteProcessCertVerification(
   }
 
   RefPtr<VerifySSLServerCertChild> authCert = new VerifySSLServerCertChild(
-      aCert, aResultTask, std::move(aPeerCertChain));
+      aCert, aResultTask, std::move(aPeerCertChain), aProviderFlags);
   if (!actorChild->SendPVerifySSLServerCertConstructor(
           authCert, serverCertSerialized, peerCertBytes,
           PromiseFlatCString(aHostName), aPort, aOriginAttributes,

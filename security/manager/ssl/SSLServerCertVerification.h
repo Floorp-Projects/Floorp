@@ -50,7 +50,8 @@ class BaseSSLServerCertVerificationResult {
                         uint16_t aCertificateTransparencyStatus,
                         EVStatus aEVStatus, bool aSucceeded,
                         PRErrorCode aFinalError, uint32_t aCollectedErrors,
-                        bool aIsBuiltCertChainRootBuiltInRoot) = 0;
+                        bool aIsBuiltCertChainRootBuiltInRoot,
+                        uint32_t aProviderFlags) = 0;
 };
 
 // Dispatched to the STS thread to notify the infoObject of the verification
@@ -74,7 +75,8 @@ class SSLServerCertVerificationResult final
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
                 uint32_t aCollectedErrors,
-                bool aIsBuiltCertChainRootBuiltInRoot) override;
+                bool aIsBuiltCertChainRootBuiltInRoot,
+                uint32_t aProviderFlags) override;
 
  private:
   ~SSLServerCertVerificationResult() = default;
@@ -89,6 +91,7 @@ class SSLServerCertVerificationResult final
   PRErrorCode mFinalError;
   uint32_t mCollectedErrors;
   bool mIsBuiltCertChainRootBuiltInRoot;
+  uint32_t mProviderFlags;
 };
 
 class SSLServerCertVerificationJob : public Runnable {
