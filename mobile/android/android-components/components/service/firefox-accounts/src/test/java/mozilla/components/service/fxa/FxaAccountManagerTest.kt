@@ -11,7 +11,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AccessTokenInfo
-import mozilla.components.concept.sync.AccessType
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.MigratingAccountInfo
@@ -703,10 +702,6 @@ class FxaAccountManagerTest {
 
         override suspend fun getProfile(ignoreCache: Boolean): Profile? {
             return profile
-        }
-
-        override suspend fun authorizeOAuthCode(clientId: String, scopes: Array<String>, state: String, accessType: AccessType): String? {
-            return "123abc"
         }
 
         override fun getCurrentDeviceId(): String? {

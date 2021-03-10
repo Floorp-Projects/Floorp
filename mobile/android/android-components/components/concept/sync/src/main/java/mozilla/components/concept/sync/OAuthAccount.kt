@@ -8,17 +8,6 @@ import kotlinx.coroutines.Deferred
 import org.json.JSONObject
 
 /**
- * The access-type determines whether the code can be exchanged for a refresh token for
- * offline use or not.
- *
- * @property msg string value of the access-type
- */
-enum class AccessType(val msg: String) {
-    ONLINE("online"),
-    OFFLINE("offline")
-}
-
-/**
  * An object that represents a login flow initiated by [OAuthAccount].
  * @property state OAuth state parameter, identifying a specific authentication flow.
  * This string is randomly generated during [OAuthAccount.beginOAuthFlow] and [OAuthAccount.beginPairingFlow].
@@ -100,23 +89,6 @@ interface OAuthAccount : AutoCloseable {
      * @return Current account's session token, if available. `null` otherwise.
      */
     fun getSessionToken(): String?
-
-    /**
-     * Provisions a scoped OAuth code for a given [clientId] and the passed [scopes].
-     *
-     * @param clientId the client id string
-     * @param scopes the list of scopes to request access to
-     * @param state the state token string
-     * @param accessType the accessType method to be used by the returned code, determines whether
-     * the code can be exchanged for a refresh token to be used offline or not
-     * @return Deferred authorized auth code string, or `null` in case of failure.
-     */
-    suspend fun authorizeOAuthCode(
-        clientId: String,
-        scopes: Array<String>,
-        state: String,
-        accessType: AccessType = AccessType.ONLINE
-    ): String?
 
     /**
      * Fetches the profile object for the current client either from the existing cached state
