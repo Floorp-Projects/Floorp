@@ -8,14 +8,8 @@ package org.mozilla.gecko;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.net.MalformedURLException;
 import java.net.Proxy;
-import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,7 +25,6 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
-import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.R;
@@ -838,24 +831,6 @@ public class GeckoAppShell {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static String[] getHandlersForMimeType(final String aMimeType, final String aAction) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return new String[] {};
-        }
-        return geckoInterface.getHandlersForMimeType(aMimeType, aAction);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static String[] getHandlersForURL(final String aURL, final String aAction) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return new String[] {};
-        }
-        return geckoInterface.getHandlersForURL(aURL, aAction);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
     private static boolean hasHWVP8Encoder() {
         return HardwareCodecCapabilityUtils.hasHWVP8(true /* aIsEncoder */);
     }
@@ -908,26 +883,6 @@ public class GeckoAppShell {
         if (subType == null)
             subType = "*";
         return type + "/" + subType;
-    }
-
-    @SuppressWarnings("try")
-    @WrapForJNI(calledFrom = "gecko")
-    private static boolean openUriExternal(final String targetURI,
-                                           final String mimeType,
-                                           final String packageName,
-                                           final String className,
-                                           final String action,
-                                           final String title) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return false;
-        }
-        // Bug 1450449 - Downloaded files already are already in a public directory and aren't
-        // really owned exclusively by Firefox, so there's no real benefit to using
-        // content:// URIs here.
-        try (StrictModeContext unused = StrictModeContext.allowAllVmPolicies()) {
-            return geckoInterface.openUriExternal(targetURI, mimeType, packageName, className, action, title);
-        }
     }
 
     @WrapForJNI(dispatchTo = "gecko")
@@ -1434,23 +1389,6 @@ public class GeckoAppShell {
         sApplicationContext = context;
     }
 
-    public interface GeckoInterface {
-        public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title);
-
-        public String[] getHandlersForMimeType(String mimeType, String action);
-        public String[] getHandlersForURL(String url, String action);
-    };
-
-    private static GeckoInterface sGeckoInterface;
-
-    public static GeckoInterface getGeckoInterface() {
-        return sGeckoInterface;
-    }
-
-    public static void setGeckoInterface(final GeckoInterface aGeckoInterface) {
-        sGeckoInterface = aGeckoInterface;
-    }
-
     /* package */ static Camera sCamera;
 
     private static final int kPreferredFPS = 25;
@@ -1685,106 +1623,6 @@ public class GeckoAppShell {
         }
 
         return "DIRECT";
-    }
-
-    @WrapForJNI
-    private static InputStream createInputStream(final URLConnection connection)
-            throws IOException {
-        return connection.getInputStream();
-    }
-
-    private static class BitmapConnection extends URLConnection {
-        private Bitmap mBitmap;
-
-        BitmapConnection(final Bitmap b) throws MalformedURLException, IOException {
-            super(null);
-            mBitmap = b;
-        }
-
-        @Override
-        public void connect() {}
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            return new BitmapInputStream();
-        }
-
-        @Override
-        public String getContentType() {
-            return "image/png";
-        }
-
-        private final class BitmapInputStream extends PipedInputStream {
-            private boolean mHaveConnected = false;
-
-            @Override
-            public synchronized int read(final byte[] buffer, final int byteOffset,
-                                         final int byteCount) throws IOException {
-                if (mHaveConnected) {
-                    return super.read(buffer, byteOffset, byteCount);
-                }
-
-                final PipedOutputStream output = new PipedOutputStream();
-                connect(output);
-
-                ThreadUtils.postToBackgroundThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-                            } finally {
-                                IOUtils.safeStreamClose(output);
-                            }
-                        }
-                    });
-                mHaveConnected = true;
-                return super.read(buffer, byteOffset, byteCount);
-            }
-        }
-    }
-
-    @WrapForJNI
-    private static URLConnection getConnection(final String url) {
-        try {
-            String spec;
-            if (url.startsWith("android://")) {
-                spec = url.substring(10);
-            } else {
-                spec = url.substring(8);
-            }
-
-            // Check if we are loading a package icon.
-            try {
-                if (spec.startsWith("icon/")) {
-                    String[] splits = spec.split("/");
-                    if (splits.length != 2) {
-                        return null;
-                    }
-                    final String pkg = splits[1];
-                    final PackageManager pm = getApplicationContext().getPackageManager();
-                    final Drawable d = pm.getApplicationIcon(pkg);
-                    final Bitmap bitmap = getBitmapFromDrawable(d);
-                    return new BitmapConnection(bitmap);
-                }
-            } catch (Exception ex) {
-                Log.e(LOGTAG, "error", ex);
-            }
-
-            // if the colon got stripped, put it back
-            int colon = spec.indexOf(':');
-            if (colon == -1 || colon > spec.indexOf('/')) {
-                spec = spec.replaceFirst("/", ":/");
-            }
-        } catch (Exception ex) {
-            return null;
-        }
-        return null;
-    }
-
-    @WrapForJNI
-    private static String connectionGetMimeType(final URLConnection connection) {
-        return connection.getContentType();
     }
 
     @WrapForJNI(calledFrom = "gecko")
