@@ -6,17 +6,6 @@
 
 interface mozIDOMWindowProxy;
 
-[scriptable, uuid(e8420a7b-659b-4325-968b-a114a6a067aa)]
-interface nsIBrowserTab : nsISupports {
-  readonly attribute mozIDOMWindowProxy window;
-};
-
-[scriptable, uuid(0370450f-2e9c-4d16-b333-8ca6ce31a5ff)]
-interface nsIAndroidBrowserApp : nsISupports {
-  readonly attribute nsIBrowserTab selectedTab;
-  nsIBrowserTab getBrowserTab(in int32_t tabId);
-};
-
 [scriptable, uuid(e64c39b8-b8ec-477d-aef5-89d517ff9219)]
 interface nsIAndroidEventCallback : nsISupports
 {
@@ -65,9 +54,5 @@ interface nsIAndroidView : nsIAndroidEventDispatcher
 [scriptable, uuid(1beb70d3-70f3-4742-98cc-a3d301b26c0c)]
 interface nsIAndroidBridge : nsIAndroidEventDispatcher
 {
-  attribute nsIAndroidBrowserApp browserApp;
-  readonly attribute boolean isFennec;
-  void contentDocumentChanged(in mozIDOMWindowProxy window);
-  boolean isContentDocumentDisplayed(in mozIDOMWindowProxy window);
   nsIAndroidEventDispatcher getDispatcherByName(in string name);
 };
