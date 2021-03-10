@@ -20,8 +20,9 @@
   function getCharacterDims() {
     let span = document.getElementById("measure");
     let rect = span.getBoundingClientRect();
-    return { width: rect.right - rect.left,
-             height: rect.bottom - rect.top }; 
+    // Subtract 2 from each dimension because of 1px border on all sides
+    // of the frame.
+    return { width: rect.width - 2, height: rect.height - 2 }; 
   }
 
   function setStart(aDWU, aX, aY, aSelectType)
@@ -32,14 +33,14 @@
 
     // Select text
     let result = aDWU.selectAtPoint(aX, aY, aSelectType);
-    ok(result == true, "selectAtPoint secceeded?");
+    ok(result == true, "selectAtPoint succeeded?");
   }
 
   function setEnd(aDWU, aX, aY, aSelectType)
   {
     // Select text
     let result = aDWU.selectAtPoint(aX, aY, aSelectType);
-    ok(result == true, "selectAtPoint secceeded?");
+    ok(result == true, "selectAtPoint succeeded?");
   }
 
   function setSingle(aDWU, aX, aY, aSelectType, aSelectTypeStr, aExpectedSelectionText) {
@@ -49,7 +50,7 @@
 
     // Select text
     let result = aDWU.selectAtPoint(aX, aY, aSelectType);
-    ok(result == true, "selectAtPoint secceeded?");
+    ok(result == true, "selectAtPoint succeeded?");
   }
 
   function checkSelection(aDoc, aSelectTypeStr, aExpectedSelectionText) {
@@ -94,6 +95,7 @@
 
     let div = document.getElementById("div1");
     let rect = div.getBoundingClientRect();
+    rect.x += 1; rect.y += 1; rect.width -= 2; rect.height -= 2;  // remove border
 
     // Centered on the first character in the sentence div
     let targetPoint = { xPos: rect.left + (charDims.width / 2),
@@ -110,28 +112,24 @@
     setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
     checkSelection(document, "SELECT_PARAGRAPH", "ttestselection1 Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut. Ne labore incorrupte vix. Cu copiosae postulant tincidunt ius, in illud appetere contentiones eos. Ei munere officiis assentior pro, nibh decore ius at.");
 
-    // Centered on the second character in the sentence div
-    targetPoint = { xPos: rect.left + (charDims.width + (charDims.width / 2)),
+    // Within the 10th character "c" in the sentence div
+    targetPoint = { xPos: rect.left + 9.6 * charDims.width,
                     yPos: rect.top + (charDims.height / 2) };
+    // The expectations here are incorrect, because selectAtPoint selects two characters
+    // when it should only get one. https://bugzilla.mozilla.org/show_bug.cgi?id=1696176
     setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
-    checkSelection(document, "SELECT_CHARACTER", "te");
+    checkSelection(document, "SELECT_CHARACTER", "c");
     setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CLUSTER);
-    checkSelection(document, "SELECT_CLUSTER", "te");
+    checkSelection(document, "SELECT_CLUSTER", "c");
 
-    // Separate character blocks in a word 't(te)s(ts)election1'
-    targetPoint = { xPos: rect.left + (charDims.width + (charDims.width / 2)),
+    // Separate character blocks in a word 'ttestse(l)ection(1)'
+    targetPoint = { xPos: rect.left + 7.6 * charDims.width,
                     yPos: rect.top + (charDims.height / 2) };
     setStart(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
-    targetPoint = { xPos: rect.left + ((charDims.width * 4) + (charDims.width / 2)),
+    targetPoint = { xPos: rect.left + 14.6 * charDims.width,
                     yPos: rect.top + (charDims.height / 2) };
     setEnd(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
-    if (isLinux || isMac) {
-      // XXX I think this is a bug, the right hand selection is 4.5 characters over with a
-      // monspaced font. what we want: t(te)s(ts)election1 what we get: t(te)st(se)lection1
-      checkSelection(document, "split selection", "tese");
-    } else if (isWindows) {
-      checkSelection(document, "split selection", "tets");
-    }
+    checkSelection(document, "split selection", "l1");
 
     // Trying to select where there's no text, should fail but not throw
     let result = dwu.selectAtPoint(rect.left - 20, rect.top - 20, Ci.nsIDOMWindowUtils.SELECT_CHARACTER, false);
@@ -141,6 +139,7 @@
 
     div = document.getElementById("div2");
     rect = div.getBoundingClientRect();
+    rect.x += 1; rect.y += 1; rect.width -= 2; rect.height -= 2;  // remove border
 
     // Centered on the first line, first character in the paragraph div
     targetPoint = { xPos: rect.left + (charDims.width / 2),
@@ -160,6 +159,7 @@
     frame.contentWindow.scrollTo(0, 0);
 
     rect = frame.getBoundingClientRect();
+    rect.x += 1; rect.y += 1; rect.width -= 2; rect.height -= 2;  // remove border
 
     targetPoint = { xPos: charDims.width / 2,
                     yPos: charDims.height / 2 };
