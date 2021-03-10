@@ -30,7 +30,7 @@ struct BestOverlap {
 };
 
 static const size_t DottedCornerCacheSize = 256;
-nsDataHashtable<FourFloatsHashKey, BestOverlap> DottedCornerCache;
+nsTHashMap<FourFloatsHashKey, BestOverlap> DottedCornerCache;
 
 DottedCornerFinder::DottedCornerFinder(const Bezier& aOuterBezier,
                                        const Bezier& aInnerBezier,

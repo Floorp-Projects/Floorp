@@ -8,7 +8,7 @@
 #define dom_ipc_StringTable_h
 
 #include "mozilla/RangedPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 /**
  * This file contains helper classes for creating and accessing compact string
@@ -109,7 +109,7 @@ class StringTableBuilder {
     StringType mValue;
   };
 
-  nsDataHashtable<KeyType, Entry> mEntries;
+  nsTHashMap<KeyType, Entry> mEntries;
   uint32_t mSize = 0;
 };
 

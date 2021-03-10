@@ -17,7 +17,7 @@
 #include "mozilla/dom/Performance.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
@@ -136,7 +136,7 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   nsTArray<RefPtr<GamepadHapticActuator>> mHapticActuators;
   nsTArray<RefPtr<GamepadLightIndicator>> mLightIndicators;
   nsTArray<RefPtr<GamepadTouch>> mTouchEvents;
-  nsDataHashtable<nsUint32HashKey, uint32_t> mTouchIdHash;
+  nsTHashMap<nsUint32HashKey, uint32_t> mTouchIdHash;
 };
 
 }  // namespace dom

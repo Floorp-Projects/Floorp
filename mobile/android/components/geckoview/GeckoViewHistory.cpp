@@ -80,9 +80,9 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess(
   MOZ_ASSERT(XRE_IsContentProcess());
 
   // First, serialize all the new URIs that we need to look up. Note that this
-  // could be written as `nsDataHashtable<nsUint64HashKey, nsTArray<URIParams>`
-  // instead, but, since we don't expect to have many tab children, we can avoid
-  // the cost of hashing.
+  // could be written as `nsTHashMap<nsUint64HashKey,
+  // nsTArray<URIParams>` instead, but, since we don't expect to have many tab
+  // children, we can avoid the cost of hashing.
   AutoTArray<NewURIEntry, 8> newEntries;
   for (auto query = aQueries.ConstIter(); !query.Done(); query.Next()) {
     nsIURI* uri = query.Get()->GetKey();

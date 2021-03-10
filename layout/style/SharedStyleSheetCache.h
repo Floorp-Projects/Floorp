@@ -22,7 +22,7 @@
 #include "mozilla/PrincipalHashKey.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/css/Loader.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsIMemoryReporter.h"
 #include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
@@ -123,19 +123,18 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
 
   void WillStartPendingLoad(css::SheetLoadData&);
 
-  nsDataHashtable<SheetLoadDataHashKey, CompleteSheet> mCompleteSheets;
+  nsTHashMap<SheetLoadDataHashKey, CompleteSheet> mCompleteSheets;
   nsRefPtrHashtable<SheetLoadDataHashKey, css::SheetLoadData> mPendingDatas;
   // The SheetLoadData pointers in mLoadingDatas below are weak references that
   // get cleaned up when StreamLoader::OnStopRequest gets called.
   //
   // Note that we hold on to all sheet loads, even if in the end they happen not
   // to be cacheable.
-  nsDataHashtable<SheetLoadDataHashKey, WeakPtr<css::SheetLoadData>>
-      mLoadingDatas;
+  nsTHashMap<SheetLoadDataHashKey, WeakPtr<css::SheetLoadData>> mLoadingDatas;
 
   // An origin-to-number-of-registered-documents count, in order to manage cache
   // eviction as described in RegisterLoader / UnregisterLoader.
-  nsDataHashtable<PrincipalHashKey, uint32_t> mLoaderPrincipalRefCnt;
+  nsTHashMap<PrincipalHashKey, uint32_t> mLoaderPrincipalRefCnt;
 
   static SharedStyleSheetCache* sInstance;
 };

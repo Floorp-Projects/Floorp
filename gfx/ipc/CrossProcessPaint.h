@@ -15,7 +15,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "nsColor.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTHashtable.h"
@@ -134,7 +134,7 @@ class CrossProcessPaint final {
   void LostFragment(dom::WindowGlobalParent* aWGP);
 
  private:
-  typedef nsDataHashtable<nsUint64HashKey, PaintFragment> ReceivedFragmentMap;
+  typedef nsTHashMap<nsUint64HashKey, PaintFragment> ReceivedFragmentMap;
 
   CrossProcessPaint(float aScale, dom::TabId aRoot);
   ~CrossProcessPaint();

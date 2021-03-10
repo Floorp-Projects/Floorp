@@ -41,7 +41,7 @@ typedef nsRefPtrHashtable<nsStringHashKey, MediaKeySession> KeySessionHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, dom::DetailedPromise> PromiseHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, MediaKeySession>
     PendingKeySessionsHashMap;
-typedef nsDataHashtable<nsUint32HashKey, uint32_t> PendingPromiseIdTokenHashMap;
+typedef nsTHashMap<nsUint32HashKey, uint32_t> PendingPromiseIdTokenHashMap;
 typedef uint32_t PromiseId;
 
 // This class is used on the main thread only.

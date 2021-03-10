@@ -28,7 +28,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsExceptionHandler.h"
 #include "nsIMemoryReporter.h"
@@ -496,7 +496,7 @@ class ChannelCountReporter final : public nsIMemoryReporter {
     }
   };
 
-  using CountTable = nsDataHashtable<nsDepCharHashKey, ChannelCounts>;
+  using CountTable = nsTHashMap<nsDepCharHashKey, ChannelCounts>;
 
   static StaticMutex sChannelCountMutex;
   static CountTable* sChannelCounts;

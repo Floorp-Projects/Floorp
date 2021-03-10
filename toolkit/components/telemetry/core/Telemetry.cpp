@@ -53,7 +53,7 @@
 #include "nsClassHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsDirectoryServiceDefs.h"
@@ -673,7 +673,7 @@ class GetLoadedModulesResultRunnable final : public Runnable {
   SharedLibraryInfo mRawModules;
   nsCOMPtr<nsIThread> mWorkerThread;
 #  if defined(XP_WIN)
-  nsDataHashtable<nsStringHashKey, nsString> mCertSubjects;
+  nsTHashMap<nsStringHashKey, nsString> mCertSubjects;
 #  endif  // defined(XP_WIN)
 
  public:

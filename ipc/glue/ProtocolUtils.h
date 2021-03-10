@@ -26,7 +26,7 @@
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/ipc/Shmem.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsTArrayForwardDeclare.h"
@@ -526,7 +526,7 @@ class IToplevelProtocol : public IProtocol {
   int32_t NextId();
 
   template <class T>
-  using IDMap = nsDataHashtable<nsUint32HashKey, T>;
+  using IDMap = nsTHashMap<nsUint32HashKey, T>;
 
   base::ProcessId mOtherPid;
 

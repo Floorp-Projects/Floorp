@@ -11,7 +11,7 @@
 #include "nscore.h"
 #include "nsINativeDNSResolverOverride.h"
 #include "nsHashKeys.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "mozilla/RWLock.h"
 #include "nsTArray.h"
 #include "prio.h"
@@ -74,8 +74,8 @@ class NativeDNSResolverOverride : public nsINativeDNSResolverOverride {
   virtual ~NativeDNSResolverOverride() = default;
   mozilla::RWLock mLock;
 
-  nsDataHashtable<nsCStringHashKey, nsTArray<PRNetAddr>> mOverrides;
-  nsDataHashtable<nsCStringHashKey, nsCString> mCnames;
+  nsTHashMap<nsCStringHashKey, nsTArray<PRNetAddr>> mOverrides;
+  nsTHashMap<nsCStringHashKey, nsCString> mCnames;
 
   friend bool FindAddrOverride(const nsACString& aHost, uint16_t aAddressFamily,
                                uint16_t aFlags, AddrInfo** aAddrInfo);

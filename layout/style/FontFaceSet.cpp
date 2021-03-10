@@ -650,7 +650,7 @@ bool FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) {
   mNonRuleFacesDirty = false;
 
   // reuse existing FontFace objects mapped to rules already
-  nsDataHashtable<nsPtrHashKey<RawServoFontFaceRule>, FontFace*> ruleFaceMap;
+  nsTHashMap<nsPtrHashKey<RawServoFontFaceRule>, FontFace*> ruleFaceMap;
   for (size_t i = 0, i_end = mRuleFaces.Length(); i < i_end; ++i) {
     FontFace* f = mRuleFaces[i].mFontFace;
     if (!f) {

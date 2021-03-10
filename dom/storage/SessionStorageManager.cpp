@@ -20,7 +20,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

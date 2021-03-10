@@ -9,7 +9,7 @@
 #include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "nsStringFwd.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 
 #include "nsStyleConsts.h"
@@ -347,7 +347,7 @@ class CounterStyleManager final {
   void DestroyCounterStyle(CounterStyle* aCounterStyle);
 
   nsPresContext* mPresContext;
-  nsDataHashtable<nsRefPtrHashKey<nsAtom>, CounterStyle*> mStyles;
+  nsTHashMap<nsRefPtrHashKey<nsAtom>, CounterStyle*> mStyles;
   nsTArray<CounterStyle*> mRetiredStyles;
 };
 

@@ -363,12 +363,11 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   static uint32_t gConsumers;
 
-  nsDataHashtable<nsPtrHashKey<const nsAtom>,
-                  const mozilla::a11y::HTMLMarkupMapInfo*>
+  nsTHashMap<nsPtrHashKey<const nsAtom>,
+             const mozilla::a11y::HTMLMarkupMapInfo*>
       mHTMLMarkupMap;
 #ifdef MOZ_XUL
-  nsDataHashtable<nsPtrHashKey<const nsAtom>,
-                  const mozilla::a11y::XULMarkupMapInfo*>
+  nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*>
       mXULMarkupMap;
 #endif
 

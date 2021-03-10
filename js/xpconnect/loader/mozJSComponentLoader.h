@@ -17,7 +17,7 @@
 #include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "jsapi.h"
 
 #include "xpcIJSGetFactory.h"
@@ -171,10 +171,10 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
                           ModuleEntry* aMod, JS::MutableHandleObject aExports);
 
   // Modules are intentionally leaked, but still cleared.
-  nsDataHashtable<nsCStringHashKey, ModuleEntry*> mModules;
+  nsTHashMap<nsCStringHashKey, ModuleEntry*> mModules;
 
   nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
-  nsDataHashtable<nsCStringHashKey, ModuleEntry*> mInProgressImports;
+  nsTHashMap<nsCStringHashKey, ModuleEntry*> mInProgressImports;
 
   // A map of on-disk file locations which are loaded as modules to the
   // pre-resolved URIs they were loaded from. Used to prevent the same file

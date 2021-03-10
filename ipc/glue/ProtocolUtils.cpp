@@ -689,7 +689,7 @@ int32_t IToplevelProtocol::Register(IProtocol* aRouted) {
             mEventTargetMap.Get(manager->Id())) {
       MOZ_ASSERT(!mEventTargetMap.Contains(id),
                  "Don't insert with an existing ID");
-      mEventTargetMap.InsertOrUpdate(id, target);
+      mEventTargetMap.InsertOrUpdate(id, std::move(target));
     }
   }
 
@@ -847,7 +847,7 @@ already_AddRefed<nsISerialEventTarget> IToplevelProtocol::GetMessageEventTarget(
     MOZ_ASSERT(existingTgt == target || existingTgt == nullptr);
 #endif /* DEBUG */
 
-    mEventTargetMap.InsertOrUpdate(handle.mId, target);
+    mEventTargetMap.InsertOrUpdate(handle.mId, nsCOMPtr{target});
   }
 
   return target.forget();
@@ -888,7 +888,7 @@ void IToplevelProtocol::SetEventTargetForActorInternal(
 
   MutexAutoLock lock(mEventTargetMutex);
   // FIXME bug 1445121 - sometimes the id is already mapped.
-  mEventTargetMap.InsertOrUpdate(id, aEventTarget);
+  mEventTargetMap.InsertOrUpdate(id, nsCOMPtr{aEventTarget});
 }
 
 void IToplevelProtocol::ReplaceEventTargetForActor(
@@ -902,7 +902,7 @@ void IToplevelProtocol::ReplaceEventTargetForActor(
 
   MutexAutoLock lock(mEventTargetMutex);
   MOZ_ASSERT(mEventTargetMap.Contains(id), "Only replace an existing ID");
-  mEventTargetMap.InsertOrUpdate(id, aEventTarget);
+  mEventTargetMap.InsertOrUpdate(id, nsCOMPtr{aEventTarget});
 }
 
 }  // namespace ipc

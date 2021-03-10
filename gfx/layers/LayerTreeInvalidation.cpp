@@ -17,7 +17,7 @@
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
 #include "mozilla/gfx/Point.h"     // for IntSize
 #include "mozilla/mozalloc.h"      // for operator new, etc
-#include "nsDataHashtable.h"       // for nsDataHashtable
+#include "nsTHashMap.h"            // for nsTHashMap
 #include "nsDebug.h"               // for NS_ASSERTION
 #include "nsHashKeys.h"            // for nsPtrHashKey
 #include "nsISupportsImpl.h"       // for Layer::AddRef, etc
@@ -425,8 +425,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase {
     // TODO: Consider how we could avoid unnecessary invalidation when children
     // change order, and whether the overhead would be worth it.
 
-    nsDataHashtable<nsPtrHashKey<Layer>, uint32_t> oldIndexMap(
-        mChildren.Length());
+    nsTHashMap<nsPtrHashKey<Layer>, uint32_t> oldIndexMap(mChildren.Length());
     for (uint32_t i = 0; i < mChildren.Length(); ++i) {
       mChildren[i]->CheckCanary();
       oldIndexMap.InsertOrUpdate(mChildren[i]->mLayer, i);

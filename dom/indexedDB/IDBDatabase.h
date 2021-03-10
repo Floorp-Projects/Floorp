@@ -14,7 +14,7 @@
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UniquePtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
@@ -72,8 +72,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
   nsTHashtable<nsPtrHashKey<IDBTransaction>> mTransactions;
 
-  nsDataHashtable<nsISupportsHashKey,
-                  indexedDB::PBackgroundIDBDatabaseFileChild*>
+  nsTHashMap<nsISupportsHashKey, indexedDB::PBackgroundIDBDatabaseFileChild*>
       mFileActors;
 
   RefPtr<Observer> mObserver;

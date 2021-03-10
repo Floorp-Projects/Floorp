@@ -92,7 +92,7 @@
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsExceptionHandler.h"
@@ -1444,7 +1444,7 @@ class Datastore final
    * Non-authoritative hashtable representation of mOrderedItems for efficient
    * lookup.
    */
-  nsDataHashtable<nsStringHashKey, LSValue> mValues;
+  nsTHashMap<nsStringHashKey, LSValue> mValues;
   /**
    * The authoritative ordered state of the Datastore; mValue also exists as an
    * unordered hashtable for efficient lookup.
@@ -1469,7 +1469,7 @@ class Datastore final
             RefPtr<DirectoryLock>&& aDirectoryLock,
             RefPtr<Connection>&& aConnection,
             RefPtr<QuotaObject>&& aQuotaObject,
-            nsDataHashtable<nsStringHashKey, LSValue>& aValues,
+            nsTHashMap<nsStringHashKey, LSValue>& aValues,
             nsTArray<LSItemInfo>&& aOrderedItems);
 
   Maybe<DirectoryLock&> MaybeDirectoryLockRef() const {
@@ -1844,7 +1844,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
    * are changed/evicted from the Datastore as they happen, as reported to us by
    * SaveItem notifications.
    */
-  nsDataHashtable<nsStringHashKey, LSValue> mValues;
+  nsTHashMap<nsStringHashKey, LSValue> mValues;
   /**
    * Latched state of mDatastore's keys during a SaveItem notification with
    * aAffectsOrder=true.  The ordered keys needed to be saved off so that a
@@ -2172,7 +2172,7 @@ class PrepareDatastoreOp
   RefPtr<Datastore> mDatastore;
   UniquePtr<ArchivedOriginScope> mArchivedOriginScope;
   LoadDataOp* mLoadDataOp;
-  nsDataHashtable<nsStringHashKey, LSValue> mValues;
+  nsTHashMap<nsStringHashKey, LSValue> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
   OriginMetadata mOriginMetadata;
   nsCString mMainThreadOrigin;
@@ -2769,7 +2769,7 @@ Atomic<int32_t, Relaxed> gSnapshotGradualPrefill(
     kDefaultSnapshotGradualPrefill);
 Atomic<bool> gClientValidation(kDefaultClientValidation);
 
-typedef nsDataHashtable<nsCStringHashKey, int64_t> UsageHashtable;
+typedef nsTHashMap<nsCStringHashKey, int64_t> UsageHashtable;
 
 StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 
@@ -4250,7 +4250,7 @@ Datastore::Datastore(const OriginMetadata& aOriginMetadata,
                      RefPtr<DirectoryLock>&& aDirectoryLock,
                      RefPtr<Connection>&& aConnection,
                      RefPtr<QuotaObject>&& aQuotaObject,
-                     nsDataHashtable<nsStringHashKey, LSValue>& aValues,
+                     nsTHashMap<nsStringHashKey, LSValue>& aValues,
                      nsTArray<LSItemInfo>&& aOrderedItems)
     : mDirectoryLock(std::move(aDirectoryLock)),
       mConnection(std::move(aConnection)),

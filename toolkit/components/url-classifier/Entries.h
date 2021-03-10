@@ -17,7 +17,7 @@
 #include "nsIOutputStream.h"
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "plbase64.h"
 
 namespace mozilla {
@@ -312,11 +312,11 @@ nsresult WriteTArray(nsIOutputStream* aStream,
 
 typedef nsClassHashtable<nsUint32HashKey, nsCString> PrefixStringMap;
 
-typedef nsDataHashtable<nsCStringHashKey, int64_t> TableFreshnessMap;
+typedef nsTHashMap<nsCStringHashKey, int64_t> TableFreshnessMap;
 
 typedef nsCStringHashKey FullHashString;
 
-typedef nsDataHashtable<FullHashString, int64_t> FullHashExpiryCache;
+typedef nsTHashMap<FullHashString, int64_t> FullHashExpiryCache;
 
 struct CachedFullHashResponse {
   int64_t negativeCacheExpirySec;

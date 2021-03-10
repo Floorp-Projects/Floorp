@@ -9,7 +9,7 @@
 
 #include "mozIStorageRow.h"
 #include "nsCOMArray.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "mozilla/Attributes.h"
 class nsIVariant;
 struct sqlite3_stmt;
@@ -50,7 +50,7 @@ class Row final : public mozIStorageRow {
   /**
    * Maps a given name to a column index.
    */
-  nsDataHashtable<nsCStringHashKey, uint32_t> mNameHashtable;
+  nsTHashMap<nsCStringHashKey, uint32_t> mNameHashtable;
 };
 
 }  // namespace storage

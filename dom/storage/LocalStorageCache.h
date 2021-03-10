@@ -10,7 +10,7 @@
 #include "nsIPrincipal.h"
 
 #include "nsString.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Telemetry.h"
@@ -159,7 +159,7 @@ class LocalStorageCache : public LocalStorageCacheBridge {
    public:
     Data() : mOriginQuotaUsage(0) {}
     int64_t mOriginQuotaUsage;
-    nsDataHashtable<nsStringHashKey, nsString> mKeys;
+    nsTHashMap<nsStringHashKey, nsString> mKeys;
   };
 
  public:

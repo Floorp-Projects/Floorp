@@ -27,7 +27,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsDisplayList.h"
 #include "nsHashKeys.h"
 #include "nsFieldSetFrame.h"
@@ -4634,7 +4634,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   uint32_t clampMaxRowLine = rowLineNameMap.mClampMaxLine + offsetToRowZero;
   // We need 1 cursor per row (or column) if placement is sparse.
   {
-    Maybe<nsDataHashtable<nsUint32HashKey, uint32_t>> cursors;
+    Maybe<nsTHashMap<nsUint32HashKey, uint32_t>> cursors;
     if (isSparse) {
       cursors.emplace();
     }

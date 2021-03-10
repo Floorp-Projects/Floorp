@@ -7,7 +7,7 @@
 #define mozilla_intl_IntlOSPreferences_h__
 
 #include "mozilla/StaticPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -103,7 +103,7 @@ class OSPreferences : public mozIOSPreferences {
   nsTArray<nsCString> mRegionalPrefsLocales;
 
   const size_t kMaxCachedPatterns = 15;
-  nsDataHashtable<nsCStringHashKey, nsCString> mPatternCache;
+  nsTHashMap<nsCStringHashKey, nsCString> mPatternCache;
 
  private:
   virtual ~OSPreferences();

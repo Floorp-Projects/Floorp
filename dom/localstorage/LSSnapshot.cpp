@@ -784,7 +784,7 @@ nsresult LSSnapshot::EnsureAllKeys() {
     return NS_ERROR_FAILURE;
   }
 
-  nsDataHashtable<nsStringHashKey, nsString> newValues;
+  nsTHashMap<nsStringHashKey, nsString> newValues;
 
   for (auto key : keys) {
     newValues.InsertOrUpdate(key, VoidString());

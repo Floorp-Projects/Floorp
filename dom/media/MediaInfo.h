@@ -8,7 +8,7 @@
 
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/RefPtr.h"
-#  include "nsDataHashtable.h"
+#  include "nsTHashMap.h"
 #  include "nsString.h"
 #  include "nsTArray.h"
 #  include "AudioConfig.h"
@@ -36,7 +36,7 @@ class MetadataTag {
   }
 };
 
-typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
+typedef nsTHashMap<nsCStringHashKey, nsCString> MetadataTags;
 
 class TrackInfo {
  public:

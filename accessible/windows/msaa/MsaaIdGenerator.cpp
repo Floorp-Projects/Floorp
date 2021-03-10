@@ -13,7 +13,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "sdnAccessible.h"
 
 // These constants may be adjusted to modify the proportion of the Child ID
@@ -35,7 +35,7 @@ namespace mozilla {
 namespace a11y {
 namespace detail {
 
-typedef nsDataHashtable<nsUint64HashKey, uint32_t> ContentParentIdMap;
+typedef nsTHashMap<nsUint64HashKey, uint32_t> ContentParentIdMap;
 
 #pragma pack(push, 1)
 union MsaaID {

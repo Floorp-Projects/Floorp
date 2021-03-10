@@ -336,8 +336,8 @@ class DocAccessibleParent : public RemoteAccessible,
   nsTArray<PendingChildDoc> mPendingChildDocs;
 
   static uint64_t sMaxDocID;
-  static nsDataHashtable<nsUint64HashKey, DocAccessibleParent*>& LiveDocs() {
-    static nsDataHashtable<nsUint64HashKey, DocAccessibleParent*> sLiveDocs;
+  static nsTHashMap<nsUint64HashKey, DocAccessibleParent*>& LiveDocs() {
+    static nsTHashMap<nsUint64HashKey, DocAccessibleParent*> sLiveDocs;
     return sLiveDocs;
   }
 };

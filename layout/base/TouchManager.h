@@ -73,7 +73,7 @@ class TouchManager {
     bool mConvertToPointer;
   };
 
-  static nsDataHashtable<nsUint32HashKey, TouchInfo>* sCaptureTouchList;
+  static nsTHashMap<nsUint32HashKey, TouchInfo>* sCaptureTouchList;
   static layers::LayersId sCaptureTouchLayersId;
 };
 

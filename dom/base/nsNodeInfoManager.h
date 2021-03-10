@@ -17,7 +17,7 @@
 #include "mozilla/MruCache.h"
 #include "nsCOMPtr.h"                      // for member
 #include "nsCycleCollectionParticipant.h"  // for NS_DECL_CYCLE_*
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsStringFwd.h"
 
 class nsAtom;
@@ -160,7 +160,7 @@ class nsNodeInfoManager final {
     }
   };
 
-  nsDataHashtable<NodeInfoInnerKey, mozilla::dom::NodeInfo*> mNodeInfoHash;
+  nsTHashMap<NodeInfoInnerKey, mozilla::dom::NodeInfo*> mNodeInfoHash;
   mozilla::dom::Document* MOZ_NON_OWNING_REF mDocument;  // WEAK
   uint32_t mNonDocumentNodeInfos;
   nsCOMPtr<nsIPrincipal> mPrincipal;  // Never null after Init() succeeds.

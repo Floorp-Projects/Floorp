@@ -22,7 +22,7 @@
 #endif
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsPrintfCString.h"
@@ -459,7 +459,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   }
 
   nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
-  nsDataHashtable<nsCharPtrHashKey, bool> warnings;
+  nsTHashMap<nsCharPtrHashKey, bool> warnings;
   std::function<void(const char*)> deprecationWarningLogFn =
       [&](const char* aMsgName) {
         EME_LOG(

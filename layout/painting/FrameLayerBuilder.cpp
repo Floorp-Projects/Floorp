@@ -1270,8 +1270,7 @@ class PaintedLayerDataTree {
    * A hash map for quick access the node belonging to a particular animated
    * geometry root.
    */
-  nsDataHashtable<nsPtrHashKey<AnimatedGeometryRoot>, PaintedLayerDataNode*>
-      mNodes;
+  nsTHashMap<nsPtrHashKey<AnimatedGeometryRoot>, PaintedLayerDataNode*> mNodes;
 
   bool mForInactiveLayer;
 };

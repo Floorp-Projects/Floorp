@@ -13,7 +13,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsGlobalWindowInner.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "mozilla/ProfileChunkedBuffer.h"
@@ -70,7 +70,7 @@ class Timeout final : protected LinkedListElement<RefPtr<Timeout>> {
     const TimeoutIdAndReason mValue;
   };
 
-  class TimeoutSet : public nsDataHashtable<TimeoutHashKey, Timeout*> {
+  class TimeoutSet : public nsTHashMap<TimeoutHashKey, Timeout*> {
    public:
     NS_INLINE_DECL_REFCOUNTING(TimeoutSet);
 

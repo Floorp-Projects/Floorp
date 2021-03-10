@@ -18,7 +18,7 @@
 // Helper Classes
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsCycleCollectionParticipant.h"
 
 // Interfaces Needed
@@ -165,7 +165,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                   public nsIInterfaceRequestor,
                                   public PRCListStr {
  public:
-  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindowOuter*>
+  typedef nsTHashMap<nsUint64HashKey, nsGlobalWindowOuter*>
       OuterWindowByIdTable;
 
   using PrintPreviewResolver =

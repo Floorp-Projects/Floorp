@@ -14,7 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 class nsRuleWalker;
 struct MiscContainer;
@@ -43,7 +43,7 @@ class nsHTMLCSSStyleSheet final {
   nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy) = delete;
 
  protected:
-  nsDataHashtable<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
+  nsTHashMap<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
 };
 
 #endif /* !defined(nsHTMLCSSStyleSheet_h_) */

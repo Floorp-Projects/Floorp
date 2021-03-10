@@ -10,7 +10,7 @@
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/ipc/StringTable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 namespace dom {
@@ -214,7 +214,7 @@ class MOZ_RAII SharedStringMapBuilder {
   StringTableBuilder<nsCStringHashKey, nsCString> mKeyTable;
   StringTableBuilder<nsStringHashKey, nsString> mValueTable;
 
-  nsDataHashtable<nsCStringHashKey, Entry> mEntries;
+  nsTHashMap<nsCStringHashKey, Entry> mEntries;
 };
 
 }  // namespace ipc

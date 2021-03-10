@@ -360,7 +360,7 @@ class FontFaceSet final : public DOMEventTargetHelper,
   //
   // We could use just the pointer and use this as a hash set, but then we'd
   // have no way to verify that we've checked all the loads we should.
-  nsDataHashtable<nsPtrHashKey<const gfxFontFaceSrc>, bool> mAllowedFontLoads;
+  nsTHashMap<nsPtrHashKey<const gfxFontFaceSrc>, bool> mAllowedFontLoads;
 
   // Whether mNonRuleFaces has changed since last time UpdateRules ran.
   bool mNonRuleFacesDirty;

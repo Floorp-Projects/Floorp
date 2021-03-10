@@ -12,7 +12,7 @@
 #include "base/platform_thread.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
 
@@ -56,7 +56,7 @@ class SandboxBroker final : private SandboxBrokerCommon,
   };
   // Bitwise operations on enum values return ints, so just use int in
   // the hash table type (and below) to avoid cluttering code with casts.
-  typedef nsDataHashtable<nsCStringHashKey, int> PathPermissionMap;
+  typedef nsTHashMap<nsCStringHashKey, int> PathPermissionMap;
 
   class Policy {
     PathPermissionMap mMap;
@@ -139,7 +139,7 @@ class SandboxBroker final : private SandboxBrokerCommon,
   nsCString mTempPath;
   nsCString mContentTempPath;
 
-  typedef nsDataHashtable<nsCStringHashKey, nsCString> PathMap;
+  typedef nsTHashMap<nsCStringHashKey, nsCString> PathMap;
   PathMap mSymlinkMap;
 
   SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid, int& aClientFd);

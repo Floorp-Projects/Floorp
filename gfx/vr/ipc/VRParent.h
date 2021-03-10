@@ -53,7 +53,7 @@ class VRParent final : public PVRParent {
 
  private:
   nsCString mOpenVRControllerAction;
-  nsDataHashtable<nsUint32HashKey, nsCString> mOpenVRControllerManifest;
+  nsTHashMap<nsUint32HashKey, nsCString> mOpenVRControllerManifest;
   RefPtr<VRGPUParent> mVRGPUParent;
   DISALLOW_COPY_AND_ASSIGN(VRParent);
 };

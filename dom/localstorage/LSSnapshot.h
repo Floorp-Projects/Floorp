@@ -14,7 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsIRunnable.h"
 #include "nsISupports.h"
@@ -97,7 +97,7 @@ class LSSnapshot final : public nsIRunnable {
 
   nsTHashtable<nsStringHashKey> mLoadedItems;
   nsTHashtable<nsStringHashKey> mUnknownItems;
-  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsTHashMap<nsStringHashKey, nsString> mValues;
   UniquePtr<SnapshotWriteOptimizer> mWriteOptimizer;
   UniquePtr<nsTArray<LSWriteAndNotifyInfo>> mWriteAndNotifyInfos;
 

@@ -12,7 +12,7 @@
 #include "AccEvent.h"
 
 #include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIDocumentObserver.h"
 #include "nsIObserver.h"
@@ -606,12 +606,12 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * Cache of accessibles within this document accessible.
    */
   AccessibleHashtable mAccessibleCache;
-  nsDataHashtable<nsPtrHashKey<const nsINode>, LocalAccessible*>
+  nsTHashMap<nsPtrHashKey<const nsINode>, LocalAccessible*>
       mNodeToAccessibleMap;
 
   Document* mDocumentNode;
   nsCOMPtr<nsITimer> mScrollWatchTimer;
-  nsDataHashtable<nsPtrHashKey<nsINode>, TimeStamp> mLastScrollingDispatch;
+  nsTHashMap<nsPtrHashKey<nsINode>, TimeStamp> mLastScrollingDispatch;
 
   /**
    * Bit mask of document load states (@see LoadState).

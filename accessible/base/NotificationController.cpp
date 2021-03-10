@@ -522,8 +522,7 @@ void NotificationController::ProcessMutationEvents() {
   }
 
   // Group the show events by the parent of their target.
-  nsDataHashtable<nsPtrHashKey<LocalAccessible>,
-                  nsTArray<AccTreeMutationEvent*>>
+  nsTHashMap<nsPtrHashKey<LocalAccessible>, nsTArray<AccTreeMutationEvent*>>
       showEvents;
   for (AccTreeMutationEvent* event = mFirstMutationEvent; event;
        event = event->NextEvent()) {

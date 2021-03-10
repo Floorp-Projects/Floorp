@@ -6,7 +6,7 @@
 
 #include "nsMathMLOperators.h"
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
@@ -29,8 +29,7 @@ struct OperatorData {
 static int32_t gTableRefCount = 0;
 static uint32_t gOperatorCount = 0;
 static OperatorData* gOperatorArray = nullptr;
-static nsDataHashtable<nsStringHashKey, OperatorData*>* gOperatorTable =
-    nullptr;
+static nsTHashMap<nsStringHashKey, OperatorData*>* gOperatorTable = nullptr;
 static bool gGlobalsInitialized = false;
 
 static const char16_t kDashCh = char16_t('#');
@@ -273,7 +272,7 @@ static nsresult InitOperators(void) {
 static nsresult InitOperatorGlobals() {
   gGlobalsInitialized = true;
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-  gOperatorTable = new nsDataHashtable<nsStringHashKey, OperatorData*>();
+  gOperatorTable = new nsTHashMap<nsStringHashKey, OperatorData*>();
   if (gOperatorTable) {
     rv = InitOperators();
   }
