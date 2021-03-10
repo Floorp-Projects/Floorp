@@ -242,6 +242,7 @@ linux1804-qr-tests:
     - gtest
     # - jittest  # See comment in linux1804-ccov-tests set.
     - jsreftest
+    - marionette
     - mochitest-a11y
     - mochitest-chrome
     - mochitest-chrome-gpu
@@ -275,6 +276,7 @@ linux-talos-flex:
 
 windows-qr-tests:
     - crashtest
+    - marionette
     - mochitest-chrome-gpu
     - mochitest-browser-chrome
     - mochitest-plain
