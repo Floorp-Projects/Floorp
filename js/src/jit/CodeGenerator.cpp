@@ -2533,6 +2533,11 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
                  Address(shared, RegExpShared::offsetOfGroupsTemplate()),
                  ImmWord(0), &oolEntry);
 
+  // Similarly, if the |hasIndices| flag is set, fall back to the OOL stub.
+  masm.branchTest32(Assembler::NonZero,
+                    Address(shared, RegExpShared::offsetOfFlags()),
+                    Imm32(int32_t(JS::RegExpFlag::HasIndices)), &oolEntry);
+
   // Construct the result.
   Register object = temp1;
   Label matchResultFallback, matchResultJoin;
