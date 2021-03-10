@@ -67,6 +67,7 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
   MOZ_ASSERT(mConnInfo->IsHttp3());
 
   mErrorBeforeConnect = status;
+  mAlpnToken = mConnInfo->GetNPNToken();
   if (NS_FAILED(mErrorBeforeConnect)) {
     // See explanation for non-strictness of this operation in
     // SetSecurityCallbacks.
@@ -310,11 +311,9 @@ nsresult HttpConnectionUDP::OnHeadersAvailable(nsAHttpTransaction* trans,
   NS_ENSURE_ARG_POINTER(trans);
   MOZ_ASSERT(responseHead, "No response head?");
 
-  if (mHttp3Session) {
-    DebugOnly<nsresult> rv = responseHead->SetHeader(
-        nsHttp::X_Firefox_Http3, mHttp3Session->GetAlpnToken());
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
+  DebugOnly<nsresult> rv =
+      responseHead->SetHeader(nsHttp::X_Firefox_Http3, mAlpnToken);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // deal with 408 Server Timeouts
   uint16_t responseStatus = responseHead->Status();

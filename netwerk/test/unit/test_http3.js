@@ -179,6 +179,7 @@ Http3CheckListener.prototype = {
       } catch (e) {}
       Assert.equal(httpVersion, "h3");
       Assert.equal(this.onDataAvailableFired, true);
+      Assert.equal(request.getResponseHeader("X-Firefox-Http3"), "h3-27");
     }
     run_next_test();
     do_test_finished();
