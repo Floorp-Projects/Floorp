@@ -152,8 +152,8 @@ class CharacterData : public nsIContent {
   /**
    * Append the text content to aResult.
    */
-  MOZ_MUST_USE
-  bool AppendTextTo(nsAString& aResult, const fallible_t& aFallible) const {
+  [[nodiscard]] bool AppendTextTo(nsAString& aResult,
+                                  const fallible_t& aFallible) const {
     return mText.AppendTo(aResult, aFallible);
   }
 
@@ -205,8 +205,7 @@ class CharacterData : public nsIContent {
   /**
    * Compare two CharacterData nodes for text equality.
    */
-  MOZ_MUST_USE
-  bool TextEquals(const CharacterData* aOther) const {
+  [[nodiscard]] bool TextEquals(const CharacterData* aOther) const {
     return mText.TextEquals(aOther->mText);
   }
 

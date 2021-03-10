@@ -379,13 +379,11 @@ class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {
     insertBack(aElem);
   }
 
-  MOZ_MUST_USE
   already_AddRefed<ScriptLoadRequest> Steal(ScriptLoadRequest* aElem) {
     aElem->removeFrom(*this);
     return dont_AddRef(aElem);
   }
 
-  MOZ_MUST_USE
   already_AddRefed<ScriptLoadRequest> StealFirst() {
     MOZ_ASSERT(!isEmpty());
     return Steal(getFirst());

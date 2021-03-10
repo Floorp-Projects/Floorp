@@ -1245,7 +1245,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
    * OnEditActionHandled() is called when the TextEditor handles something
    * and immediately before dispatching "input" event.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnEditActionHandled() {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult OnEditActionHandled() {
     MOZ_ASSERT(!mEditActionHandled);
     mEditActionHandled = true;
     if (!Is(TextControlAction::SetValue)) {
@@ -1280,7 +1280,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
    * SetValueWithoutTextEditorAgain() should be called if the frame for
    * mTextControlState was destroyed during setting value.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValueWithoutTextEditorAgain() {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT bool SetValueWithoutTextEditorAgain() {
     MOZ_ASSERT(!IsOriginalTextControlFrameAlive());
     // If the frame was destroyed because of a flush somewhere inside
     // TextEditor, mBoundFrame here will be nullptr.  But it's also
