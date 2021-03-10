@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  </head>
+  <body>
+    <script>
+
+function shouldBe(testStr, refStr) {
+  ok(testStr == refStr, 'Expected "' + refStr + '", was "' + testStr + '".');
+}
+
+function getErrorStr(gl, err) {
+  if (!err) return "NO_ERROR";
+  for (const k in gl) {
+    const v = gl[k];
+    if (v == err) {
+      return k;
+    }
+  }
+  return `<${err}>`;
+}
+
+function glErrorShouldBe(gl, expected, opt_info) {
+  if (opt_info) {
+    opt_info = opt_info + ': '
+  } else {
+    opt_info = '';
+  }
+
+  if (!expected.length) {
+    expected = [expected];
+  }
+  expected = expected.map(x => getErrorStr(gl, x));
+  let was = gl.getError();
+  was = getErrorStr(gl, was);
+  console.log(expected);
+  ok(expected.includes(was),
+    `${opt_info}Expected gl.getError() in [${expected}], was ${was}.`);
+}
+
+(() => {
+  const gl = document.createElement('canvas').getContext('webgl2');
+  if (!gl) {
+    todo(false, 'No webgl2, skipping...');
+    return;
+  }
+  const pbo = gl.createBuffer();
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo);
+
+  const PBO_DATA = new Uint8Array([
+    255, 0, 0, 255,
+    0, 255, 0, 255,
+  ]);
+  gl.bufferData(gl.PIXEL_UNPACK_BUFFER, PBO_DATA, gl.STATIC_DRAW);
+
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+
+  const readback = new Uint8Array(4);
+
+  const PBO_LIST = [null, pbo];
+  for (const cur of PBO_LIST) {
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, cur);
+
+    function tryUpload(arg, expectedReadback) {
+      let argType = typeof(arg);
+      if (arg === null) {
+        argType = 'null';
+      }
+      const argForPbo = (argType == 'number');
+      const pboBound = !!cur;
+      const expectedErr = (argForPbo == pboBound) ? 0 : gl.INVALID_OPERATION;
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                    arg);
+      const with_without = pboBound ? 'with' : 'without';
+      glErrorShouldBe(gl, expectedErr, `${with_without} pbo, texImage(..., ${argType}("${arg}"))`);
+
+      if (expectedErr) return;
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readback);
+      shouldBe(expectedReadback.toString(), readback.toString());
+    }
+
+    const CPU_DATA = new Uint8Array([255, 255, 0, 255]);
+
+    tryUpload(null, [0,0,0,0]);
+    tryUpload(CPU_DATA, CPU_DATA);
+    tryUpload(0, PBO_DATA.slice(0,4));
+    //tryUpload(4, PBO_DATA.slice(4));
+  }
+})();
+    </script>
+  </body>
+</html>
