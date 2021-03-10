@@ -68,9 +68,10 @@ auto nsNativeBasicThemeCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
   return {size, size};
 }
 
-bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+template <typename PaintBackendData>
+void nsNativeBasicThemeCocoa::DoPaintScrollbarThumb(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     DPIRatio aDpiRatio) {
   ScrollbarParams params =
@@ -81,25 +82,44 @@ bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
   LayoutDeviceCoord radius =
       (params.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
   PaintRoundedRectWithRadius(
-      aDrawTarget, thumbRect, thumbRect, sRGBColor::FromABGR(thumb.mFillColor),
+      aPaintData, thumbRect, thumbRect, sRGBColor::FromABGR(thumb.mFillColor),
       sRGBColor::White(0.0f), 0.0f, radius / aDpiRatio, aDpiRatio);
   if (!thumb.mStrokeColor) {
-    return true;
+    return;
   }
 
   // Paint the stroke if needed.
   thumbRect.Inflate(thumb.mStrokeOutset + thumb.mStrokeWidth);
   radius = (params.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
-  PaintRoundedRectWithRadius(aDrawTarget, thumbRect,
-                             sRGBColor::White(0.0f),
+  PaintRoundedRectWithRadius(aPaintData, thumbRect, sRGBColor::White(0.0f),
                              sRGBColor::FromABGR(thumb.mStrokeColor),
                              thumb.mStrokeWidth, radius / aDpiRatio, aDpiRatio);
+}
+
+bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
+    DrawTarget& aDt, const LayoutDeviceRect& aRect, bool aHorizontal,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    DPIRatio aDpiRatio) {
+  DoPaintScrollbarThumb(aDt, aRect, aHorizontal, aFrame, aStyle, aElementState,
+                        aDocumentState, aDpiRatio);
   return true;
 }
 
-bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    DPIRatio aDpiRatio) {
+  DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
+                        aElementState, aDocumentState, aDpiRatio);
+  return true;
+}
+
+template <typename PaintBackendData>
+void nsNativeBasicThemeCocoa::DoPaintScrollbarTrack(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, DPIRatio aDpiRatio) {
   ScrollbarParams params =
       ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
@@ -107,26 +127,60 @@ bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
   if (ScrollbarDrawingMac::GetScrollbarTrackRects(aRect.ToUnknownRect(), params,
                                                   aDpiRatio.scale, rects)) {
     for (const auto& rect : rects) {
-      FillRect(aDrawTarget, LayoutDeviceRect::FromUnknownRect(rect.mRect),
+      FillRect(aPaintData, LayoutDeviceRect::FromUnknownRect(rect.mRect),
                sRGBColor::FromABGR(rect.mColor));
     }
   }
+}
+
+bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
+    DrawTarget& aDt, const LayoutDeviceRect& aRect, bool aHorizontal,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
+  DoPaintScrollbarTrack(aDt, aRect, aHorizontal, aFrame, aStyle, aDocumentState,
+                        aDpiRatio);
   return true;
 }
 
-bool nsNativeBasicThemeCocoa::PaintScrollCorner(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
-    const ComputedStyle& aStyle, const EventStates& aDocumentState,
-    DPIRatio aDpiRatio) {
+bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
+  DoPaintScrollbarTrack(aWrData, aRect, aHorizontal, aFrame, aStyle,
+                        aDocumentState, aDpiRatio);
+  return true;
+}
+
+template <typename PaintBackendData>
+void nsNativeBasicThemeCocoa::DoPaintScrollCorner(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
   ScrollbarParams params =
       ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, aStyle, false);
   ScrollbarDrawingMac::ScrollCornerRects rects;
   if (ScrollbarDrawingMac::GetScrollCornerRects(aRect.ToUnknownRect(), params,
                                                 aDpiRatio.scale, rects)) {
     for (const auto& rect : rects) {
-      FillRect(aDrawTarget, LayoutDeviceRect::FromUnknownRect(rect.mRect),
+      FillRect(aPaintData, LayoutDeviceRect::FromUnknownRect(rect.mRect),
                sRGBColor::FromABGR(rect.mColor));
     }
   }
+}
+
+bool nsNativeBasicThemeCocoa::PaintScrollCorner(
+    DrawTarget& aDt, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
+    const ComputedStyle& aStyle, const EventStates& aDocumentState,
+    DPIRatio aDpiRatio) {
+  DoPaintScrollCorner(aDt, aRect, aFrame, aStyle, aDocumentState, aDpiRatio);
+  return true;
+}
+
+bool nsNativeBasicThemeCocoa::PaintScrollCorner(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
+  DoPaintScrollCorner(aWrData, aRect, aFrame, aStyle, aDocumentState,
+                      aDpiRatio);
   return true;
 }
