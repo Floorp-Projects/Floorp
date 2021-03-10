@@ -3623,6 +3623,14 @@ class nsIFrame : public nsQueryFrame {
   mozilla::OverflowAreas GetOverflowAreasRelativeToSelf() const;
 
   /**
+   * Same as GetOverflowAreas, except relative to the parent frame.
+   *
+   * @return the overflow area relative to the parent frame, in the parent
+   * frame's coordinate system
+   */
+  mozilla::OverflowAreas GetOverflowAreasRelativeToParent() const;
+
+  /**
    * Same as ScrollableOverflowRect, except relative to the parent
    * frame.
    *

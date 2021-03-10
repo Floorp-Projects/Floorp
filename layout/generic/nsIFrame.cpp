@@ -7458,6 +7458,10 @@ OverflowAreas nsIFrame::GetOverflowAreasRelativeToSelf() const {
   return OverflowAreas(InkOverflowRect(), ScrollableOverflowRect());
 }
 
+OverflowAreas nsIFrame::GetOverflowAreasRelativeToParent() const {
+  return GetOverflowAreas() + mRect.TopLeft();
+}
+
 nsRect nsIFrame::ScrollableOverflowRectRelativeToParent() const {
   return ScrollableOverflowRect() + mRect.TopLeft();
 }
