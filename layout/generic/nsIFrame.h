@@ -370,9 +370,6 @@ std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus);
  * actually been set (this is the initial state of newly-created frames).
  */
 
-// max delta we can store
-#define NS_FRAME_OVERFLOW_DELTA_MAX 0xfe
-
 // there are no overflow rects; code relies on this being the all-zero value
 #define NS_FRAME_OVERFLOW_NONE 0x00000000
 
@@ -5064,6 +5061,9 @@ class nsIFrame : public nsQueryFrame {
   // delta values are not meaningful and the overflow area is stored
   // as a separate rect property.
   struct InkOverflowDeltas {
+    // The maximum delta value we can store in any of the four edges.
+    static constexpr uint8_t kMax = 0xfe;
+
     uint8_t mLeft;
     uint8_t mTop;
     uint8_t mRight;
