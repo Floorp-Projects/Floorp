@@ -79,7 +79,9 @@ bool OpenTypeMVAR::Parse(const uint8_t* data, size_t length) {
       return DropVariations("Failed to read value record");
     }
     if (tag <= prevTag) {
-      return DropVariations("Invalid or out-of-order value tag");
+      return DropVariations(
+        "Out-of-order value tag: '%c%c%c%c', previous tag: '%c%c%c%c'",
+        OTS_UNTAG(tag), OTS_UNTAG(prevTag));
     }
     prevTag = tag;
     // Adjust offset in case additional fields have been added to the

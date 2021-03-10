@@ -7,6 +7,7 @@
 #include "name.h"
 #include "mozilla/Compression.h"
 #include <cmath>
+#include <memory>
 
 namespace ots {
 
@@ -48,18 +49,18 @@ bool OpenTypeSILF::Parse(const uint8_t* data, size_t length,
                               OTS_MAX_DECOMPRESSED_TABLE_SIZE / (1024.0 * 1024.0),
                               decompressed_size / (1024.0 * 1024.0));
         }
-        std::vector<uint8_t> decompressed(decompressed_size);
+        std::unique_ptr<uint8_t> decompressed(new uint8_t[decompressed_size]());
         size_t outputSize = 0;
         bool ret = mozilla::Compression::LZ4::decompressPartial(
             reinterpret_cast<const char*>(data + table.offset()),
             table.remaining(),  // input buffer size (input size + padding)
-            reinterpret_cast<char*>(decompressed.data()),
-            decompressed.size(),  // target output size
+            reinterpret_cast<char*>(decompressed.get()),
+            decompressed_size,  // target output size
             &outputSize);   // return output size
-        if (!ret || outputSize != decompressed.size()) {
+        if (!ret || outputSize != decompressed_size) {
           return DropGraphite("Decompression failed");
         }
-        return this->Parse(decompressed.data(), decompressed.size(), true);
+        return this->Parse(decompressed.get(), decompressed_size, true);
       }
       default:
         return DropGraphite("Unknown compression scheme");

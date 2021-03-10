@@ -179,8 +179,7 @@ bool ParseAnchorTable(const ots::Font *font,
 }
 
 bool ParseMarkArrayTable(const ots::Font *font,
-                         const uint8_t *data, const size_t length,
-                         const uint16_t class_count) {
+                         const uint8_t *data, const size_t length) {
   ots::Buffer subtable(data, length);
 
   uint16_t mark_count = 0;
@@ -644,7 +643,7 @@ bool ParseMarkToAttachmentSubtables(const ots::Font *font,
     return OTS_FAILURE_MSG("Bad mark array offset %d", offset_mark_array);
   }
   if (!ParseMarkArrayTable(font, data + offset_mark_array,
-                           length - offset_mark_array, class_count)) {
+                           length - offset_mark_array)) {
     return OTS_FAILURE_MSG("Failed to parse mark array");
   }
 
