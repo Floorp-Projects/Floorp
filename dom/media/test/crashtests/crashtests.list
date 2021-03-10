@@ -143,3 +143,4 @@ load channel-count-in-metadata-different-than-in-content.mp4 # Bug 1584959
 load mp4_box_emptyrange.mp4 # Bug 1667480
 load 1673526-1.html
 load 1673526-2.html
+load 1693043.html

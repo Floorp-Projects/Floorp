@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+<script>
+async function boom() {
+  const audio = document.createElement("audio");
+  audio.preload = "metadata";
+  audio.src = "sound.ogg";
+  await new Promise(r => audio.onloadedmetadata = r);
+  const s = audio.mozCaptureStream();
+  const recorder = new MediaRecorder(
+      new MediaStream(s.getTracks()),
+      { audioBitsPerSecond: 3994678619 }
+    );
+  recorder.start();
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="boom()">
+</body>
+</html>
