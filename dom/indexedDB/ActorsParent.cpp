@@ -5095,12 +5095,12 @@ class DeleteFilesRunnable final : public Runnable,
 
 class Maintenance final : public Runnable, public OpenDirectoryListener {
   struct DirectoryInfo final {
-    InitializedOnce<const OriginMetadata> mOriginMetadata;
+    InitializedOnce<const FullOriginMetadata> mFullOriginMetadata;
     InitializedOnce<const nsTArray<nsString>> mDatabasePaths;
     const PersistenceType mPersistenceType;
 
     DirectoryInfo(PersistenceType aPersistenceType,
-                  OriginMetadata aOriginMetadata,
+                  FullOriginMetadata aFullOriginMetadata,
                   nsTArray<nsString>&& aDatabasePaths);
 
     DirectoryInfo(const DirectoryInfo& aOther) = delete;
@@ -5254,15 +5254,15 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
   void DirectoryLockFailed() override;
 };
 
-Maintenance::DirectoryInfo::DirectoryInfo(PersistenceType aPersistenceType,
-                                          OriginMetadata aOriginMetadata,
-                                          nsTArray<nsString>&& aDatabasePaths)
-    : mOriginMetadata(std::move(aOriginMetadata)),
+Maintenance::DirectoryInfo::DirectoryInfo(
+    PersistenceType aPersistenceType, FullOriginMetadata aFullOriginMetadata,
+    nsTArray<nsString>&& aDatabasePaths)
+    : mFullOriginMetadata(std::move(aFullOriginMetadata)),
       mDatabasePaths(std::move(aDatabasePaths)),
       mPersistenceType(aPersistenceType) {
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-  MOZ_ASSERT(!mOriginMetadata->mGroup.IsEmpty());
-  MOZ_ASSERT(!mOriginMetadata->mOrigin.IsEmpty());
+  MOZ_ASSERT(!mFullOriginMetadata->mGroup.IsEmpty());
+  MOZ_ASSERT(!mFullOriginMetadata->mOrigin.IsEmpty());
 #ifdef DEBUG
   MOZ_ASSERT(!mDatabasePaths->IsEmpty());
   for (const nsString& databasePath : *mDatabasePaths) {
@@ -13599,8 +13599,7 @@ nsresult Maintenance::DirectoryWork() {
 
               // Don't do any maintenance for private browsing databases, which
               // are only temporary.
-              if (OriginAttributes::IsPrivateBrowsing(
-                      metadata.mOriginMetadata.mOrigin)) {
+              if (OriginAttributes::IsPrivateBrowsing(metadata.mOrigin)) {
                 return Ok{};
               }
 
@@ -13613,9 +13612,7 @@ nsresult Maintenance::DirectoryWork() {
 
                 IDB_TRY_UNWRAP(
                     const DebugOnly<bool> created,
-                    quotaManager
-                        ->EnsurePersistentOriginIsInitialized(
-                            metadata.mOriginMetadata)
+                    quotaManager->EnsurePersistentOriginIsInitialized(metadata)
                         .map([](const auto& res) { return res.second; }),
                     // Not much we can do here...
                     Ok{});
@@ -13687,8 +13684,7 @@ nsresult Maintenance::DirectoryWork() {
                   }));
 
               if (!databasePaths.IsEmpty()) {
-                mDirectoryInfos.EmplaceBack(persistenceType,
-                                            metadata.mOriginMetadata,
+                mDirectoryInfos.EmplaceBack(persistenceType, metadata,
                                             std::move(databasePaths));
               }
 
@@ -13764,8 +13760,8 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
         if (!directoryLock) {
           directoryLock = mDirectoryLock->Specialize(
-              directoryInfo.mPersistenceType, *directoryInfo.mOriginMetadata,
-              Client::IDB);
+              directoryInfo.mPersistenceType,
+              *directoryInfo.mFullOriginMetadata, Client::IDB);
           MOZ_ASSERT(directoryLock);
         }
 
@@ -13774,7 +13770,7 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
         // mode.
         const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
             this, directoryLock, directoryInfo.mPersistenceType,
-            *directoryInfo.mOriginMetadata, databasePath, Nothing{});
+            *directoryInfo.mFullOriginMetadata, databasePath, Nothing{});
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
