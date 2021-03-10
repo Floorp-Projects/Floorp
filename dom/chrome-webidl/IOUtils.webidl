@@ -206,12 +206,6 @@ namespace IOUtils {
   Promise<boolean> exists(DOMString path);
 };
 
-[Exposed=Window]
-partial namespace IOUtils {
-  [Throws]
-  readonly attribute any profileBeforeChange;
-};
-
 /**
  * Options to be passed to the |IOUtils.readUTF8| method.
  */
