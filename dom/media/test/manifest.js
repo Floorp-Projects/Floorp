@@ -415,6 +415,39 @@ var gPlayTests = [
   // Test playback of a WebM file with resolution changes.
   { name: "resolution-change.webm", type: "video/webm", duration: 6.533 },
 
+  // The following webm files test cases where the webm metadata dimensions do
+  // not match those in the stream. See bug 1695033 for more info.
+
+  // Reference file with correct dimensions (webm metadata matches stream
+  // resolution).
+  { name: "bipbop_short_vp8.webm", type: "video/webm", duration: 1.011 },
+
+  // The webm resolution is greater in both dimensions than the in stream
+  // resolution.
+  {
+    name: "bipbop_short_pixel_metadata_bigger_than_in_stream_vp8.webm",
+    type: "video/webm",
+    duration: 1.011,
+  },
+
+  // The webm resolution is correct for height, but is narrower than the stream
+  // resolution.
+  {
+    name: "bipbop_short_pixel_metadata_narrower_than_in_stream_vp8.webm",
+    type: "video/webm",
+    duration: 1.011,
+  },
+
+  // The webm resolution is smaller in both dimensions than the in stream
+  // resolution.
+  {
+    name: "bipbop_short_pixel_metadata_smaller_than_in_stream_vp8.webm",
+    type: "video/webm",
+    duration: 1.011,
+  },
+
+  // End of webm dimension clashing files.
+
   // A really short, low sample rate, single channel file. This tests whether
   // we can handle playing files when only push very little audio data to the
   // hardware.
