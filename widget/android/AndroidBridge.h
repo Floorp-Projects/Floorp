@@ -93,9 +93,6 @@ class AndroidBridge final {
 
   static AndroidBridge* Bridge() { return sBridge; }
 
-  void ContentDocumentChanged(mozIDOMWindowProxy* aDOMWindow);
-  bool IsContentDocumentDisplayed(mozIDOMWindowProxy* aDOMWindow);
-
   bool GetHandlersForURL(const nsAString& aURL,
                          nsIMutableArray* handlersArray = nullptr,
                          nsIHandlerApp** aDefaultApp = nullptr,
