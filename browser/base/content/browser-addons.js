@@ -1028,12 +1028,17 @@ var gExtensionsNotifications = {
 };
 
 var BrowserAddonUI = {
-  async promptRemoveExtension(addon) {
+  promptRemoveExtension(addon) {
     let { name } = addon;
-    let title = await document.l10n.formatValue("addon-removal-title", {
-      name,
-    });
+    let brand = document
+      .getElementById("bundle_brand")
+      .getString("brandShorterName");
     let { getFormattedString, getString } = gNavigatorBundle;
+    let title = getFormattedString("webext.remove.confirmation.title", [name]);
+    let message = getFormattedString("webext.remove.confirmation.message", [
+      name,
+      brand,
+    ]);
     let btnTitle = getString("webext.remove.confirmation.button");
     let {
       BUTTON_TITLE_IS_STRING: titleString,
@@ -1053,32 +1058,22 @@ var BrowserAddonUI = {
       gAddonAbuseReportEnabled &&
       ["extension", "theme"].includes(addon.type)
     ) {
-      checkboxMessage = await document.l10n.formatValue(
-        "addon-removal-abuse-report-checkbox"
+      checkboxMessage = getFormattedString(
+        "webext.remove.abuseReportCheckbox.message",
+        [document.getElementById("bundle_brand").getString("vendorShortName")]
       );
     }
-
-    let message = null;
-
-    if (!Services.prefs.getBoolPref("prompts.windowPromptSubDialog", false)) {
-      message = getFormattedString("webext.remove.confirmation.message", [
-        name,
-        document.getElementById("bundle_brand").getString("brandShorterName"),
-      ]);
-    }
-
-    let result = confirmEx(
-      window,
+    const result = confirmEx(
+      null,
       title,
       message,
       btnFlags,
       btnTitle,
-      /* button1 */ null,
-      /* button2 */ null,
+      null,
+      null,
       checkboxMessage,
       checkboxState
     );
-
     return { remove: result === 0, report: checkboxState.value };
   },
 
@@ -1094,7 +1089,7 @@ var BrowserAddonUI = {
       return;
     }
 
-    let { remove, report } = await this.promptRemoveExtension(addon);
+    let { remove, report } = this.promptRemoveExtension(addon);
 
     AMTelemetry.recordActionEvent({
       object: eventObject,
