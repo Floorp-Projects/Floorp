@@ -182,6 +182,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
 <script type="application/javascript">
 "use strict";
 
+const { AppConstants } = SpecialPowers.Cu.import(
+  "resource://gre/modules/AppConstants.jsm",
+  {}
+);
 /** Test for css3-animations running on the compositor thread (Bug 964646) **/
  
 // Global state
@@ -224,11 +228,6 @@ runOMTATest(function() {
     SimpleTest.finish();
   });
 }, SimpleTest.finish);
-
-function isGeckoView() {
-  return SpecialPowers.Services.androidBridge &&
-    !SpecialPowers.Services.androidBridge.isFennec;
-}
 
 //----------------------------------------------------------------------
 //
@@ -2099,7 +2098,7 @@ addAsyncAnimTest(async function() {
 // Bug 996796 patch 12 - test for correct visited styles during
 // animation-only style flush.
 addAsyncAnimTest(async function() {
-  if (isGeckoView()) {
+  if (AppConstants.platform === "android") {
     todo(false, "no global history on GeckoView; can't run test");
     return;
   }
@@ -2474,7 +2473,7 @@ addAsyncAnimTest(async function() {
 // Tests that a background-color animation from currentColor to a normal color
 // on <a> element is updated when the link is visited.
 addAsyncAnimTest(async function() {
-  if (isGeckoView()) {
+  if (AppConstants.platform === "android") {
     todo(false, "no global history on GeckoView; can't run test");
     return;
   }
