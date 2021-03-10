@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import platform
-import re
 import subprocess
 import sys
 import tempfile
@@ -24,66 +23,6 @@ from mozfile import which
 HOMEBREW_BOOTSTRAP = (
     "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"
 )
-XCODE_APP_STORE = "macappstore://itunes.apple.com/app/id497799835?mt=12"
-XCODE_LEGACY = (
-    "https://developer.apple.com/downloads/download.action?path=Developer_Tools/"
-    "xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg"
-)
-
-RE_CLANG_VERSION = re.compile("Apple (?:clang|LLVM) version (\d+\.\d+)")
-
-APPLE_CLANG_MINIMUM_VERSION = StrictVersion("4.2")
-
-XCODE_REQUIRED = """
-Xcode is required to build Firefox. Please complete the install of Xcode
-through the App Store.
-
-It's possible Xcode is already installed on this machine but it isn't being
-detected. This is possible with developer preview releases of Xcode, for
-example. To correct this problem, run:
-
-  `xcode-select --switch /path/to/Xcode.app`.
-
-e.g. `sudo xcode-select --switch /Applications/Xcode.app`.
-"""
-
-XCODE_REQUIRED_LEGACY = """
-You will need to download and install Xcode to build Firefox.
-
-Please complete the Xcode download and then relaunch this script.
-"""
-
-XCODE_NO_DEVELOPER_DIRECTORY = """
-xcode-select says you don't have a developer directory configured. We think
-this is due to you not having Xcode installed (properly). We're going to
-attempt to install Xcode through the App Store. If the App Store thinks you
-have Xcode installed, please run xcode-select by hand until it stops
-complaining and then re-run this script.
-"""
-
-XCODE_COMMAND_LINE_TOOLS_MISSING = """
-The Xcode command line tools are required to build Firefox.
-"""
-
-INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS = """
-Perform the following steps to install the Xcode command line tools:
-
-    1) Open Xcode.app
-    2) Click through any first-run prompts
-    3) From the main Xcode menu, select Preferences (Command ,)
-    4) Go to the Download tab (near the right)
-    5) Install the "Command Line Tools"
-
-When that has finished installing, please relaunch this script.
-"""
-
-UPGRADE_XCODE_COMMAND_LINE_TOOLS = """
-An old version of the Xcode command line tools is installed. You will need to
-install a newer version in order to compile Firefox. If Xcode itself is old,
-its command line tools may be too old even if it claims there are no updates
-available, so if you are seeing this message multiple times, please update
-Xcode first.
-"""
 
 BREW_INSTALL = """
 We will install the Homebrew package manager to install required packages.
@@ -142,7 +81,7 @@ class OSXBootstrapper(BaseBootstrapper):
         self.minor_version = version.split(".")[1]
 
     def install_system_packages(self):
-        self.ensure_xcode()
+        self.ensure_command_line_tools()
 
         self.ensure_homebrew_installed()
         _, hg_modern, _ = self.is_mercurial_modern()
@@ -182,87 +121,42 @@ class OSXBootstrapper(BaseBootstrapper):
 
         return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
 
-    def ensure_xcode(self):
-        if self.os_version < StrictVersion("10.7"):
-            if not os.path.exists("/Developer/Applications/Xcode.app"):
-                print(XCODE_REQUIRED_LEGACY)
-
-                subprocess.check_call(["open", XCODE_LEGACY])
-                sys.exit(1)
-
-        # OS X 10.7 have Xcode come from the app store. However, users can
-        # still install Xcode into any arbitrary location. We honor the
-        # location of Xcode as set by xcode-select. This should also pick up
-        # developer preview releases of Xcode, which can be installed into
-        # paths like /Applications/Xcode5-DP6.app.
-        elif self.os_version >= StrictVersion("10.7"):
-            select = which("xcode-select")
-            try:
-                output = subprocess.check_output(
-                    [select, "--print-path"], stderr=subprocess.STDOUT
-                )
-            except subprocess.CalledProcessError as e:
-                # This seems to appear on fresh OS X machines before any Xcode
-                # has been installed. It may only occur on OS X 10.9 and later.
-                if b"unable to get active developer directory" in e.output:
-                    print(XCODE_NO_DEVELOPER_DIRECTORY)
-                    self._install_xcode_app_store()
-                    assert False  # Above should exit.
-
-                output = e.output
-
-            # This isn't the most robust check in the world. It relies on the
-            # default value not being in an application bundle, which seems to
-            # hold on at least Mavericks.
-            if b".app/" not in output:
-                print(XCODE_REQUIRED)
-                self._install_xcode_app_store()
-                assert False  # Above should exit.
-
-        # Once Xcode is installed, you need to agree to the license before you can
-        # use it.
-        try:
-            output = subprocess.check_output(
-                ["/usr/bin/xcrun", "clang"], stderr=subprocess.STDOUT
-            )
-        except subprocess.CalledProcessError as e:
-            if b"license" in e.output:
-                xcodebuild = which("xcodebuild")
-                try:
-                    subprocess.check_output(
-                        [xcodebuild, "-license"], stderr=subprocess.STDOUT
-                    )
-                except subprocess.CalledProcessError as e:
-                    if b"requires admin privileges" in e.output:
-                        self.run_as_root([xcodebuild, "-license"])
-
-        # Even then we're not done! We need to install the Xcode command line tools.
-        # As of Mountain Lion, apparently the only way to do this is to go through a
-        # menu dialog inside Xcode itself. We're not making this up.
-        if self.os_version >= StrictVersion("10.7"):
-            if not os.path.exists("/usr/bin/clang"):
-                print(XCODE_COMMAND_LINE_TOOLS_MISSING)
-                print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
-                sys.exit(1)
-
-            output = subprocess.check_output(
-                ["/usr/bin/clang", "--version"], universal_newlines=True
-            )
-            match = RE_CLANG_VERSION.search(output)
-            if match is None:
-                raise Exception("Could not determine Clang version.")
-
-            version = StrictVersion(match.group(1))
-
-            if version < APPLE_CLANG_MINIMUM_VERSION:
-                print(UPGRADE_XCODE_COMMAND_LINE_TOOLS)
-                print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
-                sys.exit(1)
-
-    def _install_xcode_app_store(self):
-        subprocess.check_call(["open", XCODE_APP_STORE])
-        print("Once the install has finished, please relaunch this script.")
-        sys.exit(1)
+    def ensure_command_line_tools(self):
+        # We need either the command line tools or Xcode (one is sufficient).
+        # Python 3, required to run this code, is not installed by default on macos
+        # as of writing (macos <= 11.x).
+        # There are at least 5 different ways to obtain it:
+        # - macports
+        # - homebrew
+        # - command line tools
+        # - Xcode
+        # - python.org
+        # The first two require to install the command line tools.
+        # So only in the last case we may not have command line tools or xcode
+        # available.
+        # When the command line tools are installed, `xcode-select --print-path`
+        # prints their path.
+        # When Xcode is installed, `xcode-select --print-path` prints its path.
+        # When neither is installed, `xcode-select --print-path` prints an error
+        # to stderr and nothing to stdout.
+        # So in the rare case where we detect neither the command line tools or
+        # Xcode is installed, we trigger an intall of the command line tools
+        # (via `xcode-select --install`).
+        proc = subprocess.run(
+            ["xcode-select", "--print-path"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        if not proc.stdout:
+            subprocess.run(["xcode-select", "--install"], check=True)
+            # xcode-select --install triggers a separate process to be started by
+            # launchd, and tracking its successful outcome would require something
+            # like figuring its pid and using kqueue to get a notification when it
+            # finishes. Considering how unlikely it is that someone would end up
+            # here in the first place, we just bail out.
+            print("Please follow the command line tools installer instructions")
+            print("and rerun `./mach bootstrap` when it's finished.")
+            sys.exit(1)
 
     def _ensure_homebrew_found(self):
         self.brew = which("brew")
