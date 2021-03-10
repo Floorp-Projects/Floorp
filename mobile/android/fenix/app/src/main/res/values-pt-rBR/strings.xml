@@ -14,7 +14,7 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Pesquise ou digite um endereço</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">Suas abas abertas serão mostradas aqui.</string>
+    <string name="no_open_tabs_description">Suas abas abertas são mostradas aqui.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Suas abas privativas são mostradas aqui.</string>
@@ -181,6 +181,8 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Aparência</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Personalizar leitor</string>
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Não foi possível conectar. Esquema de URL não reconhecível.</string>
@@ -1054,7 +1056,7 @@
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Tem certeza que quer excluir %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">Excluir esta aba também excluirá toda a coleção. Você pode criar novas coleções quando quiser.</string>
+    <string name="delete_tab_and_collection_dialog_message">Excluir esta aba também exclui toda a coleção. Você pode criar novas coleções quando quiser.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Excluir %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
