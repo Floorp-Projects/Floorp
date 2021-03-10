@@ -24,3 +24,5 @@ if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
     OS_LIBS += ["atomic"]
 
 DisableStlWrapping()
+
+include("/mozglue/build/replace_malloc.mozbuild")
