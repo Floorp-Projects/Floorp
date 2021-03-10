@@ -36,28 +36,12 @@
         "events": ["startup"]
       }
     },
-    "experiments": {
-      "schema": "experiment-apis/experiments.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experiment-apis/experiments.js",
-        "paths": [["experiments"]]
-      }
-    },
     "matchPatterns": {
       "schema": "experiment-apis/matchPatterns.json",
       "child": {
         "scopes": ["addon_child"],
         "script": "experiment-apis/matchPatterns.js",
         "paths": [["matchPatterns"]]
-      }
-    },
-    "sharedPreferences": {
-      "schema": "experiment-apis/sharedPreferences.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "experiment-apis/sharedPreferences.js",
-        "paths": [["sharedPreferences"]]
       }
     },
     "systemManufacturer": {
