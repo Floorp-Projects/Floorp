@@ -135,6 +135,21 @@ readermode:
       scroll_position: Percentage of window scrolled in Reader Mode (whole number)
     products:
       - "firefox"
+  button:
+    objects: ["click"]
+    release_channel_collection: opt-out
+    record_in_processes: ["content"]
+    description: >
+      This is recorded any time a Reader Mode button is clicked.
+    bug_numbers: [1693362]
+    notification_emails:
+      - "kirill@getpocket.com"
+      - "sdowne@getpocket.com"
+    expiry_version: never
+    extra_keys:
+      label: The type of button clicked.
+    products:
+      - "firefox"
 
 addonsManager:
   install:
