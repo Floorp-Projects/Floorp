@@ -731,14 +731,18 @@ void WinWebAuthnManager::MaybeAbortSign(const uint64_t& aTransactionId,
 }
 
 void WinWebAuthnManager::Cancel(PWebAuthnTransactionParent* aParent,
-                                const uint64_t& aTransactionId) {
+                                const Tainted<uint64_t>& aTransactionId) {
   if (mTransactionParent != aParent) {
     return;
   }
 
   ClearTransaction();
 
-  auto iter = mCancellationIds.find(aTransactionId);
+  auto iter = mCancellationIds.find(
+      MOZ_NO_VALIDATE(aTransactionId,
+                      "Transaction ID is checked against a global container, "
+                      "so an invalid entry can affect another origin's "
+                      "request. This issue is filed as Bug 1696159."));
   if (iter != mCancellationIds.end()) {
     gWinWebauthnCancelCurrentOperation(iter->second);
   }
