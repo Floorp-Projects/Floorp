@@ -673,7 +673,11 @@ void SurfaceTextureHost::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
 
-  auto imageType = aResources.GetBackendType() == WebRenderBackend::SOFTWARE
+  // Prefer TextureExternal unless the backend requires TextureRect.
+  TextureHost::NativeTexturePolicy policy =
+      TextureHost::BackendNativeTexturePolicy(aResources.GetBackendType(),
+                                              GetSize());
+  auto imageType = policy == TextureHost::NativeTexturePolicy::REQUIRE
                        ? wr::ExternalImageType::TextureHandle(
                              wr::ImageBufferKind::TextureRect)
                        : wr::ExternalImageType::TextureHandle(
