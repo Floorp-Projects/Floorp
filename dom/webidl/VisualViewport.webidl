@@ -7,7 +7,8 @@
  * https://wicg.github.io/visual-viewport/#the-visualviewport-interface
  */
 
-[Exposed=Window]
+[Pref="dom.visualviewport.enabled",
+ Exposed=Window]
 interface VisualViewport : EventTarget {
   readonly attribute double offsetLeft;
   readonly attribute double offsetTop;

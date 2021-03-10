@@ -21,8 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1285070
     {"file": "helper_bug1502010_unconsumed_pan.html"},
     {"file": "helper_bug1544966_zoom_on_touch_action_none.html", "prefs": [...touch_action_prefs]},
     {"file": "helper_bug1648491_no_pointercancel_with_dtc.html", "prefs": [...touch_action_prefs]},
-    {"file": "helper_bug1663731_no_pointercancel_on_second_touchstart.html", "prefs": [...touch_action_prefs]},
-    {"file": "helper_bug1682170_pointercancel_on_touchaction_pinchzoom.html", "prefs": [...touch_action_prefs]},
+    {"file": "helper_bug1663731_no_pointercancel_on_second_touchstart.html",
+     "prefs": [["dom.visualviewport.enabled", true], ...touch_action_prefs]},
+    {"file": "helper_bug1682170_pointercancel_on_touchaction_pinchzoom.html",
+     "prefs": [["dom.visualviewport.enabled", true], ...touch_action_prefs]},
   ];
 
   if (isApzEnabled()) {
