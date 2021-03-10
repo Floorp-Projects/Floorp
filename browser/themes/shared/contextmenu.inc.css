@@ -13,8 +13,8 @@
 }
 
 #context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
+  width: 1.25em;
+  height: auto;
   margin: 7px;
   -moz-context-properties: fill;
   fill: currentColor;

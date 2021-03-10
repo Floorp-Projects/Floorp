@@ -150,6 +150,11 @@ menucaption {
     list-style-image: url("chrome://global/skin/icons/menu-arrow.svg");
     -moz-context-properties: fill;
     fill: currentColor;
+    margin-inline-end: 1.5em;
+  }
+
+  .menu-right > image {
+    width: 1em;
   }
 
   .menu-right:-moz-locale-dir(rtl) {
