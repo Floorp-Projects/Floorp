@@ -12,7 +12,7 @@ class MainWorker {
   const UniquePtr<TaskQueueWrapper> mTaskQueue;
   MediaEventListener mShutdownListener;
   const UniquePtr<media::ShutdownBlockingTicket> mTicket;
-  MainWorker(UniquePtr<TaskQueueWrapper> aTaskQueue)
+  explicit MainWorker(UniquePtr<TaskQueueWrapper> aTaskQueue)
       : mTaskQueue(std::move(aTaskQueue)),
         mTicket(MakeUnique<media::ShutdownBlockingTicket>(
             u"MainWorker::mTicket"_ns, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
