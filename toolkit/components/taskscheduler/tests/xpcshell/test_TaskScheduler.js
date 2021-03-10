@@ -20,21 +20,25 @@ const { TaskScheduler } = ChromeUtils.import(
   "resource://gre/modules/TaskScheduler.jsm"
 );
 
-registerCleanupFunction(() => {
-  TaskScheduler.deleteAllTasks();
+registerCleanupFunction(async () => {
+  await TaskScheduler.deleteAllTasks();
 });
 
 add_task(async function test_gen() {
-  TaskScheduler.registerTask("FOO", "xyz", TaskScheduler.MIN_INTERVAL_SECONDS, {
-    disabled: true,
-  });
-  TaskScheduler.deleteTask("FOO");
+  await TaskScheduler.registerTask(
+    "FOO",
+    "xyz",
+    TaskScheduler.MIN_INTERVAL_SECONDS,
+    {
+      disabled: true,
+    }
+  );
+  await TaskScheduler.deleteTask("FOO");
 
-  Assert.throws(
-    () =>
-      TaskScheduler.registerTask("BAR", "123", 1, {
-        disabled: true,
-      }),
+  await Assert.rejects(
+    TaskScheduler.registerTask("BAR", "123", 1, {
+      disabled: true,
+    }),
     /Interval is too short/
   );
 });
