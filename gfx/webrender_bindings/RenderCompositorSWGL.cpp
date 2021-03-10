@@ -96,6 +96,14 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
       // Update the bounds to include zero if the origin is at zero.
       bounds.ExpandToEnclose(LayoutDeviceIntPoint(0, 0));
     }
+    // Sometimes we end up racing on the widget size, and it can shrink between
+    // BeginFrame and StartCompositing. We calculated our dirty region based on
+    // the previous widget size, so we need to clamp the bounds here to ensure
+    // we remain within the buffer.
+    bounds.IntersectRect(
+        bounds,
+        LayoutDeviceIntRect(bounds.TopLeft(),
+                            LayoutDeviceIntSize(size.width, size.height)));
   } else {
     // If we couldn't lock the DT above, then allocate a data surface and map
     // that for usage with SWGL.
