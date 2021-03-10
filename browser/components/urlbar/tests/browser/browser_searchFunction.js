@@ -13,12 +13,12 @@ add_task(async function init() {
   // fired.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  await SearchTestUtils.installSearchExtension({
-    keyword: ALIAS,
+  aliasEngine = await Services.search.addEngineWithDetails("Test", {
+    alias: ALIAS,
+    template: "http://example.com/?search={searchTerms}",
   });
-  aliasEngine = Services.search.getEngineByName("Example");
-
   registerCleanupFunction(async function() {
+    await Services.search.removeEngine(aliasEngine);
     BrowserTestUtils.removeTab(tab);
     gURLBar.handleRevert();
   });

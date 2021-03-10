@@ -16,14 +16,16 @@ const { SearchSuggestionController } = ChromeUtils.import(
 let gEngine;
 
 add_task(async function setup() {
-  await SearchTestUtils.installSearchExtension();
-  gEngine = Services.search.getEngineByName("Example");
+  gEngine = await Services.search.addEngineWithDetails("TestLimit", {
+    template: "http://example.com/?search={searchTerms}",
+  });
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(gEngine);
   await UrlbarTestUtils.formHistory.clear();
 
   registerCleanupFunction(async function() {
     await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.removeEngine(gEngine);
     await UrlbarTestUtils.formHistory.clear();
   });
 });

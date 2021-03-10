@@ -51,15 +51,16 @@ add_task(async function setup() {
   await Services.search.moveEngine(engine2, 0);
 
   // Add an engine with an alias.
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch",
-    keyword: "alias",
+  gAliasEngine = await Services.search.addEngineWithDetails("MozSearch", {
+    alias: "alias",
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
   });
-  gAliasEngine = Services.search.getEngineByName("MozSearch");
 
   registerCleanupFunction(async () => {
     await Services.search.setDefault(oldDefaultEngine);
     await Services.search.setDefaultPrivate(oldDefaultPrivateEngine);
+    await Services.search.removeEngine(gAliasEngine);
     await PlacesUtils.history.clear();
   });
 });

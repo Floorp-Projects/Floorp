@@ -5,18 +5,15 @@ const { SearchTestUtils } = ChromeUtils.import(
   "resource://testing-common/SearchTestUtils.jsm"
 );
 
-SearchTestUtils.init(this);
-
 add_task(async function setup() {
-  await SearchTestUtils.installSearchExtension({
-    name: "engine1",
-    search_url: "https://example.com/engine1",
-    search_url_get_params: "search={searchTerms}",
+  const engine1 = await Services.search.addEngineWithDetails("engine1", {
+    method: "get",
+    template: "http://example.com/engine1?search={searchTerms}",
   });
-  await SearchTestUtils.installSearchExtension({
-    name: "engine2",
-    search_url: "https://example.com/engine2",
-    search_url_get_params: "search={searchTerms}",
+
+  const engine2 = await Services.search.addEngineWithDetails("engine2", {
+    method: "get",
+    template: "http://example.com/engine2?search={searchTerms}",
   });
 
   const originalDefault = await Services.search.getDefault();
@@ -25,6 +22,9 @@ add_task(async function setup() {
   registerCleanupFunction(async () => {
     await Services.search.setDefault(originalDefault);
     await Services.search.setDefaultPrivate(originalDefaultPrivate);
+
+    await Services.search.removeEngine(engine1);
+    await Services.search.removeEngine(engine2);
   });
 });
 
