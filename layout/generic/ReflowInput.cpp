@@ -1456,7 +1456,8 @@ LogicalSize ReflowInput::CalculateAbsoluteSizeWithResolvedAutoBlockSize(
 
   MOZ_ASSERT(mFlags.mIsBSizeSetByAspectRatio,
              "This flag should have been set because nsIFrame::ComputeSize() "
-             "returns AspectRatioUsage::ToComputeBSize unintentionally");
+             "returns AspectRatioUsage::ToComputeBSize unconditionally for "
+             "auto block-size");
   mFlags.mIsBSizeSetByAspectRatio = false;
 
   return resultSize;
