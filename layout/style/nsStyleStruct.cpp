@@ -2847,7 +2847,9 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mWhiteSpace(StyleWhiteSpace::Normal),
       mHyphens(StyleHyphens::Manual),
       mRubyAlign(StyleRubyAlign::SpaceAround),
-      mRubyPosition(StyleRubyPosition::Over),
+      mRubyPosition(StaticPrefs::layout_css_ruby_position_alternate_enabled()
+                        ? StyleRubyPosition::AlternateOver
+                        : StyleRubyPosition::Over),
       mTextSizeAdjust(StyleTextSizeAdjust::Auto),
       mTextCombineUpright(NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE),
       mControlCharacterVisibility(
