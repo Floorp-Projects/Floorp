@@ -478,7 +478,7 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
         try:
             handshaker.do_handshake()
         except HandshakeException as e:
-            self.logger.info('Handshake failed for error: %s', e)
+            self.logger.info('Handshake failed for error: %s' % e)
             h2response.set_error(e.status)
             h2response.write()
             return
