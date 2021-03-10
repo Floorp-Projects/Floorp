@@ -9146,8 +9146,8 @@ bool nsIFrame::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
       b = vis.YMost() - mRect.height;  // bottom: positive is downwards
   if (aOverflowAreas.ScrollableOverflow().IsEqualEdges(
           nsRect(nsPoint(0, 0), GetSize())) &&
-      l <= NS_FRAME_OVERFLOW_DELTA_MAX && t <= NS_FRAME_OVERFLOW_DELTA_MAX &&
-      r <= NS_FRAME_OVERFLOW_DELTA_MAX && b <= NS_FRAME_OVERFLOW_DELTA_MAX &&
+      l <= InkOverflowDeltas::kMax && t <= InkOverflowDeltas::kMax &&
+      r <= InkOverflowDeltas::kMax && b <= InkOverflowDeltas::kMax &&
       // we have to check these against zero because we *never* want to
       // set a frame as having no overflow in this function.  This is
       // because FinishAndStoreOverflow calls this function prior to
