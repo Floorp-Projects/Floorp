@@ -33,6 +33,9 @@ function getScrollPosition(bc) {
  * for an average page without any frames.
  */
 add_task(async function test_scroll() {
+  // Needed for setScrollPosition()
+  await pushPrefs(["dom.visualviewport.enabled", true]);
+
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
@@ -83,6 +86,9 @@ add_task(async function test_scroll() {
  * for multiple frames of pages with framesets.
  */
 add_task(async function test_scroll_nested() {
+  // Needed for setScrollPosition()
+  await pushPrefs(["dom.visualviewport.enabled", true]);
+
   let tab = BrowserTestUtils.addTab(gBrowser, URL_FRAMESET);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
@@ -155,7 +161,11 @@ add_task(async function test_scroll_nested() {
  * are preserved as well (bug 1265818).
  */
 add_task(async function test_scroll_background_tabs() {
-  pushPrefs(["browser.sessionstore.restore_on_demand", true]);
+  await pushPrefs(
+    ["browser.sessionstore.restore_on_demand", true],
+    // Needed for setScrollPosition()
+    ["dom.visualviewport.enabled", true]
+  );
 
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let tab = BrowserTestUtils.addTab(newWin.gBrowser, URL);
