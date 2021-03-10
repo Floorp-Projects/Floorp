@@ -6229,7 +6229,14 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
           styleBSize.AsLengthPercentage());
-    } else if (aspectRatio && result.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
+    } else if (aspectRatio) {
+      // If both inline and block dimensions are auto (i.e. weak size
+      // constraints), the block axis is the ratio-dependent axis.
+      // If we have a super large inline size, aspect-ratio should still be
+      // applied. That's why we apply aspect-ratio unconditionally for auto
+      // block size here.
+      // FIXME: Bug 1690423 moves this part below the handle of grid, so this
+      // shouldn't affect grid layout.
       result.BSize(aWM) = aspectRatio.ComputeRatioDependentSize(
           LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
           boxSizingAdjust);
