@@ -5,6 +5,8 @@
 "use strict";
 
 {
+  const prefersDarkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
   function _isTextColorDark(r, g, b) {
     return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
   }
@@ -23,17 +25,19 @@
         processColor(rgbaChannels, element) {
           if (!rgbaChannels) {
             element.removeAttribute("lwt-newtab");
-            element.removeAttribute("lwt-newtab-brighttext");
+            element.toggleAttribute(
+              "lwt-newtab-brighttext",
+              prefersDarkQuery.matches
+            );
             return null;
           }
 
           element.setAttribute("lwt-newtab", "true");
           const { r, g, b, a } = rgbaChannels;
-          if (!_isTextColorDark(r, g, b)) {
-            element.setAttribute("lwt-newtab-brighttext", "true");
-          } else {
-            element.removeAttribute("lwt-newtab-brighttext");
-          }
+          element.toggleAttribute(
+            "lwt-newtab-brighttext",
+            !_isTextColorDark(r, g, b)
+          );
 
           return `rgba(${r}, ${g}, ${b}, ${a})`;
         },
@@ -107,28 +111,39 @@
    */
   const ContentThemeController = {
     /**
-     * Tell the frame script that the page supports theming, and watch for updates
-     * from the frame script.
+     * Listen for theming updates from the LightweightThemeChild actor, and
+     * begin listening to changes in preferred color scheme.
      */
     init() {
       addEventListener("LightweightTheme:Set", this);
+
+      // We don't sync default theme attributes in `init()`, as we may not have
+      // a body element to attach the attribute to yet. They will be set when
+      // the first LightweightTheme:Set event is delivered during pageshow.
+      prefersDarkQuery.addEventListener("change", this);
     },
 
     /**
-     * Handle theme updates from the frame script.
-     * @param {Object} event object containing the theme update.
+     * Handle theme updates from the LightweightThemeChild actor or due to
+     * changes to the prefers-color-scheme media query.
+     * @param {Object} event object containing the theme or query update.
      */
-    handleEvent({ type, detail }) {
-      if (type == "LightweightTheme:Set") {
-        let { data } = detail;
+    handleEvent(event) {
+      // XUL documents don't have a body
+      const element = document.body ? document.body : document.documentElement;
+
+      if (event.type == "LightweightTheme:Set") {
+        let { data } = event.detail;
         if (!data) {
           data = {};
         }
-        // XUL documents don't have a body
-        const element = document.body
-          ? document.body
-          : document.documentElement;
         this._setProperties(element, data);
+      } else if (event.type == "change") {
+        // If a lightweight theme doesn't apply, update lwt-newtab-brighttext to
+        // reflect prefers-color-scheme.
+        if (!element.hasAttribute("lwt-newtab")) {
+          element.toggleAttribute("lwt-newtab-brighttext", event.matches);
+        }
       }
     },
 
