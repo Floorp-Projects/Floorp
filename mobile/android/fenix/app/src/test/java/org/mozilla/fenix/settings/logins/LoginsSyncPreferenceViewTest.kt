@@ -24,9 +24,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.settings.SyncPreferenceView
 import org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragmentDirections
 
-class SyncLoginsPreferenceViewTest {
+class LoginsSyncPreferenceViewTest {
 
     @MockK private lateinit var syncLoginsPreference: Preference
     @MockK private lateinit var lifecycleOwner: LifecycleOwner
@@ -137,10 +138,25 @@ class SyncLoginsPreferenceViewTest {
         }
     }
 
-    private fun createView() = SyncLoginsPreferenceView(
-        syncLoginsPreference,
-        lifecycleOwner,
-        accountManager,
-        navController
+    private fun createView() = SyncPreferenceView(
+        syncPreference = syncLoginsPreference,
+        lifecycleOwner = lifecycleOwner,
+        accountManager = accountManager,
+        syncEngine = SyncEngine.Passwords,
+        onSignInToSyncClicked = {
+            val directions =
+                SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
+            navController.navigate(directions)
+        },
+        onSyncStatusClicked = {
+            val directions =
+                SavedLoginsAuthFragmentDirections.actionGlobalAccountSettingsFragment()
+            navController.navigate(directions)
+        },
+        onReconnectClicked = {
+            val directions =
+                SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment()
+            navController.navigate(directions)
+        }
     )
 }
