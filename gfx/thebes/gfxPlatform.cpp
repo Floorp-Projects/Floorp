@@ -2705,6 +2705,9 @@ void gfxPlatform::InitWebRenderConfig() {
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT)) {
     gfxVars::SetUseWebRenderDCompWin(true);
   }
+  if (StaticPrefs::gfx_webrender_software_d3d11_AtStartup()) {
+    gfxVars::SetAllowSoftwareWebRenderD3D11(true);
+  }
   if (Preferences::GetBool("gfx.webrender.dcomp-video-overlay-win", false)) {
     if (IsWin10AnniversaryUpdateOrLater() &&
         gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR)) {
@@ -3313,13 +3316,22 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   // Before we disable D3D11 and HW_COMPOSITING, we should check if we can
   // fallback from WebRender to Software WebRender + D3D11 compositing.
   if (StaticPrefs::gfx_webrender_fallback_software_d3d11_AtStartup() &&
-      StaticPrefs::gfx_webrender_software_d3d11_AtStartup() &&
+      gfxVars::AllowSoftwareWebRenderD3D11() &&
       gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE) &&
       gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING) &&
       gfxVars::UseWebRender() && !gfxVars::UseSoftwareWebRender()) {
     // Fallback to Software WebRender + D3D11 compositing.
     gfxCriticalNote << "Fallback WR to SW-WR + D3D11";
     gfxVars::SetUseSoftwareWebRender(true);
+    return true;
+  }
+
+  if (StaticPrefs::gfx_webrender_fallback_software_d3d11_AtStartup() &&
+      gfxVars::AllowSoftwareWebRenderD3D11() &&
+      gfxVars::UseSoftwareWebRender()) {
+    // Fallback from Software WebRender + D3D11 to Software WebRender.
+    gfxCriticalNote << "Fallback SW-WR + D3D11 to SW-WR";
+    gfxVars::SetAllowSoftwareWebRenderD3D11(false);
     return true;
   }
 
