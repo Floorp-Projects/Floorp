@@ -523,9 +523,11 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>, @Nullable GeckoResult.Consumer<Throwable>);
     method @NonNull @SafeVarargs public static <V> GeckoResult<List<V>> allOf(@NonNull GeckoResult<V>);
     method @NonNull public static <V> GeckoResult<List<V>> allOf(@Nullable List<GeckoResult<V>>);
+    method @AnyThread @NonNull public static GeckoResult<AllowOrDeny> allow();
     method @NonNull public synchronized GeckoResult<Boolean> cancel();
     method public synchronized void complete(@Nullable T);
     method public synchronized void completeExceptionally(@NonNull Throwable);
+    method @AnyThread @NonNull public static GeckoResult<AllowOrDeny> deny();
     method @NonNull public <U> GeckoResult<U> exceptionally(@NonNull GeckoResult.OnExceptionListener<U>);
     method @NonNull public static <T> GeckoResult<T> fromException(@NonNull Throwable);
     method @NonNull public static <U> GeckoResult<U> fromValue(@Nullable U);
@@ -538,8 +540,8 @@ package org.mozilla.geckoview {
     method @NonNull public <U> GeckoResult<U> then(@NonNull GeckoResult.OnValueListener<T,U>);
     method @NonNull public <U> GeckoResult<U> then(@Nullable GeckoResult.OnValueListener<T,U>, @Nullable GeckoResult.OnExceptionListener<U>);
     method @NonNull public GeckoResult<T> withHandler(@Nullable Handler);
-    field public static final GeckoResult<AllowOrDeny> ALLOW;
-    field public static final GeckoResult<AllowOrDeny> DENY;
+    field @Deprecated @DeprecationSchedule(id="allowdeny",version=92) public static final GeckoResult<AllowOrDeny> ALLOW;
+    field @Deprecated @DeprecationSchedule(id="allowdeny",version=92) public static final GeckoResult<AllowOrDeny> DENY;
   }
 
   @AnyThread public static interface GeckoResult.CancellationDelegate {

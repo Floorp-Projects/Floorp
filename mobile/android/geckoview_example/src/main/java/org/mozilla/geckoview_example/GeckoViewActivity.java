@@ -123,7 +123,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     @Nullable
     @Override
     public GeckoResult<AllowOrDeny> onInstallPrompt(final @NonNull WebExtension extension) {
-        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+        return GeckoResult.allow();
     }
 
     @Nullable
@@ -132,7 +132,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
                                                    @NonNull WebExtension updatedExtension,
                                                    @NonNull String[] newPermissions,
                                                    @NonNull String[] newOrigins) {
-        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+        return GeckoResult.allow();
     }
 
     @Override
@@ -184,7 +184,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
     public GeckoResult<AllowOrDeny> onCloseTab(WebExtension extension, GeckoSession session) {
         final WebExtensionDelegate delegate = mExtensionDelegate.get();
         if (delegate == null) {
-            return GeckoResult.fromValue(AllowOrDeny.DENY);
+            return GeckoResult.deny();
         }
 
         final TabSession tabSession = mTabManager.getSession(session);
@@ -192,7 +192,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
             delegate.closeTab(tabSession);
         }
 
-        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+        return GeckoResult.allow();
     }
 
     @Override
@@ -201,7 +201,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
                                                 WebExtension.UpdateTabDetails updateDetails) {
         final WebExtensionDelegate delegate = mExtensionDelegate.get();
         if (delegate == null) {
-            return GeckoResult.fromValue(AllowOrDeny.DENY);
+            return GeckoResult.deny();
         }
 
         final TabSession tabSession = mTabManager.getSession(session);
@@ -209,7 +209,7 @@ class WebExtensionManager implements WebExtension.ActionDelegate,
             delegate.updateTab(tabSession, updateDetails);
         }
 
-        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+        return GeckoResult.allow();
     }
 
     @Override
@@ -1901,7 +1901,7 @@ public class GeckoViewActivity
                   " isRedirect=" + request.isRedirect +
                   " isDirectNavigation=" + request.isDirectNavigation);
 
-            return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+            return GeckoResult.allow();
         }
 
         @Override
@@ -1912,7 +1912,7 @@ public class GeckoViewActivity
                   " isRedirect=" + request.isRedirect +
                   "isDirectNavigation=" + request.isDirectNavigation);
 
-            return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+            return GeckoResult.allow();
         }
 
         @Override
