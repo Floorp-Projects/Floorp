@@ -205,8 +205,19 @@
 }
 
 #identity-box[pageproxystate="valid"].chromeUI #identity-icon {
+  list-style-image: url(chrome://branding/content/icon16.png);
+}
+@media (min-resolution: 1.1dppx) {
+  #identity-box[pageproxystate="valid"].chromeUI #identity-icon {
+    list-style-image: url(chrome://branding/content/icon32.png);
+  }
+}
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#identity-box[pageproxystate="valid"].chromeUI #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
+} /*** END !proton ***/
 
 #identity-box[pageproxystate="valid"].localResource #identity-icon {
   list-style-image: url(chrome://global/skin/icons/document.svg);
