@@ -49,7 +49,7 @@ class MediaDocument : public nsHTMLDocument {
   void InitialSetupDone();
 
   // Check whether initial setup has been done.
-  MOZ_MUST_USE bool InitialSetupHasBeenDone() const {
+  [[nodiscard]] bool InitialSetupHasBeenDone() const {
     return mDidInitialDocumentSetup;
   }
 

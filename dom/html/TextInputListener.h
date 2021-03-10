@@ -44,7 +44,7 @@ class TextInputListener final : public nsIDOMEventListener,
   /**
    * OnEditActionHandled() is called when the editor handles each edit action.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   OnEditActionHandled(TextEditor& aTextEditor);
 
   /**

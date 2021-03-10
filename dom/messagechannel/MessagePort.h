@@ -51,7 +51,7 @@ class UniqueMessagePortId final {
   ~UniqueMessagePortId() { ForceClose(); };
   void ForceClose();
 
-  MOZ_MUST_USE MessagePortIdentifier release() {
+  [[nodiscard]] MessagePortIdentifier release() {
     MessagePortIdentifier id = mIdentifier;
     mIdentifier.neutered() = true;
     return id;

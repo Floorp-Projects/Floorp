@@ -34,17 +34,13 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
   NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument) override;
 
  protected:
-  MOZ_MUST_USE
-  virtual bool SerializeHTMLAttributes(mozilla::dom::Element* aContent,
-                                       mozilla::dom::Element* aOriginalElement,
-                                       nsAString& aTagPrefix,
-                                       const nsAString& aTagNamespaceURI,
-                                       nsAtom* aTagName, int32_t aNamespace,
-                                       nsAString& aStr);
+  [[nodiscard]] virtual bool SerializeHTMLAttributes(
+      mozilla::dom::Element* aContent, mozilla::dom::Element* aOriginalElement,
+      nsAString& aTagPrefix, const nsAString& aTagNamespaceURI,
+      nsAtom* aTagName, int32_t aNamespace, nsAString& aStr);
 
-  MOZ_MUST_USE
-  virtual bool AppendAndTranslateEntities(const nsAString& aStr,
-                                          nsAString& aOutputStr) override;
+  [[nodiscard]] virtual bool AppendAndTranslateEntities(
+      const nsAString& aStr, nsAString& aOutputStr) override;
 
  private:
   static const uint8_t kEntities[];

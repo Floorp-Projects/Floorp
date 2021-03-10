@@ -145,9 +145,8 @@ class nsTextFragment final {
    * Append the contents of this string fragment to aString
    * @return false if an out of memory condition is detected, true otherwise
    */
-  MOZ_MUST_USE
-  bool AppendTo(nsAString& aString,
-                const mozilla::fallible_t& aFallible) const {
+  [[nodiscard]] bool AppendTo(nsAString& aString,
+                              const mozilla::fallible_t& aFallible) const {
     if (mState.mIs2b) {
       if (aString.IsEmpty()) {
         m2b->ToString(mState.mLength, aString);
@@ -183,9 +182,9 @@ class nsTextFragment final {
    * @param aLength the length of the substring
    * @return false if an out of memory condition is detected, true otherwise
    */
-  MOZ_MUST_USE
-  bool AppendTo(nsAString& aString, int32_t aOffset, int32_t aLength,
-                const mozilla::fallible_t& aFallible) const {
+  [[nodiscard]] bool AppendTo(nsAString& aString, int32_t aOffset,
+                              int32_t aLength,
+                              const mozilla::fallible_t& aFallible) const {
     if (mState.mIs2b) {
       bool ok = aString.Append(Get2b() + aOffset, aLength, aFallible);
       if (!ok) {
@@ -292,7 +291,7 @@ class nsTextFragment final {
    * Check whether the text in this fragment is the same as the text in the
    * other fragment.
    */
-  MOZ_MUST_USE bool TextEquals(const nsTextFragment& aOther) const;
+  [[nodiscard]] bool TextEquals(const nsTextFragment& aOther) const;
 
  private:
   void ReleaseText();

@@ -173,7 +173,7 @@ class TextControlState final : public SupportsWeakPtr {
    * OnEditActionHandled() is called when mTextEditor handles something
    * and immediately before dispatching "input" event.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnEditActionHandled();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult OnEditActionHandled();
 
   enum class ValueSetterOption {
     // The call is for setting value to initial one, computed one, etc.
@@ -217,10 +217,10 @@ class TextControlState final : public SupportsWeakPtr {
    *                    for the performance.
    * @param aOptions    See ValueSetterOption.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValue(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT bool SetValue(
       const nsAString& aValue, const nsAString* aOldValue,
       const ValueSetterOptions& aOptions);
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValue(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT bool SetValue(
       const nsAString& aValue, const ValueSetterOptions& aOptions) {
     return SetValue(aValue, nullptr, aOptions);
   }
