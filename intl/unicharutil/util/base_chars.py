@@ -9,7 +9,6 @@ from collections import namedtuple
 from unicodedata import category, combining, normalize
 
 UNICODE_LIMIT = 0x110000
-UNICODE_BMP_LIMIT = 0x10000
 
 UNICODE_COMBINING_CLASS_NOT_REORDERED = 0
 UNICODE_COMBINING_CLASS_KANA_VOICING = 8
@@ -17,10 +16,6 @@ UNICODE_COMBINING_CLASS_VIRAMA = 9
 
 BaseCharMapping = namedtuple("BaseCharMapping", ("char", "base_char"))
 BaseCharMappingBlock = namedtuple("BaseCharMappingBlock", ("first", "last", "offset"))
-
-
-def is_in_bmp(char):
-    return ord(char) < UNICODE_BMP_LIMIT
 
 
 # Keep this function in sync with IsCombiningDiacritic in nsUnicodeProperties.h.
@@ -36,32 +31,17 @@ def is_combining_diacritic(char):
     )
 
 
-# Keep this function in sync with IsMathSymbol in nsUnicodeProperties.h.
-def is_math_symbol(char):
-    return category(char) == "Sm"
+# Keep this function in sync with IsMathOrMusicSymbol in nsUnicodeProperties.h.
+def is_math_or_music_symbol(char):
+    return category(char) in ("Sm", "So")
 
 
-def crosses_bmp(char, base_char):
-    if is_in_bmp(char) != is_in_bmp(base_char):
-        # Mappings that would change the length of a UTF-16 string are not
-        # currently supported.
-        return True
-    if not is_in_bmp(char):
-        # Currently there are no mappings we care about outside of the basic
-        # multilingual plane. However, if such a mapping is added to Unicode in
-        # the future, this warning will appear at build time.
-        print(
-            "Warning: Skipping "
-            + "{:#06x}".format(ord(char))
-            + " → "
-            + "{:#06x}".format(ord(base_char))
-        )
-        print(
-            "base_chars.py and nsUnicodeProperties.cpp need to be rewritten to "
-            "use uint32_t instead of uint16_t."
-        )
-        return True
-    return False
+def changes_plane(char, base_char):
+    # Mappings that would change the first 16 bits of a character are not
+    # currently supported. This is because the mapping table only records the
+    # last 16 bits of the base character and also because moving into or out of
+    # the basic multilingual plane would change the length of a UTF-16 string.
+    return ord(char) >> 16 != ord(base_char) >> 16
 
 
 def main(header, fallback_table):
@@ -69,15 +49,15 @@ def main(header, fallback_table):
 
     # Glean mappings from decompositions
 
-    for char in range(UNICODE_BMP_LIMIT):
+    for char in range(UNICODE_LIMIT):
         char = chr(char)
-        if is_combining_diacritic(char) or is_math_symbol(char):
+        if is_combining_diacritic(char) or is_math_or_music_symbol(char):
             continue
         decomposition = normalize("NFD", char)
         if len(decomposition) < 2:
             continue
         base_char = decomposition[0]
-        if crosses_bmp(char, base_char):
+        if changes_plane(char, base_char):
             continue
         next_char = decomposition[1]
         if not is_combining_diacritic(next_char):
@@ -104,7 +84,7 @@ def main(header, fallback_table):
                 decomposition = decomposition[1:]
         if len(decomposition) > 1:
             continue
-        if crosses_bmp(char, decomposition):
+        if changes_plane(char, decomposition):
             continue
         mappings[char] = decomposition
 
@@ -137,8 +117,6 @@ def main(header, fallback_table):
         while len(indexes) < mappings[block.offset].char >> 8:
             indexes.append(255)
         indexes.append(i)
-    while len(indexes) < 256:
-        indexes.append(255)
 
     # Write the mappings to a C header file
 
@@ -151,7 +129,10 @@ def main(header, fallback_table):
     header.write("static const uint16_t BASE_CHAR_MAPPING_LIST[] = {\n")
     for char, base_char in mappings:
         header.write(
-            "  /* {:#06x}".format(char) + " */ " + "{:#06x}".format(base_char) + ","
+            "  /* {:#06x}".format(char)
+            + " */ "
+            + "{:#06x}".format(base_char & 0xFFFF)
+            + ","
         )
         if char != base_char:
             header.write(" /* " + chr(char) + " → " + chr(base_char) + " */")
@@ -175,7 +156,7 @@ def main(header, fallback_table):
         )
     header.write("};\n")
     header.write("\n")
-    header.write("static const uint8_t BASE_CHAR_MAPPING_BLOCK_INDEX[256] = {\n")
+    header.write("static const uint8_t BASE_CHAR_MAPPING_BLOCK_INDEX[] = {\n")
     for i, index in enumerate(indexes):
         header.write(
             "  " + str(index).rjust(3) + ", // " + "{:#04x}".format(i) + "xx\n"

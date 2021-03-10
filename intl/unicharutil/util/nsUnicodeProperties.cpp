@@ -310,10 +310,11 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength) {
 
 uint32_t GetNaked(uint32_t aCh) {
   MOZ_ASSERT(!IsCombiningDiacritic(aCh), "This character needs to be skipped");
-  if (!IS_IN_BMP(aCh)) {
+  uint32_t index = aCh >> 8;
+  if (index >= MOZ_ARRAY_LENGTH(BASE_CHAR_MAPPING_BLOCK_INDEX)) {
     return aCh;
   }
-  uint8_t index = BASE_CHAR_MAPPING_BLOCK_INDEX[aCh >> 8];
+  index = BASE_CHAR_MAPPING_BLOCK_INDEX[index];
   if (index == 0xff) {
     return aCh;
   }
@@ -322,7 +323,8 @@ uint32_t GetNaked(uint32_t aCh) {
   if (lo < block.mFirst || lo > block.mLast) {
     return aCh;
   }
-  return BASE_CHAR_MAPPING_LIST[block.mMappingStartOffset + lo - block.mFirst];
+  return (aCh & 0xffff0000) |
+         BASE_CHAR_MAPPING_LIST[block.mMappingStartOffset + lo - block.mFirst];
 }
 
 }  // end namespace unicode
