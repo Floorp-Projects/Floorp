@@ -1768,6 +1768,8 @@ class DiscoverButton extends CategoryButton {
 }
 customElements.define("discover-button", DiscoverButton, { extends: "button" });
 
+// Create the button-group element so it gets loaded.
+document.createElement("button-group");
 class CategoriesBox extends customElements.get("button-group") {
   constructor() {
     super();
