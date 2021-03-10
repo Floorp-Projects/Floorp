@@ -63,7 +63,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
 
   await extension.startup();
 
-  const { toolbox } = await openToolboxForTab(tab);
+  const toolbox = await openToolboxForTab(tab);
 
   // Test $0 binding with no selected node
   info("Test inspectedWindow.eval $0 binding with no selected node");

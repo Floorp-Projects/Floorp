@@ -68,7 +68,7 @@ async function openToolboxForTab(tab, panelId = TOOLBOX_BLANK_PANEL_ID) {
       { url, outerWindowID }
     )}`
   );
-  return { toolbox, target: toolbox.target };
+  return toolbox;
 }
 
 async function closeToolboxForTab(tab) {
