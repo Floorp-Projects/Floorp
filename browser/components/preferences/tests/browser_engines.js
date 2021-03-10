@@ -1,18 +1,17 @@
-const { SearchTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SearchTestUtils.jsm"
-);
-
-SearchTestUtils.init(this);
+let engineName = "engine1";
 
 function getCellText(tree, i, cellName) {
   return tree.view.getCellText(i, tree.columns.getNamedColumn(cellName));
 }
 
 add_task(async function setup() {
-  await SearchTestUtils.installSearchExtension({
-    keyword: ["testing", "customkeyword"],
-    search_url: "https://example.com/engine1",
-    search_url_get_params: "search={searchTerms}",
+  const engine = await Services.search.addEngineWithDetails(engineName, {
+    alias: ["testing", "customkeyword"],
+    method: "get",
+    template: "http://example.com/engine1?search={searchTerms}",
+  });
+  registerCleanupFunction(async function() {
+    await Services.search.removeEngine(engine);
   });
 });
 

@@ -27,18 +27,20 @@ add_task(async function setup() {
       ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
     ],
   });
-
-  await SearchTestUtils.installSearchExtension({
-    name: TEST_ENGINE_NAME,
-    search_url: `https://${TEST_ENGINE_DOMAIN}/`,
-  });
-
+  let testEngine = await Services.search.addEngineWithDetails(
+    TEST_ENGINE_NAME,
+    {
+      alias: "@test",
+      template: `http://${TEST_ENGINE_DOMAIN}/?search={searchTerms}`,
+    }
+  );
   for (let i = 0; i < 3; i++) {
     await PlacesTestUtils.addVisits([`https://${TEST_ENGINE_DOMAIN}/`]);
   }
 
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
+    await Services.search.removeEngine(testEngine);
   });
 });
 
@@ -597,12 +599,11 @@ add_task(async function onboard_multipleEnginesForHostname() {
     set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 3]],
   });
 
-  let extension = await SearchTestUtils.installSearchExtension(
+  let testEngineMaps = await Services.search.addEngineWithDetails(
+    `${TEST_ENGINE_NAME}Maps`,
     {
-      name: `${TEST_ENGINE_NAME}Maps`,
-      search_url: `https://${TEST_ENGINE_DOMAIN}/maps/`,
-    },
-    true
+      template: `http://${TEST_ENGINE_DOMAIN}/maps/?search={searchTerms}`,
+    }
   );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -638,7 +639,7 @@ add_task(async function onboard_multipleEnginesForHostname() {
     "The tab-to-search result is the only onboarding result."
   );
   await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
-  await extension.unload();
+  await Services.search.removeEngine(testEngineMaps);
   UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
   delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
@@ -652,14 +653,9 @@ add_task(async function extended_unicode_in_engine() {
   // general-web engine string because Baidu is included in WEB_ENGINE_NAMES.
   let engineName = "百度";
   let engineDomain = "example-2.com";
-  let extension = await SearchTestUtils.installSearchExtension(
-    {
-      id: "testunicode",
-      name: engineName,
-      search_url: `https://${engineDomain}/`,
-    },
-    true
-  );
+  let testEngine = await Services.search.addEngineWithDetails(engineName, {
+    template: `http://${engineDomain}/?search={searchTerms}`,
+  });
   for (let i = 0; i < 3; i++) {
     await PlacesTestUtils.addVisits([`https://${engineDomain}/`]);
   }
@@ -692,5 +688,5 @@ add_task(async function extended_unicode_in_engine() {
 
   await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await PlacesUtils.history.clear();
-  await extension.unload();
+  await Services.search.removeEngine(testEngine);
 });

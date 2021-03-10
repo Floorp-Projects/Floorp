@@ -2169,7 +2169,7 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
   checkEnvironmentData(data);
   Assert.deepEqual(data.settings.defaultSearchEngineData, {
     name: "TestEngine",
-    loadPath: "[other]addEngineWithDetails:testengine@tests.mozilla.org",
+    loadPath: "[other]addEngineWithDetails:example@tests.mozilla.org",
     origin: "verified",
     submissionURL: "https://www.google.com/fake1?q=",
   });
@@ -2197,7 +2197,7 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
   checkEnvironmentData(data);
   Assert.deepEqual(data.settings.defaultSearchEngineData, {
     name: "TestEngine",
-    loadPath: "[other]addEngineWithDetails:testengine@tests.mozilla.org",
+    loadPath: "[other]addEngineWithDetails:example@tests.mozilla.org",
     origin: "verified",
     submissionURL: "https://www.google.com/fake2?q=",
   });
