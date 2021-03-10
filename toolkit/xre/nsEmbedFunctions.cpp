@@ -817,7 +817,6 @@ nsresult XRE_InitParentProcess(int aArgc, char* aArgv[],
     if (aMainFunction) {
       nsCOMPtr<nsIRunnable> runnable =
           new MainFunctionRunnable(aMainFunction, aMainFunctionData);
-      NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = NS_DispatchToCurrentThread(runnable);
       NS_ENSURE_SUCCESS(rv, rv);
