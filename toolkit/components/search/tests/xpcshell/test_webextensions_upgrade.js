@@ -74,6 +74,7 @@ add_task(async function test_basic_upgrade() {
 add_task(async function test_upgrade_changes_name() {
   let extension = await SearchTestUtils.installSearchExtension({
     name: "engine",
+    id: "engine@tests.mozilla.org",
     search_url_get_params: `q={searchTerms}&version=1.0`,
     version: "1.0",
   });
@@ -106,6 +107,7 @@ add_task(async function test_upgrade_changes_name() {
 
   let manifest = SearchTestUtils.createEngineManifest({
     name: "Bar",
+    id: "engine@tests.mozilla.org",
     search_url_get_params: `q={searchTerms}&version=2.0`,
     version: "2.0",
   });

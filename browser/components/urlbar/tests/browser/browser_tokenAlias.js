@@ -5,6 +5,7 @@
 
 "use strict";
 
+const TEST_ALIAS_ENGINE_NAME = "Test";
 const ALIAS = "@test";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
@@ -13,8 +14,6 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 // spaces.  U+3000 is the ideographic space in CJK and is commonly used by CJK
 // speakers.
 const TEST_SPACES = [" ", "\u3000", " \u3000", "\u3000 "];
-
-let testEngine;
 
 // Allow more time for Mac machines so they don't time out in verify mode.  See
 // bug 1673062.
@@ -31,12 +30,12 @@ add_task(async function init() {
   defaultEngine.alias = "@default";
   let oldDefaultEngine = await Services.search.getDefault();
   Services.search.setDefault(defaultEngine);
-  testEngine = await Services.search.addEngineWithDetails("Test", {
-    alias: ALIAS,
-    template: "http://example.com/?search={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: TEST_ALIAS_ENGINE_NAME,
+    keyword: ALIAS,
   });
+
   registerCleanupFunction(async function() {
-    await Services.search.removeEngine(testEngine);
     Services.search.setDefault(oldDefaultEngine);
   });
 
@@ -107,7 +106,7 @@ async function doSimpleTest(revertBetweenSteps) {
     // Wait for the second new search that starts when search mode is entered.
     await UrlbarTestUtils.promiseSearchComplete(window);
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "typed",
     });
     Assert.equal(gURLBar.value, "", "value should be empty");
@@ -130,7 +129,7 @@ async function doSimpleTest(revertBetweenSteps) {
     // Wait for the second new search that starts when search mode is entered.
     await UrlbarTestUtils.promiseSearchComplete(window);
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "typed",
     });
     Assert.equal(gURLBar.value, "foo", "value should be query");
@@ -153,7 +152,7 @@ async function doSimpleTest(revertBetweenSteps) {
     // Wait for the second new search that starts when search mode is entered.
     await UrlbarTestUtils.promiseSearchComplete(window);
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "typed",
     });
     Assert.equal(gURLBar.value, "", "value should be empty");
@@ -210,7 +209,7 @@ add_task(async function spacesBeforeAlias() {
     // Wait for the second new search that starts when search mode is entered.
     await UrlbarTestUtils.promiseSearchComplete(window);
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "typed",
     });
     Assert.equal(gURLBar.value, "", "value should be empty");
@@ -314,7 +313,7 @@ add_task(async function aliasCase() {
   // Wait for the second new search that starts when search mode is entered.
   await UrlbarTestUtils.promiseSearchComplete(window);
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
+    engineName: TEST_ALIAS_ENGINE_NAME,
     entry: "typed",
   });
   Assert.equal(gURLBar.value, "", "value should be empty");
@@ -333,7 +332,7 @@ add_task(async function aliasCase_query() {
   // Wait for the second new search that starts when search mode is entered.
   await UrlbarTestUtils.promiseSearchComplete(window);
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: testEngine.name,
+    engineName: TEST_ALIAS_ENGINE_NAME,
     entry: "typed",
   });
   Assert.equal(gURLBar.value, "query", "value should be query");
@@ -500,7 +499,7 @@ add_task(async function enterAutofillsAlias() {
     await searchPromise;
 
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "keywordoffer",
     });
 
@@ -526,7 +525,7 @@ add_task(async function rightEntersSearchMode() {
     await searchPromise;
 
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "typed",
     });
     Assert.equal(gURLBar.value, "", "value should be empty");
@@ -562,7 +561,7 @@ add_task(async function rightEntersSearchMode() {
     );
 
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "keywordoffer",
       isPreview: true,
     });
@@ -573,7 +572,7 @@ add_task(async function rightEntersSearchMode() {
     await searchPromise;
 
     await UrlbarTestUtils.assertSearchMode(window, {
-      engineName: testEngine.name,
+      engineName: TEST_ALIAS_ENGINE_NAME,
       entry: "keywordoffer",
       isPreview: false,
     });
@@ -650,10 +649,13 @@ add_task(async function hiddenEngine() {
 add_task(async function nonPrefixedKeyword() {
   let name = "Custom";
   let alias = "customkeyword";
-  let engine = await Services.search.addEngineWithDetails(name, {
-    alias,
-    template: "http://example.com/?search={searchTerms}",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name,
+      keyword: alias,
+    },
+    true
+  );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -688,16 +690,19 @@ add_task(async function nonPrefixedKeyword() {
     "The first result should be a keyword search result with the correct engine."
   );
 
-  await Services.search.removeEngine(engine);
+  await extension.unload();
 });
 
 // Tests that we show all engines with a token alias that match the search
 // string.
 add_task(async function multipleMatchingEngines() {
-  let testEngineFoo = await Services.search.addEngineWithDetails("TestFoo", {
-    alias: `${ALIAS}foo`,
-    template: "http://example-2.com/?search={searchTerms}",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestFoo",
+      keyword: `${ALIAS}foo`,
+    },
+    true
+  );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -748,7 +753,7 @@ add_task(async function multipleMatchingEngines() {
     "Urlbar should contain the search string."
   );
 
-  await Services.search.removeEngine(testEngineFoo);
+  await extension.unload();
 });
 
 // Tests that UrlbarProviderTokenAliasEngines is disabled in search mode.

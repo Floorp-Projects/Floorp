@@ -34,6 +34,7 @@ add_task(async function test_change_engine() {
   let doc = gBrowser.selectedBrowser.contentDocument;
 
   let extension1 = await SearchTestUtils.installSearchExtension({
+    id: "example@tests.mozilla.org",
     name: "Example",
     version: "1.0",
     keyword: "foo",
@@ -63,6 +64,7 @@ add_task(async function test_change_engine() {
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
   let extension2 = await SearchTestUtils.installSearchExtension({
+    id: "example@tests.mozilla.org",
     name: "Example 2",
     version: "2.0",
     keyword: "bar",
@@ -87,7 +89,5 @@ add_task(async function test_change_engine() {
     "Should show the correct keyword"
   );
 
-  await extension1.unload();
-  await extension2.unload();
   gBrowser.removeCurrentTab();
 });

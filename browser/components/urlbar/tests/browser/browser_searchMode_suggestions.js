@@ -13,7 +13,6 @@ const MANY_SUGGESTIONS_ENGINE_NAME = "searchSuggestionEngineMany.xml";
 const MAX_RESULT_COUNT = UrlbarPrefs.get("maxRichResults");
 
 let suggestionsEngine;
-let defaultEngine;
 let expectedFormHistoryResults = [];
 
 add_task(async function setup() {
@@ -22,13 +21,13 @@ add_task(async function setup() {
   );
 
   let oldDefaultEngine = await Services.search.getDefault();
-  defaultEngine = await Services.search.addEngineWithDetails(
-    DEFAULT_ENGINE_NAME,
-    {
-      template: "http://example.com/?search={searchTerms}",
-    }
+  await SearchTestUtils.installSearchExtension({
+    name: DEFAULT_ENGINE_NAME,
+    keyword: "@test",
+  });
+  await Services.search.setDefault(
+    Services.search.getEngineByName(DEFAULT_ENGINE_NAME)
   );
-  await Services.search.setDefault(defaultEngine);
   await Services.search.moveEngine(suggestionsEngine, 0);
 
   async function cleanup() {
@@ -63,7 +62,6 @@ add_task(async function setup() {
 
   registerCleanupFunction(async () => {
     await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(defaultEngine);
     await UrlbarTestUtils.formHistory.clear();
   });
 
@@ -230,7 +228,7 @@ add_task(async function emptySearch_behavior() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         searchParams: {
           query: " ",
-          engine: defaultEngine.name,
+          engine: DEFAULT_ENGINE_NAME,
         },
       },
       {
