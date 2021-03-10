@@ -217,7 +217,7 @@ impl LazilyCompiledShader {
             let vertex_descriptor = match vertex_format {
                 VertexArrayKind::Primitive => &desc::PRIM_INSTANCES,
                 VertexArrayKind::LineDecoration => &desc::LINE,
-                VertexArrayKind::Gradient => &desc::GRADIENT,
+                VertexArrayKind::FastLinearGradient => &desc::FAST_LINEAR_GRADIENT,
                 VertexArrayKind::Blur => &desc::BLUR,
                 VertexArrayKind::ClipImage => &desc::CLIP_IMAGE,
                 VertexArrayKind::ClipRect => &desc::CLIP_RECT,
@@ -962,7 +962,7 @@ impl Shaders {
         )?;
 
         let cs_fast_linear_gradient = LazilyCompiledShader::new(
-            ShaderKind::Cache(VertexArrayKind::Gradient),
+            ShaderKind::Cache(VertexArrayKind::FastLinearGradient),
             "cs_fast_linear_gradient",
             &[],
             device,

@@ -99,7 +99,7 @@ pub mod desc {
         ],
     };
 
-    pub const GRADIENT: VertexDescriptor = VertexDescriptor {
+    pub const FAST_LINEAR_GRADIENT: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
             count: 2,
@@ -651,7 +651,7 @@ pub enum VertexArrayKind {
     Border,
     Scale,
     LineDecoration,
-    Gradient,
+    FastLinearGradient,
     Resolve,
     SvgFilter,
     Composite,
@@ -872,7 +872,7 @@ pub struct RendererVAOs {
     border_vao: VAO,
     line_vao: VAO,
     scale_vao: VAO,
-    gradient_vao: VAO,
+    fast_linear_gradient_vao: VAO,
     resolve_vao: VAO,
     svg_filter_vao: VAO,
     composite_vao: VAO,
@@ -915,7 +915,7 @@ impl RendererVAOs {
             border_vao: device.create_vao_with_new_instances(&desc::BORDER, &prim_vao),
             scale_vao: device.create_vao_with_new_instances(&desc::SCALE, &prim_vao),
             line_vao: device.create_vao_with_new_instances(&desc::LINE, &prim_vao),
-            gradient_vao: device.create_vao_with_new_instances(&desc::GRADIENT, &prim_vao),
+            fast_linear_gradient_vao: device.create_vao_with_new_instances(&desc::FAST_LINEAR_GRADIENT, &prim_vao),
             resolve_vao: device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao),
             svg_filter_vao: device.create_vao_with_new_instances(&desc::SVG_FILTER, &prim_vao),
             composite_vao: device.create_vao_with_new_instances(&desc::COMPOSITE, &prim_vao),
@@ -930,7 +930,7 @@ impl RendererVAOs {
         device.delete_vao(self.clip_rect_vao);
         device.delete_vao(self.clip_box_shadow_vao);
         device.delete_vao(self.clip_image_vao);
-        device.delete_vao(self.gradient_vao);
+        device.delete_vao(self.fast_linear_gradient_vao);
         device.delete_vao(self.blur_vao);
         device.delete_vao(self.line_vao);
         device.delete_vao(self.border_vao);
@@ -954,7 +954,7 @@ impl ops::Index<VertexArrayKind> for RendererVAOs {
             VertexArrayKind::Border => &self.border_vao,
             VertexArrayKind::Scale => &self.scale_vao,
             VertexArrayKind::LineDecoration => &self.line_vao,
-            VertexArrayKind::Gradient => &self.gradient_vao,
+            VertexArrayKind::FastLinearGradient => &self.fast_linear_gradient_vao,
             VertexArrayKind::Resolve => &self.resolve_vao,
             VertexArrayKind::SvgFilter => &self.svg_filter_vao,
             VertexArrayKind::Composite => &self.composite_vao,
