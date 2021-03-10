@@ -203,28 +203,6 @@ bool AndroidBridge::HasHWH264() {
   return java::HardwareCodecCapabilityUtils::HasHWH264();
 }
 
-void AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt,
-                                              nsCString& aMimeType) {
-  ALOG_BRIDGE("AndroidBridge::GetMimeTypeFromExtensions");
-
-  auto jstrType = java::GeckoAppShell::GetMimeTypeFromExtensions(aFileExt);
-
-  if (jstrType) {
-    aMimeType = jstrType->ToCString();
-  }
-}
-
-void AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType,
-                                             nsACString& aFileExt) {
-  ALOG_BRIDGE("AndroidBridge::GetExtensionFromMimeType");
-
-  auto jstrExt = java::GeckoAppShell::GetExtensionFromMimeType(aMimeType);
-
-  if (jstrExt) {
-    aFileExt = jstrExt->ToCString();
-  }
-}
-
 gfx::Rect AndroidBridge::getScreenSize() {
   ALOG_BRIDGE("AndroidBridge::getScreenSize");
 

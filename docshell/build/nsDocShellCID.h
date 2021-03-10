@@ -21,15 +21,6 @@
 #define NS_IHISTORY_CONTRACTID "@mozilla.org/browser/history;1"
 
 /**
- * A contract for a service that is used for finding
- * platform-specific applications for handling particular URLs.
- *
- * @implements nsIExternalURLHandlerService
- */
-#define NS_EXTERNALURLHANDLERSERVICE_CONTRACTID \
-  "@mozilla.org/uriloader/external-url-handler-service;1"
-
-/**
  * An observer service topic that can be listened to to catch creation
  * of content browsing areas (both toplevel ones and subframes).  The
  * subject of the notification will be the nsIWebNavigation being

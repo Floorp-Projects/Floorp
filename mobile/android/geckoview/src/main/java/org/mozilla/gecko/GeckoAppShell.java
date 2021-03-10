@@ -840,21 +840,6 @@ public class GeckoAppShell {
         return HardwareCodecCapabilityUtils.hasHWVP8(false /* aIsEncoder */);
     }
 
-    static List<ResolveInfo> queryIntentActivities(final Intent intent) {
-        final PackageManager pm = getApplicationContext().getPackageManager();
-
-        // Exclude any non-exported activities: we can't open them even if we want to!
-        // Bug 1031569 has some details.
-        final ArrayList<ResolveInfo> list = new ArrayList<>();
-        for (ResolveInfo ri: pm.queryIntentActivities(intent, 0)) {
-            if (ri.activityInfo.exported) {
-                list.add(ri);
-            }
-        }
-
-        return list;
-    }
-
     @WrapForJNI(calledFrom = "gecko")
     public static String getExtensionFromMimeType(final String aMimeType) {
         return MimeTypeMap.getSingleton().getExtensionFromMimeType(aMimeType);

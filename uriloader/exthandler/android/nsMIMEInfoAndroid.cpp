@@ -3,13 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsMIMEInfoAndroid.h"
-#include "AndroidBridge.h"
-#include "nsAndroidHandlerApp.h"
 #include "nsArrayUtils.h"
 #include "nsISupportsUtils.h"
-#include "nsStringEnumerator.h"
-#include "nsNetUtil.h"
-#include "mozilla/Utf8.h"
 
 using namespace mozilla;
 
@@ -22,74 +17,31 @@ nsMIMEInfoAndroid::LaunchDefaultWithFile(nsIFile* aFile) {
 
 NS_IMETHODIMP
 nsMIMEInfoAndroid::LoadUriInternal(nsIURI* aURI) {
-  nsCString uriSpec;
-  aURI->GetSpec(uriSpec);
-
-  nsCString uriScheme;
-  aURI->GetScheme(uriScheme);
-
-  nsAutoString mimeType;
-  if (mType.Equals(uriScheme) || mType.Equals(uriSpec)) {
-    mimeType.Truncate();
-  } else {
-    CopyUTF8toUTF16(mType, mimeType);
-  }
-
-  if (java::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec),
-                                           mimeType, u""_ns, u""_ns, u""_ns,
-                                           u""_ns)) {
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 bool nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
                                                nsMIMEInfoAndroid** aMimeInfo) {
   RefPtr<nsMIMEInfoAndroid> info = new nsMIMEInfoAndroid(aMimeType);
-  mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
-  // we don't have access to the bridge, so just assume we can handle
-  // the mime type for now and let the system deal with it
-  if (!bridge) {
-    info.forget(aMimeInfo);
-    return false;
-  }
-
-  nsIHandlerApp* systemDefault = nullptr;
-
-  if (!IsUtf8(aMimeType)) return false;
-
-  NS_ConvertUTF8toUTF16 mimeType(aMimeType);
-
-  bridge->GetHandlersForMimeType(mimeType, info->mHandlerApps, &systemDefault);
-
-  if (systemDefault) info->mPrefApp = systemDefault;
-
-  nsAutoCString fileExt;
-  bridge->GetExtensionFromMimeType(aMimeType, fileExt);
-  info->SetPrimaryExtension(fileExt);
-
-  uint32_t len;
-  info->mHandlerApps->GetLength(&len);
-  if (len == 1) {
-    info.forget(aMimeInfo);
-    return false;
-  }
-
   info.forget(aMimeInfo);
-  return true;
+  return false;
 }
 
 bool nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt,
                                               nsMIMEInfoAndroid** aMimeInfo) {
   nsCString mimeType;
-  if (mozilla::AndroidBridge::Bridge())
-    mozilla::AndroidBridge::Bridge()->GetMimeTypeFromExtensions(aFileExt,
-                                                                mimeType);
+  if (jni::IsAvailable()) {
+    auto javaString = java::GeckoAppShell::GetMimeTypeFromExtensions(aFileExt);
+    if (javaString) {
+      mimeType = javaString->ToCString();
+    }
+  }
 
   // "*/*" means that the bridge didn't know.
   if (mimeType.Equals(nsDependentCString("*/*"),
-                      nsCaseInsensitiveCStringComparator))
+                      nsCaseInsensitiveCStringComparator)) {
     return false;
+  }
 
   bool found = GetMimeInfoForMimeType(mimeType, aMimeInfo);
   (*aMimeInfo)->SetPrimaryExtension(aFileExt);
@@ -105,36 +57,7 @@ nsresult nsMIMEInfoAndroid::GetMimeInfoForURL(const nsACString& aURL,
                                               nsIHandlerInfo** info) {
   nsMIMEInfoAndroid* mimeinfo = new nsMIMEInfoAndroid(aURL);
   NS_ADDREF(*info = mimeinfo);
-  *found = true;
-
-  mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
-  if (!bridge) {
-    // we don't have access to the bridge, so just assume we can handle
-    // the protocol for now and let the system deal with it
-    return NS_OK;
-  }
-
-  nsIHandlerApp* systemDefault = nullptr;
-  bridge->GetHandlersForURL(NS_ConvertUTF8toUTF16(aURL), mimeinfo->mHandlerApps,
-                            &systemDefault);
-
-  if (systemDefault) mimeinfo->mPrefApp = systemDefault;
-
-  nsAutoCString fileExt;
-  nsAutoCString mimeType;
-  mimeinfo->GetType(mimeType);
-  bridge->GetExtensionFromMimeType(mimeType, fileExt);
-  mimeinfo->SetPrimaryExtension(fileExt);
-
-  uint32_t len;
-  mimeinfo->mHandlerApps->GetLength(&len);
-  if (len == 1) {
-    // Code that calls this requires an object regardless if the OS has
-    // something for us, so we return the empty object.
-    *found = false;
-    return NS_OK;
-  }
-
+  *found = false;
   return NS_OK;
 }
 
@@ -258,9 +181,12 @@ nsMIMEInfoAndroid::ExtensionExists(const nsACString& aExtension,
   NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
 
   nsCString mimeType;
-  if (mozilla::AndroidBridge::Bridge()) {
-    mozilla::AndroidBridge::Bridge()->GetMimeTypeFromExtensions(aExtension,
-                                                                mimeType);
+  if (jni::IsAvailable()) {
+    auto javaString =
+        java::GeckoAppShell::GetMimeTypeFromExtensions(aExtension);
+    if (javaString) {
+      mimeType = javaString->ToCString();
+    }
   }
 
   // "*/*" means the bridge didn't find anything (i.e., extension doesn't
