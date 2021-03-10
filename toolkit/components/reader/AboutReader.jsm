@@ -39,6 +39,8 @@ var gStrings = Services.strings.createBundle(
   "chrome://global/locale/aboutReader.properties"
 );
 
+Services.telemetry.setEventRecordingEnabled("readermode", true);
+
 const zoomOnCtrl =
   Services.prefs.getIntPref("mousewheel.with_control.action", 3) == 3;
 const zoomOnMeta =
@@ -377,6 +379,12 @@ AboutReader.prototype = {
         }
         break;
       case "click":
+        const buttonLabel = target.attributes.getNamedItem(`aria-label`).value;
+
+        Services.telemetry.recordEvent("readermode", "button", "click", null, {
+          label: buttonLabel,
+        });
+
         if (target.classList.contains("dropdown-toggle")) {
           this._toggleDropdownClicked(aEvent);
         }
