@@ -1614,20 +1614,6 @@ process attach {continue_flag}-p {pid!s}
                 print("Could not find a suitable debugger in your PATH.")
                 return 1
 
-            # Parameters come from the CLI. We need to convert them before
-            # their use.
-            if debugger_args:
-                from mozbuild import shellutil
-
-                try:
-                    debugger_args = shellutil.split(debugger_args)
-                except shellutil.MetaCharacterException as e:
-                    print(
-                        "The --debugger-args you passed require a real shell to parse them."
-                    )
-                    print("(We can't handle the %r character.)" % e.char)
-                    return 1
-
             # Prepend the debugger args.
             args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
 
@@ -1744,16 +1730,6 @@ process attach {continue_flag}-p {pid!s}
         if not no_profile_option_given and setpref:
             print("setpref is only supported if a profile is not specified")
             return 1
-
-            if not no_profile_option_given:
-                # The profile name may be non-ascii, but come from the
-                # commandline as str, so convert here with a better guess at
-                # an encoding than the default.
-                encoding = sys.getfilesystemencoding() or sys.getdefaultencoding()
-                args = [
-                    unicode(a, encoding) if not isinstance(a, unicode) else a
-                    for a in args
-                ]
 
         some_debugging_option = debug or debugger or debugger_args
 
