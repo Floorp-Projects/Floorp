@@ -93,9 +93,6 @@ class MarionetteCommandsChild extends JSWindowActorChild {
         case "MarionetteCommandsParent:findElements":
           result = await this.findElements(data);
           break;
-        case "MarionetteCommandsParent:getCurrentUrl":
-          result = await this.getCurrentUrl();
-          break;
         case "MarionetteCommandsParent:getActiveElement":
           result = await this.getActiveElement();
           break;
@@ -254,13 +251,6 @@ class MarionetteCommandsChild extends JSWindowActorChild {
     }
 
     return elem;
-  }
-
-  /**
-   * Get the current URL.
-   */
-  async getCurrentUrl() {
-    return this.document.defaultView.location.href;
   }
 
   /**
