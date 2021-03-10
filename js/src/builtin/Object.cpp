@@ -2042,9 +2042,9 @@ static bool FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor,
    * [[Prototype]] before standard classes have been initialized.  For now,
    * only set the [[Prototype]] if it hasn't already been set.
    */
-  Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-  if (global->shouldSplicePrototype()) {
-    if (!GlobalObject::splicePrototype(cx, global, tagged)) {
+  if (global->staticPrototype() == nullptr) {
+    MOZ_ASSERT(!global->staticPrototypeIsImmutable());
+    if (!SetPrototype(cx, global, proto)) {
       return false;
     }
   }
