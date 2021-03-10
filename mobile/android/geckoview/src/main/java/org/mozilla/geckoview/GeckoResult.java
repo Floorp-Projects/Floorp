@@ -241,13 +241,37 @@ public class GeckoResult<T> {
 
     /**
      * A GeckoResult that resolves to AllowOrDeny.ALLOW
+     * @deprecated use {@link #allow} instead.
      */
+    @Deprecated
+    @DeprecationSchedule(id = "allowdeny", version = 92)
     public static final GeckoResult<AllowOrDeny> ALLOW = GeckoResult.fromValue(AllowOrDeny.ALLOW);
 
     /**
      * A GeckoResult that resolves to AllowOrDeny.DENY
+     * @deprecated use {@link #deny} instead.
      */
+    @Deprecated
+    @DeprecationSchedule(id = "allowdeny", version = 92)
     public static final GeckoResult<AllowOrDeny> DENY = GeckoResult.fromValue(AllowOrDeny.DENY);
+
+    /**
+     * @return a {@link GeckoResult} that resolves to {@link AllowOrDeny#DENY}
+     */
+    @AnyThread
+    @NonNull
+    public static GeckoResult<AllowOrDeny> deny() {
+        return GeckoResult.fromValue(AllowOrDeny.DENY);
+    }
+
+    /**
+     * @return a {@link GeckoResult} that resolves to {@link AllowOrDeny#ALLOW}
+     */
+    @AnyThread
+    @NonNull
+    public static GeckoResult<AllowOrDeny> allow() {
+        return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+    }
 
     // The default dispatcher for listeners on this GeckoResult. Other dispatchers can be specified
     // when the listener is registered.

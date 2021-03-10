@@ -158,7 +158,7 @@ class AccessibilityTest : BaseSessionTest() {
             override fun onLoadRequest(session: GeckoSession,
                                        request: GeckoSession.NavigationDelegate.LoadRequest)
                     : GeckoResult<AllowOrDeny>? {
-                return GeckoResult.ALLOW
+                return GeckoResult.allow()
             }
         })
         // XXX: Sometimes we get the window state change of the initial

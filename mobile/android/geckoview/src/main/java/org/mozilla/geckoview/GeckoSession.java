@@ -1793,7 +1793,7 @@ public class GeckoSession {
     private GeckoResult<AllowOrDeny> shouldLoadUri(final NavigationDelegate.LoadRequest request) {
         final NavigationDelegate delegate = mNavigationHandler.getDelegate();
         if (delegate == null) {
-            return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+            return GeckoResult.allow();
         }
 
         final GeckoResult<AllowOrDeny> result = new GeckoResult<>();

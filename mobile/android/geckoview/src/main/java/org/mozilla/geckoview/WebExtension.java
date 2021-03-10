@@ -581,7 +581,7 @@ public class WebExtension {
         @NonNull
         default GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension source,
                                                     @NonNull GeckoSession session)  {
-            return GeckoResult.DENY;
+            return GeckoResult.deny();
         }
 
         /**
@@ -604,7 +604,7 @@ public class WebExtension {
         default GeckoResult<AllowOrDeny> onUpdateTab(final @NonNull WebExtension extension,
                                                      final @NonNull GeckoSession session,
                                                      final @NonNull UpdateTabDetails details) {
-            return GeckoResult.DENY;
+            return GeckoResult.deny();
         }
     }
 

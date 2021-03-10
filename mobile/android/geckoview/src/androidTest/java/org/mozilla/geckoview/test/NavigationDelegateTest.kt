@@ -562,9 +562,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Redirect flag is set", request.isRedirect,
                         equalTo(forEachCall(false, true)))
 
-                return forEachCall(
-                    GeckoResult.fromValue(AllowOrDeny.ALLOW),
-                    GeckoResult.fromValue(AllowOrDeny.DENY))
+                return forEachCall(GeckoResult.allow(), GeckoResult.deny())
             }
         })
 
@@ -1253,13 +1251,11 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
-                val res : AllowOrDeny
                 if (request.uri.endsWith(HELLO_HTML_PATH)) {
-                    res = AllowOrDeny.DENY
+                    return GeckoResult.deny()
                 } else {
-                    res = AllowOrDeny.ALLOW
+                    return GeckoResult.allow()
                 }
-                return GeckoResult.fromValue(res)
             }
         })
 
@@ -1439,13 +1435,11 @@ class NavigationDelegateTest : BaseSessionTest() {
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
                 // Pretend we handled the target="_blank" link click.
-                val res : AllowOrDeny
                 if (request.uri.endsWith(NEW_SESSION_CHILD_HTML_PATH)) {
-                    res = AllowOrDeny.DENY
+                    return GeckoResult.deny()
                 } else {
-                    res = AllowOrDeny.ALLOW
+                    return GeckoResult.allow()
                 }
-                return GeckoResult.fromValue(res)
             }
         })
 
@@ -1849,7 +1843,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 object : WebExtensionController.PromptDelegate {
             @AssertCalled
             override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
-                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                return GeckoResult.allow()
             }
         })
 
@@ -2044,7 +2038,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Should have a user gesture", request.hasUserGesture, equalTo(true))
                 assertThat("Load should not be direct", request.isDirectNavigation,
                         equalTo(false))
-                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                return GeckoResult.allow()
             }
         })
     }
@@ -2056,7 +2050,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("URLs should match", request.uri, endsWith(forEachCall(HELLO_HTML_PATH, HELLO2_HTML_PATH)))
-                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                return GeckoResult.allow()
             }
         })
 
