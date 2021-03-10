@@ -2559,14 +2559,13 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
     gfxContextAutoSaveRestore autoSR;
     const nsStyleImageLayers::Layer& layer = layers.mLayers[i];
 
+    ImageLayerClipState currentLayerClipState = clipState;
     if (!aParams.bgClipRect) {
       bool isBottomLayer = (i == layers.mImageCount - 1);
       if (currentBackgroundClip != layer.mClip || isBottomLayer) {
         currentBackgroundClip = layer.mClip;
-        ImageLayerClipState currentLayerClipState;
-        if (isBottomLayer) {
-          currentLayerClipState = clipState;
-        } else {
+        if (!isBottomLayer) {
+          currentLayerClipState = {};
           // For the bottom layer, we already called GetImageLayerClip above
           // and it stored its results in clipState.
           GetImageLayerClip(layer, aParams.frame, aBorder, aParams.borderArea,
@@ -2595,11 +2594,11 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
     }
     nsBackgroundLayerState state = PrepareImageLayer(
         &aParams.presCtx, aParams.frame, aParams.paintFlags, paintBorderArea,
-        clipState.mBGClipArea, layer, nullptr);
+        currentLayerClipState.mBGClipArea, layer, nullptr);
     result &= state.mImageRenderer.PrepareResult();
 
     // Skip the layer painting code if we found the dirty region is empty.
-    if (clipState.mDirtyRectInDevPx.IsEmpty()) {
+    if (currentLayerClipState.mDirtyRectInDevPx.IsEmpty()) {
       continue;
     }
 
@@ -2615,7 +2614,8 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
       result &= state.mImageRenderer.DrawLayer(
           &aParams.presCtx, aRenderingCtx, state.mDestArea, state.mFillArea,
           state.mAnchor + paintBorderArea.TopLeft(),
-          clipState.mDirtyRectInAppUnits, state.mRepeatSize, aParams.opacity);
+          currentLayerClipState.mDirtyRectInAppUnits, state.mRepeatSize,
+          aParams.opacity);
 
       if (co != CompositionOp::OP_OVER) {
         aRenderingCtx.SetOp(CompositionOp::OP_OVER);
