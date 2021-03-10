@@ -31,8 +31,7 @@ class WebAuthnTransactionParent final : public PWebAuthnTransactionParent {
       const uint64_t& aTransactionId,
       const WebAuthnGetAssertionInfo& aTransactionInfo);
 
-  mozilla::ipc::IPCResult RecvRequestCancel(
-      const Tainted<uint64_t>& aTransactionId);
+  mozilla::ipc::IPCResult RecvRequestCancel(const uint64_t& aTransactionId);
 
   mozilla::ipc::IPCResult RecvDestroyMe();
 

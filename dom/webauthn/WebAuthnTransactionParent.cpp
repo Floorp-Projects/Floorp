@@ -59,7 +59,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
 }
 
 mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestCancel(
-    const Tainted<uint64_t>& aTransactionId) {
+    const uint64_t& aTransactionId) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
 #ifdef OS_WIN
