@@ -1,6 +1,6 @@
 == box-decoration-break-1.html box-decoration-break-1-ref.html
 fuzzy(0-1,0-20) fuzzy-if(skiaContent,0-1,0-700) == box-decoration-break-with-inset-box-shadow-1.html box-decoration-break-with-inset-box-shadow-1-ref.html
-skip-if(verify) fuzzy(0-45,0-460) fuzzy-if(skiaContent,0-57,0-439) fuzzy-if(Android,0-70,0-1330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == box-decoration-break-with-outset-box-shadow-1.html box-decoration-break-with-outset-box-shadow-1-ref.html # Bug 1386543, bug 1392106
+skip-if(verify) fuzzy(0-45,0-460) fuzzy-if(skiaContent,0-64,0-484) fuzzy-if(Android,0-70,0-1330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == box-decoration-break-with-outset-box-shadow-1.html box-decoration-break-with-outset-box-shadow-1-ref.html # Bug 1386543, bug 1392106
 == box-decoration-break-border-image.html box-decoration-break-border-image-ref.html
 == box-decoration-break-block-border-padding.html box-decoration-break-block-border-padding-ref.html
 == box-decoration-break-block-margin.html box-decoration-break-block-margin-ref.html
