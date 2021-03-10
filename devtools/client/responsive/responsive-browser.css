@@ -21,6 +21,7 @@
   position: fixed;
   z-index: 1;
   height: 30px;
+  width: var(--rdm-stack-width);
 }
 
 .browserContainer.responsive-mode .browserStack > .rdm-toolbar.accomodate-ua {
@@ -128,6 +129,12 @@ html[dir="rtl"] .browserContainer.responsive-mode.left-aligned > .browserStack {
 /* tabdialogbox handling - it needs to not be treated as part of the grid: */
 .browserContainer.responsive-mode > .browserStack > .dialogStack {
   position: fixed;
-  width: 100%;
-  height: 100%;
+  width: var(--rdm-stack-width);
+}
+
+/* handle height for tabdialogbox and RDM device modal. Both are position:fixed and so
+   are taken from the grid layout when RDM is opened. */
+.browserContainer.responsive-mode .browserStack.device-modal-opened > .rdm-toolbar,
+.browserContainer.responsive-mode > .browserStack > .dialogStack {
+  height: var(--rdm-stack-height);
 }
