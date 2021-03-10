@@ -56,12 +56,12 @@ add_task(async function() {
 
   info("Close the about:devtools-toolbox tab");
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
-  await waitForRequestsToSettle(window.AboutDebugging.store);
+  await waitForAboutDebuggingRequests(window.AboutDebugging.store);
 
   info("Remove first background tab");
   await removeTab(backgroundTab1);
   await waitUntil(() => !findDebugTargetByText("TEST_TAB", document));
-  await waitForRequestsToSettle(window.AboutDebugging.store);
+  await waitForAboutDebuggingRequests(window.AboutDebugging.store);
 
   await removeTab(tab);
 });

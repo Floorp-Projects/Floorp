@@ -49,7 +49,7 @@ add_task(async function() {
   info("Wait for the tab to appear in the debug targets with the correct name");
   await waitUntil(() => findDebugTargetByText("TAB1", document));
 
-  await waitForRequestsToSettle(AboutDebugging.store);
+  await waitForAboutDebuggingRequests(AboutDebugging.store);
   info("Click on the Connect item in the sidebar");
   connectLink.click();
 
@@ -103,7 +103,7 @@ add_task(async function() {
   );
   await waitUntil(() => !findDebugTargetByText("TAB2", document));
 
-  await waitForRequestsToSettle(AboutDebugging.store);
+  await waitForAboutDebuggingRequests(AboutDebugging.store);
 
   await removeTab(tab);
 });

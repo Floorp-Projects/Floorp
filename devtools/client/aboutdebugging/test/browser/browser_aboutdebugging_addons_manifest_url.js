@@ -68,6 +68,6 @@ add_task(async function() {
   await waitUntil(() => usbStatusElement.textContent.includes("USB disabled"));
   await stopAdbProcess();
 
-  await waitForRequestsToSettle(window.AboutDebugging.store);
+  await waitForAboutDebuggingRequests(window.AboutDebugging.store);
   await removeTab(tab);
 });

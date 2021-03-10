@@ -69,7 +69,10 @@ add_task(async function() {
   gBrowser.selectedTab = gBrowser.tabs[2];
   await onTabRestored;
 
-  const onTabsSuccess = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
+  const onTabsSuccess = aboutDebugging_waitForDispatch(
+    store,
+    "REQUEST_TABS_SUCCESS"
+  );
 
   info("Select the about:debugging tab again");
   gBrowser.selectedTab = tab;
