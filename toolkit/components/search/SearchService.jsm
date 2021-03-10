@@ -186,6 +186,26 @@ SearchService.prototype = {
   // A reference to the handler for the default override allow list.
   _defaultOverrideAllowlist: null,
 
+  // This is a list of search engines that we currently consider to be "General"
+  // search, as opposed to a vertical search engine such as one used for
+  // shopping, book search, etc.
+  //
+  // Currently these are a list of hard-coded application provided ones. At some
+  // point in the future we expect to allow WebExtensions to specify by themselves,
+  // however this needs more definition on the "vertical" search terms, and the
+  // effects before we enable it.
+  //
+  // TODO: Bug 1697477 will move this to SearchEngine and combine it with the
+  // urlbar lists.
+  GENERAL_SEARCH_ENGINE_IDS: new Set([
+    "google@search.mozilla.org",
+    "ddg@search.mozilla.org",
+    "bing@search.mozilla.org",
+    "baidu@search.mozilla.org",
+    "yahoo-jp@search.mozilla.org",
+    "yandex@search.mozilla.org",
+  ]),
+
   // This reflects the combined values of the prefs for enabling the separate
   // private default UI, and for the user choosing a separate private engine.
   // If either one is disabled, then we don't enable the separate private default.
@@ -2095,8 +2115,10 @@ SearchService.prototype = {
    * The new default will be chosen from (in order):
    *
    * - Existing default from configuration, if it is not hidden.
-   * - The first non-hidden engine.
+   * - The first non-hidden engine that is a general search engine.
    * - If all other engines are hidden, unhide the default from the configuration.
+   * - If the default from the configuration is the one being removed, unhide
+   *   the first general search engine, or first visible engine.
    *
    * @param {boolean} privateMode
    *   If true, returns the default engine for private browsing mode, otherwise
@@ -2124,24 +2146,46 @@ SearchService.prototype = {
       newDefault.hidden ||
       newDefault.name == excludeEngineName
     ) {
-      // then to the first visible engine that isn't excluded...
-      let firstVisible = this._getSortedEngines(false).find(
+      let sortedEngines = this._getSortedEngines(false);
+      let generalSearchEngines = sortedEngines.filter(e =>
+        this.GENERAL_SEARCH_ENGINE_IDS.has(e._extensionID)
+      );
+      // then to the first visible general search engine that isn't excluded...
+      let firstVisible = generalSearchEngines.find(
         e => e.name != excludeEngineName
       );
       if (firstVisible) {
         newDefault = firstVisible;
-        // and finally as a last resort we unhide the original default engine,
-        // even if the name is the same as the excluded one (should never happen).
       } else if (newDefault) {
-        if (newDefault.name == excludeEngineName) {
-          logConsole.error(
-            "Could not find an engine to fallback to, using the same engine."
-          );
+        // then to the original if it is not the one that is excluded...
+        if (newDefault.name != excludeEngineName) {
+          newDefault.hidden = false;
+        } else {
+          newDefault = null;
         }
-        newDefault.hidden = false;
+      }
+
+      // and finally as a last resort we unhide the first engine
+      // even if the name is the same as the excluded one (should never happen).
+      if (!newDefault) {
+        if (!firstVisible) {
+          sortedEngines = this._getSortedEngines(true);
+          firstVisible = sortedEngines.find(e =>
+            this.GENERAL_SEARCH_ENGINE_IDS.has(e._extensionID)
+          );
+          if (!firstVisible) {
+            firstVisible = sortedEngines[0];
+          }
+        }
+        if (firstVisible) {
+          firstVisible.hidden = false;
+          newDefault = firstVisible;
+        }
       }
     }
+    // We tried out best but something went very wrong.
     if (!newDefault) {
+      logConsole.error("Could not find a replacement default engine.");
       return null;
     }
 
