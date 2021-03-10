@@ -379,6 +379,7 @@ RenderCompositorD3D11SWGL::CreateStagingTexture(const gfx::IntSize aSize) {
   MOZ_ASSERT(SUCCEEDED(hr));
   if (!cpuTexture) {
     gfxCriticalNote << "Failed to create StagingTexture: " << aSize;
+    RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
   }
   return cpuTexture.forget();
 }
@@ -415,6 +416,7 @@ RenderCompositorD3D11SWGL::DoCreateTile(Surface* aSurface) {
   MOZ_ASSERT(SUCCEEDED(hr));
   if (!texture) {
     gfxCriticalNote << "Failed to allocate Texture2D: " << aSurface->TileSize();
+    RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
     return MakeUnique<TileD3D11>(nullptr, nullptr, nullptr, aSurface, this);
   }
 

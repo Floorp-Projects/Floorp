@@ -1237,7 +1237,7 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
 #ifdef XP_WIN
     if (supportsAcceleration) {
       options.SetAllowSoftwareWebRenderD3D11(
-          StaticPrefs::gfx_webrender_software_d3d11_AtStartup());
+          gfx::gfxVars::AllowSoftwareWebRenderD3D11());
     }
 #elif defined(MOZ_WIDGET_ANDROID)
     MOZ_ASSERT(supportsAcceleration);
