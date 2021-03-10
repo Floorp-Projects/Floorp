@@ -1830,9 +1830,10 @@ child:
                       MaybeDiscardedBrowsingContext aAncestorBrowsingContextToFocus,
                       bool aIsLeavingDocument, bool aAdjustWidget, uint64_t aActionId);
     async SetupFocusedAndActive(MaybeDiscardedBrowsingContext aFocusedBrowsingContext,
-                                MaybeDiscardedBrowsingContext aActiveBrowsingContext);
-    async ReviseActiveBrowsingContext(MaybeDiscardedBrowsingContext aActiveBrowsingContext,
-                                      uint64_t aActionId);
+                                MaybeDiscardedBrowsingContext aActiveBrowsingContext,
+                                uint64_t aActionId);
+    async ReviseActiveBrowsingContext(uint64_t aOldActionId, MaybeDiscardedBrowsingContext aActiveBrowsingContext,
+                                      uint64_t aNewActionId);
 both:
     async MaybeExitFullscreen(MaybeDiscardedBrowsingContext aContext);
     async WindowPostMessage(MaybeDiscardedBrowsingContext aContext,

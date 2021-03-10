@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <tuple>
 #include <utility>
 #include "ErrorList.h"
 #include "Units.h"
@@ -3158,6 +3159,8 @@ class nsContentUtils {
    * GenerateProcessSpecificId is called.
    */
   static uint64_t GenerateProcessSpecificId(uint64_t aId);
+
+  static std::tuple<uint64_t, uint64_t> SplitProcessSpecificId(uint64_t aId);
 
   /**
    * Generate a window ID which is unique across processes and will never be

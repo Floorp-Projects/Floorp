@@ -6949,7 +6949,8 @@ mozilla::ipc::IPCResult ContentParent::RecvSetActiveBrowsingContext(
          "in parent.",
          context));
     Unused << SendReviseActiveBrowsingContext(
-        fm->GetActiveBrowsingContextInChrome(), aActionId);
+        aActionId, fm->GetActiveBrowsingContextInChrome(),
+        fm->GetActionIdForActiveBrowsingContextInChrome());
     return IPC_OK();
   }
 
@@ -6981,7 +6982,8 @@ mozilla::ipc::IPCResult ContentParent::RecvUnsetActiveBrowsingContext(
          "parent [%p].",
          context));
     Unused << SendReviseActiveBrowsingContext(
-        fm->GetActiveBrowsingContextInChrome(), aActionId);
+        aActionId, fm->GetActiveBrowsingContextInChrome(),
+        fm->GetActionIdForActiveBrowsingContextInChrome());
     return IPC_OK();
   }
 

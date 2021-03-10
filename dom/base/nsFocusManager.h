@@ -814,25 +814,26 @@ class nsFocusManager final : public nsIFocusManager,
   // Receives notification of another process setting the top-level Web
   // content as being in the frontmost tab with focus in Web content.
   void SetActiveBrowsingContextFromOtherProcess(
-      mozilla::dom::BrowsingContext* aContext);
+      mozilla::dom::BrowsingContext* aContext, uint64_t aActionId);
 
   // Content-only
   // Receives notification that another process determined that focus
   // moved to chrome so a particular BrowsingContext is no longer the
   // "active" one.
   void UnsetActiveBrowsingContextFromOtherProcess(
-      mozilla::dom::BrowsingContext* aContext);
+      mozilla::dom::BrowsingContext* aContext, uint64_t aActionId);
 
   // Content-only
   // Receives a notification from parent that this content process's
   // attempt to set the active browsing context was late and the
-  // prevailing browsing context is instead the first argument of
-  // this method call. This should be ignored if the second argument
+  // prevailing browsing context is instead the second argument of
+  // this method call. This should be ignored if the first argument
   // doesn't match the latest action id associated with setting the
   // active browsing context in this process, because in that case,
   // this revision is late.
-  void ReviseActiveBrowsingContext(mozilla::dom::BrowsingContext* aContext,
-                                   uint64_t aActionId);
+  void ReviseActiveBrowsingContext(uint64_t aOldActionId,
+                                   mozilla::dom::BrowsingContext* aContext,
+                                   uint64_t aNewActionId);
 
   // Chrome-only
   // Sets the chrome process notion of what content believes to be
@@ -848,6 +849,8 @@ class nsFocusManager final : public nsIFocusManager,
   // the top-level BrowsingContext in the frontmost tab when focus
   // is in Web content.
   mozilla::dom::BrowsingContext* GetActiveBrowsingContextInChrome();
+
+  uint64_t GetActionIdForActiveBrowsingContextInChrome() const;
 
   static uint64_t GenerateFocusActionId();
 
@@ -879,6 +882,8 @@ class nsFocusManager final : public nsIFocusManager,
   // else has updated mActiveBrowsingContextInContent before the revision
   // arrives.
   uint64_t mActionIdForActiveBrowsingContextInContent;
+
+  uint64_t mActionIdForActiveBrowsingContextInChrome;
 
   // Whether or not mActiveBrowsingContextInContent was set from another process
   // or from this process.
