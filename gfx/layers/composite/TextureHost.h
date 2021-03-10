@@ -744,6 +744,27 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
     return false;
   }
 
+  // Our WebRender backend may impose restrictions on whether textures are
+  // prepared as native textures or not, or it may have no restriction at
+  // all. This enumerates those possibilities.
+  enum NativeTexturePolicy {
+    REQUIRE,
+    FORBID,
+    DONT_CARE,
+  };
+
+  static NativeTexturePolicy BackendNativeTexturePolicy(
+      layers::WebRenderBackend aBackend, gfx::IntSize aSize) {
+    static const int32_t SWGL_DIMENSION_MAX = 1 << 15;
+    if (aBackend == WebRenderBackend::SOFTWARE) {
+      return (aSize.width <= SWGL_DIMENSION_MAX &&
+              aSize.height <= SWGL_DIMENSION_MAX)
+                 ? REQUIRE
+                 : FORBID;
+    }
+    return DONT_CARE;
+  }
+
  protected:
   virtual void ReadUnlock();
 
