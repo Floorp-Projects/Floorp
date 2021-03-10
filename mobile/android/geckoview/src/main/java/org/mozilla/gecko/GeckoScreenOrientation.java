@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.util.Log;
 import android.view.Surface;
@@ -215,58 +214,6 @@ public class GeckoScreenOrientation {
         return mScreenOrientation;
     }
 
-    /**
-     * Lock screen orientation given the Gecko screen orientation.
-     *
-     * @param aGeckoOrientation
-     *        The Gecko orientation provided.
-     */
-    public void lock(final int aGeckoOrientation) {
-        lock(ScreenOrientation.get(aGeckoOrientation));
-    }
-
-    /**
-     * Lock screen orientation given the Gecko screen orientation.
-     *
-     * @param aScreenOrientation
-     *        Gecko screen orientation derived from Android orientation and
-     *        rotation.
-     *
-     * @return Whether the locking was successful.
-     */
-    public boolean lock(final ScreenOrientation aScreenOrientation) {
-        Log.d(LOGTAG, "locking to " + aScreenOrientation);
-        final ScreenOrientationDelegate delegate = GeckoAppShell.getScreenOrientationDelegate();
-        final int activityInfoOrientation = screenOrientationToActivityInfoOrientation(aScreenOrientation);
-        synchronized (this) {
-            if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
-                update(aScreenOrientation);
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Unlock and update screen orientation.
-     *
-     * @return Whether the unlocking was successful.
-     */
-    public boolean unlock() {
-        Log.d(LOGTAG, "unlocking");
-        final ScreenOrientationDelegate delegate = GeckoAppShell.getScreenOrientationDelegate();
-        final int activityInfoOrientation = screenOrientationToActivityInfoOrientation(ScreenOrientation.DEFAULT);
-        synchronized (this) {
-            if (delegate.setRequestedOrientationForCurrentActivity(activityInfoOrientation)) {
-                update();
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
     /*
      * Combine the Android orientation and rotation to the Gecko orientation.
      *
@@ -329,65 +276,5 @@ public class GeckoScreenOrientation {
         final WindowManager windowManager =
                 (WindowManager) appContext.getSystemService(Context.WINDOW_SERVICE);
         return windowManager.getDefaultDisplay().getRotation();
-    }
-
-    /*
-     * Convert Gecko screen orientation to Android orientation.
-     *
-     * @param aScreenOrientation
-     *        Gecko screen orientation.
-     * @return Android orientation. This conversion is lossy, the Android
-     *         orientation does not differentiate between primary and secondary
-     *         orientations.
-     */
-    public static int screenOrientationToAndroidOrientation(
-            final ScreenOrientation aScreenOrientation) {
-        switch (aScreenOrientation) {
-            case PORTRAIT:
-            case PORTRAIT_PRIMARY:
-            case PORTRAIT_SECONDARY:
-                return Configuration.ORIENTATION_PORTRAIT;
-            case LANDSCAPE:
-            case LANDSCAPE_PRIMARY:
-            case LANDSCAPE_SECONDARY:
-                return Configuration.ORIENTATION_LANDSCAPE;
-            case NONE:
-            case DEFAULT:
-            default:
-                return Configuration.ORIENTATION_UNDEFINED;
-        }
-    }
-
-    /*
-     * Convert Gecko screen orientation to Android ActivityInfo orientation.
-     * This is yet another orientation used by Android, but it's more detailed
-     * than the Android orientation.
-     * It is required for screen orientation locking and unlocking.
-     *
-     * @param aScreenOrientation
-     *        Gecko screen orientation.
-     * @return Android ActivityInfo orientation.
-     */
-    public static int screenOrientationToActivityInfoOrientation(
-            final ScreenOrientation aScreenOrientation) {
-        switch (aScreenOrientation) {
-            case PORTRAIT:
-                return ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
-            case PORTRAIT_PRIMARY:
-                return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-            case PORTRAIT_SECONDARY:
-                return ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
-            case LANDSCAPE:
-                return ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
-            case LANDSCAPE_PRIMARY:
-                return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-            case LANDSCAPE_SECONDARY:
-                return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
-            case DEFAULT:
-            case NONE:
-                return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
-            default:
-                return ActivityInfo.SCREEN_ORIENTATION_NOSENSOR;
-        }
     }
 }
