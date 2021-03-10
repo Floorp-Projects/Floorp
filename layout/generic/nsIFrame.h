@@ -3687,8 +3687,8 @@ class nsIFrame : public nsQueryFrame {
   nsRect PreEffectsInkOverflowRect() const;
 
   /**
-   * Store the overflow area in the frame's mOverflow.mVisualDeltas
-   * fields or as a frame property in the frame manager so that it can
+   * Store the overflow area in the frame's mOverflow.mInkOverflowDeltas
+   * fields or as a frame property in OverflowAreasProperty() so that it can
    * be retrieved later without reflowing the frame. Returns true if either of
    * the overflow areas changed.
    */
@@ -5063,22 +5063,22 @@ class nsIFrame : public nsQueryFrame {
   // If mOverflow.mType == NS_FRAME_OVERFLOW_LARGE, then the
   // delta values are not meaningful and the overflow area is stored
   // as a separate rect property.
-  struct VisualDeltas {
+  struct InkOverflowDeltas {
     uint8_t mLeft;
     uint8_t mTop;
     uint8_t mRight;
     uint8_t mBottom;
-    bool operator==(const VisualDeltas& aOther) const {
+    bool operator==(const InkOverflowDeltas& aOther) const {
       return mLeft == aOther.mLeft && mTop == aOther.mTop &&
              mRight == aOther.mRight && mBottom == aOther.mBottom;
     }
-    bool operator!=(const VisualDeltas& aOther) const {
+    bool operator!=(const InkOverflowDeltas& aOther) const {
       return !(*this == aOther);
     }
   };
   union {
     uint32_t mType;
-    VisualDeltas mVisualDeltas;
+    InkOverflowDeltas mInkOverflowDeltas;
   } mOverflow;
 
   /** @see GetWritingMode() */
@@ -5355,15 +5355,15 @@ class nsIFrame : public nsQueryFrame {
     MOZ_ASSERT(mOverflow.mType != NS_FRAME_OVERFLOW_LARGE,
                "should not be called when overflow is in a property");
     // Calculate the rect using deltas from the frame's border rect.
-    // Note that the mOverflow.mDeltas fields are unsigned, but we will often
-    // need to return negative values for the left and top, so take care
-    // to cast away the unsigned-ness.
-    return nsRect(-(int32_t)mOverflow.mVisualDeltas.mLeft,
-                  -(int32_t)mOverflow.mVisualDeltas.mTop,
-                  mRect.Width() + mOverflow.mVisualDeltas.mRight +
-                      mOverflow.mVisualDeltas.mLeft,
-                  mRect.Height() + mOverflow.mVisualDeltas.mBottom +
-                      mOverflow.mVisualDeltas.mTop);
+    // Note that the mOverflow.mInkOverflowDeltas fields are unsigned, but we
+    // will often need to return negative values for the left and top, so take
+    // care to cast away the unsigned-ness.
+    return nsRect(-(int32_t)mOverflow.mInkOverflowDeltas.mLeft,
+                  -(int32_t)mOverflow.mInkOverflowDeltas.mTop,
+                  mRect.Width() + mOverflow.mInkOverflowDeltas.mRight +
+                      mOverflow.mInkOverflowDeltas.mLeft,
+                  mRect.Height() + mOverflow.mInkOverflowDeltas.mBottom +
+                      mOverflow.mInkOverflowDeltas.mTop);
   }
   /**
    * Returns true if any overflow changed.
