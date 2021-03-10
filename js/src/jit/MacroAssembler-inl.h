@@ -421,7 +421,7 @@ void MacroAssembler::branchTestFunctionFlags(Register fun, uint32_t flags,
   static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
                 "The code in this function and the ones below must change");
 
-  int32_t bit = IMM32_16ADJ(flags);
+  int32_t bit = Imm32_16Adj(flags);
   Address address(fun, JSFunction::offsetOfNargs());
   branchTest32(cond, address, Imm32(bit), label);
 }
@@ -514,8 +514,8 @@ void MacroAssembler::branchFunctionKind(Condition cond,
   MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
   MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
   Address address(fun, JSFunction::offsetOfNargs());
-  int32_t mask = IMM32_16ADJ(FunctionFlags::FUNCTION_KIND_MASK);
-  int32_t bit = IMM32_16ADJ(kind << FunctionFlags::FUNCTION_KIND_SHIFT);
+  int32_t mask = Imm32_16Adj(FunctionFlags::FUNCTION_KIND_MASK);
+  int32_t bit = Imm32_16Adj(kind << FunctionFlags::FUNCTION_KIND_SHIFT);
   load32(address, scratch);
   and32(Imm32(mask), scratch);
   branch32(cond, scratch, Imm32(bit), label);
