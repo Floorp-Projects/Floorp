@@ -17,14 +17,12 @@ add_task(async function() {
     "simple2.js"
   );
 
-  const doc = dbg.win.document;
-
   const rootNodes = dbg.win.document.querySelectorAll(
     selectors.sourceTreeRootNode
   );
 
   info("Expands the main root node");
-  expandAll(dbg, rootNodes[0]);
+  expandAllSourceNodes(dbg, rootNodes[0]);
 
   // We need to assert the actual DOM nodes in the source tree, because the
   // state can contain simple1.js and simple2.js, but only show one of them.
@@ -36,7 +34,7 @@ add_task(async function() {
     is(rootNodes.length, 2, "Found 2 sourceview root nodes when fission is on");
 
     info("Expands the remote frame root node");
-    expandAll(dbg, rootNodes[1]);
+    expandAllSourceNodes(dbg, rootNodes[1]);
   }
 
   info("Waiting for simple2.js from example.org (frame)");
@@ -44,14 +42,3 @@ add_task(async function() {
 
   await dbg.toolbox.closeToolbox();
 });
-
-function findSourceNodeWithText(dbg, text) {
-  return [...findAllElements(dbg, "sourceNodes")].some(el => {
-    return el.textContent.includes(text);
-  });
-}
-
-function expandAll(dbg, treeNode) {
-  rightClickEl(dbg, treeNode);
-  selectContextMenuItem(dbg, "#node-menu-expand-all");
-}

@@ -901,9 +901,7 @@ async function loadAndAddBreakpoint(dbg, filename, line, column) {
     const loc = breakpoints[id].location;
     ok(
       false,
-      `Breakpoint has correct line ${line}, column ${column}, but was line ${
-        loc.line
-      } column ${loc.column}`
+      `Breakpoint has correct line ${line}, column ${column}, but was line ${loc.line} column ${loc.column}`
     );
   }
 
@@ -923,7 +921,10 @@ async function invokeWithBreakpoint(
 
   const invokeFailed = await Promise.race([
     waitForPaused(dbg),
-    invokeResult.then(() => new Promise(() => {}), () => true),
+    invokeResult.then(
+      () => new Promise(() => {}),
+      () => true
+    ),
   ]);
 
   if (invokeFailed) {
@@ -981,6 +982,17 @@ async function assertScopes(dbg, items) {
   }
 
   is(getScopeLabel(dbg, items.length + 1), "Window");
+}
+
+function findSourceNodeWithText(dbg, text) {
+  return [...findAllElements(dbg, "sourceNodes")].find(el => {
+    return el.textContent.includes(text);
+  });
+}
+
+function expandAllSourceNodes(dbg, treeNode) {
+  rightClickEl(dbg, treeNode);
+  selectContextMenuItem(dbg, "#node-menu-expand-all");
 }
 
 /**
@@ -1218,10 +1230,7 @@ async function getEditorLineEl(dbg, line) {
  * @param {Number} line Line where to check for a breakpoint in the editor
  * @static
  */
-async function assertNoBreakpoint(
-  dbg,
-  line
-) {
+async function assertNoBreakpoint(dbg, line) {
   const el = await getEditorLineEl(dbg, line);
 
   const exists = !!el.querySelector(".new-breakpoint");
@@ -1236,18 +1245,13 @@ async function assertNoBreakpoint(
  * @param {Number} line Line where to check for a breakpoint
  * @static
  */
-async function assertBreakpoint(
-  dbg,
-  line
-) {
+async function assertBreakpoint(dbg, line) {
   const el = await getEditorLineEl(dbg, line);
 
   const exists = !!el.querySelector(".new-breakpoint");
   ok(exists, `Breakpoint exists on line ${line}`);
 
-  const hasConditionClass = el.classList.contains(
-    "has-condition"
-  );
+  const hasConditionClass = el.classList.contains("has-condition");
 
   ok(
     !hasConditionClass,
@@ -1256,10 +1260,7 @@ async function assertBreakpoint(
 
   const hasLogClass = el.classList.contains("has-log");
 
-  ok(
-    !hasLogClass,
-    `Regular breakpoint doesn't have log on line ${line}`
-  );
+  ok(!hasLogClass, `Regular breakpoint doesn't have log on line ${line}`);
 }
 
 /*
@@ -1270,23 +1271,15 @@ async function assertBreakpoint(
  * @param {Number} line Line where to check for a breakpoint
  * @static
  */
-async function assertConditionBreakpoint(
-  dbg,
-  line
-) {
+async function assertConditionBreakpoint(dbg, line) {
   const el = await getEditorLineEl(dbg, line);
 
   const exists = !!el.querySelector(".new-breakpoint");
   ok(exists, `Breakpoint exists on line ${line}`);
 
-  const hasConditionClass = el.classList.contains(
-    "has-condition"
-  );
+  const hasConditionClass = el.classList.contains("has-condition");
 
-  ok(
-    hasConditionClass,
-    `Conditional breakpoint on line ${line}`
-  );
+  ok(hasConditionClass, `Conditional breakpoint on line ${line}`);
 
   const hasLogClass = el.classList.contains("has-log");
 
@@ -1304,18 +1297,13 @@ async function assertConditionBreakpoint(
  * @param {Number} line Line where to check for a breakpoint
  * @static
  */
-async function assertLogBreakpoint(
-  dbg,
-  line
-) {
+async function assertLogBreakpoint(dbg, line) {
   const el = await getEditorLineEl(dbg, line);
 
   const exists = !!el.querySelector(".new-breakpoint");
   ok(exists, `Breakpoint exists on line ${line}`);
 
-  const hasConditionClass = el.classList.contains(
-    "has-condition"
-  );
+  const hasConditionClass = el.classList.contains("has-condition");
 
   ok(
     !hasConditionClass,
@@ -1324,10 +1312,7 @@ async function assertLogBreakpoint(
 
   const hasLogClass = el.classList.contains("has-log");
 
-  ok(
-    hasLogClass,
-    `Log breakpoint on line ${line}`
-  );
+  ok(hasLogClass, `Log breakpoint on line ${line}`);
 }
 
 function assertBreakpointSnippet(dbg, index, snippet) {
@@ -1735,9 +1720,7 @@ async function clickAtPos(dbg, pos) {
 
   const { top, left } = tokenEl.getBoundingClientRect();
   info(
-    `Clicking on token ${tokenEl.innerText} in line ${
-      tokenEl.parentNode.innerText
-    }`
+    `Clicking on token ${tokenEl.innerText} in line ${tokenEl.parentNode.innerText}`
   );
   tokenEl.dispatchEvent(
     new MouseEvent("click", {
@@ -2074,7 +2057,6 @@ function setInputValue(hud, value) {
   return onValueSet;
 }
 
-
 function assertMenuItemChecked(menuItem, isChecked) {
   is(
     !!menuItem.getAttribute("aria-checked"),
@@ -2084,7 +2066,10 @@ function assertMenuItemChecked(menuItem, isChecked) {
 }
 
 async function toggleDebbuggerSettingsMenuItem(dbg, { className, isChecked }) {
-  const menuButton = findElementWithSelector(dbg, ".debugger-settings-menu-button");
+  const menuButton = findElementWithSelector(
+    dbg,
+    ".debugger-settings-menu-button"
+  );
   const { parent } = dbg.panel.panelWin;
   const { document } = parent;
 
@@ -2117,8 +2102,8 @@ async function setLogPoint(dbg, index, value) {
 // which doesn't contain mochitests resource://testing-common URL.
 // This isn't important to allow rejections in the context of the browser toolbox tests.
 const protocolHandler = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
+  .getProtocolHandler("resource")
+  .QueryInterface(Ci.nsIResProtocolHandler);
 if (protocolHandler.hasSubstitution("testing-common")) {
   const { PromiseTestUtils } = ChromeUtils.import(
     "resource://testing-common/PromiseTestUtils.jsm"
@@ -2128,7 +2113,9 @@ if (protocolHandler.hasSubstitution("testing-common")) {
   // a navigation or pause/resume end up as uncaught rejections. These never
   // indicate errors and are allowed in all debugger tests.
   PromiseTestUtils.allowMatchingRejectionsGlobally(/Page has navigated/);
-  PromiseTestUtils.allowMatchingRejectionsGlobally(/Current thread has changed/);
+  PromiseTestUtils.allowMatchingRejectionsGlobally(
+    /Current thread has changed/
+  );
   PromiseTestUtils.allowMatchingRejectionsGlobally(
     /Current thread has paused or resumed/
   );
