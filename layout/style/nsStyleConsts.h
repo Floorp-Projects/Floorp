@@ -561,12 +561,6 @@ enum class StyleRubyAlign : uint8_t {
   SpaceAround,
 };
 
-// ruby-position, see nsStyleText
-enum class StyleRubyPosition : uint8_t {
-  Over,
-  Under,
-};
-
 // See nsStyleText
 enum class StyleTextSizeAdjust : uint8_t {
   None,
