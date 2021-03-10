@@ -25,6 +25,7 @@ class nsConsoleMessage final : public nsIConsoleMessage {
 
   int64_t mTimeStamp;
   nsString mMessage;
+  bool mIsForwardedFromContentProcess;
 };
 
 #endif /* __nsconsolemessage_h__ */

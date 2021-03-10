@@ -4701,6 +4701,7 @@ mozilla::ipc::IPCResult ContentParent::RecvConsoleMessage(
   }
 
   RefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
+  msg->SetIsForwardedFromContentProcess(true);
   consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
   return IPC_OK();
 }

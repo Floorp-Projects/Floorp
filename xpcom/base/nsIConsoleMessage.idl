@@ -34,6 +34,8 @@ interface nsIConsoleMessage : nsISupports
 
     [binaryname(MessageMoz)] readonly attribute AString message;
 
+    attribute boolean isForwardedFromContentProcess;
+
     AUTF8String toString();
 };
 
