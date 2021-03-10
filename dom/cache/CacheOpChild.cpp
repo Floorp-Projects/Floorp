@@ -17,8 +17,8 @@
 namespace mozilla::dom {
 // XXX Move this to ToJSValue.h
 template <typename T>
-MOZ_MUST_USE bool ToJSValue(JSContext* aCx, const SafeRefPtr<T>& aArgument,
-                            JS::MutableHandle<JS::Value> aValue) {
+[[nodiscard]] bool ToJSValue(JSContext* aCx, const SafeRefPtr<T>& aArgument,
+                             JS::MutableHandle<JS::Value> aValue) {
   return ToJSValue(aCx, *aArgument.unsafeGetRawPtr(), aValue);
 }
 

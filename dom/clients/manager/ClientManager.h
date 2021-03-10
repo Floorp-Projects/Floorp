@@ -61,7 +61,7 @@ class ClientManager final : public ClientThing<ClientManagerChild> {
   // Utility method to perform an IPC operation.  This will create a
   // PClientManagerOp actor tied to a MozPromise.  The promise will
   // resolve or reject with the result of the remote operation.
-  MOZ_MUST_USE RefPtr<ClientOpPromise> StartOp(
+  [[nodiscard]] RefPtr<ClientOpPromise> StartOp(
       const ClientOpConstructorArgs& aArgs,
       nsISerialEventTarget* aSerialEventTarget);
 

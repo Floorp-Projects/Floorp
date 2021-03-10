@@ -106,11 +106,11 @@ class nsJSURI final : public mozilla::net::nsSimpleURI {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
+    [[nodiscard]] NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
       return InitFromInputStream(aStream);
     }
 
-    MOZ_MUST_USE NS_IMETHOD SetBase(nsIURI* aBaseURI) override {
+    [[nodiscard]] NS_IMETHOD SetBase(nsIURI* aBaseURI) override {
       mURI = new nsJSURI(aBaseURI);
       return NS_OK;
     }

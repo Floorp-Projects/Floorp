@@ -650,9 +650,9 @@ class ScriptLoader final : public nsISupports {
 
   // Get source text.  On success |aMaybeSource| will contain either UTF-8 or
   // UTF-16 source; on failure it will remain in its initial state.
-  MOZ_MUST_USE nsresult GetScriptSource(JSContext* aCx,
-                                        ScriptLoadRequest* aRequest,
-                                        MaybeSourceText* aMaybeSource);
+  [[nodiscard]] nsresult GetScriptSource(JSContext* aCx,
+                                         ScriptLoadRequest* aRequest,
+                                         MaybeSourceText* aMaybeSource);
 
   void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(

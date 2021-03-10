@@ -49,9 +49,9 @@ class DocGroup final {
   // Returns NS_ERROR_FAILURE and sets |aString| to an empty string if the TLD
   // service isn't available. Returns NS_OK on success, but may still set
   // |aString| may still be set to an empty string.
-  static MOZ_MUST_USE nsresult GetKey(nsIPrincipal* aPrincipal,
-                                      bool aCrossOriginIsolated,
-                                      nsACString& aKey);
+  [[nodiscard]] static nsresult GetKey(nsIPrincipal* aPrincipal,
+                                       bool aCrossOriginIsolated,
+                                       nsACString& aKey);
 
   bool MatchesKey(const nsACString& aKey) { return aKey == mKey; }
 

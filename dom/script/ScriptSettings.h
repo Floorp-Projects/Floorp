@@ -211,12 +211,12 @@ class MOZ_STACK_CLASS AutoJSAPI : protected ScriptSettingsStackEntry {
   //
   // Successfully initializing the AutoJSAPI will ensure that it enters the
   // Realm of aGlobalObject's JSObject and exposes that JSObject to active JS.
-  MOZ_MUST_USE bool Init(nsIGlobalObject* aGlobalObject);
+  [[nodiscard]] bool Init(nsIGlobalObject* aGlobalObject);
 
   // This is a helper that grabs the native global associated with aObject and
   // invokes the above Init() with that. aObject must not be a cross-compartment
   // wrapper: CCWs are not associated with a single global.
-  MOZ_MUST_USE bool Init(JSObject* aObject);
+  [[nodiscard]] bool Init(JSObject* aObject);
 
   // Unsurprisingly, this uses aCx and enters the compartment of aGlobalObject.
   // If aGlobalObject or its associated JS global are null then it returns
@@ -226,15 +226,15 @@ class MOZ_STACK_CLASS AutoJSAPI : protected ScriptSettingsStackEntry {
   // If aGlobalObject represents a web-visible global, errors reported by this
   // AutoJSAPI as it comes off the stack will fire the relevant error events and
   // show up in the corresponding web console.
-  MOZ_MUST_USE bool Init(nsIGlobalObject* aGlobalObject, JSContext* aCx);
+  [[nodiscard]] bool Init(nsIGlobalObject* aGlobalObject, JSContext* aCx);
 
   // Convenience functions to take an nsPIDOMWindowInner or nsGlobalWindowInner,
   // when it is more easily available than an nsIGlobalObject.
-  MOZ_MUST_USE bool Init(nsPIDOMWindowInner* aWindow);
-  MOZ_MUST_USE bool Init(nsPIDOMWindowInner* aWindow, JSContext* aCx);
+  [[nodiscard]] bool Init(nsPIDOMWindowInner* aWindow);
+  [[nodiscard]] bool Init(nsPIDOMWindowInner* aWindow, JSContext* aCx);
 
-  MOZ_MUST_USE bool Init(nsGlobalWindowInner* aWindow);
-  MOZ_MUST_USE bool Init(nsGlobalWindowInner* aWindow, JSContext* aCx);
+  [[nodiscard]] bool Init(nsGlobalWindowInner* aWindow);
+  [[nodiscard]] bool Init(nsGlobalWindowInner* aWindow, JSContext* aCx);
 
   JSContext* cx() const {
     MOZ_ASSERT(mCx, "Must call Init before using an AutoJSAPI");
@@ -260,11 +260,11 @@ class MOZ_STACK_CLASS AutoJSAPI : protected ScriptSettingsStackEntry {
   //
   // Note that this fails if and only if we OOM while wrapping the exception
   // into the current compartment.
-  MOZ_MUST_USE bool StealException(JS::MutableHandle<JS::Value> aVal);
+  [[nodiscard]] bool StealException(JS::MutableHandle<JS::Value> aVal);
 
   // As for StealException(), but uses the JS::ExceptionStack class to also
   // include the exception's stack, represented by SavedFrames.
-  MOZ_MUST_USE bool StealExceptionAndStack(JS::ExceptionStack* aExnStack);
+  [[nodiscard]] bool StealExceptionAndStack(JS::ExceptionStack* aExnStack);
 
   // Peek the current exception from the JS engine, without stealing it.
   // Callers must ensure that HasException() is true, and that cx() is in a
@@ -272,7 +272,7 @@ class MOZ_STACK_CLASS AutoJSAPI : protected ScriptSettingsStackEntry {
   //
   // Note that this fails if and only if we OOM while wrapping the exception
   // into the current compartment.
-  MOZ_MUST_USE bool PeekException(JS::MutableHandle<JS::Value> aVal);
+  [[nodiscard]] bool PeekException(JS::MutableHandle<JS::Value> aVal);
 
   void ClearException() {
     MOZ_ASSERT(IsStackTop());

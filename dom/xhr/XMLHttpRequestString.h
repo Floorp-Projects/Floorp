@@ -41,7 +41,7 @@ class XMLHttpRequestString final {
   // This method should be called only when the string is really needed because
   // it can cause the duplication of the strings in case the loading of the XHR
   // is not completed yet.
-  MOZ_MUST_USE bool GetAsString(nsAString& aString) const;
+  [[nodiscard]] bool GetAsString(nsAString& aString) const;
 
   size_t SizeOfThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -108,7 +108,7 @@ class XMLHttpRequestStringSnapshot final {
 
   bool IsEmpty() const { return !mLength; }
 
-  MOZ_MUST_USE bool GetAsString(DOMString& aString) const;
+  [[nodiscard]] bool GetAsString(DOMString& aString) const;
 
  private:
   XMLHttpRequestStringSnapshot(const XMLHttpRequestStringSnapshot&) = delete;

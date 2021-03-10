@@ -130,7 +130,7 @@ static nsCString FormatErrorMessage(nsresult aError,
                          static_cast<uint32_t>(aError));
 }
 
-MOZ_MUST_USE inline bool ToJSValue(
+[[nodiscard]] inline bool ToJSValue(
     JSContext* aCx, const IOUtils::InternalFileInfo& aInternalFileInfo,
     JS::MutableHandle<JS::Value> aValue) {
   FileInfo info;
@@ -1684,8 +1684,8 @@ JSObject* IOUtils::JsBuffer::IntoUint8Array(JSContext* aCx, JsBuffer aBuffer) {
   return JS_NewUint8ArrayWithBuffer(aCx, arrayBuffer, 0, aBuffer.mLength);
 }
 
-MOZ_MUST_USE bool ToJSValue(JSContext* aCx, IOUtils::JsBuffer&& aBuffer,
-                            JS::MutableHandle<JS::Value> aValue) {
+[[nodiscard]] bool ToJSValue(JSContext* aCx, IOUtils::JsBuffer&& aBuffer,
+                             JS::MutableHandle<JS::Value> aValue) {
   if (aBuffer.mBufferKind == IOUtils::BufferKind::String) {
     JSString* str = IOUtils::JsBuffer::IntoString(aCx, std::move(aBuffer));
     if (!str) {
