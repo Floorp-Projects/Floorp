@@ -31,12 +31,19 @@ exclude: true
 - ⚠️ Deprecate the [`MediaElement`][65.11] API to be removed in v91.
   Please use [`MediaSession`][81.6] for media events and control.
   ([bug 1693584]({{bugzilla}}1693584)).
+- ⚠️ Deprecate [`GeckoResult.ALLOW`][89.6] and [`GeckoResult.DENY`][89.7] in
+  favor of [`GeckoResult.allow`][89.8] and [`GeckoResult.deny`][89.9].
+  ([bug 1697270]({{bugzilla}}1697270)).
 
 [88.1]: {{javadoc_uri}}/WebExtension.Download.html#update-org.mozilla.geckoview.WebExtension.Download.Info-
 [88.2]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForDetailResult
 [88.3]: {{javadoc_uri}}/GeckoView.html#onTouchEventForDetailResult
 [88.4]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForResult
 [88.5]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult
+[88.6]: {{javadoc_uri}}/GeckoResult.html#ALLOW
+[88.7]: {{javadoc_uri}}/GeckoResult.html#DENY
+[88.8]: {{javadoc_uri}}/GeckoResult.html#allow--
+[88.9]: {{javadoc_uri}}/GeckoResult.html#deny--
 
 ## v87
 - ⚠ Added [`WebExtension.DownloadInitData`][87.1] class that can be used to
@@ -921,4 +928,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f97675adf85a37a764245f17806897b796d4a546
+[api-version]: 2e897390b591268984d7af478badd5ee80a34ee4
