@@ -70,7 +70,13 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     // Cache shaders
     shaders.insert("cs_blur", vec!["ALPHA_TARGET".to_string(), "COLOR_TARGET".to_string()]);
 
-    for name in &["cs_line_decoration", "cs_gradient", "cs_border_segment", "cs_border_solid", "cs_svg_filter"] {
+    for name in &[
+        "cs_line_decoration",
+        "cs_fast_linear_gradient",
+        "cs_border_segment",
+        "cs_border_solid",
+        "cs_svg_filter",
+    ] {
         shaders.insert(name, vec![String::new()]);
     }
 
