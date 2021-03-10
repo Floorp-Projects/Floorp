@@ -3235,7 +3235,8 @@ void MediaDecoderStateMachine::RequestAudioData() {
             AUTO_PROFILER_LABEL(
                 "MediaDecoderStateMachine::RequestAudioData:Rejected",
                 MEDIA_PLAYBACK);
-            LOGV("OnAudioNotDecoded aError=%s", aError.ErrorName().get());
+            LOGV("OnAudioNotDecoded ErrorName=%s Message=%s",
+                 aError.ErrorName().get(), aError.Message().get());
             mAudioDataRequest.Complete();
             switch (aError.Code()) {
               case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
@@ -3291,7 +3292,8 @@ void MediaDecoderStateMachine::RequestVideoData(
             AUTO_PROFILER_LABEL(
                 "MediaDecoderStateMachine::RequestVideoData:Rejected",
                 MEDIA_PLAYBACK);
-            LOGV("OnVideoNotDecoded aError=%s", aError.ErrorName().get());
+            LOGV("OnVideoNotDecoded ErrorName=%s Message=%s",
+                 aError.ErrorName().get(), aError.Message().get());
             mVideoDataRequest.Complete();
             switch (aError.Code()) {
               case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
