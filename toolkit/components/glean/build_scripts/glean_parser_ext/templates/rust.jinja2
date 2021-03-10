@@ -229,7 +229,7 @@ pub(crate) mod __glean_metric_maps {
 
 {% for typ, metrics in metric_by_type.items() %}
 {% if typ.0 in ('BOOLEAN_MAP', 'COUNTER_MAP', 'STRING_MAP') %}
-        pub static {{typ.0}}: Lazy<RwLock<HashMap<MetricId, {{typ.1}}>>> = Lazy::new(||
+        pub static {{typ.0}}: Lazy<RwLock<HashMap<MetricId, Labeled{{typ.1}}>>> = Lazy::new(||
             RwLock::new(HashMap::new())
         );
 {% endif %}

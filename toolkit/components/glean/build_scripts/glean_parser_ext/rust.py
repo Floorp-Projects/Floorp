@@ -81,7 +81,7 @@ def type_name(obj):
     """
 
     if getattr(obj, "labeled", False):
-        return "LabeledMetric<{}>".format(class_name(obj.type))
+        return "LabeledMetric<Labeled{}>".format(class_name(obj.type))
     generate_enums = getattr(obj, "_generate_enums", [])  # Extra Keys? Reasons?
     if len(generate_enums):
         for name, suffix in generate_enums:

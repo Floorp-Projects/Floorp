@@ -402,3 +402,21 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+  a_labeled_counter:
+    type: labeled_counter
+    description: |
+      This is a test-only metric.
+      Just counting labeled things.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1688281
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1688281#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
+    no_lint:
+      - COMMON_PREFIX

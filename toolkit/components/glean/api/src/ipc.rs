@@ -30,6 +30,7 @@ pub struct IPCPayload {
     pub memory_samples: HashMap<MetricId, Vec<u64>>,
     pub string_lists: HashMap<MetricId, Vec<String>>,
     pub timing_samples: HashMap<MetricId, Vec<u128>>,
+    pub labeled_counters: HashMap<MetricId, HashMap<String, i32>>,
 }
 
 /// Global singleton: pending IPC payload.
@@ -116,6 +117,7 @@ pub fn take_buf() -> Option<Vec<u8>> {
 }
 
 pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
+    // TODO: Instrument failures to find metrics by id.
     let ipc_payload: IPCPayload = bincode::deserialize(buf).map_err(|_| ())?;
     for (id, value) in ipc_payload.counters.into_iter() {
         if let Some(metric) = __glean_metric_maps::COUNTER_MAP.get(&id) {
@@ -139,6 +141,13 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
     }
     for (id, _samples) in ipc_payload.timing_samples.into_iter() {
         log::info!("Cannot yet replay child process timing dist {:?}", id);
+    }
+    for (id, labeled_counts) in ipc_payload.labeled_counters.into_iter() {
+        if let Some(metric) = __glean_metric_maps::LABELED_COUNTER_MAP.get(&id) {
+            for (label, count) in labeled_counts.into_iter() {
+                metric.get(&label).add(count);
+            }
+        }
     }
     Ok(())
 }
