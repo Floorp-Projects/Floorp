@@ -100,11 +100,9 @@ add_task(
     let suggestOpenPages = Preferences.get("browser.urlbar.suggest.openpage");
     Preferences.set("browser.urlbar.suggest.openpage", false);
 
-    await Services.search.addEngineWithDetails("MozSearch", {
-      method: "GET",
-      template: "http://example.com/?q={searchTerms}",
-    });
-    let engine = Services.search.getEngineByName("MozSearch");
+    await SearchTestUtils.installSearchExtension();
+
+    let engine = Services.search.getEngineByName("Example");
     let originalEngine = await Services.search.getDefault();
     await Services.search.setDefault(engine);
 
@@ -114,10 +112,6 @@ add_task(
       Preferences.set("browser.urlbar.suggest.openpage", suggestOpenPages);
 
       await Services.search.setDefault(originalEngine);
-      let mozSearchEngine = Services.search.getEngineByName("MozSearch");
-      if (mozSearchEngine) {
-        await Services.search.removeEngine(mozSearchEngine);
-      }
     }
     registerCleanupFunction(cleanup);
 
@@ -130,7 +124,7 @@ add_task(
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedTab.linkedBrowser,
       false,
-      "http://example.com/?q=ex"
+      "https://example.com/?q=ex"
     );
     await cleanup();
   })

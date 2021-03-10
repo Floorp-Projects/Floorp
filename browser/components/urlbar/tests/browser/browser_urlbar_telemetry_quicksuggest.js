@@ -65,11 +65,9 @@ add_task(async function init() {
   });
 
   // Add a mock engine so we don't hit the network.
-  let engine = await Services.search.addEngineWithDetails("Test", {
-    template: "http://example.com/?search={searchTerms}",
-  });
+  await SearchTestUtils.installSearchExtension();
   let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(engine);
+  Services.search.setDefault(Services.search.getEngineByName("Example"));
 
   // Set up Quick Suggest.
   await UrlbarQuickSuggest.init();
@@ -86,7 +84,6 @@ add_task(async function init() {
   registerCleanupFunction(async () => {
     sandbox.restore();
     Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(engine);
     Services.telemetry.canRecordExtended = oldCanRecord;
     delete UrlbarProviderQuickSuggest._helpUrl;
   });

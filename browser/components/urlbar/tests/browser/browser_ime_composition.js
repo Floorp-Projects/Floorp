@@ -41,16 +41,17 @@ add_task(async function() {
     url: "http://example.com/",
     parentGuid: PlacesUtils.bookmarks.menuGuid,
   });
-  let engine = await Services.search.addEngineWithDetails("Test", {
-    alias: "@test",
-    template: `http://example.com/?search={searchTerms}`,
+
+  await SearchTestUtils.installSearchExtension({
+    name: "Test",
+    keyword: "@test",
   });
+
   let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(Services.search.getEngineByName("Test"));
 
   registerCleanupFunction(async () => {
     await Services.search.setDefault(originalEngine);
-    await Services.search.removeEngine(engine);
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();
   });
