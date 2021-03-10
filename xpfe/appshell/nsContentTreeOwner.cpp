@@ -22,7 +22,6 @@
 #include "nsIURIFixup.h"
 #include "nsIWebNavigation.h"
 #include "nsDocShellCID.h"
-#include "nsIExternalURLHandlerService.h"
 #include "nsIMIMEInfo.h"
 #include "nsIWidget.h"
 #include "nsWindowWatcher.h"

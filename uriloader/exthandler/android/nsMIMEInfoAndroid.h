@@ -8,7 +8,7 @@
 
 #include "nsMIMEInfoImpl.h"
 #include "nsIMutableArray.h"
-#include "nsAndroidHandlerApp.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 
 class nsMIMEInfoAndroid final : public nsIMIMEInfo {
  public:
