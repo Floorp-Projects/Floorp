@@ -16,7 +16,6 @@
     "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "patches": [
       "clang-tidy-ci.patch",
-      "clang-tidy-no-errors.patch",
       "compiler-rt-cross-compile.patch",
       "compiler-rt-no-codesign.patch"
     ]
