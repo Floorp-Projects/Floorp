@@ -14,7 +14,6 @@
 #include "js/Utility.h"
 #include "js/experimental/TypedData.h"
 #include "jsfriendapi.h"
-#include "mozilla/AutoRestore.h"
 #include "mozilla/Compression.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EndianUtils.h"
@@ -35,7 +34,6 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
-#include "nsISupports.h"
 #include "nsLocalFile.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
@@ -53,6 +51,16 @@
 #  include "nsSystemInfo.h"
 #endif
 
+#define REJECT_IF_SHUTTING_DOWN(aJSPromise)                       \
+  do {                                                            \
+    if (sShutdownStarted) {                                       \
+      (aJSPromise)                                                \
+          ->MaybeRejectWithNotAllowedError(                       \
+              "Shutting down and refusing additional I/O tasks"); \
+      return (aJSPromise).forget();                               \
+    }                                                             \
+  } while (false)
+
 #define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)               \
   do {                                                                   \
     if (nsresult _rv = (_file)->InitWithPath((_path)); NS_FAILED(_rv)) { \
@@ -62,9 +70,6 @@
       return (_promise).forget();                                        \
     }                                                                    \
   } while (0)
-
-static constexpr auto SHUTDOWN_ERROR =
-    "IOUtils: Shutting down and refusing additional I/O tasks"_ns;
 
 namespace mozilla::dom {
 
@@ -143,8 +148,568 @@ MOZ_MUST_USE inline bool ToJSValue(
   return ToJSValue(aCx, info, aValue);
 }
 
-static template <typename T>
-void ResolveJSPromise(Promise* aPromise, T&& aValue) {
+// IOUtils implementation
+
+/* static */
+StaticDataMutex<StaticRefPtr<nsISerialEventTarget>>
+    IOUtils::sBackgroundEventTarget("sBackgroundEventTarget");
+/* static */
+StaticRefPtr<nsIAsyncShutdownClient> IOUtils::sBarrier;
+/* static */
+Atomic<bool> IOUtils::sShutdownStarted = Atomic<bool>(false);
+
+/* static */
+template <typename OkT, typename Fn>
+RefPtr<IOUtils::IOPromise<OkT>> IOUtils::RunOnBackgroundThread(Fn aFunc) {
+  nsCOMPtr<nsISerialEventTarget> bg = GetBackgroundEventTarget();
+  if (!bg) {
+    return IOPromise<OkT>::CreateAndReject(
+        IOError(NS_ERROR_ABORT)
+            .WithMessage("Could not dispatch task to background thread"),
+        __func__);
+  }
+
+  return InvokeAsync(bg, __func__, [func = std::move(aFunc)]() {
+    Result<OkT, IOError> result = func();
+    if (result.isErr()) {
+      return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
+    }
+    return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
+  });
+}
+
+/* static */
+template <typename OkT, typename Fn>
+void IOUtils::RunOnBackgroundThreadAndResolve(Promise* aPromise, Fn aFunc) {
+  RunOnBackgroundThread<OkT, Fn>(std::move(aFunc))
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise = RefPtr(aPromise)](OkT&& ok) {
+            ResolveJSPromise(promise, std::forward<OkT>(ok));
+          },
+          [promise = RefPtr(aPromise)](const IOError& err) {
+            RejectJSPromise(promise, err);
+          });
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
+                                        const nsAString& aPath,
+                                        const ReadOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  Maybe<uint32_t> toRead = Nothing();
+  if (!aOptions.mMaxBytes.IsNull()) {
+    if (aOptions.mMaxBytes.Value() == 0) {
+      // Resolve with an empty buffer.
+      nsTArray<uint8_t> arr(0);
+      promise->MaybeResolve(TypedArrayCreator<Uint8Array>(arr));
+      return promise.forget();
+    }
+    toRead.emplace(aOptions.mMaxBytes.Value());
+  }
+
+  RunOnBackgroundThreadAndResolve<JsBuffer>(
+      promise,
+      [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
+        return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
+      });
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
+                                            const nsAString& aPath,
+                                            const ReadUTF8Options& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+  RunOnBackgroundThreadAndResolve<JsBuffer>(
+      promise, [file = std::move(file), decompress = aOptions.mDecompress]() {
+        return ReadUTF8Sync(file, decompress);
+      });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
+                                            const nsAString& aPath,
+                                            const ReadUTF8Options& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThread<JsBuffer>([file, decompress = aOptions.mDecompress]() {
+    return ReadUTF8Sync(file, decompress);
+  })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise, file](JsBuffer&& aBuffer) {
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+              promise->MaybeRejectWithUnknownError(
+                  "Could not initialize JS API");
+              return;
+            }
+            JSContext* cx = jsapi.cx();
+
+            JS::Rooted<JSString*> jsonStr(
+                cx, IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
+            if (!jsonStr) {
+              RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
+              return;
+            }
+
+            JS::Rooted<JS::Value> val(cx);
+            if (!JS_ParseJSON(cx, jsonStr, &val)) {
+              JS::Rooted<JS::Value> exn(cx);
+              if (JS_GetPendingException(cx, &exn)) {
+                JS_ClearPendingException(cx);
+                promise->MaybeReject(exn);
+              } else {
+                RejectJSPromise(
+                    promise,
+                    IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                        .WithMessage("ParseJSON threw an uncatchable exception "
+                                     "while parsing file(%s)",
+                                     file->HumanReadablePath().get()));
+              }
+
+              return;
+            }
+
+            promise->MaybeResolve(val);
+          },
+          [promise](const IOError& aErr) { RejectJSPromise(promise, aErr); });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
+                                         const nsAString& aPath,
+                                         const Uint8Array& aData,
+                                         const WriteOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  aData.ComputeState();
+  auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
+  if (buf.isNothing()) {
+    promise->MaybeRejectWithOperationError(
+        "Out of memory: Could not allocate buffer while writing to file");
+    return promise.forget();
+  }
+
+  auto opts = InternalWriteOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
+
+  RunOnBackgroundThreadAndResolve<uint32_t>(
+      promise, [file = std::move(file), buf = std::move(*buf),
+                opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
+                                             const nsAString& aPath,
+                                             const nsACString& aString,
+                                             const WriteOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  auto opts = InternalWriteOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
+
+  RunOnBackgroundThreadAndResolve<uint32_t>(
+      promise, [file = std::move(file), str = nsCString(aString),
+                opts = opts.unwrap()]() {
+        return WriteSync(file, AsBytes(Span(str)), opts);
+      });
+
+  return promise.forget();
+}
+
+static bool AppendJsonAsUtf8(const char16_t* aData, uint32_t aLen, void* aStr) {
+  nsCString* str = static_cast<nsCString*>(aStr);
+  return AppendUTF16toUTF8(Span<const char16_t>(aData, aLen), *str, fallible);
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
+                                             const nsAString& aPath,
+                                             JS::Handle<JS::Value> aValue,
+                                             const WriteOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  auto opts = InternalWriteOpts::FromBinding(aOptions);
+  if (opts.isErr()) {
+    RejectJSPromise(promise, opts.unwrapErr());
+    return promise.forget();
+  }
+
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JS::Value> rootedValue(cx, aValue);
+  nsCString utf8Str;
+
+  if (!JS_Stringify(cx, &rootedValue, nullptr, JS::NullHandleValue,
+                    AppendJsonAsUtf8, &utf8Str)) {
+    JS::Rooted<JS::Value> exn(cx, JS::UndefinedValue());
+    if (JS_GetPendingException(cx, &exn)) {
+      JS_ClearPendingException(cx);
+      promise->MaybeReject(exn);
+    } else {
+      RejectJSPromise(promise,
+                      IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                          .WithMessage("Could not serialize object to JSON"));
+    }
+    return promise.forget();
+  }
+
+  RunOnBackgroundThreadAndResolve<uint32_t>(
+      promise, [file = std::move(file), utf8Str = std::move(utf8Str),
+                opts = opts.unwrap()]() {
+        return WriteSync(file, AsBytes(Span(utf8Str)), opts);
+      });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
+                                        const nsAString& aSourcePath,
+                                        const nsAString& aDestPath,
+                                        const MoveOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
+
+  nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+
+  RunOnBackgroundThreadAndResolve<Ok>(
+      promise,
+      [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
+       noOverwrite = aOptions.mNoOverwrite]() {
+        return MoveSync(sourceFile, destFile, noOverwrite);
+      });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
+                                          const nsAString& aPath,
+                                          const RemoveOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThreadAndResolve<Ok>(
+      promise, [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent,
+                recursive = aOptions.mRecursive]() {
+        return RemoveSync(file, ignoreAbsent, recursive);
+      });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::MakeDirectory(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const MakeDirectoryOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThreadAndResolve<Ok>(
+      promise,
+      [file = std::move(file), createAncestors = aOptions.mCreateAncestors,
+       ignoreExisting = aOptions.mIgnoreExisting,
+       permissions = aOptions.mPermissions]() {
+        return MakeDirectorySync(file, createAncestors, ignoreExisting,
+                                 permissions);
+      });
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
+                                        const nsAString& aPath) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThreadAndResolve<InternalFileInfo>(
+      promise, [file = std::move(file)]() { return StatSync(file); });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
+                                        const nsAString& aSourcePath,
+                                        const nsAString& aDestPath,
+                                        const CopyOptions& aOptions) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+  REJECT_IF_SHUTTING_DOWN(promise);
+
+  nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
+
+  nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+
+  RunOnBackgroundThreadAndResolve<Ok>(
+      promise,
+      [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
+       noOverwrite = aOptions.mNoOverwrite, recursive = aOptions.mRecursive]() {
+        return CopySync(sourceFile, destFile, noOverwrite, recursive);
+      });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Touch(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const Optional<int64_t>& aModification) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  Maybe<int64_t> newTime = Nothing();
+  if (aModification.WasPassed()) {
+    newTime = Some(aModification.Value());
+  }
+
+  RunOnBackgroundThreadAndResolve<int64_t>(
+      promise,
+      [file = std::move(file), newTime]() { return TouchSync(file, newTime); });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
+                                               const nsAString& aPath) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThreadAndResolve<nsTArray<nsString>>(
+      promise, [file = std::move(file)]() { return GetChildrenSync(file); });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
+                                                  const nsAString& aPath,
+                                                  uint32_t aPermissions,
+                                                  const bool aHonorUmask) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+#if defined(XP_UNIX) && !defined(ANDROID)
+  if (aHonorUmask) {
+    aPermissions &= ~nsSystemInfo::gUserUmask;
+  }
+#endif
+
+  RunOnBackgroundThreadAndResolve<Ok>(
+      promise, [file = std::move(file), permissions = aPermissions]() {
+        return SetPermissionsSync(file, permissions);
+      });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
+                                          const nsAString& aPath) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+  RunOnBackgroundThreadAndResolve<bool>(
+      promise, [file = std::move(file)]() { return ExistsSync(file); });
+
+  return promise.forget();
+}
+
+/* static */
+already_AddRefed<nsISerialEventTarget> IOUtils::GetBackgroundEventTarget() {
+  if (sShutdownStarted) {
+    return nullptr;
+  }
+
+  auto lockedBackgroundEventTarget = sBackgroundEventTarget.Lock();
+  if (!lockedBackgroundEventTarget.ref()) {
+    nsCOMPtr<nsISerialEventTarget> et;
+    MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
+        "IOUtils::BackgroundIOThread", getter_AddRefs(et)));
+    MOZ_ASSERT(et);
+    *lockedBackgroundEventTarget = et;
+
+    if (NS_IsMainThread()) {
+      IOUtils::SetShutdownHooks();
+    } else {
+      nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+          __func__, []() { IOUtils::SetShutdownHooks(); });
+      NS_DispatchToMainThread(runnable.forget());
+    }
+  }
+  return do_AddRef(*lockedBackgroundEventTarget);
+}
+
+/* static */
+already_AddRefed<nsIAsyncShutdownClient> IOUtils::GetShutdownBarrier() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!sBarrier) {
+    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
+    MOZ_ASSERT(svc);
+
+    nsCOMPtr<nsIAsyncShutdownClient> barrier;
+    nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    sBarrier = barrier;
+  }
+  return do_AddRef(sBarrier);
+}
+
+/* static */
+void IOUtils::SetShutdownHooks() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+  nsCOMPtr<nsIAsyncShutdownBlocker> blocker = new IOUtilsShutdownBlocker();
+
+  nsresult rv = barrier->AddBlocker(
+      blocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
+      u"IOUtils: waiting for pending I/O to finish"_ns);
+  // Adding a new shutdown blocker should only fail if the current shutdown
+  // phase has completed. Ensure that we have set our shutdown flag to stop
+  // accepting new I/O tasks in this case.
+  if (NS_FAILED(rv)) {
+    sShutdownStarted = true;
+  }
+  NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
+  ErrorResult er;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::Create(global, er);
+  if (er.Failed()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(promise);
+  return do_AddRef(promise);
+}
+
+/* static */
+template <typename T>
+void IOUtils::ResolveJSPromise(Promise* aPromise, T&& aValue) {
   if constexpr (std::is_same_v<T, Ok>) {
     aPromise->MaybeResolveWithUndefined();
   } else {
@@ -152,7 +717,8 @@ void ResolveJSPromise(Promise* aPromise, T&& aValue) {
   }
 }
 
-static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
+/* static */
+void IOUtils::RejectJSPromise(Promise* aPromise, const IOError& aError) {
   const auto& errMsg = aError.Message();
 
   switch (aError.Code()) {
@@ -209,537 +775,6 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
       aPromise->MaybeRejectWithUnknownError(
           errMsg.refOr(FormatErrorMessage(aError.Code(), "Unexpected error")));
   }
-}
-
-static void RejectShuttingDown(Promise* aPromise) {
-  RejectJSPromise(aPromise,
-                  IOUtils::IOError(NS_ERROR_ABORT).WithMessage(SHUTDOWN_ERROR));
-}
-
-// IOUtils implementation
-/* static */
-IOUtils::StateMutex IOUtils::sState{"IOUtils::sState"};
-
-/* static */
-template <typename OkT, typename Fn>
-void IOUtils::DispatchAndResolve(IOUtils::EventQueue* aQueue, Promise* aPromise,
-                                 Fn aFunc) {
-  if (RefPtr<IOPromise<OkT>> p = aQueue->Dispatch<OkT, Fn>(std::move(aFunc))) {
-    p->Then(
-        GetCurrentSerialEventTarget(), __func__,
-        [promise = RefPtr(aPromise)](OkT&& ok) {
-          ResolveJSPromise(promise, std::forward<OkT>(ok));
-        },
-        [promise = RefPtr(aPromise)](const IOError& err) {
-          RejectJSPromise(promise, err);
-        });
-  }
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
-                                        const nsAString& aPath,
-                                        const ReadOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    Maybe<uint32_t> toRead = Nothing();
-    if (!aOptions.mMaxBytes.IsNull()) {
-      if (aOptions.mMaxBytes.Value() == 0) {
-        // Resolve with an empty buffer.
-        nsTArray<uint8_t> arr(0);
-        promise->MaybeResolve(TypedArrayCreator<Uint8Array>(arr));
-        return promise.forget();
-      }
-      toRead.emplace(aOptions.mMaxBytes.Value());
-    }
-
-    DispatchAndResolve<JsBuffer>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), toRead, decompress = aOptions.mDecompress]() {
-          return ReadSync(file, toRead, decompress, BufferKind::Uint8Array);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
-                                            const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    DispatchAndResolve<JsBuffer>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), decompress = aOptions.mDecompress]() {
-          return ReadUTF8Sync(file, decompress);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
-                                            const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    state.ref()
-        ->mEventQueue
-        ->Dispatch<JsBuffer>([file, decompress = aOptions.mDecompress]() {
-          return ReadUTF8Sync(file, decompress);
-        })
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [promise, file](JsBuffer&& aBuffer) {
-              AutoJSAPI jsapi;
-              if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-                promise->MaybeRejectWithUnknownError(
-                    "Could not initialize JS API");
-                return;
-              }
-              JSContext* cx = jsapi.cx();
-
-              JS::Rooted<JSString*> jsonStr(
-                  cx, IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
-              if (!jsonStr) {
-                RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
-                return;
-              }
-
-              JS::Rooted<JS::Value> val(cx);
-              if (!JS_ParseJSON(cx, jsonStr, &val)) {
-                JS::Rooted<JS::Value> exn(cx);
-                if (JS_GetPendingException(cx, &exn)) {
-                  JS_ClearPendingException(cx);
-                  promise->MaybeReject(exn);
-                } else {
-                  RejectJSPromise(
-                      promise,
-                      IOError(NS_ERROR_DOM_UNKNOWN_ERR)
-                          .WithMessage(
-                              "ParseJSON threw an uncatchable exception "
-                              "while parsing file(%s)",
-                              file->HumanReadablePath().get()));
-                }
-
-                return;
-              }
-
-              promise->MaybeResolve(val);
-            },
-            [promise](const IOError& aErr) { RejectJSPromise(promise, aErr); });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
-                                         const nsAString& aPath,
-                                         const Uint8Array& aData,
-                                         const WriteOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    aData.ComputeState();
-    auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
-    if (buf.isNothing()) {
-      promise->MaybeRejectWithOperationError(
-          "Out of memory: Could not allocate buffer while writing to file");
-      return promise.forget();
-    }
-
-    auto opts = InternalWriteOpts::FromBinding(aOptions);
-    if (opts.isErr()) {
-      RejectJSPromise(promise, opts.unwrapErr());
-      return promise.forget();
-    }
-
-    DispatchAndResolve<uint32_t>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), buf = std::move(*buf),
-         opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
-                                             const nsAString& aPath,
-                                             const nsACString& aString,
-                                             const WriteOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    auto opts = InternalWriteOpts::FromBinding(aOptions);
-    if (opts.isErr()) {
-      RejectJSPromise(promise, opts.unwrapErr());
-      return promise.forget();
-    }
-
-    DispatchAndResolve<uint32_t>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), str = nsCString(aString),
-         opts = opts.unwrap()]() {
-          return WriteSync(file, AsBytes(Span(str)), opts);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-static bool AppendJsonAsUtf8(const char16_t* aData, uint32_t aLen, void* aStr) {
-  nsCString* str = static_cast<nsCString*>(aStr);
-  return AppendUTF16toUTF8(Span<const char16_t>(aData, aLen), *str, fallible);
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
-                                             const nsAString& aPath,
-                                             JS::Handle<JS::Value> aValue,
-                                             const WriteOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    auto opts = InternalWriteOpts::FromBinding(aOptions);
-    if (opts.isErr()) {
-      RejectJSPromise(promise, opts.unwrapErr());
-      return promise.forget();
-    }
-
-    JSContext* cx = aGlobal.Context();
-    JS::Rooted<JS::Value> rootedValue(cx, aValue);
-    nsCString utf8Str;
-
-    if (!JS_Stringify(cx, &rootedValue, nullptr, JS::NullHandleValue,
-                      AppendJsonAsUtf8, &utf8Str)) {
-      JS::Rooted<JS::Value> exn(cx, JS::UndefinedValue());
-      if (JS_GetPendingException(cx, &exn)) {
-        JS_ClearPendingException(cx);
-        promise->MaybeReject(exn);
-      } else {
-        RejectJSPromise(promise,
-                        IOError(NS_ERROR_DOM_UNKNOWN_ERR)
-                            .WithMessage("Could not serialize object to JSON"));
-      }
-      return promise.forget();
-    }
-
-    DispatchAndResolve<uint32_t>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), utf8Str = std::move(utf8Str),
-         opts = opts.unwrap()]() {
-          return WriteSync(file, AsBytes(Span(utf8Str)), opts);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
-                                        const nsAString& aSourcePath,
-                                        const nsAString& aDestPath,
-                                        const MoveOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
-
-    nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
-
-    DispatchAndResolve<Ok>(
-        state.ref()->mEventQueue, promise,
-        [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
-         noOverwrite = aOptions.mNoOverwrite]() {
-          return MoveSync(sourceFile, destFile, noOverwrite);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
-                                          const nsAString& aPath,
-                                          const RemoveOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    DispatchAndResolve<Ok>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent,
-         recursive = aOptions.mRecursive]() {
-          return RemoveSync(file, ignoreAbsent, recursive);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::MakeDirectory(
-    GlobalObject& aGlobal, const nsAString& aPath,
-    const MakeDirectoryOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    DispatchAndResolve<Ok>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), createAncestors = aOptions.mCreateAncestors,
-         ignoreExisting = aOptions.mIgnoreExisting,
-         permissions = aOptions.mPermissions]() {
-          return MakeDirectorySync(file, createAncestors, ignoreExisting,
-                                   permissions);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
-                                        const nsAString& aPath) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    DispatchAndResolve<InternalFileInfo>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file)]() { return StatSync(file); });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
-                                        const nsAString& aSourcePath,
-                                        const nsAString& aDestPath,
-                                        const CopyOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
-
-    nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
-
-    DispatchAndResolve<Ok>(
-        state.ref()->mEventQueue, promise,
-        [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
-         noOverwrite = aOptions.mNoOverwrite,
-         recursive = aOptions.mRecursive]() {
-          return CopySync(sourceFile, destFile, noOverwrite, recursive);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Touch(
-    GlobalObject& aGlobal, const nsAString& aPath,
-    const Optional<int64_t>& aModification) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    Maybe<int64_t> newTime = Nothing();
-    if (aModification.WasPassed()) {
-      newTime = Some(aModification.Value());
-    }
-    DispatchAndResolve<int64_t>(state.ref()->mEventQueue, promise,
-                                [file = std::move(file), newTime]() {
-                                  return TouchSync(file, newTime);
-                                });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
-                                               const nsAString& aPath) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    DispatchAndResolve<nsTArray<nsString>>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file)]() { return GetChildrenSync(file); });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
-                                                  const nsAString& aPath,
-                                                  uint32_t aPermissions,
-                                                  const bool aHonorUmask) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-#if defined(XP_UNIX) && !defined(ANDROID)
-  if (aHonorUmask) {
-    aPermissions &= ~nsSystemInfo::gUserUmask;
-  }
-#endif
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    DispatchAndResolve<Ok>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file), permissions = aPermissions]() {
-          return SetPermissionsSync(file, permissions);
-        });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
-                                          const nsAString& aPath) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
-  if (!promise) {
-    return nullptr;
-  }
-
-  if (auto state = GetState()) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
-
-    DispatchAndResolve<bool>(
-        state.ref()->mEventQueue, promise,
-        [file = std::move(file)]() { return ExistsSync(file); });
-  } else {
-    RejectShuttingDown(promise);
-  }
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
-  ErrorResult er;
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Promise> promise = Promise::Create(global, er);
-  if (er.Failed()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(promise);
-  return do_AddRef(promise);
 }
 
 /* static */
@@ -1384,160 +1419,6 @@ Result<bool, IOUtils::IOError> IOUtils::ExistsSync(nsIFile* aFile) {
 }
 
 /* static */
-void IOUtils::GetProfileBeforeChange(GlobalObject& aGlobal,
-                                     JS::MutableHandle<JS::Value> aClient,
-                                     ErrorResult& aRv) {
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  if (auto state = GetState()) {
-    MOZ_RELEASE_ASSERT(state.ref()->mBlockerStatus !=
-                       ShutdownBlockerStatus::Uninitialized);
-
-    if (state.ref()->mBlockerStatus == ShutdownBlockerStatus::Failed) {
-      aRv.ThrowAbortError("IOUtils: could not register shutdown blockers");
-      return;
-    }
-
-    MOZ_RELEASE_ASSERT(state.ref()->mBlockerStatus ==
-                       ShutdownBlockerStatus::Initialized);
-    auto result = state.ref()->mEventQueue->GetProfileBeforeChangeClient();
-    if (result.isErr()) {
-      aRv.ThrowAbortError("IOUtils: could not get shutdown client");
-      return;
-    }
-
-    RefPtr<nsIAsyncShutdownClient> client = result.unwrap();
-    MOZ_RELEASE_ASSERT(client);
-    if (nsresult rv = client->GetJsclient(aClient); NS_FAILED(rv)) {
-      aRv.ThrowAbortError("IOUtils: Could not get shutdown jsclient");
-    }
-    return;
-  }
-
-  aRv.ThrowAbortError(
-      "IOUtils: profileBeforeChange phase has already finished");
-}
-
-/* sstatic */
-Maybe<IOUtils::StateMutex::AutoLock> IOUtils::GetState() {
-  auto state = sState.Lock();
-  if (state->mQueueStatus == EventQueueStatus::Shutdown) {
-    return Nothing{};
-  }
-
-  if (state->mQueueStatus == EventQueueStatus::Uninitialized) {
-    MOZ_RELEASE_ASSERT(!state->mEventQueue);
-    state->mEventQueue = new EventQueue();
-    state->mQueueStatus = EventQueueStatus::Initialized;
-
-    MOZ_RELEASE_ASSERT(state->mBlockerStatus ==
-                       ShutdownBlockerStatus::Uninitialized);
-  }
-
-  if (NS_IsMainThread() &&
-      state->mBlockerStatus == ShutdownBlockerStatus::Uninitialized) {
-    state->SetShutdownHooks();
-  }
-
-  return Some(std::move(state));
-}
-
-IOUtils::EventQueue::EventQueue() {
-  MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
-      "IOUtils::EventQueue", getter_AddRefs(mBackgroundEventTarget)));
-
-  MOZ_RELEASE_ASSERT(mBackgroundEventTarget);
-}
-
-void IOUtils::State::SetShutdownHooks() {
-  if (mBlockerStatus != ShutdownBlockerStatus::Uninitialized) {
-    return;
-  }
-
-  if (NS_WARN_IF(NS_FAILED(mEventQueue->SetShutdownHooks()))) {
-    mBlockerStatus = ShutdownBlockerStatus::Failed;
-  } else {
-    mBlockerStatus = ShutdownBlockerStatus::Initialized;
-  }
-
-  MOZ_ASSERT(mBlockerStatus == ShutdownBlockerStatus::Initialized,
-             "IOUtils: could not register shutdown blockers.");
-}
-
-nsresult IOUtils::EventQueue::SetShutdownHooks() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
-  if (!svc) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsIAsyncShutdownBlocker> blocker = new IOUtilsShutdownBlocker(
-      IOUtilsShutdownBlocker::Phase::ProfileBeforeChange);
-
-  nsCOMPtr<nsIAsyncShutdownClient> profileBeforeChange;
-  MOZ_TRY(svc->GetProfileBeforeChange(getter_AddRefs(profileBeforeChange)));
-  MOZ_RELEASE_ASSERT(profileBeforeChange);
-
-  MOZ_TRY(profileBeforeChange->AddBlocker(
-      blocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      u"IOUtils::EventQueue::SetShutdownHooks"_ns));
-
-  nsCOMPtr<nsIAsyncShutdownClient> xpcomWillShutdown;
-  MOZ_TRY(svc->GetXpcomWillShutdown(getter_AddRefs(xpcomWillShutdown)));
-  MOZ_RELEASE_ASSERT(xpcomWillShutdown);
-
-  blocker = new IOUtilsShutdownBlocker(
-      IOUtilsShutdownBlocker::Phase::XpcomWillShutdown);
-  MOZ_TRY(xpcomWillShutdown->AddBlocker(
-      blocker, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
-      u"IOUtils::EventQueue::SetShutdownHooks"_ns));
-
-  MOZ_TRY(svc->MakeBarrier(
-      u"IOUtils: waiting for profileBeforeChange IO to complete"_ns,
-      getter_AddRefs(mProfileBeforeChangeBarrier)));
-  MOZ_RELEASE_ASSERT(mProfileBeforeChangeBarrier);
-
-  return NS_OK;
-}
-
-template <typename OkT, typename Fn>
-RefPtr<IOUtils::IOPromise<OkT>> IOUtils::EventQueue::Dispatch(Fn aFunc) {
-  MOZ_RELEASE_ASSERT(mBackgroundEventTarget);
-
-  return InvokeAsync(
-      mBackgroundEventTarget, __func__, [func = std::move(aFunc)]() {
-        Result<OkT, IOError> result = func();
-        if (result.isErr()) {
-          return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
-        }
-        return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
-      });
-};
-
-Result<already_AddRefed<nsIAsyncShutdownClient>, nsresult>
-IOUtils::EventQueue::GetProfileBeforeChangeClient() {
-  if (!mProfileBeforeChangeBarrier) {
-    return Err(NS_ERROR_NOT_AVAILABLE);
-  }
-
-  nsCOMPtr<nsIAsyncShutdownClient> profileBeforeChange;
-  MOZ_TRY(mProfileBeforeChangeBarrier->GetClient(
-      getter_AddRefs(profileBeforeChange)));
-  return profileBeforeChange.forget();
-}
-
-Result<already_AddRefed<nsIAsyncShutdownBarrier>, nsresult>
-IOUtils::EventQueue::GetProfileBeforeChangeBarrier() {
-  if (!mProfileBeforeChangeBarrier) {
-    return Err(NS_ERROR_NOT_AVAILABLE);
-  }
-
-  return do_AddRef(mProfileBeforeChangeBarrier);
-}
-
-/* static */
 Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
     Span<const uint8_t> aUncompressed) {
   nsTArray<uint8_t> result;
@@ -1623,102 +1504,39 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
   return decompressed;
 }
 
-NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker,
-                  nsIAsyncShutdownCompletionCallback);
+NS_IMPL_ISUPPORTS(IOUtilsShutdownBlocker, nsIAsyncShutdownBlocker);
 
 NS_IMETHODIMP IOUtilsShutdownBlocker::GetName(nsAString& aName) {
-  aName = u"IOUtils Blocker ("_ns;
-
-  switch (mPhase) {
-    case Phase::ProfileBeforeChange:
-      aName.Append(u"profile-before-change"_ns);
-      break;
-
-    case Phase::XpcomWillShutdown:
-      aName.Append(u"xpcom-will-shutdown"_ns);
-      break;
-
-    default:
-      MOZ_CRASH("Unknown shutdown phase");
-  }
-
-  aName.Append(')');
+  aName = u"IOUtils Blocker"_ns;
   return NS_OK;
 }
 
 NS_IMETHODIMP IOUtilsShutdownBlocker::BlockShutdown(
     nsIAsyncShutdownClient* aBarrierClient) {
-  using EventQueueStatus = IOUtils::EventQueueStatus;
+  nsCOMPtr<nsISerialEventTarget> et = IOUtils::GetBackgroundEventTarget();
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  IOUtils::sShutdownStarted = true;
 
-  nsCOMPtr<nsIAsyncShutdownBarrier> barrier;
-
-  {
-    auto state = IOUtils::sState.Lock();
-    if (state->mQueueStatus == EventQueueStatus::Shutdown) {
-      // If the blocker for profile-before-change has already run, then the
-      // event queue is already torn down and we have nothing to do.
-
-      MOZ_RELEASE_ASSERT(mPhase == Phase::XpcomWillShutdown);
-      MOZ_RELEASE_ASSERT(!state->mEventQueue);
-
-      Unused << NS_WARN_IF(NS_FAILED(aBarrierClient->RemoveBlocker(this)));
-      mParentClient = nullptr;
-
-      return NS_OK;
-    }
-
-    MOZ_RELEASE_ASSERT(state->mEventQueue);
-
-    mParentClient = aBarrierClient;
-
-    barrier =
-        state->mEventQueue->GetProfileBeforeChangeBarrier().unwrapOr(nullptr);
+  if (!IOUtils::sBarrier) {
+    return NS_ERROR_NULL_POINTER;
   }
 
-  // We cannot barrier->Wait() while holding the mutex because it will lead to
-  // deadlock.
-  if (!barrier || NS_WARN_IF(NS_FAILED(barrier->Wait(this)))) {
-    // If we don't have a barrier, we still need to flush the IOUtils event
-    // queue and disable task submission.
-    //
-    // Likewise, if waiting on the barrier failed, we are going to make our best
-    // attempt to clean up.
-    Unused << Done();
-  }
+  nsCOMPtr<nsIRunnable> backgroundRunnable =
+      NS_NewRunnableFunction(__func__, [self = RefPtr(this)]() {
+        nsCOMPtr<nsIRunnable> mainThreadRunnable =
+            NS_NewRunnableFunction(__func__, [self = RefPtr(self)]() {
+              IOUtils::sBarrier->RemoveBlocker(self);
 
-  return NS_OK;
-}
+              auto lockedBackgroundET = IOUtils::sBackgroundEventTarget.Lock();
+              *lockedBackgroundET = nullptr;
+              IOUtils::sBarrier = nullptr;
+            });
+        nsresult rv = NS_DispatchToMainThread(mainThreadRunnable.forget());
+        NS_ENSURE_SUCCESS_VOID(rv);
+      });
 
-NS_IMETHODIMP IOUtilsShutdownBlocker::Done() {
-  using EventQueueStatus = IOUtils::EventQueueStatus;
-
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  auto state = IOUtils::sState.Lock();
-  MOZ_RELEASE_ASSERT(state->mEventQueue);
-
-  // This method is called once we have served all shutdown clients. Now we
-  // flush the remaining IO queue and forbid additional IO requests.
-  state->mEventQueue->Dispatch<Ok>([]() { return Ok{}; })
-      ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [self = RefPtr(this)]() {
-               if (self->mParentClient) {
-                 Unused << NS_WARN_IF(
-                     NS_FAILED(self->mParentClient->RemoveBlocker(self)));
-                 self->mParentClient = nullptr;
-
-                 auto state = IOUtils::sState.Lock();
-                 MOZ_RELEASE_ASSERT(state->mEventQueue);
-                 state->mEventQueue = nullptr;
-               }
-             });
-
-  MOZ_RELEASE_ASSERT(state->mQueueStatus == EventQueueStatus::Initialized);
-  state->mQueueStatus = EventQueueStatus::Shutdown;
-
-  return NS_OK;
+  return et->Dispatch(backgroundRunnable.forget(),
+                      nsIEventTarget::DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP IOUtilsShutdownBlocker::GetState(nsIPropertyBag** aState) {
@@ -1889,4 +1707,5 @@ MOZ_MUST_USE bool ToJSValue(JSContext* aCx, IOUtils::JsBuffer&& aBuffer,
 
 }  // namespace mozilla::dom
 
+#undef REJECT_IF_SHUTTING_DOWN
 #undef REJECT_IF_INIT_PATH_FAILED
