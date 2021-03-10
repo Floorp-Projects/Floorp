@@ -11,7 +11,6 @@
 #include "base/task.h"          // for NewRunnableMethod, etc
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_widget.h"
-#include "WidgetUtilsGtk.h"
 
 namespace mozilla {
 namespace widget {
@@ -75,7 +74,7 @@ RefPtr<nsWaylandDisplay> WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
 wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
     aGdkDisplay = gdk_display_get_default();
-    if (!GdkIsWaylandDisplay(aGdkDisplay)) {
+    if (!aGdkDisplay || GDK_IS_X11_DISPLAY(aGdkDisplay)) {
       return nullptr;
     }
   }

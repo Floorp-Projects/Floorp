@@ -39,7 +39,6 @@
 #ifdef MOZ_WIDGET_GTK
 #  include <gdk/gdk.h>
 #  include "gfxPlatformGtk.h"
-#  include "mozilla/WidgetUtilsGtk.h"
 #endif
 
 #ifdef MOZ_X11
@@ -717,7 +716,7 @@ static void PreparePattern(FcPattern* aPattern, bool aIsPrinterFont) {
     int lcdfilter;
     if (FcPatternGet(aPattern, FC_LCD_FILTER, 0, &value) == FcResultNoMatch) {
       GdkDisplay* dpy = gdk_display_get_default();
-      if (mozilla::widget::GdkIsX11Display(dpy) &&
+      if (GDK_IS_X11_DISPLAY(dpy) &&
           GetXftInt(GDK_DISPLAY_XDISPLAY(dpy), "lcdfilter", &lcdfilter)) {
         FcPatternAddInteger(aPattern, FC_LCD_FILTER, lcdfilter);
       }

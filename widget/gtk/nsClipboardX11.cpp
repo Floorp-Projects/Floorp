@@ -18,7 +18,6 @@
 #include "nsStringStream.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "WidgetUtilsGtk.h"
 
 #include <gtk/gtk.h>
 
@@ -106,7 +105,7 @@ bool nsRetrievalContextX11::WaitForX11Content() {
 
   GdkDisplay* gdkDisplay = gdk_display_get_default();
   // gdk_display_get_default() returns null on headless
-  if (mozilla::widget::GdkIsX11Display(gdkDisplay)) {
+  if (gdkDisplay && GDK_IS_X11_DISPLAY(gdkDisplay)) {
     Display* xDisplay = GDK_DISPLAY_XDISPLAY(gdkDisplay);
     checkEventContext context;
     context.cbWidget = nullptr;

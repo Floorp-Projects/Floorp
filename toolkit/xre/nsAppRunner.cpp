@@ -303,7 +303,6 @@ nsString gProcessStartupShortcut;
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
-#  include "mozilla/WidgetUtilsGtk.h"
 #  include <glib.h>
 #  if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
 #    define CLEANUP_MEMORY 1
@@ -4462,11 +4461,11 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       gdk_display_manager_set_default_display(gdk_display_manager_get(),
                                               mGdkDisplay);
       if (saveDisplayArg) {
-        if (GdkIsX11Display(mGdkDisplay)) {
+        if (GDK_IS_X11_DISPLAY(mGdkDisplay)) {
           SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
         }
 #  ifdef MOZ_WAYLAND
-        else if (GdkIsWaylandDisplay(mGdkDisplay)) {
+        else if (!GDK_IS_X11_DISPLAY(mGdkDisplay)) {
           SaveWordToEnv("WAYLAND_DISPLAY", nsDependentCString(display_name));
         }
 #  endif

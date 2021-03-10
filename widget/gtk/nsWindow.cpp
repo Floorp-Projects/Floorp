@@ -50,7 +50,6 @@
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
 #include "ScreenHelperGTK.h"
-#include "WidgetUtilsGtk.h"
 
 #include <gtk/gtk.h>
 #include <gtk/gtkx.h>
@@ -2172,7 +2171,7 @@ guint32 nsWindow::GetLastUserInputTime() {
   // button and key releases.  Therefore use the most recent of
   // gdk_x11_display_get_user_time and the last time that we have seen.
   GdkDisplay* gdkDisplay = gdk_display_get_default();
-  guint32 timestamp = GdkIsX11Display(gdkDisplay)
+  guint32 timestamp = GDK_IS_X11_DISPLAY(gdkDisplay)
                           ? gdk_x11_display_get_user_time(gdkDisplay)
                           : gtk_get_current_event_time();
 
@@ -2490,7 +2489,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
     case NS_NATIVE_DISPLAY: {
 #ifdef MOZ_X11
       GdkDisplay* gdkDisplay = gdk_display_get_default();
-      if (GdkIsX11Display(gdkDisplay)) {
+      if (gdkDisplay && GDK_IS_X11_DISPLAY(gdkDisplay)) {
         return GDK_DISPLAY_XDISPLAY(gdkDisplay);
       }
 #endif /* MOZ_X11 */
@@ -7065,7 +7064,7 @@ static gboolean key_press_event_cb(GtkWidget* widget, GdkEventKey* event) {
 #    define KeyPress 2
 #  endif
   GdkDisplay* gdkDisplay = gtk_widget_get_display(widget);
-  if (GdkIsX11Display(gdkDisplay)) {
+  if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
     Display* dpy = GDK_DISPLAY_XDISPLAY(gdkDisplay);
     while (XPending(dpy)) {
       XEvent next_event;
@@ -8174,7 +8173,7 @@ nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
 
   // nsWindow::GetSystemGtkWindowDecoration can be called from various threads
   // so we can't use gfxPlatformGtk here.
-  if (GdkIsWaylandDisplay()) {
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     return sGtkWindowDecoration;
   }

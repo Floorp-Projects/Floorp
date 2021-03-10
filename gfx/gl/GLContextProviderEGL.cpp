@@ -78,13 +78,31 @@
 
 #if defined(MOZ_WIDGET_GTK)
 #  include "mozilla/widget/GtkCompositorWidget.h"
-#  include "mozilla/WidgetUtilsGtk.h"
 #  if defined(MOZ_WAYLAND)
+#    include <dlfcn.h>
 #    include <gdk/gdkwayland.h>
 #    include <wayland-egl.h>
 #    define MOZ_GTK_WAYLAND 1
 #  endif
 #endif
+
+inline bool IsWaylandDisplay() {
+#ifdef MOZ_GTK_WAYLAND
+  return gdk_display_get_default() &&
+         GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default());
+#else
+  return false;
+#endif
+}
+
+inline bool IsX11Display() {
+#ifdef MOZ_WIDGET_GTK
+  return gdk_display_get_default() &&
+         GDK_IS_X11_DISPLAY(gdk_display_get_default());
+#else
+  return false;
+#endif
+}
 
 struct wl_egl_window;
 
@@ -110,17 +128,15 @@ class WaylandGLSurface {
 static nsDataHashtable<nsPtrHashKey<void>, WaylandGLSurface*> sWaylandGLSurface;
 
 void DeleteWaylandGLSurface(EGLSurface surface) {
-#  ifdef MOZ_GTK_WAYLAND
   // We're running on Wayland which means our EGLSurface may
   // have attached Wayland backend data which must be released.
-  if (GdkIsWaylandDisplay()) {
+  if (IsWaylandDisplay()) {
     auto entry = sWaylandGLSurface.Lookup(surface);
     if (entry) {
       delete entry.Data();
       entry.Remove();
     }
   }
-#  endif
 }
 #endif
 
@@ -253,10 +269,10 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
   }
 
   int visualID = 0;
+  if (IsX11Display()) {
 #ifdef MOZ_X11
-  GdkDisplay* gdkDisplay = gdk_display_get_default();
-  if (GdkIsX11Display(gdkDisplay)) {
-    auto* display = GDK_DISPLAY_XDISPLAY(gdkDisplay);
+    GdkDisplay* gdkDisplay = gdk_display_get_default();
+    auto display = gdkDisplay ? GDK_DISPLAY_XDISPLAY(gdkDisplay) : nullptr;
     if (display) {
       XWindowAttributes windowAttrs;
       if (!XGetWindowAttributes(display, (Window)aWindow, &windowAttrs)) {
@@ -265,8 +281,8 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
       }
       visualID = XVisualIDFromVisual(windowAttrs.visual);
     }
-  }
 #endif
+  }
 
   bool doubleBuffered = true;
 
@@ -330,12 +346,10 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
   gl->MakeCurrent();
   gl->SetIsDoubleBuffered(doubleBuffered);
 
-#ifdef MOZ_GTK_WAYLAND
-  if (surface && GdkIsWaylandDisplay()) {
+  if (surface && IsWaylandDisplay()) {
     // Make eglSwapBuffers() non-blocking on wayland
     egl->fSwapInterval(0);
   }
-#endif
   if (aWebRender && egl->mLib->IsANGLE()) {
     MOZ_ASSERT(doubleBuffered);
     egl->fSwapInterval(0);
@@ -515,12 +529,10 @@ bool GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
   }
   const bool ok = MakeCurrent(true);
   MOZ_ASSERT(ok);
-#ifdef MOZ_GTK_WAYLAND
-  if (mSurface && GdkIsWaylandDisplay()) {
+  if (mSurface && IsWaylandDisplay()) {
     // Make eglSwapBuffers() non-blocking on wayland
     mEgl->fSwapInterval(0);
   }
-#endif
   return ok;
 }
 
@@ -1043,14 +1055,11 @@ EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) const {
 
 static void FillContextAttribs(bool es3, bool useGles, nsTArray<EGLint>* out) {
   out->AppendElement(LOCAL_EGL_SURFACE_TYPE);
-#ifdef MOZ_GTK_WAYLAND
-  if (GdkIsWaylandDisplay()) {
+  if (IsWaylandDisplay()) {
     // Wayland on desktop does not support PBuffer or FBO.
     // We create a dummy wl_egl_window instead.
     out->AppendElement(LOCAL_EGL_WINDOW_BIT);
-  } else
-#endif
-  {
+  } else {
     out->AppendElement(LOCAL_EGL_PBUFFER_BIT);
   }
 
@@ -1166,12 +1175,9 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
 
   mozilla::gfx::IntSize pbSize(size);
   EGLSurface surface = nullptr;
-#ifdef MOZ_GTK_WAYLAND
-  if (GdkIsWaylandDisplay()) {
+  if (IsWaylandDisplay()) {
     surface = GLContextEGL::CreateWaylandBufferSurface(*egl, config, pbSize);
-  } else
-#endif
-  {
+  } else {
     surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
         *egl, config, LOCAL_EGL_NONE, pbSize);
   }
