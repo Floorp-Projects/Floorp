@@ -581,16 +581,3 @@ bool AndroidBridge::PumpMessageLoop() {
 
   return java::GeckoThread::PumpMessageLoop(msg);
 }
-
-extern "C" __attribute__((visibility("default"))) jobject JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv* env, jclass,
-                                                          jlong size);
-
-jni::Object::LocalRef AndroidBridge::ChannelCreate(jni::Object::Param stream) {
-  JNIEnv* const env = jni::GetEnvForThread();
-  auto rv = jni::Object::LocalRef::Adopt(
-      env, env->CallStaticObjectMethod(sBridge->jChannels,
-                                       sBridge->jChannelCreate, stream.Get()));
-  MOZ_CATCH_JNI_EXCEPTION(env);
-  return rv;
-}
