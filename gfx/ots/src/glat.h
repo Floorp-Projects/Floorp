@@ -96,7 +96,7 @@ class OpenTypeGLAT_v3 : public OpenTypeGLAT_Basic {
   struct GlyphAttrs : public TablePart<OpenTypeGLAT_v3> {
     explicit GlyphAttrs(OpenTypeGLAT_v3* parent)
       : TablePart<OpenTypeGLAT_v3>(parent), octabox(parent) { }
-    bool ParsePart(Buffer& table) { return false; }
+    bool ParsePart(Buffer& table OTS_UNUSED) { return false; }
     bool ParsePart(Buffer& table, const size_t size);
     bool SerializePart(OTSStream* out) const;
     struct OctaboxMetrics : public TablePart<OpenTypeGLAT_v3> {

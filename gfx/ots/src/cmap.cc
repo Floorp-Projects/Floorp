@@ -400,8 +400,7 @@ bool OpenTypeCMAP::Parse31013(const uint8_t *data, size_t length,
   return true;
 }
 
-bool OpenTypeCMAP::Parse0514(const uint8_t *data, size_t length,
-                             uint16_t num_glyphs) {
+bool OpenTypeCMAP::Parse0514(const uint8_t *data, size_t length) {
   // Unicode Variation Selector table
   ots::Buffer subtable(data, length);
 
@@ -782,7 +781,7 @@ bool OpenTypeCMAP::Parse(const uint8_t *data, size_t length) {
       } else if ((subtable_headers[i].encoding == 5) &&
                  (subtable_headers[i].format == 14)) {
         if (!Parse0514(data + subtable_headers[i].offset,
-                       subtable_headers[i].length, num_glyphs)) {
+                       subtable_headers[i].length)) {
           return Error("Failed to parse format 14 cmap subtable %d", i);
         }
       }
