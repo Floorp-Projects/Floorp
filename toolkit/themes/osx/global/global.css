@@ -55,24 +55,6 @@
   list-style-image: url("chrome://global/skin/icons/question-64.png");
 }
 
-/* ::::: iframe ::::: */
-
-xul|iframe {
-  border: none;
-  width: 100px;
-  height: 100px;
-  min-width: 10px;
-  min-height: 10px;
-}
-
-@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
-  /* In emulation, <iframe> is block instead of inline, so reset the width/height */
-  xul|iframe {
-    width: auto;
-    height: auto;
-  }
-}
-
 /* Separators */
 
 xul|separator:not([orient="vertical"]) {
