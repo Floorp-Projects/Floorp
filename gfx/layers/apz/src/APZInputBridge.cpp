@@ -74,23 +74,27 @@ void APZEventResult::SetStatusAsConsumeDoDefaultWithTargetConfirmationFlags(
     const AsyncPanZoomController& aTarget) {
   mStatus = nsEventStatus_eConsumeDoDefault;
 
-  if (!aTarget.IsRootContent() &&
-      aBlock.GetOverscrollHandoffChain()->ScrollingDownWillMoveDynamicToolbar(
-          &aTarget)) {
-    // The event is actually consumed by a non-root APZC but scroll
-    // positions in all relevant APZCs are at the bottom edge, so if there's
-    // still contents covered by the dynamic toolbar we need to move the
-    // dynamic toolbar to make the covered contents visible, thus we need
-    // to tell it to GeckoView so we handle it as if it's consumed in the
-    // root APZC.
-    // IMPORTANT NOTE: If the incoming TargetConfirmationFlags has
-    // mDispatchToContent, we need to change it to Nothing() so that
-    // GeckoView can properly wait for results from the content on the
-    // main-thread.
-    mHandledResult =
-        aFlags.mDispatchToContent
-            ? Nothing()
-            : Some(APZHandledResult{APZHandledPlace::HandledByRoot, &aTarget});
+  if (!aTarget.IsRootContent()) {
+    auto [result, rootApzc] =
+        aBlock.GetOverscrollHandoffChain()->ScrollingDownWillMoveDynamicToolbar(
+            &aTarget);
+    if (result) {
+      MOZ_ASSERT(rootApzc && rootApzc->IsRootContent());
+      // The event is actually consumed by a non-root APZC but scroll
+      // positions in all relevant APZCs are at the bottom edge, so if there's
+      // still contents covered by the dynamic toolbar we need to move the
+      // dynamic toolbar to make the covered contents visible, thus we need
+      // to tell it to GeckoView so we handle it as if it's consumed in the
+      // root APZC.
+      // IMPORTANT NOTE: If the incoming TargetConfirmationFlags has
+      // mDispatchToContent, we need to change it to Nothing() so that
+      // GeckoView can properly wait for results from the content on the
+      // main-thread.
+      mHandledResult = aFlags.mDispatchToContent
+                           ? Nothing()
+                           : Some(APZHandledResult{
+                                 APZHandledPlace::HandledByRoot, rootApzc});
+    }
   }
 }
 
@@ -270,20 +274,10 @@ APZHandledResult::APZHandledResult(APZHandledPlace aPlace,
       }
       break;
     case APZHandledPlace::HandledByRoot: {
-      // The only way we can have mPlace == HandledByRoot but target is not the
-      // root, is if scroll is handed off immediately from target to the root
-      // because target and its ancestors (other than the root) do not have a
-      // scroll range. Therefore, it's the scroll directions of the root which
-      // are relevant.
-      const AsyncPanZoomController* target = aTarget;
-      while (target && !target->IsRootContent()) {
-        target = target->GetParent();
-      }
-
-      MOZ_ASSERT(target && target->IsRootContent());
-      if (target) {
-        mScrollableDirections = target->ScrollableDirections();
-        mOverscrollDirections = target->GetAllowedHandoffDirections();
+      MOZ_ASSERT(aTarget->IsRootContent());
+      if (aTarget) {
+        mScrollableDirections = aTarget->ScrollableDirections();
+        mOverscrollDirections = aTarget->GetAllowedHandoffDirections();
       }
       break;
     }

@@ -877,18 +877,26 @@ static APZHandledResult GetHandledResultFor(
     return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
   }
 
-  if (aApzc && aApzc->IsRootContent()) {
+  if (!aApzc) {
+    return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
+  }
+
+  if (aApzc->IsRootContent()) {
     return aApzc->CanVerticalScrollWithDynamicToolbar()
                ? APZHandledResult{APZHandledPlace::HandledByRoot, aApzc}
                : APZHandledResult{APZHandledPlace::Unhandled, aApzc};
   }
 
+  auto [result, rootApzc] = aCurrentInputBlock.GetOverscrollHandoffChain()
+                                ->ScrollingDownWillMoveDynamicToolbar(aApzc);
+  if (!result) {
+    return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
+  }
+
   // Return `HandledByRoot` if scroll positions in all relevant APZC are at the
   // bottom edge and if there are contents covered by the dynamic toolbar.
-  return aApzc && aCurrentInputBlock.GetOverscrollHandoffChain()
-                      ->ScrollingDownWillMoveDynamicToolbar(aApzc)
-             ? APZHandledResult{APZHandledPlace::HandledByRoot, aApzc}
-             : APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
+  MOZ_ASSERT(rootApzc && rootApzc->IsRootContent());
+  return APZHandledResult{APZHandledPlace::HandledByRoot, rootApzc};
 }
 
 void InputQueue::ProcessQueue() {
