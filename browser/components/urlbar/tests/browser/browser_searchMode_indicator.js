@@ -9,7 +9,6 @@
  */
 
 const TEST_QUERY = "test string";
-const DEFAULT_ENGINE_NAME = "Test";
 const SUGGESTIONS_ENGINE_NAME = "searchSuggestionEngine.xml";
 
 // These need to have different domains because otherwise new tab and/or
@@ -29,18 +28,13 @@ add_task(async function setup() {
   );
 
   let oldDefaultEngine = await Services.search.getDefault();
-  defaultEngine = await Services.search.addEngineWithDetails(
-    DEFAULT_ENGINE_NAME,
-    {
-      template: "http://example.com/?search={searchTerms}",
-    }
-  );
+  await SearchTestUtils.installSearchExtension();
+  defaultEngine = Services.search.getEngineByName("Example");
   await Services.search.setDefault(defaultEngine);
   await Services.search.moveEngine(suggestionsEngine, 0);
 
   registerCleanupFunction(async () => {
     await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(defaultEngine);
   });
 
   // Set our top sites.

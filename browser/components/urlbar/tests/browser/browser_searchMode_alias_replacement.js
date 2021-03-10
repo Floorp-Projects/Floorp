@@ -25,13 +25,12 @@ add_task(async function setup() {
   defaultEngine.alias = "@default";
   let oldDefaultEngine = await Services.search.getDefault();
   Services.search.setDefault(defaultEngine);
-  aliasEngine = await Services.search.addEngineWithDetails("Test", {
-    alias: ALIAS,
-    template: "http://example.com/?search={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    keyword: ALIAS,
   });
+  aliasEngine = Services.search.getEngineByName("Example");
 
   registerCleanupFunction(async function() {
-    await Services.search.removeEngine(aliasEngine);
     Services.search.setDefault(oldDefaultEngine);
   });
 });

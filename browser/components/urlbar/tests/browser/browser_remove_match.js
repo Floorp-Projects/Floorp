@@ -5,6 +5,19 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
 });
 
+add_task(async function setup() {
+  await SearchTestUtils.installSearchExtension();
+
+  let engine = Services.search.getEngineByName("Example");
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  await Services.search.moveEngine(engine, 0);
+
+  registerCleanupFunction(async function() {
+    await Services.search.setDefault(originalEngine);
+  });
+});
+
 add_task(async function test_remove_history() {
   const TEST_URL = "http://remove.me/from_urlbar/";
   await PlacesTestUtils.addVisits(TEST_URL);
@@ -63,14 +76,6 @@ add_task(async function test_remove_form_history() {
       ["browser.urlbar.maxHistoricalSearchSuggestions", 1],
     ],
   });
-
-  await Services.search.addEngineWithDetails("test", {
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
-  });
-  let engine = Services.search.getEngineByName("test");
-  let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
 
   let formHistoryValue = "foobar";
   await UrlbarTestUtils.formHistory.add([formHistoryValue]);
@@ -139,8 +144,6 @@ add_task(async function test_remove_form_history() {
   );
 
   await SpecialPowers.popPrefEnv();
-  await Services.search.setDefault(originalEngine);
-  await Services.search.removeEngine(engine);
 });
 
 // We shouldn't be able to remove a bookmark item.
@@ -186,17 +189,8 @@ add_task(async function test_searchMode_removeRestyledHistory() {
     ],
   });
 
-  let engine = await Services.search.addEngineWithDetails("test", {
-    method: "GET",
-    template: "http://example.com/",
-    searchGetParams: "q={searchTerms}",
-  });
-  let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
-  await Services.search.moveEngine(engine, 0);
-
   let query = "ciao";
-  let url = `http://example.com/?q=${query}bar`;
+  let url = `https://example.com/?q=${query}bar`;
   await PlacesTestUtils.addVisits(url);
 
   await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
@@ -228,6 +222,4 @@ add_task(async function test_searchMode_removeRestyledHistory() {
   });
   await PlacesUtils.history.clear();
   await SpecialPowers.popPrefEnv();
-  await Services.search.setDefault(originalEngine);
-  await Services.search.removeEngine(engine);
 });
