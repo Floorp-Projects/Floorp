@@ -41,6 +41,13 @@ class ProfilerDialog extends PureComponent {
     this.props.hideProfilerDialog();
   }
 
+  setProfilerIframeDirection(frameWindow) {
+    // Set iframe direction according to the parent document direction.
+    const { documentElement } = document;
+    const dir = window.getComputedStyle(documentElement).direction;
+    frameWindow.document.documentElement.setAttribute("dir", dir);
+  }
+
   /**
    * The profiler iframe can either be the simplified devtools recording panel,
    * or the more detailed about:profiling settings page.
@@ -58,7 +65,10 @@ class ProfilerDialog extends PureComponent {
       case PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE:
         src = clientWrapper.getPerformancePanelUrl();
         onLoad = e => {
-          clientWrapper.loadPerformanceProfiler(e.target.contentWindow, () => {
+          const frameWindow = e.target.contentWindow;
+          this.setProfilerIframeDirection(frameWindow);
+
+          clientWrapper.loadPerformanceProfiler(frameWindow, () => {
             switchProfilerContext(PROFILER_PAGE_CONTEXT.ABOUTPROFILING_REMOTE);
           });
         };
@@ -67,7 +77,10 @@ class ProfilerDialog extends PureComponent {
       case PROFILER_PAGE_CONTEXT.ABOUTPROFILING_REMOTE:
         src = "about:profiling#remote";
         onLoad = e => {
-          clientWrapper.loadAboutProfiling(e.target.contentWindow, () => {
+          const frameWindow = e.target.contentWindow;
+          this.setProfilerIframeDirection(frameWindow);
+
+          clientWrapper.loadAboutProfiling(frameWindow, () => {
             switchProfilerContext(PROFILER_PAGE_CONTEXT.DEVTOOLS_REMOTE);
           });
         };
