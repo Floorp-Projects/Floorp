@@ -133,6 +133,7 @@ static void TestPrintfFormats() {
   MOZ_RELEASE_ASSERT(print_one("0xF0F0", "0x%llX", 0xf0f0ull));
   MOZ_RELEASE_ASSERT(print_one("27270", "%zu", (size_t)27270));
   MOZ_RELEASE_ASSERT(print_one("27270", "%tu", (ptrdiff_t)27270));
+  MOZ_RELEASE_ASSERT(print_one("27270", "%ju", (intmax_t)27270));
   MOZ_RELEASE_ASSERT(print_one("hello", "he%so", "ll"));
   MOZ_RELEASE_ASSERT(print_one("hello   ", "%-8s", "hello"));
   MOZ_RELEASE_ASSERT(print_one("   hello", "%8s", "hello"));
