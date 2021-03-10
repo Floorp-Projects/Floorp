@@ -79,16 +79,13 @@ add_task(async function setup() {
   // Create two new search engines. Mark one as the default engine, so
   // the test don't crash. We need to engines for this test as the searchbar
   // doesn't display the default search engine among the one-off engines.
-  await Services.search.addEngineWithDetails("MozSearch", {
-    alias: "mozalias",
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearch",
+    keyword: "mozalias",
   });
-
-  await Services.search.addEngineWithDetails("MozSearch2", {
-    alias: "mozalias2",
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearch2",
+    keyword: "mozalias2",
   });
 
   // Make the first engine the default search engine.
@@ -111,8 +108,6 @@ add_task(async function setup() {
   registerCleanupFunction(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await Services.search.setDefault(originalEngine);
-    await Services.search.removeEngine(engineDefault);
-    await Services.search.removeEngine(engineOneOff);
     Services.telemetry.setEventRecordingEnabled("navigation", false);
   });
 });

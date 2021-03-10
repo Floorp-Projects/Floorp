@@ -7,22 +7,12 @@
  * Tests one-off search button behavior with search mode.
  */
 
-const TEST_ENGINE = {
-  name: "test engine",
-  details: {
-    alias: "@test",
-    template: "http://example.com/?search={searchTerms}",
-  },
-};
+const TEST_ENGINE_NAME = "test engine";
 
 add_task(async function setup() {
-  const engine = await Services.search.addEngineWithDetails(
-    TEST_ENGINE.name,
-    TEST_ENGINE.details
-  );
-
-  registerCleanupFunction(async () => {
-    await Services.search.removeEngine(engine);
+  await SearchTestUtils.installSearchExtension({
+    name: TEST_ENGINE_NAME,
+    keyword: "@test",
   });
 });
 
@@ -46,10 +36,10 @@ add_task(async function test() {
 
   info("Enter search mode");
   await UrlbarTestUtils.enterSearchMode(window, {
-    engineName: TEST_ENGINE.name,
+    engineName: TEST_ENGINE_NAME,
   });
   await UrlbarTestUtils.assertSearchMode(window, {
-    engineName: TEST_ENGINE.name,
+    engineName: TEST_ENGINE_NAME,
     entry: "oneoff",
   });
   ok(!oneOffs.selectedButton, "There is no selected one-off button");
