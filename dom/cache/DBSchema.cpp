@@ -808,7 +808,7 @@ Result<Maybe<SavedResponse>, nsresult> StorageMatch(
 
   // If we are given a cache to check, then simply find its cache ID
   // and perform the match.
-  if (!aParams.cacheName().EqualsLiteral("")) {
+  if (aParams.cacheNameSet()) {
     CACHE_TRY_INSPECT(
         const auto& maybeCacheId,
         StorageGetCacheId(aConn, aNamespace, aParams.cacheName()));
