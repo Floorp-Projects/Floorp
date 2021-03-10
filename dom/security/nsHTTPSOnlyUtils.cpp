@@ -17,7 +17,6 @@
 #include "nsIHttpsOnlyModePermission.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsIRedirectHistoryEntry.h"
 #include "nsIScriptError.h"
 #include "prnetdb.h"
 
@@ -204,84 +203,6 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
                                        nsIScriptError::warningFlag, aLoadInfo,
                                        aURI);
   return true;
-}
-
-/* static */
-bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
-                                                     nsILoadInfo* aLoadInfo) {
-  // 1. Check if the HTTPS-Only Mode is even enabled, before we do anything else
-  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
-    return false;
-  }
-
-  // 2. Check if the upgrade downgrade pref even wants us to try to break the
-  // cycle.
-  if (!mozilla::StaticPrefs::
-          dom_security_https_only_mode_break_upgrade_downgrade_endless_loop()) {
-    return false;
-  }
-
-  // 3. If it's not a top-level load, then there is nothing to do here either.
-  if (aLoadInfo->GetExternalContentPolicyType() !=
-      ExtContentPolicy::TYPE_DOCUMENT) {
-    return false;
-  }
-
-  // 4. If the load is exempt, then it's defintely not related to https-only
-  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
-  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
-    return false;
-  }
-
-  // 5. If the load is triggered by a user gesture, then it's definitely
-  // not a loop we need to break.
-  if (aLoadInfo->GetHasValidUserGestureActivation()) {
-    return false;
-  }
-
-  // 6. If the URI to be loaded is not http, then it's defnitely no endless
-  // loop caused by https-only.
-  if (!aURI->SchemeIs("http")) {
-    return false;
-  }
-
-  nsAutoCString uriHost;
-  aURI->GetAsciiHost(uriHost);
-
-  // 7. Check actual redirects. If the Principal that kicked off the
-  // load/redirect is not https, then it's definitely not a redirect cause by
-  // https-only. If the scheme of the principal however is https and the
-  // asciiHost of the URI to be loaded and the asciiHost of the Principal are
-  // identical, then we are dealing with an upgrade downgrade scenario and we
-  // have to break the cycle.
-  if (!aLoadInfo->RedirectChain().IsEmpty()) {
-    nsCOMPtr<nsIPrincipal> redirectPrincipal;
-    for (nsIRedirectHistoryEntry* entry : aLoadInfo->RedirectChain()) {
-      entry->GetPrincipal(getter_AddRefs(redirectPrincipal));
-      if (redirectPrincipal && redirectPrincipal->SchemeIs("https")) {
-        nsAutoCString redirectHost;
-        redirectPrincipal->GetAsciiHost(redirectHost);
-        if (uriHost.Equals(redirectHost)) {
-          return true;
-        }
-      }
-    }
-  }
-
-  // 8. Meta redirects and JS based redirects (win.location). If the security
-  // context that triggered the load is not https, then it's defnitely no
-  // endless loop caused by https-only. If the scheme is http however and the
-  // asciiHost of the URI to be loaded matches the asciiHost of the Principal,
-  // then we are dealing with an upgrade downgrade scenario and we have to break
-  // the cycle.
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
-  if (!triggeringPrincipal->SchemeIs("https")) {
-    return false;
-  }
-  nsAutoCString triggeringHost;
-  triggeringPrincipal->GetAsciiHost(triggeringHost);
-  return uriHost.Equals(triggeringHost);
 }
 
 /* static */
