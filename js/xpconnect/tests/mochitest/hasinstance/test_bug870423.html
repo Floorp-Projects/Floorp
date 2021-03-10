@@ -13,9 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870423
   /** Test for cross-scope instanceof. **/
   SimpleTest.waitForExplicitFinish();
 
-  async function go() {
-    await SpecialPowers.pushPrefEnv({ set: [["dom.webidl.crosscontext_hasinstance.enabled", false]] });
-
+  function go() {
     var sowin = $('soifr').contentWindow;
     var xowin = $('xoifr').contentWindow;
     var xosswin = $('xossifr').contentWindow;
