@@ -63,8 +63,8 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
 
   virtual bool IsInteractiveHTMLContent() const override { return true; }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLEmbedElement,
-                                                     nsGenericHTMLElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLEmbedElement,
+                                           nsGenericHTMLElement)
 
   // WebIDL <embed> api
   void GetAlign(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::align, aValue); }

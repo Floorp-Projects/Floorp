@@ -320,8 +320,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    */
   void Destroy();
 
+  // Subclasses should call cycle collection methods from the respective
+  // traverse / unlink.
   static void Traverse(nsObjectLoadingContent* tmp,
                        nsCycleCollectionTraversalCallback& cb);
+  static void Unlink(nsObjectLoadingContent* tmp);
 
   void CreateStaticClone(nsObjectLoadingContent* aDest) const;
 

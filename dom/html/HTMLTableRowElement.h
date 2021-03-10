@@ -71,8 +71,8 @@ class HTMLTableRowElement final : public nsGenericHTMLElement {
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLTableRowElement,
-                                                     nsGenericHTMLElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTableRowElement,
+                                           nsGenericHTMLElement)
 
  protected:
   virtual ~HTMLTableRowElement();
