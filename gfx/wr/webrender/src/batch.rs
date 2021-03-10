@@ -272,10 +272,10 @@ impl BatchRects {
         let union = self.batch.union(rect);
         // If we have already started storing per-item rects, continue doing so.
         // Otherwise, check whether only storing the batch rect is a good enough
-        // apporximation.
+        // approximation.
         if let Some(items) = &mut self.items {
             items.push(*rect);
-        } else if self.batch.area() + rect.area() > union.area() {
+        } else if self.batch.area() + rect.area() < union.area() {
             let mut items = Vec::with_capacity(16);
             items.push(self.batch);
             items.push(*rect);
