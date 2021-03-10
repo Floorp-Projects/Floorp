@@ -177,8 +177,9 @@ nsresult OpusTrackEncoder::Init(int aChannels) {
   }
 
   if (mAudioBitrate) {
-    error = opus_encoder_ctl(mEncoder,
-                             OPUS_SET_BITRATE(static_cast<int>(mAudioBitrate)));
+    int bps = static_cast<int>(
+        std::min<uint32_t>(mAudioBitrate, std::numeric_limits<int>::max()));
+    error = opus_encoder_ctl(mEncoder, OPUS_SET_BITRATE(bps));
     if (error != OPUS_OK) {
       return NS_ERROR_FAILURE;
     }
