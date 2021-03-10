@@ -33,9 +33,15 @@ following process.
 
 * If the default engine specified by the configuration for the user's region and locale
   is visible, then it will be selected as default.
-* If there is another engine visible, fall back to the first visible engine.
+* If there is another engine visible, fall back to the first engine identified
+  as a general search engine (see below).
 * If there are no other visible engines, unhide the region/locale default engine
-  from the configuration and set it as default.
+  from the configuration and set it as default if it is not the one being removed.
+* Otherwise, unhide the first general search engine, or the first visible engine.
+
+A general search engine is defined as one that returns general search results,
+for example Google or DuckDuckGo. A non-general search engine returns results
+for a specific area, e.g. shopping, books, dictionaries.
 
 Add-ons and App-provided Engines
 ================================
