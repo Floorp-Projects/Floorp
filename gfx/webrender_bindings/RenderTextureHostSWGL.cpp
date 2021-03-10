@@ -112,16 +112,8 @@ wr::WrExternalImage RenderTextureHostSWGL::LockSWGL(
     return InvalidToWrExternalImage();
   }
   const PlaneInfo& plane = mPlanes[aChannelIndex];
-
-  // Prefer native textures, unless our backend forbids it.
-  TextureHost::NativeTexturePolicy policy =
-      TextureHost::BackendNativeTexturePolicy(WebRenderBackend::SOFTWARE,
-                                              plane.mSize);
-  return policy == TextureHost::NativeTexturePolicy::FORBID
-             ? RawDataToWrExternalImage((uint8_t*)plane.mData,
-                                        plane.mStride * plane.mSize.height)
-             : NativeTextureToWrExternalImage(
-                   plane.mTexture, 0, 0, plane.mSize.width, plane.mSize.height);
+  return NativeTextureToWrExternalImage(plane.mTexture, 0, 0, plane.mSize.width,
+                                        plane.mSize.height);
 }
 
 void RenderTextureHostSWGL::UnlockSWGL() {
