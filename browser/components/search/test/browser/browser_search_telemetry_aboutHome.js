@@ -12,13 +12,16 @@ add_task(async function setup() {
   // Create two new search engines. Mark one as the default engine, so
   // the test don't crash. We need to engines for this test as the searchbar
   // in content doesn't display the default search engine among the one-off engines.
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch",
-    keyword: "mozalias",
+  await Services.search.addEngineWithDetails("MozSearch", {
+    alias: "mozalias",
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
   });
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch2",
-    keyword: "mozalias2",
+
+  await Services.search.addEngineWithDetails("MozSearch2", {
+    alias: "mozalias2",
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
   });
 
   // Make the first engine the default search engine.
@@ -40,6 +43,8 @@ add_task(async function setup() {
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function() {
     await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engineDefault);
+    await Services.search.removeEngine(engineOneOff);
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
     Services.telemetry.canRecordExtended = oldCanRecord;
@@ -70,7 +75,7 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   info("Trigger a simple search, just test + enter.");
   let p = BrowserTestUtils.browserStopped(
     tab.linkedBrowser,
-    "https://example.com/?q=test+query"
+    "http://example.com/?q=test+query"
   );
   await typeInSearchField(
     tab.linkedBrowser,

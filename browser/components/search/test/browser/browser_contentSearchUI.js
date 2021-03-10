@@ -262,12 +262,14 @@ add_task(async function setup() {
   let currentEngines = await Services.search.getVisibleEngines();
 
   extension1 = await SearchTestUtils.installSearchExtension({
+    id: TEST_ENGINE1_NAME,
     name: TEST_ENGINE1_NAME,
     suggest_url:
       "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
     suggest_url_get_params: "query={searchTerms}",
   });
   extension2 = await SearchTestUtils.installSearchExtension({
+    id: TEST_ENGINE2_NAME,
     name: TEST_ENGINE2_NAME,
     suggest_url:
       "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
@@ -1020,6 +1022,8 @@ add_task(async function cleanup() {
   await Services.search.setDefault(
     Services.search.getEngineByName(currentEngineName)
   );
+  await extension1.unload();
+  await extension2.unload();
 });
 
 function checkState(
