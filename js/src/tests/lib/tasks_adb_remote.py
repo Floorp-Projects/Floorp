@@ -13,7 +13,7 @@ from mozdevice import ADBDevice, ADBError, ADBTimeoutError, ADBProcessError
 
 from .results import TestOutput, escape_cmdline
 from .adaptor import xdr_annotate
-from .remote import init_remote_dir, init_device
+from .remote import init_device
 
 TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
@@ -112,11 +112,10 @@ def setup_device(prefix, options):
 
         prefix[0] = posixpath.join(options.remote_test_root, "bin", "js")
         tempdir = posixpath.join(options.remote_test_root, "tmp")
-        # Update the test root to point to our test directory.
-        jit_tests_dir = posixpath.join(options.remote_test_root, "tests")
 
-        init_remote_dir(device, jit_tests_dir)
+        # Push tests & lib directories.
         device.push(os.path.dirname(TEST_DIR), options.remote_test_root, timeout=600)
+
         # Substitute lib files which are aliasing non262 files.
         replace_lib_file(["non262", "shell.js"], "non262.js")
         replace_lib_file(["non262", "reflect-parse", "Match.js"], "match.js")
