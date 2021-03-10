@@ -26,6 +26,7 @@ EXPORTS.mozilla.dom += [
     "WorkerRunnable.h",
     "WorkerScope.h",
     "WorkerStatus.h",
+    "WorkerTestUtils.h",
 ]
 
 # Private stuff.
@@ -65,6 +66,7 @@ UNIFIED_SOURCES += [
     "WorkerRef.cpp",
     "WorkerRunnable.cpp",
     "WorkerScope.cpp",
+    "WorkerTestUtils.cpp",
     "WorkerThread.cpp",
 ]
 

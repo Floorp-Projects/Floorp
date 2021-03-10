@@ -977,6 +977,7 @@ WEBIDL_FILES = [
     "WorkerGlobalScope.webidl",
     "WorkerLocation.webidl",
     "WorkerNavigator.webidl",
+    "WorkerTestUtils.webidl",
     "Worklet.webidl",
     "WorkletGlobalScope.webidl",
     "XMLDocument.webidl",
