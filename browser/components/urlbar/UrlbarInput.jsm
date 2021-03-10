@@ -3098,15 +3098,23 @@ class UrlbarInput {
     }
     let oldEnd = oldValue.substring(this.selectionEnd);
 
-    let pasteData = originalPasteData;
+    let isURLAssumed = true;
     try {
-      Services.uriFixup.getFixupURIInfo(
-        pasteData,
-        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
+      const { keywordAsSent } = Services.uriFixup.getFixupURIInfo(
+        originalPasteData,
+        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+          Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
       );
-    } catch (e) {
-      pasteData = pasteData.replace(/\s/g, " ");
-    }
+      isURLAssumed = !keywordAsSent;
+    } catch (e) {}
+
+    // In some cases, the data pasted will contain newline codes. In order to
+    // achive the behavior expected by user, remove newline codes when URL is
+    // assumed. When keywords are assumed, replace all whitespace characters
+    // including newline with a space.
+    let pasteData = isURLAssumed
+      ? originalPasteData.replace(/[\r\n]/g, "")
+      : originalPasteData.replace(/\s/g, " ");
 
     pasteData = UrlbarUtils.stripUnsafeProtocolOnPaste(pasteData);
 
