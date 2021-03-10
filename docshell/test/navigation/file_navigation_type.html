@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <script>
+    onpageshow = function() {
+      let bc = new BroadcastChannel("navigation_type");
+      bc.onmessage = function(event) {
+        if (event.data == "loadNewPage") {
+          bc.close();
+          location.href = location.href + "?next";
+        } else if (event.data == "back") {
+          bc.close();
+          history.back();
+        } else if (event.data == "close") {
+          window.close();
+          bc.postMessage("closed");
+          bc.close();
+        }
+      }
+      bc.postMessage({ navigationType: performance.navigation.type });
+    }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>performance.navigation.type</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    let bc = new BroadcastChannel("navigation_type");
+    let pageshowCount = 0;
+    bc.onmessage = function(event) {
+      if (event.data == "closed") {
+        bc.close();
+        SimpleTest.finish();
+        return;
+      }
+
+      ++pageshowCount;
+      if (pageshowCount == 1) {
+        is(event.data.navigationType, PerformanceNavigation.TYPE_NAVIGATE,
+           "Should have navigation type TYPE_NAVIGATE.");
+        bc.postMessage("loadNewPage");
+      } else if (pageshowCount == 2) {
+        is(event.data.navigationType, PerformanceNavigation.TYPE_NAVIGATE,
+           "Should have navigation type TYPE_NAVIGATE.");
+        bc.postMessage("back");
+      } else if (pageshowCount == 3) {
+        is(event.data.navigationType, PerformanceNavigation.TYPE_BACK_FORWARD ,
+           "Should have navigation type TYPE_BACK_FORWARD .");
+        bc.postMessage("close");
+      } else {
+        ok(false, "Unexpected load");
+      }
+    }
+
+    function test() {
+      window.open("file_navigation_type.html", "", "noopener");
+    }
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

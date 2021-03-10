@@ -1212,12 +1212,25 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
     mFiredUnloadEvent = false;
     RefPtr<Document> doc = contentViewer->GetDocument();
     if (doc) {
+      RefPtr<nsGlobalWindowInner> inner =
+          mScriptGlobal ? mScriptGlobal->GetCurrentInnerWindowInternal()
+                        : nullptr;
       if (mBrowsingContext->IsTop()) {
         doc->NotifyPossibleTitleChange(false);
+        if (inner) {
+          // Now that we have found the inner window of the page restored
+          // from the history, we have to make sure that
+          // performance.navigation.type is 2.
+          // Traditionally this type change has been done to the top level page
+          // only.
+          inner->GetPerformance()->GetDOMTiming()->NotifyRestoreStart();
+        }
       }
-      if (mScriptGlobal && mScriptGlobal->GetCurrentInnerWindowInternal()) {
-        mScriptGlobal->GetCurrentInnerWindowInternal()->Thaw(false);
+
+      if (inner) {
+        inner->Thaw(false);
       }
+
       nsCOMPtr<nsIChannel> channel = doc->GetChannel();
       if (channel) {
         SetCurrentURI(doc->GetDocumentURI(), channel, true, 0);
