@@ -12,8 +12,6 @@
 #  include <dbus/dbus.h>
 #  include <dbus/dbus-glib-lowlevel.h>
 
-#  include "WidgetUtilsGtk.h"
-
 #  if defined(MOZ_X11)
 #    include "gfxPlatformGtk.h"
 #    include "prlink.h"
@@ -199,7 +197,7 @@ bool WakeLockTopic::CheckXScreenSaverSupport() {
   }
 
   GdkDisplay* gDisplay = gdk_display_get_default();
-  if (!GdkIsX11Display(gDisplay)) {
+  if (!gDisplay || !GDK_IS_X11_DISPLAY(gDisplay)) {
     return false;
   }
   Display* display = GDK_DISPLAY_XDISPLAY(gDisplay);
@@ -224,7 +222,7 @@ bool WakeLockTopic::InhibitXScreenSaver(bool inhibit) {
     return false;
   }
   GdkDisplay* gDisplay = gdk_display_get_default();
-  if (!GdkIsX11Display(gDisplay)) {
+  if (!gDisplay || !GDK_IS_X11_DISPLAY(gDisplay)) {
     return false;
   }
   Display* display = GDK_DISPLAY_XDISPLAY(gDisplay);

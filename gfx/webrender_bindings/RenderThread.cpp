@@ -41,7 +41,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#  include "mozilla/WidgetUtilsGtk.h"
+#  include <gdk/gdkx.h>
 #endif
 
 #ifdef MOZ_WAYLAND
@@ -1125,7 +1125,8 @@ static already_AddRefed<gl::GLContext> CreateGLContext(nsACString& aError) {
 #elif defined(MOZ_WIDGET_ANDROID)
   gl = CreateGLContextEGL();
 #elif defined(MOZ_WAYLAND)
-  if (mozilla::widget::GdkIsWaylandDisplay()) {
+  if (gdk_display_get_default() &&
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     gl = CreateGLContextEGL();
   }
 #elif XP_MACOSX

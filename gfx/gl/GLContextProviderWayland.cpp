@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_GTK
-#  include "mozilla/WidgetUtilsGtk.h"
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
 #endif
 
 #include "GLContextProvider.h"
@@ -20,7 +21,7 @@ static class GLContextProviderEGL sGLContextProviderEGL;
 already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aWebRender,
     bool aForceAccelerated) {
-  if (GdkIsX11Display()) {
+  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return sGLContextProviderX11.CreateForCompositorWidget(
         aCompositorWidget, aWebRender, aForceAccelerated);
   } else {
@@ -32,7 +33,7 @@ already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWayland::CreateHeadless(
     const GLContextCreateDesc& desc, nsACString* const out_failureId) {
-  if (GdkIsX11Display()) {
+  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return sGLContextProviderX11.CreateHeadless(desc, out_failureId);
   } else {
     return sGLContextProviderEGL.CreateHeadless(desc, out_failureId);
@@ -41,7 +42,7 @@ already_AddRefed<GLContext> GLContextProviderWayland::CreateHeadless(
 
 /*static*/
 GLContext* GLContextProviderWayland::GetGlobalContext() {
-  if (GdkIsX11Display()) {
+  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return sGLContextProviderX11.GetGlobalContext();
   } else {
     return sGLContextProviderEGL.GetGlobalContext();
@@ -50,7 +51,7 @@ GLContext* GLContextProviderWayland::GetGlobalContext() {
 
 /*static*/
 void GLContextProviderWayland::Shutdown() {
-  if (GdkIsX11Display()) {
+  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     sGLContextProviderX11.Shutdown();
   } else {
     sGLContextProviderEGL.Shutdown();

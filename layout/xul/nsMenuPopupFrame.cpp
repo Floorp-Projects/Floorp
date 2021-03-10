@@ -58,7 +58,9 @@
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include <algorithm>
 #ifdef MOZ_WAYLAND
-#  include "mozilla/WidgetUtilsGtk.h"
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
+#  include <gdk/gdkwayland.h>
 #endif /* MOZ_WAYLAND */
 
 #include "X11UndefineNone.h"
@@ -544,7 +546,8 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   prefSize = XULBoundsCheck(minSize, prefSize, maxSize);
 
 #ifdef MOZ_WAYLAND
-  static bool inWayland = mozilla::widget::GdkIsWaylandDisplay();
+  static bool inWayland = gdk_display_get_default() &&
+                          !GDK_IS_X11_DISPLAY(gdk_display_get_default());
 #else
   static bool inWayland = false;
 #endif
@@ -1447,7 +1450,8 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // the popup's margin.
 
 #ifdef MOZ_WAYLAND
-      if (mozilla::widget::GdkIsWaylandDisplay()) {
+      if (gdk_display_get_default() &&
+          !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
         screenPoint = nsPoint(anchorRect.x, anchorRect.y);
         mAnchorRect = anchorRect;
       }
@@ -1584,7 +1588,8 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // because we don't know the absolute position of the window on the
       // screen.
 #ifdef MOZ_WAYLAND
-    static bool inWayland = mozilla::widget::GdkIsWaylandDisplay();
+    static bool inWayland = gdk_display_get_default() &&
+                            !GDK_IS_X11_DISPLAY(gdk_display_get_default());
 #else
     static bool inWayland = false;
 #endif
@@ -1724,7 +1729,8 @@ LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
   nsCOMPtr<nsIScreenManager> sm(
       do_GetService("@mozilla.org/gfx/screenmanager;1"));
 #ifdef MOZ_WAYLAND
-  static bool inWayland = mozilla::widget::GdkIsWaylandDisplay();
+  static bool inWayland = gdk_display_get_default() &&
+                          !GDK_IS_X11_DISPLAY(gdk_display_get_default());
 #else
   static bool inWayland = false;
 #endif

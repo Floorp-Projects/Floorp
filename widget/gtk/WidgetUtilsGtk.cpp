@@ -6,7 +6,6 @@
 #include "WidgetUtilsGtk.h"
 #include "nsWindow.h"
 #include <gtk/gtk.h>
-#include <dlfcn.h>
 
 namespace mozilla {
 
@@ -47,31 +46,6 @@ int32_t WidgetUtilsGTK::IsTouchDeviceSupportPresent() {
 bool IsMainWindowTransparent() {
   return nsWindow::IsToplevelWindowTransparent();
 }
-
-// We avoid linking gdk_*_display_get_type directly in order to avoid a runtime
-// dependency on GTK built with both backends. Other X11- and Wayland-specific
-// functions get stubbed out by libmozgtk and crash when called, but those
-// should only be called when the matching backend is already in use.
-
-bool GdkIsWaylandDisplay(GdkDisplay* display) {
-  static auto sGdkWaylandDisplayGetType =
-      (GType(*)())dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
-  return sGdkWaylandDisplayGetType &&
-         G_TYPE_CHECK_INSTANCE_TYPE(display, sGdkWaylandDisplayGetType());
-}
-
-bool GdkIsX11Display(GdkDisplay* display) {
-  static auto sGdkX11DisplayGetType =
-      (GType(*)())dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
-  return sGdkX11DisplayGetType &&
-         G_TYPE_CHECK_INSTANCE_TYPE(display, sGdkX11DisplayGetType());
-}
-
-bool GdkIsWaylandDisplay() {
-  return GdkIsWaylandDisplay(gdk_display_get_default());
-}
-
-bool GdkIsX11Display() { return GdkIsX11Display(gdk_display_get_default()); }
 
 }  // namespace widget
 

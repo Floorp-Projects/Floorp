@@ -10,7 +10,9 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "WidgetUtilsGtk.h"
+
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -169,7 +171,8 @@ nsDMABufDevice::nsDMABufDevice()
       mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
       mGbmDevice(nullptr),
       mGbmFd(-1) {
-  if (GdkIsWaylandDisplay()) {
+  if (gdk_display_get_default() &&
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     wl_display* display = WaylandDisplayGetWLDisplay();
     mRegistry = (void*)wl_display_get_registry(display);
     wl_registry_add_listener((wl_registry*)mRegistry, &registry_listener, this);

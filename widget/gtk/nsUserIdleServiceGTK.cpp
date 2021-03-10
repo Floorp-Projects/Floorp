@@ -11,7 +11,6 @@
 #include "nsDebug.h"
 #include "prlink.h"
 #include "mozilla/Logging.h"
-#include "WidgetUtilsGtk.h"
 
 using mozilla::LogLevel;
 
@@ -31,7 +30,8 @@ static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nullptr;
 static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nullptr;
 
 static void Initialize() {
-  if (!mozilla::widget::GdkIsX11Display()) {
+  if (!gdk_display_get_default() ||
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return;
   }
 
