@@ -52,6 +52,11 @@ class RenderCompositorLayersSWGL : public RenderCompositor {
 
   bool ShouldUseNativeCompositor() override { return true; }
 
+  void StartCompositing(const wr::DeviceIntRect* aDirtyRects,
+                        size_t aNumDirtyRects,
+                        const wr::DeviceIntRect* aOpaqueRects,
+                        size_t aNumOpaqueRects) override;
+
   void CompositorBeginFrame() override {}
   void CompositorEndFrame() override;
   void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
@@ -173,6 +178,7 @@ class RenderCompositorLayersSWGL : public RenderCompositor {
 
   nsTArray<FrameSurface> mFrameSurfaces;
   bool mInFrame = false;
+  bool mCompositingStarted = false;
 
   layers::ScreenshotGrabber mProfilerScreenshotGrabber;
 };
