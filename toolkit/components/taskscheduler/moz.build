@@ -9,18 +9,18 @@ with Files("**"):
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
-XPIDL_MODULE = "taskscheduler"
-XPCOM_MANIFESTS += ["components.conf"]
-
 EXTRA_JS_MODULES += ["TaskScheduler.jsm"]
 
 # This whole component is currently Windows-only, but a Mac implementation is planned.
 # Only the Windows C++ interface is an XPCOM component.
 if CONFIG["OS_TARGET"] == "WINNT":
     EXTRA_JS_MODULES += ["TaskSchedulerWinImpl.jsm"]
+    XPCOM_MANIFESTS += ["components.conf"]
+    XPIDL_MODULE = "taskscheduler"
     XPIDL_SOURCES += ["nsIWinTaskSchedulerService.idl"]
     EXPORTS += ["nsWinTaskScheduler.h"]
     SOURCES += ["nsWinTaskScheduler.cpp"]
     OS_LIBS += ["taskschd"]
+    DEFINES["UNICODE"] = True
 
 FINAL_LIBRARY = "xul"
