@@ -199,9 +199,6 @@ bool PathContainsInvalidLinks(wchar_t* const fullPath) {
 
       mozilla::UniquePtr<UINT8[]> byteBuffer =
           mozilla::MakeUnique<UINT8[]>(MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-      if (!byteBuffer) {
-        return true;
-      }
       ZeroMemory(byteBuffer.get(), MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
       REPARSE_DATA_BUFFER* buffer = (REPARSE_DATA_BUFFER*)byteBuffer.get();
       DWORD bytes = 0;
@@ -267,8 +264,8 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
   }
   mozilla::UniquePtr<wchar_t[]> longInstallPath =
       mozilla::MakeUnique<wchar_t[]>(longInstallPathChars);
-  if (!longInstallPath || !GetLongPathNameW(fullPath, longInstallPath.get(),
-                                            longInstallPathChars)) {
+  if (!GetLongPathNameW(fullPath, longInstallPath.get(),
+                        longInstallPathChars)) {
     return false;
   }
 
@@ -303,9 +300,6 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
       length += 1;
       mozilla::UniquePtr<wchar_t[]> programFiles32PathWithSlash =
           mozilla::MakeUnique<wchar_t[]>(length + 1);
-      if (!programFiles32PathWithSlash) {
-        return false;
-      }
 
       NS_tsnprintf(programFiles32PathWithSlash.get(), length + 1, NS_T("%s\\"),
                    programFiles32Path.get());
@@ -340,9 +334,6 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
     }
     mozilla::UniquePtr<wchar_t[]> programFilesNativePath =
         mozilla::MakeUnique<wchar_t[]>(lengthChars);
-    if (!programFilesNativePath) {
-      return false;
-    }
 
     // Now actually read the value.
     if (RegGetValueW(
@@ -369,9 +360,6 @@ bool IsProgramFilesPath(NS_tchar* fullPath) {
       nativePathStrLen += 1;
       mozilla::UniquePtr<wchar_t[]> programFilesNativePathWithSlash =
           mozilla::MakeUnique<wchar_t[]>(nativePathStrLen + 1);
-      if (!programFilesNativePathWithSlash) {
-        return false;
-      }
 
       NS_tsnprintf(programFilesNativePathWithSlash.get(), nativePathStrLen + 1,
                    NS_T("%s\\"), programFilesNativePath.get());
