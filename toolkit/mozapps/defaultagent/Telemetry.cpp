@@ -102,11 +102,6 @@ static TelemetryFieldResult GetOSLocale() {
                                    nullptr, nullptr);
   mozilla::UniquePtr<char[]> narrowLocaleName =
       mozilla::MakeUnique<char[]>(bufLen);
-  if (!narrowLocaleName) {
-    HRESULT hr = HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
-    LOG_ERROR(hr);
-    return TelemetryFieldResult(mozilla::WindowsError::FromHResult(hr));
-  }
   WideCharToMultiByte(CP_UTF8, 0, localeName, -1, narrowLocaleName.get(),
                       bufLen, nullptr, nullptr);
 

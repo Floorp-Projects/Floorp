@@ -196,9 +196,6 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
 
     mozilla::UniquePtr<wchar_t[]> timeStr =
         mozilla::MakeUnique<wchar_t[]>(kTimeStrMaxLen + 1);
-    if (!timeStr) {
-      return E_OUTOFMEMORY;
-    }
 
     if (wcsftime(timeStr.get(), kTimeStrMaxLen + 1, kTimeFormat, &now_tm) ==
         0) {
