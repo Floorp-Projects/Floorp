@@ -2059,21 +2059,8 @@ nsLocalFile::Launch() {
 
   return giovfs->ShowURIForInput(mPath);
 #elif defined(MOZ_WIDGET_ANDROID)
-  // Try to get a mimetype, if this fails just use the file uri alone
-  nsresult rv;
-  nsAutoCString type;
-  nsCOMPtr<nsIMIMEService> mimeService(
-      do_GetService("@mozilla.org/mime;1", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = mimeService->GetTypeFromFile(this, type);
-  }
-
-  nsAutoCString fileUri = "file://"_ns + mPath;
-  return java::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri),
-                                              NS_ConvertUTF8toUTF16(type),
-                                              u""_ns, u""_ns, u""_ns, u""_ns)
-             ? NS_OK
-             : NS_ERROR_FAILURE;
+  // Not supported on GeckoView
+  return NS_ERROR_NOT_IMPLEMENTED;
 #elif defined(MOZ_WIDGET_COCOA)
   CFURLRef url;
   if (NS_SUCCEEDED(GetCFURL(&url))) {
