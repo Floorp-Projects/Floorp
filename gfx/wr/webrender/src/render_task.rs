@@ -14,7 +14,7 @@ use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
 use crate::prim_store::{ClipData, PictureIndex};
-use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey};
+use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey, FastLinearGradientTask};
 #[cfg(feature = "debugger")]
 use crate::print_tree::{PrintTreePrinter};
 use crate::resource_cache::{ResourceCache, ImageRequest};
@@ -235,16 +235,6 @@ pub struct BorderTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BlitTask {
     pub source: RenderTaskId,
-}
-
-#[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FastLinearGradientTask {
-    pub stops: [GradientStopKey; GRADIENT_FP_STOPS],
-    pub orientation: LineOrientation,
-    pub start_point: f32,
-    pub end_point: f32,
 }
 
 #[derive(Debug)]
