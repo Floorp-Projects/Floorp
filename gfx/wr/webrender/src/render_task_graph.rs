@@ -837,7 +837,7 @@ impl RenderPass {
 }
 
 // Dump an SVG visualization of the render graph for debugging purposes
-#[allow(dead_code)]
+#[cfg(feature = "capture")]
 pub fn dump_render_tasks_as_svg(
     render_tasks: &RenderTaskGraph,
     output: &mut dyn std::io::Write,
