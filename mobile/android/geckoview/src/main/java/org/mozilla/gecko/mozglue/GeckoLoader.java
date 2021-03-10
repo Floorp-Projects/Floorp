@@ -28,7 +28,6 @@ import java.util.zip.ZipFile;
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
 
-    private static File sCacheFile;
     private static File sGREDir;
 
     /* Synchronized on GeckoLoader.class. */
@@ -38,13 +37,6 @@ public final class GeckoLoader {
 
     private GeckoLoader() {
         // prevent instantiation
-    }
-
-    public static File getCacheDir(final Context context) {
-        if (sCacheFile == null) {
-            sCacheFile = context.getCacheDir();
-        }
-        return sCacheFile;
     }
 
     public static File getGREDir(final Context context) {
@@ -504,13 +496,11 @@ public final class GeckoLoader {
 
     // These methods are implemented in mozglue/android/nsGeckoUtils.cpp
     private static native void putenv(String map);
-    public static native boolean verifyCRCs(String apkName);
 
     // These methods are implemented in mozglue/android/APKOpen.cpp
     public static native void nativeRun(String[] args, int prefsFd, int prefMapFd, int ipcFd, int crashFd, int crashAnnotationFd);
     private static native void loadGeckoLibsNative();
     private static native void loadSQLiteLibsNative();
     private static native void loadNSSLibsNative();
-    public static native boolean neonCompatible();
     public static native void suppressCrashDialog();
 }
