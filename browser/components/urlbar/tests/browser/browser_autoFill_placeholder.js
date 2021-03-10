@@ -44,14 +44,7 @@ add_task(async function origin() {
 add_task(async function tokenAlias() {
   // We have built-in engine aliases that may conflict with the one we choose
   // here in terms of autofill, so be careful and choose a weird alias.
-  await Services.search.addEngineWithDetails("Test", {
-    alias: "@__example",
-    template: "http://example.com/?search={searchTerms}",
-  });
-  registerCleanupFunction(async function() {
-    let engine = Services.search.getEngineByName("Test");
-    await Services.search.removeEngine(engine);
-  });
+  await SearchTestUtils.installSearchExtension({ keyword: "@__example" });
 
   // Do an initial search that triggers autofill so that the placeholder has an
   // initial value.
@@ -177,18 +170,14 @@ add_task(async function noMatch2() {
 
 add_task(async function clear_placeholder_for_keyword_or_alias() {
   info("Clear the autofill placeholder if a keyword is typed");
-  await PlacesTestUtils.addVisits("http://example.com/");
+  await PlacesTestUtils.addVisits("https://example.com/");
   await PlacesUtils.keywords.insert({
     keyword: "ex",
-    url: "http://somekeyword.com/",
+    url: "https://somekeyword.com/",
   });
-  let engine = await Services.search.addEngineWithDetails("AutofillTest", {
-    alias: "exam",
-    template: "http://example.com/?search={searchTerms}",
-  });
+  await SearchTestUtils.installSearchExtension({ keyword: "exam" });
   registerCleanupFunction(async function() {
     await PlacesUtils.keywords.remove("ex");
-    await Services.search.removeEngine(engine);
   });
 
   // Do an initial search that triggers autofill so that the placeholder has an

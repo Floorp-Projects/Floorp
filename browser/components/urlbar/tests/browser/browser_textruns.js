@@ -11,11 +11,9 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", true]],
   });
-  let engine = await Services.search.addEngineWithDetails("Test", {
-    template: "http://example.com/?search={searchTerms}",
-  });
+  await SearchTestUtils.installSearchExtension({ name: "Test" });
   let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(engine);
+  await Services.search.setDefault(Services.search.getEngineByName("Test"));
 
   let lotsOfSpaces = "%20".repeat(300);
   await PlacesTestUtils.addVisits({
@@ -30,7 +28,6 @@ add_task(async function() {
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
     await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(engine);
   });
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

@@ -176,14 +176,7 @@ add_task(async function urlPort() {
 });
 
 add_task(async function tokenAlias() {
-  await Services.search.addEngineWithDetails("Test", {
-    alias: "@example",
-    template: "http://example.com/?search={searchTerms}",
-  });
-  registerCleanupFunction(async function() {
-    let engine = Services.search.getEngineByName("Test");
-    await Services.search.removeEngine(engine);
-  });
+  await SearchTestUtils.installSearchExtension({ keyword: "@example" });
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "@ExA",
