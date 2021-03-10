@@ -16,7 +16,7 @@
  * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
  *   for a complete specification.
  * @param PtrType the reference-type being wrapped
- * @see nsDataHashtable, nsClassHashtable
+ * @see nsClassHashtable, nsTHashMap
  */
 template <class KeyClass, class PtrType>
 class nsRefCountedHashtable

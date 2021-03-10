@@ -147,8 +147,8 @@ class nsTHashtable_base_iterator
  *   }</pre>
  *
  * @see nsInterfaceHashtable
- * @see nsDataHashtable
  * @see nsClassHashtable
+ * @see nsTHashMap
  * @author "Benjamin Smedberg <bsmedberg@covad.net>"
  */
 
