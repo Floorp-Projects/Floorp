@@ -238,6 +238,8 @@ var SearchTestUtils = Object.freeze({
    *   The display name to use for the WebExtension.
    * @param {string} [options.version]
    *   The version to use for the WebExtension.
+   * @param {string} [options.favicon_url]
+   *   The favicon to use for the search engine in the WebExtension.
    * @param {string} [options.keyword]
    *   The keyword to use for the WebExtension.
    * @param {string} [options.encoding]
@@ -273,6 +275,10 @@ var SearchTestUtils = Object.freeze({
         },
       },
     };
+    if (options.favicon_url) {
+      manifest.chrome_settings_overrides.search_provider.favicon_url =
+        options.favicon_url;
+    }
     if (options.encoding) {
       manifest.chrome_settings_overrides.search_provider.encoding =
         options.encoding;
