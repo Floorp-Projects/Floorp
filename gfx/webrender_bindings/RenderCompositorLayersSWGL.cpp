@@ -73,6 +73,13 @@ void RenderCompositorLayersSWGL::CancelFrame() {
   MOZ_ASSERT(mInFrame);
   mCompositor->CancelFrame();
   mInFrame = false;
+  mCompositingStarted = false;
+}
+
+void RenderCompositorLayersSWGL::StartCompositing(
+    const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects,
+    const wr::DeviceIntRect* aOpaqueRects, size_t aNumOpaqueRects) {
+  mCompositingStarted = mInFrame;
 }
 
 void RenderCompositorLayersSWGL::CompositorEndFrame() {
@@ -123,7 +130,12 @@ RenderedFrameId RenderCompositorLayersSWGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
   MOZ_ASSERT(mInFrame);
   mInFrame = false;
-  mCompositor->EndFrame();
+  if (mCompositingStarted) {
+    mCompositor->EndFrame();
+    mCompositingStarted = false;
+  } else {
+    mCompositor->CancelFrame();
+  }
   return GetNextRenderFrameId();
 }
 
