@@ -105,7 +105,6 @@ EXTRA_JS_MODULES += [
     "app/TelemetryStorage.jsm",
     "app/TelemetryTimestamps.jsm",
     "app/TelemetryUtils.jsm",
-    "other/UITelemetry.jsm",
     "pings/CoveragePing.jsm",
     "pings/EcosystemTelemetry.jsm",
     "pings/EventPing.jsm",
