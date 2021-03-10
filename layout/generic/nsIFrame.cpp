@@ -9160,17 +9160,17 @@ bool nsIFrame::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
       // so that our eventual SetRect/SetSize will know that it has to
       // reset our overflow areas.
       (l | t | r | b) != 0) {
-    VisualDeltas oldDeltas = mOverflow.mVisualDeltas;
+    InkOverflowDeltas oldDeltas = mOverflow.mInkOverflowDeltas;
     // It's a "small" overflow area so we store the deltas for each edge
     // directly in the frame, rather than allocating a separate rect.
     // If they're all zero, that's fine; we're setting things to
     // no-overflow.
-    mOverflow.mVisualDeltas.mLeft = l;
-    mOverflow.mVisualDeltas.mTop = t;
-    mOverflow.mVisualDeltas.mRight = r;
-    mOverflow.mVisualDeltas.mBottom = b;
+    mOverflow.mInkOverflowDeltas.mLeft = l;
+    mOverflow.mInkOverflowDeltas.mTop = t;
+    mOverflow.mInkOverflowDeltas.mRight = r;
+    mOverflow.mInkOverflowDeltas.mBottom = b;
     // There was no scrollable overflow before, and there isn't now.
-    return oldDeltas != mOverflow.mVisualDeltas;
+    return oldDeltas != mOverflow.mInkOverflowDeltas;
   } else {
     bool changed =
         !aOverflowAreas.ScrollableOverflow().IsEqualEdges(
