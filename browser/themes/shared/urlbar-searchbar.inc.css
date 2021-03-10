@@ -577,6 +577,14 @@
   -moz-box-align: center;
 }
 
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+#pageActionSeparator {
+  /* Just remove this element once Proton is released */
+  display: none;
+}
+} /*** END proton ***/
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 #pageActionSeparator {
   /* This draws the separator the same way that #urlbar-label-box draws its
      left and right borders, which end up looking like separators.  It might not
@@ -596,6 +604,7 @@
   visibility: visible;
   margin-inline: 6px;
 }
+} /*** END !proton ***/
 
 #userContext-icons,
 #urlbar-zoom-button {
