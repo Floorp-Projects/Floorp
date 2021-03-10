@@ -1316,7 +1316,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "VideoPlaybackQuality", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "VisualViewport", insecureContext: true, android: true },
+  { name: "VisualViewport", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "VRDisplay", releaseNonWindowsAndMac: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!

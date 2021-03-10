@@ -13,7 +13,7 @@ add_task(async () => {
     set: [
       ["apz.allow_zooming", true],
       ["dom.meta-viewport.enabled", true],
-      ["dom.visualviewport.enabled", true],
+      ["dom.visualviewport.enabled,", true],
     ],
   });
 
