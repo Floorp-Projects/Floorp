@@ -6259,7 +6259,6 @@ class MBoxNonStrictThis : public MUnaryInstruction, public BoxPolicy<0>::Data {
   MBoxNonStrictThis(MDefinition* def, JSObject* globalThis)
       : MUnaryInstruction(classOpcode, def), globalThis_(globalThis) {
     setResultType(MIRType::Object);
-    setMovable();
   }
 
  public:
