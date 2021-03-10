@@ -198,6 +198,9 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       rv = NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
     } else if (mCurrentConfig.mImage != info.mImage ||
                mCurrentConfig.mDisplay != info.mDisplay) {
+      // We can't properly determine the image rect if we're changing
+      // resolution based on sample information.
+      mCurrentConfig.ResetImageRect();
       PROFILER_MARKER_TEXT("VPX Stream Init Discrepancy", MEDIA_PLAYBACK, {},
                            "VPXChangeMonitor::CheckForChange has detected a "
                            "discrepancy between initialization data and stream "
