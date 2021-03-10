@@ -18,20 +18,9 @@ XPCOMUtils.defineLazyModuleGetter(
   "_TaskSchedulerWinImpl"
 );
 
-XPCOMUtils.defineLazyModuleGetter(
-  this,
-  "MacOSImpl",
-  "resource://gre/modules/TaskSchedulerMacOSImpl.jsm",
-  "_TaskSchedulerMacOSImpl"
-);
-
 XPCOMUtils.defineLazyGetter(this, "gImpl", () => {
   if (AppConstants.platform == "win") {
     return WinImpl;
-  }
-
-  if (AppConstants.platform == "macosx") {
-    return MacOSImpl;
   }
 
   // Stubs for unsupported platforms
@@ -50,19 +39,11 @@ const { AppConstants } = ChromeUtils.import(
  * Interface to a system task scheduler, capable of running a command line at an interval
  * independent of the application.
  *
- * The expected consumer of this component wants to run a periodic short-lived maintenance task.
- * These periodic maintenance tasks will be per-OS-level user and run with the OS-level user's
- * permissions.  (These still need to work across systems with multiple users and the various
- * ownership and permission combinations that we see.)  This component does not help schedule
- * maintenance daemons, meaning long-lived processes.
- *
- * Currently only implemented for Windows and macOS, on other platforms these calls do nothing.
+ * Currently only implemented for Windows, on other platforms these calls do nothing.
  *
  * The implementation will only interact with tasks from the same install of this application.
  * - On Windows the native tasks are named like "\<vendor>\<id> <install path hash>",
  *   e.g. "\Mozilla\Task Identifier 308046B0AF4A39CB"
- * - On macOS the native tasks are labeled like "<macOS bundle ID>.<install path hash>.<id>",
- *   e.g. "org.mozilla.nightly.308046B0AF4A39CB.Task Identifier".
  */
 var TaskScheduler = {
   MIN_INTERVAL_SECONDS: 1800,
@@ -94,7 +75,7 @@ var TaskScheduler = {
    *        Interval at which to run the command, in seconds. Minimum 1800 (30 minutes).
    *
    * @param options
-   *        Optional, as are all of its properties:
+   *        Optional, as as all of its properties:
    *        {
    *          args
    *            Array of arguments to pass on the command line. Does not include the command
@@ -110,15 +91,11 @@ var TaskScheduler = {
    *
    *          disabled
    *            If true the task will be created disabled, so that it will not be run.
-   *            Ignored on macOS: see comments in TaskSchedulerMacOSImpl.jsm.
    *            Default false, intended for tests.
    *        }
    * }
    */
-  async registerTask(id, command, intervalSeconds, options) {
-    if (typeof id !== "string") {
-      throw new Error("id is not a string");
-    }
+  registerTask(id, command, intervalSeconds, options) {
     if (!Number.isInteger(intervalSeconds)) {
       throw new Error("Interval is not an integer");
     }
@@ -134,14 +111,14 @@ var TaskScheduler = {
    *
    * @throws NS_ERROR_FILE_NOT_FOUND if the task does not exist.
    */
-  async deleteTask(id) {
+  deleteTask(id) {
     return gImpl.deleteTask(id);
   },
 
   /**
    * Delete all tasks registered by this application.
    */
-  async deleteAllTasks() {
+  deleteAllTasks() {
     return gImpl.deleteAllTasks();
   },
 };

@@ -51,11 +51,11 @@ WinImpl._taskFolderNameParts = function() {
   };
 };
 
-registerCleanupFunction(async () => {
-  await TaskScheduler.deleteAllTasks();
+registerCleanupFunction(() => {
+  TaskScheduler.deleteAllTasks();
 });
 
-add_task(async function test_create() {
+add_task(function test_create() {
   const taskName = "test-task-1";
   const rawTaskName = WinImpl._formatTaskName(taskName);
   const folderName = WinImpl._taskFolderName();
@@ -78,7 +78,7 @@ add_task(async function test_create() {
   const expectedIntervalOutWin10 = "PT2H"; // Windows 10 regroups by hours and minutes
   const expectedIntervalOutWin7 = `PT${intervalSecsIn}S`; // Windows 7 doesn't regroup
 
-  await TaskScheduler.registerTask(taskName, exePath, intervalSecsIn, {
+  TaskScheduler.registerTask(taskName, exePath, intervalSecsIn, {
     disabled: true,
     args: argsIn,
     description,
@@ -131,17 +131,12 @@ add_task(async function test_create() {
   const expectedUpdatedIntervalOutWin10 = "PT3H";
   const expectedUpdatedIntervalOutWin7 = `PT${updatedIntervalSecsIn}S`;
 
-  await TaskScheduler.registerTask(
-    taskName,
-    updatedExePath,
-    updatedIntervalSecsIn,
-    {
-      disabled: true,
-      args: argsIn,
-      description,
-      workingDirectory: workingDir,
-    }
-  );
+  TaskScheduler.registerTask(taskName, updatedExePath, updatedIntervalSecsIn, {
+    disabled: true,
+    args: argsIn,
+    description,
+    workingDirectory: workingDir,
+  });
 
   // Read back the updated task
   const readBackUpdatedXML = WinSvc.getTaskXML(folderName, rawTaskName);
@@ -179,7 +174,7 @@ add_task(async function test_create() {
   }
 
   // Delete
-  await TaskScheduler.deleteAllTasks();
+  TaskScheduler.deleteAllTasks();
 
   // Check that the folder is gone
   {
