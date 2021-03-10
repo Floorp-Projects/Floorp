@@ -28,29 +28,20 @@ add_task(async function() {
   });
 
   sandbox = sinon.createSandbox();
-  let engine = await Services.search.addEngineWithDetails("MozSearch", {
-    alias: "moz",
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
-  });
-  let engine2 = await Services.search.addEngineWithDetails("MozSearch2", {
-    alias: "@moz",
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
-  });
+  await SearchTestUtils.installSearchExtension();
+  await SearchTestUtils.installSearchExtension({ name: "Example2" });
+
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "http://example.com/?q=%s",
+    url: "https://example.com/?q=%s",
     title: "test",
   });
   await PlacesUtils.keywords.insert({
     keyword: "keyword",
-    url: "http://example.com/?q=%s",
+    url: "https://example.com/?q=%s",
   });
   registerCleanupFunction(async () => {
     sandbox.restore();
-    await Services.search.removeEngine(engine);
-    await Services.search.removeEngine(engine2);
     await PlacesUtils.bookmarks.remove(bm);
     await UrlbarTestUtils.formHistory.clear();
   });

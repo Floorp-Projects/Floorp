@@ -1383,13 +1383,11 @@ add_task(async function test() {
   await Services.search.setDefault(engine);
   await Services.search.moveEngine(engine, 0);
 
-  let aliasEngine = await Services.search.addEngineWithDetails(
-    TEST_ENGINE_NAME,
-    {
-      alias: TEST_ENGINE_ALIAS,
-      template: `http://${TEST_ENGINE_DOMAIN}/?search={searchTerms}`,
-    }
-  );
+  await SearchTestUtils.installSearchExtension({
+    name: TEST_ENGINE_NAME,
+    keyword: TEST_ENGINE_ALIAS,
+    search_url: `https://${TEST_ENGINE_DOMAIN}/`,
+  });
 
   // Add a bookmark and a keyword.
   let bm = await PlacesUtils.bookmarks.insert({
@@ -1410,7 +1408,6 @@ add_task(async function test() {
 
   registerCleanupFunction(async function() {
     await Services.search.setDefault(oldDefaultEngine);
-    await Services.search.removeEngine(aliasEngine);
     await PlacesUtils.keywords.remove("kw");
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();

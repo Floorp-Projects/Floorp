@@ -178,18 +178,16 @@ add_task(async function tabSearchModePreview() {
 
 add_task(async function tabTabToSearch() {
   info("Tab past a tab-to-search result after focusing with the keyboard.");
-  let engineDomain = "example.com";
-  let testEngine = await Services.search.addEngineWithDetails("Test", {
-    template: `http://${engineDomain}/?search={searchTerms}`,
-  });
+  await SearchTestUtils.installSearchExtension();
+
   for (let i = 0; i < 3; i++) {
-    await PlacesTestUtils.addVisits([`https://${engineDomain}/`]);
+    await PlacesTestUtils.addVisits(["https://example.com/"]);
   }
 
   // Search for a tab-to-search result.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: engineDomain.slice(0, 4),
+    value: "exam",
   });
   await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -212,7 +210,6 @@ add_task(async function tabTabToSearch() {
     await UrlbarTestUtils.assertSearchMode(window, null);
   });
   await PlacesUtils.history.clear();
-  await Services.search.removeEngine(testEngine);
 });
 
 add_task(async function tabNoSearchStringSearchMode() {

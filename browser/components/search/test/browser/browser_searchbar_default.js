@@ -42,16 +42,14 @@ add_task(async function setup() {
   // Create two new search engines. Mark one as the default engine, so
   // the test don't crash. We need to engines for this test as the searchbar
   // doesn't display the default search engine among the one-off engines.
-  await Services.search.addEngineWithDetails("MozSearch1", {
-    alias: "mozalias",
-    method: "GET",
-    template: templateNormal + "{searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearch1",
+    keyword: "mozalias",
   });
-
-  await Services.search.addEngineWithDetails("MozSearch2", {
-    alias: "mozalias2",
-    method: "GET",
-    template: templatePrivate + "{searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearch2",
+    keyword: "mozalias2",
+    search_url_get_params: "query={searchTerms}",
   });
 
   await SpecialPowers.pushPrefEnv({
@@ -67,14 +65,10 @@ add_task(async function setup() {
   let engineDefault = Services.search.getEngineByName("MozSearch1");
   await Services.search.setDefault(engineDefault);
 
-  let engineOneOff = Services.search.getEngineByName("MozSearch2");
-
   registerCleanupFunction(async function() {
     gCUITestUtils.removeSearchBar();
     await Services.search.setDefault(originalEngine);
     await Services.search.setDefaultPrivate(originalPrivateEngine);
-    await Services.search.removeEngine(engineDefault);
-    await Services.search.removeEngine(engineOneOff);
   });
 });
 
