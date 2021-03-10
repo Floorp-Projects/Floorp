@@ -470,13 +470,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript, notxpcom] void DetachEditorFromWindow();
 
   /**
-   * If true, this browser is not visible in the traditional sense, but
-   * is actively being rendered to the screen (ex. painted on a canvas)
-   * and should be treated accordingly.
-   **/
-  attribute boolean isOffScreenBrowser;
-
-  /**
    * Propagated to the print preview document viewer.  Must only be called on
    * a document viewer that has been initialized for print preview.
    */

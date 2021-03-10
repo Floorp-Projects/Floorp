@@ -398,7 +398,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mCSSErrorReportingEnabled(false),
       mAllowAuth(mItemType == typeContent),
       mAllowKeywordFixup(false),
-      mIsOffScreenBrowser(false),
       mDisableMetaRefreshWhenInactive(false),
       mIsAppTab(false),
       mDeviceSizeIsPageSize(false),
@@ -4929,12 +4928,9 @@ nsDocShell::GetVisibility(bool* aVisibility) {
     }
 
     nsIFrame* frame = view ? view->GetFrame() : nullptr;
-    bool isDocShellOffScreen = false;
-    docShell->GetIsOffScreenBrowser(&isDocShellOffScreen);
     if (frame &&
         !frame->IsVisibleConsideringAncestors(
-            nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY) &&
-        !isDocShellOffScreen) {
+            nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY)) {
       return NS_OK;
     }
 
@@ -4951,18 +4947,6 @@ nsDocShell::GetVisibility(bool* aVisibility) {
   // Check with the tree owner as well to give embedders a chance to
   // expose visibility as well.
   return treeOwnerAsWin->GetVisibility(aVisibility);
-}
-
-NS_IMETHODIMP
-nsDocShell::SetIsOffScreenBrowser(bool aIsOffScreen) {
-  mIsOffScreenBrowser = aIsOffScreen;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsOffScreenBrowser(bool* aIsOffScreen) {
-  *aIsOffScreen = mIsOffScreenBrowser;
-  return NS_OK;
 }
 
 void nsDocShell::ActivenessMaybeChanged() {
