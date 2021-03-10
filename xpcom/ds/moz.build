@@ -52,7 +52,6 @@ EXPORTS += [
     "nsClassHashtable.h",
     "nsCOMArray.h",
     "nsCRT.h",
-    "nsDataHashtable.h",
     "nsDeque.h",
     "nsEnumeratorUtils.h",
     "nsExpirationTracker.h",
