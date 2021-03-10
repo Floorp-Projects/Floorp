@@ -431,6 +431,10 @@ CompositorBridgeParent::~CompositorBridgeParent() {
     RefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
     tex->DeallocateDeviceData();
   }
+  // Check if WebRender/Compositor was shutdown.
+  if (mWrBridge || mCompositor) {
+    gfxCriticalNote << "CompositorBridgeParent destroyed without shutdown";
+  }
 }
 
 void CompositorBridgeParent::ForceIsFirstPaint() {
