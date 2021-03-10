@@ -1,3 +1,5 @@
 [ui]
 ssh = ssh -i /builds/worker/updatebot/id_rsa -l updatebot@mozilla.com
 username = Updatebot <updatebot@mozilla.com>
+[extensions]
+strip =
