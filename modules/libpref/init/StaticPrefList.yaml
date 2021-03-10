@@ -6465,7 +6465,7 @@
 # Is ruby-position: alternate enabled?
 - name: layout.css.ruby.position-alternate.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
