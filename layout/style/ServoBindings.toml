@@ -456,6 +456,7 @@ cbindgen-types = [
     { gecko = "StyleOverflowAnchor", servo = "crate::values::computed::OverflowAnchor" },
     { gecko = "StyleTextDecorationSkipInk", servo = "crate::values::computed::TextDecorationSkipInk" },
     { gecko = "StyleTextDecorationLength", servo = "crate::values::computed::TextDecorationLength" },
+    { gecko = "StyleRubyPosition", servo = "crate::values::computed::RubyPosition" },
     { gecko = "StyleLength", servo = "crate::values::computed::CSSPixelLength" },
     { gecko = "StyleLengthPercentage", servo = "crate::values::computed::LengthPercentage" },
     { gecko = "StyleNonNegativeLengthPercentage", servo = "crate::values::computed::NonNegativeLengthPercentage" },
