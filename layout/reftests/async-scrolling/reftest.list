@@ -63,7 +63,7 @@ fuzzy-if(browserIsRemote&&d2d,0-1,0-22) skip-if(!asyncPan) fuzzy-if(geckoview,2-
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
 fuzzy-if(Android,0-19,0-4) fuzzy-if(webrender&&gtkWidget,12-19,12-32) fuzzy-if(webrender&&cocoaWidget,17-21,20-44) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html # Bug 1604338
-fuzzy-if(Android,0-44,0-10) fuzzy-if(webrender&&gtkWidget,16-26,26-64) fuzzy-if(webrender&&cocoaWidget,11-13,38-82) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-36) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html # Bug 1604338
+fuzzy-if(Android,0-44,0-10) fuzzy-if(webrender&&gtkWidget,16-26,26-64) fuzzy-if(webrender&&cocoaWidget,10-13,38-82) fuzzy-if(winWidget&&!nativeThemePref,0-4,0-36) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html # Bug 1604338
 fuzzy-if(Android,0-6,0-8) fuzzy-if(webrender&&gtkWidget,17-28,24-60) fuzzy-if(webrender&&cocoaWidget,15-19,40-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html # Bug 1604338
 fuzzy-if(Android,0-6,0-8) fuzzy-if(webrender&&gtkWidget,17-29,24-60) fuzzy-if(webrender&&cocoaWidget,15-19,40-75) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html # Bug 1604338
 skip-if(!asyncPan) == fixed-pos-scrolled-clip-5.html fixed-pos-scrolled-clip-5-ref.html
