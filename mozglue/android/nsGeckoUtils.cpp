@@ -27,23 +27,6 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv* jenv, jclass,
   jenv->ReleaseStringUTFChars(map, str);
 }
 
-extern "C" APKOPEN_EXPORT jboolean MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_verifyCRCs(JNIEnv* jenv, jclass,
-                                                      jstring jApkName) {
-  const char* str;
-  // XXX: java doesn't give us true UTF8, we should figure out something
-  // better to do here
-  str = jenv->GetStringUTFChars(jApkName, nullptr);
-  if (str == nullptr) {
-    return false;
-  }
-
-  RefPtr<Zip> zip = Zip::Create(str);
-  const bool valid = zip->VerifyCRCs();
-  jenv->ReleaseStringUTFChars(jApkName, str);
-  return jboolean(valid);
-}
-
 #ifdef MOZ_CRASHREPORTER
 
 extern "C" __attribute__((visibility("default"))) jboolean MOZ_JNICALL
