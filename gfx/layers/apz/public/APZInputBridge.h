@@ -43,6 +43,14 @@ struct APZHandledResult {
   ScrollDirections mOverscrollDirections = ScrollDirections();
 
   APZHandledResult() = default;
+  // A constructor for cases where we have the target of the input block this
+  // event is part of, the target might be adjusted to be the root in the
+  // ScrollingDownWillMoveDynamicToolbar case.
+  //
+  // NOTE: There's a case where |aTarget| is the APZC for the root content but
+  // |aPlace| has to be `HandledByContent`, for example, the root content has
+  // an event handler using preventDefault() in the callback, so call sites of
+  // this function should be responsible to set a proper |aPlace|.
   APZHandledResult(APZHandledPlace aPlace,
                    const AsyncPanZoomController* aTarget);
   APZHandledResult(APZHandledPlace aPlace, SideBits aScrollableDirections,
