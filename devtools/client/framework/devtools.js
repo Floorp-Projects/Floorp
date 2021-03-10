@@ -564,7 +564,7 @@ DevTools.prototype = {
     tab,
     { toolId, hostType, startTime, raise, reason, hostOptions } = {}
   ) {
-    const descriptor = await this.createDescriptorForTab(tab);
+    const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
     return this.showToolbox(
       descriptor,
       toolId,
@@ -707,8 +707,10 @@ DevTools.prototype = {
    * web-extensions need to use dedicated instances of Target and cannot reuse the
    * cached instances managed by DevTools target factory.
    */
-  createDescriptorForTab: function(tab) {
-    return TabDescriptorFactory.createDescriptorForTab(tab);
+  createDescriptorForTabForWebExtension: function(tab) {
+    return TabDescriptorFactory.createDescriptorForTab(tab, {
+      forceCreationForWebextension: true,
+    });
   },
 
   /**
