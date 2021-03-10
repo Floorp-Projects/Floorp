@@ -32,7 +32,7 @@ add_task(async function() {
   info("Navigate to 'USB device runtime' page");
   await navigateToUSBRuntime(mocks, document);
   checkSelectPageEvent("runtime", sessionId);
-  await waitForRequestsToSettle(window.AboutDebugging.store);
+  await waitForAboutDebuggingRequests(window.AboutDebugging.store);
 
   await removeTab(tab);
 });

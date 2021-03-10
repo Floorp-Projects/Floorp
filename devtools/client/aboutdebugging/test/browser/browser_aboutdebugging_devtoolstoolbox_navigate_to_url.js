@@ -45,7 +45,7 @@ add_task(async function() {
   info("Remove the background tab");
   await removeTab(debug_tab);
   await waitUntil(() => !findDebugTargetByText("NEW_TAB_TITLE", document));
-  await waitForRequestsToSettle(window.AboutDebugging.store);
+  await waitForAboutDebuggingRequests(window.AboutDebugging.store);
 
   info("Remove the about:debugging tab.");
   await removeTab(tab);
