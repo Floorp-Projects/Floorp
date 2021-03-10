@@ -903,24 +903,6 @@ public class GeckoAppShell {
         }
     }
 
-    @WrapForJNI(calledFrom = "gecko")
-    private static void showNotification(final String name, final String cookie, final String title,
-                                         final String text, final String host,
-                                         final String imageUrl, final String persistentData) {
-        if (persistentData == null) {
-            getNotificationListener().showNotification(name, cookie, title, text, host, imageUrl);
-            return;
-        }
-
-        getNotificationListener().showPersistentNotification(
-                name, cookie, title, text, host, imageUrl, persistentData);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void closeNotification(final String name) {
-        getNotificationListener().closeNotification(name);
-    }
-
     public static synchronized void setDisplayDpiOverride(@Nullable final Integer dpi) {
         if (dpi == null) {
             return;
