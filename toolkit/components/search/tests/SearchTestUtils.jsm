@@ -26,19 +26,11 @@ var EXPORTED_SYMBOLS = ["SearchTestUtils"];
 
 var gTestScope;
 
-var SearchTestUtils = {
+var SearchTestUtils = Object.freeze({
   init(testScope) {
     gTestScope = testScope;
-    let env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    this._isMochitest = !env.exists("XPCSHELL_TEST_PROFILE_DIR");
-    if (this._isMochitest) {
-      this._isMochitest = true;
-      AddonTestUtils.initMochitest(testScope);
-    } else {
-      this._isMochitest = false;
-      // This handles xpcshell-tests.
+    // This handles xpcshell-tests.
+    if (!("ExtensionTestUtils" in gTestScope)) {
       gTestScope.ExtensionTestUtils = ExtensionTestUtils;
     }
   },
@@ -185,43 +177,21 @@ var SearchTestUtils = {
    * Note: If you are in xpcshell-tests, then you should call
    * `initXPCShellAddonManager` before calling this.
    *
-   * Note: for tests, the extension must generally be unloaded before
-   * `registerCleanupFunction`s are triggered. See bug 1694409.
-   *
-   * For mochitests this function automatically registers an unload, this
-   * may be skipped with the skipUnload argument.
-   * For xpcshell-tests, we will hopefully be able to add the unload once
-   * bug 1694409 is fixed.
-   *
    * @param {object} [options]
    *   @see createEngineManifest
-   * @param {boolean} [skipUnload]
-   *   If true, this will skip the automatic unloading of the extension.
-   * @returns {object}
-   *   The loaded extension. This will need unloading before ending the test.
    */
-  async installSearchExtension(options = {}, skipUnload = false) {
+  async installSearchExtension(options = {}) {
+    options.id = (options.id ?? "example") + "@tests.mozilla.org";
     let extensionInfo = {
       useAddonManager: "permanent",
       manifest: this.createEngineManifest(options),
     };
 
-    let extension;
-
-    // Cleanup must be registered before loading the extension to avoid
-    // failures for mochitests.
-    if (!skipUnload && this._isMochitest) {
-      gTestScope.registerCleanupFunction(async () => {
-        await extension.unload();
-      });
-    }
-
-    extension = gTestScope.ExtensionTestUtils.loadExtension(extensionInfo);
+    let extension = gTestScope.ExtensionTestUtils.loadExtension(extensionInfo);
     await extension.startup();
     if (!options.skipWaitForSearchEngine) {
       await AddonTestUtils.waitForSearchProviderStartup(extension);
     }
-
     return extension;
   },
 
@@ -286,11 +256,8 @@ var SearchTestUtils = {
    *   The generated manifest.
    */
   createEngineManifest(options = {}) {
+    options.id = options.id ?? "example@tests.mozilla.org";
     options.name = options.name ?? "Example";
-    options.id = options.id ?? options.name.toLowerCase().replaceAll(" ", "");
-    if (!options.id.includes("@")) {
-      options.id += "@tests.mozilla.org";
-    }
     options.version = options.version ?? "1.0";
     let manifest = {
       version: options.version,
@@ -396,4 +363,4 @@ var SearchTestUtils = {
     this.idleService._fireObservers("idle");
     await reloadObserved;
   },
-};
+});

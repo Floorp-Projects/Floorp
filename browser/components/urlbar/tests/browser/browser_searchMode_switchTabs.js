@@ -192,13 +192,9 @@ add_task(async function slow_load() {
     set: [["browser.urlbar.suggest.searches", false]],
   });
   const engineName = "Test";
-  let extension = await SearchTestUtils.installSearchExtension(
-    {
-      name: engineName,
-    },
-    true
-  );
-
+  let engine = await Services.search.addEngineWithDetails(engineName, {
+    template: "http://example.com/?search={searchTerms}",
+  });
   const originalTab = gBrowser.selectedTab;
   const newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
@@ -222,21 +218,17 @@ add_task(async function slow_load() {
   await UrlbarTestUtils.assertSearchMode(window, null);
 
   BrowserTestUtils.removeTab(newTab);
+  await Services.search.removeEngine(engine);
   await SpecialPowers.popPrefEnv();
-  await extension.unload();
 });
 
 // Tests the same behaviour as slow_load, but in a more reliable way using
 // non-real-world behaviour.
 add_task(async function slow_load_guaranteed() {
   const engineName = "Test";
-  let extension = await SearchTestUtils.installSearchExtension(
-    {
-      name: engineName,
-    },
-    true
-  );
-
+  let engine = await Services.search.addEngineWithDetails(engineName, {
+    template: "http://example.com/?search={searchTerms}",
+  });
   const backgroundTab = BrowserTestUtils.addTab(gBrowser);
 
   // Simulate a tab that was in search mode, loaded a SERP, then was switched
@@ -254,7 +246,7 @@ add_task(async function slow_load_guaranteed() {
   await UrlbarTestUtils.assertSearchMode(window, null);
 
   BrowserTestUtils.removeTab(backgroundTab);
-  await extension.unload();
+  await Services.search.removeEngine(engine);
 });
 
 // Enters search mode by typing a restriction char with no search string.
