@@ -10615,7 +10615,7 @@
 # platforms, but stick to the standard colors on those.
 - name: widget.non-native-theme.use-theme-accent
   type: bool
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   value: true
 #else
   value: false
