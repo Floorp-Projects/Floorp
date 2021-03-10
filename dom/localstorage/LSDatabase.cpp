@@ -410,16 +410,12 @@ LSDatabase::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 
   MOZ_ASSERT(gLSDatabases);
 
-  nsTArray<RefPtr<LSDatabase>> databases;
+  nsTArray<RefPtr<LSDatabase>> databases(gLSDatabases->Count());
+  std::transform(gLSDatabases->cbegin(), gLSDatabases->cend(),
+                 MakeBackInserter(databases),
+                 [](const auto& entry) { return entry.GetData(); });
 
-  for (auto iter = gLSDatabases->ConstIter(); !iter.Done(); iter.Next()) {
-    LSDatabase* database = iter.Data();
-    MOZ_ASSERT(database);
-
-    databases.AppendElement(database);
-  }
-
-  for (RefPtr<LSDatabase>& database : databases) {
+  for (const RefPtr<LSDatabase>& database : databases) {
     database->RequestAllowToClose();
   }
 

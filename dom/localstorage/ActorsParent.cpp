@@ -5806,9 +5806,10 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
     mLoadedItems.Clear();
     mUnknownItems.Clear();
 #ifdef DEBUG
-    for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
-      MOZ_ASSERT(iter.Data().IsVoid());
-    }
+    const bool allValuesVoid =
+        std::all_of(mValues.cbegin(), mValues.cend(),
+                    [](const auto& entry) { return entry.GetData().IsVoid(); });
+    MOZ_ASSERT(allValuesVoid);
 #endif
     mValues.Clear();
     mLoadedAllItems = true;
@@ -7940,49 +7941,28 @@ bool ArchivedOriginScope::HasMatches(
   AssertIsOnIOThread();
   MOZ_ASSERT(aHashtable);
 
-  struct Matcher {
-    ArchivedOriginHashtable* mHashtable;
+  return mData.match(
+      [aHashtable](const Origin& aOrigin) {
+        const nsCString hashKey = GetArchivedOriginHashKey(
+            aOrigin.OriginSuffix(), aOrigin.OriginNoSuffix());
 
-    explicit Matcher(ArchivedOriginHashtable* aHashtable)
-        : mHashtable(aHashtable) {}
-
-    bool operator()(const Origin& aOrigin) {
-      nsCString hashKey = GetArchivedOriginHashKey(aOrigin.OriginSuffix(),
-                                                   aOrigin.OriginNoSuffix());
-
-      ArchivedOriginInfo* archivedOriginInfo;
-      return mHashtable->Get(hashKey, &archivedOriginInfo);
-    }
-
-    bool operator()(const Prefix& aPrefix) {
-      for (auto iter = mHashtable->ConstIter(); !iter.Done(); iter.Next()) {
-        const auto& archivedOriginInfo = iter.Data();
-
-        if (archivedOriginInfo->mOriginNoSuffix == aPrefix.OriginNoSuffix()) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    bool operator()(const Pattern& aPattern) {
-      for (auto iter = mHashtable->ConstIter(); !iter.Done(); iter.Next()) {
-        const auto& archivedOriginInfo = iter.Data();
-
-        if (aPattern.GetPattern().Matches(
-                archivedOriginInfo->mOriginAttributes)) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    bool operator()(const Null& aNull) { return mHashtable->Count(); }
-  };
-
-  return mData.match(Matcher(aHashtable));
+        return aHashtable->Contains(hashKey);
+      },
+      [aHashtable](const Pattern& aPattern) {
+        return std::any_of(aHashtable->cbegin(), aHashtable->cend(),
+                           [&aPattern](const auto& entry) {
+                             return aPattern.GetPattern().Matches(
+                                 entry.GetData()->mOriginAttributes);
+                           });
+      },
+      [aHashtable](const Prefix& aPrefix) {
+        return std::any_of(aHashtable->cbegin(), aHashtable->cend(),
+                           [&aPrefix](const auto& entry) {
+                             return entry.GetData()->mOriginNoSuffix ==
+                                    aPrefix.OriginNoSuffix();
+                           });
+      },
+      [aHashtable](const Null& aNull) { return !aHashtable->IsEmpty(); });
 }
 
 void ArchivedOriginScope::RemoveMatches(
