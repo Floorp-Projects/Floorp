@@ -24,22 +24,9 @@ SimpleTest.waitForFocus(doTest);
 
 function doTest() {
   var hiddenBrowser = document.getElementById("hiddenBrowser");
-  var offScreenBrowser = document.getElementById("offScreenBrowser");
-  var offScreenSubBrowser = offScreenBrowser.contentDocument.getElementById("topBrowser");
-  var offScreenBurriedBrowser = offScreenBrowser.contentDocument.getElementById("burriedBrowser");
-  
+
   hiddenBrowser.contentWindow.focus();
-  ok(!hiddenBrowser.contentDocument.hasFocus(),"hidden browser is visible");
-
-  offScreenBrowser.docShell.isOffScreenBrowser = true;
-  offScreenBrowser.contentWindow.focus();
-  ok(offScreenBrowser.contentDocument.hasFocus(),"offscreen browser is not visible");
-
-  offScreenSubBrowser.contentWindow.focus();
-  todo(offScreenSubBrowser.contentDocument.hasFocus(),"visible browser in offscreen browser is not visible");
-
-  offScreenBurriedBrowser.contentWindow.focus();
-  ok(!offScreenBurriedBrowser.contentDocument.hasFocus(),"hidden browser in offscreen browser is visible");
+  ok(!hiddenBrowser.contentDocument.hasFocus(), "hidden browser is unfocusable");
 
   SimpleTest.finish();
 }
@@ -49,6 +36,5 @@ function doTest() {
   ]]></script>
   <box flex="1" style="visibility: hidden; border:5px black solid">
     <browser style="border:5px blue solid" id="hiddenBrowser" src="bug454235-subframe.xhtml"/>
-    <browser style="border:5px yellow solid" id="offScreenBrowser" src="bug454235-subframe.xhtml"/>
   </box>
 </window>
