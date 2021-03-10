@@ -140,7 +140,7 @@ async protocol PWebAuthnTransaction {
   parent:
     async RequestRegister(uint64_t aTransactionId, WebAuthnMakeCredentialInfo aTransactionInfo);
     async RequestSign(uint64_t aTransactionId, WebAuthnGetAssertionInfo aTransactionInfo);
-    async RequestCancel(uint64_t aTransactionId);
+    [Tainted] async RequestCancel(uint64_t aTransactionId);
     async DestroyMe();
 
   child:
