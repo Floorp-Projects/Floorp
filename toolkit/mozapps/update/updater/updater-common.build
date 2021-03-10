@@ -85,6 +85,7 @@ if CONFIG["MOZ_TSAN"]:
         "TsanOptions.cpp",
     ]
 
+DEFINES["SPRINTF_H_USES_VSNPRINTF"] = True
 DEFINES["NS_NO_XPCOM"] = True
 DisableStlWrapping()
 for var in ("MAR_CHANNEL_ID", "MOZ_APP_VERSION"):
