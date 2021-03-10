@@ -7,7 +7,6 @@ import json
 import tempfile
 import shutil
 import os
-import mozfile
 from .symbolication import ProfileSymbolicator
 from mozlog import get_proxy_logger
 
@@ -24,9 +23,13 @@ def symbolicate_profile_json(profile_path, objdir_path):
     Symbolicate a single JSON profile.
     """
     temp_dir = tempfile.mkdtemp()
-    firefox_symbol_path = os.path.join(temp_dir, "firefox")
+    missing_symbols_zip = os.path.join(temp_dir, "missingsymbols.zip")
+
+    firefox_symbol_path = os.path.join(objdir_path, "dist", "crashreporter-symbols")
+    if not os.path.isdir(firefox_symbol_path):
+        os.mkdir(firefox_symbol_path)
+
     windows_symbol_path = os.path.join(temp_dir, "windows")
-    os.mkdir(firefox_symbol_path)
     os.mkdir(windows_symbol_path)
 
     symbol_paths = {"FIREFOX": firefox_symbol_path, "WINDOWS": windows_symbol_path}
@@ -57,16 +60,6 @@ def symbolicate_profile_json(profile_path, objdir_path):
             "symbolPaths": symbol_paths,
         }
     )
-
-    symbol_path = os.path.join(objdir_path, "dist", "crashreporter-symbols")
-    missing_symbols_zip = os.path.join(tempfile.mkdtemp(), "missingsymbols.zip")
-
-    if mozfile.is_url(symbol_path):
-        symbolicator.integrate_symbol_zip_from_url(symbol_path)
-    elif os.path.isfile(symbol_path):
-        symbolicator.integrate_symbol_zip_from_file(symbol_path)
-    elif os.path.isdir(symbol_path):
-        symbol_paths["FIREFOX"] = symbol_path
 
     LOG.info(
         "Symbolicating the performance profile... This could take a couple "
