@@ -634,13 +634,6 @@ pub struct VisibleGradientTile {
     pub local_clip_rect: LayoutRect,
 }
 
-#[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-pub struct CachedGradientSegment {
-    pub render_task: RenderTaskId,
-    pub local_rect: LayoutRect,
-}
-
 /// Information about how to cache a border segment,
 /// along with the current render task cache entry.
 #[cfg_attr(feature = "capture", derive(Serialize))]

@@ -17,7 +17,7 @@ use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
-use crate::prim_store::gradient::GRADIENT_FP_STOPS;
+use crate::prim_store::gradient::GradientJob;
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
@@ -869,16 +869,4 @@ pub struct LineDecorationJob {
     pub wavy_line_thickness: f32,
     pub style: i32,
     pub axis_select: f32,
-}
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(C)]
-#[derive(Clone, Debug)]
-pub struct GradientJob {
-    pub task_rect: DeviceRect,
-    pub stops: [f32; GRADIENT_FP_STOPS],
-    pub colors: [PremultipliedColorF; GRADIENT_FP_STOPS],
-    pub axis_select: f32,
-    pub start_stop: [f32; 2],
 }
