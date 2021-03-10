@@ -191,3 +191,10 @@ fun String.getDataUrlImageExtension(defaultExtension: String = "jpg"): String {
     return ("data:image\\/([a-zA-Z0-9-.+]+).*").toRegex()
         .find(this)?.groups?.get(1)?.value ?: defaultExtension
 }
+
+/**
+ * Returns this char sequence if it's not null or empty
+ * or the result of calling [defaultValue] function if the char sequence is null or empty.
+ */
+inline fun <C, R> C?.ifNullOrEmpty(defaultValue: () -> R): C where C : CharSequence, R : C =
+    if (isNullOrEmpty()) defaultValue() else this

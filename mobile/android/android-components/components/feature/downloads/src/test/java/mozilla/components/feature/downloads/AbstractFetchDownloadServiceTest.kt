@@ -12,28 +12,31 @@ import android.app.Service
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
 import mozilla.components.browser.state.state.content.DownloadState.Status.FAILED
 import mozilla.components.browser.state.state.content.DownloadState.Status.INITIATED
-import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -63,16 +66,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mock
 import org.mockito.Mockito.atLeastOnce
@@ -89,10 +92,13 @@ import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.MockitoAnnotations.initMocks
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.Implementation
+import org.robolectric.annotation.Implements
 import org.robolectric.shadows.ShadowNotificationManager
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.lang.IllegalArgumentException
 import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
@@ -1405,7 +1411,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P])
+    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     fun `WHEN a download is completed and the scoped storage is not used it MUST be added manually to the download system database`() = runBlockingTest {
         val download = DownloadState(
                 url = "http://www.mozilla.org",
@@ -1516,7 +1522,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P])
+    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     @Suppress("Deprecation")
     fun `do not pass non-http(s) url to addCompletedDownload`() = runBlockingTest {
         val download = DownloadState(
@@ -1541,7 +1547,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P])
+    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     @Suppress("Deprecation")
     fun `pass http(s) url to addCompletedDownload`() = runBlockingTest {
         val download = DownloadState(
@@ -1563,6 +1569,42 @@ class AbstractFetchDownloadServiceTest {
 
         service.addToDownloadSystemDatabaseCompat(download, this)
         verify(downloadManager).addCompletedDownload(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyLong(), anyBoolean(), any(), any())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
+    @Suppress("Deprecation")
+    fun `always call addCompletedDownload with a not empty or null mimeType`() = runBlockingTest {
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+        val spyContext = spy(testContext)
+        var downloadManager: DownloadManager = mock()
+        doReturn(spyContext).`when`(service).context
+        doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
+        val downloadWithNullMimeType = DownloadState(
+            url = "blob:moz-extension://d5ea9baa-64c9-4c3d-bb38-49308c47997c/",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path,
+            contentType = null
+        )
+        val downloadWithEmptyMimeType = downloadWithNullMimeType.copy(contentType = "")
+        val defaultMimeType = "*/*"
+
+        service.addToDownloadSystemDatabaseCompat(downloadWithNullMimeType, this)
+        verify(downloadManager).addCompletedDownload(
+            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
+            anyString(), anyLong(), anyBoolean(), isNull(), any()
+        )
+
+        downloadManager = mock()
+        doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
+        service.addToDownloadSystemDatabaseCompat(downloadWithEmptyMimeType, this)
+        verify(downloadManager).addCompletedDownload(
+            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
+            anyString(), anyLong(), anyBoolean(), isNull(), any()
+        )
     }
 
     @Test
@@ -1769,7 +1811,7 @@ class AbstractFetchDownloadServiceTest {
         doReturn(contentTypeFromFile).`when`(contentResolver).getType(any())
         doReturn(contentResolver).`when`(spyContext).contentResolver
 
-        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock(), "any")
+        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock<Uri>(), "any")
 
         assertEquals("application/pdf", result)
     }
@@ -1779,12 +1821,14 @@ class AbstractFetchDownloadServiceTest {
         val contentType = " application/pdf "
         val spyContext = spy(testContext)
         val contentResolver = mock<ContentResolver>()
-
-        doReturn(null).`when`(contentResolver).getType(any())
         doReturn(contentResolver).`when`(spyContext).contentResolver
 
-        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock(), contentType)
+        doReturn(null).`when`(contentResolver).getType(any())
+        var result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock<Uri>(), contentType)
+        assertEquals("application/pdf", result)
 
+        doReturn("").`when`(contentResolver).getType(any())
+        result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock<Uri>(), contentType)
         assertEquals("application/pdf", result)
     }
 
@@ -1792,12 +1836,103 @@ class AbstractFetchDownloadServiceTest {
     fun `getSafeContentType - WHEN none of the provided content types are available THEN return a generic content type`() {
         val spyContext = spy(testContext)
         val contentResolver = mock<ContentResolver>()
-
-        doReturn(null).`when`(contentResolver).getType(any())
         doReturn(contentResolver).`when`(spyContext).contentResolver
 
-        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock(), null)
+        doReturn(null).`when`(contentResolver).getType(any())
+        var result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock<Uri>(), null)
+        assertEquals("*/*", result)
 
+        doReturn("").`when`(contentResolver).getType(any())
+        result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock<Uri>(), null)
         assertEquals("*/*", result)
     }
+
+    // Following 3 tests use the String version of #getSafeContentType while the above 3 tested the Uri version
+    // The String version just overloads and delegates the Uri one but being in a companion object we cannot
+    // verify the delegation so we are left to verify the result to prevent any regressions.
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `getSafeContentType2 - WHEN the file content type is available THEN use it`() {
+        val contentTypeFromFile = "application/pdf; qs=0.001"
+        val spyContext = spy(testContext)
+        val contentResolver = mock<ContentResolver>()
+
+        doReturn(contentTypeFromFile).`when`(contentResolver).getType(any())
+        doReturn(contentResolver).`when`(spyContext).contentResolver
+
+        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, "any", "any")
+
+        assertEquals("application/pdf", result)
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `getSafeContentType2 - WHEN the file content type is not available THEN use the provided content type`() {
+        val contentType = " application/pdf "
+        val spyContext = spy(testContext)
+        val contentResolver = mock<ContentResolver>()
+        doReturn(contentResolver).`when`(spyContext).contentResolver
+
+        doReturn(null).`when`(contentResolver).getType(any())
+        var result = AbstractFetchDownloadService.getSafeContentType(spyContext, "any", contentType)
+        assertEquals("application/pdf", result)
+
+        doReturn("").`when`(contentResolver).getType(any())
+        result = AbstractFetchDownloadService.getSafeContentType(spyContext, "any", contentType)
+        assertEquals("application/pdf", result)
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `getSafeContentType2 - WHEN none of the provided content types are available THEN return a generic content type`() {
+        val spyContext = spy(testContext)
+        val contentResolver = mock<ContentResolver>()
+        doReturn(contentResolver).`when`(spyContext).contentResolver
+
+        doReturn(null).`when`(contentResolver).getType(any())
+        var result = AbstractFetchDownloadService.getSafeContentType(spyContext, "any", null)
+        assertEquals("*/*", result)
+
+        doReturn("").`when`(contentResolver).getType(any())
+        result = AbstractFetchDownloadService.getSafeContentType(spyContext, "any", null)
+        assertEquals("*/*", result)
+    }
+
+    // Hard to test #getFilePathUri since it only returns the result of a certain Android api call.
+    // But let's try.
+    @Test
+    fun `getFilePathUri - WHEN called without a registered provider THEN exception is thrown`() {
+        // There is no app registered provider that could expose a file from the filesystem of the machine running this test.
+        // Peeking into the exception would indicate whether the code really called "FileProvider.getUriForFile" as expected.
+        var exception: IllegalArgumentException? = null
+        try {
+            AbstractFetchDownloadService.getFilePathUri(testContext, "test.txt")
+        } catch (e: IllegalArgumentException) {
+            exception = e
+        }
+
+        assertTrue(exception!!.stackTrace[0].fileName.contains("FileProvider"))
+        assertTrue(exception.stackTrace[0].methodName == "getUriForFile")
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `getFilePathUri - WHEN called THEN return a file provider path for the filePath`() {
+        // Test that the String filePath is passed to the provider from which we expect a Uri path
+        val result = AbstractFetchDownloadService.getFilePathUri(testContext, "location/test.txt")
+
+        assertTrue(result.toString().endsWith("location/test.txt"))
+    }
+}
+
+@Implements(FileProvider::class)
+object ShadowFileProvider {
+    @Implementation
+    @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
+    fun getUriForFile(
+        context: Context?,
+        authority: String?,
+        file: File
+    ) = "content://authority/random/location/${file.name}".toUri()
 }

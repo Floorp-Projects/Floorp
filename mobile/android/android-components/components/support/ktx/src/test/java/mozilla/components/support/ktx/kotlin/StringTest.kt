@@ -9,6 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -208,5 +209,28 @@ class StringTest {
         val result = base64Image.getDataUrlImageExtension()
 
         assertEquals("gif", result)
+    }
+
+    @Test
+    fun `ifNullOrEmpty returns the same if this CharSequence is not null and not empty`() {
+        val randomString = "something"
+
+        assertSame(randomString, randomString.ifNullOrEmpty { "something else" })
+    }
+
+    @Test
+    fun `ifNullOrEmpty returns the invocation of the passed in argument if this CharSequence is null`() {
+        val nullString: String? = null
+        val validResult = "notNullString"
+
+        assertSame(validResult, nullString.ifNullOrEmpty { validResult })
+    }
+
+    @Test
+    fun `ifNullOrEmpty returns the invocation of the passed in argument if this CharSequence is empty`() {
+        val nullString = ""
+        val validResult = "notEmptyString"
+
+        assertSame(validResult, nullString.ifNullOrEmpty { validResult })
     }
 }
