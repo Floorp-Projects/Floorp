@@ -330,11 +330,7 @@ add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
     let notif = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(notif, "checking for notification popup");
     ok(!notif.dismissed, "doorhanger is not dismissed");
-    is(
-      notif.message,
-      "Would you like to add a username to the saved password?",
-      "Check message"
-    );
+    is(notif.message, "Add username to saved password?", "Check message");
 
     let { panel } = PopupNotifications;
     let passwordVisiblityToggle = panel.querySelector(
@@ -385,11 +381,7 @@ add_task(async function test_pwOnlyOldLoginMatchesUPForm() {
     let notif = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(notif, "checking for notification popup");
     ok(!notif.dismissed, "doorhanger is not dismissed");
-    is(
-      notif.message,
-      "Would you like to add a username to the saved password?",
-      "Check message"
-    );
+    is(notif.message, "Add username to saved password?", "Check message");
 
     let { panel } = PopupNotifications;
     let passwordVisiblityToggle = panel.querySelector(
@@ -477,7 +469,7 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
     let notif = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(notif, "got notification popup");
     ok(!notif.dismissed, "doorhanger is not dismissed");
-    is(notif.message, "Would you like to update this login?", "Check message");
+    is(notif.message, "Update this login?", "Check message");
 
     await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
@@ -505,7 +497,7 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
     let notif = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(notif, "got notification popup");
     ok(!notif.dismissed, "doorhanger is not dismissed");
-    is(notif.message, "Would you like to update this login?", "Check message");
+    is(notif.message, "Update this login?", "Check message");
 
     await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, REMOVE_LOGIN_MENUITEM);
@@ -537,7 +529,7 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
     let notif = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(notif, "got notification popup");
     ok(!notif.dismissed, "doorhanger is not dismissed");
-    is(notif.message, "Would you like to update this login?", "Check message");
+    is(notif.message, "Update this login?", "Check message");
 
     await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     let promiseLoginUpdateSaved = TestUtils.topicObserved(
@@ -577,7 +569,7 @@ add_task(async function test_changePLoginOnUPForm() {
     let notif = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(notif, "got notification popup");
     ok(!notif.dismissed, "doorhanger is not dismissed");
-    is(notif.message, "Would you like to update this password?", "Check msg");
+    is(notif.message, "Update this password?", "Check msg");
 
     await checkDoorhangerUsernamePassword("", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
@@ -606,7 +598,7 @@ add_task(async function test_changePLoginOnPForm() {
     let notif = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(notif, "got notification popup");
     ok(!notif.dismissed, "doorhanger is not dismissed");
-    is(notif.message, "Would you like to update this password?", "Check msg");
+    is(notif.message, "Update this password?", "Check msg");
 
     await checkDoorhangerUsernamePassword("", "notifyp1");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
@@ -637,11 +629,8 @@ add_task(async function test_checkUPSaveText() {
     ok(notif, "got notification popup");
     // Check the text, which comes from the localized saveLoginMsg string.
     let notificationText = notif.message;
-    let expectedText =
-      "Would you like " +
-      BRAND_SHORT_NAME +
-      " to save this login for example.com?";
-    is(expectedText, notificationText, "Checking text: " + notificationText);
+    let expectedText = "Save login for example.com?";
+    is(notificationText, expectedText, "Checking text: " + notificationText);
     await cleanupDoorhanger(notif);
   });
 
@@ -665,11 +654,8 @@ add_task(async function test_checkPSaveText() {
     ok(notif, "got notification popup");
     // Check the text, which comes from the localized saveLoginMsgNoUser string.
     let notificationText = notif.message;
-    let expectedText =
-      "Would you like " +
-      BRAND_SHORT_NAME +
-      " to save this password for example.com?";
-    is(expectedText, notificationText, "Checking text: " + notificationText);
+    let expectedText = "Save password for example.com?";
+    is(notificationText, expectedText, "Checking text: " + notificationText);
     await cleanupDoorhanger(notif);
   });
 
