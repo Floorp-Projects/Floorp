@@ -191,7 +191,7 @@ add_task(async function test_devtools_network_get_har() {
   await extension.awaitMessage("ready");
 
   // Open the Toolbox
-  const { toolbox } = await openToolboxForTab(tab);
+  const toolbox = await openToolboxForTab(tab);
 
   // Get HAR, it should be empty since no data collected yet.
   const getHAREmptyPromise = extension.awaitMessage("getHAR-result");
@@ -241,7 +241,7 @@ add_task(async function test_devtools_network_on_request_finished() {
   await extension.awaitMessage("ready");
 
   // Open the Toolbox
-  const { toolbox } = await openToolboxForTab(tab);
+  const toolbox = await openToolboxForTab(tab);
 
   // Wait the extension to subscribe the onRequestFinished listener.
   await extension.sendMessage("addOnRequestFinishedListener");
