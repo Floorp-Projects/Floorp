@@ -4,7 +4,7 @@
 
 
 use api::units::*;
-use api::{ColorF, PremultipliedColorF, ImageFormat, LineOrientation, BorderStyle};
+use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX};
@@ -678,26 +678,7 @@ impl TextureCacheRenderTarget {
                 }
             }
             RenderTaskKind::FastLinearGradient(ref task_info) => {
-                let mut stops = [0.0; 4];
-                let mut colors = [PremultipliedColorF::BLACK; 4];
-
-                let axis_select = match task_info.orientation {
-                    LineOrientation::Horizontal => 0.0,
-                    LineOrientation::Vertical => 1.0,
-                };
-
-                for (stop, (offset, color)) in task_info.stops.iter().zip(stops.iter_mut().zip(colors.iter_mut())) {
-                    *offset = stop.offset;
-                    *color = ColorF::from(stop.color).premultiplied();
-                }
-
-                self.fast_linear_gradients.push(FastLinearGradientInstance {
-                    task_rect: target_rect.to_f32(),
-                    axis_select,
-                    stops,
-                    colors,
-                    start_stop: [task_info.start_point, task_info.end_point],
-                });
+                self.fast_linear_gradients.push(task_info.to_instance(&target_rect));
             }
             RenderTaskKind::Image(..) |
             RenderTaskKind::Cached(..) |
