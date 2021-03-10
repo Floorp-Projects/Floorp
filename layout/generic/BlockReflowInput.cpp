@@ -865,8 +865,7 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
 
   // Update the float combined area state
   // XXX Floats should really just get invalidated here if necessary
-  mFloatOverflowAreas.UnionWith(aFloat->GetOverflowAreas() +
-                                aFloat->GetPosition());
+  mFloatOverflowAreas.UnionWith(aFloat->GetOverflowAreasRelativeToParent());
 
   // Place the float in the float manager
   // calculate region
