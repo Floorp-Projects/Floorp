@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -410,7 +413,7 @@ add_test(function test_Capabilities_ctor() {
   equal(false, caps.get("acceptInsecureCerts"));
   ok(caps.get("timeouts") instanceof Timeouts);
   ok(caps.get("proxy") instanceof Proxy);
-  equal(caps.get("setWindowRect"), !Services.androidBridge);
+  equal(caps.get("setWindowRect"), AppConstants.platform !== "android");
   equal(caps.get("strictFileInteractability"), false);
 
   ok(caps.has("rotatable"));
@@ -507,7 +510,7 @@ add_test(function test_Capabilities_fromJSON() {
   caps = fromJSON({ timeouts: timeoutsConfig });
   equal(123, caps.get("timeouts").implicit);
 
-  if (!Services.androidBridge) {
+  if (AppConstants.platform !== "android") {
     caps = fromJSON({ setWindowRect: true });
     equal(true, caps.get("setWindowRect"));
     Assert.throws(

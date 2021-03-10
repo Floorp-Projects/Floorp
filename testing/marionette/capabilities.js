@@ -18,6 +18,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
 
   assert: "chrome://marionette/content/assert.js",
@@ -27,6 +28,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
+XPCOMUtils.defineLazyGetter(
+  this,
+  "isAndroid",
+  () => AppConstants.platform === "android"
+);
 
 XPCOMUtils.defineLazyGetter(this, "appinfo", () => {
   // Enable testing this module, as Services.appinfo.* is not available
@@ -459,7 +466,7 @@ class Capabilities extends Map {
       ["acceptInsecureCerts", false],
       ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["proxy", new Proxy()],
-      ["setWindowRect", !Services.androidBridge],
+      ["setWindowRect", !isAndroid],
       ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
@@ -563,11 +570,11 @@ class Capabilities extends Map {
 
         case "setWindowRect":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
-          if (!Services.androidBridge && !v) {
+          if (!isAndroid && !v) {
             throw new error.InvalidArgumentError(
               "setWindowRect cannot be disabled"
             );
-          } else if (Services.androidBridge && v) {
+          } else if (isAndroid && v) {
             throw new error.InvalidArgumentError(
               "setWindowRect is only supported on desktop"
             );
@@ -625,7 +632,7 @@ this.UnhandledPromptBehavior = UnhandledPromptBehavior;
 function getWebDriverBrowserName() {
   // Similar to chromedriver which reports "chrome" as browser name for all
   // WebView apps, we will report "firefox" for all GeckoView apps.
-  if (Services.androidBridge) {
+  if (isAndroid) {
     return "firefox";
   }
 
@@ -635,7 +642,7 @@ function getWebDriverBrowserName() {
 function getWebDriverPlatformName() {
   let name = Services.sysinfo.getProperty("name");
 
-  if (Services.androidBridge) {
+  if (isAndroid) {
     return "android";
   }
 
