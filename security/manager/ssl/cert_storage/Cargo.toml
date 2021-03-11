@@ -6,7 +6,7 @@ authors = ["Dana Keeler <dkeeler@mozilla.com>", "Mark Goodwin <mgoodwin@mozilla.
 [dependencies]
 base64 = "0.10"
 byteorder = "1.2.7"
-crossbeam-utils = "0.6.3"
+crossbeam-utils = "0.8"
 cstr = "0.2"
 log = "0.4"
 memmap = "0.7"

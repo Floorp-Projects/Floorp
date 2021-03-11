@@ -5,7 +5,7 @@ authors = ["Myk Melez <myk@mykzilla.org>"]
 
 [dependencies]
 atomic_refcell = "0.1"
-crossbeam-utils = "0.6.3"
+crossbeam-utils = "0.8"
 cstr = "0.2"
 lazy_static = "1"
 libc = "0.2"

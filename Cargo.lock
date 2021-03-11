@@ -357,7 +357,7 @@ version = "0.1.0"
 dependencies = [
  "bits_client",
  "comedy",
- "crossbeam-utils 0.6.5",
+ "crossbeam-utils 0.8.1",
  "libc",
  "log",
  "moz_task",
@@ -522,7 +522,7 @@ version = "0.0.1"
 dependencies = [
  "base64 0.10.1",
  "byteorder",
- "crossbeam-utils 0.6.5",
+ "crossbeam-utils 0.8.1",
  "cstr",
  "log",
  "memmap",
@@ -2701,7 +2701,7 @@ name = "kvstore"
 version = "0.1.0"
 dependencies = [
  "atomic_refcell",
- "crossbeam-utils 0.6.5",
+ "crossbeam-utils 0.8.1",
  "cstr",
  "lazy_static",
  "libc",
@@ -6135,7 +6135,7 @@ dependencies = [
 name = "xulstore"
 version = "0.1.0"
 dependencies = [
- "crossbeam-utils 0.6.5",
+ "crossbeam-utils 0.8.1",
  "cstr",
  "libc",
  "log",
