@@ -245,7 +245,13 @@ var ClientIDImpl = {
       // fall through to next option
     }
 
-    // We're missing one or both IDs from the DRS state file, generate new ones.
+    // Absent or broken state file? Check prefs as last resort.
+    if (!hasCurrentClientID) {
+      hasCurrentClientID = this.updateClientID(this.getCachedClientID());
+    }
+
+    // We're missing one or both IDs from the DRS state file and prefs.
+    // Generate new ones.
     if (!hasCurrentClientID) {
       Services.telemetry.scalarSet("telemetry.generated_new_client_id", true);
       this.updateClientID(CommonUtils.generateUUID());
